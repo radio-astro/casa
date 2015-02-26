@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCache.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: TableCache.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableCache.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/TableCache.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableCache::TableCache()
 : tableMap_p(static_cast<void*>(0))
@@ -95,5 +95,5 @@ void TableCache::rename (const String& newName, const String& oldName)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

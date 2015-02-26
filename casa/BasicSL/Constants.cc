@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Constants.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Constants.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicSL/Constants.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Been changed for SUN CC port
 
@@ -153,5 +153,5 @@ const Double C::day		= 86400.0;
 const Double C::MJD0 = 2400000.5;
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

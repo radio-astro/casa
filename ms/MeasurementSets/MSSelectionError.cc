@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionError.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSSelectionError.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 MSSelectionError::MSSelectionError (Category c)
@@ -241,5 +241,5 @@ MSSelectionObservationParseError::MSSelectionObservationParseError (const String
 MSSelectionObservationParseError::~MSSelectionObservationParseError () throw()
 {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

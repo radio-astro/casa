@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableError.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: TableError.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEERROR_H
 #define TABLES_TABLEERROR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# This header file defines the error classes belonging to the table
 //# descriptor class and its associated classes.
@@ -497,6 +497,6 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

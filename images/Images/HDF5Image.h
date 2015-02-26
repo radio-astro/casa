@@ -23,19 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: HDF5Image.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_HDF5IMAGE_H
 #define IMAGES_HDF5IMAGE_H
 
 //# Includes
-#include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/HDF5Lattice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/ImageAttrHandlerHDF5.h>
+#include <casacore/lattices/Lattices/HDF5Lattice.h>
 
 //# Forward Declarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // Read, store, and manipulate astronomical images in HDF5 format.
@@ -60,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // </etymology>
 
   // <synopsis> 
-  // All AIPS++ Images are Lattices.  They may be treated like any other Lattice;
+  // All Casacore Images are Lattices.  They may be treated like any other Lattice;
   // getSlice(...), putSlice(...), LatticeIterator for iterating, etc...
   // ArrayImages contain a map, a mask for that map, and coordinate 
   // information.  This provides a Lattice interface for images and their 
@@ -247,6 +249,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // It can fail if, e.g., the underlying file is not writable.
     virtual Bool setImageInfo(const ImageInfo& info);
 
+    // Get access to the attribute handler.
+    // If a handler keyword does not exist yet, it is created if
+    // <src>createHandler</src> is set.
+    // Otherwise the handler is empty and no groups can be created for it.
+    virtual ImageAttrHandler& attrHandler (Bool createHandler=False);
+
     // Remove a region/mask belonging to the image from the given group
     // (which can be Any).
     // If a mask removed is the default mask, the image gets unmasked.
@@ -292,6 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //# Data members.
     HDF5Lattice<T> map_p;
     LatticeRegion* regionPtr_p;
+    ImageAttrHandlerHDF5 itsAttrHandler;
 
     //# Make members of parent class known.
   public:
@@ -307,7 +316,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     using ImageInterface<T>::setMiscInfoMember;
     using ImageInterface<T>::setLogMember;
     using ImageInterface<T>::setUnitMember;
-    // using ImageInterface<T>::setImageInfoMember;
+    using ImageInterface<T>::setImageInfoMember;
   };
 
 
@@ -325,9 +334,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/HDF5Image.tcc>
+#include <casacore/images/Images/HDF5Image.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSTableImpl.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSTableImpl.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSTABLEIMPL_H
 #define MS_MSTABLEIMPL_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/DataType.h>
-#include <tables/Tables/Table.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/Utilities/Fallible.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/Utilities/Fallible.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class SetupNewTable;
@@ -172,6 +172,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

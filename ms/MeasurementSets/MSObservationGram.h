@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSObservationGram.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSObservationGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSOBSERVATIONGRAM_H
 #define MS_MSOBSERVATIONGRAM_H
 
 
 //# Includes
-#include <ms/MeasurementSets/MSObservationParse.h> 
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSObservationParse.h> 
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -104,6 +105,6 @@ class TableExprNode;
   
   // </group>
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

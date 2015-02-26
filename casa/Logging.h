@@ -23,19 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Logging.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Logging.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_LOGGING_H
 #define CASA_LOGGING_H
 
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogFilter.h>
-//#include <aips/LogTables/TableLogSink.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
+//#include <aips/LogTables/TableLogSink.h>
+#include <casacore/casa/Logging/LogIO.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module> 
 //
@@ -44,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </summary>
 
 // <prerequisite>
-//   <li> General AIPS++ utility classes, such as String.
+//   <li> General Casacore utility classes, such as String.
 // </prerequisite>
 
 // <reviewed reviewer="wbrouw" date="1996/08/21" demos="dLogging.cc" tests="tLogging.cc">
@@ -118,7 +120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Schematically, application programmers would use the logging system as
 // follows:
 // <srcBlock>
-// #include <casa/Logging.h>
+// #include <casacore/casa/Logging.h>
 // ...
 // void MyClass:myFunction(LogIO &os)
 // {
@@ -421,6 +423,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

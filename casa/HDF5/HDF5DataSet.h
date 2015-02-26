@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.h 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: HDF5DataSet.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_HDF5DATASET_H
 #define CASA_HDF5DATASET_H
 
 //# Includes
-#include <casa/HDF5/HDF5Object.h>
-#include <casa/HDF5/HDF5HidMeta.h>
-#include <casa/HDF5/HDF5DataType.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/DataType.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/HDF5/HDF5Object.h>
+#include <casacore/casa/HDF5/HDF5HidMeta.h>
+#include <casacore/casa/HDF5/HDF5DataType.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/DataType.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# Forward Declarations
   template<typename T> class Block;
@@ -70,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // appropriate Slicer object. Note that the Slicer object must be fully
   // filled; it does not infer missing info from the array shape.
   // <p>
-  // AIPS++ arrays are in Fortran order, while HDF5 uses C order.
+  // Casacore arrays are in Fortran order, while HDF5 uses C order.
   // Therefore array axes are reversed, thus axes in shapes, slicers, etc.
   // </synopsis> 
 

@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MemoryLogSink.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MemoryLogSink.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MEMORYLOGSINK_H
 #define CASA_MEMORYLOGSINK_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Logging/LogSinkInterface.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogSinkInterface.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -134,6 +134,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

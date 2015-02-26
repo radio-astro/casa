@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionalProxy.h 20824 2009-11-20 04:55:09Z Malte.Marquarding $
+//# $Id: FunctionalProxy.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONALSPROXY_H
 #define SCIMATH_FUNCTIONALSPROXY_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Record.h>
-#include <casa/BasicSL/Complex.h>
-#include <scimath/Functionals/FunctionHolder.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/scimath/Functionals/FunctionHolder.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class FunctionalProxy {
 public:

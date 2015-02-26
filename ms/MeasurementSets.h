@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasurementSets.h 20691 2009-07-14 03:13:54Z Malte.Marquarding $
+//# $Id: MeasurementSets.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MEASUREMENTSETS_H
 #define MS_MEASUREMENTSETS_H
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -50,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology>
 // The MeasurementSet is where all data are ultimately to be found
-// in AIPS++.  Since, this is a collection of 
+// in Casacore.  Since, this is a collection of 
 // measurements (either actual or simulated), the term MeasurementSet
 // seems appropriate. Often we use the abbreviation (and typedef) MS for
 // MeasurementSet.
@@ -124,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // return this unit string, it can be used to construct a 
 // <linkto class=Unit>Unit</linkto> object for a particular column.
 //
-// The MEASURE_TYPE keyword gives the AIPS++ Measure that applies to the
+// The MEASURE_TYPE keyword gives the Casacore Measure that applies to the
 // column (if any). See the 
 //  <linkto module="Measures:description">Measures</linkto> module for a 
 // list of available Measures and their use.
@@ -278,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

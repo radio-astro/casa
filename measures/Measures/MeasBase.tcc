@@ -23,15 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasBase.tcc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MeasBase.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
+
+#ifndef MEASURES_MEASBASE_TCC
+#define MEASURES_MEASBASE_TCC
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MeasBase.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MeasBase.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class Mv, class Mr>
@@ -170,5 +173,7 @@ void MeasBase<Mv,Mr>::print(std::ostream &os) const {
   os << tellMe() << ": " << data;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

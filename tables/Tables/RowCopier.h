@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RowCopier.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: RowCopier.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef TABLES_ROWCOPIER_H
 #define TABLES_ROWCOPIER_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -84,7 +85,7 @@ class ColumnHolder; //# Only in the .cc file
 // In the FITS Binary Table extension to Table conversion class, BinTable,
 // the input FITS file is a stream that must be read sequentially, so the
 // input arrives row-by-row.  Internally, there is a single row table that
-// is used to hold the values for the current row.  To fill an aips++ table
+// is used to hold the values for the current row.  To fill a Casacore table
 // with the data from each row, one creates the output table using the
 // table descriptor from the input, single-row table and uses RowCopier to
 // copy the single-row table to the appropriate row of the full table, 
@@ -195,7 +196,7 @@ private:
 
     // The ColumnHolder class exists only in the .cc file, it is what
     // ultimately does the work.
-    ColumnHolder *columns_p;
+    CountedPtr<ColumnHolder> columns_p;
 };
 
 
@@ -204,6 +205,6 @@ inline Bool RowCopier::copy (uInt rownr)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

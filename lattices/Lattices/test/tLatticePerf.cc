@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticePerf.cc 20953 2010-09-16 07:18:01Z gervandiepen $
+//# $Id: tLatticePerf.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <lattices/Lattices/PagedArray.h>
-#include <lattices/Lattices/HDF5Lattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/TileStepper.h>
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
+#include <casacore/lattices/Lattices/PagedArray.h>
+#include <casacore/lattices/Lattices/HDF5Lattice.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/lattices/Lattices/TileStepper.h>
+#include <casacore/lattices/Lattices/TiledLineStepper.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // <summary>
 // Test program for performance of PagedArray and HDF5Lattice

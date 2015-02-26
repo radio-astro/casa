@@ -24,32 +24,32 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSReader.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSReader.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSREADER_H
 #define MS_MSREADER_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSDopplerIndex.h>
-#include <ms/MeasurementSets/MSFeedIndex.h>
-#include <ms/MeasurementSets/MSFreqOffIndex.h>
-#include <ms/MeasurementSets/MSPointingIndex.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
-#include <ms/MeasurementSets/MSSysCalIndex.h>
-#include <ms/MeasurementSets/MSTableIndex.h>
-#include <ms/MeasurementSets/MSWeatherIndex.h>
-#include <ms/MeasurementSets/MSValidIds.h>
-#include <tables/Tables/TableRow.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSDopplerIndex.h>
+#include <casacore/ms/MeasurementSets/MSFeedIndex.h>
+#include <casacore/ms/MeasurementSets/MSFreqOffIndex.h>
+#include <casacore/ms/MeasurementSets/MSPointingIndex.h>
+#include <casacore/ms/MeasurementSets/MSSourceIndex.h>
+#include <casacore/ms/MeasurementSets/MSSysCalIndex.h>
+#include <casacore/ms/MeasurementSets/MSTableIndex.h>
+#include <casacore/ms/MeasurementSets/MSWeatherIndex.h>
+#include <casacore/ms/MeasurementSets/MSValidIds.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Read from an MS, coordinating all of the subtables in the process
@@ -145,7 +145,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

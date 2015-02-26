@@ -23,19 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: showtablelock.cc 21145 2011-11-29 13:30:41Z gervandiepen $
+//# $Id: showtablelock.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/Table.h>
-#include <casa/IO/LockFile.h>
-#include <casa/OS/Path.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/IO/LockFile.h>
+#include <casacore/casa/OS/Path.h>
 #include <stdexcept>
 #include <iostream>
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 int main (int argc, char* argv[])
 {
+  if (TableLock::lockingDisabled()) {
+    cerr << "Note: table locking is disabled because Casacore "
+         << "was built with -DAIPS_TABLES_NOLOCKING" << endl;
+  }
   if (argc < 2) {
     cerr << "Use as:   showtablelock tablename" << endl;
     return 1;

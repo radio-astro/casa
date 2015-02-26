@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolIndex.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSPolIndex.cc 21545 2015-01-22 19:36:35Z gervandiepen $
 
 
-#include <ms/MeasurementSets/MSPolIndex.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/aips.h>
-#include <casa/stdlib.h>
+#include <casacore/ms/MeasurementSets/MSPolIndex.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/stdlib.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //-------------------------------------------------------------------------
 
@@ -77,7 +77,7 @@ Vector<Int> MSPolarizationIndex::matchCorrTypeAndProduct(const Vector<Int>&
 
   // Match the polarization correlation types and receptor cross-products 
   // by row and correlation index
-  uInt numCorr = min(corrType.nelements(), corrProduct.ncolumn());
+  uInt numCorr = std::min(corrType.nelements(), corrProduct.ncolumn());
   uInt nrows = msPolarizationCols_p.nrow();
   Vector<Bool> corrMatch(nrows, False);
   for (uInt row=0; row<nrows; row++) {
@@ -145,5 +145,5 @@ Vector<Int> MSPolarizationIndex::matchCorrTypeAndProduct(const Vector<Int>&
 
 //-------------------------------------------------------------------------
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

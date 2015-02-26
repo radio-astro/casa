@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeNavigator.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LatticeNavigator.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef LATTICES_LATTICENAVIGATOR_H
 #define LATTICES_LATTICENAVIGATOR_H
 
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class IPosition;
@@ -362,6 +362,6 @@ inline Bool LatticeNavigator::operator--()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,26 +23,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTempImage.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tTempImage.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <images/Images/TempImage.h>
-#include <images/Images/SubImage.h>
-#include <images/Images/ImageInfo.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/TempLattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Quanta/QLogical.h>
-#include <casa/Utilities/COWPtr.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/images/Images/TempImage.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/lattices/Lattices/TempLattice.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/IO/CanonicalIO.h>
+#include <casacore/casa/IO/MemoryIO.h>
+#include <casacore/casa/Utilities/COWPtr.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
+#include <casacore/casa/namespace.h>
 
-#include <casa/namespace.h>
+// Write and check the image.
 void doIt (TempImage<Int>& scratch)
 {
   IPosition shape(3,1);    
@@ -130,6 +135,73 @@ void doIt (TempImage<Int>& scratch)
   AlwaysAssertExit (info.restoringBeam().getPA()==a3);
 }
 
+// Stream, unstream, and check the image.
+void streamImage (ImageInterface<Int>& img)
+{
+  MemoryIO membuf;
+  CanonicalIO canio (&membuf);
+  AipsIO os (&canio);
+  // Write the image.
+  os.putstart("Image", 1);
+  {
+    Record rec;
+    String msg;
+    AlwaysAssertExit (img.toRecord(msg, rec));
+    os <<  rec;
+                      }
+  os << img.get();
+  os << img.isMasked();
+  if (img.isMasked()) {
+    os << img.getMask();
+  }
+  os.putend();
+  // Get the image back.
+  TempImage<Int> scratch;
+  os.setpos (0);
+  AlwaysAssertExit (os.getstart("Image") == 0);
+  {
+    Record rec;
+    String msg;
+    os >> rec;
+    AlwaysAssertExit (scratch.fromRecord(msg, rec));
+  }
+  {
+    Array<Int> arr;
+    os >> arr;
+    scratch.put (arr);
+  }
+  Bool isMasked;
+  os >> isMasked;
+  if (isMasked) {
+    Array<Bool> mask;
+    os >> mask;
+    scratch.attachMask (ArrayLattice<Bool>(mask));
+  }
+  // Check the result.
+  AlwaysAssertExit (scratch.getAt(IPosition(3,7)) == 7);
+  scratch.putAt (0, IPosition(3,7));
+  AlwaysAssertExit (allEQ(scratch.get(), 0));
+  /*  // Check the mask.
+  AlwaysAssertExit (scratch.isMasked());
+  AlwaysAssertExit (scratch.hasPixelMask());
+  AlwaysAssertExit (scratch.pixelMask().isWritable());
+  Array<Bool> tm1;
+  scratch.getMaskSlice (tm1, IPosition(3,1), IPosition(3,6));
+  tm1(IPosition(3,6)) = False;
+  AlwaysAssertExit (allEQ (tm1, True));
+  */
+  // Test other info.
+  AlwaysAssertExit (scratch.units() == Unit("Jy"));
+  // Test info handling.
+  Quantity a1(10.0,Unit("arcsec"));
+  Quantity a2(8.0,Unit("arcsec"));
+  Quantity a3(-45.0,Unit("deg"));
+  ImageInfo info = scratch.imageInfo();
+  AlwaysAssertExit (info.restoringBeam().getMajor()==a1);
+  AlwaysAssertExit (info.restoringBeam().getMinor()==a2);
+  AlwaysAssertExit (info.restoringBeam().getPA()==a3);
+}
+
 void testTempCloseDelete()
 {
   Int nchan= 10;
@@ -137,7 +209,7 @@ void testTempCloseDelete()
   Int ny=1000;
 
   TempImage<Float> tIm((TiledShape(IPosition(4,nx,ny,1,nchan))),
-		       CoordinateUtil::defaultCoords4D(),
+                       CoordinateUtil::defaultCoords4D(),
                        0);
   cerr <<"isPaged " << tIm.isPaged() << endl;
   tIm.set(0.0);
@@ -149,18 +221,14 @@ void testTempCloseDelete()
   for (Int k=0; k < nchan ; ++k){
     blc(3)=k; trc(3)=k;
     Slicer sl(blc, trc, Slicer::endIsLast);
-    cout<<'a'<<endl;
     SubImage<Float> imSub(tIm, sl, True);
-    cout<<'b'<<endl;
     goodplane += Float(k);
     imSub.put(goodplane);
-    cout<<'c'<<endl;
   }
 
   LatticeExprNode LEN = max( tIm );
   cerr << "max " << LEN.getFloat() << endl;
 }
-
 
 int main()
 {
@@ -172,7 +240,6 @@ int main()
       AlwaysAssertExit (scratch.isPaged());
       doIt (scratch);
     }
-    testTempCloseDelete();
     {
       TempImage<Int> small((TiledShape(IPosition(3,64,64,16))),
 			   CoordinateUtil::defaultCoords3D(),
@@ -192,10 +259,8 @@ int main()
     	Quantity min(3, "arcsec");
     	Quantity pa(30, "deg");
     	info.setAllBeams(16, 4, GaussianBeam());
-    	Bool ok = True;
     	try {
     		temp.setImageInfo(info);
-    		ok = False;
     	}
     	catch (AipsError x) {
     		cout << "Exception thrown as expected: "
@@ -204,7 +269,6 @@ int main()
     	info.setBeam(0, 0, maj, min, pa);
     	try {
     		temp.setImageInfo(info);
-    		ok = False;
     	}
     	catch (AipsError x) {}
     	for (uInt i=0; i<4; i++) {
@@ -214,7 +278,8 @@ int main()
     	}
     	AlwaysAssert(temp.setImageInfo(info), AipsError);
     }
-  } catch (AipsError x) {
+    testTempCloseDelete();
+  } catch (AipsError& x) {
     cerr << x.getMesg() << endl;
     cout << "FAIL" << endl;
     return 1;

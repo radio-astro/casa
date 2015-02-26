@@ -24,15 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelUtil.tcc 19950 2007-02-27 12:25:11Z Malte.Marquarding $
+//# $Id: MSSelUtil.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#ifndef MS_MSSELUTIL_TCC
+#define MS_MSSELUTIL_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/ms/MeasurementSets/MSSelUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 Array<Float> MSSelUtil<T>::diffData(const Array<T>& data,
@@ -161,5 +164,7 @@ Array<Float> MSSelUtil<T>::diffData(const Array<T>& data,
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

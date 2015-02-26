@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dRemoveAxes.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: dRemoveAxes.cc 21511 2014-11-21 12:30:59Z gervandiepen $
 
 
 
-#include <casa/aips.h>
-#include <casa/Arrays.h>
-#include <coordinates/Coordinates.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/coordinates/Coordinates.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
-
-
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
 
-#include <casa/namespace.h>
+
+
+#include <casacore/casa/namespace.h>
 int main()
 {
 try {

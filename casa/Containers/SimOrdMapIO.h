@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SimOrdMapIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SimOrdMapIO.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_SIMORDMAPIO_H
 #define CASA_SIMORDMAPIO_H
 
-#include <casa/aips.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Class declarations.
 class AipsIO;
@@ -57,9 +57,9 @@ ostream& operator<<(ostream&, const SimpleOrderedMap<K,V>&);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/SimOrdMapIO.tcc>
+#include <casacore/casa/Containers/SimOrdMapIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

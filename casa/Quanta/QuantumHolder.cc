@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QuantumHolder.cc 20890 2010-05-17 07:08:54Z gervandiepen $
+//# $Id: QuantumHolder.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Exceptions.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Containers/Record.h>
-#include <casa/BasicSL/String.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 QuantumHolder::QuantumHolder() 
@@ -744,5 +744,5 @@ const String &QuantumHolder::ident() const {
   return myid;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumn.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: ArrayColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_ARRAYCOLUMN_H
 #define TABLES_ARRAYCOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableColumn.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class RefRows;
@@ -502,7 +502,7 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 
 //# Make old name ROArrayColumn still available.
@@ -510,6 +510,6 @@ protected:
 
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <tables/Tables/ArrayColumn.tcc>
+#include <casacore/tables/Tables/ArrayColumn.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

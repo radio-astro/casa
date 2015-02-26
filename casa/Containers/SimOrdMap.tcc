@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SimOrdMap.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: SimOrdMap.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/Exceptions/Error.h>
+#ifndef CASA_SIMORDMAP_TCC
+#define CASA_SIMORDMAP_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class K, class V>
 SimpleOrderedMap<K,V>::SimpleOrderedMap (const V& dflt, uInt incr)
@@ -251,5 +254,7 @@ Bool SimpleOrderedMap<K,V>::ok() const
     return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

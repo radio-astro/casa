@@ -23,75 +23,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Tables.h 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: Tables.h 21551 2015-01-29 09:15:47Z gervandiepen $
 
 #ifndef TABLES_TABLES_H
 #define TABLES_TABLES_H
 
 //# Includes
 //#   table description
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScaRecordColDesc.h>
-
-//#   storage managers
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/StandardStManAccessor.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/IncrStManAccessor.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledDataStManAccessor.h>
-#include <tables/Tables/TiledCellStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/MemoryStMan.h>
-
-//#   virtual column engines
-#include <tables/Tables/RetypedArrayEngine.h>
-#include <tables/Tables/RetypedArraySetGet.h>
-#include <tables/Tables/ScaledArrayEngine.h>
-#include <tables/Tables/MappedArrayEngine.h>
-#include <tables/Tables/ForwardCol.h>
-#include <tables/Tables/ForwardColRow.h>
-#include <tables/Tables/CompressComplex.h>
-#include <tables/Tables/CompressFloat.h>
-#include <tables/Tables/VirtualTaQLColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScaRecordColDesc.h>
 
 //#   table access
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableCopy.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/Slice.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableCopy.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/Slice.h>
 
 //#   keywords
-#include <tables/Tables/TableRecord.h>
-#include <casa/Containers/RecordField.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Containers/RecordField.h>
 
 //#   table lookup
-#include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/ColumnsIndexArray.h>
-
-//#   table expressions (for selection of rows)
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <tables/Tables/TableParse.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
+#include <casacore/tables/Tables/ColumnsIndexArray.h>
 
 //#   table vectors
-#include <tables/Tables/TableVector.h>
-#include <tables/Tables/TabVecMath.h>
-#include <tables/Tables/TabVecLogic.h>
+#include <casacore/tables/Tables/TableVector.h>
+#include <casacore/tables/Tables/TabVecMath.h>
+#include <casacore/tables/Tables/TabVecLogic.h>
+
+//#   data managers
+#include <casacore/tables/DataMan.h>
+
+//#   table expressions (for selection of rows)
+#include <casacore/tables/TaQL.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 
@@ -139,8 +117,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //       for concurrent access,
 //  <LI> <A HREF="#Tables:KeyLookup">indexing</A> a table for faster lookup,
 //  <LI> <A HREF="#Tables:vectors">vector operations</A> on a column.
-//  <LI> <A HREF="#Tables:performance">performance and robustness</A> considerations.
+//  <LI> <A HREF="#Tables:performance">performance and robustness</A>
+//       considerations with some information on
+//       <A HREF="#Tables:iotracing">IO tracing</A>.
 // </UL>
+// A few <A HREF="Tables:applications">applications</A> exist to inspect
+// and manipulate a table.
 
 
 // <ANCHOR NAME="Tables:motivation">
@@ -282,38 +264,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // You can read data from a table column with the "get" functions
 // in the classes
-// <linkto class="ROScalarColumn:description">ROScalarColumn&lt;T&gt;</linkto>
+// <linkto class="ScalarColumn:description">ScalarColumn&lt;T&gt;</linkto>
 // and
-// <linkto class="ROArrayColumn:description">ROArrayColumn&lt;T&gt;</linkto>.
+// <linkto class="ArrayColumn:description">ArrayColumn&lt;T&gt;</linkto>.
 // For scalars of a standard data type (i.e. Bool, uChar, Int, Short,
 // uShort, uInt, float, double, Complex, DComplex and String) you could
 // instead use 
-// <linkto class="ROTableColumn">ROTableColumn::getScalar(...)</linkto> or
-// <linkto class="ROTableColumn">ROTableColumn::asXXX(...)</linkto>.
+// <linkto class="TableColumn">TableColumn::getScalar(...)</linkto> or
+// <linkto class="TableColumn">TableColumn::asXXX(...)</linkto>.
 // These functions offer an extra: they do automatic data type promotion;
 // so that you can, for example, get a double value from a float column.
 //
-// These "get" functions are used in the same way as the simple"put"
+// These "get" functions are used in the same way as the simple "put"
 // functions described in the previous section.
 // <p>
 // <linkto class="ScalarColumn:description">ScalarColumn&lt;T&gt;</linkto>
-// is derived from ROScalarColumn&lt;T&gt;, and
-// therefore has the same "get" functions. However, if a
-// ScalarColumn&lt;T&gt; object is constructed for a non-writable column,
-// an exception is thrown. Only ROScalarColumn&lt;T&gt; objects can be
-// constructed for nonwritable columns.
+// can be constructed for a non-writable column. However, an exception
+// is thrown if the put function is used for it.
 // The same is true for
 // <linkto class="ArrayColumn:description">ArrayColumn&lt;T&gt;</linkto> and
 // <linkto class="TableColumn:description">TableColumn</linkto>.
 // <p>
 // A typical program could look like:
 // <srcblock>
-// #include <tables/Tables/Table.h>
-// #include <tables/Tables/ScalarColumn.h>
-// #include <tables/Tables/ArrayColumn.h>
-// #include <casa/Arrays/Vector.h>
-// #include <casa/Arrays/Slicer.h>
-// #include <casa/Arrays/ArrayMath.h>
+// #include <casacore/tables/Tables/Table.h>
+// #include <casacore/tables/Tables/ScalarColumn.h>
+// #include <casacore/tables/Tables/ArrayColumn.h>
+// #include <casacore/casa/Arrays/Vector.h>
+// #include <casacore/casa/Arrays/Slicer.h>
+// #include <casacore/casa/Arrays/ArrayMath.h>
 // #include <iostream>
 // 
 // main()
@@ -323,8 +302,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //     // Construct the various column objects.
 //     // Their data type has to match the data type in the table description.
-//     ROScalarColumn<Int> acCol (tab, "ac");
-//     ROArrayColumn<Float> arr2Col (tab, "arr2");
+//     ScalarColumn<Int> acCol (tab, "ac");
+//     ArrayColumn<Float> arr2Col (tab, "arr2");
 //
 //     // Loop through all rows in the table.
 //     uInt nrrow = tab.nrow();
@@ -381,14 +360,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // in that section. Other sections discuss the access to the table.
 //
 // <srcblock>
-// #include <tables/Tables/TableDesc.h>
-// #include <tables/Tables/SetupNewTab.h>
-// #include <tables/Tables/Table.h>
-// #include <tables/Tables/ScaColDesc.h>
-// #include <tables/Tables/ScaRecordColDesc.h>
-// #include <tables/Tables/ArrColDesc.h>
-// #include <tables/Tables/StandardStMan.h>
-// #include <tables/Tables/IncrementalStMan.h>
+// #include <casacore/tables/Tables/TableDesc.h>
+// #include <casacore/tables/Tables/SetupNewTab.h>
+// #include <casacore/tables/Tables/Table.h>
+// #include <casacore/tables/Tables/ScaColDesc.h>
+// #include <casacore/tables/Tables/ScaRecordColDesc.h>
+// #include <casacore/tables/Tables/ArrColDesc.h>
+// #include <casacore/tables/Tables/StandardStMan.h>
+// #include <casacore/tables/Tables/IncrementalStMan.h>
 // 
 // main()
 // {
@@ -471,16 +450,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // A typical program could look like:
 // <srcblock>
-// #include <tables/Tables/TableDesc.h>
-// #include <tables/Tables/SetupNewTab.h>
-// #include <tables/Tables/Table.h>
-// #include <tables/Tables/ScaColDesc.h>
-// #include <tables/Tables/ArrColDesc.h>
-// #include <tables/Tables/ScalarColumn.h>
-// #include <tables/Tables/ArrayColumn.h>
-// #include <casa/Arrays/Vector.h>
-// #include <casa/Arrays/Slicer.h>
-// #include <casa/Arrays/ArrayMath.h>
+// #include <casacore/tables/Tables/TableDesc.h>
+// #include <casacore/tables/Tables/SetupNewTab.h>
+// #include <casacore/tables/Tables/Table.h>
+// #include <casacore/tables/Tables/ScaColDesc.h>
+// #include <casacore/tables/Tables/ArrColDesc.h>
+// #include <casacore/tables/Tables/ScalarColumn.h>
+// #include <casacore/tables/Tables/ArrayColumn.h>
+// #include <casacore/casa/Arrays/Vector.h>
+// #include <casacore/casa/Arrays/Slicer.h>
+// #include <casacore/casa/Arrays/ArrayMath.h>
 // #include <iostream>
 // 
 // main()
@@ -570,7 +549,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   Copy values from another column to this column.<BR>
 //   These functions have the advantage that the
 //   data type of the input and/or output column can be unknown.
-//   The generic (RO)TableColumn objects can be used for this purpose.
+//   The generic TableColumn objects can be used for this purpose.
 //   The put(Column) function checks the data types and, if possible,
 //   converts them. If the conversion is not possible, it throws an
 //   exception.
@@ -598,7 +577,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     <linkto class="ArrayColumn">ArrayColumn::putColumn(...)</linkto>
 //     are less generic and therefore potentially more efficient.
 //     The most efficient variants are the ones taking a
-//     ROScalar/ArrayColumn&lt;T&gt;, because they require no data type
+//     Scalar/ArrayColumn&lt;T&gt;, because they require no data type
 //     conversion.
 //   </ul>
 // </ol>
@@ -677,7 +656,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // otherwise an exception is thrown.
 // In the following example we select all rows with RA>10:
 // <srcblock>
-//    #include <tables/Tables/ExprNode.h>
+//    #include <casacore/tables/Tables/ExprNode.h>
 //    Table table ("Table.name");
 //    Table result = table (table.col("RA") > 10);
 // </srcblock>
@@ -853,12 +832,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // possible to add a constant to a table vector. This has the effect
 // that the underlying column gets changed.
 //
-// You can use the templated classes
-// <linkto class="ROTableVector:description">ROTableVector</linkto> and
-// <linkto class="TableVector:description">TableVector</linkto> and
-// to define a table vector (readonly and read/write, respectively) for
-// a scalar column. Columns containing arrays or tables are not supported.
-// The data type of the (RO)TableVector object must match the
+// You can use the templated class
+// <linkto class="TableVector:description">TableVector</linkto>
+// to make a scalar column appear as a (table) vector.
+// Columns containing arrays or tables are not supported.
+// The data type of the TableVector object must match the
 // data type of the column.
 // A table vector can also hold a normal vector so that (temporary)
 // results of table vector operations can be handled.
@@ -867,13 +845,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // store the result in a temporary table vector.
 // <srcblock>
 //    // Create a table vector for column COL1.
-//    // It has to be a ROTableVector, because the table is opened
-//    // as readonly.
+//    // Note that if the table is readonly, putting data in the table vector
+//    // results in an exception.
 //    Table tab ("Table.data");
-//    ROTableVector<Int> tabvec(tab, "COL1");
-//    // Multiply it by a constant.
-//    // The result has to be stored in a TableVector,
-//    // since a ROTableVector cannot be written to.
+//    TableVector<Int> tabvec(tab, "COL1");
+//    // Multiply it by a constant. Result is kept in a Vector in memory.
 //    TableVector<Int> temp = 2 * tabvec;
 // </srcblock>
 //
@@ -950,13 +926,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // mentioned classes.
 //
 // <srcblock>
-// #include <tables/Tables/TableDesc.h>
-// #include <tables/Tables/ScaColDesc.h>
-// #include <tables/Tables/ArrColDesc.h>
+// #include <casacore/tables/Tables/TableDesc.h>
+// #include <casacore/tables/Tables/ScaColDesc.h>
+// #include <casacore/tables/Tables/ArrColDesc.h>
 // #include <aips/Tables/ScaRecordTabDesc.h>
-// #include <tables/Tables/TableRecord.h>
-// #include <casa/Arrays/IPosition.h>
-// #include <casa/Arrays/Vector.h>
+// #include <casacore/tables/Tables/TableRecord.h>
+// #include <casacore/casa/Arrays/IPosition.h>
+// #include <casacore/casa/Arrays/Vector.h>
 //
 // main()
 // {
@@ -1060,7 +1036,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <ANCHOR NAME="Tables:storage managers">
 // <h3>Storage Managers</h3></ANCHOR>
 //
-// Several storage managers are currently supported.
+// Storage managers are used to store the data contained in the column cells.
+// At table construction time the binding of columns to storage managers is done.
+// <br>Each storage manager uses one or more files (usually called table.fi_xxx
+// where i is a sequence number and _xxx is some kind of extension).
+// Typically several file are used to store the data of the columns of a table.
+// <br>In order to reduce the number of files (and to support large block sizes),
+// it is possible to have a single container file (a MultiFile) containing all
+// data files used by the storage managers. Such a file is called table.mf.
+// Note that the program <em>lsmf</em> can be used to see which
+// files are contained in a MultiFile. The program <em>tomf</em> can
+// convert the files in a MultiFile to regular files.
+// <br>At table creation time it is decided if a MultiFile will be used. It
+// can be done by means of the StorageOption object given to the SetupNewTable
+// constructor and/or by the aipsrc variables:
+// <ul>
+//  <li> <src>table.storage.option</src> which can have the value
+//       'multifile', 'sepfile' (meaning separate files), or 'default'.
+//       Currently the default is to use separate files.
+//  <li> <src>table.storage.blocksize</src> defines the block size to be
+//       used by a MultiFile. If 0 is given, the file system's block size
+//       will be used.
+// </ul>
+// About all standard storage managers support the MultiFile.
+// The exception is StManAipsIO, because it is hardly ever used.
+//
+// Several storage managers exist, each with its own storage characteristics.
 // The default and preferred storage manager is <src>StandardStMan</src>.
 // Other storage managers should only be used if they pay off in
 // file space (like <src>IncrementalStMan</src> for slowly varying data)
@@ -1416,6 +1417,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  <dt> TableLock::UserNoReadLocking
 //  <dd> is similar to UserLocking. However, similarly to AutoNoReadLocking
 //       no lock is needed to read the table.
+//  <dt> TableLock::NoLocking
+//  <dd> does not use table locking. It is the responsibility of the
+//       user to ensure that no concurrent access is done on the same
+//       bucket or tile in a storage manager, otherwise a table might
+//       get corrupted.
+//       <br>This mode is always used if Casacore is built with
+//       -DAIPS_TABLE_NOLOCKING.
 // </dl>
 // Synchronization of the processes accessing the same table is done
 // by means of the lock file. When a lock is released, the storage
@@ -1689,12 +1697,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //       to separate them, otherwise tiles containing FLAG also contain DATA making the
 //       tiles much bigger, thus more expensive to access.
 // </ol>
+//
+// <ANCHOR NAME="Tables:iotracing">
+// <h4>IO Tracing</h4></ANCHOR>
+//
+// Several forms of tracing can be done to see how the Table I/O performs.
+// <ul>
+//  <li> On Linux/UNIX systems the <src>strace</src> command can be used to
+//       collect trace information about the physical IO.
+//  <li> The function <src>showCacheStatistics</src> in class
+//       TiledStManAccessor can be used to show the number of actual reads
+//       and writes and the percentage of cache hits.
+//  <li> The software has some options to trace the operations done on
+//       tables. It is possible to specify the columns and/or the operations
+//       to be traced. The following <src>aipsrc</src> variables can be used.
+//   <ul>
+//    <li> <src>table.trace.filename</src> specifies the file to write the
+//         trace output to. If not given or empty, no tracing will be done.
+//         The file name can contain environment variables or a tilde.
+//    <li> <src>table.trace.operation</src> specifies the operations to be
+//         traced. It is a string containing s, r, and/or w where
+//         s means tracing RefTable construction (selection/sort),
+//         r means column reads, and w means column writes.
+//         If empty, only the high level table operations (open, create, close)
+//         will be traced.
+//    <li> <src>table.trace.columntype</src> specifies the types of columns to
+//         be traced. It is a string containing the characters s, a, and/or r.
+//         s means all scalar columns, a all array columns, and r all record
+//         columns. If empty and if <src>table.trace.column</src> is empty,
+//         its default value is a.
+//    <li> <src>table.trace.column</src> specifies names of columns to be
+//         traced. Its value can be one or more glob-like patterns separated
+//         by commas without any whitespace. The default is empty.
+//         For example:
+// <srcblock>
+//    table.trace.column: *DATA,FLAG,WEIGHT*
+// </srcblock>
+//         to trace all DATA, the FLAG, and all WEIGHT columns.
+//   </ul>
+//       The trace output is a text file with the following columns
+//       separated by a space.
+//   <ul>
+//    <li> The UTC time the trace line was written (with msec accuracy).
+//    <li> The operation: n(ew), o(pen), c(lose), t(able), r(ead), w(rite),
+//         s(election/sort/iter), p(rojection).
+//         t means an arbitrary table operation as given in the name column.
+//    <li> The table-id (as t=i) given at table creation (new) or open.
+//    <li> The table name, column name, or table operation
+//         (as <src>*oper*</src>).
+//         <src>*reftable*</src> means that the operation is on a RefTable
+//         (thus result of selection, sort, projection, or iteration).
+//    <li> The row or rows to access (* means all rows).
+//         Multiple rows are given as a series of ranges like s:e:i,s:e:i,...
+//         where e and i are only given if applicable (default i is 1).
+//         Note that e is inclusive and defaults to s.
+//    <li> The optional array shape to access (none means scalar).
+//         In case multiple rows are accessed, the last shape value is the
+//         number of rows.
+//    <li> The optional slice of the array in each row as [start][end][stride].
+//   </ul>
+//       Shape, start, end, and stride are given in Fortran-order as
+//       [n1,n2,...].
+// </ul>
 
+// <ANCHOR NAME="Tables:applications">
+// <h4>Applications to inspect/manipulate a table</h4></ANCHOR>
+// <ul>
+//  <li><em>showtable</em> shows the structure of a table. It can show:
+//   <ul>
+//    <li> the columns and their format (optionally sorted on name)
+//    <li> the data managers used to store the column data
+//    <li> the table and/or column keywords and their values
+//    <li> recursively the same info of the subtables
+//   </ul>
+//  <li><em>showtablelock</em> if a table is locked or opened and by
+//      which process.
+//  <li><em>lsmf</em> shows the virtual files contained in a MultiFile.
+//  <li><em>tomf</em> copies the given files to a MultiFile.
+//  <li><em>taql</em> can be used to query a table using the
+//       <a href="../notes/199.html">Table Query Language</a> (TaQL).
+// </ul>
+//
 // </synopsis>
 // </module>
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,22 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasures.h 20675 2009-07-10 05:54:49Z Malte.Marquarding $
+//# $Id: TableMeasures.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MEASURES_TABLEMEASURES_H
 #define MEASURES_TABLEMEASURES_H
 
-#include <measures/TableMeasures/ArrayMeasColumn.h>
-#include <measures/TableMeasures/ArrayQuantColumn.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <measures/TableMeasures/TableMeasDesc.h>
-#include <measures/TableMeasures/TableMeasOffsetDesc.h>
-#include <measures/TableMeasures/TableMeasRefDesc.h>
-#include <measures/TableMeasures/TableMeasValueDesc.h>
-#include <measures/TableMeasures/TableQuantumDesc.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/TableMeasures/ArrayMeasColumn.h>
+#include <casacore/measures/TableMeasures/ArrayQuantColumn.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/measures/TableMeasures/TableMeasDesc.h>
+#include <casacore/measures/TableMeasures/TableMeasOffsetDesc.h>
+#include <casacore/measures/TableMeasures/TableMeasRefDesc.h>
+#include <casacore/measures/TableMeasures/TableMeasValueDesc.h>
+#include <casacore/measures/TableMeasures/TableQuantumDesc.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module> 
 
@@ -62,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // The TableMeasures system exists to provide a way of creating (defining)
 // Measure and Quantum Table columns thus enabling the direct storage of 
-// Quanta and Measures in Aips++ Tables. 
+// Quanta and Measures in Casacore Tables. 
 // <p>
 // Defining Quantum and Measure columns is a once only operation (for each
 // column).  It can be seen as an extension to the existing Column Descriptor 
@@ -73,12 +74,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <p>
 // Once defined, Measure and Quantum column objects are used to access a
 // column for reading and writing of Measures and Quanta.  For Quantum
-// column objects see the classes 
-// <linkto><class=ROScalarQuantColumn>ScalarQuantColumn</linkto> and
-// <linkto><class=ROArrayQuantColumn>ArrayQuantColumn</linkto>.  For
+// column objects see the class
+// <linkto><class=ScalarQuantColumn>ScalarQuantColumn</linkto> and
+// <linkto><class=ArrayQuantColumn>ArrayQuantColumn</linkto>.  For
 // Measure column objects see 
-// <linkto><class=ROScalarMeasColumn>ScalarMeasColumn</linkto> and
-// <linkto><class=ROArrayMeasColumn>ArrayMeasColumn</linkto>.
+// <linkto><class=ScalarMeasColumn>ScalarMeasColumn</linkto> and
+// <linkto><class=ArrayMeasColumn>ArrayMeasColumn</linkto>.
 //
 // <h3>Conversions</h3>
 // The classes accessing the data use the underlying
@@ -130,7 +131,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 
 // <motivation>
-// The standard Aips++ Table system does not directly support Quantum and
+// The standard Casacore Table system does not directly support Quantum and
 // Measure columns.  These classes overcome this limitation.
 // </motivation>
 
@@ -140,6 +141,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

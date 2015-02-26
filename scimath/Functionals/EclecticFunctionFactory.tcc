@@ -24,12 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: EclecticFunctionFactory.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
-#include <scimath/Functionals/EclecticFunctionFactory.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Containers/Record.h>
+//# $Id: EclecticFunctionFactory.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#ifndef SCIMATH_ECLECTICFUNCTIONFACTORY_TCC
+#define SCIMATH_ECLECTICFUNCTIONFACTORY_TCC
+#include <casacore/scimath/Functionals/EclecticFunctionFactory.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Containers/Record.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 EclecticFunctionFactory<T>::EclecticFunctionFactory() :
@@ -81,5 +84,7 @@ void EclecticFunctionFactory<T>::addFactory(const String& type,
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

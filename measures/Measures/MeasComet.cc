@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasComet.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MeasComet.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MeasComet.h>
-#include <measures/Measures/MeasIERS.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/MVRadialVelocity.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/System/Aipsrc.h>
-#include <casa/BasicMath/Math.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/System/Aipsrc.h>
-#include <casa/OS/Path.h>
+#include <casacore/measures/Measures/MeasComet.h>
+#include <casacore/measures/Measures/MeasIERS.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/MVRadialVelocity.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/OS/Path.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 MeasComet::MeasComet() :
@@ -252,30 +252,26 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
       topo_p = MVPosition(Quantity(kws.asDouble("GeoDist"), "km"),
 			  Quantity(kws.asDouble("GeoLong"), "deg"),
 			  Quantity(kws.asDouble("GeoLat"), "deg"));
-      if(kws.isDefined("posrefsys")){
+      if (kws.isDefined("posrefsys")) {
 	String prs = kws.asString("posrefsys");
 	prs.upcase();
 	if(prs.contains("J2000")){
 	  mtype_p = MDirection::J2000;
-	}
-	else if(prs.contains("B1950")){
+	}else if(prs.contains("B1950")){
 	  mtype_p = MDirection::B1950;	
-	}
-	else if(prs.contains("APP")){
+	}else if(prs.contains("APP")){
 	  mtype_p = MDirection::APP;
-	}
-	else if(prs.contains("ICRS")){
+	}else if(prs.contains("ICRS")){
 	  mtype_p = MDirection::ICRS;
-	}
-	else if(prs.contains("TOPO")){
+	}else if(prs.contains("TOPO")){
 	  mtype_p = MDirection::TOPO;
+	}else{
+	  os << LogIO::SEVERE
+             << "Unrecognized position reference frame (posrefsys): "
+	     << kws.asString("posrefsys")
+             << " - possible are J2000, B1950, APP, ICRS, TOPO" << LogIO::POST;
 	}
-	else{
-	  os << LogIO::SEVERE << "Unrecognized position reference frame (posrefsys): "
-	     << kws.asString("posrefsys") << " - possible are J2000, B1950, APP, ICRS, TOPO" << LogIO::POST;
-	}
-      }
-      else if (kws.asDouble("GeoDist") != 0.0){
+      } else if (kws.asDouble("GeoDist") != 0.0){
 	mtype_p = MDirection::TOPO;
       }
 	  
@@ -424,5 +420,5 @@ Bool MeasComet::fillMeas(Double utf) const {
   return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

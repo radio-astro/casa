@@ -1,4 +1,4 @@
-//# ImageUtilities2.cc:  Implement templates functions
+//# ImageUtilities2.tcc:  Implement templates functions
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,35 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageUtilities2.tcc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: ImageUtilities2.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef IMAGES_IMAGEUTILITIES2_TCC
+#define IMAGES_IMAGEUTILITIES2_TCC
 //
 
-#include <images/Images/ImageUtilities.h>
+#include <casacore/images/Images/ImageUtilities.h>
 
-#include <casa/Arrays/MaskedArray.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <casa/Exceptions/Error.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/ImageOpener.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/RebinImage.h>
-#include <images/Images/SubImage.h>
-#include <images/Images/TempImage.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <lattices/Lattices/TempLattice.h>
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <lattices/Lattices/MaskedLatticeIterator.h>
-//#include <components/SpectralComponents/SpectralElement.h>
-#include <casa/System/ProgressMeter.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Utilities/Assert.h>
-#include <tables/LogTables/NewFile.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/ImageOpener.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Images/TempImage.h>
+#include <casacore/images/Images/RebinImage.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/lattices/Lattices/TempLattice.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/tables/LogTables/NewFile.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <typename T> void ImageUtilities::addDegenerateAxes(
 	LogIO& os, PtrHolder<ImageInterface<T> >& outImage,
@@ -125,16 +123,18 @@ template <typename T> void ImageUtilities::addDegenerateAxes(
 }
 
 
-template <typename T, typename U> void ImageUtilities::copyMiscellaneous(
-	ImageInterface<T>& out, const ImageInterface<U>& in,
-	const Bool copyImageInfo
-) {
+template <typename T, typename U> 
+void ImageUtilities::copyMiscellaneous (ImageInterface<T>& out,
+                                        const ImageInterface<U>& in,
+                                        Bool copyImageInfo)
+{
     out.setMiscInfo(in.miscInfo());
     if (copyImageInfo) {
-    	out.setImageInfo(in.imageInfo());
+        out.setImageInfo(in.imageInfo());
     }
     out.setUnits(in.units());
     out.appendLog(in.logger());
+    copyAttributes (out.attrHandler(True), in.roAttrHandler());
 }
 
 
@@ -212,7 +212,6 @@ void ImageUtilities::bin (MaskedArray<T>& out, Coordinate& coordOut,
    }
 }
 
-
 template <typename T, typename U> void ImageUtilities::copyMask (
 	ImageInterface<T>& out,
 	const ImageInterface<U>& in,
@@ -275,15 +274,6 @@ template <typename T> void ImageUtilities::openImage(
 	);
 }
 
-template <typename T>
-std::tr1::shared_ptr<ImageInterface<T> > ImageUtilities::openImage(
-	const String& fileName
-) {
-	ImageInterface<T>* p = 0;
-	ImageUtilities::openImage(p, fileName);
-	return std::tr1::shared_ptr<ImageInterface<T> >(p);
-}
-
 template <typename T> void ImageUtilities::openImage(
 	PtrHolder<ImageInterface<T> >& image,
 	const String& fileName
@@ -293,6 +283,24 @@ template <typename T> void ImageUtilities::openImage(
    image.set(p);
 }
 
+template <typename T>
+#if defined(AIPS_CXX11)
+std::shared_ptr<ImageInterface<T> > ImageUtilities::openImage
+#else
+std::tr1::shared_ptr<ImageInterface<T> > ImageUtilities::openImage
+#endif
+(const String& fileName)
+{
+   ImageInterface<T>* p = 0;
+   ImageUtilities::openImage(p, fileName);
+#if defined(AIPS_CXX11)
+   return std::shared_ptr<ImageInterface<T> >(p);
+#else
+   return std::tr1::shared_ptr<ImageInterface<T> >(p);
+#endif
+}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

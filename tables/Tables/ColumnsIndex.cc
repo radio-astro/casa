@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnsIndex.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnsIndex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableLocker.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Utilities/Sort.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableLocker.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ColumnsIndex::ColumnsIndex (const Table& table, const String& columnName,
 			    Compare* compareFunction, Bool noSort)
@@ -169,7 +169,7 @@ void ColumnsIndex::deleteObjects()
 }
 
 void ColumnsIndex::addColumnToDesc (RecordDesc& description,
-				    const ROTableColumn& column)
+				    const TableColumn& column)
 {
   const ColumnDesc& columnDesc = column.columnDesc();
   DataType dataType = columnDesc.dataType();
@@ -195,7 +195,7 @@ void ColumnsIndex::create (const Table& table,
   uInt nrfields = columnNames.nelements();
   for (uInt i=0; i<nrfields; i++) {
     addColumnToDesc (description,
-		     ROTableColumn (itsTable, columnNames(i)));
+		     TableColumn (itsTable, columnNames(i)));
   }
   makeObjects (description);
   readData();
@@ -326,7 +326,7 @@ void ColumnsIndex::readData()
     {
       Vector<Bool>* vecptr = (Vector<Bool>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Bool>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Bool>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -336,7 +336,7 @@ void ColumnsIndex::readData()
     {
       Vector<uChar>* vecptr = (Vector<uChar>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<uChar>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<uChar>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -346,7 +346,7 @@ void ColumnsIndex::readData()
     {
       Vector<Short>* vecptr = (Vector<Short>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Short>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Short>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -356,7 +356,7 @@ void ColumnsIndex::readData()
     {
       Vector<Int>* vecptr = (Vector<Int>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Int>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Int>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -366,7 +366,7 @@ void ColumnsIndex::readData()
     {
       Vector<uInt>* vecptr = (Vector<uInt>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<uInt>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<uInt>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -376,7 +376,7 @@ void ColumnsIndex::readData()
     {
       Vector<Float>* vecptr = (Vector<Float>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Float>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Float>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -386,7 +386,7 @@ void ColumnsIndex::readData()
     {
       Vector<Double>* vecptr = (Vector<Double>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Double>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Double>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -396,7 +396,7 @@ void ColumnsIndex::readData()
     {
       Vector<Complex>* vecptr = (Vector<Complex>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<Complex>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<Complex>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -406,7 +406,7 @@ void ColumnsIndex::readData()
     {
       Vector<DComplex>* vecptr = (Vector<DComplex>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<DComplex>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<DComplex>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -416,7 +416,7 @@ void ColumnsIndex::readData()
     {
       Vector<String>* vecptr = (Vector<String>*)itsDataVectors[i];
       if (itsColumnChanged[i]) {
-	ROScalarColumn<String>(itsTable, name).getColumn (*vecptr, True);
+	ScalarColumn<String>(itsTable, name).getColumn (*vecptr, True);
       }
       itsData[i] = vecptr->getStorage (deleteIt);
       sort.sortKey (itsData[i], desc.type(i));
@@ -749,4 +749,4 @@ void ColumnsIndex::copyKey (Block<void*> fields, const Record& key)
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

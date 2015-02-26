@@ -24,15 +24,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LinearFit.tcc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: LinearFit.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_LINEARFIT_TCC
+#define SCIMATH_LINEARFIT_TCC
 
 //# Includes
-#include <scimath/Fitting/LinearFit.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <scimath/Mathematics/AutoDiffIO.h>
-#include <scimath/Functionals/Function.h>
+#include <casacore/scimath/Fitting/LinearFit.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/scimath/Mathematics/AutoDiffIO.h>
+#include <casacore/scimath/Functionals/Function.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constants
 
@@ -88,5 +91,7 @@ fitIt(Vector<typename FunctionTraits<T>::BaseType> &sol,
   return solved_p;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

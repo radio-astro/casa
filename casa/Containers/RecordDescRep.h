@@ -24,21 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordDescRep.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordDescRep.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_RECORDDESCREP_H
 #define CASA_RECORDDESCREP_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class RecordDesc;
@@ -347,6 +347,6 @@ inline const String& RecordDescRep::tableDescName (Int whichField) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

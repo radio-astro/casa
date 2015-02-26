@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Gaussian1D.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: Gaussian1D.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_GAUSSIAN1D_TCC
+#define SCIMATH_GAUSSIAN1D_TCC
 
 //# Includes
-#include <scimath/Functionals/Gaussian1D.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Gaussian1D.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -42,5 +45,7 @@ T Gaussian1D<T>::eval(typename Function1D<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

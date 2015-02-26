@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.h 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: Directory.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_DIRECTORY_H
 #define CASA_DIRECTORY_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/OS/Path.h>
-#include <casa/OS/File.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/File.h>
    
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Vector;
 class Regex;
@@ -255,6 +255,6 @@ inline uInt Directory::freeSpaceInMB() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

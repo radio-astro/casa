@@ -23,30 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CountedPtr2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: CountedPtr2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 void throw_Null_CountedPtr_dereference_error() {
   throw (AipsError("CountedPtr: null dereference error"));
 }
 
-// Leave a tag to allow manual verification of build setting
-
-#if defined (CASA_THREAD_NEUTRAL)
-    String CasaThreadNeutral = "CasaThreadNeutral:YES";
-#else
-    String CasaThreadNeutral = "CasaThreadNeutral:NO";
-#endif // defined (CASA_THREAD_NEUTRAL)
-
-#if defined (USE_SHARED_PTR)
-
-#warning "****** Using shared pointer implementation in CountedPtr."
-
-#endif
-
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -1,4 +1,4 @@
-//# ImageFITS2Converter.cc : non-templated FITS<->aips++ image conversion 
+//# ImageFITS2Converter.cc : non-templated FITS<->Casacore image conversion 
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,53 +24,55 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 21104 2011-07-15 08:06:21Z gervandiepen $
+//# $Id: ImageFITS2Converter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/ImageFITSConverter.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/FITSQualityImage.h>
-#include <images/Images/SubImage.h>
-#include <lattices/Lattices/MaskedLatticeIterator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/FITSTable.h>
-#include <fits/FITS/hdu.h>
-#include <fits/FITS/FITSDateUtil.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <fits/FITS/FITSHistoryUtil.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/QualityCoordinate.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/ObsInfo.h>
+#include <casacore/images/Images/ImageFITSConverter.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/images/Images/FITSQualityImage.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/lattices/Lattices/MaskedLatticeIterator.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/FITSTable.h>
+#include <casacore/fits/FITS/BinTable.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/fits/FITS/FITSDateUtil.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/fits/FITS/FITSHistoryUtil.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/QualityCoordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Quanta/MVTime.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Quanta/MVTime.h>
 
-#include <casa/OS/File.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
-#include <casa/OS/Directory.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/SymLink.h>
+#include <casacore/casa/OS/Directory.h>
 
-#include <casa/Utilities/Assert.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/System/ProgressMeter.h>
-#include <casa/version.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/System/ProgressMeter.h>
+#include <casacore/casa/version.h>
 
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iomanip.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 const String ImageFITSConverter::CASAMBM = "casambm";
 
@@ -257,7 +259,7 @@ Bool ImageFITSConverter::FITSToImage(
 	      success = False;
 	    }
 	  }
-	  catch(AipsError x){
+	  catch(const AipsError& x){
 	    if(whichHDU>=0){
 	      throw(x);
 	    }
@@ -273,17 +275,17 @@ Bool ImageFITSConverter::FITSToImage(
 	    while(theHDU<numHDU){
 	      os << LogIO::WARN << "This HDU (" << theHDU << ") did not contain a legible image." << LogIO::POST;  
 	      theHDU++;
-	      while (theHDU<numHDU && (infile.err() ||
-				       infile.rectype() != FITS::HDURecord ||
-				       (infile.hdutype() != FITS::PrimaryArrayHDU &&
-					infile.hdutype() != FITS::ImageExtensionHDU))
-		     ) {
-		infile.skip_hdu();
-		theHDU++;
-	      }
-	      os << LogIO::WARN << "Next candidate image HDU is #" << theHDU 
-		 << "\n (note: use the whichhdu parameter to address HDUs directly)" << LogIO::POST;  
-	      break;
+              while (theHDU<numHDU && (infile.err() ||
+                                       infile.rectype() != FITS::HDURecord ||
+                                       (infile.hdutype() != FITS::PrimaryArrayHDU &&
+                                        infile.hdutype() != FITS::ImageExtensionHDU))
+                   ) {
+                infile.skip_hdu();
+                theHDU++;
+              }
+              os << LogIO::WARN << "Next candidate image HDU is #" << theHDU 
+                   << "\n (note: use the whichhdu parameter to address HDUs directly)" << LogIO::POST;  
+              break;
 	    }
 	  }
 	}
@@ -583,14 +585,14 @@ void ImageFITSConverter::readBeamsTable(
 				<< LogIO::NORMAL << "Loading multiple beams from BEAMS table"
 				<< LogIO::POST;
 	uInt nChan = beamTable.keywordSet().asuInt("NCHAN");
-	uInt	 nPol = beamTable.keywordSet().asuInt("NPOL");
+	uInt nPol  = beamTable.keywordSet().asuInt("NPOL");
 
 	info.setAllBeams(nChan, nPol, GaussianBeam::NULL_BEAM);
-	ROScalarColumn<Float> bmaj(beamTable, "BMAJ");
-	ROScalarColumn<Float> bmin(beamTable, "BMIN");
-	ROScalarColumn<Float> bpa(beamTable, "BPA");
-	ROScalarColumn<Int> chan(beamTable, "CHAN");
-	ROScalarColumn<Int> pol(beamTable, "POL");
+	ScalarColumn<Float> bmaj(beamTable, "BMAJ");
+	ScalarColumn<Float> bmin(beamTable, "BMIN");
+	ScalarColumn<Float> bpa(beamTable, "BPA");
+	ScalarColumn<Int> chan(beamTable, "CHAN");
+	ScalarColumn<Int> pol(beamTable, "POL");
 
 	String bmajUnit = bmaj.keywordSet().asString("TUNIT");
 	String bminUnit = bmin.keywordSet().asString("TUNIT");
@@ -620,7 +622,7 @@ Unit ImageFITSConverter::getBrightnessUnit (RecordInterface& header, LogIO& os)
 
          UnitMap::addFITS();
          if (UnitVal::check(unitString)) {
-	     // Translate units from FITS units to true aips++ units
+	     // Translate units from FITS units to true Casacore units
 	     // There is no scale factor in this translation.
              u = UnitMap::fromFITS(Unit(unitString));
          } 
@@ -962,8 +964,8 @@ Bool ImageFITSConverter::ImageToFITSOut(
 		}
 		// Make sure bscale does not come out to be zero
 
-		if (::casa::near(minPix, maxPix)) {
-			if (::casa::near(Float(0.0), maxPix)) {
+		if (::casacore::near(minPix, maxPix)) {
+			if (::casacore::near(Float(0.0), maxPix)) {
 				maxPix = 1.0;
 			} else {
 				maxPix = maxPix + 0.01*maxPix;
@@ -1472,41 +1474,40 @@ Bool ImageFITSConverter::ImageToFITSOut(
 	return True;
 }
 
-
 void ImageFITSConverter::_writeBeamsTable(
         FitsOutput *const &outfile, const ImageInfo& info
 ) {
-    // write multiple beams to a table
-    RecordDesc desc;
-    Record stringLengths; // no strings
-    Record units;
-    GaussianBeam beam = *info.getBeamSet().getBeams().begin();
-    desc.addField("BMAJ", TpFloat);
-    units.define("BMAJ", beam.getMajor().getUnit());
-    desc.addField("BMIN", TpFloat);
-    units.define("BMIN", beam.getMinor().getUnit());
-    desc.addField("BPA", TpFloat);
-    units.define("BPA", beam.getPA(True).getUnit());
-    desc.addField("CHAN", TpInt);
-    desc.addField("POL", TpInt);
-    Record extraKeywords;
-    extraKeywords.define("EXTNAME", "BEAMS");
-    extraKeywords.define("EXTVER", 1);
-    extraKeywords.define("XTENSION", "BINTABLE");
-    extraKeywords.setComment("XTENSION", "Binary extension");
-    extraKeywords.define("NCHAN", (Int)info.getBeamSet().nchan());
-    extraKeywords.define("NPOL", (Int)info.getBeamSet().nstokes());
-    FITSTableWriter writer(
-        outfile, desc, stringLengths, info.getBeamSet().nelements(),
-        extraKeywords, units, False
-    );
-    RecordFieldPtr<Float> bmaj(writer.row(), "BMAJ");
-    RecordFieldPtr<Float> bmin(writer.row(), "BMIN");
-    RecordFieldPtr<Float> bpa(writer.row(), "BPA");
-    RecordFieldPtr<Int> chan(writer.row(), "CHAN");
-    RecordFieldPtr<Int> pol(writer.row(), "POL");
-    const ImageBeamSet& beamSet = info.getBeamSet();
-    IPosition axisPath(2, 0, 1);
+	// write multiple beams to a table
+	RecordDesc desc;
+	Record stringLengths; // no strings
+	Record units;
+	GaussianBeam beam = *info.getBeamSet().getBeams().begin();
+	desc.addField("BMAJ", TpFloat);
+	units.define("BMAJ", beam.getMajor().getUnit());
+	desc.addField("BMIN", TpFloat);
+	units.define("BMIN", beam.getMinor().getUnit());
+	desc.addField("BPA", TpFloat);
+	units.define("BPA", beam.getPA(True).getUnit());
+	desc.addField("CHAN", TpInt);
+	desc.addField("POL", TpInt);
+	Record extraKeywords;
+	extraKeywords.define("EXTNAME", "BEAMS");
+	extraKeywords.define("EXTVER", 1);
+	extraKeywords.define("XTENSION", "BINTABLE");
+	extraKeywords.setComment("XTENSION", "Binary extension");
+	extraKeywords.define("NCHAN", (Int)info.getBeamSet().nchan());
+	extraKeywords.define("NPOL", (Int)info.getBeamSet().nstokes());
+	FITSTableWriter writer(
+		outfile, desc, stringLengths, info.getBeamSet().nelements(),
+		extraKeywords, units, False
+	);
+	RecordFieldPtr<Float> bmaj(writer.row(), "BMAJ");
+	RecordFieldPtr<Float> bmin(writer.row(), "BMIN");
+	RecordFieldPtr<Float> bpa(writer.row(), "BPA");
+	RecordFieldPtr<Int> chan(writer.row(), "CHAN");
+	RecordFieldPtr<Int> pol(writer.row(), "POL");
+	const ImageBeamSet& beamSet = info.getBeamSet();
+	IPosition axisPath(2, 0, 1);
         ArrayPositionIterator iter(beamSet.shape(), axisPath, False);
         while (! iter.pastEnd()) {
           const IPosition& pos = iter.pos();
@@ -1518,9 +1519,8 @@ void ImageFITSConverter::_writeBeamsTable(
           *bpa = beam.getPA("deg", True);
           writer.write();
           iter.next();
-    }
+	}
 }
-
 
 Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 		LogIO &os,
@@ -1678,5 +1678,5 @@ Bool ImageFITSConverter::openFitsOutput(String &error, FitsOutput *(&fitsOut),
 	}
 	return True;
 }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

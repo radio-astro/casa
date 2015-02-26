@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aips.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: aips.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #if defined(AIPS_DEBUG)
 Bool aips_debug_on = True;
@@ -35,5 +35,5 @@ Bool aips_debug_on = True;
 Bool aips_debug_on = False;
 #endif
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

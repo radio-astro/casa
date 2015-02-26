@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tChebyshev.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: tChebyshev.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
 #ifdef DEBUG 
 #define DIAGNOSTICS
 #endif
 
-#include <scimath/Functionals/Chebyshev.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicMath/Math.h>
-#include <scimath/Mathematics/AutoDiffA.h>
-#include <scimath/Mathematics/AutoDiffMath.h>
-#include <scimath/Mathematics/AutoDiffIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions.h>
-#include <casa/iostream.h>
+#include <casacore/scimath/Functionals/Chebyshev.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/scimath/Mathematics/AutoDiffA.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/scimath/Mathematics/AutoDiffIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
     Chebyshev<Double> cheb;
 

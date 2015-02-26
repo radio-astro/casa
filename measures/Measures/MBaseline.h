@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MBaseline.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MBaseline.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MBASELINE_H
 #define MEASURES_MBASELINE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MeasBase.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MeasRef.h>
-#include <casa/Quanta/MVBaseline.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MeasBase.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/casa/Quanta/MVBaseline.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MBaseline;
@@ -248,6 +248,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,28 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCorrGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSCorrGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSCorrGram; grammar for corr command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSCorrGram.h>
-#include <ms/MeasurementSets/MSCorrParse.h> // routines used by bison actions
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSCorrGram.h>
+#include <casacore/ms/MeasurementSets/MSCorrParse.h> // routines used by bison actions
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSCorrGram.ycc"                  // flex output
-#include "MSCorrGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSCorrGram.ycc"                  // bison output
+#include "MSCorrGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSCorrGramwrap()
@@ -52,7 +53,7 @@ int MSCorrGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
 static const char*           strpMSCorrGram = 0;
@@ -140,4 +141,4 @@ String msCorrGramRemoveQuotes (const String& in)
     return out;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

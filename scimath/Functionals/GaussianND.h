@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GaussianND.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: GaussianND.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_GAUSSIANND_H
 #define SCIMATH_GAUSSIANND_H
 
-#include <casa/aips.h>
-#include <scimath/Functionals/GaussianNDParam.h>
-#include <scimath/Functionals/Function.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/GaussianNDParam.h>
+#include <casacore/scimath/Functionals/Function.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -237,9 +237,9 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/GaussianND.tcc>
+#include <casacore/scimath/Functionals/GaussianND.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

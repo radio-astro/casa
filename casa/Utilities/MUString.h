@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MUString.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MUString.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MUSTRING_H
 #define CASA_MUSTRING_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Block.h>
 
 //# Forward Declarations
-#include <casa/iosfwd.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/iosfwd.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class Regex;
 template <class T> class Vector; 
@@ -418,6 +418,6 @@ ostream &operator<<(ostream &os, const MUString &in);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

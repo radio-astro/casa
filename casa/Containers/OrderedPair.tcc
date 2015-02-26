@@ -23,11 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: OrderedPair.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: OrderedPair.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/OrderedPair.h>
+#ifndef CASA_ORDEREDPAIR_TCC
+#define CASA_ORDEREDPAIR_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/OrderedPair.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class K, class V> 
 OrderedPair<K,V>::OrderedPair()
@@ -55,5 +58,7 @@ OrderedPair<K,V>::operator= (const OrderedPair<K,V>& that)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,28 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSImage.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tFITSImage.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Containers/Record.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/OS/Path.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-#include <images/Images/FITSImage.h>
-#include <images/Images/ImageInterface.h>
-#include <images/Images/ImageFITSConverter.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/images/Images/FITSImage.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/ImageFITSConverter.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
               const Array<Float>& fits, const Array<Bool>& fitsMask, Float tol=1.0e-5);
 
@@ -117,7 +117,7 @@ try {
    String error;
    ImageInterface<Float>* pTempImage = 0;
    String imageName;
-   if (!ImageFITSConverter::FITSToImage(pTempImage, error,
+   if (!ImageFITSConverter::FITSToImage(pTempImage, error, 
                                         imageName, in, 0)) {
       os << error << LogIO::EXCEPTION;
    }

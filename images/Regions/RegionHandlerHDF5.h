@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerHDF5.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: RegionHandlerHDF5.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_REGIONHANDLERHDF5_H
 #define IMAGES_REGIONHANDLERHDF5_H
 
 //# Includes
-#include <images/Regions/RegionHandler.h>
-#include <casa/HDF5/HDF5File.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/RegionHandler.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 // <summary>
@@ -194,6 +195,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

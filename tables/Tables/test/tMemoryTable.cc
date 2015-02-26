@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMemoryTable.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: tMemoryTable.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/VirtualTaQLColumn.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Containers/Record.h>
-#include <casa/OS/Path.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/DataMan/VirtualTaQLColumn.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for the MemoryTable class.
 // </summary>
@@ -206,55 +206,55 @@ void info (const Table& aTable)
     switch (cdesc.dataType()) {
     case TpInt:
       if (cdesc.isArray()) {
-	ROArrayColumn<Int> ad(aTable,cdesc.name());
+	ArrayColumn<Int> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<Int> aa(aTable,cdesc.name());
+	ScalarColumn<Int> aa(aTable,cdesc.name());
 	cout << aa.getColumn() << endl;
       }
       break;
     case TpBool:
       if (cdesc.isArray()) {
-	ROArrayColumn<Bool> ad(aTable,cdesc.name());
+	ArrayColumn<Bool> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<Bool> ab(aTable,cdesc.name());
+	ScalarColumn<Bool> ab(aTable,cdesc.name());
 	cout << ab.getColumn() << endl;
       }
       break;
     case TpDComplex:
       if (cdesc.isArray()) {
-	ROArrayColumn<DComplex> ad(aTable,cdesc.name());
+	ArrayColumn<DComplex> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<DComplex> ac(aTable,cdesc.name());
+	ScalarColumn<DComplex> ac(aTable,cdesc.name());
 	cout << ac.getColumn() << endl;
       }
       break;
     case TpFloat:
       if (cdesc.isArray()) {
-	ROArrayColumn<float> ad(aTable,cdesc.name());
+	ArrayColumn<float> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<float> ad(aTable,cdesc.name());
+	ScalarColumn<float> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       }
       break;
     case TpDouble:
       if (cdesc.isArray()) {
-	ROArrayColumn<double> ad(aTable,cdesc.name());
+	ArrayColumn<double> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<double> ad(aTable,cdesc.name());
+	ScalarColumn<double> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       }
       break;
     case TpString:
       if (cdesc.isArray()) {
-	ROArrayColumn<String> ad(aTable,cdesc.name());
+	ArrayColumn<String> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       } else {
-	ROScalarColumn<String> ad(aTable,cdesc.name());
+	ScalarColumn<String> ad(aTable,cdesc.name());
 	cout << ad.getColumn() << endl;
       }
       break;

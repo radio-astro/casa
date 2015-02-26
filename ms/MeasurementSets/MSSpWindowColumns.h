@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpWindowColumns.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSSpWindowColumns.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSPWINDOWCOLUMNS_H
 #define MS_MSSPWINDOWCOLUMNS_H
 
-#include <casa/aips.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MCFrequency.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <measures/TableMeasures/ArrayMeasColumn.h>
-#include <measures/TableMeasures/ArrayQuantColumn.h>
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/MeasFrame.h>
-#include <ms/MeasurementSets/MSDopplerColumns.h>
-#include <ms/MeasurementSets/MSSourceColumns.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MCFrequency.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/measures/TableMeasures/ArrayMeasColumn.h>
+#include <casacore/measures/TableMeasures/ArrayQuantColumn.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/ms/MeasurementSets/MSDopplerColumns.h>
+#include <casacore/ms/MeasurementSets/MSSourceColumns.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MSSpectralWindow;
 
@@ -443,6 +443,6 @@ private:
   ScalarQuantColumn<Double> totalBandwidthQuant_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

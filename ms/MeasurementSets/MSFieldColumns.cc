@@ -23,27 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFieldColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFieldColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <measures/Measures/MeasRef.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/Quantum.h>
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Path.h>
-#include <casa/OS/Directory.h>
-#include <casa/iomanip.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSFieldColumns::ROMSFieldColumns(const MSField& msField):
   measCometsPath_p(),
@@ -611,5 +611,5 @@ void MSFieldColumns::setDirectionRef(MDirection::Types ref) {
 // compile-command: "gmake MSFieldColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

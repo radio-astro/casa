@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutputAstron.h 21105 2011-07-15 08:07:31Z gervandiepen $
+//# $Id: MSFitsOutputAstron.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFITSOUTPUTASTRON_H
 #define MS_MSFITSOUTPUTASTRON_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -133,6 +133,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Combinatorics.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Combinatorics.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 //   
 
-#include <scimath/Mathematics/Combinatorics.h>
+#include <casacore/scimath/Mathematics/Combinatorics.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
     // Initialize factorial with first 2 values (0! and 1! are both 1).
     Vector<uInt> Combinatorics::_factorialCache(2,1);
@@ -62,5 +62,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
         return factorial(n)/(factorial(k)*factorial(n-k));
     }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

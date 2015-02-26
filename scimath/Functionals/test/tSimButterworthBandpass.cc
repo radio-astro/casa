@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSimButterworthBandpass.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tSimButterworthBandpass.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
 #define DIAGNOSTICS
 #ifdef DEBUG 
 #define DIAGNOSTICS
 #endif
 
-#include <scimath/Functionals/SimButterworthBandpass.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Containers/Record.h>
+#include <casacore/scimath/Functionals/SimButterworthBandpass.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Containers/Record.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
     SimButterworthBandpass<Double> butt(1,1,-1.0,1.0,0.0,1.0);
 

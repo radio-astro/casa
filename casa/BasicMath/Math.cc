@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.cc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: Math.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 // Changes for SUN CC port - abs changed to fabs for double and float args.
 
@@ -36,7 +36,7 @@
 #include <ieeefp.h>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Bool near(uInt val1, uInt val2, Double tol) {
   if (tol <= 0) {
@@ -307,5 +307,5 @@ Double roundDouble(Double val, Double ndigit) {
   return sign*round(temp)*pow(10.0, i);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

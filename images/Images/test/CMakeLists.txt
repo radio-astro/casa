@@ -1,11 +1,12 @@
 set (datafiles
-imageStats.fits
-imagetestimage.fits
-jyperpixelimage.fits
-mexinputtest.fits
-qualityimage.fits
-test_image.fits
-test_image.im/table.dat
+qualityimage.fits          # for tFITSQualityImage
+mexinputtest.fits         # for tFITSImgParser
+imageStats.fits             # for tImageStatistics
+#ngc5921.clean.fits       # for tImageMetaData
+#ngc5921.clean.no_freq.no_stokes.fits     # for tImageMetaData
+#jyperpixelimage.fits     # for tImageMetaData
+imagetestimage.fits     # for tFITSImage
+test_image.im/table.dat    # for dImageStatistics. image2fits
 test_image.im/table.f0
 test_image.im/table.f0_TSM0
 test_image.im/table.info
@@ -20,22 +21,25 @@ foreach (file ${datafiles})
     configure_file (${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file} COPYONLY)
 endforeach (file)
 
+
 set (tests
 dImageInterface
 dImageStatistics
 dImageSummary
 dPagedImage
 tExtendImage
-tFITSImage
-tFITSImgParser
 tFITSErrorImage
 tFITSExtImage
 tFITSExtImageII
+tFITSImage
+tFITSImgParser
 tFITSQualityImage
 tHDF5Image
+tImageAttrHandler
 tImageBeamSet
 tImageConcat
 tImageEmpty
+tImageExpr
 tImageExpr2Gram
 tImageExpr3Gram
 tImageExprGram
@@ -47,8 +51,8 @@ tImageStatistics2
 tImageUtilities
 tLELSpectralIndex
 tMIRIADImage
-tPagedImage2
 tPagedImage
+tPagedImage2
 tRebinImage
 tSubImage
 tTempImage

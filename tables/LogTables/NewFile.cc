@@ -24,23 +24,23 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NewFile.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: NewFile.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/LogTables/NewFile.h>
-#include <casa/System/Choice.h>
+#include <casacore/tables/LogTables/NewFile.h>
+#include <casacore/casa/System/Choice.h>
 
-#include <casa/OS/File.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/SymLink.h>
-#include <casa/Arrays/Vector.h>
-#include <tables/Tables/Table.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/SymLink.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/tables/Tables/Table.h>
 
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 NewFile::NewFile(Bool deleteIfExists) : delete_p(deleteIfExists)
 {
@@ -148,5 +148,5 @@ Bool NewFile::valueOK(const String &value, String &error) const
     return retval;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

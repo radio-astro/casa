@@ -1,4 +1,4 @@
-//# MatrixMath.cc: The AIPS++ linear algebra functions
+//# MatrixMath.cc: The Casacore linear algebra functions
 //# Copyright (C) 1994,1995,1996,1998,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixMathLA.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: MatrixMathLA.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Mathematics/MatrixMathLA.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Utilities/Assert.h>
+#ifndef SCIMATH_MATRIXMATHLA_TCC
+#define SCIMATH_MATRIXMATHLA_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Mathematics/MatrixMathLA.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Utilities/Assert.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 Matrix<T> invert(const Matrix<T> &in){
@@ -229,5 +232,7 @@ template<class T> void CholeskySolve(Matrix<T> &A, Vector<T> &diag,
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

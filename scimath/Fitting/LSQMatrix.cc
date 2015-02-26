@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQMatrix.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LSQMatrix.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <scimath/Fitting/LSQMatrix.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Fitting/LSQMatrix.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 LSQMatrix::LSQMatrix() 
@@ -144,5 +144,5 @@ void LSQMatrix::mulDiagonal(uInt n, Double fac) {
     return x;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

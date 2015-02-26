@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasData.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MeasData.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASDATA_H
 #define MEASURES_MEASDATA_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class RotMatrix;
@@ -157,6 +157,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

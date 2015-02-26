@@ -23,13 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFits.h 20690 2009-07-14 03:12:10Z Malte.Marquarding $
+//# $Id: MSFits.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MSFITS_MSFITS_H
 #define MSFITS_MSFITS_H
 
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -46,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <synopsis>
-// The MeasurementSets module handles storage of telescope data in AIPS++
+// The MeasurementSets module handles storage of telescope data in Casacore
 // tables and defines functions to access the data.
 // The MSFits module is an extra layer on top of MeasurementSets to convert
 // a MeasurementSet to and from FITS.
@@ -69,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

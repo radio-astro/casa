@@ -22,16 +22,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_FITTOHALFSTATISTICS_H
 #define SCIMATH_FITTOHALFSTATISTICS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <scimath/Mathematics/ConstrainedRangeStatistics.h>
-#include <scimath/Mathematics/FitToHalfStatisticsData.h>
+#include <casacore/scimath/Mathematics/ConstrainedRangeStatistics.h>
+#include <casacore/scimath/Mathematics/FitToHalfStatisticsData.h>
 
-namespace casa {
+namespace casacore {
 
 // Class to calculate statistics using the so-called fit to half algorithm. In this
 // algorithm, a center value is specified, and only points greater or equal or less or equal
@@ -245,7 +246,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/FitToHalfStatistics.tcc>
+#include <casacore/scimath/Mathematics/FitToHalfStatistics.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

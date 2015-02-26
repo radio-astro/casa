@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketBase.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_BUCKETBASE_H
 #define CASA_BUCKETBASE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/IO/BucketFile.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/BucketFile.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // Abstract base class for Bucket classes.
@@ -132,6 +132,6 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

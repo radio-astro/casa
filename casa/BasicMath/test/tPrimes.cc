@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPrimes.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: tPrimes.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/BasicMath/Primes.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/BasicMath/Primes.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Test the non-cache functions.
 
 void primesNoncacheTests (uInt number, Bool shouldBePrime, uInt numberOfFactors)

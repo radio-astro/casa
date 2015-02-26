@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionTools.h 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: MSSelectionTools.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTIONTOOLS_H
 #define MS_MSSELECTIONTOOLS_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/ms/MeasurementSets/MSSelection.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   Vector<Int> set_intersection(const Vector<Int>& v1, const Vector<Int>& v2);
   Vector<Int> set_union(const Vector<Int>& v1, const Vector<Int>& v2);

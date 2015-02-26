@@ -29,15 +29,15 @@
 #ifndef COORDINATES_FITSCOORDINATEUTIL_H
 #define COORDINATES_FITSCOORDINATEUTIL_H
 
-#include <casa/aips.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
-#include <coordinates/Coordinates/ObsInfo.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
 
 
-class wcsprm;
+struct wcsprm;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class Coordinate;
 class CoordinateSystem;
@@ -144,10 +144,9 @@ public:
     static Vector<String> cTypeFromDirection (Bool& isNCP, const Projection& proj,
                                               const Vector<String>& axisNames,
                                               Double refLat, Bool printError);
-
-    static Vector<String> cTypeFromDirection (
-    	const Projection& proj, const Vector<String>& axisNames, Bool printError
-    );
+    static Vector<String> cTypeFromDirection (const Projection& proj,
+                                              const Vector<String>& axisNames,
+                                              Bool printError);
 
 private:
     // Generate actual FITS keywords
@@ -156,8 +155,8 @@ private:
                                Vector<Double>& crval,
                                Vector<Double>& crpix,
                                Vector<Double>& cdelt,
-                               //   Vector<Double>& crota,
-			       //   Vector<Double>& projp,
+                               //#   Vector<Double>& crota,
+			       //#   Vector<Double>& projp,
                                Vector<Double>& pvi_ma,
                                Vector<String>& ctype,
                                Vector<String>& cunit,
@@ -224,7 +223,7 @@ private:
     void fixCoordinate(Coordinate& c, LogIO& os) const;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

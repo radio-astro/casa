@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTable2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSTable2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #if defined(__GNUG__) && (__GNUG__ == 2) && (__GNUC_MINOR__ < 91)
-#include <ms/MeasurementSets/MSTable.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSTable.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
  
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #define MSTableStatics(ColEnum,KeyEnum) \
 SimpleOrderedMap<Int, String> MSTable<ColEnum,KeyEnum>::columnMap_p(""); \
@@ -64,6 +64,6 @@ MSTableStatics(MSWeather::PredefinedColumns,MSWeather::PredefinedKeywords)
 MSTableStatics(MSDoppler::PredefinedColumns,MSDoppler::PredefinedKeywords)
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

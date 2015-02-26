@@ -23,19 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayIteratorSTL.cc 20668 2009-07-10 01:14:57Z Malte.Marquarding $
+//# $Id: tArrayIteratorSTL.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 #include <vector>
 #include <iterator>
 
-using namespace casa;
+// If an argument is given, some performance tests will also be done.
+
+using namespace casacore;
 
 void testSub (Array<Int>& arr1, const IPosition& blc,
 	      const IPosition& trc, const IPosition& inc)
@@ -132,9 +134,13 @@ void testIt()
   }
 }
 
-int main()
+int main (int argc, char* [])
 {
   testIt();
+  if (argc < 2) {
+    return 0;
+  }
+  // Do performance tests.
   const Int nelem = 1000000;
   const Int nstep = 100;
   //const Int nstep = 1;
@@ -500,4 +506,5 @@ int main()
     }
     tim.show("write small enditer   ");
   }
+  return 0;
 }

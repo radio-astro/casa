@@ -23,18 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSMask.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: FITSQualityMask.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <images/Images/FITSQualityMask.h>
+#include <casacore/images/Images/FITSQualityMask.h>
+#include <casacore/images/Images/FITSImage.h>
+#include <casacore/images/Images/FITSErrorImage.h>
 
-#include <images/Images/FITSImage.h>
-#include <images/Images/FITSErrorImage.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FITSQualityMask::FITSQualityMask(FITSImage *fitsData, FITSErrorImage *fitsError)
 : itsFitsData(fitsData),
@@ -281,5 +280,5 @@ Bool FITSQualityMask::filterZeroNaN(Bool *pMask, const Float *pData, const uInt 
 	return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,32 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: MSStateGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSStateGram; grammar for field command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSStateColumns.h>
-#include <ms/MeasurementSets/MSStateGram.h>
-#include <ms/MeasurementSets/MSStateParse.h>
-#include <ms/MeasurementSets/MSStateIndex.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSStateColumns.h>
+#include <casacore/ms/MeasurementSets/MSStateGram.h>
+#include <casacore/ms/MeasurementSets/MSStateParse.h>
+#include <casacore/ms/MeasurementSets/MSStateIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSStateGram.ycc"                  // flex output
-#include "MSStateGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSStateGram.ycc"                  // bison output
+#include "MSStateGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSStateGramwrap()
@@ -56,7 +57,7 @@ int MSStateGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
 static const char*           strpMSStateGram = 0;
@@ -148,4 +149,4 @@ void MSStateGramerror (const char*)
 		      String(MSStateGramtext) + "'"));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

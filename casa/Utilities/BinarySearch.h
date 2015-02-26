@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: BinarySearch.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BinarySearch.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_BINARYSEARCH_H
 #define CASA_BINARYSEARCH_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Binary search a sorted, linear, data structure.
@@ -151,9 +151,9 @@ template<class Container, class ElType>
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/BinarySearch.tcc>
+#include <casacore/casa/Utilities/BinarySearch.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

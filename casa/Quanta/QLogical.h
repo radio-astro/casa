@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QLogical.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QLogical.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_QLOGICAL_H
 #define CASA_QLOGICAL_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Arrays/LogiArrayFwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Arrays/LogiArrayFwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -211,9 +211,9 @@ Bool QMakeBool(const LogicalArray &val);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Quanta/QLogical.tcc>
+#include <casacore/casa/Quanta/QLogical.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

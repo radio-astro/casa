@@ -23,49 +23,49 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CoordinateUtil.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: CoordinateUtil.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/Projection.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCDoppler.h>
-#include <measures/Measures/MCFrequency.h>
-#include <measures/Measures/MCEpoch.h>
-#include <measures/Measures/MCPosition.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MeasConvert.h>
-#include <casa/Quanta/MVEpoch.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/OS/Time.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/QC.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/MVEpoch.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/Projection.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MCDoppler.h>
+#include <casacore/measures/Measures/MCFrequency.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/measures/Measures/MCPosition.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/casa/Quanta/MVEpoch.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/QC.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/MVEpoch.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { // begin namespace casa
+namespace casacore { // begin namespace casa
 
 
 void CoordinateUtil::addDirAxes(CoordinateSystem & coords){
@@ -224,7 +224,7 @@ uInt CoordinateUtil::addAxes (
 			nExtra += 2;
 		}
 		else if(!silent){
-			ThrowCc("Image already contains a DirectionCoordinate");
+			throw AipsError("Image already contains a DirectionCoordinate");
 		}
 	}
 	if (spectral) {
@@ -233,7 +233,7 @@ uInt CoordinateUtil::addAxes (
 			nExtra++;
 		}
 		else if(!silent){
-			ThrowCc("Image already contains a SpectralCoordinate");
+			throw AipsError("Image already contains a SpectralCoordinate");
 		}
 	}
 	if (! stokes.empty()) {
@@ -246,7 +246,7 @@ uInt CoordinateUtil::addAxes (
 			nExtra++;
 		}
 		else if(!silent){
-			ThrowCc("Image already contains a StokesCoordinate");
+			throw AipsError("Image already contains a StokesCoordinate");
 		}
 	}
 	if (linear) {
@@ -269,7 +269,7 @@ uInt CoordinateUtil::addAxes (
 			nExtra++;
 		}
 		else if(!silent){
-			ThrowCc("Image already contains a LinearCoordinate");
+			throw AipsError("Image already contains a LinearCoordinate");
 		}
 	}
 	if (tabular) {
@@ -281,7 +281,7 @@ uInt CoordinateUtil::addAxes (
 			nExtra++;
 		}
 		else if(!silent){
-			ThrowCc("Image already contains a TabularCoordinate");
+			throw AipsError("Image already contains a TabularCoordinate");
 		}
 	}
 	ThrowIf(
@@ -588,7 +588,6 @@ CoordinateSystem CoordinateUtil::makeCoordinateSystem(const IPosition& shape,
 //
    uInt nDone = 0;
    if (n>=4) {
-      Bool ok = True;
       nDone = 4;
       if (doneStokes) {
          CoordinateUtil::addFreqAxis(csys);
@@ -601,7 +600,6 @@ CoordinateSystem CoordinateUtil::makeCoordinateSystem(const IPosition& shape,
                CoordinateUtil::addFreqAxis(csys);
                doneFreq = True;
             } else {
-               ok = False;
                nDone = 3;
             }
          } 
@@ -1426,6 +1424,178 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
 }
    
 
+Bool CoordinateUtil::isSky (LogIO& os, const CoordinateSystem& cSys) {   
+    const uInt nPixelAxes = cSys.nPixelAxes();
+
+    if (nPixelAxes != 2) {
+        os << "The CoordinateSystem is not two dimensional. It has " 
+            << nPixelAxes << " dimensions" << LogIO::EXCEPTION;
+    }  
+    Bool xIsLong = True;
+    Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
+    if (dirCoordinate==-1) {
+        os << "There is no DirectionCoordinate (sky) in this CoordinateSystem" << LogIO::EXCEPTION;
+    }
+    Vector<Int> dirPixelAxes = cSys.pixelAxes(dirCoordinate);
+    if (dirPixelAxes(0) == -1 || dirPixelAxes(1) == -1) {
+        os << "The pixel axes for the DirectionCoordinate have been removed" << LogIO::EXCEPTION;
+    }
+ 
+    // Which axis is longitude and which is latitude
+
+    if(dirPixelAxes(0)==0 && dirPixelAxes(1)==1) {
+        xIsLong = True;
+    } else {
+        xIsLong = False;
+    }
+    return xIsLong;
+} 
+
+Bool CoordinateUtil::setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
+                                       const String& unit,
+                                       const Double& value)
+{
+   static Unit HZ(String("GHz"));
+   static Unit M(String("m"));
+//
+
+
+   Int after = -1;
+   Int iS = cSys.findCoordinate(Coordinate::SPECTRAL, after);
+   if (iS>=0) {
+      SpectralCoordinate sCoord = cSys.spectralCoordinate(iS);
+
+// Check for weird value
+
+      if (value < 0.0){
+      	errorMsg = String("The rest frequency/wavelength is below zero!");
+      	return False;
+      }
+      else if (isNaN(value)){
+      	errorMsg = String("The rest frequency/wavelength is NaN!");
+      	return False;
+      }
+      else if (isInf(value)){
+      	errorMsg = String("The rest frequency/wavelength is InF!");
+      	return False;
+      }
+
+// Get the old rest frequency and unit
+
+      Double oldValue = sCoord.restFrequency();
+      Unit   oldUnit  = Unit(sCoord.worldAxisUnits()(0));
+
+// Check whether something has to be done
+
+      if (!unit.empty() && (value != oldValue) && (value>0 || oldValue>0)){
+
+// Make sure the unit conforms with m or Hz
+      	Unit t(unit);
+         if (t != HZ && t!= M) {
+            errorMsg = String("Illegal spectral unit");
+            return False;
+         }
+
+// Compute the rest frequency in the given units from the input
+
+      	Quantity newQuant=Quantity(value, Unit(unit));
+			MVFrequency newFreq = MVFrequency(newQuant);
+			Double newValue = newFreq.get(oldUnit).getValue();
+
+// Exclude weird numbers
+
+	      if (isNaN(newValue)){
+	      	errorMsg = String("The new rest frequency/wavelength is NaN!");
+	      	return False;
+	      }
+	      else if (isInf(newValue)){
+	      	errorMsg = String("The new rest frequency/wavelength is InF!");
+	      	return False;
+	      }
+
+// Set the new rest frequency
+
+	      if (!sCoord.setRestFrequency(newValue)) {
+				errorMsg = sCoord.errorMessage();
+				return False;
+			}
+      }
+
+// Replace in CS
+
+      cSys.replaceCoordinate(sCoord, iS);
+   }
+   return True;
+}
+
+Bool CoordinateUtil::setSpectralConversion (String& errorMsg, 
+                                            CoordinateSystem& cSys,
+                                            const String frequencySystem)
+{
+// Set conversion type.  This lets the SC convert to other frequency systems  
+// We need some extra info from the ObsInfo for the Spectral conversion layer
+// We avoid trying to fish it out unless we have to, because it might
+// not be present and we would get unecessary failures.
+             
+   Int after = -1;
+   Int iS = cSys.findCoordinate(Coordinate::SPECTRAL, after);
+   if (iS>=0) {
+      SpectralCoordinate coord(cSys.spectralCoordinate(iS));
+      MFrequency::Types oldctype;
+      MEpoch epoch;
+      MPosition position;
+      MDirection direction;
+      coord.getReferenceConversion(oldctype, epoch, position, direction);
+//
+      MFrequency::Types ctype;
+      if (!MFrequency::getType(ctype, frequencySystem)) {
+         errorMsg = String("invalid frequency system");
+         return False;
+      }
+// 
+      if (ctype!=oldctype) {
+
+// We also need a direction. Use the reference if we can find one
+
+         after = -1;
+         Int cD = cSys.findCoordinate(Coordinate::DIRECTION, after);
+         if (cD<0) {
+            errorMsg = String("No DirectionCoordinate; cannot set Spectral conversion layer");
+            return False;
+         } else {
+            const DirectionCoordinate& dCoord = cSys.directionCoordinate(cD);
+            const Vector<Double>& rp = dCoord.referencePixel();
+            if (!dCoord.toWorld(direction, rp)) {
+               errorMsg = dCoord.errorMessage();
+               return False;
+            }   
+       
+// Now find the epoch and position
+
+            const ObsInfo& oi = cSys.obsInfo();
+            String telescope = oi.telescope();
+            if (!MeasTable::Observatory(position, telescope)) {
+               errorMsg = String("Cannot find observatory; cannot set Spectral conversion layer");
+               return False;
+            } else {
+               epoch = oi.obsDate();
+               Double t = epoch.getValue().get();
+               if (t <= 0.0) {
+                  errorMsg = String("Epoch not valid; cannot set Spectral conversion layer");
+                  return False;
+               } else {
+                  coord.setReferenceConversion(ctype, epoch, position, direction);
+               }
+            }
+         }
+      }
+// 
+      cSys.replaceCoordinate(coord, iS);
+   }
+   return True;
+} 
+
+
 Bool CoordinateUtil::setDirectionUnit (CoordinateSystem& csys, const String& unit, Int which)
 {
 
@@ -1608,7 +1778,6 @@ Bool CoordinateUtil::dropRemovedAxes (
 // There should be no axes in common in these two lists because
 // when a world axis is removed, so is its pixel axis
 
-   Bool ok; 
    Double replacement;
 
    if (k>0) {
@@ -1617,7 +1786,7 @@ Bool CoordinateUtil::dropRemovedAxes (
 
       for (uInt i=0; i<removeWorld.nelements(); i++) {
          replacement = csysIn.referenceValue()(removeWorld[i]);
-         ok = csysOut.removeWorldAxis(removeWorld[i], replacement);
+         csysOut.removeWorldAxis(removeWorld[i], replacement);
       }
    }
    if (l>0) {
@@ -1626,7 +1795,7 @@ Bool CoordinateUtil::dropRemovedAxes (
 //
       for (uInt i=0; i<removePixel.nelements(); i++) {
          replacement = csysIn.referencePixel()(removePixel[i]);
-         ok = csysOut.removePixelAxis(removePixel[i], replacement);
+         csysOut.removePixelAxis(removePixel[i], replacement);
       }
    }
    if (preserveAxesOrder) {
@@ -1798,4 +1967,4 @@ String CoordinateUtil::axisLabel (const Coordinate& coord, uInt axis,
   return base;
 }
 
-} // end namespace casa
+} // end namespace casacore

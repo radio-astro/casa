@@ -23,24 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Coordinates.h 20691 2009-07-14 03:13:54Z Malte.Marquarding $
+//# $Id: Coordinates.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef COORDINATES_COORDINATES_H
 #define COORDINATES_COORDINATES_H
 
 //# Module includes
-#include <coordinates/Coordinates/Coordinate.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/LinearXform.h>
-#include <coordinates/Coordinates/Projection.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/aips.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearXform.h>
+#include <casacore/coordinates/Coordinates/Projection.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -61,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //        (Mark Calabretta's implementation of these conventions) will be
 //        revised for the new designs.  At that time, the Coordinate classes
 //        may also be revised.
-//   <li> Generic AIPS++ classes; especially those in the 
+//   <li> Generic Casacore classes; especially those in the 
 //        <linkto module=Arrays>Arrays</linkto> module.
 //   <li> The <linkto module=Measures>Measures</linkto> module.
 // </prerequisite>
@@ -274,6 +275,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

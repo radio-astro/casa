@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBinTable.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tBinTable.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
 
-#include <fits/FITS/BinTable.h>
-#include <fits/FITS/fitsio.h>
-#include <casa/Inputs/Input.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/File.h>
+#include <casacore/fits/FITS/BinTable.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/File.h>
 
-#include <casa/iostream.h>
-#include <casa/stdio.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/stdio.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main(int argc, const char* argv[])
 {
     try {

@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseSinkSource.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BaseSinkSource.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/IO/BaseSinkSource.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/BaseSinkSource.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 BaseSinkSource::BaseSinkSource()
 : itsTypeIO ()
@@ -94,5 +94,5 @@ Bool BaseSinkSource::isNull() const
     return itsTypeIO.null();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

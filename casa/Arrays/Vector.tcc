@@ -23,22 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector.tcc 21179 2012-03-07 10:28:37Z gervandiepen $
+//# $Id: Vector.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
+#ifndef CASA_VECTOR_TCC
+#define CASA_VECTOR_TCC
 
-#ifndef CASA_ARRAY_VECTOR_TCC
-#define CASA_ARRAY_VECTOR_TCC
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
-
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
 template<class T> Vector<T>::Vector()
   : Array<T>(IPosition(1,0))
@@ -47,7 +46,7 @@ template<class T> Vector<T>::Vector()
 }
 
 
-template<class T> Vector<T>::Vector(uInt Length)
+template<class T> Vector<T>::Vector(size_t Length)
 : Array<T>(IPosition(1, Length))
 {
     DebugAssert(ok(), ArrayError);
@@ -59,7 +58,7 @@ template<class T> Vector<T>::Vector(const IPosition& len)
     if (len.nelements() != 1) this->throwNdimVector();
 }
 
-template<class T> Vector<T>::Vector(uInt Length, const T &initialValue)
+template<class T> Vector<T>::Vector(size_t Length, const T &initialValue)
 : Array<T>(IPosition(1, Length), initialValue)
 {
     DebugAssert(ok(), ArrayError);
@@ -71,7 +70,7 @@ template<class T> Vector<T>::Vector(const IPosition& len, const T &initialValue)
     if (len.nelements() != 1) this->throwNdimVector();
 }
 
-template<class T> Vector<T>::Vector(const Block<T> &other, Int nr)
+template<class T> Vector<T>::Vector(const Block<T> &other, Int64 nr)
 : Array<T>(IPosition(1, other.nelements()))
 {
     initVector (other, nr);
@@ -90,19 +89,19 @@ template<class T> Vector<T>::Vector(const Block<T> &other)
 // <thrown>
 //    <item> ArrayError
 // </thrown>
-template<class T> void Vector<T>::initVector(const Block<T> &other, Int nr)
+template<class T> void Vector<T>::initVector(const Block<T> &other, Int64 nr)
 {
-    uInt n = nr;
+    size_t n = nr;
     if (nr <= 0) {
 	n = other.nelements();
     }
     if (n > other.nelements())
 	throw(ArrayError("Vector<T>::initVector(const Block<T> &other"
-				   ", Int nr) - nr > other.nelements()"));
+				   ", Int64 nr) - nr > other.nelements()"));
     if (this->nelements() != n) {
 	this->resize(n);
     }
-    for (uInt i=0; i < n; i++) {
+    for (size_t i=0; i < n; i++) {
 	this->begin_p[i] = other[i];
     }
     return;
@@ -165,7 +164,7 @@ template<class T> void Vector<T>::resize(const IPosition &l, Bool copyValues)
 	Array<T>::resize(l);
 	size_t minNels = std::min(this->nelements(), oldref.nelements());
 	objcopy(this->begin_p, oldref.begin_p, minNels,
-		uInt(this->inc_p(0)), uInt(oldref.inc_p(0)));
+		this->inc_p(0), oldref.inc_p(0));
     } else {
 	Array<T>::resize(l);
     }
@@ -213,7 +212,7 @@ template<class T> Vector<T> &Vector<T>::operator=(const Vector<T> &other)
 template<class T> void Vector<T>::toBlock(Block<T> & other) const
 {
     DebugAssert(ok(), ArrayError);
-    uInt vec_length = this->nelements();
+    size_t vec_length = this->nelements();
     // Make sure the block has enough space, but there is no need to copy elements
     other.resize(vec_length, True, False);
     objcopy(other.storage(), this->begin_p, this->nels_p, 1U, this->inc_p(0));
@@ -233,7 +232,7 @@ template<class T> Array<T> &Vector<T>::operator=(const Array<T> &a)
 template<class T> Vector<T> Vector<T>::operator()(const Slice &slice)
 {
     DebugAssert(ok(), ArrayError);
-    Int b, l, s;       // begin length step
+    Int64 b, l, s;       // begin length step
     if (slice.all()) {
 	b = 0;
 	l = this->length_p(0);

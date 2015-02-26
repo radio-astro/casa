@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Param.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Param.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_PARAM_H
 #define CASA_PARAM_H
 
 
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/stdlib.h>
-#include <casa/string.h>             // need things like strlen() and such
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/stdlib.h>
+#include <casacore/casa/string.h>             // need things like strlen() and such
 
 //# Forward declarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // A simple keyword/value pair with internal help Strings.
@@ -99,14 +99,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </srcblock></example>
 //
 // <motivation>
-// The Param class was an early attempt at keywords within AIPS++.  They have 
+// The Param class was an early attempt at keywords within Casacore. They have 
 // become obsolete but hang on due to their relationship with the Input class.
 // </motivation>
 //
 // <todo asof="Thu 1995/04/06 21:26:43 GMT">
 //   <li> fix the GetStringArray() function
 //   <li> convert from Block<T> to Array<T> as return values.
-//   <li> replace entirely with AIPS++ Keywords?
+//   <li> replace entirely with Casacore Keywords?
 // </todo>
 
 
@@ -243,7 +243,7 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

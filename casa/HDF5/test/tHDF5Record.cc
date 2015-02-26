@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5Record.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: tHDF5Record.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/HDF5/HDF5Record.h>
-#include <casa/HDF5/HDF5File.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/HDF5/HDF5Record.h>
+#include <casacore/casa/HDF5/HDF5Group.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-using namespace casa;
+using namespace casacore;
 
 Array<Bool> arrb()
 {
@@ -272,6 +273,11 @@ int main()
     HDF5Record::writeRecord (file, "test", rec3);
     check (file);
 
+    // Check a group exists.
+    AlwaysAssertExit (HDF5Group::exists (file, "test"));
+    // Get the group names in the file.
+    vector<String> names = HDF5Group::linkNames (file);
+    AlwaysAssertExit (names.size() == 1  &&  names[0] == "test");
     // Delete the record.
     HDF5Record::remove (file, "test");
     // Read back and check it is empty.

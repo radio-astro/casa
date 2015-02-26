@@ -22,19 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_CHAUVENETCRITERIONSTATISTICS_H
 #define SCIMATH_CHAUVENETCRITERIONSTATISTICS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <scimath/Mathematics/ConstrainedRangeStatistics.h>
+#include <casacore/scimath/Mathematics/ConstrainedRangeStatistics.h>
 
 #include <set>
 #include <vector>
 #include <utility>
 
-namespace casa {
+namespace casacore {
 
 // Class to calculate statistics using the so-called Chauvenet criterion. This method
 // iteratively calculates statistics by discarding outliers on the basis of Chauvenet's
@@ -92,7 +93,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/ChauvenetCriterionStatistics.tcc>
+#include <casacore/scimath/Mathematics/ChauvenetCriterionStatistics.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

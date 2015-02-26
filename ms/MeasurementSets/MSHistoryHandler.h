@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSHistoryHandler.h 18405 2005-02-16 00:13:07Z rrusk $
+//# $Id: MSHistoryHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 
 #ifndef MS_MSHISTORYHANDLER_H
 #define MS_MSHISTORYHANDLER_H
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSHistory.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSHistory.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MSHistoryColumns;
 class LogIO;
@@ -87,7 +88,7 @@ class MSHistoryHandler
  private: 
 
   // Prevent use of default constructor
-  MSHistoryHandler() {};
+  MSHistoryHandler() {}
 
   MSHistoryColumns *msHistCol_p;
   MSHistory  histTable_p;
@@ -96,6 +97,6 @@ class MSHistoryHandler
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

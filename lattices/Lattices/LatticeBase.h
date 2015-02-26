@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeBase.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: LatticeBase.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef LATTICES_LATTICEBASE_H
 #define LATTICES_LATTICEBASE_H
 
 
 //# Includes
-#include <lattices/Lattices/LELCoordinates.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/IO/FileLocker.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/LEL/LELCoordinates.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/IO/FileLocker.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LogIO;
@@ -86,6 +87,11 @@ public:
   // Make a copy of the derived object (reference semantics).
   virtual LatticeBase* clone() const = 0;
 
+  // Get the image type (returns name of derived class).
+  // The default implementation returns "Lattice".
+  // Note it is made pure virtual in ImageInterface.
+  virtual String imageType() const;
+
   // Get the data type of the lattice.
   virtual DataType dataType() const = 0;
 
@@ -108,6 +114,12 @@ public:
   // Is the lattice writable?
   // <br>The default implementation returns True.
   virtual Bool isWritable() const;
+
+  // Save the image in an AipsIO file with the given name.
+  // Its purpose is to make ImageConcat and ImageExpr objects
+  // persistent.
+  // <br>The default implementation throws an exception.
+  virtual void save (const String& fileName) const;
 
   // It is strongly recommended to use class
   // <linkto class=LatticeLocker>LatticeLocker</linkto> to
@@ -259,6 +271,6 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

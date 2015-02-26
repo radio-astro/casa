@@ -23,30 +23,30 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSLister.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: MSLister.cc 21545 2015-01-22 19:36:35Z gervandiepen $
 //#
-#include <casa/Quanta/MVTime.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <measures/Measures/Stokes.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSLister.h>
-#include <ms/MeasurementSets/MSSummary.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <ms/MeasurementSets/MSIter.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/MaskArrMath.h>
-#include <casa/iomanip.h>
-#include <casa/iostream.h>
-#include <casa/OS/File.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSLister.h>
+#include <casacore/ms/MeasurementSets/MSSummary.h>
+#include <casacore/ms/MeasurementSets/MSRange.h>
+#include <casacore/ms/MeasurementSets/MSIter.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/OS/File.h>
 
 #include <fstream>
 
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 // Null constructor merely sets private formatting string
@@ -54,7 +54,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 MSLister::MSLister ()
   : dashline_p(replicate('-',80)),
     mss_p()
-
 {
   pMSSel_p = 0;
 }
@@ -684,8 +683,7 @@ void MSLister::listData(const int pageRows,
       }
 
       // Convert antenna ID Vectors to antenna name Vectors
-      Int ant1Length;
-      ant1.shape(ant1Length); // Get length of ant1
+      Int ant1Length = ant1.size(); // Get length of ant1
       Vector<String> antennaNames; // Hold name for each antenna
       Vector<String> antNames1(ant1Length); // Antenna names for the ID's held in ant1
       Vector<String> antNames2(ant1Length); // Antenna names for the ID's held in ant2
@@ -1200,8 +1198,7 @@ Int MSLister::columnWidth(const Vector<String> antNames) {
 
   logStream_p << LogIO::DEBUG1 << "Begin: MSLister::columnWidth" << LogIO::POST;
 
-  Int antNamesShape;
-  antNames.shape(antNamesShape);
+  Int antNamesShape = antNames.size();
   uInt maxWidth=0;
   for (Int i = 0; i < antNamesShape; i++) {
     if (maxWidth < antNames(i).length()) maxWidth = antNames(i).length();
@@ -1275,7 +1272,7 @@ void MSLister::polarizationParse(String correlation) {
 		logStream_p << LogIO::DEBUG2 << correlation << LogIO::POST;
 		// Acquire 1 polarization selection
 		while(correlation.contains(cRegex)) {
-			parseCorrs.shape(nParseCorrs); // get size of parseCorrs
+                        nParseCorrs = parseCorrs.size(); // get size of parseCorrs
 			parseCorrs.resize(++nParseCorrs,True); // append one element to parseCorrs
 			// Store polarization in parseCorrs
 			parseCorrs(nParseCorrs - 1) = correlation.through(cRegex);
@@ -1352,5 +1349,5 @@ void MSLister::clearFlags()
 
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

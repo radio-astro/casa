@@ -23,54 +23,54 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImage.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: FITSImage.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Images/FITSImage.h>
+#include <casacore/images/Images/FITSImage.h>
 
-#include <images/Images/FITSImgParser.h>
-#include <fits/FITS/hdu.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/ImageFITSConverter.h>
-#include <images/Images/MaskSpecifier.h>
-#include <images/Images/ImageOpener.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <lattices/Lattices/TempLattice.h>
-#include <lattices/Lattices/FITSMask.h>
-#include <tables/Tables/TiledFileAccess.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Record.h>
-#include <tables/LogTables/LoggerHolder.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/OS/File.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Utilities/ValType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/FITSImgParser.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/images/Images/ImageFITSConverter.h>
+#include <casacore/images/Images/MaskSpecifier.h>
+#include <casacore/images/Images/ImageOpener.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/lattices/Lattices/TempLattice.h>
+#include <casacore/lattices/LRegions/FITSMask.h>
+#include <casacore/tables/DataMan/TiledFileAccess.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Utilities/ValType.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FITSImage::FITSImage (const String& name, uInt whichRep, uInt whichHDU)
 : ImageInterface<Float>(),
   name_p      (name),
   fullname_p  (name),
-  pTiledFile_p(0),
   pPixelMask_p(0),
   scale_p     (1.0),
   offset_p    (0.0),
   shortMagic_p (0),
+  uCharMagic_p (0),
   longMagic_p (0),
   hasBlanks_p (False),
   dataType_p  (TpOther),
@@ -89,11 +89,11 @@ FITSImage::FITSImage (const String& name, const MaskSpecifier& maskSpec, uInt wh
   name_p      (name),
   fullname_p  (name),
   maskSpec_p  (maskSpec),
-  pTiledFile_p(0),
   pPixelMask_p(0),
   scale_p     (1.0),
   offset_p    (0.0),
   shortMagic_p (0),
+  uCharMagic_p (0),
   longMagic_p (0),
   hasBlanks_p (False),
   dataType_p  (TpOther),
@@ -118,6 +118,7 @@ FITSImage::FITSImage (const FITSImage& other)
   scale_p     (other.scale_p),
   offset_p    (other.offset_p),
   shortMagic_p (other.shortMagic_p),
+  uCharMagic_p (other.uCharMagic_p),
   longMagic_p (other.longMagic_p),
   hasBlanks_p (other.hasBlanks_p),
   dataType_p  (other.dataType_p),
@@ -157,12 +158,13 @@ FITSImage& FITSImage::operator=(const FITSImage& other)
       scale_p     = other.scale_p;
       offset_p    = other.offset_p;
       shortMagic_p = other.shortMagic_p;
+      uCharMagic_p = other.uCharMagic_p;
       longMagic_p = other.longMagic_p;
       hasBlanks_p = other.hasBlanks_p;
       dataType_p  = other.dataType_p;
       fileOffset_p= other.fileOffset_p;
       isClosed_p  = other.isClosed_p;
-      filterZeroMask_p=other.filterZeroMask_p;
+      filterZeroMask_p = other.filterZeroMask_p;
       whichRep_p = other.whichRep_p;
       whichHDU_p = other.whichHDU_p;
       _hasBeamsTable = other._hasBeamsTable;
@@ -387,6 +389,9 @@ Bool FITSImage::doGetSlice(Array<Float>& buffer,
    } else if (pTiledFile_p->dataType() == TpShort) {
       pTiledFile_p->get (buffer, section, scale_p, offset_p,
 			 shortMagic_p, hasBlanks_p);
+   } else if (pTiledFile_p->dataType() == TpUChar) {
+      pTiledFile_p->get (buffer, section, scale_p, offset_p,
+			uCharMagic_p, hasBlanks_p);
    }
    return False;                            // Not a reference
 } 
@@ -438,14 +443,14 @@ Bool FITSImage::ok() const
 
 Bool FITSImage::doGetMaskSlice (Array<Bool>& buffer, const Slicer& section)
 {
-	if (!hasBlanks_p) {
-		buffer.resize (section.length());
-		buffer = True;
-		return False;
-	}
+   if (!hasBlanks_p) {
+      buffer.resize (section.length());
+      buffer = True;
+      return False;
+   }
 //
-	reopenIfNeeded();
-	return pPixelMask_p->getSlice (buffer, section);
+   reopenIfNeeded();
+   return pPixelMask_p->getSlice (buffer, section);
 }
 
 
@@ -589,14 +594,15 @@ void FITSImage::setup()
 // hasBlanks only relevant to Integer images.  Says if 'blank' value defined in header
 
    getImageAttributes(cSys, shape, imageInfo, brightnessUnit, miscInfo, 
-                      recsize, recno, dataType, scale_p, offset_p, shortMagic_p,
+                      recsize, recno, dataType, scale_p, offset_p, 
+		      uCharMagic_p, shortMagic_p,
                       longMagic_p, hasBlanks_p, fullName,  whichRep_p, whichHDU_p);
    // shape must be set before image info in cases of multiple beams
    shape_p = TiledShape (shape, TiledFileAccess::makeTileShape(shape));
-
    setMiscInfoMember (miscInfo);
 
 // set ImageInterface data
+
    setCoordsMember (cSys);
 
 // Set FITSImage data
@@ -621,11 +627,14 @@ void FITSImage::setup()
       dataType_p = TpShort;
    } else if (dataType == FITS::LONG) {
       dataType_p = TpInt;
+   } else if (dataType == FITS::BYTE) {
+      dataType_p = TpUChar;
    }
 
 // See if there is a mask specifier.  Defaults to apply mask.
 
    if (maskSpec_p.useDefault()) {
+
 // We would like to use any mask.  For 32 f.p. bit we don't know if there
 // are masked pixels (they are NaNs).  For Integer types we do know if there
 // the magic value has been set (suggests there are masked pixels) and 
@@ -638,14 +647,15 @@ void FITSImage::setup()
 
       hasBlanks_p = False;
    }
+
 // Open the image.
    open();
 
    // Finally, read any supported extensions, like a BEAMS table
    if (_hasBeamsTable) {
-	   ImageFITSConverter::readBeamsTable(imageInfo, fullName, dataType_p);
+     ImageFITSConverter::readBeamsTable(imageInfo, fullName, dataType_p);
    }
-   setImageInfo (imageInfo);
+   setImageInfoMember (imageInfo);
 }
 
 
@@ -661,27 +671,27 @@ void FITSImage::open()
                                       dataType_p, TSMOption(),
 				      writable, canonical);
 
-// Shares the pTiledFile_p pointer. Scale factors for 16bit and 32 bit integers
+// Shares the pTiledFile_p pointer. Scale factors for integers
 
+   FITSMask* fitsMask=0;
    if (hasBlanks_p) {
       if (dataType_p == TpFloat) {
-    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p));
-    	 tmpMask->setFilterZero(filterZeroMask_p);
-         pPixelMask_p = tmpMask;
+         fitsMask = new FITSMask(&(*pTiledFile_p));
       } else if (dataType_p == TpDouble) {
-    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p));
-     	 tmpMask->setFilterZero(filterZeroMask_p);
-         pPixelMask_p = tmpMask;
+         fitsMask = new FITSMask(&(*pTiledFile_p));
+      } else if (dataType_p == TpUChar) {
+         fitsMask = new FITSMask(&(*pTiledFile_p), scale_p, offset_p, 
+                                 uCharMagic_p, hasBlanks_p);
       } else if (dataType_p == TpShort) {
-    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p), scale_p, offset_p,
-    			 shortMagic_p, hasBlanks_p);
-    	 tmpMask->setFilterZero(filterZeroMask_p);
-         pPixelMask_p = tmpMask;
+         fitsMask = new FITSMask(&(*pTiledFile_p), scale_p, offset_p, 
+                                 shortMagic_p, hasBlanks_p);
       } else if (dataType_p == TpInt) {
-    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p), scale_p, offset_p,
-    			 longMagic_p, hasBlanks_p);
-    	 tmpMask->setFilterZero(filterZeroMask_p);
-         pPixelMask_p = tmpMask;
+         fitsMask = new FITSMask(&(*pTiledFile_p), scale_p, offset_p, 
+                                 longMagic_p, hasBlanks_p);
+      }
+      if (fitsMask) {
+        fitsMask->setFilterZero(filterZeroMask_p);
+        pPixelMask_p = fitsMask;
       }
    }
 
@@ -697,11 +707,11 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
                                     RecordInterface& miscInfo,
                                     Int& recordsize, Int& recordnumber, 
                                     FITS::ValueType& dataType, 
-                                    Float& scale, Float& offset, Short& shortMagic,
+                                    Float& scale, Float& offset, 
+				    uChar& uCharMagic, Short& shortMagic,
                                     Int& longMagic, Bool& hasBlanks, const String& name,
                                     uInt whichRep, uInt whichHDU)
 {
-
     LogIO os(LogOrigin("FITSImage", "getImageAttributes", WHERE));
     File fitsfile(name);
     if (!fitsfile.exists() || !fitsfile.isReadable() || !fitsfile.isRegular()) {
@@ -721,7 +731,9 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
     recordsize = infile.fitsrecsize();
 
 
+//
 // Advance to the right HDU
+//
     for (uInt i=0; i<whichHDU; i++) {
         infile.skip_hdu();
         if (infile.err()) {
@@ -735,9 +747,11 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
 // Check type
 	dataType = infile.datatype();
 	if (dataType != FITS::FLOAT &&
-		dataType != FITS::DOUBLE &&
-		dataType != FITS::SHORT &&
-		dataType != FITS::LONG) {
+	    dataType != FITS::DOUBLE &&
+	    dataType != FITS::SHORT &&
+	    dataType != FITS::LONG &&
+	    dataType != FITS::BYTE)	  
+	  {
 	   throw AipsError("FITS file " + name +
 			   " should contain float, double, short or long data");
 	}
@@ -768,32 +782,42 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
     {
     	if (dataType==FITS::FLOAT) {
     		crackHeader<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo,  scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
     	} else if (dataType==FITS::DOUBLE) {
     		crackHeader<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
     	} else if (dataType==FITS::LONG) {
     		crackHeader<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-    	} if (dataType==FITS::SHORT) {
-    		crackHeader<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    	} else if (dataType==FITS::SHORT) {
+	  crackHeader<Short>(cSys, shape, imageInfo, brightnessUnit, 
+			     miscInfo, scale, offset, uCharMagic, shortMagic, 
+			     longMagic, hasBlanks, os, infile, whichRep);
+    	} else if (dataType==FITS::BYTE) {
+	  crackHeader<uChar>(cSys, shape, imageInfo, brightnessUnit, 
+			     miscInfo, scale, offset, uCharMagic, shortMagic, 
+			     longMagic, hasBlanks, os, infile, whichRep);
     	}
     }
     else
     {
     	if (dataType==FITS::FLOAT) {
     		crackExtHeader<Float>(cSys, shape, imageInfo, brightnessUnit, miscInfo,  scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
     	} else if (dataType==FITS::DOUBLE) {
     		crackExtHeader<Double>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
     	} else if (dataType==FITS::LONG) {
     		crackExtHeader<Int>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
-    	} if (dataType==FITS::SHORT) {
-    		crackExtHeader<Short>(cSys, shape, imageInfo, brightnessUnit, miscInfo, scale,
-    				offset, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    				offset, uCharMagic, shortMagic, longMagic, hasBlanks, os, infile, whichRep);
+    	} else if (dataType==FITS::SHORT) {
+	  crackExtHeader<Short>(cSys, shape, imageInfo, brightnessUnit, 
+				miscInfo, scale, offset, uCharMagic, shortMagic, 
+				longMagic, hasBlanks, os, infile, whichRep);
+    	} else if (dataType==FITS::BYTE) {
+	  crackExtHeader<uChar>(cSys, shape, imageInfo, brightnessUnit, 
+				miscInfo, scale, offset, uCharMagic, shortMagic, 
+				longMagic, hasBlanks, os, infile, whichRep);
     	}
     }
 //  }
@@ -816,6 +840,5 @@ void FITSImage::setMaskZero(Bool filterZero)
 	filterZeroMask_p = filterZero;
 }
 
-
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

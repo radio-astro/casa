@@ -20,9 +20,9 @@ getbig.f
 grd2d.f
 grd2dwts.f
 grdde2d.f
-grdsf.f
 grdgauss.f
 grdjinc1.f
+grdsf.f
 hclean.f
 lawson.f
 maxabs.f
@@ -36,8 +36,8 @@ target_link_libraries (casa_scimath_f casa_tables ${LAPACK_LIBRARIES} ${BLAS_LIB
 
 install (
 TARGETS casa_scimath_f
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 

@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHistAcc.cc 20497 2009-01-19 02:30:07Z Malte.Marquarding $
+//# $Id: tHistAcc.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <casa/iostream.h>
-#include <casa/Arrays.h>
-#include <casa/BasicMath/Random.h>
-#include <scimath/Mathematics/StatAcc.h>
-#include <scimath/Mathematics/HistAcc.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/scimath/Mathematics/StatAcc.h>
+#include <casacore/scimath/Mathematics/HistAcc.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {
@@ -96,10 +96,9 @@ int main()
       cout << "  hmanf.getStatistics().getMean():    ";
       cout << hmanf.getStatistics().getMean() << endl;
 
-      uInt n;
       Block<uInt> binsi;
       Block<Float> valsf;
-      n = hmanf.getHistogram(binsi,valsf);
+      hmanf.getHistogram(binsi,valsf);
       cout << "  length of binsi=" << binsi.nelements() << endl; 
       cout << "  length of valsf=" << valsf.nelements() << endl; 
 

@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MDirection.cc 21169 2012-01-04 08:12:25Z gervandiepen $
+//# $Id: MDirection.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/QMath.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Register.h>
-#include <measures/Measures/MDirection.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/QMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 MDirection::MDirection() :
@@ -303,6 +304,7 @@ void MDirection::checkTypes() const {
 }
 
 void MDirection::checkMyTypes() {
+  // Multiple threads could execute this, but that is harmless.
   static Bool first(True);
   if (first) {
     first = False;
@@ -489,5 +491,5 @@ String MDirection::toString() const {
 	return output;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

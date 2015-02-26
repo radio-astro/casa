@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionError.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSSelectionError.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTIONERROR_H
 #define MS_MSSELECTIONERROR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# This header file defines the error classes thrown by the
   //# MSSelection and related classes.
@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // exceptions (but all exceptions from the MSSelection line of
   // classes).  To catch more specific MSSelection exceptions, catch
   // the derived classes.  Note that you have to catch AipsError to
-  // catch all possible exceptions thrown by all of AIPS++ modules! 
+  // catch all possible exceptions thrown by all of Casacore modules! 
   //</synopsis>
   
   class MSSelectionError : public AipsError {
@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Construct with given message.
     void changeMessage(String& message);
     void addMessage(String& message);
-    void reset() {message="";};
+    void reset() {message="";}
     MSSelectionError (const String& message,Category c=GENERAL);
     ~MSSelectionError () throw();
     Bool hasMessage;
@@ -296,6 +296,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //-------------------------------------------------------------------
   //  
   String constructMessage(const Int pos, const String& command);
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

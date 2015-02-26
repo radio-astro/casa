@@ -1,4 +1,4 @@
-//# Copyright (C) 2000,2001
+//# Copyright (C) 2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,10 +22,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/StatsDataProvider.h>
+#ifndef SCIMATH_STATSDATAPROVIDER_TCC
+#define SCIMATH_STATSDATAPROVIDER_TCC
 
-namespace casa {
+#include <casacore/scimath/Mathematics/StatsDataProvider.h>
+
+namespace casacore {
 
 template <class AccumType, class InputIterator, class MaskIterator>
 StatsDataProvider<AccumType, InputIterator, MaskIterator>::StatsDataProvider() {}
@@ -35,3 +39,5 @@ StatsDataProvider<AccumType, InputIterator, MaskIterator>::~StatsDataProvider() 
 
 }
 
+
+#endif

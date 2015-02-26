@@ -24,15 +24,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LinearFitSVD.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LinearFitSVD.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_LINEARFITSVD_H
 #define SCIMATH_LINEARFITSVD_H
 
-#include <casa/aips.h>
-#include <scimath/Fitting/LinearFit.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Fitting/LinearFit.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Linear least-squares fit using Singular Value Decomposition method. 
@@ -92,9 +92,9 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Fitting/LinearFitSVD.tcc>
+#include <casacore/scimath/Fitting/LinearFitSVD.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

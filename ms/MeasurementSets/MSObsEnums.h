@@ -24,12 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSObsEnums.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSObsEnums.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSOBSENUMS_H
 #define MS_MSOBSENUMS_H
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <use visibility=export>
 
@@ -107,6 +109,6 @@ public:
     };
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

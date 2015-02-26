@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSSelectionErrorHandler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/casa/Arrays/Vector.h>
 #include <vector>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSSelectionErrorHandler::MSSelectionErrorHandler()
     :tokenList(), messageList()
@@ -78,5 +78,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     messageList.resize(0);
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

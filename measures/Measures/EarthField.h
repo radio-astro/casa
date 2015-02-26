@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: EarthField.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: EarthField.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_EARTHFIELD_H
 #define MEASURES_EARTHFIELD_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/MVPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/MVPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -221,7 +221,7 @@ public:
 };
   
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

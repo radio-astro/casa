@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: $
+//# $Id: MSStateIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSTATEINDEX_H
 #define MS_MSSTATEINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSState.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSStateColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSState.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSStateColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -87,7 +87,7 @@ public:
   MSStateIndex(const MSState &state);
 
   // Null destructor
-  virtual ~MSStateIndex() {};
+  virtual ~MSStateIndex() {}
 
   Vector<Int> matchStateIntent(const String& name);
   Vector<Int> matchStateIntent(const Vector<String>& names);
@@ -124,7 +124,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

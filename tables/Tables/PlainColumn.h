@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PlainColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_PLAINCOLUMN_H
 #define TABLES_PLAINCOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseColumn.h>
-#include <tables/Tables/ColumnSet.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseColumn.h>
+#include <casacore/tables/Tables/ColumnSet.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableAttr;
@@ -142,6 +142,12 @@ protected:
     DataManagerColumn*  dataColPtr_p;    //# Pointer to column in data manager.
     ColumnSet*          colSetPtr_p;
     String              originalName_p;  //# Column name before any rename
+    Bool                rtraceColumn_p;  //# trace reads of the column?
+    Bool                wtraceColumn_p;  //# trace writes of the column?
+
+    // Get the trace-id of the table.
+    int traceId() const
+      { return colSetPtr_p->traceId(); }
 
     // Write the column.
     // The control information is written into the given AipsIO object,
@@ -193,6 +199,6 @@ inline void PlainColumn::autoReleaseLock() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,11 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Register.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Register.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Utilities/Register.h>
+#ifndef CASA_REGISTER_TCC
+#define CASA_REGISTER_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Utilities/Register.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class t> uInt Register(const t *) {
   static uInt type = 0;
@@ -35,5 +38,7 @@ template<class t> uInt Register(const t *) {
   return type;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

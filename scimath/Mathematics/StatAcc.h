@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StatAcc.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: StatAcc.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_STATACC_H
 #define SCIMATH_STATACC_H
 
-#include <casa/aips.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Fallible.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Fallible.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // forward declarations:
 template <class T> class Array;
@@ -213,10 +213,10 @@ inline void StatAcc<T>::put(const T v, const Float w) {
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatAcc.tcc>
+#include <casacore/scimath/Mathematics/StatAcc.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

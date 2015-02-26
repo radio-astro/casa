@@ -25,17 +25,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfitsskip.cc 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: tfitsskip.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
 
-# include <fits/FITS/fits.h>
-# include <fits/FITS/hdu.h>
-# include <fits/FITS/fitsio.h>
-# include <casa/BasicSL/String.h>
-# include <casa/iostream.h>
-# include <casa/stdlib.h>
-# include <casa/namespace.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/hdu.h>
+# include <casacore/fits/FITS/fitsio.h>
+# include <casacore/casa/BasicSL/String.h>
+# include <casacore/casa/iostream.h>
+# include <casacore/casa/stdlib.h>
+# include <casacore/casa/namespace.h>
 
 
 // Display basic info and the keyword list

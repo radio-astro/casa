@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedMSCal.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: DerivedMSCal.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_DERIVEDMSCAL_H
 #define DERIVEDMSCAL_DERIVEDMSCAL_H
 
 //# Includes
-#include <derivedmscal/DerivedMC/MSCalEngine.h>
-#include <tables/Tables/VirtColEng.h>
+#include <casacore/casa/aips.h>
+#include <casacore/derivedmscal/DerivedMC/MSCalEngine.h>
+#include <casacore/tables/DataMan/VirtColEng.h>
 
-namespace casa {
+namespace casacore {
 
 // <summary>
 // Virtual column engine to return derived MS values
@@ -110,10 +111,10 @@ namespace casa {
 //  DerivedMSCal dataMan;
 //  tab.addColumn (td, dataMan);
 //  // Print values of all rows.
-//  ROScalarColumn<double> ha1(tab, "HA1");
-//  ROScalarColumn<double> ha2(tab, "HA2");
-//  ROScalarColumn<double> pa1(tab, "PA1");
-//  ROScalarColumn<double> pa2(tab, "PA2");
+//  ScalarColumn<double> ha1(tab, "HA1");
+//  ScalarColumn<double> ha2(tab, "HA2");
+//  ScalarColumn<double> pa1(tab, "PA1");
+//  ScalarColumn<double> pa2(tab, "PA2");
 //  for (uInt row=0; row<tab.nrow(); ++row) {
 //    cout << ha1(row)<<' '<<ha2(row)<<' '<<pa1(row)<<' '<<pa2(row)<<endl;
 //  }

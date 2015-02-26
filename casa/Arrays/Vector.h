@@ -23,25 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: Vector.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef CASA_VECTOR_H
 #define CASA_VECTOR_H
 
 //# Includes
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
 
 //# Forward declarations
 //template <class T, class U> class vector; 
 #if defined(WHATEVER_VECTOR_FORWARD_DEC)
 WHATEVER_VECTOR_FORWARD_DEC;
 #else
-#include <casa/stdvector.h>
+#include <casacore/casa/stdvector.h>
 #endif
 
-#include <set>
-
-namespace casa { //#Begin namespace casa
+namespace casacore { //#Begin namespace casa
 
 // <summary> A 1-D Specialization of the Array class </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -49,9 +48,7 @@ namespace casa { //#Begin namespace casa
 //
 // Vector objects are one-dimensional specializations (e.g., more convenient
 // and efficient indexing) of the general Array class. You might also want
-// to look at the Array documentation to see inherited functionality. A
-// tutorial on using the array classes in general is available in the
-// "AIPS++ Programming Manual".
+// to look at the Array documentation to see inherited functionality.
 //
 // Generally the member functions of Array are also available in
 // Vector versions
@@ -100,21 +97,21 @@ public:
 
     // A Vector with a defined length and origin of zero.
     // <group>
-    explicit Vector(uInt Length);
+    explicit Vector(size_t Length);
     explicit Vector(const IPosition& Length);
     // </group>
 
     // A Vector with a defined length and origin of zero.
     // Fill it with the initial value.
     // <group>
-    Vector(uInt Length, const T &initialValue);
+    Vector(size_t Length, const T &initialValue);
     Vector(const IPosition& Length, const T &initialValue);
     // </group>
 
     // Create a Vector from the given Block "other." Make it length "nr"
     // and copy over that many elements.
-    Vector(const Block<T> &other, Int nr);
-    // Create a Vector of lenght other.nelements() and copy over its values.
+    Vector(const Block<T> &other, Int64 nr);
+    // Create a Vector of length other.nelements() and copy over its values.
     explicit Vector(const Block<T> &other);
 
     // Create a reference to other.
@@ -135,20 +132,19 @@ public:
     // Create a Vector from an STL vector (see <src>tovector()</src> in
     // <linkto class=Array>Array</linkto>  for the reverse operation).
     // <note role=tip> Both this constructor and the tovector() are
-    // defined in <src>Vector2.cc</src>. In case of DIY template instantiation
-    // the appropriate templates are instantiated using the macro
-    // <src>AIPS_VECTOR2_AUX_TEMPLATES(X)</src>
-    // defined in <src>Vector2.cc</src> (<src>X</src> is the template
-    // argument needed). </note>
-    template <class U>
-    Vector(const vector<T, U> &other);
-
-    template <class U>
-    Vector(const std::set<U>& other);
-
-    // implicit promotion/demotion of type
+    // defined in <src>Vector2.cc</src>. </note>
+    // It does implicit promotion/demotion of the type U if different from T.
     template <class U, class V>
         Vector(const vector<U, V> &other);
+
+    // Create a Vector from a container iterator and its length.
+    // <note> The length is used instead of last, because the distance
+    // function needed to calculate the length can be expensive.
+    // <br>A third dummy argument is unfortunately needed to avoid ambiguity
+    // with another Vector constructor (taking two uInts).
+    // </note>
+    template<typename Iterator>
+    Vector(Iterator first, size_t size, int dummy);
 
     // Define a destructor, otherwise the compiler makes a static one.
     virtual ~Vector();
@@ -167,7 +163,7 @@ public:
     //# be hidden).
     // Resize without argument is equal to resize(0, False).
     // <group>
-    void resize(uInt len, Bool copyValues=False)
+    void resize(size_t len, Bool copyValues=False)
       { if (len != this->nelements()) resize (IPosition(1,len), copyValues); }
     virtual void resize(const IPosition &len, Bool copyValues=False);
     virtual void resize();
@@ -201,15 +197,15 @@ public:
     // Single-pixel addressing. If AIPS_ARRAY_INDEX_CHECK is defined,
     // bounds checking is performed (not for [])..
     // <group>
-    T &operator[](uInt index)
+    T &operator[](size_t index)
       { return (this->contiguous_p  ?  this->begin_p[index] : this->begin_p[index*this->inc_p(0)]); }
-    const T &operator[](uInt index) const
+    const T &operator[](size_t index) const
       { return (this->contiguous_p  ?  this->begin_p[index] : this->begin_p[index*this->inc_p(0)]); }
     T &operator()(const IPosition &i)
       { return Array<T>::operator()(i); }
     const T &operator()(const IPosition &i) const 
       { return Array<T>::operator()(i); }
-    T &operator()(uInt index)
+    T &operator()(size_t index)
       {
 #if defined(AIPS_ARRAY_INDEX_CHECK)
 	this->validateIndex(index);   //# Throws an exception on failure
@@ -217,7 +213,7 @@ public:
         return *(this->begin_p + index*this->inc_p(0));
       }
 
-    const T &operator()(uInt index) const
+    const T &operator()(size_t index) const
       {
 #if defined(AIPS_ARRAY_INDEX_CHECK)
 	this->validateIndex(index);   //# Throws an exception on failure
@@ -291,12 +287,10 @@ public:
 
 
     // The length of the Vector.
-    // <group>
-    void shape(Int &Shape) const
-      { Shape = this->length_p(0); }
     const IPosition &shape() const
       { return this->length_p; }
-    // </group>
+    void shape(Int &Shape) const
+      { Shape = this->length_p(0); }
 
     // Replace the data values with those in the pointer <src>storage</src>.
     // The results are undefined is storage does not point at nelements() or
@@ -321,13 +315,13 @@ protected:
 
 private:
     // Helper functions for constructors.
-    void initVector(const Block<T> &, Int nr);      // copy semantics
+    void initVector(const Block<T> &, Int64 nr);      // copy semantics
 };
 
-} //#End namespace casa
+} //#End namespace casacore
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/Vector.tcc>
-#include <casa/Arrays/Vector2.tcc>
+#include <casacore/casa/Arrays/Vector.tcc>
+#include <casacore/casa/Arrays/Vector2.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

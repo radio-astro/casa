@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableInfo.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableInfo.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <tables/Tables/TableInfo.h>
-#include <casa/BasicSL/String.h>
-#include <casa/OS/File.h>
-#include <casa/iostream.h>
-#include <casa/fstream.h>
+#include <casacore/tables/Tables/TableInfo.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/fstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableInfo::TableInfo()
 : writeIt_p (True)
@@ -200,5 +200,5 @@ String TableInfo::subType(Type tableType)
     };
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,12 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: OrdMapIO.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: OrdMapIO.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/OrdMapIO.h>
+#ifndef CASA_ORDMAPIO_TCC
+#define CASA_ORDMAPIO_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/OrdMapIO.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCComplement.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCComplement.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_WCCOMPLEMENT_H
 #define IMAGES_WCCOMPLEMENT_H
 
 //# Includes
-#include <images/Regions/WCCompound.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/WCCompound.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Make the complement of an image region.
@@ -127,6 +128,6 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: iosstrfwd.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: iosstrfwd.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_IOSSTRFWD_H
 #define CASA_IOSSTRFWD_H
 
 
 //# Make sure any special macros are set
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Define the IO system forward declarations for strings (strstream) as well
 // After changeover to sstream, iosfwd takes care of it all.
@@ -44,6 +44,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 using std::istringstream;
 using std::ostringstream;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

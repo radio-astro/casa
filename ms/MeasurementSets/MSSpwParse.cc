@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwParse.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSSpwParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSpwParse.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MSSpwParse.h>
+#include <casacore/ms/MeasurementSets/MSSpwIndex.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   MSSpwParse* MSSpwParse::thisMSSParser = 0x0; // Global pointer to the parser object
   TableExprNode* MSSpwParse::node_p = 0x0;
@@ -90,13 +90,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ROMSDataDescColumns msDataDescSubTable(ddSubTable_p);
 
     Vector<Int> mapDDID2SpwID, notFoundIDs;
-    Int nSpwRows, nDDIDRows;
+    Int nDDIDRows;
     Bool Found;
     TableExprNode condition;
     const String DATA_DESC_ID = MS::columnName(MS::DATA_DESC_ID),
       FLAG_COL = MS::columnName(MS::FLAG);
     
-    nSpwRows = msSpwSubTable.nrow();
     nDDIDRows = msDataDescSubTable.nrow();
     mapDDID2SpwID.resize(nDDIDRows);
 
@@ -110,7 +109,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(Int i=0;i<nDDIDRows;i++)
 	  {
 	    //	    cerr << "DDID->SPWID: " << i << " " <<  mapDDID2SpwID(i) << endl;
-	    //cerr << n << " " << i << " " << SpwIds(n) << " " << mapDDID2SpwID(i) << endl;
 	  if ((SpwIds(n) == mapDDID2SpwID(i)) && 
 	      (!msDataDescSubTable.flagRow()(i)) && 
 	      (!msSpwSubTable.flagRow()(SpwIds(n)))
@@ -235,7 +233,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       nSpw = spwIds.nelements(),
       loc=n,k=0;
     
-    //cerr << spwIds << " " << chanIDList << endl;
     for (Int i=0;i<nSpw;i++)
       {
 	if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
@@ -253,7 +250,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else k+=3;
       }
 
-    //    cerr << spwIds << " " << chanIDList << endl;
     // nSpw=chanList.shape()[0];
     // spwIds.resize(nSpw);
     // for (Int i=0;i<nSpw;i++)
@@ -320,4 +316,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return tten;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

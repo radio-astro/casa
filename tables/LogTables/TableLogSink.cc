@@ -1,4 +1,4 @@
-//# TableLogSink.h: save log messages in an AIPS++ Table
+//# TableLogSink.h: save log messages in a Casacore Table
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,21 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLogSink.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TableLogSink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Vector.h>
-#include <tables/LogTables/TableLogSink.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/tables/LogTables/TableLogSink.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/DataMan/StandardStMan.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/Constants.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 String TableLogSink::localId( ) {
     return String("TableLogSink");
@@ -133,11 +134,6 @@ void TableLogSink::copy_other (const TableLogSink& other)
     message_p.reference  (other.message_p);
     location_p.reference (other.location_p);
     id_p.reference       (other.id_p);
-    roTime_p.reference     (other.roTime_p);
-    roPriority_p.reference (other.roPriority_p);
-    roMessage_p.reference  (other.roMessage_p);
-    roLocation_p.reference (other.roLocation_p);
-    roId_p.reference       (other.roId_p);
 }
 
 TableLogSink::~TableLogSink()
@@ -158,20 +154,14 @@ void TableLogSink::makeTable (SetupNewTable& setup)
 
 void TableLogSink::attachCols()
 {
-    roTime_p.attach     (log_table_p, columnName(TIME));
-    roPriority_p.attach (log_table_p, columnName(PRIORITY));
-    roMessage_p.attach  (log_table_p, columnName(MESSAGE));
-    roLocation_p.attach (log_table_p, columnName(LOCATION));
-    roId_p.attach       (log_table_p, columnName(OBJECT_ID));
-    // Attach the writable columns only if writable.
+    time_p.attach     (log_table_p, columnName(TIME));
+    priority_p.attach (log_table_p, columnName(PRIORITY));
+    message_p.attach  (log_table_p, columnName(MESSAGE));
+    location_p.attach (log_table_p, columnName(LOCATION));
+    id_p.attach       (log_table_p, columnName(OBJECT_ID));
+    // If writable, define the time keywords when not defined yet.
+    // In this way the table browser can interpret the times.
     if (log_table_p.isWritable()) {
-        time_p.attach     (log_table_p, columnName(TIME));
-        priority_p.attach (log_table_p, columnName(PRIORITY));
-        message_p.attach  (log_table_p, columnName(MESSAGE));
-        location_p.attach (log_table_p, columnName(LOCATION));
-        id_p.attach       (log_table_p, columnName(OBJECT_ID));
-        // Define the time keywords when not defined yet.
-        // In this way the table browser can interpret the times.
         TableRecord& keySet = time_p.rwKeywordSet();
         if (! keySet.isDefined ("UNIT")) {
           keySet.define ("UNIT", "s");
@@ -316,5 +306,5 @@ LogSink TableLogSink::makeSink (const LogFilterInterface &filter,
   return LogSink (filter, CountedPtr<LogSinkInterface>(sink));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

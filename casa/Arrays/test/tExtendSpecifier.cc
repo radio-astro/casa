@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tExtendSpecifier.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tExtendSpecifier.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Arrays/ExtendSpecifier.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/ExtendSpecifier.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt()
 {
   {

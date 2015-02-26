@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecLogic.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TVecLogic.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TVECLOGIC_H
 #define TABLES_TVECLOGIC_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class T> class TabVecRep;
@@ -123,9 +123,9 @@ template<class T>
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <tables/Tables/TVecLogic.tcc>
+#include <casacore/tables/Tables/TVecLogic.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

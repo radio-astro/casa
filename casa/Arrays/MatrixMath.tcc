@@ -1,4 +1,4 @@
-//# MatrixMath.cc: The AIPS++ linear algebra functions
+//# MatrixMath.tcc: The Casacore linear algebra functions
 //# Copyright (C) 1994,1995,1996,1998,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,20 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixMath.tcc 21159 2011-12-13 02:59:29Z ben.h@bigpond.net.au $
+//# $Id: MatrixMath.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
+#ifndef CASA_MATRIXMATH_TCC
+#define CASA_MATRIXMATH_TCC
 
-#ifndef CASA_ARRAY_MATRIXMATH_TCC
-#define CASA_ARRAY_MATRIXMATH_TCC
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/math.h>
 
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/iostream.h>
-#include <casa/math.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
                                       // the vector dot/scalar/inner product
 template<class T> T innerProduct (const Vector<T> &A, const Vector<T> &B) {
@@ -170,6 +169,7 @@ Matrix<T> directProduct(const  Matrix<T> &A, const Matrix<T> &B) {
     return dpAB;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
 
 #endif

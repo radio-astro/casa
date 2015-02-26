@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelectionTools.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: MSSelectionTools.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/ms/MeasurementSets/MSSelection.h>
 #include <string.h>
 #include <iostream>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   //
   //----------------------------------------------------------------------------
   //

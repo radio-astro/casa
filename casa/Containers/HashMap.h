@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HashMap.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HashMap.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_HASHMAP_H
 #define CASA_HASHMAP_H
 
 //# Includes
-#include <casa/Containers/Block.h>
-#include <casa/Containers/List.h>
-#include <casa/Containers/OrderedPair.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/List.h>
+#include <casacore/casa/Containers/OrderedPair.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class key,class val> class ConstHashMapIter;
@@ -223,9 +224,9 @@ public:
 //
 // <example>
 //    <srcblock>
-//    #include <casa/Containers/HashMap.h>
-//    #include <casa/BasicSL/String.h>
-//    #include <casa/iostream.h>
+//    #include <casacore/casa/Containers/HashMap.h>
+//    #include <casacore/casa/BasicSL/String.h>
+//    #include <casacore/casa/iostream.h>
 //   
 //    main() {
 //      HashMap<String,Int> hash;
@@ -518,9 +519,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/HashMap.tcc>
+#include <casacore/casa/Containers/HashMap.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

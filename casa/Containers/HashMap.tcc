@@ -23,14 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HashMap.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HashMap.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/HashMap.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+#ifndef CASA_HASHMAP_TCC
+#define CASA_HASHMAP_TCC
+
+#include <casacore/casa/Containers/HashMap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class key> HashClass<key>::HashClass() { }
 template<class key> HashClass<key>::~HashClass() { }
@@ -221,5 +224,7 @@ template<class t> const t &defaultHashValue(const t *) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PrecTimer.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: PrecTimer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/OS/PrecTimer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
-#include <casa/fstream.h>
-#include <casa/iomanip.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/OS/PrecTimer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <cstdlib>
 #include <cstring>
 
@@ -40,7 +40,7 @@
 #include <sys/types.h>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 double PrecTimer::CPU_speed_in_MHz = PrecTimer::get_CPU_speed_in_MHz();
@@ -155,5 +155,5 @@ void PrecTimer::print_time (ostream& os, double time) const
   os << setprecision(3) << setw(5) << time << ' ' << units[i] << 's';
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

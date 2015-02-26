@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DirectoryIterator.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DirectoryIterator.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_DIRECTORYITERATOR_H
 #define CASA_DIRECTORYITERATOR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/OS/File.h>
-#include <casa/OS/Directory.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/Utilities/Regex.h>
 
 #include <dirent.h>                          // needed for DIR
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>  
 // Traverse the contents of a directory
@@ -167,15 +167,17 @@ private:
     // to compare files with regular expression.
     Regex itsExpression;
 
+#if defined(AIPS_CRAY_PGI)
     // Cray XT3 does not support readdir on compute nodes.
     // Use scandir instead.
     dirent** itsNameList;
     int      itsNrNames;
     int      itsNameInx;
+#endif
 };
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

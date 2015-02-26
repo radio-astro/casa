@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DefaultValue.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: DefaultValue.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_DEFAULTVALUE_H
 #define CASA_DEFAULTVALUE_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A templated function which sets a variable to a default value.
@@ -105,6 +105,6 @@ template <class T> inline void defaultValue(T &theValue)
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

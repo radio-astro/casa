@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayError.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: ArrayError.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // .SUMMARY General, Indexing, and Conformace errors thrown by Array classes.
 
-#include <casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/ArrayError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ArrayError::ArrayError(Category c) : AipsError("ArrayError",c) {}
 
@@ -137,5 +137,5 @@ ArraySlicerError::ArraySlicerError(const String &m,Category c)
 
 ArraySlicerError::~ArraySlicerError() throw(){}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

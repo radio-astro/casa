@@ -17,16 +17,13 @@ xyio.c
 xyzio.c
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_mirlib PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_mirlib casa_casa)
 
 install (
 TARGETS casa_mirlib
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VelocityMachine.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: VelocityMachine.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/VelocityMachine.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/UnitVal.h>
-#include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/VelocityMachine.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/measures/Measures/MeasConvert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -135,12 +135,12 @@ const Quantum<Double> &VelocityMachine::makeVelocity(Double in) {
 	ThrowIf(
 		rfreqValue < 0,
 		"Rest frequency is " + String::toString(rest_p)
-		+ " which is invalid because it is less than 0 so cannot."
-		+ " convert to velocity"
+		+ " which is invalid because it is less than 0 so cannot "
+		" convert to velocity"
 	);
-		resv_p.setValue(cvvo_p(cvfv_p(in).
-			 toDoppler(rest_p).getValue()).
-		  getValue().get().getValue() / vfac_p);
+        resv_p.setValue(cvvo_p(cvfv_p(in).
+                               toDoppler(rest_p).getValue()).
+                        getValue().get().getValue() / vfac_p);
   return resv_p;
 }
 
@@ -274,5 +274,5 @@ void VelocityMachine::copy(const VelocityMachine &other) {
   vun_p = other.vun_p;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

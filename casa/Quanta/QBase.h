@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QBase.h 20993 2010-11-08 13:36:32Z gervandiepen $
+//# $Id: QBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_QBASE_H
 #define CASA_QBASE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Unit.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Unit.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -153,6 +153,6 @@ LogIO &operator<<(LogIO &os, const QBase &meas);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

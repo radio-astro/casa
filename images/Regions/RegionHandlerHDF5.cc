@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerHDF5.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RegionHandlerHDF5.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/RegionHandlerHDF5.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCHDF5Mask.h>
-#include <casa/HDF5/HDF5Record.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/RegionHandlerHDF5.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCHDF5Mask.h>
+#include <casacore/casa/HDF5/HDF5Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RegionHandlerHDF5::RegionHandlerHDF5 (GetCallback* callback,
 				      void* objectPtr)
@@ -334,4 +334,4 @@ void RegionHandlerHDF5::restore()
   itsRecord = HDF5Record::readRecord (*file(), "maskinfo");
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

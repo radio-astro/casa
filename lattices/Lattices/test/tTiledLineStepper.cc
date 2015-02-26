@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTiledLineStepper.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tTiledLineStepper.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <lattices/Lattices/TiledLineStepper.h>
-#include <casa/Inputs/Input.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/lattices/Lattices/TiledLineStepper.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main (int argc, const char* argv[])
 {
     Input inp(1);

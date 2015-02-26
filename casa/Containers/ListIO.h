@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ListIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ListIO.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_LISTIO_H
 #define CASA_LISTIO_H
 
-#include <casa/Containers/List.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/List.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Input/output operators for Lists.
@@ -61,9 +62,9 @@ template<class t> ostream &operator<<(ostream &, const ConstListIter<t> &);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/ListIO.tcc>
+#include <casacore/casa/Containers/ListIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

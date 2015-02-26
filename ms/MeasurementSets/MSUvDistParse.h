@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSUvDistParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSUVDISTPARSE_H
 #define MS_MSUVDISTPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -93,7 +94,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Associate the ms and the shorthand.
     MSUvDistParse (const MeasurementSet* ms);
     
-    //    ~MSUvDistParse() {if (node_p) delete node_p;node_p=0x0;};
+    //    ~MSUvDistParse() {if (node_p) delete node_p;node_p=0x0;}
     
     const TableExprNode *selectUVRange(const Double& startUV,
                                        const Double& endUV, 
@@ -101,9 +102,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       Bool doSlow=False);
     
     Vector<Bool> selectedUnits() {return meterUnits_p;}
-    Matrix<Double> selectedUV() {return selectedUV_p;};
-    static void reset(){selectedUV_p.resize(2,0);meterUnits_p.resize(0);};
-    static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
+    Matrix<Double> selectedUV() {return selectedUV_p;}
+    static void reset(){selectedUV_p.resize(2,0);meterUnits_p.resize(0);}
+    static void cleanup() {if (node_p) delete node_p;node_p=0x0;}
 
     // Get table expression node object.
     static const TableExprNode* node();
@@ -119,6 +120,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   };
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

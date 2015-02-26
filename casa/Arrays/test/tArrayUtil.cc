@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayUtil.cc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: tArrayUtil.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test of functions in ArrayUtil.h.
 // </summary>
@@ -332,40 +332,6 @@ Bool testReorderArray (Bool doExcp)
       }
     }
   }
-  {
-    cout << "arrayReorder 10 timings on [30,40,50,60] ..." << endl;
-    IPosition shape(4,30,40,50,60);
-    Array<Int> arr(shape);
-    indgen(arr);
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reorderArray (arr, IPosition(1,0));
-      }
-      tim.show ("0,1,2,3");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reorderArray (arr, IPosition(4,0,1,3,2));
-      }
-      tim.show ("0,1,3,2");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reorderArray (arr, IPosition(4,0,2,1,3));
-      }
-      tim.show ("0,2,1,3");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reorderArray (arr, IPosition(4,1,3,2,0));
-      }
-      tim.show ("1,3,2,0");
-    }
-  }
   if (doExcp) {
     try {
       reorderArray (Array<Int>(IPosition(2,3,4)), IPosition(2,1,1));
@@ -500,40 +466,6 @@ Bool testReverseArray()
                                            shape[2] - 1 - i)));
         }
       }
-    }
-  }
-  {
-    cout << "arrayReverse 10 timings on [30,40,50,60] ..." << endl;
-    IPosition shape(4,30,40,50,60);
-    Array<Int> arr(shape);
-    indgen(arr);
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reverseArray (arr, 0);
-      }
-      tim.show ("0");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reverseArray (arr, 1);
-      }
-      tim.show ("1");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reverseArray (arr, 2);
-      }
-      tim.show ("2");
-    }
-    {
-      Timer tim;
-      for (Int i=0; i<10; i++) {
-	reverseArray (arr, 3);
-      }
-      tim.show ("3");
     }
   }
   return res;

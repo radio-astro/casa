@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Mutex.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Mutex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/OS/Mutex.h>
 #include <errno.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 //# Define a macro to cast the void* to pthread_mutex_t*.
 #define ITSMUTEX \
   (static_cast<pthread_mutex_t*>(itsMutex))
 
-namespace casa {
+namespace casacore {
 
 #ifdef USE_THREADS
 
@@ -149,4 +149,4 @@ namespace casa {
   }
 
 
-} // namespace casa
+} // namespace casacore

@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnitName.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: UnitName.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/Quanta/UnitName.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/Quanta/UnitName.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 UnitName::UnitName() :
     basicKind(),
@@ -89,5 +89,5 @@ ostream& operator<< (ostream &os, const UnitName &name) {
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

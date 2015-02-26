@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFunctors.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: tFunctors.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/BasicMath/Functors.h>
-#include <casa/OS/Timer.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Functors.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 #include <vector>
 #include <algorithm>
 
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 #define TESTFUNCTOR1(NAME, FUNC) \

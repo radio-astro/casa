@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSSpectralUtil.cc 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: FITSSpectralUtil.cc 21531 2014-12-24 11:46:02Z gervandiepen $
 
-#include <fits/FITS/FITSSpectralUtil.h>
+#include <casacore/fits/FITS/FITSSpectralUtil.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Bool FITSSpectralUtil::fromFITSHeader(Int &spectralAxis,
 				      Double &referenceChannel,
@@ -781,5 +781,5 @@ Double FITSSpectralUtil::refractiveIndex(const Double& lambda_um){
      return nOfLambda;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

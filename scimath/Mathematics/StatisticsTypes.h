@@ -22,16 +22,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATISTICSTYPES_H
 #define SCIMATH_STATISTICSTYPES_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 #include <utility>
 #include <vector>
 
-namespace casa {
+namespace casacore {
 
 class Record;
 template <class T> class CountedPtr;
@@ -72,7 +73,7 @@ Record toRecord(const StatsData<AccumType>& stats);
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatisticsTypes.tcc>
+#include <casacore/scimath/Mathematics/StatisticsTypes.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

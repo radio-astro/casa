@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: Slice.h 21566 2015-02-18 12:58:58Z gervandiepen $
 
 #ifndef CASA_SLICE_H
 #define CASA_SLICE_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <unistd.h>         //# for ssize_t
 
 #if defined(AIPS_DEBUG)
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Assert.h>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations.
 class Slicer;
@@ -153,10 +153,12 @@ Slice::Slice(size_t Start, size_t Length, size_t Inc)
 
 inline
 Slice::Slice(size_t Start, size_t End, size_t Inc, Bool endIsLength)
-  : startp(Start), incp(Inc), lengthp(endIsLength ? End : End+1-Start)
+  : startp(Start), incp(Inc), lengthp(endIsLength ? End : 1+(End-Start)/Inc)
 {
 #if defined(AIPS_DEBUG)
-    DebugAssert(End >= Start, AipsError);
+    if (! endIsLength) {
+        DebugAssert(End >= Start, AipsError);
+    }
     DebugAssert(incp > 0, AipsError);
 #endif
 }
@@ -188,10 +190,10 @@ inline size_t Slice::inc() const
 inline size_t Slice::end() const
 {
     // return -1 if all()
-    return startp + lengthp - 1;
+    return startp + (lengthp-1)*incp;
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

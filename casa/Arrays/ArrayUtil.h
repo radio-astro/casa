@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayUtil.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: ArrayUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYUTIL_H
 #define CASA_ARRAYUTIL_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Regex;
@@ -304,9 +304,9 @@ uInt reorderArrayHelper (IPosition& newShape, IPosition& incr,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/ArrayUtil.tcc>
+#include <casacore/casa/Arrays/ArrayUtil.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

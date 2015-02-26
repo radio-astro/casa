@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCRadialVelocity.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MCRadialVelocity.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MCRadialVelocity.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Quanta/MVDirection.h>
-#include <measures/Measures/Aberration.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MDoppler.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MCRadialVelocity.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/measures/Measures/Aberration.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MDoppler.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Statics
 uInt MCRadialVelocity::ToRef_p[N_Routes][3] = {
@@ -334,5 +334,5 @@ void MCRadialVelocity::doFillState (void*) {
   MCBase::makeState(FromTo_p[0], MRadialVelocity::N_Types, N_Routes, ToRef_p);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

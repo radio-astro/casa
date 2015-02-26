@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableError.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: TableError.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/TableError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableError::TableError (Category c)
 : AipsError("Table error",c)
@@ -197,5 +197,5 @@ TableParseError::TableParseError (const String& s,Category c)
 TableParseError::~TableParseError () throw()
 {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,28 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.cc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: TableCopy.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <tables/Tables/TableCopy.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/TableLocker.h>
-#include <tables/Tables/TableError.h>
-#include <tables/Tables/DataManager.h>
-#include <tables/Tables/DataManInfo.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/OS/Path.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableCopy.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/TableLocker.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/tables/DataMan/DataManager.h>
+#include <casacore/tables/DataMan/DataManInfo.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Table TableCopy::makeEmptyTable (const String& newName,
 				 const Record& dataManagerInfo,
@@ -144,7 +144,7 @@ void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows,
       const String& name = outDesc[i].name();
       if (inDesc.isColumn(name)) {
 	TableColumn outCol(out, name);
-	ROTableColumn inCol(in, name);
+	TableColumn inCol(in, name);
 	copySubTables (outCol.rwKeywordSet(), inCol.keywordSet(),
 		       out.tableName(), out.tableType(), in, noRows, omit);
       }
@@ -195,5 +195,5 @@ void TableCopy::copySubTables (TableRecord& outKeys,
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

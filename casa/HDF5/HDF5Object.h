@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Object.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5Object.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_HDF5OBJECT_H
 #define CASA_HDF5OBJECT_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
 //# Define hid_t and hsize_t if not defined (thus if HDF5 disabled).
 //# They should be the same as used by HDF5.
@@ -43,7 +43,7 @@
 #endif
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Define 2 functions to check that hid_t and hsize_t are mapped correctly.
   // They are called by the constructor, so the compiler will scream if

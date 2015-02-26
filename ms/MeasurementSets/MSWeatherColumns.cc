@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSWeatherColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSWeatherColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSWeatherColumns.h>
-#include <ms/MeasurementSets/MSWeather.h>
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
+#include <casacore/ms/MeasurementSets/MSWeather.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSWeatherColumns::ROMSWeatherColumns(const MSWeather& msWeather):
   isNull_p(True),
@@ -383,5 +383,5 @@ void MSWeatherColumns::attach(MSWeather& msWeather)
 // compile-command: "gmake MSWeatherColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

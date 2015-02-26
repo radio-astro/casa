@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ListIO.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ListIO.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/ListIO.h>
+#ifndef CASA_LISTIO_TCC
+#define CASA_LISTIO_TCC
+
+#include <casacore/casa/Containers/ListIO.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 //  Outputs a doubly linked list to the specified ostream stream.
@@ -60,5 +63,7 @@ template<class t> ostream &operator<<(ostream &ios, const ConstListIter<t> &list
   return(ios);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

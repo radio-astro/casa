@@ -24,18 +24,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//#  $Id: MMapIO.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//#  $Id: MMapIO.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/IO/MMapIO.h>
-#include <casa/IO/LargeRegularFileIO.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/IO/MMapIO.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa
+namespace casacore
 {
   
 MMapIO::MMapIO (const RegularFile& regularFile, ByteIO::OpenOption option)
 {
-  int fdes = LargeRegularFileIO::openCreate (regularFile, option);
+  int fdes = RegularFileIO::openCreate (regularFile, option);
   map (fdes, regularFile.path().originalName());
   if (option == ByteIO::Append) {
     seek (0, ByteIO::End);

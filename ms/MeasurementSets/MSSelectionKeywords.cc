@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelectionKeywords.cc 18093 2004-11-30 17:51:10Z ddebonis $
-#include <ms/MeasurementSets/MSSelectionKeywords.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/BasicSL/String.h>
+//# $Id: MSSelectionKeywords.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+#include <casacore/ms/MeasurementSets/MSSelectionKeywords.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSSelectionKeywords::Field MSSelectionKeywords::field(const String& itemName)
 {
@@ -139,5 +139,5 @@ void MSSelectionKeywords::initMap(SimpleOrderedMap<String,Int>*& fieldMap,
   reverseMap=&revMap;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

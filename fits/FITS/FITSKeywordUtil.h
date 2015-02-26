@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSKeywordUtil.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FITSKeywordUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef FITS_FITSKEYWORDUTIL_H
 #define FITS_FITSKEYWORDUTIL_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class ConstFitsKeywordList;
 class FitsKeywordList;
@@ -67,9 +67,9 @@ template<class T> class Vector;
 // </etymology>
 //
 // <synopsis>
-// This class provides functions to conveniently interconvert between AIPS++
+// This class provides functions to conveniently interconvert between Casacore
 // types and a FitsKeywordList which is needed by the native FITS classes.
-// It is more convenient to maintain the list within AIPS++
+// It is more convenient to maintain the list within Casacore
 // as a Record, so we only need methods to turn a FitsKeywordList into a 
 // Record, and vice versa.
 //
@@ -117,7 +117,7 @@ template<class T> class Vector;
 // <motivation>
 // The FitsKeywordList class can be somewhat tedious to use, as it deals with,
 // e.g., char* pointers rather than Strings. This class makes it easy to
-// interconvert between FITS keywords and AIPS++ types.
+// interconvert between FITS keywords and Casacore types.
 // </motivation>
 //
 // <todo asof="2000/06/21">
@@ -208,6 +208,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

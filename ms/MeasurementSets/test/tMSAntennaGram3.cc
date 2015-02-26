@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSAntennaGram3.cc 20934 2010-08-17 09:16:24Z gervandiepen $
+//# $Id: tMSAntennaGram3.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/iostream.h>
 
-#include <ms/MeasurementSets/MSAntennaGram.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <tables/Tables/SetupNewTab.h>
+#include <casacore/ms/MeasurementSets/MSAntennaGram.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/ms/MeasurementSets/MSSelection.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
 
-using namespace casa;
+using namespace casacore;
 
 void makeMS()
 {
@@ -107,6 +107,9 @@ void selMS()
   doSel (ms, "\\RT1 & RT0");
   doSel (ms, "/A.*/&", True);
   doSel (ms, "/A.*/&&", True);
+  doSel (ms, "^A*&&", True);
+  doSel (ms, "^/A.*/&&", True);
+  doSel (ms, "!/A.*/&&", True);
   doSel (ms, "<3", True);
   doSel (ms, "1~5");
   doSel (ms, "1m~5m", True);

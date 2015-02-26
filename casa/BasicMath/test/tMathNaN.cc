@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMathNaN.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tMathNaN.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Inputs/Input.h>
-#include <casa/OS/Timer.h> 
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/OS/Timer.h> 
 #if defined(AIPS_SOLARIS) || defined(AIPS_IRIX)
 #include <ieeefp.h>
 #endif
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 #define	isnanfmacro(x)	(((*(Int *)(x) & 0x7f800000) == 0x7f800000) && \
 			    ((*(Int *)(x) & 0x007fffff) != 0x00000000))
 
@@ -208,7 +208,7 @@ Bool doIt (Int n, Float x, Bool nan)
 int main (int argc, const char* argv[])
 {
    Input inputs(1);
-   inputs.version ("$Revision: 20652 $");
+   inputs.version ("$Revision: 21505 $");
    inputs.create("n", "100", "Number of tries");
  
    inputs.readArguments(argc, argv);

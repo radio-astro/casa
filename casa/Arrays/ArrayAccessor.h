@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ArrayAccessor.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: ArrayAccessor.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYACCESSOR_H
 #define CASA_ARRAYACCESSOR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
 //# Forward Declarations
 template <class T> class ArrayBaseAccessor;

@@ -24,14 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionWrapper.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: FunctionWrapper.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_FUNCTIONWRAPPER_TCC
+#define SCIMATH_FUNCTIONWRAPPER_TCC
 
 //# Includes
-#include <scimath/Functionals/FunctionWrapper.h>
-#include <casa/Arrays/Vector.h>
-#include <scimath/Functionals/WrapperData.h>
+#include <casacore/scimath/Functionals/FunctionWrapper.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/scimath/Functionals/WrapperData.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T>
@@ -46,7 +49,7 @@ FunctionWrapper<T>::FunctionWrapper(T(*f)(const T&), const Bool) :
 
 template <class T>
 FunctionWrapper<T>::FunctionWrapper(T(*f)(const Vector<T>&),
-					const Bool isPar) :
+                                    const Bool) :
   WrapperParam<T>(0),
   doit_p(new WrapperData<T,T,Vector<T>,False,True>(f)) {}
 
@@ -124,5 +127,7 @@ uInt FunctionWrapper<T>::ndim() const {
   return (doit_p ? doit_p->ndim() : 0);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

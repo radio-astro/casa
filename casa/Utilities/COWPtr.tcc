@@ -24,15 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: COWPtr.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: COWPtr.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
+#ifndef CASA_COWPTR_TCC
+#define CASA_COWPTR_TCC
 
-#ifndef CASA_UTILS_COWPTR_TCC
-#define CASA_UTILS_COWPTR_TCC
+#include <casacore/casa/Utilities/COWPtr.h>
 
-#include <casa/Utilities/COWPtr.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> COWPtr<T>::COWPtr(T *obj, Bool deleteIt, Bool readOnly)
 : obj_p(obj, deleteIt), const_p(readOnly)
@@ -65,6 +64,7 @@ template <class T> Bool COWPtr<T>::makeUnique()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
 
 #endif

@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slicer.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Slicer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/ArrayError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Slicer::Slicer()
 : asEnd_p (endIsLength),
@@ -298,5 +298,5 @@ ostream  &operator << (ostream &stream, const Slicer &slicer)
   return stream;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

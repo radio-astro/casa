@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTapeIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTapeIO.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/OS/Path.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicMath/Random.h>
-#include <casa/Inputs.h>
-#include <casa/IO/TapeIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/casa/Inputs.h>
+#include <casacore/casa/IO/TapeIO.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main(int argc, const char* argv[])
 {
   try {

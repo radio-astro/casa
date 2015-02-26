@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSParse.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSPARSE_H
 #define MS_MSPARSE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -126,7 +126,7 @@ public:
     // Get ms object.
     MSSelectableTable* msInterface();
 
-  void setMS(MeasurementSet* ms) {ms_p=ms;};
+  void setMS(MeasurementSet* ms) {ms_p=ms;}
   void setMSInterface(MSSelectableTable* msI) {msInterface_p = msI;}
   static MeasurementSet *ms_p;
   static MSSelectableTable *msInterface_p;
@@ -140,6 +140,6 @@ private:
   MSSelectableTable *tempMSInterface_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

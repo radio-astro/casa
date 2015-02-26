@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSHistoryColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSHistoryColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSHistoryColumns.h>
-#include <ms/MeasurementSets/MSHistory.h>
+#include <casacore/ms/MeasurementSets/MSHistoryColumns.h>
+#include <casacore/ms/MeasurementSets/MSHistory.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSHistoryColumns::ROMSHistoryColumns(const MSHistory& msHistory):
   application_p(msHistory, MSHistory::
@@ -146,5 +146,5 @@ void MSHistoryColumns::attach(MSHistory& msHistory)
 // compile-command: "gmake MSHistoryColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

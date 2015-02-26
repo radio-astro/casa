@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordDesc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordDesc.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 
 #ifndef CASA_RECORDDESC_H
@@ -32,12 +32,13 @@
 
 
 //# Includes
-#include <casa/Containers/RecordDescRep.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Utilities/COWPtr.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordDescRep.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Utilities/COWPtr.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -515,6 +516,6 @@ inline AipsIO& operator>> (AipsIO& os, RecordDesc& desc)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StringDistance.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: StringDistance.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_STRINGDISTANCE_H
 #define CASA_STRINGDISTANCE_H
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
-namespace casa {
+namespace casacore {
 
 // <summary>
 // Class to deal with Levensthein distance of strings.

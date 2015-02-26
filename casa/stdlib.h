@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: stdlib.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: stdlib.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_STDLIB_H
 #define CASA_STDLIB_H
@@ -33,7 +33,7 @@
 //# them (e.g. <cstring>)
 
 //# Make sure any special macros are set
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 #if defined(__sgi) || defined(AIPS_SUN_NATIVE)
 #include <stdlib.h>
@@ -41,9 +41,9 @@
 #include <cstdlib>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

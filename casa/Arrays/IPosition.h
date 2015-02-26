@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: IPosition.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
+#include <casacore/casa/BasicSL/String.h>
 #include <vector>
 #include <cstddef>                  // for ptrdiff_t
 #include <sys/types.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -602,6 +602,6 @@ inline Bool IPosition::conform(const IPosition& other) const
     return  (size_p == other.size_p);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

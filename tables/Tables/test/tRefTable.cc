@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRefTable.cc 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: tRefTable.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/stdio.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/stdio.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // <summary>
 // Test program for RefTable::addColumn
@@ -47,10 +47,10 @@ void readTab (const String& tabName, uInt nrow, uInt ncol)
   Table tab(tabName);
   AlwaysAssertExit (tab.tableDesc().ncolumn() == ncol);
   AlwaysAssertExit (tab.nrow() == nrow);
-  ROScalarColumn<Int> ab(tab,"ab");
-  ROScalarColumn<Int> ac(tab,"ac");
-  ROScalarColumn<uInt> ad(tab,"ad");
-  ROScalarColumn<Int> ax(tab,"ax");
+  ScalarColumn<Int> ab(tab,"ab");
+  ScalarColumn<Int> ac(tab,"ac");
+  ScalarColumn<uInt> ad(tab,"ad");
+  ScalarColumn<Int> ax(tab,"ax");
   for (uInt i=0; i<tab.nrow(); ++i) {
     AlwaysAssertExit (ab(i) == Int(i));
     AlwaysAssertExit (ac(i) == Int(i+1));

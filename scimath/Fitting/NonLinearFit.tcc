@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NonLinearFit.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: NonLinearFit.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Fitting/NonLinearFit.h>
-#include <scimath/Mathematics/AutoDiffIO.h>
-#include <scimath/Functionals/Function.h>
+#ifndef SCIMATH_NONLINEARFIT_TCC
+#define SCIMATH_NONLINEARFIT_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Fitting/NonLinearFit.h>
+#include <casacore/scimath/Mathematics/AutoDiffIO.h>
+#include <casacore/scimath/Functionals/Function.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constants
 // Default convergence criterium
@@ -85,5 +88,7 @@ void NonLinearFit<T>::setMaxIter(uInt maxIter) {
   curiter_p = (curiter_p > maxiter_p ? maxiter_p : curiter_p);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

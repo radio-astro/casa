@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfits1.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: tfits1.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
 
-# include <fits/FITS/fits.h>
-# include <fits/FITS/hdu.h>
-# include <casa/BasicSL/String.h>
-# include <casa/iostream.h>
-# include <casa/stdlib.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/hdu.h>
+# include <casacore/casa/BasicSL/String.h>
+# include <casacore/casa/iostream.h>
+# include <casacore/casa/stdlib.h>
 
-# include <casa/Arrays/Vector.h>
+# include <casacore/casa/Arrays/Vector.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
-// # include <casa/string.h> // test
+// # include <casacore/casa/string.h> // test
 
 // Display basic info and the keyword list
 void show(HeaderDataUnit *h) {

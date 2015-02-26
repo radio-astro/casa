@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordDescRep.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: RecordDescRep.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Containers/RecordDescRep.h>
-#include <casa/Containers/RecordDesc.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordDescRep.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/stdio.h>
-#include <casa/iostream.h>
+#include <casacore/casa/stdio.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RecordDescRep::RecordDescRep()
 : n_p(0),
@@ -560,5 +560,5 @@ void RecordDescRep::increment_length()
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

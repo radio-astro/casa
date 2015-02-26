@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: EnvVar.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: EnvVar.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/OS/EnvVar.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/stdlib.h>
 #include <cstring>                  //# for strcpy with gcc-4.3
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Bool EnvironmentVariable::isDefined (const String& name)
 {
@@ -58,5 +58,5 @@ void EnvironmentVariable::set (const String& name, const String& value)
   AlwaysAssert (putenv(str) == 0, AipsError);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

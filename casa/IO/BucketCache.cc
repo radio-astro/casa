@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketCache.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: BucketCache.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <casa/IO/BucketCache.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/IO/BucketCache.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 BucketCache::BucketCache (BucketFile* file, Int64 startOffset,
 			  uInt bucketSize, uInt nrOfBuckets,
@@ -420,5 +420,5 @@ void BucketCache::initStatistics()
     nwrite_p  = 0;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

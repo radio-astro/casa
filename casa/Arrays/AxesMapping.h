@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AxesMapping.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AxesMapping.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_AXESMAPPING_H
 #define CASA_AXESMAPPING_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Slicer;
@@ -160,6 +160,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

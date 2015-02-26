@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: EvenPolynomialParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: EvenPolynomialParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_EVENPOLYNOMIALPARAM_TCC
+#define SCIMATH_EVENPOLYNOMIALPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/EvenPolynomialParam.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/scimath/Functionals/EvenPolynomialParam.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 EvenPolynomialParam<T>::EvenPolynomialParam() :
@@ -63,5 +66,7 @@ void EvenPolynomialParam<T>::setCoefficients(const Vector<T> &coefficients) {
   param_p.setParameters(coefficients);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

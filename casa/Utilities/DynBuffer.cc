@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynBuffer.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: DynBuffer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/DynBuffer.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/DynBuffer.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // This is the implementation of the DynBuffer class.
 
@@ -138,5 +138,5 @@ Bool DynBuffer::next (uInt& len, Char*& ptr)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaParse.cc 20949 2010-09-06 08:22:49Z gervandiepen $
+//# $Id: MSAntennaParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSAntennaIndex.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Logging/LogIO.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/ms/MeasurementSets/MSAntennaParse.h>
+#include <casacore/ms/MeasurementSets/MSAntennaIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
  // Global pointer to the parser object
   MSAntennaParse* MSAntennaParse::thisMSAParser = 0;
@@ -69,8 +69,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     : MSParse(myms, "Antenna"),
       colName1(MS::columnName(MS::ANTENNA1)),
       colName2(MS::columnName(MS::ANTENNA2)),
-      ant1List(0),ant2List(0), baselineList(0,2)
+      ant1List(0),ant2List(0), baselineList(0,2),
+      msSubTable_p(myms->antenna())
   {
+    column1AsTEN_p = myms->col(myms->columnName(MS::ANTENNA1));
+    column2AsTEN_p = myms->col(myms->columnName(MS::ANTENNA2));
   }
 
   // Add the current condition to the TableExprNode tree.  Mask auto
@@ -371,4 +374,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

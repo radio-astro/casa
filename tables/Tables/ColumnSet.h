@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnSet.h 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: ColumnSet.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_COLUMNSET_H
 #define TABLES_COLUMNSET_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableLockData.h>
-#include <tables/Tables/BaseTable.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableLockData.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/tables/Tables/StorageOption.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class SetupNewTable;
@@ -48,6 +49,7 @@ class TableAttr;
 class ColumnDesc;
 class PlainColumn;
 class DataManager;
+class MultiFile;
 class Record;
 class IPosition;
 class AipsIO;
@@ -94,7 +96,7 @@ public:
 
     // Construct from the table description.
     // This creates all underlying filled and virtual column objects.
-    ColumnSet (TableDesc*);
+    ColumnSet (TableDesc*, const StorageOption& = StorageOption());
 
     ~ColumnSet();
 
@@ -203,6 +205,10 @@ public:
     // Optionally only the virtual engines are retrieved.
     Record dataManagerInfo (Bool virtualOnly=False) const;
 
+    // Get the trace-id of the table.
+    int traceId() const
+      { return baseTablePtr_p->traceId(); }
+
     // Initialize rows startRownr till endRownr (inclusive).
     void initialize (uInt startRownr, uInt endRownr);
 
@@ -273,6 +279,10 @@ private:
     // Let the data managers (from the given index on) prepare themselves.
     void prepareSomeDataManagers (uInt from);
 
+    // Open or create the MultiFile if needed.
+    void openMultiFile (uInt from, const Table& tab,
+                        ByteIO::OpenOption);
+
     // Check if a data manager name has not already been used.
     // Start checking at the given index in the array.
     // It returns False if the name has already been used.
@@ -301,7 +311,9 @@ private:
 
     //# Declare the variables.
     TableDesc*                      tdescPtr_p;
-    uInt                            nrrow_p;        //# #rows
+    StorageOption                   storageOpt_p;
+    MultiFile*                      multiFile_p;
+    Int64                           nrrow_p;        //# #rows
     BaseTable*                      baseTablePtr_p;
     TableLockData*                  lockPtr_p;      //# lock object
     SimpleOrderedMap<String,void*>  colMap_p;       //# list of PlainColumns
@@ -360,6 +372,6 @@ inline Block<Bool>& ColumnSet::dataManChanged()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

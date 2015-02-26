@@ -1,4 +1,4 @@
-//# LSQaips.h: Interface for aips++ Vectors in least squares fitting
+//# LSQaips.h: Interface for Casacore Vectors in least squares fitting
 //# Copyright (C) 1999,2000,2001,2004,2006
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQaips.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: LSQaips.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_LSQAIPS_H
 #define SCIMATH_LSQAIPS_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/VectorSTLIterator.h>
-#include <scimath/Fitting/LSQFit.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/VectorSTLIterator.h>
+#include <casacore/scimath/Fitting/LSQFit.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
 // <summary>
-// Interface for aips++ Vectors in least squares fitting
+// Interface for Casacore Vectors in least squares fitting
 // </summary>
 // <reviewed reviewer="" date="2004/04/01" tests=""
 //	 demos="">
@@ -51,12 +51,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// From Least SQuares and aips++
+// From Least SQuares and aips++ (now Casacore)
 // </etymology>
 //
 // <synopsis>
 // The interface used in the <src>LSQaips</src> class is in terms of
-// aips++ Vectors directly, rather than an STL iterator (like 
+// Casacore Vectors directly, rather than an STL iterator (like 
 // <linkto class=VectorSTLIterator>VectorSTLIterator</linkto>) based
 // on it.
 //
@@ -198,9 +198,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Fitting/LSQaips.tcc>
+#include <casacore/scimath/Fitting/LSQaips.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

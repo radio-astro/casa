@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandler.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: RegionHandler.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_REGIONHANDLER_H
 #define IMAGES_REGIONHANDLER_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -185,7 +185,7 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

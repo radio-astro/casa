@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lorentzian1D.h 20229 2010-02-15 12:19:06Z Wataru.Kawasaki $
+//# $Id: Lorentzian1D.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_LORENTZIAN1D_H
 #define SCIMATH_LORENTZIAN1D_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Functionals/Lorentzian1DParam.h>
-#include <scimath/Functionals/Function1D.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Lorentzian1DParam.h>
+#include <casacore/scimath/Functionals/Function1D.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -54,10 +54,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology> 
 // A Lorentzian1D functional is designed exclusively for calculating a
-// Lorentzian (or Normal) distribution in one dimension. Other classes exist
-// for calculating these functions in two
-// (<linkto class=Lorentzian2D>Lorentzian2D</linkto>) and N 
-// (<linkto class=LorentzianND>LorentzianND</linkto>) dimensions.
+// Lorentzian (or Normal) distribution in one dimension.
+//# Other classes exist (not yet!)
+//# for calculating these functions in two
+//# (<linkto class=Lorentzian2D>Lorentzian2D</linkto>) and N 
+//# (<linkto class=LorentzianND>LorentzianND</linkto>) dimensions.
 // </etymology>
 
 // <synopsis> 
@@ -271,7 +272,7 @@ public:
 #undef Lorentzian1D_PS
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include "Lorentzian1D.tcc"

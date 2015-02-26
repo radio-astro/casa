@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLockData.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLockData.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLELOCKDATA_H
 #define TABLES_TABLELOCKDATA_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableLock.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableLock.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Class to hold table lock data.
@@ -158,6 +158,6 @@ inline void TableLockData::putInfo (const MemoryIO& info)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

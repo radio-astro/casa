@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.h 20934 2010-08-17 09:16:24Z gervandiepen $
+//# $Id: MSAntennaGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSANTENNAGRAM_H
 #define MS_MSANTENNAGRAM_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Matrix.h>
-#include <ms/MeasurementSets/MSAntennaParse.h> // routines used by bison actions
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/ms/MeasurementSets/MSAntennaParse.h> // routines used by bison actions
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -121,6 +122,6 @@ class TableExprNode;
   
   // </group>
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

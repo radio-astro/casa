@@ -23,31 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSUvDistGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSUvDistGram; grammar for UV distribution command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSUvDistGram.h>
-#include <ms/MeasurementSets/MSUvDistParse.h> // routines used by bison actions
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSUvDistGram.h>
+#include <casacore/ms/MeasurementSets/MSUvDistParse.h> // routines used by bison actions
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 #include <limits>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSUvDistGram.ycc"                  // flex output
-#include "MSUvDistGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSUvDistGram.ycc"                  // bison output
+#include "MSUvDistGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSUvDistGramwrap()
@@ -55,7 +56,7 @@ int MSUvDistGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
 static const char*           strpMSUvDistGram = 0;
@@ -182,4 +183,4 @@ void MSUvDistGramerror (const char*)
 //     return out;
 // }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

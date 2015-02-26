@@ -23,16 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QLogical.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QLogical.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_QLOGICAL_TCC
+#define CASA_QLOGICAL_TCC
 
 //# Includes
-#include <casa/Quanta/QLogical.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class Qtype>
 Bool operator==(const Quantum<Qtype> &left, const Quantum<Qtype> &other) {
@@ -249,5 +252,7 @@ Bool operator>=(const Qtype &left, const Quantum<Qtype> &other) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

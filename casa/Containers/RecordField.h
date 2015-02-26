@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordField.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordField.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_RECORDFIELD_H
 #define CASA_RECORDFIELD_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/Notice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/Notice.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableRecord;
@@ -306,9 +306,9 @@ inline void* attachRecordFieldPtr (RecordInterface* parent, Int fieldNumber,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/RecordField.tcc>
+#include <casacore/casa/Containers/RecordField.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

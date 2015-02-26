@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FileLocker.cc 20853 2010-01-20 14:07:57Z gervandiepen $
+//# $Id: FileLocker.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/IO/FileLocker.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
+#include <casacore/casa/IO/FileLocker.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <casa/string.h>
+#include <casacore/casa/string.h>
 
 //# Locking is not supported on Cray compute nodes.
 #if defined(AIPS_CRAY_PGI)  &&  !defined(AIPS_NOFILELOCK)
@@ -39,7 +39,7 @@
 #endif
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FileLocker::FileLocker()
 : itsFD          (-1),
@@ -242,5 +242,5 @@ String FileLocker::lastMessage() const
     return strerror(itsError);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

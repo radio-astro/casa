@@ -23,21 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RebinLattice.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: RebinLattice.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <lattices/Lattices/RebinLattice.h>
+#ifndef LATTICES_REBINLATTICE_TCC
+#define LATTICES_REBINLATTICE_TCC
 
-#include <casa/Arrays/ArrayMath.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h> 
+#include <casacore/lattices/Lattices/RebinLattice.h>
+
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h> 
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 RebinLattice<T>::RebinLattice ()
@@ -433,5 +436,7 @@ Slicer RebinLattice<T>::findOriginalSlicer (const Slicer& section) const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

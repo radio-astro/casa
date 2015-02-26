@@ -23,27 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageExprGram.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 // ImageExprGram; grammar for image command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <lattices/Lattices/LatticeExprNode.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Containers/Block.h>
-#include <images/Images/ImageExprGram.h>
-#include <images/Images/ImageExprParse.h>    // routines used by bison actions
-#include <casa/Exceptions/Error.h>
+#include <casacore/lattices/LEL/LatticeExprNode.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/images/Images/ImageExprGram.h>
+#include <casacore/images/Images/ImageExprParse.h>    // routines used by bison actions
+#include <casacore/casa/Exceptions/Error.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "ImageExprGram.ycc"                  // flex output
-#include "ImageExprGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "ImageExprGram.ycc"                  // bison output
+#include "ImageExprGram.lcc"                  // flex output
 
 
 
@@ -54,7 +55,7 @@ int ImageExprGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
 static const char*  strpImageExprGram = 0;
@@ -130,5 +131,5 @@ String imageExprGramRemoveQuotes (const String& in)
     return out;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,21 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tWCExtension.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: tWCExtension.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCExtension.h>
-#include <images/Regions/WCBox.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/images/Regions/WCExtension.h>
+#include <casacore/images/Regions/WCBox.h>
+#include <casacore/images/Regions/WCPolygon.h>
+
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt()
 {
   // Create a dummy box to make the special units known to UnitMap.
@@ -183,9 +185,50 @@ void doIt()
       cout << bbox.start() << bbox.end() << endl;
       delete regptr;
     }
+    Vector<Double> x(3);
+    Vector<Double> y(3);
+    x[0] = 3;
+    x[1] = 3;
+    x[2] = 8;
+    y[0] = 3;
+    y[1] = 8;
+    y[2] = 3;
+    Quantum<Vector<Double> > xq(x);
+    xq.setUnit("pix");
+    Quantum<Vector<Double> > yq(y);
+    yq.setUnit("pix");
+    IPosition pixelAxes(2);
+    pixelAxes[0] = 0;
+    pixelAxes[1] = 1;
+
+    WCPolygon poly(xq, yq, pixelAxes, cSys);
+    IPosition axes3(1,2);
+    Vector<Quantum<Double> > blc3(1);
+    Vector<Quantum<Double> > trc3(1);
+    blc3(0) = Quantum<Double> (3.0, "pix");
+    trc3(0) = Quantum<Double> (10.0, "pix");
+    Vector<Int> absRel3(1, RegionType::Abs);
+    WCBox ebox(blc3, trc3, axes3, cSys, absRel3);
+    WCExtension wcspoly(poly, ebox);
+
+    {
+      LCRegion* regptr = wcspoly.toLCRegion (cSys, IPosition(3,30,40,50));
+      Array<Bool> mask = regptr->get();
+      IPosition shape = mask.shape();
+      for (Int k=0; k<shape[2]; k++) {
+    	  for (Int j=shape[1]-1; j>=0; j--) {
+    		  for (Int i=0; i< shape[0]; i++) {
+    			  cout << regptr->getAt(IPosition(3,i,j,k)) << " ";
+    		  }
+    		  cout << endl;
+    	  }
+    	  cout << endl;
+      }
+      delete regptr;
+
+    }
   }
 }
-
 
 Int inIPos (Int val, const IPosition& ipos)
 {

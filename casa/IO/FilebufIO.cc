@@ -1,5 +1,5 @@
-//# FilebufIO.cc: Class for buffered IO on a file descriptor
-//# Copyright (C) 1997,1999,2001,2002
+//# FilebufIO.cc: Class for buffered IO on a file.
+//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,30 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FilebufIO.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: FilebufIO.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/IO/FilebufIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/LargeIOFuncDef.h>
+#include <casacore/casa/IO/FilebufIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>                // needed for errno
-#include <casa/string.h>          // needed for strerror
-
-#ifdef PABLO_IO
-#include "IOTrace.h"
-#else
-#define traceREAD read
-#define traceWRITE write
-#define trace2OPEN open
-#define traceLSEEK lseek
-#define trace3OPEN open
-#define traceCLOSE close
-#endif // PABLO_IO
+#include <errno.h>                     // needed for errno
+#include <casacore/casa/string.h>               // needed for strerror
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FilebufIO::FilebufIO()
 : itsSeekable   (False),
@@ -77,10 +67,7 @@ FilebufIO::FilebufIO (int fd, uInt bufferSize)
 
 FilebufIO::~FilebufIO()
 {
-  try {
-      detach();
-  }
-  catch(...){}
+  detach();
 }
 
 
@@ -96,7 +83,7 @@ void FilebufIO::attach (int fd, uInt bufSize)
   setBuffer (bufSize);
 }
 
-void FilebufIO::setBuffer (uInt bufSize)
+void FilebufIO::setBuffer (Int64 bufSize)
 {
   if (itsBuffer) {
     flush();
@@ -169,7 +156,7 @@ void FilebufIO::resync()
 }
 
 
-void FilebufIO::writeBuffer (Int64 offset, const char* buf, Int size)
+void FilebufIO::writeBuffer (Int64 offset, const char* buf, Int64 size)
 {
   if (size > 0) {
     if (offset != itsSeekOffset) {
@@ -186,14 +173,14 @@ void FilebufIO::writeBuffer (Int64 offset, const char* buf, Int size)
   }
 }
 
-uInt FilebufIO::readBuffer (Int64 offset, char* buf, uInt size,
-			    Bool throwException)
+Int64 FilebufIO::readBuffer (Int64 offset, char* buf, Int64 size,
+                                  Bool throwException)
 {
   if (offset != itsSeekOffset) {
     ::traceLSEEK (itsFile, offset, SEEK_SET);
     itsSeekOffset = offset;
   }
-  Int bytesRead = ::traceREAD (itsFile, buf, size);
+  Int64 bytesRead = ::traceREAD (itsFile, buf, size);
   int error = errno;
   if (bytesRead > Int(size)) { // Should never be executed
     itsSeekOffset = -1;
@@ -209,7 +196,7 @@ uInt FilebufIO::readBuffer (Int64 offset, char* buf, uInt size,
     if (bytesRead < 0) {
       itsSeekOffset = -1;
       throw AipsError (String("FilebufIO::read error for file ")
-			      + fileName() + ": " + strerror(error));
+		       + fileName() + ": " + strerror(error));
     } else if (bytesRead < Int(size)) {
       itsSeekOffset = -1;
       throw AipsError ("FilebufIO::read - incorrect number of bytes ("
@@ -222,7 +209,7 @@ uInt FilebufIO::readBuffer (Int64 offset, char* buf, uInt size,
   return bytesRead;
 }
 
-void FilebufIO::write (uInt size, const void* buf)
+void FilebufIO::write (Int64 size, const void* buf)
 {
   // Throw an exception if not writable.
   if (!itsWritable) {
@@ -233,8 +220,8 @@ void FilebufIO::write (uInt size, const void* buf)
   // Determine blocknr of first and last full block.
   Int64 st = (itsOffset + itsBufSize - 1) / itsBufSize;
   Int64 end = (itsOffset + size) / itsBufSize;
-  uInt blkst = st * itsBufSize - itsOffset;
-  uInt sz = 0;
+  Int64 blkst = st * itsBufSize - itsOffset;
+  Int64 sz = 0;
   if (st < end) {
     sz = (end-st) * itsBufSize;
     // There are one or more full blocks.
@@ -268,7 +255,7 @@ void FilebufIO::write (uInt size, const void* buf)
   }
 }
 
-Int FilebufIO::read (uInt size, void* buf, Bool throwException)
+Int64 FilebufIO::read (Int64 size, void* buf, Bool throwException)
 {
   // Throw an exception if not readable.
   if (!itsReadable) {
@@ -279,8 +266,8 @@ Int FilebufIO::read (uInt size, void* buf, Bool throwException)
   // Determine blocknr of first and last full block.
   Int64 st = (itsOffset + itsBufSize - 1) / itsBufSize;
   Int64 end = (itsOffset + size) / itsBufSize;
-  uInt blkst = st * itsBufSize - itsOffset;
-  uInt sz = 0;
+  Int64 blkst = st * itsBufSize - itsOffset;
+  Int64 sz = 0;
   if (st < end) {
     // There are one or more full blocks.
     // Read them all.
@@ -307,7 +294,7 @@ Int FilebufIO::read (uInt size, void* buf, Bool throwException)
     sz += readBuffer (stoff, bufp, endoff-stoff, throwException);
   }
   // Read the start of the user buffer (if needed).
-  uInt total = sz;
+  Int64 total = sz;
   if (blkst > 0) {
     if (blkst > size) {
       blkst = size;
@@ -326,7 +313,7 @@ Int FilebufIO::read (uInt size, void* buf, Bool throwException)
   return total;
 }
 
-void FilebufIO::writeBlock (uInt size, const char* buf)
+void FilebufIO::writeBlock (Int64 size, const char* buf)
 {
   // Write a part of a block.
   // It is ensured that the buffer fits in a single block and that it
@@ -340,7 +327,7 @@ void FilebufIO::writeBlock (uInt size, const char* buf)
     itsBufOffset = itsOffset / itsBufSize * itsBufSize;
     itsBufLen = readBuffer (itsBufOffset, itsBuffer, itsBufSize, False);
   }
-  uInt st = itsOffset - itsBufOffset;
+  Int64 st = itsOffset - itsBufOffset;
   memcpy (itsBuffer+st, buf, size);
   itsDirty = True;
   if (st+size > itsBufLen) {
@@ -348,7 +335,7 @@ void FilebufIO::writeBlock (uInt size, const char* buf)
   }
 }
 
-uInt FilebufIO::readBlock (uInt size, char* buf, Bool throwException)
+Int64 FilebufIO::readBlock (Int64 size, char* buf, Bool throwException)
 {
   // Read a part of a block.
   // It is ensured that the buffer fits in a single block and that it
@@ -362,7 +349,7 @@ uInt FilebufIO::readBlock (uInt size, char* buf, Bool throwException)
     itsBufOffset = itsOffset / itsBufSize * itsBufSize;
     itsBufLen = readBuffer (itsBufOffset, itsBuffer, itsBufSize, False);
   }
-  uInt st = itsOffset - itsBufOffset;
+  Int64 st = itsOffset - itsBufOffset;
 #if defined(TABLEREPAIR)
   if (st+size > itsBufLen) {
     memset (itsBuffer+itsBufLen, 0, st+size-itsBufLen);
@@ -428,5 +415,5 @@ Bool FilebufIO::isSeekable() const
   return itsSeekable;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

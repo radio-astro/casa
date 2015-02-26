@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketCache.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BucketCache.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_BUCKETCACHE_H
 #define CASA_BUCKETCACHE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/IO/BucketFile.h>
-#include <casa/Containers/Block.h>
-#include <casa/OS/CanonicalConversion.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/BucketFile.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/OS/CanonicalConversion.h>
 
 //# Forward clarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Define the type of the static read and write function.
@@ -412,6 +412,6 @@ inline uInt BucketCache::nFreeBucket() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeLocker.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LatticeLocker.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_LATTICELOCKER_H
 #define LATTICES_LATTICELOCKER_H
 
 
 //# Includes
-#include <lattices/Lattices/LatticeBase.h>
-#include <tables/Tables/TableLock.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/LatticeBase.h>
+#include <casacore/tables/Tables/TableLock.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class to hold a (user) lock on a lattice.
@@ -160,6 +161,6 @@ inline Bool LatticeLocker::hasLock (FileLocker::LockType type) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

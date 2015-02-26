@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NNGridder.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: NNGridder.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_NNGRIDDER_H
 #define SCIMATH_NNGRIDDER_H
 
-#include <scimath/Mathematics/Gridder.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/Gridder.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A non-negative gridding class
@@ -67,9 +68,9 @@ protected:
   using Gridder<Domain,Range>::onGrid;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/NNGridder.tcc>
+#include <casacore/scimath/Mathematics/NNGridder.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

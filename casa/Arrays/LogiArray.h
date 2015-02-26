@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogiArray.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogiArray.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGIARRAY_H
 #define CASA_LOGIARRAY_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/LogiArrayFwd.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/LogiArrayFwd.h>
+#include <casacore/casa/Arrays/Array.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Logical valued Arrays.
@@ -84,6 +84,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

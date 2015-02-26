@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Error.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HDF5Error.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/HDF5/HDF5Error.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HDF5Error::HDF5Error (Category c)
 : AipsError("HDF5 error", c)
@@ -38,4 +38,4 @@ HDF5Error::HDF5Error (const String& str, Category c)
 HDF5Error::~HDF5Error () throw()
 {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

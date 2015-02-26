@@ -23,66 +23,63 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubImage.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: SubImage.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/SubImage.h>
+#ifndef IMAGES_SUBIMAGE_TCC
+#define IMAGES_SUBIMAGE_TCC
 
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/LattRegionHolder.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/lattices/LRegions/LattRegionHolder.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/Arrays.h>
+#include <casacore/casa/Arrays.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 SubImage<T>::SubImage()
-: itsImagePtr  (),
-  itsSubLatPtr ()
+: itsImagePtr  (0),
+  itsSubLatPtr (0)
 {}
 
 template<class T>
 SubImage<T>::SubImage (const ImageInterface<T>& image,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII())
 {
-  itsSubLatPtr.reset(new SubLattice<T> (image, axesSpec));
+  itsSubLatPtr = new SubLattice<T> (image, axesSpec);
   setCoords (image.coordinates(), preserveAxesOrder);
   setMembers();
 }
 
 template<class T>
 SubImage<T>::SubImage (ImageInterface<T>& image,
-               Bool writableIfPossible,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
-: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (image, writableIfPossible, axesSpec)
-	);
+		       Bool writableIfPossible,
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, writableIfPossible, axesSpec);
   setCoords (image.coordinates(), preserveAxesOrder);
   setMembers();
 }
 
 template<class T>
 SubImage<T>::SubImage (const ImageInterface<T>& image,
-               const LattRegionHolder& region,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
-: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (
-			image,
-			region.toLatticeRegion(
-				image.coordinates(),
-                image.shape()
-            ),
-            axesSpec
-        )
-    );
+		       const LattRegionHolder& region,
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image,
+				    region.toLatticeRegion(image.coordinates(),
+							   image.shape()),
+				    axesSpec);
   const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -97,21 +94,16 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 
 template<class T>
 SubImage<T>::SubImage (ImageInterface<T>& image,
-               const LattRegionHolder& region,
-               Bool writableIfPossible,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
-: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T> (
-			image,
-			region.toLatticeRegion(
-				image.coordinates(),
-				image.shape()
-			),
-            writableIfPossible,
-            axesSpec
-        )
-   );
+		       const LattRegionHolder& region,
+		       Bool writableIfPossible,
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, 
+				    region.toLatticeRegion(image.coordinates(),
+							   image.shape()),
+                                    writableIfPossible,
+				    axesSpec);
   const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -126,11 +118,11 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 
 template<class T>
 SubImage<T>::SubImage (const ImageInterface<T>& image,
-               const Slicer& slicer,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
+		       const Slicer& slicer,
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII())
 {
-  itsSubLatPtr.reset(new SubLattice<T> (image, slicer, axesSpec));
+  itsSubLatPtr = new SubLattice<T> (image, slicer, axesSpec);
   const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -144,16 +136,13 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 
 template<class T>
 SubImage<T>::SubImage (ImageInterface<T>& image,
-               const Slicer& slicer,
-               Bool writableIfPossible,
-               AxesSpecifier axesSpec, Bool preserveAxesOrder)
-: itsImagePtr (image.cloneII()) {
-	itsSubLatPtr.reset(
-		new SubLattice<T>(
-			image, slicer, writableIfPossible,
-			axesSpec
-		)
-	);
+		       const Slicer& slicer,
+		       Bool writableIfPossible,
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
+: itsImagePtr (image.cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (image, slicer, writableIfPossible,
+				    axesSpec);
   const Slicer& refslicer = itsSubLatPtr->getRegionPtr()->slicer();
 //
   Vector<Float> blc, inc;
@@ -168,20 +157,27 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 template<class T>
 SubImage<T>::SubImage (const SubImage<T>& other)
 : ImageInterface<T> (other),
-  itsImagePtr (other.itsImagePtr->cloneII()),
-  itsSubLatPtr(new SubLattice<T> (*other.itsSubLatPtr)) {
+  itsImagePtr (other.itsImagePtr->cloneII())
+{
+  itsSubLatPtr = new SubLattice<T> (*other.itsSubLatPtr);
 }
 
 template<class T>
-SubImage<T>::~SubImage() {}
+SubImage<T>::~SubImage()
+{
+  delete itsImagePtr;
+  delete itsSubLatPtr;
+}
 
 template<class T>
 SubImage<T>& SubImage<T>::operator= (const SubImage<T>& other)
 {
   if (this != &other) {
     ImageInterface<T>::operator= (other);
-    itsImagePtr.set(other.itsImagePtr->cloneII());
-    itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
+    delete itsImagePtr;
+    itsImagePtr = other.itsImagePtr->cloneII();
+    delete itsSubLatPtr;
+    itsSubLatPtr = new SubLattice<T> (*other.itsSubLatPtr);
   }
   return *this;
 }
@@ -223,12 +219,13 @@ String SubImage<T>::imageType() const
 }
 
 template<class T>
-void SubImage<T>::setCoords (const CoordinateSystem& coords, Bool preserveAxesOrder)
+void SubImage<T>::setCoords (const CoordinateSystem& coords,
+                             Bool preserveAxesOrder)
 {
   const AxesMapping& axesMap = itsSubLatPtr->getAxesMap();
   AlwaysAssert (!axesMap.isReordered(), AipsError);
   if (!axesMap.isRemoved()) {
-    this->setCoordsMember (coords);
+    setCoordsMember (coords);
   } else {
     const IPosition& map = axesMap.getToNew();
     const uInt naxes = map.nelements();
@@ -247,9 +244,10 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords, Bool preserveAxesOr
 
     CoordinateSystem crdOut;
     CoordinateUtil::dropRemovedAxes(crdOut, crd, preserveAxesOrder);
-    this->setCoordsMember (crdOut);
+    setCoordsMember (crdOut);
   }
 }
+
 
 template <class T>
 Bool SubImage<T>::ok() const
@@ -381,6 +379,12 @@ IPosition SubImage<T>::doNiceCursorShape (uInt maxPixels) const
 }
 
 template<class T>
+ImageAttrHandler& SubImage<T>::attrHandler (Bool createHandler)
+{
+  return itsImagePtr->attrHandler (createHandler);
+}
+
+template<class T>
 T SubImage<T>::getAt (const IPosition& where) const
 {
   return itsSubLatPtr->getAt (where);
@@ -447,5 +451,8 @@ void SubImage<T>::convertIPosition(Vector<Float>& x, const IPosition& pos) const
   for (uInt i=0; i<x.nelements(); i++) x[i] = Float(pos(i));
 }
 
-} //# NAMESPACE CASA - END
 
+} //# NAMESPACE CASACORE - END
+
+
+#endif

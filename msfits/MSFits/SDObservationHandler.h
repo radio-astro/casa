@@ -24,15 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDObservationHandler.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: SDObservationHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_SDOBSERVATIONHANDLER_H
 #define MS_SDOBSERVATIONHANDLER_H
 
-#include <casa/Containers/RecordField.h>
-#include <tables/Tables/ScalarColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnsIndex;
@@ -154,7 +155,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

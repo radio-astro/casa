@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasValue.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MeasValue.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MEASVALUE_H
 #define CASA_MEASVALUE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class Qtype> class Quantum;
@@ -211,6 +211,6 @@ ostream &operator<<(ostream &os, const MeasValue &meas);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

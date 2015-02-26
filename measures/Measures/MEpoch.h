@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MEpoch.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MEpoch.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEPOCH_H
 #define MEASURES_MEPOCH_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MeasBase.h>
-#include <measures/Measures/MeasRef.h>
-#include <casa/Quanta/MVEpoch.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MeasBase.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/casa/Quanta/MVEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MEpoch;
@@ -70,10 +70,10 @@ template <class M> class ScalarMeasColumn;
 // <example>
 // Convert (with all steps explicit) a UTC to an IAT time.
 // <srcblock>
-//	#include <measures/Measures.h>
-//	#include <measures/Measures/MEpoch.h>
-//	#include <measures/Measures/MCEpoch.h>
-//      #include <casa/logging/LogIO.h>
+//	#include <casacore/measures/Measures.h>
+//	#include <casacore/measures/Measures/MEpoch.h>
+//	#include <casacore/measures/Measures/MCEpoch.h>
+//      #include <casacore/casa/logging/LogIO.h>
 //      
 //	cout << "TAI for UTC = MJD(50237.29): " <<
 //		MEpoch::Convert(MEpoch(MVEpoch(Quantity(50237.29, "d")),
@@ -257,6 +257,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

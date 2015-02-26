@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QC.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QC.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Quanta/QC.h>
-#include <casa/Quanta/UnitMap.h>
+#include <casacore/casa/Quanta/QC.h>
+#include <casacore/casa/Quanta/UnitMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Quantum<Double> QC::c(C::c,"m/s");
 Quantum<Double> QC::G(6.67259e-11,"N.m2/kg2");
@@ -71,5 +71,5 @@ QC_init::~QC_init() {
 void QC::init() {
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

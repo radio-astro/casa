@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CombiFunction.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: CombiFunction.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_COMBIFUNCTION_H
 #define SCIMATH_COMBIFUNCTION_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Functionals/CombiParam.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/CombiParam.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -219,10 +219,10 @@ public:
 #undef CombiFunction_PS
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/CombiFunction.tcc>
-#include <scimath/Functionals/Combi2Function.tcc>
+#include <casacore/scimath/Functionals/CombiFunction.tcc>
+#include <casacore/scimath/Functionals/Combi2Function.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

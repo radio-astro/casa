@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: EvenPolynomial.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: EvenPolynomial.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_EVENPOLYNOMIAL_TCC
+#define SCIMATH_EVENPOLYNOMIAL_TCC
 
 //# Includes
-#include <scimath/Functionals/EvenPolynomial.h>
+#include <casacore/scimath/Functionals/EvenPolynomial.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -47,5 +50,7 @@ T EvenPolynomial<T>::eval(typename Function1D<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

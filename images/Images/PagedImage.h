@@ -23,23 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedImage.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: PagedImage.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_PAGEDIMAGE_H
 #define IMAGES_PAGEDIMAGE_H
 
 
 //# Includes
-#include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/PagedArray.h>
-#include <tables/Tables/Table.h>
-#include <casa/Utilities/DataType.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/ImageAttrHandlerCasa.h>
+#include <casacore/lattices/Lattices/PagedArray.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 //# Forward Declarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Read, store, and manipulate astronomical images.
@@ -62,11 +64,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <etymology>
 // The PagedImage name comes from its role as the Image class with paging 
 // from persistent memory.  Users are thus invited to treat the 
-// PagedImage instances like AIPS++ Lattices  
+// PagedImage instances like Casacore Lattices  
 // </etymology>
 
 // <synopsis> 
-// All AIPS++ Images are Lattices.  They may be treated like any other Lattice;
+// All Casacore Images are Lattices.  They may be treated like any other Lattice;
 // getSlice(...), putSlice(...), LatticeIterator for iterating, etc.
 // ArrayImages contain a map, a mask for that map, and coordinate 
 // information.  This provides a Lattice interface for images and their 
@@ -193,10 +195,12 @@ public:
   // Make a copy of the object (reference semantics).
   virtual ImageInterface<T>* cloneII() const;
 
-  // Get the image type (returns name of derived class).
-  virtual String imageType() const;
+  // Return the name of this derived class.
+  static String className()
+    { return "PagedImage"; }
 
-  static String className();
+  // Get the image type (returns name of this derived class).
+  virtual String imageType() const;
 
   // A PagedImage is always persistent.
   virtual Bool isPersistent() const;
@@ -312,6 +316,12 @@ public:
   // It can fail if, e.g., the underlying table is not writable.
   virtual Bool setImageInfo(const ImageInfo& info);
 
+  // Get access to the attribute handler.
+  // If a handler keyword does not exist yet, it is created if
+  // <src>createHandler</src> is set.
+  // Otherwise the handler is empty and no groups can be created for it.
+  virtual ImageAttrHandler& attrHandler (Bool createHandler=False);
+
   // Remove a region/mask belonging to the image from the given group
   // (which can be Any).
   // If a mask removed is the default mask, the image gets unmasked.
@@ -388,6 +398,7 @@ public:
   // If needed, reopen a temporarily closed Image.
   virtual void reopen();
 
+
 private:
   // Function to return the internal Table object to the RegionHandler.
   static Table& getTable (void* imagePtr, Bool writable);
@@ -420,7 +431,7 @@ private:
 
   PagedArray<T>  map_p;
   LatticeRegion* regionPtr_p;
-  const static String _className;
+  ImageAttrHandlerCasa itsAttrHandler;
 
   //# Make members of parent class known.
 public:
@@ -436,7 +447,7 @@ protected:
   using ImageInterface<T>::setMiscInfoMember;
   using ImageInterface<T>::setLogMember;
   using ImageInterface<T>::setUnitMember;
-  // using ImageInterface<T>::setImageInfoMember;
+  using ImageInterface<T>::setImageInfoMember;
 };
 
 
@@ -453,9 +464,9 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/PagedImage.tcc>
+#include <casacore/images/Images/PagedImage.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

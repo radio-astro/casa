@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: stdexcept.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: stdexcept.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_STDEXCEPT_H
 #define CASA_STDEXCEPT_H
 
+#include <casacore/casa/aips.h>
 #include <stdexcept>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 using std::exception;
 using std::logic_error;
@@ -43,6 +44,6 @@ using std::range_error;
 using std::overflow_error;
 using std::underflow_error;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

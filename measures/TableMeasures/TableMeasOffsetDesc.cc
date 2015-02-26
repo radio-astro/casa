@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasOffsetDesc.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableMeasOffsetDesc.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <measures/TableMeasures/TableMeasOffsetDesc.h>
-#include <measures/TableMeasures/TableMeasDescBase.h>
-#include <measures/TableMeasures/TableMeasDesc.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Exceptions.h>
+#include <casacore/measures/TableMeasures/TableMeasOffsetDesc.h>
+#include <casacore/measures/TableMeasures/TableMeasDescBase.h>
+#include <casacore/measures/TableMeasures/TableMeasDesc.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Exceptions.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableMeasOffsetDesc::TableMeasOffsetDesc (const TableMeasDescBase& column,
 					  Bool asArray)
@@ -169,5 +169,5 @@ void TableMeasOffsetDesc::resetOffset (const Measure& offset)
   itsMeasure = MeasureHolder(offset);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

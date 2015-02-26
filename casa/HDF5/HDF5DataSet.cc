@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: HDF5DataSet.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/HDF5/HDF5DataSet.h>
-#include <casa/HDF5/HDF5Error.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/BlockIO.h>
-#include <casa/BasicMath/Primes.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/HDF5/HDF5DataSet.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/BlockIO.h>
+#include <casacore/casa/BasicMath/Primes.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   HDF5DataSet::HDF5DataSet (const HDF5Object& parentHid, const String& name,
 			    const IPosition& shape, const IPosition& tileShape,
@@ -173,8 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Block<hsize_t> cs = fromShape (itsTileShape);
     H5Pset_chunk(itsPLid, rank, cs.storage());
     // Create the data set.
-    setHid (H5Dcreate(parentHid, name.chars(), itsDataType.getHidFile(),
-		      itsDSid, NULL, itsPLid, NULL));
+    setHid (H5Dcreate2(parentHid, name.chars(), itsDataType.getHidFile(),
+		       itsDSid, 0, itsPLid, 0));
     if (! isValid()) {
       throw HDF5Error("Data set array " + name + " could not be created");
     }
@@ -185,7 +185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsParent = &parentHid;
     setName (name);
     // Open the dataset.
-    setHid (H5Dopen(parentHid, name.chars(), NULL));
+    setHid (H5Dopen2(parentHid, name.chars(), 0));
     if (! isValid()) {
       throw HDF5Error("Data set array " + name + " does not exist");
     }
@@ -263,7 +263,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     // Reopen the dataset with cache size in itsDaplid.
     String name = getName();
-    setHid (H5Dopen(*itsParent, name.chars(), itsDaplid));
+    setHid (H5Dopen2(*itsParent, name.chars(), itsDaplid));
     if (! isValid()) {
       throw HDF5Error("Data set array " + name + " could not be reopened");
     }
@@ -271,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   DataType HDF5DataSet::getDataType (hid_t parentHid, const String& name)
   {
-    hid_t id = H5Dopen(parentHid, name.chars(), NULL);
+    hid_t id = H5Dopen2(parentHid, name.chars(), 0);
     if (id < 0) {
       throw HDF5Error("Data set array " + name + " does not exist");
     }

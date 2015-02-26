@@ -23,23 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FittingProxy.h 19692 2006-10-11 05:39:32Z mmarquar $
+//# $Id: FittingProxy.h 21552 2015-01-29 12:59:43Z gervandiepen $
 
 #ifndef SCIMATH_FITTINGPROXY_H
 #define SCIMATH_FITTINGPROXY_H
 
 //# Includes
 
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
 
-#include <casa/namespace.h>
 //# Forward declarations
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   class String;
   template<class T> class GenericL2Fit;
   template<class T> class Vector;
-} //# NAMESPACE CASA - END
 
 // <summary> This class gives Proxy to Fitting connection</summary>
 
@@ -60,7 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The class makes the connection between the
 // <linkto module=Fitting>Fitting</linkto> module and 
 // other object system. It provides a series of proxy callable
-// methods. See Aips++ Note 197 for details. <br>
+// methods. See Note 197 for details. <br>
 // Operations supported
 // are all the fitting methods supported in the Fitting module
 // </synopsis>
@@ -157,8 +155,8 @@ private:
     //# Data
     // Pointer to a Fitting Machine: real or complex
     // <group>
-    casa::GenericL2Fit<Double> *fitter_p;
-    casa::GenericL2Fit<DComplex> *fitterCX_p;
+    casacore::GenericL2Fit<Double> *fitter_p;
+    casacore::GenericL2Fit<DComplex> *fitterCX_p;
     // </group>
     // Number of unknowns
     Int n_p;
@@ -185,5 +183,6 @@ private:
   FitType **list_p;
 };
 
+} //# NAMESPACE CASACORE - END
 
 #endif

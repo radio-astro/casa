@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrMath.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrMath.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MASKARRMATH_H
 #define CASA_MASKARRMATH_H
 
 
-#include <casa/aips.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/IPosition.h>
 //# Needed to get the proper Complex typedef's
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> Mathematical operations for MaskedArrays (and with Arrays) </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="tMaskArrMath0 tMaskArrMath1 tMaskArrMath2 tMaskArrExcp">
@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// MaskArrMath is short for MaskedArrayMath, which is too long by
+// MaskArrMath is short for MaskedArrayMath, which is too long by the old
 // AIPS++ file naming conventions.  This file contains global functions
 // which perform element by element mathematical operations on masked arrays.
 // </etymology>
@@ -415,14 +415,21 @@ template<class T> T rms(const MaskedArray<T> &a);
 // is used to find the median (kthLargest is about 6 times faster
 // than a full quicksort).
 // <group>
-template<class T> inline T median(const MaskedArray<T> &a)
-    { return median (a, False, (a.nelements() <= 100)); }
-template<class T> inline T median(const MaskedArray<T> &a, Bool sorted)
+template<class T> inline T median(const MaskedArray<T> &a, Bool sorted=False)
     { return median (a, sorted, (a.nelements() <= 100)); }
 template<class T> T median(const MaskedArray<T> &a, Bool sorted,
 			   Bool takeEvenMean);
 // </group>
 
+// The median absolute deviation from the median. Interface is as for
+// the median functions
+// <group>
+template<class T> inline T madfm(const MaskedArray<T> &a, Bool sorted=False)
+    { return madfm (a, sorted, (a.nelements() <= 100)); }
+template<class T> T madfm(const MaskedArray<T> &a, Bool sorted,
+                          Bool takeEvenMean);
+// </group>
+ 
 
 // Returns a MaskedArray where every element is squared.
 template<class T> MaskedArray<T> square(const MaskedArray<T> &val);
@@ -480,6 +487,17 @@ private:
   Bool     itsTakeEvenMean;
   Bool     itsInPlace;
 };
+template<typename T> class MaskedMadfmFunc {
+public:
+  explicit MaskedMadfmFunc(Bool sorted=False, Bool takeEvenMean=True)
+    : itsSorted(sorted), itsTakeEvenMean(takeEvenMean) {}
+  Float operator()(const MaskedArray<Float>& arr) const
+    { return madfm(arr, itsSorted, itsTakeEvenMean); }
+private:
+  Bool     itsSorted;
+  Bool     itsTakeEvenMean;
+  Bool     itsInPlace;
+};
 
 // Apply the given ArrayMath reduction function objects
 // to each box in the array.
@@ -529,9 +547,9 @@ Array<T> slidingArrayMath (const MaskedArray<T>& array,
 			   Bool fillEdge=True);
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/MaskArrMath.tcc>
+#include <casacore/casa/Arrays/MaskArrMath.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

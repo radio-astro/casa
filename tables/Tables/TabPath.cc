@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TabPath.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TabPath.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <tables/Tables/TabPath.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/TabPath.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <unistd.h>                    // for system call access
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# This is the implementation of the class TabPath.
 
@@ -80,5 +80,5 @@ const String& TabPath::dir (uInt dirnr) const
     return tabDir_p[dirnr];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

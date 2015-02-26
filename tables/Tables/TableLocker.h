@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLocker.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLocker.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_TABLELOCKER_H
 #define TABLES_TABLELOCKER_H
 
 
 //# Includes
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableLock.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableLock.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class to hold a (user) lock on a table.
@@ -145,6 +146,6 @@ inline Bool TableLocker::hasLock (FileLocker::LockType type) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

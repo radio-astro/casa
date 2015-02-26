@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AutoDiffIO.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: AutoDiffIO.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_AUTODIFFIO_H
 #define SCIMATH_AUTODIFFIO_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template <class T> class AutoDiff;
@@ -64,9 +64,9 @@ ostream &operator << (ostream &os, const AutoDiff<T> &ad);
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/AutoDiffIO.tcc>
+#include <casacore/scimath/Mathematics/AutoDiffIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

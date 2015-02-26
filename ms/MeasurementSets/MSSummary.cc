@@ -23,43 +23,43 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSummary.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: MSSummary.cc 21559 2015-02-10 08:33:29Z gervandiepen $
 //#
-#include <casa/aips.h>
-#include <casa/Arrays.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/ContainerIO.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Quanta/Unit.h>
-#include <measures/Measures/MDirection.h>
-#include <casa/Quanta.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVTime.h>
-#include <measures/Measures/Stokes.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/RefRows.h>
-#include <casa/Utilities/GenSort.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/TableVector.h>
-#include <ms/MeasurementSets.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSMetaData.h>
-#include <ms/MeasurementSets/MSSummary.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <ms/MeasurementSets/MSSelector.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/casa/Quanta.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/BasicSL/STLIO.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/TableVector.h>
+#include <casacore/ms/MeasurementSets.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSMetaData.h>
+#include <casacore/ms/MeasurementSets/MSSummary.h>
+#include <casacore/ms/MeasurementSets/MSRange.h>
+#include <casacore/ms/MeasurementSets/MSSelector.h>
+#include <casacore/ms/MeasurementSets/MSSelection.h>
 
-#include <casa/iomanip.h>
-#include <casa/iostream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 // Constructor assigns pointer.  If MS goes out of scope you
@@ -101,7 +101,7 @@ MSSummary::~MSSummary ()
 //
 Int MSSummary::nrow () const
 {
-	return _msmd.ptr()->nRows();
+	return _msmd->nRows();
 }
 
 
@@ -128,7 +128,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 		return False;
 	} else {
 		pMS = pTemp;
-		_msmd.set(new MSMetaData(&ms, _cacheSizeMB));
+		_msmd.reset(new MSMetaData(&ms, _cacheSizeMB));
 		return True;
 	}
 }
@@ -137,20 +137,22 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 //
 // List information about an ms to the logger
 //
-void MSSummary::list (LogIO& os, Bool verbose) const
+void MSSummary::list (LogIO& os, Bool verbose, Bool oneBased) const
 {
 	Record dummy;
-	list(os, dummy, verbose, False);
+	list(os, dummy, verbose, False, oneBased);
 }
 
-void MSSummary::list (LogIO& os, Record& outRec, Bool verbose, Bool fillRecord) const
+void MSSummary::list (LogIO& os, Record& outRec, Bool verbose,
+                      Bool fillRecord, Bool oneBased) const
 {
 	// List a title for the Summary
 	listTitle (os);
+
 	// List the main table as well as the subtables in a useful order and format
 	listWhere (os,verbose);
 	listWhat (os,outRec, verbose, fillRecord);
-	listHow (os,verbose);
+	listHow (os,verbose, oneBased);
 
 	// These aren't really useful (yet?)
 	//  listSource (os,verbose);
@@ -206,13 +208,13 @@ void MSSummary::listWhat (LogIO& os, Record& outRec, Bool verbose, Bool fillReco
 }
 
 
-void MSSummary::listHow (LogIO& os, Bool verbose) const
+void MSSummary::listHow (LogIO& os, Bool verbose, Bool oneBased) const
 {
 	// listSpectralWindow (os,verbose);
 	// listPolarization (os,verbose);
-	listSpectralAndPolInfo(os, verbose);
+        listSpectralAndPolInfo(os, verbose, oneBased);
 	listSource (os,verbose);
-	//  listFeed (os,verbose);
+	//  listFeed (os,verbose, oneBased));
 	listAntenna (os,verbose);
 }
 
@@ -236,18 +238,14 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		return;
 	}
 
-	//ROMSColumns msc(*pMS);
-	/*
-	std::set<Double> times = _msmd->getTimesForScans(std::set<Int>());
-	Double startTime = *times.begin();
-	Double stopTime = *(--times.end());
-	*/
+	// Make objects
 	std::pair<Double, Double> timerange = _msmd->getTimeRange();
 	Double startTime = timerange.first;
 	Double stopTime = timerange.second;
-	//minMax(startTime, stopTime, msc.time().getColumn());
 	Double exposTime = stopTime - startTime;
+	//    Double exposTime = sum(msc.exposure().getColumn());
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
+
 	ROMSMainColumns msmc(*pMS);
 	String timeref=msmc.time().keywordSet().subRecord("MEASINFO").asString("Ref");
 
@@ -259,6 +257,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			<< " (" << timeref << ")"
 			<< endl << endl;
 	os << LogIO::POST;
+
 	if(fillRecord){
 		outRec.define("numrecords", nrow());
 		outRec.define("IntegrationTime", exposTime);
@@ -291,6 +290,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	mssel.setMS(const_cast<MeasurementSet&>(*pMS));
 	mssel.initSelection(True);
 	Table mstab(mssel.selectedTable());
+
 	// Field names:
 	ROMSFieldColumns field(pMS->field());
 	Vector<String> fieldnames(field.name().getColumn());
@@ -315,6 +315,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthnrow = 10;
 	Int widthNUnflaggedRow = 13;
 	//Int widthInttim = 7;
+
 	// Set up iteration over OBSID and ARRID:
 	Block<String> icols(2);
 	icols[0] = "OBSERVATION_ID";
@@ -325,6 +326,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	const Int maxRecLength=10000; //limiting for speed and size sake
 	// Iterate:
 	while (!obsarriter.pastEnd()) {
+
 		// Table containing this iteration:
 		Table obsarrtab(obsarriter.table());
 		// Extract (zero-based) OBSID and ARRID for this iteration:
@@ -332,6 +334,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Int obsid(obsidcol(0));
 		ROTableVector<Int> arridcol(obsarrtab,"ARRAY_ID");
 		Int arrid(arridcol(0));
+
 		if (verbose) {
 			// Report OBSID and ARRID, and header for listing:
 			os << endl << "   ObservationID = " << obsid;
@@ -342,12 +345,11 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"            nRows     ";
-			if (_listUnflaggedRowCount) {
-				os << "nUnflRows   ";
-			}
-			os << "SpwIds   Average Interval(s)    ScanIntent" << endl;
-
+                           << "            nRows     ";
+                        if (_listUnflaggedRowCount) {
+                          os << "nUnflRows   ";
+                        }
+                        os << "SpwIds   Average Interval(s)    ScanIntent" << endl;
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -358,6 +360,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		jcols[0] = "SCAN_NUMBER";
 		jcols[1] = "FIELD_ID";
 		TableIterator stiter(obsarrtab,jcols);
+
 		// Vars for keeping track of time, fields, and ddis
 		Int lastscan(-1);
 		Vector<Int> lastfldids;
@@ -376,6 +379,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Int thisnrow(0);
 		Double meanIntTim(0.0);
 
+
 		os.output().precision(3);
 		Int subsetscan=0;
 		// Iterate over scans/fields:
@@ -385,6 +389,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			// ms table at this scan
 			Table t(stiter.table());
 			Int nrow=t.nrow();
+
 			// relevant columns
 			ROTableVector<Double> timecol(t,"TIME");
 			ROTableVector<Double> inttim(t,"EXPOSURE");
@@ -413,6 +418,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			nst=1;
 
 			nVisPerField_(fldids(0))+=nrow;
+
 			// fill field and ddi lists for this scan
 			for (Int i=1; i < nrow; i++) {
 				if ( !anyEQ(fldids,fldcol(i)) ) {
@@ -434,6 +440,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				}
 
 			}
+
 			// If not first timestamp, check if scan changed, etc.
 			if (!firsttime) {
 				// Has state changed?
@@ -470,7 +477,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					// this MJD
 					day=floor(MVTime(btime/C::day).day());
 
-					spw = _msmd.ptr()->getSpwsForScan(lastscan);
+					spw = _msmd->getSpwsForScan(lastscan);
 					String name=fieldnames(lastfldids(0));
 
 					if (verbose) {
@@ -500,15 +507,15 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						os.output().width(widthnrow);
 						os.output().setf(ios::right, ios::adjustfield);
 						os <<  _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
-						if (_listUnflaggedRowCount) {
-							ostringstream xx;
-							xx << std::fixed << setprecision(2)
-								<< _msmd->nUnflaggedRows(
-									MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0)
-								);
-							os.output().width(widthNUnflaggedRow);
-							os << xx.str();
-						}
+                                                if (_listUnflaggedRowCount) {
+                                                  ostringstream xx;
+                                                  xx << std::fixed << setprecision(2)
+                                                     << _msmd->nUnflaggedRows(
+								MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0)
+							);
+                                                  os.output().width(widthNUnflaggedRow);
+                                                  os << xx.str();
+                                                }
 
 						//os.output().width(widthInttim); os << meanIntTim;
 						os.output().width(widthLead); os << "  ";
@@ -533,17 +540,14 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 							os << intToScanMap[*iter];
 						}
 						os << "] ";
-						/*
 						// The Obsmode column can be empty only report them if it is not
-						String obsMode = "";
-						if (obsModes.size() > (unsigned int) 0) {
-							obsMode=obsModes(laststids(0));
-						}
+						//String obsMode = "";
+						//if (obsModes.size() > (unsigned int) 0) {
+						//	obsMode=obsModes(laststids(0));
+						//}
 						//os << obsMode;
 
-						// os << endl;
-
-						 */
+						//os << endl;
 						std::set<String> intents = _msmd->getIntentsForScan(lastscan);
 						if (intents.size() > 0) {
 							os << intents;
@@ -567,7 +571,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						subScanRecord.define("StateId", laststids(0));
 						subScanRecord.define("nRow", thisnrow);
 						subScanRecord.define("IntegrationTime", meanIntTim);
-						subScanRecord.define("SpwIds", Vector<Int>(spw));
+						subScanRecord.define("SpwIds", Vector<Int>(spw.begin(), spw.size(), 0));
 						scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 						if(!outRec.isDefined(scanrecid)){
 							outRec.defineRecord(scanrecid, scanRecord);
@@ -581,7 +585,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					}
 
 					// new btime:
-					// btime=thistime;
 					btime = _msmd->getTimeRangeForScan(thisscan).first;
 					// next last day is this day
 					lastday=day;
@@ -595,7 +598,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				//etime=timecol(nrow-1);   //CAS-2751
 				etime = _msmd->getTimeRangeForScan(thisscan).second;
 			} else {
-                std::pair<Double, Double> timeRange = _msmd->getTimeRangeForScan(thisscan);
+                                std::pair<Double, Double> timeRange = _msmd->getTimeRangeForScan(thisscan);
 				// initialize btime and etime
 				//btime=thistime;
 				btime = timeRange.first;
@@ -662,21 +665,15 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			os.output().setf(ios::right, ios::adjustfield);
 			os << _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
 			if (_listUnflaggedRowCount) {
-				ostringstream xx;
-				xx << std::fixed << setprecision(2)
-					<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
-				os.output().width(widthNUnflaggedRow);
-				os << xx.str();
-			}
+                          ostringstream xx;
+                          xx << std::fixed << setprecision(2)
+                             << _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+                          os.output().width(widthNUnflaggedRow);
+                          os << xx.str();
+                        }
 //			os.output().width(widthInttim); os << meanIntTim;
 			os.output().width(widthLead);  os << "  ";
-			ostringstream oss;
-			ostream_iterator<uInt> out_it (oss,", ");
-			copy ( spw.begin(), spw.end(), out_it );
-			String spwout = oss.str();
-			spwout.trim();
-			spwout.rtrim(',');
-			os << "[" << spwout << "]";
+                        showContainer (os.output(), spw, ", ", "[", "]");
 			/*
 			if (spw.size() <= 9) {
 				os.output().width(28 - (3*spw.size())); os << " ";
@@ -696,21 +693,18 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				os << intToScanMap[*iter];
 			}
 			os << "] ";
-			/*
 			// The Obsmode column can be empty only report them if it is not
-			String obsMode = "";
-			if (obsModes.size() > (unsigned int) 0) {
-				obsMode=obsModes(laststids(0));
-			}
-			os << obsMode;
-			os << endl;
-			*/
+			//String obsMode = "";
+			//if (obsModes.size() > (unsigned int) 0) {
+			//	obsMode=obsModes(laststids(0));
+			//}
+			//os << obsMode;
+			//os << endl;
 			set<String> intents = _msmd->getIntentsForScan(lastscan);
 			if (intents.size() > 0) {
 				os << intents;
 			}
 			os << endl;
-
 		}
 		if(fillRecord  && (recLength < maxRecLength)){
 			Record scanRecord;
@@ -728,7 +722,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			subScanRecord.define("FieldName", name);
 			subScanRecord.define("nRow", thisnrow);
 			subScanRecord.define("IntegrationTime", meanIntTim);
-			subScanRecord.define("SpwIds", Vector<Int>(spw));
+			subScanRecord.define("SpwIds", Vector<Int>(spw.begin(), spw.size(), 0));
 			scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 			if(!outRec.isDefined(scanrecid)){
 				outRec.defineRecord(scanrecid, scanRecord);
@@ -847,7 +841,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 		Int nddi(1);
 		Int nst(1);
 		Double btime(0.0), etime(0.0);
-		Double lastday(0.0), day(0.0);
 		Bool firsttime(True);
 		Int thisnrow(0);
 		Double meanIntTim(0.0);
@@ -938,9 +931,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 						meanIntTim=0.0;
 					}
 
-					// this MJD
-					day=floor(MVTime(btime/C::day).day());
-
 					// Spws
 					spwids.resize(lastddids.nelements());
 					for (uInt iddi=0; iddi<spwids.nelements();++iddi)
@@ -961,7 +951,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 					subScanRecord.define("nRow", thisnrow);
 					subScanRecord.define("IntegrationTime", meanIntTim);
 					subScanRecord.define("SpwIds", spwids);
-					subScanRecord.define("DDIds", lastddids);
 					scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 					if(!outRec.isDefined(scanrecid)){
 						outRec.defineRecord(scanrecid, scanRecord);
@@ -976,8 +965,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 
 					// new btime:
 					btime=thistime;
-					// next last day is this day
-					lastday=day;
 
 					thisnrow=0;
 					meanIntTim=0.;
@@ -1014,9 +1001,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 		else
 			meanIntTim=0.0;
 
-		// this MJD
-		day=floor(MVTime(btime/C::day).day());
-
 		// Spws
 		spwids.resize(lastddids.nelements());
 		for (uInt iddi=0; iddi<spwids.nelements();++iddi)
@@ -1038,7 +1022,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 		subScanRecord.define("nRow", thisnrow);
 		subScanRecord.define("IntegrationTime", meanIntTim);
 		subScanRecord.define("SpwIds", spwids);
-		subScanRecord.define("DDIds", lastddids);
 		scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 		if(!outRec.isDefined(scanrecid)){
 			outRec.defineRecord(scanrecid, scanRecord);
@@ -1215,7 +1198,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 }
 
 
-void MSSummary::listFeed (LogIO& os, Bool verbose) const
+void MSSummary::listFeed (LogIO& os, Bool verbose, Bool oneBased) const
 {
 	// Do nothing in terse mode
 	if (verbose) {
@@ -1251,7 +1234,7 @@ void MSSummary::listFeed (LogIO& os, Bool verbose) const
 				os.output().width(widthLead);	os << "  ";
 				os.output().width(widthAnt);	os << (msFC.antennaId()(row)+1);
 				Int spwId = msFC.spectralWindowId()(row);
-				if (spwId >= 0) spwId = spwId + 1;
+				if (oneBased  &&  spwId >= 0) spwId = spwId + 1;
 				os.output().width(widthSpWinId);os << spwId;
 				os.output().width(widthNumRec);	os << msFC.numReceptors()(row);
 				os.output().width(widthPolType);os << msFC.polarizationType()(row);
@@ -1299,6 +1282,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthSrc   =  6;
 		Int widthnVis  =  10;
 		Int widthNUnflaggedRows = 13;
+
 		outrec.define("nfields", Int(fieldId.nelements()));
 		if (verbose) {}  // null, always same output
 
@@ -1317,9 +1301,9 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 			os.output().width(widthnVis);
 			os << "nRows";
 			if (_listUnflaggedRowCount) {
-				os.output().width(widthNUnflaggedRows);
-				os << "nUnflRows";
-			}
+                          os.output().width(widthNUnflaggedRows);
+                          os << "nUnflRows";
+                        }
 		}
 		os << endl;
 		// loop through fields
@@ -1346,12 +1330,12 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 					os.output().width(widthnVis);
 					os << _msmd->nRows(MSMetaData::BOTH, fld);
 					if (_listUnflaggedRowCount) {
-						os.output().width(widthNUnflaggedRows);
-						ostringstream xx;
-						xx << std::fixed << setprecision(2) << std::right
-							<< _msmd->nUnflaggedRows(MSMetaData::BOTH, fld);
-						os << xx.str();
-					}
+                                          os.output().width(widthNUnflaggedRows);
+                                          ostringstream xx;
+                                          xx << std::fixed << setprecision(2) << std::right
+                                             << _msmd->nUnflaggedRows(MSMetaData::BOTH, fld);
+                                          os << xx.str();
+                                        }
 				}
 				os << endl;
 				if(fillRecord){
@@ -1688,8 +1672,6 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 	ROMSSpWindowColumns msSWC(pMS->spectralWindow());
 	// Create a MS-data_desc-columns object
 	ROMSDataDescColumns msDDC(pMS->dataDescription());
-	// Create a MS-polin-columns object
-	ROMSPolarizationColumns msPOLC(pMS->polarization());
 
 	if (msDDC.nrow()<=0 or msSWC.nrow()<=0) {
 		//The DATA_DESCRIPTION or SPECTRAL_WINDOW table is empty
@@ -1705,7 +1687,6 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 	for (uInt i=0; i<ddId.nelements(); i++) uddId(i)=ddId(i);
 	// now get the corresponding spectral windows and pol setups
 	Vector<Int> spwIds = msDDC.spectralWindowId().getColumnCells(uddId);
-	Vector<Int> polIds = msDDC.polarizationId().getColumnCells(uddId);
 	//const Int option=Sort::HeapSort | Sort::NoDuplicates;
 	//const Sort::Order order=Sort::Ascending;
 	//Int nSpw=GenSort<Int>::sort (spwIds, order, option);
@@ -1714,7 +1695,6 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 		// For each row of the DataDesc subtable, write the info
 		for (uInt i=0; i<ddId.nelements(); i++) {
 			Int dd=ddId(i);
-			Int pol=polIds(i);
 			Int spw = msDDC.spectralWindowId()(dd);
 
 			Record ddRec;
@@ -1725,8 +1705,6 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 			ddRec.define("ChanWidth", msSWC.chanWidth()(spw)(IPosition(1,0)));
 			ddRec.define("TotalWidth", msSWC.totalBandwidth()(spw));
 			ddRec.define("RefFreq", msSWC.refFrequency()(spw));
-			ddRec.define("PolId", polIds(i));
-			ddRec.define("NumCorr", msPOLC.numCorr()(pol));
 
 			outRec.defineRecord(String::toString(dd), ddRec);
 		}
@@ -1775,7 +1753,8 @@ void MSSummary::listPolarization (LogIO& os, Bool verbose) const
 	os << LogIO::POST;
 }
 
-void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
+void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose,
+                                        Bool /*oneBased*/) const
 {
 	// Create a MS-spwin-columns object
 	ROMSSpWindowColumns msSWC(pMS->spectralWindow());
@@ -1847,12 +1826,11 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().setf(ios::right, ios::adjustfield);
 		os.output().width(widthNumChan);	os << " #Chans" << " ";
 		os.output().setf(ios::left, ios::adjustfield);
-		os.output().width(widthFrame);      os << "  Frame";
-		os.output().width(widthFreq);	os << "   Ch0(MHz)";
+		os.output().width(widthFrame);  os << "  Frame";
+		os.output().width(widthFreq);   os << "   Ch0(MHz)";
 		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		os.output().width(widthFreq);	os << "CtrFreq(MHz) ";
-
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
 		Bool hasBBCNo = _msmd->hasBBCNo();
 		if (hasBBCNo) {
@@ -1865,7 +1843,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		vector<uInt> nChans = _msmd->nChans();
 		vector<QVD> chanFreqs = _msmd->getChanFreqs();
 		vector<QVD> chanWidths = _msmd->getChanWidths();
-		vector<Quantity> centerFreqs = _msmd->getCenterFreqs();
+ 		vector<Quantity> centerFreqs = _msmd->getCenterFreqs();
 		vector<Double> bandwidths = _msmd->getBandWidths();
 		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
 
@@ -1905,7 +1883,6 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os<< bandwidths[spw]/1000;
 			os.output().width(widthFrqNum);
 			os.output().precision(4);
-
 			os << centerFreqs[spw].getValue("MHz") << " ";
 			if (hasBBCNo) {
 				os.output().width(widthBBCNo);
@@ -2099,5 +2076,5 @@ void MSSummary::clearFlags(LogIO& os) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

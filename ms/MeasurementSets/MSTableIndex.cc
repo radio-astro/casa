@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTableIndex.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTableIndex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <ms/MeasurementSets/MSTableIndex.h>
+#include <casacore/ms/MeasurementSets/MSTableIndex.h>
 
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordDesc.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Exceptions/Error.h>
-#include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSTableIndex::MSTableIndex()
     : timeVals_p(0), intervalVals_p(0), key_p(0), time_p(0.0), interval_p(0.0),
@@ -390,5 +390,5 @@ Bool MSTableIndex::keysChanged()
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

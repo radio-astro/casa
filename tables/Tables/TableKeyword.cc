@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableKeyword.cc 21040 2011-04-07 13:26:55Z gervandiepen $
+//# $Id: TableKeyword.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <tables/Tables/TableKeyword.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/PlainTable.h>
-#include <tables/Tables/TableAttr.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableError.h>
-#include <casa/OS/Path.h>
+#include <casacore/tables/Tables/TableKeyword.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/PlainTable.h>
+#include <casacore/tables/Tables/TableAttr.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/OS/Path.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableKeyword::TableKeyword (const String& tableDescName)
 : table_p         (new Table),
@@ -141,7 +141,7 @@ String TableKeyword::tableName (const String& parentName) const
     return Path::stripDirectory (attr_p.name(), parentName);
 }
 
-Table TableKeyword::table(const TableLock * optionalLockOptions) const
+Table TableKeyword::table (const TableLock* lockOptions) const
 {
     // Return the table object if already open.
     if (! table_p->isNull()) {
@@ -155,14 +155,9 @@ Table TableKeyword::table(const TableLock * optionalLockOptions) const
     // Note that the opened table is not kept to avoid possible leaks
     // if a table keyword refers to the table itself (like the SORTED_TABLE
     // in an MS).
-    //
-    // If lock options are provided then use those rather than the options
-    // that come from the main table (used to allow subtables to have locks
-    // different than the main table).
-
-    TableLock lockOptions = optionalLockOptions != 0 ? * optionalLockOptions
-                                                     : attr_p.lockOptions();
-    return Table(attr_p.name(), lockOptions, option);
+    return Table(attr_p.name(),
+                 lockOptions  ?  *lockOptions : attr_p.lockOptions(),
+                 option);
 }
 
 void TableKeyword::close() const
@@ -203,5 +198,5 @@ Bool TableKeyword::conform (const Table& that) const
     return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,18 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedLatticeIterator.tcc 19909 2007-02-23 02:08:02Z Malte.Marquarding $
+//# $Id: MaskedLatticeIterator.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <casa/aips.h>
+#ifndef LATTICES_MASKEDLATTICEITERATOR_TCC
+#define LATTICES_MASKEDLATTICEITERATOR_TCC
 
-#include <lattices/Lattices/MaskedLatticeIterator.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h> 
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+
+#include <casacore/lattices/Lattices/MaskedLatticeIterator.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Assert.h> 
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T>
 RO_MaskedLatticeIterator<T>::RO_MaskedLatticeIterator()
@@ -150,5 +153,7 @@ Bool RO_MaskedLatticeIterator<T>::getMask (Array<Bool>& arr,
 				       removeDegenerateAxes);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

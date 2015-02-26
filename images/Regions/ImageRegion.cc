@@ -23,30 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageRegion.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: ImageRegion.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/ImageRegion.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/images/Regions/WCRegion.h>
+#include <casacore/images/Regions/WCLELMask.h>
+#include <casacore/images/Regions/WCUnion.h>
+#include <casacore/images/Regions/WCIntersection.h>
+#include <casacore/images/Regions/WCDifference.h>
+#include <casacore/images/Regions/WCComplement.h>
+#include <casacore/images/Images/ImageExprParse.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/lattices/LEL/LatticeExprNode.h>
+#include <casacore/lattices/LRegions/LCSlicer.h>
+#include <casacore/lattices/LRegions/RegionType.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <images/Images/ImageExprParse.h>
-#include <images/Regions/WCRegion.h>
-#include <images/Regions/WCUnion.h>
-#include <images/Regions/WCIntersection.h>
-#include <images/Regions/WCDifference.h>
-#include <images/Regions/WCComplement.h>
-#include <images/Regions/WCLELMask.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/LatticeExprNode.h>
-#include <lattices/Lattices/RegionType.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ImageRegion::ImageRegion()
 : LattRegionHolder (uInt(0)),
@@ -101,8 +100,7 @@ ImageRegion& ImageRegion::operator= (const ImageRegion& other)
 {
     if (this != &other) {
 	LattRegionHolder::operator= (other);
-	if(itsWC)
-           delete itsWC;
+        delete itsWC;
 	itsWC = other.itsWC;
 	if (itsWC != 0) {
 	    itsWC = itsWC->cloneRegion();
@@ -127,6 +125,55 @@ Bool ImageRegion::operator== (const LattRegionHolder& other) const
     return True;
 }
 
+ImageRegion* ImageRegion::fromLatticeExpression(const String& latticeExpression)
+{
+  if (latticeExpression.empty()) {
+    return 0;
+  }
+  // Get LatticeExprNode (tree) from parser.
+  LatticeExprNode node = ImageExprParse::command(latticeExpression);
+  WCLELMask region(node);
+  return new ImageRegion(region);
+}
+
+ImageRegion* ImageRegion::fromRecord(LogIO* logger,
+                                     const CoordinateSystem& coords,
+                                     const IPosition& imShape,
+                                     const Record& regionRecord)
+{
+  if (logger != 0) {
+    *logger << LogOrigin("ImageRegion", __FUNCTION__);
+  }
+  ImageRegion* pRegion = 0;
+  if (regionRecord.nfields() == 0) {
+    IPosition blc(imShape.nelements(), 0);
+    IPosition trc(imShape - 1);
+    LCSlicer slicer(blc, trc, RegionType::Abs);
+    pRegion = new ImageRegion(slicer);
+    if (logger != 0) {
+      *logger << LogIO::NORMAL << "Selected bounding box : " << endl;
+      *logger << LogIO::NORMAL << "    " << blc << " to " << trc << "  ("
+              << CoordinateUtil::formatCoordinate(blc, coords) << " to "
+              << CoordinateUtil::formatCoordinate(trc, coords) << ")"
+              << LogIO::POST;
+    }
+  } else {
+    pRegion = ImageRegion::fromRecord(TableRecord(regionRecord), "");
+    if (logger != 0) {
+      LatticeRegion latRegion = pRegion->toLatticeRegion(coords, imShape);
+      Slicer sl = latRegion.slicer();
+      *logger << LogIO::NORMAL << "Selected bounding box : " << endl;
+      *logger << LogIO::NORMAL << "    " << sl.start() << " to " << sl.end()
+              << "  ("
+              << CoordinateUtil::formatCoordinate(sl.start(), coords)
+              << " to "
+              << CoordinateUtil::formatCoordinate(sl.end(), coords)
+              << ")" << LogIO::POST;
+    }
+  }
+  return pRegion;
+}
+
 Bool ImageRegion::isWCRegion() const
 {
     return  (itsWC != 0);
@@ -137,75 +184,6 @@ const WCRegion* ImageRegion::asWCRegionPtr() const
     AlwaysAssert (isWCRegion(), AipsError);
     return itsWC;
 }
-
-ImageRegion* ImageRegion::fromLatticeExpression(const String& latticeExpression) {
-	if (latticeExpression.empty()) {
-		return 0;
-	}
-	/*
-	// Get LatticeExprNode (tree) from parser.  Substitute possible
-	// object-id's by a sequence number, while creating a
-	// LatticeExprNode for it.  Convert the Record containing
-	// regions to a PtrBlock<const ImageRegion*>.
-	Block<LatticeExprNode> tempLattices;
-	String expr = latticeExpression;
-	Int pos = expr.find_last_of("/", 10000);
-	String imageName = expr.after(pos);
-	// hmmm I can't make the ternary operator work for this
-	String directory = "";
-	if (pos > 0) {
-		directory = expr.before(pos);
-	}
-	PtrBlock<const ImageRegion*> tempRegs;
-	LatticeExprNode node = ImageExprParse::command(
-		imageName, tempLattices, tempRegs, directory
-	);
-	*/
-	LatticeExprNode node = ImageExprParse::command(latticeExpression);
-	const WCLELMask region(node);
-	return new ImageRegion(region);
-}
-
-ImageRegion* ImageRegion::fromRecord(
-	LogIO *const &logger, const CoordinateSystem& coords,
-	const IPosition& imShape, const Record& regionRecord
-) {
-	if (logger != 0) {
-		*logger << LogOrigin("ImageRegion", __func__);
-	}
-	ImageRegion* pRegion = 0;
-	if (regionRecord.nfields() == 0) {
-		IPosition blc(imShape.nelements(), 0);
-		IPosition trc(imShape - 1);
-		LCSlicer slicer(blc, trc, RegionType::Abs);
-		pRegion = new ImageRegion(slicer);
-		if (logger != 0) {
-			*logger << LogIO::NORMAL << "Selected bounding box : " << endl;
-			*logger << LogIO::NORMAL << "    " << blc << " to " << trc << "  ("
-				<< CoordinateUtil::formatCoordinate(blc, coords) << " to "
-				<< CoordinateUtil::formatCoordinate(trc, coords) << ")"
-				<< LogIO::POST;
-		}
-	}
-	else {
-		pRegion = ImageRegion::fromRecord(TableRecord(regionRecord), "");
-		if (logger != 0) {
-			LatticeRegion latRegion = pRegion->toLatticeRegion(
-				coords, imShape
-			);
-			Slicer sl = latRegion.slicer();
-			*logger << LogIO::NORMAL << "Selected bounding box : " << endl;
-			*logger << LogIO::NORMAL << "    " << sl.start() << " to " << sl.end()
-				<< "  ("
-				<< CoordinateUtil::formatCoordinate(sl.start(), coords)
-				<< " to "
-				<< CoordinateUtil::formatCoordinate(sl.end(), coords)
-				<< ")" << LogIO::POST;
-		}
-	}
-	return pRegion;
-}
-
 
 LCRegion& ImageRegion::asMask()
 {
@@ -321,53 +299,5 @@ LattRegionHolder* ImageRegion::makeComplement() const
     return LattRegionHolder::makeComplement();
 }
 
-Record * ImageRegion::tweakedRegionRecord(Record *Region) {
-	// Image uses Float but it can't be specified in the IDL interface
-	if (Region->isDefined("blc")) {
-		Int fldn_blc = Region->fieldNumber("blc");
-		if ((Region->dataType(fldn_blc)) == TpArrayDouble) {
-			Array<Double> a_blc;
-			Region->get(fldn_blc, a_blc);
-			Vector<Double> blc(a_blc);
-			Vector<Float> Blc(blc.size());
-			for (uInt i = 0; i < blc.size(); i++) {
-				Blc[i] = (Float) blc[i];
-			}
-			Region->removeField(fldn_blc);
-			Region->define("blc", Blc);
-		}
-	}
-	if (Region->isDefined("trc")) {
-		Int fldn_trc = Region->fieldNumber("trc");
-		if ((Region->dataType(fldn_trc)) == TpArrayDouble) {
-			Array<Double> a_trc;
-			Region->get(fldn_trc, a_trc);
-			Vector<Double> trc(a_trc);
-			Vector<Float> Trc(trc.size());
-			for (uInt i = 0; i < trc.size(); i++) {
-				Trc[i] = (Float) trc[i];
-			}
-			Region->removeField(fldn_trc);
-			Region->define("trc", Trc);
-		}
-	}
-	if (Region->isDefined("inc")) {
-		Int fldn_inc = Region->fieldNumber("inc");
-		if ((Region->dataType(fldn_inc)) == TpArrayDouble) {
-			Array<Double> a_inc;
-			Region->get(fldn_inc, a_inc);
-			Vector<Double> inc(a_inc);
-			Vector<Float> Inc(inc.size());
-			for (uInt i = 0; i < inc.size(); i++) {
-				Inc[i] = (Float) inc[i];
-			}
-			Region->removeField(fldn_inc);
-			Region->define("inc", Inc);
-		}
-	}
-	return Region;
-}
-
-
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

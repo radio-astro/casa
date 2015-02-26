@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasOffsetDesc.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableMeasOffsetDesc.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MEASURES_TABLEMEASOFFSETDESC_H
 #define MEASURES_TABLEMEASOFFSETDESC_H
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/MeasureHolder.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/MeasureHolder.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableMeasDescBase;
@@ -212,6 +213,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,12 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeDefinitions.h 19343 2006-04-05 22:18:53Z sbhatnag $
+//# $Id: MSTimeDefinitions.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSTIMEDEFINITIONS_H
 #define MS_MSTIMEDEFINITIONS_H
 
-namespace casa{
+#include <casacore/casa/aips.h>
+
+namespace casacore{
 
   typedef struct TimeFields{
     Int year,month,day,hour,minute,sec,fsec;

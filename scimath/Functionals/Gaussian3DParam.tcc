@@ -23,17 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Gaussian3DParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: Gaussian3DParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/Gaussian3DParam.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
-#include <scimath/Functionals/Function.h>
+#ifndef SCIMATH_GAUSSIAN3DPARAM_TCC
+#define SCIMATH_GAUSSIAN3DPARAM_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/Gaussian3DParam.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Function.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class Type> 
 Gaussian3DParam<Type>::Gaussian3DParam() 
@@ -76,7 +79,7 @@ Gaussian3DParam<Type>::Gaussian3DParam(Type &height,
 
 
 template<class Type> 
-Gaussian3DParam<Type>::Gaussian3DParam(Type height, 
+Gaussian3DParam<Type>::Gaussian3DParam(Type /*height*/, 
                                        const Vector<Type>& center, 
                                        const Vector<Type>& width, 
                                        Type T, Type P)
@@ -324,5 +327,7 @@ void Gaussian3DParam<Type>::settrigvals() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

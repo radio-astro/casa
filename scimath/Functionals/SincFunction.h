@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SincFunction.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: SincFunction.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_SINCFUNCTION_H
 #define SCIMATH_SINCFUNCTION_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Functionals/SincParam.h>
-#include <scimath/Functionals/Function.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/SincParam.h>
+#include <casacore/scimath/Functionals/Function.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -144,9 +144,9 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/SincFunction.tcc>
+#include <casacore/scimath/Functionals/SincFunction.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

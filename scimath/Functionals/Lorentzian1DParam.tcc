@@ -23,14 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lorentzian1DParam.tcc 20253 2010-02-15 12:15:00Z Wataru.Kawasaki $
+//# $Id: Lorentzian1DParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_LORENTZIAN1DPARAM_TCC
+#define SCIMATH_LORENTZIAN1DPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/Lorentzian1DParam.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Lorentzian1DParam.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Statics
 ///template<class T>
@@ -104,5 +107,7 @@ void Lorentzian1DParam<T>::setFlux(const T &flux) {
   param_p[HEIGHT] = flux*T(C::_1_pi)/abs(param_p[WIDTH])/fwhm2int;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

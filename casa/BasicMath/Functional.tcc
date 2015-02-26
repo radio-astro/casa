@@ -24,16 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Functional.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Functional.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_FUNCTIONAL_TCC
+#define CASA_FUNCTIONAL_TCC
 
 //# Includes
-#include <casa/BasicMath/Functional.h>
+#include <casacore/casa/BasicMath/Functional.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template<class Domain,class Range>
 Functional<Domain,Range>::~Functional() {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

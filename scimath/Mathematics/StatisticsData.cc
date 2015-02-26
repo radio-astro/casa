@@ -22,13 +22,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: HostInfoDarwin.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/StatisticsData.h>
+#include <casacore/scimath/Mathematics/StatisticsData.h>
 
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa {
+namespace casacore {
 
 String StatisticsData::toString(STATS stat) {
 	switch(stat) {

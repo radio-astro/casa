@@ -27,36 +27,36 @@
 //# $Id: 
 
 
-#include <coordinates/Coordinates/FITSCoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/FITSCoordinateUtil.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/ObsInfo.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
 
-#include <coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Containers/Record.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <fits/FITS/FITSDateUtil.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MFrequency.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/fits/FITS/FITSDateUtil.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MFrequency.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
 #include <wcslib/wcs.h>
 #include <wcslib/wcshdr.h>
@@ -65,7 +65,7 @@
 #include <wcslib/fitshdr.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
     Bool FITSCoordinateUtil::toFITSHeader(RecordInterface &header, 
 					  IPosition &shape,
@@ -308,7 +308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (skyCoord >=0 && pvi_ma.nelements() > 0) {
 	    if (!writeWCS) {
 		for (uInt k=0; k<pvi_ma.nelements(); k++) {
-		    if (!casa::nearAbs(pvi_ma(k), 0.0)) {
+		    if (!casacore::nearAbs(pvi_ma(k), 0.0)) {
 			os << LogIO::WARN << 
 			    "Projection parameters not all zero.Information lost in FITS"
 			    " conversion. Try WCS?." <<
@@ -1265,9 +1265,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool eqIs1950VLA(False);
 	Bool eqIs2000(False);
 	if (eqIsDefined) {
-	    eqIs1950 = casa::near(equinox, 1950.0);
-	    eqIs1950VLA = casa::near(equinox, 1979.9);
-	    eqIs2000 = casa::near(equinox, 2000.0);
+	    eqIs1950 = casacore::near(equinox, 1950.0);
+	    eqIs1950VLA = casacore::near(equinox, 1979.9);
+	    eqIs2000 = casacore::near(equinox, 2000.0);
 	}
 
 // Extract RADESYS keyword
@@ -1391,7 +1391,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    if (equinox>=1984.0) {                     // Paper II
 			type = MDirection::J2000;               // FK5
 			return True;
-		    } else if (casa::near(equinox,1979.9)) {
+		    } else if (casacore::near(equinox,1979.9)) {
 			type = MDirection::B1950_VLA;
 			return True;
 		    } else {
@@ -1420,7 +1420,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     {
         if (wcs.specsys[0]=='\0') {
-	    if (wcs.velref==0) { // velref was also not given
+            if (wcs.velref==0) { // velref was also not given
 	        os << LogIO::NORMAL << "Neither SPECSYS nor VELREF keyword given, spectral reference frame not defined ..." 
 		   << LogIO::POST;
 	        type = MFrequency::Undefined;
@@ -1612,7 +1612,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Observer and Telescope are in the FITS cards record.
 
 	Vector<String> error;
-	Bool ok = oi.fromFITS (error, header);
+	oi.fromFITS (error, header);
 
 // Now overwrite the date info from the wcs struct
 
@@ -1623,7 +1623,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 //
 	MEpoch::Types timeSystem;
-	ok = MEpoch::getType (timeSystem, timeSysStr);
+	MEpoch::getType (timeSystem, timeSysStr);
 
 // The date information is in the WCS structure
 // 'mjdobs' takes precedence over 'dateobs'
@@ -1843,7 +1843,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (header.isDefined("pc")) {
 
 // Unlikely to encounter this, as the current WCS papers
-// use the CD rather than PC matrix. The aips++ user binding
+// use the CD rather than PC matrix. The Casacore user binding
 // (Image tool) does not allow the WCS definition to be written
 // so probably we could remove this
 
@@ -1868,7 +1868,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // We can only handle one non-zero angle
 
 	    for (uInt i=0; i<crota.nelements(); i++) {
-		if (!casa::near(crota(i), 0.0)) {
+		if (!casacore::near(crota(i), 0.0)) {
 		    if (rotationAxis >= 0) {
 			os << LogIO::SEVERE << "Can only convert one non-zero"
 			    " angle from " << sprefix << 
@@ -1912,7 +1912,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void FITSCoordinateUtil::cardsToRecord (LogIO& os, RecordInterface& rec, char* pHeader) const
     //
-    // Convert the fitshdr struct to an aips++ Record for ease of later use
+    // Convert the fitshdr struct to a Casacore Record for ease of later use
     //
     {
 
@@ -2034,7 +2034,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	String sType = c.showType();
 //
 	for (uInt i=0; i<n; i++) {
-	    if (casa::near(cdelt(i),0.0)) {
+	    if (casacore::near(cdelt(i),0.0)) {
 		if (type==Coordinate::DIRECTION) {
 		    cdelt[i] = C::pi/180.0;        // 1 deg
 		    os << LogIO::WARN << "Zero increment in coordinate of type " << sType << " setting  to 1 deg" << LogIO::POST;
@@ -2048,5 +2048,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	c.setIncrement(cdelt);
     }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

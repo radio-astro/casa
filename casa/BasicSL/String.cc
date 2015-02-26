@@ -23,18 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.cc 21359 2013-06-14 12:55:29Z gervandiepen $
+//# $Id: String.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/BasicSL/RegexBase.h>
+#include <casacore/casa/BasicSL/RegexBase.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 #include <algorithm>
-#include <casa/string.h>
-#include <casa/sstream.h>
+#include <casacore/casa/string.h>
+#include <casacore/casa/sstream.h>
 #include <stdio.h>		// for vsnprintf( )
 #include <cstdarg>              // for va_start/end
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Special constructors
 String::String(ostringstream &os) {
@@ -75,44 +77,16 @@ Int String::freq(const Char *s) const {
   return found;
 }
 
-Double String::toDouble(const String& string) {
-	Bool x;
-	return String::toDouble(x, string);
-}
+Int String::toInt (const String& s, Bool chk)
+  { Int v=0; s.fromString(v, chk); return v; }
+Float String::toFloat (const String& s, Bool chk)
+  { Float v=0; s.fromString(v, chk); return v; }
+Double String::toDouble (const String& s, Bool chk)
+  { Double v=0; s.fromString(v, chk); return v; }
 
-
-Double String::toDouble(Bool& success, const String& string) {
-    istringstream instr(string);
-    Double var;
-    instr >> var;
-    success = ! instr.fail();
-    return (success ? var : 0.0);
-}
-
-Float String::toFloat(const String& string) {
-    Bool x;
-    return String::toFloat(x, string);
-}
-
-Float String::toFloat(Bool& success, const String& string) {
-	istringstream instr(string);
-    Float var;
-    // Initialize in case the string is empty or non-numeric.
-    instr >> var;
-    success = ! instr.fail();
-    return (success ? var : 0.0);
-}
-
-
-Int String::toInt(const String& string) {
-    istringstream instr(string);
-    Int var;
-    // Initialize in case the string is empty or non-numeric.
-    instr >> var;
-    if (instr.fail()) {
-      var = 0;
-    }
-    return var;
+void String::throwFromStringError() const
+{
+  throw AipsError ("fromString failure for string '" + *this + "'");
 }
 
 String String::format (const char* picture, ...)
@@ -630,28 +604,6 @@ SubString &SubString::operator=(const Char c) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
-
-
-// Create some needed templates
-#if !defined(AIPS_AUTO_STL)
-
-#if defined(__GNUG__)
- template void std::__reverse<char*>(char *, char *, std::random_access_iterator_tag);
-#endif
-
-#if defined(AIPS_SUN_NATIVE)
- template void std::__reverse(char *, char *, std::random_access_iterator_tag);
- template std::istream& __rwstd::rw_extract_string ( std::istream&, std::string&, std::char_traits<char>);
-#endif
-
-
-template char *std::transform<char *>(char *, char *, char *, int (*)(int));
-#if defined(AIPS_GCC3)
-template void std::__reverse<string::iterator>(string::iterator, string::iterator, std::random_access_iterator_tag);
-template string::iterator std::transform<string::iterator>(string::iterator, string::iterator, string::iterator, int (*)(int));
-#endif
-
-#endif
+} //# NAMESPACE CASACORE - END
 
 

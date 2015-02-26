@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SymLink.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: SymLink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/OS/SymLink.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/Exceptions.h>
+#include <casacore/casa/OS/SymLink.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/Exceptions.h>
 
 #include <unistd.h>               // needed for unlink
 #include <errno.h>                // needed for errno
-#include <casa/string.h>          // needed for strerror
+#include <casacore/casa/string.h>          // needed for strerror
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 SymLink::SymLink()
 : File()
@@ -191,5 +191,5 @@ Path SymLink::followSymLink() const
     return result;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCBase.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MCBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MCBase.h>
-#include <casa/BasicSL/String.h>
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
+#include <casacore/measures/Measures/MCBase.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -153,5 +153,5 @@ String MCBase::showState(uInt *state,
   return String(oss);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

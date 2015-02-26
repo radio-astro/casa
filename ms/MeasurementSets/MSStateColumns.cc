@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSStateColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSStateColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSStateColumns.h>
-#include <ms/MeasurementSets/MSState.h>
+#include <casacore/ms/MeasurementSets/MSStateColumns.h>
+#include <casacore/ms/MeasurementSets/MSState.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSStateColumns::ROMSStateColumns(const MSState& msState):
   cal_p(msState, MSState::columnName(MSState::CAL)),
@@ -169,5 +169,5 @@ void MSStateColumns::attach(MSState& msState)
 // compile-command: "gmake MSStateColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

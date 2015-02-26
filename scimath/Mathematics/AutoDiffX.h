@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AutoDiffX.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: AutoDiffX.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_AUTODIFFX_H
 #define SCIMATH_AUTODIFFX_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Mathematics/AutoDiff.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template <class T> class Vector;
@@ -166,6 +166,6 @@ template <class T> class AutoDiffX : public AutoDiff<T> {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

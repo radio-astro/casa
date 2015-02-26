@@ -23,35 +23,36 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: taql.cc 21168 2012-01-04 08:11:03Z gervandiepen $
+//# $Id: taql.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableProxy.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/ExprNodeArray.h>
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/TaQL/TableParse.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableProxy.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/TaQL/ExprNodeArray.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <map>
 #include <vector>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
 #ifdef HAVE_READLINE
 # include <readline/readline.h>
 # include <readline/history.h>
 #endif
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 // <summary>
@@ -63,17 +64,16 @@ typedef map<String, pair<Table,String> > TableMap;
 
 
 #ifdef HAVE_READLINE
-bool readLine (string& line, const string& prompt, bool addToHistory)
+bool readLine (string& line, const string& prompt)
 {
   char* str = readline(prompt.c_str());
   if (!str) return false;
   line = string(str);
   free(str);
-  if (addToHistory) add_history (line.c_str());
   return true;
 }
 #else
-bool readLine (String& line, const String& prompt, bool)
+bool readLine (String& line, const String& prompt)
 {
   if (!prompt.empty()) cerr << prompt;
   getline (cin, line);
@@ -87,7 +87,7 @@ bool readLineSkip (String& line, const String& prompt,
   Regex lwhiteRE("^[ \t]*");
   Regex rwhiteRE("[ \t]*$");
   bool fnd = false;
-  while (!fnd  &&  readLine (line, prompt, false)) {
+  while (!fnd  &&  readLine (line, prompt)) {
     // Skip leading and trailing whitespace.
     line.del (lwhiteRE);
     line.del (rwhiteRE);
@@ -110,7 +110,7 @@ bool readLineSkip (String& line, const String& prompt,
     }
   }
 #ifdef HAVE_READLINE
-  add_history (line.c_str());
+  if (fnd) add_history (line.c_str());
 #endif
   return fnd;
 }
@@ -204,10 +204,24 @@ void showDir (const Array<double>& dir, const Vector<String>& units)
       q[i].setValue (*iter);
       MVAngle angle(q[i]);
       if (i == 0)  {
-        angle.print (cout, MVAngle::Format(MVAngle::TIME, 9));
+        ostringstream ostr;
+        angle.print (ostr, MVAngle::Format(MVAngle::TIME, 9));
+        string str(ostr.str());
+        string::size_type pos = str.find(':');
+        if (pos != string::npos) str[pos] = 'h';
+        pos = str.find(':');
+        if (pos != string::npos) str[pos] = 'm';
+        cout << str;
       } else {
         cout << ", ";
-        angle.print (cout, MVAngle::Format(MVAngle::ANGLE, 9));
+        ostringstream ostr;
+        angle.print (ostr, MVAngle::Format(MVAngle::ANGLE, 9));
+        string str(ostr.str());
+        string::size_type pos = str.find('.');
+        if (pos != string::npos) str[pos] = 'd';
+        pos = str.find('.');
+        if (pos != string::npos) str[pos] = 'm';
+        cout << str;
       }
       iter++;
     }
@@ -255,7 +269,7 @@ template<> void showArray (const Array<MVTime>& arr)
 void showTable (const Table& tab, const Vector<String>& colnam, bool printMeas)
 {
   uInt nrcol = 0;
-  PtrBlock<ROTableColumn*> tableColumns(colnam.nelements());
+  PtrBlock<TableColumn*> tableColumns(colnam.nelements());
   Block<Vector<String> > timeUnit(colnam.nelements());
   Block<Vector<String> > posUnit(colnam.nelements());
   Block<Vector<String> > dirUnit(colnam.nelements());
@@ -264,7 +278,7 @@ void showTable (const Table& tab, const Vector<String>& colnam, bool printMeas)
     if (! tab.tableDesc().isColumn (colnam(i))) {
       cout << "Column " << colnam(i) << " does not exist" << endl;
     }else{
-      tableColumns[nrcol] = new ROTableColumn (tab, colnam(i));
+      tableColumns[nrcol] = new TableColumn (tab, colnam(i));
       if (! tableColumns[nrcol]->columnDesc().isScalar()
       &&  ! tableColumns[nrcol]->columnDesc().isArray()) {
 	cout << "Column " << colnam(i)
@@ -464,7 +478,7 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
       s.downcase();
       addCalc = !(s=="select" || s=="update" || s=="insert" || s=="calc" ||
                   s=="delete" || s=="create" || s=="createtable" ||
-                  s=="count"  || s=="using"  || s=="usingstyle" || s=="time");
+                  s=="count"  || s=="using"  || s=="usingstyle"  || s=="time");
       showResult = (s=="select");
       if (s=="count") {
         doCount    = True;
@@ -527,7 +541,8 @@ void showHelp()
        << endl;
   cerr << "taql can be started with multiple arguments containing options and" << endl;
   cerr << "an optional TaQL command as the last argument." << endl;
-  cerr << "It will run interactively if no TaQL command is given." << endl;
+  cerr << "It will run interactively if no TaQL command is given. `If possible," << endl;
+  cerr << "interactive commands are kept in $HOME/.taql_history for later reuse." << endl;
   cerr << "Use q, quit, exit, or ^D to exit." << endl;
   cerr << endl;
   cerr << "Any TaQL command can be used. If no command name is given, CALC is assumed." << endl;
@@ -705,6 +720,14 @@ vector<const Table*> replaceVars (String& str, const TableMap& tables)
 void askCommands (bool printCommand, bool printSelect, bool printMeas,
                   bool printRows, const String& prefix)
 {
+#ifdef HAVE_READLINE
+  string histFile;
+  String homeDir = EnvironmentVariable::get("HOME");
+  if (! homeDir.empty()) {
+    histFile = homeDir + "/.taql_history";
+    read_history(histFile.c_str());
+  }
+#endif
   Regex varassRE("^[a-zA-Z_][a-zA-Z0-9_]*[ \t]*=");
   Regex assRE("[ \t]*=");
   Regex lwhiteRE("^[ \t]*");
@@ -773,6 +796,11 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
       }
     }
   }
+#ifdef HAVE_READLINE
+  if (! histFile.empty()) {
+    write_history(histFile.c_str());
+  }
+#endif
 }
 
 

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogiMatrix.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogiMatrix.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGIMATRIX_H
 #define CASA_LOGIMATRIX_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Logical valued Matrices.
@@ -80,6 +80,6 @@ typedef Matrix<LogicalArrayElem> LogicalMatrix;
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

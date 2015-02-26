@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitVector.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BitVector.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/BitVector.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/BitVector.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 BitVector::BitVector()
 : size_p (0),
@@ -275,5 +275,5 @@ ostream& operator<< (ostream& os, const BitVector& vector)
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

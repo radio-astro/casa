@@ -1,4 +1,4 @@
-//# aipstype.h: Global initialization for standard aips++ types
+//# aipstype.h: Global initialization for standard Casacore types
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,14 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aipstype.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: aipstype.h 21540 2015-01-14 06:56:39Z gervandiepen $
 
 #ifndef CASA_AIPSTYPE_H
 #define CASA_AIPSTYPE_H
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+// For temporary backward namespace compatibility, use casa as alias for casacore.
+//# Note: namespace casa = casacore; does not work for forward declarations.
+#define casacore casa
 
-// Define the standard types used by aips++
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
+
+// Define the standard types used by Casacore
 
 typedef bool Bool;
 const Bool True = true;
@@ -48,6 +52,6 @@ typedef float Float;
 typedef double Double;
 typedef long double lDouble;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

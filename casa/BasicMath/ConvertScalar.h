@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConvertScalar.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ConvertScalar.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_CONVERTSCALAR_H
 #define CASA_CONVERTSCALAR_H
 
 //# Includes
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Templated functions to convert scalars from one type to another.
@@ -56,6 +57,6 @@ inline void convertScalar (Complex& out, DComplex in)
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

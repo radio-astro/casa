@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Fitting.h 20670 2009-07-10 01:43:43Z Malte.Marquarding $
+//# $Id: Fitting.h 21521 2014-12-10 08:06:42Z gervandiepen $
 #ifndef SCIMATH_FITTING_H
 #define SCIMATH_FITTING_H
 
-#include <casa/aips.h>
-#include <scimath/Fitting/LSQFit.h>
-#include <scimath/Fitting/LinearFit.h>
-#include <scimath/Fitting/LinearFitSVD.h>
-#include <scimath/Fitting/NonLinearFit.h>
-#include <scimath/Fitting/NonLinearFitLM.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Fitting/LSQFit.h>
+#include <casacore/scimath/Fitting/LinearFit.h>
+#include <casacore/scimath/Fitting/LinearFitSVD.h>
+#include <casacore/scimath/Fitting/NonLinearFit.h>
+#include <casacore/scimath/Fitting/NonLinearFitLM.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Of course, in this case we do not have an independent estimate of
 // chi<sup>2</sup>.
 //
-// The methods used in the Fitting module are described in aips++ 
+// The methods used in the Fitting module are described in 
 // <a href="../notes/224.html">Note 224</a>.
 // The methods (both standard and
 // SVD) are based on a Cholesky decomposition of the normal equations.
@@ -147,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The <em>LSQFit</em> class uses a native C++ interface (pointers and 
 // iterators). They handle real data and complex data.
 // The <em>LSQaips</em> class offers the functionality of <em>LSQFit</em>,
-// but with an additional aips++ Array interface.<br>
+// but with an additional Casacore Array interface.<br>
 //
 // Functionality is
 // <ol>
@@ -200,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 //
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

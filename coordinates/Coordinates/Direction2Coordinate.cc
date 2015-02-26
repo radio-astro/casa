@@ -24,24 +24,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Direction2Coordinate.cc 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id: Direction2Coordinate.cc 21531 2014-12-24 11:46:02Z gervandiepen $
 
 
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MDirection.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/Unit.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/Unit.h>
 
 #include <iomanip>
 
 // A different file so that apps which don't need measures don't link them all
 // in (measures bring in tables and lots of other stuff)
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 Bool DirectionCoordinate::toWorld(MDirection &world, 
@@ -122,5 +122,5 @@ Vector<Double> DirectionCoordinate::toPixel(const MDirection &world) const {
 	);
 	return x;
 }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

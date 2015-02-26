@@ -1,5 +1,5 @@
-//# tMSReader.cc: This program tests the MSReader class
-//# Copyright (C) 2000,2002
+//# tMSMetaData.cc: This program tests the MSMetaData class
+//# Copyright (C) 2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSReader.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMSMetaData.cc 21531 2014-12-24 11:46:02Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <ms/MeasurementSets/MSMetaData.h>
+#include <casacore/ms/MeasurementSets/MSMetaData.h>
 
-#include <casa/BasicMath/StdLogical.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/EnvVar.h>
-#include <casa/Quanta/QLogical.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/MDirection.h>
+#include <casacore/casa/BasicMath/StdLogical.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/measures/Measures/MDirection.h>
 
-#include <casa/Containers/ContainerIO.h>
+#include <casacore/casa/BasicSL/STLIO.h>
 #include <iomanip>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 void _printSet(const std::set<uInt>& set) {
 	const std::set<uInt>::const_iterator end = set.end();
@@ -1039,8 +1039,8 @@ void testIt(MSMetaData& md) {
 			cout << "*** test getObservatoryPosition()" << endl;
 			MPosition tPos = md.getObservatoryPosition(0);
 			Vector<Double> angles = tPos.getAngle("deg").getValue();
-            cout << angles << endl;
-            AlwaysAssert(near(angles[0], -67.7549, 1e-6), AipsError);
+                        cout << angles << endl;
+			AlwaysAssert(near(angles[0], -67.7549, 1e-6), AipsError);
 			AlwaysAssert(near(angles[1], -23.0229, 1e-6), AipsError);
 			cout << "*** cache size " << md.getCache() << endl;
 
@@ -1437,7 +1437,7 @@ int main() {
     	String *parts = new String[2];
     	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
     	String datadir = parts[0] + "/data/";
-    	casa::MeasurementSet ms(datadir + "regression/unittest/MSMetaData/MSMetaData.ms");
+    	casacore::MeasurementSet ms(datadir + "regression/unittest/MSMetaData/MSMetaData.ms");
     	/*
     	cout << "*** test preload constructor" << endl;
     	MSMetaDataPreload md(ms);

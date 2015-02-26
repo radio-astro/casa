@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tQuantumHolder.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tQuantumHolder.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/aips.h>
-#include <casa/Exceptions.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/QLogical.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Containers/Record.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
   try {
     cout << "Test QuantumHolder  " << endl;

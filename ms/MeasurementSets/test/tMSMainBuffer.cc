@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSMainBuffer.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tMSMainBuffer.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/namespace.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/namespace.h>
 // #include <trial/MeasurementSets/MSMainBuffer.h>
-// #include <ms/MeasurementSets/MeasurementSet.h>
-// #include <casa/Arrays/ArrayLogical.h>
-// #include <casa/Arrays/Vector.h>
-// #include <casa/Arrays/Cube.h>
-// #include <casa/Arrays/Matrix.h>
-// #include <casa/Exceptions/Error.h>
-// #include <casa/BasicSL/Constants.h>
-// #include <casa/BasicMath/Math.h>
+// #include <casacore/ms/MeasurementSets/MeasurementSet.h>
+// #include <casacore/casa/Arrays/ArrayLogical.h>
+// #include <casacore/casa/Arrays/Vector.h>
+// #include <casacore/casa/Arrays/Cube.h>
+// #include <casacore/casa/Arrays/Matrix.h>
+// #include <casacore/casa/Exceptions/Error.h>
+// #include <casacore/casa/BasicSL/Constants.h>
+// #include <casacore/casa/BasicMath/Math.h>
 // #include <aips/Exceptions/Excp.h>
-// #include <tables/Tables/Table.h>
-// #include <casa/Utilities/Assert.h>
-// #include <casa/BasicSL/String.h>
-// #include <casa/iostream.h>
+// #include <casacore/tables/Tables/Table.h>
+// #include <casacore/casa/Utilities/Assert.h>
+// #include <casacore/casa/BasicSL/String.h>
+// #include <casacore/casa/iostream.h>
 
 int main() {
 //   const String filename = "tMSMainBuffer_tmp.table";

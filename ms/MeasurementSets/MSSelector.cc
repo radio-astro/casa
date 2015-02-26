@@ -24,38 +24,38 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelector.cc 20628 2009-06-12 02:56:35Z gervandiepen $
+//# $Id: MSSelector.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelector.h>
+#include <casacore/ms/MeasurementSets/MSSelector.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/MaskArrMath.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Containers/Record.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicSL/Constants.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/RefRows.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableParse.h>
-#include <casa/Utilities/GenSort.h>
-#include <ms/MeasurementSets/MSIter.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <ms/MeasurementSets/MSSelUtil2.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/TaQL/TableParse.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/ms/MeasurementSets/MSIter.h>
+#include <casacore/ms/MeasurementSets/MSRange.h>
+#include <casacore/ms/MeasurementSets/MSSelUtil2.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSSelector::MSSelector():msIter_p(0),initSel_p(False),dataDescId_p(0),
 		lastDataDescId_p(1,-1),useSlicer_p(False),
@@ -883,7 +883,6 @@ Record MSSelector::getData(const Vector<String>& items, Bool ifrAxis,
 				Vector<Double> time=msc.time().getColumn();
 				Vector<Int> fieldId=msc.fieldId().getColumn();
 				Int lastFieldId=-1;
-				Double lastTime=-1;
 				Double startOfDay=( nSlot>0 ?
 						C::day*int(time(0)/C::day) : 0);
 				Int nT = (average ? 1 : nSlot);
@@ -924,7 +923,6 @@ Record MSSelector::getData(const Vector<String>& items, Bool ifrAxis,
 									phaseDirMeas(curFieldId,times(k)));
 						ep.set(MVEpoch(times(k)/C::day));
 						msd_p.setEpoch(ep);
-						lastTime=times(k);
 						if (doHA) ha(k)=msd_p.hourAngle()/C::_2pi*C::day;
 						if (doLAST) last(k)=msd_p.last().getValue().get();
 					}
@@ -1999,5 +1997,5 @@ Bool MSSelector::checkSelection() {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

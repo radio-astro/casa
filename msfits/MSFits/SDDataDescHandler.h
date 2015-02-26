@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDDataDescHandler.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: SDDataDescHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_SDDATADESCHANDLER_H
 #define MS_SDDATADESCHANDLER_H
 
-#include <casa/Containers/RecordField.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnsIndex;
@@ -128,7 +129,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

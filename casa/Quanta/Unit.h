@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Unit.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Unit.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_UNIT_H
 #define CASA_UNIT_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Quanta/UnitVal.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Quanta/UnitVal.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -162,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// #include <casa/Quanta.h>
+// #include <casacore/casa/Quanta.h>
 // // check if a string is a valid unit
 // if ( !UnitVal::check("Km") ) { cout << "Invalid unit string " << "Km" << endl;
 // // define some units
@@ -243,6 +243,6 @@ private:
 //# Inline Implementations
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

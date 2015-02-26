@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: hdu2.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: hdu2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-# include <fits/FITS/fits.h>
-# include <fits/FITS/hdu.h>
-# include <fits/FITS/fitsio.h>
-# include <casa/string.h>
-# include <casa/stdio.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/hdu.h>
+# include <casacore/fits/FITS/fitsio.h>
+# include <casacore/casa/string.h>
+# include <casacore/casa/stdio.h>
 # include <assert.h>
-# include <casa/sstream.h>
-//# include <casa/strsteam.h>
+# include <casacore/casa/sstream.h>
+//# include <casacore/casa/strsteam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //== FitsBit specializations ==================================================
 FitsField<FitsBit>::FitsField(int n) : FitsBase(FITS::BIT,n), field(0) { }
@@ -2223,5 +2223,5 @@ int * FitsArray<FitsBit>::vdim() {
 }
 //================================================
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

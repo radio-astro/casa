@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeNavigator.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LatticeNavigator.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/lattices/Lattices/LatticeNavigator.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LatticeNavigator::~LatticeNavigator()
 {
@@ -108,5 +108,5 @@ Bool LatticeNavigator::ok() const
   return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

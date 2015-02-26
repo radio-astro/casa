@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableAttr.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TableAttr.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEATTR_H
 #define TABLES_TABLEATTR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/TableLock.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableLock.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -104,8 +104,6 @@ public:
     void set (const Table& table);
 
     // Set the keyword to read/write access.
-    // If the table is already open, it will be reopened with read/write
-    // access if the table is writable.
     void setRW()
       { openWritable_p = True; }
 
@@ -130,6 +128,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

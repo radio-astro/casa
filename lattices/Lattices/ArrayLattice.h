@@ -24,17 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ArrayLattice.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ArrayLattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_ARRAYLATTICE_H
 #define LATTICES_ARRAYLATTICE_H
 
 //# Includes
-#include <lattices/Lattices/Lattice.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/Lattice.h>
+#include <casacore/casa/Arrays/Array.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A memory resident Lattice
@@ -131,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 
 // <motivation>
-// We needed a way of creating Lattices but with AIPS++ Array characteristics.
+// We needed a way of creating Lattices but with Casacore Array characteristics.
 // </motivation>
 
 //# <todo asof="1997/05/31">
@@ -232,9 +233,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/ArrayLattice.tcc>
+#include <casacore/lattices/Lattices/ArrayLattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

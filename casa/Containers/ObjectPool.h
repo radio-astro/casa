@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectPool.h 21067 2011-05-06 13:58:12Z gervandiepen $
+//# $Id: ObjectPool.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_OBJECTPOOL_H
 #define CASA_OBJECTPOOL_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/PoolStack.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/PoolStack.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -161,9 +161,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/ObjectPool.tcc>
+#include <casacore/casa/Containers/ObjectPool.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

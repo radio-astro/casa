@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTable.tcc 19947 2007-02-27 11:30:08Z Malte.Marquarding $
+//# $Id: MSTable.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <ms/MeasurementSets/MSTable.h>
-#include <ms/MeasurementSets/MSTableImpl.h>
-#include <tables/Tables/TableRecord.h>
+#ifndef MS_MSTABLE_TCC
+#define MS_MSTABLE_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/ms/MeasurementSets/MSTable.h>
+#include <casacore/ms/MeasurementSets/MSTableImpl.h>
+#include <casacore/tables/Tables/TableRecord.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# These statics cannot be compiled with egcs 1.0.3a.
 #if !defined(__GNUG__) || (defined(__GNUG__) && (__GNUG__ == 2) && (__GNUC_MINOR__ >= 91)) || defined(AIPS_GCC3) || defined(AIPS_GCC4)
@@ -51,7 +54,7 @@ SimpleOrderedMap<Int, Int> MSTable<ColEnum,KeyEnum>::keyDTypeMap_p(TpOther);
 template <class ColEnum, class KeyEnum> 
 SimpleOrderedMap<Int, String> MSTable<ColEnum,KeyEnum>::keyCommentMap_p("");
 template <class ColEnum, class KeyEnum> 
-SimpleCountedConstPtr<TableDesc> MSTable<ColEnum,KeyEnum>::requiredTD_p;
+CountedPtr<TableDesc> MSTable<ColEnum,KeyEnum>::requiredTD_p;
 #endif
 
 
@@ -280,5 +283,7 @@ Table MSTable<ColEnum,KeyEnum>::referenceCopy(const String& newTableName,
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

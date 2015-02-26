@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSImgParser.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tFITSImgParser.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <images/Images/FITSImgParser.h>
+#include <casacore/images/Images/FITSImgParser.h>
 
-#include <casa/Inputs/Input.h>
-#include <casa/OS/Path.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main (int argc, const char* argv[])
 {

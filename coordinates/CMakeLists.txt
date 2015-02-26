@@ -22,15 +22,12 @@ Coordinates/StokesCoordinate.cc
 Coordinates/TabularCoordinate.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_coordinates PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_coordinates casa_fits ${WCSLIB_LIBRARIES})
 
 install (TARGETS casa_coordinates
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 

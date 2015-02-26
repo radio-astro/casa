@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ValTypeId.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ValTypeId.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_VALTYPEID_H
 #define CASA_VALTYPEID_H
 
-#include <casa/Utilities/ValType.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/ValType.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // The id-string of a value type
@@ -85,7 +86,7 @@ inline String valDataTypeId (const TableRecord* obj)
 
 // </group>
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

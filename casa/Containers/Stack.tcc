@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Stack.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Stack.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/Stack.h>
-#include <casa/Containers/StackError.h>
+#ifndef CASA_STACK_TCC
+#define CASA_STACK_TCC
+
+#include <casacore/casa/Containers/Stack.h>
+#include <casacore/casa/Containers/StackError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class elem> Stack<elem>::~Stack() {
     if ( topOfStack )
@@ -64,5 +67,7 @@ template<class elem> Stack<elem> &Stack<elem>::operator=(const Stack<elem> &othe
     return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

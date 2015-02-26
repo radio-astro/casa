@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSpWindowIndex.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSSpWindowIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSPWINDOWINDEX_H
 #define MS_MSSPWINDOWINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <measures/Measures/MFrequency.h>
-#include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/ms/MeasurementSets/MSSpectralWindow.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -87,7 +87,7 @@ public:
   MSSpWindowIndex(const MSSpectralWindow& spectralWindow);
 
   // Null destructor
-  virtual ~MSSpWindowIndex() {};
+  virtual ~MSSpWindowIndex() {}
 
   // Look up SPECTRAL_WINDOW_ID's for a given frequency group or groups
   Vector<Int> matchFreqGrp(const Int& freqGrp);
@@ -114,7 +114,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

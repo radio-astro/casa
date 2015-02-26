@@ -24,38 +24,38 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagger.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSFlagger.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFlagger.h>
+#include <casacore/ms/MeasurementSets/MSFlagger.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Logging/LogIO.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledDataStManAccessor.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/GenSort.h>
-#include <ms/MeasurementSets/MSSelector.h>
-#include <ms/MeasurementSets/MSSelUtil.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/DataMan/TiledDataStMan.h>
+#include <casacore/tables/DataMan/TiledDataStManAccessor.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/ms/MeasurementSets/MSSelector.h>
+#include <casacore/ms/MeasurementSets/MSSelUtil.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSFlagger::MSFlagger():msSel_p(0)
 {}
@@ -735,7 +735,7 @@ Bool MSFlagger::createFlagHistory(Int nHis)
       // get the hypercube ids, sort them, remove the duplicate values
       ROScalarColumn<Int> hypercubeId(tab,flagHypercubeId);
       Vector<Int> ids=hypercubeId.getColumn();
-      Int nId=genSort(ids,Sort::QuickSort+Sort::NoDuplicates);
+      Int nId=genSort(ids,Sort::Ascending,Sort::QuickSort+Sort::NoDuplicates);
       ids.resize(nId,True); // resize and copy values
       Vector<Bool> cubeAdded(nId,False);
       Record values1; 
@@ -1021,5 +1021,5 @@ Bool MSFlagger::check()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

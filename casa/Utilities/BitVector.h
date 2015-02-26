@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BitVector.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BitVector.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_BITVECTOR_H
 #define CASA_BITVECTOR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class BitVectorHelper;
@@ -341,7 +341,7 @@ inline const BitVectorHelper& BitVectorHelper::operator=
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

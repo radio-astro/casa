@@ -24,16 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSMask.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FITSQualityMask.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_FITSQUALMASK_H
 #define LATTICES_FITSQUALMASK_H
 
 //# Includes
-#include <casa/Arrays/Array.h>
-#include <lattices/Lattices/Lattice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/lattices/Lattices/Lattice.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class FITSImage;
@@ -150,6 +151,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

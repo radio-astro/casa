@@ -23,16 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functors.h 21195 2012-03-14 08:10:42Z gervandiepen $
+//# $Id: Functors.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_FUNCTORS_H
 #define CASA_FUNCTORS_H
 
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/String.h>
 #include <functional>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
   // Define a function to do a binary transform in place.
@@ -167,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 
 
-  // Functor to add variables of possible different types.
+  // Functor to add variables of possibly different types.
   // This is unlike std::plus which requires equal types.
   template <typename L, typename R=L, typename RES=L>
   struct Plus : public std::binary_function<L,R,RES>
@@ -176,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { return RES(x)+y; }
   };
 
-  // Functor to subtract variables of possible different types.
+  // Functor to subtract variables of possibly different types.
   // This is unlike std::minus which requires equal types.
   template <typename L, typename R=L, typename RES=L>
   struct Minus : public std::binary_function<L,R,RES>
@@ -185,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { return RES(x)-y; }
   };
 
-  // Functor to multiply variables of possible different types.
+  // Functor to multiply variables of possibly different types.
   // This is unlike std::multiplies which requires equal types.
   template <typename L, typename R=L, typename RES=L>
   struct Multiplies : public std::binary_function<L,R,RES>
@@ -194,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { return RES(x)*y; }
   };
 
-  // Functor to divide variables of possible different types.
+  // Functor to divide variables of possibly different types.
   // This is unlike std::divides which requires equal types.
   template <typename L, typename R=L, typename RES=L>
   struct Divides : public std::binary_function<L,R,RES>
@@ -203,7 +205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { return RES(x)/y; }
   };
 
-  // Functor to take modulo of (integer) variables of possible different types.
+  // Functor to take modulo of (integer) variables of possibly different types.
   // This is unlike std::divides which requires equal types.
   template <typename L, typename R=L, typename RES=L>
   struct Modulo : public std::binary_function<L,R,RES>
@@ -612,6 +614,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Accum itsBase;    // store as Accum, so subtracttion results in Accum
   };
 
-} //# NAMESPACE CASA - END
+  // Functor to downcase a std::string. The result is a casacore::String.
+  struct Downcase : public std::unary_function<std::string,String>
+  {
+    String operator() (const std::string& value) const
+      { return downcase(value); }
+  };
+
+  // Functor to upcase a std::string. The result is a casacore::String.
+  struct Upcase : public std::unary_function<std::string,String>
+  {
+    String operator() (const std::string& value) const
+      { return upcase(value); }
+  };
+
+  // Functor to capitalize a std::string. The result is a casacore::String.
+  struct Capitalize : public std::unary_function<std::string,String>
+  {
+    String operator() (const std::string& value) const
+      { return capitalize(value); }
+  };
+
+  // Functor to trim a std::string. The result is a casacore::String.
+  // Leading and trailing whitespace is removed.
+  struct Trim : public std::unary_function<std::string,String>
+  {
+    String operator() (const std::string& value) const
+      { return trim(value); }
+  };
+
+
+} //# NAMESPACE CASACORE - END
 
 #endif

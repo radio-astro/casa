@@ -22,22 +22,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATSALGORITHM_H
 #define SCIMATH_STATSALGORITHM_H
 
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <scimath/Mathematics/StatsDataProvider.h>
-#include <scimath/Mathematics/StatisticsData.h>
-#include <scimath/Mathematics/StatisticsTypes.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/scimath/Mathematics/StatsDataProvider.h>
+#include <casacore/scimath/Mathematics/StatisticsData.h>
+#include <casacore/scimath/Mathematics/StatisticsTypes.h>
 
 #include <map>
 #include <set>
 #include <vector>
 
-namespace casa {
+namespace casacore {
 
 // Base class of statistics algorithm class hierarchy.
 
@@ -282,9 +283,8 @@ public:
 	// instead of settng and adding data "by hand", set the data provider that will provide
 	// all the data sets. Calling this method will clear any other data sets that have
 	// previously been set or added.
-	virtual void setDataProvider(StatsDataProvider<AccumType, InputIterator, MaskIterator> *dataProvider) {
-		ThrowIf(! dataProvider, "Logic Error: data provider cannot be NULL");
-		_clearData();
+	virtual void setDataProvider(CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider) {
+		ThrowIf(dataProvider.null(), "Logic Error: data provider cannot be NULL");
 		_dataProvider = dataProvider;
 	}
 
@@ -310,7 +310,7 @@ protected:
 
 	const vector<InputIterator>& _getData() const { return _data; }
 
-	StatsDataProvider<AccumType, InputIterator, MaskIterator>* _getDataProvider() {
+	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > _getDataProvider() {
 		return _dataProvider;
 	}
 
@@ -371,7 +371,7 @@ private:
 	std::map<uInt, DataRanges> _dataRanges;
 	vector<AccumType> _sortedArray;
 	std::set<StatisticsData::STATS> _statsToCalculate, _unsupportedStats;
-	StatsDataProvider<AccumType, InputIterator, MaskIterator> *_dataProvider;
+	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > _dataProvider;
 
 	void _throwIfDataProviderDefined() const;
 };
@@ -379,7 +379,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatisticsAlgorithm.tcc>
+#include <casacore/scimath/Mathematics/StatisticsAlgorithm.tcc>
 #endif
 
 #endif

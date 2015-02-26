@@ -2,6 +2,13 @@
 # CASA measures
 #
 
+# If given, add the data directory as compile variable.
+# If it contains a single $, it needs to be doubled for make purposes.
+if (DATA_DIR)
+    string(REGEX REPLACE [$] $$ DATA_DIRX ${DATA_DIR})
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCASADATA='\"${DATA_DIRX}\"'")
+endif (DATA_DIR)
+
 add_library (casa_measures
 Measures/Aberration.cc
 Measures/EarthField.cc
@@ -29,6 +36,7 @@ Measures/MeasIERS.cc
 Measures/MeasJPL.cc
 Measures/MeasMath.cc
 Measures/MeasTable.cc
+Measures/MeasTableMul.cc
 Measures/Measure.cc
 Measures/MeasureHolder.cc
 Measures/MeasuresProxy.cc
@@ -41,10 +49,10 @@ Measures/Muvw.cc
 Measures/Nutation.cc
 Measures/ParAngleMachine.cc
 Measures/Precession.cc
+Measures/Quality.cc
 Measures/SofaTest.cc
 Measures/SolarPos.cc
 Measures/Stokes.cc
-Measures/Quality.cc
 Measures/UVWMachine.cc
 Measures/VelocityMachine.cc
 TableMeasures/TableMeasColumn.cc
@@ -56,9 +64,6 @@ TableMeasures/TableMeasValueDesc.cc
 TableMeasures/TableQuantumDesc.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_measures PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_measures casa_tables casa_scimath)
 
 add_subdirectory (apps)
@@ -66,8 +71,8 @@ add_subdirectory (apps)
 install (
 TARGETS casa_measures
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
@@ -104,6 +109,7 @@ Measures/MeasMath.h
 Measures/MeasRef.h
 Measures/MeasRef.tcc
 Measures/MeasTable.h
+Measures/MeasTableMul.h
 Measures/Measure.h
 Measures/MeasureHolder.h
 Measures/MeasuresProxy.h
@@ -116,10 +122,10 @@ Measures/Muvw.h
 Measures/Nutation.h
 Measures/ParAngleMachine.h
 Measures/Precession.h
+Measures/Quality.h
 Measures/SofaTest.h
 Measures/SolarPos.h
 Measures/Stokes.h
-Measures/Quality.h
 Measures/UVWMachine.h
 Measures/VelocityMachine.h
 DESTINATION include/casacore/measures/Measures

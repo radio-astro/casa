@@ -23,25 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aips.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: aips.h 21540 2015-01-14 06:56:39Z gervandiepen $
 
 #ifndef CASA_AIPS_H
 #define CASA_AIPS_H
 
 //# Define compiler specific flags
-#include <casa/aipsenv.h>
+#include <casacore/casa/aipsenv.h>
 
-//# Define the standard types used by AIPS++.
-#include <casa/aipstype.h>
+//# Define the standard types used by Casacore.
+#include <casacore/casa/aipstype.h>
 
-//# Define the extra non-standard types used by aips++
-#include <casa/aipsxtype.h>
+//# Define the extra non-standard types used by Casacore
+#include <casacore/casa/aipsxtype.h>
 
-//# Define the special aips++ macros
-#include <casa/aipsdef.h>
+//# Define the special Casacore macros
+#include <casacore/casa/aipsdef.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+//# Define the namespace used by Casacore
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
+} //# NAMESPACE CASACORE - END
 
-} //# NAMESPACE CASA - END
 
 #endif

@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Queue.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: Queue.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/Queue.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Exceptions/Error.h>
+#ifndef CASA_QUEUE_TCC
+#define CASA_QUEUE_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/Queue.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> Queue<T>::Queue() : first_p(0), next_p(0), data_p(1)
 {
@@ -119,5 +122,7 @@ template<class T> T Queue<T>::operator()()
     return value;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

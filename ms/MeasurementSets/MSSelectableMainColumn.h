@@ -25,37 +25,37 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: HostInfoDarwin.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTABLEMAINCOLUMN_H
 #define MS_MSSELECTABLEMAINCOLUMN_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Containers/OrderedMap.h>
-#include <casa/Containers/MapIO.h>
-#include <tables/Tables/ExprNode.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMainEnums.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSMainEnums.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   class MSSelectableMainColumn
   {
   public:
-    MSSelectableMainColumn(const Table& msLikeTable)  {init(msLikeTable);};
+    MSSelectableMainColumn(const Table& msLikeTable)  {init(msLikeTable);}
     MSSelectableMainColumn() {table_p=NULL;}
-    virtual ~MSSelectableMainColumn() {};
+    virtual ~MSSelectableMainColumn() {}
 
-    virtual void init(const Table& msLikeTable) {table_p=&msLikeTable;};
+    virtual void init(const Table& msLikeTable) {table_p=&msLikeTable;}
     const Table* table()                      {return table_p;}
     virtual const ROArrayColumn<Bool>& flag() = 0;
-    virtual const Bool flagRow(const Int& i) = 0;
+    virtual Bool flagRow(const Int& i) = 0;
     virtual const ROScalarQuantColumn<Double>& exposureQuant() = 0;
     virtual const ROScalarQuantColumn<Double>& timeQuant() = 0;
     virtual const MeasurementSet *asMS() = 0;
@@ -67,28 +67,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSMainColInterface: public MSSelectableMainColumn
   {
   public: 
-    MSMainColInterface():MSSelectableMainColumn(), msCols_p(NULL) {};
+    MSMainColInterface():MSSelectableMainColumn(), msCols_p(NULL) {}
     MSMainColInterface(const Table& msAsTable): MSSelectableMainColumn(msAsTable)
     {init(msAsTable);}
 
-    virtual ~MSMainColInterface() {if (msCols_p) delete msCols_p;};
+    virtual ~MSMainColInterface() {if (msCols_p) delete msCols_p;}
 
     virtual void init(const Table& msAsTable)
     {MSSelectableMainColumn::init(msAsTable);ms_p = MeasurementSet(msAsTable); msCols_p=new ROMSMainColumns(ms_p);}
     virtual const ROArrayColumn<Bool>& flag() {return msCols_p->flag();}
 
-    //    virtual const Bool flagRow(const Int& i) {return allTrue(msCols_p->flag()(i));}
-    virtual const Bool flagRow(const Int& i) {return msCols_p->flagRow()(i);}
-    virtual const ROScalarQuantColumn<Double>& exposureQuant() {return msCols_p->exposureQuant();};
+    //    virtual Bool flagRow(const Int& i) {return allTrue(msCols_p->flag()(i));}
+    virtual Bool flagRow(const Int& i) {return msCols_p->flagRow()(i);}
+    virtual const ROScalarQuantColumn<Double>& exposureQuant() {return msCols_p->exposureQuant();}
     virtual const ROScalarQuantColumn<Double>& timeQuant()     {return msCols_p->timeQuant();}
 
-    virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
+    virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());}
   private:
     MeasurementSet ms_p;
     ROMSMainColumns *msCols_p;
 
   };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

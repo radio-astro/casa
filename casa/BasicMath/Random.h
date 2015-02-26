@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Random.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Random.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_RANDOM_H
 #define CASA_RANDOM_H
 
-#include <casa/aips.h>
-#include <casa/BasicMath/Math.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Math.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class String;
 template<class T> class Vector;
@@ -1391,6 +1391,6 @@ inline Double Weibull::beta() const {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

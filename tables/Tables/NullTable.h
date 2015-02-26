@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.h 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: NullTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_NULLTABLE_H
 #define TABLES_NULLTABLE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseTable.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseTable.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class indicating a null Table object
@@ -153,6 +153,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

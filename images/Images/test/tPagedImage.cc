@@ -23,38 +23,38 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPagedImage.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: tPagedImage.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <images/Images/PagedImage.h>
-#include <images/Images/ImageInfo.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Quanta/QLogical.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
 
-#include <casa/stdlib.h>
-#include <casa/iostream.h>
+#include <casacore/casa/stdlib.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 
 // Remove the dirname from the table name in an error message.
@@ -88,7 +88,6 @@ Table makeNewTable(const String& name)
    Table table(setup);
    return table;
 }
-
 
 void testTempCloseDelete()
 {
@@ -285,7 +284,7 @@ int main()
        Bool ok = False;
        try {
           pIm.resize(shape0);
-       } catch (AipsError x) {
+       } catch (AipsError& x) {
 //          cout << "Caught error " << x.getMesg() << endl;
           ok = True;
        } 
@@ -510,7 +509,7 @@ int main()
    }
    {
 	   // per plane beam support
-	   String name = "afsdf.im";
+	   String name = "tPagedImage_tmp_afsdf.im";
 	   PagedImage<Float> temp(
 			   TiledShape(IPosition(4, 64 ,64, 4, 16)),
 			   CoordinateUtil::defaultCoords4D(), name
@@ -525,7 +524,7 @@ int main()
 		   temp.setImageInfo(info);
 		   ok = False;
 	   }
-	   catch (AipsError x) {
+	   catch (AipsError& x) {
 		   cout << "Exception thrown as expected: " << x.getMesg() << endl;
 	   }
 	   AlwaysAssert(ok, AipsError);
@@ -534,7 +533,7 @@ int main()
 		   temp.setImageInfo(info);
 		   ok = False;
 	   }
-	   catch (AipsError x) {}
+	   catch (AipsError& x) {}
 	   AlwaysAssert(ok, AipsError);
 	   for (uInt i=0; i<4; i++) {
 		   for (uInt j=0; j<16; j++) {
@@ -542,16 +541,16 @@ int main()
 		   }
 	   }
 	   AlwaysAssert(temp.setImageInfo(info), AipsError);
+           GaussianBeam beam2 = temp.imageInfo().restoringBeam(2,2);
 	   ok = True;
 	   try {
-		   GaussianBeam beam = temp.imageInfo().restoringBeam();
-		   ok = False;
+             GaussianBeam beam = temp.imageInfo().restoringBeam();
+             ok = False;
 	   }
-	   catch (AipsError x) {
-		   cout << "Exception thrown as expected: " << x.getMesg() << endl;
+	   catch (AipsError& x) {
+             cout << "Exception thrown as expected: " << x.getMesg() << endl;
 	   }
 	   AlwaysAssert(ok, AipsError);
-
 	   // AlwaysAssert(beam.size() == 0, AipsError);
 	   AlwaysAssert(temp.imageInfo().hasMultipleBeams(), AipsError);
 	   min = Quantity(min.getValue() + 0.1, min.getUnit());
@@ -562,12 +561,13 @@ int main()
 	   AlwaysAssert(beam.getMajor() == maj, AipsError);
 	   AlwaysAssert(beam.getMinor() == min, AipsError);
 	   AlwaysAssert(beam.getPA() == pa, AipsError);
-  }
-    // Test the temporary close if marked for delete.
-    testTempCloseDelete();
+   }
 
-    cout<< "ok"<< endl;
-  } catch (AipsError x) {
+   // Test the temporary close if marked for delete.
+   testTempCloseDelete();
+
+   cout<< "ok"<< endl;
+  } catch (AipsError& x) {
     cerr << "Exception caught: " << x.getMesg() << endl;
     return 1;
   } 

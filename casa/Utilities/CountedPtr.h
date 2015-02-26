@@ -23,582 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CountedPtr.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: CountedPtr.h 21534 2014-12-31 15:18:51Z gervandiepen $
 
 #ifndef CASA_COUNTEDPTR_H
 #define CASA_COUNTEDPTR_H
 
-#include <casa/aips.h>
-
-// Uncommenting out the following two lines will define USE_SHARED_PTR and
-// cause the implementtion of CountedPtr to use a thread-safe smart
-// pointer implementation class inside (at this writing this will be
-// boost::shared_ptr but will eventually be std::shared_ptr).
-// Another effect is that portions of the measures framework will use
-// boost::recursive_mutex to make those classes friendly to multithreading.
-//
-// N.B.: I would not recommend mixing defined/undefined for the two symbols.
-//
-// Changing the setting will causes a major rebuild of both the casacore
-// and code projects since CountedPtr underlies most data structures and
-// because of the template nature of CountedPtr. (jjacobs 7/19/12)
-//
-////#define USE_SHARED_PTR
-////#define CASA_THREAD_NEUTRAL
-
-#define USE_SHARED_PTR
-#if ! defined (USE_SHARED_PTR)
-
-//====================================================================
-//====================================================================
-//
-// This is the original, thread-hostile implementatlow ion.
-// For nonthreaded applications it's fine, though and as a bonus
-// it does not incur and dependencies on boost.
-//
-//====================================================================
-//====================================================================
-
-#include <casa/aips.h>
-
-namespace casa { //#Begin casa namespace
-
-//# Forward Declarations
-template<class t> class SimpleCountedPtr;
-template<class t> class SimpleCountedConstPtr;
-template<class t> class CountedPtr;
-template<class t> class CountedConstPtr;
-
-// <summary> act on dereference error </summary>
-// <synopsis>
-// Global function that throws an exception. It is called by the
-// member functions of the counted pointer classes when an
-// un-initialized (null) pointer is followed.
-// </synopsis>
-// <group name=dereference_error>
-void throw_Null_CountedPtr_dereference_error();
-// </group>
-
-// <summary>Internal representation for <src>CountedPtr</src></summary>
-// <use visibility=local>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedPtr:description">SimpleCountedPtr</linkto>
-// <li> class <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class is a utility class for
-// <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>
-// and <linkto class="CountedPtr:description">CountedPtr</linkto>.
-// It stores the reference count and the pointer to the real data.
-//
-// <note role=tip> It is currently a template and is used such that
-// <src>t</src> is the <em>true</em> type of the stored pointer. This
-// means, however, that when it is used, a template instantiation must be
-// done for each type which <src>t</src> assumes. This makes debugging
-// easier, but in the future all of these pointers could be declared with
-// <src>void</src> type to avoid template instantiations.
-// </note>
-// </synopsis>
-
-// <motivation>
-// This class isolates all of the low level management of the reference.
-// </motivation>
-
-template<class t> class PtrRep
-{
-
-public:
-
-    friend class SimpleCountedPtr<t>;
-    friend class SimpleCountedConstPtr<t>;
-    friend class CountedPtr<t>;
-    friend class CountedConstPtr<t>;
-
-protected:
-
-    // This constructor sets up the reference count to one and
-    // initializes the pointer to the real data. The
-    // <src>delit</src> flag can be passed in to indicate whether
-    // the real data should be freed or not when the
-    // reference count reaches zero.
-    // <group>
-    PtrRep(t *v) : val(v), count(1), deletable(True) {}
-    PtrRep(t *v, Bool delit) : val(v), count(1), deletable(delit) {}
-    // </group>
-
-    // This deletes the real data if indeed it can be deleted.
-    void freeVal();
-
-    // This destructor uses the <src>deletable</src> flag to indicate if the
-    // real data should be freed or not.
-    //
-    ~PtrRep() {
-	freeVal();
-    }
-
-private:
-
-    t *val;
-    unsigned int count;
-    Bool deletable;
-
-};
-
-// <summary>Simple referenced counted pointer for constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <etymology>
-// This class is <em>Simple</em> because it does not have the
-// <src>operator->()</src> operator. This means that it puts less demands
-// on the underlying type. It is <em>Counted</em> because it is reference
-// counted, and it is <em>Const</em> because the underlying value is
-// non-modifiable.
-// </etymology>
-
-// <synopsis>
-// This class implements a simple reference counting mechanism. It
-// allows <src>SimpleCountedConstPtr</src>s to be passed around freely,
-// incrementing or decrementing the reference count as needed when one
-// <src>SimpleCountedConstPtr</src> is assigned to another. When the
-// reference count reaches zero the internal storage is deleted by
-// default, but this behavior can be overridden.
-//
-// This class is used as a pointer to constant data. As such, it only
-// has the subset of the
-// <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>
-// functions which are relevant for constant data.
-// </synopsis>
-
-// <motivation>
-// Reference counting
-// </motivation>
-
-template<class t> class SimpleCountedConstPtr
-{
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>SimpleCountedConstPtr</src>. The assignment operator can be used
-    // to assign a null <src>SimpleCountedConstPtr</src> from another
-    // pointer.
-    //
-    SimpleCountedConstPtr() : ref(0) {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer.  By default, the data pointed to by <src>val</src>
-    // will be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer of
-    // type <src>t*</src>.
-    // </note>
-    //
-    SimpleCountedConstPtr(t *val, Bool delit = True) {
-	ref = new PtrRep<t>(val,delit);
-    }
-
-    // This constructor sets up a reference count for the
-    // <src>val</src> pointer.  Since <src>val</src> is a pointer to
-    // constant data, the data will not be deleted when the reference
-    // count reaches zero.
-    //
-    // <note role=tip> Since the constant data will NOT be cleaned up
-    // when the reference count reaches zero, the use of this class for
-    // pointers to constant data may not be desirable.
-    // </note>
-    //
-    SimpleCountedConstPtr(const t *val) {
-	ref = new PtrRep<t>((t *) val,False);
-    }
-
-    // This copy constructor allows <src>SimpleCountedConstPtr</src>s to be
-    // initialized from other <src>SimpleCountedConstPtr</src>s.
-    //
-    SimpleCountedConstPtr(const SimpleCountedConstPtr<t> &val) : ref(val.ref) {
-	if (ref)
-	    (*ref).count++;
-    }
-
-    // This destructor only deletes the really stored data when it was
-    // initialized as deletable and the reference count is zero.
-    //
-    virtual ~SimpleCountedConstPtr();
-
-    // The <src>SimpleCountedConstPtr</src> indirection operator simply
-    // returns a reference to the value being protected. If the pointer
-    // is un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <note role=tip> The address of the reference returned should
-    // not be stored for later use.
-    // </note>
-    //
-    const t &operator*() const {
-	if (!ref) throw_Null_CountedPtr_dereference_error();
-	return(*(*ref).val);
-    }
-
-    // Equality operator which checks to see if two
-    // <src>SimpleCountedConstPtr</src>s are pointing at the same thing.
-    //
-    Bool operator==(const SimpleCountedConstPtr<t> &other) const {
-	return (ref == other.ref ? True : False);
-    }
-
-    // Non-equality operator which checks to see if two
-    // <src>SimpleCountedConstPtr</src>s are not pointing at the same thing.
-    //
-    Bool operator!=(const SimpleCountedConstPtr<t> &other) const {
-	return (ref != other.ref ? True : False);
-    }
-
-    // This assignment operator allows <src>SimpleCountedConstPtr</src>s
-    // to be freely assigned to each other.
-    //
-    SimpleCountedConstPtr<t> &operator=(const SimpleCountedConstPtr<t> &val) {
-	if (ref && --(*ref).count == 0){
-	    delete ref;
-            ref = 0;
-        }
-	if ((ref = val.ref) != 0)
-	    (*ref).count++;
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>SimpleCountedConstPtr</src> points to be changed.
-    //
-    SimpleCountedConstPtr<t> &operator=(t *v);
-
-    // Sometimes it is useful to know if there is more than one
-    // reference made. This is a way of getting that. Of course the point
-    // of these classes is that this information is normally not required.
-    //
-    uInt nrefs() const {return ref->count;}
-
-    // This function changes the value for this
-    // <src>SimpleCountedConstPtr</src> and all of the other
-    // <src>SimpleCountedConstPtr</src>s which point to this same value.
-    //
-    // <note role=warning> This is dangerous, and generally should not
-    // be done.
-    // </note>
-    //
-    //
-    // ==> This method violates the expected semantics for a smart pointer
-    // (both boost and C++0x) and should not be used.  The existing CASA
-    // use of this method has been rewritten to accomplish it's needs without
-    // polluting this class.
-
-    void replace(t *v, Bool delit = True) __attribute__ ((deprecated)) {
-	if (ref) {
-	    (*ref).freeVal();
-	    (*ref).val = v;
-	    (*ref).deletable = delit;
-	}
-    }
-
-    // Check to see if this <src>SimpleCountedConstPtr</src> is
-    // un-initialized, null.
-    //
-    Bool null() const { return (ref==0 || (ref->val == 0));}
-
-protected:
-
-    PtrRep<t> *ref;
-
-};
-
-// <summary>Regular referenced counted pointer for constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class has the same objective as
-// <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// but it adds the <src>operator->()</src>. It still only contains a
-// pointer whose underlying data cannot be changed. The destructor
-// deletes the underlying data when the reference count reaches zero.
-// </synopsis>
-
-// <motivation>
-// <src>operator->()</src> is useful, but not always available for
-// every type.
-// </motivation>
-
-template<class t> class CountedConstPtr : virtual public SimpleCountedConstPtr<t> {
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>CountedConstPtr</src>. The assignment operator can be
-    // used to assign a null <src>CountedConstPtr</src> from
-    // another pointer.
-    //
-    CountedConstPtr() : SimpleCountedConstPtr<t>() {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer. By default, the data pointed to by <src>val</src> will
-    // be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer
-    // of type <src>t*</src>.
-    // </note>
-    //
-    CountedConstPtr(t *val, Bool delit = True) : SimpleCountedConstPtr<t>(val,delit) {}
-
-    // This copy constructor allows <src>CountedConstPtr</src>s to be
-    // initialized from other <src>CountedConstPtr</src>s.
-    //
-    CountedConstPtr(const CountedConstPtr<t> &val) : SimpleCountedConstPtr<t>(val) {}
-
-    // This assignment operator allows <src>CountedConstPtr</src>s to be
-    // freely assigned to each other.
-    //
-    CountedConstPtr<t> &operator=(const CountedConstPtr<t> &val) {
-	SimpleCountedConstPtr<t>::operator=(val);
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>CountedConstPtr</src> points to be changed.
-    //
-    CountedConstPtr<t> &operator=(t *v) {
-	SimpleCountedConstPtr<t>::operator=(v);
-	return *this;
-    }
-
-    // This dereferencing operator behaves as expected; it returns the
-    // pointer to the value being protected, and then its dereferencing
-    // operator will be invoked as appropriate. If the pointer is
-    // un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    const t *operator->() const {
-	if (!this->ref) throw_Null_CountedPtr_dereference_error();
-	return ((*this->ref).val);
-    }
-};
-
-// <summary> Simple referenced counted pointer to non-constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class, like
-// <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>,
-// does not define the <src>operator->()</src>. Thus it can point to
-// simple data which does not have this operator defined. In contrast to
-// <src>SimpleCountedConstPtr</src>, this class points at non-constant
-// underlying data. The deletion properties are the same for both
-// classes.
-// </synopsis>
-
-template<class t> class SimpleCountedPtr : virtual public SimpleCountedConstPtr<t> {
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>SimpleCountedPtr</src>. The assignment operator can be used
-    // to assign a null <src>SimpleCountedPtr</src> from another pointer.
-    //
-    SimpleCountedPtr() : SimpleCountedConstPtr<t>() {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer.  By default, the data pointed to by <src>val</src>
-    // will be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer
-    // of type <src>t*</src>.
-    // </note>
-    //
-    SimpleCountedPtr(t *val, Bool delit = True) : SimpleCountedConstPtr<t>(val,delit) {}
-
-    // This copy constructor allows <src>SimpleCountedPtr</src>s to be
-    // initialized from other <src>SimpleCountedPtr</src>s.
-    //
-    SimpleCountedPtr(const SimpleCountedPtr<t> &val) : SimpleCountedConstPtr<t>(val) {}
-
-    // This assignment operator allows <src>SimpleCountedPtr</src>s to be
-    // freely assigned to each other.
-    //
-    SimpleCountedPtr<t> &operator=(const SimpleCountedPtr<t> &val) {
-	SimpleCountedConstPtr<t>::operator=(val);
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>SimpleCountedPtr</src> points to be changed.
-    //
-    SimpleCountedPtr<t> &operator=(t *v) {
-	SimpleCountedConstPtr<t>::operator=(v);
-	return *this;
-    }
-
-    // The <src>SimpleCountedPtr</src> indirection operator simply
-    // returns a reference to the value being protected. If the pointer
-    // is un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <note role=tip> The address of the reference returned should
-    // not be stored for later use.
-    // </note>
-    //
-    // <group>
-    const t &operator*() const {
-	if (!this->ref) throw_Null_CountedPtr_dereference_error();
-	return(*(*this->ref).val);
-    }
-    t &operator*() {
-	if (!this->ref) throw_Null_CountedPtr_dereference_error();
-	return(*(*this->ref).val);
-    }
-    // </group>
-
-};
-
-// <summary>Regular referenced counted pointer for non-constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedPtr:description">SimpleCountedPtr</linkto>
-// <li> class <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class completes the lattice. It inherits much of the members
-// which deal with non-constant data from
-// <linkto class="SimpleCountedPtr:description">SimpleCountedPtr</linkto>,
-// and it inherits the const <src>operator->()</src> from
-// <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>.
-// What this class adds is the <src>operator->()</src> which returns a
-// modifiable pointer.
-// </synopsis>
-//
-template<class t> class CountedPtr : public SimpleCountedPtr<t>,
-                                     public CountedConstPtr<t> {
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>CountedPtr</src>. The assignment operator can be used
-    // to assign a null <src>CountedPtr</src> from another
-    // pointer.
-    //
-    CountedPtr();
-
-    // This constructor sets up a reference count for the
-    // <src>val</src> pointer.  By default, the data pointed to by
-    // <src>val</src> will be deleted when it is no longer
-    // referenced. Passing in <src>False</src> for <src>delit</src> will
-    // prevent the data from being deleted when the reference count
-    // reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer of
-    // type <src>t*</src>.
-    // </note>
-    //
-    CountedPtr(t *val, Bool delit = True);
-
-    // This copy constructor allows <src>CountedPtr</src>s to be
-    // initialized from other <src>CountedPtr</src>s.
-    //
-    CountedPtr(const CountedPtr<t> &val);
-
-    // This assignment operator allows <src>CountedPtr</src>s to be
-    // freely assigned to each other.
-    //
-    CountedPtr<t> &operator=(const CountedPtr<t> &val) {
-	SimpleCountedPtr<t>::operator=(val);
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>CountedPtr</src> points to be changed.
-    //
-    CountedPtr<t> &operator=(t *v) {
-	SimpleCountedPtr<t>::operator=(v);
-	return *this;
-    }
-
-    // This dereferencing operator behaves as expected; it returns the
-    // pointer to the value being protected, and then its dereferencing
-    // operator will be invoked as appropriate. If the pointer is
-    // un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <group>
-    t *operator->() const {
-	if (!this->ref) throw_Null_CountedPtr_dereference_error();
-	return ((*this->ref).val);
-    }
-    t *operator->() {
-	if (!this->ref) throw_Null_CountedPtr_dereference_error();
-	return ((*this->ref).val);
-    }
-    // </group>
-};
-
- } //#End casa namespace
-
-// Keep this definition local
-
-#else // when defined (USE_SHARED_PTR) is true
-
-
-// #include <boost/shared_ptr.hpp>
+#include <casacore/casa/aips.h>
+
+#if defined AIPS_CXX11
+#include <memory>
+///#elif defined HAVE_BOOST
+///#include <boost/shared_ptr.hpp>
+#define SHARED_PTR std::shared_ptr
+#define DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
+#define DYNAMIC_CAST std::dynamic_cast
+#else
 #include <tr1/memory>
+#define SHARED_PTR std::tr1::shared_ptr
+#define DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
+#define DYNAMIC_CAST std::tr1::dynamic_cast
+#endif
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
-//# Forward Declarations
-template<class t> class SimpleCountedPtr;
-template<class t> class SimpleCountedConstPtr;
-template<class t> class CountedPtr;
-template<class t> class CountedConstPtr;
 
 // <summary> act on dereference error </summary>
 // <synopsis>
@@ -611,30 +58,24 @@ void throw_Null_CountedPtr_dereference_error();
 // </group>
 
 
-// <summary>Simple referenced counted pointer for constant data</summary>
+// <summary>Referenced counted pointer for constant data</summary>
 // <use visibility=export>
 // <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
 
 // <etymology>
-// This class is <em>Simple</em> because it does not have the
-// <src>operator->()</src> operator. This means that it puts less demands
-// on the underlying type. It is <em>Counted</em> because it is reference
-// counted, and it is <em>Const</em> because the underlying value is
-// non-modifiable.
+// This class is <em>Counted</em> because it is reference counted.
 // </etymology>
 
 // <synopsis>
-// This class implements a simple reference counting mechanism. It
-// allows <src>SimpleCountedConstPtr</src>s to be passed around freely,
+// This class implements a reference counting mechanism. It
+// allows <src>CountedPtr</src>s to be passed around freely,
 // incrementing or decrementing the reference count as needed when one
-// <src>SimpleCountedConstPtr</src> is assigned to another. When the
+// <src>CountedPtr</src> is assigned to another. When the
 // reference count reaches zero the internal storage is deleted by
 // default, but this behavior can be overridden.
 //
-// This class is used as a pointer to constant data. As such, it only
-// has the subset of the
-// <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>
-// functions which are relevant for constant data.
+// Internally the class uses std::shared_ptr to be thread-safe. Note that
+// tr1 is used if the compiler does not support C++11 yet.
 // </synopsis>
 
 // <motivation>
@@ -642,11 +83,11 @@ void throw_Null_CountedPtr_dereference_error();
 // </motivation>
 
 template<class t>
-class SimpleCountedConstPtr
+class CountedPtr
 {
 
 protected:
-
+    // Helper class to make deletion of object optional.
     template <typename T>
     class Deleter {
     public:
@@ -656,412 +97,76 @@ protected:
         Bool reallyDeleteIt_p;
     };
 
-    typedef std::tr1::shared_ptr<t> PointerRep;
 
 public:
 
 
-    // This constructor allows for the creation of a null
-    // <src>SimpleCountedConstPtr</src>. The assignment operator can be used
-    // to assign a null <src>SimpleCountedConstPtr</src> from another
-    // pointer.
-    //
-    SimpleCountedConstPtr() : pointerRep_p () {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer.  By default, the data pointed to by <src>val</src>
-    // will be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer of
-    // type <src>t*</src>.
-    // </note>
-    //
-    SimpleCountedConstPtr(t *val, Bool delit = True)
-    : pointerRep_p (val, Deleter<t> (delit))
-    {}
-
-    // This constructor sets up a reference count for the
-    // <src>val</src> pointer.  Since <src>val</src> is a pointer to
-    // constant data, the data will not be deleted when the reference
-    // count reaches zero.
-    //
-    // <note role=tip> Since the constant data will NOT be cleaned up
-    // when the reference count reaches zero, the use of this class for
-    // pointers to constant data may not be desirable.
-    // </note>
-    //
-    SimpleCountedConstPtr(const t *val)
-    : pointerRep_p (val, Deleter<t> (False))
-    {}
-
-    // This copy constructor allows <src>SimpleCountedConstPtr</src>s to be
-    // initialized from other <src>SimpleCountedConstPtr</src>s.
-    //
-//    SimpleCountedConstPtr(const SimpleCountedConstPtr<t> &val) : ref(val.ref) {
-//	if (ref)
-//	    (*ref).count++;
-//    }
-
-    // This destructor only deletes the really stored data when it was
-    // initialized as deletable and the reference count is zero.
-    //
-    virtual ~SimpleCountedConstPtr() {}
-
-    // The <src>SimpleCountedConstPtr</src> indirection operator simply
-    // returns a reference to the value being protected. If the pointer
-    // is un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <note role=tip> The address of the reference returned should
-    // not be stored for later use.
-    // </note>
-    //
-    const t &operator*() const {
-	if (null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
-	return pointerRep_p.operator* ();
-    }
-
-    // Equality operator which checks to see if two
-    // <src>SimpleCountedConstPtr</src>s are pointing at the same thing.
-    //
-    Bool operator==(const SimpleCountedConstPtr<t> &other) const {
-	return (this->get() == other.get() ? True : False);
-    }
-
-    // Non-equality operator which checks to see if two
-    // <src>SimpleCountedConstPtr</src>s are not pointing at the same thing.
-    //
-    Bool operator!=(const SimpleCountedConstPtr<t> &other) const {
-	return (this->get() != other.get()  ? True : False);
-    }
-
-    // This assignment operator allows <src>SimpleCountedConstPtr</src>s
-    // to be freely assigned to each other.
-    //
-//    SimpleCountedConstPtr<t> &
-//    operator=(const SimpleCountedConstPtr<t> &val) {
-//	if (ref && --(*ref).count == 0){
-//	    delete ref;
-//            ref = 0;
-//        }
-//	if ((ref = val.ref) != 0)
-//	    (*ref).count++;
-//	return *this;
-//    }
-
-    // This assignment operator allows the object to which the current
-    // <src>SimpleCountedConstPtr</src> points to be changed.
-    //
-    SimpleCountedConstPtr<t> &
-    operator=(t *v)
-    {
-        pointerRep_p = PointerRep (v);
-
-        return * this;
-    }
-
-    // Sometimes it is useful to know if there is more than one
-    // reference made. This is a way of getting that. Of course the point
-    // of these classes is that this information is normally not required.
-    //
-    uInt nrefs() const {return pointerRep_p.use_count();}
-
-    // This function changes the value for this
-    // <src>SimpleCountedConstPtr</src> and all of the other
-    // <src>SimpleCountedConstPtr</src>s which point to this same value.
-    //
-    // <note role=warning> This is dangerous, and generally should not
-    // be done.
-    // </note>
-    //
-//    void replace(t *v, Bool delit = True) {
-//	if (ref) {
-//	    (*ref).freeVal();
-//	    (*ref).val = v;
-//	    (*ref).deletable = delit;
-//	}
-//    }
-
-    // Check to see if this <src>SimpleCountedConstPtr</src> is
-    // un-initialized, null.
-    //
-    Bool null() const { return get() == 0;}
-
-protected:
-
-    // typedef boost::shared_ptr<t> PointerRep;
-
-    PointerRep pointerRep_p;
-
-    t *
-    get () const
-    {
-        return pointerRep_p.get();
-    }
-
-//    t *
-//    get ()
-//    {
-//        return pointerRep_p.get();
-//    }
-
-};
-
-// <summary>Regular referenced counted pointer for constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class has the same objective as
-// <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// but it adds the <src>operator->()</src>. It still only contains a
-// pointer whose underlying data cannot be changed. The destructor
-// deletes the underlying data when the reference count reaches zero.
-// </synopsis>
-
-// <motivation>
-// <src>operator->()</src> is useful, but not always available for
-// every type.
-// </motivation>
-
-template<class t> class CountedConstPtr : virtual public SimpleCountedConstPtr<t> {
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>CountedConstPtr</src>. The assignment operator can be
-    // used to assign a null <src>CountedConstPtr</src> from
-    // another pointer.
-    //
-    CountedConstPtr() : SimpleCountedConstPtr<t>() {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer. By default, the data pointed to by <src>val</src> will
-    // be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer
-    // of type <src>t*</src>.
-    // </note>
-    //
-    CountedConstPtr(t *val, Bool delit = True) : SimpleCountedConstPtr<t>(val,delit) {}
-
-    // This copy constructor allows <src>CountedConstPtr</src>s to be
-    // initialized from other <src>CountedConstPtr</src>s.
-    //
-    CountedConstPtr(const CountedConstPtr<t> &val) : SimpleCountedConstPtr<t>(val) {}
-
-    // This assignment operator allows <src>CountedConstPtr</src>s to be
-    // freely assigned to each other.
-    //
-    CountedConstPtr<t> &operator=(const CountedConstPtr<t> &val) {
-	SimpleCountedConstPtr<t>::operator=(val);
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>CountedConstPtr</src> points to be changed.
-    //
-    CountedConstPtr<t> &operator=(t *v) {
-	SimpleCountedConstPtr<t>::operator=(v);
-	return *this;
-    }
-
-    // This dereferencing operator behaves as expected; it returns the
-    // pointer to the value being protected, and then its dereferencing
-    // operator will be invoked as appropriate. If the pointer is
-    // un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    const t
-    *operator->() const {
-
-	if (this->null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
-
-	return this->get ();
-    }
-};
-
-// <summary> Simple referenced counted pointer to non-constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class, like
-// <linkto class="SimpleCountedConstPtr:description">SimpleCountedConstPtr</linkto>,
-// does not define the <src>operator->()</src>. Thus it can point to
-// simple data which does not have this operator defined. In contrast to
-// <src>SimpleCountedConstPtr</src>, this class points at non-constant
-// underlying data. The deletion properties are the same for both
-// classes.
-// </synopsis>
-
-template<class t> class SimpleCountedPtr : virtual public SimpleCountedConstPtr<t> {
-public:
-
-    // This constructor allows for the creation of a null
-    // <src>SimpleCountedPtr</src>. The assignment operator can be used
-    // to assign a null <src>SimpleCountedPtr</src> from another pointer.
-    //
-    SimpleCountedPtr() : SimpleCountedConstPtr<t>() {}
-
-    // This constructor sets up a reference count for the <src>val</src>
-    // pointer.  By default, the data pointed to by <src>val</src>
-    // will be deleted when it is no longer referenced. Passing in
-    // <src>False</src> for <src>delit</src> will prevent the data
-    // from being deleted when the reference count reaches zero.
-    //
-    // <note role=warning> After the counted pointer is initialized
-    // the value should no longer be manipulated by the raw pointer
-    // of type <src>t*</src>.
-    // </note>
-    //
-    SimpleCountedPtr(t *val, Bool delit = True) : SimpleCountedConstPtr<t>(val,delit) {}
-
-    // This copy constructor allows <src>SimpleCountedPtr</src>s to be
-    // initialized from other <src>SimpleCountedPtr</src>s.
-    //
-    SimpleCountedPtr(const SimpleCountedPtr<t> &val) : SimpleCountedConstPtr<t>(val) {}
-
-    // This assignment operator allows <src>SimpleCountedPtr</src>s to be
-    // freely assigned to each other.
-    //
-    SimpleCountedPtr<t> &operator=(const SimpleCountedPtr<t> &val) {
-	SimpleCountedConstPtr<t>::operator=(val);
-	return *this;
-    }
-
-    // This assignment operator allows the object to which the current
-    // <src>SimpleCountedPtr</src> points to be changed.
-    //
-    SimpleCountedPtr<t> &operator=(t *v) {
-	SimpleCountedConstPtr<t>::operator=(v);
-	return *this;
-    }
-
-    // The <src>SimpleCountedPtr</src> indirection operator simply
-    // returns a reference to the value being protected. If the pointer
-    // is un-initialized (null), an exception will be thrown. The member
-    // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
-    // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <note role=tip> The address of the reference returned should
-    // not be stored for later use.
-    // </note>
-    //
-    // <group>
-    const t &operator*() const {
-	if (this->null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
-	return * this->get();
-    }
-    t &operator*() {
-	if (this->null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
-	return * this->get();
-    }
-    // </group>
-
-};
-
-// <summary>Regular referenced counted pointer for non-constant data</summary>
-// <use visibility=export>
-// <reviewed reviewer="Friso Olnon" date="1995/03/15" tests="tCountedPtr" demos="">
-
-// <prerequisite>
-// <li> class <linkto class="SimpleCountedPtr:description">SimpleCountedPtr</linkto>
-// <li> class <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>
-// </prerequisite>
-
-// <synopsis>
-// This class completes the lattice. It inherits much of the members
-// which deal with non-constant data from
-// <linkto class="SimpleCountedPtr:description">SimpleCountedPtr</linkto>,
-// and it inherits the const <src>operator->()</src> from
-// <linkto class="CountedConstPtr:description">CountedConstPtr</linkto>.
-// What this class adds is the <src>operator->()</src> which returns a
-// modifiable pointer.
-// </synopsis>
-//
-template<class t> class CountedPtr : public SimpleCountedPtr<t>,
-                                     public CountedConstPtr<t> {
-public:
 
     // This constructor allows for the creation of a null
     // <src>CountedPtr</src>. The assignment operator can be used
     // to assign a null <src>CountedPtr</src> from another
     // pointer.
     //
-    CountedPtr();
+    CountedPtr() : pointerRep_p () {}
 
-    // This constructor sets up a reference count for the
-    // <src>val</src> pointer.  By default, the data pointed to by
-    // <src>val</src> will be deleted when it is no longer
-    // referenced. Passing in <src>False</src> for <src>delit</src> will
-    // prevent the data from being deleted when the reference count
-    // reaches zero.
+    // This constructor sets up a reference count for the <src>val</src>
+    // pointer.  By default, the data pointed to by <src>val</src>
+    // will be deleted when it is no longer referenced. Passing in
+    // <src>False</src> for <src>delit</src> will prevent the data
+    // from being deleted when the reference count reaches zero.
     //
     // <note role=warning> After the counted pointer is initialized
     // the value should no longer be manipulated by the raw pointer of
     // type <src>t*</src>.
     // </note>
-    //
-    CountedPtr(t *val, Bool delit = True);
-
+    CountedPtr(t *val, Bool delit = True)
+    : pointerRep_p (val, Deleter<t> (delit))
+    {}
+    
     // This copy constructor allows <src>CountedPtr</src>s to be
-    // initialized from other <src>CountedPtr</src>s.
-    //
-    CountedPtr(const CountedPtr<t> &val);
+    // initialized from other <src>CountedPtr</src>s for which the pointer TP*
+    // is convertible to T*.
+    template<typename TP>
+    CountedPtr(const CountedPtr<TP>& that)
+      : pointerRep_p(that.pointerRep_p)
+    {}
+
+    // This destructor only deletes the really stored data when it was
+    // initialized as deletable and the reference count is zero.
+    ~CountedPtr() {}
 
     // This assignment operator allows <src>CountedPtr</src>s to be
-    // freely assigned to each other.
-    //
-    CountedPtr<t> &operator=(const CountedPtr<t> &val) {
-	SimpleCountedPtr<t>::operator=(val);
-	return *this;
+    // copied from other <src>CountedPtr</src>s for which the pointer TP*
+    // is convertible to t*.
+    template<typename TP>
+    CountedPtr<t>& operator=(const CountedPtr<TP>& that)
+    {
+      pointerRep_p = that.pointerRep_p;
+      return *this;
     }
 
-    // This assignment operator allows the object to which the current
-    // <src>CountedPtr</src> points to be changed.
-    //
-    CountedPtr<t> &operator=(t *v) {
-	SimpleCountedPtr<t>::operator=(v);
-	return *this;
+    // Reset the pointer.
+    // <group>
+    void reset (t *val, Bool delit=True)
+      { pointerRep_p = PointerRep (val, Deleter<t>(delit)); }
+    void reset()
+      { pointerRep_p.reset(); }
+    // </group>
+
+    // The <src>CountedPtr</src> indirection operator simply
+    // returns a reference to the value being protected. If the pointer
+    // is un-initialized (null), an exception will be thrown. The member
+    // function
+    // <linkto class="CountedPtr:null()const">null</linkto>()
+    // can be used to catch such a condition in time.
+    // <note role=tip> The address of the reference returned should
+    // not be stored for later use.
+    // </note>
+    t &operator*() const {
+	if (null()){
+	    throw_Null_CountedPtr_dereference_error();
+	}
+	return pointerRep_p.operator* ();
     }
 
     // This dereferencing operator behaves as expected; it returns the
@@ -1069,41 +174,128 @@ public:
     // operator will be invoked as appropriate. If the pointer is
     // un-initialized (null), an exception will be thrown. The member
     // function
-    // <linkto class="SimpleCountedConstPtr:null()const">null</linkto>()
+    // <linkto class="CountedPtr:null()const">null</linkto>()
     // can be used to catch such a condition in time.
-    //
-    // <thrown>
-    // <li> ExcpError
-    // </thrown>
-    //
-    // <group>
-    t *
-    operator->() const {
-	if (this->null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
-	return this->get();
+    t *operator->() const {
+	return get ();
     }
-    t *
-    operator->() {
-	if (this->null()){
-	    throw_Null_CountedPtr_dereference_error();
-	}
 
-	return this->get();
+    // Get the underlying pointer.
+    t* get () const {
+        return pointerRep_p.get();
     }
+
+    // Equality operator which checks to see if two
+    // <src>CountedPtr</src>s are pointing at the same thing.
+    Bool operator==(const CountedPtr<t> &other) const {
+	return (get() == other.get());
+    }
+    //# Note: use of const void* gives ambiguius overload error.
+    Bool operator==(int ptr) const {
+        return (ptr == 0  &&  get() == 0);
+    }
+
+    // Non-equality operator which checks to see if two
+    // <src>CountedPtr</src>s are not pointing at the same thing.
+    Bool operator!=(const CountedPtr<t> &other) const {
+	return (get() != other.get()  ? True : False);
+    }
+    //# Note: use of const void* gives ambiguius overload error.
+    Bool operator!=(int ptr) const {
+        return (ptr != 0  ||  get() != 0);
+    }
+
+    // This assignment operator allows the object to which the current
+    // <src>CountedPtr</src> points to be changed.
+    CountedPtr<t> &
+    operator=(t *v)
+    {
+        pointerRep_p = PointerRep (v);
+        return * this;
+    }
+
+    // Cast functions.
+    // <group>
+    template<typename U>
+    CountedPtr<U> static_ptr_cast() const
+#ifdef AIPS_CXX11
+      { return CountedPtr<U> (std::static_pointer_cast<U> (pointerRep_p)); }
+#else
+      { return CountedPtr<U> (std::tr1::static_pointer_cast<U> (pointerRep_p)); }
+#endif
+    template<typename U>
+    CountedPtr<U> const_ptr_cast() const
+#ifdef AIPS_CXX11
+      { return CountedPtr<U> (std::const_pointer_cast<U> (pointerRep_p)); }
+#else
+      { return CountedPtr<U> (std::tr1::const_pointer_cast<U> (pointerRep_p)); }
+#endif
+    template<typename U>
+    CountedPtr<U> dynamic_ptr_cast() const
+#ifdef AIPS_CXX11
+      { return CountedPtr<U> (std::dynamic_pointer_cast<U> (pointerRep_p)); }
+#else
+      { return CountedPtr<U> (std::tr1::dynamic_pointer_cast<U> (pointerRep_p)); }
+#endif
     // </group>
+
+    // Sometimes it is useful to know if there is more than one
+    // reference made. This is a way of getting that. Of course the point
+    // of these classes is that this information is normally not required.
+    uInt nrefs() const
+      { return pointerRep_p.use_count(); }
+
+    // Check to see if this <src>CountedPtr</src> is
+    // un-initialized, null.
+    Bool null() const
+      { return get() == 0; }
+
+    // Test if it contains a valid pointer.
+    operator bool() const
+      { return get() != 0; }
+
+private:
+    // Make all types of CountedPtr a friend for the templated operator=.
+    template<typename TP> friend class CountedPtr;
+
+#ifdef AIPS_CXX11
+    typedef std::shared_ptr<t> PointerRep;
+  ///#elif HAVE_BOOST
+  ///    typedef boost::shared_ptr<t> PointerRep;
+#else
+    typedef std::tr1::shared_ptr<t> PointerRep;
+#endif
+
+    // Create from a shared_ptr.
+    CountedPtr (const PointerRep& rep)
+      : pointerRep_p (rep)
+    {}
+
+
+    PointerRep pointerRep_p;
 };
 
- } //#End casa namespace
+// A shared_ptr is used as implementation.
+inline Bool countedPtrShared()
+  { return True; }
+
+// Cast the CountedPtr from one pointer type to another.
+template<typename T, typename U>
+CountedPtr<T> static_pointer_cast (const CountedPtr<U>& that)
+  { return that.template static_ptr_cast<T>(); }
+template<typename T, typename U>
+CountedPtr<T> const_pointer_cast (const CountedPtr<U>& that)
+  { return that.template const_ptr_cast<T>(); }
+template<typename T, typename U>
+CountedPtr<T> dynamic_pointer_cast (const CountedPtr<U>& that)
+  { return that.template dynamic_ptr_cast<T>(); }
 
 
-#endif // defined (USE_BOOST_SHARED_PTR)
+} //#End casa namespace
 
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/CountedPtr.tcc>
+#include <casacore/casa/Utilities/CountedPtr.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
-
 
 #endif

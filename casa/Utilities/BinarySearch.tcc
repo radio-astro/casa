@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BinarySearch.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: BinarySearch.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Utilities/BinarySearch.h>
-#include <casa/Exceptions/Error.h>
+#ifndef CASA_BINARYSEARCH_TCC
+#define CASA_BINARYSEARCH_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Utilities/BinarySearch.h>
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //#!!!!! If you change either of the following, make sure you change the other
 //#!!!!! similarly.
@@ -134,5 +137,7 @@ template<class Container, class ElType>
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

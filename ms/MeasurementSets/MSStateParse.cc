@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSStateParse.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSStateParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSStateParse.h>
-#include <ms/MeasurementSets/MSStateIndex.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MSStateParse.h>
+#include <casacore/ms/MeasurementSets/MSStateIndex.h>
+#include <casacore/ms/MeasurementSets/MSSourceIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   MSStateParse* MSStateParse::thisMSSIParser = 0x0; // Global pointer to the parser object
   TableExprNode* MSStateParse::node_p = 0x0;
@@ -79,4 +79,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return node_p;
   }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

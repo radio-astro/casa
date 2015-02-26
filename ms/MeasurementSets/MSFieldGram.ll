@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-$Id: MSFieldGram.ll 20704 2009-09-03 08:53:52Z gervandiepen $
+$Id: MSFieldGram.ll 21507 2014-11-21 12:17:24Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -38,7 +38,7 @@ $Id: MSFieldGram.ll 20704 2009-09-03 08:53:52Z gervandiepen $
 #undef YY_DECL
 #define YY_DECL int MSFieldGramlex (YYSTYPE* lvalp)
 static string                qstr;
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
 %}
 
 WHITE     [ \t\n]*

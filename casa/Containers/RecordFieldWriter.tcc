@@ -24,13 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordFieldWriter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordFieldWriter.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/RecordFieldWriter.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
+#ifndef CASA_RECORDFIELDWRITER_TCC
+#define CASA_RECORDFIELDWRITER_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/RecordFieldWriter.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class outType, class inType>
 RecordFieldCopier<outType,inType>::RecordFieldCopier(RecordInterface &outRecord, 
@@ -71,5 +74,7 @@ void UnequalShapeCopier<T>::writeField()
     (*in_p).freeStorage(in, deleteIn);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

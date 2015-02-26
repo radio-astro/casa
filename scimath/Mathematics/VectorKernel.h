@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VectorKernel.h 19880 2007-02-15 04:10:07Z Malte.Marquarding $
+//# $Id: VectorKernel.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_VECTORKERNEL_H
 #define SCIMATH_VECTORKERNEL_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Regex;
@@ -50,7 +50,6 @@ class String;
 
 // <prerequisite>
 //   <li> <linkto class="Vector">Vector</linkto>
-//   <li> <linkto class="SepImageConvolver">SepImageConvolver</linkto>
 // </prerequisite>
 
 // <etymology>
@@ -127,7 +126,7 @@ enum KernelTypes {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

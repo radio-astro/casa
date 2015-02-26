@@ -1,4 +1,4 @@
-//# aipstype.h: Global initialization for standard aips++ types
+//# complex.h: import std complex functions into namespace casacore
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: complex.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: complex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_STD_COMPLEX_H
 #define CASA_STD_COMPLEX_H
 
 // Make sure any special macros are set
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 #if defined(AIPS_SGI)
 #include <complex.h>
@@ -40,7 +40,7 @@
 #endif
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 using std::real;
 using std::imag;
@@ -60,6 +60,6 @@ using std::sqrt;
 using std::polar;
 using std::pow;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

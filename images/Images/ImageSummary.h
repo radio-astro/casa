@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageSummary.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ImageSummary.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_IMAGESUMMARY_H
 #define IMAGES_IMAGESUMMARY_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MDoppler.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/ObsInfo.h>
-#include <images/Images/ImageInfo.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
+#include <casacore/images/Images/ImageInfo.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class ImageInterface;
@@ -222,9 +222,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageSummary.tcc>
+#include <casacore/images/Images/ImageSummary.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

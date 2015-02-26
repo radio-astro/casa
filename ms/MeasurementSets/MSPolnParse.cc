@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolnParse.cc 20754 2009-10-01 08:59:24Z gervandiepen $
+//# $Id: MSPolnParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSPolnParse.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSSpwGram.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Containers/MapIO.h>
-#include <casa/Containers/OrderedMap.h>
+#include <casacore/ms/MeasurementSets/MSPolnParse.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSpwGram.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/casa/Containers/OrderedMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //  MSPolnParse* MSPolnParse::thisMSSParser = 0x0; // Global pointer to the parser object
   // TableExprNode* MSPolnParse::node_p = 0x0;
@@ -106,12 +106,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //------------------------------------------------------------------------------
   //  
   Vector<Int> MSPolnParse::getMapToDDIDs(MSDataDescIndex& msDDNdx, 
-					 MSPolarizationIndex& msPolNdx,
+					 MSPolarizationIndex& /*msPolNdx*/,
 					 const Vector<Int>& spwIDs, 
 					 Vector<Int>& polnIDs,
 					 Vector<Int>& polnIndices)
   {
-    (void)msPolNdx;
     Vector<Int> ddIDs;
     Vector<Int> thisDDList;
     Vector<Int> validPolIDs, validPolIndices;
@@ -166,9 +165,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> validPolIDs, validPolIndices;
     MSDataDescIndex msDDNdx(ms()->dataDescription());
     MSPolarizationIndex msPolNdx(ms()->polarization());
-
+    //    cout << "SpwIDs = " << spwIDs << endl;
     polnIDs = getPolnIDsV2(polnExpr, polTypes);
-
+    //    cout << "PolIDs = " << polnIDs << " polTypes = " << polTypes << endl;
     //   if (polnIDs.nelements() == 0)
    if (polTypes.nelements() == 0)
       {
@@ -196,6 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setIDLists((Int)polnIDs[p],0,polnIndices);
 		polMap_p(polnIDs[p]).resize(0);
 		polMap_p(polnIDs[p])=polnIndices;
+		//		cout << "DDIDs for SPW = " << spwIDs[s] << " = " << tmp[0] << endl;
 	      }
 	  }
 	if (thisDDList.nelements() > 0) 
@@ -229,11 +229,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  i.e. "RR", "LL" etc.
   //
   Vector<Int> MSPolnParse::matchPolIDsToPolTableRow(const Vector<Int>& polIds,
-						    OrderedMap<Int, Vector<Int> >& polIndexMap,
+						    OrderedMap<Int, Vector<Int> >& /*polIndexMap*/,
 						    Vector<Int>& polIndices,
 						    Bool addToMap)
   {
-    (void)polIndexMap;
     Vector<Int> rowList;
     MSPolarization mspol(ms()->polarizationTableName());
     ROMSPolarizationColumns mspolC(mspol);
@@ -255,7 +254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// "LL".
 	//
 	Bool allFound=False;
-	Int foundCounter=0;
+	uInt foundCounter=0;
 	//	Vector<Int> polIndices(0,-1);
 	for(uInt i=0; i<polIds.nelements(); i++)
 	  {
@@ -270,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	  }
 
-	if ((allFound=(foundCounter == (Int)polIds.nelements())))
+	if ((allFound=(foundCounter == polIds.nelements())))
 	  {
 	    if (addToMap) setIDLists((Int)row,0,polIndices);
 	  }
@@ -378,12 +377,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Vector<Int> polnIDs;
 
 	String s(":"), spwExpr, polnExpr;
-	Int nSpw, nTokens;
+	Int nTokens;
 	//
 	// User suppport: Check if they tried [SPW:CHAN:]POLN kind of
 	// specification.  Darn - String::freq(...) does not work!
 	//
-	nSpw=tokenize(polnSpecList[i],s,tokens);
+	tokenize(polnSpecList[i],s,tokens);
 	tokenize(tokens[0],s,tmp);
 	nTokens = tokens.nelements();
 
@@ -454,7 +453,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    x.addMessage(mesg);
 	    throw;
 	  }
-
 	selectFromIDList(ddIDList_p);
       }
     {
@@ -500,4 +498,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //------------------------------------------------------------------------------
   //
   const TableExprNode MSPolnParse::node() { return node_p; }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

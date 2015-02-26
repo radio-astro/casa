@@ -1,4 +1,4 @@
-//# FITS.cc: Transform an AIPS++ Array to or from a FITS disk file.
+//# FITS.cc: Transform a Casacore Array to or from a FITS disk file.
 //# Copyright (C) 1993,1994,1995,1996,1998,1999,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //# 
@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BasicFITS.cc 19974 2007-02-28 05:26:06Z Malte.Marquarding $
+//# $Id: BasicFITS.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/BasicFITS.h>
-#include <fits/FITS/FITS2.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/hdu.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/fits/FITS/BasicFITS.h>
+#include <casacore/fits/FITS/FITS2.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Array<Float> ReadFITS(const char *FileName, Bool &ok, String &ErrorMessage,
 		      String *unitName,
@@ -59,7 +59,7 @@ Array<Float> ReadFITS(const char *FileName, Bool &ok, String &ErrorMessage,
     if (infile.rectype() != FITS::HDURecord ||
 	infile.hdutype() != FITS::PrimaryArrayHDU) {
 	ok = False;
-	ErrorMessage = "FITS file is not an image, or is misformed "
+	ErrorMessage = "FITS file is not an image, or is malformed "
 	    "(or something)";
 	return data;
     }
@@ -299,5 +299,5 @@ Bool WriteFITS(const char *FileName, const Array<Float> &array,
     return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

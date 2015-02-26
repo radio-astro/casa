@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quality.h 21292 2012-11-28 14:58:19Z gervandiepen $
+//# $Id: Quality.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_QUALITY_H
 #define MEASURES_QUALITY_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Quality parameter definitions.
@@ -93,7 +93,7 @@ public:
 private:
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

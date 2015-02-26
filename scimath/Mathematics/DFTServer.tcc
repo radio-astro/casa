@@ -23,14 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DFTServer.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: DFTServer.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Mathematics/DFTServer.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/iostream.h>
+#ifndef SCIMATH_DFTSERVER_TCC
+#define SCIMATH_DFTSERVER_TCC
+
+#include <casacore/scimath/Mathematics/DFTServer.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 DFTServer<T>& DFTServer<T>::operator=(const DFTServer<T> &other)
@@ -409,5 +412,7 @@ void DFTServer<T>::showReal(Array<T> &data)
 
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

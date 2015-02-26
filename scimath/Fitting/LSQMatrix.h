@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQMatrix.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LSQMatrix.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_LSQMATRIX_H
 #define SCIMATH_LSQMATRIX_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <algorithm>
-#include <casa/Utilities/RecordTransformable.h>
+#include <casacore/casa/Utilities/RecordTransformable.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -244,6 +244,6 @@ class LSQMatrix : public RecordTransformable {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

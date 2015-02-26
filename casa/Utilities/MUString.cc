@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MUString.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MUString.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Utilities/MUString.h>
-#include <casa/sstream.h>
-#include <casa/iostream.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/MUString.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Regex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Constructors
 MUString::MUString() :
@@ -516,5 +516,5 @@ ostream &operator<<(ostream &os, const MUString &in) {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

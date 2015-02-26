@@ -23,48 +23,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSConcat.cc 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: MSConcat.cc 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <ms/MeasurementSets/MSConcat.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/BasicMath/Math.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSFeed.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableVector.h>
-#include <tables/Tables/TabVecMath.h>
-#include <tables/Tables/TableCopy.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
-#include <casa/OS/Path.h>
-#include <casa/OS/Directory.h>
+#include <casacore/ms/MeasurementSets/MSConcat.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/ms/MeasurementSets/MSAntenna.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/ms/MeasurementSets/MSFeed.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableVector.h>
+#include <casacore/tables/Tables/TabVecMath.h>
+#include <casacore/tables/Tables/TableCopy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/Directory.h>
 
-namespace casa {
+namespace casacore {
 
 MSConcat::MSConcat(MeasurementSet& ms):
   MSColumns(ms),
@@ -302,7 +302,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   const Block<uInt> newAntIndices = copyAntennaAndFeed(otherMS.antenna(), 
 						       otherMS.feed()); 
   Bool antIndexTrivial = True;
-  for(uint ii=0; ii<newAntIndices.size(); ii++){
+  for(uInt ii=0; ii<newAntIndices.size(); ii++){
     //cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
     if(newAntIndices[ii]!=ii){
       antIndexTrivial=False;
@@ -996,7 +996,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	<< " rows to the feed subtable" << endl;
   }
 
-  //for(uint ii=0; ii<newAntIndices.size(); ii++){
+  //for(uInt ii=0; ii<newAntIndices.size(); ii++){
   //  cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
   //}
 
@@ -1584,7 +1584,7 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
     // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
     Bool idsOK = True;
-    Int maxID = static_cast<int> (newAntIndices.nelements()-1);
+    Int maxID = static_cast<Int>(newAntIndices.nelements()) - 1;
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
       if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
 	idsOK = False;
@@ -1655,7 +1655,7 @@ Bool MSConcat::copyPointingB(MSPointing& otherPoint,const
     // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
     Bool idsOK = True;
-    Int maxID = static_cast<int> (newAntIndices.nelements()-1);
+    Int maxID = static_cast<Int>(newAntIndices.nelements()) - 1;
     for (Int k=0; k < rowToBeAdded; k++){
       if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
 	idsOK = False;
@@ -1718,7 +1718,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
   if(remRedunObsId){ // remove redundant rows
     MSObservationColumns& obsCol = observation();
     Vector<Bool> rowToBeRemoved(obs.nrow(), False);
-    vector<uint> rowsToBeRemoved;
+    vector<uInt> rowsToBeRemoved;
     for(uInt j=0; j<obs.nrow(); j++){ // loop over OBS table rows
       for (uInt k=j+1; k<obs.nrow(); k++){ // loop over remaining OBS table rows
 	if(obsRowsEquivalent(obsCol, j, k)){ // rows equivalent?
@@ -1735,7 +1735,7 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
 
     // create final maps
     // map for first table
-    for(uInt i=0; i<static_cast<uInt> (originalNrow); i++){ // loop over rows of old first table
+    for(Int i=0; i<originalNrow; i++){ // loop over rows of old first table
       if(tempObsIndex2.isDefined(i)){ // ID changed because of removal
 	  newObsIndexA_p.define(i,tempObsIndex2(i));
 	  doObsA_p = True;
@@ -2248,7 +2248,7 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
 	solSystObjects_p.define(fieldCols.sourceId()(i), (Int) refType);
       }
       if(!fieldCols.ephemPath(i).empty()){ // this is an ephemeris object
-	solSystObjects_p.define(fieldCols.sourceId()(i), -2); // mark as -2
+        solSystObjects_p.define(fieldCols.sourceId()(i), -2); // mark as -2
       }	
     }
     for(uInt i=0; i<otherms.field().nrow(); i++){
@@ -2325,18 +2325,18 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       vector<uInt> rowsToBeRemoved;
       Vector<Int> thisSPWIdB=sourceCol.spectralWindowId().getColumn();
 
-      for (int j=0 ; j < numrows_this ; ++j){
+      for (Int j=0 ; j < numrows_this ; ++j){
 	if(rowToBeRemoved(j)){
 	  continue;
 	}
 	// check if row j has an equivalent row somewhere else in the table
 	Int reftypej = solSystObjects_p(thisId(j));
-	for (int k=j+1 ; k < numrows_this ; ++k){
+	for (Int k=j+1 ; k < numrows_this ; ++k){
 	  if (!rowToBeRemoved(k)){
 	    if(thisSPWIdB(j)==thisSPWIdB(k)){ // the SPW id is the same
 	      Int reftypek = solSystObjects_p(thisId(k));
-	      Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
-		|| ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object
+ 	      Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
+ 		|| ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object
 	      if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects) ){ // and all columns are the same (not testing source, spw id, time, and interval)
 		//cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
 
@@ -2377,7 +2377,6 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       }
 
       // renumber consecutively
-      Bool rowsRenumbered(False);
       Int nnrow = 0;
       for (Int j=0 ; j < newNumrows_this ; ++j){
 	if(newThisId(j) > nnrow){ 
@@ -2387,7 +2386,6 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	  //sourceRow.putMatchingFields(j, sourceRecord);
 	  tempSourceIndex2.define(newThisId(j), nnrow);
 	  sourceCol.sourceId().put(j, nnrow);
-	  rowsRenumbered = True;
 	}
       }
 	
@@ -2395,14 +2393,14 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       Bool rowsRenamed(False);
       Int nDistinctSources = newNumrows_this;
       Vector<Int> thisSourceId=sourceCol.sourceId().getColumn();
-      for (int j=0 ; j < newNumrows_this ; ++j){
+      for (Int j=0 ; j < newNumrows_this ; ++j){
 	// check if row j has an equivalent row somewhere down in the table
 	Int reftypej = solSystObjects_p(thisId(j));
-	for (int k=j+1 ; k < newNumrows_this ; ++k){
+	for (Int k=j+1 ; k < newNumrows_this ; ++k){
 	  if(thisSourceId(j)!=thisSourceId(k)){
 	    Int reftypek = solSystObjects_p(thisId(k));
-	    Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
-	      || ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object;
+ 	    Bool sameSolSystObjects = ((reftypek==reftypej) && (reftypek>-1)) // object with solar syst ref frame
+ 	      || ((reftypek==reftypej) && (reftypek==-2)); // ephemeris object;
 	    if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects)){ 
 	                                          // all columns are the same except source id (not testing spw id),
 	                                          // spw id must be different, otherwise row would have been deleted above
@@ -2627,7 +2625,7 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
     DebugAssert(otherDDCols.spectralWindowId()(d) >= 0 &&
 		otherDDCols.spectralWindowId()(d) < static_cast<Int>(otherSpw.nrow()), 
 		AipsError);
-    const uInt otherSpwId = static_cast<uInt>(otherDDCols.spectralWindowId()(d));
+    const Int otherSpwId = otherDDCols.spectralWindowId()(d);
     DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
 
     foundInDD(otherSpwId) = True;
@@ -2660,7 +2658,7 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       // cout << "counterpart found for other spw " << otherSpwId 
       //     << " found in this spw " << *newSpwPtr << endl;
       matchedSPW = True;
-      if(*newSpwPtr != static_cast<int> (otherSpwId)){
+      if(*newSpwPtr != otherSpwId){
 	newSPWIndex_p.define(otherSpwId, *newSpwPtr);
       }
     }      

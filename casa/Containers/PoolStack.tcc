@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PoolStack.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PoolStack.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_POOLSTACK_TCC
+#define CASA_POOLSTACK_TCC
 
 //# Includes
-#include <casa/Containers/PoolStack.h>
+#include <casacore/casa/Containers/PoolStack.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T, class Key>
@@ -72,5 +75,7 @@ void PoolStack<T, Key>::clear() {
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -1,4 +1,4 @@
-//# FITSTable.h: Simplified interface to FITS tables with AIPS++ Look and Feel.
+//# FITSTable.h: Simplified interface to FITS tables with Casacore Look and Feel.
 //# Copyright (C) 1995,1996,1997,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,21 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSTable.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FITSTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef FITS_FITSTABLE_H
 #define FITS_FITSTABLE_H
 
 
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Containers/Block.h>
-#include <fits/FITS/hdu.h>
-#include <fits/FITS/fitsio.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class String;
 class FITSFieldCopier;
@@ -46,7 +46,7 @@ class TableDesc;
 template<class T> class Vector;
 
 // <summary>
-// Simplified interface to FITS tables with AIPS++ Look and Feel.
+// Simplified interface to FITS tables with Casacore Look and Feel.
 // </summary>
 //
 // <use visibility=export>
@@ -484,6 +484,6 @@ private:
     void check_error(const char *extra_info = 0);
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

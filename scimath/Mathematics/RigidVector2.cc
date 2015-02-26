@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RigidVector2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: RigidVector2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/RigidVector.h>
-#include <scimath/Mathematics/SquareMatrix.h>
+#include <casacore/scimath/Mathematics/RigidVector.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RigidVector<Complex,4> operator*(const SquareMatrix<Complex,4>& m,
 				 const RigidVector<Float,4>& v) {
@@ -63,5 +63,5 @@ RigidVector<Complex,4> operator*(const SquareMatrix<Complex,4>& m,
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

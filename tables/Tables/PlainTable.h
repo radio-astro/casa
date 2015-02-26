@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: PlainTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_PLAINTABLE_H
 #define TABLES_PLAINTABLE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseTable.h>
-#include <tables/Tables/TableCache.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableSyncData.h>
-#include <tables/Tables/TSMOption.h>
-#include <casa/IO/AipsIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/tables/Tables/TableCache.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableSyncData.h>
+#include <casacore/tables/DataMan/TSMOption.h>
+#include <casacore/casa/IO/AipsIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class SetupNewTable;
@@ -304,6 +304,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

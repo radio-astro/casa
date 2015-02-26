@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ByteSinkSource.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ByteSinkSource.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/IO/ByteSinkSource.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/ByteSinkSource.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ByteSinkSource::ByteSinkSource ()
 {}
@@ -53,5 +53,5 @@ ByteSinkSource& ByteSinkSource::operator= (const ByteSinkSource& sinkSource)
 ByteSinkSource::~ByteSinkSource()
 {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PlainColumn.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/PlainColumn.h>
-#include <tables/Tables/ColumnSet.h>
-#include <tables/Tables/BaseColDesc.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/DataManager.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIter.h>
-#include <casa/IO/AipsIO.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/PlainColumn.h>
+#include <casacore/tables/Tables/ColumnSet.h>
+#include <casacore/tables/Tables/TableTrace.h>
+#include <casacore/tables/Tables/BaseColDesc.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/DataMan/DataManager.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 PlainColumn::PlainColumn (const BaseColumnDesc* cdp, ColumnSet* csp)
 : BaseColumn    (cdp),
@@ -44,7 +45,11 @@ PlainColumn::PlainColumn (const BaseColumnDesc* cdp, ColumnSet* csp)
   dataColPtr_p  (0),
   colSetPtr_p   (csp),
   originalName_p(cdp->name())
-{}
+{
+  int trace = TableTrace::traceColumn (colDesc_p);
+  rtraceColumn_p = (trace&TableTrace::READ)  != 0;
+  wtraceColumn_p = (trace&TableTrace::WRITE) != 0;
+}
 
 PlainColumn::~PlainColumn()
 {}
@@ -152,5 +157,5 @@ void PlainColumn::checkValueLength (const Array<String>* value) const
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

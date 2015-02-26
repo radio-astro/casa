@@ -23,29 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableAccess.cc 21155 2011-12-12 07:56:57Z gervandiepen $
+//# $Id: tTableAccess.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/ForwardCol.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/DataMan/StandardStMan.h>
+#include <casacore/tables/DataMan/TiledShapeStMan.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/tables/DataMan/ForwardCol.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // <summary>
 // Interactive test program for adding/removing columns.
@@ -124,7 +124,7 @@ String removeDir (const String& msg)
 template<typename T>
 void readSca (const Table& tab)
 {
-  ROScalarColumn<T> col(tab, "scacol");
+  ScalarColumn<T> col(tab, "scacol");
   uInt nrow = tab.nrow();
   for (uInt i=0; i<nrow; ++i) {
     cout << col.get(i) << " ";
@@ -137,7 +137,7 @@ void readSca (const Table& tab)
 template<typename T>
 void readArr (const Table& tab)
 {
-  ROArrayColumn<T> col(tab, "arrcol");
+  ArrayColumn<T> col(tab, "arrcol");
   uInt nrow = tab.nrow();
   for (uInt i=0; i<nrow; ++i) {
     cout << col.get(i) << endl;

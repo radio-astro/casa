@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRegex2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tRegex2.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Utilities/Regex.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //# Forward Declarations
 
 void a();
@@ -70,6 +70,10 @@ String::size_type doMatch (const Regex& exp, const char* str, uInt pos)
 // First do some simple Regex things.
 void a() {
   //  Regex exp(Regex::fromPattern("a"));
+  Regex exp22(Regex::fromPattern("[CR]T[^ab]*"));
+  cout << "RTa " << String("RTa").matches(exp22) << endl;
+  cout << "RTb " << String("RTb").matches(exp22) << endl;
+  cout << "RTc " << String("RTc").matches(exp22) << endl;
   Regex exp(Regex::fromPattern("{a,b,c,d,e,f,g}"));
   cout << String("a").matches(exp) << endl;
   cout << String("b").matches(exp) << endl;

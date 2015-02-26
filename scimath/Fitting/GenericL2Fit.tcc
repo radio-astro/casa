@@ -24,15 +24,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GenericL2Fit.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: GenericL2Fit.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_GENERICL2FIT_TCC
+#define SCIMATH_GENERICL2FIT_TCC
 
 //# Includes
-#include <scimath/Fitting/GenericL2Fit.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/VectorSTLIterator.h>
-#include <scimath/Functionals/HyperPlane.h>
+#include <casacore/scimath/Fitting/GenericL2Fit.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/VectorSTLIterator.h>
+#include <casacore/scimath/Functionals/HyperPlane.h>
 
-namespace casa {  //# Begin namespace casa
+namespace casacore {  //# Begin namespace casa
 //# Constants
 // Default svd collinearity
 
@@ -347,8 +350,8 @@ fit(Vector<typename FunctionTraits<T>::BaseType> &sol,
 
 template<class T>
 Bool GenericL2Fit<T>::
-fit(Vector<typename FunctionTraits<T>::BaseType> &sol,
-    const Vector<Bool> *const mask) {
+fit(Vector<typename FunctionTraits<T>::BaseType> &,
+    const Vector<Bool> *const) {
   throw(AipsError("GenericL2: A001: not implemented yet; ask Wim Brouw"));
   return False;
 }
@@ -652,3 +655,5 @@ buildResidual(Vector<typename FunctionTraits<T>::BaseType> &y,
 }
 
 } //#End namesapce casa
+
+#endif

@@ -23,25 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLinearFitSVD.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tLinearFitSVD.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <scimath/Fitting/LinearFitSVD.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Matrix.h>
-#include <scimath/Functionals/CombiFunction.h>
-#include <scimath/Functionals/FunctionWrapper.h>
-#include <scimath/Functionals/HyperPlane.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicMath/Primes.h>
-#include <casa/BasicMath/Random.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/scimath/Fitting/LinearFitSVD.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/scimath/Functionals/CombiFunction.h>
+#include <casacore/scimath/Functionals/FunctionWrapper.h>
+#include <casacore/scimath/Functionals/HyperPlane.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicMath/Primes.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Some C++ functions
 // To use them in Fitting, have to have parameters and also AutoDiff
 static Double func0(const Vector<Double> &) {return 1;}            // 1

@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTServer.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: FFTServer.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_FFTSERVER_H
 #define SCIMATH_FFTSERVER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Mathematics/FFTW.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/FFTW.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Containers/Block.h>
 #include <vector>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class Array;
@@ -401,7 +401,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 //# Do NOT include the .tcc file here like done for other templated classes.
 //# The instantiations are done explicitly.

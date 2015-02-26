@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSort_1.cc 21089 2011-05-19 03:51:34Z gervandiepen $
+//# $Id: tSort_1.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/Utilities/Sort.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/OS/Timer.h>
-#include <casa/sstream.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/stdlib.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //# Forward Declarations
 Bool sortarr (Int*, uInt nr, int);
 Bool sortall (Int*, uInt nr, uInt type);
@@ -167,6 +167,10 @@ Bool sortall (Int* arr, uInt nr, uInt type)
 	    success = False;
 	}
     }
+    cout << "ParSort   ";
+    if (! sortarr (arr, nr, Sort::ParSort)) {
+	success = False;
+    }
     cout << "QuickSort ";
     if (! sortarr (arr, nr, Sort::QuickSort)) {
 	success = False;
@@ -238,7 +242,7 @@ Bool sortarr1 (Int* arr, uInt nr, int opt)
     sort.sortKey (arr,TpInt);
     Vector<uInt> ptr;
     Timer tim;
-    sort.sort (ptr,nr,opt);
+    sort.sort (ptr,nr,opt,False);
     tim.show();
     for (uInt i=1; i<nr; i++) {
 	if (arr[ptr(i)] < arr[ptr(i-1)]) {
@@ -263,6 +267,7 @@ Bool sortarr2 (Int* arr, uInt nr, int opt)
     Vector<uInt> ptr;
     Timer tim;
     sort.sort (ptr,nr,opt);
+    ///sort.sort (ptr,nr,opt,False);
     tim.show("  with obj");
     for (uInt i=1; i<nr; i++) {
 	if (arr[ptr(i)] < arr[ptr(i-1)]) {
@@ -309,8 +314,13 @@ Bool sort2 (uInt nr)
     sort.sortKey (vec1.data(), TpInt);
     sort.sortKey (vec2.data(), TpInt);
     Vector<uInt> inx;
-    sort.sort (inx, vec1.size());
-    cout << "sort2     ";
+    sort.sort (inx, vec1.size(), Sort::QuickSort);
+    cout << "quicksort2";
+    timer.show();
+    timer.mark();
+    Vector<uInt> inx1;
+    sort.sort (inx1, vec1.size(), Sort::ParSort);
+    cout << "parsort2  ";
     timer.show();
   }
   {
@@ -318,10 +328,11 @@ Bool sort2 (uInt nr)
     Int nrant = 1 + max(max(vec1), max(vec2));
     Vector<Int> bl(vec1*nrant);
     bl += vec2;
+    cout << "  fill    ";
     timer.show();
     Vector<uInt> inx;
     GenSortIndirect<Int>::sort (inx, bl);
-    cout << "sort2c    ";
+    cout << "indsort   ";
     timer.show();
   }
   return True;

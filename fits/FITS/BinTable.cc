@@ -1,4 +1,4 @@
-//# Bintable.cc:  this defines BinaryTable, which converts FITS binary tables to aips++ Tables
+//# Bintable.cc:  this defines BinaryTable, which converts FITS binary tables to Casacore Tables
 //# Copyright (C) 1994-1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BinTable.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: BinTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <fits/FITS/BinTable.h>
-#include <fits/FITS/fits.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/MemoryStMan.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/RowCopier.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/sstream.h>
-#include <casa/stdio.h>
+#include <casacore/fits/FITS/BinTable.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/DataMan/MemoryStMan.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/RowCopier.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/stdio.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Bool isSDFitsColumn(FITS::ReservedName name) {
     if (name == FITS::AUTHOR || name == FITS::CDELT || name == FITS::CROTA ||
@@ -167,7 +167,6 @@ BinaryTable::BinaryTable(FitsInput& fitsin, FITSErrorHandler errhandler,
    ConstFitsKeywordList &kwl = kwlist();
    kwl.first();
    const FitsKeyword *kw;
-   Regex trailing(" *$"); // trailing blanks
    String kwname;
    // will hold the index portion for indexed keywords, this should be
    // more than enough space
@@ -176,7 +175,7 @@ BinaryTable::BinaryTable(FitsInput& fitsin, FITSErrorHandler errhandler,
        if (!kw->isreserved() || (sdfits && isSDFitsColumn(kw->kw().name()))) {
 	   // Get the kw name and remove the trailing spaces
            kwname = kw->name();
-	   kwname = kwname.before(trailing);
+	   kwname.rtrim(' ');
 	   // if it is indexed, add the index to the keyword
 	   if (kw->isindexed()) {
 	       sprintf(index,"%i",kw->index());
@@ -231,7 +230,7 @@ BinaryTable::BinaryTable(FitsInput& fitsin, FITSErrorHandler errhandler,
        //		check if the column name exists
        String colname(ttype(i));
        //               remove trailing spaces
-       colname  = colname.before(trailing);
+       colname.rtrim(' ');
        if (td.isColumn(colname)) {
 	   //		issue a warning, append column number to this name
 	   ostringstream newname;
@@ -707,7 +706,7 @@ void BinaryTable::fillRow()
 		// its a pity so many copies seem to be necessary
 		// one to copy the heap into the local version of the
 		// desired type
-		// the second to hold and scale the values in an aips++ type
+		// the second to hold and scale the values in a Casacore type
 		// and finally the copy actually placed in the table
 		switch (vatypes_p[j]) {
 		case FITS::LOGICAL:
@@ -1043,5 +1042,5 @@ const Table &BinaryTable::nextRow()
     return (*currRowTab);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

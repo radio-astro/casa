@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHashMap.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tHashMap.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Containers/HashMapIter.h>
-#include <casa/BasicSL/String.h>
-#include <casa/fstream.h>
-#include <casa/iostream.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/Containers/HashMapIter.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/stdlib.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 #define DIAGNOSTICS 1
 #define OUTPUT 1
 #define COMPLETE 0

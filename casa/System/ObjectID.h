@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectID.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ObjectID.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_OBJECTID_H
 #define CASA_OBJECTID_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template<class T> class Block;
@@ -172,6 +172,6 @@ inline const String &ObjectID::hostName() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

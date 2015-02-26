@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFeed.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFeed.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFeed.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/ForwardCol.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/MSFeed.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/DataMan/ForwardCol.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSFeed::MSFeed():hasBeenDestroyed_p(True) { }
 
@@ -143,7 +143,7 @@ void MSFeed::init()
 		  "Feed id","","");
 	// FOCUS_LENGTH
 	colMapDef(FOCUS_LENGTH,"FOCUS_LENGTH",TpDouble,
-		  "Focus lenght","m","");
+		  "Focus length","m","");
 	// INTERVAL
 	colMapDef(INTERVAL,"INTERVAL",TpDouble,
 		  "Interval for which this set of parameters is accurate",
@@ -213,5 +213,5 @@ MSFeed MSFeed::referenceCopy(const String& newTableName,
 		  (newTableName,writableColumns));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

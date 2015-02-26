@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSDopplerColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSDopplerColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSDopplerColumns.h>
-#include <ms/MeasurementSets/MSDoppler.h>
+#include <casacore/ms/MeasurementSets/MSDopplerColumns.h>
+#include <casacore/ms/MeasurementSets/MSDoppler.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSDopplerColumns::ROMSDopplerColumns(const MSDoppler& msDoppler):
   isNull_p(True),
@@ -125,5 +125,5 @@ void MSDopplerColumns::setVelDefRef(MDoppler::Types ref)
 // compile-command: "gmake MSDopplerColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

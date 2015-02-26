@@ -23,23 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: System.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: System.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 
 #ifndef CASA_SYSTEM_H
 #define CASA_SYSTEM_H
 
-#include <casa/System/Aipsrc.h>
-#include <casa/System/AipsrcValue.h>
-#include <casa/System/AipsrcVector.h>
-#include <casa/System/AppInfo.h>
-#include <casa/System/Choice.h>
-#include <casa/System/ObjectID.h>
-#include <casa/System/PGPlotter.h>
-#include <casa/System/PGPlotterInterface.h>
-#include <casa/System/ProgressMeter.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/System/AipsrcVector.h>
+#include <casacore/casa/System/AppInfo.h>
+#include <casacore/casa/System/Choice.h>
+#include <casacore/casa/System/ObjectID.h>
+#include <casacore/casa/System/PGPlotter.h>
+#include <casacore/casa/System/PGPlotterInterface.h>
+#include <casacore/casa/System/ProgressMeter.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -97,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

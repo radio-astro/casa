@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableVector.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableVector.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEVECTOR_H
 #define TABLES_TABLEVECTOR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TVec.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TVec.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -285,7 +285,7 @@ inline TableVector<T>& TableVector<T>::operator= (const T& value)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 
 //# Make old name ROTableVector still available.
@@ -293,6 +293,6 @@ inline TableVector<T>& TableVector<T>::operator= (const T& value)
 
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <tables/Tables/TableVector.tcc>
+#include <casacore/tables/Tables/TableVector.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

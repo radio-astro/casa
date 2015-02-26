@@ -23,14 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Convolver.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Convolver.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Mathematics/Convolver.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIter.h>
+#ifndef SCIMATH_CONVOLVER_TCC
+#define SCIMATH_CONVOLVER_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Mathematics/Convolver.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class FType> Convolver<FType>::
 Convolver(const Array<FType>& psf, Bool){
@@ -347,5 +350,7 @@ setFastConvolve(){
 
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

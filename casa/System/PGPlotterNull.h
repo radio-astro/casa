@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PGPlotterNull.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PGPlotterNull.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef GRAPHICS_PGPLOTTERNULL_H
 #define GRAPHICS_PGPLOTTERNULL_H
 
-#include <casa/aips.h>
-#include <casa/System/PGPlotter.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/System/PGPlotter.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class String;
 template<class T> class Vector;
@@ -256,6 +256,6 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,30 +23,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: MSMetaData.cc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <ms/MeasurementSets/MSMetaData.h>
+#include <casacore/ms/MeasurementSets/MSMetaData.h>
 
-#include <casa/Arrays/MaskArrMath.h>
-#include <casa/OS/File.h>
-#include <measures/Measures/MeasTable.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSPointingColumns.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/TableProxy.h>
+#include <casacore/casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/ms/MeasurementSets/MSPointingColumns.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/TaQL/TableParse.h>
+#include <casacore/tables/Tables/TableProxy.h>
 // DEBUG ONLY
 
 /*
 #include <iomanip>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
-#include <casa/OS/PrecTimer.h>
+#include <casacore/casa/OS/PrecTimer.h>
 */
 
 #define _ORIGIN "MSMetaData::" + String(__FUNCTION__) + ": "
 
-namespace casa {
+namespace casacore {
 
 MSMetaData::MSMetaData(const MeasurementSet *const &ms, const Float maxCacheSizeMB)
 	: _ms(ms), _cacheMB(0), _maxCacheMB(maxCacheSizeMB), _nStates(0),
@@ -130,7 +131,7 @@ void MSMetaData::_getStateToIntentsMap(
 		Vector<String>::const_iterator curIntentSet=intentSets.begin();
 		curIntentSet!=end; curIntentSet++, sIter++
 	) {
-		Vector<String> intents = casa::stringToVector(*curIntentSet, ',');
+		Vector<String> intents = casacore::stringToVector(*curIntentSet, ',');
 		*sIter = std::set <String>(intents.begin(), intents.end());
 		uniqueIntents.insert(intents.begin(), intents.end());
 	}
@@ -371,10 +372,10 @@ void MSMetaData::_getRowStats(
 		myScanToNXCRowsMap, myFieldToNACRowsMap,
 		myFieldToNXCRowsMap
 	);
-	scanToNACRowsMap = myScanToNACRowsMap;
-	scanToNXCRowsMap = myScanToNXCRowsMap;
-	fieldToNACRowsMap = myFieldToNACRowsMap;
-	fieldToNXCRowsMap = myFieldToNXCRowsMap;
+	scanToNACRowsMap.reset(myScanToNACRowsMap);
+	scanToNXCRowsMap.reset(myScanToNXCRowsMap);
+	fieldToNACRowsMap.reset(myFieldToNACRowsMap);
+	fieldToNXCRowsMap.reset(myFieldToNXCRowsMap);
 
 	Float newSize = _cacheMB + sizeof(Int)*(
 		2 + 2*scanToNACRowsMap->size()
@@ -494,8 +495,8 @@ void MSMetaData::_getAntennas(
 	CountedPtr<Vector<Int> >& ant2
 ) const {
 	if (
-		! _antenna1.null() && _antenna1->size() > 0
-		&& ! _antenna2.null() && _antenna2->size() > 0
+		_antenna1 && _antenna1->size() > 0
+		&& _antenna2 && _antenna2->size() > 0
 	) {
 		ant1 = _antenna1;
 		ant2 = _antenna2;
@@ -507,8 +508,9 @@ void MSMetaData::_getAntennas(
 	ROScalarColumn<Int> ant2Col(*_ms, ant2ColName);
 	Vector<Int> a2 = ant2Col.getColumn();
 
-	ant1 = new Vector<Int>(a1);
-	ant2 = new Vector<Int>(a2);
+	//MSMetaData::_getAntennas(a1, a2, *_ms);
+	ant1.reset(new Vector<Int>(a1));
+	ant2.reset(new Vector<Int>(a2));
 
 	if (_cacheUpdated(2*sizeof(Int)*ant1->size())) {
 		_antenna1 = ant1;
@@ -517,7 +519,7 @@ void MSMetaData::_getAntennas(
 }
 
 CountedPtr<Vector<Int> > MSMetaData::_getScans() const {
-	if (! _scans.null() && _scans->size() > 0) {
+	if (_scans && _scans->size() > 0) {
 		return _scans;
 	}
 	String scanColName = MeasurementSet::columnName(MSMainEnums::SCAN_NUMBER);
@@ -528,51 +530,8 @@ CountedPtr<Vector<Int> > MSMetaData::_getScans() const {
 	return scans;
 }
 
-CountedPtr<Vector<Int> > MSMetaData::_getArrayIDs() const {
-	if (! _arrayIDs.null() && _arrayIDs->size() > 0) {
-		return _arrayIDs;
-	}
-	static const String arrColName = MeasurementSet::columnName(MSMainEnums::ARRAY_ID);
-	CountedPtr<Vector<Int> > arrIDs(
-		new Vector<Int>(ROScalarColumn<Int>(*_ms, arrColName).getColumn())
-	);
-	if (_cacheUpdated(sizeof(Int)*arrIDs->size())) {
-		_arrayIDs = arrIDs;
-	}
-	return arrIDs;
-}
-
-CountedPtr<Vector<Int> > MSMetaData::_getDataDescIDs() const {
-	if (! _dataDescIDs.null() && ! _dataDescIDs->empty()) {
-		return _dataDescIDs;
-	}
-	static const String ddColName = MeasurementSet::columnName(MSMainEnums::DATA_DESC_ID);
-	ROScalarColumn<Int> ddCol(*_ms, ddColName);
-	CountedPtr<Vector<Int> > dataDescIDs(
-		new Vector<Int>(ddCol.getColumn())
-	);
-	if (_cacheUpdated(sizeof(Int)*dataDescIDs->size())) {
-		_dataDescIDs = dataDescIDs;
-	}
-	return dataDescIDs;
-}
-
-CountedPtr<Vector<Int> > MSMetaData::_getFieldIDs() const {
-	if (! _fieldIDs.null() && ! _fieldIDs->empty()) {
-		return _fieldIDs;
-	}
-	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
-	CountedPtr<Vector<Int> > fields(
-		new Vector<Int>(ROScalarColumn<Int>(*_ms, fieldIdColName).getColumn())
-	);
-	if (_cacheUpdated(sizeof(Int)*fields->size())) {
-		_fieldIDs = fields;
-	}
-	return fields;
-}
-
 CountedPtr<Vector<Int> > MSMetaData::_getObservationIDs() const {
-	if (! _observationIDs.null() && _observationIDs->size() > 0) {
+	if (_observationIDs && _observationIDs->size() > 0) {
 		return _observationIDs;
 	}
 	static const String obsColName = MeasurementSet::columnName(MSMainEnums::OBSERVATION_ID);
@@ -585,8 +544,36 @@ CountedPtr<Vector<Int> > MSMetaData::_getObservationIDs() const {
 	return obsIDs;
 }
 
+CountedPtr<Vector<Int> > MSMetaData::_getArrayIDs() const {
+	if (_arrayIDs && _arrayIDs->size() > 0) {
+		return _arrayIDs;
+	}
+	static const String arrColName = MeasurementSet::columnName(MSMainEnums::ARRAY_ID);
+	CountedPtr<Vector<Int> > arrIDs(
+		new Vector<Int>(ROScalarColumn<Int>(*_ms, arrColName).getColumn())
+	);
+	if (_cacheUpdated(sizeof(Int)*arrIDs->size())) {
+		_arrayIDs = arrIDs;
+	}
+	return arrIDs;
+}
+
+CountedPtr<Vector<Int> > MSMetaData::_getFieldIDs() const {
+	if (_fieldIDs && ! _fieldIDs->empty()) {
+		return _fieldIDs;
+	}
+	String fieldIdColName = MeasurementSet::columnName(MSMainEnums::FIELD_ID);
+	CountedPtr<Vector<Int> > fields(
+		new Vector<Int>(ROScalarColumn<Int>(*_ms, fieldIdColName).getColumn())
+	);
+	if (_cacheUpdated(sizeof(Int)*fields->size())) {
+		_fieldIDs = fields;
+	}
+	return fields;
+}
+
 CountedPtr<Vector<Int> > MSMetaData::_getStateIDs() const {
-	if (! _stateIDs.null() && _stateIDs->size() > 0) {
+	if (_stateIDs && _stateIDs->size() > 0) {
 		return _stateIDs;
 	}
 	static const String stateColName = MeasurementSet::columnName(MSMainEnums::STATE_ID);
@@ -605,6 +592,21 @@ CountedPtr<Vector<Int> > MSMetaData::_getStateIDs() const {
 		_stateIDs = states;
 	}
 	return states;
+}
+
+CountedPtr<Vector<Int> > MSMetaData::_getDataDescIDs() const {
+	if (_dataDescIDs && ! _dataDescIDs->empty()) {
+		return _dataDescIDs;
+	}
+	static const String ddColName = MeasurementSet::columnName(MSMainEnums::DATA_DESC_ID);
+	ROScalarColumn<Int> ddCol(*_ms, ddColName);
+	CountedPtr<Vector<Int> > dataDescIDs(
+		new Vector<Int>(ddCol.getColumn())
+	);
+	if (_cacheUpdated(sizeof(Int)*dataDescIDs->size())) {
+		_dataDescIDs = dataDescIDs;
+	}
+	return dataDescIDs;
 }
 
 std::set<Int> MSMetaData::getScansForState(const Int stateID) {
@@ -1640,7 +1642,7 @@ std::set<Int> MSMetaData::getScansForTimes(
 }
 
 CountedPtr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() const {
-	if (! _scanToTimesMap.null() && ! _scanToTimesMap->empty()) {
+	if (_scanToTimesMap && ! _scanToTimesMap->empty()) {
 		return _scanToTimesMap;
 	}
 	Vector<Int> scans = *_getScans();
@@ -1674,7 +1676,7 @@ CountedPtr<std::map<Int, std::set<Double> > > MSMetaData::_getScanToTimesMap() c
 }
 
 CountedPtr<Vector<Double> > MSMetaData::_getTimes() const {
-	if (! _times.null() && ! _times->empty()) {
+	if (_times && ! _times->empty()) {
 		return _times;
 	}
 	String timeColName = MeasurementSet::columnName(MSMainEnums::TIME);
@@ -1688,7 +1690,7 @@ CountedPtr<Vector<Double> > MSMetaData::_getTimes() const {
 }
 
 CountedPtr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() {
-	if (! _exposures.null() && ! _exposures->getValue().empty()) {
+	if (_exposures && ! _exposures->getValue().empty()) {
 		return _exposures;
 	}
 	String colName = MeasurementSet::columnName(MSMainEnums::EXPOSURE);
@@ -1704,7 +1706,7 @@ CountedPtr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() {
 }
 
 CountedPtr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
-	if (! _flagsColumn.null() && _flagsColumn->nrow() > 0) {
+	if (_flagsColumn && _flagsColumn->nrow() > 0) {
 		return _flagsColumn;
 	}
 	String flagColName = MeasurementSet::columnName(MSMainEnums::FLAG);
@@ -2167,15 +2169,15 @@ void MSMetaData::_getFieldsAndTimesMaps(
 ) {
 	// This method is responsible for setting _fieldToTimesMap and _timeToFieldMap
 	if (
-		! _fieldToTimesMap.null() && ! _fieldToTimesMap->empty()
-		&& ! _timeToFieldsMap.null() && ! _timeToFieldsMap->empty()
+		_fieldToTimesMap && ! _fieldToTimesMap->empty()
+		&& _timeToFieldsMap && ! _timeToFieldsMap->empty()
 	) {
 		fieldToTimesMap = _fieldToTimesMap;
 		timeToFieldsMap = _timeToFieldsMap;
 		return;
 	}
-	fieldToTimesMap = new std::map<Int, std::set<Double> >();
-	timeToFieldsMap = new std::map<Double, std::set<Int> >();
+	fieldToTimesMap.reset(new std::map<Int, std::set<Double> >());
+	timeToFieldsMap.reset(new std::map<Double, std::set<Int> >());
 	CountedPtr<Vector<Int> > allFields = _getFieldIDs();
 	CountedPtr<Vector<Double> > allTimes = this->_getTimes();
 	Vector<Int>::const_iterator lastField = allFields->end();
@@ -2522,7 +2524,7 @@ void MSMetaData::_getUnflaggedRowStats(
 	// This method is responsible for setting _nUnflaggedACRows, _nUnflaggedXCRows,
 	// _unflaggedFieldNACRows, _unflaggedFieldNXCRows, _unflaggedScanNACRows,
 	// _unflaggedScanNXCRows
-	if (! _unflaggedFieldNACRows.null() && ! _unflaggedFieldNACRows->empty()) {
+	if (_unflaggedFieldNACRows && ! _unflaggedFieldNACRows->empty()) {
 		nACRows = _nUnflaggedACRows;
 		nXCRows = _nUnflaggedXCRows;
 		fieldNACRows = _unflaggedFieldNACRows;
@@ -2538,10 +2540,10 @@ void MSMetaData::_getUnflaggedRowStats(
 		myFieldNXCRows, myScanNACRows, myScanNXCRows
 	);
 
-	fieldNACRows = myFieldNACRows;
-	fieldNXCRows = myFieldNXCRows;
-	scanNACRows = myScanNACRows;
-	scanNXCRows = myScanNXCRows;
+	fieldNACRows.reset(myFieldNACRows);
+	fieldNXCRows.reset(myFieldNXCRows);
+	scanNACRows.reset(myScanNACRows);
+	scanNXCRows.reset(myScanNXCRows);
 
 	uInt mysize = fieldNACRows->size() + fieldNXCRows->size()
 		+ scanNACRows->size() + scanNXCRows->size();
@@ -2561,6 +2563,7 @@ void MSMetaData::_getUnflaggedRowStats(
 	std::map<Int, Double>*& fieldNACRows, std::map<Int, Double>*& fieldNXCRows,
 	AOSFMapD*& scanNACRows,
 	AOSFMapD*& scanNXCRows
+
 ) const {
 	nACRows = 0;
 	nXCRows = 0;

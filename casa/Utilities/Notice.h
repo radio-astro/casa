@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Notice.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Notice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_NOTICE_H
 #define CASA_NOTICE_H
 
-#include <casa/Containers/Link.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Link.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declaration
 class NoticeTarget;
@@ -235,7 +236,7 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

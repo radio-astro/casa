@@ -23,11 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Link.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Link.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/Link.h>
+#ifndef CASA_LINK_TCC
+#define CASA_LINK_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Containers/Link.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class t> Link<t> *Link<t>::unlink(Link<t> *) {
   Link<t> *nxt = Next;
@@ -43,5 +46,7 @@ template<class t> Link<t>::~Link() {
   if (Next != 0) delete Next;}
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

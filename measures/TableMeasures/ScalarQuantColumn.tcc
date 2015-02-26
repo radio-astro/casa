@@ -23,33 +23,36 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarQuantColumn.tcc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: ScalarQuantColumn.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
+
+#ifndef MEASURES_SCALARQUANTCOLUMN_TCC
+#define MEASURES_SCALARQUANTCOLUMN_TCC
 
 //# Includes
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <measures/TableMeasures/TableQuantumDesc.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Unit.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/TableError.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/measures/TableMeasures/TableQuantumDesc.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
-ROScalarQuantColumn<T>::ROScalarQuantColumn()
+ScalarQuantColumn<T>::ScalarQuantColumn()
 : itsDataCol (0),
   itsUnitsCol(0),
   itsConvOut (False)
 {}
 
 template<class T>
-ROScalarQuantColumn<T>::ROScalarQuantColumn (const Table& tab,
-					     const String& columnName)
+ScalarQuantColumn<T>::ScalarQuantColumn (const Table& tab,
+                                         const String& columnName)
 : itsDataCol (0),
   itsUnitsCol(0),
   itsConvOut (False)
@@ -59,9 +62,9 @@ ROScalarQuantColumn<T>::ROScalarQuantColumn (const Table& tab,
 }
 
 template<class T>
-ROScalarQuantColumn<T>::ROScalarQuantColumn (const Table& tab,
-					     const String& columnName,
-					     const Unit& u)
+ScalarQuantColumn<T>::ScalarQuantColumn (const Table& tab,
+                                         const String& columnName,
+                                         const Unit& u)
 : itsDataCol (0),
   itsUnitsCol(0)
 {
@@ -71,13 +74,13 @@ ROScalarQuantColumn<T>::ROScalarQuantColumn (const Table& tab,
 }
 
 template<class T>
-ROScalarQuantColumn<T>::~ROScalarQuantColumn()
+ScalarQuantColumn<T>::~ScalarQuantColumn()
 {
   cleanUp();
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::cleanUp()
+void ScalarQuantColumn<T>::cleanUp()
 {
   delete itsDataCol;
   itsDataCol = 0;
@@ -86,8 +89,7 @@ void ROScalarQuantColumn<T>::cleanUp()
 }
 
 template<class T>
-ROScalarQuantColumn<T>::ROScalarQuantColumn
-                                        (const ROScalarQuantColumn<T>& that)
+ScalarQuantColumn<T>::ScalarQuantColumn (const ScalarQuantColumn<T>& that)
 : itsDataCol (0),
   itsUnitsCol(0)
 {
@@ -95,7 +97,7 @@ ROScalarQuantColumn<T>::ROScalarQuantColumn
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::init (const Table& tab, const String& columnName)
+void ScalarQuantColumn<T>::init (const Table& tab, const String& columnName)
 {
   TableQuantumDesc* tqDesc = 
                 TableQuantumDesc::reconstruct (tab.tableDesc(), columnName);
@@ -116,7 +118,7 @@ void ROScalarQuantColumn<T>::init (const Table& tab, const String& columnName)
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::reference (const ROScalarQuantColumn<T>& that)
+void ScalarQuantColumn<T>::reference (const ScalarQuantColumn<T>& that)
 {   
   cleanUp();
   itsUnit    = that.itsUnit;
@@ -131,22 +133,22 @@ void ROScalarQuantColumn<T>::reference (const ROScalarQuantColumn<T>& that)
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::attach (const Table& tab, 
-				     const String& columnName)
+void ScalarQuantColumn<T>::attach (const Table& tab, 
+                                   const String& columnName)
 {
-  reference (ROScalarQuantColumn<T>(tab, columnName)); 
+  reference (ScalarQuantColumn<T>(tab, columnName)); 
 }
  
 template<class T>
-void ROScalarQuantColumn<T>::attach (const Table& tab, 
-				     const String& columnName,
-				     const Unit& u)
+void ScalarQuantColumn<T>::attach (const Table& tab, 
+                                   const String& columnName,
+                                   const Unit& u)
 {
-  reference (ROScalarQuantColumn<T>(tab, columnName, u)); 
+  reference (ScalarQuantColumn<T>(tab, columnName, u)); 
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::throwIfNull() const
+void ScalarQuantColumn<T>::throwIfNull() const
 {
   if (isNull()) {
     throw (TableInvOper("Quantum table column is null"));
@@ -154,7 +156,7 @@ void ROScalarQuantColumn<T>::throwIfNull() const
 }
  
 template<class T>
-void ROScalarQuantColumn<T>::getData (uInt rownr, Quantum<T>& q) const
+void ScalarQuantColumn<T>::getData (uInt rownr, Quantum<T>& q) const
 {
   // Quantums are created from Ts stored in itsDataCol and Units
   // in itsUnitsCol, if units are variable, or itsUnit if non-variable.
@@ -167,7 +169,7 @@ void ROScalarQuantColumn<T>::getData (uInt rownr, Quantum<T>& q) const
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q) const
+void ScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q) const
 {
   getData (rownr, q);
   if (itsConvOut) {
@@ -176,23 +178,23 @@ void ROScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q) const
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q,
-				  const Unit& u) const
+void ScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q,
+                                const Unit& u) const
 {
   getData (rownr, q);
   q.convert (u);
 }
 
 template<class T>
-void ROScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q,
-				  const Quantum<T>& other) const
+void ScalarQuantColumn<T>::get (uInt rownr, Quantum<T>& q,
+                                const Quantum<T>& other) const
 {
   getData (rownr, q);
   q.convert (other);
 }
 
 template<class T> 
-Quantum<T> ROScalarQuantColumn<T>::operator() (uInt rownr) const
+Quantum<T> ScalarQuantColumn<T>::operator() (uInt rownr) const
 {
   Quantum<T> q;
   get (rownr, q);
@@ -200,8 +202,8 @@ Quantum<T> ROScalarQuantColumn<T>::operator() (uInt rownr) const
 }
 
 template<class T> 
-Quantum<T> ROScalarQuantColumn<T>::operator() (uInt rownr,
-					       const Unit& u) const
+Quantum<T> ScalarQuantColumn<T>::operator() (uInt rownr,
+                                             const Unit& u) const
 {
   Quantum<T> q;
   get (rownr, q, u);
@@ -209,79 +211,12 @@ Quantum<T> ROScalarQuantColumn<T>::operator() (uInt rownr,
 }
 
 template<class T> 
-Quantum<T> ROScalarQuantColumn<T>::operator() (uInt rownr,
-					       const Quantum<T>& other) const
+Quantum<T> ScalarQuantColumn<T>::operator() (uInt rownr,
+                                             const Quantum<T>& other) const
 {
   Quantum<T> q;
   get (rownr, q, other);
   return q;
-}
-
-
-
-template<class T>
-ScalarQuantColumn<T>::ScalarQuantColumn()
-: ROScalarQuantColumn<T>(),
-  itsDataCol (0),
-  itsUnitsCol(0)
-{}
-
-template<class T>
-ScalarQuantColumn<T>::ScalarQuantColumn (const Table& tab,
-					 const String& columnName)
-: ROScalarQuantColumn<T>(tab, columnName),
-  itsDataCol (0),
-  itsUnitsCol(0)
-{
-  itsDataCol = new ScalarColumn<T> (tab, columnName);
-  if (unitsCol() != 0) {
-    itsUnitsCol = new ScalarColumn<String> (tab,
-					    unitsCol()->columnDesc().name());
-  }
-}
-
-template<class T>
-ScalarQuantColumn<T>::ScalarQuantColumn (const ScalarQuantColumn<T>& that)
-: ROScalarQuantColumn<T>(),
-  itsDataCol (0),
-  itsUnitsCol(0)
-{
-  reference (that);
-}
-
-template<class T>
-ScalarQuantColumn<T>::~ScalarQuantColumn()
-{
-  cleanUp();
-}
-
-template<class T>
-void ScalarQuantColumn<T>::cleanUp()
-{
-  delete itsDataCol;
-  itsDataCol = 0;
-  delete itsUnitsCol;
-  itsUnitsCol = 0;
-}
-
-template<class T>
-void ScalarQuantColumn<T>::reference (const ScalarQuantColumn<T>& that)
-{
-  cleanUp();
-  ROScalarQuantColumn<T>::reference (that);
-  if (that.itsDataCol != 0) {
-    itsDataCol = new ScalarColumn<T>(*that.itsDataCol);
-  }
-  if (that.itsUnitsCol != 0) {
-    itsUnitsCol = new ScalarColumn<String>(*that.itsUnitsCol);
-  }
-}
-
-template<class T>
-void ScalarQuantColumn<T>::attach (const Table& tab, 
-				   const String& columnName)
-{
-  reference (ScalarQuantColumn<T>(tab, columnName)); 
 }
  
 template<class T>
@@ -299,5 +234,7 @@ void ScalarQuantColumn<T>::put (uInt rownr, const Quantum<T>& q)
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

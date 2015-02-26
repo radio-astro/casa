@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Nutation.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Nutation.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_NUTATION_H
 #define MEASURES_NUTATION_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Euler.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/Euler.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 //  <srcblock>
-// #include <measures/Measures.h>
+// #include <casacore/measures/Measures.h>
 //	MVDirection pos(Quantity(10,"degree"),Quantity(-10.5,"degree"));
 //						// direction RA=10; DEC=-10.5
 //	Nutation mine(Nutation::IAU1980);	// define nutation type
@@ -236,7 +236,7 @@ class Nutation {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

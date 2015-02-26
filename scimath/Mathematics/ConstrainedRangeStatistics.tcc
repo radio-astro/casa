@@ -22,14 +22,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/ConstrainedRangeStatistics.h>
+#ifndef SCIMATH_CONSTRAINEDRANGESTATISTICS_TCC
+#define SCIMATH_CONSTRAINEDRANGESTATISTICS_TCC
 
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/ConstrainedRangeStatistics.h>
+
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
 #include <iomanip>
 
-namespace casa {
+namespace casacore {
 
 // min > max indicates that these quantities have not be calculated
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1748,3 +1752,5 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 }
 
 }
+
+#endif

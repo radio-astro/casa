@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tStringDistance.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: tStringDistance.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/StringDistance.h>
+#include <casacore/casa/Utilities/StringDistance.h>
 #include <iostream>
 #include <stdexcept>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
 using namespace std;
-using namespace casa;
+using namespace casacore;
 
 int main(int argc, char* argv[2])
 {

@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: hdu.h 21081 2011-05-09 11:36:20Z gervandiepen $
+//# $Id: hdu.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef FITS_HDU_H
 #define FITS_HDU_H
 
-# include <casa/aips.h>
-# include <fits/FITS/fits.h>
-# include <fits/FITS/blockio.h>
-# include <casa/BasicSL/String.h>
-# include <casa/Arrays/Vector.h>
+# include <casacore/casa/aips.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/blockio.h>
+# include <casacore/casa/BasicSL/String.h>
+# include <casacore/casa/Arrays/Vector.h>
 
 //# # include <stdarg.h> // If we ever wan to put varargs support back
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class FitsInput;
 class FitsOutput;
@@ -720,6 +720,7 @@ class PrimaryTable : public PrimaryArray<TYPE> {
             int bitpix, int naxis, long *naxes);     
 
 	int read();
+	int read(int) { return -1; }
 	int write(FitsOutput &){ return -1; }
 
 	char* object() const 	   { return object_x; }
@@ -992,21 +993,6 @@ class FitsArray : public FitsField<TYPE> {
 
 //<summary> FITS array of FitsBit type </summary>
 
-//<templating>
-//#until cxx2html can handle this, duplicate:
-// <li> typedef FitsArray<FitsLogical> LogicalFitsArray;
-// <li> typedef FitsArray<FitsBit> BitFitsArray;
-// <li> typedef FitsArray<char> CharFitsArray;
-// <li> typedef FitsArray<unsigned char> ByteFitsArray;
-// <li> typedef FitsArray<short> ShortFitsArray;
-// <li> typedef FitsArray<FitsLong> LongFitsArray;
-// <li> typedef FitsArray<float> FloatFitsArray;
-// <li> typedef FitsArray<double> DoubleFitsArray;
-// <li> typedef FitsArray<Complex> ComplexFitsArray;
-// <li> typedef FitsArray<IComplex> IComplexFitsArray;
-// <li> typedef FitsArray<DComplex> DComplexFitsArray;
-// <li> typedef FitsArray<FitsVADesc> VADescFitsArray;
-//</templating>
 //<note>
 // We must specify a FitsArray<FitsBit> as a specialization.
 //</note>
@@ -1208,9 +1194,9 @@ class AsciiTableExtension : public BinaryTableExtension {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <fits/FITS/hdu.tcc>
+#include <casacore/fits/FITS/hdu.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 # endif

@@ -22,15 +22,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: ImageBeamSet.h 21563 2015-02-16 07:05:15Z gervandiepen $
 
 #ifndef IMAGES_IMAGEBEAMSET_H
 #define IMAGES_IMAGEBEAMSET_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <scimath/Mathematics/GaussianBeam.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/scimath/Mathematics/GaussianBeam.h>
+//#include <casacore/measures/Measures/Stokes.h>
+//#include <map>
 
-namespace casa {
+namespace casacore {
 
 class SpectralCoordinate;
 
@@ -214,9 +217,11 @@ public:
       { return _minBeam; }
 
     // Get the beam in the set which has the largest area.
+    // Get the beam in the set which has the largest area.
     GaussianBeam getMaxAreaBeam() const
       { return _maxBeam; }
 
+    // Get the beam in the set which has the median area.
     GaussianBeam getMedianAreaBeam() const;
 
     // Get the position of the beam with the minimum area.
@@ -227,13 +232,13 @@ public:
     IPosition getMaxAreaBeamPosition() const
       { return _maxBeamPos; }
 
-    //<group>
     // Get the minimal, maximal, and median area beams and positions in the beam set matrix for
     // the given stokes. If the stokes axis has length 1 in the beam matrix,
     // it is valid for all stokes and no checking is done that <src>stokes</src> is valid;
     // the requested beam for the entire beam set is simply returned in this case. If the
     // number of stokes in the beam matrix is >1, checking is done that the specified value
     // of <src>stokes</src> is valid and if not, an exception is thrown.
+    // <group>
     const GaussianBeam& getMinAreaBeamForPol(IPosition& pos,
                                              uInt stokes) const;
 
@@ -246,19 +251,18 @@ public:
 
     static const String& className();
 
-	// Get the beam that has the smallest minor axis. If multiple beams have the smallest minor axis,
-	// the beam in this subset with the smallest area will be returned.
-	const GaussianBeam getSmallestMinorAxisBeam() const;
+    // Get the beam that has the smallest minor axis. If multiple beams have the smallest minor axis,
+    // the beam in this subset with the smallest area will be returned.
+    const GaussianBeam getSmallestMinorAxisBeam() const;
 
-	// <group>
-	// convert ImageBeamSet to and from record
-	static ImageBeamSet fromRecord(const Record& rec);
+    // convert ImageBeamSet to and from record
+    // <group>
+    static ImageBeamSet fromRecord(const Record& rec);
+    Record toRecord() const;
+    //</group>
 
-	Record toRecord() const;
-	//</group>
-
-	// If verbose, log all beams, if not just summarize beam stats.
-	void summarize(LogIO& log, Bool verbose, const CoordinateSystem& csys) const;
+    // If verbose, log all beams, if not just summarize beam stats.
+    void summarize(LogIO& log, Bool verbose, const CoordinateSystem& csys) const;
 
 private:
 
@@ -273,7 +277,7 @@ private:
 	void _calculateAreas();
 
 	static void _chanInfoToStream(
-		ostream& os, const SpectralCoordinate *const &spCoord,
+		ostream& os, const SpectralCoordinate *spCoord,
 		const uInt chan, const uInt chanWidth, const uInt freqPrec,
 		const uInt velWidth, const uInt velPrec
 	);

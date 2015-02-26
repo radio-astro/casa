@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLocker.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLocker.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <tables/Tables/TableLocker.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/TableLocker.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableLocker::TableLocker (Table& table,
 			  FileLocker::LockType type,
@@ -63,4 +63,4 @@ TableLocker::~TableLocker()
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

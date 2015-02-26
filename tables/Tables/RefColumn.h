@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefColumn.h 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: RefColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_REFCOLUMN_H
 #define TABLES_REFCOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseColumn.h>
-#include <tables/Tables/ColumnCache.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseColumn.h>
+#include <casacore/tables/Tables/ColumnCache.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class RefTable;
@@ -274,6 +274,6 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

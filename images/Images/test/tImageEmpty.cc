@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageEmpty.cc 20875 2010-03-30 07:12:05Z gervandiepen $
+//# $Id: tImageEmpty.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/PagedImage.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-using namespace casa;
+using namespace casacore;
 
 // This test program was created because of a problem detected in the
 // CASA Imager::clone function. It created an image without writing/flushing

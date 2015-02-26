@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AxesSpecifier.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AxesSpecifier.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/AxesSpecifier.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/AxesSpecifier.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 AxesSpecifier::AxesSpecifier()
 : itsKeep (True)
@@ -121,5 +121,5 @@ AxesMapping AxesSpecifier::apply (const IPosition& shape) const
   return AxesMapping(axisToNew);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

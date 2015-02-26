@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDoppler.cc 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: MVDoppler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Register.h>
-#include <casa/Quanta/MVDoppler.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/Quanta/MVDoppler.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // MVDoppler class
 
@@ -116,11 +116,11 @@ Bool MVDoppler::operator!=(const MVDoppler &other) const {
 }
 
 Bool MVDoppler::near(const MVDoppler &other, Double tol) const {
-  return ::casa::near(val, other.val, tol);
+  return ::casacore::near(val, other.val, tol);
 }
 
 Bool MVDoppler::nearAbs(const MVDoppler &other, Double tol) const {
-  return ::casa::nearAbs(val, other.val, tol);
+  return ::casacore::nearAbs(val, other.val, tol);
 }
 
 // Member functions
@@ -219,5 +219,5 @@ Double MVDoppler::makeD(Double v, const Unit &dt, Bool rev) const{
   return (v*x);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

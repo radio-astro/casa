@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubImage.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: SubImage.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_SUBIMAGE_H
 #define IMAGES_SUBIMAGE_H
 
 
 //# Includes
-#include <images/Images/ImageInterface.h>
-#include <casa/Arrays/AxesSpecifier.h>
-#include <casa/Utilities/PtrHolder.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/casa/Arrays/AxesSpecifier.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class IPosition;
@@ -94,13 +95,14 @@ public:
   // while for the non-const version one has to specify if the SubImage
   // should be writable (if the original image is non-writable, the
   // SubImage is always set to non-writable).
-  // If preserveAxesOrder is True, the axes order will be preserved. This
+  // <br>If preserveAxesOrder is True, the axes order will be preserved. This
   // is only important in cases where pixel axes are to be dropped, if not
   // the axes order will be preserved. If False and pixel axes are dropped,
   // the order of the coordinates will be preserved, but not necessarily
   // the axes.
   // <group>
-  SubImage (const ImageInterface<T>& image, AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
+  SubImage (const ImageInterface<T>& image,
+	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   SubImage (ImageInterface<T>& image, Bool writableIfPossible,
 	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   // </group>
@@ -112,7 +114,8 @@ public:
   SubImage (const ImageInterface<T>& image, const LattRegionHolder& region,
 	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   SubImage (ImageInterface<T>& image, const LattRegionHolder& region,
-	    Bool writableIfPossible, AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
+	    Bool writableIfPossible,
+	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   // </group>
   
   // Create a SubImage from the given Image and slicer.
@@ -122,7 +125,8 @@ public:
   SubImage (const ImageInterface<T>& image, const Slicer& slicer,
 	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   SubImage (ImageInterface<T>& image, const Slicer& slicer,
-	    Bool writableIfPossible, AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
+	    Bool writableIfPossible,
+	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   // </group>
   
   // Copy constructor (reference semantics).
@@ -192,6 +196,12 @@ public:
   // include in the cursor of an iterator.
   virtual uInt advisedMaxPixels() const;
 
+  // Get access to the attribute handler (of the parent image).
+  // If a handler keyword does not exist yet, it is created if
+  // <src>createHandler</src> is set.
+  // Otherwise the handler is empty and no groups can be created for it.
+  virtual ImageAttrHandler& attrHandler (Bool createHandler=False);
+
   // Get or put a single element in the lattice.
   // <group>
   virtual T getAt (const IPosition& where) const;
@@ -243,12 +253,12 @@ public:
 private:
   // Set the coordinates.
   // It removes world axes if the subimage has axes removed.
-  // If preserveAxesOrder is True and axes are dropped, it will preserve
+  // <br>If preserveAxesOrder is True and axes are dropped, it will preserve
   // the order of the axes as well as the order of the coordinates.
   void setCoords (const CoordinateSystem& coords, Bool preserveAxesOrder);
+  void setCoords (const CoordinateSystem& coords);
 
-  // Set the other members in the parent.
-  // void setMembers(const ImageBeamSet& hpBeams);
+  // Set the other members to the one in itsImagePtr.
   void setMembers();
 
   // Set the members to the subset (in particular, the beamset).
@@ -257,26 +267,10 @@ private:
   // Helper
    void convertIPosition(Vector<Float>& x, const IPosition& pos) const;
 
+
   //# itsImagePtr points to the parent image.
-  PtrHolder<ImageInterface<T> > itsImagePtr;
-  // tried to make this PtrHolder and SPtrHolder, but segfaults happened
-  // in gcwrap tests in call to pixelMask() (itsSubLatPtr->pixelMask())
-  std::tr1::shared_ptr<SubLattice<T> >    itsSubLatPtr;
-
-
-  /*
-  // Given an original image shape and coordinate system and a subimage shape and
-  // coordinate system, get the corresponding per plane beam array. The subimage
-  // coordinate system must have been made with origCoords.subimage() and both must
-  // have the same types of axes in the same order. The shapes must have the same
-  // number of dimensions and all members of <src>subShape</src> must be greater or
-  // equal to 1 and less than the corresponding members of <src>origShape</src>.
-  ImageBeamSet _beamsForSubImage(
-  	const IPosition& subShape,
-  	const CoordinateSystem& subCoords
-  );
-  */
-
+  ImageInterface<T>* itsImagePtr;
+  SubLattice<T>*     itsSubLatPtr;
 
   //# Make members of parent class known.
 public:
@@ -287,9 +281,9 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/SubImage.tcc>
+#include <casacore/images/Images/SubImage.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

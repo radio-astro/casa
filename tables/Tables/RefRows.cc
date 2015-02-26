@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefRows.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RefRows.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <tables/Tables/RefRows.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RefRows::RefRows (const Vector<uInt>& rowNumbers, Bool isSliced,
 		  Bool collapse)
@@ -132,7 +132,7 @@ RefRows& RefRows::operator= (const RefRows& other)
 	itsRows.resize (other.itsRows.nelements());
 	itsRows   = other.itsRows;
 	itsNrows  = other.itsNrows;
-	itsSliced = itsSliced;
+	itsSliced = other.itsSliced;
     }
     return *this;
 }
@@ -245,5 +245,5 @@ void RefRowsSliceIter::next()
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

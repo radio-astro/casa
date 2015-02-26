@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnitVal.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: UnitVal.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/UnitName.h>
-#include <casa/Utilities/MUString.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/UnitName.h>
+#include <casacore/casa/Utilities/MUString.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Utilities/Regex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 int UnitVal_static_initializer::initialized = 0;
 
@@ -249,5 +249,5 @@ Bool UnitVal::field(MUString &str, UnitVal &res) {
   return False;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

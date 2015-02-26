@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: istream.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: istream.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ISTREAM_H
 #define CASA_ISTREAM_H
@@ -33,16 +33,16 @@
 //# them (e.g. <cstring>)
 
 //# Make sure any special macros are set
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 //# gcc has no <istream> yet. Change later
 #if defined(__GNUG__)
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 #else
 #include <istream>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 using std::istream;
 using std::ws;
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 #endif
 
 #endif

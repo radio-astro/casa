@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeLocker.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tLatticeLocker.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <lattices/Lattices/PagedArray.h>
-#include <lattices/Lattices/LatticeLocker.h>
-#include <casa/Arrays/Array.h>
-#include <tables/Tables/Table.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/lattices/Lattices/PagedArray.h>
+#include <casacore/lattices/Lattices/LatticeLocker.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // This program tests concurrent access to lattices.
 
 

@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDPolarizationHandler.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: SDPolarizationHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_SDPOLARIZATIONHANDLER_H
 #define MS_SDPOLARIZATIONHANDLER_H
 
-#include <casa/Containers/RecordField.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnsIndex;
@@ -141,7 +142,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

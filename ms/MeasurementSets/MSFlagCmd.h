@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagCmd.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSFlagCmd.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFLAGCMD_H
 #define MS_MSFLAGCMD_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSTable.h>
-#include <ms/MeasurementSets/MSFlagCmdEnums.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSTable.h>
+#include <casacore/ms/MeasurementSets/MSFlagCmdEnums.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // A Table intended to hold a MeasurementSet FLAG_CMD table.
@@ -134,7 +134,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

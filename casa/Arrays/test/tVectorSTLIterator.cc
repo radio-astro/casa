@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tVectorSTLIterator.cc 20935 2010-08-17 14:01:02Z gervandiepen $
+//# $Id: tVectorSTLIterator.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/VectorSTLIterator.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/VectorSTLIterator.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-using namespace casa;
+using namespace casacore;
 
 void test1()
 {

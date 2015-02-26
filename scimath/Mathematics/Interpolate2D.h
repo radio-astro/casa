@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Interpolate2D.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: Interpolate2D.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_INTERPOLATE2D_H
 #define SCIMATH_INTERPOLATE2D_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template <typename T> class Vector;
@@ -108,7 +108,10 @@ class Interpolate2D {
     LINEAR, 
     
     // Bicubic 
-    CUBIC};
+    CUBIC,
+
+    // Lanczos
+    LANCZOS};
   
   // Constructor
   Interpolate2D(Interpolate2D::Method method=Interpolate2D::LINEAR);
@@ -210,6 +213,20 @@ class Interpolate2D {
 		     const Matrix<Bool>* &maskPtr) const;
   Bool interpCubicBool(Bool &result, const Vector<Double> &where,
 		       const Matrix<Bool> &data) const;
+
+  // Lanczos interpolation
+  template <typename T>
+  Bool interpLanczos(T &result, const Vector<Double> &where,
+		     const Matrix<T> &data,
+		     const Matrix<Bool>* &maskPtr) const;
+  Bool interpLanczosBool(Bool &result, const Vector<Double> &where,
+		       const Matrix<Bool> &data) const;
+  // Lanczos interpolation: helper functions
+  template <typename T>
+  T sinc(const T x) const;
+  template <typename T>
+  T L(const T x, const Int a) const;
+
   // helping routine from numerical recipes
   void bcucof (Double c[4][4], const Double y[4],
 	       const Double y1[4], 
@@ -240,10 +257,10 @@ class Interpolate2D {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/Interpolate2D2.tcc>
+#include <casacore/scimath/Mathematics/Interpolate2D2.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

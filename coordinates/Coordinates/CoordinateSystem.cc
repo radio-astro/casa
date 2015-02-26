@@ -24,46 +24,46 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CoordinateSystem.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: CoordinateSystem.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 
-#include <coordinates/Coordinates/Coordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/QualityCoordinate.h>
-#include <coordinates/Coordinates/FITSCoordinateUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/ContainerIO.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MEpoch.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/QualityCoordinate.h>
+#include <casacore/coordinates/Coordinates/FITSCoordinateUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/STLIO.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
-#include <casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 const String CoordinateSystem::_class = "CoordinateSystem";
 
@@ -660,8 +660,7 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
         	// tabular spectral coordinate
         	SpectralCoordinate spCoord = spectralCoordinate(coordinate);
         	SpectralCoordinate::SpecType nativeType = spCoord.nativeType();
-        	Vector<Double> newWorldValues(newShape.nelements() > 0 ? newShape[i] : spCoord.worldValues().size());
-
+                Vector<Double> newWorldValues(newShape.nelements() > 0 ? newShape[i] : spCoord.worldValues().size());
 		// switch off reference conversion if necessary
 		MFrequency::Types baseType = spCoord.frequencySystem(False);
 		MFrequency::Types convType = spCoord.frequencySystem(True);
@@ -694,8 +693,8 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
 		  throw AipsError("Unable to set reference conversion layer of tabular spectral coordinate.");
 		}
 
-        	crpix(i) = 0;
-        	cdelt[i] = newCoord.increment()[0];
+         	crpix(i) = 0;
+         	cdelt[i] = newCoord.increment()[0];
 
         	replaceCoordinate(newCoord, coordinate);
         }
@@ -882,22 +881,22 @@ Bool CoordinateSystem::replaceCoordinate(const Coordinate &newCoordinate, uInt w
 
 Int CoordinateSystem::findCoordinate(Coordinate::Type type, Int afterCoord) const
 {
-	if (afterCoord < -1) {
-		afterCoord = -1;
+    if (afterCoord < -1) {
+	afterCoord = -1;
+    }
+    Int n = nCoordinates();
+    Bool found = False;
+    while (++afterCoord < n) {
+	if (coordinates_p[afterCoord]->type() == type) {
+	    found = True;
+	    break;
 	}
-	Int n = nCoordinates();
-	Bool found = False;
-	while (++afterCoord < n) {
-		if (coordinates_p[afterCoord]->type() == type) {
-			found = True;
-			break;
-		}
-	}
-	if (found) {
-		return afterCoord;
-	} else {
-		return -1;
-	}
+    }
+    if (found) {
+	return afterCoord;
+    } else {
+	return -1;
+    }
 }
 
 void CoordinateSystem::findWorldAxis(Int &coordinate, Int &axisInCoordinate, 
@@ -2205,27 +2204,20 @@ Bool CoordinateSystem::setWorldAxisNames(const Vector<String> &names)
     return ok;
 }
 
-Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units) {
-	return setWorldAxisUnits(units, False);
+Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units)
+{
+    return setWorldAxisUnits (units, False);
 }
 
-
-Bool CoordinateSystem::setWorldAxisUnits(
-	const Vector<String> &units, Bool throwException
-) {
-    Bool ok = (units.nelements()==nWorldAxes());
-    if (!ok) {
-    	String error = "units vector must be of length nWorldAxes()";
-    	if (throwException) {
-    		throw AipsError(error);
-    	}
-    	else {
-    		set_error(error);
-    		return False;
-    	}
-    }
-    const uInt nc = nCoordinates();
-    for (uInt i=0; i<nc; i++) {
+Bool CoordinateSystem::setWorldAxisUnits(const Vector<String> &units,
+                                         Bool throwException)
+{
+    String error;
+    if (units.nelements() != nWorldAxes()) {
+      error = "units vector must be of length nWorldAxes()";
+    } else {
+      const uInt nc = nCoordinates();
+      for (uInt i=0; i<nc; i++) {
         Vector<String> tmp(coordinates_p[i]->worldAxisUnits().copy());
         uInt na = tmp.nelements(); 
         for (uInt j=0; j<na; j++) {
@@ -2233,19 +2225,20 @@ Bool CoordinateSystem::setWorldAxisUnits(
            if (which >= 0) tmp[j] = units[which];
         }
 
-        ok = (coordinates_p[i]->setWorldAxisUnits(tmp) && ok);
-        if (!ok) {
-        	String error = coordinates_p[i]->errorMessage();
-        	if (throwException) {
-        		throw AipsError(error);
-        	}
-        	else {
-        		set_error(error);
-        		return False;
-        	}
+        // Set new units
+        if  (! coordinates_p[i]->setWorldAxisUnits(tmp)) {
+          error = coordinates_p[i]->errorMessage();
         }
+      }
     }
-    return ok;
+    // Check if an error has occurred. If so, throw if needed.
+    if (error.empty()) {
+      return True;   // no error
+    } else if (throwException) {
+      throw AipsError (error);
+    }
+    set_error (error);
+    return False;
 }
 
 Bool CoordinateSystem::setReferencePixel(const Vector<Double> &refPix)
@@ -2623,6 +2616,25 @@ ObsInfo CoordinateSystem::obsInfo() const
 void CoordinateSystem::setObsInfo(const ObsInfo &obsinfo)
 {
     obsinfo_p = obsinfo;
+}
+
+String CoordinateSystem::coordRecordName(uInt which) const
+{
+  // Write each string into a field it's type plus coordinate
+  // number, e.g. direction0
+  string basename = "unknown";
+  switch (coordinates_p[which]->type()) {
+  case Coordinate::LINEAR:    basename = "linear"; break;
+  case Coordinate::DIRECTION: basename = "direction"; break;
+  case Coordinate::SPECTRAL:  basename = "spectral"; break;
+  case Coordinate::STOKES:    basename = "stokes"; break;
+  case Coordinate::TABULAR:   basename = "tabular"; break;
+  case Coordinate::QUALITY:   basename = "quality"; break;
+  case Coordinate::COORDSYS:  basename = "coordsys"; break;
+  }
+  ostringstream onum;
+  onum << which;
+  return basename + onum.str();
 }
 
 Bool CoordinateSystem::save(RecordInterface &container,
@@ -4495,11 +4507,9 @@ Int CoordinateSystem::spectralAxisNumber(Bool doWorld) const {
     }
     Int specIndex = findCoordinate(Coordinate::SPECTRAL);
     if (doWorld) {
-    	return worldAxes(specIndex)[0];
+      return worldAxes(specIndex)[0];
     }
-    else {
-    	return pixelAxes(specIndex)[0];
-    }
+    return pixelAxes(specIndex)[0];
 }
 
 
@@ -4521,11 +4531,9 @@ Int CoordinateSystem::polarizationAxisNumber(Bool doWorld) const {
         return -1;
     }
     if (doWorld) {
-    	return worldAxes(polarizationCoordinateNumber())[0];
+      return worldAxes(polarizationCoordinateNumber())[0];
     }
-    else {
-    	return pixelAxes(polarizationCoordinateNumber())[0];
-    }
+    return pixelAxes(polarizationCoordinateNumber())[0];
 }
 
 Bool CoordinateSystem::hasQualityAxis() const {
@@ -4639,7 +4647,7 @@ Vector<Int> CoordinateSystem::linearAxesNumbers() const {
 }
 
 void CoordinateSystem::_initFriendlyAxisMap() {
-	ScopedMutexLock lock(_mapInitMutex);
+        ScopedMutexLock lock(_mapInitMutex);
 	if (_friendlyAxisMap.size() == 0) {
 		_friendlyAxisMap["velocity"] = "spectral";
 		_friendlyAxisMap["frequency"] = "spectral";
@@ -4719,13 +4727,6 @@ Bool CoordinateSystem::isDirectionAbscissaLongitude() const {
 		"The pixel axes for the DirectionCoordinate have been removed"
 	);
 	return dirPixelAxes(0) < dirPixelAxes(1);
-}
-
-
-void CoordinateSystem::_downcase(Vector<String>& vec) const {
-	for (Vector<String>::iterator iter = vec.begin(); iter != vec.end(); iter++) {
-		iter->downcase();
-	}
 }
 
 void CoordinateSystem::setSpectralConversion (
@@ -4836,5 +4837,4 @@ Bool CoordinateSystem::setRestFrequency (
 	return True;
 }
 
-} //# NAMESPACE CASA - END
-
+} //# NAMESPACE CASACORE - END

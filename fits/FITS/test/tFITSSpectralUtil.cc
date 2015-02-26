@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSSpectralUtil.cc 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: tFITSSpectralUtil.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
-#include <fits/FITS/FITSSpectralUtil.h>
+#include <casacore/fits/FITS/FITSSpectralUtil.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <casa/Logging.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/casa/Logging.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     try {

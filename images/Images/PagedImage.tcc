@@ -23,50 +23,51 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedImage.tcc 20871 2010-03-24 07:32:02Z gervandiepen $
+//# $Id: PagedImage.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/PagedImage.h>
-#include <images/Regions/ImageRegion.h>
-#include <images/Regions/RegionHandlerTable.h>
-#include <images/Images/ImageInfo.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/PagedArrIter.h>
-#include <lattices/Lattices/LatticeExprNode.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogMessage.h>
+#ifndef IMAGES_PAGEDIMAGE_TCC
+#define IMAGES_PAGEDIMAGE_TCC
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/File.h>
-#include <casa/OS/Path.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableInfo.h>
-#include <tables/Tables/TableColumn.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/UnitMap.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/images/Regions/RegionHandlerTable.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/LatticeNavigator.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/PagedArrIter.h>
+#include <casacore/lattices/LEL/LatticeExprNode.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogMessage.h>
 
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableInfo.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-template <class T> const String PagedImage<T>::_className = "PagedImage";
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> 
 PagedImage<T>::PagedImage (const TiledShape& shape, 
@@ -78,7 +79,7 @@ PagedImage<T>::PagedImage (const TiledShape& shape,
 {
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  this->setTableType();
+  setTableType();
 }
 
 template <class T> 
@@ -119,7 +120,7 @@ void PagedImage<T>::makePagedImage (const TiledShape& shape,
   map_p = PagedArray<T> (shape, tab, "map", rowNumber);
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  this->setTableType();
+  setTableType();
 }
 
 template <class T> 
@@ -135,7 +136,7 @@ PagedImage<T>::PagedImage (const TiledShape& shape,
   map_p = PagedArray<T> (shape, tab, "map", rowNumber);
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
-  this->setTableType();
+  setTableType();
 }
 
 template <class T> 
@@ -241,7 +242,7 @@ void PagedImage<T>::restoreAll (const TableRecord& rec)
   // Restore the coordinates.
   CoordinateSystem* restoredCoords = CoordinateSystem::restore(rec, "coords");
   AlwaysAssert(restoredCoords != 0, AipsError);
-  this->setCoordsMember (*restoredCoords);
+  setCoordsMember (*restoredCoords);
   delete restoredCoords;
   // Restore the image info.
   restoreImageInfo (rec);
@@ -254,12 +255,7 @@ void PagedImage<T>::restoreAll (const TableRecord& rec)
 template<class T>
 String PagedImage<T>::imageType() const
 {
-  return _className;
-}
-
-template<class T>
-String PagedImage<T>::className() {
-	return _className;
+  return className();
 }
 
 template<class T>
@@ -508,14 +504,14 @@ void PagedImage<T>::restoreMiscInfo (const TableRecord& rec)
 {
   if (rec.isDefined("miscinfo")  &&
       rec.dataType("miscinfo") == TpRecord) {
-    this->setMiscInfoMember (rec.asRecord ("miscinfo"));
+    setMiscInfoMember (rec.asRecord ("miscinfo"));
   }
 }
 
 template<class T> 
 Bool PagedImage<T>::setMiscInfo (const RecordInterface& newInfo)
 {
-  this->setMiscInfoMember (newInfo);
+  setMiscInfoMember (newInfo);
   reopenRW();
   Table& tab = table();
   if (! tab.isWritable()) {
@@ -566,7 +562,7 @@ void PagedImage<T>::open_logtable()
 {
   // Open logtable as readonly if main table is not writable.
   Table& tab = table();
-  this->setLogMember (LoggerHolder (name() + "/logtable", tab.isWritable()));
+  setLogMember (LoggerHolder (name() + "/logtable", tab.isWritable()));
   // Insert the keyword if possible and if it does not exist yet.
   if (tab.isWritable()  &&  ! tab.keywordSet().isDefined ("logtable")) {
     tab.rwKeywordSet().defineTable("logtable", Table(name() + "/logtable"));
@@ -576,7 +572,7 @@ void PagedImage<T>::open_logtable()
 template<class T> 
 Bool PagedImage<T>::setUnits(const Unit& newUnits) 
 {
-  this->setUnitMember (newUnits);
+  setUnitMember (newUnits);
   reopenRW();
   Table& tab = table();
   if (! tab.isWritable()) {
@@ -629,7 +625,7 @@ void PagedImage<T>::restoreUnits (const TableRecord& rec)
       retval = Unit(unitName);
     }
   }
-  this->setUnitMember (retval);
+  setUnitMember (retval);
 }
 
 
@@ -641,7 +637,7 @@ void PagedImage<T>::removeRegion (const String& name,
   reopenRW();
   // Remove the default mask if it is the region to be removed.
   if (name == getDefaultMask()) {
-    this->setDefaultMask (String());
+    setDefaultMask (String());
   }
   ImageInterface<T>::removeRegion (name, type, throwIfUnknown);
 }
@@ -784,6 +780,7 @@ void PagedImage<T>::resync()
 template<class T>
 void PagedImage<T>::flush()
 {
+  itsAttrHandler.flush();
   map_p.flush();
   logger().flush();
   if (regionPtr_p != 0) {
@@ -855,7 +852,7 @@ void PagedImage<T>::restoreImageInfo (const TableRecord& rec)
     ImageInfo info;
     Bool ok = info.fromRecord (error, rec.asRecord("imageinfo"));
     if (ok) {
-      ImageInterface<T>::setImageInfo (info);
+      setImageInfoMember (info);
     } else {
       LogIO os;
       os << LogIO::WARN << "Failed to restore the ImageInfo in image " << name()
@@ -864,4 +861,12 @@ void PagedImage<T>::restoreImageInfo (const TableRecord& rec)
   }
 }
 
-} //# NAMESPACE CASA - END
+template<class T>
+ImageAttrHandler& PagedImage<T>::attrHandler (Bool createHandler)
+{
+  return itsAttrHandler.attachTable (table(), createHandler);
+}
+
+} //# NAMESPACE CASACORE - END
+
+#endif

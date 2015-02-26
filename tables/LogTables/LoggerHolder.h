@@ -24,17 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LoggerHolder.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LoggerHolder.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_LOGGERHOLDER_H
 #define TABLES_LOGGERHOLDER_H
 
 //# Includes
-#include <casa/Logging/LogIO.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/CountedPtr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LoggerHolderRep;
@@ -578,6 +579,6 @@ inline LoggerHolder::const_iterator LoggerHolder::end() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

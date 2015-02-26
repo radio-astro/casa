@@ -24,8 +24,8 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: cregex.h 20901 2010-06-09 07:23:37Z gervandiepen $
 */
+//# $Id: cregex.h 21561 2015-02-16 06:57:35Z gervandiepen $
 
 #ifndef CASA_CREGEX_H
 #define CASA_CREGEX_H
@@ -45,9 +45,9 @@ extern "C" {
 #define BYTEWIDTH 8
 
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 /* Maximum number of duplicates an interval can allow. */
 /* Has been changed to copy from the limits.h file
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 /* This defines the various regexp syntaxes.
    It can be set using the function a2_re_set_syntax.  */
-///extern int obscure_syntax;
+////extern int obscure_syntax;
 
 
 /* The following bits are used in the obscure_syntax variable to choose among
@@ -293,15 +293,15 @@ extern int re_exec ();
 
 
 #ifdef SYNTAX_TABLE
-  ///extern char *re_syntax_table;
+  ////extern char *re_syntax_table;
 #endif
 
 #ifdef __cplusplus
-  ///extern int re_max_failures;
+  ////extern int re_max_failures;
 }
 #endif
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif /* !__REGEXP_LIBRARY */

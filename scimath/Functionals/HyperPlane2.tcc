@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HyperPlane2.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: HyperPlane2.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_HYPERPLANE2_TCC
+#define SCIMATH_HYPERPLANE2_TCC
 
 //# Includes
-#include <scimath/Functionals/HyperPlane.h>
+#include <casacore/scimath/Functionals/HyperPlane.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -59,5 +62,7 @@ eval(typename Function<AutoDiff<T> >::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

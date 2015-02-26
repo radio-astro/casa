@@ -23,21 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMappedIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tMappedIO.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/IO/LargeFiledesIO.h>
-#include <casa/IO/LargeIOFuncDef.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/IO/FiledesIO.h>
+#include <casacore/casa/IO/LargeIOFuncDef.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include <cstring>          //# needed for memcpy
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main (int argc, const char* argv[])
 {
@@ -83,10 +84,10 @@ int main (int argc, const char* argv[])
     Int64 pagesz = getpagesize();
     if (mode >= 0) {
       Timer timer;
-      int fd = LargeFiledesIO::create("tMappedIO_tmp.dat2");
+      int fd = FiledesIO::create("tMappedIO_tmp.dat2");
       timer.mark();
       ::traceLSEEK(fd, size*nrch-1, SEEK_SET);
-      ::traceWRITE (fd, buf, 1);
+      AlwaysAssert (::traceWRITE (fd, buf, 1) == 1, AipsError);
       timer.show("write");
       // Map chunk by chunk.
       for (int k=0; k<nrch; k++) {
@@ -113,10 +114,11 @@ int main (int argc, const char* argv[])
 	::munmap ((char*)pageStart, nrBytes);
       }
       timer.show ("Mapped IO     write");
+      FiledesIO::close (fd);
     }
     if (mode <= 0) {
       Timer timer;
-      int fd = LargeFiledesIO::open ("tMappedIO_tmp.dat2");
+      int fd = FiledesIO::open ("tMappedIO_tmp.dat2");
       timer.mark();
       // Map chunk by chunk.
       for (int k=0; k<nrch; k++) {
@@ -145,12 +147,13 @@ int main (int argc, const char* argv[])
 	::munmap ((char*)pageStart, nrBytes);
       }
       timer.show ("Mapped IO     read ");
+      FiledesIO::close (fd);
     }
 
     delete [] buf;
     return 0;                           // exit with success status
 
-  } catch (AipsError x) {
+  } catch (const AipsError& x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }  

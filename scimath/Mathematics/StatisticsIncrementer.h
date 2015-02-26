@@ -22,13 +22,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATISTICSINCREMENTER_H
 #define SCIMATH_STATISTICSINCREMENTER_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa {
+namespace casacore {
 
 // Utility functions used for incrementing pointers in a data set used by the stats framework.
 
@@ -70,7 +71,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatisticsIncrementer.tcc>
+#include <casacore/scimath/Mathematics/StatisticsIncrementer.tcc>
 #endif
 
 #endif

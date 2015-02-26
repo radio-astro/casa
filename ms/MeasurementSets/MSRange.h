@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSRange.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MSRange.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSRANGE_H
 #define MS_MSRANGE_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelectionKeywords.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSSelectionKeywords.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> class ArrayColumn;
 template <class T> class ScalarColumn;
@@ -215,7 +215,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

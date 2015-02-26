@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixIter.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MatrixIter.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MATRIXITER_H
 #define CASA_MATRIXITER_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/ArrayIter.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // 
 // <summary> Iterate a Matrix cursor through another Array. </summary>
@@ -133,9 +133,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/MatrixIter.tcc>
+#include <casacore/casa/Arrays/MatrixIter.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

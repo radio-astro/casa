@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogSink.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: LogSink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogFilter.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogFilter.h>
 
-#include <casa/Logging/NullLogSink.h>
-#include <casa/Logging/MemoryLogSink.h>
-#include <casa/Logging/StreamLogSink.h>
+#include <casacore/casa/Logging/NullLogSink.h>
+#include <casacore/casa/Logging/MemoryLogSink.h>
+#include <casacore/casa/Logging/StreamLogSink.h>
 
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 CountedPtr<LogSink::LsiIntermediate> *LogSink::global_sink_p = 0;
 Mutex LogSink::theirMutex;
@@ -325,5 +325,5 @@ void LogSink::createGlobalSink()
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

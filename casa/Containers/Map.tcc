@@ -23,9 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Map.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Map.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/Map.h>
+#ifndef CASA_MAP_TCC
+#define CASA_MAP_TCC
+
+#include <casacore/casa/Containers/Map.h>
 
 
 //# template<class key, class value> value &Map<key,value>::operator()(const key &ky) {
@@ -36,7 +39,7 @@
 //#     return define(ky,DefaultVal);
 //# }
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
 template<class key, class value>
 Map<key,value>::~Map() {
@@ -58,7 +61,7 @@ const value &Map<key,value>::operator()(const key &ky) const {
 template<class key, class value>
 Map<key,value> &Map<key,value>::operator=(const Map<key,value> &m) {
   if (m.Rep)
-    this->SetRep(m.Rep->Clone());
+    SetRep(m.Rep->Clone());
   else
     throw_map_init_error();
   return *this;
@@ -67,7 +70,7 @@ Map<key,value> &Map<key,value>::operator=(const Map<key,value> &m) {
 template<class key, class value>
 Map<key,value> &Map<key,value>::operator=(const Map<key,value> *m) {
   if (m && m->Rep) 
-    this->SetRep(m->Rep->Clone());
+    SetRep(m->Rep->Clone());
   else
     throw_map_init_error();
   return *this;
@@ -272,7 +275,7 @@ ConstMapIter<key,value>::ConstMapIter(const Map<key,value> &st) : Rep(st.getRep(
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<key,value> &other) {
   if (other.isValid()) 
-    this->SetRep(other.Rep->Clone());
+    SetRep(other.Rep->Clone());
   else
     throw_mapiter_init_error();
   return *this;
@@ -281,7 +284,7 @@ ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<k
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<key,value> *other) {
   if (other && (*other).isValid())
-    this->SetRep(other->Rep->Clone());
+    SetRep(other->Rep->Clone());
   else
     throw_mapiter_init_error();
   return *this;
@@ -289,14 +292,14 @@ ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<k
 
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const Map<key,value> &other) {
-    this->SetRep(other.getRep());
+    SetRep(other.getRep());
     return *this;
   }
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const Map<key,value> *other) {
     if (! other)
       throw_mapiter_init_error();
-    this->SetRep(other->getRep());
+    SetRep(other->getRep());
     return *this;
   }
 
@@ -447,3 +450,5 @@ template<class key, class value> Map<key,value>::Map(MapRep<key,value> *nRep)
 }
 
 } //#End casa namespace
+
+#endif

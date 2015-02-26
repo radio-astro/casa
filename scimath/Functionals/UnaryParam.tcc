@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnaryParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: UnaryParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_UNARYPARAM_TCC
+#define SCIMATH_UNARYPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/UnaryParam.h>
+#include <casacore/scimath/Functionals/UnaryParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 UnaryParam<T>::UnaryParam() :
@@ -77,5 +80,7 @@ UnaryParam<T> &UnaryParam<T>::operator=(const UnaryParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

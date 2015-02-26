@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Precision.cc 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: Precision.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/Precision.h>
+#include <casacore/casa/Utilities/Precision.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt precisionForValueErrorPairs (const Vector<Double>& pair1,
                                   const Vector<Double>& pair2)
@@ -42,7 +42,7 @@ uInt precisionForValueErrorPairs (const Vector<Double>& pair1,
     Double err2 = pair2[1];
     value = max(val1, val2);
     error = (err1 == 0 || err2 == 0)
-      ? max(fabs(err1), fabs(err1))
+      ? max(fabs(err1), fabs(err2))
       : min(fabs(err1), fabs(err2));
   }
 
@@ -77,12 +77,13 @@ uInt precisionForValueErrorPairs (const Vector<Double>& pair1,
   error = 0.1*error;
 
   // Generate format
+  // Add little value for possible round-off error
   uInt after = 0;
   if ( log10(error) < 0 ) {
-    after = int(fabs(log10(error)))+1;
+    after = int(fabs(log10(error)) + 1e-8) + 1;
   }
   return after;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

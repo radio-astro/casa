@@ -24,22 +24,21 @@
 //#
 //# $Id: $
 
-#include <casa/BasicSL/String.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/EnvVar.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/EnvVar.h>
 
-#include <images/Images/PagedImage.h>
-#include <images/Images/SubImage.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/SubImage.h>
 
-#include <scimath/Mathematics/ClassicalStatistics.h>
-#include <casa/Exceptions/Error.h>
-#include <lattices/Lattices/LatticeStatsDataProvider.h>
-#include <lattices/Lattices/LatticeStatistics.h>
-#include <lattices/Lattices/LatticeUtilities.h>
+#include <casacore/scimath/Mathematics/ClassicalStatistics.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/lattices/LatticeMath/LatticeStatsDataProvider.h>
+#include <casacore/lattices/LatticeMath/LatticeStatistics.h>
 
 #include <iomanip>
 
-using namespace casa;
+using namespace casacore;
 
 int main() {
 	try {
@@ -51,7 +50,7 @@ int main() {
 			cout << "Cannot find image so tests cannot be run" << endl;
 			return 0;
 		}
- 		casa::PagedImage<Float> im(imageName);
+ 		casacore::PagedImage<Float> im(imageName);
 		RO_LatticeIterator<Float> imIter(im);
 		/*
 		{
@@ -320,19 +319,17 @@ int main() {
 			cout << std::setprecision(15)  << median << endl;
         }
         */
-		/*
         {
             LatticeStatistics<Float> lattStats(im);
             Array<Double> d;
             lattStats.getStatistic(d, LatticeStatsBase::SUM);
             cout << d << endl;
-
+            /*
             Array<Double> res;
             lattStats.getStatistic(res, LatticeStatsBase::MEDIAN);
             AlwaysAssert(near(*res.begin(), -0.00010517791088204831), AipsError);
-            //
+            */
         }
-	*/
 		/*
         {
 			cout << endl << "This should produce the desired results" << endl;
@@ -378,7 +375,7 @@ int main() {
         		cout << "Cannot find image " << imageName2 << " so some tests cannot be run" << endl;
         		return 0;
         	}
-        	casa::PagedImage<Float> im2(imageName2);
+        	casacore::PagedImage<Float> im2(imageName2);
         	LatticeStatistics<Float> lattStats(im2);
         	Array<Double> res;
         	lattStats.getStatistic(res, LatticeStatsBase::MEDIAN);
@@ -392,7 +389,7 @@ int main() {
 				cout << "Cannot find image " << imageName2 << " so some tests cannot be run" << endl;
 				return 0;
 			}
-			casa::PagedImage<Float> im2(imageName2);
+			casacore::PagedImage<Float> im2(imageName2);
 			Slicer slice(IPosition(im2.ndim(), 0), IPosition(im2.ndim(), 800));
 			SubImage<Float> x(im2, slice);
 			LatticeStatistics<Float> lattStats(x);
@@ -400,84 +397,6 @@ int main() {
 			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
 		}
         */
-		/*
-		{
-			cout << "testing LatticeUtilities::collapse()" << endl;
-			Array<Float> data;
-			Array<Bool> mask;
-			IPosition axes(2, 2, 3);
-			casa::PagedImage<Float> im("uu.im");
-			LatticeUtilities::collapse(
-				data, mask, axes, im, False,
-				True, True, LatticeStatsBase::MEAN
-			);
-		}
-	*/
-		/*
-		{
-			cout << "begin 2" << endl;
-			PagedImage<Float> im("bottleneck.im");
-			IPosition shape = im.shape();
-			IPosition cursorAxes(2, 2, 3);
-			IPosition cursorShape(im.ndim(),1);
-			for (uInt i=0; i<cursorAxes.size(); i++) {
-				cursorShape(cursorAxes(i)) = shape(cursorAxes(i));
-			}
-			IPosition axisPath(4, 2, 3, 0, 1);
-			LatticeStepper stepper(shape, cursorShape, axisPath);
-			uInt count = 0;
-			for (stepper.reset(); ! stepper.atEnd(); stepper++, ++count) {
-				IPosition curPos = stepper.position();
-				Slicer slicer(curPos, stepper.endPosition(), Slicer::endIsLast);
-				SubLattice<Float> subLat(im, slicer);
-			}
-			cout << "count " << count << endl;
-		}
-		*/
-            /*
-		{
-//			Array<Float> data;
-//			Array<Bool> mask;
-//			IPosition axes(2, 2, 3);
-            cout << "start" << endl;
-            casa::PagedImage<Float> im("bottleneck.im");
-            for (uInt i=0; i<14400; ++i) {
-                im.clone();
-            }
-        }
-*/
-/*
-		{
-			if (! File(imageName).exists()) {
-				cout << "Cannot find image " << imageName << " so some tests cannot be run" << endl;
-				return 0;
-			}
-			cout << "Calc stats on 200M image" << endl;
-			LatticeStatistics<Float> lattStats(im);
-			Vector<Int> axes(2, 1);
-			axes[1] = 2;
-			lattStats.setAxes(axes);
-			lattStats.setClassicalStatsTimingCoeffs(0,0,1,1);
-			Array<Double> res;
-			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
-			cout << "shpae res " << res.shape() << endl;
-		}
-		*/
-		/*
-		{
-			CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
-			PagedImage<Float> im3(
-				TiledShape(IPosition(3,1,3000,3000)), csys, "mytimings.im"
-			);
-			LatticeStatistics<Float> lattStats(im3);
-			lattStats.setAxes(Vector<Int>(1, 0));
-			lattStats.configureClassical(0,0,1,1);
-			Array<Double> res;
-			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
-			cout << "shpae res " << res.shape() << endl;
-		}
-		*/
-
 
     }
     catch (const AipsError& x) {

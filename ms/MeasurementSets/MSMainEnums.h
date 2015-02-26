@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSMainEnums.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: MSMainEnums.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSMAINENUMS_H
 #define MS_MSMAINENUMS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <use visibility=export>
 
@@ -191,6 +191,10 @@ public:
     // Float(Nc, Nf)
     FLOAT_DATA,
     //
+    // The imaging weights (optional). <BR>
+    // Float(Nf)
+    IMAGING_WEIGHT,
+    //
     // Complex correlation function or lag spectrum for each correlation 
     // product <BR>
     // Complex(Nc, Nl)
@@ -307,7 +311,7 @@ public:
     };
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

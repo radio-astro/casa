@@ -24,23 +24,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GenericL2Fit.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: GenericL2Fit.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_GENERICL2FIT_H
 #define SCIMATH_GENERICL2FIT_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <scimath/Fitting/LSQaips.h>
-#include <scimath/Fitting/LSQTraits.h>
-#include <scimath/Functionals/Function.h>
-#include <scimath/Functionals/FunctionTraits.h>
-#include <scimath/Mathematics/AutoDiff.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/scimath/Fitting/LSQaips.h>
+#include <casacore/scimath/Fitting/LSQTraits.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/scimath/Functionals/FunctionTraits.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
 
-namespace casa { // begin namespace casa
+namespace casacore { // begin namespace casa
 
 //# Forward declarations
 template <class T> class Array;
@@ -568,8 +568,8 @@ template<class T> class GenericL2Fit : public LSQaips {
 		       const typename FunctionTraits<T>::BaseType y);
 };
 
-} //# End namespace casa
+} //# End namespace casacore
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Fitting/GenericL2Fit.tcc>
+#include <casacore/scimath/Fitting/GenericL2Fit.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

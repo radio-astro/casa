@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5File.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/HDF5/HDF5File.h>
-#include <casa/HDF5/HDF5HidMeta.h>
-#include <casa/HDF5/HDF5Error.h>
-#include <casa/OS/RegularFile.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/casa/HDF5/HDF5HidMeta.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
+#include <casacore/casa/OS/RegularFile.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #ifdef HAVE_HDF5
 
@@ -101,7 +101,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Use 8 byte offets and blocks of 32768 bytes.
     HDF5HidProperty create_plist (H5Pcreate(H5P_FILE_CREATE));
     H5Pset_sizes(create_plist, 8, 8);
-    H5Pset_userblock(create_plist, 32768);
     // Use unbuffered IO.
     HDF5HidProperty access_plist (H5Pcreate(H5P_FILE_ACCESS));
     H5Pset_fapl_sec2(access_plist);

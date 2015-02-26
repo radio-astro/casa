@@ -24,12 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: MarshallableChebyshev.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: MarshallableChebyshev.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/MarshallableChebyshev.h>
-#include <casa/Arrays/Array.h>
+#ifndef SCIMATH_MARSHALLABLECHEBYSHEV_TCC
+#define SCIMATH_MARSHALLABLECHEBYSHEV_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/MarshallableChebyshev.h>
+#include <casacore/casa/Arrays/Array.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 const String MarshallableChebyshev<T>::modenames[] = 
@@ -95,5 +98,7 @@ MarshallableChebyshev<T>::MarshallableChebyshev(const Record& gr)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

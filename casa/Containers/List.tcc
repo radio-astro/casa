@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: List.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: List.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Containers/List.h>
-#include <casa/Containers/IterError.h>
+#ifndef CASA_LIST_TCC
+#define CASA_LIST_TCC
 
-namespace casa { //#Begin casa namespace
+#include <casacore/casa/Containers/List.h>
+#include <casacore/casa/Containers/IterError.h>
+
+namespace casacore { //#Begin casa namespace
 
 template<class t> uInt ListNotice<t>::type() const  {
   return Register(this);
@@ -414,3 +417,5 @@ ConstListIter<t> &ListIter<t>::operator=(const ConstListIter<t> *) {
   return *this;}
 
 } //#End casa namespace
+
+#endif

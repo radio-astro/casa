@@ -23,15 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecTemp.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: TVecTemp.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <casa/aips.h>
-#include <tables/Tables/TVecTemp.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <tables/Tables/TableError.h>
+#ifndef TABLES_TVECTEMP_TCC
+#define TABLES_TVECTEMP_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TVecTemp.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/tables/Tables/TableError.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Construct from a vector.
 template<class T>
@@ -74,5 +77,7 @@ template<class T>
 void TabVecTemp<T>::set (const T& val)
     { vecPtr_p->set (val); }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

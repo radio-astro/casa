@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDefaultValue.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tDefaultValue.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <casa/Utilities/DefaultValue.h>
+#include <casacore/casa/Utilities/DefaultValue.h>
 
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // a bogus test case of a specializtion for Strings
 static void defaultValue(String &val)
 {

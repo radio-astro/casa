@@ -23,18 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColDesc.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: ScaColDesc.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ScaColData.h>
-#include <tables/Tables/ConcatScalarColumn.h>
-#include <casa/Utilities/ValTypeId.h>
-#include <tables/Tables/TableError.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/iostream.h>
+#ifndef TABLES_SCACOLDESC_TCC
+#define TABLES_SCACOLDESC_TCC
+
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ScaColData.h>
+#include <casacore/tables/Tables/ConcatScalarColumn.h>
+#include <casacore/casa/Utilities/ValTypeId.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ScalarColumnDesc<T>::ScalarColumnDesc (const String& name,
@@ -192,5 +195,7 @@ ConcatColumn* ScalarColumnDesc<T>::makeConcatColumn (ConcatTable* ct) const
     return new ConcatScalarColumn<T> (this, ct);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

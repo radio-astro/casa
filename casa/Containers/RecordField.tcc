@@ -24,13 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordField.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordField.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_RECORDFIELD_TCC
+#define CASA_RECORDFIELD_TCC
 
 
-#include <casa/Containers/RecordField.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 RecordFieldPtr<T>::RecordFieldPtr()
@@ -166,5 +169,7 @@ void RecordFieldPtr<T>::notify (const Notice& notice)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

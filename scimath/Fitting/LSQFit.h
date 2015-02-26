@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQFit.h 21049 2011-04-13 07:52:48Z gervandiepen $
+//# $Id: LSQFit.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_LSQFIT_H
 #define SCIMATH_LSQFIT_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/RecordTransformable.h>
-#include <scimath/Fitting/LSQMatrix.h>
-#include <scimath/Fitting/LSQTraits.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/RecordTransformable.h>
+#include <casacore/scimath/Fitting/LSQMatrix.h>
+#include <casacore/scimath/Fitting/LSQTraits.h>
 #include <complex>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
  
@@ -80,7 +80,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Methods to obtain additional information about the fitting process are
 // available.
 //
-// This class can  be used as a stand-alone class outside of the aips++
+// This class can  be used as a stand-alone class outside of the Casacore
 // environment.  In that case the aips.h include file
 // can be replaced if necessary by appropriate typedefs for Double, Float and 
 // uInt.<br> 
@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // arguments only. They can be used with any container having an STL
 // random-access iterator interface. Especially they can be used with
 // <src>carrays</src> (necessary templates provided),
-// aips++ Vectors (necessary templates
+// Casacore Vectors (necessary templates
 // provided in <src>LSQaips</src>),
 // standard random access STL containers (like <src>std::vector</src>).
 //
@@ -224,8 +224,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // for a 3 unknown solution, and solve (note that the degenerate will be
 // set to 0. The last one will use SVD and one condition equation.r 
 // <srcblock>
-//   #include <casa/aips.h>
-//   #include <scimath/Fitting/LSQFit.h>
+//   #include <casacore/casa/aips.h>
+//   #include <casacore/scimath/Fitting/LSQFit.h>
 //   #include <iostream>
 //   
 //   int main() {
@@ -989,9 +989,9 @@ class LSQFit {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Fitting/LSQFit2.tcc>
+#include <casacore/scimath/Fitting/LSQFit2.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

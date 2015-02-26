@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFeedColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFeedColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFeedColumns.h>
-#include <ms/MeasurementSets/MSFeed.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ColDescSet.h>
+#include <casacore/ms/MeasurementSets/MSFeedColumns.h>
+#include <casacore/ms/MeasurementSets/MSFeed.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ColDescSet.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSFeedColumns::ROMSFeedColumns(const MSFeed& msFeed):
   antennaId_p(msFeed, MSFeed::columnName(MSFeed::ANTENNA_ID)),
@@ -362,5 +362,5 @@ void MSFeedColumns::attachOptionalCols(MSFeed& msFeed)
 // compile-command: "gmake MSFeedColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

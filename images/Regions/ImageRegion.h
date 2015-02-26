@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageRegion.h 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: ImageRegion.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef IMAGES_IMAGEREGION_H
 #define IMAGES_IMAGEREGION_H
 
 //# Includes
-#include <lattices/Lattices/LattRegionHolder.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/LRegions/LattRegionHolder.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class CoordinateSystem;
@@ -122,18 +123,17 @@ public:
 
     // Create an ImageRegion from a lattice expression. Returned pointer
     // is created via new(); it is the caller's responsibility to delete it.
-    // This method was moved from ImageAnalysis.
     static ImageRegion* fromLatticeExpression(const String& latticeExpression);
 
     // Create an ImageRegion from a record. The returned pointer is created via
-    // new() and so callers are responsible for deleting it. If a null pointer is
-    // passed in for <src>logger</src> no logging is done, otherwise informational
-    // messages regarding bounding boxes are emitted to the <src>logger</src> object.
-    // Moved from ImageAnalysis.
-    static ImageRegion* fromRecord(
-    	LogIO *const &logger, const CoordinateSystem& coords,
-    	const IPosition& imShape, const Record& regionRecord
-    );
+    // new(). It's the callers responsibility to delete it.
+    // If a null pointer is passed in for <src>logger</src> no logging is done,
+    // otherwise informational messages regarding bounding boxes are emitted
+    // to the <src>logger</src> object.
+    static ImageRegion* fromRecord (LogIO *logger,
+                                    const CoordinateSystem& coords,
+                                    const IPosition& imShape,
+                                    const Record& regionRecord);
 
     // Test if the underlying region is an WCRegion.
     virtual Bool isWCRegion() const;
@@ -190,14 +190,6 @@ public:
     virtual LattRegionHolder* makeComplement() const;
     // </group>
 
-    // moved from ImageAnalysis
-    // TODO: From Ger:
-    // In fact I doubt if that tweaked function is really needed.
-    // The fromRecord function in e.g. LCBox use toArrayFloat which converts a double array
-    // to a float array.
-    // You should try if the code works fine without doing the tweakrecord.
-    static  Record * tweakedRegionRecord(Record *Region);
-
 private:
     WCRegion*   itsWC;
 };
@@ -220,6 +212,6 @@ inline const WCRegion& ImageRegion::asWCRegion() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

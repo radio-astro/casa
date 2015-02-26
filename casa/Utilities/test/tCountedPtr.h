@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCountedPtr.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tCountedPtr.h 21505 2014-11-21 11:43:02Z gervandiepen $
 
 // Split off from the original tCountedPtr.cc
 // in order to satisfy the automated building of the test program.
@@ -33,10 +33,11 @@
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Example class for test of CountedPtr class
 // </summary>
@@ -57,13 +58,23 @@
 
 
 class myobj {
-    const char *store;
+protected:
+    String store;
 public:
     myobj(const char *str) : store(str) { 
 	cout << "myobj(" << store << ") ctor" << endl;
     }
-    ~myobj() { cout << "myobj(" << store << ") dtor" << endl;}
-    const char *name() const { return store; }
+    virtual ~myobj() { cout << "myobj(" << store << ") dtor" << endl;}
+    virtual String name() const { return store; }
+};
+
+class myobj1 :public myobj {
+public:
+    myobj1(const char *str) : myobj(str) { 
+	cout << " myobj1(" << store << ") ctor" << endl;
+    }
+    virtual ~myobj1() { cout << " myobj1(" << store << ") dtor" << endl;}
+    virtual String name() const { return "myobj1_" + store; }
 };
 
 

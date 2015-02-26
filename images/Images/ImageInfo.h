@@ -24,25 +24,25 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageInfo.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: ImageInfo.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_IMAGEINFO_H
 #define IMAGES_IMAGEINFO_H
 
-#include <casa/aips.h>
-#include <casa/Utilities/RecordTransformable.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/RecordTransformable.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 
-#include <images/Images/ImageBeamSet.h>
+#include <casacore/images/Images/ImageBeamSet.h>
 
 //# Forward declarations
-#include <casa/iosfwd.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/iosfwd.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class LoggerHolder;
 
@@ -194,94 +194,98 @@ public:
 // and so these will return Undefined.
    static ImageInfo::ImageTypes MiriadImageType (const String& type);
 
-    // Set and get the beam.  Zero-based <src>channel</src>
-    // and <src>polarization</src> are
+    // Set and get the beam.
+    // Zero-based <src>channel</src> and <src>stokes</src> are
     // necessary and used if and only if the ImageBeamSet
-    // has multiple beams. If just a single beam, that beam
+    // has multiple beams for such an axis. If just a single beam, that beam
     // is returned. If no (or a null) beam, a null beam is returned.
-    // <group>
-    GaussianBeam restoringBeam(
-    	const Int channel=-1, const Int polarization=-1
-    ) const;
+    GaussianBeam restoringBeam(Int channel=-1, Int stokes=-1) const;
 
-    // set the single global restoring beam. An exception will be
+    // Set the single global restoring beam. An exception will be
     // thrown if this object already has multiple beams. In that case,
     // the caller must call removeRestoringBeam() first.
     void setRestoringBeam(const GaussianBeam& beam);
+  //#/// Added to build casarest with nrao-nov12
+    void setRestoringBeam(const Quantum<Double>& major,
+                          const Quantum<Double>& minor,
+                          const Quantum<Double>& pa)
+      { setRestoringBeam (GaussianBeam (major, minor, pa)); }
 
     // Remove all beams (global or per plane) associated with this object.
     void removeRestoringBeam();
-    // </group>
 
-// get the beam set associated with this object
+   // Get the beam set associated with this object
    const ImageBeamSet& getBeamSet() const;
 
-   // set the beam for a specific plane. A value of <src>channel</src> or <src>stokes</src>
-   // of less than 0 means that particular coordinate does not exist. Obviously, at least
-   // one of these must be zero or greater. The only consistency checking that is done is
-   // to ensure the values of <src>channel</src> and <src>stokes</src> are consistent with
-   // the size of the beam array
-   // Additional consistency checks are done when this object is added via
-   // ImageInterface<T>::setImageInfo(). If no beam set has been set yet, you must call
-   // setAllBeams() or setBeams() before calling setBeam().
-   void setBeam(
-   	Int channel, Int stokes, const Quantity& major,
-   	const Quantity& minor, const Quantity& pa
-   );
+    // Set the beam for a specific plane.
+    // A value of <src>channel</src> or <src>stokes</src> of less than 0
+    // means that particular coordinate does not exist. Obviously, at least
+    // one of these must be zero or greater. The only consistency checking
+    // that is done is to ensure the values of <src>channel</src> and
+    // <src>stokes</src> are consistent with the size of the beam array.
+    // Additional consistency checks are done when this object is added via
+    // ImageInterface<T>::setImageInfo().
+    // <br>This function cannot be used if no beams have been set via set(All)Beams.
+    // <group>
+    void setBeam(Int channel, Int stokes, const Quantity& major,
+                 const Quantity& minor, const Quantity& pa);
 
-   void setBeam(
-   	Int channel, Int stokes, const GaussianBeam& beam
-   );
+    void setBeam(Int channel, Int stokes, const GaussianBeam& beam);
+    // </group>
 
-   // </group>
+    // does this object contain multiple beams?
+    Bool hasMultipleBeams() const
+      { return _beams.hasMultiBeam(); }
 
-   // does this object contain multiple beams?
-   Bool hasMultipleBeams() const
-     { return _beams.hasMultiBeam(); }
+    // does this object contain a single beam
+    Bool hasSingleBeam() const
+      { return _beams.hasSingleBeam(); }
 
-   // does this object contain a single beam
-   Bool hasSingleBeam() const
-     { return _beams.hasSingleBeam(); }
+    // Does this object contain one or more beams?
+    Bool hasBeam() const
+      { return ! _beams.empty(); }
 
-   // Does this object contain one or more beams?
-   Bool hasBeam() const
-     { return ! _beams.empty(); }
+    // <group>
+    // Number of channels and stokes in per hyper-plane beam array
+    uInt nChannels() const
+      { return _beams.nchan(); }
+    uInt nStokes() const
+      { return _beams.nstokes(); }
+    // </group>
 
-    // initialize all per-plane beams to the same value
+    // <group>
+    // Initialize all per-plane beams to the same value
     void setAllBeams(
-    	const uInt nChannels, const uInt nPolarizations,
+    	const uInt nChannels, const uInt nStokes,
     	const GaussianBeam& beam
     );
 
-    // set the per plane beams array directly. If the dimensionality of <src>beams</src>
-    // is 1, one <src>hasSpectral</src> or <src>hasPolarization</src> must be True and
-    // the other False. If the dimensionality of <src>beams</src> is 2,
-    // <src>hasSpectral</src> and <src>hasPolarization</src> are ignored.
+    // Set the per plane beams array directly.
     void setBeams(const ImageBeamSet& beams);
+    // </group>
 
     // This method is not meant for common use. New code should not use it.
     // Get the restoring beam from a LoggerHolder (where the history is stored)
-    // as AIPS writes the beam in the FITS history rather than the header keywords.
-    // If there is no beam,  False is returned, and the internal state of the object
-    // is unchanged.
+    // as AIPS writes the beam in the FITS history rather than the header
+    // keywords. If there is no beam,  False is returned, and the internal
+    // state of the object is unchanged.
     Bool getRestoringBeam (LoggerHolder& logger);
 
-    // <group>
+    // Convert the given beam to a Record.
+    Record beamToRecord(Int channel, Int stokes) const;
 
-    Record beamToRecord(const Int channel, const Int stokes) const;
+    // Check if the beam set matches the coordinate axes sizes.
+    void checkBeamSet (const CoordinateSystem& coords,
+                       const IPosition& shape,
+                       const String& imageName) const;
 
+    // Append the other beamset to this one.
     void appendBeams (ImageInfo& infoThat,
                       Int axis, Bool relax, LogIO& os,
                       const CoordinateSystem& csysThis,
                       const CoordinateSystem& csysThat,
                       const IPosition& shapeThis,
                       const IPosition& shapeThat);
-
-    void checkBeamSet(
-    	const CoordinateSystem& coords,
-    	const IPosition& shape,
-    	const String& imageName
-    ) const;
 
     // Check if the beam shape matches the coordinates.
     void checkBeamShape (uInt& nchan, uInt& npol,
@@ -326,37 +330,32 @@ public:
                      Bool relax,
                      LogIO& os) const;
 
-
-
-    // </group>
-
     // If relax=True, give a warning message if warn=True and set to False.
     // Otherwise give an error showing msg1 only.
     static void logMessage(Bool& warn, LogIO& os, Bool relax,
                            const String& msg1, const String msg2=String());
 
-    // get the beam area in terms of pixel size of the specified DirectionCoordinate
-    Double getBeamAreaInPixels(
-    	Int channel, Int stokes, const DirectionCoordinate& dc
-    ) const;
-
+    // Get the beam area in terms of pixel size of the specified
+    // DirectionCoordinate
+    Double getBeamAreaInPixels(Int channel, Int stokes,
+                               const DirectionCoordinate&) const;
+ 
     static Double getBeamAreaInPixels(
     	const GaussianBeam& beam, const DirectionCoordinate& dc
     );
 
 private:
-    ImageBeamSet _beams;
-    mutable Bool _warnBeam;   //# tell if warning is already given
-    ImageInfo::ImageTypes itsImageType;
-    String itsObjectName;
+  // Common copy ctor/assignment operator code.
+  void copy_other(const ImageInfo &other);
 
-// Common copy ctor/assignment operator code.
-    void copy_other(const ImageInfo &other);
+  // Set the restoring beam from the record.
+  void _setRestoringBeam(const Record& inRecord);
 
-    void _setRestoringBeam(const Record& inRecord);
-
-    inline static String _className() {static const String c = "ImageInfo"; return c; }
-
+  //# Data members
+  ImageBeamSet _beams;
+  mutable Bool _warnBeam;   //# tell if warning is already given
+  ImageTypes   itsImageType;
+  String       itsObjectName;
 };
 
 // <summary> Global functions </summary>
@@ -365,6 +364,8 @@ private:
 ostream &operator<<(ostream &os, const ImageInfo &info);
 // </group>
 
-} //# NAMESPACE CASA - END
+
+
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELImageCoord.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LELImageCoord.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Images/LELImageCoord.h>
-#include <images/Images/ImageExpr.h>
-#include <images/Images/SubImage.h>
-#include <images/Images/ExtendImage.h>
-#include <images/Images/RebinImage.h>
-#include <lattices/Lattices/LattRegionHolder.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/LELImageCoord.h>
+#include <casacore/images/Images/ImageExpr.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Images/ExtendImage.h>
+#include <casacore/images/Images/RebinImage.h>
+#include <casacore/lattices/LRegions/LattRegionHolder.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LELImageCoord::LELImageCoord()
 {}
@@ -180,5 +180,5 @@ LatticeExprNode LELImageCoord::makeRebinLattice
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SquareMatrix.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: SquareMatrix.h 21521 2014-12-10 08:06:42Z gervandiepen $
  
 #ifndef SCIMATH_SQUAREMATRIX_H
 #define SCIMATH_SQUAREMATRIX_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 template <class T, Int n> class RigidVector;
@@ -315,9 +315,9 @@ ostream& operator<<(ostream& os, const SquareMatrix<Float,4>& m);
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/SquareMatrix.tcc>
+#include <casacore/scimath/Mathematics/SquareMatrix.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

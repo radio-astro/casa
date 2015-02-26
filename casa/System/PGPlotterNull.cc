@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PGPlotterNull.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: PGPlotterNull.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/System/PGPlotterNull.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Containers/Record.h>
-#include <casa/iostream.h>
+#include <casacore/casa/System/PGPlotterNull.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 PGPlotterNull::PGPlotterNull(const String &)
     : beenWarned(True)
@@ -602,5 +602,5 @@ void PGPlotterNull::noplotter()
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

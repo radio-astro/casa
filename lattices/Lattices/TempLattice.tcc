@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TempLattice.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TempLattice.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <lattices/Lattices/TempLattice.h>
+#ifndef LATTICES_TEMPLATTICE_TCC
+#define LATTICES_TEMPLATTICE_TCC
+
+#include <casacore/lattices/Lattices/TempLattice.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 TempLattice<T>::~TempLattice()
@@ -199,4 +202,6 @@ LatticeIterInterface<T>* TempLattice<T>::makeIter (const LatticeNavigator& nav,
   return itsImpl->makeIter (nav, useRef);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
+#endif

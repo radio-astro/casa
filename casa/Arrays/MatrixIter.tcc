@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MatrixIter.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#ifndef CASA_ARRAY_MATRIX_ITER_TCC
-#define CASA_ARRAY_MATRIX_ITER_TCC
+#ifndef CASA_MATRIXITER_TCC
+#define CASA_MATRIXITER_TCC
 
-#include<casa/Arrays/MatrixIter.h>
+#include<casacore/casa/Arrays/MatrixIter.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> MatrixIterator<T>::MatrixIterator(Array<T> &a)
 : ArrayIterator<T>(a, 2)
@@ -52,6 +52,6 @@ template<class T> MatrixIterator<T>::MatrixIterator(Array<T> &a,
     this->ap_p = mp;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

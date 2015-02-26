@@ -24,14 +24,14 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: ImageExprGram.yy 19949 2007-02-27 12:20:55Z Malte.Marquarding $
+    $Id: ImageExprGram.yy 21521 2014-12-10 08:06:42Z gervandiepen $
 */
 
 %{
-using namespace casa;
+using namespace casacore;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
 LatticeExprNode* node;

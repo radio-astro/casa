@@ -24,16 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogFilter.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogFilter.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_LOGFILTER_H
 #define CASA_LOGFILTER_H
 
 //# Includes
-#include <casa/Logging/LogFilterInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogFilterInterface.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Filter LogMessages on message priority.
@@ -119,6 +120,6 @@ inline LogMessage::Priority LogFilter::lowestPriority() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

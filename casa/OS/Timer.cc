@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Timer.cc 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: Timer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //  User time:
 //    time cpu spends in user mode on behalf of the program.
@@ -32,12 +32,12 @@
 //  Real time:
 //    what you get from a stop watch timer.
 
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   void Timer::mark()
   {
@@ -342,4 +342,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     show(os);
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

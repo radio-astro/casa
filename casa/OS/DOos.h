@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DOos.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DOos.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_DOOS_H
 #define CASA_DOOS_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -178,7 +178,7 @@ public:
   // Tell if a table is used or locked by another process.
   // It returns a vector containing 3 integers.
   // The first one tells if the table is in use or locked.
-  // See <linkto class=LockFile>LockFile</linkto>::showLock for details.
+  // See <linkto class=LockFile>LockFile</linkto>\::showLock for details.
   // The second one gives the pid of the process using/locking the table.
   // The third one tells if the table is permanently locked (0 = not).
   static Vector<Int> lockInfo (const String& tableName);
@@ -186,6 +186,6 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

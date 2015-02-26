@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSLister.h 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSLister.h 21521 2014-12-10 08:06:42Z gervandiepen $
 //#
 #ifndef MS_MSLISTER_H
 #define MS_MSLISTER_H
 
 
-#include <casa/aips.h>
-#include <casa/Logging/LogIO.h>
-//#include <casa/Logging/LogSink.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
-#include <ms/MeasurementSets/MSSelector.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogIO.h>
+//#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/ms/MeasurementSets/MSSelector.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MeasurementSet;
 
@@ -315,6 +315,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

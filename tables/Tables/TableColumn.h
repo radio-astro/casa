@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLECOLUMN_H
 #define TABLES_TABLECOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseColumn.h>
-#include <tables/Tables/BaseTable.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseColumn.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -178,8 +178,6 @@ public:
     void checkWritable() const
         { if (!isWritable()) throwNotWritable(); }
 
-    Bool hasContent() const;
-
     // Get readonly access to the column keyword set.
     const TableRecord& keywordSet() const
 	{ return baseColPtr_p->keywordSet(); }
@@ -220,6 +218,10 @@ public:
     // Test if the given cell contains a defined value.
     Bool isDefined (uInt rownr) const
 	{ TABLECOLUMNCHECKROW(rownr); return baseColPtr_p->isDefined (rownr); }
+
+    // Does the column has content in the given row (default is the first row)?
+    // It has if it is defined and does not contain an empty array.
+    Bool hasContent (uInt rownr=0) const;
 
     // Get the #dimensions of an array in a particular cell.
     uInt ndim (uInt rownr) const
@@ -400,6 +402,6 @@ private:
 typedef TableColumn ROTableColumn;
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

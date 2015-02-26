@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedColumn.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: DerivedColumn.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <derivedmscal/DerivedMC/DerivedColumn.h>
+#include <casacore/derivedmscal/DerivedMC/DerivedColumn.h>
 
-namespace casa {
+namespace casacore {
 
   HourangleColumn::~HourangleColumn()
   {}

@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StokesConverter.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: StokesConverter.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_STOKESCONVERTER_H
 #define MS_STOKESCONVERTER_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/BasicSL/Complex.h>
-#include <measures/Measures/Stokes.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/measures/Measures/Stokes.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // StokesConverter converts any set of polarizations into any other one
@@ -181,6 +181,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

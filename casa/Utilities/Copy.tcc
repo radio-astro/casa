@@ -23,10 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Copy.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Copy.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Utilities/Copy.h>
+#ifndef CASA_COPY_TCC
+#define CASA_COPY_TCC
+
+#include <casacore/casa/Utilities/Copy.h>
 
 //# Note that this is empty to make transition between explicit and
 //# implicit templates easy.
 
+
+#endif

@@ -22,19 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_CONSTRAINEDRANGESTATISTICS_H
 #define SCIMATH_CONSTRAINEDRANGESTATISTICS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <scimath/Mathematics/ClassicalStatistics.h>
+#include <casacore/scimath/Mathematics/ClassicalStatistics.h>
 
 #include <set>
 #include <vector>
 #include <utility>
 
-namespace casa {
+namespace casacore {
 
 // Abstract base class for statistics algorithms which are characterized by
 // a range of good values. The range is usually calculated dynamically based on the entire distribution.
@@ -577,7 +578,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/ConstrainedRangeStatistics.tcc>
+#include <casacore/scimath/Mathematics/ConstrainedRangeStatistics.tcc>
 #endif
 
 #endif

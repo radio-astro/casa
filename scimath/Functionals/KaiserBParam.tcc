@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: KaiserBParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: KaiserBParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_KAISERBPARAM_TCC
+#define SCIMATH_KAISERBPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/KaiserBParam.h>
+#include <casacore/scimath/Functionals/KaiserBParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 KaiserBParam<T>::KaiserBParam() :
@@ -62,5 +65,7 @@ KaiserBParam<T> &KaiserBParam<T>::operator=(const KaiserBParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

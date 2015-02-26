@@ -1,4 +1,4 @@
-//# Template.h: Canonicalise, format etc. aips++ template definitions
+//# Template.h: Canonicalise, format etc. Casacore template definitions
 //# Copyright (C) 2001,2002,2004,2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,25 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Template.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Template.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_TEMPLATE_H
 #define CASA_TEMPLATE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class Regex;
 template <class T> class Vector;
 
 // <summary>
-// Canonicalise, format and other actions on aips++ template definitions
+// Canonicalise, format and other actions on Casacore template definitions
 // </summary>
 
 // <use visibility=local>
@@ -50,7 +50,7 @@ template <class T> class Vector;
 // </reviewed>
 
 // <prerequisite>
-//  <li> Knowledge about the aips++ DYO template system
+//  <li> Knowledge about the Casacore DYO template system
 // </prerequisite>
 
 // <synopsis>
@@ -266,9 +266,9 @@ class Template {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/Template.tcc>
+#include <casacore/casa/Utilities/Template.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

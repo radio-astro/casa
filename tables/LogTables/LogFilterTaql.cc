@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogFilterTaql.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LogFilterTaql.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/LogTables/LogFilterTaql.h>
-#include <tables/LogTables/LogFilterExpr.h>
+#include <casacore/tables/LogTables/LogFilterTaql.h>
+#include <casacore/tables/LogTables/LogFilterExpr.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LogFilterTaql::LogFilterTaql (const String& expr)
 : expr_p  (0)
@@ -73,5 +73,5 @@ Bool LogFilterTaql::pass (const LogMessage& message) const
   return expr_p->matches (message);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

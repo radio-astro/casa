@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCCompound.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCCompound.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_WCCOMPOUND_H
 #define IMAGES_WCCOMPOUND_H
 
 //# Includes
-#include <images/Regions/WCRegion.h>
-#include <casa/Containers/Block.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/WCRegion.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ImageRegion;
@@ -159,6 +160,6 @@ inline const PtrBlock<const WCRegion*>& WCCompound::regions() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

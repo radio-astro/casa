@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: Projection.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <coordinates/Coordinates/Projection.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/coordinates/Coordinates/Projection.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
     
     
     Projection::Projection(Projection::Type which) 
@@ -280,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (parameters_p.nelements() != other.parameters_p.nelements()) return False;
 	
 	for (uInt i=0; i<parameters_p.nelements(); i++) {
-	    if (!casa::near(parameters_p(i),other.parameters_p(i),tol)) return False;
+	    if (!casacore::near(parameters_p(i),other.parameters_p(i),tol)) return False;
 	}
 	
 	return True;
@@ -398,5 +398,5 @@ Projection::Type Projection::type (String& ctypeLong,
    return type(proj1);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ParAngleMachine.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: ParAngleMachine.h 21521 2014-12-10 08:06:42Z gervandiepen $
 #ifndef MEASURES_PARANGLEMACHINE_H
 #define MEASURES_PARANGLEMACHINE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MCEpoch.h>
-#include <measures/Measures/MEpoch.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/MVEpoch.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/MVEpoch.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasFrame;
@@ -205,6 +205,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

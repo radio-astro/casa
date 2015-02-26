@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Time.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
+//# $Id: Time.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/OS/Time.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/OS/HostInfo.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/OS/HostInfo.h>
 
 #if defined(AIPS_SOLARIS) || defined(_AIX) || defined(AIPS_IRIX)
 #include <sys/time.h>
@@ -48,7 +48,7 @@ extern time_t altzone;	// Not declared in all <time.h> files.
 #endif
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 inline double daysFrom1970()
 {
@@ -398,13 +398,8 @@ double Time::age() {
 }
 
 uInt Time::seconds() {
-  // return seconds after the minute [0,59]
-  double hour,min;
-
-  hour= mJulianDayfrac*24.0;
-  min= (hour-(int)hour)*60.0;
-
-  return (uInt)((min-(int)min)*60.0);
+  // return integral seconds after the minute [0,59]
+  return (uInt)(dseconds());
 }
 
 double Time::dseconds() {
@@ -630,5 +625,5 @@ String Time::timeZoneName () {
   return isDST () ? tzname[1] : tzname[0];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

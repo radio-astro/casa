@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerMemory.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: RegionHandlerMemory.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_REGIONHANDLERMEMORY_H
 #define IMAGES_REGIONHANDLERMEMORY_H
 
 
 //# Includes
-#include <images/Regions/RegionHandler.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/SimOrdMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/RegionHandler.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class for keeping regions in memory.
@@ -187,6 +188,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

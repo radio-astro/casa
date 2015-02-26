@@ -24,40 +24,40 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DirectionCoordinate.cc 20631 2009-06-12 05:58:14Z gervandiepen $
+//# $Id: DirectionCoordinate.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
 
-#include <coordinates/Coordinates/FITSCoordinateUtil.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/LinearXform.h>
-#include <measures/Measures/MCDirection.h>
-#include <coordinates/Coordinates/Coordinate.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayAccessor.h>
-#include <casa/Containers/Record.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MeasConvert.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/RotMatrix.h>
-#include <casa/Quanta/Euler.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/coordinates/Coordinates/FITSCoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearXform.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayAccessor.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
+#include <casacore/casa/Quanta/Euler.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/BasicSL/String.h>
 
 #include <wcslib/wcsfix.h>
 
-#include <casa/iomanip.h>  
-#include <casa/sstream.h>
+#include <casacore/casa/iomanip.h>  
+#include <casacore/casa/sstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 DirectionCoordinate::DirectionCoordinate()
@@ -359,15 +359,13 @@ Bool DirectionCoordinate::toMix(Vector<Double>& worldOut,
    static Vector<Double> in_tmp;
    static Vector<Double> out_tmp;
 //
-   const uInt nWorld = worldAxes.nelements();
    const uInt nPixel = pixelAxes.nelements();
-   if(nWorld == nWorld) {}	// (turn off compiler warning...).
-   DebugAssert(nWorld==nWorldAxes(), AipsError);
-   DebugAssert(nPixel==nPixelAxes(), AipsError);
-   DebugAssert(worldIn.nelements()==nWorld, AipsError);
-   DebugAssert(pixelIn.nelements()==nPixel, AipsError);
-   DebugAssert(worldMin.nelements()==nWorld, AipsError);
-   DebugAssert(worldMax.nelements()==nWorld, AipsError);
+   DebugAssert(worldAxes.nelements()==nWorldAxes(), AipsError);
+   DebugAssert(pixelAxes.nelements()==nPixelAxes(), AipsError);
+   DebugAssert(worldIn.nelements()==worldAxes.nelements(), AipsError);
+   DebugAssert(pixelIn.nelements()==pixelAxes.nelements(), AipsError);
+   DebugAssert(worldMin.nelements()==worldAxes.nelements(), AipsError);
+   DebugAssert(worldMax.nelements()==worldAxes.nelements(), AipsError);
 //
    for (uInt i=0; i<nPixel; i++) {
       if (pixelAxes(i) && worldAxes(i)) {
@@ -767,7 +765,7 @@ Bool DirectionCoordinate::isNCP() const {
 			Quantity dec(referenceValue()[1], worldAxisUnits()[1]);
 			return (
 				dec.getValue() != 0
-				&& casa::near(pars[1], 1/tan(dec.getValue("rad")))
+				&& casacore::near(pars[1], 1/tan(dec.getValue("rad")))
 			);
 		}
 	}
@@ -816,12 +814,12 @@ DirectionCoordinate DirectionCoordinate::convert(
 		myRefVal[0], myRefVal[1],
 		type_p
 	);
-    x = increment();
-    Vector<Quantity> inc(2);
-    inc[0] = Quantity(x[0], units[0]);
-    inc[1] = Quantity(x[1], units[1]);
+        x = increment();
+        Vector<Quantity> inc(2);
+        inc[0] = Quantity(x[0], units[0]);
+        inc[1] = Quantity(x[1], units[1]);
 
-    Vector<Double> myRefPix = myClone.referencePixel();
+        Vector<Double> myRefPix = myClone.referencePixel();
 
 	// get the angle for the linear transformation matrix. Need two world coordinate points.
 
@@ -854,7 +852,6 @@ DirectionCoordinate DirectionCoordinate::convert(
 	Vector<Quantity> newRefDirVec(2);
 	newRefDirVec[0] = Quantity(newRefDir.getValue(units[0])[0], units[0]);
 	newRefDirVec[1] = Quantity(newRefDir.getValue(units[1])[1], units[1]);
-	cout << "converted ref dir " << newRefDirVec << endl;
 	Quantum<Vector<Double> > newWorld2Dir = MDirection::Convert(
 		origWorldDir2, directionType
 	)().getAngle();
@@ -1289,12 +1286,12 @@ Bool DirectionCoordinate::near(const Coordinate& other,
 
 // {lon,lat}poles
 
-    if (!casa::near(Double(wcs_p.lonpole), Double(dCoord.wcs_p.lonpole))) {
+    if (!casacore::near(Double(wcs_p.lonpole), Double(dCoord.wcs_p.lonpole))) {
        oss << "The DirectionCoordinates have differing lonpoles";
        set_error(String(oss));
        return False;      
     }
-    if (!casa::near(Double(wcs_p.latpole), Double(dCoord.wcs_p.latpole))) {
+    if (!casacore::near(Double(wcs_p.latpole), Double(dCoord.wcs_p.latpole))) {
        oss << "The DirectionCoordinates have differing latpoles";
        set_error(String(oss));
        return False;      
@@ -1312,7 +1309,7 @@ Bool DirectionCoordinate::near(const Coordinate& other,
       }
       for (uInt i=0; i<thisVal.nelements(); i++) {
          if (!exclude[i]) {
-            if (!casa::near(thisVal[i],thatVal[i])) {
+            if (!casacore::near(thisVal[i],thatVal[i])) {
                oss << "The DirectionCoordinates have differing reference values for axis "
                    << i;
                set_error(String(oss));
@@ -1407,8 +1404,7 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     }
     String projname;
     subrec.get("projection", projname);
-    Vector<Double> projparms;
-    subrec.get("projection_parameters", projparms);
+    Vector<Double> projparms(subrec.toArrayDouble("projection_parameters"));
     Projection proj(Projection::type(projname), projparms);
 //
     if (!subrec.isDefined("crval")) {
@@ -1417,8 +1413,7 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     		<< "crval is not defined.";
     	throw AipsError(oss.str());
     }
-    Vector<Double> crval;
-    subrec.get("crval", crval);
+    Vector<Double> crval(subrec.toArrayDouble("crval"));
 //
     if (!subrec.isDefined("crpix")) {
     	ostringstream oss;
@@ -1426,8 +1421,7 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     		<< "crpix is not defined.";
     	throw AipsError(oss.str());
     }
-    Vector<Double> crpix;
-    subrec.get("crpix", crpix);
+    Vector<Double> crpix(subrec.toArrayDouble("crpix"));
 //
     if (!subrec.isDefined("cdelt")) {
     	ostringstream oss;
@@ -1435,8 +1429,7 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     		<< "cdelt is not defined.";
     	throw AipsError(oss.str());
     }
-    Vector<Double> cdelt;
-    subrec.get("cdelt", cdelt);
+    Vector<Double> cdelt(subrec.toArrayDouble("cdelt"));
 //
     if (!subrec.isDefined("pc")) {
     	ostringstream oss;
@@ -1444,8 +1437,7 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
     		<< "pc is not defined.";
     	throw AipsError(oss.str());
     }
-    Matrix<Double> pc;
-    subrec.get("pc", pc);
+    Matrix<Double> pc(subrec.toArrayDouble("pc"));
 //
     Double longPole, latPole;
     longPole = latPole = 999.0;            // Optional
@@ -1515,31 +1507,30 @@ DirectionCoordinate* DirectionCoordinate::restore(const RecordInterface &contain
 }
 
 
-void DirectionCoordinate::setProjection(const Projection p) {
-	Matrix<Double> xform;
-	pcToXform(xform, wcs_p);
-	projection_p = p;
-	makeWCS(
-		wcs_p, xform, projection_p, type_p, wcs_p.crpix[0], wcs_p.crpix[1],
-		wcs_p.crval[0], wcs_p.crval[1], wcs_p.cdelt[0], wcs_p.cdelt[1],
-		wcs_p.lonpole, wcs_p.latpole
-	);
+void DirectionCoordinate::setProjection(const Projection& p)
+{
+  Matrix<Double> xform;
+  pcToXform(xform, wcs_p);
+  projection_p = p;
+  makeWCS (wcs_p, xform, projection_p, type_p, wcs_p.crpix[0], wcs_p.crpix[1],
+           wcs_p.crval[0], wcs_p.crval[1], wcs_p.cdelt[0], wcs_p.cdelt[1],
+           wcs_p.lonpole, wcs_p.latpole);
 }
 
-void DirectionCoordinate::setReferenceFrame(const MDirection::Types rf) {
-	Matrix<Double> xform;
-	pcToXform(xform, wcs_p);
-	type_p = rf;
-	makeWCS(
-		wcs_p, xform, projection_p, type_p, wcs_p.crpix[0], wcs_p.crpix[1],
-		wcs_p.crval[0], wcs_p.crval[1], wcs_p.cdelt[0], wcs_p.cdelt[1],
-		wcs_p.lonpole, wcs_p.latpole
-	);
+void DirectionCoordinate::setReferenceFrame(const MDirection::Types rf)
+{
+  Matrix<Double> xform;
+  pcToXform(xform, wcs_p);
+  type_p = rf;
+  makeWCS (wcs_p, xform, projection_p, type_p, wcs_p.crpix[0], wcs_p.crpix[1],
+           wcs_p.crval[0], wcs_p.crval[1], wcs_p.cdelt[0], wcs_p.cdelt[1],
+           wcs_p.lonpole, wcs_p.latpole);
 }
 
-Bool DirectionCoordinate::hasSquarePixels() const {
+Bool DirectionCoordinate::hasSquarePixels() const
+{
 	Vector<Double> inc = increment();
-	return casa::near(fabs(inc[0]), fabs(inc[1]));
+	return casacore::near(fabs(inc[0]), fabs(inc[1]));
 }
 
 void DirectionCoordinate::toCurrent(Vector<Double>& value) const
@@ -2137,9 +2128,8 @@ void DirectionCoordinate::makeWCS(::wcsprm& wcs,  const Matrix<Double>& xform,
 // Construct FITS ctype vector   
      
     Vector<String> axisNames = DirectionCoordinate::axisNames(directionType, True);
-    Vector<String> ctype = FITSCoordinateUtil::cTypeFromDirection (
-    	proj, axisNames, False
-    );
+    Vector<String> ctype = FITSCoordinateUtil::cTypeFromDirection (proj, axisNames,
+                                                                   False);
     strncpy (wcs.ctype[0], ctype[0].chars(), 9);
     strncpy (wcs.ctype[1], ctype[1].chars(), 9);
 //
@@ -2256,5 +2246,5 @@ void DirectionCoordinate::copy(const DirectionCoordinate &other)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LoggerHolder.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LoggerHolder.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <tables/LogTables/LoggerHolder.h>
-#include <casa/Logging/MemoryLogSink.h>
-#include <tables/LogTables/TableLogSink.h>
-#include <casa/Logging/LogFilter.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/casa/Logging/MemoryLogSink.h>
+#include <casacore/tables/LogTables/TableLogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LoggerHolder::LoggerHolder (Bool nullSink)
 : itsRep (new LoggerHolderRep (nullSink))
@@ -353,5 +353,5 @@ LoggerHolderIterator& LoggerHolderIterator::operator=
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

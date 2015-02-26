@@ -23,17 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasConvert.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasConvert.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
+
+#ifndef MEASURES_MEASCONVERT_TCC
+#define MEASURES_MEASCONVERT_TCC
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <measures/Measures/MeasBase.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MCBase.h>
-#include <measures/Measures/MRBase.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/measures/Measures/MeasBase.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/measures/Measures/MCBase.h>
+#include <casacore/measures/Measures/MRBase.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template<class M>
@@ -474,5 +477,7 @@ void MeasConvert<M>::print(ostream &os) const {
   if (!outref.empty()) os << " Output reference" << outref;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

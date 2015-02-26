@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeCache.h 20403 2008-09-15 07:02:01Z gervandiepen $
+//# $Id: LatticeCache.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef LATTICES_LATTICECACHE_H
 #define LATTICES_LATTICECACHE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Vector.h>
 
 //# Forward Declarations
-#include <casa/iosfwd.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/iosfwd.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> class Block;
 template <class T> class Lattice;
@@ -157,9 +157,9 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/LatticeCache.tcc>
+#include <casacore/lattices/Lattices/LatticeCache.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

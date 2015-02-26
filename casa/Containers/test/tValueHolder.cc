@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tValueHolder.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: tValueHolder.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
 
-using namespace casa;
+using namespace casacore;
 
 void doBool (Bool v)
 {
@@ -102,7 +102,11 @@ template<typename T, typename U> void doPos(T v, U, DataType dt)
   AlwaysAssertExit (vhc.isNull());
   vhc = ValueHolder::fromRecord (rec, "a");
   AlwaysAssertExit (!vhc.isNull());
-  AlwaysAssertExit (vhc.dataType() == dt);
+  if (dt == TpUShort) {
+    AlwaysAssertExit (vhc.dataType() == TpInt);
+  } else {
+    AlwaysAssertExit (vhc.dataType() == dt);
+  }
   U vc;
   vhc.getValue (vc);
   AlwaysAssertExit (vc == U(v));
@@ -282,9 +286,9 @@ int main()
     doNeg(double(-4.7), double(0), TpDouble);
     doPos(uChar(13), uChar(0), TpUChar);
     doPos(Short(4), Short(0), TpShort);
-    doPos(uShort(14), Int(0), TpInt);
+    doPos(uShort(14), uShort(0), TpUShort);
     doPos(Int(17), Int(0), TpInt);
-    doPos(uInt(10), Int(0), TpInt);
+    doPos(uInt(10), uInt(0), TpUInt);
     doPos(Int64(40), Int64(0), TpInt64);
     doPos(float(4.1), Float(0), TpFloat);
     doPos(double(4.7), Double(0), TpDouble);

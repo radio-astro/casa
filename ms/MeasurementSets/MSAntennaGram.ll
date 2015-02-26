@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSAntennaGram.ll 20934 2010-08-17 09:16:24Z gervandiepen $
+    $Id: MSAntennaGram.ll 21451 2014-06-10 07:48:08Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -48,7 +48,7 @@ FLOAT     {INT}{EXP}|{INT}"."{DIGIT}*({EXP})?|{DIGIT}*"."{INT}({EXP})?
 QSTRING   \"[^\"\n]*\"
 ASTRING   \'[^\'\n]*\'
 STRING    ({QSTRING}|{ASTRING})+
-REGEX     "/"[^/\n]*"/"
+REGEX     "^"?"/"[^/\n]*"/"
 
 ALPHA     [a-zA-Z]
 UNIT      {ALPHA}+
@@ -80,6 +80,7 @@ PATTERN   {PATT1}|{PATT2}
              int lenstr = strlen(MSAntennaGramtext) - 2;
              lvalp->str = (char*)malloc(lenstr+1);
              strncpy(lvalp->str, MSAntennaGramtext+1, lenstr);
+             if (MSAntennaGramtext[0] == '^') lvalp->str[0] = '^';
              lvalp->str[lenstr] = '\0';
              return REGEX;
           }

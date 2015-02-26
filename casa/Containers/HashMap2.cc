@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HashMap2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
-#include <casa/Containers/HashMap.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+//# $Id: HashMap2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+#include <casacore/casa/Containers/HashMap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt hashFunc(const String &s) {
     const char *ptr = s.chars();
@@ -100,5 +100,5 @@ void throw_hashmapiter_init_error() {
   throw(AipsError("Bad initialization of HashMap iterator"));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

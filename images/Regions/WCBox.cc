@@ -23,36 +23,36 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCBox.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: WCBox.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCBox.h>
+#include <casacore/images/Regions/WCBox.h>
 
-#include <casa/Arrays/ArrayLogical.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Quanta/QLogical.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/Stokes.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/lattices/LRegions/LCBox.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/Stokes.h>
 
-#include <casa/iomanip.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCBox::WCBox()
 //
@@ -465,7 +465,7 @@ WCBox* WCBox::fromRecord (const TableRecord& rec,
 
 // Get the pixelAxes.  Pixel things must be converted to zero rel
 
-   Vector<Int> axes = Vector<Int>(rec.asArrayInt ("pixelAxes"));
+   Vector<Int> axes = Vector<Int>(rec.toArrayInt ("pixelAxes"));
    const uInt nAxes = axes.nelements();
    IPosition pixelAxes(nAxes);
    for (uInt i=0; i<nAxes; i++) {
@@ -475,7 +475,7 @@ WCBox* WCBox::fromRecord (const TableRecord& rec,
 
 // Get the absRel vector
 
-   Vector<Int> absRel = Vector<Int>(rec.asArrayInt ("absrel"));
+   Vector<Int> absRel = Vector<Int>(rec.toArrayInt ("absrel"));
    uInt nAbsRel = absRel.nelements();
 
 // Get the blc and trc quantity vectors
@@ -755,5 +755,5 @@ void WCBox::convertPixel(Double& pixel,
    }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

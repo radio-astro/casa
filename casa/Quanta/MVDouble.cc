@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDouble.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MVDouble.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Register.h>
-#include <casa/Quanta/MVDouble.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/Quanta/MVDouble.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // MVDouble class
 
@@ -126,11 +126,11 @@ void MVDouble::assure(const MeasValue &in) {
 }
 
 Bool MVDouble::near(const MVDouble &other, Double tol) const {
-  return ::casa::near(val, other.val, tol);
+  return ::casacore::near(val, other.val, tol);
 }
 
 Bool MVDouble::nearAbs(const MVDouble &other, Double tol) const {
-  return ::casa::nearAbs(val, other.val, tol);
+  return ::casacore::nearAbs(val, other.val, tol);
 }
 
 // Member functions
@@ -174,5 +174,5 @@ Bool MVDouble::putValue(const Vector<Quantum<Double> > &in) {
   return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

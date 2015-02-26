@@ -22,10 +22,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/StatisticsIncrementer.h>
+#ifndef SCIMATH_STATISTICSINCREMENTER_TCC
+#define SCIMATH_STATISTICSINCREMENTER_TCC
 
-namespace casa {
+#include <casacore/scimath/Mathematics/StatisticsIncrementer.h>
+
+namespace casacore {
 
 template <class InputIterator, class MaskIterator>
 void StatisticsIncrementer<InputIterator, MaskIterator>::increment(
@@ -136,3 +140,5 @@ void StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 
 }
 
+
+#endif

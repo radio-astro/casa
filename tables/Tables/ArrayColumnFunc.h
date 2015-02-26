@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumnFunc.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ArrayColumnFunc.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_ARRAYCOLUMNFUNC_H
 #define TABLES_ARRAYCOLUMNFUNC_H
 
 //# Includes
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/Array.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary> Abstract baseclass for slices functors </summary>
   // <synopsis>
@@ -55,14 +56,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class GetCellSlices : public BaseSlicesFunctor<T>
   {
   public:
-    GetCellSlices (const ROArrayColumn<T>& col, uInt rownr)
+    GetCellSlices (const ArrayColumn<T>& col, uInt rownr)
       : itsCol(col), itsRow(rownr)
     {}
     virtual void apply (const Slicer& slicer, Array<T>& arr)
       { itsCol.getSlice (itsRow, slicer, arr); }
   private:
-    const ROArrayColumn<T>& itsCol;
-    uInt                   itsRow;
+    const ArrayColumn<T>& itsCol;
+    uInt                  itsRow;
   };
 
   // <summary> Functor to get irregular array slices from a column</summary>
@@ -70,13 +71,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class GetColumnSlices : public BaseSlicesFunctor<T>
   {
   public:
-    GetColumnSlices (const ROArrayColumn<T>& col)
+    GetColumnSlices (const ArrayColumn<T>& col)
       : itsCol(col)
     {}
     virtual void apply (const Slicer& slicer, Array<T>& arr)
       { itsCol.getColumn (slicer, arr); }
   private:
-    const ROArrayColumn<T>& itsCol;
+    const ArrayColumn<T>& itsCol;
   };
 
   // <summary> Functor to put irregular array slices into a cell </summary>
@@ -108,6 +109,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ArrayColumn<T>& itsCol;
   };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPosIter.cc 20857 2010-02-03 13:06:09Z gervandiepen $
+//# $Id: ArrayPosIter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/ArrayPosIter.h>
-#include <casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/ArrayPosIter.h>
+#include <casacore/casa/Arrays/ArrayError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ArrayPositionIterator::ArrayPositionIterator(const IPosition &shape, 
 					     const IPosition &origin,
@@ -216,4 +216,4 @@ ArrayBase& ArrayPositionIterator::getArray()
   throw ArrayIteratorError ("ArrayPositionIterator::getArray cannot be used");
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

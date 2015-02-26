@@ -1,14 +1,9 @@
 #
 # CASA Images
 #
-if (APPLE)
-    BISON_TARGET (ImageExprGram Images/ImageExprGram.yy ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram COMPILE_FLAGS "-p ImageExprGram")
-    execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ImageExprGram ImageExprGram.ycc WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    FLEX_TARGET (ImageExprGram Images/ImageExprGram.ll ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.lcc COMPILE_FLAGS "-PImageExprGram")
-else (APPLE)
-    BISON_TARGET (ImageExprGram Images/ImageExprGram.yy ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.ycc COMPILE_FLAGS "-p ImageExprGram")
-    FLEX_TARGET (ImageExprGram Images/ImageExprGram.ll ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.lcc COMPILE_FLAGS "-PImageExprGram")
-endif (APPLE)
+
+BISON_TARGET (ImageExprGram Images/ImageExprGram.yy ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.ycc COMPILE_FLAGS "-p ImageExprGram")
+FLEX_TARGET (ImageExprGram Images/ImageExprGram.ll ${CMAKE_CURRENT_BINARY_DIR}/ImageExprGram.lcc COMPILE_FLAGS "-PImageExprGram")
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
@@ -34,32 +29,33 @@ Regions/WCBox.cc
 Regions/AipsIOReaderWriter.cc
 Regions/WCComplement.cc
 Regions/RegionHandlerHDF5.cc
-Images/ImageInfo.cc
-Images/ImageExprGram.cc
-Images/MaskSpecifier.cc
-Images/ImageBeamSet.cc
-Images/FITSImage.cc
 Images/FITSErrorImage.cc
-Images/FITSImgParser.cc
+Images/FITSImage.cc
 Images/FITSImgParser.cc
 Images/FITSQualityImage.cc
 Images/FITSQualityMask.cc
-Images/PagedImage2.cc
-Images/ImageExprParse.cc
-Images/ImageOpener.cc
-Images/LELImageCoord.cc
-Images/ImageUtilities.cc
-Images/ImageFITS2Converter.cc
-Images/MIRIADImage.cc
 Images/HDF5Image2.cc
+Images/ImageAttrGroup.cc
+Images/ImageAttrGroupCasa.cc
+Images/ImageAttrGroupHDF5.cc
+Images/ImageAttrHandler.cc
+Images/ImageAttrHandlerCasa.cc
+Images/ImageAttrHandlerHDF5.cc
+Images/ImageBeamSet.cc
+Images/ImageExprGram.cc
+Images/ImageExprParse.cc
+Images/ImageFITS2Converter.cc
+Images/ImageInfo.cc
+Images/ImageOpener.cc
 Images/ImageProxy.cc
+Images/ImageUtilities.cc
+Images/LELImageCoord.cc
+Images/MIRIADImage.cc
+Images/MaskSpecifier.cc
+Images/PagedImage2.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
 )
-
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_images PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 
 target_link_libraries (
 casa_images
@@ -73,8 +69,8 @@ add_subdirectory (apps)
 install (
 TARGETS casa_images
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
@@ -84,13 +80,19 @@ Images/CurvedImage2D.tcc
 Images/ExtendImage.h
 Images/ExtendImage.tcc
 Images/FITS2Image.tcc
-Images/FITSImage.h
 Images/FITSErrorImage.h
+Images/FITSImage.h
 Images/FITSImgParser.h
 Images/FITSQualityImage.h
 Images/FITSQualityMask.h
 Images/HDF5Image.h
 Images/HDF5Image.tcc
+Images/ImageAttrGroup.h
+Images/ImageAttrGroupCasa.h
+Images/ImageAttrGroupHDF5.h
+Images/ImageAttrHandler.h
+Images/ImageAttrHandlerCasa.h
+Images/ImageAttrHandlerHDF5.h
 Images/ImageBeamSet.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
@@ -124,6 +126,7 @@ Images/SubImage.h
 Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
+Images/WCBox.h
 DESTINATION include/casacore/images/Images
 )
 
@@ -149,6 +152,12 @@ Regions/WCPolygon.h
 Regions/WCRegion.h
 Regions/WCUnion.h
 DESTINATION include/casacore/images/Regions
+)
+
+# Temporary hack until all packages use scimath/GaussianBeam
+install (FILES
+Images/GaussianBeam.h
+DESTINATION include/casacore/components/ComponentModels
 )
 
 install (FILES

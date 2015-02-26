@@ -23,33 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableLockSync_2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTableLockSync_2.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/TiledCellStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Time.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/DataMan/TiledCellStMan.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 #include <unistd.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for the Table classes
 // </summary>
@@ -200,12 +200,12 @@ void c (const TableLock& lockMode, uInt wait, uInt lastWait, Bool show)
     Bool userLocking =  (lockMode.option() == TableLock::UserLocking);
     // Open the table for read.
     Table tab ("tTableLockSync_2_tmp.tab", lockMode);
-    ROScalarColumn<uInt> seq (tab, "seq");
-    ROScalarColumn<Int> col1 (tab, "col1");
-    ROScalarColumn<Int> col2 (tab, "col2");
-    ROArrayColumn<float> freq (tab, "Freq");
-    ROArrayColumn<float> pol (tab, "Pol");
-    ROArrayColumn<float> data (tab, "Data");
+    ScalarColumn<uInt> seq (tab, "seq");
+    ScalarColumn<Int> col1 (tab, "col1");
+    ScalarColumn<Int> col2 (tab, "col2");
+    ArrayColumn<float> freq (tab, "Freq");
+    ArrayColumn<float> pol (tab, "Pol");
+    ArrayColumn<float> data (tab, "Data");
     Block<uInt> count;
     Time* lastTime = 0;
 

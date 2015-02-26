@@ -23,31 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTimeGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSTimeGram; grammar for time command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSTimeGram.h>
-#include <ms/MeasurementSets/MSTimeParse.h> // routines used by bison actions
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <casa/Arrays/Matrix.h>
-#include <ms/MeasurementSets/MSSelectableMainColumn.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSTimeGram.h>
+#include <casacore/ms/MeasurementSets/MSTimeParse.h> // routines used by bison actions
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/ms/MeasurementSets/MSSelectableMainColumn.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSTimeGram.ycc"                  // flex output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSTimeGram.ycc"                  // bison output
 #define yy_scan_chars yy_scan_chars_MSTimeGram
-#include "MSTimeGram.lcc"                  // bison output
+#include "MSTimeGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSTimeGramwrap()
@@ -55,7 +56,7 @@ int MSTimeGramwrap()
   return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
   static const char*           strpMSTimeGram = 0;
@@ -265,4 +266,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     tf.fsec = fsec;
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

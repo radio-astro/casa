@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeIndexer.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: LatticeIndexer.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef LATTICES_LATTICEINDEXER_H
 #define LATTICES_LATTICEINDEXER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A helper class for stepping through Lattices.
@@ -264,6 +264,6 @@ inline size_t LatticeIndexer::nelements() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

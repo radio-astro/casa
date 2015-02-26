@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SCSL.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SCSL.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/SCSL.h>
-#include <casa/BasicSL/Complex.h>
-#include <scimath/Mathematics.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/scimath/Mathematics/SCSL.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/scimath/Mathematics.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #if ! defined(HAVE_SCSL)
 #define PN(a)
@@ -378,5 +378,5 @@ void SCSL::zdfft3d(Int PN(isign), Int PN(n1), Int PN(n2), Int PN(n3),
 #endif
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -24,17 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDAntennaHandler.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: SDAntennaHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_SDANTENNAHANDLER_H
 #define MS_SDANTENNAHANDLER_H
 
-#include <casa/Containers/RecordField.h>
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/MPosition.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/casa/Arrays/Array.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnsIndex;
@@ -168,7 +169,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

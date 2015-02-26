@@ -23,18 +23,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: FFTW.h 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: FFTW.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_FFTW_H
 #define SCIMATH_FFTW_H
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/VectorIter.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/VectorIter.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa {
+namespace casacore {
 
 //# Forward Declarations.
 class FFTWPlan;
@@ -99,6 +100,6 @@ private:
   static Mutex theirMutex;          // Initialization mutex
 };    
     
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

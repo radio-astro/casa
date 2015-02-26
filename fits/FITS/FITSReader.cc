@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSReader.cc $
+//# $Id: FITSReader.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <fits/FITS/FITSReader.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/fits/FITS/FITSReader.h>
 
-namespace casa {
+namespace casacore {
 
 // Display basic info and the keyword list
 void showHDU(HeaderDataUnit *h) {

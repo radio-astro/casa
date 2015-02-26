@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NumericTraits2.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: NumericTraits2.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_NUMERICTRAITS2_H
 #define SCIMATH_NUMERICTRAITS2_H
 
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> A specialisation for T=Float of the NumericTraits class </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -92,6 +93,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Error.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HDF5Error.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_HDF5ERROR_H
 #define CASA_HDF5ERROR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# This header file defines the error classes belonging to the table
 //# descriptor class and its associated classes.
@@ -63,6 +63,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

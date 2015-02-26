@@ -22,7 +22,7 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# $Id: WCLELMask.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCLELMask.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
 
@@ -30,13 +30,14 @@
 #define IMAGES_WCLELMASK_H
 
 //# Includes
-#include <images/Regions/WCRegion.h>
-#include <lattices/Lattices/RegionType.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/WCRegion.h>
+#include <casacore/lattices/LRegions/RegionType.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LCRegion;
@@ -185,6 +186,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

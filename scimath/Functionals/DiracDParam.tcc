@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DiracDParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: DiracDParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_DIRACDPARAM_TCC
+#define SCIMATH_DIRACDPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/DiracDParam.h>
+#include <casacore/scimath/Functionals/DiracDParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 DiracDParam<T>::DiracDParam() :
@@ -65,5 +68,7 @@ DiracDParam<T> &DiracDParam<T>::operator=(const DiracDParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

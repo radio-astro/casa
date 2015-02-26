@@ -23,21 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5LattIter.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5LattIter.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <lattices/Lattices/HDF5LattIter.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/DefaultValue.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#ifndef LATTICES_HDF5LATTITER_TCC
+#define LATTICES_HDF5LATTITER_TCC
+
+#include <casacore/lattices/Lattices/HDF5LattIter.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/DefaultValue.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 HDF5LattIter<T>::HDF5LattIter (const HDF5Lattice<T>& data,
@@ -90,5 +93,7 @@ void HDF5LattIter<T>::setupTileCache()
   itsData.setCacheSizeInTiles (cacheSize);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

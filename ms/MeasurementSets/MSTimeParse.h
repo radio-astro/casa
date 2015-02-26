@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTimeParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSTIMEPARSE_H
 #define MS_MSTIMEPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <ms/MeasurementSets/MSSelectableMainColumn.h>
-#include <measures/Measures/MEpoch.h>
-#include <ms/MeasurementSets/MSTimeDefinitions.h>
-#include <casa/Containers/Block.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectableMainColumn.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/ms/MeasurementSets/MSTimeDefinitions.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -99,13 +100,13 @@ public:
 	       MSSelectableMainColumn& msMainColInterface,
 	       const TableExprNode& otherTEN,
 	       const Bool honourRowFlags=True);
-  ~MSTimeParse() {columnAsTEN_p=TableExprNode();};
+  ~MSTimeParse() {columnAsTEN_p=TableExprNode();}
 
 //   ~MSTimeParse() 
 //   {
 //     if (node_p) delete node_p;node_p=0x0;
 //     if (otherTens_p) delete otherTens_p;otherTens_p=0x0;
-//   };
+//   }
 
   const TableExprNode *selectTime(const MEpoch& time,
 				  bool daytime = false);
@@ -116,8 +117,8 @@ public:
   const TableExprNode *selectTimeRange(const MEpoch& lowboundTime, 
 				       const MEpoch& upboundTime,
 				       bool daytime = false,
-				       Float edgeWidth=-1.0);
-  Matrix<Double> selectedTimes() {return timeList;};
+                                       Float edgeWidth=-1.0);
+  Matrix<Double> selectedTimes() {return timeList;}
   const TableExprNode *addCondition(TableExprNode& condition);
 
   /*
@@ -137,18 +138,18 @@ public:
   // Get table expression node object.
   static const TableExprNode* node();
 
-  Int year0() {return defaultYear;};
-  Int month0() {return defaultMonth;};
-  Int day0() {return defaultDay;};
-  Int hour0() {return defaultHour;};
-  Int minute0() {return defaultMinute;};
-  Int second0() {return defaultSeconds;};
-  Int fractionalsec0() {return defaultFractionalSec;};
-  Double defaultInteg() {return defaultExposure;};
+  Int year0() {return defaultYear;}
+  Int month0() {return defaultMonth;}
+  Int day0() {return defaultDay;}
+  Int hour0() {return defaultHour;}
+  Int minute0() {return defaultMinute;}
+  Int second0() {return defaultSeconds;}
+  Int fractionalsec0() {return defaultFractionalSec;}
+  Double defaultInteg() {return defaultExposure;}
 
   static void validate(const TimeFields& tf);
-  static void reset(){timeList.resize(2,0);};
-  static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
+  static void reset(){timeList.resize(2,0);}
+  static void cleanup() {if (node_p) delete node_p;node_p=0x0;}
 
   static TableExprNode* node_p;
   //private:
@@ -172,6 +173,6 @@ public:
   static MSSelectableMainColumn *mainColumn_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

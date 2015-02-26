@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tObjectPool.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tObjectPool.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/ObjectPool.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/ObjectPool.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
 
   Bool ok(True);
@@ -47,7 +47,8 @@ int main() {
     Vector<Double> *list3[10];
     Vector<Double> *list5[10];
     
-    for (uInt i=0; i<10000; i++) {
+    for (uInt i=0; i<1; i++) {
+      //for (uInt i=0; i<10000; i++) {
       for (uInt j=0; j<10; j++) {
 	list3[j] = pool.get(3);
 	list5[j] = pool.get(5);
@@ -68,12 +69,14 @@ int main() {
     
     if (pool.nelements() != 2) {
       cout << pool.nelements() << " elements in pool" << endl;
-      ok =False;
+      ok = False;
     }
-    if (pool.get(5)->nelements() != 5) {
+    list5[0] = pool.get(5);
+    if (list5[0]->nelements() != 5) {
       cout << "Incorrectly added elements" << endl;
       ok = False;
     }
+    pool.release(list5[0], 5);
     PoolStack<Vector<Double>, uInt> &mstack = pool.getStack(5);
     if (mstack.key() != 5) {
       cout << "Illegal key found" << endl;
@@ -82,7 +85,7 @@ int main() {
     pool.clear();
     if (pool.nelements() != 1) {
       cout << pool.nelements() << " elements in pool after clearing" << endl;
-      ok =False;
+      ok = False;
     }
 
   } catch (AipsError x) {

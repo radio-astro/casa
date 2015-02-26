@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColData.h 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: ScaColData.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_SCACOLDATA_H
 #define TABLES_SCACOLDATA_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/PlainColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/PlainColumn.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnSet;
@@ -215,9 +215,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <tables/Tables/ScaColData.tcc>
+#include <casacore/tables/Tables/ScaColData.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

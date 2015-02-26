@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSimOrdMap.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tSimOrdMap.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/Containers/SimOrdMapIO.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/Containers/SimOrdMapIO.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //# Forward Declarations
 
 void doit();

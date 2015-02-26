@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasRef.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: MeasRef.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASREF_H
 #define MEASURES_MEASREF_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MRBase.h>
-#include <measures/Measures/MeasFrame.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MRBase.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -206,9 +206,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <measures/Measures/MeasRef.tcc>
+#include <casacore/measures/Measures/MeasRef.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

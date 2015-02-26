@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableIter.cc 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: TableIter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableIter.h>
-#include <tables/Tables/BaseTabIter.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/TableIter.h>
+#include <casacore/tables/Tables/BaseTabIter.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableIterator::TableIterator()
 : tabIterPtr_p (0)
@@ -46,7 +46,7 @@ TableIterator::TableIterator (const Table& tab,
 {
     Block<String> keys(1, key);
     Block<Int> ord(1, order);
-    Block<CountedPtr<BaseCompare> > cmpObj(1, 0);
+    Block<CountedPtr<BaseCompare> > cmpObj(1);
     tabIterPtr_p = tab.baseTablePtr()->makeIterator (keys, cmpObj,
 						     ord, option);
     next();                            // get first subtable
@@ -59,7 +59,7 @@ TableIterator::TableIterator (const Table& tab,
 : tabIterPtr_p (0)
 {
     Block<Int> ord(keys.nelements(), order);
-    Block<CountedPtr<BaseCompare> > cmpObj(keys.nelements(), 0);
+    Block<CountedPtr<BaseCompare> > cmpObj(keys.nelements());
     tabIterPtr_p = tab.baseTablePtr()->makeIterator (keys, cmpObj,
 						     ord, option);
     next();                            // get first subtable
@@ -71,7 +71,7 @@ TableIterator::TableIterator (const Table& tab,
 			      Option option)
 : tabIterPtr_p (0)
 {
-    Block<CountedPtr<BaseCompare> > cmpObj(keys.nelements(), 0);
+    Block<CountedPtr<BaseCompare> > cmpObj(keys.nelements());
     tabIterPtr_p = tab.baseTablePtr()->makeIterator (keys, cmpObj,
 						     orders, option);
     next();                            // get first subtable
@@ -127,5 +127,5 @@ void TableIterator::next()
     subTable_p = Table(tabIterPtr_p->next());
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSReader.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMSReader.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
 //# Includes
 
-#include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSReader.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/iostream.h>
-#include <casa/OS/Timer.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSReader.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/OS/Timer.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main(int argc, const char* argv[]) 
 {
     try {

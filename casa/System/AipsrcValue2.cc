@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcValue2.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: AipsrcValue2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/System/AipsrcValue.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <> 
 Bool AipsrcValue<String>::find(String &value,
@@ -44,5 +44,5 @@ Bool AipsrcValue<String>::find(String &value,
   return x;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

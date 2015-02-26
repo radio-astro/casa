@@ -22,15 +22,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/HingesFencesStatistics.h>
+#ifndef SCIMATH_HINGESFENCESSTATISTICS_TCC
+#define SCIMATH_HINGESFENCESSTATISTICS_TCC
 
-#include <scimath/Mathematics/StatisticsIncrementer.h>
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/HingesFencesStatistics.h>
+
+#include <casacore/scimath/Mathematics/StatisticsIncrementer.h>
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
 #include <iomanip>
 
-namespace casa {
+namespace casacore {
 
 // min > max indicates that these quantities have not be calculated
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1230,3 +1234,5 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_weightedSt
 }
 
 }
+
+#endif

@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Projection.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: Projection.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef COORDINATES_PROJECTION_H
 #define COORDINATES_PROJECTION_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 // <summary>
@@ -218,7 +218,7 @@ private:
 inline Projection::Type Projection::type() const {return which_p;}
 inline const Vector<Double> & Projection::parameters() const {return parameters_p;}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDFITSTable.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SDFITSTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef FITS_SDFITSTABLE_H
 #define FITS_SDFITSTABLE_H
 
 
-#include <casa/aips.h>
-#include <fits/FITS/FITSTable.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/fits/FITS/FITSTable.h>
+#include <casacore/casa/Containers/Block.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // SDFITSTable is a FITSTable which follows the Single Dish FITS Convention.
@@ -133,7 +133,7 @@ private:
     SDFITSTable &operator=(const SDFITSTable &);
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

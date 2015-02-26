@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: TableCopy.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_TABLECOPY_H
 #define TABLES_TABLECOPY_H
 
 
 //# Includes
-#include <tables/Tables/DataManInfo.h>
-#include <tables/Tables/Table.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/DataMan/DataManInfo.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Record.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class with static functions for copying a table.
@@ -182,6 +183,6 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

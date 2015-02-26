@@ -23,30 +23,30 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dImageSummary.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dImageSummary.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 //
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Inputs/Input.h>
-#include <casa/Logging.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/BasicSL/String.h>
-#include <images/Images/ImageUtilities.h>
-#include <images/Images/ImageOpener.h>
-#include <images/Images/ImageSummary.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/FITSImage.h>
-#include <images/Images/MIRIADImage.h>
-#include <measures/Measures/MDoppler.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Logging.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/images/Images/ImageUtilities.h>
+#include <casacore/images/Images/ImageOpener.h>
+#include <casacore/images/Images/ImageSummary.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/FITSImage.h>
+#include <casacore/images/Images/MIRIADImage.h>
+#include <casacore/measures/Measures/MDoppler.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main (int argc, const char* argv[])
 {
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20329 $");
+   inputs.version ("$Revision: 21512 $");
 
    String name = "test_image.im";
    inputs.create("in", name, "Input image name?");

@@ -24,14 +24,14 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSSpwGram.yy 20749 2009-09-30 14:24:05Z gervandiepen $
+    $Id: MSSpwGram.yy 21521 2014-12-10 08:06:42Z gervandiepen $
 */
 
 %{
-  using namespace casa;
+  using namespace casacore;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
   const TableExprNode* node;

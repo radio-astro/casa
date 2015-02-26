@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Mutex.h 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Mutex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MUTEX_H
 #define CASA_MUTEX_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 //# Mostly copied from the LOFAR software.
 
-namespace casa {
+namespace casacore {
 
   // <summary>Wrapper around a pthreads mutex</summary>
   // <use visibility=export>
@@ -192,6 +192,6 @@ namespace casa {
   };
 
 
-} // namespace casa
+} // namespace casacore
 
 #endif

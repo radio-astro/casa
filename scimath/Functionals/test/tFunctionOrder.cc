@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFunctionOrder.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tFunctionOrder.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <scimath/Functionals/FunctionOrder.h>
+#include <casacore/scimath/Functionals/FunctionOrder.h>
 
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
   cout << "---------------- test FunctionOrder ---------------" << endl;
   {

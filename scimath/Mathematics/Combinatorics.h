@@ -24,19 +24,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Combinatorics.h 21116 2011-07-21 11:23:15Z gervandiepen $
+//# $Id: Combinatorics.h 21541 2015-01-15 09:57:38Z gervandiepen $
 
 #ifndef SCIMATH_COMBINATORICS_H
 #define SCIMATH_COMBINATORICS_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/namespace.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Combinatorics related functions.
@@ -88,7 +87,7 @@ class Combinatorics {
   static volatile uInt _factorialCacheSize; //# volatile for double checked lock
   static Mutex theirMutex;
 };
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

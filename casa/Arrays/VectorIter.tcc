@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VectorIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: VectorIter.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#ifndef CASA_ARRAY_VECTORITER_TCC
-#define CASA_ARRAY_VECTORITER_TCC
+#ifndef CASA_VECTORITER_TCC
+#define CASA_VECTORITER_TCC
 
-#include<casa/Arrays/VectorIter.h>
+#include<casacore/casa/Arrays/VectorIter.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> VectorIterator<T>::VectorIterator(Array<T> &a, uInt axis)
   : ArrayIterator<T>(a, IPosition(1,axis), True)
@@ -41,6 +41,6 @@ template<class T> VectorIterator<T>::VectorIterator(Array<T> &a, uInt axis)
     this->ap_p = vp;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

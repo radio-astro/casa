@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTileLayout.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSTileLayout.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSTILELAYOUT_H
 #define MS_MSTILELAYOUT_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward decl
 class IPosition;
@@ -126,6 +126,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

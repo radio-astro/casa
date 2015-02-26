@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: MarshallableChebyshev.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MarshallableChebyshev.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_MARSHALLABLECHEBYSHEV_H
 #define SCIMATH_MARSHALLABLECHEBYSHEV_H
 
-#include <casa/aips.h>
-#include <scimath/Functionals/Chebyshev.h>
-#include <scimath/Functionals/FunctionMarshallable.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Chebyshev.h>
+#include <casacore/scimath/Functionals/FunctionMarshallable.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class is a specialization of the Chebyshev class that supports 
 // serialization.  That is, it allows one to write the state of the Chebyshev 
 // polynomial object into a Record.  This record can then be transmitted 
-// to another execution context (e.g.  or another AIPS++ DO) where it 
+// to another execution context where it 
 // can be "reconstituted" as a new object with identical state as this one.  
 // This documentation focusses on this serialization functionality (also known 
 // as "marshalling"); for details about the general features of the Chebyshev 
@@ -199,9 +199,9 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/MarshallableChebyshev.tcc>
+#include <casacore/scimath/Functionals/MarshallableChebyshev.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

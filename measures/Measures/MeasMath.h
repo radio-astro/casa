@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasMath.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MeasMath.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASMATH_H
 #define MEASURES_MEASMATH_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Euler.h>
-#include <casa/Quanta/RotMatrix.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Quanta/MVDirection.h>
-#include <measures/Measures/MeasFrame.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Euler.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/measures/Measures/MeasFrame.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Measure;
@@ -274,7 +274,6 @@ private:
   // </group>
   // Workspace
   // <group>
-  Euler EULER1;
   RotMatrix ROTMAT1;
   MVPosition MVPOS1, MVPOS2, MVPOS3, MVPOS4;
   Double g1, g2, g3, lengthE;
@@ -316,6 +315,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

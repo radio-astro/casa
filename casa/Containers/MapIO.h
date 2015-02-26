@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MapIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MapIO.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_MAPIO_H
 #define CASA_MAPIO_H
 
-#include <casa/Containers/Map.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Map.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class AipsIO;
 
@@ -60,9 +61,9 @@ template<class key, class value> ostream &operator<<(ostream &, const ConstMapIt
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/MapIO.tcc>
+#include <casacore/casa/Containers/MapIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

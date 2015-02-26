@@ -23,83 +23,83 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsInput.cc 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: MSFitsInput.cc 21532 2014-12-24 12:52:41Z gervandiepen $
 //
 
-#include <msfits/MSFits/MSFitsInput.h>
+#include <casacore/msfits/MSFits/MSFitsInput.h>
 
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/FITSReader.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <ms/MeasurementSets/MSFeedColumns.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSHistoryColumns.h>
-#include <ms/MeasurementSets/MSObsColumns.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MeasData.h>
-#include <measures/Measures/Stokes.h>
-#include <measures/Measures/MeasTable.h>
-#include <casa/OS/File.h>
-#include <casa/OS/HostInfo.h>
-#include <casa/Quanta/MVTime.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableInfo.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
-#include <tables/Tables/ExprNode.h>
-#include <casa/Utilities/Fallible.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/FITSReader.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/ms/MeasurementSets/MSFeedColumns.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSHistoryColumns.h>
+#include <casacore/ms/MeasurementSets/MSObsColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MeasData.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/HostInfo.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/DataMan/StandardStMan.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableInfo.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/tables/DataMan/TiledShapeStMan.h>
+#include <casacore/tables/DataMan/TiledDataStMan.h>
+#include <casacore/tables/DataMan/TiledStManAccessor.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/casa/Utilities/Fallible.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <fits/FITS/FITSDateUtil.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <fits/FITS/FITSSpectralUtil.h>
-#include <fits/FITS/BinTable.h>
-#include <fits/FITS/fits.h>
-#include <tables/LogTables/NewFile.h>
-#include <casa/System/ProgressMeter.h>
-#include <ms/MeasurementSets/MSTileLayout.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
-#include <ms/MeasurementSets/MSSummary.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
-#include <casa/OS/Directory.h>
+#include <casacore/fits/FITS/FITSDateUtil.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/fits/FITS/FITSSpectralUtil.h>
+#include <casacore/fits/FITS/BinTable.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/tables/LogTables/NewFile.h>
+#include <casacore/casa/System/ProgressMeter.h>
+#include <casacore/ms/MeasurementSets/MSTileLayout.h>
+#include <casacore/ms/MeasurementSets/MSSourceIndex.h>
+#include <casacore/ms/MeasurementSets/MSSummary.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/OS/Directory.h>
 
 using std::make_pair;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 extern void showBinaryTable(BinaryTableExtension &x);
 
@@ -725,7 +725,7 @@ void MSFitsInput::getPrimaryGroupAxisInfo() {
         // note: 1-based ref pix
         corrType_p(i) = ifloor(refVal_p(iPol) + (i + 1 - refPix_p(iPol))
                 * delta_p(iPol) + 0.5);
-        // convert AIPS-convention Stokes description to aips++ enum
+        // convert AIPS-convention Stokes description to Casacore enum
         switch (corrType_p(i)) {
         case -8:
             corrType_p(i) = Stokes::YX;
@@ -2521,7 +2521,7 @@ void MSFitsInput::fillExtraTables() {
                 Int spwId = msc_p->dataDescription().spectralWindowId()(lastDDId);
                 // now check if we've seen this field for this spectral window
                 // Use indexed access to the SOURCE sub-table
-		pair<Int, Int> myfldspw = make_pair<Int, Int>(lastFieldId, spwId);
+		pair<Int, Int> myfldspw = make_pair(lastFieldId, spwId);
 		if(!sourceFieldIndex.isDefined(myfldspw)){
 
 		    sourceFieldIndex.define(myfldspw, 1); 
@@ -2752,7 +2752,7 @@ void MSFitsInput::sortPolarizations() {
         // note: 1-based ref pix
         corrType_p(i) = ifloor(refVal_p(iPol) + (i + 1 - refPix_p(iPol))
                 * delta_p(iPol) + 0.5);
-        // convert AIPS-convention Stokes description to aips++ enum
+        // convert AIPS-convention Stokes description to Casacore enum
         switch (corrType_p(i)) {
         case -8:
             corrType_p(i) = Stokes::YX;
@@ -3537,7 +3537,6 @@ void MSFitsInput::fillSourceTable() {
         Int nrow = ms_p.nrow();
         Int lastFieldId = -1;
         Int lastDDId = -1;
-        Double lastTime = 0;
         Vector<Int> fieldId = msc_p->fieldId().getColumn();
         Vector<Int> ddId = msc_p->dataDescId().getColumn();
 
@@ -3547,8 +3546,6 @@ void MSFitsInput::fillSourceTable() {
         for (Int i = 0; i < nrow; i++) {
             if (fieldId(i) != lastFieldId || (ddId(i) != lastDDId)) {
                 lastFieldId = fieldId(i);
-                if (i > 0)
-                    lastTime = msc_p->time()(i - 1);
                 Array<Double> pointingDir = msc_p->field().phaseDir()(
                         lastFieldId);
                 String name = msc_p->field().name()(lastFieldId);
@@ -3791,5 +3788,5 @@ void MSFitsInput::fillFieldTable(double ra, double dec, String source) {
 
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

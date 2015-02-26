@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTServer.cc 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: FFTServer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/FFTServer.hcc>
+#include <casacore/scimath/Mathematics/FFTServer.hcc>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Instantiate the templates.
   template class FFTServer<Float, Complex>;
   template class FFTServer<Double, DComplex>;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

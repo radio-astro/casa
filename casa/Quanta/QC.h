@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QC.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QC.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_QC_H
 #define CASA_QC_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/UnitMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/UnitMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <example>
 // To obtain the velocity of light in pc/a, use:
 // <srcblock>
-// #include <casa/Quanta.h>
+// #include <casacore/casa/Quanta.h>
 // Double vel_pcpy = (C::c).convert("pc/a").getValue();
 // </srcblock>
 // </example>
@@ -292,6 +292,6 @@ static QC_init qc_init;
 //# Inline Implementations
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

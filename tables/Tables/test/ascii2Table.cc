@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ascii2Table.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ascii2Table.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
 //# Includes
 
-#include <tables/Tables/ReadAsciiTable.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/ReadAsciiTable.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // program to load an ASCII file into a table
 // </summary>
@@ -90,7 +90,7 @@ void calc(Table& tab, const String& name)
 	cout << "Column " << name << " does not exist" << endl;
 	return;
     }
-    ROTableColumn tabcol (tab, name);
+    TableColumn tabcol (tab, name);
     const ColumnDesc& cd = tabcol.columnDesc();
     if (cd.dataType() == TpBool    || cd.dataType() == TpString
     ||  cd.dataType() == TpComplex || cd.dataType() == TpDComplex

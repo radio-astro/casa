@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: math.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: math.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_STD_MATH_H
 #define CASA_STD_MATH_H
@@ -33,17 +33,17 @@
 //# them (e.g. <cstring>)
 
 //# Make sure any special macros are set
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 #if defined(__APPLE__) || defined(AIPS_DARWIN)
 #include <math.h>
 #include <ostream>
 #include <cmath>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
     using std::isnan;
     using std::isinf;
     using std::isfinite;
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 #endif
 
 #if defined(AIPS_SGI) || defined(AIPS_SUN_NATIVE) 
@@ -51,16 +51,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #else
 # include <cmath>
 # if !defined(AIPS_INTELCC)
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
     using std::abs;
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 # endif
 # if !(defined(AIPS_KAICC) || defined(AIPS_GCC3) || defined(AIPS_GCC4) || defined(AIPS_INTELCC) || defined(AIPS_DARWIN) || defined(AIPS_CRAY_PGI))
 #  define NEEDS_POWFLOATFLOAT
 # endif
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 using std::abs;
 using std::fabs;
@@ -98,6 +98,6 @@ using ::erfc;
 #endif
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

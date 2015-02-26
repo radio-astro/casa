@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrIO.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrIO.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#ifndef CASA_ARRAY_MASKARRIO_TCC
-#define CASA_ARRAY_MASKARRIO_TCC
+#ifndef CASA_MASKARRIO_TCC
+#define CASA_MASKARRIO_TCC
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/aips.h>
-#include <casa/Arrays/MaskArrIO.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/MaskArrIO.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ostream & operator<< (ostream &s, const MaskedArray<T> &a)
@@ -52,6 +52,7 @@ ostream & operator<< (ostream &s, const MaskedArray<T> &a)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
 
 #endif

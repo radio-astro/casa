@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeIterator.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: LatticeIterator.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef LATTICES_LATTICEITERATOR_H
 #define LATTICES_LATTICEITERATOR_H
 
 //# Includes
-#include <casa/aips.h>
-#include <lattices/Lattices/Lattice.h>
-#include <lattices/Lattices/LatticeIterInterface.h>
-#include <casa/Utilities/CountedPtr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/Lattice.h>
+#include <casacore/lattices/Lattices/LatticeIterInterface.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class IPosition;
@@ -519,11 +519,11 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 //# See comments in Lattice.h why Lattice.tcc is included here.
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/Lattice.tcc>
-#include <lattices/Lattices/LatticeIterator.tcc>
+#include <casacore/lattices/Lattices/Lattice.tcc>
+#include <casacore/lattices/Lattices/LatticeIterator.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

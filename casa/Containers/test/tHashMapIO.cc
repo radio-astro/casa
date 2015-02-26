@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHashMapIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tHashMapIO.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Containers/HashMapIO.h>
-#include <casa/BasicSL/String.h>
-#include <casa/fstream.h>
-#include <casa/iostream.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/Containers/HashMapIO.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/stdlib.h>
 
 //#if defined(AIPS_STUPID_SUN)
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //#undef AIPS_STUPID_SUN
 //#endif
 

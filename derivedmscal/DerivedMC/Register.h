@@ -23,10 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Register.h 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: Register.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_REGISTER_H
 #define DERIVEDMSCAL_REGISTER_H
+
+#include <casacore/casa/aips.h>
 
 // <group name=DerivedMSCal>
 // This function registers the DerivedMSCal virtual column engine and

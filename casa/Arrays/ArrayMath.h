@@ -23,25 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.h 21293 2012-11-30 15:58:59Z gervandiepen $
+//# $Id: ArrayMath.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYMATH_H
 #define CASA_ARRAYMATH_H
 
-#include <casa/aips.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicMath/Functors.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicMath/Functors.h>
+#include <casacore/casa/Arrays/Array.h>
 //# Needed to get the proper Complex typedef's
-#include <casa/BasicSL/Complex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <numeric>
 #include <functional>
 
-#include <vector>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Matrix;
 
@@ -195,17 +193,6 @@ inline void checkArrayShapes (const ArrayBase& left, const ArrayBase& right,
 }
 // </group>
 
-void throwStdVectorSizes (const char* name);
-
-template<typename T>
-inline void checkStdVectorSizes(
-	const vector<T>& left, const vector<T>& right,
-    const char* name
-) {
-  if (left.size() != right.size()) {
-    throwStdVectorSizes (name);
-  }
-}
 
 // Functions to apply a binary or unary operator to arrays.
 // They are modeled after std::transform.
@@ -238,13 +225,13 @@ inline void arrayContTransform (const Array<L>& left, R right,
   if (left.contiguousStorage()) {
     myrtransform (left.cbegin(), left.cend(),
                  result.cbegin(), right, op);
-    ///    std::transform (left.cbegin(), left.cend(),
-    ///                    result.cbegin(), bind2nd(op, right));
+    ////    std::transform (left.cbegin(), left.cend(),
+    ////                    result.cbegin(), bind2nd(op, right));
   } else {
     myrtransform (left.begin(), left.end(),
                  result.cbegin(), right, op);
-    ///    std::transform (left.begin(), left.end(),
-    ///                    result.cbegin(), bind2nd(op, right));
+    ////    std::transform (left.begin(), left.end(),
+    ////                    result.cbegin(), bind2nd(op, right));
   }
 }
 
@@ -258,13 +245,13 @@ inline void arrayContTransform (L left, const Array<R>& right,
   if (right.contiguousStorage()) {
     myltransform (right.cbegin(), right.cend(),
                   result.cbegin(), left, op);
-    ///    std::transform (right.cbegin(), right.cend(),
-    ///                    result.cbegin(), bind1st(op, left));
+    ////    std::transform (right.cbegin(), right.cend(),
+    ////                    result.cbegin(), bind1st(op, left));
   } else {
     myltransform (right.begin(), right.end(),
                   result.cbegin(), left, op);
-    ///    std::transform (right.begin(), right.end(),
-    ///                    result.cbegin(), bind1st(op, left));
+    ////    std::transform (right.begin(), right.end(),
+    ////                    result.cbegin(), bind1st(op, left));
   }
 }
 
@@ -347,10 +334,10 @@ inline void arrayTransformInPlace (Array<L>& left, R right, BinaryOperator op)
 {
   if (left.contiguousStorage()) {
     myiptransform (left.cbegin(), left.cend(), right, op);
-    ///    transformInPlace (left.cbegin(), left.cend(), bind2nd(op, right));
+    ////    transformInPlace (left.cbegin(), left.cend(), bind2nd(op, right));
   } else {
     myiptransform (left.begin(), left.end(), right, op);
-    ///    transformInPlace (left.begin(), left.end(), bind2nd(op, right));
+    ////    transformInPlace (left.begin(), left.end(), bind2nd(op, right));
   }
 }
 
@@ -425,9 +412,6 @@ template<class T>
   Array<T> operator^ (const Array<T> &left, const Array<T> &right);
 // </group>
 
-template<class T>
-  vector<T> operator+ (const vector<T> &left, const vector<T> &right);
-
 // 
 // Element by element arithmetic between an array and a scalar, returning
 // an array.
@@ -449,11 +433,6 @@ template<class T>
 template<class T> 
     Array<T> operator^ (const Array<T> &left, const T &right);
 // </group>
-
-
-template<class T>
-vector<T> operator/ (const vector<T> &left, const T &right);
-
 
 // 
 // Element by element arithmetic between a scalar and an array, returning
@@ -605,14 +584,24 @@ template<class T> void indgen(Array<T> &a, T start, T inc);
 // Fills all elements of "array" with a sequence starting with 0
 // and ending with nelements() - 1. The first axis varies
 // most rapidly.
-template<class T>  void indgen(Array<T> &a);
+template<class T> inline void indgen(Array<T> &a)
+  { indgen(a, T(0), T(1)); }
 // 
 // Fills all elements of "array" with a sequence starting with start
 // incremented by one for each position in the array. The first axis varies
 // most rapidly.
-template<class T>  void indgen(Array<T> &a, T start);
+template<class T> inline void indgen(Array<T> &a, T start)
+  { indgen(a, start, T(1)); }
 
-template<class T> Vector<T> indgen(uInt length);
+// Create a Vector of the given length and fill it with the start value
+// incremented with <code>inc</code> for each element.
+template<class T> inline Vector<T> indgen(uInt length, T start, T inc)
+{
+  Vector<T> x(length);
+  indgen(x, start, inc);
+  return x;
+}
+
 
 // Sum of every element of the array.
 template<class T> T sum(const Array<T> &a);
@@ -677,18 +666,33 @@ template<class T> T rms(const Array<T> &a);
 // <note>The function kthLargest in class GenSortIndirect can be used to
 // obtain the index of the median in an array. </note>
 // <group>
-template<class T> inline T median(const Array<T> &a)
-    { return median (a, False, (a.nelements() <= 100), False); }
+template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
+			   Bool takeEvenMean, Bool inPlace=False);
+template<class T> T median(const Array<T> &a, Bool sorted, Bool takeEvenMean,
+			   Bool inPlace=False)
+    { Block<T> tmp; return median (a, tmp, sorted, takeEvenMean, inPlace); }
 template<class T> inline T median(const Array<T> &a, Bool sorted)
     { return median (a, sorted, (a.nelements() <= 100), False); }
-template<class T> inline T medianInPlace(const Array<T> &a,
-					 Bool sorted = False)
+template<class T> inline T median(const Array<T> &a)
+    { return median (a, False, (a.nelements() <= 100), False); }
+template<class T> inline T medianInPlace(const Array<T> &a, Bool sorted=False)
     { return median (a, sorted, (a.nelements() <= 100), True); }
-template<class T> T median(const Array<T> &a, Bool sorted, Bool takeEvenMean,
-			   Bool inPlace = False)
-    { Block<T> tmp; return median (a, tmp, sorted, takeEvenMean, inPlace); }
-template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
-			   Bool takeEvenMean, Bool inPlace = False);
+// </group>
+
+// The median absolute deviation from the median. Interface is as for
+// the median functions
+// <group>
+template<class T> T madfm(const Array<T> &a, Block<T> &tmp, Bool sorted, 
+                         Bool takeEvenMean, Bool inPlace = False);
+template<class T> T madfm(const Array<T> &a, Bool sorted, Bool takeEvenMean,
+                          Bool inPlace=False)
+    { Block<T> tmp; return madfm(a, tmp, sorted, takeEvenMean, inPlace); }
+template<class T> inline T madfm(const Array<T> &a, Bool sorted)
+    { return madfm(a, sorted, (a.nelements() <= 100), False); }
+template<class T> inline T madfm(const Array<T> &a)
+    { return madfm(a, False, (a.nelements() <= 100), False); }
+template<class T> inline T madfmInPlace(const Array<T> &a, Bool sorted=False)
+    { return madfm(a, sorted, (a.nelements() <= 100), True); }
 // </group>
 
 // Return the fractile of an array.
@@ -698,11 +702,49 @@ template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
 // It uses kthLargest if the array is not sorted yet.
 // <note>The function kthLargest in class GenSortIndirect can be used to
 // obtain the index of the fractile in an array. </note>
-template<class T> T fractile(const Array<T> &a, Float fraction,
-			     Bool sorted = False, Bool inPlace = False)
-  { Block<T> tmp; return fractile (a, tmp, fraction, sorted, inPlace); }
 template<class T> T fractile(const Array<T> &a, Block<T> &tmp, Float fraction,
-			     Bool sorted = False, Bool inPlace = False);
+			     Bool sorted=False, Bool inPlace=False);
+template<class T> T fractile(const Array<T> &a, Float fraction,
+			     Bool sorted=False, Bool inPlace=False)
+  { Block<T> tmp; return fractile (a, tmp, fraction, sorted, inPlace); }
+
+// Return the inter-fractile range of an array.  
+// This is the full range between the bottom and the top fraction.
+// <group>
+template<class T> T interFractileRange(const Array<T> &a, Block<T> &tmp,
+                                       Float fraction,
+                                       Bool sorted=False, Bool inPlace=False);
+template<class T> T interFractileRange(const Array<T> &a, Float fraction,
+                                       Bool sorted=False, Bool inPlace=False)
+  { Block<T> tmp; return interFractileRange(a, tmp, fraction, sorted, inPlace); }
+// </group>
+
+// Return the inter-hexile range of an array.  
+// This is the full range between the bottom sixth and the top sixth
+// of ordered array values. "The semi-interhexile range is very nearly
+// equal to the rms for a Gaussian distribution, but it is much less
+// sensitive to the tails of extended distributions." (Condon et al
+// 1998)
+// <group>
+template<class T> T interHexileRange(const Array<T> &a, Block<T> &tmp,
+                                     Bool sorted=False, Bool inPlace=False)
+  { return interFractileRange(a, tmp, 1./6., sorted, inPlace); }
+template<class T> T interHexileRange(const Array<T> &a, Bool sorted=False,
+                                     Bool inPlace=False)
+  { return interFractileRange(a, 1./6., sorted, inPlace); }
+// </group>
+
+// Return the inter-quartile range of an array.  
+// This is the full range between the bottom quarter and the top
+// quarter of ordered array values.
+// <group>
+template<class T> T interQuartileRange(const Array<T> &a, Block<T> &tmp,
+                                       Bool sorted=False, Bool inPlace=False)
+  { return interFractileRange(a, tmp, 0.25, sorted, inPlace); }
+template<class T> T interQuartileRange(const Array<T> &a, Bool sorted=False,
+                                       Bool inPlace=False)
+  { return interFractileRange(a, 0.25, sorted, inPlace); }
+// </group>
 
 
 // Methods for element-by-element scaling of complex and real.
@@ -848,9 +890,9 @@ template<class T> Array<T> cube(const Array<T> &val);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/ArrayMath.tcc>
+#include <casacore/casa/Arrays/ArrayMath.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

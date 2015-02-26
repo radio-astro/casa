@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HyperPlaneParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: HyperPlaneParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_HYPERPLANEPARAM_TCC
+#define SCIMATH_HYPERPLANEPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/HyperPlaneParam.h>
+#include <casacore/scimath/Functionals/HyperPlaneParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 HyperPlaneParam<T>::HyperPlaneParam(uInt m) :
@@ -48,5 +51,7 @@ HyperPlaneParam<T>::operator=(const HyperPlaneParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

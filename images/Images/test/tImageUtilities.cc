@@ -1,4 +1,3 @@
-
 //# tImageUtilities.cc: Test program for the static ImageUtilities functions
 //# Copyright (C) 2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -24,36 +23,37 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageUtilities.cc 20632 2009-06-14 12:16:13Z gervandiepen $
+//# $Id: tImageUtilities.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Quanta/QLogical.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <images/Images/ImageUtilities.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/ImageFITSConverter.h>
-#include <images/Images/TempImage.h>
-#include <images/Images/ImageOpener.h>
-#include <lattices/Lattices/PagedArray.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeUtilities.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/Directory.h>
-#include <casa/IO/RegularFileIO.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Quanta/QLogical.h>
 
-#include <casa/namespace.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/images/Images/ImageUtilities.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/ImageFITSConverter.h>
+#include <casacore/images/Images/TempImage.h>
+#include <casacore/images/Images/ImageOpener.h>
+#include <casacore/lattices/Lattices/PagedArray.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/LatticeUtilities.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
+
+#include <casacore/casa/namespace.h>
 void doOpens()
 {
    Directory dir("tImageUtilities_tmp");
@@ -75,6 +75,10 @@ void doOpens()
       {
          PtrHolder<ImageInterface<Float> > im;
          ImageUtilities::openImage(im, name1);
+      }
+      {
+         CountedPtr<ImageInterface<Float> > im;
+         im = ImageUtilities::openImage<Float>(name1);
       }
       {
          PtrHolder<ImageInterface<Float> > im;
@@ -198,7 +202,6 @@ void doConversions()
    {
       CoordinateSystem cSys = CoordinateUtil::defaultCoords2D();
       cerr << "inc = " << cSys.increment() << endl;
-      const Vector<String>& units = cSys.worldAxisUnits();
       IPosition pixelAxes(2, 0, 1);
       IPosition worldAxes(2, 0, 1);
 //
@@ -206,48 +209,6 @@ void doConversions()
       Vector<Double> pixel = cSys.referencePixel().copy();
       pixel += 10.0;
       cSys.toWorld(world, pixel);
-//
-      Vector<Quantum<Double> > wPars(5);
-
-// Position
-
-      wPars(0).setValue(world(worldAxes(0)));
-      wPars(0).setUnit(units(worldAxes(0)));
-      wPars(1).setValue(world(worldAxes(1)));
-      wPars(1).setUnit(units(worldAxes(1)));
-
-// Shape
-
-      wPars(2).setValue(20.0);
-      wPars(2).setUnit(Unit(String("arcmin")));
-      wPars(3).setValue(10.0);
-      wPars(3).setUnit(Unit(String("arcmin")));
-      wPars(4).setValue(70.0);
-      wPars(4).setUnit(Unit(String("deg")));
-
-// Convert to pixel
-
-      Vector<Double> pPars;
-      //ImageUtilities::worldWidthsToPixel (pPars, wPars, cSys, pixelAxes);
-
-// Back to world
-
-      Vector<Double> pPars2(5);
-      pPars2(0) = pixel(pixelAxes(0));
-      pPars2(1) = pixel(pixelAxes(1));
-      for (uInt i=0; i<3; i++) {
-         pPars2(i+2) = pPars(i);
-      }
-      GaussianBeam wPars2;
-      //ImageUtilities::pixelWidthsToWorld (wPars2, pPars2, cSys, pixelAxes);
-//
-      listWorld(wPars);
-      listPixel(pPars);
-      listWorld(wPars2);
-//
-      for (uInt i=0; i<wPars.nelements(); i++) {
-//         AlwaysAssert(wPars(i)==wPars2(i), AipsError);
-      }
    }
 }
 
@@ -279,88 +240,13 @@ void doBin()
    AlwaysAssert(allEQ(maOut.getMask(),True), AipsError);
 }
 
-/*
-void doDeconvolveFromBeam() {
-	LogOrigin lor("tImageUtilities", __FUNCTION__, WHERE);
-	LogIO os(lor);
-	Angular2DGaussian convolved(
-		Quantity(5, "arcsec"),
-		Quantity(5, "arcsec"),
-		Quantity(0, "deg")
-	);
-	Angular2DGaussian deconvolved;
-	Bool fitSuccess = False;
-	GaussianBeam beam(
-		Quantity(4, "arcsec"), Quantity(4, "arcsec"),
-		Quantity(0, "deg")
-	);
-
-	Bool isPointSource = ImageUtilities::deconvolveFromBeam(
-		deconvolved, convolved, fitSuccess, os, beam
-	);
-	Angular2DGaussian exp(
-		Quantity(3, "arcsec"),
-		Quantity(3, "arcsec"),
-		Quantity(0, "deg")
-	);
-	AlwaysAssert(! isPointSource, AipsError);
-	AlwaysAssert(fitSuccess, AipsError);
-	AlwaysAssert(deconvolved == exp, AipsError);
-
-	convolved = Angular2DGaussian(
-		Quantity(10, "arcsec"),
-		Quantity(5, "arcsec"),
-		Quantity(20, "deg")
-	);
-	fitSuccess = False;
-	beam = GaussianBeam(
-		Quantity(8, "arcsec"), Quantity(4, "arcsec"),
-		Quantity(20, "deg")
-	);
-
-	isPointSource = ImageUtilities::deconvolveFromBeam(
-		deconvolved, convolved, fitSuccess, os, beam
-	);
-	exp = Angular2DGaussian(
-		Quantity(6, "arcsec"),
-		Quantity(3, "arcsec"),
-		Quantity(20, "deg")
-	);
-	AlwaysAssert(! isPointSource, AipsError);
-	AlwaysAssert(fitSuccess, AipsError);
-	AlwaysAssert(near(deconvolved, exp, 1e-7, Quantity(1, "uas")), AipsError);
-
-
-	// make beam larger than the source so the fit fails
-	beam = GaussianBeam(
-		Quantity(6, "arcsec"), Quantity(6, "arcsec"),
-		Quantity(0, "deg")
-	);
-	convolved = Angular2DGaussian(
-		Quantity(5, "arcsec"),
-		Quantity(5, "arcsec"),
-		Quantity(20, "deg")
-	);
-	isPointSource = ImageUtilities::deconvolveFromBeam(
-		deconvolved, convolved, fitSuccess, os, beam
-	);
-	AlwaysAssert(! fitSuccess, AipsError);
-
-	// TODO test for point source, I can't figure out how to actually set parameters so the method
-	// returns true
-}
-  */
 int main()
 {
   try {
     doBin();
     doTypes();
     doOpens();
-    //doDeconvolveFromBeam();
-//    doConversions();
-
-  }
-  catch (const AipsError& x) {
+  } catch (const AipsError& x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }

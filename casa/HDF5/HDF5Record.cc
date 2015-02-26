@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Record.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: HDF5Record.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/HDF5/HDF5Record.h>
-#include <casa/HDF5/HDF5DataSet.h>
-#include <casa/HDF5/HDF5Group.h>
-#include <casa/HDF5/HDF5HidMeta.h>
-#include <casa/HDF5/HDF5Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/HDF5/HDF5Record.h>
+#include <casacore/casa/HDF5/HDF5DataSet.h>
+#include <casacore/casa/HDF5/HDF5Group.h>
+#include <casacore/casa/HDF5/HDF5HidMeta.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #ifdef HAVE_HDF5
 
@@ -226,7 +227,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void HDF5Record::readEmptyArray (hid_t attrId,
 				   const String& name, RecordInterface& rec)
   {
-    Int values[3];
+    // Initialize to satisfy compiler; HDF5DataType does not use them.
+    Int values[] = {0,0,0};
     HDF5DataType dtype(values[1], values[2]);
     read (attrId, values, dtype);
     Int rank = values[1];
@@ -416,8 +418,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HDF5HidDataSpace dsid (H5Screate_simple(0, NULL, NULL));
     AlwaysAssert (dsid.getHid()>=0, AipsError);
     // Create the attribute.
-    HDF5HidAttribute id (H5Acreate(groupHid, name.c_str(), dtype.getHidFile(),
-				   dsid, H5P_DEFAULT, H5P_DEFAULT));
+    HDF5HidAttribute id (H5Acreate2(groupHid, name.c_str(), dtype.getHidFile(),
+				    dsid, H5P_DEFAULT, H5P_DEFAULT));
     AlwaysAssert (id.getHid()>=0, AipsError);
     AlwaysAssert (H5Awrite(id, dtype.getHidMem(), value)>=0, AipsError);
   }
@@ -435,8 +437,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AlwaysAssert (dsid.getHid()>=0, AipsError);
     // Create the attribute.
     HDF5DataType dtype(val);
-    HDF5HidAttribute id (H5Acreate(groupHid, name.c_str(), dtype.getHidFile(),
-				   dsid, H5P_DEFAULT, H5P_DEFAULT));
+    HDF5HidAttribute id (H5Acreate2(groupHid, name.c_str(), dtype.getHidFile(),
+				    dsid, H5P_DEFAULT, H5P_DEFAULT));
     AlwaysAssert (id.getHid()>=0, AipsError);
     AlwaysAssert (H5Awrite(id, dtype.getHidMem(), val.c_str())>=0, AipsError);
   }
@@ -456,8 +458,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HDF5HidDataSpace dsid (H5Screate_simple(rank, ls.storage(), NULL));
     AlwaysAssert (dsid.getHid()>=0, AipsError);
     // Create the attribute.
-    HDF5HidAttribute id (H5Acreate(groupHid, name.c_str(), dtype.getHidFile(),
-				   dsid, H5P_DEFAULT, H5P_DEFAULT));
+    HDF5HidAttribute id (H5Acreate2(groupHid, name.c_str(), dtype.getHidFile(),
+				    dsid, H5P_DEFAULT, H5P_DEFAULT));
     AlwaysAssert (id.getHid()>=0, AipsError);
     AlwaysAssert (H5Awrite(id, dtype.getHidMem(), value)>=0, AipsError);
   }
@@ -488,16 +490,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 ++aiter, ++viter) {
       *viter = (char*)(aiter->c_str());
     }
+    // It appears that HDF5 cannot write an attribute with more than 4000 values.
+    // So cut off if needed. 
+    IPosition shape = value.shape();
+    if (shape[0] > 4000) {
+      LogIO os;
+      os << "HDF5Record: Cut off size of attribute " + name + " from " +
+        String::toString(shape[0]) + " to 4000 values"
+         << LogIO::NORMAL << LogIO::POST;
+      shape[0] = 4000;
+    }
     // Create the data space for the array.
-    const IPosition& shape = value.shape();
     int rank = shape.nelements();
     Block<hsize_t> ls = HDF5DataSet::fromShape (shape);
     HDF5HidDataSpace dsid (H5Screate_simple(rank, ls.storage(), NULL));
     AlwaysAssert (dsid.getHid()>=0, AipsError);
     // Create the attribute.
     HDF5DataType dtype((String*)0);
-    HDF5HidAttribute id (H5Acreate(groupHid, name.c_str(), dtype.getHidFile(),
-				   dsid, H5P_DEFAULT, H5P_DEFAULT));
+    HDF5HidAttribute id (H5Acreate2(groupHid, name.c_str(), dtype.getHidFile(),
+				    dsid, H5P_DEFAULT, H5P_DEFAULT));
     AlwaysAssert (id.getHid()>=0, AipsError);
     AlwaysAssert (H5Awrite(id, dtype.getHidMem(), &(ptrs[0])) >= 0,
 		  AipsError);

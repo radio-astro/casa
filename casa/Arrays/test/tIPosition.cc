@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tIPosition.cc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: tIPosition.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
@@ -31,17 +31,17 @@
 #define AIPS_ARRAY_INDEX_CHECK
 #endif
 
-#include <casa/iostream.h>
-#include <casa/sstream.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <vector>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 void testKeepRemove()
 {

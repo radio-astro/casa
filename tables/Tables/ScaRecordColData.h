@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaRecordColData.h 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: ScaRecordColData.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_SCARECORDCOLDATA_H
 #define TABLES_SCARECORDCOLDATA_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/PlainColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/PlainColumn.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnSet;
@@ -208,6 +208,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordInterface.h 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: RecordInterface.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_RECORDINTERFACE_H
@@ -32,14 +32,14 @@
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Notice.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Notice.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Arrays/Array.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class RecordDesc;
@@ -653,6 +653,6 @@ inline Int RecordNotice::fieldNumber() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

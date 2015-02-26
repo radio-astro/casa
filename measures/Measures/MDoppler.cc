@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MDoppler.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MDoppler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MDoppler.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Quanta/MVFrequency.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Register.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/MVFrequency.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Register.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 MDoppler::MDoppler() :
@@ -153,6 +153,7 @@ void MDoppler::checkTypes() const {
 }
 
 void MDoppler::checkMyTypes() {
+  // Multiple threads could execute this, but that is harmless.
   static Bool first(True);
   if (first) {
     first = False;
@@ -252,5 +253,5 @@ MDoppler::shiftFrequency(const Quantum<Vector<Double> > &freq) const {
   return Quantum<Vector<Double> >(tmp, freq.getFullUnit());
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

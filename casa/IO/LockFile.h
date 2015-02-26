@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LockFile.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LockFile.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOCKFILE_H
 #define CASA_LOCKFILE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/IO/FileLocker.h>
-#include <casa/OS/Time.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/FileLocker.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
 #include <sys/types.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class FiledesIO;
@@ -63,7 +63,7 @@ class CanonicalIO;
 // This class handles file locking by means of a special lock file
 // which serves as the locking mechanism for another file or
 // group of files. It is for instance used to lock a table in
-// the AIPS++ table system.
+// the Casacore Table System.
 // <p>
 // The lock file has in principle world read/write access, so every
 // process accessing the main file can write information in it.
@@ -192,10 +192,12 @@ public:
     // <br> The <src>permLocking</src> argument is used to indicate if
     // permanent locking will be used. If so, it'll indicate so. In that
     // way showLock() can find out if if table is permanently locked.
+    // <br> The <src>noLocking</src> argument is used to indicate that
+    // no locking is needed. It means that acquiring a lock always succeeds.
     explicit LockFile (const String& fileName, double inspectInterval = 0,
 		       Bool create = False, Bool addToRequestList = True,
 		       Bool mustExist = True, uInt seqnr = 0,
-		       Bool permLocking = False);
+		       Bool permLocking = False, Bool noLocking = False);
 
     // The destructor does not delete the file, because it is not known
     // when the last process using the lock file will stop.
@@ -357,7 +359,7 @@ inline Bool LockFile::canLock (FileLocker::LockType type)
 }
 inline Bool LockFile::hasLock (FileLocker::LockType type) const
 {
-    return (itsFileIO == 0  ?  False : itsLocker.hasLock (type));
+    return (itsFileIO == 0  ?  True : itsLocker.hasLock (type));
 }
 inline int LockFile::lastError() const
 {
@@ -378,6 +380,6 @@ inline const Block<Int>& LockFile::reqIds() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

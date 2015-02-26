@@ -24,18 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: EclecticFunctionFactory.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: EclecticFunctionFactory.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_ECLECTICFUNCTIONFACTORY_H
 #define SCIMATH_ECLECTICFUNCTIONFACTORY_H
 
-#include <scimath/Functionals/Function.h>
-#include <casa/Containers/OrderedMap.h>
-#include <casa/Containers/OrderedPair.h>
-#include <casa/Exceptions/Error.h>
-#include <scimath/Functionals/AbstractFunctionFactory.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/Containers/OrderedPair.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/scimath/Functionals/AbstractFunctionFactory.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -149,10 +150,10 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/EclecticFunctionFactory.tcc>
+#include <casacore/scimath/Functionals/EclecticFunctionFactory.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

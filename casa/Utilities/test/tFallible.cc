@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFallible.cc 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: tFallible.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 #if !defined(AIPS_DEBUG)
 #define AIPS_DEBUG
 #endif
 
-#include <casa/Utilities/Fallible.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/Fallible.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void Foo(Int x)
 {
     AlwaysAssertExit(x == 5);

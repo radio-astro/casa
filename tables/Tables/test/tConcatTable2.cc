@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConcatTable2.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tConcatTable2.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ExprNode.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // <summary>
 // Test program for the ConcatTable class
@@ -134,16 +134,16 @@ void checkTable (const Table& tab, uInt nkey, uInt nsubrow, Int stval,
   if (nkey == 3) {
     AlwaysAssertExit (tab.keywordSet().asTable("keysub").nrow() == nsubrow);
   }
-  ROScalarColumn<Bool> abool(tab, "abool");
-  ROScalarColumn<uChar> auchar(tab, "auchar");
-  ROScalarColumn<Short> ashort(tab, "ashort");
-  ROScalarColumn<Int> aint(tab, "aint");
-  ROScalarColumn<uInt> auint(tab, "auint");
-  ROScalarColumn<Float> afloat(tab,  "afloat");
-  ROScalarColumn<Double> adouble(tab,"adouble");
-  ROScalarColumn<Complex> acomplex(tab, "acomplex");
-  ROScalarColumn<DComplex> adcomplex(tab, "adcomplex");
-  ROScalarColumn<String> astring(tab, "astring");
+  ScalarColumn<Bool> abool(tab, "abool");
+  ScalarColumn<uChar> auchar(tab, "auchar");
+  ScalarColumn<Short> ashort(tab, "ashort");
+  ScalarColumn<Int> aint(tab, "aint");
+  ScalarColumn<uInt> auint(tab, "auint");
+  ScalarColumn<Float> afloat(tab,  "afloat");
+  ScalarColumn<Double> adouble(tab,"adouble");
+  ScalarColumn<Complex> acomplex(tab, "acomplex");
+  ScalarColumn<DComplex> adcomplex(tab, "adcomplex");
+  ScalarColumn<String> astring(tab, "astring");
   char str[8];
   // Values are stored as: 0 1 2 5 6 7 8 9 3 4
   for (uInt i=0; i<tab.nrow(); i++) {

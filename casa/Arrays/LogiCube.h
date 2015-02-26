@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogiCube.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogiCube.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGICUBE_H
 #define CASA_LOGICUBE_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Arrays/Cube.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Arrays/Cube.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Logical valued Cubes.
@@ -81,6 +81,6 @@ typedef Cube<LogicalArrayElem> LogicalCube;
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

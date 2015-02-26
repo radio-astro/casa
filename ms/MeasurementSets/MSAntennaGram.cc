@@ -23,27 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaGram.cc 20934 2010-08-17 09:16:24Z gervandiepen $
+//# $Id: MSAntennaGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSAntennaGram; grammar for antenna command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSAntennaGram.h>
-#include <ms/MeasurementSets/MSAntennaParse.h> // routines used by bison actions
-#include <ms/MeasurementSets/MSAntennaIndex.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSAntennaGram.h>
+#include <casacore/ms/MeasurementSets/MSAntennaParse.h> // routines used by bison actions
+#include <casacore/ms/MeasurementSets/MSAntennaIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSAntennaGram.ycc"                  // flex output
-#include "MSAntennaGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSAntennaGram.ycc"                  // bison output
+#include "MSAntennaGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSAntennaGramwrap()
@@ -51,7 +52,7 @@ int MSAntennaGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
   static const char*           strpMSAntennaGram = 0;
@@ -278,4 +279,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //     return out;
   // }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SCSL.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SCSL.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_SCSL_H
 #define SCIMATH_SCSL_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>C++ Interface to the Sgi/Cray Scientific Library (SCSL)</summary>
 // <synopsis>
@@ -2217,6 +2217,6 @@ static void zdfft3d(Int isign, Int n1, Int n2, Int n3, Double scale,
 // </group>
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

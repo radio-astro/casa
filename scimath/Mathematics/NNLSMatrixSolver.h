@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NNLSMatrixSolver.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: NNLSMatrixSolver.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_NNLSMATRIXSOLVER_H
 #define SCIMATH_NNLSMATRIXSOLVER_H
 
 
-#include <casa/aips.h>
-#include <scimath/Mathematics/MatrixSolver.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/MatrixSolver.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //<summary>
 // NNLSMatrixSolver.h: the base class for NNLS solvers of linear equations AX=B
@@ -95,6 +95,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

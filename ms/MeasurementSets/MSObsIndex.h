@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSObsIndex.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSObsIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSOBSINDEX_H
 #define MS_MSOBSINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSObservation.h>
-#include <ms/MeasurementSets/MSObsColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSObservation.h>
+#include <casacore/ms/MeasurementSets/MSObsColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -87,7 +87,7 @@ public:
   MSObservationIndex(const MSObservation& observationTable);
 
   // Null destructor
-  virtual ~MSObservationIndex() {};
+  virtual ~MSObservationIndex() {}
 
   // Look up OBSERVATION_ID's for a given project code
   Vector<Int> matchProjectCode(const String& projectCode);
@@ -105,7 +105,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SPolynomial.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: SPolynomial.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_SPOLYNOMIAL_H
 #define SCIMATH_SPOLYNOMIAL_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Functionals/SPolynomialParam.h>
-#include <scimath/Functionals/Function.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/SPolynomialParam.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -129,9 +129,9 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/SPolynomial.tcc>
+#include <casacore/scimath/Functionals/SPolynomial.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

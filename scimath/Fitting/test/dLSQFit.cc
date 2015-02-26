@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dLSQFit.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dLSQFit.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Fitting/LSQFit.h>
-#include <casa/iostream.h>
-#include <casa/namespace.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Fitting/LSQFit.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/namespace.h>
 
 void showdt(const LSQFit &lsq, Int n) {
   uInt nun, np, ncon, ner, rk, *piv;

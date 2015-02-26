@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tStokesConverter.cc 20215 2008-01-18 04:11:36Z Malte.Marquarding $
+//# $Id: tStokesConverter.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
-#include <casa/Arrays/MaskArrLogi.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/StokesConverter.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/MaskArrLogi.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/StokesConverter.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() 
 {
   Int err=0;

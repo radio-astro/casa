@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCanonicalConversion.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tCanonicalConversion.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 
-#include <casa/OS/CanonicalConversion.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/OS/CanonicalConversion.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Check if all conversion definitions are set correctly.
 // It write error messages to cout and exits (with status 1)
 // when errors are found.

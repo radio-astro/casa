@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasValue.cc 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: MeasValue.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Quanta/MeasValue.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/MeasValue.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constants
 
@@ -66,5 +66,5 @@ ostream &operator<<(ostream &os, const MeasValue &meas) {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

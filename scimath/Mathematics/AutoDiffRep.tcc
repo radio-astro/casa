@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AutoDiffRep.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: AutoDiffRep.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_AUTODIFFREP_TCC
+#define SCIMATH_AUTODIFFREP_TCC
 
 //# Includes
-#include <scimath/Mathematics/AutoDiffRep.h>
+#include <casacore/scimath/Mathematics/AutoDiffRep.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T>
@@ -98,5 +101,7 @@ AutoDiffRep<T> &AutoDiffRep<T>::operator=(const AutoDiffRep<T> &other) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

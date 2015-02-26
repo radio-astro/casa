@@ -24,19 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageRegrid.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ImageRegrid.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_IMAGEREGRID_H
 #define IMAGES_IMAGEREGRID_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
-#include <scimath/Mathematics/Interpolate2D.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/scimath/Mathematics/Interpolate2D.h>
+#include <set>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class MaskedLattice;
 template<class T> class ImageInterface;
@@ -150,8 +151,7 @@ public:
 	      const ImageInterface<T>& inImage,
               Bool replicate=False, uInt decimate=0,
               Bool showProgress=False, Bool forceRegrid=False,
-              Bool verbose=False
-            );
+              Bool verbose=False);
 
 // Get and set the 2-D coordinate grid.  After a call to function <src>regrid</src>
 // in which coupled 2D coordinate (presently only DirectionCoordinate) is
@@ -205,7 +205,8 @@ public:
   // Upon return, <src>coordsToBeRegridded</src> will contain a list of the coordinates that will
   // be regridded.
   static CoordinateSystem makeCoordinateSystem(
-		  LogIO& os, std::set<Coordinate::Type>& coordsToBeRegridded,
+		  LogIO& os,
+                  std::set<Coordinate::Type>& coordsToBeRegridded,
 		  const CoordinateSystem& cSysTo,
 		  const CoordinateSystem& cSysFrom,
 		  const IPosition& axes,
@@ -227,14 +228,12 @@ public:
 //  
   // Check shape and axes.  Exception if no good.  If pixelAxes
   // of length 0, set to all axes according to shape
-  void _checkAxes(
-		  IPosition& outPixelAxes,
-		  const IPosition& inShape,
-		  const IPosition& outShape,
-		  const Vector<Int>& pixelAxisMap,
-		  const CoordinateSystem& outCoords,
-		  Bool verbose
-  );
+  void _checkAxes(IPosition& outPixelAxes,
+                  const IPosition& inShape,
+                  const IPosition& outShape,
+                  const Vector<Int>& pixelAxisMap,
+                  const CoordinateSystem& outCoords,
+                  Bool verbose);
 
   // Find maps between coordinate systems
   void findMaps (uInt nDim, 
@@ -252,20 +251,20 @@ public:
 
   // Regrid one Coordinate
    void _regridOneCoordinate (LogIO& os, IPosition& outShape2,
-                             Vector<Bool>& doneOutPixelAxes,
-                             MaskedLattice<T>* &finalOutPtr,  
-                             MaskedLattice<T>* &inPtr,   
-                             MaskedLattice<T>* &outPtr,  
-                             CoordinateSystem& outCoords,
-                             const CoordinateSystem& inCoords,
-                             Int outPixelAxis,
-                             const ImageInterface<T>& inImage,
-                             const IPosition& outShape,
-                             Bool replicate, uInt decimate,
-                             Bool outIsMasked, Bool showProgress,
-                             Bool forceRegrid, 
-                             typename Interpolate2D::Method method,
-                             Bool verbose);
+                              Vector<Bool>& doneOutPixelAxes,
+                              MaskedLattice<T>* &finalOutPtr,  
+                              MaskedLattice<T>* &inPtr,   
+                              MaskedLattice<T>* &outPtr,  
+                              CoordinateSystem& outCoords,
+                              const CoordinateSystem& inCoords,
+                              Int outPixelAxis,
+                              const ImageInterface<T>& inImage,
+                              const IPosition& outShape,
+                              Bool replicate, uInt decimate,
+                              Bool outIsMasked, Bool showProgress,
+                              Bool forceRegrid, 
+                              typename Interpolate2D::Method method,
+                              Bool verbose);
 
   // Regrid  DirectionCoordinate or 2-axis LinearCoordinate
    void regridTwoAxisCoordinate  (LogIO& os, MaskedLattice<T>& outLattice,
@@ -382,10 +381,10 @@ public:
 
  
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageRegrid.tcc>
+#include <casacore/images/Images/ImageRegrid.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

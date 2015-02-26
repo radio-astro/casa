@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelUtil.h 20838 2009-12-01 10:10:55Z gervandiepen $
+//# $Id: MSSelUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELUTIL_H
 #define MS_MSSELUTIL_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Helper class for MSFlagger with templated static function
@@ -62,9 +62,9 @@ public:
 			       Bool doMedian=False);
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <ms/MeasurementSets/MSSelUtil.tcc>
+#include <casacore/ms/MeasurementSets/MSSelUtil.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

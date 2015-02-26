@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCurvedLattice2D.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tCurvedLattice2D.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <lattices/Lattices/CurvedLattice2D.h>
-#include <lattices/Lattices/CLIPNearest2D.h>
-#include <lattices/Lattices/PixelCurve1D.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/PagedArray.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Inputs/Input.h>
-#include <casa/OS/Timer.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/lattices/Lattices/CurvedLattice2D.h>
+#include <casacore/lattices/LatticeMath/CLIPNearest2D.h>
+#include <casacore/lattices/Lattices/PixelCurve1D.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/PagedArray.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt (MaskedLattice<Int>& lat, uInt axis1, uInt axis2, uInt curveAxis)
 {
   // Make a straight line from (1,0) to the trc.

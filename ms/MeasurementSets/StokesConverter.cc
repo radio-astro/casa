@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StokesConverter.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: StokesConverter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <ms/MeasurementSets/StokesConverter.h>
-#include <scimath/Mathematics/SquareMatrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/ms/MeasurementSets/StokesConverter.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // make a portable float to float sqrt for use in Array<Float>::apply
 extern "C" {
@@ -455,5 +455,5 @@ void StokesConverter::invert(Array<Bool>& out, const Array<Bool>& in) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

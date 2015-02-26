@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSFieldParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFieldParse.h>
-#include <ms/MeasurementSets/MSFieldIndex.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MSFieldParse.h>
+#include <casacore/ms/MeasurementSets/MSFieldIndex.h>
+#include <casacore/ms/MeasurementSets/MSSourceIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSFieldParse* MSFieldParse::thisMSFParser = 0x0; // Global pointer to the parser object
   TableExprNode* MSFieldParse::node_p = 0x0;
@@ -96,16 +96,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 // ---------------OLD CODE START (Feb. 2012)-----------------------
-// #include <ms/MeasurementSets/MSFieldParse.h>
-// #include <ms/MeasurementSets/MSFieldIndex.h>
-// #include <ms/MeasurementSets/MSSourceIndex.h>
-// #include <ms/MeasurementSets/MSSelectionTools.h>
-// #include <casa/Logging/LogIO.h>
+// #include <casacore/ms/MeasurementSets/MSFieldParse.h>
+// #include <casacore/ms/MeasurementSets/MSFieldIndex.h>
+// #include <casacore/ms/MeasurementSets/MSSourceIndex.h>
+// #include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+// #include <casacore/casa/Logging/LogIO.h>
 
-// namespace casa { //# NAMESPACE CASA - BEGIN
+// namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
 //   MSFieldParse* MSFieldParse::thisMSFParser = 0x0; // Global pointer to the parser object
 //   TableExprNode* MSFieldParse::node_p = 0x0;

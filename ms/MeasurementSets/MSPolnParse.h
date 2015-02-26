@@ -23,21 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolnParse.h 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSPolnParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSPOLNPARSE_H
 #define MS_MSPOLNPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <casa/Containers/OrderedMap.h>
-#include <casa/Containers/MapIO.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <ms/MeasurementSets/MSPolIndex.h>
-#include <ms/MeasurementSets/MSDataDescIndex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/ms/MeasurementSets/MSPolarization.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/ms/MeasurementSets/MSPolIndex.h>
+#include <casacore/ms/MeasurementSets/MSDataDescIndex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -92,7 +93,7 @@ class MSPolnParse : public MSParse
 public:
   // Default constructor
   MSPolnParse ();
-  //  ~MSPolnParse() {cleanup();};
+  //  ~MSPolnParse() {cleanup();}
 
   // Associate the ms and the shorthand.
   MSPolnParse (const MeasurementSet* ms);
@@ -102,8 +103,8 @@ public:
   // Get table expression node object.
   const TableExprNode node();
   //  static MSPolnParse* thisMSSParser;
-  void reset() {polMap_p.clear(); ddIDList_p.resize(0);};
-  void cleanup() {/*if (node_p) delete node_p;node_p=0x0;*/};
+  void reset() {polMap_p.clear(); ddIDList_p.resize(0);}
+  void cleanup() {/*if (node_p) delete node_p;node_p=0x0;*/}
   Int theParser(const String& command); 
 		// Vector<Int>& selectedDDIDs, 
 		// Matrix<Int>& selectedSpwPolnMap);
@@ -135,6 +136,6 @@ private:
   void setIDLists(const Int key, const Int ndx, Vector<Int>& val);
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

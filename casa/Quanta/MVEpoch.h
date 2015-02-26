@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MVEpoch.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MVEpoch.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MVEPOCH_H
 #define CASA_MVEPOCH_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MeasValue.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/MeasValue.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Unit;
@@ -207,6 +207,6 @@ private:
 //# Global functions
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

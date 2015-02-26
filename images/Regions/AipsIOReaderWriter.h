@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIOReaderWriter.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: AipsIOReaderWriter.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_AIPSIOREADERWRITER_H
 #define IMAGES_AIPSIOREADERWRITER_H
 
 //# Includes
-#include <images/Regions/RFReaderWriter.h>
-#include <images/Regions/ImageRegion.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/RFReaderWriter.h>
+#include <casacore/images/Regions/ImageRegion.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Implementation of CASA region AipsIO file reader and writer
@@ -77,7 +78,7 @@ public:
     //<group>
     // Implements RSFileReader::read.
     bool read(Record& region);
-    bool read(const ImageRegion *region);
+    bool read(ImageRegion*& region);
     //</group>
 
 

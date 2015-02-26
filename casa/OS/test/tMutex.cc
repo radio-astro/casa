@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMutex.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: tMutex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/OS/Mutex.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions.h>
-#include <casa/iostream.h>
+#include <casacore/casa/OS/Mutex.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/iostream.h>
 
-using namespace casa;
+using namespace casacore;
 
 // <summary>
-// Test program for class File.
+// Test program for class Mutex.
 // </summary>
 
 void testErrorCheck()
@@ -174,7 +174,9 @@ void testMutexedInitParallel()
 {
   int count=0;
   MutexedInit safeInit (testMutexedInitFunc, &count);
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i=0; i<16; ++i) {
     safeInit.exec();
   }

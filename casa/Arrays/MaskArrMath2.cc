@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrMath2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrMath2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/MaskArrMath.h>
-#include <casa/Arrays/ArrayError.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
-//#include <casa/Arrays/VectorIter.h>
-//#include <casa/Arrays/Matrix.h>
-//#include <casa/BasicMath/Math.h>
+//#include <casacore/casa/Arrays/VectorIter.h>
+//#include <casacore/casa/Arrays/Matrix.h>
+//#include <casacore/casa/BasicMath/Math.h>
 
 MaskedArray<Complex> operator * (const MaskedArray<Complex> &left, 
 					 const Float &right) 
@@ -65,5 +65,5 @@ MaskedArray<Complex> operator*(const Float& left,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

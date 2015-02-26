@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $I$
+//# $Id: LogFilterInterface.cc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Logging/LogFilterInterface.h>
+#include <casacore/casa/Logging/LogFilterInterface.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LogFilterInterface::~LogFilterInterface()
 {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

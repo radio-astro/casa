@@ -1,4 +1,4 @@
-//# TableDesc.h:  specify structure of aips++ tables
+//# TableDesc.h:  specify structure of Casacore tables
 //# Copyright (C) 1994,1995,1996,1997,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableDesc.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TableDesc.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEDESC_H
 #define TABLES_TABLEDESC_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/ColDescSet.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableRecord;
@@ -44,7 +44,7 @@ class TabPath;
 template<class T> class Vector;
 
 // <summary>
-// Define the structure of an AIPS++ table
+// Define the structure of a Casacore table
 // </summary>
 
 // <use visibility=export>
@@ -173,7 +173,7 @@ template<class T> class Vector;
 
 // <motivation>
 // A table description specifies the structure, but not the contents,
-// of an aips++ table.  Since many tables will have identical structure
+// of a Casacore table.  Since many tables will have identical structure
 // and different content, it makes good sense to separate structure 
 // ("description") from content.
 // </motivation>
@@ -483,6 +483,8 @@ private:
     String             vers_p;          //# version of table description
     String             dir_p;           //# directory
     String             comm_p;          //# comment
+    //# Note: the TableRecords are done as pointer, otherwise TableRecord.h
+    //# needs to be included leading to a mutual include.
     TableRecord*       key_p;           //# user set of keywords
     TableRecord*       privKey_p;       //# Private set of keywords
     ColumnDescSet      col_p;           //# set of column names + indices
@@ -586,7 +588,7 @@ inline void TableDesc::checkSubTableDesc () const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

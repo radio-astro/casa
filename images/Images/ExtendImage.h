@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExtendImage.h 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: ExtendImage.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_EXTENDIMAGE_H
 #define IMAGES_EXTENDIMAGE_H
 
 
 //# Includes
-#include <images/Images/ImageInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class ExtendLattice;
@@ -146,6 +147,12 @@ public:
   // Check class invariants.
   virtual Bool ok() const;
 
+  // Get access to the attribute handler (of the parent image).
+  // If a handler keyword does not exist yet, it is created if
+  // <src>createHandler</src> is set.
+  // Otherwise the handler is empty and no groups can be created for it.
+  virtual ImageAttrHandler& attrHandler (Bool createHandler=False);
+
   // Do the actual getting of an array of values.
   virtual Bool doGetSlice (Array<T>& buffer, const Slicer& section);
 
@@ -192,9 +199,9 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ExtendImage.tcc>
+#include <casacore/images/Images/ExtendImage.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

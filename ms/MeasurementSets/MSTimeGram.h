@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeGram.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTimeGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSTIMEGRAM_H
 #define MS_MSTIMEGRAM_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSTimeDefinitions.h>
-#include <ms/MeasurementSets/MSTimeParse.h> // routines used by bison actions
-#include <ms/MeasurementSets/MSSelectableMainColumn.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSTimeDefinitions.h>
+#include <casacore/ms/MeasurementSets/MSTimeParse.h> // routines used by bison actions
+#include <casacore/ms/MeasurementSets/MSSelectableMainColumn.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Forward Declarations
   class MeasurementSet;
@@ -106,6 +107,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				Int hour, Int minute, Int sec, Int fsec);
   // </group>
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

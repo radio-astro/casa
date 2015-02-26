@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLockFile.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tLockFile.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 
-#include <casa/IO/LockFile.h>
-#include <casa/IO/MemoryIO.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/IO/RegularFileIO.h>
-#include <casa/OS/Path.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/IO/LockFile.h>
+#include <casacore/casa/IO/MemoryIO.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt (const String& name, double interval)
 {
     cout << "Choose between 2 locknrs (i.e. parts of file to lock)." << endl;
@@ -50,23 +50,24 @@ void doIt (const String& name, double interval)
     Path path(name);
     cout << "LockFile for " << path.absoluteName() << endl;
     cout << "Inspection interval = " << interval << " seconds" << endl;
-    int op, lnr, perm;
-    cout << "permanentLocking? (0 or 1):";
-    cin >> perm;
+    int op, lnr;
+    cout << "Locking type (0=no, 1=permanent, other=normal):";
+    cin >> op;
     //# Create 2 lock objects with given inspection interval.
     //# Let them start at a different offset in the file.
-    LockFile lock1(name, interval, False, True, True, 0, perm==1);
+    LockFile lock1(name, interval, False, True, True, 0, op==1, op==0);
     LockFile* lockp;
     while (True) {
-	cout << "locknr (1,2): ";
+	cout << "locknr (1,2 0=end): ";
 	cin >> lnr;
 	if (lnr <= 0) break;
 	if (lnr == 1) {
 	    lockp = &lock1;
 	} else {
-	    cout << "permanentLocking? (0 or 1):";
-	    cin >> op;
-	    lockp = new LockFile (name, interval, False, True, True, 1);
+            cout << "Locking type (0=no, 1=permanent, other=normal):";
+            cin >> op;
+	    lockp = new LockFile (name, interval, False, True, True, 1,
+                                  op==1, op==0);
 	}
 	while (True) {
 	    cout << "1=rlock, 2=wlock, 3=rlockw, 4=wlockw, 5=unlock, "

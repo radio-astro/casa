@@ -23,15 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecScaCol.tcc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TVecScaCol.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <casa/aips.h>
-#include <tables/Tables/TVecScaCol.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableError.h>
-#include <casa/BasicSL/String.h>
+#ifndef TABLES_TVECSCACOL_TCC
+#define TABLES_TVECSCACOL_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TVecScaCol.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/BasicSL/String.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Construct a table column vector.
 template<class T>
@@ -76,5 +79,7 @@ void TabVecScaCol<T>::set (const T& val)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

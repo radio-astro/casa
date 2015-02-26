@@ -1,4 +1,4 @@
-//# ValueHolder.cc: A holder object for the standard AIPS++ data
+//# ValueHolder.cc: A holder object for the standard Casacore data
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolder.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: ValueHolder.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 ValueHolder::ValueHolder (Bool value)
@@ -132,4 +132,4 @@ ValueHolder& ValueHolder::operator= (const ValueHolder& that)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

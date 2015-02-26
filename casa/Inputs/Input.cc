@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Input.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Input.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //  Class Input: the user interface
 
-#include <casa/Inputs/Input.h>
-#include <casa/OS/EnvVar.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/iostream.h>
 
 #if defined(TESTBED)
 #define DEBUG 1
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 // The constructor does nothing more but read the users environment
@@ -48,8 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 
 Input::Input (Int createEnv) 
-: version_id("1999/07/30 BEG/TPPR/PJT/GvD"),
-  is_closed(False),
+: is_closed(False),
   do_prompt(False),
   debug_level(0),
   p_count(0)
@@ -310,11 +309,12 @@ Bool Input::put (const String& key, const String& value)
 Bool Input::put (const String& key)
 {
   String k = key;                  // Need non-const string
-  if (!key.index("=")) {
+  String::size_type inx = key.index("=");
+  if (inx == String::npos) {
     String msg = "Input::Put: " + key + " is not a valid parameter.";
     throw (AipsError(msg));
   }
-  return put (k.before("="), k.after("="));
+  return put (k.before(inx), k.after(inx));
 }
 
 Int Input::count() const
@@ -428,7 +428,7 @@ void Input::pane()
   String value, type;
 
   cout << "-F 4.2 1 0 170x7+10+20 +35+1 'CANTATA for KHOROS' cantata\n";
-  cout << "-M 1 0 100x40+10+20 +23+1 'An AIPS++ program' aips++\n";
+  cout << "-M 1 0 100x40+10+20 +23+1 'A Casacore program' casacore\n";
   
   ConstListIter<Param> parlist(parList_p);       
   parlist.toStart();
@@ -547,16 +547,16 @@ void Input::readArguments (int ac, char const* const* av)
 			"-keyword not followed by value"));
       }
       i++;  // Advance
-      keyandval = thisarg.after("-") + "=" + av[i];
+      keyandval = thisarg.after(0) + "=" + av[i];
     } else {
       keyandval = thisarg;
     }
     //	cout << "putting " << keyandval << endl;
     put (keyandval);   // Insert command line parameters
-    if (keyandval.before("=") == "debug") {
-      debug_level = atoi(keyandval.after("=").chars());
-    } else if (keyandval.before("=")=="help") {
-      help_mode = keyandval.after("=");
+    if (keyandval.size() > 5  &&  keyandval.before(6) == "debug=") {
+      debug_level = atoi(keyandval.after(6).chars());
+    } else if (keyandval.size() > 4  &&  keyandval.before(5) == "help=") {
+      help_mode = keyandval.after(4);
     }
   }
   announce();          // Announce and possibly die here
@@ -585,9 +585,10 @@ Vector<Bool> Input::makeMaskFromRanges(const String& ranges, uInt length,
 			      "invalid range:") + expressions[i]));
     }
     Int left, right;
-    if (expressions[i].contains("-")) {
-      left = atoi(expressions[i].before("-").chars());
-      right = atoi(expressions[i].after("-").chars());
+    String::size_type inx = expressions[i].index('-');
+    if (inx != String::npos) {
+      left = atoi(expressions[i].before(inx).chars());
+      right = atoi(expressions[i].after(inx).chars());
     } else {
       left = right = atoi(expressions[i].chars());
     }
@@ -607,5 +608,5 @@ Vector<Bool> Input::makeMaskFromRanges(const String& ranges, uInt length,
   return mask;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

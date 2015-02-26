@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSDerivedValues.cc 20459 2008-12-02 12:51:13Z gervandiepen $
+//# $Id: MSDerivedValues.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <ms/MeasurementSets/MSDopplerUtil.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <measures/Measures/VelocityMachine.h>
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MeasurementSets/MSDopplerUtil.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/measures/Measures/VelocityMachine.h>
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSDerivedValues::MSDerivedValues() 
 {
@@ -60,8 +60,8 @@ MSDerivedValues::operator=(const MSDerivedValues& other)
   // should copy all data here, for now, just init
   init();
 
-  radialVelocityType_p = other.radialVelocityType_p;
   mount_p = other.mount_p;
+  radialVelocityType_p = other.radialVelocityType_p;
 
   return *this;
 }
@@ -184,16 +184,19 @@ MSDerivedValues& MSDerivedValues::setAntennaMount(const Vector<String>& mount)
   if (nAnt>0) {
     mount_p.resize(nAnt);
     for (Int i=0; i<nAnt; i++) {
-      if (mount(i)=="alt-az" || mount(i)=="ALT-AZ" || mount(i)=="") 
+      if (mount(i)=="alt-az" || mount(i)=="ALT-AZ" || mount(i)=="") {
 	mount_p(i)=0;
-      else if (mount(i)=="alt-az+rotator" || mount(i)=="ALT-AZ+ROTATOR")
-        mount_p(i)=0; // a temporary mount type, behaves as alt-az in general
-      else if (mount(i)=="equatorial" || mount(i)=="EQUATORIAL") mount_p(i)=1;
-      else if (mount(i)=="X-Y" || mount(i)=="x-y") mount_p(i)=2;
-      else if (mount(i)=="orbiting" || mount(i)=="ORBITING") mount_p(i)=3;
-      else if (mount(i)=="bizarre" || mount(i)=="BIZARRE") mount_p(i)=4;
-      else throw(AipsError("MSDerivedValues::setAntennaMount() - "
-			   "Unrecognized mount type"));
+      } else if (mount(i)=="alt-az+rotator" || mount(i)=="ALT-AZ+ROTATOR") {
+	mount_p(i)=0;
+      } else if (mount(i)=="equatorial" || mount(i)=="EQUATORIAL") {
+        mount_p(i)=1;
+      } else if (mount(i)=="X-Y" || mount(i)=="x-y") {
+        mount_p(i)=2;
+      } else if (mount(i)=="orbiting" || mount(i)=="ORBITING") {
+        mount_p(i)=3;
+      } else {
+        mount_p(i)=4;
+      }
     }
   }
   return *this;
@@ -281,7 +284,7 @@ Double MSDerivedValues::parAngle()
     LogMessage message(LogOrigin("MSDerivedValues","parAngle"));
     LogSink logSink;
     message.message("unhandled mount type");
-    message.priority(LogMessage::SEVERE);
+    message.priority(LogMessage::WARN);
     logSink.post(message);
   }
   return pa;
@@ -392,5 +395,5 @@ void MSDerivedValues::init()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

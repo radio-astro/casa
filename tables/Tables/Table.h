@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: Table.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseTable.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/TSMOption.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/Utilities/Sort.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/DataMan/TSMOption.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Utilities/Sort.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class SetupNewTable;
@@ -333,7 +333,9 @@ public:
     // It will flush if the destructor is called due to an exception,
     // because the Table object may not be correct.
     // Of course, in that case the flush function could be called explicitly.
-    ~Table();
+    // <br>It is virtual, so an object of a derived class like MeasurementSet
+    // is destructed correctly through a Table pointer.
+    virtual ~Table();
 
     // Assignment (reference semantics).
     Table& operator= (const Table&);
@@ -790,11 +792,12 @@ public:
     // All rows for which the expression is true, will be selected and
     // "stored" in the result.
     // You need to include ExprNode.h for this purpose.
+    // <br>The first <src>offset</src> matching rows will be skipped.
     // <br>If <src>maxRow>0</src>, the selection process will stop
-    // when <src>maxRow</src> matching rows are found.
+    // when <src>maxRow</src> rows are selected.
     // <br>The TableExprNode argument can be empty (null) meaning that only
-    // the <src>maxRow</src> argument is taken into account.
-    Table operator() (const TableExprNode&, uInt maxRow=0) const;
+    // the <src>maxRow/offset</src> arguments are taken into account.
+    Table operator() (const TableExprNode&, uInt maxRow=0, uInt offset=0) const;
 
     // Select rows using a vector of row numbers.
     // This can, for instance, be used to select the same rows as
@@ -838,23 +841,23 @@ public:
     // Per column a compare function can be provided. By default
     // the standard compare function defined in Compare.h will be used.
     // Default sort order is ascending.
-    // Default sorting algorithm is the heapsort.
+    // Default sorting algorithm is the parallel sort.
     // <group>
     // Sort on one column.
     Table sort (const String& columnName,
 		int = Sort::Ascending,
-		int = Sort::HeapSort) const;
+		int = Sort::ParSort) const;
     // Sort on multiple columns. The principal column has to be the
     // first element in the Block of column names.
     Table sort (const Block<String>& columnNames,
 		int = Sort::Ascending,
-		int = Sort::HeapSort) const;
+		int = Sort::ParSort) const;
     // Sort on multiple columns. The principal column has to be the
     // first element in the Block of column names.
     // The order can be given per column.
     Table sort (const Block<String>& columnNames,
 		const Block<Int>& sortOrders,
-		int = Sort::HeapSort) const;
+		int = Sort::ParSort) const;
     // Sort on multiple columns. The principal column has to be the
     // first element in the Block of column names.
     // The order can be given per column.
@@ -864,7 +867,7 @@ public:
     Table sort (const Block<String>& columnNames,
 		const Block<CountedPtr<BaseCompare> >& compareObjects,
 		const Block<Int>& sortOrders,
-		int = Sort::HeapSort) const;
+		int = Sort::ParSort) const;
     // </group>
 
     // Get a vector of row numbers in the root table of rows in this table.
@@ -1213,6 +1216,6 @@ inline void Table::showStructure (std::ostream& os,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

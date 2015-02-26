@@ -22,22 +22,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_CLASSICALSTATS_H
 #define SCIMATH_CLASSICALSTATS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <scimath/Mathematics/StatisticsAlgorithm.h>
+#include <casacore/scimath/Mathematics/StatisticsAlgorithm.h>
 
-#include <scimath/Mathematics/StatisticsTypes.h>
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/StatisticsTypes.h>
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
 #include <set>
 #include <vector>
 #include <utility>
 
-namespace casa {
+namespace casacore {
 
 // Class to calculate statistics in a "classical" sense, ie using accumulators with no
 // special filtering beyond optional range filtering etc.
@@ -176,7 +177,7 @@ public:
 	virtual void setCalculateAsAdded(Bool c);
 
 	// An exception will be thrown if setCalculateAsAdded(True) has been called.
-	void setDataProvider(StatsDataProvider<AccumType, InputIterator, MaskIterator> *dataProvider);
+	void setDataProvider(CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider);
 
 	void setStatsToCalculate(std::set<StatisticsData::STATS>& stats);
 
@@ -759,7 +760,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/ClassicalStatistics.tcc>
+#include <casacore/scimath/Mathematics/ClassicalStatistics.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Euler.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Euler.cc 21544 2015-01-22 10:33:37Z gervandiepen $
 
 //# Includes
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/Euler.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/QMath.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/Euler.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/QMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Euler class
 
@@ -139,7 +139,7 @@ Euler::Euler(const Quantum<Vector<Double> > &in) :
 euler(3), axes(3) {
     Int i;
     Vector<Double> tmp = Euler::makeRad(in);
-    Int j; tmp.shape(j); j=min(j,3);
+    Int j=tmp.size(); j=min(j,3);
     for (i=0; i<j; i++) {
 	euler(i) = tmp(i);
     }
@@ -152,7 +152,7 @@ euler(3), axes(3) {
 Euler::Euler(const Quantum<Vector<Double> > &in, const Vector<uInt> &ax) :
 euler(3), axes(3) {
     Vector<Double> tmp = Euler::makeRad(in);
-    Int j; tmp.shape(j); j=min(j,3); Int i; ax.shape(i); j=min(j,i);
+    Int j=tmp.size(); j=min(j,3); Int i=ax.size(); j=min(j,i);
     for (i=0; i<j; i++) {
 	DebugAssert(ax(i) <= 3, AipsError);
 	euler(i) = tmp(i);
@@ -258,5 +258,5 @@ ostream &operator<<(ostream &os, const Euler &eul) {
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

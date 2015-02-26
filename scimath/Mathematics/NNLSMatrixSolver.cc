@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NNLSMatrixSolver.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: NNLSMatrixSolver.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <scimath/Mathematics/NNLSMatrixSolver.h>
-#include <casa/Arrays/MatrixMath.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/NNLSMatrixSolver.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
 
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogMessage.h>
 
-#include <casa/sstream.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/sstream.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #if !defined(NEED_FORTRAN_UNDERSCORES)
 #define NEED_FORTRAN_UNDERSCORES 1
@@ -117,5 +117,5 @@ Bool NNLSMatrixSolver::solve() // Solve AX=B for X
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

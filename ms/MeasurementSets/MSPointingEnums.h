@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSPointingEnums.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSPointingEnums.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSPOINTINGENUMS_H
 #define MS_MSPOINTINGENUMS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <use visibility=export>
 
@@ -127,6 +127,6 @@ public:
     };
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

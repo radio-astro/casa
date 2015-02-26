@@ -24,24 +24,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AppInfo.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AppInfo.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/System/AppInfo.h>
+#include <casacore/casa/System/AppInfo.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/System/Aipsrc.h>
-#include <casa/System/AipsrcVector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Time.h>
-#include <casa/OS/Memory.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/OS/Directory.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/System/AipsrcVector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/OS/Memory.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Bool AppInfo::need_init_p = True;
 uInt AppInfo::tz_r = 0;
@@ -137,5 +137,5 @@ void AppInfo::init() {
   AlwaysAssert(tz >= -0.625 && tz <= 0.625, AipsError);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

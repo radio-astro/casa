@@ -23,23 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayIO.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYIO_H
 #define CASA_ARRAYIO_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
 //# Forward declarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-#include <set>
-#include <vector>
-#include <map>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class AipsIO;
 class LogIO;
@@ -49,7 +45,6 @@ template<class T> class Matrix;
 template<class T> class Vector;
 template<class T> class Cube;
 template<class T> class Block;
-
 
 // <summary>
 //    Input/output operators for Arrays.
@@ -353,9 +348,9 @@ void writeAsciiVector (const Vector<T>& vec, const Char* fileName);
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/ArrayIO.tcc>
+#include <casacore/casa/Arrays/ArrayIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

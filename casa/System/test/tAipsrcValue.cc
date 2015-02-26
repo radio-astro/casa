@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tAipsrcValue.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tAipsrcValue.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/System/AipsrcValue.h>
-#include <casa/System/AipsrcVector.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/System/AipsrcVector.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main(){
   String aipsrcKeyword("my.double.test");
   String aipsrcKeyword1("mine.double.test");

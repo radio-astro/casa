@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableInfo.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableInfo.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEINFO_H
 #define TABLES_TABLEINFO_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Table type, subtype and further info
@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <p>
 // To be sure that different table types have unique names, it can be
 // useful to use enum's and to define them in one common file. For
-// AIPS++ tables this enum is defined in this file.
+// Casacore tables this enum is defined in this file.
 
 // <example>
 // <srcblock>
@@ -161,7 +161,7 @@ public:
 	WEATHER,
 	// Measurement Equation Calibration table
 	ME_CALIBRATION,
-	// AIPS++ Log table
+	// Casacore Log table
 	LOG,
 	// A ComponentList table contains parameterised representations of the
 	// sky brightness.
@@ -242,6 +242,6 @@ inline const String& TableInfo::readme() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

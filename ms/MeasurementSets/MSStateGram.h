@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSStateGram.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSStateGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSTATEGRAM_H
 #define MS_MSSTATEGRAM_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -96,6 +97,6 @@ int msStateGramInput (char* buf, int max_size);
 
 // </group>
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

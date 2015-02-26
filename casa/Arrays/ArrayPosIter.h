@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPosIter.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: ArrayPosIter.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYPOSITER_H
 #define CASA_ARRAYPOSITER_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 //# Change the following to a forward declare?
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ArrayBase;
@@ -202,6 +202,6 @@ inline Bool ArrayPositionIterator::pastEnd() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

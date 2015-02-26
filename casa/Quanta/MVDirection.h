@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDirection.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MVDirection.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MVDIRECTION_H
 #define CASA_MVDIRECTION_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/MVPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/MVPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward De
 
@@ -247,6 +247,6 @@ MVDirection operator*(const RotMatrix &left, const MVDirection&right);
 MVDirection  operator*(const MVDirection &left, const RotMatrix &right);
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

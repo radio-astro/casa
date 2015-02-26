@@ -24,21 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CoordinateSystem.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: CoordinateSystem.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef COORDINATES_COORDINATESYSTEM_H
 #define COORDINATES_COORDINATESYSTEM_H
 
-#include <casa/aips.h>
-#include <coordinates/Coordinates/Coordinate.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MFrequency.h>
-#include <coordinates/Coordinates/ObsInfo.h>
-#include <casa/Containers/Block.h>
-#include <measures/Measures/MDoppler.h>
+#include <casacore/casa/aips.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/measures/Measures/MDoppler.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Matrix;
 class DirectionCoordinate;
@@ -402,6 +402,9 @@ public:
     // removed). 
     Int worldAxisToPixelAxis(uInt worldAxis) const;
 
+    // Return the name of the record field in which the coordinate is stored.
+    String coordRecordName(uInt which) const;
+
     // Returns <src>Coordinate::COORDSYS</src>
     virtual Coordinate::Type type() const;
 
@@ -427,7 +430,6 @@ public:
     // This one throws an exception rather than returning False. After all, that's
     // what exceptions are for.
     virtual Vector<Double> toWorld(const Vector<Double> &pixel) const;
-    virtual Vector<Double> toWorld(const IPosition& pixel) const;
     virtual Bool toPixel(Vector<Double> &pixel, 
 			 const Vector<Double> &world) const;
     // This one throws an exception rather than returning False.
@@ -443,6 +445,7 @@ public:
     // This is provided as a convenience since it is a very commonly desired
     // operation through CoordinateSystem.  The output vector is resized.   
     Bool toWorld(Vector<Double> &world, const IPosition &pixel) const;
+    Vector<Double> toWorld(const IPosition& pixel) const;
 
     // Batch up a lot of transformations. The first (most rapidly varying) axis
     // of the matrices contain the coordinates. Returns False if any conversion
@@ -621,7 +624,8 @@ public:
     // returning False on failure.
     // <group>
     virtual Bool setWorldAxisUnits(const Vector<String> &units);
-    virtual Bool setWorldAxisUnits(const Vector<String> &units, Bool throwException);
+    Bool setWorldAxisUnits(const Vector<String> &units,
+                           Bool throwException);
     virtual Vector<String> worldAxisUnits() const;
     // </group>
 
@@ -729,13 +733,16 @@ public:
     // Probably even if we return False we should set up the best linear
     // coordinate that we can.
     // Use oneRelative=True to convert one-relative FITS pixel coordinates to
-    // zero-relative aips++ coordinates.  On output, <src>stokesFITSValue</src>
+    // zero-relative Casacore coordinates.
+    // On output, <src>stokesFITSValue</src>
     // holds the FITS value of any unofficial Stokes (beam, optical depth,
     // spectral index) for the last unofficial value accessed (-1 if none).
-    // The idea is that if the Stokes axis is of length one and holds an unofficial value,
-    // you should drop the STokes axis and convert that value to <src>ImageInfo::ImageTypes</src>
-    // with <src>ImageInfo::imageTypeFromFITSValue</src>. If on input, <src>stokesFITSValue</src>
-    // is positive, then a warning is issued if any unofficial values are encountered.
+    // The idea is that if the Stokes axis is of length one and holds an
+    // unofficial value, you should drop the STokes axis and convert that
+    // value to <src>ImageInfo::ImageTypes</src> with
+    // <src>ImageInfo::imageTypeFromFITSValue</src>.
+    // If on input, <src>stokesFITSValue</src> is positive, then a warning
+    // is issued if any unofficial values are encountered.
     // Otherwise no warning is issued.
     //# cf comment in toFITS.
     static Bool fromFITSHeader(Int& stokesFITSValue, 
@@ -764,17 +771,21 @@ public:
    // Does this coordinate system have a spectral axis?
    Bool hasSpectralAxis() const;
 
-   // what number is the spectral axis? If doWorld=True, the world axis number is
-   // returned, if False, the pixel axis number is returned. Returns -1 if no spectral axis exists or if
-   // doWorld = False and the spectral pixel axis has been removed.
+   // What number is the spectral axis?
+   // If doWorld=True, the world axis number is returned.
+   // Otherwise, the pixel axis number is returned.
+   // Returns -1 if the spectral axis (world c.q. pixel) does not exist.
    Int spectralAxisNumber(Bool doWorld=False) const;
 
-   // what number is the spectral coordinate? Returns -1 if no spectral coordinate exists.
+   // what number is the spectral coordinate?
+    // Returns -1 if no spectral coordinate exists.
    Int spectralCoordinateNumber() const;
 
 
    // does this coordinate system have a polarizaion/stokes coordinate?
    Bool hasPolarizationCoordinate() const;
+   Bool hasPolarizationAxis() const
+     { return hasPolarizationCoordinate(); }
 
    // Given a stokes or polarization parameter, find the pixel location.
    // Note the client is responsible for any boundedness checks
@@ -785,10 +796,10 @@ public:
    // Returns -1 if no stokes coordinate exists.
    Int polarizationCoordinateNumber() const;
 
-   // what is the number of the polarization/stokes axis?
-   // If doWorld=True, the world axis number is
-   // returned, if False, the pixel axis number is returned. Returns -1 if no stokes coordinate exists or if
-   // doWorld = False and the stokes pixel axis has been removed.
+   // What is the number of the polarization/stokes axis?
+   // If doWorld=True, the world axis number is returned.
+   // Otherwise, the pixel axis number is returned.
+   // Returns -1 if the stokes axis (world c.q. pixel) does not exist.
    Int polarizationAxisNumber(Bool doWorld=False) const;
 
    // Does this coordinate system have a quality axis?
@@ -813,7 +824,8 @@ public:
    Bool hasDirectionCoordinate() const;
 
    // Get the pixel axis numbers of the direction coordinate in this object.
-   // The order of the returned axis numbers is always longitude axis first, latitude axis second.
+   // The order of the returned axis numbers is always longitude axis first,
+   // latitude axis second.
    Vector<Int> directionAxesNumbers() const;
 
    String stokesAtPixel(const uInt pixel) const;
@@ -827,36 +839,33 @@ public:
    // Get the 0 based order of the minimal match strings specified in <src>order</src>.
    // If <src>requireAll</src> is True, checks are done to ensure that all axes in
    // the coordinate system are uniquely specified in <src>order</src>.
-   // If <src>allowFriendlyNames</src> is True, the following (fully specified) strings will
-   // match the specified axes:
+   // If <src>allowFriendlyNames</src> is True, the following (fully specified) strings
+   // will match the specified axes:
    // "spectral" matches both "frequency" and "velocity".
-   // "ra" matches "right ascension"
-   Vector<Int> getWorldAxesOrder(
-		   Vector<String>& myNames, Bool requireAll,
-		   Bool allowFriendlyNames=False
-   ) const;
+   // "ra" matches "right ascension".
+   Vector<Int> getWorldAxesOrder(Vector<String>& myNames, Bool requireAll,
+                                 Bool allowFriendlyNames=False) const;
 
-   // is the abscissa in the DirectionCoordinate the longitude axis? Throws exception
-   // if there is no DirectionCoordinate or if either of the direction pixel axes have
-   // been removed. For a normal direction coordinate, this will return True.
+   // Is the abscissa in the DirectionCoordinate the longitude axis?
+   // Throws exception if there is no DirectionCoordinate or if either of
+   // the direction pixel axes have been removed.
+   // For a normal direction coordinate, this will return True.
    Bool isDirectionAbscissaLongitude() const;
 
-   // <group>
-   // Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
-   // so that pixel<->world go to the specified frequency system (a valid
-   // MFrequency::Types string).  Returns False if frequency system invalid
-   // or if no DirectionCoordinate or if cant get Date/Epoch
-   Bool setSpectralConversion (String& errorMsg, const String frequencySystem);
-   // this version throws an exception rather than returning False
-   void setSpectralConversion (const String frequencySystem);
-   //</group>
-
-   // Set rest frequency of SpectralCoordinate in CoordinateSystem.
-   // Unit must be consistent with Hz or m.
-   // Returns False if invalid inputs (and CS not changed) and an error message.
-   Bool setRestFrequency (
-		   String& errorMsg, const Quantity& freq
-   );
+    // Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
+    // so that pixel<->world go to the specified frequency system (a valid
+    // MFrequency::Types string).  Returns False if frequency system invalid
+    // or if no DirectionCoordinate or if cant get Date/Epoch.
+    // <group>
+    Bool setSpectralConversion (String& errorMsg, const String frequencySystem);
+    // This version throws an exception rather than returning False.
+    void setSpectralConversion (const String frequencySystem);
+    //</group>
+ 
+    // Set rest frequency of SpectralCoordinate in CoordinateSystem.
+    // Unit must be consistent with Hz or m.
+    // Returns False if invalid inputs (and CS not changed) and an error message.
+    Bool setRestFrequency (String& errorMsg, const Quantity& freq);
 
 private:
     // Where we store copies of the coordinates we are created with.
@@ -971,11 +980,12 @@ private:
                            MDoppler::Types velocityType, const String& velUnits) const;
     // </group>
 
-    void _downcase(Vector<String>& vec) const;
+    void _downcase(Vector<String>& vec) const
+      { for (uInt i=0; i<vec.size(); ++i) vec[i].downcase(); }
 
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

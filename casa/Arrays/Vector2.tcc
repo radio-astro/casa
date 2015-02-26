@@ -23,49 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector2.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Vector2.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
+#ifndef CASA_VECTOR2_TCC
+#define CASA_VECTOR2_TCC
 
-#ifndef CASA_ARRAY_VECTOR2_TCC
-#define CASA_ARRAY_VECTOR2_TCC
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/stdvector.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/stdvector.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-template<class T>
-template<class U>
-Vector<T>::Vector(const vector<T, U> &other)
-  : Array<T>(IPosition(1, other.size())) {
-  uInt i=0;
-  for (typename vector<T, U>::const_iterator pos=other.begin();
-       pos != other.end(); pos++) (*this)[i++] = *pos;
-}
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 template <class U, class V>
 Vector<T>::Vector(const vector<U, V> &other)
-	: Array<T>(IPosition(1, other.size())) {
-	uInt i=0;
-	for (typename vector<U, V>::const_iterator pos=other.begin();
-		pos != other.end(); pos++) {
-		(*this)[i++] = (T)*pos;
-	}
+  : Array<T>(IPosition(1, other.size()))
+{
+  size_t i=0;
+  for (typename vector<U, V>::const_iterator pos=other.begin();
+       pos != other.end(); ++pos) {
+    (*this)[i++] = (T)*pos;
+  }
 }
-
-
 template<class T>
-template<class U>
-
-Vector<T>::Vector(const std::set<U> &other)
-  : Array<T>(IPosition(1, other.size())) {
-  uInt i=0;
-  for (
-		  typename std::set<U>::const_iterator pos=other.begin();
-		  pos != other.end(); pos++
-	) {
-	  (*this)[i++] = *pos;
+template<class Iterator>
+Vector<T>::Vector(Iterator first, size_t size, int)
+  : Array<T>(IPosition(1, size)) {
+  for (size_t i=0; i<size; ++i, ++first) {
+    (*this)[i] = *first;
   }
 }
 
@@ -78,14 +62,7 @@ void Array<T>::tovector(vector<T, U> &out) const {
   this->freeStorage(stor, deleteIt);
 }  
 
-// MACRO to generate the proper templates for the above versions.
-// Use as e.g. AIPS_VECTOR2_AUX_TEMPLATES(Double)
-// If 'X' contains commas, use a 'typedef template X'
-#define AIPS_VECTOR2_AUX_TEMPLATES(X) \
-template Vector<X>::Vector(const vector<X> &); \
-template void Array<X>::tovector(vector<X> &) const;
+} //# NAMESPACE CASACORE - END
 
-
-} //# NAMESPACE CASA - END
 
 #endif

@@ -23,21 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CurvedImage2D.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: CurvedImage2D.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/CurvedImage2D.h>
-#include <lattices/Lattices/CurvedLattice2D.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#ifndef IMAGES_CURVEDIMAGE2D_TCC
+#define IMAGES_CURVEDIMAGE2D_TCC
+
+#include <casacore/images/Images/CurvedImage2D.h>
+#include <casacore/lattices/Lattices/CurvedLattice2D.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 CurvedImage2D<T>::CurvedImage2D()
@@ -65,10 +68,10 @@ CurvedImage2D<T>::CurvedImage2D (const ImageInterface<T>& image,
   cSysOut.addCoordinate(c);  
   cSysOut.setObsInfo(itsImagePtr->coordinates().obsInfo());
 //
-  this->setCoordsMember (cSysOut);
-  this->setImageInfo (itsImagePtr->imageInfo());
-  this->setMiscInfoMember (itsImagePtr->miscInfo());
-  this->setUnitMember (itsImagePtr->units());
+  setCoordsMember (cSysOut);
+  setImageInfoMember (itsImagePtr->imageInfo());
+  setMiscInfoMember (itsImagePtr->miscInfo());
+  setUnitMember (itsImagePtr->units());
   logger().addParent (itsImagePtr->logger());
 }
 
@@ -185,6 +188,12 @@ String CurvedImage2D<T>::name (Bool stripPath) const
 }
   
 template<class T>
+ImageAttrHandler& CurvedImage2D<T>::attrHandler (Bool createHandler)
+{
+  return itsImagePtr->attrHandler (createHandler);
+}
+
+template<class T>
 Bool CurvedImage2D<T>::doGetSlice (Array<T>& buffer,
 				   const Slicer& section)
 {
@@ -266,5 +275,7 @@ void CurvedImage2D<T>::reopen()
   itsImagePtr->reopen();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

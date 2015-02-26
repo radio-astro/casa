@@ -23,24 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageInterface.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: ImageInterface.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_IMAGEINTERFACE_H
 #define IMAGES_IMAGEINTERFACE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <images/Regions/RegionHandler.h>
-#include <images/Images/MaskSpecifier.h>
-#include <images/Images/ImageInfo.h>
-#include <lattices/Lattices/MaskedLattice.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <tables/LogTables/LoggerHolder.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Quanta/Unit.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/RegionHandler.h>
+#include <casacore/images/Images/MaskSpecifier.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/images/Images/ImageAttrHandler.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Quanta/Unit.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class LatticeIterInterface;
@@ -189,8 +190,6 @@ public:
 
   // Functions to set or replace the coordinate information in the Image
   // Returns False on failure, e.g. if the number of axes do not match.
-  //# NOTE. setCoordinateInfo should be pure virtual with a partial 
-  //# implementation however SGI ntv will not generate it with -no_prelink.
   // <group>
   virtual Bool setCoordinateInfo (const CoordinateSystem& coords);
   const CoordinateSystem& coordinates() const
@@ -241,6 +240,14 @@ public:
   const ImageInfo& imageInfo() const
     { return imageInfo_p; }
   virtual Bool setImageInfo (const ImageInfo& info);
+  // </group>
+
+  // Get access to the attribute handler.
+  // By default an empty handler is returned where no groups can be added to.
+  // <group>
+  virtual ImageAttrHandler& attrHandler (Bool createHandler=False);
+  ImageAttrHandler& roAttrHandler() const
+    { return const_cast<ImageInterface<T>*>(this)->attrHandler(False); }
   // </group>
 
   // Can the image handle region definition?
@@ -344,7 +351,6 @@ protected:
   ImageInterface& operator= (const ImageInterface& other);
 
   // Restore the image info from the record.
-  // FIXME This isn't implmented. Can it be removed?
   Bool restoreImageInfo (const RecordInterface& rec);
 
   // Set the image logger variable.
@@ -352,7 +358,7 @@ protected:
     { log_p = logger; }
 
   // Set the image info variable.
- void setImageInfoMember (const ImageInfo& imageInfo);
+  void setImageInfoMember (const ImageInfo& imageInfo);
 
   // Set the coordinate system variable.
   void setCoordsMember (const CoordinateSystem& coords)
@@ -385,13 +391,15 @@ private:
   // The region handling object.
   RegionHandler* regHandPtr_p;
 
+  // The attribute handling object.
+  ImageAttrHandler itsBaseAttrHandler;
 };
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageInterface.tcc>
+#include <casacore/images/Images/ImageInterface.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
