@@ -82,7 +82,8 @@ class RestoreDataInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
-        rawdata_dir=None, output_dir=None, session=None, vis=None):
+        rawdata_dir=None, output_dir=None, session=None, vis=None,
+	lazy=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -102,6 +103,8 @@ class RestoreDataInputs(basetask.StandardInputs):
         :type session: a string or list of strings
         :param vis: the ASDMs(s) for which data is to be restored
         :type vis: a string or list of strings
+        :param lazy: use the lazy filler to restore data
+        :type lazy: boolean True or False
         """
 
         # set the properties to the values given as input arguments
@@ -170,6 +173,16 @@ class RestoreDataInputs(basetask.StandardInputs):
         if type(value) is types.ListType:
             self._my_vislist = value
         self._vis = value
+
+    @property
+    def lazy(self):
+        if self._lazy is None:
+            self._lazy = False
+        return self._lazy
+
+    @lazy.setter
+    def lazy(self, value):
+        self._lazy = value
 
 
 class RestoreDataResults(basetask.Results):
@@ -326,7 +339,8 @@ class RestoreData(basetask.StandardTaskTemplate):
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
-            vis=vislist, session=sessionlist, save_flagonline=False)
+            vis=vislist, session=sessionlist, save_flagonline=False,
+	    lazy=inputs.lazy)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
