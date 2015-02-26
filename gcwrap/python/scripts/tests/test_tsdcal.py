@@ -275,9 +275,7 @@ class tsdcal_test_skycal(tsdcal_test_base):
                         with sdutil.tbmanager(self.infile) as tb:
                             antenna1 = numpy.unique(tb.getcol('ANTENNA1'))
                             myargs['baseline'] = '%s&&&'%(','.join(map(str,antenna1)))
-                    print myargs
                     a = myms.msseltoindex(self.infile, **myargs)
-                    print a
                     antenna1_selection = a['antenna1']
                     spw_selection = a['spw']
                     expected_nrow = 3 * len(spw_selection) * len(antenna1_selection)
@@ -379,24 +377,113 @@ class tsdcal_test_skycal(tsdcal_test_base):
 
 # interpolator utility for testing
 class Interpolator(object):
-    def __init__(self, table):
+    @staticmethod
+    def __interp_freq_linear(data, flag):
+        outdata = data.copy()
+        outflag = flag
+        npol, nchan = outdata.shape
+        for ipol in xrange(npol):
+            valid_chans = numpy.where(outflag[ipol,:] == False)[0]
+            if len(valid_chans) == 0:
+                continue
+            for ichan in xrange(nchan):
+                if outflag[ipol,ichan] == True:
+                    #print '###', ipol, ichan, 'before', data[ipol,ichan]
+                    if ichan <= valid_chans[0]:
+                        outdata[ipol,ichan] = data[ipol,valid_chans[0]]
+                    elif ichan >= valid_chans[-1]:
+                        outdata[ipol,ichan] = data[ipol,valid_chans[-1]]
+                    else:
+                        ii = abs(valid_chans - ichan).argmin()
+                        if valid_chans[ii] - ichan > 0:
+                            ii -= 1
+                        i0 = valid_chans[ii]
+                        i1 = valid_chans[ii+1]
+                        outdata[ipol,ichan] = ((i1 - ichan) * data[ipol,i0] + (ichan - i0) * data[ipol,i1]) / (i1 - i0)
+                    #print '###', ipol, ichan, 'after', data[ipol,ichan]
+        return outdata, outflag
+
+    @staticmethod
+    def interp_freq_linear(data, flag):
+        outflag = flag.copy()
+        outflag[:] = False
+        outdata, outflag = Interpolator.__interp_freq_linear(data, outflag)
+        return outdata, outflag
+        
+    @staticmethod
+    def interp_freq_nearest(data, flag):
+        outdata = data.copy()
+        outflag = flag
+        npol, nchan = outdata.shape
+        for ipol in xrange(npol):
+            valid_chans = numpy.where(outflag[ipol,:] == False)[0]
+            if len(valid_chans) == 0:
+                continue
+            for ichan in xrange(nchan):
+                if outflag[ipol,ichan] == True:
+                    #print '###', ipol, ichan, 'before', data[ipol,ichan]
+                    if ichan <= valid_chans[0]:
+                        outdata[ipol,ichan] = data[ipol,valid_chans[0]]
+                    elif ichan >= valid_chans[-1]:
+                        outdata[ipol,ichan] = data[ipol,valid_chans[-1]]
+                    else:
+                        ii = abs(valid_chans - ichan).argmin()
+                        outdata[ipol,ichan] = data[ipol,valid_chans[ii]]
+                    #print '###', ipol, ichan, 'after', data[ipol,ichan]
+        return outdata, outflag
+
+    @staticmethod
+    def interp_freq_linearflag(data, flag):
+        # NOTE
+        # interpolation/extrapolation of flag along frequency axis is
+        # also needed for linear interpolation. Due to this, number of
+        # flag channels will slightly increase and causes different
+        # behavior from existing scantable based single dish task
+        # (sdcal2).
+        #
+        # It appears that effective flag at a certain channel is set to
+        # the flag at previous channels (except for channel 0).
+        #
+        # 2015/02/26 TN
+        npol,nchan = flag.shape
+        #print '###BEFORE', flag[:,:12]
+        outflag = flag.copy()
+        for ichan in xrange(nchan-1):
+            outflag[:,ichan] = numpy.logical_or(flag[:,ichan], flag[:,ichan+1])
+        outflag[:,1:] = outflag[:,:-1]
+        outflag[:,-1] = flag[:,-2]
+        #print '###AFTER', outflag[:,:12]
+
+        outdata, outflag = Interpolator.__interp_freq_linear(data, outflag)
+        return outdata, outflag
+
+    @staticmethod
+    def interp_freq_nearestflag(data, flag):
+        outdata, outflag = Interpolator.interp_freq_nearest(data, flag)
+        return outdata, outflag
+
+    def __init__(self, table, finterp='linear'):
         self.table = table
         self.taql = ''
         self.time = None
         self.data = None
+        self.finterp = getattr(Interpolator,'interp_freq_%s'%(finterp.lower()))
+        print 'self.finterp:', self.finterp.__name__
 
     def select(self, antenna, spw):
         self.taql = 'ANTENNA1 == %s && ANTENNA2 == %s && SPECTRAL_WINDOW_ID == %s'%(antenna, antenna, spw)
         with sdutil.table_selector(self.table, self.taql) as tb:
             self.time = tb.getcol('TIME')
             self.data = tb.getcol('FPARAM')
+            self.flag = tb.getcol('FLAG')
 
     def interpolate(self, t):
         raise Exception('Not implemented')
+        
 
 class LinearInterpolator(Interpolator):
-    def __init__(self, table):
-        super(LinearInterpolator, self).__init__(table)
+    def __init__(self, table, finterp='linear'):
+        super(LinearInterpolator, self).__init__(table, finterp)
 
     def interpolate(self, t):
         dt = self.time - t
@@ -413,17 +500,38 @@ class LinearInterpolator(Interpolator):
             d0 = self.data[:,:,index]
             d1 = self.data[:,:,index+1]
             ref = ((t1 - t) * d0 + (t - t0) * d1) / (t1 - t0)
-        return ref
+        flag = self.interpolate_flag(t)
+        ref, refflag = self.finterp(ref, flag)
+                               
+        return ref, refflag
+    
+    def interpolate_flag(self, t):
+        dt = self.time - t
+        index = abs(dt).argmin()
+        if dt[index] > 0.0:
+            index -= 1
+        if index < 0:
+            flag = self.flag[:,:,0].copy()
+        elif index >= len(self.time) - 1:
+            flag = self.flag[:,:,-1].copy()
+        else:
+            f0 = self.flag[:,:,index]
+            f1 = self.flag[:,:,index+1]
+            flag = numpy.logical_or(f0, f1)
+
+        return flag
 
 class NearestInterpolator(Interpolator):
-    def __init__(self, table):
-        super(NearestInterpolator, self).__init__(table)
+    def __init__(self, table, finterp='nearest'):
+        super(NearestInterpolator, self).__init__(table, finterp)
 
     def interpolate(self, t):
         dt = self.time - t
         index = abs(dt).argmin()
-        return self.data[:,:,index].copy()
-            
+        ref, refflag = self.finterp(self.data[:,:,index].copy(), self.flag[:,:,index].copy())
+        return ref, refflag
+
+    
 class tsdcal_test_apply(tsdcal_test_base):
     
     """
@@ -441,6 +549,10 @@ class tsdcal_test_apply(tsdcal_test_base):
     test_apply_sky08 --- apply data (linear) 
     test_apply_sky09 --- apply selected data
     test_apply_sky10 --- apply data (nearest)
+    test_apply_sky11 --- apply data (linearflag for frequency interpolation)
+    test_apply_sky12 --- apply data (nearestflag for frequency interpolation)
+    test_apply_sky13 --- apply data (string applytable input)
+    test_apply_sky14 --- apply data (interp='')
     """
 
     @property
@@ -472,21 +584,15 @@ class tsdcal_test_apply(tsdcal_test_base):
         Decorator for the test case that is intended to verify
         normal execution result.
 
-        interp --- interpolation option ('linear' or 'nearest')
+        interp --- interpolation option ('linear', 'nearest', '*flag')
+                   comma-separated list is allowed and it will be
+                   interpreted as '<interp for time>,<intep for freq>'
         selection --- data selection parameter as dictionary
         """
         def wrapper(func):
             import functools
             @functools.wraps(func)
             def _wrapper(self):
-                func(self)
-
-                # sanity check
-                self.assertIsNone(self.result, msg='The task must complete without error')
-                # verify if CORRECTED_DATA exists
-                with sdutil.tbmanager(self.infile) as tb:
-                    self.assertTrue('CORRECTED_DATA' in tb.colnames(), msg='CORRECTED_DATA column must be created after task execution!')
-
                 # data selection 
                 myms = gentools(['ms'])[0]
                 myargs = kwargs.copy()
@@ -495,6 +601,7 @@ class tsdcal_test_apply(tsdcal_test_base):
                         antenna1 = numpy.unique(tb.getcol('ANTENNA1'))
                         myargs['baseline'] = '%s&&&'%(','.join(map(str,antenna1)))
                 a = myms.msseltoindex(self.infile, **myargs)
+                antennalist = a['antenna1']
                 with sdutil.tbmanager(self.applytable) as tb:
                     spwlist = numpy.unique(tb.getcol('SPECTRAL_WINDOW_ID'))
                 with sdutil.tbmanager(os.path.join(self.infile, 'DATA_DESCRIPTION')) as tb:
@@ -503,14 +610,46 @@ class tsdcal_test_apply(tsdcal_test_base):
                 if len(a['spw']) > 0:
                     spwlist = list(set(spwlist) & set(a['spw']))
                     spwddlist = map(spwidcol.index, spwlist)
+
+                # preserve original flag
+                flag_org = {}
+                for antenna in antennalist:
+                    flag_org[antenna] = {}
+                    for (spw,spwdd) in zip(spwlist,spwddlist):
+                        taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna, antenna, spwdd)
+                        with sdutil.table_selector(self.infile, taql) as tb:
+                            flag_org[antenna][spw] = tb.getcol('FLAG')
+                
+                # execute test
+                func(self)
+
+                # sanity check
+                self.assertIsNone(self.result, msg='The task must complete without error')
+                # verify if CORRECTED_DATA exists
+                with sdutil.tbmanager(self.infile) as tb:
+                    self.assertTrue('CORRECTED_DATA' in tb.colnames(), msg='CORRECTED_DATA column must be created after task execution!')
+
+                # parse interp
+                pos = interp.find(',')
+                if pos == -1:
+                    tinterp = interp.lower()
+                    finterp = 'linearflag'
+                else:
+                    tinterp = interp[:pos].lower()
+                    finterp = interp[pos+1:]
+                if len(tinterp) == 0:
+                    tinterp = 'linear'
+                if len(finterp) == 0:
+                    finterp = 'linearflag'
                 
                 # result depends on interp
-                self.assertTrue(interp in ['linear', 'nearest'], msg='Internal Error')
-                if interp == 'linear':
-                    interpolator = LinearInterpolator(self.applytable)
+                print 'Interpolation option:', tinterp, finterp
+                self.assertTrue(tinterp in ['linear', 'nearest'], msg='Internal Error')
+                if tinterp == 'linear':
+                    interpolator = LinearInterpolator(self.applytable, finterp)
                 else:
-                    interpolator = NearestInterpolator(self.applytable)
-                for antenna in a['antenna1']:
+                    interpolator = NearestInterpolator(self.applytable, finterp)
+                for antenna in antennalist:
                     for (spw,spwdd) in zip(spwlist,spwddlist):
                         interpolator.select(antenna, spw)
                         taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna, antenna, spwdd)
@@ -519,21 +658,36 @@ class tsdcal_test_apply(tsdcal_test_base):
                             for irow in xrange(tb.nrows()):
                                 t = tb.getcell('TIME', irow)
                                 data = tb.getcell('DATA', irow)
+                                outflag = tb.getcell('FLAG', irow)
                                 corrected = tb.getcell('CORRECTED_DATA', irow)
-                                ref = interpolator.interpolate(t)
+                                ref, calflag = interpolator.interpolate(t)
+                                inflag = flag_org[antenna][spw][:,:,irow]
                                 expected = (data - ref) / ref
+                                expected_flag = numpy.logical_or(inflag, calflag)
+                                #print 'antenna', antenna, 'spw', spw, 'row', irow
+                                #print 'inflag', inflag[:,:12], 'calflag', calflag[:,:12], 'expflag', expected_flag[:,:12], 'outflag', outflag[:,:12]
+                                #print 'ref', ref[:,126:130], 'data', data[:,126:130], 'expected', expected[:,126:130], 'corrected', corrected[:,126:130]
+                                
                                 self.assertEqual(corrected.shape, expected.shape, msg='Shape mismatch in antenna %s spw %s row %s (expeted %s actual %s)'%(antenna,spw,irow,list(expected.shape),list(corrected.shape)))
                                 npol, nchan = corrected.shape
                                 for ipol in xrange(npol):
                                     for ichan in xrange(nchan):
+                                        # data
                                         _expected = expected[ipol,ichan]
                                         _corrected = corrected[ipol,ichan]
-                                        if _expected == 0.0:
+                                        if abs(_expected) < 1.0e-7:
+                                        #if _expected == 0.0:
+                                            # this happens either expected value is 0.0
+                                            # or loss of significant digits
                                             diff = abs(_corrected - _expected)
                                         else:
                                             diff = abs((_corrected - _expected) / _expected)
                                         self.assertLess(diff, self.eps, msg='Calibrated result differ in antenna %s spw %s row %s pol %s chan %s (expected %s actual %s diff %s)'%(antenna,spw,irow,ipol,ichan,_expected,_corrected,diff))
-                                
+
+                                        # flag
+                                        _outflag = outflag[ipol,ichan]
+                                        _expected_flag = expected_flag[ipol,ichan]
+                                        self.assertEqual(_outflag, _expected_flag, msg='Resulting flag differ in antenna%s spw %s row %s pol %s chan %s (expected %s actual %s)'%(antenna,spw,irow,ipol,ichan,_expected_flag,_outflag))
                     
             return _wrapper
         return wrapper
@@ -594,7 +748,6 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         test_apply_sky07 --- invalid applytable (not caltable)
         """
-        # 'cubic' interpolation along time axis is not supported yet
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.infile], interp='linear')
 
     @normal_case()
@@ -617,7 +770,35 @@ class tsdcal_test_apply(tsdcal_test_base):
         test_apply_sky10 --- apply data (nearest)
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='nearest')
+
+    @normal_case(interp='linear,linearflag')
+    def test_apply_sky11(self):
+        """
+        test_apply_sky11 --- apply data (linearflag for frequency interpolation)
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,linearflag')
         
+    @normal_case(interp='linear,nearestflag')
+    def test_apply_sky12(self):
+        """
+        test_apply_sky12 --- apply data (nearestflag for frequency interpolation)
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,nearestflag')
+        
+    @normal_case()
+    def test_apply_sky13(self):
+        """
+        test_apply_sky13 --- apply data (string applytable input)
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
+
+    @normal_case(interp='')
+    def test_apply_sky14(self):
+        """
+        test_apply_sky14 --- apply data (interp='')
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='')
+
 def suite():
     return [tsdcal_test, tsdcal_test_skycal,
             tsdcal_test_apply]
