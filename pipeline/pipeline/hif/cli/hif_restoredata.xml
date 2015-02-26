@@ -34,6 +34,11 @@
 	<value>../rawdata</value>
     </param>
 
+    <param type="bool" name="lazy">
+	<description>Use the lazy filler option</description>
+	<value>False</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -115,6 +120,11 @@ products_dir -- Name of the data products directory. Currently not
 rawdata_dir -- Name of the rawdata subdirectory. 
    default: '../rawdata'
    example: rawdata_dir='myrawdatapath'
+
+lazy -- Use the lazy fillter option
+   default: False
+   example: lazy=Treu
+
 
 
 --- pipeline task execution modes
