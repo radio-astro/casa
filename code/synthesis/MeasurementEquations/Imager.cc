@@ -5743,8 +5743,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   //Int rawspwid = rawspwids[0];
   //Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
   //Int nchan=freqArray.shape()[0]   ;
-  //Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
-  Int nchan = Int(fabs(freqMax - freqMin)/freqWidth);
+  Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
 
   // UNCOMMENTED for debug
   //Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
