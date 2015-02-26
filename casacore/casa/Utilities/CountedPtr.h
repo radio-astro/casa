@@ -131,6 +131,11 @@ public:
       : pointerRep_p(that.pointerRep_p)
     {}
 
+    // Create from a shared_ptr.
+    CountedPtr (const PointerRep& rep)
+      : pointerRep_p (rep)
+    {}
+
     // This destructor only deletes the really stored data when it was
     // initialized as deletable and the reference count is zero.
     ~CountedPtr() {}
@@ -265,12 +270,6 @@ private:
 #else
     typedef std::tr1::shared_ptr<t> PointerRep;
 #endif
-
-    // Create from a shared_ptr.
-    CountedPtr (const PointerRep& rep)
-      : pointerRep_p (rep)
-    {}
-
 
     PointerRep pointerRep_p;
 };
