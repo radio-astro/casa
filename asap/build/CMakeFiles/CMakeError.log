@@ -1,0 +1,32 @@
+Performing C++ SOURCE FILE Test HAS_GXX_FORTRAN_RULES failed with the following output:
+Change Dir: /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec.dir/build.make CMakeFiles/cmTryCompileExec.dir/build
+gmake[1]: Entering directory `/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building CXX object CMakeFiles/cmTryCompileExec.dir/src.cxx.o
+/usr/bin/c++    -DHAS_GXX_FORTRAN_RULES   -fcx-fortran-rules -o CMakeFiles/cmTryCompileExec.dir/src.cxx.o -c /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp/src.cxx
+cc1plus: error: unrecognized command line option "-fcx-fortran-rules"
+gmake[1]: Leaving directory `/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp'
+gmake[1]: *** [CMakeFiles/cmTryCompileExec.dir/src.cxx.o] Error 1
+gmake: *** [cmTryCompileExec/fast] Error 2
+
+Source file was:
+int main() { return 0;}
+Performing C SOURCE FILE Test HAS_GCC_FORTRAN_RULES failed with the following output:
+Change Dir: /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/gmake "cmTryCompileExec/fast"
+/usr/bin/gmake -f CMakeFiles/cmTryCompileExec.dir/build.make CMakeFiles/cmTryCompileExec.dir/build
+gmake[1]: Entering directory `/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp'
+/usr/bin/cmake -E cmake_progress_report /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec.dir/src.c.o
+/usr/bin/gcc   -DHAS_GCC_FORTRAN_RULES   -fcx-fortran-rules -o CMakeFiles/cmTryCompileExec.dir/src.c.o   -c /home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp/src.c
+cc1: error: unrecognized command line option "-fcx-fortran-rules"
+gmake[1]: *** [CMakeFiles/cmTryCompileExec.dir/src.c.o] Error 1
+gmake[1]: Leaving directory `/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/CMakeTmp'
+gmake: *** [cmTryCompileExec/fast] Error 2
+
+Source file was:
+int main(void) { return 0; }
