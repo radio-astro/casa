@@ -956,12 +956,13 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
-record* msmetadata::pointingdirection(int rowid) {
+record* msmetadata::pointingdirection(int rowid, bool const interpolate, int const initialrow) {
 	//_FUNC(
 		Int ant1 COMMA ant2;
 		Double time;
+		
 		std::pair<casa::MDirection COMMA casa::MDirection> pDirs = _msmd->getPointingDirection(
-			ant1, ant2, time, rowid
+                        ant1, ant2, time, rowid, interpolate, initialrow
 		);
 		MeasureHolder m1(pDirs.first);
 		MeasureHolder m2(pDirs.second);

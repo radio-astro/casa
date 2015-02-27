@@ -1056,6 +1056,14 @@ windows in the dataset and close the tool.
                     <description>Row number in the main MS table.</description>
                     <value>0</value>
                 </param>
+                <param type="bool" direction="in" name="interpolate">
+                    <description>Interpolate pointings in case the interval in the main table is shorter than that in the pointing table (often the case in fast-scanning in single dish observaitions)</description>
+                    <value>false</value>
+                </param>
+                <param type="int" direction="in" name="initialrow">
+                    <description>Initial guess of row index in pointing table to start search.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="record"/>
             <description>
