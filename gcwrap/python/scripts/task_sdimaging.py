@@ -6,6 +6,7 @@ from taskinit import casalog, gentools, qatool
 
 import asap as sd
 import sdutil
+import sdbeamutil
 from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
@@ -196,30 +197,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         imhelper.sortvislist(self.spw, self.mode, self.width)
         self.sorted_idx = imhelper.sortedvisindx
         selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
-#         selection_ids = self.get_selection_idx_for_ms(0)
         self.__update_subtable_name(self.infiles[self.sorted_idx[0]])
         # field
         fieldid = selection_ids['field'][0] if type(selection_ids['field']) != int else selection_ids['field']
         sourceid=-1
         self.open_table(self.field_table)
-#         field_names = self.table.getcol('NAME')
         source_ids = self.table.getcol('SOURCE_ID')
         self.close_table()
-#         if type(self.field)==str:
-#             try:
-#                 fieldid = field_names.tolist().index(self.field)
-#             except:
-#                 msg = 'field name '+field+' not found in FIELD table of the first MS'
-#                 raise ValueError, msg
-#         else:
-#             if self.field == -1:
-#                 sourceid = source_ids[0]
-#             elif self.field < len(field_names):
-#                 fieldid = self.field
-#                 sourceid = source_ids[self.field]
-#             else:
-#                 msg = 'field id %s does not exist in the first MS' % (self.field)
-#                 raise ValueError, msg
         if self.field == '' or fieldid ==-1:
             sourceid = source_ids[0]
         elif fieldid >= 0 and fieldid < len(source_ids):
@@ -266,7 +250,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['spw'] = -1 #spwid_ref
 
         # outframe (force using the current frame)
-        #self.imager_param['outframe'] = ''
         self.imager_param['outframe'] = self.outframe
         if self.outframe == '':
             if len(self.infiles) > 1:
@@ -366,24 +349,15 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         
         # start and width
         if self.mode == 'velocity':
-#             startval = [self.imager_param['outframe'], self.start]
-#             widthval = self.width
             startval = [self.imager_param['outframe'], imstart]
             widthval = imwidth
         elif self.mode == 'frequency':
-#             chan0 = "%fHz" % (freq_chan0)
-#             startval = [self.imager_param['outframe'], self.start if self.start!='' else chan0]
-#             width0 = "%fHz" % (freq_inc0)
-#             widthval = self.width if self.width!='' else width0
             startval = [self.imager_param['outframe'], imstart]
             widthval = imwidth
         else: #self.mode==channel
             startval = int(self.start)
             widthval = int(self.width)
 
-        #startval = 0
-        #widthval = self.allchannels
-        #self.nchan = 1
         if self.nchan < 0: self.nchan = self.allchannels
         self.imager_param['start'] = startval
         self.imager_param['step'] = widthval
@@ -451,9 +425,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Start masking the map using minweight = %f" % \
                      self.minweight, "INFO")
         my_ia.open(weightfile)
-        ###weight_val = my_ia.getchunk()
-        ###valid_pixels = numpy.where(weight_val > 0.0)
-        ####Never do the above in a task...it can swap out easily
         try:
             stat=my_ia.statistics(mask="'"+weightfile+"' > 0.0", robust=True)
             valid_pixels=stat['npts']
@@ -471,7 +442,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                      "INFO")
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
                      (median_weight*self.minweight),"INFO")
-        #mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
         ###Leaving the original logic to calculate the number of masked pixels via
         ###product of median of and min_weight (which i don't understand the logic)
         ### if one wanted to find how many pixel were masked one could easily count the
@@ -491,21 +461,90 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.filter()  ####set logging back to normal
         
         casalog.filter()  ####set logging back to normal
-        #weight_val[mask_pixels] = 0.
-        #my_ia.putchunk(weight_val)
         imsize=numpy.product(my_ia.shape())
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
         my_ia.calcmask("'%s'>%f" % (weightfile,self.minweight), asdefault=True)
         my_ia.close()
-        #masked_fraction = 100.*(1. - (weight_val.size - len(mask_pixels[0])) / float(len(valid_pixels[0])) )
         masked_fraction = 100.*(1. - (imsize - nmask_pixels) / float(valid_pixels[0]) )
         casalog.post("This amounts to %5.1f %% of the area with nonzero weight." % \
                     ( masked_fraction ),"INFO")
         casalog.post("The weight image '%s' is returned by this task, if the user wishes to assess the results in detail." \
                      % (weightfile), "INFO")
-        #del weight_val, mask_pixels, valid_pixels
+        
+        # Calculate theoretical beam size
+        casalog.post("Calculating image beam size.")
+        if self.gridfunction.upper() not in  ['SF']:
+            casalog.post("Beam size definition for '%s' kernel is experimental." % self.gridfunction, priority='WARN')
+            casalog.post("You may want to take careful look at the restoring beam in the image.",priority='WARN')
+        my_msmd = gentools(['msmd'])[0]
+        # antenna diameter and blockage
+        ref_ms_idx = self.sorted_idx[0]
+        ref_ms_name = self.infiles[ref_ms_idx]
+        selection_ids = self.get_selection_idx_for_ms(ref_ms_idx)
+        ant_idx = selection_ids['antenna1']
+        diameter = self._get_average_antenna_diameter(ant_idx)
+        my_msmd.open(ref_ms_name)
+        ant_name = my_msmd.antennanames(ant_idx)
+        my_msmd.close()
+        is_alma = False
+        for name in ant_name:
+            if name[0:2] in ["PM", "DV", "DA", "CM"]:
+                is_alma = True
+                break
+        blockage = "0.75m" if is_alma else "0.0m" # unknown blockage diameter
+        # output reference code
+        my_ia.open(self.outfile)
+        csys = my_ia.coordsys()
+        my_ia.close()
+        outref = csys.referencecode('direction')[0]
+        cell = list(csys.increment(type='direction',format='s')['string'])
+        # pointing sampling
+        xSampling, ySampling, angle = sdutil.get_ms_sampling_arcsec(ref_ms_name, spw=self.spw,
+                                                                    antenna=selection_ids['baseline'],
+                                                                    field=self.field,
+                                                                    scan=self.scanno,#timerange='',
+                                                                    outref=outref)
+        casalog.post("Detected raster sampling = [%f, %f] arcsec" %
+                     (xSampling, ySampling))
+        # handling of failed sampling detection
+        valid_sampling = True
+        sampling = [xSampling, ySampling]
+        if abs(xSampling) < 1.0e-3 or numpy.isnan(xSampling):
+            casalog.post("Invalid sampling=%s arcsec. Using the value of orthogonal direction=%s arcsec" % (xSampling, ySampling), priority="WARN")
+            sampling = [ ySampling ]
+            valid_sampling = False
+        if abs(ySampling) < 1.0e-3 or numpy.isnan(ySampling):
+            if valid_sampling:
+                casalog.post("Invalid sampling=%s arcsec. Using the value of orthogonal direction=%s arcsec" % (ySampling, xSampling), priority="WARN")
+                sampling = [ xSampling ]
+                valid_sampling = True
+        # reduce sampling and cell if it's possible
+        if len(sampling)>1 and sampling[0]==sampling[1]:
+            sampling = [sampling[0]]
+            if cell[0]==cell[1]: cell = [cell[0]]
+        if valid_sampling:
+            # actual calculation of beam size
+            bu = sdbeamutil.TheoreticalBeam()
+            bu.set_antenna(diameter,blockage)
+            bu.set_sampling(sampling, "%fdeg" % angle)
+            bu.set_image_param(cell, self.restfreq, self.gridfunction,
+                               self.convsupport, self.truncate, self.gwidth,
+                               self.jwidth,is_alma)
+            bu.summary()
+            imbeam_dict = bu.get_beamsize_image()
+            casalog.post("Setting image beam: major=%s, minor=%s, pa=%s" %
+                         (imbeam_dict['major'], imbeam_dict['minor'],
+                          imbeam_dict['pa'],))
+            # set beam size to image
+            my_ia.open(self.outfile)
+            my_ia.setrestoringbeam(**imbeam_dict)
+            my_ia.close()
+        else:
+            #BOTH sampling was invalid
+            casalog.post("Could not detect valid raster sampling. Exitting without setting beam size to image", priority='WARN')
+
 
     def _calc_PB(self, antenna):
         """
@@ -531,31 +570,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                   "Please set restreq or cell manually to generate an image."
             raise Exception, msg
         # Antenna diameter
-        self.open_table(self.antenna_table)
-#         antid = -1
-        try:
-#             if type(antenna) == int and antenna < self.table.nrows():
-#                 antid = antenna
-#             elif type(antenna) == str and len(antenna) > 0:
-#                 for idx in range(self.table.nrows()):
-#                     if (antenna.upper() == self.table.getcell('NAME', idx)):
-#                         antid = idx
-#                         break
-            antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
-            diams = self.table.getcol('DISH_DIAMETER')
-#             if antid > 0:
-#                 antdiam_ave = my_qa.quantity(self.table.getcell('DISH_DIAMETER', antid),antdiam_unit)
-#             else:
-#                 diams = self.table.getcol('DISH_DIAMETER')
-#                 antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
-        finally:
-            self.close_table()
-
-        if len(antenna) == 0:
-            antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
-        else:
-            d_ave = sum([diams[idx] for idx in antenna])/float(len(antenna))
-            antdiam_ave = my_qa.quantity(d_ave, antdiam_unit)
+        antdiam_ave = self._get_average_antenna_diameter(antenna)
         # Calculate PB
         wave_length = 0.2997924 / my_qa.convert(my_qa.quantity(ref_freq),'GHz')['value']
         D_m = my_qa.convert(antdiam_ave, 'm')['value']
@@ -714,3 +729,19 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.pointing_table = sdutil.get_subtable_name(keys['POINTING'])
         self.data_desc_table = sdutil.get_subtable_name(keys['DATA_DESCRIPTION'])
         self.pointing_table = sdutil.get_subtable_name(keys['POINTING'])        
+
+    def _get_average_antenna_diameter(self, antenna):
+        my_qa = qatool()
+        self.open_table(self.antenna_table)
+        try:
+            antdiam_unit = self.table.getcolkeyword('DISH_DIAMETER', 'QuantumUnits')[0]
+            diams = self.table.getcol('DISH_DIAMETER')
+        finally:
+            self.close_table()
+
+        if len(antenna) == 0:
+            antdiam_ave = my_qa.quantity(diams.mean(), antdiam_unit)
+        else:
+            d_ave = sum([diams[idx] for idx in antenna])/float(len(antenna))
+            antdiam_ave = my_qa.quantity(d_ave, antdiam_unit)
+        return antdiam_ave
