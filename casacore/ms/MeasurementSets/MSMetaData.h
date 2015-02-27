@@ -32,6 +32,7 @@
 #include <casacore/casa/Quanta/QVector.h>
 #include <casacore/measures/Measures/MPosition.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSPointingColumns.h>
 #include <casacore/casa/Utilities/CountedPtr.h>
 #include <map>
 
@@ -352,7 +353,8 @@ public:
 	// get the pointing directions associated with antenna1 and antenna2 for
 	// the specified row of the main MS table
 	std::pair<MDirection, MDirection> getPointingDirection(
-		Int& ant1, Int& ant2, Double& time, uInt row
+		Int& ant1, Int& ant2, Double& time, uInt row,
+		bool const interpolate=false, Int initialguess=0
 	) const;
 
 	// get the time range for the entire dataset. min(TIME(x) - 0.5*INTERVAL(x)) to
@@ -586,6 +588,11 @@ private:
 	std::map<String, std::set<Double> > _getIntentsToTimesMap() const;
 
 	CountedPtr<std::map<Int, std::set<Double> > > _getScanToTimesMap() const;
+
+	MDirection _getInterpolatedDirection(
+		const ROMSPointingColumns& pCols, const Int& index,
+		const Double& time
+	) const;
 
 	void _getRowStats(
 		uInt& nACRows, uInt& nXCRows,
