@@ -336,7 +336,7 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_clearData() {
 	_dataStrides.clear();
 	_maskStrides.clear();
 	_sortedArray.clear();
-	_dataProvider = NULL;
+	_dataProvider.reset( );
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -388,8 +388,7 @@ std::map<Double, uInt64> StatisticsAlgorithm<AccumType, InputIterator, MaskItera
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_throwIfDataProviderDefined() const {
-	ThrowIf(
-		! _dataProvider.null(),
+	ThrowIf( _dataProvider,
 		"Logic Error: Cannot add data after a data provider has been set. Call setData() to clear "
 		"the existing data provider and to add this new data set"
 	);
