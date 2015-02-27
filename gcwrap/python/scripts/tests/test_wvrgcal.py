@@ -14,26 +14,26 @@ class wvrgcal_test(unittest.TestCase):
 
     vis_f = 'multisource_unittest.ms'
     vis_g = 'wvrgcal4quasar_10s.ms'
-    ref = ['multisource_unittest_reference.wvr',
-           'multisource_unittest_reference-newformat.wvr',
-           'wvrgcalctest.W',
-           'wvrgcalctest_toffset.W',
-           'wvrgcalctest_segsource.W',
-           'wvrgcalctest_wvrflag1.W',
-           'wvrgcalctest_wvrflag2.W',
-           'wvrgcalctest_reverse.W',
-           'wvrgcalctest_reversespw.W',
-           'wvrgcalctest_smooth.W',
-           'wvrgcalctest_scale.W',
-           'wvrgcalctest_tie1.W',
-           'wvrgcalctest_tie2.W',
-           'wvrgcalctest_sourceflag1.W',
-           'wvrgcalctest_sourceflag2.W',
-           'wvrgcalctest_statsource.W',
-           'wvrgcalctest_nsol.W',
-           'wvrgcalctest_disperse.W',
-           'multisource_unittest_reference-mod.wvr',
-           'wvrgcalctest-test19.W']
+    ref = ['multisource_unittest_reference.wvr', # ref0
+           'multisource_unittest_reference-newformat.wvr', # ref1: test2
+           'wvrgcalctest.W', # ref2
+           'wvrgcalctest_toffset.W', # ref3: test3
+           'wvrgcalctest_segsource.W', # ref4
+           'wvrgcalctest_wvrflag1.W', # ref5
+           'wvrgcalctest_wvrflag2.W', # ref6
+           'wvrgcalctest_reverse.W',  # ref7
+           'wvrgcalctest_reversespw.W', # ref8: test4
+           'wvrgcalctest_smooth.W', # ref9
+           'wvrgcalctest_scale.W', # ref10: test6
+           'wvrgcalctest_tie1.W', # ref11: test7
+           'wvrgcalctest_tie2.W', # ref12: test8
+           'wvrgcalctest_sourceflag1.W', # ref13
+           'wvrgcalctest_sourceflag2.W', # ref14: test9
+           'wvrgcalctest_statsource.W', # ref15: test10
+           'wvrgcalctest_nsol.W', # ref16: test11
+           'wvrgcalctest_disperse.W', # ref17: test12
+           'multisource_unittest_reference-mod.wvr', # ref18: test16
+           'wvrgcalctest-test19.W'] # ref19: test19
 
 ## 2   'wvrgcalctest.W': '',
 ## 3   'wvrgcalctest_toffset.W': '--toffset -1', ........................ test3
@@ -52,6 +52,7 @@ class wvrgcal_test(unittest.TestCase):
 ## 16   'wvrgcalctest_nsol.W':'--nsol 5' ..................................test11
 ## 17   'wvrgcalctest_disperse.W':'--disperse', .......................... test12
 
+    makeref = False # set this to true to generate new reference tables 
 
     out = 'mycaltable.wvr'
     rval = False
@@ -72,6 +73,10 @@ class wvrgcal_test(unittest.TestCase):
                 rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/'+self.ref[i]+' .')
                 if rval!=0:
                     raise Exception, "Error copying input data"
+
+        if self.makeref:
+            print "Will create copies of generated caltables in directory \"newref\""
+            os.system('mkdir -p newref')
 
         default(wvrgcal)
 
@@ -97,6 +102,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'], toffset=0.)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[1])
+            os.system('cp -R '+self.out+' newref/'+self.ref[1])
 
         print rvaldict
 
@@ -127,6 +136,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, segsource=False, toffset=-1.)
 
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[3])
+            os.system('cp -R '+self.out+' newref/'+self.ref[3])
+
         print rvaldict
 
         self.rval = rvaldict['success']
@@ -141,6 +154,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, reversespw='1', segsource=False, toffset=0.)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[8])
+            os.system('cp -R '+self.out+' newref/'+self.ref[8])
 
         print rvaldict
 
@@ -182,6 +199,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, scale=0.8, segsource=False, toffset=0.)
 
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[10])
+            os.system('cp -R '+self.out+' newref/'+self.ref[10])
+
         print rvaldict
 
         self.rval = rvaldict['success']
@@ -197,6 +218,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,1,2'], toffset=0.)
 
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[11])
+            os.system('cp -R '+self.out+' newref/'+self.ref[11])
+
         print rvaldict
 
         self.rval = rvaldict['success']
@@ -211,6 +236,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,3', '1,2'], toffset=0.)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[12])
+            os.system('cp -R '+self.out+' newref/'+self.ref[12])
 
         print rvaldict
 
@@ -229,6 +258,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, sourceflag=['0455-462','0132-169'], toffset=0.)
 
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[14])
+            os.system('cp -R '+self.out+' newref/'+self.ref[14])
+
         print rvaldict
 
         self.rval = rvaldict['success']
@@ -243,6 +276,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, statsource='0455-462', toffset=0.)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[15])
+            os.system('cp -R '+self.out+' newref/'+self.ref[15])
 
         print rvaldict
 
@@ -259,6 +296,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, nsol=5, toffset=0.)
 
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[16])
+            os.system('cp -R '+self.out+' newref/'+self.ref[16])
+
         print rvaldict
 
         self.rval = rvaldict['success']
@@ -273,6 +314,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True, toffset=-1.)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[17])
+            os.system('cp -R '+self.out+' newref/'+self.ref[17])
 
         print rvaldict
 
@@ -365,6 +410,10 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
         rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'], toffset=0., maxdistm=40., minnumants=2)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[18])
+            os.system('cp -R '+self.out+' newref/'+self.ref[18])
 
         print rvaldict
 
@@ -459,6 +508,10 @@ class wvrgcal_test(unittest.TestCase):
         flagdata(vis='myinput.ms', mode='manual', antenna='PM02&&*', scan='3')
 
         rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1., mingoodfrac=0.2)
+
+        if self.makeref:
+            os.system('rm -rf newref/'+self.ref[19])
+            os.system('cp -R '+self.out+' newref/'+self.ref[19])
 
         print rvaldict
 

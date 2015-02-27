@@ -317,17 +317,18 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				mycb.close()
 			return taskrval
 		else:
-			if(rval == 32512):
+			rcode = os.WEXITSTATUS(rval)
+			if(rcode == 127):
 				raise Exception, "wvrgcal executable not available."
-			elif(rval == 65280):
-				casalog.post(theexecutable+' terminated with exit code '+str(rval),'SEVERE')
+			elif(rcode == 255):
+				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'SEVERE')
 				return taskrval
-			elif(rval == 34304 or rval==256):
-				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+			elif(rcode == 134 or rval==1):
+				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'WARN')
 				casalog.post("No useful input data.",'SEVERE')
 				return taskrval
 			else:
-				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'WARN')
 				return taskrval
 	
 	except Exception, instance:
