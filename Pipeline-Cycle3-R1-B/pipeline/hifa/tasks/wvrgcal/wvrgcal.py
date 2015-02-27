@@ -604,10 +604,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
     def _get_wvr_caltable_namer(self, inputs):
         """        
-        Returns a function that inserts a ''.flags_X_X_X.wvr' component into a
+        Returns a function that inserts a ''.flagged_<N>_antennas.wvr' component into a
         filename.
         """
-        flags = '.flag%s' % '_'.join(inputs.wvrflag) if inputs.wvrflag else ''
+        flags = '.flagged_%d_antennas' % len(inputs.wvrflag) if inputs.wvrflag else ''
         
         def caltable_namer(caltable):
             root, ext = os.path.splitext(caltable)
