@@ -22,7 +22,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_CLASSICALSTATS_H
 #define SCIMATH_CLASSICALSTATS_H
@@ -177,7 +176,7 @@ public:
 	virtual void setCalculateAsAdded(Bool c);
 
 	// An exception will be thrown if setCalculateAsAdded(True) has been called.
-	void setDataProvider(CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider);
+	void setDataProvider(StatsDataProvider<AccumType, InputIterator, MaskIterator> *dataProvider);
 
 	void setStatsToCalculate(std::set<StatisticsData::STATS>& stats);
 
