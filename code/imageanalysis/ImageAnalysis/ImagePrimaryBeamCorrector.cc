@@ -128,14 +128,17 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	if (_getImage()->shape().isEqual(_pbImage->shape())) {
 		const CoordinateSystem csys = _getImage()->coordinates();
-		if (
+        // tolerance allows round trip conversion casa -> fits -> casa
+        // in which precision may be lost
+        if (
 			! csys.directionCoordinate().near(
-				_pbImage->coordinates().directionCoordinate()
+				_pbImage->coordinates().directionCoordinate(),
+                1e-11
 			)
 		) {
 			ThrowCc(
 				"Coordinate systems of image and template are different: "
-				+ csys.errorMessage()
+				+ csys.directionCoordinate().errorMessage()
 			);
 		}
 		else {
