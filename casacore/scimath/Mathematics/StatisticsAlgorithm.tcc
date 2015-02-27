@@ -1,34 +1,8 @@
-//# Copyright (C) 2000,2001
-//# Associated Universities, Inc. Washington DC, USA.
-//#
-//# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
-//# option) any later version.
-//#
-//# This library is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
-//#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
-
 #ifndef SCIMATH_STATISTICSALGORITHM_TCC
 #define SCIMATH_STATISTICSALGORITHM_TCC
-
+ 
 #include <casacore/scimath/Mathematics/StatisticsAlgorithm.h>
-
+ 
 #include <casacore/casa/BasicSL/STLIO.h>
 
 namespace casacore {
@@ -37,7 +11,7 @@ template <class AccumType, class InputIterator, class MaskIterator>
 StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::StatisticsAlgorithm()
 : _data(), _weights(), _masks(), _counts(), _dataStrides(), _maskStrides(),
   _isIncludeRanges(), _dataRanges(), _sortedArray(), _statsToCalculate(),
-  _unsupportedStats(), _dataProvider() {}
+  _unsupportedStats(), _dataProvider(NULL) {}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>&
@@ -336,7 +310,7 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_clearData() {
 	_dataStrides.clear();
 	_maskStrides.clear();
 	_sortedArray.clear();
-	_dataProvider.reset( );
+	_dataProvider = NULL;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -370,31 +344,15 @@ std::map<uInt64, AccumType> StatisticsAlgorithm<AccumType, InputIterator, MaskIt
 	return indexToValuesMap;
 }
 
-/*
-template <class AccumType, class InputIterator, class MaskIterator>
-std::map<Double, uInt64> StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_indicesFromQuantiles(
-	uInt64 npts, const std::set<Double>& quantiles
-) {
-	std::map<Double, uInt64> quantileToIndexMap;
-	std::set<Double>::const_iterator qiter = quantiles.begin();
-	std::set<Double>::const_iterator qend = quantiles.end();
-	while (qiter != qend) {
-		quantileToIndexMap[*qiter] = ((uInt64)ceil(*qiter * (Double)npts) - 1);
-		++qiter;
-	}
-	return quantileToIndexMap;
-}
-*/
-
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_throwIfDataProviderDefined() const {
-	ThrowIf( _dataProvider,
+	ThrowIf(
+		_dataProvider,
 		"Logic Error: Cannot add data after a data provider has been set. Call setData() to clear "
 		"the existing data provider and to add this new data set"
 	);
 }
 
 }
-
 
 #endif

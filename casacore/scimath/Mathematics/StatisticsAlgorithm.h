@@ -22,7 +22,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATSALGORITHM_H
 #define SCIMATH_STATSALGORITHM_H
@@ -283,8 +282,9 @@ public:
 	// instead of settng and adding data "by hand", set the data provider that will provide
 	// all the data sets. Calling this method will clear any other data sets that have
 	// previously been set or added.
-	virtual void setDataProvider(CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider) {
-		ThrowIf(dataProvider.null(), "Logic Error: data provider cannot be NULL");
+	virtual void setDataProvider(StatsDataProvider<AccumType, InputIterator, MaskIterator> *dataProvider) {
+		ThrowIf(! dataProvider, "Logic Error: data provider cannot be NULL");
+		_clearData();
 		_dataProvider = dataProvider;
 	}
 
@@ -310,7 +310,7 @@ protected:
 
 	const vector<InputIterator>& _getData() const { return _data; }
 
-	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > _getDataProvider() {
+	StatsDataProvider<AccumType, InputIterator, MaskIterator>* _getDataProvider() {
 		return _dataProvider;
 	}
 
@@ -371,7 +371,7 @@ private:
 	std::map<uInt, DataRanges> _dataRanges;
 	vector<AccumType> _sortedArray;
 	std::set<StatisticsData::STATS> _statsToCalculate, _unsupportedStats;
-	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > _dataProvider;
+	StatsDataProvider<AccumType, InputIterator, MaskIterator> *_dataProvider;
 
 	void _throwIfDataProviderDefined() const;
 };
