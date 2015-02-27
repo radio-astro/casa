@@ -31,7 +31,6 @@
 #include <casacore/casa/OS/File.h>
 #include <casacore/measures/Measures/MeasTable.h>
 #include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
-#include <casacore/ms/MeasurementSets/MSPointingColumns.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
 #include <casacore/tables/TaQL/TableParse.h>
@@ -2954,7 +2953,8 @@ std::map<std::pair<uInt, uInt>, Int> MSMetaData::getSpwIDPolIDToDataDescIDMap() 
 }
 
 std::pair<MDirection, MDirection> MSMetaData::getPointingDirection(
-	Int& antenna1, Int& antenna2, Double& time, uInt row
+	Int& antenna1, Int& antenna2, Double& time, uInt row,
+	bool const interpolate, Int initialguess
 ) const {
 	ThrowIf(
 		row >= this->nRows(),
@@ -2966,10 +2966,64 @@ std::pair<MDirection, MDirection> MSMetaData::getPointingDirection(
 	antenna2 = (*ant2)[row];
 	time = (*_getTimes())[row];
 	ROMSPointingColumns pCols(_ms->pointing());
-	return std::make_pair<MDirection, MDirection>(
-		pCols.directionMeas(pCols.pointingIndex(antenna1, time)),
-		pCols.directionMeas(pCols.pointingIndex(antenna2, time))
-	);
+	Int pidx1, pidx2;
+	pidx1 = pCols.pointingIndex(antenna1, time, initialguess);
+	pidx2 = pCols.pointingIndex(antenna2, time, initialguess);
+	String intervalColName = MeasurementSet::columnName(MSMainEnums::INTERVAL);
+	Double interval = ScalarColumn<Double>(*_ms, intervalColName).getColumn()[row];
+	MDirection dir1, dir2;
+	if (!interpolate || interval >= pCols.interval()(pidx1)) {
+	  dir1 = pCols.directionMeas(pidx1);
+	}
+	else {
+	  dir1 = _getInterpolatedDirection(pCols, pidx1, time);
+	}
+	if (!interpolate || interval >= pCols.interval()(pidx2)) {
+	  dir2 = pCols.directionMeas(pidx2);
+	}
+	else {
+	  dir2 = _getInterpolatedDirection(pCols, pidx2, time);
+	}
+	return std::make_pair<MDirection, MDirection>(dir1, dir2);
+}
+
+MDirection MSMetaData::_getInterpolatedDirection(
+		const ROMSPointingColumns& pCols, const Int& index1,
+		const Double& time
+		) const {
+  Int antenna = pCols.antennaId()(index1);
+  Double interval1 = pCols.interval()(index1);
+  Double time1 = pCols.time()(index1);
+  Int index2;
+  if (time >= time1) {
+    index2 = pCols.pointingIndex(antenna, time1+interval1,index1+1);
+  }
+  else {
+    index2 = pCols.pointingIndex(antenna, time1-interval1);
+  }
+  if (index2 < 0 || index2==index1) {
+    // look in opposite direction
+    if (time >= time1) {
+	index2 = pCols.pointingIndex(antenna, time1-interval1);
+    } else {
+	index2 = pCols.pointingIndex(antenna, time1+interval1,index1+1);
+    }
+  }
+  ThrowIf(index2 < 0 || index2==index1,
+	  "Failed to find pointing index to interpolate direction.");
+
+  Double time2 = pCols.time()(index2);
+  ThrowIf(time2 == time1,
+	  "Failed to find pointing index with valid timestamp to interpolate direction.");
+
+  // Interpolate (time1, time2),(dir1,dir2)
+  Vector<Double> dirvec1 = pCols.directionMeas(index1).getAngle("rad").getValue();
+  Vector<Double> dirvec2 = pCols.directionMeas(index2).getAngle("rad").getValue();
+  MDirection::Ref rf = pCols.directionMeas(index1).getRef();
+  Vector<Double> newdir = dirvec1 + (dirvec2-dirvec1)*(time-time1)/(time2-time1);
+  Quantity qlon(newdir(0), "rad");
+  Quantity qlat(newdir(1), "rad");
+  return MDirection(qlon, qlat, rf);
 }
 
 std::map<Int, uInt> MSMetaData::_getDataDescIDToSpwMap() const {
