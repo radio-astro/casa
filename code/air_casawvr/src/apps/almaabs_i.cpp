@@ -52,7 +52,7 @@ namespace LibAIR2 {
     pll.AddPrior("P", 300, 550);
   }
 
-  void iALMAAbsRet::sample(void)
+  bool iALMAAbsRet::sample(void)
   {
     // Create starting set
     std::list<Minim::MCPoint> ss;
@@ -73,9 +73,12 @@ namespace LibAIR2 {
 
     if (post.size() < 10000 )
     {
-      std::cout<<"Terminated after "<<post.size()
-	       <<std::endl;
+      std::cout<<"Terminated after "<<post.size()<<std::endl;
     }
+    if(evidence == 0.){
+      return false;
+    }
+    return true;
 
   }
 

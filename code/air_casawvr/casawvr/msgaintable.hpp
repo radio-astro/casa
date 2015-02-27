@@ -21,6 +21,7 @@
 #include <string>
 
 #include "msfwds.hpp"
+#include "../src/apps/antennautils.hpp"
 
 namespace LibAIR2 {
 
@@ -48,7 +49,7 @@ namespace LibAIR2 {
 		       bool disperse,
 		       const std::string &msname,
 		       const std::string &invocation,
-		       const std::set<int> &interpolImpossibleAnts);
+		       const LibAIR2::AntSet &interpolImpossibleAnts);
 
   /** \brief Add "History" information to a calibration table --
       really just version info about us

@@ -95,19 +95,13 @@ namespace LibAIR2 {
     return std::count_if(c.begin(), c.end(), std::isnan<double>);
   }
 
-  bool dTdLCoeffsSingle::zeronan(std::vector<double> &)
-  {
-    std::cerr << "dTdLCoeffsSingle::zeronan  not implemented" << std::endl;
-    return isnan();
-  }
-
   dTdLCoeffsIndiv::dTdLCoeffsIndiv(const coeff_t &c):
     coeff(c)
   {
   }
 
-  dTdLCoeffsIndiv::dTdLCoeffsIndiv(size_t nWVR):
-    coeff(boost::extents[4][nWVR][3])
+  dTdLCoeffsIndiv::dTdLCoeffsIndiv(size_t nAnts):
+    coeff(boost::extents[4][nAnts][3])
   {
   }
 
@@ -165,13 +159,6 @@ namespace LibAIR2 {
 			 coeff.origin()+(coeff.shape()[0]*coeff.shape()[1]*coeff.shape()[2]), 
 			 std::isnan<double>);
   }
-
-  bool dTdLCoeffsIndiv::zeronan(std::vector<double> &)
-  {
-    std::cerr << "dTdLCoeffsIndiv::zeronan  not implemented" << std::endl;
-    return isnan();
-  }
-
 
 
   dTdLCoeffsSingleInterpolated::dTdLCoeffsSingleInterpolated()
@@ -316,34 +303,6 @@ namespace LibAIR2 {
       }
     }
     return false;
-  }
-
-  bool dTdLCoeffsSingleInterpolated::zeronan(std::vector<double> &nantimes)
-  {
-    bool rval = false;
-    nantimes.resize(0);
-
-    for(std::set<ret_t>::iterator i=retrievals.begin(); 
-	i != retrievals.end();
-	++i)
-    {
-      for(size_t j=0; j<4; ++j)
-      {
-	if ( std::isnan(i->coeffs[j]) || (std::isnan(i->err[j])) ||  std::isnan(i->c2[j]) )
-	{
-	  rval = true;
-	  nantimes.push_back(i->time);
-	  for(size_t k=0; k<4; ++k){
-	    const_cast<double&>(i->coeffs[k])=0.;
-	    const_cast<double&>(i->c2[k])=0.;
-	    const_cast<double&>(i->err[k])=0.;
-	  }
-	  break;
-	}
-      }
-    }
-
-    return rval;
   }
 
 }

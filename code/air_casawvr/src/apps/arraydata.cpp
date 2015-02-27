@@ -24,15 +24,15 @@ namespace LibAIR2 {
 				   const std::vector<size_t> &state, 
 				   const std::vector<size_t> &field, 
 				   const std::vector<size_t> &source, 
-				   size_t nWVRs):
+				   size_t nAnts):
     time(time),
     el(el),
     az(az),
     state(state),
     field(field),
     source(source),
-    wvrdata(boost::extents[time.size()][nWVRs][4]),
-    nWVRs(nWVRs)
+    wvrdata(boost::extents[time.size()][nAnts][4]),
+    nAnts(nAnts)
   {
   }
 
@@ -113,12 +113,12 @@ namespace LibAIR2 {
 			      state,
 			      field,
 			      src,
-			      d.nWVRs));
+			      d.nAnts));
     size_t n=0;
     for(size_t i=0; i<d.g_state().size(); ++i)
       if(states.count(d.g_state()[i]))
       {
-	for (size_t j=0; j<d.nWVRs; ++j)
+	for (size_t j=0; j<d.nAnts; ++j)
 	{
 	  for(size_t k=0; k<4; ++k)
 	  {
@@ -155,7 +155,7 @@ namespace LibAIR2 {
       for(size_t k=0; k<4; ++k)
       {
 	//go through each wvr.
-	for (size_t l=0; l<d.nWVRs; ++l)
+	for (size_t l=0; l<d.nAnts; ++l)
 	{
 	  //go through each sample in time
 	  for(size_t i=starti; i<endi; ++i)

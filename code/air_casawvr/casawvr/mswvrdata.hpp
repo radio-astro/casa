@@ -77,7 +77,7 @@ namespace LibAIR2 {
   /** Add the antennas flagged in the ANTENNA table to the set
    */
   void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
-			 std::set<int> &flaggedAnts);
+			 LibAIR2::AntSet &flaggedAnts);
 
   /** Time points, states, and field IDs at which WVR data have been
       recorded

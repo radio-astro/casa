@@ -38,19 +38,28 @@ namespace LibAIR2 {
 			 const ALMAWVRCharacter &WVRChar):
     i(new iALMAAbsRet(TObs,
 		      el,
-		      WVRChar))
+		      WVRChar)),
+    valid(true)
   {
-    i->sample();
+    if( ! i->sample()){
+      valid = false;
+    }
   }
 
   ALMAAbsRet::~ALMAAbsRet()
   {
   }
 
-  void ALMAAbsRet::g_Res(ALMAResBase &res)
+  bool ALMAAbsRet::g_Res(ALMAResBase &res)
   {
-    i->g_Pars(res);
-    i->g_Coeffs(res);
+    if(valid){ 
+      i->g_Pars(res);
+      i->g_Coeffs(res);
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   std::ostream & operator<<(std::ostream &os, 
@@ -89,7 +98,7 @@ namespace LibAIR2 {
     return os;
   }
 
-  /** \brief Check that the supplied temperatures are feasible
+  /** \brief Check that the supplied temperatures are reasonable
    */
   static void checkTObs(const std::vector<double>  &TObs)
   {
@@ -107,12 +116,13 @@ namespace LibAIR2 {
     if (above>0 || below>0){
       char tstr[120];                                                                                       
       sprintf(tstr, "Values out of range: Out of %d TObs values, %d were below 2.7 K and %d were above 350 K.", 
-	      TObs.size(), below, above); 
+	      (int)TObs.size(), below, above); 
       throw std::runtime_error(tstr);
     }
   }
   
   static void getMidPointData(const InterpArrayData &d,
+			      int refant,
 			      std::vector<double>  &TObs,
 			      double &el,
 			      double &time,
@@ -122,7 +132,7 @@ namespace LibAIR2 {
     const size_t midpoint=static_cast<size_t>(d.g_time().size() *0.5);
     for(size_t k=0; k<4; ++k)
     {
-      TObs[k]=d.g_wvrdata()[midpoint][0][k];
+      TObs[k]=d.g_wvrdata()[midpoint][refant][k];
     }
     checkTObs(TObs);    
     el=d.g_el()[midpoint];
@@ -138,7 +148,8 @@ namespace LibAIR2 {
       dTdL[i]*=1e3;
     }
   }
-  ALMAAbsInpL SimpleSingleI(const InterpArrayData &d)
+  ALMAAbsInpL SimpleSingleI(const InterpArrayData &d,
+			    int refant)
   {
     ALMAAbsInpL res;
     ALMAAbsInput a;
@@ -146,11 +157,12 @@ namespace LibAIR2 {
     std::vector<double>  TObs(4);
     double el, time;
     size_t state;
-    getMidPointData(d, TObs, 
+    getMidPointData(d, refant, 
+		    TObs, 
 		    el, time,
 		    state);    
 
-    a.antno=0;
+    a.antno=refant;
     for(size_t i=0; i<4; ++i)
       a.TObs[i]=TObs[i];
     a.el=el;
@@ -162,7 +174,8 @@ namespace LibAIR2 {
 
   ALMAAbsInpL MultipleUniformI(const InterpArrayData &d,
 			       size_t n,
-			       const std::set<size_t> &states)
+			       const std::set<size_t> &states,
+			       int refant)
   {
     ALMAAbsInpL res;
     const size_t nrows=d.g_time().size();
@@ -179,9 +192,9 @@ namespace LibAIR2 {
       {
 	throw std::runtime_error("Could not find a row with a sky state");
       }      
-      a.antno=0;
+      a.antno=refant;
       for(size_t k=0; k<4; ++k)
-	a.TObs[k]=d.g_wvrdata()[row][0][k];
+	a.TObs[k]=d.g_wvrdata()[row][refant][k];
       a.el=d.g_el()[row];
       a.time=d.g_time()[row];
       a.state=d.g_state()[row];
@@ -193,7 +206,8 @@ namespace LibAIR2 {
   ALMAAbsInpL FieldMidPointI(const InterpArrayData &d,
 			     const std::vector<double> &time,
 			     const std::vector<std::pair<double, double> >  &fb,
-			     const std::set<size_t> &states)
+			     const std::set<size_t> &states,
+			     int refant)
   {
     ALMAAbsInpL res;
 
@@ -220,10 +234,10 @@ namespace LibAIR2 {
       {
 	throw std::runtime_error("Could not find a row with a sky state");
       }
-      a.antno=0;
+      a.antno=refant;
       for(size_t k=0; k<4; ++k)
       {
-	a.TObs[k]=d.g_wvrdata()[row][0][k];
+	a.TObs[k]=d.g_wvrdata()[row][refant][k];
       }
       a.el=d.g_el()[row];
       a.time=d.g_time()[row];
@@ -235,12 +249,12 @@ namespace LibAIR2 {
   }
 
   dTdLCoeffsBase * 
-  SimpleSingle(const InterpArrayData &d)
+  SimpleSingle(const InterpArrayData &d, int refant)
   {
     std::vector<double>  TObs(4);
     double el, time;
     size_t state;
-    getMidPointData(d, TObs, el, time, state);
+    getMidPointData(d, refant, TObs, el, time, state);
 
     ALMAWVRCharacter wvrchar;
     ALMAAbsRet ar(TObs, 
@@ -270,13 +284,13 @@ namespace LibAIR2 {
   // There is too much repetition here, need to merge with other
   // functions here
   dTdLCoeffsBase * 
-  SimpleSingleCont(const InterpArrayData &d)
+  SimpleSingleCont(const InterpArrayData &d, int refant)
   {
 
     std::vector<double>  TObs(4);
     double el, time;
     size_t state;
-    getMidPointData(d, TObs, el, time, state);
+    getMidPointData(d, refant, TObs, el, time, state);
 
     LibAIR2::ALMARetOpts opts;
     LibAIR2::ALMAContRes res;
@@ -305,14 +319,27 @@ namespace LibAIR2 {
     
   }
 
-  boost::ptr_list<ALMAResBase> doALMAAbsRet(const ALMAAbsInpL &il, std::vector<int>& problemAnts)
+  boost::ptr_list<ALMAResBase> doALMAAbsRet(ALMAAbsInpL &il,
+					    std::vector<std::pair<double, double> > &fb,
+					    AntSet& problemAnts)
   {
 
-    problemAnts.resize(0);
+    problemAnts.clear();
+
+    AntSet resZeroAnts;
+    AntSet resNonZeroAnts;
+
     boost::ptr_list<ALMAResBase> res;
+
+    ALMAAbsInpL newil;
+    std::vector<std::pair<double, double> > newfb;
+    bool fbFilled = (fb.size()>0);
+
+    size_t count=0;
 
     BOOST_FOREACH(const ALMAAbsInput &x, il)
     {
+      bool problematic = false;
       std::vector<double>  TObs(4);
       for(size_t i=0; i<4; ++i)
         TObs[i]=x.TObs[i];
@@ -324,16 +351,51 @@ namespace LibAIR2 {
 		  << std::endl << "         LibAIR2::checkTObs: " << rE.what() << std::endl;
 	std::cerr << std::endl << "WARNING: problem with Tobs of antenna " << x.antno
 		  << std::endl << "         LibAIR2::checkTObs: " << rE.what() << std::endl;
-	problemAnts.push_back(x.antno);
+	problematic = true;
       }
       ALMAWVRCharacter wvrchar;
       ALMAAbsRet ar(TObs, 
 		    x.el,  
 		    wvrchar);
       ALMAResBase *ares=new ALMAResBase;      
-      ar.g_Res(*ares);
-      res.push_back(ares);
+      if(!ar.g_Res(*ares)){
+	std::cout << "WARNING: Bayesian evidence was zero for antenna " << x.antno << std::endl
+		  << "         TObs was " << TObs[0] << " " << TObs[1] << " " << TObs[2] << " " <<TObs[3] 
+		  << " K, elevation " << x.el/M_PI*180. << " deg" << std::endl;
+	std::cerr << "WARNING: Bayesian evidence was zero for antenna " << x.antno << std::endl
+		  << "         TObs was " << TObs[0] << " " << TObs[1] << " " << TObs[2] << " " <<TObs[3] 
+		  << " K, elevation " << x.el/M_PI*180. << " deg" << std::endl;
+      }
+      else{
+	res.push_back(ares);
+	newil.push_back(x);
+	if(fbFilled){
+	  newfb.push_back(fb[count++]);
+	}
+      }
+	
+      if(problematic){
+	problemAnts.insert(x.antno);
+      }
+
+      if(res.size()==0){
+	resZeroAnts.insert(x.antno);
+      }
+      else{
+	resNonZeroAnts.insert(x.antno);
+      }	
+
     }
+
+    for(AntSet::const_iterator it=resZeroAnts.begin(); it!=resZeroAnts.end(); it++){
+      if(resNonZeroAnts.count(*it)==0){ // in none of the retrievals was there a non-zero evidence
+	problemAnts.insert(*it);
+      }
+    }
+
+    il = newil;
+    fb = newfb;
+
     return res;
   }
 
@@ -380,7 +442,7 @@ namespace LibAIR2 {
 
 
   dTdLCoeffsSingleInterpolated *
-  SimpleMultiple(const InterpArrayData &d,
+  SimpleMultiple(//const InterpArrayData &d,
 		 const std::vector<double> &time,
 		 const std::vector<std::pair<double, double> > &fb,
 		 boost::ptr_list<ALMAResBase> &r)

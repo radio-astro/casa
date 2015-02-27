@@ -84,11 +84,6 @@ namespace LibAIR2 {
      */
     virtual bool isnan(void) const =0;
 		     
-    /** Set all NaN solutions to zero and give the times at which this occurred;
-        return true if a NaN was encountered
-     */
-    virtual bool zeronan(std::vector<double> &nantimes)=0;
-
   };
 
   /** \brief The trivial implementation in which alsways a single set
@@ -132,8 +127,6 @@ namespace LibAIR2 {
 
     virtual bool isnan(void) const;
 
-    virtual bool zeronan(std::vector<double> &nantimes);
-    
   };
 
 
@@ -144,7 +137,7 @@ namespace LibAIR2 {
   {
   public:
 
-    /// First dimension is channel number, second is WVR number, third
+    /// First dimension is channel number, second is antenna number, third
     /// is (coefficent, error, second order coefficient)
     typedef boost::multi_array<double, 3> coeff_t;
 
@@ -163,7 +156,7 @@ namespace LibAIR2 {
      */
     dTdLCoeffsIndiv(const coeff_t &c);
 
-    dTdLCoeffsIndiv(size_t nWVR);
+    dTdLCoeffsIndiv(size_t nAnts);
 
     // ----------------------- Public Interface ---------------------
 
@@ -186,8 +179,6 @@ namespace LibAIR2 {
 
     virtual bool isnan(void) const;
 
-    virtual bool zeronan(std::vector<double> &nantimes);
-    
   };
 
   /** \brief Implementation in which the coefficients are interpolated
@@ -246,8 +237,6 @@ namespace LibAIR2 {
     virtual void repr(std::vector<double> &res,
 		      std::vector<double> &err) const;
     virtual bool isnan() const;
-    
-    virtual bool zeronan(std::vector<double> &nantimes);
     
   };
 

@@ -31,9 +31,6 @@ namespace LibAIR2 {
   /// Print the wvrgcal banner
   void printBanner(std::ostream &os);
   
-  /// Inform user no solution was obtained
-  void printNoSolution(std::ostream &os, std::vector<double>& nantimes);
-
   /// Infor user about states_ids that we will take into accout
   void printUsedStates(const std::set<size_t> &useID);
 
@@ -56,11 +53,11 @@ namespace LibAIR2 {
 
   public:
     AntITable(const aname_t &names,
-	      const std::set<int> &flag,
-	      const std::set<int> &nowvr,
+	      const LibAIR2::AntSet &flag,
+	      const LibAIR2::AntSet &nowvr,
 	      const std::vector<double> &rms,
 	      const std::vector<double> &disc,
-	      const std::set<int> &interpolImpossibleAnts=std::set<int>()
+	      const LibAIR2::AntSet &interpolImpossibleAnts=LibAIR2::AntSet()
 	      );
     
   };

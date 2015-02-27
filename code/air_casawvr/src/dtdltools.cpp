@@ -58,9 +58,12 @@ namespace LibAIR2 {
       std::cout << "Error: Cannot calculate dTdL Moment 1, evidence is zero." << std::endl;
       std::cerr << "Error: Cannot calculate dTdL Moment 1, evidence is zero." << std::endl;
     }
-    for(size_t j=0; j<scratch.size(); ++j) // perform the division in any case in order to also record NaNs
+    else
     {
-      res[j]/=Z;
+      for(size_t j=0; j<scratch.size(); ++j) 
+      {
+	res[j]/=Z;
+      }
     }
   }
 
@@ -98,9 +101,12 @@ namespace LibAIR2 {
       std::cout << "Error: Cannot calculate dTdL Moment 2, evidence is zero." << std::endl;
       std::cerr << "Error: Cannot calculate dTdL Moment 2, evidence is zero." << std::endl;
     }
-    for(size_t j=0; j<scratch.size(); ++j) // perform the division in any case in order to also record NaNs
+    else
     {
-      res[j]/=Z;
+      for(size_t j=0; j<scratch.size(); ++j) 
+      {
+	res[j]/=Z;
+      }
     }
   }
 

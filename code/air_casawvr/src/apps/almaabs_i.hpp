@@ -77,7 +77,7 @@ namespace LibAIR2 {
 		double el,
 		const ALMAWVRCharacter &WVRChar);
 
-    void sample(void);
+    bool sample(void); // returns false if evidence is zero
 
     // -------------- Retrieval of results ------------------
     

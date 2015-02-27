@@ -160,14 +160,14 @@ void checkMSandPars(const casa::MeasurementSet &ms,
     antenna numbers or names and always return as a sequence of
     antenna numbers.
  */
-std::set<int> getAntPars(const std::string &s,
-			 const boost::program_options::variables_map &vm,
-			 const casa::MeasurementSet &ms)
+LibAIR2::AntSet getAntPars(const std::string &s,
+			   const boost::program_options::variables_map &vm,
+			   const casa::MeasurementSet &ms)
 {
   using namespace LibAIR2;
   aname_t anames=getAName(ms);
   std::vector<std::string> pars=vm[s].as<std::vector<std::string> >();
-  std::set<int> res;
+  LibAIR2::AntSet res;
   for (size_t i=0; i<pars.size(); ++i)
   {
     if (anames.right.count(pars[i]))
@@ -260,11 +260,11 @@ LibAIR2::AntSetWeight limitedNearestAnt(const LibAIR2::antpos_t &pos,
 /** \brief Flag and interpolate WVR data
  */
 void flagInterp(const casa::MeasurementSet &ms,
-		const std::set<int> &wvrflag,
+		const LibAIR2::AntSet &wvrflag,
 		LibAIR2::InterpArrayData &d,
 		const double maxdist_m,
 		const int minnumants,
-		std::set<int> &interpImpossibleAnts)
+		LibAIR2::AntSet &interpImpossibleAnts)
 {
 
   LibAIR2::antpos_t apos;
@@ -272,7 +272,7 @@ void flagInterp(const casa::MeasurementSet &ms,
   LibAIR2::AntSet wvrflag_s(wvrflag.begin(), 
 			   wvrflag.end());
 
-  for(std::set<int>::const_iterator i=wvrflag.begin();
+  for(LibAIR2::AntSet::const_iterator i=wvrflag.begin();
       i!=wvrflag.end(); 
       ++i)
   {
@@ -467,7 +467,7 @@ void computePathDisc(const LibAIR2::InterpArrayData &d,
 			d.g_state(),
 			d.g_field(),
 			d.g_source(),
-			d.nWVRs);
+			d.nAnts);
   boost::array<double, 4> c1mask = {{0, 1, 0,0}};
   boost::array<double, 4> c3mask = {{0, 0, 0,1}};
   boost::array<double, 4> callmask = {{1, 1, 1,1}};
@@ -477,11 +477,11 @@ void computePathDisc(const LibAIR2::InterpArrayData &d,
 	  coeffs);    
   
   LibAIR2::ArrayGains g3(d.g_time(), 
-			d.g_el(),
-			d.g_state(),
-			d.g_field(),
-			d.g_source(),
-			d.nWVRs);
+			 d.g_el(),
+			 d.g_state(),
+			 d.g_field(),
+			 d.g_source(),
+			 d.nAnts);
   coeffs.chmask=c3mask;
   g3.calc(d,
 	  coeffs);    
@@ -543,6 +543,11 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
 	try
 	  {
 	    int srcid=boost::lexical_cast<int>(*j);
+	    boost::bimap<size_t, std::string>::left_map::const_iterator it = srcmap.left.find(srcid);
+	    if(it == srcmap.left.end()) { // id does not exist
+	      std::cerr << "Parameter 'tie': The field id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
+	      throw std::exception();
+	    }
 	    cs.insert(srcid);
 	  }
 	catch (const std::exception& x)
@@ -552,7 +557,7 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
 	    }
 	    catch (const std::exception& y){
 	      std::ostringstream oss;
-	      oss << "Parameter 'tie': The field " << *j << " is not recognised. Please check for typos." << std::endl;
+	      oss << "Parameter 'tie': The field id " << *j << " is not recognised. Please check for typos." << std::endl;
 	      throw LibAIR2::WVRUserError(oss.str());
 	    }
 	  }
@@ -666,9 +671,9 @@ filterFlaggedInp(const LibAIR2::ALMAAbsInpL &inp,
 
 /** Return the set of antenna IDs that do not have a WVR
  */
-std::set<int> NoWVRAnts(const LibAIR2::aname_t &an)
+LibAIR2::AntSet NoWVRAnts(const LibAIR2::aname_t &an)
 {
-  std::set<int> res;
+  LibAIR2::AntSet res;
   for(LibAIR2::aname_t::const_iterator i=an.begin();
       i!= an.end();
       ++i)
@@ -868,7 +873,7 @@ int main(int argc,  char* argv[])
 
   std::set<size_t> useID=LibAIR2::skyStateIDs(ms);
 
-  std::set<int> wvrflag;
+  LibAIR2::AntSet wvrflag;
   // Prepare flagging and interpolation
   if (vm.count("wvrflag"))
   {
@@ -876,12 +881,12 @@ int main(int argc,  char* argv[])
   }
 
   LibAIR2::aname_t anames=LibAIR2::getAName(ms);
-  std::set<int> nowvr=NoWVRAnts(anames);
+  LibAIR2::AntSet nowvr=NoWVRAnts(anames);
   
-  std::set<int> interpwvrs(wvrflag); // the antennas to interpolate solutions for
+  LibAIR2::AntSet interpwvrs(wvrflag); // the antennas to interpolate solutions for
   interpwvrs.insert(nowvr.begin(), nowvr.end());
 
-  std::set<int> flaggedants; // the antennas flagged in the ANTENNA table are not to be interpolated
+  LibAIR2::AntSet flaggedants; // the antennas flagged in the ANTENNA table are not to be interpolated
   LibAIR2::WVRAddFlaggedAnts(ms, flaggedants);
 
   wvrflag.insert(flaggedants.begin(),flaggedants.end());
@@ -920,7 +925,7 @@ int main(int argc,  char* argv[])
      
      d.reset(LibAIR2::filterState(*d, useID));
 
-     std::set<int> interpImpossibleAnts;
+     LibAIR2::AntSet interpImpossibleAnts;
 
      // Flag and interpolate
      flagInterp(ms,
@@ -929,13 +934,38 @@ int main(int argc,  char* argv[])
 		vm["maxdistm"].as<double>(),
 		vm["minnumants"].as<int>(),
 		interpImpossibleAnts);
-     
+
+     // Determine the reference antenna for dTdL calculation
+     int refant = -1; 
+     {
+       LibAIR2::AntSet wvrants=LibAIR2::WVRAntennas(ms, wvrspws);
+       for(LibAIR2::AntSet::iterator it=wvrants.begin(); it != wvrants.end(); it++){
+	 if(interpImpossibleAnts.count(*it)==0){
+	   refant = *it; // use the first antenna which was OK or which could be interpolated to
+	   break;
+	 }
+       }
+     }
+
+     if(refant<0){
+       std::cout << "No antennas with sufficient WVR data found." << std::endl;
+       std::cerr << "No antennas with sufficient WVR data found." << std::endl;
+       return -1;
+     }
+     std::cout << "Choosing";
+     if(interpwvrs.count(refant)>0){
+       std::cout << " (interpolated)";
+     }
+     std::cout << " antenna " << refant  << " == " << anames.left.at(refant)
+	       << " as reference antenna for dTdL calculations." << std::endl;
+
+
      LibAIR2::ArrayGains g(d->g_time(), 
-			  d->g_el(),
-			  d->g_state(),
-			  d->g_field(),
-			  d->g_source(),
-			  d->nWVRs);
+			   d->g_el(),
+			   d->g_state(),
+			   d->g_field(),
+			   d->g_source(),
+			   d->nAnts);
      
      boost::scoped_ptr<LibAIR2::dTdLCoeffsBase>  coeffs;
      
@@ -946,7 +976,7 @@ int main(int argc,  char* argv[])
      {
 	std::cout<<"[Output from \"cont\" option has not yet been updated]"
 		 <<std::endl;
-	coeffs.reset(LibAIR2::SimpleSingleCont(*d));
+	coeffs.reset(LibAIR2::SimpleSingleCont(*d, refant));
      }
      else
      {
@@ -992,7 +1022,7 @@ int main(int argc,  char* argv[])
 // 	  std::cerr << tf[i] << " ";
 // 	  std::cerr << tsou[i] << std::endl;
 // 	}
-// 	std::cerr << "nWVRs " << d->nWVRs << std::endl;
+// 	std::cerr << "nAnts " << d->nAnts << std::endl;
 // 	for(uint i=0; i<time.size(); i++){
 // 	  std::cerr << "i time  " << i << " " << time[i] << std::endl;
 // 	}
@@ -1007,15 +1037,17 @@ int main(int argc,  char* argv[])
 	   inp=FieldMidPointI(*d,
 			      time,
 			      fb,
-			      useID);
+			      useID,
+			      refant);
 	    
 	}
 	else
 	{
 	   const size_t n=vm["nsol"].as<int>();
 	   inp=LibAIR2::MultipleUniformI(*d, 
-					n,
-					useID);
+					 n,
+					 useID,
+					 refant);
 	}
 
 	
@@ -1030,14 +1062,15 @@ int main(int argc,  char* argv[])
 	boost::tie(inp,fb)=filterFlaggedInp(inp,
 					    fb);
 
-	std::cerr << "Calculating the coefficients now...";
+	std::cerr << "Calculating the coefficients now ... " << std::endl;
 	boost::ptr_list<LibAIR2::ALMAResBase> rlist;
-	std::vector<int> problemAnts;
+	LibAIR2::AntSet problemAnts;
 
 	rval = 0;
 
 	try {
 	   rlist=LibAIR2::doALMAAbsRet(inp,
+				       fb,
 				       problemAnts);
 	}
 	catch(const std::runtime_error rE){
@@ -1053,12 +1086,12 @@ int main(int argc,  char* argv[])
 	   rval = -2;
 
 	   if(iterations<2){
-	      for(size_t i=0; i<problemAnts.size(); i++){
-		 if(interpwvrs.count(problemAnts[i])==0){
-		    std::cerr	<< "Flagging antenna " << problemAnts[i] << " == " << anames.left.at(problemAnts[i]) << std::endl;
-		    std::cout	<< "Flagging antenna " << problemAnts[i] << " == " << anames.left.at(problemAnts[i]) << std::endl;
-		    interpwvrs.insert(problemAnts[i]); // for flagInterp()
-		    wvrflag.insert(problemAnts[i]); // for later log output
+	     for(LibAIR2::AntSet::const_iterator it=problemAnts.begin(); it!=problemAnts.end(); it++){
+		 if(interpwvrs.count(*it)==0){
+		    std::cerr	<< "Flagging antenna " << *it << " == " << anames.left.at(*it) << std::endl;
+		    std::cout	<< "Flagging antenna " << *it << " == " << anames.left.at(*it) << std::endl;
+		    interpwvrs.insert(*it); // for flagInterp()
+		    wvrflag.insert(*it); // for later log output
 		 }
 	      }
 	      std::cerr	<< "Reiterating ..." << std::endl;
@@ -1066,8 +1099,8 @@ int main(int argc,  char* argv[])
 	      continue;
 	   }
 	   else{
-	      std::cerr << "Number of remaining problematic WVR measurements: " << problemAnts.size() << std::endl;
-	      std::cout << "Number of remaining problematic WVR measurements: " << problemAnts.size() << std::endl;
+	      std::cerr << "Number of remaining antennas with problematic WVR measurements: " << problemAnts.size() << std::endl;
+	      std::cout << "Number of remaining antennas with problematic WVR measurements: " << problemAnts.size() << std::endl;
 	      std::cerr << "Will continue without further iterations ..." << std::endl;
 	      std::cout << "Will continue without further iterations ..." << std::endl;
 	   }	      
@@ -1092,7 +1125,7 @@ int main(int argc,  char* argv[])
 			    src,
 			    sortedI);
 	   
-	   coeffs.reset(LibAIR2::SimpleMultiple(*d, 
+	   coeffs.reset(LibAIR2::SimpleMultiple(//*d, 
 					       time,
 					       fb,
 					       rlist));   
@@ -1104,12 +1137,6 @@ int main(int argc,  char* argv[])
 	
      }
     
-     std::vector<double> nantimes;
-
-     if (coeffs->zeronan(nantimes))
-     {
-       LibAIR2::printNoSolution(std::cerr, nantimes);
-     }
      try{
        g.calc(*d,
 	      *coeffs);    

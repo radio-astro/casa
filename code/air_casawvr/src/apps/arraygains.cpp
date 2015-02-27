@@ -42,7 +42,7 @@ namespace LibAIR2 {
     const size_t ntimes=wvrdata.nTimes();
     for (size_t i=0; i<ntimes; ++i)
     {
-      for(size_t j=0; j<wvrdata.nWVRs; ++j)
+      for(size_t j=0; j<wvrdata.nAnts; ++j)
       {
 	double cpath=0;
 	for(size_t k=0; k<4; ++k)
@@ -70,7 +70,7 @@ namespace LibAIR2 {
     const size_t ntimes=wvrdata.nTimes();
     for (size_t i=0; i<ntimes; ++i)
     {
-      for(size_t j=0; j<wvrdata.nWVRs; ++j)
+      for(size_t j=0; j<wvrdata.nAnts; ++j)
       {
 	double cpath=0;
 	for(size_t k=0; k<4; ++k)
@@ -97,7 +97,7 @@ namespace LibAIR2 {
     const size_t ntimes=wvrdata.nTimes();
     for (size_t i=0; i<ntimes; ++i)
     {
-      for(size_t j=0; j<wvrdata.nWVRs; ++j)
+      for(size_t j=0; j<wvrdata.nAnts; ++j)
       {
 	double cpath=0;
 	for(size_t k=0; k<4; ++k)
@@ -124,12 +124,12 @@ namespace LibAIR2 {
 
     for (size_t i=0; i<ntimes; ++i)
     {
-      for(size_t j=0; j<wvrdata.nWVRs; ++j)
+      for(size_t j=0; j<wvrdata.nAnts; ++j)
       {
 	double cpath=0;
 	coeffs.get(j, 
 		   wvrdata.g_time()[i], 
-		   M_PI/2, 
+		   M_PI/2., 
 		   c,
 		   c2);
 	reweight_thermal(c, cw);
@@ -138,6 +138,7 @@ namespace LibAIR2 {
 	  const double T = wvrdata.g_wvrdata()[i][j][k];
 	  if(T>0. && c[k]!=0)
 	  {
+	    //std::cout << "i j k cw[k] T " << i << " " << j << " " << k << " " << cw[k] << " " << T << std::endl;
 	    cpath+=T*cw[k];
 	  }
 	}
@@ -274,6 +275,7 @@ namespace LibAIR2 {
 	  if(absPath(k, i)>0.)
 	  {
 	    const double d=absPath(k, i) * std::sin(el[k]);
+	    //std::cout << "i k d " << i << " " << k << " " << d << std::endl;
 	    sx+=d;
 	    sx2+= (d*d);
 	    ++npoints;
@@ -281,15 +283,17 @@ namespace LibAIR2 {
 	}
 	if (time[k]>=tmask[csegment].second && csegment<tmask.size()-1)
 	  ++csegment;
-	if(npoints>0)
-	{
-	  const double rms= pow(sx2/((double)npoints)-pow(sx/((double)npoints), 2), 0.5);
-	  res[i]=rms;
-	}
-	else
-	{
-	  res[i]=0.;
-	}
+      }
+      if(npoints>0)
+      {
+	double dnpoints = npoints;
+	const double rms= pow(sx2/dnpoints - pow(sx/dnpoints, 2), 0.5);
+	//std::cout << "sx2 dnpoints sx rms " << sx2 << " " << dnpoints << " " << sx << " " << rms << std::endl;
+	res[i]=rms;
+      }
+      else
+      {
+	res[i]=0.;
       }
     }
   }
@@ -355,14 +359,14 @@ namespace LibAIR2 {
 	if (time[k]>=tmask[ns].second && ns<tmask.size()-1)
           ++ns;
       }
+      res[i]=0.;
       if(np>0){
-	const double rms= pow(sx2/((double)np)-pow(sx/((double)np), 2), 0.5);
-	res[i]=rms;
-	//std::cerr << "rms " << rms << std::endl;
-      }
-      else
-      {
-	res[i]=0.;
+	double dnp = np;
+	double rms2 =  sx2/dnp - pow(sx/dnp, 2);
+	if(rms2>0.){
+	  double rms= pow(rms2, 0.5); //the standard deviation
+	  res[i]=rms;
+	}
       }
     }
   }

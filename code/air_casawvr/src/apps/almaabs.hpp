@@ -21,6 +21,7 @@
 #include <boost/ptr_container/ptr_list.hpp>
 
 #include "alma_datastruct.h"
+#include "antennautils.hpp"
 
 namespace LibAIR2 {
 
@@ -39,6 +40,8 @@ namespace LibAIR2 {
   class ALMAAbsRet {
     boost::scoped_ptr<iALMAAbsRet> i;
 
+    bool valid;
+
   public:
     /**
        \param TObs The observed sky temperatures
@@ -54,9 +57,9 @@ namespace LibAIR2 {
 
     virtual ~ALMAAbsRet();
 
-    /** \brief Get retrieved results
+    /** \brief Get retrieved results, return false if they are invalid
      */
-    void g_Res(ALMAResBase &res);
+    bool g_Res(ALMAResBase &res); 
 
   };
 
@@ -89,26 +92,31 @@ namespace LibAIR2 {
    */
   ALMAAbsInpL MultipleUniformI(const InterpArrayData &d,
 			       size_t n,
-			       const std::set<size_t> &states);  
+			       const std::set<size_t> &states,
+			       int refant);  
 
   /** Prepare input for mid-point of each new field (sequantially)
 
       \param time The stamps of each field ID 
 
-      \param fb The segments correspodnging to field boundaries
+      \param fb The segments corresponding to field boundaries
       
       \param states Consider only data with one of these state IDs
    */
   ALMAAbsInpL FieldMidPointI(const InterpArrayData &d,
 			     const std::vector<double> &time,
 			     const std::vector<std::pair<double, double> >  &fb,
-			     const std::set<size_t> &states);
+			     const std::set<size_t> &states,
+			     int refant);
 
   
 
-  /**  Carry out the retrieval of coefficients form a list of inputs
+  /**  Carry out the retrieval of coefficients form a list of inputs;
+       remove the inputs which have zero Bayesian evidence from the list
    */
-  boost::ptr_list<ALMAResBase> doALMAAbsRet(const ALMAAbsInpL &il, std::vector<int> &problemAnts);
+  boost::ptr_list<ALMAResBase> doALMAAbsRet(ALMAAbsInpL &il, 
+					    std::vector<std::pair<double, double> > &fb,
+					    LibAIR2::AntSet &problemAnts);
   
 
   /** \brief Calculate coefficients for phase correction from inputs
@@ -132,14 +140,14 @@ namespace LibAIR2 {
       continuum
    */
   dTdLCoeffsBase * 
-  SimpleSingleCont(const InterpArrayData &d);
+  SimpleSingleCont(const InterpArrayData &d, int refant);
 
 
   /** 
       Separate retrieval for each new field
   */
   dTdLCoeffsSingleInterpolated *
-  SimpleMultiple(const InterpArrayData &d,
+  SimpleMultiple(//const InterpArrayData &d,
 		 const std::vector<double> &time,
 		 const std::vector<std::pair<double, double> > &fb,
 		 boost::ptr_list<ALMAResBase> &r);

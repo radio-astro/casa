@@ -39,7 +39,7 @@ namespace LibAIR2 {
 		       bool disperse,
 		       const std::string &msname,
 		       const std::string &invocation,
-		       const std::set<int> &interpImpossibleAnts)
+		       const LibAIR2::AntSet &interpImpossibleAnts)
   {
 
     using namespace casa;

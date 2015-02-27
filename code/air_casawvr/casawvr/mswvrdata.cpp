@@ -152,7 +152,7 @@ namespace LibAIR2 {
   }
 
   void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
-			 std::set<int> &flaggedAnts)
+			 LibAIR2::AntSet &flaggedAnts)
   {
         // add the antennas flagged in the ANTENNA table to the set
     casa::ROScalarColumn<casa::Bool> antflagrow(ms.antenna(),
@@ -353,12 +353,14 @@ namespace LibAIR2 {
 
   InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, const std::vector<int>& wvrspws,
 			       std::vector<size_t>& sortedI,
-			       std::set<int>& flaggedantsInMain, double requiredUnflaggedFraction,
+			       std::set<int>& flaggedantsInMain,
+			       double requiredUnflaggedFraction,
 			       bool usepointing)
   {
+    
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
     AntSet wvrants=WVRAntennas(ms, wvrspws);
-    const size_t nWVRs=wvrants.size();
+    const size_t nAnts=ms.antenna().nrow();
 
     if(requiredUnflaggedFraction<0.){
       std::cout << "WARNING: Negative required fraction of unflagged data points. Will assume 0." << std::endl;
@@ -418,16 +420,14 @@ namespace LibAIR2 {
 			      states,
 			      fields,
 			      source,
-			      nWVRs));
-
+			      nAnts));
 
     // This holds how far we've filled in for each of the antennas
 
-    //std::vector<size_t> counters(nWVRs, 0);
     int counter = -1;
 
-    std::vector<size_t> nunflagged(nWVRs, 0);
-    std::vector<size_t> ntotal(nWVRs, 0);
+    std::vector<size_t> nunflagged(nAnts, 0);
+    std::vector<size_t> ntotal(nAnts, 0);
 
     casa::ROArrayColumn<casa::Complex> indata(ms, 
 					      casa::MS::columnName(casa::MS::DATA));
@@ -511,11 +511,10 @@ namespace LibAIR2 {
       }
     } // end for ii
 
-
     bool allFlagged=true;
-    for(size_t i=0; i<nWVRs; i++)
+    for(AntSet::iterator it=wvrants.begin(); it != wvrants.end(); it++)
     {
-      if(nunflagged[i]>0)
+      if(nunflagged[*it]>0)
       {
 	allFlagged=false;
 	break;
@@ -524,20 +523,20 @@ namespace LibAIR2 {
     if(!allFlagged)
     {
       allFlagged = true;
-      for(size_t i=0; i<nWVRs; i++)
+      for(AntSet::iterator it=wvrants.begin(); it != wvrants.end(); it++)
       {
-	if(nunflagged[i]==0)
+	if(nunflagged[*it]==0)
 	{
-	  std::cout << "All WVR data points for antenna " << i << " are flagged." << std::endl;
-	  flaggedantsInMain.insert(i);
+	  std::cout << "All WVR data points for antenna " << *it << " are flagged." << std::endl;
+	  flaggedantsInMain.insert(*it);
 	}
-	else if(nunflagged[i]<requiredUnflaggedFraction * ntotal[i])
+	else if(nunflagged[*it]<requiredUnflaggedFraction * ntotal[*it])
 	{
-	  std::cout << "The fraction of good (unflagged) WVR data points for antenna " << i
-		    << " is " << nunflagged[i] << " out of " << ntotal[i]
+	  std::cout << "The fraction of good (unflagged) WVR data points for antenna " << *it
+		    << " is " << nunflagged[*it] << " out of " << ntotal[*it]
 		    << ". This is below the required " << requiredUnflaggedFraction*100.
 		    << "%. Antenna will be flagged." << std::endl;
-	  flaggedantsInMain.insert(i);
+	  flaggedantsInMain.insert(*it);
 	}
 	else{
 	  allFlagged=false;
@@ -552,7 +551,6 @@ namespace LibAIR2 {
     {
       throw LibAIR2::MSInputDataError("All WVR data points are flagged.");
     }
-
 
     return res.release();
     

@@ -56,20 +56,6 @@ namespace LibAIR2 {
     
   }
 
-  void printNoSolution(std::ostream &os, std::vector<double> &nantimes)
-  {
-    os<<std::endl
-      <<"WARNING: Some solutions for phase correction coefficients at the following times are invalid."<<std::endl
-      <<"         This normally happens because WVR data were corrupted is some way:"<<std::endl
-      <<"         e.g.: there was some shadowing, the calibration arm was in the WVR beam, or other issues."<<std::endl
-      <<"         The solutions will be set to zero and flagged."
-      <<std::endl;
-    for(size_t i=0; i<nantimes.size(); i++){
-      os.precision(10);
-      os << "          time " << i << ": " << nantimes[i] << std::endl;
-    }
-  }
-
   void printUsedStates(const std::set<size_t> &useID)
   {
     std::cout<<std::endl
@@ -103,11 +89,11 @@ namespace LibAIR2 {
   }
 
   AntITable::AntITable(const aname_t &names,
-		       const std::set<int> &flag,
-                       const std::set<int> &nowvr,                       
+		       const LibAIR2::AntSet &flag,
+                       const LibAIR2::AntSet &nowvr,                       
 		       const std::vector<double> &rms,
 		       const std::vector<double> &disc,
-		       const std::set<int> &interpolImpossibleAnts)
+		       const LibAIR2::AntSet &interpolImpossibleAnts)
   {
     for(aname_t::const_iterator i=names.begin(); i !=names.end(); ++i)
     {

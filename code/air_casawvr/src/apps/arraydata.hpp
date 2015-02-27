@@ -58,15 +58,15 @@ namespace LibAIR2 {
 
     // ----------------------  Public data ------------------
 
-    /// Number of WVRs
-    const size_t nWVRs;
+    /// Number of Antennas
+    const size_t nAnts;
 
 
     // ----------------------- Construction/Destruction -------------
 
     /**
 
-       \param nWVRs number of WVRs for which the data are recorded
+       \param nAnts number of Ants for which the data are recorded
 
      */
     InterpArrayData(const std::vector<double> &time, 
@@ -75,7 +75,7 @@ namespace LibAIR2 {
 		    const std::vector<size_t> &state, 
 		    const std::vector<size_t> &field, 
 		    const std::vector<size_t> &source, 
-		    size_t nWVRs);
+		    size_t nAnts);
 
     // ----------------------- Public Interface -------------
 
