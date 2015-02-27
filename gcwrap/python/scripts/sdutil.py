@@ -1451,19 +1451,24 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     if len(selected_idx['spw']) > 1 or len(selected_idx['antenna1']) > 1:
         casalog.post("Using only spw=%d and antenna=%s in %s to get pointing sampling" % (spw0, bl0, msname), priority='warn')
     tb_loc.open(msname)
+    nrow_org = tb_loc.nrows()
     taqlstr = 'DATA_DESC_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % \
               (ddid0,ant0,ant0)
     if len(selected_idx['field'])>0:
-        taqlstr += (' && FIELD_ID IN %s' % str(selected_idx['field']))
+        taqlstr += (' && FIELD_ID IN %s' % str(list(selected_idx['field'])))
     if len(selected_idx['scan']) > 0:
-        taqlstr += (' && SCAN_NUMBER IN %s' % str(selected_idx['scan']))
+        taqlstr += (' && SCAN_NUMBER IN %s' % str(list(selected_idx['scan'])))
     if len(selected_intent) > 0:
-        taqlstr += (' && STATE_ID IN %s' % str(selected_intent))
+        taqlstr += (' && STATE_ID IN %s' % str(list(selected_intent)))
     seltb = tb_loc.query(query=taqlstr,sortlist='TIME',columns='TIME')
     row_idx = seltb.rownumbers()
     times = seltb.getcol("TIME")
     tb_loc.close()
     seltb.close()
+    tb_loc.open(msname+'/POINTING')
+    nrow_ptg = tb_loc.nrows()
+    tb_loc.close()
+    initial_guess = (nrow_org==nrow_ptg) #indicates MS converted back from ASAP.
     #ms_loc.open(msname)
     #ms_loc.msselect(items=dict(spw=str(spw0),baseline=bl0,field=field,
     #                       scan=scan,time=timerange,scanintent=intent))
@@ -1479,10 +1484,15 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     del idx
     # sort by time
     row_gap = rasterutil._detect_gap(times)
+    # reduce the number of pointings to use when there are too many
+    if len(row_gap) > 100:
+        casalog.post("Detected more than 100 raster rows. Using the first 100 raster rows to define separation between rows.")
+        times = times[:row_gap[100]]
+        row_idx = row_idx[:row_gap[100]]
     # get pointing direction of the time
     msmd_loc.open(msname)
     inframe = msmd_loc.pointingdirection(row_idx[0])['antenna1']['pointingdirection']['refer']
-    direction_raw = [ msmd_loc.pointingdirection(idx,True)['antenna1']['pointingdirection'] for idx in row_idx ]
+    direction_raw = [ msmd_loc.pointingdirection(idx,True,(idx if initial_guess else 0))['antenna1']['pointingdirection'] for idx in row_idx ]
     msmd_loc.close()
     if inframe==outref:
         ra_rad = [ dir['m0']['value'] for dir in direction_raw ]

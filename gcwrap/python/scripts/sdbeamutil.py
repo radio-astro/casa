@@ -152,6 +152,8 @@ class TheoreticalBeam:
         casalog.post("Calculating theoretical beam size of the image")
         # construct theoretic beam for image
         axis, beam = self.get_antenna_beam()
+        casalog.post("Length of convolution array=%d, total width=%f arcsec, separation=%f arcsec" % (len(axis), axis[-1]-axis[0], axis[1]-axis[0]),
+                     priority="DEBUG1")
         kernel = self.get_kernel(axis)
         sampling = self.get_box_kernel(axis,self.sampling_arcsec[0])
         # convolution
@@ -162,12 +164,14 @@ class TheoreticalBeam:
         #fwhm_arcsec = findFWHM(axis,result)
         fwhm_arcsec, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
         ### DEBUG MESSAGE
-        casalog.post("initial FWHM of beam = %f arcsec" % findFWHM(axis,beam),
-                     priority="DEBUG")
-        casalog.post("FWHM of kernel = %f arcsec" % findFWHM(axis,kernel),
-                     priority="DEBUG")
-        casalog.post("FWHM of theoretical beam = %f arcsec" %
-                     findFWHM(axis,result), priority="DEBUG")
+        casalog.post("- initial FWHM of beam = %f arcsec" %
+                     findFWHM(axis,beam))
+        casalog.post("- FWHM of gridding kernel = %f arcsec" %
+                     findFWHM(axis,kernel))
+        casalog.post("- FWHM of theoretical beam = %f arcsec" %
+                     findFWHM(axis,result))
+        casalog.post("- FWHM of theoretical beam (gauss fit) = %f arcsec" %
+                     fwhm_arcsec)
         ###
         del result
         if len(self.sampling_arcsec)==1 and \
@@ -187,11 +191,13 @@ class TheoreticalBeam:
             fwhm1, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
             fwhm_geo_arcsec = np.sqrt(fwhm_arcsec*fwhm1)
             ### DEBUG MESSAGE
-            casalog.post("The second axis",priority="DEBUG")
-            casalog.post("FWHM of kernel = %f arcsec" %
-                         findFWHM(axis,kernel),priority="DEBUG")
-            casalog.post("FWHM of theoretical beam = %f arcsec" %
-                         findFWHM(axis,result),priority="DEBUG")
+            casalog.post("The second axis")
+            casalog.post("- FWHM of gridding kernel = %f arcsec" %
+                         findFWHM(axis,kernel))
+            casalog.post("- FWHM of theoretical beam = %f arcsec" %
+                         findFWHM(axis,result))
+            casalog.post("- FWHM of theoretical beam (gauss fit) = %f arcsec" %
+                         fwhm1)
         # clear-up axes
         del axis, beam, kernel, sampling, gridded, result
 
@@ -226,10 +232,21 @@ class TheoreticalBeam:
                                         obscuration=self.antenna_block_m,
                                         fwhmfactor=None)
         truncate = False
-        convolutionPixelSize = 0.02
+        convolutionPixelSize = 0.02 #arcsec
+        # avoid too coarse convolution array w.r.t. sampling
         if self.is_sampling_set and \
                min(self.sampling_arcsec) < 5*convolutionPixelSize:
             convolutionPixelSize = min(self.sampling_arcsec) / 5.0
+        # avoid too fine convolution arrays.
+        sizes = list(self.cell_arcsec)+[fwhm_arcsec]
+        if self.is_sampling_set: sizes += list(self.sampling_arcsec)
+        minsize = min(sizes)
+        support_min = 1000.
+        #support_fwhm = 5000.
+        if minsize > support_min*convolutionPixelSize:
+            convolutionPixelSize = minsize/support_min
+        #if maxsize > support_fwhm*convolutionPixelSize:
+        #    convolutionPixelSize = min(fwhm_arcsec/support_fwhm,minsize/10.)
         
         if (self.taper < 0.1):
             # Airly disk
