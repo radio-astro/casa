@@ -539,30 +539,30 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
     for(std::set<std::string>::const_iterator j=tied[i].begin();
 	j!=tied[i].end();
 	++j)
-      {	
-	try
-	  {
-	    int srcid=boost::lexical_cast<int>(*j);
-	    boost::bimap<size_t, std::string>::left_map::const_iterator it = srcmap.left.find(srcid);
-	    if(it == srcmap.left.end()) { // id does not exist
-	      std::cerr << "Parameter 'tie': The field id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
-	      throw std::exception();
-	    }
-	    cs.insert(srcid);
-	  }
-	catch (const std::exception& x)
-	  {
-	    try{
-	      cs.insert(srcmap.right.at(*j));
-	    }
-	    catch (const std::exception& y){
-	      std::ostringstream oss;
-	      oss << "Parameter 'tie': The field id " << *j << " is not recognised. Please check for typos." << std::endl;
-	      throw LibAIR2::WVRUserError(oss.str());
-	    }
-	  }
-	res.push_back(cs);
-      } // end for
+    {	
+      try
+      {
+	int srcid=boost::lexical_cast<int>(*j);
+	boost::bimap<size_t, std::string>::left_map::const_iterator it = srcmap.left.find(srcid);
+	if(it == srcmap.left.end()) { // id does not exist
+	  std::cerr << "Parameter 'tie': The field id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
+	  throw std::exception();
+	}
+	cs.insert(srcid);
+      }
+      catch (const std::exception& x)
+      {
+	try{
+	  cs.insert(srcmap.right.at(*j));
+	}
+	catch (const std::exception& y){
+	  std::ostringstream oss;
+	  oss << "Parameter 'tie': The field id " << *j << " is not recognised. Please check for typos." << std::endl;
+	  throw LibAIR2::WVRUserError(oss.str());
+	}
+      }
+    } // end for
+    res.push_back(cs);
   }
   return res;
 }
@@ -572,18 +572,22 @@ void printTied(const std::vector<std::set<std::string> > &tied,
 {
   for(size_t i=0; i<tied.size(); ++i)
   {
-    std::cout<<"Tying: ";
-    BOOST_FOREACH(const std::string &x, tied[i])
-      std::cout<<x<<" and ";
+    std::set<std::string>::const_iterator it=tied[i].begin();
+    std::cout<<"Tying: " << *it;
+    for(it++; it!=tied[i].end(); it++){
+      std::cout<<" and "<<*it;
+    }
     std::cout<<std::endl;
   }
   if (tied.size())
     std::cout<<"Tied sets as numerical source IDs:"<<std::endl;
   for(size_t i=0; i<tiedi.size(); ++i)
   {
-    std::cout<<"Tying: ";
-    BOOST_FOREACH(const size_t &x, tiedi[i])
-      std::cout<<x<<" and ";
+    std::set<size_t>::const_iterator it=tiedi[i].begin();
+    std::cout<<"Tying: " << *it;
+    for(it++; it!=tiedi[i].end(); it++){
+      std::cout<<" and "<<*it;
+    }
     std::cout<<std::endl;
   }
 

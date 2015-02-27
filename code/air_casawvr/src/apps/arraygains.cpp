@@ -220,22 +220,25 @@ namespace LibAIR2 {
 	double sx=0, sx2=0;
 	size_t csegment=0;
 	size_t npoints=0;
-	for (size_t k=0; k<ntimes; ++k)
+	if(tmask.size()>0)
 	{
-	  if (time[k]<tmask[csegment].first)
-	    continue;
-	  if (time[k]>=tmask[csegment].first && time[k]<=tmask[csegment].second)
+	  for (size_t k=0; k<ntimes; ++k)
 	  {
-	    if(absPath(k, i)>0. && absPath(k,j)>0.)
+	    if (time[k]<tmask[csegment].first)
+	      continue;
+	    if (time[k]>=tmask[csegment].first && time[k]<=tmask[csegment].second)
 	    {
-	      const double d=deltaPath(k, i, j);
-	      sx+=d;
-	      sx2+= (d*d);
-	      ++npoints;
+	      if(absPath(k, i)>0. && absPath(k,j)>0.)
+	      {
+		const double d=deltaPath(k, i, j);
+		sx+=d;
+		sx2+= (d*d);
+		++npoints;
+	      }
 	    }
+	    if (time[k]>=tmask[csegment].second && csegment<tmask.size()-1)
+	      ++csegment;
 	  }
-	  if (time[k]>=tmask[csegment].second && csegment<tmask.size()-1)
-	    ++csegment;
 	}
 	if (npoints>0)
 	{
@@ -259,30 +262,36 @@ namespace LibAIR2 {
   void ArrayGains::pathRMSAnt(const std::vector<std::pair<double, double> > &tmask,
 			      std::vector<double> &res) const
   {
+
     res.resize(nAnt);
+
     for(size_t i=0; i<nAnt; ++i)
     {
       double sx=0, sx2=0;
       size_t csegment=0;
       size_t npoints=0;
-      for (size_t k=0; k<time.size(); ++k)
+
+      if(tmask.size()>0)
       {
-	if (time[k]<tmask[csegment].first)
-	  continue;
-	
-	if (time[k]>=tmask[csegment].first && time[k]<=tmask[csegment].second)
+	for (size_t k=0; k<time.size(); ++k)
 	{
-	  if(absPath(k, i)>0.)
+	  if(time[k]<tmask[csegment].first)
+	    continue;
+	
+	  if (time[k]>=tmask[csegment].first && time[k]<=tmask[csegment].second)
 	  {
-	    const double d=absPath(k, i) * std::sin(el[k]);
-	    //std::cout << "i k d " << i << " " << k << " " << d << std::endl;
-	    sx+=d;
-	    sx2+= (d*d);
-	    ++npoints;
+	    if(absPath(k, i)>0.)
+	    {
+	      const double d=absPath(k, i) * std::sin(el[k]);
+	      //std::cout << "i k d " << i << " " << k << " " << d << std::endl;
+	      sx+=d;
+	      sx2+= (d*d);
+	      ++npoints;
+	    }
 	  }
+	  if (time[k]>=tmask[csegment].second && csegment<tmask.size()-1)
+	    ++csegment;
 	}
-	if (time[k]>=tmask[csegment].second && csegment<tmask.size()-1)
-	  ++csegment;
       }
       if(npoints>0)
       {
@@ -341,23 +350,26 @@ namespace LibAIR2 {
       double sx=0, sx2=0;
       size_t np=0;
       size_t ns=0;
-      for (size_t k=0; k<ntimes; ++k)
+      if (tmask.size()>0)
       {
-	if (time[k]<tmask[ns].first)
-	  continue;
-	if (time[k]>=tmask[ns].first && time[k]<=tmask[ns].second)
-	{	
-	  //std::cerr << "k i absPath(k, i) other.absPath(k,i) " << k << " " << i << " " << absPath(k, i) << " " << other.absPath(k,i) << std:: endl;
-	  if(absPath(k, i)>0. && other.absPath(k,i)>0.)
-	  {
-	    const double d=(absPath(k, i)-other.absPath(k,i));
-	    sx+=d;
-	    sx2+= (d*d);
-	    ++np;
+	for (size_t k=0; k<ntimes; ++k)
+	{
+	  if (time[k]<tmask[ns].first)
+	    continue;
+	  if (time[k]>=tmask[ns].first && time[k]<=tmask[ns].second)
+	  {	
+	    //std::cerr << "k i absPath(k, i) other.absPath(k,i) " << k << " " << i << " " << absPath(k, i) << " " << other.absPath(k,i) << std:: endl;
+	    if(absPath(k, i)>0. && other.absPath(k,i)>0.)
+	    {
+	      const double d=(absPath(k, i)-other.absPath(k,i));
+	      sx+=d;
+	      sx2+= (d*d);
+	      ++np;
+	    }
 	  }
+	  if (time[k]>=tmask[ns].second && ns<tmask.size()-1)
+	    ++ns;
 	}
-	if (time[k]>=tmask[ns].second && ns<tmask.size()-1)
-          ++ns;
       }
       res[i]=0.;
       if(np>0){
