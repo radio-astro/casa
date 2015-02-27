@@ -48,7 +48,8 @@ class ImportDataInputs(basetask.StandardInputs):
     def session(self):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('session')
-        
+
+        # if vis is a scalar but session is a list, return the session for this vis        
         if not isinstance(self.vis, list) and isinstance(self._session, list):
             idx = self._my_vislist.index(self.vis)
             return self._session[idx]
@@ -76,9 +77,19 @@ class ImportDataInputs(basetask.StandardInputs):
     
     @vis.setter    
     def vis(self, value):
-        if type(value) is types.ListType:
-            self._my_vislist = value 
-        self._vis = value
+        vislist = value if type(value) is types.ListType else [value,]
+
+        # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
+        # In this case we do not want to reset my_vislist, as handle_multivis is
+        # setting vis to the individual measurement sets
+        if not hasattr(self, basetask.VISLIST_RESET_KEY):
+            LOG.trace('Setting Inputs._my_vislist to %s' % vislist)
+            self._my_vislist = vislist
+        else:
+            LOG.trace('Leaving Inputs._my_vislist at current value of %s' 
+                      % self._my_vislist)
+
+        self._vis = value    
         
     @property
     def dbservice(self):
