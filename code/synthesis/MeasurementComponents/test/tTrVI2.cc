@@ -45,24 +45,123 @@ using namespace std;
 using namespace casa;
 using namespace casa::vi;
 
-//int main(int argc, char **argv) {
+
+//-----------------------------------------------------------------------------
+// CONFIGURATION SHOULD BE SET HERE
+
+
+// JUSTO:  Set which MS you want to use here:
+
+// MS to use:
+//String msname="ngc5921.ms";      // This does have CORRECTED_DATA column
+String msname="ngc5921_noCD.ms";   // This does NOT have CORRECTED_DATA column
+
+//String msname="Four_ants_3C286.ms";  // (This has CORRECTED_DATA, and has more iterations)
+
+
+//  JUSTO:  This datacol variable is used below when setting up the MSTransformIteratorFactory...
+
+// Set which datacol(s) is arranged for the MSTransformIteratorFactory configuration
+//String datacol("ALL");      //  this works ok (despite MSTransformDataHandler?)
+String datacol("CORRECTED");  //  this is trapped in MSTransformDataHandler if no physical CORRECTED_DATA column
+
+      //  NB: Strictly, we need to set "datacolumn" to "ALL" above to make sure both 
+      //      DATA and CORRECTED are both properly averaged (because we ask for both
+      //      from the VB2 below).    However, the point of using only 
+      //      CORRECTED is demonstrate a typical case for plotms (only CORRECTED)
+      //      and to show that there are still traps in MSTransformDataHandler
+      //      that forbid this if the physical column does not exist. 
+
+
+// Simple factor to calibrate with
+Float calfactor(100.0);
+
+// Averaging timescale (where relevant)
+Double avetime(5000.0);  // non-trivial
+//Double avetime(0.1);  // trivial  (averaging code will be exercised, but no reduction in volume)
+
+// Should summary of each VB be printed out?
+Bool verbose(True);
+
+// Control which tests are done
+Bool doCalVi2synth(False);  // Ordinary CalibratingVi2 test via synthesis interfaces
+Bool doCalVi2msvis(False);  // Ordinary CalibratingVi2 test via msvis interfaces (incl. static init)
+Bool doLayeredVi2(True);    // LayeredVi2Factory test, w/ cal and averaging
+Bool doMSTransVi2(True);    // MSTransformIteratorFactory test, w/ cal and averaging
+
+// END OF CONFIGURATION
+//-----------------------------------------------------------------------------
+
+// A function to test VB contents, etc.
+Bool testVB(VisBuffer2* vb, Float calfactor, Bool verbose) {
+
+  // A is corr/data/calfactor which should = 1.0
+  Cube<Float> A=amplitude(vb->visCubeCorrected()/vb->visCube())/calfactor;
+  A(vb->flagCube())=1.0;  // make sure flagged samples are 1.0
+  Float Am=mean(A);
+  Float Ae=stddev(A);
+  
+  // W is  wt(corr)/wt(data)*calfactor^2, which should =1.0
+  Matrix<Float> W=vb->weight()*square(vb->sigma())*calfactor*calfactor;
+  //  W(W==0.0)=1.0;  // make any zeros 1.0
+  Float Wm=mean(W);
+  Float We=stddev(W);
+  
+  if (verbose) {
+    // Report on the attached vb
+    cout << " nR="<< vb->nRows()
+	 << " nCh="<< vb->nChannels()
+	 << " nC="<< vb->nCorrelations()
+	 << " fldId="<< vb->fieldId()(0)
+	 << " scan#="<< vb->scan()(0)
+	 << " spwId="<< vb->spectralWindows()(0) << " (DDID="<<vb->dataDescriptionIds()(0)<<")"
+	 << " time="<<MVTime(vb->time()(0)/C::day).string(MVTime::YMD,7)
+      	 << " nfl="<< ntrue(vb->flagCube())
+	 << " Amp="<< max(amplitude(vb->visCube()))
+	 << "->"<< max(amplitude(vb->visCubeCorrected()))
+	 << " <A>="<< Am << "+/-" << Ae
+	 << " W="<< max(1.0f/square(vb->sigma()))
+	 << "->"<< max(vb->weight())
+	 << " <W>="<< Wm << "+/-" << We
+	 << endl;
+
+  }
+
+  return True;  // will add actual tests later
+}
+
+Bool doIteration(VisibilityIterator2* vi, Float calfactor, Bool verbose) {
+
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+  Int iChunk(0);
+  for(vi->originChunks();vi->moreChunks();++iChunk,vi->nextChunk()) {
+    Int iIter(0);
+    for (vi->origin();vi->more();++iIter,vi->next()) {
+      //cout << "Chunk="<<iChunk<<" Iter="<<iIter<<endl;
+      testVB(vb,calfactor,verbose);
+    }
+  }
+  return True;
+}
+
+
 int main() {
-
-  Bool verbose(True);
-
-  // JUSTO:  Set which MS you want to use here:
-  //String msname="ngc5921.ms";            // This does have CORRECTED_DATA column
-  String msname="ngc5921_noCD.ms";   // This does NOT have CORRECTED_DATA column
-
-  //String msname="Four_ants_3C286.ms";  // (This has CORRECTED_DATA, and has more iterations)
 
   Timer timer;
   try {
 
-    timer.mark();
-    //MS ms(argv1], Table::Update);
+    cout << endl <<  "Global Config:" << endl;
+    cout << " msname    = " << msname << endl;
+    cout << " calfactor = " << calfactor << endl;
+    cout << " avetime   = " << avetime << endl;
+    cout << " datacol   = " << datacol << endl;
+    cout << " verbose   = " << boolalpha << verbose << endl << endl;
+
+    // make the MS object for use below
     MeasurementSet ms(msname, Table::Update);
 
+    // make some sort columns (this matches MSTransform default, apparently)
     Block<int> sort(5);
     Int icol(0);
     sort[icol++] = MS::ARRAY_ID;
@@ -70,134 +169,98 @@ int main() {
     sort[icol++] = MS::FIELD_ID;
     sort[icol++] = MS::DATA_DESC_ID;
     sort[icol++] = MS::TIME;
-
     SortColumns sc(sort);
+
+    // Now do each test
 
     //-----------------------------------------------------------
     // Basic use of the CalibratingVi2 (alone, via synthesis)
-    if (False)
+    if (doCalVi2synth)
     {
+      String title="CalibratingVi2 via synthesis";
+      cout << endl << "Testing "+title+"------------------------------" << endl;
 
       timer.mark();
+
+      // Arrange iteration
       IteratingParameters iterpar(0.0,sc);
-      Float calfactor(1000.0);
+
+      // Arrange calibration
       CalibratingParameters calpar(calfactor);
 
+      // Construct the VI2
       vi::CalibratingVi2Factory cf(&ms,calpar,iterpar);
       vi::VisibilityIterator2 *cVi = new vi::VisibilityIterator2(cf);
-      vi::VisBuffer2 *cvb = cVi->getVisBuffer();
 
-      Int iChunk(0);
-      for(cVi->originChunks();cVi->moreChunks();cVi->nextChunk()) {
-	Int iIter(0);
-	for (cVi->origin();cVi->more();cVi->next()) {	  
+      timer.show(" "+title+" setup: "); 
+      timer.mark();
 
-	  // ratio should be 1.0, with error ~<float precision
-	  Cube<Float> ratio=amplitude(cvb->visCubeCorrected()/cvb->visCube())/calfactor;
-	  ratio(cvb->flagCube())=1.0;  // make sure flagged samples are 1.0
-	  Float mratio=mean(ratio);
-	  Float eratio=stddev(ratio);
+      // Drive the Iteration
+      doIteration(cVi,calfactor,verbose);
 
-	  // Report on the attached vb
-	  if (verbose) {
-	    cout << " nRows="<< cvb->nRows()
-		 << " nChans="<< cvb->nChannels()
-		 << " nCorrs="<< cvb->nCorrelations()
-		 << " arrId="<< cvb->arrayId()(0)
-		 << " fldId="<< cvb->fieldId()(0)
-		 << " scan#="<< cvb->scan()(0)
-		 << " spwId="<< cvb->spectralWindows()(0) << " (DDID="<<cvb->dataDescriptionIds()(0)<<")"
-		 << " time="<<MVTime(cvb->time()(0)/C::day).string(MVTime::YMD,7)
-		 << " shape="<< cvb->visCube().shape()
-		 << " max(amp(data))="<< max(amplitude(cvb->visCube()))
-		 << " max(amp(model))="<< max(amplitude(cvb->visCubeModel()))
-		 << " max(amp(corr))="<< max(amplitude(cvb->visCubeCorrected()))
-		 << " ratio="<< mratio << "+/-" << eratio
-		 << endl;
-	  }
-	  ++iIter;
-	}
-	++iChunk;
-      }
+      // Cleanup
       delete cVi;
-      timer.show(" CVI: "); 
+      timer.show(" "+title+" iteration: "); 
 
     }
 
 
     //-----------------------------------------------------------
     // Basic use of the CalibratingVi2 (alone, via msvis interfaces)
-    if (False)
+    if (doCalVi2msvis)
     {
+      String title="CalibratingVi2 via msvis interfaces (static init)";
+      cout << endl << "Testing "+title+"------------------------------" << endl;
 
+      timer.mark();
+
+      // Arrange iteration
       IteratingParameters iterpar(0.0,sc);
 
-      Float calfactor(10000.0);
+      // Arrange calibration (by Record, since we use msvis interfaces)
       Record calrec;
       calrec.define("calfactor",calfactor);
 
+      // Construct the VI2
       CalibratingVi2FactoryI* CViFI = casa::vi::CalibratingVi2FactoryI::generate(&ms,calrec,iterpar);
       vi::VisibilityIterator2 *cVi = new vi::VisibilityIterator2(*CViFI);
       delete CViFI;
 
-      vi::VisBuffer2 *cvb = cVi->getVisBuffer();
+      timer.show(" "+title+" setup: "); 
+      timer.mark();
 
-      Int iChunk(0);
-      for(cVi->originChunks();cVi->moreChunks();cVi->nextChunk()) {
-	Int iIter(0);
-	for (cVi->origin();cVi->more();cVi->next()) {	  
-	  // Report on the attached vb
+      // Drive the Iteration
+      doIteration(cVi,calfactor,verbose);
 
-	  // ratio should be 1.0, with error ~<float precision
-	  Cube<Float> ratio=amplitude(cvb->visCubeCorrected()/cvb->visCube())/calfactor;
-	  ratio(cvb->flagCube())=1.0;  // make sure flagged samples are 1.0
-	  Float mratio=mean(ratio);
-	  Float eratio=stddev(ratio);
-	  
-	  if (verbose) {
-	    cout << " nRows="<< cvb->nRows()
-		 << " nChans="<< cvb->nChannels()
-		 << " nCorrs="<< cvb->nCorrelations()
-		 << " arrId="<< cvb->arrayId()(0)
-		 << " fldId="<< cvb->fieldId()(0)
-		 << " scan#="<< cvb->scan()(0)
-		 << " spwId="<< cvb->spectralWindows()(0) << " (DDID="<<cvb->dataDescriptionIds()(0)<<")"
-		 << " time="<<MVTime(cvb->time()(0)/C::day).string(MVTime::YMD,7)
-		 << " shape="<< cvb->visCube().shape()
-		 << " max(amp(data))="<< max(amplitude(cvb->visCube()))
-		 << " max(amp(corr))="<< max(amplitude(cvb->visCubeCorrected()))
-		 << " ratio="<< mratio << "+/-" << eratio
-		 << endl;
-	  }
-	  ++iIter;
-	}
-	++iChunk;
-      }
+      // Cleanup
       delete cVi;
-      timer.show(" CVI by static init: "); 
+      timer.show(" "+title+" iteration: "); 
 
     }
 
     //-----------------------------------------------------------
     // Use of LayeredVi2Factory to combine calibration and time averaging 
-    if (True)
+    if (doLayeredVi2) 
     {
 
-      cout << endl << "Using LayeredVi2Factory------------------------" << endl;
+      String title="LayeredVi2Factory with cal+ave";
+      cout << endl << "Testing "+title+"------------------------------" << endl;
 
       timer.mark();
 
+      // Arrange iteration
       IteratingParameters iterpar(0.0,sc);
-
-      Float calfactor(10000.0);
+						
+      // Arrange calibration (by Record since we use msvis interfaces)
       Record calrec;
       calrec.define("calfactor",calfactor);
 
+      // Arrange for averaging
       vi::AveragingOptions aveopt(vi::AveragingOptions::AverageCorrected|
 				  vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT|
 				  vi::AveragingOptions::AverageObserved|
 				  vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA);
-      vi::AveragingParameters avepar(5000.0,0.0,SortColumns(),aveopt); 
+      vi::AveragingParameters avepar(avetime,0.0,SortColumns(),aveopt); 
 
       // We can set up with many combinations
       //vi::LayeredVi2Factory lf(&ms,&iterpar,Record(),NULL);    // only plain iteration
@@ -205,127 +268,60 @@ int main() {
       //vi::LayeredVi2Factory lf(&ms,&iterpar,Record(),&avepar); // only averaging
       vi::LayeredVi2Factory lf(&ms,&iterpar,calrec,&avepar);     // cal _and_ averaging
 
+      // Create the VI2
       vi::VisibilityIterator2 *lVi = new vi::VisibilityIterator2(lf);
-      lVi->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
+      // Needed?  // lVi->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
 
-      vi::VisBuffer2 *lvb = lVi->getVisBuffer();
+      timer.show(" "+title+" setup: "); 
+      timer.mark();
 
-      Int iChunk(0);
-      for(lVi->originChunks();lVi->moreChunks();lVi->nextChunk()) {
-	Int iIter(0);
-	for (lVi->origin();lVi->more();lVi->next()) {
-	  //cout << "Chunk="<<iChunk<<" Iter="<<iIter<<endl;
+      // Drive the Iteration
+      doIteration(lVi,calfactor,verbose);
 
-	  // ratio should be 1.0, with error ~<float precision
-	  Cube<Float> ratio=amplitude(lvb->visCubeCorrected()/lvb->visCube())/calfactor;
-	  ratio(lvb->flagCube())=1.0;  // make sure flagged samples are 1.0
-	  Float mratio=mean(ratio);
-	  Float eratio=stddev(ratio);
-
-	  // Report on the attached vb
-	  if (verbose) {
-	    cout << " nRows="<< lvb->nRows()
-		 << " nChans="<< lvb->nChannels()
-		 << " nCorrs="<< lvb->nCorrelations()
-		 << " arrId="<< lvb->arrayId()(0)
-		 << " fldId="<< lvb->fieldId()(0)
-		 << " scan#="<< lvb->scan()(0)
-		 << " spwId="<< lvb->spectralWindows()(0) << " (DDID="<<lvb->dataDescriptionIds()(0)<<")"
-		 << " time="<<MVTime(lvb->time()(0)/C::day).string(MVTime::YMD,7)
-		 << " shape="<< lvb->visCube().shape()
-		 << " max(amp(data))="<< max(amplitude(lvb->visCube()))
-		 << " max(amp(corr))="<< max(amplitude(lvb->visCubeCorrected()))
-		 << " ratio="<< mratio << "+/-" << eratio
-		 << endl;
-	  }
-	  ++iIter;
-	}
-	++iChunk;
-      }
+      // Cleanup
       delete lVi;
-      timer.show(" LVI: "); 
+      timer.show(" "+title+" iteration: "); 
     }
 
     //-----------------------------------------------------------
     //  Use MSTranformIteratorFactory w/ calibration and averaging
-    if (True)
+    if (doMSTransVi2)
     {
-      cout << endl << "Using MSTransformIteratorFactory------------------------" << endl;
+      String title="MSTransformIteratorFactory with cal+ave";
+      cout << endl << "Testing "+title+"------------------------------" << endl;
 
-      // Use MSTransformIteratorFactory
+      cout << "(Setup is same as 'Testing LayeredVi2Factory with cal+ave')" << endl;
 
-      Float calfactor(10000.0);
+
+      timer.mark();
+
+      // Arrange calibration (by Record since we use mstransform interfaces)
       Record calrec;
       calrec.define("calfactor",calfactor);
 
+      // The configuration Record for MSTransformIteratorFactory
       Record config;
-
-
-
-      // JUSTO:
-
-      //config.define("datacolumn","ALL");      //  this works ok
-      config.define("datacolumn","CORRECTED");  //  this is trapped in MSTransformDataHandler if no physical CORRECTED_DATA column
-
-      //  NB: Strictly, we need to set "datacolumn" to "ALL" above to make sure both 
-      //      DATA and CORRECTED are both properly averaged (because we ask for both
-      //      from the VB2 below.    .   The point of using only 
-      //      CORRECTED is demonstrate a typical case for plotms (only CORRECTED)
-      //      and to show that there are still traps in MSTransformDataHandler
-      //      that forbid this if the physical column does not exist. 
-
-
-
-
       config.define("inputms",msname);
-      config.define("timeaverage",False);
+      config.define("datacolumn",datacol);  //  from above
       config.define("timeaverage",True);
-      config.define("timebin","5000.0s");
+      config.define("timebin",String::toString(avetime)+"s"); 
       config.defineRecord("callib",calrec);
-      
+
+      // Construct the VI2
       MSTransformIteratorFactory mstf(config);
       vi::VisibilityIterator2 *mstVi = new vi::VisibilityIterator2(mstf);
       
-      vi::VisBuffer2 *mstvb = mstVi->getVisBuffer();
+      timer.show(" "+title+" setup: "); 
+      timer.mark();
 
-      Int iChunk(0);
-      for(mstVi->originChunks();mstVi->moreChunks();mstVi->nextChunk()) {
-	Int iIter(0);
-	for (mstVi->origin();mstVi->more();mstVi->next()) {
-	  //	  cout << "Chunk="<<iChunk<<" Iter="<<iIter<<endl;
+      // Drive the Iteration
+      doIteration(mstVi,calfactor,verbose);
 
-	  // ratio should be 1.0, with error ~<float precision
-	  Cube<Float> ratio=amplitude(mstvb->visCubeCorrected()/mstvb->visCube())/calfactor;
-	  ratio(mstvb->flagCube())=1.0;  // make sure flagged samples are 1.0
-	  Float mratio=mean(ratio);
-	  Float eratio=stddev(ratio);
-
-	  if (verbose) {
-	    // Report on the attached vb
-	    cout << " nRows="<< mstvb->nRows()
-		 << " nChans="<< mstvb->nChannels()
-		 << " nCorrs="<< mstvb->nCorrelations()
-		 << " arrId="<< mstvb->arrayId()(0)
-		 << " fldId="<< mstvb->fieldId()(0)
-		 << " scan#="<< mstvb->scan()(0)
-		 << " spwId="<< mstvb->spectralWindows()(0) << " (DDID="<<mstvb->dataDescriptionIds()(0)<<")"
-		 << " time="<<MVTime(mstvb->time()(0)/C::day).string(MVTime::YMD,7)
-		 << " shape="<< mstvb->visCube().shape()
-		 << " max(amp(data))="<< max(amplitude(mstvb->visCube()))
-		 << " max(amp(corr))="<< max(amplitude(mstvb->visCubeCorrected()))
-		 << " ratio="<< mratio << "+/-" << eratio
-		 << endl;
-	  }
-	  ++iIter;
-	}
-	++iChunk;
-      }
+      // Cleanup
       delete mstVi;
-      timer.show(" MSTVI: "); 
-
+      timer.show(" "+title+" iteration: "); 
 
     }
-
 
   } 
   catch (const AipsError &x) {
@@ -334,7 +330,8 @@ int main() {
   }
   
   //  timer.show("Done.  "); cout<<endl<<endl<<endl;
-  return 0;  }
+  return 0;  
+}
 
 
 //----------------------------------------------------------------
@@ -353,7 +350,6 @@ int main() {
       VisBuffer2* vb = vi.getVisBuffer();
       
       Int iChunk(0);
-
       for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
 	Int iIter(0);
 	for (vi.origin();vi.more();vi.next()) {
