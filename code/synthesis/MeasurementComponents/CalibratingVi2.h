@@ -80,10 +80,12 @@ public:
   virtual void origin ();
   virtual void next ();
 
-  // Smart corrected data/weights accessors
+  // Smart corrected data/weights/flags accessors
   virtual void weight(Matrix<Float>& wt) const;
   virtual void weightSpectrum(Cube<Float>& wtsp) const;
   virtual void visibilityCorrected(Cube<Complex>& vis) const;
+  virtual void flag(Cube<Bool>& flagC) const;
+  //  virtual void flag(Matrix<Bool>& flagM) const;  // CORR-INDEP FLAGS DEPRECATED IN VI2/VB2?
 
   // Reports True in case of *Corrected columns
   //  (because this class provides it, even if it doesn't exist physically!)

@@ -22,6 +22,7 @@
 
 #include <synthesis/MeasurementComponents/CalibratingVi2.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
+#include <casa/Arrays/ArrayPartMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -169,6 +170,47 @@ void CalibratingVi2::next()
 
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void CalibratingVi2::flag(Cube<Bool>& flagC) const
+{
+  //  cout << "CVI2::flag(Cube)...";
+
+  // Call for correction, which might set some flags
+  correctCurrentVB();
+
+  // copy result to caller's Cube<Bool>
+  flagC.assign(getVii()->getVisBuffer()->flagCube());
+
+}
+
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+/* DEPRECATED?
+void CalibratingVi2::flag(Matrix<Bool>& flagM) const
+{
+  // Corr-indep flags
+  //  cout << "CVI2::flag(Matrix)...";
+
+  // Get corr-dep flags
+  Cube<Bool> flagC;
+  this->flag(flagC);
+
+  // sum on corr axis
+  uInt nr=flagC.shape()(2);
+  uInt nch=flagC.shape()(1);
+  flagM.resize(nch,nr);
+  flagM=partialMaxs(flagC,IPosition(1,0)); 
+
+
+}
+*/
+
+
 
 // -----------------------------------------------------------------------
 //
@@ -176,9 +218,9 @@ void CalibratingVi2::next()
 void CalibratingVi2::weight(Matrix<Float>& wt) const
 {
  
-  return getVii()->weight(wt);
+  //  cout << "CVI2::weight...";
 
- // Call for correction
+  // Call for correction
   //   TBD: optimize w.r.t. calibrating only the weights?
   correctCurrentVB();
 
@@ -193,6 +235,8 @@ void CalibratingVi2::weight(Matrix<Float>& wt) const
 // -----------------------------------------------------------------------
 void CalibratingVi2::weightSpectrum(Cube<Float>& wtsp) const
 {
+
+  //  cout << "CVI2::weightSpectrum...";
 
   if (this->weightSpectrumExists()) {
 
@@ -218,6 +262,8 @@ void CalibratingVi2::weightSpectrum(Cube<Float>& wtsp) const
 // -----------------------------------------------------------------------
 void CalibratingVi2::visibilityCorrected(Cube<Complex>& vis) const
 {
+
+  //  cout << "CVI2::visibilityCorrected...";
 
   // TBD:
   //  o consider if underlying VisBuffer should be maintained const? 
@@ -264,17 +310,36 @@ Bool CalibratingVi2::existsColumn(VisBufferComponent2 id) const
 // -----------------------------------------------------------------------
 void CalibratingVi2::correctCurrentVB() const
 {
+  // This method must call NO ordinary VB2 accessors that require ViImpl 
+  //   methods that are defined in this class, _even_implicitly_, because 
+  //   the VB2 uses the VI2 that has its ViImpl overridden by these local 
+  //   methods.  This causes infinite loops!!!
+  // One way to avoid this is to ensure that every method in this class 
+  //   initializes the VB2 fields via getVii() methods.....
 
-  // Get the underlying ViImpl2's VisBuffer, to munge it
-  VisBuffer2 *vb = getVii()->getVisBuffer();
+  //  cout << " correctCurrentVB(): " << boolalpha << visCorrOK_p;
 
   // Do the correction, if not done yet
   if (!visCorrOK_p) {
 
-    // Initialize the to-be-calibrated weights
+    // Get the underlying ViImpl2's VisBuffer, to munge it
+    VisBuffer2 *vb = getVii()->getVisBuffer();
+
+    // sense if WEIGHT_SPECTRUM exists
+    Bool doWtSp = getVii()->weightSpectrumExists();
+
+    // Init the flagCube from below
+    //   This does not use any CVi2 overloads
+    Cube<Bool> flC;
+    getVii()->flag(flC);
+    vb->setFlagCube(flC);
+
+    // Initialize the to-be-calibrated weights (this is smart re spec weights or not)
+    //   This does not use any CVi2 overloads  (luckily)
     vb->resetWeightsUsingSigma();
     
     // Set the the initialize corrected data w/ data
+    //   This does not use any CVi2 overloads
     vb->setVisCubeCorrected(vb->visCube());
     
     // Apply calibration  (TBD, includes weight calibration?)
@@ -286,11 +351,28 @@ void CalibratingVi2::correctCurrentVB() const
     vCC*=corrFactor_p;
     vb->setVisCubeCorrected(vCC);
 
+    if (doWtSp) {
+      // Calibrate the WS
+      Cube<Float> wS(vb->weightSpectrum());   // Was set above
+      wS/=(corrFactor_p*corrFactor_p);
+      vb->setWeightSpectrum(wS);
+      // Set W via median on chan axis
+      vb->setWeight(partialMedians(wS,IPosition(1,1)));
+    }
+    else {
+      // Just calibrate the W
+      Matrix<Float> w(vb->weight());          // Was set above
+      w/=(corrFactor_p*corrFactor_p);
+      vb->setWeight(w);
+    }
+
     // Signal that we have applied the correction, to avoid unnecessary redundancy
     visCorrOK_p=True;
 
-  }    
+    //    cout << "-->" << visCorrOK_p;
 
+  }    
+  //  cout << endl;
 }
 
 
