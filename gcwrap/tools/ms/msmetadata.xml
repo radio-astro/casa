@@ -462,7 +462,7 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="exposuretime">
-            <shortdescription>Get the exposure time for the specified scan, spwid, and polarizaiton ID.</shortdescription>
+            <shortdescription>Get the exposure time for the specified scan, spwid, polarizaiton ID, array ID, and observation ID.</shortdescription>
             <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number.</description>
@@ -476,19 +476,28 @@ windows in the dataset and close the tool.
                     <description>Polarization ID.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="record"/>
             <description>
-                Get the exposure time for the specified scan, spwid, and polarizaiton ID. This is the exposure time
-                of the record with the lowest time stamp of the records associated with these parameters. Returns
-                a quantity dictionary. If polid is not specified (or specified and negative) and there is only one
-                polarization ID in for the specified combination of scan and spwid, then that polarization ID is used.
-                If there are multiple polarization IDs for the specified scan and spwid, a list of these is logged
-                and an empty dictionary is returned.
+                Get the exposure time for the specified scan, spwid, polarizaiton ID, array ID, and observation ID.
+                This is the exposure time of the record with the lowest time stamp of the records associated with
+                these parameters. Returns a quantity dictionary. If polid is not specified (or specified and negative)
+                and there is only one polarization ID in for the specified combination of scan, spwid, obsID, and
+                arrayID, then that polarization ID is used. If there are multiple polarization IDs for the
+                combination of other parameters, a list of these is logged and an empty dictionary is returned.
             </description>
             <example>
     msmd.open("my.ms")
     # get the exposure time for scan 1, spwid 2, and polid 3
+    # for arrayID = 0 and obsID = 0
     integration_time = msmd.getexposuretime(scan=1, spwid=2, polid=3)
     msmd.done()
             </example>
@@ -559,8 +568,8 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="fieldsforscan">
-            <shortdescription>Get an array of the unique fields for the specified scan number.</shortdescription>
-             <input>
+            <shortdescription>Get an array of the unique fields for the specified scan number, observation ID, and array ID.</shortdescription>
+            <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the fields.</description>
                     <value>-1</value>
@@ -569,23 +578,31 @@ windows in the dataset and close the tool.
                     <description>If true, return the field names. If false, return the zero-based field IDs.</description>
                     <value>false</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="any"/>
             <description>
-                Get an array of the unique fields for the specified scan number.
+                Get an array of the unique fields for the specified scan number, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the field names for scan number 5
+    # get the field names for scan number 5 (arrayid = obsid = 0)
     field_names = msmd.fieldsforscan(5, True)
-    # get the field IDs for scan number 5
+    # get the field IDs for scan number 5 (arrayid = obsid = 0)
     field_IDs = msmd.fieldsforscan(5, False)
     msmd.done()
             </example>
         </method>
   
         <method type="function" name="fieldsforscans">
-            <shortdescription>Get an array of the unique fields for the specified scan numbers.</shortdescription>
+            <shortdescription>Get an array of the unique fields for the specified scan numbers, observationID, and array ID.</shortdescription>
              <input>
                 <param type="intArray" direction="in" name="scans">
                     <description>Scan numbers for which to return the fields.</description>
@@ -595,16 +612,24 @@ windows in the dataset and close the tool.
                     <description>If true, return the field names. If false, return the zero-based field IDs.</description>
                     <value>false</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="any"/>
             <description>
-                Get an array of the unique fields for the specified scan numbers.
+                Get an array of the unique fields for the specified scan numbers, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the field names for scan numbers 5 and 10
+    # get the field names for scan numbers 5 and 10 (obsid = 0, arrayid = 0)
     field_names = msmd.fieldsforscan([5, 10], True)
-    # get the field IDs for scan numbers 5 and 10
+    # get the field IDs for scan numbers 5 and 10 (obsid = 0, arrayid = 0)
     field_IDs = msmd.fieldsforscan([5, 10], False)
     msmd.done()
             </example>
@@ -725,20 +750,28 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="intentsforscan">
-            <shortdescription>Get an array of the unique intents for the specified scan.</shortdescription>
+            <shortdescription>Get an array of the unique intents for the specified scan, obsservation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the intents.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="stringArray"/>
             <description>
-                Get an array of the unique intents for the specified scan.
+                Get an array of the unique intents for the specified scan, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the intents associated with scan 4
+    # get the intents associated with scan 4 (obsid=0, arrayid = 0)
     intents = msmd.intentsforscan(4)
     msmd.done()
             </example>
@@ -1079,105 +1112,149 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="scannumbers">
-            <shortdescription>Get an array of the unique scan numbers associated with the MS.</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers associated with the MS for the specified observation ID and array ID.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
             <returns type="intArray"/>
             <description>
-                This method will return an array of unique scan numbers in the associated MS.
+                This method will return an array of unique scan numbers in the associated MS for the specified observation ID and array ID.
             </description>
             <example>
     msmd.open("my.ms")
+    # scan numbers for obsid=0 and arrayid=0
     scan_numbers = msmd.scannumbers()
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="scansforfield">
-            <shortdescription>Get an array of the unique scan numbers associated with the specified field.</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers associated with the specified field, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="any" direction="in" name="intent">
                     <description>Field ID or field name (case sensitive) for which to return the scan numbers.</description>
                      <value type="string"/>
                     <any type="variant" limittypes="string int"/>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers associated with the specified field.
+                Get an array of the unique scan numbers associated with the specified field, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with field "planet Z"
+    # get the scan numbers associated with field "planet Z" (obsid=0, arrayid=0)
     scan_numbers = msmd.scansforfield("planet Z")
-    # get the scan numbers associated with field ID 5
+    # get the scan numbers associated with field ID 5 (obsid=0, arrayid=0)
     scan_numbers = msmd.scansforfield(5)
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="scansforintent">
-            <shortdescription>Get an array of the unique scan numbers associated with the specified intent.</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers associated with the specified intent, observation ID, and arrayID.</shortdescription>
              <input>
                 <param type="string" direction="in" name="intent">
                     <description>Intent (case-sensitive) for which to return the scan numbers.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers associated with the specified intent. The "*" character matches any number of characters from all character classes.
+                Get an array of the unique scan numbers associated with the specified intent, observation ID, and arrayID.
+                The "*" character matches any number of characters from all character classes.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with intent "detect planet X"
+    # get the scan numbers associated with intent "detect planet X" (obsid=0, arrayid=0)
     scan_numbers = msmd.scansforintent("detect planet X", regex=False)
-    # got all the scan numbers associated with all intents which contain 'WVR'
+    # got all the scan numbers associated with all intents which contain 'WVR' (obsid=0, arrayid=0)
     scan_numbers = msmd.scansforintent("*WVR*")
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="scansforspw">
-            <shortdescription>Get an array of the unique scan numbers associated with the specified zero-based spectral window ID.</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers associated with the specified zero-based spectral window ID, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="spw">
                     <description>Zero-based spectral window ID for which to return the scan numbers.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers associated with the specified zero-based spectral window ID.
+                Get an array of the unique scan numbers associated with the specified zero-based spectral window ID, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with spectral window ID 14
+    # get the scan numbers associated with spectral window ID 14, obsid=0, arrayid=0
     scan_numbers = msmd.scansforspw(14)
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="scansforstate">
-            <shortdescription>Get an array of the unique scan numbers for the specified state.</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers for the specified state, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="state">
                     <description>ID of state for which to return the scan numbers.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers for the specified state.
+                Get an array of the unique scan numbers for the specified state, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with state 2
+    # get the scan numbers associated with state 2, obsid=0, arrayid=0
     scans = msmd.scansforstate(2)
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="scansfortimes">
-            <shortdescription>Get an array of the unique scan numbers for the specified time range (time-tol to time+tol).</shortdescription>
+            <shortdescription>Get an array of the unique scan numbers for the specified time range (time-tol to time+tol), observation ID, and array ID.</shortdescription>
              <input>
                 <param type="double" direction="in" name="time">
                     <description>Time at center of time range.</description>
@@ -1187,14 +1264,22 @@ windows in the dataset and close the tool.
                     <description>Time on either side of center for specifying range.</description>
                     <value>0</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique scan numbers for the specified time range (time-tol to time+tol).
+                Get an array of the unique scan numbers for the specified time range (time-tol to time+tol), observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with the specified time range
+    # get the scan numbers associated with the specified time range (obsid=0, arrayid=0)
     scans = msmd.scansfortimes(4.84282937e+09, 20)
     msmd.done()
             </example>
@@ -1291,41 +1376,71 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="spwsforscan">
-            <shortdescription>Get an array of the unique spectral window IDs for the specified scan number.</shortdescription>
+            <shortdescription>Get an array of the unique spectral window IDs for the specified scan number, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the spectral window IDs.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique spectral window IDs for the specified scan number.
+                Get an array of the unique spectral window IDs for the specified scan number, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the spectral window IDs associated with scan number 20
+    # get the spectral window IDs associated with scan number 20, obsid=0, arrayid=0.
     spws = msmd.spwsforscan(20)
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="statesforscan">
-            <shortdescription>Get an array of the unique state IDs for the specified scan number.</shortdescription>
+            <shortdescription>Get an array of the unique state IDs for the specified scan number, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the state IDs.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique state IDs for the specified scan number.
+                Get an array of the unique state IDs for the specified scan number, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the state IDs associated with scan number 251
+    # get the state IDs associated with scan number 251, obsid=0, arrayid=0
     states = msmd.statesforscan(251)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="summary">
+            <shortdescription>Get dictionary summarizing the MS.</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get dictionary summarizing the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the summary
+    summary = msmd.summary()
     msmd.done()
             </example>
         </method>
@@ -1386,40 +1501,56 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="timesforscan">
-            <shortdescription>Get an array of the unique times for the specified scan number.</shortdescription>
+            <shortdescription>Get an array of the unique times for the specified scan number, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the times.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="doubleArray"/>
             <description>
-                Get an array of the unique times for the specified scan number.
+                Get an array of the unique times for the specified scan number, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the times associated with scan number 10
+    # get the times associated with scan number 10, obsid=0, arrayid=0
     times = msmd.timesforscans(10)
     msmd.done()
             </example>
         </method>
         
         <method type="function" name="timesforscans">
-            <shortdescription>Get an array of the unique times for the specified scan numbers.</shortdescription>
+            <shortdescription>Get an array of the unique times for the specified scan numbers, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="intArray" direction="in" name="scans">
                     <description>Scan numbers for which to return the times.</description>
                     <value>-1</value>
                 </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
             </input>
             <returns type="doubleArray"/>
             <description>
-                Get an array of the unique times for the specified scan numbers.
+                Get an array of the unique times for the specified scan numbers, observation ID, and array ID.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the times associated with scan numbers 10 and 20
+    # get the times associated with scan numbers 10 and 20, obsid=0, arrayid=0
     times = msmd.timesforscans([10,20])
     msmd.done()
             </example>

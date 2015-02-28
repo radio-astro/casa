@@ -41,6 +41,7 @@
 #include <measures/Measures/MDirection.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaData.h>
+#include <ms/MeasurementSets/MSKeys.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/regex.hpp>
@@ -522,14 +523,19 @@ record* msmetadata::effexposuretime() {
 	return 0;
 }
 
-record* msmetadata::exposuretime(int scan, int spwid, int polid) {
+record* msmetadata::exposuretime(
+	int scan, int spwid, int polid, int obsid, int arrayid
+) {
 	_FUNC(
 		_checkSpwId(spwid, True);
+		_checkObsId(obsid, True);
 		if (polid >= 0) {
 			_checkPolId(polid, True);
 		}
 		else {
-			std::set<uInt> polids = _msmd->getPolarizationIDs(scan, spwid);
+			std::set<uInt> polids = _msmd->getPolarizationIDs(
+				(uInt)obsid, arrayid, scan, (uInt)spwid
+			);
 			ThrowIf(
 				polids.empty(),
 				"This dataset has no records for the specified scan and spwid"
@@ -621,12 +627,18 @@ vector<int> msmetadata::fieldsforname(const string& name) {
 	return vector<int>();
 }
 
-variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
+variant* msmetadata::fieldsforscan(int scan, bool asnames, int obsid, int arrayid) {
 	_FUNC(
-		if (scan < 0) {
-			throw AipsError("Scan number must be nonnegative.");
-		}
-		std::set<Int> ids = _msmd->getFieldsForScan(scan);
+		ThrowIf(
+			scan < 0,
+			"Scan number must be nonnegative."
+		);
+		_checkObsId(obsid, True);
+		ScanKey scanKey;
+		scanKey.obsID = obsid;
+		scanKey.arrayID = arrayid;
+		scanKey.scan = scan;
+		std::set<Int> ids = _msmd->getFieldsForScan(scanKey);
 		if (asnames) {
 			return new variant(_fieldNames(ids));
 		}
@@ -639,11 +651,15 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 	return 0;
 }
 
-variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames) {
+variant* msmetadata::fieldsforscans(
+	const vector<int>& scans, const bool asnames,
+	int obsid, int arrayid
+) {
 	_FUNC(
 		ThrowIf(
 			scans.empty(), "Scans array cannot be empty"
 		);
+		_checkObsId(obsid, True);
 		std::set<Int> uscans;
 		for (
 			vector<int>::const_iterator scan=scans.begin();
@@ -654,7 +670,7 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 			);
 			uscans.insert(*scan);
 		}
-		std::set<Int> ids = _msmd->getFieldsForScans(uscans);
+		std::set<Int> ids = _msmd->getFieldsForScans(uscans, obsid, arrayid);
 		if (asnames) {
 			return new variant(_fieldNames(ids));
 		}
@@ -748,12 +764,17 @@ vector<string> msmetadata::intentsforfield(const variant& field) {
 	return vector<string>();
 }
 
-vector<string> msmetadata::intentsforscan(int scan) {
+vector<string> msmetadata::intentsforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative.");
 		}
-		return _setStringToVectorString(_msmd->getIntentsForScan(scan));
+		_checkObsId(obsid, True);
+		ScanKey scanKey;
+		scanKey.obsID = obsid;
+		scanKey.arrayID = arrayid;
+		scanKey.scan = scan;
+		return _setStringToVectorString(_msmd->getIntentsForScan(scanKey));
 	)
 	return vector<string>();
 }
@@ -994,21 +1015,25 @@ bool msmetadata::open(const string& msname, const float cachesize) {
 	return false;
 }
 
-vector<int> msmetadata::scannumbers() {
+vector<int> msmetadata::scannumbers(int obsid, int arrayid) {
 	_FUNC(
-		return _setIntToVectorInt(_msmd->getScanNumbers());
+		_checkObsId(obsid, True);
+		return _setIntToVectorInt(_msmd->getScanNumbers(obsid, arrayid));
 	)
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforfield(const variant& field) {
+vector<int> msmetadata::scansforfield(
+	const variant& field, int obsid, int arrayid
+) {
 	_FUNC(
+		_checkObsId(obsid, True);
 		switch (field.type()) {
 		case variant::INT:
-			return _setIntToVectorInt(_msmd->getScansForFieldID(field.toInt()));
+			return _setIntToVectorInt(_msmd->getScansForFieldID(field.toInt(), obsid, arrayid));
 			break;
 		case variant::STRING:
-			return _setIntToVectorInt(_msmd->getScansForField(field.toString()));
+			return _setIntToVectorInt(_msmd->getScansForField(field.toString(), obsid, arrayid));
 			break;
 		default:
 			throw AipsError("Unacceptable type for field parameter.");
@@ -1017,42 +1042,47 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforintent(const string& intent) {
+vector<int> msmetadata::scansforintent(const string& intent, int obsid, int arrayid) {
 	_FUNC(
+		_checkObsId(obsid, True);
 		Bool expand = intent.find('*') != std::string::npos;
 		if (expand) {
-			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToScansMap();
-			std::set<Int> ids = _idsFromExpansion(mymap, intent);
-			return _setIntToVectorInt(ids);
+			std::map<String COMMA std::set<ScanKey> > mymap = _msmd->getIntentToScansMap();
+			std::set<ScanKey> ids = _idsFromExpansion(mymap, intent);
+			std::set<Int> scans = scanNumbers(ids);
+			return _setIntToVectorInt(scans);
 		}
 		else {
-			return _setIntToVectorInt(_msmd->getScansForIntent(intent));
+			return _setIntToVectorInt(_msmd->getScansForIntent(intent, obsid, arrayid));
 		}
 	)
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforspw(const int spw) {
+vector<int> msmetadata::scansforspw(const int spw, int obsid, int arrayid) {
 	_FUNC(
 		_checkSpwId(spw, True);
-		return _setIntToVectorInt(_msmd->getScansForSpw(spw));
+		_checkObsId(obsid, True);
+		return _setIntToVectorInt(_msmd->getScansForSpw(spw, obsid, arrayid));
 	)
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansfortimes(const double center, const double tol) {
+vector<int> msmetadata::scansfortimes(const double center, const double tol, int obsid, int arrayid) {
 	_FUNC(
-		return _setIntToVectorInt(_msmd->getScansForTimes(center, tol));
+		_checkObsId(obsid, True);
+		return _setIntToVectorInt(_msmd->getScansForTimes(center, tol, obsid, arrayid));
 	)
 	return vector<int>();
 }
 
-vector<int> msmetadata::scansforstate(const int state) {
+vector<int> msmetadata::scansforstate(int state, int obsid, int arrayid) {
 	_FUNC(
 		if (state < 0) {
 			throw AipsError("State ID must be nonnegative.");
 		}
-		return _setIntToVectorInt(_msmd->getScansForState(state));
+		_checkObsId(obsid, True);
+		return _setIntToVectorInt(_msmd->getScansForState(state, obsid, arrayid));
 	)
 	return vector<int>();
 }
@@ -1146,23 +1176,29 @@ vector<int> msmetadata::spwsforfield(const variant& field) {
 	return vector<int>();
 }
 
-vector<int> msmetadata::spwsforscan(const int scan) {
+vector<int> msmetadata::spwsforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		if (scan < 0) {
 			throw AipsError("Scan must be nonnegative");
 		}
-		return _setUIntToVectorInt(_msmd->getSpwsForScan(scan));
+		_checkObsId(obsid, True);
+		ScanKey scanKey;
+		scanKey.obsID = obsid;
+		scanKey.arrayID = arrayid;
+		scanKey.scan = scan;
+		return _setUIntToVectorInt(_msmd->getSpwsForScan(scanKey));
 	)
 	return vector<int>();
 
 }
 
-vector<int> msmetadata::statesforscan(const int scan) {
+vector<int> msmetadata::statesforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative");
 		}
-		return _setIntToVectorInt(_msmd->getStatesForScan(scan));
+		_checkObsId(obsid, True);
+		return _setIntToVectorInt(_msmd->getStatesForScan(obsid, arrayid, scan));
 	)
 	return vector<int>();
 }
@@ -1177,6 +1213,13 @@ vector<double> msmetadata::timesforfield(const int field) {
 	return vector<double>();
 }
 
+record* msmetadata::summary() {
+	_FUNC(
+		return fromRecord(_msmd->getSummary());
+	)
+	return NULL;
+}
+
 vector<double> msmetadata::timesforintent(const string& intent) {
 	_FUNC(
 		return _setDoubleToVectorDouble(_msmd->getTimesForIntent(intent));
@@ -1184,17 +1227,22 @@ vector<double> msmetadata::timesforintent(const string& intent) {
 	return vector<double>();
 }
 
-vector<double> msmetadata::timesforscan(const int scan) {
+vector<double> msmetadata::timesforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative");
 		}
-		return _setDoubleToVectorDouble(_msmd->getTimesForScan(scan));
+		_checkObsId(obsid, True);
+		ScanKey scanKey;
+		scanKey.obsID = obsid;
+		scanKey.arrayID = arrayid;
+		scanKey.scan = scan;
+		return _setDoubleToVectorDouble(_msmd->getTimesForScan(scanKey));
 	)
 	return vector<double>();
 }
 
-vector<double> msmetadata::timesforscans(const vector<int>& scans) {
+vector<double> msmetadata::timesforscans(const vector<int>& scans, int obsid, int arrayid) {
 	_FUNC(
 		for (
 			vector<int>::const_iterator iter=scans.begin();
@@ -1204,8 +1252,13 @@ vector<double> msmetadata::timesforscans(const vector<int>& scans) {
 				throw AipsError("All scan numbers must be nonnegative");
 			}
 		}
+		_checkObsId(obsid, True);
 		std::set<Int> scanSet(scans.begin(), scans.end());
-		return _setDoubleToVectorDouble(_msmd->getTimesForScans(scanSet));
+		ArrayKey arrayKey;
+		arrayKey.obsID = obsid;
+		arrayKey.arrayID = arrayid;
+		std::set<ScanKey> keys = scanKeys(scanSet, arrayKey);
+		return _setDoubleToVectorDouble(_msmd->getTimesForScans(keys));
 	)
 	return vector<double>();
 }
@@ -1322,6 +1375,15 @@ std::vector<uint> msmetadata::_vectorIntToVectorUInt(const std::vector<Int>& ins
 	return output;
 }
 
+void msmetadata::_checkObsId(int id, bool throwIfNegative) const {
+	ThrowIf(
+		id >= (int)_msmd->nObservations() || (throwIfNegative && id < 0),
+		"Observation ID " + String::toString(id)
+		+ " out of range, must be less than "
+		+ String::toString((int)_msmd->nObservations())
+	);
+}
+
 void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 	ThrowIf(
 		id >= (int)_msmd->nSpw(True) || (throwIfNegative && id < 0),
@@ -1340,13 +1402,14 @@ void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 	);
 }
 
-std::set<Int> msmetadata::_idsFromExpansion(
-	const std::map<String, std::set<Int> >& mymap, const String& matchString
+template <class T>
+std::set<T> msmetadata::_idsFromExpansion(
+	const std::map<String, std::set<T> >& mymap, const String& matchString
 ) {
-	std::set<Int> ids;
+	std::set<T> ids;
 	boost::regex re;
 	re.assign(_escapeExpansion(matchString));
-	foreach_(std::pair<String COMMA std::set<Int> > kv, mymap) {
+	foreach_(std::pair<String COMMA std::set<T> > kv, mymap) {
 		if (boost::regex_match(kv.first, re)) {
 			ids.insert(kv.second.begin(), kv.second.end());
 		}
@@ -1367,7 +1430,6 @@ std::set<Int> msmetadata::_idsFromExpansion(
 	}
 	return ids;
 }
-
 
 std::vector<casa::String> msmetadata::_match(
 	const vector<casa::String>& candidates, const casa::String& matchString

@@ -30,12 +30,15 @@ friend msmetadata* ms::metadata(const float maxcache);
 
 void _init(const casa::MeasurementSet *const &ms, const float maxcache);
 
+void _checkObsId(int id, bool throwIfNegative) const;
+
 void _checkSpwId(int id, bool throwIfNegative) const;
 
 void _checkPolId(int id, bool throwIfNegative) const;
 
-static std::set<int> _idsFromExpansion(
-	const std::map<casa::String, std::set<int> >& mymap, const casa::String& matchString
+template <class T>
+static std::set<T> _idsFromExpansion(
+	const std::map<casa::String, std::set<T> >& mymap, const casa::String& matchString
 );
 
 static std::set<int> _idsFromExpansion(
