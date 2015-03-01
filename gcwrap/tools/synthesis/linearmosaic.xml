@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+<!--$Id$-->
+ 
+	<tool name="linearmosaic" module="linearmosaic">
+        <shortdescription>combining images in a weighted fashion</shortdescription>
+       
+<description>
+The {\tt calibrater} tool (cb) provides for synthesis calibration 
+operations within CASA.  
+</description>
+<code>
+	<include>tools/synthesis/linearmosaic_forward.h</include>
+<private>
+	<include>tools/synthesis/linearmosaic_private.h</include>
+</private>
+</code>
+
+<method type="constructor" name="calibrater">
+<shortdescription>Construct a calibrater tool</shortdescription>
+
+<returns type="calibrater"/>
+
+<description>
+
+Create a {\tt linearmosaic} tool.  
+
+</description>
+
+<example>
+
+lm=linearmosaic.create()
+
+</example>
+</method>
+
+   <method type="function" name="defineimage">
+   <shortdescription>Set the output direction image parameters</shortdescription>
+   
+<description>
+Define the direction axes output image parameters.
+
+
+</description>
+<input>
+
+     <param type="int" name="nx">
+     <description>Total number of spatial pixels in x</description>
+     <value>128</value>
+     </param>
+
+     <param type="int" name="ny">
+     <description>Total number of spatial pixels in y</description>
+     <value>-1</value>
+     </param>
+
+     <param type="any" name="cellx">
+     <description>Cellsize in x (e.g. '1arcsec')</description>
+     <any type="variant" />
+     <value>1.0</value>
+     </param>
+
+     <param type="any" name="celly">
+     <description>Cellsize in y (e.g. '1arcsec')</description>
+     <any type="variant" />
+     <value></value>
+     </param>
+
+     <param type="any" name="imagecenter">
+     <description>Direction of phase center as a diretion measure 
+     </description>
+     <any type="variant" />
+     <value>0</value>
+     </param>
+
+<param type="string" name="outputimage">
+     <description>output image name 
+     </description>
+     <any type="variant" />
+     <value>0</value>
+     </param>
+
+
+
+
+</input>
+<example>
+
+
+</example>
+
+<returns type="bool"/>
+
+</method>
+
+   <method type="function" name="makemosaic">
+   <shortdescription>Fourier transform the specified model and componentlist</shortdescription>
+   
+<description>
+Put the list of images onto the mosaic image using the weight images
+</description>
+<input>
+
+     <param type="stringArray" name="images">
+     <description>Name of images to mosaic</description>
+     <value></value>
+     </param>
+
+     <param type="stringArray" name="weightimages">
+     <description>Name of images to mosaic</description>
+     <value></value>
+     </param>
+</input>
+
+<returns type="bool"/>
+<example>
+</example>
+<comments>
+</comments>
+</method>
+
+
+
+
+</tool>
+
+
+
+
+</casaxml>
