@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.61 2014/12/09 15:42:09 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.62 2015/03/01 22:36:03 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.61 2014/12/09 15:42:09 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.62 2015/03/01 22:36:03 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -556,7 +556,7 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                          atmfreqImage,transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
                          originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
                          overlayTimes, overlayAntennas, xant, antennasToPlot, overlaySpws,
-                         baseband, showBasebandNumber, basebandDict):
+                         baseband, showBasebandNumber, basebandDict, drewAtmosphere):
     """
     If requested by the user at the command line, draw the atmospheric curve
     and the FDM window locations.
@@ -568,14 +568,15 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                        atmfreq, transmission, subplotCols,
                        showatmPoints=showatmPoints, xframe=xframe, 
                        channels=channels,
-                       mylineno=mylineno,xant=xant)
+                       mylineno=mylineno,xant=xant,drewAtmosphere=drewAtmosphere)
         if (LO1 != ''):
             # Now draw the image band
             DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                 mysize, TebbSkyImage, plotrange, xaxis,
                 atmchanImage, atmfreqImage, transmissionImage,
                 subplotCols, LO1, xframe, firstFrame, showatmPoints, 
-                channels=channels, mylineno=mylineno,xant=xant)
+                channels=channels, mylineno=mylineno,xant=xant,
+                           drewAtmosphere=drewAtmosphere)
     # The following case is needed for the case that overlay='antenna,time' and
     # the final timerange is flagged on the final antenna.
 #    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
@@ -3136,7 +3137,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               # draw labels
                               # try adding the following 'if' statement on Jun 18, 2013; it works.
                               if (drewAtmosphere==False or overlayAntennas==False):
-                                  drewAtmosphere = True
                                   if (debug): print "drawOverlayTimeLegends loc 1"
                                   drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
                                                          caltable,titlesize,fieldIndicesToPlot,
@@ -3161,7 +3161,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                        chanFreqGHz_casa33,originalSpw,chanFreqGHz,
                                                        overlayTimes, overlayAntennas, xant, 
                                                        antennasToPlot, overlaySpws, baseband,
-                                                       showBasebandNumber, basebandDict)
+                                                       showBasebandNumber, basebandDict,
+                                                       drewAtmosphere)
+                                  drewAtmosphere = True
                               if (xctr == firstUnflaggedAntennaToPlot or overlayAntennas==False): # changed xant->xctr on 11-mar-2014
                                   DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                                                        channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
@@ -3963,19 +3965,21 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            and not drewAtmosphere)  # added on 2014-12-04 to support case of a flagged antenna CAS-7187
                           ):
                           if ((showatm or showtsky) and len(atmString) > 0): 
-                              drewAtmosphere = True
                               DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                              mysize, TebbSky, plotrange, xaxis, atmchan,
                                              atmfreq, transmission, subplotCols,
                                              showatmPoints=showatmPoints, xframe=xframe, 
-                                             channels=channels,mylineno=lineNumber())
+                                             channels=channels,mylineno=lineNumber(),
+                                             drewAtmosphere=drewAtmosphere)
                               if (LO1 != ''):
                                   # Now draw the image band
                                   DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                                                  mysize, TebbSkyImage, plotrange, xaxis,
                                                  atmchanImage, atmfreqImage, transmissionImage,
                                                  subplotCols, LO1, xframe, firstFrame, showatmPoints, 
-                                                 channels=channels,mylineno=lineNumber())
+                                                 channels=channels,mylineno=lineNumber(),
+                                                 drewAtmosphere=drewAtmosphere)
+                              drewAtmosphere = True
                           if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
                               if (tableFormat == 33):
                                   showFDM(originalSpw_casa33, chanFreqGHz_casa33, baseband, showBasebandNumber, basebandDict)
@@ -4751,18 +4755,20 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           (xant==antennasToPlot[-1] and doneOverlayTime)
                           ):
                           if ((showatm or showtsky) and len(atmString)>0):
-                              drewAtmosphere = True
                               DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                              mysize, TebbSky, plotrange, xaxis, atmchan,
                                              atmfreq, transmission, subplotCols,
                                              showatmPoints=showatmPoints, xframe=xframe, 
-                                             channels=channels, mylineno=lineNumber())
+                                             channels=channels, mylineno=lineNumber(),
+                                             drewAtmosphere=drewAtmosphere)
                               if (LO1 != ''):
                                   DrawAtmosphere(showatm,showtsky, subplotRows, atmString,
                                                  mysize, TebbSky, plotrange, xaxis, atmchanImage,
                                                  atmfreqImage, transmissionImage, subplotCols,
                                                  LO1, xframe, firstFrame, showatmPoints, 
-                                                 channels=channels, mylineno=lineNumber())
+                                                 channels=channels, mylineno=lineNumber(),
+                                                 drewAtmosphere=drewAtmosphere)
+                              drewAtmosphere = True
                       
                           if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
                               if (tableFormat == 33):
@@ -5810,7 +5816,8 @@ def showFDM(originalSpw, chanFreqGHz, baseband, showBasebandNumber, basebandDict
 def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                    TebbSky, plotrange, xaxis, atmchan, atmfreq, transmission,
                    subplotCols, lo1='', xframe=0, firstFrame=0,
-                   showatmPoints=False, channels=[0], mylineno=-1,xant=-1):
+                   showatmPoints=False, channels=[0], mylineno=-1,xant=-1,
+                   drewAtmosphere=False):
     """
     Draws atmospheric transmission or Tsky on an amplitude vs. chan or freq plot.
     """
@@ -5819,12 +5826,13 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
     xrange = xlim[1]-xlim[0]
     yrange = ylim[1]-ylim[0]
 
-    if (lo1 == ''):
-        # add some space at the top -- Apr 16, 2012
-        pb.ylim([ylim[0], ylim[1]+TOP_MARGIN*yrange])
-    else:
-        pb.ylim([ylim[0], ylim[1]+TOP_MARGIN*yrange*0.5])
-    ylim = pb.ylim()
+    if (not drewAtmosphere):
+        if (lo1 == ''):
+            # add some space at the top -- Apr 16, 2012
+            pb.ylim([ylim[0], ylim[1]+TOP_MARGIN*yrange])
+        else:
+            pb.ylim([ylim[0], ylim[1]+TOP_MARGIN*yrange*0.5])
+        ylim = pb.ylim()
     yrange = ylim[1]-ylim[0]
     #
     ystartPolLabel = 1.0-0.04*subplotRows
@@ -5843,7 +5851,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
             atmcolor = transmissionColor
         else:
             atmcolor = tskyColor
-        if (lo1 == ''):
+        if (lo1 == '' and not drewAtmosphere):
             pb.text(0.25, ystartPolLabel, atmString, color=atmcolor, size=mysize, transform=pb.gca().transAxes)
 
         if (showtsky):
@@ -5871,7 +5879,8 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
         SetNewXLimits(xlim)  # necessary for zoom='intersect'
         SetNewYLimits(ylim)
         # Now draw the percentage on right edge of plot
-        if (showtsky):
+        if (not drewAtmosphere):
+          if (showtsky):
             if (lo1 == ''):
 #                pb.text(xEdgeLabel, edgeYvalue,'%.0fK'%(edgeT),color=atmcolor,
 #                        size=mysize, transform=pb.gca().transAxes)
@@ -5892,7 +5901,7 @@ def DrawAtmosphere(showatm, showtsky, subplotRows, atmString, mysize,
                 pb.text(xEdgeLabel, zeroYValue,'%.0fK'%(zeroValue),
                         color=atmcolor,
                         size=mysize, transform=pb.gca().transAxes)
-        else:
+          else:
             # showatm=True
             if (lo1 == ''):
 #                pb.text(xEdgeLabel, edgeYvalue,'%.0f%%'%(edgeT*100),
