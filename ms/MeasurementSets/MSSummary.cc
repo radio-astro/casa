@@ -938,6 +938,7 @@ void MSSummary::getScanSummary (Record& outRec) const
 					subScanRecord.define("nRow", thisnrow);
 					subScanRecord.define("IntegrationTime", meanIntTim);
 					subScanRecord.define("SpwIds", spwids);
+					subScanRecord.define("DDIds", lastddids);
 					scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 					if(!outRec.isDefined(scanrecid)){
 						outRec.defineRecord(scanrecid, scanRecord);
@@ -1009,6 +1010,7 @@ void MSSummary::getScanSummary (Record& outRec) const
 		subScanRecord.define("nRow", thisnrow);
 		subScanRecord.define("IntegrationTime", meanIntTim);
 		subScanRecord.define("SpwIds", spwids);
+		subScanRecord.define("DDIds", lastddids);
 		scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 		if(!outRec.isDefined(scanrecid)){
 			outRec.defineRecord(scanrecid, scanRecord);
@@ -1659,6 +1661,8 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 	ROMSSpWindowColumns msSWC(pMS->spectralWindow());
 	// Create a MS-data_desc-columns object
 	ROMSDataDescColumns msDDC(pMS->dataDescription());
+	// Create a MS-polin-columns object
+	ROMSPolarizationColumns msPOLC(pMS->polarization());
 
 	if (msDDC.nrow()<=0 or msSWC.nrow()<=0) {
 		//The DATA_DESCRIPTION or SPECTRAL_WINDOW table is empty
@@ -1674,6 +1678,7 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 	for (uInt i=0; i<ddId.nelements(); i++) uddId(i)=ddId(i);
 	// now get the corresponding spectral windows and pol setups
 	Vector<Int> spwIds = msDDC.spectralWindowId().getColumnCells(uddId);
+	Vector<Int> polIds = msDDC.polarizationId().getColumnCells(uddId);
 	//const Int option=Sort::HeapSort | Sort::NoDuplicates;
 	//const Sort::Order order=Sort::Ascending;
 	//Int nSpw=GenSort<Int>::sort (spwIds, order, option);
@@ -1682,6 +1687,7 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 		// For each row of the DataDesc subtable, write the info
 		for (uInt i=0; i<ddId.nelements(); i++) {
 			Int dd=ddId(i);
+			Int pol=polIds(i);
 			Int spw = msDDC.spectralWindowId()(dd);
 
 			Record ddRec;
@@ -1692,6 +1698,8 @@ void MSSummary::getSpectralWindowInfo(Record& outRec) const
 			ddRec.define("ChanWidth", msSWC.chanWidth()(spw)(IPosition(1,0)));
 			ddRec.define("TotalWidth", msSWC.totalBandwidth()(spw));
 			ddRec.define("RefFreq", msSWC.refFrequency()(spw));
+			ddRec.define("PolId", polIds(i));
+			ddRec.define("NumCorr", msPOLC.numCorr()(pol));
 
 			outRec.defineRecord(String::toString(dd), ddRec);
 		}
