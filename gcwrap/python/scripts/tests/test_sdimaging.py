@@ -232,6 +232,18 @@ class sdimaging_unittest_base:
         elif len(inval) == 1:
             return [inval[0], inval[0]]
         return inval[0:2]
+
+    def _check_beam(self, image, ref_beam):
+        """Check image beam size"""
+        ia.open(image)
+        beam = ia.restoringbeam()
+        ia.close()
+        maj_asec = qa.getvalue(qa.convert(beam['major'], 'arcsec'))
+        min_asec = qa.getvalue(qa.convert(beam['minor'], 'arcsec'))
+        maj_asec_ref = qa.getvalue(qa.convert(ref_beam['major'], 'arcsec'))
+        min_asec_ref = qa.getvalue(qa.convert(ref_beam['minor'], 'arcsec'))
+        self.assertAlmostEqual(abs(maj_asec-maj_asec_ref)/max(maj_asec_ref,1.e-12), 0., places=3, msg="major axis = %f arcsec (expected: %f)" % (maj_asec, maj_asec_ref))
+        self.assertAlmostEqual(abs(min_asec-min_asec_ref)/max(min_asec_ref,1.e-12), 0., places=3, msg="minor axis = %f arcsec (expected: %f)" % (min_asec, min_asec_ref))
     
 ###
 # Test on bad parameter settings
@@ -536,6 +548,9 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
+        # beam size from r32523
+        ref_beam=dict(major='678.608683arcsec',minor='678.608683arcsec')
+        self._check_beam(self.outfile, ref_beam)
 
     def test104(self):
         """Test 104: Box-car gridding"""
@@ -561,6 +576,9 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
+        # beam size from r32523
+        ref_beam=dict(major='525.242243arcsec',minor='525.242243arcsec')
+        self._check_beam(self.outfile, ref_beam)
 
     def test105(self):
         """Test 105: Prolate Spheroidal gridding"""
@@ -586,6 +604,13 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
+        # beam size from analysisUtils.
+        #aU.sfBeam(1.42038,diameter=104.9,pixelsize=180.,
+        #          xSamplingArcsec=354.16985191848795,
+        #          ySamplingArcsec=180.0432853343201,
+        #          convsupport=3,obscuration=0.0)
+        ref_beam=dict(major='636.38188150396184arcsec',minor='636.38188150396184arcsec')
+        self._check_beam(self.outfile, ref_beam)
 
     def test106(self):
         """Test 106: Imaging two polarization separately (XX and YY, not Stokes I)"""
@@ -636,6 +661,9 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
+        # beam size from r32523
+        ref_beam=dict(major='531.909699arcsec',minor='531.909699arcsec')
+        self._check_beam(self.outfile, ref_beam)
 
     def test108(self):
         """Test 108: Gaussian*Jinc gridding"""
@@ -661,6 +689,13 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trc':numpy.array([74, 74,  0, 39], dtype=numpy.int32),
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
+        # beam size from analysisUtils.
+        #aU.gjincBeam(1.42038,diameter=104.9,pixelsize=180.,geometricMean=True,
+        #             xSamplingArcsec=354.16985191848795,
+        #             ySamplingArcsec=180.0432853343201,
+        #             obscuration=0.0,widthMultiplier=1.0)
+        ref_beam=dict(major='598.81865927903209arcsec',minor='598.81865927903209arcsec')
+        self._check_beam(self.outfile, ref_beam)
 
     def test109(self):
         """Test 109: Empty phasecenter (auto-calculation)"""
