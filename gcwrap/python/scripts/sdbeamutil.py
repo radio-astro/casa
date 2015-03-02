@@ -243,11 +243,11 @@ class TheoreticalBeam:
         if self.is_sampling_set: sizes += list(self.sampling_arcsec)
         minsize = min(sizes)
         support_min = 1000.
-        #support_fwhm = 5000.
+        support_fwhm = 5000.
         if minsize > support_min*convolutionPixelSize:
             convolutionPixelSize = minsize/support_min
-        #if maxsize > support_fwhm*convolutionPixelSize:
-        #    convolutionPixelSize = min(fwhm_arcsec/support_fwhm,minsize/10.)
+        if fwhm_arcsec > support_fwhm*convolutionPixelSize:
+            convolutionPixelSize = min(fwhm_arcsec/support_fwhm,minsize/10.)
         
         if (self.taper < 0.1):
             # Airly disk
@@ -287,7 +287,8 @@ class TheoreticalBeam:
                 diam = 10.7
                 casalog.post("Using effective antenna diameter %fm for %s kernel of ALMA antennas" % (diam,self.kernel_type))
             epsilon = self.antenna_block_m/diam
-            return (self.rootAiryIntensity(axis, epsilon))**2
+            return self.get_pb_kernel(axis,diam,self.ref_freq, epsilon=epsilon)
+            #return (self.rootAiryIntensity(axis, epsilon))**2
         else:
             raise RuntimeError, "Invalid kernel: %s" % self.kernel_type
 
@@ -529,6 +530,27 @@ class TheoreticalBeam:
         return (np.exp(-np.log(2)*(x/float(gwidth))**2))  
 
     ### Airly disk ###
+    def get_pb_kernel(self, axis,diam,ref_freq, epsilon=0.0):
+        """
+        Return Airy Disk array defined by the axis, diameter, reference frequency
+        and ratio of central hole and antenna diameter
+        
+        axis: x-axis values
+        diameter: antenna diameter in unit of m
+        reference frequency: the reference frequency of the image
+        epsilon: ratio of central hole diameter to antenna diameter
+        """
+        a = (self.rootAiryIntensity(axis, epsilon))**2
+        airyfwhm = findFWHM(axis,a)
+        fwhm = primaryBeamArcsec(frequency=ref_freq, diameter=diam,
+                                 taper=self.taper, showEquation=False,
+                                 obscuration=diam*epsilon,
+                                 fwhmfactor=None)
+        ratio = fwhm/airyfwhm
+        tempaxis = axis/ratio
+        a = self.rootAiryIntensity(tempaxis, epsilon)
+        return a**2        
+
     def buildAiryDisk(self, fwhm, xaxisLimitInUnitsOfFwhm, convolutionPixelSize,
                       truncate=False, obscuration=0.75,diameter=12.0):
         """
