@@ -198,8 +198,9 @@ class TheoreticalBeam:
                          findFWHM(axis,result))
             casalog.post("- FWHM of theoretical beam (gauss fit) = %f arcsec" %
                          fwhm1)
+            del result
         # clear-up axes
-        del axis, beam, kernel, sampling, gridded, result
+        del axis, beam, kernel, sampling, gridded
 
         return dict(major="%farcsec" % (fwhm_geo_arcsec),
                     minor="%farcsec" % (fwhm_geo_arcsec),
