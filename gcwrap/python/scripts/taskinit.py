@@ -69,6 +69,7 @@ af = aftool()
 metool = casac.measures
 iatool = casac.image
 potool = casac.imagepol
+lmtool= casac.linearmosaic
 smtool = casac.simulator
 cltool = casac.componentlist
 coordsystool = casac.coordsys
@@ -120,9 +121,9 @@ casalog.showconsole(MPIEnvironment.log_to_console)
 
 def gentools(tools=None):
 	"""
-	Generate a fresh set of tools the ones who's
-	state can be funny
-	im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi=gentools() 
+	Generate a fresh set of tools; only the ones who have
+	states..so globally sharing the same one can be unpredicatable 
+	im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms,lm=gentools() 
 	or if you want specific set of tools
 	im, ia, cb=gentools(['im', 'ia', 'cb'])
 
@@ -133,7 +134,7 @@ def gentools(tools=None):
 		 'cl': 'cltool()', 'cs' :'cstool()', 'rg':'rgtool()',
 		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()',
 		 'msmd':'msmdtool()','fi':'fitool()','fn':'fntool()', 
-		 'imd':'imdtool()','sdms':'sdmstool()'}
+		 'imd':'imdtool()','sdms':'sdmstool()', 'lm':'lmtool()'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'me', 'ia', 'po',
@@ -143,7 +144,7 @@ def gentools(tools=None):
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
 
-im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools()
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms,lm=gentools()
 
 def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=False):
         """

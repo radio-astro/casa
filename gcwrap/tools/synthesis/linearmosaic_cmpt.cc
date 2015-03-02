@@ -11,13 +11,14 @@
 
 #include <iostream>
 #include <linearmosaic_cmpt.h>
+#include <images/Images/PagedImage.h>
 #include <synthesis/MeasurementEquations/LinearMosaic.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Utilities/Assert.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
-#include <iostream>
+
 
 using namespace std;
 using namespace casa;
@@ -45,11 +46,24 @@ linearmosaic::defineimage(const int nx,
 		      const ::casac::variant& cellx,
 		      const ::casac::variant& celly,
 		      const ::casac::variant& imagecenter,
-		      const std::string& outputimage) {
+		      const std::string& outputimage, const std::string& outputweight) {
 
   Bool rstat(False);
   try {
     if(itsMos) delete itsMos;
+    casa::MDirection imcen;
+    if(!casaMDirection(imagecenter, imcen)){
+    	    throw(AipsError("Could not interprete phasecenter parameter"));
+    }
+    Int nX, nY;
+    nX=nx;
+    nY=ny;
+    if(nY < 1)
+    nY=nx;
+    casa::Quantity cellX=casaQuantity(cellx);
+    casa::Quantity cellY=casaQuantity(celly);
+    itsMos=new LinearMosaic(outputimage, outputweight, imcen, nX, nY,
+    			  cellX, cellY);
     rstat = True;
   } catch  (AipsError x) {
 
@@ -61,10 +75,17 @@ linearmosaic::defineimage(const int nx,
   // ---------------------------------------------------------------------
   bool linearmosaic::makemosaic( const std::vector<std::string>& images,  const std::vector<std::string>& weightimages){
 
- Bool rstat(False);
+ Bool rstat(True);
   try {
+
+	  Vector<CountedPtr<ImageInterface<Float> > > im(1), wgt(1);
+	  for (int k=0; images.size(); ++k){
+
+		  im[0]=new casa::PagedImage<Float>(images[k]);
+		  wgt[0]=new casa::PagedImage<Float>(weightimages[k]);
+		  rstat=rstat && itsMos->makeMosaic(im, wgt);
+	  }
     
-    rstat = True;
   } catch  (AipsError x) {
 
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

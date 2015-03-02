@@ -81,10 +81,14 @@ Define the direction axes output image parameters.
 <param type="string" name="outputimage">
      <description>output image name 
      </description>
-     <any type="variant" />
-     <value>0</value>
+     <value></value>
      </param>
 
+<param type="string" name="outputweight">
+     <description>output weight image name 
+     </description>
+     <value></value>
+     </param>
 
 
 
