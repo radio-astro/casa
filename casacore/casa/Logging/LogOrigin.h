@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogOrigin.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: LogOrigin.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_LOGORIGIN_H
 #define CASA_LOGORIGIN_H
 
-#include <casacore/casa/aips.h>
-#include <casacore/casa/BasicSL/String.h>
-#include <casacore/casa/System/ObjectID.h>
-#include <casacore/casa/iosfwd.h>
+#include <casa/aips.h>
+#include <casa/BasicSL/String.h>
+#include <casa/System/ObjectID.h>
+#include <casa/iosfwd.h>
 
-namespace casacore { //# NAMESPACE CASACORE - BEGIN
+namespace casa { //# NAMESPACE CASA - BEGIN
 
-struct SourceLocation;
+class SourceLocation;
 
 // <summary> 
 // LogOrigin: The source code location of the originator of a LogMessage.
@@ -94,6 +94,7 @@ struct SourceLocation;
 class LogOrigin 
 {
 public:
+
     // The default constructor sets a null class name, function name, object id,
     // source file name, and sets the line number to zero.
     LogOrigin();
@@ -155,8 +156,8 @@ public:
     // <src>where</src> will be defined with the <src>WHERE</src> macro.
     LogOrigin &sourceLocation(const SourceLocation *where);
 
-    // Returns <src>class\::function</src> for a member function, or
-    // <src>\::function</src> for a global function.
+    // Returns <src>class::function</src> for a member function, or
+    // <src>::function</src> for a global function.
     String fullName() const;
 
     // Turn the entire origin into a String.
@@ -168,6 +169,10 @@ public:
 
     // Return true if the line number and file name are not set.
     Bool isUnset() const;
+
+    // Return a String with the MPI rank
+    String getNode();
+
 private:
     String task_p;
     String function_p;
@@ -175,6 +180,7 @@ private:
     ObjectID id_p;
     uInt line_p;
     String file_p;
+    String node_p;
 
     // Provide common implementation for copy constructor and
     // assignment operator.
@@ -202,11 +208,11 @@ struct SourceLocation
     static const SourceLocation *canonicalize(const char *file, Int line);
 };
 
-#define WHERE casacore::SourceLocation::canonicalize(__FILE__, __LINE__)
+#define WHERE casa::SourceLocation::canonicalize(__FILE__, __LINE__)
 
 // </group>
 
 
-} //# NAMESPACE CASACORE - END
+} //# NAMESPACE CASA - END
 
 #endif

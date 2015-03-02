@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogOrigin.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: LogOrigin.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#include <casacore/casa/Logging/LogOrigin.h>
+#include <casa/Logging/LogOrigin.h>
+#include <stdlib.h>
+#include <casa/sstream.h>
 
-#include <casacore/casa/sstream.h>
-
-namespace casacore { //# NAMESPACE CASACORE - BEGIN
+namespace casa { //# NAMESPACE CASA - BEGIN
 
 LogOrigin::LogOrigin()
-  : task_p(""), function_p(""), class_p(""), id_p(True), line_p(0), file_p("")
+: task_p(""), function_p(""), class_p(""), id_p(True), line_p(0), file_p(""), node_p(getNode())
 {
     // Nothing
 }
@@ -40,7 +40,8 @@ LogOrigin::LogOrigin()
 LogOrigin::LogOrigin(const String &globalFunctionName, const SourceLocation *where)
   : task_p(""), function_p(globalFunctionName), class_p(""), id_p(True), 
     line_p(where ? where->lineNumber : 0), 
-    file_p(where ? where->fileName : "")
+    file_p(where ? where->fileName : ""),
+    node_p(getNode())
 {
     // Nothing
 }
@@ -49,7 +50,8 @@ LogOrigin::LogOrigin(const String &className, const String &memberFuncName,
 		     const SourceLocation *where)
   : task_p(""), function_p(memberFuncName), class_p(className), id_p(True), 
     line_p(where ? where->lineNumber : 0),
-    file_p(where ? where->fileName : "")
+    file_p(where ? where->fileName : ""),
+    node_p(getNode())
 {
     // Nothing
 }
@@ -59,7 +61,8 @@ LogOrigin::LogOrigin(const String &className, const String &memberFuncName,
 : task_p(""), function_p(memberFuncName), class_p(className), 
   id_p(id), 
   line_p(where ? where->lineNumber : 0),
-  file_p(where ? where->fileName : "")
+  file_p(where ? where->fileName : ""),
+  node_p(getNode())
 {
     // Nothing
 }
@@ -85,6 +88,7 @@ void LogOrigin::copy_other(const LogOrigin &other)
     id_p = other.id_p;
     line_p = other.line_p;
     file_p = other.file_p;
+    node_p = other.node_p;
 }
 
 LogOrigin::~LogOrigin()
@@ -179,6 +183,8 @@ String LogOrigin::fullName() const
     if(task_p.length())
 	    nameTag = task_p + "::";
     nameTag += className() + "::" + functionName();
+    if(node_p.length())
+        nameTag +=  "::" + node_p;
     return nameTag;
 }
 
@@ -230,6 +236,35 @@ const SourceLocation *SourceLocation::canonicalize(const char *file, Int line)
     return &permanent;
 }
 
+/*
+ * Get the OpenMPI rank from the current process.
+ * This assumes that the MPI library implementation is openMPI.
+ * If CASA is started without mpirun, LogOrigin will print nothing
+ * for node_p. If it is started with mpirun, each CASA instance
+ * running on an MPI server will print its rank at the LogOrigin
+ */
+String LogOrigin::getNode()
+{
+    String rank = "";
+    rank.resize(256);
+    // Note, MPI rank 0 means the MPIClient from mpi4py is running, not a server,
+    // therefore it should print nothing
+    if (getenv("OMPI_COMM_WORLD_RANK") != NULL)
+    {
+        String myrank = "";
+        myrank.resize(256);
+        myrank = getenv("OMPI_COMM_WORLD_RANK");
+        if (myrank.compare("0") == 0){
+            rank = "";
+        }
+        else {
+            rank = "MPIServer-";
+            rank = rank.append(myrank);
+        }
+    }
 
-} //# NAMESPACE CASACORE - END
+    return rank;
+}
+
+} //# NAMESPACE CASA - END
 
