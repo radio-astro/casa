@@ -39,25 +39,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
   template<class T> class ImageInterface;
   template<class T> class Vector;
+  class CoordinateSystem;
   // <summary> Class that contains functions needed for feathering</summary>
 
   class LinearMosaic{
 
   public:
 	  LinearMosaic();
+	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
+			  const Quantity cellx=Quantity(0.0, "arcsec"), const Quantity celly=Quantity(0.0, "arcsec"));
 	  //Coordinate System of output image along with the different pointing images and weight images
 	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-			  	  const Vector<ImageInterface<Float> >& ims,
-			  	  const Vector<ImageInterface<Float> >& wgtims);
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
 	  Bool makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
-			  	  const Vector<ImageInterface<Float> >& ims,
-			  	  const Vector<ImageInterface<Float> >& wgtims);
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
+	  Bool makeMosaic(const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+		  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
 
-
+	  void setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt);
 
   private:
 	  Bool addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
 			  const ImageInterface<Float>& inWgt, Bool outimIsWeighted=False, Bool unWeightOutImage=True);
+	  void makeEmptyImage(const String imagename, const CoordinateSystem& cs, const MDirection& imcen, const Int nx, const Int ny, const Int npol, const Int nchan);
+	  ImageInterface<Float> *outImage_p, *outWgt_p;
+	  String outImName_p, outWgtName_p;
+	  Int nx_p, ny_p;
+	  MDirection imcen_p;
+	  Quantity cellx_p, celly_p;
 };
 
 

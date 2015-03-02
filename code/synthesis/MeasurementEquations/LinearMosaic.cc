@@ -41,49 +41,73 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-	LinearMosaic::LinearMosaic (){
+	LinearMosaic::LinearMosaic (): outImage_p(NULL), outWgt_p(NULL){
 
 
 	}
-	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny, const Vector<ImageInterface<Float> >& ims,
-				  	  const Vector<ImageInterface<Float> >& wgtims){
-		Int nchan=ims[0].shape()[3];
-		Int npol=ims[0].shape()[2];
+	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx,
+			const Int ny, const Quantity cellx, const Quantity celly){
+		outImName_p=outim;
+
+		outWgtName_p= outwgt=="" ? outim+String(".weight") : outwgt;
+		nx_p=nx;
+		ny_p=ny;
+		imcen_p=imcen;
+		cellx_p=cellx;
+		celly_p=celly;
+
+	 }
+	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
+				const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+				const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
+		Int nchan=ims[0]->shape()[3];
+		Int npol=ims[0]->shape()[2];
 		for (uInt k=0; k< ims.nelements(); ++k){
-			if(nchan != ims[k].shape()[3] || nchan != wgtims.shape()[3])
+			if(nchan != ims[k]->shape()[3] || nchan != wgtims[k]->shape()[3])
 				ThrowCc("images should have the same number of channels");
-			if(npol != ims[k].shape()[2] || npol != wgtims.shape()[2])
+			if(npol != ims[k]->shape()[2] || npol != (wgtims[k])->shape()[2])
 				ThrowCc("images should have the same number of polarization planes");
 		}
-		CoordinateSystem outcs= ims[0].coordinates();
-		Int dirAx=outcs.findCoordinate(Coordinate::DIRECTION);
-		DirectionCoordinate dc=outcs.directionCoordinate(dirAx);
-		String elunit=outcs.worldAxisUnits()[dirAx];
-		Vector<Double> cenVec(2);
-		cenVec[0]=Double(nx)/2.0; cenVec[1]=Double(ny)/2.0;
-		dc.setReferencePixel(cenVec);
-		MDirection::Types eltype;
-		MDirection::getType(eltype, imcen.getRefString());
-		dc.setReferenceValue(imcen.getAngle().getValue(elunit));
-		dc.setReferenceFrame(eltype);
-		outcs.replaceCoordinate(dc, dirAx);
-		PagedImage<Float> outdiskim(IPosition(4, nx, ny, npol, nchan), outcs, outim);
-		PagedImage<Float> outdiskwgt(IPosition(4, nx, ny, npol, nchan), outcs, outwgt);
-
+		CoordinateSystem cs=ims[0]->coordinates();
+		makeEmptyImage(outim, cs, imcen, nx, ny,npol, nchan);
+		makeEmptyImage(outwgt, cs, imcen, nx, ny,npol, nchan);
+		PagedImage<Float> outdiskim(outim);
+		PagedImage<Float> outdiskwgt(outwgt);
+		setOutImages(outdiskim, outdiskwgt);
+		makeMosaic(ims, wgtims);
 
 	}
 	Bool LinearMosaic::makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
-			  	  const Vector<ImageInterface<Float> >& ims,
-			  	  const Vector<ImageInterface<Float> >& wgtims){
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
 		Bool retval=True;
 		if(ims.nelements() != wgtims.nelements())
 			ThrowCc("Unequal number of images and weight images ");
 		for (uInt k=0; k < ims.nelements(); ++k){
-			retval=retval && addOnToImage(outim, outwgt, ims[k], wgtims[k], k>0, (k==ims.nelements()-1));
+			retval=retval && addOnToImage(outim, outwgt, *(ims[k]), *(wgtims[k]), k>0, (k==ims.nelements()-1));
 		}
 		return retval;
 
+	}
+	Bool LinearMosaic::makeMosaic(
+				  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
+				  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
+
+			Bool retval=True;
+			if(outImage_p==NULL || outWgt_p==NULL)
+				ThrowCc("No output image or weight image defined");
+			if(ims.nelements() != wgtims.nelements())
+				ThrowCc("Unequal number of images and weight images ");
+			for (uInt k=0; k < ims.nelements(); ++k){
+				retval=retval && addOnToImage(*outImage_p, *outWgt_p, *(ims[k]), *(wgtims[k]), k>0, (k==ims.nelements()-1));
+			}
+			return retval;
+
+		}
+	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt){
+		outImage_p=&outim;
+		outWgt_p = &outwgt;
 	}
 	Bool LinearMosaic::addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
 			  const ImageInterface<Float>& inWgt, Bool outImIsWeighted, Bool unWeightOutIm){
@@ -149,5 +173,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return True;
 	}
 
+	void LinearMosaic::makeEmptyImage(const String imagename, const CoordinateSystem& cs, const MDirection& imcen, const Int nx, const Int ny,
+				const Int npol, const Int nchan){
+		CoordinateSystem outcs=cs;
+		Int dirAx=outcs.findCoordinate(Coordinate::DIRECTION);
+		DirectionCoordinate dc=outcs.directionCoordinate(dirAx);
+		Vector<Double> incr=dc.increment();
+		String elunit=dc.worldAxisUnits()[0];
+		if(cellx_p.getValue() !=  0.0)
+			incr[0]=cellx_p.getValue(elunit);
+		if(celly_p.getValue() != 0.0)
+			incr[1]=celly_p.getValue(elunit);
+		dc.setIncrement(incr);
+		Vector<Double> cenVec(2);
+		cenVec[0]=Double(nx)/2.0; cenVec[1]=Double(ny)/2.0;
+		dc.setReferencePixel(cenVec);
+		MDirection::Types eltype;
+		MDirection::getType(eltype, imcen.getRefString());
+		dc.setReferenceValue(imcen.getAngle().getValue(elunit));
+		dc.setReferenceFrame(eltype);
+		outcs.replaceCoordinate(dc, dirAx);
+		PagedImage<Float> outdiskim(IPosition(4, nx, ny, npol, nchan), outcs, imagename);
+	}
 
 } //end namespace casa

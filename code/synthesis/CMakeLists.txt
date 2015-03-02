@@ -266,6 +266,7 @@ casa_add_library( synthesis
  MeasurementEquations/IPLatConvEquation.cc
  MeasurementEquations/LatConvEquation.cc
  MeasurementEquations/LatticeModel.cc
+ MeasurementEquations/LinearMosaic.cc
  MeasurementEquations/MatrixCleaner.cc
  MeasurementEquations/MultiTermMatrixCleaner.cc
  MeasurementEquations/Simulator.cc
@@ -510,6 +511,7 @@ install (FILES
 	MeasurementEquations/LatticeModel.h
 	MeasurementEquations/LinearEquation.h
 	MeasurementEquations/LinearModel.h
+	MeasurementEquations/LinearMosaic.h
 	MeasurementEquations/MaskedArrayModel.h
 	MeasurementEquations/MaskedHogbomCleanModel.h
 	MeasurementEquations/MatrixCleaner.h
