@@ -77,7 +77,7 @@ pipeline processing for huge dataset.
         <allowed kind="enum">
             <value>auto</value>
             <value>list</value>
-            <value>interact</value>
+<!--            <value>interact</value> -->
         </allowed>
     </param>
 
@@ -106,12 +106,6 @@ pipeline processing for huge dataset.
         <value>True</value>
     </param>
 
-    <param type="any" name="blparam" subparam="true">
-        <description>per spectrum fit parameters</description>
-        <any type="variant" limittypes="dictArray"/>
-        <value type="dictArray"></value>
-    </param>
-
     <param type="any" name="blformat" ignorecase="true" subparam="true">
         <shortdescription>format(s) of file(s) in which best-fit parameters are written [\'text\', \'csv\', \'table\' or \'\']</shortdescription>
         <description>format(s) of file(s) in which best-fit parameters are written</description>
@@ -137,7 +131,7 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="string" name="blfunc">
-        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'sinusoid\']</shortdescription>
+        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</shortdescription>
         <description>baseline model function</description>
         <value>poly</value>
         <allowed kind="enum">
@@ -145,6 +139,7 @@ pipeline processing for huge dataset.
             <value>chebyshev</value>
             <value>cspline</value>
             <value>sinusoid</value>
+            <value>variable</value>
         </allowed>
     </param>
 
@@ -197,6 +192,11 @@ pipeline processing for huge dataset.
         <value>0</value>
     </param>
 
+    <param type="string" name="blparam" subparam="true">
+        <description>text file that stores per spectrum fit parameters</description>
+        <value></value>
+    </param>
+
     <param type="bool" name="verify">
         <shortdescription>interactively verify the results of operation for each spectrum [True, False] (see description in help)</shortdescription>
         <description>interactively verify the results of operation for each spectrum (see description in help)</description>
@@ -244,7 +244,6 @@ pipeline processing for huge dataset.
             <when param="blmode">
                 <equals value="fit">
                         <default param="dosubtract"><value>True</value></default>
-                        <default param="blparam"><value type="dictArray"></value></default>
                         <default param="blformat"><value type="string">text</value></default>
                         <default param="bloutput"><value type="string"></value></default>
                 </equals>
@@ -276,6 +275,9 @@ pipeline processing for huge dataset.
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
+                </equals>
+                <equals value="variable">
+                        <default param="blparam"><value type="string"></value></default>
                 </equals>
             </when>
             <when param="showprogress">
@@ -333,8 +335,9 @@ pol -- select data by polarization IDs
         default: '' (use all polarizations)
         example: pol='0,1' (polarization IDs 0,1)
         this selection is in addition to the other selections to data
-maskmode -- mode of setting additional channel masks. When blmode='apply',
-            maskmode and its subparameters are ignored.
+maskmode -- mode of setting additional channel masks. When blmode='apply'
+             and/or blfunc='variable', maskmode and its subparameters
+             are ignored.
         options: 'auto', 'list', or 'interact'
         default: 'auto'
         example: maskmode='auto' runs linefinder to detect line regions 
@@ -380,22 +383,6 @@ blmode -- baselining mode.
         dosubtract -- execute baseline subtraction in addition to fitting
                 options: (bool) True, False
                 default: True
-        blparam -- per spectrum fit parameters. it must be a list of 
-                   dictionary. Each dictionary corresponds to each 
-                   spectrum and must contain the following keys and values:
-                     'row': row number, 
-                     'blfunc': function name. available ones include
-                               'poly', 'chebyshev', 'cspline' and 'sinusoid', 
-                     'order': maximum order of polynomial. needed when
-                              blfunc='poly' or 'chebyshev', 
-                     'npiece': number or piecewise polynomial.
-                               needed when blfunc='cspline' and
-                     'nwave': a list of sinusoidal wave numbers.
-                              needed when blfunc='sinusoid'.
-                example: [{'row':0,'blfunc':'poly','order':5}, 
-                          {'row':1,'blfunc':'chebyshev','order':10},
-                          {'row':2,'blfunc':'cspline','npiece':4}, 
-                          {'row':3,'blfunc':'sinusoid','nwave':[0,1,2,3]}, ...]
         blformat -- format(s) of file(s) in which best-fit parameters are 
                     written. 
                 options: 'text', 'csv', 'table', '', and a list of these 
@@ -424,7 +411,7 @@ blmode -- baselining mode.
                 default: ''
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 
           set, blfunc and its subparameters are ignored.
-        options: 'poly', 'chebyshev', 'cspline', or 'sinusoid'
+        options: 'poly', 'chebyshev', 'cspline', 'sinusoid', or 'variable'
         default: 'poly'
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
@@ -434,6 +421,7 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  cubic polynomial having C2-continuity (i.e., the second 
                  derivative is continuous at the joining points). 
                  blfunc='sinusoid' uses a combination of sinusoidal curves. 
+        NOTE blfunc='variable' IS EXPERT MODE!!!
     &gt;&gt;&gt; blfunc expandable parameters
         order -- order of baseline model function
                 options: (int) (&lt;0 turns off baseline fitting)
@@ -478,6 +466,8 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
                  default: 3
         clipniter -- maximum iteration number for iterative fitting
                  default: 0 (no iteration, i.e., no clipping)
+        blparam -- the name of text file that stores per spectrum fit
+                   parameters. See below for details of format.
 verify -- interactively verify the results of operation for each spectrum.
           When verify = True, for each input spectrum, spectra
           before and after the operation are displayed in a plot
@@ -551,6 +541,34 @@ In general, sigma clipping will lower the performance since it increases
 number of fits per spectra. However, it is strongly recommended to turn
 on sigma clipping unless you are sure that the data is free from any kind
 of extreme values that may affect the fit.
+
+
+----------------------------------
+PER SPECTRUM FIT PARAMETERS
+----------------------------------
+Per spectrum baseline fitting parameter is accepted in blfunc='variable'.
+Note this is an expert mode. The fitting parameters should be defined in
+a text file for each spectrum in the input MS. The text file should store
+commpa separated values in order of:
+row ID, polarization ID, masklist, blfunc, order, npiece, nwave,clipthresh,
+clipniter, use_linefinder, thresh, edge, chan_avg_limit.
+Each row in the text file must contain the following keys and values:
+* 'row': row number,
+* 'blfunc': function name.
+     available ones include, 'poly', 'chebyshev', 'cspline' and 'sinusoid', 
+* 'order': maximum order of polynomial. needed when blfunc='poly'
+     or 'chebyshev', 
+* 'npiece': number or piecewise polynomial. needed when blfunc='cspline',
+and
+* 'nwave': a list of sinusoidal wave numbers. needed when blfunc='sinusoid'.
+
+example:
+#row,pol,masklist,blfunc,order,npiece,nwave,clipthresh,clipniter,use_lf,thres,edge,avg_limit
+0,0,[[500,1600]],poly,5,,,,,,,,
+0,1,,chebyshev,10,,,,,,,,
+1,0,,cspline,,4,,,,,,,
+1,1,,sinusoid,,,[0,1,2,3],,,,,,
+
   </example>
 
 </task>

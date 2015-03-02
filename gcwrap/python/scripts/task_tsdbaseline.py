@@ -4,7 +4,7 @@ from taskinit import *
 import sdutil
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, edge=None, blmode=None, dosubtract=None, blparam=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
     casalog.origin('tsdbaseline')
 
@@ -13,6 +13,10 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             raise Exception(outfile+' exists.')
         if (blfunc.lower().strip() != 'poly'):
             raise Exception(blfunc+' is not available.')
+        if (maskmode!='list'):
+            raise ValueError, "maskmode='%s' is not supported yet" % maskmode
+        if (blfunc=='variable' and not os.path.exists(blparam)):
+            raise ValueError, "input file '%s' does not exists" % blparam
 
         if (spw == ''): spw = '*'
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
