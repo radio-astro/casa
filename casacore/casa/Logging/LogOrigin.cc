@@ -25,9 +25,9 @@
 //#
 //# $Id: LogOrigin.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#include <casa/Logging/LogOrigin.h>
+#include <casacore/casa/Logging/LogOrigin.h>
 #include <stdlib.h>
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
