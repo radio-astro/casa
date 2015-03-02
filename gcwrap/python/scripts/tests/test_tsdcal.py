@@ -98,12 +98,37 @@ class tsdcal_test(unittest.TestCase):
         spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
+
+        tb.open('tsys.cal')
+        fparam_dict=tb.getvarcol('FPARAM')
+        print type(fparam_dict)
+        print 'shape of fparam'
+        #print 'shape of fparam_dict['r29']', fparam_dict['r29'].shape
+        #print fparam_dict['r29'][0]
+        #print fparam_dict['r29'][1]
+        tb.close()
+
         tb.open(infile)
-        #subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
+
+        data_dict=tb.getvarcol('DATA')
+
+        #subt=tb.query('', sortlist='ANTENNA1, TIME, SPECTRAL_WINDOW_ID', columns='FPARAM, DATA') 
+        #data=subt2.getcol('DATA')
+        #fparam=subt2.getcol('FPARAM')
+        #print data[0]
+        #print data[1]
+        #print fparam[0]
+        #print fparam[1]
+
+        subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
         #weight_dict = subt_dict.getcol('WEIGHT')
         weight_dict=tb.getvarcol('WEIGHT')
         print type(weight_dict)
-        #print weight_dict.shape
+        #print weight_dict['r69']
+        #print weight_dict['r69'][0]
+        #print weight_dict['r69'][1]
+        #print weight_dict
+        
         #corrected_data_dict = subt_dict.getcol('CORRECTED_DATA')
         tb.close()
         #subt_dict.close()

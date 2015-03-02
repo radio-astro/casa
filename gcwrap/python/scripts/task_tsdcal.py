@@ -18,6 +18,10 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
     #Python script
     try:
 
+        if ((type(calmode)==str) and calmode=='tsys'):
+            if scan!='':
+                raise Exception,'Scan input must be \'\'(\'\'=all) in calmode=\'tsys\'.'
+
         if ((type(infile)==str) and (os.path.exists(infile))):
             # don't need scr col for this
             cb.open(filename=infile,compress=False,addcorr=True,addmodel=False)
@@ -108,8 +112,6 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
             if len(outfile) == 0:
                 raise RuntimeError, 'Output file name must be specified.'
             if calmode=='tsys':
-                if spw!='':
-                    raise UserWarning,'Input of spw should be \'\'(empty list) in this mode.'
                 cb.specifycal(caltable=outfile,time="",spw=spw,pol=pol,caltype=calmodemap[calmode])
             else:
                 cb.selectvis(spw=spw, scan=scan, field=field)
