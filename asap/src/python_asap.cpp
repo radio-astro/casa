@@ -126,7 +126,7 @@ BOOST_PYTHON_MODULE(_asap) {
   casa::pyrap::register_convert_std_vector<double>();
   casa::pyrap::register_convert_std_vector<std::string>();
 //////////////see error below//////////////////////////////
-//casa::pyrap::register_convert_std_vector<bool>();
+  casa::pyrap::register_convert_std_vector<bool>();
 ///////////////////////////////////////////////////////////
   casa::pyrap::register_convert_casa_valueholder();
   casa::pyrap::register_convert_casa_record();
