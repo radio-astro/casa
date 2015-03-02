@@ -1086,6 +1086,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 			// CAS-7315: Phase shifting
 			visBuffer->phaseCenterShift(0.1,0.1);
+			visBufferRef->phaseCenterShift(0.1,0.1);
 
 			visIter->next();
 			visIterRef.next();

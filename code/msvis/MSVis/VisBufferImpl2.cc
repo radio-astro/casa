@@ -870,14 +870,85 @@ VisBufferImpl2::normalize()
 void
 VisBufferImpl2::phaseCenterShift(const Vector<Double>& phase)
 {
+	// Use the frequencies corresponding to the SPW of the first row in the buffer
+	Vector<Double> freq(getFrequencies(0));
 
+	// Set vis cube references
+	Cube<Complex> visCubeRef;
+	Cube<Complex> visCubeModelRef;
+	Cube<Complex> visCubeCorrectedRef;
+	if (cache_p->visCube_p.isPresent())
+	{
+		visCubeRef.reference(visCube());
+	}
+	if (cache_p->modelVisCube_p.isPresent())
+	{
+		visCubeModelRef.reference(visCubeModel());
+	}
+	if (cache_p->correctedVisCube_p.isPresent())
+	{
+		visCubeCorrectedRef.reference(visCubeCorrected());
+	}
+
+
+	Complex cph;
+	Double ph, udx;
+	for (Int row_idx = 0; row_idx < nRows(); ++row_idx)
+	{
+		udx = phase(row_idx) * -2.0 * C::pi / C::c; // in radian/Hz
+
+		for (Int chan_idx = 0; chan_idx < nChannels(); ++chan_idx)
+		{
+			// Calculate the Complex factor for this row and channel
+			ph = udx * freq(chan_idx);
+
+			if (ph != 0.)
+			{
+				cph = Complex(cos(ph), sin(ph));
+
+				// Shift each correlation:
+				for (Int corr_idx = 0; corr_idx < nCorrelations(); ++corr_idx)
+				{
+					if (cache_p->visCube_p.isPresent())
+					{
+						visCubeRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+
+					if (cache_p->modelVisCube_p.isPresent())
+					{
+						visCubeModelRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+
+					if (cache_p->correctedVisCube_p.isPresent())
+					{
+						visCubeCorrectedRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+				}
+			}
+		}
+	}
 }
 
 // Rotate visibility phase for phase center offsets
 void
 VisBufferImpl2::phaseCenterShift(Double dx, Double dy)
 {
+	// Offsets in radians (input is arcsec)
+	dx *= (C::pi / 180.0 / 3600.0);
+	dy *= (C::pi / 180.0 / 3600.0);
 
+	// Extra path as fraction of U and V
+	Vector<Double> udx;
+	udx = uvw().row(0);
+	Vector<Double> vdy;
+	vdy = uvw().row(1);
+	udx *= dx; // in m
+	vdy *= dy;
+
+	// Combine axes
+	udx += vdy;
+
+	phaseCenterShift(udx);
 }
 
 void

@@ -1394,12 +1394,23 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 	// Use the frequencies corresponding to the SPW of the first row in the buffer
 	Vector<Double> freq(getFrequencies(0));
 
-	// Get vis cube references (they may be resident in the inner VB or in the MSTransformBuffer)
-	// The copy constructor uses reference semantics.
-	// It does not matter if the cubes are empty, the corresponding check comes afterwards
-	Cube<Complex> visCubeRef(visCube());
-	Cube<Complex> visCubeModelRef(visCubeModel());
-	Cube<Complex> visCubeCorrectedRef(visCubeCorrected());
+	// Set vis cube references
+	Cube<Complex> visCubeRef;
+	Cube<Complex> visCubeModelRef;
+	Cube<Complex> visCubeCorrectedRef;
+	if (visCubeOk_p)
+	{
+		visCubeRef.reference(visCube());
+	}
+	if (visCubeModelOk_p)
+	{
+		visCubeModelRef.reference(visCubeModel());
+	}
+	if (visCubeCorrectedOk_p)
+	{
+		visCubeCorrectedRef.reference(visCubeCorrected());
+	}
+
 
 	Complex cph;
 	Double ph, udx;
@@ -1407,7 +1418,7 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 	{
 		udx = phase(row_idx) * -2.0 * C::pi / C::c; // in radian/Hz
 
-		for (Int chan_idx = 0; chan_idx < nChannelsOk_p; ++chan_idx)
+		for (Int chan_idx = 0; chan_idx < nChannels_p; ++chan_idx)
 		{
 			// Calculate the Complex factor for this row and channel
 			ph = udx * freq(chan_idx);
