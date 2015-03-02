@@ -97,10 +97,10 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
                 if caltype == 'UNKNOWN':
                     raise RuntimeError('Applytable \'%s\' is not a caltable format'%(_table))
                 elif caltype == 'B TSYS':
-                    cb.setapply(table=_table, spwmap=spwmap, interp=interp)
+                    cb.setapply(table=_table, spwmap=spwmap, interp=interp, calwt=True)
                 else:
                     # no spw mapping is needed for sky calibration
-                    cb.setapply(table=_table, interp=interp)
+                    cb.setapply(table=_table, interp=interp, calwt=True)
             cb.correct(applymode='calflag')
             #applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calflag')	
 
