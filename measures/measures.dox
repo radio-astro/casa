@@ -23,6 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: measures.dox 20088 2007-06-05 03:57:23Z Malte.Marquarding $
+//# $Id: measures.dox 21551 2015-01-29 09:15:47Z gervandiepen $
 
 // \defgroup measures measures package (libcasa_measures)
+//
+// The measures package handles conversions of all types of coordinates
+
+// <ul>
+//  <li> <a href="group__Measures__module.html">Measures</a>:
+//    Coordinate conversions
+// </ul>

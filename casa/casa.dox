@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: casa.dox 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: casa.dox 21551 2015-01-29 09:15:47Z gervandiepen $
 
-namespace casa {
+namespace casacore {
 
-// \defgroup casa casa core modules (libcasa_casa)
+// \defgroup casa casa package (libcasa_casa)
 
 // The casa package contains the core modules.
 // <ul>

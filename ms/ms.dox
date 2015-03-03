@@ -23,6 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ms.dox 20088 2007-06-05 03:57:23Z Malte.Marquarding $
+//# $Id: ms.dox 21551 2015-01-29 09:15:47Z gervandiepen $
 
 // \defgroup ms ms package (libcasa_ms)
+//
+// The ms package contains definition of and access to MeasurementSets
+
+// <ul>
+//  <li> <a href="group__MeasurementSets__module.html">MeasurementSets</a>:
+//    Handling of visibility data in MeasurementSets (structured tables).
+// </ul>

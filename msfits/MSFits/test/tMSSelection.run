@@ -8,7 +8,7 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tMSSelection.run 21100 2011-06-28 12:49:00Z gervandiepen $
+# $Id: tMSSelection.run 21130 2011-10-18 07:39:05Z gervandiepen $
 #-----------------------------------------------------------------------------
 
   if [ ${#AIPSPATH} = 0 ]

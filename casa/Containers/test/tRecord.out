@@ -3,7 +3,7 @@ Record field  cannot be added: length<1
 Record field aB cannot be added: no uppercase
 Record field A cannot be added: extra==10
 RecordRep::defineDataField - incorrect data type used for field TpShort
-RecordRep::createDataField: unknown data type: id=
+RecordRep::createDataField: unknown data type 12
 ArrayBase::validateConformance shape [3] differs from [1]
 ArrayBase::validateConformance shape [3] differs from [1]
 ArrayBase::validateConformance shape [3] differs from [1]
@@ -12,11 +12,11 @@ Record::define - fixed array conformance error for field TpArrayString2
 Record::define - fixed array conformance error for field TpBool
 Record cannot be changed (fixed structure)
 >>> Instance-specific assertion error message:
-( Record.cc : 108) Failed AlwaysAssert conform (other)
+(Record.cc : 108) Failed AlwaysAssertExit conform (other)
 <<<
 RecordInterface::asComplex - invalid data type
 >>> Instance-specific assertion error message:
-( Record.cc : 108) Failed AlwaysAssert conform (other)
+(Record.cc : 108) Failed AlwaysAssertExit conform (other)
 <<<
   TpBool: Bool 0
   TpUChar: uChar 0
@@ -230,7 +230,7 @@ RecordInterface::asComplex - invalid data type
     []
   TpString2a: String ""
 >>> Instance-specific assertion error message:
-( Record.cc : 281) Failed AlwaysAssert this != &other
+(Record.cc : 281) Failed AlwaysAssertExit this != &other
 <<<
 RecordDesc::mergeField - duplicate in other
 Record cannot be changed (fixed structure)
