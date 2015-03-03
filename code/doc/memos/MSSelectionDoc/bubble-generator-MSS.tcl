@@ -83,8 +83,8 @@ set all_graphs {
 	loop {
 	    line {or 
 		{line T0}
-		{line {or < >} T0}
 		{line T0+dT}
+		{line {or < >} T0}
 		{line T0 ~ T1} 
 		{line ( {line T0 ~ T1} ) } 
 		{line {or nil FLOAT} [ {line T0 ~ T1} ] } 
