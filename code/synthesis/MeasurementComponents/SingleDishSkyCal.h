@@ -240,9 +240,6 @@ public:
   // Local setApply
   virtual void setApply(const Record& apply);
 
-  // // Local setSpecify
-  // virtual void setSpecify(const Record& specify);
-
   // In general, we are freq-dep
   virtual Bool freqDepPar() { return True; };
   
@@ -357,11 +354,16 @@ public:
   virtual String typeName()     { return "SDSKY_RASTER"; };
   virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; };
 
+  // local setSolve
+  virtual void setSolve(const Record& solve);
+  
   // data selection specific to otfraster mode
   virtual String configureSelection();
 
 private:
-  void parseOption(const Record &option, Float &fraction, Int &num);
+  // edge detection parameter for otfraster mode
+  Float fraction_;
+  Int numEdge_;
 };
 
 class SingleDishOtfCal : public SingleDishSkyCal 

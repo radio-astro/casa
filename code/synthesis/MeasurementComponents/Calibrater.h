@@ -124,7 +124,9 @@ class Calibrater
 		 const Int fillgaps=0,
 		 const String& cfcache="",
 		 const Double painc=360.0,
-                 const Int fitorder=0);
+                 const Int fitorder=0,
+                 const Float fraction=0.1,
+                 const Int numedge=-1);
 
   // Arrange to solve for BPOLY (using MSSelection syntax)
   Bool setsolvebandpoly(const String& table,

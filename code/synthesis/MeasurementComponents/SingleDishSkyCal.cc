@@ -215,13 +215,13 @@ inline  casa::Int nominalDataDesc(casa::String const &msName, casa::Int const an
   return goodDataDesc;
 }
 
-inline casa::Vector<casa::Int> detectGap(casa::Vector<casa::Double> timeList)
+inline casa::Vector<size_t> detectGap(casa::Vector<casa::Double> timeList)
 {
   size_t n = timeList.size();
   casa::Vector<casa::Double> timeInterval = timeList(casa::Slice(1, n-1)) - timeList(casa::Slice(0, n-1));
   casa::Double medianTime = casa::median(timeInterval);
   casa::Double const threshold = medianTime * 5.0;
-  casa::Vector<casa::Int> gapIndexList(casa::IPosition(1, n/2 + 2), new casa::Int[n/2+2], casa::TAKE_OVER);
+  casa::Vector<size_t> gapIndexList(casa::IPosition(1, n/2 + 2), new size_t[n/2+2], casa::TAKE_OVER);
   gapIndexList[0] = 0;
   size_t gapIndexCount = 1;
   for (size_t i = 0; i < timeInterval.size(); ++i) {
@@ -235,7 +235,7 @@ inline casa::Vector<casa::Int> detectGap(casa::Vector<casa::Double> timeList)
     gapIndexCount++;
   }
   debuglog << "Detected " << gapIndexCount << " gaps." << debugpost;
-  casa::Vector<casa::Int> ret(casa::IPosition(1, gapIndexCount), gapIndexList.data(), casa::COPY);
+  casa::Vector<size_t> ret(casa::IPosition(1, gapIndexCount), gapIndexList.data(), casa::COPY);
   debuglog << "gapList=" << toString(ret) << debugpost;
   return ret;
 }
@@ -269,7 +269,8 @@ inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList
 {
   casa::Vector<casa::Double> edgeList(4);
   size_t numList = timeList.size();
-  size_t numEdge = Detector::N(numList, fraction, num); 
+  size_t numEdge = Detector::N(numList, fraction, num);
+  debuglog << "numEdge = " << numEdge << debugpost;
   if (timeList.size() > numEdge * 2) {
     edgeList[0] = timeList[0];
     edgeList[1] = timeList[numEdge];
@@ -304,32 +305,30 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
   casa::MeasurementSet msSel(casa::tableCommand(oss.str()));
   casa::ROScalarColumn<casa::Double> timeCol(msSel, "TIME");
   casa::Vector<casa::Double> timeList = timeCol.getColumn();
-  casa::Vector<casa::Int> gapList = detectGap(timeList);
+  casa::Vector<size_t> gapList = detectGap(timeList);
   casa::Vector<casa::String> edgeAsTimeRange(gapList.size() * 2);
   typedef casa::Vector<casa::Double> (*DetectorFunc)(casa::Vector<casa::Double>, casa::Float const, casa::Int const);
-  DetectorFunc func = NULL;
+  DetectorFunc detect = NULL;
   if (num > 0) {
-    func = detectEdge<FixedNumberRasterEdgeDetector>;
+    detect = detectEdge<FixedNumberRasterEdgeDetector>;
   }
   else if (fraction < 0) {
-    func = detectEdge<DefaultRasterEdgeDetector>;
+    detect = detectEdge<DefaultRasterEdgeDetector>;
   }
   else {
-    func = detectEdge<FixedFractionRasterEdgeDetector>;
+    detect = detectEdge<FixedFractionRasterEdgeDetector>;
   }
   for (size_t i = 0; i < gapList.size()-1; ++i) {
-    casa::Int startRow = gapList[i];
-    casa::Int endRow = gapList[i+1];
-    casa::Int len = endRow - startRow;
+    size_t startRow = gapList[i];
+    size_t endRow = gapList[i+1];
+    size_t len = endRow - startRow;
     debuglog << "startRow=" << startRow << ", endRow=" << endRow << debugpost;
     casa::Vector<casa::Double> oneRow = timeList(casa::Slice(startRow, len));
-    casa::Vector<casa::Double> edgeList = func(oneRow, fraction, num);
+    casa::Vector<casa::Double> edgeList = detect(oneRow, fraction, num);
     std::ostringstream s;
-    //s << std::setprecision(16) << "TIME > " << edgeList[0] << " && TIME < " << edgeList[1];
     s << std::setprecision(16) << "TIME BETWEEN " << edgeList[0] << " AND " << edgeList[1];
     edgeAsTimeRange[2*i] = s.str();
     s.str("");
-    //s << std::setprecision(16) << "TIME > " << edgeList[2] << " && TIME < " << edgeList[3];
     s << std::setprecision(16) << "TIME BETWEEN " << edgeList[2] << " AND " << edgeList[3];
     edgeAsTimeRange[2*i+1] = s.str();
     debuglog << "Resulting selection: (" << edgeAsTimeRange[2*i] << ") || ("
@@ -451,41 +450,6 @@ void SingleDishSkyCal::setApply(const Record& apply)
   SolvableVisCal::setApply(applyCopy);
 }
   
-// void SingleDishSkyCal::setSpecify(const Record& specify)
-// {
-//   debuglog << "SingleDishSkyCal::setSpecify()" << debugpost;
-
-//   // 
-//   setSolved(False);
-//   setApplied(False);
-
-//   MeasurementSet ms(msName());
-//   fillNChanParList(ms, nChanParList());
-//   debuglog << "nChanParList=" << ::toString(nChanParList()) << debugpost;
-
-//   // Collect Cal table parameters
-//   if (specify.isDefined("caltable")) {
-//     calTableName()=specify.asString("caltable");
-
-//     if (Table::isReadable(calTableName()))
-//       logSink() << "FYI: We are going to overwrite an existing CalTable: "
-// 		<< calTableName()
-// 		<< LogIO::POST;
-//   }
-
-//   // we are creating a table from scratch
-//   logSink() << "Creating " << typeName()
-// 	    << " table."
-// 	    << LogIO::POST;
-
-//   // Create a new caltable to fill up
-//   createMemCalTable();
-
-//   // Setup shape of solveAllRPar
-//   nBln() = 1;
-//   initSolvePar();
-// }
-
 template<class Accessor>
 void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
   Int cols[] = {MS::FIELD_ID, MS::ANTENNA1, MS::FEED1,
@@ -888,7 +852,9 @@ String SingleDishPositionSwitchCal::configureSelection()
 // Constructor
 SingleDishRasterCal::SingleDishRasterCal(VisSet& vs)
   : VisCal(vs),
-    SingleDishSkyCal(vs)
+    SingleDishSkyCal(vs),
+    fraction_(0.1),
+    numEdge_(-1)
 {
   debuglog << "SingleDishRasterCal::SingleDishRasterCal(VisSet& vs)" << debugpost;
 }
@@ -906,19 +872,32 @@ SingleDishRasterCal::~SingleDishRasterCal()
   debuglog << "SingleDishRasterCal::~SingleDishRasterCal()" << debugpost;
 }
 
+void SingleDishRasterCal::setSolve(const Record& solve)
+{
+  // edge detection parameter for otfraster mode
+  if (solve.isDefined("fraction")) {
+    fraction_ = solve.asFloat("fraction");
+  }
+  if (solve.isDefined("numedge")) {
+    numEdge_ = solve.asInt("numedge");
+  }
+
+  logSink() << "fraction=" << fraction_ << endl
+            << "numedge=" << numEdge_ << LogIO::POST;
+  
+  // call parent setSolve
+  SolvableVisCal::setSolve(solve);
+}
+  
 String SingleDishRasterCal::configureSelection()
 {
   debuglog << "SingleDishRasterCal::configureSelection" << debugpost;
   const Record specify;
   std::ostringstream oss;
   oss << "SELECT FROM " << msName() << " WHERE ";
-  Float fraction = 0.0f;
-  Int num = -1;
-  parseOption(specify, fraction, num);
   String delimiter = "";
-  debuglog << "fraction=" << fraction << ", num=" << num << debugpost;
   for (Int iant = 0; iant < nAnt(); ++iant) {
-    Vector<String> timeRangeList = detectRaster(msName(), iant, fraction, num);
+    Vector<String> timeRangeList = detectRaster(msName(), iant, fraction_, numEdge_);
     debuglog << "timeRangeList=" << ::toString(timeRangeList) << debugpost;
     oss << delimiter;
     oss << "(ANTENNA1 == " << iant << " && ANTENNA2 == " << iant << " && (";
@@ -936,37 +915,6 @@ String SingleDishRasterCal::configureSelection()
   oss //<< ")"
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return String(oss);  
-}
-
-void SingleDishRasterCal::parseOption(const Record &option, Float &fraction, Int &num)
-{
-  fraction = -1.0;
-  num = -1;
-  if (option.isDefined("parameter")) {
-    Vector<Double> params = option.asArrayDouble("parameter");
-    size_t numParams = params.size();
-    if (numParams == 0) {
-      fraction = 0.1;
-    }
-    else if (numParams == 1) {
-      num = static_cast<Int>(params[0]);
-    }
-    else if (numParams == 2) {
-      if (params[0] >= 1.0) {
-	num = static_cast<Int>(params[0]);
-      }
-      else {
-	fraction = params[1];
-      }
-    }
-  }
-  else {
-    // set fraction to 10%
-    fraction = 0.1;
-  }
-  debuglog << "OPTION SUMMARY: \n" 
-	   << "   fraction=" << fraction << "\n"
-	   << "   npts=" << num << debugpost;
 }
 
 //
