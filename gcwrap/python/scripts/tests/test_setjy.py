@@ -77,7 +77,7 @@ class SetjyUnitTestBase(unittest.TestCase):
         try:
             tblocal = tbtool()
             tblocal.open(vis + '/HISTORY')
-            st = tblocal.query('ORIGIN == "%s"' % origin, columns='MESSAGE')
+            st = tblocal.query('ORIGIN == pattern("%s*")' % origin, columns='MESSAGE')
             nstrows = st.nrows()
             startrow = st.nrows() - 1 - nback
             # don't go back more than selected rows
@@ -157,7 +157,8 @@ class test_SingleObservation(SetjyUnitTestBase):
         self.setUpMS(msname)        
 
     def tearDown(self):
-        self.resetMS()
+        #self.resetMS()
+        pass
 
     def test1_SingleObservationOldModel(self):
         """ Test vs an MS with a single observation using the Butler-JPL-Horizons 2010 model"""
@@ -932,7 +933,7 @@ class test_ModImage(SetjyUnitTestBase):
                                            )
 
                 record['history'] = self.get_last_history_line(self.inpms,
-                                                           origin='imager::setjy()',
+                                                           origin='imager::setjy()::',
                                                            #hint='model image to I')
                                                            hint='fld ind 12) spw 1  [I=')
             else:
