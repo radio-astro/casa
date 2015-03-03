@@ -23,9 +23,9 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: images.dox 20505 2009-01-19 14:37:24Z gervandiepen $
+//# $Id: images.dox 21537 2015-01-06 10:40:21Z gervandiepen $
 
-namespace casa {
+namespace casacore {
 
 // \defgroup images images package (libcasa_images)
 //

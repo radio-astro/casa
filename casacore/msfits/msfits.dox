@@ -23,6 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: msfits.dox 20088 2007-06-05 03:57:23Z Malte.Marquarding $
+//# $Id: msfits.dox 21551 2015-01-29 09:15:47Z gervandiepen $
 
 // \defgroup msfits msfits package (libcasa_msfits)
+//
+// The msfits package handles conversion of MeasurementSets to/from FITS
+
+// <ul>
+//  <li> <a href="group__MSFits__module.html">MSFits</a>:
+//    MeasurementSet to/from UVFITS or FITSIDI
+// </ul>
