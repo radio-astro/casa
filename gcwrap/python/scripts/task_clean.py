@@ -1,9 +1,10 @@
 import os
 import shutil
 import numpy
+import pdb
 from taskinit import *
 from cleanhelper import *
-im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools()
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools(['im','cb','ms','tb','me','ia','po','sm','cl','cs','rg','sl','dc','vp','msmd','fi','fn','imd','sdms'])
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, intent, mode, resmooth,gridmode,
@@ -23,8 +24,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
     # if (gridmode == 'advancedaprojection'):
     #     raise Exception, 'This mode is not yet ready for use'
-
-        
+    
     if gridmode == 'advancedaprojection' and usescratch==False:
         casalog.post('Forcing usescratch=True for new FTMs. This is temporary.', 'WARN')
         usescratch=True

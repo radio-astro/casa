@@ -175,7 +175,7 @@ def pclean(vis=None,
                       timerange=timerange,
                       uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                       visinmem=False, maskimage=mask, interactive=interactive, 
-                      numthreads=1, pbcorr=pbcor, minpb=minpb, savemodel=True)
+                      numthreads=1, pbcorr=pbcor, minpb=minpb, savemodel=True, dopbcorr=False, wbawp=False, aterm=False, psterm=False)
         else:
             if(ftmachine != 'ft'): ## and ftmachine != 'wproject'):
                 raise ValueError, "ftmachine %s is not supported yet with multiterm MFS" % ftmachine
@@ -193,7 +193,7 @@ def pclean(vis=None,
                       timerange=timerange,
                       uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                       visinmem=False, maskimage=mask, interactive=interactive, 
-                      numthreads=1, pbcorr=pbcor, minpb=minpb, savemodel=True, nterms=nterms)
+                      numthreads=1, pbcorr=pbcor, minpb=minpb, savemodel=True, nterms=nterms, dopbcorr=False, wbawp=False, aterm=False, psterm=False )
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
@@ -223,7 +223,7 @@ def pclean(vis=None,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                   contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcor,
-                  minpb=minpb, interactive=interactive, savemodel=True)
+                  minpb=minpb, interactive=interactive, savemodel=False, dopbcorr=False, wbawp=False, aterm=False, psterm=False )
             
 #parallel_clean=pclean
     

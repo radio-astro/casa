@@ -139,7 +139,7 @@ def gentools(tools=None):
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'me', 'ia', 'po',
                           'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 
-			  'msmd', 'fi', 'fn', 'imd', 'sdms']
+			  'msmd', 'fi', 'fn', 'imd', 'sdms', 'lm']
 	else:
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
