@@ -47,6 +47,9 @@
 #include <msvis/MSVis/AveragingVi2Factory.h>
 #include <msvis/MSVis/AveragingTvi2.h>
 
+#include <msvis/MSVis/IteratingParameters.h>
+#include <msvis/MSVis/LayeredVi2Factory.h>
+
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
 
@@ -359,6 +362,7 @@ protected:
 	void parseRefFrameTransParams(Record &configuration);
 	void parseFreqSpecParams(Record &configuration);
 	void parseTimeAvgParams(Record &configuration);
+	void parseCalParams(Record &configuration);
 
 	// From input MS
 	void initDataSelectionParams();
@@ -1202,6 +1206,10 @@ protected:
 	vi::AveragingOptions timeAvgOptions_p;
 	Double maxuvwdistance_p;
 	// uInt minbaselines_p;
+
+        // Calibration parameters
+        Bool calibrate_p;
+        Record callib_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;

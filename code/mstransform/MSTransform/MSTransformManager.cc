@@ -22,6 +22,8 @@
 
 #include <mstransform/MSTransform/MSTransformManager.h>
 
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 /////////////////////////////////////////////
@@ -154,6 +156,10 @@ void MSTransformManager::initialize()
 	maxuvwdistance_p = 0;
 	// minbaselines_p = 0;
 
+        // Cal parameters
+	calibrate_p = False;
+        callib_p = Record();
+
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
 	spectrumTransformation_p = False;
@@ -272,6 +278,8 @@ void MSTransformManager::configure(Record &configuration)
 	parseChanAvgParams(configuration);
 	parseRefFrameTransParams(configuration);
 	parseTimeAvgParams(configuration);
+	parseCalParams(configuration);
+
 
 	return;
 }
@@ -943,6 +951,36 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 
 	return;
 }
+
+void MSTransformManager::parseCalParams(Record &configuration)
+{
+
+        // Nominally no calibration
+        calibrate_p = False; 
+
+	int exists = 0;
+
+	exists = configuration.fieldNumber ("callib");
+	if (exists >= 0)
+	{
+                // extract the callib Record
+ 	        callib_p = configuration.subRecord(exists);
+		// if the Record is non-trivial, calibration is turned on
+		calibrate_p=callib_p.nfields()>0;
+
+		if (calibrate_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Calibration is activated" << LogIO::POST;
+		}
+	}
+	else
+	{
+		return;
+	}
+
+}
+
 
 // -----------------------------------------------------------------------
 // Method to open the input MS, select the data and create the
@@ -3986,8 +4024,9 @@ void MSTransformManager::checkFillWeightSpectrum()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkDataColumnsAvailable()
 {
+
 	dataColumnAvailable_p = False;
-	correctedDataColumnAvailable_p = False;
+	correctedDataColumnAvailable_p = calibrate_p;     // False;
 	floatDataColumnAvailable_p = False;
 
 	if (!selectedInputMsCols_p->data().isNull() && selectedInputMsCols_p->data().isDefined(0))
@@ -4058,6 +4097,12 @@ void MSTransformManager::checkDataColumnsToFill()
 	Bool mainColSet=False;
 	Bool modelDataChecked = False;
 
+	// This Bool is used below where availability of CORRECTED_DATA is relevant
+	//   calibrate_p will be True if OTF calibration has been arranged; otherwise
+	//   rely on physical availability in the inputMS
+	Bool corrDataAvailOrOTF_p = calibrate_p || selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA));
+
+
 	if (datacolumn_p.contains("ALL"))
 	{
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
@@ -4084,7 +4129,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		if (corrDataAvailOrOTF_p)
 		{
 			if (!mainColSet)
 			{
@@ -4148,7 +4193,7 @@ void MSTransformManager::checkDataColumnsToFill()
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 
-			if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+			if (corrDataAvailOrOTF_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
 			}
@@ -4218,7 +4263,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		if (corrDataAvailOrOTF_p)
 		{
 			if (!mainColSet)
 			{
@@ -4271,7 +4316,7 @@ void MSTransformManager::checkDataColumnsToFill()
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 
-			if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+			if (corrDataAvailOrOTF_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
 			}
@@ -4439,7 +4484,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("CORRECTED"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		if (corrDataAvailOrOTF_p)
 		{
 			if (!mainColSet)
 			{
@@ -4594,6 +4639,33 @@ void MSTransformManager::setIterationApproach()
 // -----------------------------------------------------------------------
 void MSTransformManager::generateIterator()
 {
+
+        if (calibrate_p) {
+
+	  logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+		   << "Building LayeredVi2Factory w/ calibration activated." << LogIO::POST;
+
+	  // Isolate iteration parametes
+	  vi::IteratingParameters iterpar(0,vi::SortColumns (sortColumns_p,false));
+
+	  // Package the time averaging parameters (if any)
+	  vi::AveragingParameters *tavgpar(NULL);
+	  if (timeAverage_p) {
+	    if (maxuvwdistance_p > 0) timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
+	    // NB: the iteration parameters will not be used in here (see iterpar above)
+	    tavgpar=new vi::AveragingParameters(timeBin_p, 0, 
+						vi::SortColumns(),
+						timeAvgOptions_p, maxuvwdistance_p);
+	  }
+
+	  // Construct the vi via the LayeredVi2Factory
+	  visibilityIterator_p = new vi::VisibilityIterator2 (vi::LayeredVi2Factory (selectedInputMs_p,&iterpar,callib_p,tavgpar));
+	  visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
+	}
+       
+	else
+    
+
 
 	if (timeAverage_p)
 	{
