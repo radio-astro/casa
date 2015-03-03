@@ -25,9 +25,8 @@
 
 // Where TransformingVi2 interface is defined
 #include <msvis/MSVis/TransformingVi2.h>
-//#include <synthesis/MeasurementComponents/CalibratingVi2Factory.h>
-
-//#include <synthesis/MeasurementEquations/VisEquation.h>
+#include <synthesis/MeasurementComponents/Calibrater.h>
+#include <synthesis/MeasurementEquations/VisEquation.h>
 
 #include <casa/Containers/Record.h>
 
@@ -48,16 +47,18 @@ public:
   CalibratingParameters(const CalibratingParameters& other);
   CalibratingParameters& operator=(const CalibratingParameters & other);
 
+  Bool byCalLib() const;
+
   const Record& getCalLibRecord() const;
-  Float getCorrFactor() const;  // temporary, for initial testing
+  Float getCorrFactor() const;  
 
   void setCalLibRecord(const Record& calLibRecord);
-  void setCorrFactor(Float corrFactor);  // temporary, for initial testing
+  void setCorrFactor(Float corrFactor);  
 
 private:
 
   void validate() const;
-
+  Bool byCalLib_p;
   Record calLibRecord_p;
   Float corrFactor_p;  // temporary, for initial testing
 };
@@ -73,6 +74,12 @@ public:
   CalibratingVi2(vi::VisibilityIterator2 * vi, 
 		 vi::ViImplementation2 * inputVii,
 		 const CalibratingParameters& calpar);
+
+  CalibratingVi2(vi::VisibilityIterator2 * vi, 
+		 vi::ViImplementation2 * inputVii,
+		 const CalibratingParameters& calpar,
+		 String msname);
+
   ~CalibratingVi2();
 
 
@@ -96,10 +103,12 @@ private:
   // Correct the current VB
   void correctCurrentVB() const;
 
+  // Calibrater and VisEquation
+  Calibrater cb_p;
+  VisEquation *ve_p;   
 
-  //  VisEquationI *ve_p;   // TBD: MSTransform-side VisEquation interface
-
-  Float corrFactor_p;  // Temporary correction factor to apply for testing
+  // A simple factor for testing
+  Float corrFactor_p;  
 
   // signals whether or not correctCurrentVB has been called
   mutable Bool visCorrOK_p;

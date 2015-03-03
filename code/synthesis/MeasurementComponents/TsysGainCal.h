@@ -52,6 +52,7 @@ public:
 
   // Constructor
   StandardTsys(VisSet& vs);
+  StandardTsys(String msname,Int MSnAnt,Int MSnSpw);
   StandardTsys(const Int& nAnt);
 
   virtual ~StandardTsys();

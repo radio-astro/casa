@@ -68,6 +68,27 @@ StandardTsys::StandardTsys(VisSet& vs) :
   
 }
 
+StandardTsys::StandardTsys(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  BJones(msname,MSnAnt,MSnSpw),              // immediate parent
+  sysCalTabName_(""),
+  freqDepCalWt_(False)
+{
+  if (prtlev()>2) cout << "StandardTsys::StandardTsys(msname,MSnAnt,MSnSpw)" << endl;
+
+  // Set the SYSCAL table name
+  MeasurementSet ms(msname);
+  sysCalTabName_ = ms.sysCalTableName();
+
+  // OK?
+  ROMSColumns mscol(ms);
+  const ROMSSpWindowColumns& spwcols = mscol.spectralWindow();
+  nChanParList()=spwcols.numChan().getColumn();
+  startChanList().set(0);
+
+}
+
 StandardTsys::StandardTsys(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),

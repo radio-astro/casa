@@ -51,6 +51,7 @@ public:
 
   // Constructor
   PJones(VisSet& vs);
+  PJones(String msname,Int MSnAnt,Int MSnSpw);
   //   PJones(const Int& nAnt);  // NYI
 
   virtual ~PJones();
@@ -113,6 +114,7 @@ public:
 
   // Constructor
   TJones(VisSet& vs);
+  TJones(String msname,Int MSnAnt,Int MSnSpw);
   TJones(const Int& nAnt);
 
   virtual ~TJones();
@@ -179,6 +181,7 @@ public:
 
   // Constructor
   TfJones(VisSet& vs);
+  TfJones(String msname,Int MSnAnt,Int MSnSpw);
   TfJones(const Int& nAnt);
 
   virtual ~TfJones();
@@ -217,6 +220,7 @@ public:
 
   // Constructor
   GJones(VisSet& vs);
+  GJones(String msname,Int MSnAnt,Int MSnSpw);
   GJones(const Int& nAnt);
 
   virtual ~GJones();
@@ -276,6 +280,7 @@ public:
 
   // Constructor
   BJones(VisSet& vs);
+  BJones(String msname,Int MSnAnt,Int MSnSpw);
   BJones(const Int& nAnt);
 
   virtual ~BJones();
@@ -329,6 +334,7 @@ public:
 
   // Constructor
   JJones(VisSet& vs);
+  JJones(String msname,Int MSnAnt,Int MSnSpw);
   JJones(const Int& nAnt);
 
   virtual ~JJones();
@@ -385,6 +391,7 @@ public:
 
   // Constructor
   MMueller(VisSet& vs);
+  MMueller(String msname,Int MSnAnt,Int MSnSpw);
   MMueller(const Int& nAnt);
 
   virtual ~MMueller();
@@ -441,6 +448,7 @@ public:
 
   // Constructor
   MfMueller(VisSet& vs);
+  MfMueller(String msname,Int MSnAnt,Int MSnSpw);
   MfMueller(const Int& nAnt);
 
   virtual ~MfMueller();
@@ -481,6 +489,7 @@ public:
 
   // Constructor
   TOpac(VisSet& vs);
+  TOpac(String msname,Int MSnAnt,Int MSnSpw);
   //  TOpac(const Int& nAnt);  // NYI
 
   virtual ~TOpac();
@@ -548,6 +557,7 @@ public:
 
   // Constructor
   TfOpac(VisSet& vs);
+  TfOpac(String msname,Int MSnAnt,Int MSnSpw);
   //  TfOpac(const Int& nAnt);
 
   virtual ~TfOpac();

@@ -56,23 +56,9 @@ CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const Record& calrec,
 					     const IteratingParameters& iterpar) :
   ms_p(ms),
-  calpar_p(),
+  calpar_p(calrec),
   iterpar_p(iterpar)
-{
-  // Extract parameter objects from the supplied Record
-  // TBD: add traps for a bad config Record
-  if (calrec.isDefined("calfactor")) {
-    Float calfactor=calrec.asFloat("calfactor");
-    //cout << "Found calfactor = " << calfactor << endl;
-    calpar_p = CalibratingParameters(calfactor);
-  }
-
-
-  //  calpar_p = CalibratingParameters(calrec.asRecord("callibrec"));
-
-  //  cout << "CVF::CVF(ms,calrec,iterpar)" << endl;
-
-}
+{}
 
 
 // -----------------------------------------------------------------------
@@ -96,12 +82,6 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
   
   return this->createVi(vi2,plainViI);
 
-  /*
-  // Create output VisibilityIterator
-  CalibratingVi2 *calVI = new CalibratingVi2(vi2,plainViI,calpar_p);
-  
-  return calVI;
-  */
 }
 
 
@@ -129,7 +109,7 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
 					    True); // writable!
     
   // Create output VisibilityIterator
-  CalibratingVi2 *calVI = new CalibratingVi2(vi2,vii2,calpar_p);
+  CalibratingVi2 *calVI = new CalibratingVi2(vi2,vii2,calpar_p,ms_p->tableName());
   
   return calVI;
 }

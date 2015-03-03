@@ -83,6 +83,8 @@ public:
 
   VisCal(VisSet& vs);
   
+  VisCal(String msname,Int MSnAnt,Int MSnSpw);
+  
   VisCal(const Int& nAnt);
   
   virtual ~VisCal();
@@ -381,6 +383,8 @@ public:
   // Constructor
   VisMueller(VisSet& vs);
 
+  VisMueller(String msname,Int MSnAnt,Int MSnSpw);
+
   VisMueller(const Int& nAnt);
 
   virtual ~VisMueller();
@@ -504,6 +508,8 @@ public:
 
   // Constructor
   VisJones(VisSet& vs);
+
+  VisJones(String msname,Int MSnAnt,Int MSnSpw);
 
   VisJones(const Int& nAnt);
 

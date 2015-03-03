@@ -144,6 +144,71 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
 
 };
 
+SolvableVisCal::SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),
+  corruptor_p(NULL),
+  ct_(NULL),
+  ci_(NULL),
+  cpp_(NULL),
+  spwOK_(MSnSpw,False),
+  maxTimePerSolution_p(0), 
+  minTimePerSolution_p(10000000), 
+  avgTimePerSolution_p(0),
+  timer_p(),
+  calTableName_(""),
+  calTableSelect_(""),
+  append_(False),
+  tInterpType_(""),
+  fInterpType_(""),
+  spwMap_(1,-1),
+  urefantlist_(1,-1),
+  minblperant_(4),
+  solved_(False),
+  byCallib_(False),
+  apmode_(""),
+  solint_("inf"),
+  fsolint_("none"),
+  fintervalHz_(-1.0),
+  fintervalCh_(MSnSpw,0.0),
+  chanAveBounds_(MSnSpw,Matrix<Int>()),
+  minSNR_(0.0f),
+  combine_(""),
+  focusChan_(0),
+  dataInterval_(0.0),
+  fitWt_(0.0),
+  fit_(0.0),
+  solveCPar_(MSnSpw,NULL),  // TBD: move inflation into ctor body
+  solveRPar_(MSnSpw,NULL),
+  solveParOK_(MSnSpw,NULL),
+  solveParErr_(MSnSpw,NULL),
+  solveParSNR_(MSnSpw,NULL),
+  solveAllCPar_(MSnSpw,NULL),
+  solveAllRPar_(MSnSpw,NULL),
+  solveAllParOK_(MSnSpw,NULL),
+  solveAllParErr_(MSnSpw,NULL),
+  solveAllParSNR_(MSnSpw,NULL),
+  srcPolPar_(),
+  chanmask_(NULL),
+  simulated_(False),
+  simint_("integration"),
+  onthefly_(False)
+{
+  if (prtlev()>2) cout << "SVC::SVC(msname,MSnAnt,MSnSpw)" << endl;
+
+  caiRC_p = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
+  cafRC_p = Aipsrc::registerRC("calibrater.activity.fraction", "0.00001");
+  String ca_str = Aipsrc::get(caiRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityInterval_p);
+  userPrintActivityInterval_p = abs(userPrintActivityInterval_p);
+
+  ca_str = Aipsrc::get(cafRC_p);
+  std::sscanf(std::string(ca_str).c_str(), "%f", &userPrintActivityFraction_p);
+  userPrintActivityFraction_p = abs(userPrintActivityFraction_p);
+
+  initSVC();
+
+};
+
 SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   VisCal(nAnt),
   corruptor_p(NULL),
@@ -364,6 +429,7 @@ void SolvableVisCal::setCallib(const Record& callib,
 
   if (prtlev()>2) 
     cout << "SVC::setCallib(callib)" << endl;
+
 
   if (typeName().contains("BPOLY") ||
       typeName().contains("GSPLINE"))
@@ -3556,6 +3622,17 @@ SolvableVisMueller::SolvableVisMueller(VisSet& vs) :
   if (prtlev()>2) cout << "SVM::SVM(vs)" << endl;
 }
 
+SolvableVisMueller::SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),
+  VisMueller(msname,MSnAnt,MSnSpw),
+  SolvableVisCal(msname,MSnAnt,MSnSpw),
+  dM_(NULL),
+  diffMElem_(),
+  DMValid_(False)
+{
+  if (prtlev()>2) cout << "SVM::SVM(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 SolvableVisMueller::SolvableVisMueller(const Int& nAnt) :
   VisCal(nAnt),
   VisMueller(nAnt),
@@ -3822,6 +3899,20 @@ SolvableVisJones::SolvableVisJones(VisSet& vs) :
   plotter_(NULL)
 {
   if (prtlev()>2) cout << "SVJ::SVJ(vs)" << endl;
+}
+
+SolvableVisJones::SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisMueller(msname,MSnAnt,MSnSpw), // immediate parent
+  VisJones(msname,MSnAnt,MSnSpw),           // immediate parent
+  dJ1_(NULL),                           // data...
+  dJ2_(NULL),
+  diffJElem_(),
+  DJValid_(False),
+  plotter_(NULL)
+{
+  if (prtlev()>2) cout << "SVJ::SVJ(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 SolvableVisJones::SolvableVisJones(const Int& nAnt) : 

@@ -86,6 +86,8 @@ public:
 
   SolvableVisCal(VisSet& vs);
   
+  SolvableVisCal(String msname,Int MSnAnt,Int MSnSpw);
+
   SolvableVisCal(const Int& nAnt);
 
   virtual ~SolvableVisCal();
@@ -575,6 +577,8 @@ public:
 
   SolvableVisMueller(VisSet& vs);
 
+  SolvableVisMueller(String msname,Int MSnAnt,Int MSnSpw);
+
   SolvableVisMueller(const Int& nAnt);
 
   virtual ~SolvableVisMueller();
@@ -720,6 +724,8 @@ class SolvableVisJones : public SolvableVisMueller, public VisJones {
 public:
 
   SolvableVisJones(VisSet& vs);
+
+  SolvableVisJones(String msname,Int MSnAnt,Int MSnSpw);
 
   SolvableVisJones(const Int& nAnt);
 

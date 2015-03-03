@@ -50,6 +50,7 @@ public:
 
   // Constructor
   DJones(VisSet& vs);
+  DJones(String msname,Int MSnAnt,Int MSnSpw);
   DJones(const Int& nAnt);
 
   virtual ~DJones();
@@ -138,6 +139,7 @@ public:
 
   // Constructor
   DfJones(VisSet& vs);
+  DfJones(String msname,Int MSnAnt,Int MSnSpw);
   DfJones(const Int& nAnt);
 
   virtual ~DfJones();
@@ -163,6 +165,7 @@ public:
 
   // Constructor
   DlinJones(VisSet& vs);
+  DlinJones(String msname,Int MSnAnt,Int MSnSpw);
   DlinJones(const Int& nAnt);
 
   virtual ~DlinJones();
@@ -186,6 +189,7 @@ public:
 
   // Constructor
   DflinJones(VisSet& vs);
+  DflinJones(String msname,Int MSnAnt,Int MSnSpw);
   DflinJones(const Int& nAnt);
 
   virtual ~DflinJones();
@@ -209,6 +213,7 @@ public:
 
   // Constructor
   DllsJones(VisSet& vs);
+  DllsJones(String msname,Int MSnAnt,Int MSnSpw);
   DllsJones(const Int& nAnt);
 
   virtual ~DllsJones();
@@ -245,6 +250,7 @@ public:
 
   // Constructor
   DfllsJones(VisSet& vs);
+  DfllsJones(String msname,Int MSnAnt,Int MSnSpw);
   DfllsJones(const Int& nAnt);
 
   virtual ~DfllsJones();
@@ -269,6 +275,7 @@ public:
 
   // Constructor
   XMueller(VisSet& vs);
+  XMueller(String msname,Int MSnAnt,Int MSnSpw);
   XMueller(const Int& nAnt);
 
   virtual ~XMueller();
@@ -332,6 +339,7 @@ public:
 
   // Constructor
   XJones(VisSet& vs);
+  XJones(String msname,Int MSnAnt,Int MSnSpw);
   XJones(const Int& nAnt);
 
   virtual ~XJones();
@@ -398,6 +406,7 @@ public:
 
   // Constructor
   XfJones(VisSet& vs);
+  XfJones(String msname,Int MSnAnt,Int MSnSpw);
   XfJones(const Int& nAnt);
 
   virtual ~XfJones();
@@ -429,6 +438,7 @@ public:
 
   // Constructor
   GlinXphJones(VisSet& vs);
+  GlinXphJones(String msname,Int MSnAnt,Int MSnSpw);
   GlinXphJones(const Int& nAnt);
 
   virtual ~GlinXphJones();
@@ -478,6 +488,7 @@ public:
 
   // Constructor
   GlinXphfJones(VisSet& vs);
+  GlinXphfJones(String msname,Int MSnAnt,Int MSnSpw);
   GlinXphfJones(const Int& nAnt);
 
   virtual ~GlinXphfJones();

@@ -87,6 +87,37 @@ Calibrater::Calibrater():
 {
 }
 
+Calibrater::Calibrater(String msname): 
+  msname_p(msname),
+  ms_p(0), 
+  mssel_p(0), 
+  mss_p(0),
+  frequencySelections_p(0),
+  vs_p(0), 
+  ve_p(0),
+  vc_p(),
+  svc_p(0),
+  histLockCounter_p(), 
+  hist_p(0),
+  actRec_()
+{
+
+  // This is a bare Calibrater, intended to serve a VisEquation 
+
+  // We need very little of the usual stuff
+
+  // A VisEquation
+  ve_p = new VisEquation();
+
+  // Reset the apply/solve VisCals
+  reset();
+
+  //  NB: the reset() method traditionallydepends on the vs_p, so can't use it here
+  //  unsetapply();
+  //  unsetsolve();
+
+}
+
 Calibrater::Calibrater(const Calibrater & other)
 {
   operator=(other);
@@ -552,6 +583,9 @@ Bool Calibrater::validatecallib(Record callib) {
 
     for (uInt icl=0;icl<ncl;++icl) {
 
+      if (thistabrec.dataType(icl)!=TpRecord)
+	continue;
+
       Record thisicl=thistabrec.asRecord(icl);
       try {
 	CalLibSlice::validateCLS(thisicl);
@@ -563,6 +597,7 @@ Bool Calibrater::validatecallib(Record callib) {
 		  << x.getMesg() 
 		  << LogIO::POST;
       }
+
     }
   }
   return True;
@@ -652,6 +687,106 @@ Bool Calibrater::setcallib(Record callib) {
     } 
   }
 
+  // All ok, if we get this far!
+  return True;
+
+}
+
+// Set up apply-able calibration via a Cal Library
+Bool Calibrater::setcallib2(Record callib) {
+
+  logSink() << LogOrigin("Calibrater", "setcallib2(callib)");
+
+  //  cout << "Calibrater::setcallib2(callib) : " << boolalpha << callib << endl;
+
+  uInt ntab=callib.nfields();
+
+  //  cout << "callib.nfields() = " << ntab << endl;
+
+  // Do some preliminary per-table verification
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Trap parang
+    // TBD...
+    //    if (tabname=="<parang>")
+    //      continue;
+
+    // Insist that the table exists on disk
+    if (!Table::isReadable(tabname))
+      throw(AipsError("Caltable "+tabname+" does not exist."));
+
+  }
+
+  // Tables exist, so deploy them...
+
+  // Local MS object for callib parsing (only)
+  MeasurementSet lms(msname_p);
+
+  // Get some global shape info:
+  Int MSnAnt = lms.antenna().nrow();
+  Int MSnSpw = lms.spectralWindow().nrow();
+
+  for (uInt itab=0;itab<ntab;++itab) {
+
+    String tabname=callib.name(itab);
+
+    // Get the type from the table
+    String upType=calTableType(tabname);
+    upType.upcase();
+
+    // Add table name to the record
+    Record thistabrec=callib.asrwRecord(itab);
+    thistabrec.define("tablename",tabname);
+
+    // First try to create the requested VisCal object
+    VisCal *vc(NULL);
+
+    try {
+
+      //      if(!ok()) 
+      //	throw(AipsError("Calibrater not prepared for setapply."));
+      
+      logSink() << LogIO::NORMAL 
+		<< "Arranging to APPLY:"
+		<< LogIO::POST;
+      
+      // Add a new VisCal to the apply list
+      vc = createVisCal(upType,msname_p,MSnAnt,MSnSpw);  
+
+      // ingest this table according to its callib
+      vc->setCallib(thistabrec,lms);
+
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << x.getMesg() 
+		<< " Check inputs and try again."
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::callib2."));
+      return False;
+    }
+
+    // Creation apparently successful, so add to the apply list
+    // TBD: consolidate with above?
+    try {
+      
+      uInt napp=vc_p.nelements();
+      vc_p.resize(napp+1,False,True);      
+      vc_p[napp] = vc;
+      vc=NULL;
+   
+      // Maintain sort of apply list
+      ve_p->setapply(vc_p);
+      
+    } catch (AipsError x) {
+      logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() 
+		<< LogIO::POST;
+      if (vc) delete vc;
+      throw(AipsError("Error in Calibrater::setapply."));
+      return False;
+    } 
+  }
   // All ok, if we get this far!
   return True;
 
@@ -976,7 +1111,7 @@ Bool Calibrater::reset(const Bool& apply, const Bool& solve) {
   //  logSink() << LogOrigin("Calibrater","reset") << LogIO::NORMAL;
 
   // Delete the VisCal apply list
-  if (apply && vs_p) 
+  if (apply)   //  **************OK?   && vs_p) 
     unsetapply();
 
   // Delete the VisCal solve object

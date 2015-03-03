@@ -21,7 +21,7 @@
 //# $Id: $
 
 #include <synthesis/MeasurementComponents/CalibratingVi2.h>
-#include <synthesis/MeasurementEquations/VisEquation.h>
+#include <synthesis/MeasurementComponents/Calibrater.h>
 #include <casa/Arrays/ArrayPartMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -35,18 +35,35 @@ namespace vi { //# NAMESPACE VI - BEGIN
 //
 
 CalibratingParameters::CalibratingParameters() :
+  byCalLib_p(False),
   calLibRecord_p(Record()),
-  corrFactor_p(100.0)  // temporary, for initial testing  (default is a non-trivial factor)
+  corrFactor_p(1.0)  // temporary, for initial testing  (default is a non-trivial factor)
 {}
 
 CalibratingParameters::CalibratingParameters(const Record& calLibRecord) :
+  byCalLib_p(False),
   calLibRecord_p(calLibRecord),
-  corrFactor_p(1.0)  // temporary, for initial testing
+  corrFactor_p(1.0)  
 {
+
+  if (calLibRecord_p.isDefined("calfactor")) {
+    //cout << "CalibratingParameters::ctor:  found calfactor." << endl;
+    // Detect calfactor in the specified Record
+    corrFactor_p=calLibRecord_p.asFloat("calfactor");
+    byCalLib_p = False;  // signal not using a real callib
+  }
+  else if (calLibRecord_p.nfields()>0) {
+    //cout << "CalibratingParameters::ctor:  found non-trivial callib." << endl;
+    // Apparently this will be a real callib
+    byCalLib_p = True;   // signal using a real callib
+  }
+  else
+    throw(AipsError("Invalid use of callib Record"));
   validate();
 }
 
 CalibratingParameters::CalibratingParameters(Float corrFactor) :
+  byCalLib_p(False),
   calLibRecord_p(Record()),
   corrFactor_p(corrFactor)  // temporary, for initial testing
 {
@@ -61,11 +78,17 @@ CalibratingParameters::CalibratingParameters(const CalibratingParameters& other)
 CalibratingParameters& CalibratingParameters::operator=(const CalibratingParameters& other)
 {
   if (this != &other) {
+    byCalLib_p = other.byCalLib_p;
     calLibRecord_p = other.calLibRecord_p;
     corrFactor_p = other.corrFactor_p;
     validate();
   }
   return *this;
+}
+
+Bool CalibratingParameters::byCalLib() const
+{
+  return byCalLib_p;
 }
 
 const Record& CalibratingParameters::getCalLibRecord() const
@@ -103,15 +126,45 @@ CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
 				vi::ViImplementation2 * inputVii,
 				const CalibratingParameters& calpar) :
   TransformingVi2 (vi, inputVii),
-  //,  ve_p(ve)   // MSTransform-side VisEquation interface: TBD
+  cb_p(),
+  ve_p(0),
   corrFactor_p(calpar.getCorrFactor()), // temporary
   visCorrOK_p(False)
 {
 
-  // Generate non-trival working VisEquation interface that can do calibration from calparam
-  //  TBD, to look something like:
-  //  ve_p = new VisEquationI(calpar);
+  // Initialize underlying ViImpl2
+  getVii()->originChunks();
+  getVii()->origin();
+ 
+  // Make a VisBuffer for CalibratingVi2 clients (it is connected to the vi interface)
+  setVisBuffer(VisBuffer2::factory(vi,VbPlain,VbRekeyable));
 
+}
+
+// -----------------------------------------------------------------------
+CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
+				vi::ViImplementation2 * inputVii,
+				const CalibratingParameters& calpar,
+				String msname) :
+  TransformingVi2 (vi, inputVii),
+  cb_p(msname),
+  ve_p(0),
+  corrFactor_p(1.0),
+  visCorrOK_p(False)
+{
+
+  if (calpar.byCalLib()) {
+    // Arrange calibration
+    cb_p.validatecallib(calpar.getCalLibRecord());
+    cb_p.setcallib2(calpar.getCalLibRecord());
+    cb_p.applystate();
+    // Point to VisEquation
+    ve_p = cb_p.ve();
+  }
+  else {
+    // Simple mode using only the calfactor (good for tests)
+    corrFactor_p=calpar.getCorrFactor();
+  }
 
   // Initialize underlying ViImpl2
   getVii()->originChunks();
@@ -127,9 +180,7 @@ CalibratingVi2::CalibratingVi2(	vi::VisibilityIterator2 * vi,
 // -----------------------------------------------------------------------
 CalibratingVi2::~CalibratingVi2()
 {
-  // Delete VisEquationI and related, if nec. 
-  // TBD
-  //  delete ve_p;
+  ve_p=0;
 }
 
 
@@ -338,32 +389,42 @@ void CalibratingVi2::correctCurrentVB() const
     //   This does not use any CVi2 overloads  (luckily)
     vb->resetWeightsUsingSigma();
     
-    // Set the the initialize corrected data w/ data
+    // Initialize corrected data w/ data
     //   This does not use any CVi2 overloads
     vb->setVisCubeCorrected(vb->visCube());
-    
-    // Apply calibration  (TBD, includes weight calibration?)
-    //  ve_p->correct2(*vb,....);
-    
-    // Use supplied corrFactor_p to make this corrected data look changed
-    //  In leiu of working VisEquation that is TBD
-    Cube<Complex> vCC(vb->visCubeCorrected());
-    vCC*=corrFactor_p;
-    vb->setVisCubeCorrected(vCC);
 
-    if (doWtSp) {
-      // Calibrate the WS
-      Cube<Float> wS(vb->weightSpectrum());   // Was set above
-      wS/=(corrFactor_p*corrFactor_p);
-      vb->setWeightSpectrum(wS);
-      // Set W via median on chan axis
-      vb->setWeight(partialMedians(wS,IPosition(1,1)));
+    // If the VisEquation is set, use it, otherwise use the corrFactor_p
+    if (ve_p) {
+      // Apply calibration via the VisEquation
+      ve_p->correct2(*vb,False,doWtSp);
+
+      // Set unchan'd weights, in case they are requested
+      if (doWtSp)
+	vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
+	
     }
     else {
-      // Just calibrate the W
-      Matrix<Float> w(vb->weight());          // Was set above
-      w/=(corrFactor_p*corrFactor_p);
-      vb->setWeight(w);
+    
+      // Use supplied corrFactor_p to make this corrected data look changed
+      //  In leiu of working VisEquation that is TBD
+      Cube<Complex> vCC(vb->visCubeCorrected());
+      vCC*=corrFactor_p;
+      vb->setVisCubeCorrected(vCC);
+      
+      if (doWtSp) {
+	// Calibrate the WS
+	Cube<Float> wS(vb->weightSpectrum());   // Was set above
+	wS/=(corrFactor_p*corrFactor_p);
+	vb->setWeightSpectrum(wS);
+	// Set W via median on chan axis
+	vb->setWeight(partialMedians(wS,IPosition(1,1)));
+      }
+      else {
+	// Just calibrate the W
+	Matrix<Float> w(vb->weight());          // Was set above
+	w/=(corrFactor_p*corrFactor_p);
+	vb->setWeight(w);
+      }
     }
 
     // Signal that we have applied the correction, to avoid unnecessary redundancy

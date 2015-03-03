@@ -65,6 +65,19 @@ EGainCurve::EGainCurve(VisSet& vs) :
   if (prtlev()>2) cout << "EGainCurve::EGainCurve(vs)" << endl;
 }
 
+EGainCurve::EGainCurve(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw), 
+  VisMueller(msname,MSnAnt,MSnSpw),
+  SolvableVisJones(msname,MSnAnt,MSnSpw),
+  za_(),
+  eff_(nSpw(),1.0),
+  spwOK_()
+{
+  if (prtlev()>2) cout << "EGainCurve::EGainCurve(msname,MSnAnt,MSnSpw)" << endl;
+}
+
+
+
 EGainCurve::~EGainCurve() {
   if (prtlev()>2) cout << "EGainCurve::~EGainCurve()" << endl;
 }

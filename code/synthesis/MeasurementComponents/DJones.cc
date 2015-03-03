@@ -78,6 +78,15 @@ DJones::DJones(VisSet& vs) :
 
 }
 
+DJones::DJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisJones(msname,MSnAnt,MSnSpw),   // immediate parent
+  solvePol_(0)
+{
+  if (prtlev()>2) cout << "D::D(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 DJones::DJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -431,6 +440,14 @@ DfJones::DfJones(VisSet& vs) :
   if (prtlev()>2) cout << "Df::Df(vs)" << endl;
 }
 
+DfJones::DfJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  DJones(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "Df::Df(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 DfJones::DfJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -456,6 +473,14 @@ DlinJones::DlinJones(VisSet& vs)  :
   DJones(vs)              // immediate parent
 {
   if (prtlev()>2) cout << "Dlin::Dlin(vs)" << endl;
+}
+
+DlinJones::DlinJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  DJones(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "Dlin::Dlin(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 DlinJones::DlinJones(const Int& nAnt) :
@@ -484,6 +509,14 @@ DflinJones::DflinJones(VisSet& vs)  :
   if (prtlev()>2) cout << "Dflin::Dflin(vs)" << endl;
 }
 
+DflinJones::DflinJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  DlinJones(msname,MSnAnt,MSnSpw)             // immediate parent
+{
+  if (prtlev()>2) cout << "Dflin::Dflin(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 DflinJones::DflinJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -510,6 +543,14 @@ DllsJones::DllsJones(VisSet& vs)  :
   DJones(vs)              // immediate parent
 {
   if (prtlev()>2) cout << "Dlls::Dlls(vs)" << endl;
+}
+
+DllsJones::DllsJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  DJones(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "Dlls::Dlls(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 DllsJones::DllsJones(const Int& nAnt) :
@@ -642,6 +683,14 @@ DfllsJones::DfllsJones(VisSet& vs)  :
   if (prtlev()>2) cout << "Dflls::Dflls(vs)" << endl;
 }
 
+DfllsJones::DfllsJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  DllsJones(msname,MSnAnt,MSnSpw)           // immediate parent
+{
+  if (prtlev()>2) cout << "Dflls::Dflls(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 DfllsJones::DfllsJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -666,6 +715,14 @@ XMueller::XMueller(VisSet& vs) :
   SolvableVisMueller(vs)    // immediate parent
 {
   if (prtlev()>2) cout << "X::X(vs)" << endl;
+}
+
+XMueller::XMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisMueller(msname,MSnAnt,MSnSpw)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 XMueller::XMueller(const Int& nAnt) :
@@ -958,7 +1015,14 @@ XJones::XJones(VisSet& vs) :
   SolvableVisJones(vs)    // immediate parent
 {
   if (prtlev()>2) cout << "X::X(vs)" << endl;
+}
 
+XJones::XJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisJones(msname,MSnAnt,MSnSpw)    // immediate parent
+{
+  if (prtlev()>2) cout << "X::X(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 XJones::XJones(const Int& nAnt) :
@@ -1300,7 +1364,14 @@ XfJones::XfJones(VisSet& vs) :
   XJones(vs)              // immediate parent
 {
   if (prtlev()>2) cout << "Xf::Xf(vs)" << endl;
+}
 
+XfJones::XfJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  XJones(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "Xf::Xf(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 XfJones::XfJones(const Int& nAnt) :
@@ -1336,7 +1407,15 @@ GlinXphJones::GlinXphJones(VisSet& vs) :
   QU_()
 {
   if (prtlev()>2) cout << "GlinXph::GlinXph(vs)" << endl;
+}
 
+GlinXphJones::GlinXphJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  GJones(msname,MSnAnt,MSnSpw),             // immediate parent
+  QU_()
+{
+  if (prtlev()>2) cout << "GlinXph::GlinXph(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 GlinXphJones::GlinXphJones(const Int& nAnt) :
@@ -1745,6 +1824,14 @@ GlinXphfJones::GlinXphfJones(VisSet& vs)  :
   GlinXphJones(vs)        // immediate parent
 {
   if (prtlev()>2) cout << "GlinXphf::GlinXphf(vs)" << endl;
+}
+
+GlinXphfJones::GlinXphfJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  GlinXphJones(msname,MSnAnt,MSnSpw)        // immediate parent
+{
+  if (prtlev()>2) cout << "GlinXphf::GlinXphf(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 GlinXphfJones::GlinXphfJones(const Int& nAnt) :

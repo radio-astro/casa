@@ -77,6 +77,16 @@ PJones::PJones(VisSet& vs) :
   if (prtlev()>2) cout << "P::P(vs)" << endl;
 }
 
+PJones::PJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw), 
+  VisMueller(msname,MSnAnt,MSnSpw),
+  VisJones(msname,MSnAnt,MSnSpw),
+  pjonestype_(Jones::Diagonal),
+  pa_()
+{
+  if (prtlev()>2) cout << "P::P(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 PJones::~PJones() {
   if (prtlev()>2) cout << "P::~P()" << endl;
 }
@@ -191,6 +201,16 @@ TJones::TJones(VisSet& vs) :
 {
   if (prtlev()>2) cout << "T::T(vs)" << endl;
 }
+
+TJones::TJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisJones(msname,MSnAnt,MSnSpw),   // immediate parent
+  tcorruptor_p(NULL)
+{
+  if (prtlev()>2) cout << "T::T(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 TJones::TJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -462,6 +482,14 @@ TfJones::TfJones(VisSet& vs) :
   if (prtlev()>2) cout << "Tf::Tf(vs)" << endl;
 }
 
+TfJones::TfJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  TJones(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "Tf::Tf(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 TfJones::TfJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -475,15 +503,6 @@ TfJones::~TfJones() {
 }
 
 
-
-
-
-
-
-
-
-
-
 // **********************************************************
 //  GJones Implementations
 //
@@ -495,6 +514,15 @@ GJones::GJones(VisSet& vs) :
   gcorruptor_p(NULL)
 {
   if (prtlev()>2) cout << "G::G(vs)" << endl;
+}
+
+GJones::GJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisJones(msname,MSnAnt,MSnSpw),    // immediate parent
+  gcorruptor_p(NULL)
+{
+  if (prtlev()>2) cout << "G::G(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 GJones::GJones(const Int& nAnt) :
@@ -746,6 +774,15 @@ BJones::BJones(VisSet& vs) :
   maxchangap_p(0)
 {
   if (prtlev()>2) cout << "B::B(vs)" << endl;
+}
+
+BJones::BJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  GJones(msname,MSnAnt,MSnSpw),             // immediate parent
+  maxchangap_p(0)
+{
+  if (prtlev()>2) cout << "B::B(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 BJones::BJones(const Int& nAnt) :
@@ -1037,6 +1074,14 @@ JJones::JJones(VisSet& vs) :
   if (prtlev()>2) cout << "J::J(vs)" << endl;
 }
 
+JJones::JJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisJones(msname,MSnAnt,MSnSpw)    // immediate parent
+{
+  if (prtlev()>2) cout << "J::J(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 JJones::JJones(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -1153,6 +1198,14 @@ MMueller::MMueller(VisSet& vs) :
   SolvableVisMueller(vs)    // immediate parent
 {
   if (prtlev()>2) cout << "M::M(vs)" << endl;
+}
+
+MMueller::MMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  SolvableVisMueller(msname,MSnAnt,MSnSpw)    // immediate parent
+{
+  if (prtlev()>2) cout << "M::M(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 MMueller::MMueller(const Int& nAnt) :
@@ -1410,6 +1463,14 @@ MfMueller::MfMueller(VisSet& vs) :
   if (prtlev()>2) cout << "Mf::Mf(vs)" << endl;
 }
 
+MfMueller::MfMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  MMueller(msname,MSnAnt,MSnSpw)            // immediate parent
+{
+  if (prtlev()>2) cout << "Mf::Mf(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 MfMueller::MfMueller(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),
@@ -1480,6 +1541,15 @@ TOpac::TOpac(VisSet& vs) :
   za_()
 {
   if (prtlev()>2) cout << "TOpac::TOpac(vs)" << endl;
+}
+
+TOpac::TOpac(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw), 
+  VisMueller(msname,MSnAnt,MSnSpw),
+  TJones(msname,MSnAnt,MSnSpw),
+  za_()
+{
+  if (prtlev()>2) cout << "TOpac::TOpac(msname,MSnAnt,MSnSpw)" << endl;
 }
 
 TOpac::~TOpac() {
@@ -1652,6 +1722,15 @@ TfOpac::TfOpac(VisSet& vs) :
 {
   if (prtlev()>2) cout << "TfOpac::TfOpac(vs)" << endl;
 }
+
+TfOpac::TfOpac(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  TOpac(msname,MSnAnt,MSnSpw)              // immediate parent
+{
+  if (prtlev()>2) cout << "TfOpac::TfOpac(msname,MSnAnt,MSnSpw)" << endl;
+}
+
 
 //TfOpac::TfOpac(const Int& nAnt) :
 //  VisCal(nAnt), 

@@ -41,11 +41,17 @@ class VisSet;
 // Create a specialized VisCal from VisSet
 VisCal* createVisCal(const String& type, VisSet& vs);
 
+// Create a specialized VisCal from msname, nAnt, nSpw
+VisCal* createVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
+
 // Create a specialized VisCal from nAnt
 VisCal* createVisCal(const String& type, const Int& nAnt);
 
 // Create a specialized SolvableVisCal from VisSet
 SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs);
+
+// Create a specialized VisCal from msname, nAnt, nSpw
+SolvableVisCal* createSolvableVisCal(const String& type, String msname, Int MSnAnt, Int MSnSpw);
 
 // Create a specialized SolvableVisCal from nAnt
 SolvableVisCal* createSolvableVisCal(const String& type, const Int& nAnt);

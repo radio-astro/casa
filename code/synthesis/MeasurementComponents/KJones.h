@@ -92,6 +92,7 @@ public:
 
   // Constructor
   KJones(VisSet& vs);
+  KJones(String msname,Int MSnAnt,Int MSnSpw);
   KJones(const Int& nAnt);
 
   virtual ~KJones();
@@ -193,6 +194,7 @@ public:
 
   // Constructor
   KcrossJones(VisSet& vs);
+  KcrossJones(String msname,Int MSnAnt,Int MSnSpw);
   KcrossJones(const Int& nAnt);
 
   virtual ~KcrossJones();
@@ -222,6 +224,7 @@ public:
 
   // Constructor
   KMBDJones(VisSet& vs);
+  KMBDJones(String msname,Int MSnAnt,Int MSnSpw);
   KMBDJones(const Int& nAnt);
 
   virtual ~KMBDJones();
@@ -246,6 +249,7 @@ public:
 
   // Constructor
   KAntPosJones(VisSet& vs);
+  KAntPosJones(String msname,Int MSnAnt,Int MSnSpw);
   KAntPosJones(const Int& nAnt);
 
   virtual ~KAntPosJones();

@@ -120,6 +120,39 @@ EVLASwPow::EVLASwPow(VisSet& vs) :
   
 }
 
+EVLASwPow::EVLASwPow(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),             // virtual base
+  VisMueller(msname,MSnAnt,MSnSpw),         // virtual base
+  GJones(msname,MSnAnt,MSnSpw),             // immediate parent
+  sysPowTabName_(""),
+  calDevTabName_(""),
+  correff_(Float(0.932)),     // EVLA-specific net corr efficiency (4bit)
+  frgrotscale_(Float(1.176)), // EVLA-specific fringe rotation mean _scale_
+  nyquist_(1.0),
+  effChBW_()
+
+{
+  if (prtlev()>2) cout << "EVLASwPow::EVLASwPow(msname,MSnAnt,MSnSpw)" << endl;
+
+  nChanParList().set(1);
+  startChanList().set(0);
+
+  // Temporary MS to get some info
+  MeasurementSet ms(msname);
+
+  // The relevant subtable names (there must be a better way...)
+  sysPowTabName_ = ms.rwKeywordSet().asTable("SYSPOWER").tableName();
+  calDevTabName_ = ms.rwKeywordSet().asTable("CALDEVICE").tableName();
+
+  // Get spw total bandwidths
+  ROMSColumns mscol(ms);
+  const ROMSSpWindowColumns& spwcols = mscol.spectralWindow();
+  effChBW_.resize(nSpw());
+  for (Int ispw=0;ispw<nSpw();++ispw) 
+    effChBW_(ispw)=Vector<Double>(spwcols.effectiveBW()(0))(0);
+  
+}
+
 EVLASwPow::EVLASwPow(const Int& nAnt) :
   VisCal(nAnt), 
   VisMueller(nAnt),

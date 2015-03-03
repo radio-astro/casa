@@ -56,6 +56,7 @@ public:
 
   // Constructor
   EVLASwPow(VisSet& vs);
+  EVLASwPow(String msname,Int MSnAnt,Int MSnSpw);
   EVLASwPow(const Int& nAnt);
 
   virtual ~EVLASwPow();

@@ -44,6 +44,7 @@ public:
 
   // Constructor
   FJones(VisSet& vs);
+  FJones(String msname,Int MSnAnt,Int MSnSpw);
   //  FJones(const Int& nAnt);  // NYI
 
   virtual ~FJones();

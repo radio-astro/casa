@@ -93,6 +93,41 @@ VisCal::VisCal(VisSet& vs) :
   initVisCal();
 }
 
+VisCal::VisCal(String msname,Int MSnAnt,Int MSnSpw) :
+  msName_(msname),
+  nSpw_(MSnSpw),
+  nAnt_(MSnAnt),
+  nBln_(0),
+  currSpw_(0),
+  currTime_(MSnSpw,0.0),
+  currScan_(MSnSpw,-1),
+  currObs_(MSnSpw,-1),
+  currField_(MSnSpw,-1),
+  currFreq_(MSnSpw,-1),
+  lastTime_(MSnSpw,0.0),
+  refTime_(0.0),
+  refFreq_(0.0),
+  nChanPar_(MSnSpw,1),
+  nChanMat_(MSnSpw,1),
+  startChan_(MSnSpw,0),
+  interval_(0.0),
+  applied_(False),
+  V_(MSnSpw,NULL),
+  currCPar_(MSnSpw,NULL),
+  currRPar_(MSnSpw,NULL),
+  currParOK_(MSnSpw,NULL),
+  PValid_(MSnSpw,False),
+  calWt_(False),
+  currWtScale_(MSnSpw,NULL),
+  prtlev_(PRTLEV),
+  extratag_("")
+{
+  if (prtlev()>2) cout << "VC::VC(msname,MSnAnt,MSnSpw)" << endl;
+
+  // Initialize
+  initVisCal();
+}
+
 VisCal::VisCal(const Int& nAnt) :
   msName_(""),
   nSpw_(1),
@@ -730,6 +765,19 @@ VisMueller::VisMueller(VisSet& vs) :
   initVisMueller();
 }
 
+VisMueller::VisMueller(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw),
+  M_(MSnSpw,NULL),
+  currMElem_(MSnSpw,NULL),
+  currMElemOK_(MSnSpw,NULL),
+  MValid_(MSnSpw,False)
+{
+
+  if (prtlev()>2) cout << "VM::VM(msname,MSnAnt,MSnSpw)" << endl;
+
+  initVisMueller();
+}
+
 VisMueller::VisMueller(const Int& nAnt) :
   VisCal(nAnt),
   M_(1,NULL),
@@ -1238,6 +1286,20 @@ VisJones::VisJones(VisSet& vs) :
   JValid_(vs.numberSpw(),False)
 {
   if (prtlev()>2) cout << "VJ::VJ(vs)" << endl;
+
+  initVisJones();
+}
+
+VisJones::VisJones(String msname,Int MSnAnt,Int MSnSpw) :
+  VisCal(msname,MSnAnt,MSnSpw), 
+  VisMueller(msname,MSnAnt,MSnSpw),
+  J1_(MSnSpw,NULL),
+  J2_(MSnSpw,NULL),
+  currJElem_(MSnSpw,NULL),
+  currJElemOK_(MSnSpw,NULL),
+  JValid_(MSnSpw,False)
+{
+  if (prtlev()>2) cout << "VJ::VJ(msname,MSnAnt,MSnSpw)" << endl;
 
   initVisJones();
 }

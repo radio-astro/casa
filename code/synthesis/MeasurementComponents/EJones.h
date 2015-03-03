@@ -47,6 +47,7 @@ public:
 
   // Constructor
   EGainCurve(VisSet& vs);
+  EGainCurve(String msname,Int MSnAnt,Int MSnSpw);
   //  EGainCurve(const Int& nAnt);  // NYI
 
   virtual ~EGainCurve();

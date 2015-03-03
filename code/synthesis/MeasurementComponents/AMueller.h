@@ -42,6 +42,7 @@ public:
 
   // Constructor
   AMueller(VisSet& vs);
+  AMueller(String msname,Int MSnAnt,Int MSnSpw);
   AMueller(const Int& nAnt);
 
   virtual ~AMueller();
@@ -157,6 +158,7 @@ public:
 
   // Constructor
   ANoise(VisSet& vs);
+  ANoise(String msname,Int MSnAnt,Int MSnSpw);
   ANoise(const Int& nAnt);
 
   virtual ~ANoise();

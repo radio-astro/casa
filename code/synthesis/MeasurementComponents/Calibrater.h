@@ -63,6 +63,10 @@ class Calibrater
   // Default constructor
   Calibrater();
 
+
+  // Simple MS-only ctor
+  Calibrater(String msname);
+
   // Copy constructor and assignment operator
   Calibrater(const Calibrater&);
   Calibrater& operator=(const Calibrater&);
@@ -104,6 +108,7 @@ class Calibrater
 
   // Set up apply-able calibration via a Cal Library
   Bool setcallib(Record callib);
+  Bool setcallib2(Record callib);
   Bool validatecallib(Record callib);
 
   Bool setmodel(const String& modelImage);
@@ -286,6 +291,9 @@ class Calibrater
 
   // Handle caltable backward compatibility
   static Bool updateCalTable(const String& caltable);
+
+  // Return access to the VisEquation
+  VisEquation* ve() { return ve_p; };
   
  private:
   // Log functions and variables
