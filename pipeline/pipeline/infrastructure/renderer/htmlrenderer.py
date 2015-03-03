@@ -518,6 +518,7 @@ class T2_1DetailsRenderer(object):
         inputs = summary.FieldVsTimeChart.Inputs(context, vis=ms.basename)
         task = summary.FieldVsTimeChart(inputs)
         field_vs_time = task.plot()
+        
 
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         all_bands = sorted(set([spw.band for spw in ms.spectral_windows]))
@@ -545,6 +546,12 @@ class T2_1DetailsRenderer(object):
 
         task = summary.WeatherChart(context, ms)
         weather_plot = task.plot()
+        
+        task = summary.AzElChart(context, ms)
+        azel_plot = task.plot()
+
+        task = summary.ElVsTimeChart(context, ms)
+        el_vs_time_plot = task.plot()
 
 
         dirname = os.path.join('session%s' % ms.session,
@@ -566,7 +573,9 @@ class T2_1DetailsRenderer(object):
             'intent_vs_time'  : intent_vs_time,
             'field_vs_time'   : field_vs_time,
             'dirname'         : dirname,
-            'weather_plot'    : weather_plot
+            'weather_plot'    : weather_plot,
+            'azel_plot'       : azel_plot,
+            'el_vs_time_plot'      : el_vs_time_plot
         }
 
     @classmethod
