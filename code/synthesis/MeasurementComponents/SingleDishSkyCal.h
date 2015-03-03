@@ -192,25 +192,25 @@ public:
   virtual Bool normalizable() { return False; }
 
   // Hazard a guess at the parameters (solveCPar) given the data
-  virtual void guessPar(VisBuffer& vb) {};
+  virtual void guessPar(VisBuffer& vb);
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
-  virtual void differentiate(CalVisBuffer& cvb) {};
+  virtual void differentiate(CalVisBuffer& cvb);
   virtual void differentiate(VisBuffer& vb,        
         		     Cube<Complex>& V,     
         		     Array<Complex>& dV,
-        		     Matrix<Bool>& Vflg) {};
+        		     Matrix<Bool>& Vflg);
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-  		       Array<Complex>& dV) {};
+  		       Array<Complex>& dV);
 
   // Apply refant (implemented in SVJ)
   virtual void reReference() {};
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
-			  const Vector<Int>& fields) {};
+			  const Vector<Int>& fields);
 
   // Determine and apply flux density scaling
   virtual void fluxscale(const String& outfile,
@@ -226,7 +226,7 @@ public:
 			 const String& oListFile,
                          const Bool& incremental,
                          const Int& fitorder,
-                         const Bool& display) {};
+                         const Bool& display);
 
   // Use generic data gathering mechanism for solve
   virtual Bool useGenericGatherForSolve() { return False; };
@@ -234,14 +234,14 @@ public:
   // Report state:
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
 		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
-		       const String& listfile="",const Int& pagerows=50) {};
+		       const String& listfile="",const Int& pagerows=50);
 
 
   // Local setApply
   virtual void setApply(const Record& apply);
 
-  // Local setSpecify
-  virtual void setSpecify(const Record& specify);
+  // // Local setSpecify
+  // virtual void setSpecify(const Record& specify);
 
   // In general, we are freq-dep
   virtual Bool freqDepPar() { return True; };
@@ -280,7 +280,7 @@ protected:
   virtual void syncDiffMat();
 
   // Normalize a (complex) solution array (generic)
-  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) { return 0.0f; };
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 
   // Invalidate cal matrices generically 
   virtual void invalidateCalMat() {};
@@ -302,6 +302,9 @@ protected:
   inline Cube<Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); };
   inline SkyCal<Complex, Complex> &engineC() { return (*engineC_[currSpw()]); };
   inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); };
+
+  // arrange data selection according to calibration mode
+  virtual String configureSelection() = 0;
 
   // current antenna
   Int currAnt_;
@@ -334,15 +337,8 @@ public:
   virtual String typeName()     { return "SDSKY_PS"; };
   virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; };
 
-  // Specific specify() that performs position switch sky calibration
-  virtual void specify(const Record& specify);
-
-  // Self- gather and/or solve prototypes
-  //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)
-  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
-
-private:
-  String configureSelection();
+  // data selection for position switch calibration
+  virtual String configureSelection();
 
 };
   
@@ -361,11 +357,10 @@ public:
   virtual String typeName()     { return "SDSKY_RASTER"; };
   virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; };
 
-  // Specific specify() that performs raster sky calibration
-  virtual void specify(const Record& specify);
+  // data selection specific to otfraster mode
+  virtual String configureSelection();
 
 private:
-  String configureSelection(const Record &specify);
   void parseOption(const Record &option, Float &fraction, Int &num);
 };
 
@@ -384,9 +379,8 @@ public:
   virtual String typeName()     { return "SDSKY_OTF"; };
   virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; };
 
-  // Specific specify() that performs otf sky calibration
-  virtual void specify(const Record& specify);
-
+  // data selection specific to otf mode
+  virtual String configureSelection();
 };
 
 } //# NAMESPACE CASA - END
