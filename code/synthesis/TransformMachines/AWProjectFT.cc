@@ -109,7 +109,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   AWProjectFT::AWProjectFT()
     : FTMachine(), padding_p(1.0), nWPlanes_p(1),
       imageCache(0), cachesize(0), tilesize(16),
-      gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+      gridder(0), isTiled(False), arrayLattice( ), lattice( ), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(False),
       // convFunc_p(), convWeights_p(),
@@ -165,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Bool doublePrecGrid)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
-      gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+      gridder(0), isTiled(False), arrayLattice( ), lattice( ), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
       // convFunc_p(), convWeights_p(),

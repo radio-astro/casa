@@ -250,11 +250,11 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
           case TpUShort :
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asShort(i)));
                break;
-          case TpInt :
-               transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asInt(i)));
-               break;
           case TpUInt :
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asuInt(i)));
+               break;
+          case TpInt :
+               transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asInt(i)));
                break;
           case TpInt64 :
 	       {
@@ -301,13 +301,23 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
           case TpArrayShort :
           case TpArrayUShort :
           case TpArrayInt :
-          case TpArrayUInt :
                {
                Array<Int> tmpArray = theRec.asArrayInt(i);
                Vector<Int> tmpShape = (tmpArray.shape()).asVector();
                std::vector<Int> vecShape;
                tmpShape.tovector(vecShape);
                std::vector<Int> tmpVec;
+               tmpArray.tovector(tmpVec);
+               transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
+               }
+               break;
+          case TpArrayUInt :
+               {
+               Array<uInt> tmpArray = theRec.asArrayuInt(i);
+               Vector<Int> tmpShape = (tmpArray.shape()).asVector();
+               std::vector<Int> vecShape;
+               tmpShape.tovector(vecShape);
+               std::vector<uInt> tmpVec;
                tmpArray.tovector(tmpVec);
                transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
                }
@@ -439,6 +449,9 @@ Record *toRecord(const ::casac::record &theRec){
             case ::casac::variant::INT :
               {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
                break;
+            case ::casac::variant::UINT :
+              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getuInt()));}
+               break;
             case ::casac::variant::DOUBLE :
               transcribedRec->define(RecordFieldId((*rec_it).first), (*rec_it).second.getDouble());
                break;
@@ -473,6 +486,20 @@ Record *toRecord(const ::casac::record &theRec){
                for(Array<Int>::iterator iter = intArr.begin();
                                          iter != intArrend; ++iter)
                    *iter = intVec[i++];
+               transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
+               }
+               break;
+            case ::casac::variant::UINTVEC :
+               {
+               Vector<Int> shapeVec((*rec_it).second.arrayshape());
+               Vector<uInt> uintVec((*rec_it).second.getuIntVec());
+               IPosition tshape(shapeVec);
+               Array<uInt> intArr(tshape);
+               int i(0);
+               Array<uInt>::iterator intArrend = intArr.end();
+               for(Array<uInt>::iterator iter = intArr.begin();
+                                         iter != intArrend; ++iter)
+                   *iter = uintVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
                }
                break;
@@ -554,6 +581,9 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
                  break;
             case TpInt :
 	         theV = new casac::variant(theVH.asInt());
+                 break;
+            case TpUInt :
+                 theV = new casac::variant(theVH.asuInt());
                  break;
             case TpInt64 :
 	         theV = new casac::variant(theVH.asInt64());
@@ -638,6 +668,17 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
 		    theV = new casac::variant(tData, tShape);
 	         }
                  break;
+            case TpArrayUInt :
+                 {
+                    Array<uInt> tArr(theVH.asArrayuInt());
+                    Vector<Int> ts = tArr.shape().asVector();
+                    std::vector<int> tShape;
+                    std::vector<uInt> tData;
+                    ts.tovector(tShape);
+                    tArr.tovector(tData);
+                    theV = new casac::variant(tData, tShape);
+                 }
+                 break;
             case TpArrayFloat :
 	         {
 		    Array<Float> tArr(theVH.asArrayFloat());
@@ -709,7 +750,7 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
             case TpRecord :
 		    theV = new casac::variant(fromRecord(theVH.asRecord()));
                  break;
-	     default :
+	    default :
                  throw(AipsError("Unknown casa DataType!"));
 	         break;
 	  }

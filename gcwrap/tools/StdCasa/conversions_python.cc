@@ -646,6 +646,7 @@ static PyObject *map_array_pylist( const std::vector<TYPE> &vec, const std::vect
 static PyObject *map_vector_pylist( const std::vector<TYPE> &vec );
 
 FWD_DECL_map_array_pylist(int)
+FWD_DECL_map_array_pylist(unsigned int)
 FWD_DECL_map_array_pylist(bool)
 FWD_DECL_map_array_pylist(double)
 FWD_DECL_map_array_pylist(long long)
@@ -701,6 +702,7 @@ PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> 
 }
 
 MAP_ARRAY_NUMPY(int, npy_int32, NPY_INT,*to = (npy_int32) *from)
+MAP_ARRAY_NUMPY(unsigned int, npy_uint, NPY_UINT,*to = (npy_uint) *from)
 MAP_ARRAY_NUMPY(long long, npy_int64, NPY_INT64,*to = (npy_int64) *from)
 MAP_ARRAY_NUMPY(double, npy_double,NPY_DOUBLE,*to = (npy_double) *from)
 MAP_ARRAY_NUMPY(std::complex<double>, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).real(); (*to).imag = (*from).imag())
@@ -815,6 +817,7 @@ inline PyObject *map_vector( const std::vector<TYPE> &vec ) {					\
 }
 
 FWD_map_array_pylist(int)
+FWD_map_array_pylist(unsigned int)
 FWD_map_array_pylist(bool)
 FWD_map_array_pylist(double)
 FWD_map_array_pylist(std::complex<double>)
@@ -1138,6 +1141,7 @@ static PyObject *map_array_pylist( const std::vector<TYPE> &vec, const std::vect
 }
 
 ARRAY2PYOBJ(int,PyInt_FromLong(val),PyInt_FromLong(*iter),,)
+ARRAY2PYOBJ(unsigned int,PyInt_FromLong(val),PyInt_FromLong(*iter),,)
 ARRAY2PYOBJ(bool,(val == 0 ? Py_False : Py_True); Py_INCREF(ele),(*iter == false ? Py_False : Py_True),Py_INCREF(vec_val);,)
 ARRAY2PYOBJ(double,PyFloat_FromDouble(val),PyFloat_FromDouble(*iter),,)
 ARRAY2PYOBJ(std::complex<double> ,PyComplex_FromDoubles(val.real(),val.imag()),PyComplex_FromDoubles(cpx.real(),cpx.imag()),,register std::complex<double> cpx = *iter;)
@@ -1183,6 +1187,9 @@ ARRAY2PYOBJ(std::string,PyString_FromString(val.c_str()),PyString_FromString((*i
 	    case variant::INT:												\
 		result = PyInt_FromLong(val.toInt());									\
 		break;													\
+        case variant::UINT:                                             \
+        result = PyInt_FromLong(val.touInt());                          \
+        break;                                                          \
 	    case variant::LONG:												\
 		result = PyInt_FromLong(val.toLong());									\
 		break;													\
@@ -1205,6 +1212,9 @@ ARRAY2PYOBJ(std::string,PyString_FromString(val.c_str()),PyString_FromString((*i
 	    case variant::INTVEC:											\
 		HANDLEVEC2(int,getIntVec)										\
 															\
+        case variant::UINTVEC:                                          \
+        HANDLEVEC2(unsigned int,getuIntVec)                             \
+                                                                        \
 	    case variant::LONGVEC:											\
 		HANDLEVEC2(long long,getLongVec)										\
 															\

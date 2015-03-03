@@ -239,7 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	SynthesisIterBotWithOldGUI::SynthesisIterBotWithOldGUI() : 
-	  SynthesisIterBot(), itsInteractiveMasker(NULL) {
+	  SynthesisIterBot(), itsInteractiveMasker( ) {
 	}
 	void SynthesisIterBotWithOldGUI::setIterationDetails(Record iterpars) {
 		LogIO os( LogOrigin("SynthesisIterBot","setIterationDetails",WHERE) );

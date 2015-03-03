@@ -112,16 +112,15 @@ const String& CompiledSpectralElement::getFunction() const {
 void CompiledSpectralElement::_setFunction(const String& function) {
 	//_function = function;
 	std::tr1::shared_ptr<Function<Double, Double> > f = _getFunction();
-	CompiledFunction<Double> *cf = f == 0
-		? new CompiledFunction<Double>()
-		: dynamic_cast<CompiledFunction<Double> *>(f.get());
+	CompiledFunction<Double> *cf = f ? dynamic_cast<CompiledFunction<Double> *>(f.get())
+	                                 : new CompiledFunction<Double>( );
 	if (! cf->setFunction(function)) {
 		throw AipsError(
 			"CompiledSpectralElement: An illegal functional string "
 			"was specified for a compiled SpectralElement"
 		);
 	}
-	if (f == 0) {
+	if ( ! f ) {
 		f.reset(cf);
 	}
 	uInt n = get().size();

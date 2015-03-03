@@ -2118,7 +2118,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 
     Double availablemem=Double(HostInfo::memoryFree())*1024.0;
     Bool nomemory=False;
-    Block<CountedPtr< TempImage<Float> > > tempfluximage(modelNames.nelements(), NULL);
+    Block<CountedPtr< TempImage<Float> > > tempfluximage(modelNames.nelements());
     //The convolution needs in ram 3 complex x-y planes ...lets multiply it by 5 for safety
     if((availablemem < Double(nx_p*ny_p)*15.0*8.0 ) && (ft_p->name() != "MosaicFT") && !(doWideBand_p && ntaylor_p>1)){
       // very large for convolution ...destroy Skyequations to release memory

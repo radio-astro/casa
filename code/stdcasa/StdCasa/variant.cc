@@ -38,6 +38,7 @@ variant::TYPE variant::compatible_type( TYPE one_, TYPE two_ ) {
 	    switch (one) {
 		case BOOL:	one = BOOLVEC; break;
 		case INT:	one = INTVEC; break;
+		case UINT:	one = UINTVEC; break;
 		case DOUBLE:	one = DOUBLEVEC; break;
 		case COMPLEX:	one = COMPLEXVEC; break;
 		case STRING:
@@ -47,6 +48,7 @@ variant::TYPE variant::compatible_type( TYPE one_, TYPE two_ ) {
 	    switch (two) {
 		case BOOL:	two = BOOLVEC; break;
 		case INT:	two = INTVEC; break;
+		case UINT:	two = UINTVEC; break;
 		case DOUBLE:	two = DOUBLEVEC; break;
 		case COMPLEX:	two = COMPLEXVEC; break;
 		default:	two = STRINGVEC; break;
@@ -56,6 +58,7 @@ variant::TYPE variant::compatible_type( TYPE one_, TYPE two_ ) {
 	switch(one) {
 	    case BOOLVEC: return two;
 	    case INTVEC:  return two == BOOLVEC ? INTVEC : two;
+	    case UINTVEC:  return two == BOOLVEC ? UINTVEC : two;
 	    case DOUBLEVEC: return two == COMPLEXVEC || two == STRINGVEC ? two : DOUBLEVEC;
 	    case COMPLEXVEC: return two == STRINGVEC ? STRINGVEC : COMPLEXVEC;
 	    default: return STRINGVEC;
@@ -64,6 +67,7 @@ variant::TYPE variant::compatible_type( TYPE one_, TYPE two_ ) {
 	switch(one) {
 	    case BOOL: return two;
 	    case INT:  return two == BOOL ? INT : two;
+	    case UINT:  return two == BOOL ? UINT : two;
 	    case DOUBLE: return two == COMPLEX || two == STRING ? two : DOUBLE;
 	    case COMPLEX: return two == STRING ? STRING : COMPLEX;
 	    default: return STRING;
@@ -89,6 +93,9 @@ variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_
 	case INT:
 	    val.i = other.val.i;
 	    break;
+        case UINT:
+            val.ui = other.val.ui;
+            break;
 	case LONG:
 	    val.l = other.val.l;
 	    break;
@@ -103,6 +110,9 @@ variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_
 	    break;
 	case INTVEC:
 	    val.iv = new std::vector<int>(*other.val.iv);
+	    break;
+	case UINTVEC:
+	    val.uiv = new std::vector<unsigned int>(*other.val.uiv);
 	    break;
 	case LONGVEC:
 	    val.lv = new std::vector<long long>(*other.val.lv);
@@ -137,6 +147,9 @@ variant::~variant( ) {
 	case INTVEC:
 	    delete val.iv;
 	    break;
+	case UINTVEC:
+	    delete val.uiv;
+	    break;
 	case LONGVEC:
 	    delete val.lv;
 	    break;
@@ -167,7 +180,9 @@ const std::string &variant::typeString( ) const {
     static std::string bs("bool");
     static std::string bvs("boolvec");
     static std::string is("int");
+    static std::string uis("uint");
     static std::string ivs("intvec");
+    static std::string uivs("uintvec");
     static std::string ls("long");
     static std::string lvs("longvec");
     static std::string ds("double");
@@ -183,8 +198,10 @@ const std::string &variant::typeString( ) const {
 	case BOOL:		return bs;
 	case BOOLVEC:		return bvs;
 	case INT:		return is;
+	case UINT:		return uis;
 	case LONG:		return ls;
 	case INTVEC:		return ivs;
+	case UINTVEC:		return uivs;
 	case LONGVEC:		return lvs;
 	case DOUBLE:		return ds;
 	case DOUBLEVEC:		return dvs;
@@ -205,8 +222,12 @@ bool variant::toBool( ) const {
 	    return (*val.bv).size() > 0 ? (*val.bv)[0] : false;
 	case INT:
 	    return val.i ? true : false;
+        case UINT:
+            return val.ui ? true : false;
 	case INTVEC:
 	    return (*val.iv).size() > 0 ? ((*val.iv)[0] ? true : false) : false;
+	case UINTVEC:
+	    return (*val.uiv).size() > 0 ? ((*val.uiv)[0] ? true : false) : false;
 	case DOUBLE:
 	    return val.d != 0.0 ? true : false;
 	case DOUBLEVEC:
@@ -231,6 +252,8 @@ std::vector<bool> variant::toBoolVec( ) const {
 	    return std::vector<bool>(1,val.b);
 	case INT:
 	    return std::vector<bool>(1, val.i != 0 ? true : false);
+        case UINT:
+            return std::vector<bool>(1, val.ui != 0 ? true : false);
 	case DOUBLE:
 	    return std::vector<bool>(1, val.d != 0.0 ? true : false);
 	case COMPLEX:
@@ -245,6 +268,14 @@ std::vector<bool> variant::toBoolVec( ) const {
 		result[i] = *from != 0 ? true : false;
 	    return result;
 	    }
+        case UINTVEC:
+            {
+            std::vector<bool> result((*val.uiv).size());
+            std::vector<unsigned int>::const_iterator from = (*val.uiv).begin();
+            for (unsigned int i=0; from != (*val.uiv).end(); ++i, ++from)
+                result[i] = *from != 0 ? true : false;
+            return result;
+            }
 	case DOUBLEVEC:
 	    {
 	    std::vector<bool> result((*val.dv).size());
@@ -330,12 +361,16 @@ std::vector<bool> variant::toBoolVec( ) const {
     break;									\
     }
 
+typedef unsigned int uInt;
+
 std::string variant::toString( bool no_brackets ) const {
     switch( typev ) {
 	case BOOL:
 	    return booltostring(val.b);
 	case INT:
 	    return inttostring(val.i);
+        case UINT:
+            return inttostring(val.ui);
 	case LONG:
 	    return longtostring(val.l);
 	case DOUBLE:
@@ -346,6 +381,8 @@ std::string variant::toString( bool no_brackets ) const {
 	    VECTOSTRING(bool,bool,bv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case INTVEC:
 	    VECTOSTRING(int,int,iv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
+        case UINTVEC:
+            VECTOSTRING(unsigned int,int,uiv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case LONGVEC:
 	    VECTOSTRING(long long,long ,lv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case DOUBLEVEC:
@@ -369,6 +406,8 @@ std::vector<std::string> variant::toStringVec( ) const {
 	    return std::vector<std::string>(1,booltostring(val.b));
 	case INT:
 	    return std::vector<std::string>(1,inttostring(val.i));
+        case UINT:
+            return std::vector<std::string>(1,inttostring(val.ui));
 	case LONG:
 	    return std::vector<std::string>(1,longtostring(val.l));
 	case DOUBLE:
@@ -379,6 +418,8 @@ std::vector<std::string> variant::toStringVec( ) const {
 	    VECTOSTRINGVEC(bool,bool,bv,)
 	case INTVEC:
 	    VECTOSTRINGVEC(int,int,iv,)
+        case UINTVEC:
+            VECTOSTRINGVEC(unsigned int,int,uiv,)
 	case LONGVEC:
 	    VECTOSTRINGVEC(long long ,long,lv,)
 	case DOUBLEVEC:
@@ -412,6 +453,8 @@ TYPE variant::NAME( ) const {							\
 	    return (TYPE) ((*val.bv).size() > 0 ? ((*val.bv)[0] ? 1 : 0) : 0);	\
 	case INTVEC:								\
 	    return (TYPE) ((*val.iv).size() > 0 ? (*val.iv)[0] : 0);		\
+	case UINTVEC:								\
+	    return (TYPE) ((*val.uiv).size() > 0 ? (*val.uiv)[0] : 0);		\
 	case DOUBLEVEC:								\
 	    return (TYPE) ((*val.dv).size() > 0 ?  (*val.dv)[0] : 0);		\
 	case COMPLEXVEC:							\
@@ -429,6 +472,10 @@ TYPE variant::NAME( ) const {							\
 TONUMERIC(toInt,int,int)
 TONUMERIC(toDouble,double,double)
 
+unsigned int variant::touInt() const {
+   return (unsigned int) (val.ui);
+}
+
 long long variant::toLong() const {
    return (long long) (val.l);
 }
@@ -439,6 +486,8 @@ std::complex<double> variant::toComplex( ) const {
 	    return std::complex<double>(val.b ? 1.0 : 0.0, 0.0);
 	case INT:
 	    return std::complex<double>(val.i, 0.0);
+        case UINT:
+            return std::complex<double>(val.ui, 0.0);
 	case DOUBLE:
 	    return std::complex<double>(val.d, 0.0);
 	case COMPLEX:
@@ -447,6 +496,8 @@ std::complex<double> variant::toComplex( ) const {
 	    return std::complex<double>(((*val.bv).size() > 0 ? ((*val.bv)[0] ? 1.0 : 0.0) : 0.0),0.0);;
 	case INTVEC:
 	    return std::complex<double>(((*val.iv).size() > 0 ? (*val.iv)[0] : 0),0.0);
+	case UINTVEC:
+	    return std::complex<double>(((*val.uiv).size() > 0 ? (*val.uiv)[0] : 0),0.0);
 	case DOUBLEVEC:
 	    return std::complex<double>(((*val.dv).size() > 0 ?  (*val.dv)[0] : 0),0);
 	case COMPLEXVEC:
@@ -469,6 +520,8 @@ std::vector<TYPE> variant::NAME( ) const {					\
 	    return std::vector<TYPE>(1,(TYPE)(val.b ? 1 : 0));			\
 	case INT:								\
 	    return std::vector<TYPE>(1,(TYPE) val.i);				\
+        case UINT:                                                               \
+            return std::vector<TYPE>(1,(TYPE) val.ui);                           \
 	case DOUBLE:								\
 	    return std::vector<TYPE>(1,(TYPE) val.d);				\
 	case COMPLEX:								\
@@ -520,6 +573,10 @@ std::vector<TYPE> variant::NAME( ) const {					\
 TONUMERICVEC(toIntVec,   int,   int,   INTVEC,   iv,double,DOUBLEVEC,dv)
 TONUMERICVEC(toDoubleVec,double,double,DOUBLEVEC,dv,int,   INTVEC,   iv)
 
+std::vector<unsigned int> variant::touIntVec() const {
+    return std::vector<unsigned int>(1,(unsigned int) val.ui);
+}
+
 std::vector<long long> variant::toLongVec() const {
    switch(typev) {
       case LONG:
@@ -537,6 +594,8 @@ std::vector<std::complex<double> > variant::toComplexVec( ) const {
 	    return std::vector<std::complex<double> >(1,std::complex<double>((val.b ? 1 : 0),0.0));
 	case INT:
 	    return std::vector<std::complex<double> >(1,std::complex<double>(val.i,0.0));
+        case UINT:
+            return std::vector<std::complex<double> >(1,std::complex<double>(val.ui,0.0));
 	case DOUBLE:
 	    return std::vector<std::complex<double> >(1,std::complex<double>(val.d,0.0));
 	case COMPLEX:
@@ -559,6 +618,14 @@ std::vector<std::complex<double> > variant::toComplexVec( ) const {
 		result[i] = std::complex<double>(*from,0.0);
 	    return result;
 	    }
+        case UINTVEC:
+            {
+            std::vector<std::complex<double> > result((*val.uiv).size());
+            std::vector<unsigned int>::const_iterator from = (*val.uiv).begin();
+            for (unsigned int i=0; from != (*val.uiv).end(); ++i, ++from)
+                result[i] = std::complex<double>(*from,0.0);
+            return result;
+            }
 	case DOUBLEVEC:
 	    {
 	    std::vector<std::complex<double> > result((*val.dv).size());
@@ -594,6 +661,9 @@ TYPE &variant::NAME( ) {							\
 	    case INT:								\
 	        val.VAL = (TYPE) val.i;						\
 		break;								\
+            case UINT:                                                           \
+                val.VAL = (TYPE) val.ui;                                         \
+                break;                                                          \
 	    case DOUBLE:							\
 		val.VAL = (TYPE) val.d;						\
 		break;								\
@@ -618,6 +688,13 @@ TYPE &variant::NAME( ) {							\
 		delete tmp;							\
 		break;								\
 		}								\
+            case UINTVEC:                                                        \
+                {                                                               \
+                std::vector<unsigned int> *tmp = val.uiv;                                 \
+                val.VAL = (TYPE) ((*tmp).size() > 0 ? (*tmp)[0] : 0);           \
+                delete tmp;                                                     \
+                break;                                                          \
+                }                                                               \
 	    case DOUBLEVEC:							\
 		{								\
 		std::vector<double> *tmp = val.dv;				\
@@ -674,6 +751,9 @@ std::complex<double> &variant::asComplex( ) {
 	    case INT:
 		val.c = new std::complex<double>(val.i,0.0);
 		break;
+            case UINT:
+                val.c = new std::complex<double>(val.ui,0.0);
+                break;
 	    case DOUBLE:
 		val.c = new std::complex<double>(val.d,0.0);
 		break;
@@ -693,6 +773,13 @@ std::complex<double> &variant::asComplex( ) {
 		delete tmp;
 		break;
 		}
+            case UINTVEC:
+                {
+                std::vector<unsigned int> *tmp = val.uiv;
+                val.c = new std::complex<double>((*tmp).size() > 0 ? (*tmp)[0] : 0,0.0);
+                delete tmp;
+                break;
+                }
 	    case DOUBLEVEC:
 		{
 		std::vector<double> *tmp = val.dv;
@@ -749,6 +836,10 @@ std::vector<TYPE> &variant::NAME( int size ) {					\
 		newsize = size > 1 ? size : 1;					\
 		val.VAL = new std::vector<TYPE>(newsize,(TYPE) val.i);		\
 		break;								\
+            case UINT:                                                           \
+                newsize = size > 1 ? size : 1;                                  \
+                val.VAL = new std::vector<TYPE>(newsize,(TYPE) val.ui);          \
+                break;                                                          \
 	    case DOUBLE:							\
 		newsize = size > 1 ? size : 1;					\
 		val.VAL = new std::vector<TYPE>(newsize,(TYPE) val.d);		\
@@ -785,6 +876,18 @@ std::vector<TYPE> &variant::NAME( int size ) {					\
 		delete tmp;							\
 		break;								\
 		}								\
+            case UINTVEC:                                                        \
+                {                                                               \
+                std::vector<unsigned int> *tmp = val.uiv;                                 \
+                int current_size = (*tmp).size();                               \
+                newsize = size > current_size ? size : current_size;            \
+                val.VAL = new std::vector<TYPE>(newsize);                       \
+                std::vector<unsigned int>::const_iterator from = (*tmp).begin();         \
+                for (unsigned int i=0; from != (*tmp).end(); ++i, ++from)       \
+                    (*val.VAL)[i] = (TYPE)(*from);                              \
+                delete tmp;                                                     \
+                break;                                                          \
+                }                                                               \
 	    case DOUBLEVEC:							\
 		{								\
 		std::vector<double> *tmp = val.dv;				\
@@ -854,6 +957,7 @@ std::vector<TYPE> &variant::NAME( int size ) {					\
 }
 
 ASNUMERICVEC(asIntVec,int,int,INTVEC,iv)
+ASNUMERICVEC(asuIntVec,unsigned int,int,UINTVEC,uiv)
 ASNUMERICVEC(asLongVec,long long,long,INTVEC,lv)
 ASNUMERICVEC(asDoubleVec,double,double,DOUBLEVEC,dv)
 
@@ -869,6 +973,10 @@ std::vector<std::complex<double> > &variant::asComplexVec( int size ) {
 		newsize = size > 1 ? size : 1;
 		val.cv = new std::vector<std::complex<double> >(newsize,std::complex<double>(val.i,0.0));
 		break;
+            case UINT:
+                newsize = size > 1 ? size : 1;
+                val.cv = new std::vector<std::complex<double> >(newsize,std::complex<double>(val.ui,0.0));
+                break;
 	    case DOUBLE:
 		newsize = size > 1 ? size : 1;
 		val.cv = new std::vector<std::complex<double> >(newsize,std::complex<double>(val.d,0.0));
@@ -906,6 +1014,18 @@ std::vector<std::complex<double> > &variant::asComplexVec( int size ) {
 		delete tmp;
 		break;
 		}
+            case UINTVEC:
+                {
+                std::vector<unsigned int> *tmp = val.uiv;
+                int current_size = (*tmp).size();
+                newsize = size > current_size ? size : current_size;
+                val.cv = new std::vector<std::complex<double> >(newsize);
+                std::vector<unsigned int>::const_iterator from = (*tmp).begin();
+                for (unsigned int i=0; from != (*tmp).end(); ++i, ++from)
+                    (*val.cv)[i] = std::complex<double>(*from,0.0);
+                delete tmp;
+                break;
+                }
 	    case DOUBLEVEC:
 		{
 		std::vector<double> *tmp = val.dv;
@@ -977,6 +1097,10 @@ std::vector<bool> &variant::asBoolVec( int size ) {
 		newsize = size > 1 ? size : 1;
 		val.bv = new std::vector<bool>(newsize, val.i != 0 ? true : false);
 		break;
+            case UINT:
+                newsize = size > 1 ? size : 1;
+                val.bv = new std::vector<bool>(newsize, val.ui != 0 ? true : false);
+                break;
 	    case DOUBLE:
 		newsize = size > 1 ? size : 1;
 		val.bv = new std::vector<bool>(newsize, val.d != 0.0 ? true : false);
@@ -1003,6 +1127,18 @@ std::vector<bool> &variant::asBoolVec( int size ) {
 		delete tmp;
 		break;
 		}
+            case UINTVEC:
+                {
+                std::vector<unsigned int> *tmp = val.uiv;
+                int current_size = (*tmp).size();
+                newsize = size > current_size ? size : current_size;
+                val.bv = new std::vector<bool>(newsize);
+                std::vector<unsigned int>::const_iterator from = (*tmp).begin();
+                for (unsigned int i=0; from != (*tmp).end(); ++i, ++from)
+                    (*val.bv)[i] = *from != 0 ? true : false;
+                delete tmp;
+                break;
+                }
 	    case DOUBLEVEC:
 		{
 		std::vector<double> *tmp = val.dv;
@@ -1085,6 +1221,9 @@ bool &variant::asBool( ) {
 	    case INT:
 		val.b = val.i ? true : false;
 		break;
+            case UINT:
+                val.b = val.ui ? true : false;
+                break;
 	    case INTVEC:
 		{
 		std::vector<int> *tmp = val.iv;
@@ -1092,6 +1231,13 @@ bool &variant::asBool( ) {
 		delete tmp;
 		break;
 		}
+            case UINTVEC:
+                {
+                std::vector<unsigned int> *tmp = val.uiv;
+                val.b = (*tmp).size() > 0 ? ((*tmp)[0] ? true : false) : false;
+                delete tmp;
+                break;
+                }
 	    case DOUBLE:
 		val.b = val.d != 0.0 ? true : false;
 		break;
@@ -1156,6 +1302,9 @@ std::string &variant::asString( ) {
 	    case INT:
 		val.s = inttostringptr(val.i);
 		break;
+            case UINT:
+                val.s =inttostringptr(val.ui);
+                break;
 	    case DOUBLE:
 		val.s = doubletostringptr(val.d);
 		break;
@@ -1170,6 +1319,8 @@ std::string &variant::asString( ) {
 		VECASSTRING(bool,bool,bv,,"[","]",",","[]")
 	    case INTVEC:
 		VECASSTRING(int,int,iv,,"[","]",",","[]")
+            case UINTVEC:
+                VECASSTRING(unsigned int,int,uiv,,"[","]",",","[]")
 	    case DOUBLEVEC:
 		VECASSTRING(double,double,dv,,"[","]",",","[]")
 	    case COMPLEXVEC:
@@ -1209,6 +1360,10 @@ std::vector<std::string> &variant::asStringVec( int size ) {
 		newsize = size > 1 ? size : 1;
 		val.sv = new std::vector<std::string>(newsize,inttostring(val.i));
 		break;
+            case UINT:
+                newsize = size > 1 ? size : 1;
+                val.sv = new std::vector<std::string>(newsize,inttostring(val.ui));
+                break;
 	    case DOUBLE:
 		newsize = size > 1 ? size : 1;
 		val.sv = new std::vector<std::string>(newsize,doubletostring(val.d));
@@ -1225,6 +1380,8 @@ std::vector<std::string> &variant::asStringVec( int size ) {
 		VECASSTRINGVEC(bool,bool,bv,,,)
 	    case INTVEC:
 		VECASSTRINGVEC(int,int,iv,,,)
+            case UINTVEC:
+                VECASSTRINGVEC(unsigned int,int,uiv,,,)
 	    case DOUBLEVEC:
 		VECASSTRINGVEC(double,double,dv,,,)
 	    case COMPLEXVEC:
@@ -1272,6 +1429,7 @@ record &variant::asRecord( ) {
 	case RECORD:
 	    return *val.recordv;
 	case INT:
+	case UINT:
 	case LONG:
 	case BOOL:
 	case DOUBLE:
@@ -1282,6 +1440,9 @@ record &variant::asRecord( ) {
 	case INTVEC:
 	    delete val.iv;
 	    break;
+        case UINTVEC:
+            delete val.uiv;
+            break;
 	case LONGVEC:
 	    delete val.lv;
 	    break;
@@ -1341,6 +1502,9 @@ void variant::as( TYPE t, int size ) {
         case INTVEC:
 	    asIntVec(size);
 	    break;
+        case UINTVEC:
+            asuIntVec(size);
+            break;
         case LONGVEC:
 	    asLongVec(size);
 	    break;
@@ -1359,38 +1523,42 @@ void variant::as( TYPE t, int size ) {
     }
 }
 
-#define GETIT(CONST,CONST2,RET_TYPE,NAME,TYPE,VAL,DEREF)		\
-CONST RET_TYPE variant::NAME( ) CONST2 throw(error) {		\
+#define GETIT(CONST,RET_TYPE,NAME,TYPE,VAL,DEREF)		\
+CONST RET_TYPE variant::NAME( ) CONST throw(error) {		\
     if ( typev != TYPE )					\
 	throw( create_message( #NAME " called for type") );	\
     return DEREF val.VAL;					\
 }
 
-GETIT(, const, int,getInt,INT,i,)
-GETIT(, const, long long,getLong,LONG,l,)
-GETIT(, const, bool,getBool,BOOL,b,)
-GETIT(, const, double,getDouble,DOUBLE,d,)
-GETIT(const, const, std::complex<double>&,getComplex,COMPLEX,c,*)
-GETIT(const, const, std::string&,getString,STRING,s,*)
-GETIT(const, const, std::vector<int>&,getIntVec,INTVEC,iv,*)
-GETIT(const, const, std::vector<long long>&,getLongVec,LONGVEC,lv,*)
-GETIT(const, const, std::vector<bool>&,getBoolVec,BOOLVEC,bv,*)
-GETIT(const, const, std::vector<double>&,getDoubleVec,DOUBLEVEC,dv,*)
-GETIT(const, const, std::vector<std::complex<double> >&,getComplexVec,COMPLEXVEC,cv,*)
-GETIT(const, const, std::vector<std::string>&,getStringVec,STRINGVEC,sv,*)
-GETIT(const, const, record&,getRecord,RECORD,recordv,*)
+GETIT(const, int,getInt,INT,i,)
+GETIT(const, unsigned int,getuInt,UINT,ui,)
+GETIT(const, long long,getLong,LONG,l,)
+GETIT(const, bool,getBool,BOOL,b,)
+GETIT(const, double,getDouble,DOUBLE,d,)
+GETIT(const, std::complex<double>&,getComplex,COMPLEX,c,*)
+GETIT(const, std::string&,getString,STRING,s,*)
+GETIT(const, std::vector<int>&,getIntVec,INTVEC,iv,*)
+GETIT(const, std::vector<unsigned int>&,getuIntVec,UINTVEC,uiv,*)
+GETIT(const, std::vector<long long>&,getLongVec,LONGVEC,lv,*)
+GETIT(const, std::vector<bool>&,getBoolVec,BOOLVEC,bv,*)
+GETIT(const, std::vector<double>&,getDoubleVec,DOUBLEVEC,dv,*)
+GETIT(const, std::vector<std::complex<double> >&,getComplexVec,COMPLEXVEC,cv,*)
+GETIT(const, std::vector<std::string>&,getStringVec,STRINGVEC,sv,*)
+GETIT(const, record&,getRecord,RECORD,recordv,*)
 
-GETIT(,,int&,getIntMod,INT,i,)
-GETIT(,,bool&,getBoolMod,BOOL,b,)
-GETIT(,,double&,getDoubleMod,DOUBLE,d,)
-GETIT(,,std::complex<double>&,getComplexMod,COMPLEX,c,*)
-GETIT(,,std::string&,getStringMod,STRING,s,*)
-GETIT(,,std::vector<int>&,getIntVecMod,INTVEC,iv,*)
-GETIT(,,std::vector<bool>&,getBoolVecMod,BOOLVEC,bv,*)
-GETIT(,,std::vector<double>&,getDoubleVecMod,DOUBLEVEC,dv,*)
-GETIT(,,std::vector<std::complex<double> >&,getComplexVecMod,COMPLEXVEC,cv,*)
-GETIT(,,std::vector<std::string>&,getStringVecMod,STRINGVEC,sv,*)
-GETIT(,,record&,getRecordMod,RECORD,recordv,*)
+GETIT(,int&,getIntMod,INT,i,)
+GETIT(,unsigned int&,getuIntMod,UINT,ui,)
+GETIT(,bool&,getBoolMod,BOOL,b,)
+GETIT(,double&,getDoubleMod,DOUBLE,d,)
+GETIT(,std::complex<double>&,getComplexMod,COMPLEX,c,*)
+GETIT(,std::string&,getStringMod,STRING,s,*)
+GETIT(,std::vector<int>&,getIntVecMod,INTVEC,iv,*)
+GETIT(,std::vector<unsigned int>&,getuIntVecMod,UINTVEC,uiv,*)
+GETIT(,std::vector<bool>&,getBoolVecMod,BOOLVEC,bv,*)
+GETIT(,std::vector<double>&,getDoubleVecMod,DOUBLEVEC,dv,*)
+GETIT(,std::vector<std::complex<double> >&,getComplexVecMod,COMPLEXVEC,cv,*)
+GETIT(,std::vector<std::string>&,getStringVecMod,STRINGVEC,sv,*)
+GETIT(,record&,getRecordMod,RECORD,recordv,*)
 
 #define PUSHIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT,STRLONG,STRDBL,STRCPX) \
 void variant::push(TYPEX v, bool conform ) {					\
@@ -1424,6 +1592,9 @@ void variant::push(TYPEX v, bool conform ) {					\
 	    break;								\
 	case INTVEC:								\
 	    (*val.iv).push_back((int) STRINT(v BOOLTWEAK));			\
+	    break;								\
+	case UINTVEC:								\
+	    (*val.uiv).push_back((unsigned int) STRINT(v BOOLTWEAK));			\
 	    break;								\
 	case LONGVEC:								\
 	    (*val.lv).push_back((long long) STRLONG(v BOOLTWEAK));			\
@@ -1508,6 +1679,11 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 		(*val.iv).resize(index+1);					\
 	    (*val.iv)[index] = (int) (STRINT(v BOOLTWEAK));			\
 	    break;								\
+        case UINTVEC:                                                            \
+            if ( index+1 > (*val.uiv).size() )                                   \
+                (*val.uiv).resize(index+1);                                      \
+            (*val.uiv)[index] = (unsigned int) (STRINT(v BOOLTWEAK));                     \
+            break;                                                              \
 	case LONGVEC:								\
 	    if ( index+1 > (*val.lv).size() )					\
 		(*val.lv).resize(index+1);					\
@@ -1560,6 +1736,7 @@ std::string variant::create_message( const std::string s ) const {
 			typev == STRING ? "string" :
 			typev == BOOLVEC ? "boolvec" :
 			typev == INTVEC ? "intvec" :
+			typev == UINTVEC ? "uintvec" :
 			typev == DOUBLEVEC ? "doublevec" :
 			typev == STRINGVEC ? "stringvec" : "ErRoR");
     return s + " " + type + " variant";
@@ -1576,6 +1753,7 @@ int variant::vec_size( ) const {
     switch (typev) {
 	case BOOLVEC: return (*val.bv).size();
 	case INTVEC: return (*val.iv).size();
+	case UINTVEC: return (*val.uiv).size();
 	case DOUBLEVEC: return (*val.dv).size();
 	case COMPLEXVEC: return (*val.cv).size();
 	case STRINGVEC: return (*val.sv).size();
@@ -1613,6 +1791,9 @@ void variant::resize( int size ) {
 	    case INTVEC:
 		(*val.iv).resize(size);
 		break;
+            case UINTVEC:
+                (*val.uiv).resize(size);
+                break;
 	    case LONGVEC:
 		(*val.lv).resize(size);
 		break;
@@ -1632,6 +1813,7 @@ void variant::resize( int size ) {
 	switch (typev) {
 	    case BOOL:
 	    case INT:
+	    case UINT:
 	    case LONG:
 	    case DOUBLE:
 	    case COMPLEX:
@@ -1643,6 +1825,9 @@ void variant::resize( int size ) {
 	    case INTVEC:
 		(*val.iv).resize(size);
 		break;
+            case UINTVEC:
+                (*val.uiv).resize(size);
+                break;
 	    case LONGVEC:
 		(*val.lv).resize(size);
 		break;
@@ -1684,6 +1869,7 @@ bool variant::empty() const {
 	switch (typev) {
 	case BOOL:
 	case INT:
+	case UINT:
 	case LONG:
 	case DOUBLE:
 	case COMPLEX:
@@ -1692,6 +1878,7 @@ bool variant::empty() const {
 		return val.s->empty();
 	case BOOLVEC:
 	case INTVEC:
+	case UINTVEC:
 	case LONGVEC:
 	case DOUBLEVEC:
 	case COMPLEXVEC:

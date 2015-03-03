@@ -754,7 +754,7 @@ ms::getfielddirmeas(
       String f(format);
       f.downcase();
       if (f.startsWith("s")) {
-    	  return new variant(d.toString());
+    	  return new variant(String::toString(d));
       }
       MeasureHolder out(d);
       

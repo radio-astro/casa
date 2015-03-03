@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     isTiled(False),
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     mspc(0), msac(0), pointingToImage(0), usezero_p(usezero), convSampling(1),
-    skyCoverage_p(0), machineName_p("MosaicFT"), stokes_p(stokes)
+    skyCoverage_p( ), machineName_p("MosaicFT"), stokes_p(stokes)
 {
   convSize=0;
   lastIndex_p=0;

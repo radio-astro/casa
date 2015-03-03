@@ -121,7 +121,7 @@ Deconvolver::Deconvolver()
   : dirty_p(0),
     psf_p(0), 
     convolver_p(0), 
-    cleaner_p(0), 
+    cleaner_p( ), 
     mt_nterms_p(-1), 
     mt_cleaner_p(), 
     mt_valid_p(False)
@@ -146,7 +146,7 @@ void Deconvolver::defaults()
 }
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), 
      mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
@@ -155,7 +155,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 }
 
 Deconvolver::Deconvolver(const Deconvolver &other)
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
+  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p( ), 
     mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   defaults();

@@ -846,17 +846,9 @@ void ImageMetaDataRW::_setCoordinateValue(
 			"A polarization axis cannot have a reference pixel"
 		);
 		DataType t = value.dataType();
-		Bool stringIsDouble = False;
 		Double x = 0;
 		if (t == TpString) {
-		  x = String::toDouble(value.asString(),stringIsDouble);
-		        // THIS IS AN ERROR, stringIsDouble IS NOT PASSED
-		        // BY REFERENCE; IT IS NEVER MODIFIED...
-			ThrowIf (
-				! stringIsDouble,
-				value.asString()
-				+ " is not a String representation of a real numeric type"
-			);
+                        x = String::toDouble(value.asString(), True);
 		}
 		else if (
 			t == TpInt || t == TpInt64

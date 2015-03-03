@@ -451,7 +451,7 @@ bool image::fromarray(const std::string& outfile,
 		else if (pixels.type() == ::casac::variant::COMPLEXVEC) {
 			vector<std::complex<double> > pixelVector = pixels.getComplexVec();
 			complexArray.resize(IPosition(shape));
-			Vector<Complex> localpix(pixelVector);
+			Vector<DComplex> localpix(pixelVector);
 			convertArray(complexArray, localpix.reform(IPosition(shape)));
 		}
 		else {

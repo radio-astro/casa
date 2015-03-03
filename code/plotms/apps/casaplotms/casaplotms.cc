@@ -284,8 +284,12 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     PMS_PP_CALL(plotparams, PMS_PP_Cache, setYAxis, PMS::axis(yaxis))
     
     if(usePixels) {
-        PlotSymbolPtr sym = PMS_PP_RETCALL(plotparams, PMS_PP_Display,
-                unflaggedSymbol, CountedPtr<PlotSymbol>( ));
+        //PlotSymbolPtr sym = PMS_PP_RETCALL(plotparams, PMS_PP_Display,
+        //        unflaggedSymbol, NULL);
+        PlotSymbolPtr sym = NULL;
+        if(plotparams.typedGroup< PMS_PP_Display >() != NULL){
+           sym = plotparams.typedGroup< PMS_PP_Display >()-> unflaggedSymbol ( ); 
+        }
         sym->setSymbol(PlotSymbol::PIXEL);
         PMS_PP_CALL(plotparams, PMS_PP_Display, setUnflaggedSymbol, sym)
     }

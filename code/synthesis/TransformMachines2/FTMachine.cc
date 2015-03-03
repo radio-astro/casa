@@ -92,7 +92,7 @@ using namespace casa::vi;
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), 
-                           numthreads_p(-1), pbLimit_p(0.05),sj_p(0), cmplxImage_p(NULL)
+                           numthreads_p(-1), pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -111,7 +111,7 @@ using namespace casa::vi;
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
     convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1), 
-    pbLimit_p(0.05),sj_p(0), cmplxImage_p(NULL)
+    pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;

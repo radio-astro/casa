@@ -619,7 +619,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Add checks for all dimensions..
     if((facet>(nfacets-1))||(facet<0)) {
       os << LogIO::SEVERE << "Illegal facet " << facet << LogIO::POST;
-      return NULL;
+      return CountedPtr<ImageInterface<Float> >();
     }
     IPosition imshp=image.shape();
     IPosition blc(imshp.nelements(), 0);
