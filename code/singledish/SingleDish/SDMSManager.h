@@ -26,6 +26,8 @@ public:
   void setSortColumns(Block<Int> sortColumns,
 		      bool addDefaultSortCols=false);
 
+  Record getSelRec(string const &spw);
+
   //SDMSManager &operator=(SDMSManager const &other);
   // Destructor
   ~SDMSManager();

@@ -132,14 +132,13 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
 }
 
 String SingleDishMS::get_field_as_casa_string(Record const &in_data,
-					       string const &field_name)
+					      string const &field_name)
 {
   Int ifield;
   ifield = in_data.fieldNumber(String(field_name));
   if (ifield>-1) return in_data.asString(ifield);
   return "";
 }
-
 
 bool SingleDishMS::prepare_for_process(string const &in_column_name,
 				       string const &out_ms_name)
@@ -308,81 +307,135 @@ std::vector<string> SingleDishMS::split_string(string const &s,
   return elems;
 }
 
-void SingleDishMS::parse_spwch(string const &spwch, 
-			       Vector<Int> &spw, 
-			       Vector<size_t> &nchan, 
-			       Vector<Vector<Bool> > &mask)
+void SingleDishMS::parse_spw(string const &in_spw, 
+			     Vector<Int> &rec_spw,
+			     Matrix<Int> &rec_chan,
+			     Vector<size_t> &nchan, 
+			     Vector<Vector<Bool> > &mask,
+			     Vector<bool> &nchan_set)
 {
-  std::vector<string> elems = split_string(spwch, ',');
-  size_t length = elems.size();
-  spw.resize(length);
-  nchan.resize(length);
-  mask.resize(length);
-  Vector<Vector<size_t> > edge(length);
+  Record selrec = sdh_->getSelRec(in_spw);
+  rec_spw = selrec.asArrayInt("spw");
+  rec_chan = selrec.asArrayInt("channel");
 
-  for (size_t i = 0; i < length; ++i) {
-    std::vector<string> elems_spw = split_string(elems[i], ':');
-    std::istringstream iss0(elems_spw[0]);
-    iss0 >> spw[i];
-    std::istringstream iss1(elems_spw[1]);
-    iss1 >> nchan[i];
-    std::istringstream iss2(elems_spw[2]);
-    string edges;
-    iss2 >> edges;
-    std::vector<string> elems_edge = split_string(edges, ';');
-    size_t length_edge = elems_edge.size();
-    edge[i].resize(length_edge);
-    for (size_t j = 0; j < length_edge; ++j) {
-      std::istringstream iss(elems_edge[j]);
-      iss >> edge[i][j];
+  nchan.resize(rec_spw.nelements());
+  mask.resize(rec_spw.nelements());
+  nchan_set.resize(rec_spw.nelements());
+  for (size_t i = 0; i < nchan_set.nelements(); ++i) {
+    nchan_set(i) = false;
+  }
+}
+
+void SingleDishMS::get_nchan_and_mask(Vector<Int> const &rec_spw,
+				      Vector<Int> const &data_spw,
+				      Matrix<Int> const &rec_chan,
+				      size_t const num_chan,
+			      	      Vector<size_t> &nchan, 
+			              Vector<Vector<Bool> > &mask,
+				      Vector<bool> &nchan_set,
+				      bool &new_nchan)
+{
+  new_nchan = false;
+  for (size_t i = 0; i < rec_spw.nelements(); ++i) {
+    //get nchan by spwid and set to nchan[]
+    for (size_t j = 0; j < data_spw; ++j) {
+      if ((!nchan_set(i))&&(data_spw(j) == rec_spw(i))) {
+	bool found = false;
+	for (size_t k = 0; k < nchan.nelements(); ++k) {
+	  if (!nchan_set(k)) continue;
+	  if (nchan(k) == num_chan) found = true;
+	}
+	if (!found) {
+	  new_nchan = true;
+	}
+	nchan(i) = num_chan;
+	nchan_set(i) = true;
+	break;
+      }
     }
-    mask[i].resize(nchan[i]);
-    for (size_t j = 0; j < nchan[i]; ++j) {
-      mask[i][j] = False;
+    if (!nchan_set(i)) continue;
+    mask(i).resize(nchan(i));
+    for (size_t j = 0; j < mask(i).nelements(); ++j) {
+      mask(i)(j) = False;
     }
-    for (size_t j = 0; j < length_edge; j+=2) {
-      for (size_t k = edge[i][j]; k <= edge[i][j+1]; ++k) {
-	mask[i][k] = True;
+    std::vector<uInt> edge;
+    edge.clear();
+    for (size_t j = 0; j < rec_chan.nrow(); ++j) {
+      if (rec_chan.row(j)(0) == rec_spw(i)) {
+	edge.push_back(rec_chan.row(j)(1));
+	edge.push_back(rec_chan.row(j)(2));
+      }
+    }
+    //generate mask
+    for (size_t j = 0; j < edge.size(); j+=2) {
+      for (size_t k = edge[j]; k <= edge[j+1]; ++k) {
+	mask(i)(k) = True;
+      }
+    }
+  }
+}
+void SingleDishMS::get_pol_selection(string const &in_pol,
+				     size_t const num_pol,
+				     Vector<bool> &pol)
+{
+  pol.resize(num_pol);
+  bool pol_val = (in_pol == "")||(in_pol == "*");
+  for (size_t i = 0; i < pol.nelements(); ++i) {
+    pol(i) = pol_val;
+  }
+  if (!pol_val) {
+    //parse_inpol
+    istringstream iss(in_pol);
+    string tmp;
+    std::vector<int> in_pol_list;
+    while (getline(iss, tmp, ',')) {
+      istringstream iss2(tmp);
+      size_t itmp;
+      iss2 >> itmp;
+      in_pol_list.push_back(itmp);
+    }
+    //set True for pol specified
+    for (size_t i = 0; i < pol.nelements(); ++i) {
+      for (size_t j = 0; j < in_pol_list.size(); ++j) {
+	if (in_pol_list[j] == (int)i) {
+	  pol(i) = true;
+	  break;
+	}
       }
     }
   }
 }
 
-void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
-		 	 		    uint16_t order, 
-					    Vector<size_t> const &nchan, 
-					    Vector<size_t> &ctx_indices, 
-					    Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
+		 	 		uint16_t order, 
+					size_t num_chan, 
+				        Vector<size_t> const &nchan, 
+					Vector<bool> const &nchan_set,
+					Vector<size_t> &ctx_indices, 
+				        std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
 {
-  std::vector<size_t> uniq_nchan;
-  uniq_nchan.clear();
-  ctx_indices.resize(nchan.nelements());
+  size_t idx = 0;
+  bool found = false;
   for (size_t i = 0; i < nchan.nelements(); ++i) {
-    size_t idx = 0;
-    bool found = false;
-    for (size_t j = 0; j < uniq_nchan.size(); ++j) {
-      if (uniq_nchan[j] == nchan[i]) {
-	idx = j;
-	found = true;
-	break;
+    if ((nchan_set[i])&&(nchan[i] == num_chan)) {
+      idx = bl_contexts.size();
+      found = true;
+      break;
+    }
+  }
+  if (found) {
+    for (size_t i = 0; i < nchan.nelements(); ++i) {
+      if ((nchan_set[i])&&(nchan[i] == num_chan)) {
+	ctx_indices[i] = idx;
       }
     }
-    if (found) {
-      ctx_indices[i] = idx;
-    } else {
-      uniq_nchan.push_back(nchan[i]);
-      ctx_indices[i] = uniq_nchan.size() - 1;
-     }
-  }
 
-  bl_contexts.resize(uniq_nchan.size());
-  LIBSAKURA_SYMBOL(Status) status; 
-
-  for (size_t i = 0; i < uniq_nchan.size(); ++i) {
+    LIBSAKURA_SYMBOL(BaselineContext) *context;
+    LIBSAKURA_SYMBOL(Status) status; 
     status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type, 
 						     static_cast<uint16_t>(order), 
-						     uniq_nchan[i], 
-						     &bl_contexts[i]);
+						     num_chan, &context);
+						     //&bl_contexts[idx]);
     if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
       ostringstream oss;
       oss << "sakura_CreateBaselineContext() failure -- ";
@@ -395,13 +448,15 @@ void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const
       }
       throw(AipsError(oss.str()));
     }
+
+    bl_contexts.push_back(context);
   }
 }
 
-void SingleDishMS::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
 {
   LIBSAKURA_SYMBOL(Status) status;
-  for (size_t i = 0; i < bl_contexts.nelements(); ++i) {
+  for (size_t i = 0; i < bl_contexts.size(); ++i) {
     status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_contexts[i]);
     if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
       throw(AipsError("DestoyBaselineContext() failed."));
@@ -447,12 +502,26 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
     ptr[i] = static_cast<bool>(flag_cube(plane, i, row));
 }
 
+bool SingleDishMS::allchannels_flagged(size_t const num_flag, bool const* flag)
+{
+  bool res = true;
+  for (size_t i = 0; i < num_flag; ++i) {
+    if (!flag[i]) {
+      res = false;
+      break;
+    }
+  }
+  return res;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
 void SingleDishMS::subtract_baseline(string const& in_column_name,
 				     string const& out_ms_name,
-				     string const &spwch,
+				     string const& in_spw,
+				     string const& in_ppp,
 				     int const order, 
 				     float const clip_threshold_sigma, 
 				     int const num_fitting_max)
@@ -484,11 +553,16 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 
-  Vector<Int> spw;
+  Vector<Int> recspw;
+  Matrix<Int> recchan;
   Vector<size_t> nchan;
   Vector<Vector<Bool> > in_mask;
-  parse_spwch(spwch, spw, nchan, in_mask);
+  Vector<bool> nchan_set;
+  parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+
   // checking nchan
+  // ----> move to inside VI loop
+  /*
   int min_nchan = static_cast<int>(nchan(0));
   for (size_t i = 0; i < nchan.nelements(); ++i) {
     int nch = static_cast<int>(nchan(i));
@@ -501,12 +575,15 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	<< min_nchan << ").";
     throw(AipsError(oss.str()));
   }
+  */
 
   Vector<size_t> ctx_indices;
-  Vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
-  create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
-  			   static_cast<uint16_t>(order), 
-  			   nchan, ctx_indices, bl_contexts);
+  ctx_indices.resize(nchan.nelements());
+  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
+  bl_contexts.clear();
+  Vector<bool> pol;
+  bool pol_set = false;
+
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> data_spw = vb->spectralWindows();
@@ -518,38 +595,52 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<bool> mask(num_chan);
 
+      bool new_nchan;
+      get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
+      if (new_nchan) {
+	// ----> move nchan check to here
+	get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
+			     static_cast<uint16_t>(order), 
+			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
+      }
       // get a data cube (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       // get a flag cube (npol*nchan*nrow) from VisBuffer
       get_flag_cube(*vb, flag_chunk);
-      // get a flagrow vector (nrow) from VisBuffer
-      Vector<Bool> flagrow_chunk = vb->flagRow();
+
+      if (!pol_set) {
+	get_pol_selection(in_ppp, num_pol, pol);
+	pol_set = true;
+      }
       // loop over MS rows
       for (size_t irow=0; irow < num_row; ++irow) {
-	// skip row-flagged spectra
-	if (flagrow_chunk(irow)) continue;
-
   	size_t idx = 0;
-  	for (size_t ispw=0; ispw < spw.nelements(); ++ispw) {
-  	  if (data_spw[irow] == spw[ispw]) {
+  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	  if (data_spw[irow] == recspw[ispw]) {
   	    idx = ispw;
   	    break;
   	  }
   	}
-  	assert(num_chan == nchan[idx]);
 
   	// loop over polarization
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-  	  // get a spectrum from data cube
-  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+	  if (!pol(ipol)) continue;
   	  // get a channel mask from data cube
-  	  // (note that mask used here is actually a flag)
+  	  // (note that the variable 'mask' is flag in the next line 
+	  // actually, then it will be converted to real mask when 
+	  // taking AND with user-given mask info. this is just for 
+	  // saving memory usage...)
   	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // skip spectrum if all channels flagged
+	  if (allchannels_flagged(num_chan, mask.data)) continue;
+
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
   	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
+  	  // get a spectrum from data cube
+  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
   	  // actual execution of single spectrum
   	  status = 
   	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
@@ -564,7 +655,14 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   						    spec.data, 
   						    &bl_status);
   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	    throw(AipsError("SubtractBaselineFloat() failed."));
+	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+	      throw(AipsError("SubtractBaselineFloat() -- NG"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+	      throw(AipsError("SubtractBaselineFloat() -- UnknownError"));
+	    }
+	    //throw(AipsError("SubtractBaselineFloat() failed."));
   	  }
   	  // set back a spectrum to data cube
   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);

@@ -43,7 +43,8 @@ public:
   // (polynomial, write results in CORRECTED_DATA column)
   void subtract_baseline(string const& in_column_name,
 			 string const& out_ms_name,
-			 string const& spwch, 
+			 string const& in_spw, 
+			 string const& in_ppp, 
 			 int const order, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);
@@ -80,19 +81,34 @@ private:
   void convertArrayC2F(Array<Float> &from, Array<Complex> const &to);
   // Split a string with given delimiter
   std::vector<string> split_string(string const &s, char delim);
-  // Parse a string output by sdutil.get_spwchs().
-  void parse_spwch(string const &spwch, 
-		   Vector<Int> &spw, 
-		   Vector<size_t> &nchan, 
-		   Vector<Vector<Bool> > &mask);
+  // Parse msseltoindex output
+  void parse_spw(string const &in_spw, 
+		 Vector<Int> &spw, 
+		 Matrix<Int> &chan,
+		 Vector<size_t> &nchan, 
+		 Vector<Vector<Bool> > &mask,
+		 Vector<bool> &nchan_set);
+  void get_nchan_and_mask(Vector<Int> const &rec_spw,
+			  Vector<Int> const &data_spw,
+			  Matrix<Int> const &rec_chan,
+			  size_t const num_chan,
+			  Vector<size_t> &nchan, 
+			  Vector<Vector<Bool> > &mask,
+			  Vector<bool> &nchan_set,
+			  bool &new_nchan);
+  void get_pol_selection(string const &in_pol,
+			 size_t const num_pol,
+			 Vector<bool> &pol);
   // Create a set of baseline contexts
-  void create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
-			        uint16_t order, 
-			        Vector<size_t> const &nchan, 
-			        Vector<size_t> &ctx_indices, 
-			        Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
+  void get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
+			    uint16_t order, 
+			    size_t num_chan,
+			    Vector<size_t> const &nchan,
+			    Vector<bool> const &nchan_set,
+		            Vector<size_t> &ctx_indices, 
+			    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
   // Destroy a set of baseline contexts
-  void destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
+  void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
 
   /////////////////////////////
   /// MS handling functions ///
@@ -122,6 +138,9 @@ private:
 			  size_t const plane,
 			  size_t const num_flag,
 			  SakuraAlignedArray<bool> &out_flag);
+  // return true if all channels are flagged
+  bool allchannels_flagged(size_t const num_flag, 
+			   bool const* flag);
   /////////////////////////////////
   /// Array execution functions ///
   /////////////////////////////////

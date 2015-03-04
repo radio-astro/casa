@@ -306,4 +306,10 @@ void SDMSManager::setIterationApproach()
   return;
 }
 
+Record SDMSManager::getSelRec(string const &spw)
+{
+  MeasurementSet myms = MeasurementSet(inpMsName_p);
+  return myms.msseltoindex(toCasaString(spw));
+}
+
 }  // End of casa namespace.
