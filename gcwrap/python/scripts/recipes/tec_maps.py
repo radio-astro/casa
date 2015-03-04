@@ -18,6 +18,9 @@
 ##                                              options, and thereby streamlines
 ##                                              approved general usage for
 ##                                              CASA 4.3)
+##    Modified by J. E. Kooi   2015/01/29  v2.4 (Changed get_IGS_TEC to accept
+##                                              IONEX format data with any grid spacing
+##                                              in deg. and time resolution in min.)
 ##
 ##    Tested in CASA 4.3.0 and 4.2.1 on RHEL release 6.4 (Santiago)
 ##    Tested in CASA 4.2.1 on Mac OS 10.7.5
@@ -540,7 +543,8 @@ def get_IGS_TEC(ymd_date):
     ## Variables that indicate the number of points in Lat. and Lon.
     points_long = ((end_long - start_long)/incr_long) + 1
     points_lat = ((end_lat - start_lat)/incr_lat) + 1    ## Note that incr_lat is defined as '-' here
-
+    number_of_rows = int(np.ceil(points_long/16))    ## Note there are 16 columns of data in IONEX format
+    
     ## 4-D array that will contain TEC & DTEC (a[0] and a[1], respectively) values
     a = np.zeros((2,points_long,points_lat,num_maps))
 
@@ -564,41 +568,19 @@ def get_IGS_TEC(ymd_date):
                         if UseList[i+2+counterLat].split()[0].split('-')[0] == ''+str(newstartLat)+'':
                             ## Adding to array a[] a line of Latitude TEC data
                             counterLon = 0
-                            for item in range(len(UseList[i+3+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+3+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+4+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+4+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+5+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+5+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+6+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+6+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+7+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+7+counterLat].split()[item]
-                                counterLon = counterLon + 1				
+                            for row_iter in range(number_of_rows):
+                                for item in range(len(UseList[i+3+row_iter+counterLat].split())):
+                                    a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+3+row_iter+counterLat].split()[item]
+                                    counterLon = counterLon + 1
                         if '-'+UseList[i+2+counterLat].split()[0].split('-')[1] == ''+str(newstartLat)+'':
                             ## Adding to array a[] a line of Latitude TEC data. Same chunk as above but 
                             ## in this case we account for the TEC values at negative latitudes
                             counterLon = 0
-                            for item in range(len(UseList[i+3+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+3+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+4+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+4+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+5+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+5+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+6+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+6+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                            for item in range(len(UseList[i+7+counterLat].split())):
-                                a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+7+counterLat].split()[item]
-                                counterLon = counterLon + 1
-                        counterLat = counterLat + 6
+                            for row_iter in range(number_of_rows):
+                                for item in range(len(UseList[i+3+row_iter+counterLat].split())):
+                                    a[Titer,counterLon,iLat,counterMaps-1] = UseList[i+3+row_iter+counterLat].split()[item]
+                                    counterLon = counterLon + 1
+                        counterLat = counterLat + row_iter + 2
                         newstartLat = newstartLat + incr_lat
                     counterMaps = counterMaps + 1
 
@@ -612,7 +594,7 @@ def get_IGS_TEC(ymd_date):
     ## =========================================================================
     
     ## The native sampling of the IGS maps minutes
-    incr_time = 120    
+    incr_time = 24*60/int(num_maps-1)    
     tec_array = np.zeros((2,points_long,points_lat,num_maps))
 
     for Titer in range(2):
