@@ -2446,13 +2446,13 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	return True;
 }
 
-ImageInterface<Float>* ImageAnalysis::rotate(
+SPIIF ImageAnalysis::rotate(
 	const String& outFile, const Vector<Int>& shape,
 	const Quantity& pa, Record& Region, const String& mask,
 	const String& methodU, const Int decimate,
 	const Bool replicate, const Bool dropdeg,
 	const Bool overwrite, const Bool extendMask
-) {
+) const {
 	_onlyFloat(__func__);
 	*_log << LogOrigin("ImageAnalysis", __func__);
 
@@ -2579,36 +2579,33 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	}
 
 	// Create the image and mask
-	PtrHolder<ImageInterface<Float> > imOut;
+	SPIIF imOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
-		imOut.set(new TempImage<Float> (outShape, cSys));
+		imOut.reset(new TempImage<Float> (outShape, cSys));
 	}
 	else {
 		*_log << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new PagedImage<Float> (outShape, cSys, outFile));
+		imOut.reset(new PagedImage<Float> (outShape, cSys, outFile));
 	}
-	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
-	pImOut->set(0.0);
-	ImageUtilities::copyMiscellaneous(*pImOut, subImage);
+	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
+
+	imOut->set(0.0);
+	ImageUtilities::copyMiscellaneous(*imOut, subImage);
 	String maskName("");
-	ImageMaskAttacher::makeMask(*pImOut, maskName, True, True, *_log, True);
-	//
+	ImageMaskAttacher::makeMask(*imOut, maskName, True, True, *_log, True);
 	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
 	IPosition dummy;
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	Bool forceRegrid = False;
 	ir.regrid(
-		*pImOut, method, axes2, subImage, replicate,
+		*imOut, method, axes2, subImage, replicate,
 		decimate, True, forceRegrid
 	);
-
-	// Return image
-	return pImOut;
-
+	return imOut;
 }
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {

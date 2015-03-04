@@ -242,18 +242,14 @@ class ImageAnalysis
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    ImageInterface<Float>* rotate(
-    	const String& outfile,
-        const Vector<int>& shape,
+    SPIIF rotate(
+    	const String& outfile, const Vector<int>& shape,
         const Quantity& pa, Record& region,
-        const String& mask,
-        const String& method="cubic",
-        const Int decimate=0,
-        const Bool replicate=False,
-        const Bool dropdeg=False,
-        const Bool overwrite=False,
+        const String& mask, const String& method="cubic",
+        const Int decimate=0, const Bool replicate=False,
+        const Bool dropdeg=False, const Bool overwrite=False,
         const Bool extendMask=False
-    );
+    ) const;
 
     Bool rename(const String& name, const Bool overwrite = False);
 

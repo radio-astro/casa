@@ -289,9 +289,9 @@ SPIIF PVGenerator::generate() const {
     	// rotation occurs about the reference pixel, so move the reference pixel to be
     	// on the segment, near the midpoint so that the y value is an integer.
     	vector<Double> midpoint(end.size( ));
-	// THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
-	std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
-	std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
+    	// THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
+    	std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
+    	std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
     	Double targety = int(midpoint[1]);
     	Double targetx = targety == midpoint[1]
     	    ? midpoint[0]
@@ -381,11 +381,9 @@ SPIIF PVGenerator::generate() const {
 		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
 		outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
 		ImageAnalysis ia(imageToRotate);
-		rotated.reset(
-			ia.rotate(
-				"", outShape.asVector(), Quantity(paInRad, "rad"),
-				lcbox, ""
-			)
+		rotated = ia.rotate(
+			"", outShape.asVector(), Quantity(paInRad, "rad"),
+			lcbox, ""
 		);
 	}
 
