@@ -2024,10 +2024,6 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         sdbaseline_flagtest_gauss.asap, plus huge values (10000) at the channels
         2, 42, 82, and 97.
     """
-    ###
-    # the obsolete data sdbaseline_flagtest_with[out]noise.asap will be deleted.
-    # after the release of CASA-4.3 (2014/10/21 WK)
-    ###
     
     tol01 = 1.0e-6
     tol02 = 1.5 # large value owing to uncertainty in linefinder results and
