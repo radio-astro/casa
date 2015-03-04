@@ -141,7 +141,8 @@ singledishms::scale(float const factor, string const& datacolumn, string const& 
 bool
 singledishms::subtract_baseline(string const& datacolumn,
 				string const& outfile,
-				string const& spwch,
+				::casac::variant const& spw,
+				::casac::variant const& pol,
 				int const order,
 				float const clip_threshold_sigma,
 				int const num_fitting_max)
@@ -150,8 +151,9 @@ singledishms::subtract_baseline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline(datacolumn, outfile,spwch, order, 
-			     clip_threshold_sigma, 
+    itsSd->subtract_baseline(datacolumn, outfile, 
+			     toCasaString(spw), toCasaString(pol),
+			     order, clip_threshold_sigma, 
 			     num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {

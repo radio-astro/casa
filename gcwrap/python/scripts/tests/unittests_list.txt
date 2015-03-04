@@ -150,6 +150,8 @@ test_split                      scastro@eso.org
 test_split2                     scastro@eso.org
 test_spxfit                     dmehring@nrao.edu
 test_statwt                     ttsutsum@nrao.edu
+test_tsdbaseline                wataru.kawasaki@nao.ac.jp
+test_tsdcal                     masaya.kuniyoshi@nao.ac.jp
 test_uvcontsub			ttsutsum@nrao.edu
 test_uvcontsub3			ttsutsum@nrao.edu
 #test_testconcat                 dpetry@eso.org
@@ -158,4 +160,3 @@ test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
 test_wvrgcal			dpetry@eso.org
-test_tsdcal                     masaya.kuniyoshi@nao.ac.jp

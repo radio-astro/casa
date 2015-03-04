@@ -21,43 +21,18 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         if (spw == ''): spw = '*'
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
                                     baseline=str(antenna), time=timerange, 
-                                    scan=scan, polarization=pol)
-
+                                    scan=scan)#, polarization=pol)
         sdms.open(infile)
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                            antenna=str(antenna), timerange=timerange, 
-                           scan=scan, polarization=pol)
+                           scan=scan)#, polarization=pol)
         sdms.subtract_baseline(datacolumn=datacolumn,
                                outfile=outfile,
-                               spwch=sdutil.get_spwchs(selection, infile), 
+                               spw=spw,
+                               pol=pol,
                                order=order, 
                                clip_threshold_sigma=clipthresh, 
                                num_fitting_max=clipniter+1)
-        """
-        for spwid in spw_list:
-            nchan = nchanmap[spwid]
-            mask = [False]*nchan
-            for channel in selection['channel']:
-                if channel[0] != spwid: continue
-                maskidx_start = channel[1]
-                maskidx_end   = channel[2]
-                for idx in xrange(maskidx_start, maskidx_end+1): 
-                    mask[idx] = True
-            try:
-                print 'a'
-                #sdms.open(infile)
-                #sdms.set_selection(spw=str(spwid), field=field, 
-                #                   baseline='%s&&&'%(antenna), time=timerange, 
-                #                   scan=scan, polarization=pol)
-                #sdms.subtract_baseline(mask=mask, order=order, 
-                #                       clip_threshold_sigma=clipthresh, 
-                #                       num_fitting_max=clipniter+1)
-            finally:
-                sdms.close()
-        """
-
-        # file output (will be implemeted later)
 
     except Exception, instance:
-        #print '*** Exception ***', instance
         raise Exception, instance

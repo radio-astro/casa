@@ -175,6 +175,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_spxfit.py
   test_statwt.py
   test_testconcat.py
+  test_tsdbaseline.py	
   test_tsdcal.py	
   test_uvcontsub.py
   test_uvcontsub3.py
