@@ -299,6 +299,34 @@ class ia_restoringbeam_test(unittest.TestCase):
                 expec = source.restoringbeam(channel=sc, polarization=p)
                 self.assertTrue(got == expec)
         source.done()
-
+        
+    def test_rotate(self):
+        """Test rotating beam"""
+        myia = self._myia
+        nchan = 2
+        nstokes = 1
+        myia.fromshape("", shape=[5,5, nstokes, nchan])
+        myia.setrestoringbeam(
+            major="4arcsec", minor="2arcsec", pa="20deg",
+            channel=0, polarization=0
+        )
+        myia.setrestoringbeam(
+            major="8arcsec", minor="4arcsec", pa="40deg",
+            channel=1, polarization=0
+        )
+        myia.rotatebeam("60deg")
+        self.assertTrue(
+            qa.eq(
+                myia.restoringbeam(channel=0, polarization=0)['positionangle'],
+                "80deg"
+            )
+        )
+        self.assertTrue(
+            qa.eq(
+                myia.restoringbeam(channel=1, polarization=0)['positionangle'],
+                "100deg"
+            )
+        )
+        
 def suite():
     return [ia_restoringbeam_test]

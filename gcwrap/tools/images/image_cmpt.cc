@@ -3738,7 +3738,6 @@ image* image::rotate(
 		}
 		Vector<Int> shape(inshape);
 		Quantum<Double> pa(_casaQuantityFromVar(inpa));
-		//std::auto_ptr<Record> Region(toRecord(region));
 		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -3751,9 +3750,34 @@ image* image::rotate(
 			)
 		);
 		return new image(pImOut);
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool image::rotatebeam(const variant& angle) {
+	try {
+		_log << _ORIGIN;
+		if(detached()) {
+			return False;
+		}
+		Quantum<Double> pa(_casaQuantityFromVar(angle));
+		if (_image->isFloat()) {
+			BeamManipulator<Float> bManip(_image->getImage());
+			bManip.rotate(pa);
+		}
+		else {
+			BeamManipulator<Complex> bManip(_image->getComplexImage());
+			bManip.rotate(pa);
+		}
+		return true;
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -3842,8 +3866,7 @@ bool image::replacemaskedpixels(
 	}
 }
 
-record*
-image::restoringbeam(int channel, int polarization) {
+record* image::restoringbeam(int channel, int polarization) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
@@ -3863,7 +3886,8 @@ image::restoringbeam(int channel, int polarization) {
 				)
 			);
 		}
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -4646,36 +4670,6 @@ bool image::detached() const {
 	}
 	return False;
 }
-
-/*
-::casac::record*
-image::setboxregion(const std::vector<double>& blc,
-		const std::vector<double>& trc, const bool frac,
-		const std::string& infile) {
-	casac::record* rstat = 0;
-	try {
-
-		_log << _ORIGIN;
-		_log << LogIO::WARN
-			<< "THIS METHOD IS DEPRECATED AND WILL BE REMOVED. USE rg.box() INSTEAD."
-			<< LogIO::POST;
-		if (detached()) {
-			return rstat;
-		}
-
-		Record tempR(_image->setboxregion(Vector<Double> (blc),
-				Vector<Double> (trc), frac, infile));
-		rstat = fromRecord(tempR);
-
-	}
-	catch (const AipsError& x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
-*/
 
 bool image::maketestimage(
 	const std::string& outfile, const bool overwrite

@@ -8235,6 +8235,34 @@ displays the before and after images.
 
 </method>
 
+<method type="function" name="rotatebeam">
+    <shortdescription>rotate the image's beam(s) counterclockwise through the specified angle.</shortdescription>
+    <input>
+        <param type="any"  name="angle">
+        <any type="variant"/>
+        <description>Angle by which to rotate image's beam(s).  Default is no rotation.</description>
+        <value>0deg</value>
+    </param>
+    </input>
+    <returns type="bool"/>
+
+<description>
+This method rotates the attached image's beam(s) counterclockwise through the specified angle.
+This is the same thing as increasing the position angle(s) of the beam(s) by the specified angle.
+If the image does not have a beam, no changes to the image are made. If the image has multiple
+beams, all the beams are rotated through the same angle.
+</description>
+
+<example>
+# rotate any and all beams in the image (increase their position angles) by 30 degrees.
+ia.open("my.im")
+ia.rotatebeam("30deg")
+ia.done()
+
+</example>
+
+</method>
+
  
    <method type="function" name="rename">
    <shortdescription>Rename the image file associated with this image tool</shortdescription>

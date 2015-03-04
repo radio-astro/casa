@@ -157,7 +157,6 @@ def _imregrid_to_new_ref_frame(
     dirrefpix = csys.referencepixel("direction")["numeric"]
     shape = _myia.shape()
     centerpix = [int(shape[diraxes[0]]/2), int(shape[diraxes[1]]/2)]
-    print "csys ref 1 ", csys.referencevalue()
     if centerpix[0] != dirrefpix[0] or centerpix[1] != dirrefpix[1]:
         casalog.post(
             "Center direction pixel and reference pixel are "
@@ -177,7 +176,6 @@ def _imregrid_to_new_ref_frame(
         _myia.done()
         _myia = tsub
         _myia.setcoordsys(csys.torecord())
-    print "csys ref 2 ", csys.referencevalue()         
     angle = csys.convertdirection(newrefcode)
     mysin = qa.getvalue(qa.sin(angle))
     mycos = qa.getvalue(qa.cos(angle))
@@ -202,10 +200,11 @@ def _imregrid_to_new_ref_frame(
         csys.setreferencepixel(newrefpix)            
     casalog.post(
         "Will rotate direction coordinate by "
-        + qa.tos(qa.convert(angle,"deg"))
+        + qa.tos(qa.convert(angle, "deg"))
       , 'NORMAL'
     )
     rot = _myia.rotate(outfile="", shape=shape, pa=angle)
+    rot.rotatebeam(angle=angle)
     rot.setcoordsys(csys.torecord())
     # now crop
                 
