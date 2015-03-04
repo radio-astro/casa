@@ -46,6 +46,14 @@ template <class T> void BeamManipulator<T>::remove() {
 	}
 }
 
+template <class T> void BeamManipulator<T>::rotate(const Quantity& angle) {
+	ImageInfo ii = _image->imageInfo();
+	ImageBeamSet beams = ii.getBeamSet();
+	beams.rotate(angle);
+	ii.setBeams(beams);
+	_image->setImageInfo(ii);
+}
+
 template <class T> void BeamManipulator<T>::setVerbose(Bool v) {
 	if (v && ! _log) {
 		_log.reset(new LogIO());

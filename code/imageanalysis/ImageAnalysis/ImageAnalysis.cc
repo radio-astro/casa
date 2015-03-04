@@ -3261,89 +3261,7 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	}
 	cSys.setReferencePixel(refPix);
 }
-/*
-Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,
-		const String& infile) {
-	_onlyFloat(__func__);
-	Vector<Double> Blc(blc.size());
-	Vector<Double> Trc(trc.size());
-	for (uInt i = 0; i < blc.size(); i++)
-		Blc[i] = blc[i];
-	for (uInt i = 0; i < trc.size(); i++)
-		Trc[i] = trc[i];
-	return ImageAnalysis::setboxregion(Blc, Trc, false, infile);
-}
 
-Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
-		Double>& trc, const Bool frac, const String& infile) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	// create Region
-	Record rec;
-	rec.define("isRegion", Int(RegionType::LC));
-	rec.define("name", "LCBox");
-	rec.define("comment", "");
-
-	Vector<Int> latticeShapeVec;
-	if (infile != "") { // get region shape from infile
-		ImageInterface<Float>* _imageFloat_tmp;
-		ImageUtilities::openImage(_imageFloat_tmp, infile);
-		latticeShapeVec = _imageFloat_tmp->shape().asVector();
-	} else {
-		latticeShapeVec = _imageFloat->shape().asVector();
-	}
-	rec.define("shape", latticeShapeVec);
-
-	uInt inBoxDim = blc.size();
-	if (trc.size() != inBoxDim) {
-		*_log << LogIO::WARN << "blc and trc must have the same dimensions"
-				<< LogIO::POST;
-		return rec;
-	}
-
-	uInt imgDim = latticeShapeVec.size();
-	Vector<Float> itsBlc(imgDim);
-	Vector<Float> itsTrc(imgDim);
-	if (inBoxDim == 1 && blc[0] < 0) {
-		for (unsigned long i = 0; i < imgDim; i++) {
-			itsBlc(i) = 0;
-			itsTrc(i) = latticeShapeVec[i];
-		}
-	} else if (inBoxDim <= imgDim) {
-		for (unsigned long i = 0; i < inBoxDim; i++) {
-			if (frac == true) {
-				itsBlc(i) = blc[i] * latticeShapeVec[i];
-				itsTrc(i) = trc[i] * latticeShapeVec[i];
-			} else {
-				itsBlc(i) = blc[i];
-				itsTrc(i) = trc[i];
-			}
-		}
-		for (unsigned long i = inBoxDim; i < imgDim; i++) {
-			itsBlc(i) = 0;
-			itsTrc(i) = latticeShapeVec[i];
-		}
-	} else {// inBoxDim > imgDim (ignore extra values)
-		for (unsigned long i = 0; i < imgDim; i++) {
-			if (frac == true) {
-				itsBlc(i) = blc[i] * latticeShapeVec[i];
-				itsTrc(i) = trc[i] * latticeShapeVec[i];
-			} else {
-				itsBlc(i) = blc[i];
-				itsTrc(i) = trc[i];
-			}
-		}
-	}
-
-	// Write 0-relative.
-	rec.define("oneRel", False);
-	rec.define("blc", itsBlc);
-	rec.define("trc", itsTrc);
-
-	return rec;
-}
-*/
 bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
 	bool rstat(false);
@@ -3375,7 +3293,6 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		else {
 			*_log << LogIO::EXCEPTION << "Environment variable undefined, can't get data path";
 		}
-
 	return rstat;
 }
 

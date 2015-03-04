@@ -32,6 +32,12 @@ public:
 
 	~BeamManipulator() {}
 
+	// remove all existing beam(s)
+	void remove();
+
+	// rotate all the beams counterclockwise by the specified angle
+	void rotate(const Quantity& angle);
+
 	void set(
 		const Quantity& major, const Quantity& minor,
 		const Quantity& pa, const Record& rec,
@@ -40,9 +46,6 @@ public:
 
 	// set all beams in one go
 	void set(const ImageBeamSet& beamSet);
-
-	// remove existing beam(s)
-	void remove();
 
 	void setVerbose(Bool v);
 
