@@ -9,6 +9,16 @@
 <description>
 </description>
 <input>
+    <param type="string" name="mode">
+	<description>Imaging mode [\'line\'|\'ampcal\']</description>
+	<value>line</value>
+	<allowed kind="enum">
+	    <value>line</value>
+<!--	    <value>continuum</value> -->
+	    <value>ampcal</value>
+	</allowed>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -108,6 +118,12 @@ determined based on meta data such as antenna diameter, map extent, etc.
 Note that generated images are always in LSRK frame.
   
 Keyword arguments:
+
+mode -- imaging mode controls imaging parameters in the task.
+   Accepts either 'line' (spectral line imaging) or 'ampcal' (image settings
+   for amplitude calibrator)
+   default: 'line'
+   options: 'line', 'ampcal',
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 

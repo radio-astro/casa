@@ -87,7 +87,7 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         hsd_simplescale (pipelinemode=pipelinemode)
     
         # Imaging
-        hsd_imaging (pipelinemode=pipelinemode)
+        hsd_imaging (pipelinemode=pipelinemode, mode='ampcal')
 
         # Export the data
         hsd_exportdata (pipelinemode=pipelinemode)

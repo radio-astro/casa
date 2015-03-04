@@ -17,7 +17,7 @@ class SDImagingWorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
-    def __init__(self, context, infiles, outfile, spwids, scans, pols, onsourceid, 
+    def __init__(self, context, infiles, outfile, mode, spwids, scans, pols, onsourceid, 
                  edge=None, vislist=None):
         # NOTE: spwids and pols are list of numeric id list while scans
         #       is string (mssel) list
@@ -46,8 +46,9 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         spwid_list = self.inputs.spwids
         scan_list = self.inputs.scans
         pols_list = self.inputs.pols
+        imagemode = self.inputs.mode
  
-        self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, edge)
+        self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, imagemode, edge)
  
         result = SDImagingWorkerResults(task=self.__class__,
                                  success=True,
@@ -64,7 +65,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _do_imaging(self, infiles, spwid_list, scan_list, pols_list, imagename, edge):
+    def _do_imaging(self, infiles, spwid_list, scan_list, pols_list, imagename, imagemode, edge):
         context = self.context
         datatable = self.datatable
         antenna_list = [context.observing_run.st_names.index(f) 
@@ -180,6 +181,10 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             start = edge[0]
             step = 1
             nchan = total_nchan - sum(edge)
+        # ampcal
+        if imagemode.upper() == 'AMPCAL':
+            step = nchan
+            nchan = 1
     
         # restfreq
         spw = reference_data.spectral_window[spwid]

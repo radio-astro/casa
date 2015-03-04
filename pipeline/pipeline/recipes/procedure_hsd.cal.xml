@@ -55,6 +55,10 @@
     <ProcessingCommand>
         <Command xmlns="">hsd_imaging</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">mode</Keyword>
+                <Value xmlns="">ampcal</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

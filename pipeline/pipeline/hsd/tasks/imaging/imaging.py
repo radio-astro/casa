@@ -25,7 +25,7 @@ class SDImagingInputs(common.SingleDishInputs):
     Inputs for imaging
     """
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, infiles=None,
+    def __init__(self, context, mode=None, infiles=None,
                  field=None, spw=None, scan=None, pol=None,
                  reffile=None):
         self._init_properties(vars())
@@ -34,6 +34,7 @@ class SDImagingInputs(common.SingleDishInputs):
             val = getattr(self, key)
             if val is None or (val[0] == '[' and val[-1] == ']'):
                 self._to_list([key])
+        if self.mode is None: self.mode='line'
         #self._to_list(['infiles', 'iflist', 'pollist'])
 
     @property
@@ -97,6 +98,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         #pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
         reffile = self.inputs.reffile
+        imagemode = self.inputs.mode
         logrecords = []
 
         LOG.debug('scansel_list=%s'%(scansel_list))
@@ -273,7 +275,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                 combined_scans.extend(scans)
 
                 imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=infiles, 
-                                                               outfile=imagename, spwids=spwids,
+                                                               outfile=imagename, mode=imagemode,
+                                                               spwids=spwids,
                                                                scans=scans, pols=pols,
                                                                onsourceid=srctype, edge=edge,
                                                                vislist=exported_mses)
@@ -365,7 +368,8 @@ class SDImaging(common.SingleDishTaskTemplate):
             # Imaging
             LOG.info('Step 4. Imaging')
             imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
-                                                           outfile=imagename, spwids=combined_spws,
+                                                           outfile=imagename, mode=imagemode,
+                                                           spwids=combined_spws,
                                                            scans=combined_scans, pols=combined_pols,
                                                            onsourceid=srctype, edge=edge,
                                                            vislist=exported_mses)
