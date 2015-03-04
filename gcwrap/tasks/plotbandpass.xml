@@ -237,9 +237,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="showatmfield" subparam="true"> 
-      <value type="string"></value>
+      <any type="variant" limittypes="int string"></any>
       <description>for overlay="time", use first observation of this fieldID or name</description>
-      <any type="variant" limittypes="int string"/>
+      <value type="string"></value>
     </param>
 
     <param type="any" name="lo1" subparam="true">
@@ -316,6 +316,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
+    <param type="bool" name="chanrangeSetXrange" subparam="true">
+      <description>If True, then chanrange also sets the xrange to display</description>
+      <value type="bool">False</value>
+    </param>
+
     <constraints>
       <when param="figfile">
         <notequals type="string" value="">
@@ -349,6 +354,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <equals value="freq">
           <default param="chanrange"><value type="string"></value></default>
           <default param="showfdm"><value type="bool">False</value></default>
+          <default param="chanrangeSetXrange"><value type="bool">False</value></default>
         </equals>
       </when>
       <when param="yaxis">
@@ -408,6 +414,7 @@ on the yaxis selection.
  caltable3: a third cal table, of type BPOLY, to overlay on the first two
  channeldiff: set to value > 0 to plot derivatives of amplitude, the value is also used as sigma, and any outliers beyond this sigma will be printed to the logger
  chanrange: set xrange (e.g. "5~100") over which to autoscale y-axis for xaxis='freq'
+ chanrangeSetXrange: if True, then chanrange also sets the xrange to display
  convert: full path for convert command (in case it's not found)
  density: dpi to use in creating PNGs and PDFs (default=108)
  edge: the number of edge channels to ignore in finding outliers (for channeldiff>0)
