@@ -41,12 +41,12 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-	LinearMosaic::LinearMosaic (): outImage_p(NULL), outWgt_p(NULL){
+	LinearMosaic::LinearMosaic (): outImage_p(NULL), outWgt_p(NULL), outImName_p(""), outWgtName_p(""), weightType_p(1){
 
 
 	}
 	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx,
-			const Int ny, const Quantity cellx, const Quantity celly){
+			const Int ny, const Quantity cellx, const Quantity celly) :outImage_p(NULL), outWgt_p(NULL) {
 		outImName_p=outim;
 
 		outWgtName_p= outwgt=="" ? outim+String(".weight") : outwgt;
@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		makeEmptyImage(outwgt, cs, imcen, nx, ny,npol, nchan);
 		PagedImage<Float> outdiskim(outim);
 		PagedImage<Float> outdiskwgt(outwgt);
-		setOutImages(outdiskim, outdiskwgt);
+		setOutImages(outdiskim, outdiskwgt, 2);
 		makeMosaic(ims, wgtims);
 
 	}
@@ -95,8 +95,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
 			Bool retval=True;
-			if(outImage_p==NULL || outWgt_p==NULL)
+			if(outImage_p.null() && outImName_p=="")
 				ThrowCc("No output image or weight image defined");
+			if(outImage_p.null())
+				createOutImages(ims[0]->coordinates(), ims[0]->shape()[2], ims[0]->shape()[3] );
 			if(ims.nelements() != wgtims.nelements())
 				ThrowCc("Unequal number of images and weight images ");
 			for (uInt k=0; k < ims.nelements(); ++k){
@@ -105,9 +107,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return retval;
 
 		}
-	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt){
-		outImage_p=&outim;
-		outWgt_p = &outwgt;
+	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int weightType){
+		outImage_p=CountedPtr<ImageInterface<Float> >(&outim, False);
+		outWgt_p = CountedPtr<ImageInterface<Float> >(&outwgt, False);
+		weightType_p=weightType;
+	}
+	void LinearMosaic::setOutImages(const String& outim, const String& outwgt, const Int weightType){
+			outImage_p=new PagedImage<Float>(outim);
+			outWgt_p = new PagedImage<Float>(outwgt);
+			weightType_p=weightType;
 	}
 	Bool LinearMosaic::addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
 			  const ImageInterface<Float>& inWgt, Bool outImIsWeighted, Bool unWeightOutIm){
@@ -116,7 +124,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(!outImIsWeighted){
 
-			outim.copyData((LatticeExpr<Float>)(outim*outwgt));
+			if(weightType_p==1)
+				outim.copyData((LatticeExpr<Float>)(outim*outwgt));
+			else if( weightType_p==0)
+				outim.copyData((LatticeExpr<Float>)(outim*outwgt*outwgt));
+			weightType_p=2;
 
 		}
 
@@ -173,6 +185,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return True;
 	}
 
+	void LinearMosaic::createOutImages(const CoordinateSystem& cs, const Int npol, const Int nchan ){
+		makeEmptyImage(outImName_p, cs, imcen_p, nx_p, ny_p, npol, nchan );
+		makeEmptyImage(outWgtName_p, cs, imcen_p, nx_p, ny_p, npol, nchan );
+		outImage_p=new PagedImage<Float>(outImName_p);
+		outWgt_p= new PagedImage<Float>(outWgtName_p);
+	}
 	void LinearMosaic::makeEmptyImage(const String imagename, const CoordinateSystem& cs, const MDirection& imcen, const Int nx, const Int ny,
 				const Int npol, const Int nchan){
 		CoordinateSystem outcs=cs;
@@ -194,6 +212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dc.setReferenceFrame(eltype);
 		outcs.replaceCoordinate(dc, dirAx);
 		PagedImage<Float> outdiskim(IPosition(4, nx, ny, npol, nchan), outcs, imagename);
+		outdiskim.set(0.0);
 	}
 
 } //end namespace casa
