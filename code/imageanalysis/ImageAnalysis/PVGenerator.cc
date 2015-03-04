@@ -291,7 +291,7 @@ SPIIF PVGenerator::generate() const {
     	vector<Double> midpoint(end.size( ));
 	// THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
 	std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
-	std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind1st(std::divides<double>(),2.0) );
+	std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
     	Double targety = int(midpoint[1]);
     	Double targetx = targety == midpoint[1]
     	    ? midpoint[0]
