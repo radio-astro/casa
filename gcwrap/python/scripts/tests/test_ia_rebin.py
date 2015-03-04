@@ -213,6 +213,7 @@ class ia_rebin_test(unittest.TestCase):
         )
         rebin = myia.rebin("", [2, 2, 1])
         self.assertTrue(rebin)
+        rebin.done()
         outfile = "dx.im"
         self.assertTrue(
             imrebin(
@@ -223,7 +224,6 @@ class ia_rebin_test(unittest.TestCase):
         self.assertRaises(
             Exception, myia.rebin, "", [2,2,2]
         )
-        rebin.done()
         myia.done()
         self.assertFalse(
             imrebin(
@@ -285,6 +285,25 @@ class ia_rebin_test(unittest.TestCase):
         imrebin(imagename=imagename, outfile=outfile, factor=factor, box="5,5,25,25",crop=True)
         myia.open(outfile)
         self.assertTrue((myia.shape() == [4,4,1]).all())
+        myia.done()
+        
+    def test_dropdeg2(self):
+        """ axes that become degenerate when regridded are dropped if dropdeg=True: CAS-5836"""
+        myia = self._myia
+        imagename = "kbesd.im"
+        myia.fromshape(imagename, [20, 20, 20])
+        factor = [1, 1, 20]
+        zz = myia.rebin("", bin=factor, dropdeg=True)
+        myia.done()
+        self.assertTrue((zz.shape() == [20,20]).all())
+        zz.done()
+        outfile = "kyzb5.im"
+        imrebin(
+            imagename=imagename, outfile=outfile,
+            factor=factor, dropdeg=True
+        )
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [20,20]).all())
         myia.done()
  
 def suite():

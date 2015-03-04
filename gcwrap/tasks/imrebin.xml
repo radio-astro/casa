@@ -22,7 +22,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
         </param>
         <param type="intArray"  name="factor">
-            <description>Binning factors for each axis</description>
+            <description>Binning factors for each axis. Use imhead or ia.summary to determine axis ordering.</description>
         </param>
         <param type="any" direction="in" name="region">
             <any type="variant"/>
@@ -95,7 +95,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
-factor           Array of binning factors for each axis, eg [2,3]
+factor           Array of binning factors for each axis, eg [2,3]. Use imhead or ia.summary()
+                 to determine order of axes in your image.
 region           Region to use. Do not specify region and box/chans/stokes simultaneously.
                  See help par.region for details.
 box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
@@ -127,7 +128,10 @@ specified is less than the number of image axes, then the remaining axes
 not specified are not rebinned. All specified values must be positive. A
 value of one indicates that no rebinning of the associated axis will occur.
 Should this array contain any float values, they will be rounded to the next
-lowest integer.
+lowest integer. Note that in many images with both frequency and polarization
+axes, the polarization axis preceeds the frequency axis. If you wish to rebin
+the frequency axis, it is recommended that you inspect your image with imhead
+or ia.summary() to determine the axis ordering.
 
 Binning starts from the origin pixel of the bounding box of the selected region or
 the origin pixel of the input image if no region is specified. The value of crop
@@ -146,7 +150,11 @@ factor associated with a degenerate axis must always be 1.
 
 EXAMPLE
 
+# rebin the first two axes (normally the direction axes)
 imrebin(imagename="my.im", outfile="rebinned.im", factor=[2,3])
+
+# rebin the frequency axis, which is the fourth axis in this image
+imrebin(imagename="my2.im", outfile="rebinned2.im", factor=[1,1,1,4])
 
     </example>
 </task>
