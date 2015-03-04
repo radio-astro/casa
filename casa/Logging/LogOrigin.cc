@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogOrigin.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogOrigin.cc 21572 2015-03-03 12:22:11Z gervandiepen $
 
 #include <casacore/casa/Logging/LogOrigin.h>
-#include <stdlib.h>
+#include <casacore/casa/OS/EnvVar.h>
 #include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LogOrigin::LogOrigin()
 : task_p(""), function_p(""), class_p(""), id_p(True), line_p(0), file_p(""), node_p(getNode())
@@ -236,35 +236,25 @@ const SourceLocation *SourceLocation::canonicalize(const char *file, Int line)
     return &permanent;
 }
 
-/*
- * Get the OpenMPI rank from the current process.
- * This assumes that the MPI library implementation is openMPI.
- * If CASA is started without mpirun, LogOrigin will print nothing
- * for node_p. If it is started with mpirun, each CASA instance
- * running on an MPI server will print its rank at the LogOrigin
- */
+// Get the OpenMPI rank from the current process.
+// This assumes that the MPI library implementation is openMPI.
+// If a program is started without mpirun, LogOrigin will print nothing
+// for node_p. If it is started with mpirun, each instance
+// running on an MPI server will print its rank at the LogOrigin
 String LogOrigin::getNode()
 {
-    String rank = "";
-    rank.resize(256);
     // Note, MPI rank 0 means the MPIClient from mpi4py is running, not a server,
     // therefore it should print nothing
-    if (getenv("OMPI_COMM_WORLD_RANK") != NULL)
-    {
-        String myrank = "";
-        myrank.resize(256);
-        myrank = getenv("OMPI_COMM_WORLD_RANK");
-        if (myrank.compare("0") == 0){
-            rank = "";
-        }
-        else {
-            rank = "MPIServer-";
-            rank = rank.append(myrank);
-        }
+    String rank = EnvironmentVariable::get("OMPI_COMM_WORLD_RANK");
+    if (! rank.empty()) {
+      if (rank == "0") {
+        rank = String();
+      } else {
+        rank = "MPIServer-" + rank;
+      }
     }
-
     return rank;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogOrigin.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogOrigin.h 21572 2015-03-03 12:22:11Z gervandiepen $
 
 #ifndef CASA_LOGORIGIN_H
 #define CASA_LOGORIGIN_H
@@ -34,9 +34,9 @@
 #include <casacore/casa/System/ObjectID.h>
 #include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
-class SourceLocation;
+struct SourceLocation;
 
 // <summary> 
 // LogOrigin: The source code location of the originator of a LogMessage.
@@ -170,9 +170,6 @@ public:
     // Return true if the line number and file name are not set.
     Bool isUnset() const;
 
-    // Return a String with the MPI rank
-    String getNode();
-
 private:
     String task_p;
     String function_p;
@@ -181,6 +178,9 @@ private:
     uInt line_p;
     String file_p;
     String node_p;
+
+    // Return a String with the MPI rank
+    String getNode();
 
     // Provide common implementation for copy constructor and
     // assignment operator.
@@ -208,11 +208,11 @@ struct SourceLocation
     static const SourceLocation *canonicalize(const char *file, Int line);
 };
 
-#define WHERE casa::SourceLocation::canonicalize(__FILE__, __LINE__)
+#define WHERE casacore::SourceLocation::canonicalize(__FILE__, __LINE__)
 
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
