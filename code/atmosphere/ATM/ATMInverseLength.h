@@ -60,10 +60,6 @@ public:
   /** Accessor to the inverse length value in specified units. Implemented units are km-1 [KM-1], m-1 [M-1], mm-1 [MM-1], micron-1 [MICRON-1], nm-1 [NM-1].
    *  If none of these implemented units is given, the SI value will be returned. */
   inline double get(const string &units) const { return sget(valueIS_, units); }
-  /** Accessor to the inverse length in specified units as a formatted string.
-   *  Implemented units are km-1 [KM-1], m-1 [M-1], mm-1 [MM-1], micron-1 [MICRON-1], nm-1 [NM-1].
-   *  If none of these implemented units is given, the SI value will be returned. */
-  string get(const string &form, const string &units) const;
 
   /** Operator "equal to a InverseLength" */
   inline InverseLength& operator=(const InverseLength &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }

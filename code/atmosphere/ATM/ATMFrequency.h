@@ -65,10 +65,6 @@ public:
   /** Accessor to the frequency value in specified units. Implemented units are THz [THZ] [thz], GHz [GHZ] [ghz], MHz [MHZ] [mhz], Hz [HZ] [hz].
    *  If none of these implemented units is given, the SI value will be returned. */
   inline double get(const string &units) const { return sget( valueIS_, units); }
-  /** Accessor to the frequency in specified units as a formatted string.
-   *  Implemented units are THz [THZ] [thz], GHz [GHZ] [ghz], MHz [MHZ] [mhz], Hz [HZ] [hz].
-   *  If none of these implemented units is given, the SI value will be returned. */
-  string get(const string &form, const string &units) const;
 
   /** Operator "equal to a Frequency" */
   inline Frequency& operator=(const Frequency &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }

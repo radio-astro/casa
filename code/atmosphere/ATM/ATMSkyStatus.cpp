@@ -209,149 +209,136 @@ SkyStatus::SkyStatus(const RefractiveIndexProfile &refractiveIndexProfile,
 
 }
 
-SkyStatus::SkyStatus(const SkyStatus & a)
+SkyStatus::SkyStatus(const SkyStatus & a) : RefractiveIndexProfile(a)
 {
-  //cout <<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
 
-  // level AtmProfile
+  // 2015-03-02 (DB) : 
+  // Use constructor of base class RefractiveIndexProfile()
+  // and comment the following code because it is executed in RefractiveIndexProfile() constructor
 
-  //    type_ = a.type_;
-  //    prLimit_ = a.prLimit_;
+//   groundTemperature_ = a.groundTemperature_;
+//   tropoLapseRate_ = a.tropoLapseRate_;
+//   groundPressure_ = a.groundPressure_;
+//   relativeHumidity_ = a.relativeHumidity_;
+//   wvScaleHeight_ = a.wvScaleHeight_;
+//   pressureStep_ = a.pressureStep_;
+//   pressureStepFactor_ = a.pressureStepFactor_;
+//   altitude_ = a.altitude_;
+//   topAtmProfile_ = a.topAtmProfile_;
+//   numLayer_ = a.numLayer_;
+//   newBasicParam_ = a.newBasicParam_;
+//   v_layerThickness_.reserve(numLayer_);
+//   v_layerTemperature_.reserve(numLayer_);
+//   v_layerWaterVapor_.reserve(numLayer_);
+//   v_layerCO_.reserve(numLayer_);
+//   v_layerO3_.reserve(numLayer_);
+//   v_layerN2O_.reserve(numLayer_);
+//   v_layerNO2_.reserve(numLayer_);
+//   v_layerSO2_.reserve(numLayer_);
+//   for(unsigned int n = 0; n < numLayer_; n++) {
+//     v_layerThickness_.push_back(a.v_layerThickness_[n]);
+//     v_layerTemperature_.push_back(a.v_layerTemperature_[n]);
+//     //v_layerDeltaT_.push_back(a.v_layerDeltaT_[n]);
+//     //cout << "n=" << n << endl;
+//     v_layerWaterVapor_.push_back(a.v_layerWaterVapor_[n]);
+//     v_layerPressure_.push_back(a.v_layerPressure_[n]);
+//     v_layerCO_.push_back(a.v_layerCO_[n]);
+//     v_layerO3_.push_back(a.v_layerO3_[n]);
+//     v_layerN2O_.push_back(a.v_layerN2O_[n]);
+//     v_layerNO2_.push_back(a.v_layerNO2_[n]);
+//     v_layerSO2_.push_back(a.v_layerSO2_[n]);
+//   }
 
-  /*
-   v_hx_.reserve(a.v_hx_.size());
-   v_px_.reserve(a.v_px_.size());
-   v_tx_.reserve(a.v_tx_.size());
-   for(unsigned int n=0; n<a.v_hx_.size(); n++){
-   v_hx_.push_back(a.v_hx_[n]);
-   v_px_.push_back(a.v_px_[n]);
-   v_tx_.push_back(a.v_tx_[n]);
-   }
-   */
+//   // level Spectral Grid
+//   freqUnits_ = a.freqUnits_;
+//   v_chanFreq_ = a.v_chanFreq_;
 
-  groundTemperature_ = a.groundTemperature_;
-  tropoLapseRate_ = a.tropoLapseRate_;
-  groundPressure_ = a.groundPressure_;
-  relativeHumidity_ = a.relativeHumidity_;
-  wvScaleHeight_ = a.wvScaleHeight_;
-  pressureStep_ = a.pressureStep_;
-  pressureStepFactor_ = a.pressureStepFactor_;
-  altitude_ = a.altitude_;
-  topAtmProfile_ = a.topAtmProfile_;
-  numLayer_ = a.numLayer_;
-  newBasicParam_ = a.newBasicParam_;
-  v_layerThickness_.reserve(numLayer_);
-  v_layerTemperature_.reserve(numLayer_);
-  v_layerWaterVapor_.reserve(numLayer_);
-  v_layerCO_.reserve(numLayer_);
-  v_layerO3_.reserve(numLayer_);
-  v_layerN2O_.reserve(numLayer_);
-  v_layerNO2_.reserve(numLayer_);
-  v_layerSO2_.reserve(numLayer_);
-  for(unsigned int n = 0; n < numLayer_; n++) {
-    v_layerThickness_.push_back(a.v_layerThickness_[n]);
-    v_layerTemperature_.push_back(a.v_layerTemperature_[n]);
-    //v_layerDeltaT_.push_back(a.v_layerDeltaT_[n]);
-    //cout << "n=" << n << endl;
-    v_layerWaterVapor_.push_back(a.v_layerWaterVapor_[n]);
-    v_layerPressure_.push_back(a.v_layerPressure_[n]);
-    v_layerCO_.push_back(a.v_layerCO_[n]);
-    v_layerO3_.push_back(a.v_layerO3_[n]);
-    v_layerN2O_.push_back(a.v_layerN2O_[n]);
-    v_layerNO2_.push_back(a.v_layerNO2_[n]);
-    v_layerSO2_.push_back(a.v_layerSO2_[n]);
-  }
+//   v_numChan_ = a.v_numChan_;
+//   v_refChan_ = a.v_refChan_;
+//   v_refFreq_ = a.v_refFreq_;
+//   v_chanSep_ = a.v_chanSep_;
+//   v_maxFreq_ = a.v_maxFreq_;
+//   v_minFreq_ = a.v_minFreq_;
+//   v_intermediateFrequency_ = a.v_intermediateFrequency_;
+//   v_loFreq_ = a.v_loFreq_;
 
-  // level Spectral Grid
-  freqUnits_ = a.freqUnits_;
-  v_chanFreq_ = a.v_chanFreq_;
+//   v_sidebandSide_ = a.v_sidebandSide_;
+//   v_sidebandType_ = a.v_sidebandType_;
 
-  v_numChan_ = a.v_numChan_;
-  v_refChan_ = a.v_refChan_;
-  v_refFreq_ = a.v_refFreq_;
-  v_chanSep_ = a.v_chanSep_;
-  v_maxFreq_ = a.v_maxFreq_;
-  v_minFreq_ = a.v_minFreq_;
-  v_intermediateFrequency_ = a.v_intermediateFrequency_;
-  v_loFreq_ = a.v_loFreq_;
+//   vv_assocSpwId_ = a.vv_assocSpwId_;
+//   vv_assocNature_ = a.vv_assocNature_;
 
-  v_sidebandSide_ = a.v_sidebandSide_;
-  v_sidebandType_ = a.v_sidebandType_;
+//   v_transfertId_ = a.v_transfertId_;
 
-  vv_assocSpwId_ = a.vv_assocSpwId_;
-  vv_assocNature_ = a.vv_assocNature_;
+//   // level Absorption Profile
+//   vv_N_H2OLinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_H2OContPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_O2LinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_DryContPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_O3LinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_COLinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_N2OLinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_NO2LinesPtr_.reserve(a.v_chanFreq_.size());
+//   vv_N_SO2LinesPtr_.reserve(a.v_chanFreq_.size());
 
-  v_transfertId_ = a.v_transfertId_;
+//   vector<complex<double> >* v_N_H2OLinesPtr;
+//   vector<complex<double> >* v_N_H2OContPtr;
+//   vector<complex<double> >* v_N_O2LinesPtr;
+//   vector<complex<double> >* v_N_DryContPtr;
+//   vector<complex<double> >* v_N_O3LinesPtr;
+//   vector<complex<double> >* v_N_COLinesPtr;
+//   vector<complex<double> >* v_N_N2OLinesPtr;
+//   vector<complex<double> >* v_N_NO2LinesPtr;
+//   vector<complex<double> >* v_N_SO2LinesPtr;
 
-  // level Absorption Profile
-  vv_N_H2OLinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_H2OContPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_O2LinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_DryContPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_O3LinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_COLinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_N2OLinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_NO2LinesPtr_.reserve(a.v_chanFreq_.size());
-  vv_N_SO2LinesPtr_.reserve(a.v_chanFreq_.size());
+//   for(unsigned int nc = 0; nc < v_chanFreq_.size(); nc++) {
 
-  vector<complex<double> >* v_N_H2OLinesPtr;
-  vector<complex<double> >* v_N_H2OContPtr;
-  vector<complex<double> >* v_N_O2LinesPtr;
-  vector<complex<double> >* v_N_DryContPtr;
-  vector<complex<double> >* v_N_O3LinesPtr;
-  vector<complex<double> >* v_N_COLinesPtr;
-  vector<complex<double> >* v_N_N2OLinesPtr;
-  vector<complex<double> >* v_N_NO2LinesPtr;
-  vector<complex<double> >* v_N_SO2LinesPtr;
+//     v_N_H2OLinesPtr = new vector<complex<double> > ;
+//     v_N_H2OLinesPtr->reserve(numLayer_);
+//     v_N_H2OContPtr = new vector<complex<double> > ;
+//     v_N_H2OContPtr->reserve(numLayer_);
+//     v_N_O2LinesPtr = new vector<complex<double> > ;
+//     v_N_O2LinesPtr->reserve(numLayer_);
+//     v_N_DryContPtr = new vector<complex<double> > ;
+//     v_N_DryContPtr->reserve(numLayer_);
+//     v_N_O3LinesPtr = new vector<complex<double> > ;
+//     v_N_O3LinesPtr->reserve(numLayer_);
+//     v_N_COLinesPtr = new vector<complex<double> > ;
+//     v_N_COLinesPtr->reserve(numLayer_);
+//     v_N_N2OLinesPtr = new vector<complex<double> > ;
+//     v_N_N2OLinesPtr->reserve(numLayer_);
+//     v_N_NO2LinesPtr = new vector<complex<double> > ;
+//     v_N_NO2LinesPtr->reserve(numLayer_);
+//     v_N_SO2LinesPtr = new vector<complex<double> > ;
+//     v_N_SO2LinesPtr->reserve(numLayer_);
 
-  for(unsigned int nc = 0; nc < v_chanFreq_.size(); nc++) {
+//     for(unsigned int n = 0; n < numLayer_; n++) {
 
-    v_N_H2OLinesPtr = new vector<complex<double> > ;
-    v_N_H2OLinesPtr->reserve(numLayer_);
-    v_N_H2OContPtr = new vector<complex<double> > ;
-    v_N_H2OContPtr->reserve(numLayer_);
-    v_N_O2LinesPtr = new vector<complex<double> > ;
-    v_N_O2LinesPtr->reserve(numLayer_);
-    v_N_DryContPtr = new vector<complex<double> > ;
-    v_N_DryContPtr->reserve(numLayer_);
-    v_N_O3LinesPtr = new vector<complex<double> > ;
-    v_N_O3LinesPtr->reserve(numLayer_);
-    v_N_COLinesPtr = new vector<complex<double> > ;
-    v_N_COLinesPtr->reserve(numLayer_);
-    v_N_N2OLinesPtr = new vector<complex<double> > ;
-    v_N_N2OLinesPtr->reserve(numLayer_);
-    v_N_NO2LinesPtr = new vector<complex<double> > ;
-    v_N_NO2LinesPtr->reserve(numLayer_);
-    v_N_SO2LinesPtr = new vector<complex<double> > ;
-    v_N_SO2LinesPtr->reserve(numLayer_);
+//       // cout << "numLayer_=" << nc << " " << n << endl; // COMMENTED OUT BY JUAN MAY/16/2005
 
-    for(unsigned int n = 0; n < numLayer_; n++) {
+//       v_N_H2OLinesPtr->push_back(a.vv_N_H2OLinesPtr_[nc]->at(n));
+//       v_N_H2OContPtr->push_back(a.vv_N_H2OContPtr_[nc]->at(n));
+//       v_N_O2LinesPtr->push_back(a.vv_N_O2LinesPtr_[nc]->at(n));
+//       v_N_DryContPtr->push_back(a.vv_N_DryContPtr_[nc]->at(n));
+//       v_N_O3LinesPtr->push_back(a.vv_N_O3LinesPtr_[nc]->at(n));
+//       v_N_COLinesPtr->push_back(a.vv_N_COLinesPtr_[nc]->at(n));
+//       v_N_N2OLinesPtr->push_back(a.vv_N_N2OLinesPtr_[nc]->at(n));
+//       v_N_NO2LinesPtr->push_back(a.vv_N_NO2LinesPtr_[nc]->at(n));
+//       v_N_SO2LinesPtr->push_back(a.vv_N_SO2LinesPtr_[nc]->at(n));
 
-      // cout << "numLayer_=" << nc << " " << n << endl; // COMMENTED OUT BY JUAN MAY/16/2005
+//     }
 
-      v_N_H2OLinesPtr->push_back(a.vv_N_H2OLinesPtr_[nc]->at(n));
-      v_N_H2OContPtr->push_back(a.vv_N_H2OContPtr_[nc]->at(n));
-      v_N_O2LinesPtr->push_back(a.vv_N_O2LinesPtr_[nc]->at(n));
-      v_N_DryContPtr->push_back(a.vv_N_DryContPtr_[nc]->at(n));
-      v_N_O3LinesPtr->push_back(a.vv_N_O3LinesPtr_[nc]->at(n));
-      v_N_COLinesPtr->push_back(a.vv_N_COLinesPtr_[nc]->at(n));
-      v_N_N2OLinesPtr->push_back(a.vv_N_N2OLinesPtr_[nc]->at(n));
-      v_N_NO2LinesPtr->push_back(a.vv_N_NO2LinesPtr_[nc]->at(n));
-      v_N_SO2LinesPtr->push_back(a.vv_N_SO2LinesPtr_[nc]->at(n));
+//     vv_N_H2OLinesPtr_.push_back(v_N_H2OLinesPtr);
+//     vv_N_H2OContPtr_.push_back(v_N_H2OContPtr);
+//     vv_N_O2LinesPtr_.push_back(v_N_O2LinesPtr);
+//     vv_N_DryContPtr_.push_back(v_N_DryContPtr);
+//     vv_N_O3LinesPtr_.push_back(v_N_O3LinesPtr);
+//     vv_N_COLinesPtr_.push_back(v_N_COLinesPtr);
+//     vv_N_N2OLinesPtr_.push_back(v_N_N2OLinesPtr);
+//     vv_N_NO2LinesPtr_.push_back(v_N_NO2LinesPtr);
+//     vv_N_SO2LinesPtr_.push_back(v_N_SO2LinesPtr);
 
-    }
-
-    vv_N_H2OLinesPtr_.push_back(v_N_H2OLinesPtr);
-    vv_N_H2OContPtr_.push_back(v_N_H2OContPtr);
-    vv_N_O2LinesPtr_.push_back(v_N_O2LinesPtr);
-    vv_N_DryContPtr_.push_back(v_N_DryContPtr);
-    vv_N_O3LinesPtr_.push_back(v_N_O3LinesPtr);
-    vv_N_COLinesPtr_.push_back(v_N_COLinesPtr);
-    vv_N_N2OLinesPtr_.push_back(v_N_N2OLinesPtr);
-    vv_N_NO2LinesPtr_.push_back(v_N_NO2LinesPtr);
-    vv_N_SO2LinesPtr_.push_back(v_N_SO2LinesPtr);
-
-  }
+//   }
 
   // level Atm Radiance
 
@@ -598,7 +585,7 @@ bool SkyStatus::setBasicAtmosphericParameters(const Humidity &relativeHumidity,
                                           groundPressure,
                                           groundTemperature_,
                                           tropoLapseRate_,
-                                          relativeHumidity_,
+                                          relativeHumidity,
                                           wvScaleHeight_);
   return update;
 }
@@ -983,7 +970,7 @@ Length SkyStatus::WaterVaporRetrieval_fromFTS(unsigned int spwId,
   if(v_transmission.size() == getSpectralWindow(spwId).size()) {
     return mkWaterVaporRetrieval_fromFTS(spwId,
                                          v_transmission,
-                                         getAirMass(),
+                                         // getAirMass(),    // unused parameter
                                          f1,
                                          f2);
   } else {
@@ -1489,14 +1476,14 @@ Length SkyStatus::WaterVaporRetrieval_fromTEBB(const vector<unsigned int> &spwId
                                         skycoupling,
                                         tspill);
 }
-
+  
   Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
 						 const Percent &signalGain,
 						 const Temperature &tebb,
 						 double airmass,
 						 double skycoupling,
 						 const Temperature &tspill);
-
+  
 Length SkyStatus::WaterVaporRetrieval_fromTEBB(const vector<unsigned int> &spwId,
                                                const vector<Percent> &signalGain,
                                                const vector<Temperature> &v_tebb,
@@ -1732,7 +1719,7 @@ Temperature SkyStatus::getSigmaFit(unsigned int spwId,
 
 Length SkyStatus::mkWaterVaporRetrieval_fromFTS(unsigned int spwId,
                                                 const vector<double> &measuredSkyTransmission,
-                                                double airm,
+                                                //double airm,   // unused parameter
                                                 const Frequency &fre1,
                                                 const Frequency &fre2)
 {

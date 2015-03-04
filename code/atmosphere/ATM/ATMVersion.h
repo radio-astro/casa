@@ -29,7 +29,7 @@
 #include <string>
 
 #ifndef ATM_VERSION
-#define ATM_VERSION "0.6.0"
+#define ATM_VERSION "0.7.0"
 #endif
 
 

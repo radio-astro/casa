@@ -1459,7 +1459,7 @@ protected:
 
   Length mkWaterVaporRetrieval_fromFTS(unsigned int spwId,
                                        const vector<double> &v_transmission,
-                                       double airm,
+                                       //double airm,     // unused parameter
                                        const Frequency &f1,
                                        const Frequency &f2);
 

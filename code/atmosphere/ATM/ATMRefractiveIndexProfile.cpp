@@ -50,7 +50,7 @@ RefractiveIndexProfile::RefractiveIndexProfile(const SpectralGrid &spectralGrid,
   mkRefractiveIndexProfile();
 }
 
-RefractiveIndexProfile::RefractiveIndexProfile(const RefractiveIndexProfile & a)
+RefractiveIndexProfile::RefractiveIndexProfile(const RefractiveIndexProfile & a) : AtmProfile(a), SpectralGrid(a)
 {
   //   cout<<"Enter RefractiveIndexProfile copy constructor version Fri May 20 00:59:47 CEST 2005"<<endl;
 
@@ -1793,13 +1793,13 @@ bool RefractiveIndexProfile::spwidAndIndexAreValid(unsigned int spwid,
                                                    unsigned int idx)
 {
 
-  if(spwid > getNumSpectralWindow() - 1 || spwid < 0) {
+  if(spwid > getNumSpectralWindow() - 1) {
     cout
         << " RefractiveIndexProfile: ERROR: spectral window identifier out of range "
         << endl;
     return false;
   }
-  if(idx > getNumChan(spwid) - 1 || idx < 0) {
+  if(idx > getNumChan(spwid) - 1) {
     cout << " RefractiveIndexProfile: ERROR: channel index out of range "
         << endl;
     return false;

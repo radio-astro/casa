@@ -79,18 +79,5 @@ double Opacity::sput(double value, const string &units)
   }
 }
 
-string Opacity::get(const string &form, const string &units) const
-{
-  char myString[18];
-  //   if(form.length()==0)
-  sprintf(myString, "%f %s", get(units), units.c_str());
-  //     else
-  //       sprintf( myString,"%form %s",
-  // 	       get(units),
-  // 	       units);
-
-  return string(myString);
-}
-
 ATM_NAMESPACE_END
 

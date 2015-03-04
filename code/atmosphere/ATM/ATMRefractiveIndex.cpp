@@ -97,7 +97,7 @@ ATM_NAMESPACE_BEGIN
 	    exp(-2322.92/temperature)+
 	    mkSpecificRefractivity_hh18o(temperature,pressure,wvpressure,frequency)*abun_18o+
 	    mkSpecificRefractivity_hh17o(temperature,pressure,wvpressure,frequency)*abun_17o)* //+
-      // mkSpecificRefractivity_hdo(temperature,pressure,wvpressure,frequency)*2.0*abun_D)*
+      // mkSpecificRefractivity_hdo(temperature,pressure,frequency)*2.0*abun_D)*
       (6.023e23*wvpressure*217.0/(temperature*mmol_h2o));
   }
 
@@ -342,7 +342,8 @@ ATM_NAMESPACE_BEGIN
     if(species==12){return mkSpecificRefractivity_hh16o_v2(tt, pp, eh2o, nu);}
     if(species==13){return mkSpecificRefractivity_hh18o(tt, pp, eh2o, nu);}
     if(species==14){return mkSpecificRefractivity_hh17o(tt, pp, eh2o, nu);}
-    if(species==15){return mkSpecificRefractivity_hdo(tt, pp, eh2o, nu);}
+    //if(species==15){return mkSpecificRefractivity_hdo(tt, pp, eh2o, nu);}    // eh2o removed (unused parameter)
+    if(species==15){return mkSpecificRefractivity_hdo(tt, pp, nu);}
     if(species==16){return mkSpecificRefractivity_16o16o16o(tt, pp, nu);}
     if(species==17){return mkSpecificRefractivity_16o16o16o_v2(tt, pp, nu);}
     if(species==18){return mkSpecificRefractivity_16o16o16o_v1(tt, pp, nu);}
@@ -4402,7 +4403,8 @@ ATM_NAMESPACE_BEGIN
 
   //////////////////////// Opacity Source Number: 15 /////////////////////////////
 
-  complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double pp, double eh2o, double nu){
+  //complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double pp, double eh2o, double nu){
+complex<double>  RefractiveIndex::mkSpecificRefractivity_hdo(double tt, double pp, double nu){    // eh2o removed (unused parameter)
 
     static const double fre[58]={
       5.70284, 10.27828, 22.30749, 50.23643, 64.42724, 80.57828,

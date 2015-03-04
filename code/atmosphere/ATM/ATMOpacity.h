@@ -61,10 +61,6 @@ public:
   /** Accessor to the opacity value in specified units. Implemented units are np [neper] [NP] [NEPER], db [DB].
    *  If none of these implemented units is given, the value in neper will be returned. */
   inline double get(const string &units) const { return sget(valueIS_, units); }
-  /** Accessor to the opacity in specified units as a formatted string.
-   *  Implemented units are np [neper] [NP] [NEPER], db [DB].
-   *  If none of these implemented units is given, the value in neper will be returned. */
-  string get(const string &form, const string &units)const;
 
   /** Operator "equal to a Opacity" */
   inline Opacity& operator=(const Opacity &rhs) { if(&rhs != this) valueIS_ = rhs.valueIS_; return *this; }

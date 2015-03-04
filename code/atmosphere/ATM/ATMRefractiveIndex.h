@@ -919,7 +919,7 @@ private:
                                                double frequency);
   std::complex<double> mkSpecificRefractivity_hdo(double temperature,             /// 15
                                              double pressure,
-                                             double wvpressure,
+                                             //double wvpressure,            // unused parameter
                                              double frequency);
   std::complex<double> mkSpecificRefractivity_16o16o16o(double temperature,       /// 16
                                                    double pressure,
