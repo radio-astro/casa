@@ -31,7 +31,7 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
         else:
             raise Exception, 'Infile data set not found - please verify the name'
 
-        if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps', 'apply']): 
+        if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps', 'otfraster', 'apply']): 
             raise Exception, 'Calmode must be either \'ps\' or \'tsys\' or \'apply\''
 
         if (not overwrite) and (os.path.exists(outfile)):
@@ -106,7 +106,8 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
         else:
             # non-apply modes (ps, tsys)
-            calmodemap = {'tsys': 'tsys','ps': 'sdsky_ps'}
+            calmodemap = {'tsys': 'tsys','ps': 'sdsky_ps',
+                          'otfraster': 'sdsky_raster'}
 
         #if(calmode!='apply'):
             if len(outfile) == 0:
@@ -114,8 +115,9 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
             if calmode=='tsys':
                 cb.specifycal(caltable=outfile,time="",spw=spw,pol=pol,caltype=calmodemap[calmode])
             else:
+                fraction_numeric = to_numeric_fraction(fraction)
                 cb.selectvis(spw=spw, scan=scan, field=field)
-                cb.setsolve(type=calmodemap[calmode], table=outfile)
+                cb.setsolve(type=calmodemap[calmode], table=outfile, fraction=fraction_numeric, numedge=noff)
                 cb.solve()
 
     except UserWarning, instance:
@@ -134,3 +136,18 @@ def inspect_caltype(table):
         if 'VisCal' in tb.keywordnames():
             caltype = tb.getkeyword('VisCal')
     return caltype
+
+def to_numeric_fraction(fraction):
+    if len(fraction.strip()) == 0:
+        # invalid, use default
+        fraction_numeric = 0.1
+    else:
+        pos = fraction.strip().find('%') != -1
+        if pos != -1:
+            # percentage 
+            fraction_numeric = float(fraction[:pos]) * 0.01
+        else:
+            # direct value
+            fraction_numeric = float(fraction)
+    return fraction_numeric
+    
