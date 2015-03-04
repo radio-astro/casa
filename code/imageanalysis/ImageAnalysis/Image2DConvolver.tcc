@@ -103,7 +103,8 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 		ostringstream os;
 		os << "Unable to reach target resolution of "
 			<< targetBeam << " Input image beam "
-			<< inputBeam << " is probably too large";
+			<< inputBeam << " is (nearly) identical "
+			<< "to or larger than the output beam size";
 		ThrowCc(os.str());
 	}
 	kernelParms[0] = convolvingBeam.getMajor();
