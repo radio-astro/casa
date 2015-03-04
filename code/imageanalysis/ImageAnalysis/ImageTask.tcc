@@ -301,7 +301,7 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
     const ImageInterface<T>& image, const Array<T> *const values,
     const ArrayLattice<Bool> *const mask,
     const IPosition *const outShape, const CoordinateSystem *const coordsys,
-	const String *const outname, Bool overwrite
+	const String *const outname, Bool overwrite, Bool dropDegen
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
@@ -335,17 +335,19 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 		overwrite = _overwrite;
 	}
 	SPIIT outImage = tmpImage;
-	if (! myOutname.empty()) {
-		_removeExistingFileIfNecessary(myOutname, overwrite);
+	outImage->put(values == 0 ? image.get() : *values);
+	if (dropDegen || ! myOutname.empty()) {
+		if (! myOutname.empty()) {
+			_removeExistingFileIfNecessary(myOutname, overwrite);
+		}
 		String emptyMask = "";
 		Record empty;
         outImage = SubImageFactory<T>::createImage(
         	*tmpImage, myOutname, empty, emptyMask,
-        	False, False, True, False
+        	dropDegen, False, True, False
         );
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, image);
-	outImage->put(values == 0 ? image.get() : *values);
 	if (! _suppressHistory) {
 		ImageHistory<T> history(outImage);
 		vector<std::pair<String, String> >::const_iterator end = _newHistory.end();

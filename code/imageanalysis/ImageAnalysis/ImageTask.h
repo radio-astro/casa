@@ -176,8 +176,16 @@ protected:
     	const ImageInterface<T>& image, const Array<T> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0,
-    	const String *const outname=0, Bool overwrite=False
+    	const String *const outname=0, Bool overwrite=False, Bool dropDegen=False
     ) const;
+
+    SPIIT _prepareOutputImage(
+    	const ImageInterface<T>& image, Bool dropDegen
+    ) const {
+    	return _prepareOutputImage(
+    		image, 0, 0, 0, 0, 0, False, dropDegen
+    	);
+    }
 
     Verbosity _getVerbosity() const { return _verbosity; }
 

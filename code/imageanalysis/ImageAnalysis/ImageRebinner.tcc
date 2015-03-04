@@ -111,7 +111,26 @@ template<class T> SPIIT ImageRebinner<T>::rebin() const {
 		}
 	}
 	RebinImage<T> binIm(*subImage, myFactors);
-	return this->_prepareOutputImage(binIm);
+	SPIIT outIm = this->_prepareOutputImage(binIm, this->_getDropDegen());
+	/*
+	// remove any axes that have been binned into a remaining degenerate axis,
+	// CAS-5836
+	if (this->_getDropDegen()) {
+		IPosition outShape = outIm->shape();
+		uInt outDim = outIm->ndim();
+		for (uInt i=0; i<outDim; ++i) {
+			if (outShape[i] == 1) {
+				Record empty;
+				outIm = SubImageFactory<T>::createImage(
+					*outIm, this->_getOutname(), Record(),
+					"", True, True, False, False
+				);
+				break;
+			}
+		}
+	}
+	*/
+	return outIm;
 }
 
 }
