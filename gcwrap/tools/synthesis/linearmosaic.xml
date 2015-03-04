@@ -11,8 +11,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
         <shortdescription>combining images in a weighted fashion</shortdescription>
        
 <description>
-The {\tt calibrater} tool (cb) provides for synthesis calibration 
-operations within CASA.  
+The {\tt linearmosaic} tool (lm) provides a toolkit for stitching images in a weighted fashion.  
 </description>
 <code>
 	<include>tools/synthesis/linearmosaic_forward.h</include>
@@ -21,10 +20,10 @@ operations within CASA.
 </private>
 </code>
 
-<method type="constructor" name="calibrater">
-<shortdescription>Construct a calibrater tool</shortdescription>
+<method type="constructor" name="linearmosaic">
+<shortdescription>Construct a linearmosaic tool</shortdescription>
 
-<returns type="calibrater"/>
+<returns type="linearmosaic"/>
 
 <description>
 
@@ -39,12 +38,12 @@ lm=linearmosaic.create()
 </example>
 </method>
 
-   <method type="function" name="defineimage">
-   <shortdescription>Set the output direction image parameters</shortdescription>
+   <method type="function" name="defineoutputimage">
+   <shortdescription>Set the output direction image parameters and name</shortdescription>
    
 <description>
 Define the direction axes output image parameters.
-
+The output image will get the same number of spectral and polarization planes as the input images.
 
 </description>
 <input>
@@ -101,24 +100,85 @@ Define the direction axes output image parameters.
 <returns type="bool"/>
 
 </method>
+<method type="function" name="setoutputimage">
+   <shortdescription>Use this function to mosaic on an existing image and weight image</shortdescription>
+   
+<description>
+Use this function if the mosaicing is to be done onto a previous mosaic or image
+
+</description>
+<input>
+
+     <param type="string" name="outputimage">
+     <description>Existing mosaic imagename</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="outputweight">
+     <description>Existing weight image for mosaic</description>
+     <value></value>
+     </param>
+
+     <param type="int" name="weighttype">
+     <description>what kind of weight is already applied to image \n
+      0: flux correct \n
+      1: noise flat \n
+      2: optimal weight (for example pb^2 applied to image) \n
+     </description>
+     <value>1</value>
+     <allowed kind="enum">
+       <value>0</value>
+       <value>1</value>
+       <value>2</value>
+     </allowed>
+     </param>
+
+
+
+</input>
+<example>
+
+
+</example>
+
+<returns type="bool"/>
+
+</method>
 
    <method type="function" name="makemosaic">
-   <shortdescription>Fourier transform the specified model and componentlist</shortdescription>
+   <shortdescription>mosaic images in a weighted fashion onto ouput image</shortdescription>
    
 <description>
 Put the list of images onto the mosaic image using the weight images
 </description>
 <input>
 
-     <param type="stringArray" name="images">
+     <param type="any" name="images">
      <description>Name of images to mosaic</description>
+      <any type="variant" />
      <value></value>
      </param>
 
-     <param type="stringArray" name="weightimages">
+     <param type="any" name="weightimages">
      <description>Name of images to mosaic</description>
+      <any type="variant" />
      <value></value>
      </param>
+
+     <param type="int" name="weighttype">
+     <description>what kind of weight is already applied to image \n
+      0: flux correct \n
+      1: noise flat \n
+      2: optimal weight (for example pb^2 applied to image) \n
+     </description>
+     <value>1</value>
+     <allowed kind="enum">
+       <value>0</value>
+       <value>1</value>
+       <value>2</value>
+     </allowed>
+     </param>
+
 </input>
 
 <returns type="bool"/>
