@@ -118,7 +118,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
                         #tpmap_colorbar.ax.set_title('[K km/s]')
-                        tpmap_colorbar.ax.set_title('[%s]'%(self.inputs.brightnessunit))
+                        tpmap_colorbar.ax.set_title('[%s]'%(self.image.brightnessunit))
                         lab = tpmap_colorbar.ax.title
                         lab.set_fontsize(newfontsize)
                     else:
@@ -145,7 +145,8 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             parameters['spw'] = self.inputs.spw
             parameters['pol'] = polmap[pol]
             parameters['ant'] = self.inputs.antenna
-            parameters['type'] = 'sd_channel-averaged'
+            #parameters['type'] = 'sd_channel-averaged'
+            parameters['type'] = 'sd_integrated_map'
             parameters['file'] = self.inputs.imagename
 
             plot = logger.Plot(plotfile,

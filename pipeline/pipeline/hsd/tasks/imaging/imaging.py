@@ -331,6 +331,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     image_item.antenna = name
                     outcome = {}
                     outcome['image'] = image_item
+                    outcome['imagemode'] = imagemode
                     outcome['validsp'] = numpy.array(validsps)
                     outcome['rms'] = numpy.array(rmss)
                     outcome['edge'] = edge
@@ -424,6 +425,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 image_item.antenna = 'COMBINED'
                 outcome = {}
                 outcome['image'] = image_item
+                outcome['imagemode'] = imagemode
                 outcome['validsp'] = numpy.array(validsps)
                 outcome['rms'] = numpy.array(rmss)
                 outcome['edge'] = edge

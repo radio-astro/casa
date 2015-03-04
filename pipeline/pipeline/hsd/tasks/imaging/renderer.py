@@ -11,7 +11,7 @@ LOG = logging.get_logger(__name__)
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='hsd_imaging.mako', 
                  description='Image single dish data',
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
         
@@ -21,8 +21,9 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         for r in results:
             image_item = r.outcome['image']
             antenna_list = r.outcome['file_index']
+            imagemode = r.outcome['imagemode']
             spwid = image_item.spwlist
-            spw_type = context.observing_run[antenna_list[0]].spectral_window[spwid[0]].type
+            spw_type = context.observing_run[antenna_list[0]].spectral_window[spwid[0]].type if imagemode.upper()!='AMPCAL' else 'TP'
             task_cls = displays.SDImageDisplayFactory(spw_type)
             inputs = task_cls.Inputs(context,result=r)
             task = task_cls(inputs)
