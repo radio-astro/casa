@@ -3744,7 +3744,7 @@ image* image::rotate(
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > pImOut(
+		SPIIF pImOut(
 			_image->rotate(
 				outfile, shape, pa, *Region, mask, method,
 				decimate, replicate, dropdeg, overwrite, stretch
