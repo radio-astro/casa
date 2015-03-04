@@ -244,7 +244,7 @@ struct DefaultRasterEdgeDetector
 {
   static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const /*num*/)
   {
-    return static_cast<size_t>(sqrt(numData + 1) - 1);
+    return max((size_t)1, static_cast<size_t>(sqrt(numData + 1) - 1));
   }
 };
 
@@ -260,26 +260,29 @@ struct FixedFractionRasterEdgeDetector
 {
   static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const /*num*/)
   {
-    return static_cast<size_t>(numData * fraction);
+    return max((size_t)1, static_cast<size_t>(numData * fraction));
   }
 };
 
 template<class Detector>
-inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList, casa::Float const fraction, casa::Int const num)
+inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList, casa::Double const interval, casa::Float const fraction, casa::Int const num)
 {
+  // storage for time range for edges (at head and tail)
+  // [(start of head edge), (end of head edge),
+  //  (start of tail edge), (end of tail edge)]
   casa::Vector<casa::Double> edgeList(4);
   size_t numList = timeList.size();
   size_t numEdge = Detector::N(numList, fraction, num);
   debuglog << "numEdge = " << numEdge << debugpost;
   if (timeList.size() > numEdge * 2) {
-    edgeList[0] = timeList[0];
-    edgeList[1] = timeList[numEdge];
-    edgeList[2] = timeList[numList-numEdge-1];
-    edgeList[3] = timeList[numList-1];
+    edgeList[0] = timeList[0] - 0.5 * interval;
+    edgeList[1] = timeList[numEdge-1] + 0.5 * interval;
+    edgeList[2] = timeList[numList-numEdge] - 0.5 * interval;
+    edgeList[3] = timeList[numList-1] + 0.5 * interval;
   }
   else {
-    edgeList[0] = timeList[0];
-    edgeList[1] = timeList[numList-1];
+    edgeList[0] = timeList[0] - 0.5 * interval;
+    edgeList[1] = timeList[numList-1] + 0.5 * interval;
     edgeList[2] = edgeList[0];
     edgeList[3] = edgeList[2];
   }
@@ -292,6 +295,7 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
 					       casa::Int const num)
 {
   casa::Int dataDesc = nominalDataDesc(msName, ant);
+  debuglog << "nominal DATA_DESC_ID=" << dataDesc << debugpost;
   assert(dataDesc >= 0);
   if (dataDesc < 0) {
     return casa::Vector<casa::String>();
@@ -302,12 +306,15 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
       << " && ANTENNA2 == " << ant << " && FEED1 == 0 && FEED2 == 0"
       << " && DATA_DESC_ID == " << dataDesc
       << " ORDER BY TIME";
+  debuglog << "detectRaster: taql=" << oss.str() << debugpost;
   casa::MeasurementSet msSel(casa::tableCommand(oss.str()));
   casa::ROScalarColumn<casa::Double> timeCol(msSel, "TIME");
+  casa::ROScalarColumn<casa::Double> intervalCol(msSel, "INTERVAL");
   casa::Vector<casa::Double> timeList = timeCol.getColumn();
+  casa::Double interval = casa::min(intervalCol.getColumn());
   casa::Vector<size_t> gapList = detectGap(timeList);
   casa::Vector<casa::String> edgeAsTimeRange(gapList.size() * 2);
-  typedef casa::Vector<casa::Double> (*DetectorFunc)(casa::Vector<casa::Double>, casa::Float const, casa::Int const);
+  typedef casa::Vector<casa::Double> (*DetectorFunc)(casa::Vector<casa::Double>, casa::Double const,  casa::Float const, casa::Int const);
   DetectorFunc detect = NULL;
   if (num > 0) {
     detect = detectEdge<FixedNumberRasterEdgeDetector>;
@@ -324,7 +331,7 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
     size_t len = endRow - startRow;
     debuglog << "startRow=" << startRow << ", endRow=" << endRow << debugpost;
     casa::Vector<casa::Double> oneRow = timeList(casa::Slice(startRow, len));
-    casa::Vector<casa::Double> edgeList = detect(oneRow, fraction, num);
+    casa::Vector<casa::Double> edgeList = detect(oneRow, interval, fraction, num);
     std::ostringstream s;
     s << std::setprecision(16) << "TIME BETWEEN " << edgeList[0] << " AND " << edgeList[1];
     edgeAsTimeRange[2*i] = s.str();
@@ -531,6 +538,7 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
       Double gap = 2.0 * timeInterval[i] /
 	(interval[i] + interval[(i < nrow-1)?i+1:i]);
       if (gap > threshold) {
+        debuglog << "flush accumulated data at row " << i << debugpost;
 	// Here we can safely use data() since internal storeage
 	// is contiguous
 	Float *data_ = dataSum.data();
@@ -894,24 +902,39 @@ String SingleDishRasterCal::configureSelection()
   debuglog << "SingleDishRasterCal::configureSelection" << debugpost;
   const Record specify;
   std::ostringstream oss;
-  oss << "SELECT FROM " << msName() << " WHERE ";
+  oss << "SELECT FROM $1 WHERE ";
   String delimiter = "";
-  for (Int iant = 0; iant < nAnt(); ++iant) {
-    Vector<String> timeRangeList = detectRaster(msName(), iant, fraction_, numEdge_);
-    debuglog << "timeRangeList=" << ::toString(timeRangeList) << debugpost;
-    oss << delimiter;
-    oss << "(ANTENNA1 == " << iant << " && ANTENNA2 == " << iant << " && (";
-    String separator = "";
-    for (size_t i = 0; i < timeRangeList.size(); ++i) {
-      if (timeRangeList[i].size() > 0) { 
-    	oss << separator << "(" << timeRangeList[i] << ")";
-    	separator = " || ";
-      }
+  // for (Int iant = 0; iant < nAnt(); ++iant) {
+  //   Vector<String> timeRangeList = detectRaster(msName(), iant, fraction_, numEdge_);
+  //   debuglog << "timeRangeList=" << ::toString(timeRangeList) << debugpost;
+  //   oss << delimiter;
+  //   oss << "(ANTENNA1 == " << iant << " && ANTENNA2 == " << iant << " && (";
+  //   String separator = "";
+  //   for (size_t i = 0; i < timeRangeList.size(); ++i) {
+  //     if (timeRangeList[i].size() > 0) { 
+  //   	oss << separator << "(" << timeRangeList[i] << ")";
+  //   	separator = " || ";
+  //     }
+  //   }
+  //   oss << "))";
+  //   debuglog << "oss.str()=" << oss.str() << debugpost;
+  //   delimiter = " || ";
+  // }
+  // use ANTENNA 0 for reference antenna
+  Vector<String> timeRangeList = detectRaster(msName(), 0, fraction_, numEdge_);
+  debuglog << "timeRangeList=" << ::toString(timeRangeList) << debugpost;
+  oss << delimiter;
+  oss << "(ANTENNA1 == ANTENNA2 && (";
+  String separator = "";
+  for (size_t i = 0; i < timeRangeList.size(); ++i) {
+    if (timeRangeList[i].size() > 0) { 
+      oss << separator << "(" << timeRangeList[i] << ")";
+      separator = " || ";
     }
-    oss << "))";
-    debuglog << "oss.str()=" << oss.str() << debugpost;
-    delimiter = " || ";
   }
+  oss << "))";
+  debuglog << "oss.str()=" << oss.str() << debugpost;
+  
   oss //<< ")"
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return String(oss);  
