@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import numpy
 import math
+import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -145,10 +146,6 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         else:
             ny += 1
     
-        # increase nx and ny to reduce the effect of edges
-        margin = int(grid_factor)
-        nx += 2 * margin
-        ny += 2 * margin
         LOG.info('nx,ny=%s,%s' % (nx, ny))
     
         # phasecenter
@@ -211,7 +208,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         truncate = gwidth = jwidth = -1  # defaults (not used)
         convsupport = 6
     
-        temporary_name = imagename.rstrip('/')+'.tmp'
+#         temporary_name = imagename.rstrip('/')+'.tmp'
         cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
         image_args = {'field': field, 
                       'mode': mode,
@@ -230,60 +227,37 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
                       'restfreq': restfreq,
                       'stokes': stokes,
                       'ephemsrcname': ephemsrcname}
-        with temporary_filename(temporary_name) as name:
-            # weight image must be removed before imaging
-            weight_image = name.rstrip('/') + '.weight'
-            if os.path.exists(weight_image):
-                os.system('rm -rf %s'%(weight_image))
-                
-            # imaging
-            infile_list = []
-            spwsel_list = []
-            scansel_list = []
-            spwsel = []
-            for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
-                LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s%s'%(vis, spw, field,
+
+        #remove existing image explicitly
+        for rmname in [imagename, imagename.rstrip('/')+'.weight']:
+            if os.path.exists(rmname):
+                shutil.rmtree(rmname)
+
+        # imaging
+        infile_list = []
+        spwsel_list = []
+        scansel_list = []
+        spwsel = []
+        for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
+            LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s%s'%(vis, spw, field,
                                                                                        (' (ephemeris source)' if ephemsrcname!='' else '')))
-                infile_list.append(vis)
-                scansel_list.append(common.list_to_selection(scan))
-                # WORKAROUND for a bug in sdimaging
-                #spwsel_list.append(common.list_to_selection(utils.to_list(spw)))
-                if not (spw in spwsel):
-                    spwsel.append(spw)
-            spwsel_list = common.list_to_selection(spwsel)
-            # set-up image dependent parameters
-            for p in cleanup_params: image_args[p] = None
-            image_args['outfile'] = name
-            image_args['infiles'] = infile_list
-            image_args['spw'] = spwsel_list
-            image_args['scan'] = scansel_list
-            LOG.debug('Executing sdimaging task: args=%s'%(image_args))
-            image_job = casa_tasks.sdimaging(**image_args)
-                    
-            # execute job
-            self._executor.execute(image_job)
-            
-            # remove weight image
-            if os.path.exists(weight_image):
-                os.system('rm -rf %s'%(weight_image))
-            
-            # post imaging process
-            # cut margin area
-            if os.path.exists(imagename):
-                os.system('rm -rf %s'%(imagename))
-            box = '%s,%s,%s,%s'%(margin, margin, nx - margin - 1, ny - margin - 1)
-            args = {'imagename': name,
-                      'mode': 'evalexpr',
-                      'expr': 'IM0',
-                      'outfile': imagename,
-                      'box': box}
-            LOG.debug('Executing immath task: args=%s'%(args))
-            job = casa_tasks.immath(**args)
-            self._executor.execute(job, merge=False)
-            
-        # post imaging process
-        # set brightness unit to K
-        #with casatools.ImageReader(imagename) as ia:
-            #ia.setbrightnessunit('K')
+            infile_list.append(vis)
+            scansel_list.append(common.list_to_selection(scan))
+            # WORKAROUND for a bug in sdimaging
+            #spwsel_list.append(common.list_to_selection(utils.to_list(spw)))
+            if not (spw in spwsel):
+                spwsel.append(spw)
+        spwsel_list = common.list_to_selection(spwsel)
+        # set-up image dependent parameters
+        for p in cleanup_params: image_args[p] = None
+        image_args['outfile'] = imagename
+        image_args['infiles'] = infile_list
+        image_args['spw'] = spwsel_list
+        image_args['scan'] = scansel_list
+        LOG.debug('Executing sdimaging task: args=%s'%(image_args))
+        image_job = casa_tasks.sdimaging(**image_args)
+
+        # execute job
+        self._executor.execute(image_job)
             
                 
