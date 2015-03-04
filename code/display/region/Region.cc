@@ -2736,23 +2736,16 @@ namespace casa {
 
 				Double beamArea = 0;
 				ImageInfo ii = image->imageInfo();
-				GaussianBeam beam = ii.restoringBeam(zIndex);
-				DisplayCoordinateSystem cSys = image->coordinates();
-				std::string imageUnits = image->units().getName();
-				std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
-
-				Int afterCoord = -1;
-				Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
-				// use contains() not == so moment maps are dealt with nicely
-				if ( ! beam.isNull() && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
-					DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
-					Vector<String> units(2);
-					units(0) = units(1) = "rad";
-					dCoord.setWorldAxisUnits(units);
-					Vector<Double> deltas = dCoord.increment();
-					beamArea = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
+				GaussianBeam beam = ii.restoringBeam( zIndex );
+				if ( ! beam.isNull() ){
+					Int afterCoord = -1;
+					DisplayCoordinateSystem cSys = image->coordinates();
+					Int dC = cSys.findCoordinate(Coordinate::DIRECTION, afterCoord);
+					if ( dC != -1){
+						DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
+						beamArea = ii.getBeamAreaInPixels( beam, dCoord);
+					}
 				}
-
 				if ( beamArea > 0 ) layerstats->push_back(RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));
 
 				Bool statsOk = stats.getLayerStats(*layerstats, beamArea, zPos, zIndex, hPos, hIndex);
