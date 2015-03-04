@@ -202,13 +202,6 @@ public:
     // Copy operator.  Copies subparameters groups.
     PlotMSPlotParameters& operator=(const PlotMSPlotParameters& copy);
 
-    Bool operator==(const PlotMSPlotParameters& other) const {
-        return (operator==(other)); 
-	}
-    Bool operator!=(const PlotMSPlotParameters& other) const {
-        return (operator!=(other));
-	}
-
 
 protected:
     // Factory.
