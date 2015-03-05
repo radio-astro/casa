@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the param set for tsdcal -->
 
-<task type="function" name="tsdcal" category="single dish">
+<task type="function" name="tsdcal" category="single dish" visibility="experimental">
 
   <shortdescription> MS SD calibration task</shortdescription>
 

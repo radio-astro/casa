@@ -7,7 +7,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
 <!-- This is the param set for tsdbaseline -->
 
-<task type="function" name="tsdbaseline" category="single dish">
+<task type="function" name="tsdbaseline" category="single dish" visibility="experimental">
 
   <shortdescription>Fit/subtract a spectral baseline </shortdescription>
 
@@ -70,7 +70,7 @@ pipeline processing for huge dataset.
         <value></value>
     </param>
 
-    <param type="string" name="maskmode">
+    <param type="string" name="maskmode" ignorecase="true">
         <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription>
         <description>mode of setting additional channel masks</description>
         <value>auto</value>
@@ -96,7 +96,7 @@ pipeline processing for huge dataset.
         <value type="vector"><value>0</value></value>
     </param>
 
-    <param type="string" name="blmode">
+    <param type="string" name="blmode" ignorecase="true">
         <description>baselining mode [\'fit\' or \'apply\']</description>
         <value>fit</value>
     </param>
@@ -130,7 +130,7 @@ pipeline processing for huge dataset.
         <value></value>
     </param>
 
-    <param type="string" name="blfunc">
+    <param type="string" name="blfunc" ignorecase="true">
         <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</shortdescription>
         <description>baseline model function</description>
         <value>poly</value>
