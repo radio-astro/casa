@@ -157,8 +157,7 @@ class test_SingleObservation(SetjyUnitTestBase):
         self.setUpMS(msname)        
 
     def tearDown(self):
-        #self.resetMS()
-        pass
+        self.resetMS()
 
     def test1_SingleObservationOldModel(self):
         """ Test vs an MS with a single observation using the Butler-JPL-Horizons 2010 model"""
@@ -837,6 +836,9 @@ class test_ModImage(SetjyUnitTestBase):
         #except Exception, e:
         #    print "importuvfits error:"
         #    raise e
+
+    def tearDown(self):
+        self.resetMS()
     
     def test1_UBandModelwithQBandMS(self):
         """ Test U-Band model with Q-Band data to see impact of flux density scale """
@@ -933,7 +935,8 @@ class test_ModImage(SetjyUnitTestBase):
                                            )
 
                 record['history'] = self.get_last_history_line(self.inpms,
-                                                           origin='imager::setjy()::',
+                                                           #origin='imager::setjy()::',
+                                                           origin='imager::setjy()',
                                                            #hint='model image to I')
                                                            hint='fld ind 12) spw 1  [I=')
             else:
