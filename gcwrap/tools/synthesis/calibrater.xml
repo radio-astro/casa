@@ -668,6 +668,23 @@ will be computed for the entire range of observation.</description>
      <description>Order of the polynomial fit, used when type='A'.</description>
      <value>0</value>
      </param>
+
+     <param type="float" direction="in" name="fraction">
+     <description>[SINGLE-DISH SPECIFIC] Edge detection parameter
+for otfraster/otf calibration. This is a number of edge points
+as a fraction of total number of points.</description>
+     <value>0.1</value>
+     </param>
+
+     <param type="int" direction="in" name="numedge">
+     <description>[SINGLE-DISH SPECIFIC] Edge detection parameter
+for otfraster calibration. This is a number of edge points. The
+value specified here comes before fraction. Note that edge points
+will be detected from both side of each raster row so that number
+of edge points is effectively twice of the specified value in each
+raster row. Default (-1) is to use fraction.</description>
+     <value>-1</value>
+     </param>
 </input>
 <returns type="bool"/>
 
