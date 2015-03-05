@@ -2012,6 +2012,7 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
     testFlagCSpline02  --- test cubic spline fitting with maskmode = 'auto'
     testFlagSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
     testFlagSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
+    testFlagFFT        --- check if FFT used in sinusoidal fitting properly handles flag info
 
     The test data:
     sdbaseline_flagtest_const.asap -- spectra has 1 at all channels except for
@@ -2051,34 +2052,6 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         for f in [self.infile_01, self.infile_02, self.infile_02pla, self.infile_02spk, self.infile_02int]:
             if os.path.exists(f): shutil.rmtree(f)
         os.system('rm -rf '+self.outroot+'*')
-
-    def testFlagFFT(self):
-        """
-        check if FFT used in sinusoidal baselining properly handles flag info
-        
-        checking is done by comparing the baseline fitting results from two
-        input data, defined as 'infile_spk' and 'infile_int'. 'infile_spk'
-        has six spiky features in its spectra at ch 2,22,42,62,82,and 97 and
-        channels around these spikes (namely, 0-4,20-24,40-44,60-64,80-84,
-        and 95-99) are flagged, while the other one 'infile_int' has
-        interpolated (as Scantable::execFFT() does) values at channels which
-        are flagged in 'infile_spk' and no channel is flagged. If FFT
-        properly handles flagged data, the resulting fitting coefficients of
-        the above two data should be very close (may not exactly identical
-        though, since some channels are flagged in 'infile_spk' but not in
-        'infile_int'), otherwise, there will be a big difference in the
-        resulting coefficients.
-        """
-
-        mode = "list"
-        infile_spk = self.infile_02spk
-        outfile_spk = "sdbaseline_flagFFT_spk.asap"
-        result = sdbaseline(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3')
-        infile_int = self.infile_02int
-        outfile_int = "sdbaseline_flagFFT_int.asap"
-        result = sdbaseline(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3')
-        bsuffix = "_blparam.txt"
-        self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
 
     def testFlagPoly01( self ):
         """Test FlagPoly01: Polynomial fitting with maskmode = 'list'"""
@@ -2167,6 +2140,33 @@ class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
         result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
+
+    def testFlagFFT(self):
+        """
+        check if FFT used in sinusoidal baselining properly handles flag info
+        
+        checking is done by comparing the baseline fitting results from two
+        input data, defined as 'infile_spk' and 'infile_int'. 'infile_spk'
+        has six spiky features in its spectra at ch 2,22,42,62,82,and 97 and
+        channels around these spikes (namely, 0-4,20-24,40-44,60-64,80-84,
+        and 95-99) are flagged, while the other one 'infile_int' has
+        interpolated (as Scantable::execFFT() does) values at channels which
+        are flagged in 'infile_spk' and no channel is flagged. If FFT
+        properly handles flagged data, the resulting fitting coefficients of
+        the above two data should be very close (may not exactly identical
+        though, since some channels are flagged in 'infile_spk' but not in
+        'infile_int'), otherwise, there will be a big difference in the
+        resulting coefficients.
+        """
+        mode = "list"
+        infile_spk = self.infile_02spk
+        outfile_spk = "sdbaseline_flagFFT_spk.asap"
+        result = sdbaseline(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3')
+        infile_int = self.infile_02int
+        outfile_int = "sdbaseline_flagFFT_int.asap"
+        result = sdbaseline(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3')
+        bsuffix = "_blparam.txt"
+        self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
 
     def _compareCoefficients( self, out, reference ):
         # test if baseline parameters are equal to the reference values

@@ -26,6 +26,118 @@ from sdreduce import sdreduce
 
 from sdutil import tbmanager
 
+### Utilities for reading blparam file
+class FileReader( object ):
+    def __init__( self, filename ):
+        self.__filename = filename
+        self.__data = None
+        self.__nline = None
+
+    def read( self ):
+        if self.__data is None:
+            f = open(self.__filename, 'r')
+            self.__data = f.readlines()
+            f.close()
+            self.__nline = len( self.__data )
+        return
+
+    def nline( self ):
+        self.read()
+        return self.__nline
+
+    def index( self, txt, start ):
+        return self.__data[start:].index( txt ) + 1 + start
+
+    def getline( self, idx ):
+        return self.__data[idx]
+
+class BlparamFileParser( FileReader ):
+    def __init__( self, blfile ):
+        FileReader.__init__( self, blfile )
+        self.__nrow = None
+        self.__coeff = None
+        self.__rms = None
+        self.__ctxt = 'Baseline parameters\n'
+        self.__rtxt = 'Results of baseline fit\n'
+
+    def nrow( self ):
+        self.read()
+        if self.__nrow is None:
+            return self._nrow()
+        else:
+            return self.__nrow
+
+    def coeff( self ):
+        self.read()
+        if self.__coeff is None:
+            self.parseCoeff()
+        return self.__coeff
+
+    def rms( self ):
+        self.read()
+        if self.__rms is None:
+            self.parseRms()
+        return self.__rms
+
+    def _nrow( self ):
+        self.__nrow = 0
+        for i in xrange(self.nline()):
+            if self.getline( i ) == self.__ctxt:
+                self.__nrow += 1
+        return self.__nrow
+
+    def parse( self ):
+        self.read()
+        self.parseCoeff()
+        self.parseRms()
+        return
+        
+    def parseCoeff( self ):
+        self.__coeff = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__coeff) < nrow ):
+            try:
+                idx = self.index( self.__ctxt, idx )
+                coeffs = []
+                while( self.getline( idx ) != self.__rtxt ):
+                    coeff = self.__parseCoeff( idx )
+                    coeffs += coeff
+                    idx += 1
+                self.__coeff.append( coeffs )
+            except:
+                break
+        return
+
+    def parseRms( self ):
+        self.__rms = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__rms) < nrow ):
+            try:
+                idx = self.index( self.__rtxt, idx )
+                self.__rms.append( self.__parseRms( idx ) )
+            except:
+                break   
+        return
+
+    def __parseCoeff( self, idx ):
+        return parseCoeff( self.getline( idx ) )
+
+    def __parseRms( self, idx ):
+        return parseRms( self.getline( idx ) )
+
+def parseCoeff( txt ):
+    clist = txt.rstrip( '\n' ).split(',')
+    ret = []
+    for c in clist:
+        ret.append( float( c.split('=')[1] ) )
+    return ret
+    
+def parseRms( txt ):
+    t = txt.lstrip().rstrip( '\n' )[6:]
+    return float( t )
+
 class sdreduce_unittest_base:
     """
     Base class for sdreduce unit test
@@ -1539,9 +1651,10 @@ class sdreduce_test_average_flag(unittest.TestCase):
 
         self._verify_regrid(outfile, chanwidth)
 
-class sdreduce_test_baseline_flag( unittest.TestCase ):
+class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
     """
-    ### This is a copy of test_sdbaseline.sdbaseline_flagTest ###
+    ### This is a copy of test_sdbaseline.sdbaseline_flagTest, plus some
+    modifications for sdreduce ###
     
     Unit tests for task sdbaseline. No interactive testing.
     This test is to verify the proper flag handling in sdbaseline that
@@ -1559,6 +1672,7 @@ class sdreduce_test_baseline_flag( unittest.TestCase ):
     testFlagCSpline02  --- test cubic spline fitting with maskmode = 'auto'
     testFlagSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
     testFlagSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
+    testFlagFFT        --- check if FFT used in sinusoidal fitting properly handles flag info
 
     Note: the rms noise of input data for the tests *02 is 1.0.
     """
@@ -1569,11 +1683,14 @@ class sdreduce_test_baseline_flag( unittest.TestCase ):
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/sdbaseline/'    
     # Input and output names
-    infile_01 = 'sdbaseline_flagtest_withoutnoise.asap'
-    infile_02 = 'sdbaseline_flagtest_withnoise.asap'
+    infile_01    = 'sdbaseline_flagtest_const.asap'
+    infile_02    = 'sdbaseline_flagtest_gauss_plateauxonmask.asap'
+    infile_02spk = 'sdbaseline_flagtest_gauss_spikesonmask.asap'
+    infile_02int = 'sdbaseline_flagtest_gauss_interponmask.asap'
     outroot = 'sdreduce_test'
     tid = None
 
+    """
     def setUp( self ):
         if os.path.exists(self.infile_01):
             shutil.rmtree(self.infile_01)
@@ -1589,6 +1706,18 @@ class sdreduce_test_baseline_flag( unittest.TestCase ):
             shutil.rmtree(self.infile_01)
         if os.path.exists(self.infile_02):
             shutil.rmtree(self.infile_02)
+        os.system('rm -rf '+self.outroot+'*')
+    """
+
+    def setUp( self ):
+        for f in [self.infile_01, self.infile_02, self.infile_02spk, self.infile_02int]:
+            if os.path.exists(f): shutil.rmtree(f)
+            shutil.copytree(self.datapath+f, f)
+        default(sdreduce)
+
+    def tearDown( self ):
+        for f in [self.infile_01, self.infile_02, self.infile_02spk, self.infile_02int]:
+            if os.path.exists(f): shutil.rmtree(f)
         os.system('rm -rf '+self.outroot+'*')
 
     def testFlagPoly01( self ):
@@ -1678,6 +1807,60 @@ class sdreduce_test_baseline_flag( unittest.TestCase ):
         result = sdreduce(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid',calmode='none',average=False,kernel='none')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
+
+    def testFlagFFT(self):
+        """
+        check if FFT used in sinusoidal baselining properly handles flag info
+        
+        checking is done by comparing the baseline fitting results from two
+        input data, defined as 'infile_spk' and 'infile_int'. 'infile_spk'
+        has six spiky features in its spectra at ch 2,22,42,62,82,and 97 and
+        channels around these spikes (namely, 0-4,20-24,40-44,60-64,80-84,
+        and 95-99) are flagged, while the other one 'infile_int' has
+        interpolated (as Scantable::execFFT() does) values at channels which
+        are flagged in 'infile_spk' and no channel is flagged. If FFT
+        properly handles flagged data, the resulting fitting coefficients of
+        the above two data should be very close (may not exactly identical
+        though, since some channels are flagged in 'infile_spk' but not in
+        'infile_int'), otherwise, there will be a big difference in the
+        resulting coefficients.
+        """
+        mode = "list"
+        infile_spk = self.infile_02spk
+        outfile_spk = "sdbaseline_flagFFT_spk.asap"
+        result = sdreduce(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
+        infile_int = self.infile_02int
+        outfile_int = "sdbaseline_flagFFT_int.asap"
+        result = sdreduce(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
+        bsuffix = "_blparam.txt"
+        self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
+
+    def _compareCoefficients( self, out, reference ):
+        # test if baseline parameters are equal to the reference values
+        # currently comparing every lines in the files
+        # TO DO: compare only "Fitter range" and "Baseline parameters"
+        self._checkfile(out)
+        self._checkfile(reference)
+        
+        blparse_out = BlparamFileParser( out )
+        blparse_out.parse()
+        coeffs_out = blparse_out.coeff()
+        blparse_ref = BlparamFileParser( reference )
+        blparse_ref.parse()
+        coeffs_ref = blparse_ref.coeff()
+        allowdiff = 0.02
+        print 'Check baseline parameters:'
+        for irow in xrange(len(blparse_out.rms())):
+            print 'Row %s:'%(irow)
+            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
+            print '   Calculated coeffs = %s'%(coeffs_out[irow])
+            c0 = coeffs_ref[irow]
+            c1 = coeffs_out[irow]
+            for ic in xrange(len(c1)):
+                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                self.assertTrue((abs(c0[ic])<0.05) or (abs(rdiff)<allowdiff),
+                                msg='row %s: coefficient for order %s is different'%(irow,ic))
+        print ''
 
     def _checkResult(self, infile, outfile, tol):
         tb.open(infile)
