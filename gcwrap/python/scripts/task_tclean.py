@@ -12,6 +12,7 @@ import shutil
 import numpy
 from taskinit import *
 import copy
+import time;
 
 from refimagerhelper import PySynthesisImager
 from refimagerhelper import PyParallelContSynthesisImager,PyParallelCubeSynthesisImager
@@ -279,26 +280,42 @@ def tclean(
 
     retrec={}
 
-    # try: 
-    if (1):
+    try: 
+    #if (1):
         ## Init major cycle elements
+        t0=time.time();
         imager.initializeImagers()
         imager.initializeNormalizers()
+        t1=time.time();
+        casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
 
         ## Init minor cycle elements
         if niter>0:
+            t0=time.time();
+
             imager.initializeDeconvolvers()
             imager.initializeIterationControl()
 
+            t1=time.time();
+            casalog.post("***Time for initializing deconvolver(s): "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+            
         ## Make PSF
         if recalcpsf==True:
+            t0=time.time();
+
             imager.makePSF()
+
+            t1=time.time();
+            casalog.post("***Time for making PSF: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
 
         if niter >=0 : 
 
             ## Make dirty image
             if recalcres==True:
+                t0=time.time();
                 imager.runMajorCycle()
+                t1=time.time();
+                casalog.post("***Time for major cycle (recalcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
 
             ## In case of no deconvolution iterations....
             if niter==0 and recalcres==False:
@@ -308,11 +325,21 @@ def tclean(
             ## Do deconvolution and iterations
             if niter>0 :
                 while ( not imager.hasConverged() ):
+                    t0=time.time();
                     imager.runMinorCycle()
+                    t1=time.time();
+                    casalog.post("***Time for minor cycle: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+
+                    t0=time.time();
                     imager.runMajorCycle()
+                    t1=time.time();
+                    casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
 
                 ## Restore images.
+                t0=time.time();
                 imager.restoreImages()
+                t1=time.time();
+                casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
 
                 ## Get summary from iterbot
                 retrec=imager.getSummary();
@@ -320,10 +347,10 @@ def tclean(
         ## Close tools.
         imager.deleteTools()
 
-    # except Exception as e:
-    #     #print 'Exception : ' + str(e)
-    #     casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
-    #     imager.deleteTools()
+    except Exception as e:
+        #print 'Exception : ' + str(e)
+        casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
+        imager.deleteTools()
 
     return retrec
 

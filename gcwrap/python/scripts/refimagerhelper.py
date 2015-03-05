@@ -361,6 +361,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 #############################################
 #############################################
     def initializeImagers(self):
+
         joblist=[]
         #### MPIInterface related changes
         #for node in range(0,self.NN):
@@ -373,6 +374,10 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             #### MPIInterface related changes (the -1 in the expression below)
             for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
                 joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
+        self.PH.checkJobs(joblist);
+
+        joblist=[];
+        for node in self.listOfNodes:
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
             #print "nimpars = ",nimpars;
@@ -385,10 +390,12 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+        self.PH.checkJobs(joblist);
 
+        joblist=[];
+        for node in self.listOfNodes:
             ## Set weighting pars
             joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
-
         self.PH.checkJobs( joblist )
 
 
@@ -678,7 +685,7 @@ class PyParallelDeconvolver(PySynthesisImager):
 #############################################
 ###  Parallel Imager Helper.
 #############################################
-casalog.post('Using clustermanager from MPIInterface', 'WARN')
+#casalog.post('Using clustermanager from MPIInterface', 'WARN')
 from mpi4casa.MPIInterface import MPIInterface as mpi_clustermanager
 
 class PyParallelImagerHelper():
