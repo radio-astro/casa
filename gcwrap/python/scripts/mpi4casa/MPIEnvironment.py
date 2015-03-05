@@ -140,7 +140,8 @@ class MPIEnvironment:
         mpi_execution_role = "MPIClient"
     else:
         is_mpi_client = False
-        mpi_execution_role = "MPIServer"
+        # MPIServer is written in the C++ level
+        mpi_execution_role = ""
         
     # Generate MPI info message
     mpi_info_msg = "MPI Enabled at host %s with rank %s as %s " % (hostname,mpi_processor_rank,mpi_execution_role)
@@ -160,12 +161,13 @@ class MPIEnvironment:
         log_to_console = True
                         
     # Generate the processor origin for the logger
-    processor_origin = "casa"
+    processor_origin = ""
     if is_mpi_enabled:
         if is_mpi_client:
-            processor_origin = "casa@" + hostname + ":MPIClient"
+            processor_origin = "@" + hostname + ":MPIClient"
         else:
-            processor_origin = "casa@" + hostname + ":MPIServer-" + str(mpi_processor_rank)         
+            # Rank information of server is written in the C++ level
+            processor_origin = "@" + hostname      
             
     # Set ANY_SOURCE and ANY_TAG constants
     if is_mpi_enabled:
