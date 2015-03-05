@@ -240,6 +240,20 @@ YYYY/MM/DD/HH:MM:SS.FF.  Fields (i.e., YYYY, MM, DD, HH, MM, SS and
 FF), starting from left to right, can be omitted.  Omitted fields will
 be replaced by context sensitive defaults as explained below.
 
+\begin{table}[h]
+\caption{Railroad diagram for the syntax of time/time-range selection expression.}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\small {Syntax of}              & \small{Railroad Diagram}\\
+\hline
+   TIME/TIME-RANGE Expression     &  \includegraphics[width=8cm]{TIME-EXPR.png}\\
+\hline
+\end{tabular}
+\label{Tab:RAILROAD_TIME}
+\end{center}
+\end{table}
+
 \subsection{Syntax}
 
 Various forms of possible time-selection expression are listed below.
@@ -337,8 +351,8 @@ Railroad Diagram format in Table~\ref{Tab:RAILROAD_BASELINE} and
 explained in the following sections.
 
 \begin{table}[h]
-\caption{Railroad diagrams for full baseline selection expression.
-  Note that this is often referred to as ``antenna selection'' as well.}
+  \caption{Railroad diagrams for the syntax of full baseline selection expression.
+    Note that this is often referred to as ``antenna selection'' as well.}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
@@ -725,7 +739,7 @@ The full syntax is shown in the Railroad Diagram format in
 Table~\ref{Tab:RAILROAD_SPW} and explained in the following sections.
 
 \begin{table}[h]
-\caption{Railroad diagrams for full frequency selection expression.}
+  \caption{Railroad diagrams for the syntax of full frequency selection expression.}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
