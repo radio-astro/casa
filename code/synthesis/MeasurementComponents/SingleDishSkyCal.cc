@@ -244,6 +244,7 @@ struct DefaultRasterEdgeDetector
 {
   static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const /*num*/)
   {
+    debuglog << "DefaultRasterEdgeDetector" << debugpost;
     return max((size_t)1, static_cast<size_t>(sqrt(numData + 1) - 1));
   }
 };
@@ -252,7 +253,11 @@ struct FixedNumberRasterEdgeDetector
 {
   static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const num)
   {
-    return min(numData, (size_t)num);
+    debuglog << "FixedNumberRasterEdgeDetector" << debugpost;
+    if (num < 0) {
+      throw casa::AipsError("Negative number of edge points.");
+    }
+    return (size_t)num;
   }
 };
 
@@ -260,6 +265,7 @@ struct FixedFractionRasterEdgeDetector
 {
   static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const /*num*/)
   {
+    debuglog << "FixedFractionRasterEdgeDetector" << debugpost;
     return max((size_t)1, static_cast<size_t>(numData * fraction));
   }
 };
@@ -274,17 +280,24 @@ inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList
   size_t numList = timeList.size();
   size_t numEdge = Detector::N(numList, fraction, num);
   debuglog << "numEdge = " << numEdge << debugpost;
-  if (timeList.size() > numEdge * 2) {
+  if (numEdge == 0) {
+    throw casa::AipsError("Zero edge points.");
+  }
+  else if (timeList.size() > numEdge * 2) {
     edgeList[0] = timeList[0] - 0.5 * interval;
     edgeList[1] = timeList[numEdge-1] + 0.5 * interval;
     edgeList[2] = timeList[numList-numEdge] - 0.5 * interval;
     edgeList[3] = timeList[numList-1] + 0.5 * interval;
   }
   else {
-    edgeList[0] = timeList[0] - 0.5 * interval;
-    edgeList[1] = timeList[numList-1] + 0.5 * interval;
-    edgeList[2] = edgeList[0];
-    edgeList[3] = edgeList[2];
+    std::ostringstream oss;
+    oss << "Too many edge points (" << 2.0 * numEdge << " out of "
+        << timeList.size() << " points)";
+    throw casa::AipsError(oss.str());
+    // edgeList[0] = timeList[0] - 0.5 * interval;
+    // edgeList[1] = timeList[numList-1] + 0.5 * interval;
+    // edgeList[2] = edgeList[0];
+    // edgeList[3] = edgeList[2];
   }
   return edgeList;
 }
@@ -319,11 +332,11 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
   if (num > 0) {
     detect = detectEdge<FixedNumberRasterEdgeDetector>;
   }
-  else if (fraction < 0) {
-    detect = detectEdge<DefaultRasterEdgeDetector>;
+  else if (fraction > 0.0) {
+    detect = detectEdge<FixedFractionRasterEdgeDetector>;
   }
   else {
-    detect = detectEdge<FixedFractionRasterEdgeDetector>;
+    detect = detectEdge<DefaultRasterEdgeDetector>;
   }
   for (size_t i = 0; i < gapList.size()-1; ++i) {
     size_t startRow = gapList[i];
@@ -778,6 +791,9 @@ void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
   debuglog << "taql = \"" << taql << "\"" << debugpost;
   MeasurementSet msSel(tableCommand(taql, vs.iter().ms()));
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
+  if (msSel.nrow() == 0) {
+    throw AipsError("No reference integration in the data.");
+  }
   String dataColName = (msSel.tableDesc().isColumn("FLOAT_DATA")) ? "FLOAT_DATA" : "DATA";
 
   if (msSel.tableDesc().isColumn("FLOAT_DATA")) {
