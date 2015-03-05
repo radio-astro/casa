@@ -6,8 +6,10 @@ import shutil
 # when data are copied to working directory.
 ignore_subversion = shutil.ignore_patterns('.svn')
 
-def copytree_ignore_subversion(datadir, name):
+def copytree_ignore_subversion(datadir, name, outname=None):
+    if outname is None:
+        outname = name
     if not os.path.exists(name):
-        shutil.copytree(os.path.join(datadir, name), name,
+        shutil.copytree(os.path.join(datadir, name), outname,
                         ignore=ignore_subversion)
 

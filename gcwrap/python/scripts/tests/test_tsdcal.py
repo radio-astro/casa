@@ -12,7 +12,12 @@ import unittest
 import listing
 import sdutil
 
-from tsdcal import tsdcal 
+from tsdcal import tsdcal
+
+try:
+    from testutils import copytree_ignore_subversion
+except:
+    from tests.testutils import copytree_ignore_subversion
 
 class tsdcal_test(unittest.TestCase):
 
@@ -209,6 +214,7 @@ class tsdcal_test_base(unittest.TestCase):
             import functools
             @functools.wraps(func)
             def _wrapper(self):
+                self.assertTrue(len(exception_pattern) > 0, msg='Internal Error')
                 with self.assertRaises(exception_type) as ctx:
                     func(self)
                     self.fail(msg='The task must throw exception')
@@ -218,45 +224,53 @@ class tsdcal_test_base(unittest.TestCase):
             return _wrapper
         return wrapper
 
-    
-class tsdcal_test_skycal(tsdcal_test_base):
-    
+    def _setUp(self, files, task):
+        for f in files:
+            if os.path.exists(f):
+                shutil.rmtree(f)
+            #shutil.copytree(os.path.join(self.datapath,f), f)
+            copytree_ignore_subversion(self.datapath, f)
+
+        default(task)
+
+    def _tearDown(self, files):
+        for f in files:
+            if os.path.exists(f):
+                shutil.rmtree(f)
+                
+class tsdcal_test_ps(tsdcal_test_base):   
     """
-    Unit test for task tsdcal (sky calibration).
+    Unit test for task tsdcal (position switchsky calibration).
 
     The list of tests:
-    test_skycal00 --- default parameters (raises an error)
-    test_skycal01 --- invalid calibration type
-    test_skycal02 --- invalid selection (empty selection result)
-    test_skycal03 --- outfile exists (overwrite=False)
-    test_skycal04 --- empty outfile
-    test_skycal05 --- position switch calibration ('ps')
-    test_skycal06 --- position switch calibration ('ps') with data selection
-    test_skycal07 --- outfile exists (overwrite=True)
+    test_ps00 --- default parameters (raises an error)
+    test_ps01 --- invalid calibration type
+    test_ps02 --- invalid selection (empty selection result)
+    test_ps03 --- outfile exists (overwrite=False)
+    test_ps04 --- empty outfile
+    test_ps05 --- position switch calibration ('ps')
+    test_ps06 --- position switch calibration ('ps') with data selection
+    test_ps07 --- outfile exists (overwrite=True)
+    test_ps08 --- inappropriate calmode ('otfraster')
     """
+    invalid_argument_case = tsdcal_test_base.invalid_argument_case
+    exception_case = tsdcal_test_base.exception_case
+    
     @property
     def outfile(self):
         return self.applytable
 
-    def setUp(self):  
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-
-        default(tsdcal)
-
+    def setUp(self):
+        self._setUp([self.infile], tsdcal)
 
     def tearDown(self):
-        for filename in [self.infile, self.outfile]:
-            if os.path.exists(filename):
-                shutil.rmtree(filename)
+        self._tearDown([self.infile, self.outfile])
 
-    def normal_case(calmode='ps', **kwargs):
+    def normal_case(**kwargs):
         """
         Decorator for the test case that is intended to verify
         normal execution result.
 
-        calmode --- calibration mode
         selection --- data selection parameter as dictionary
 
         Here, expected result is as follows:
@@ -340,65 +354,357 @@ class tsdcal_test_skycal(tsdcal_test_base):
         return wrapper
             
     
-    @tsdcal_test_base.invalid_argument_case
-    def test_skycal00(self):
+    @invalid_argument_case
+    def test_ps00(self):
         """
-        test_skycal00 --- default parameters (raises an error)
+        test_ps00 --- default parameters (raises an error)
         """
         self.result = tsdcal()
 
-    @tsdcal_test_base.invalid_argument_case
-    def test_skycal01(self):
+    @invalid_argument_case
+    def test_ps01(self):
         """
-        test_skycal01 --- invalid calibration type
+        test_ps01 --- invalid calibration type
         """
         self.result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
 
-    @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
-    def test_skycal02(self):
+    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    def test_ps02(self):
         """
-        test_skycal02 --- invalid selection (invalid spw selection)
+        test_ps02 --- invalid selection (invalid spw selection)
         """
         self.result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
 
-    @tsdcal_test_base.exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
-    def test_skycal03(self):
+    @exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
+    def test_ps03(self):
         """
-        test_skycal03 --- outfile exists (overwrite=False)
+        test_ps03 --- outfile exists (overwrite=False)
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
         self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
 
-    @tsdcal_test_base.exception_case(RuntimeError, 'Output file name must be specified\.')
-    def test_skycal04(self):
+    @exception_case(RuntimeError, 'Output file name must be specified\.')
+    def test_ps04(self):
         """
-        test_skycal04 --- empty outfile 
+        test_ps04 --- empty outfile 
         """
         self.result = tsdcal(infile=self.infile, calmode='ps', outfile='', overwrite=False)
 
     @normal_case()
-    def test_skycal05(self):
+    def test_ps05(self):
         """
-        test_skycal05 --- position switch calibration ('ps')
+        test_ps05 --- position switch calibration ('ps')
         """
         self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile)
 
     @normal_case(spw='9')
-    def test_skycal06(self):
+    def test_ps06(self):
         """
-        test_skycal06 --- position switch calibration ('ps') with data selection
+        test_ps06 --- position switch calibration ('ps') with data selection
         """
         self.result = tsdcal(infile=self.infile, calmode='ps', spw='9', outfile=self.outfile)
 
     @normal_case()
-    def test_skycal07(self):
+    def test_ps07(self):
         """
-        test_skycal07 --- outfile exists (overwrite=True)
+        test_ps07 --- outfile exists (overwrite=True)
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
         self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
+
+    @exception_case(RuntimeError, "Error in Calibrater::solve")
+    def test_ps08(self):
+        """
+        test_ps08 --- inappropriate calmode ('otfraster')
+        """
+        # the data doesn't an OTF raster scan so that unexpected behavior may happen
+        # if calmode is 'otfraster'
+        # in this case, gap detection detects the row having only one integration
+        # due to irregular time stamp distribution and causes the "Too many edge
+        # points" error
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile, calmode='otfraster')
+
+
+class tsdcal_test_otfraster(tsdcal_test_base):   
+    """
+    Unit test for task tsdcal (OTF raster sky calibration).
+    Since basic test case is covered by tsdcal_test_ps, only
+    tests specific to otfraster calibration are defined here.
+
+    The list of tests:
+    test_otfraster00 --- invalid fraction (non numeric value)
+    test_otfraster01 --- too many edge points (fraction 0.5)
+    test_otfraster02 --- too many edge points (fraction '50%')
+    test_otfraster03 --- too many edge points (noff 100000)
+    ###test_otfraster04 --- negative edge points 
+    ###test_otfraster05 --- zero edge points 
+    test_otfraster06 --- inappropriate calibration mode ('ps')
+    test_otfraster07 --- OTF raster calibration ('otfraster') with default setting
+    test_otfraster08 --- OTF raster calibration ('otfraster') with string fraction (numeric value)
+    test_otfraster09 --- OTF raster calibration ('otfraster') with string fraction (percentage)
+    test_otfraster10 --- OTF raster calibration ('otfraster') with numeric fraction 
+    test_otfraster11 --- OTF raster calibration ('otfraster') with auto detection
+    test_otfraster12 --- OTF raster calibration ('otfraster') with custom noff
+    test_otfraster13 --- check if noff takes priority over fraction
+    """
+    invalid_argument_case = tsdcal_test_base.invalid_argument_case
+    exception_case = tsdcal_test_base.exception_case
+    infile = 'uid___A002_X6218fb_X264.ms.sel.otfraster'
+    
+    @staticmethod
+    def calculate_expected_value(table, numedge=1):
+        expected_value = {}
+        with sdutil.tbmanager(table) as tb:
+            antenna_list = numpy.unique(tb.getcol('ANTENNA1'))
+            ddid_list = numpy.unique(tb.getcol('DATA_DESC_ID'))
+        with sdutil.tbmanager(os.path.join(table,'DATA_DESCRIPTION')) as tb:
+            dd_spw_map = tb.getcol('SPECTRAL_WINDOW_ID')
+        for antenna in antenna_list:
+            expected_value[antenna] = {}
+            for ddid in ddid_list:
+                spw = dd_spw_map[ddid]
+                taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna,antenna,ddid)
+                with sdutil.tbmanager(table) as tb:
+                    try:
+                        tsel = tb.query(taql, sortlist='TIME')
+                        time_list = tsel.getcol('TIME')
+                        data = tsel.getcol('DATA').real
+                        flag = tsel.getcol('FLAG')
+                    finally:
+                        tsel.close()
+                #print 'time_list', time_list
+                if len(time_list) < 2:
+                    continue
+                data_list = []
+                time_difference = time_list[1:] - time_list[:-1]
+                #print 'time_difference', time_difference
+                gap_threshold = numpy.median(time_difference) * 5
+                #print 'gap_threshold', gap_threshold
+                gap_list = numpy.concatenate(([0], numpy.where(time_difference > gap_threshold)[0]+1))
+                if gap_list[-1] != len(time_list):
+                    gap_list = numpy.concatenate((gap_list, [len(time_list)]))
+                #print 'gap_list', gap_list
+                for i in xrange(len(gap_list)-1):
+                    start = gap_list[i]
+                    end = gap_list[i+1]
+                    raster_data = data[:,:,start:end]
+                    raster_flag = flag[:,:,start:end]
+                    raster_row = numpy.ma.masked_array(raster_data, raster_flag)
+                    left_edge = raster_row[:,:,:numedge].mean(axis=2)
+                    right_edge = raster_row[:,:,-numedge:].mean(axis=2)
+                    data_list.extend([left_edge, right_edge])
+                expected_value[antenna][spw] = data_list
+                #print 'antenna', antenna, 'spw', spw, 'len(data_list)', len(data_list)
+                    
+        return expected_value
+
+    @property
+    def outfile(self):
+        return self.applytable
+
+    def setUp(self):
+        self._setUp([self.infile], tsdcal)
+
+    def tearDown(self):
+        self._tearDown([self.infile, self.outfile])
+
+    def normal_case(numedge=1, **kwargs):
+        """
+        Decorator for the test case that is intended to verify
+        normal execution result.
+
+        numedge --- expected number of edge points
+        selection --- data selection parameter as dictionary
+
+        Here, expected result is as follows:
+            - total number of rows is 24
+            - number of antennas is 2
+            - number of spectral windows is 2
+            - each (antenna,spw) pair has 6 rows
+        """
+        def wrapper(func):
+            import functools
+            @functools.wraps(func)
+            def _wrapper(self):
+                func(self)
+
+                # sanity check
+                self.assertIsNone(self.result, msg='The task must complete without error')
+                self.assertTrue(os.path.exists(self.outfile), msg='Output file is not properly created.')
+
+                # verifying nrow
+                if len(kwargs) == 0:
+                    expected_nrow = 24
+                    antenna1_selection = None
+                    spw_selection = None
+                else:
+                    myms = gentools(['ms'])[0]
+                    myargs = kwargs.copy()
+                    if not myargs.has_key('baseline'):
+                        with sdutil.tbmanager(self.infile) as tb:
+                            antenna1 = numpy.unique(tb.getcol('ANTENNA1'))
+                            myargs['baseline'] = '%s&&&'%(','.join(map(str,antenna1)))
+                    a = myms.msseltoindex(self.infile, **myargs)
+                    antenna1_selection = a['antenna1']
+                    spw_selection = a['spw']
+                    expected_nrow = 6 * len(spw_selection) * len(antenna1_selection)
+                with sdutil.tbmanager(self.outfile) as tb:
+                    self.assertEqual(tb.nrows(), expected_nrow, msg='Number of rows mismatch (expected %s actual %s)'%(expected_nrow, tb.nrows()))
+
+                # verifying resulting sky spectra
+                eps = 1.0e-6
+                expected_value = tsdcal_test_otfraster.calculate_expected_value(self.infile, numedge)
+                for (ant,d) in expected_value.items():
+                    if antenna1_selection is not None and ant not in antenna1_selection:
+                        continue
+                    for (spw,val) in d.items():
+                        if spw_selection is not None and spw not in spw_selection:
+                            continue
+                        #print ant, spw, val
+                        construct = lambda x: '%s == %s'%(x)
+                        taql = ' && '.join(map(construct,[('ANTENNA1',ant), ('SPECTRAL_WINDOW_ID',spw)]))
+                        with sdutil.table_selector(self.outfile, taql) as tb:
+                            nrow = tb.nrows()
+                            self.assertEqual(nrow, 6, msg='Number of rows mismatch')
+                            for irow in xrange(tb.nrows()):
+                                expected = val[irow]
+                                fparam = tb.getcell('FPARAM', irow)
+                                flag = tb.getcell('FLAG', irow)
+                                self.assertEqual(expected.shape, fparam.shape, msg='Shape mismatch for antenna %s spw %s row %s (expected %s actual %s)'%(ant,spw,irow,list(expected.shape),list(fparam.shape)))
+                                npol,nchan = expected.shape
+                                for ipol in xrange(npol):
+                                    for ichan in xrange(nchan):
+                                        message_template = lambda x,y,z: 'Unexpected %s for antenna %s spw %s row %s pol %s channel %s (expected %s actual %s)'%(x,ant,spw,irow,ipol,ichan,y,z)
+                                        _flag = flag[ipol,ichan]
+                                        _mask = expected.mask[ipol,ichan]
+                                        _expected = expected.data[ipol,ichan]
+                                        _fparam = fparam[ipol,ichan]
+                                        self.assertEqual(_mask, _flag, msg=message_template('FLAG',_mask,_flag))
+                                        if _mask is True:
+                                            self.assertEqual(0.0, _fparam, msg=message_template('FPARAM',0.0,_fparam))
+                                        elif abs(_expected) < eps:
+                                            self.assertLess(abs(_fparam), eps, msg=message_template('FPARAM',_expected,_fparam))
+                                        else:
+                                            diff = abs((_fparam - _expected) / _expected)
+                                            self.assertLess(diff, eps, msg=message_template('FPARAM',_expected,_fparam))
+                                #self.assertTrue(all(flag[:,:10].flatten() == True), msg=message_template('flag status', True))
+                                #self.assertTrue(all(flag[:,10:].flatten() == False), msg=message_template('flag status', False))
+                                #fparam_valid = fparam[flag == False]
+                                #error = abs((fparam_valid - expected) / expected) 
+                                #self.assertTrue(all(error < eps), msg=message_template('sky data', expected))
+            return _wrapper
+        return wrapper
+
+    @exception_case(RuntimeError, '^Invalid fraction value \(.+\)$')
+    def test_otfraster00(self):
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction='auto')
+
+    @exception_case(ValueError, '^Too many edge points\. fraction must be < 0.5\.$')
+    def test_otfraster01(self):
+        """
+        test_otfraster01 --- too many edge points (fraction 0.5)
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction=0.5)
+
+    @exception_case(ValueError, '^Too many edge points\. fraction must be < 0.5\.$')
+    def test_otfraster02(self):
+        """
+        test_otfraster02 --- too many edge points (fraction 50%)
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction='50%')
+
+    @exception_case(RuntimeError, 'Error in Calibrater::solve')
+    def test_otfraster03(self):
+        """
+        test_otfraster03 --- too many edge points (noff 100000)
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', noff=10000)
+
+    #@exception_case(RuntimeError, 'Error in Calibrater::solve')
+    #def test_otfraster04(self):
+    #    """
+    #    test_otfraster04 --- negative edge points
+    #    """
+    #    self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+    #                         calmode='otfraster', noff=-3)
+
+    #@exception_case(RuntimeError, 'Error in Calibrater::solve')
+    #def test_otfraster05(self):
+    #    """
+    #    test_otfraster05 --- zero edge points
+    #    """
+    #    self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+    #                         calmode='otfraster', noff=0)
+
+    @exception_case(RuntimeError, 'Error in Calibrater::solve')
+    def test_otfraster06(self):
+        """
+        test_otfraster06 --- inappropriate calibration mode ('ps')
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='ps')
+    @normal_case(numedge=1)
+    def test_otfraster07(self):
+        """
+        test_otfraster07 --- OTF raster calibration ('otfraster') with default setting
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster')
+
+    @normal_case(numedge=2)
+    def test_otfraster08(self):
+        """
+        test_otfraster08 --- OTF raster calibration ('otfraster') with string fraction (numeric value)
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction='0.3')
+
+    @normal_case(numedge=2)
+    def test_otfraster09(self):
+        """
+        test_otfraster09 --- OTF raster calibration ('otfraster') with string fraction (percentage)
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction='30%')
+
+    @normal_case(numedge=2)
+    def test_otfraster10(self):
+        """
+        test_otfraster10 --- OTF raster calibration ('otfraster') with numeric fraction
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction=0.3)
+
+    @normal_case(numedge=2)
+    def test_otfraster11(self):
+        """
+        test_otfraster11 --- OTF raster calibration ('otfraster') with auto detection
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction=0, noff=0)
+
+    @normal_case(numedge=3)
+    def test_otfraster12(self):
+        """
+        test_otfraster12 --- OTF raster calibration ('otfraster') with custom noff
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', noff=3)
+
+    @normal_case(numedge=3)
+    def test_otfraster13(self):
+        """
+        test_otfraster13 --- check if noff takes priority over fraction
+        """
+        self.result = tsdcal(infile=self.infile, outfile=self.outfile,
+                             calmode='otfraster', fraction='90%', noff=3)
+        
 
 # interpolator utility for testing
 class Interpolator(object):
@@ -579,7 +885,9 @@ class tsdcal_test_apply(tsdcal_test_base):
     test_apply_sky13 --- apply data (string applytable input)
     test_apply_sky14 --- apply data (interp='')
     """
-
+    invalid_argument_case = tsdcal_test_base.invalid_argument_case
+    exception_case = tsdcal_test_base.exception_case
+    
     @property
     def nrow_per_chunk(self):
         # number of rows per antenna per spw is 18
@@ -591,18 +899,11 @@ class tsdcal_test_apply(tsdcal_test_base):
         return 3.0e-4
     
     def setUp(self):
-        for f in [self.infile, self.applytable]:
-            if os.path.exists(f):
-                shutil.rmtree(f)
-            shutil.copytree(self.datapath+f, f)
-
-        default(tsdcal)
+        self._setUp([self.infile, self.applytable], tsdcal)
 
 
     def tearDown(self):
-        for f in [self.infile, self.applytable]:
-            if os.path.exists(f):
-                shutil.rmtree(f)
+        self._tearDown([self.infile, self.applytable])
 
     def normal_case(interp='linear', **kwargs):
         """
@@ -717,50 +1018,50 @@ class tsdcal_test_apply(tsdcal_test_base):
             return _wrapper
         return wrapper
 
-    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    @exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky00(self):
         """
         test_apply_sky00 --- empty applytable
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable='')
 
-    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    @exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky01(self):
         """
         test_apply_sky01 --- empty applytable (list ver.)
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[''])
 
-    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    @exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky02(self):
         """
         test_apply_sky02 --- empty applytable list
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
 
-    @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    @exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
     def test_apply_sky03(self):
         """
         test_apply_sky03 --- unexisting applytable
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
 
-    @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    @exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
     def test_apply_sky04(self):
         """
         test_apply_sky04 --- unexisting applytable (list ver.)
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
 
-    @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
     def test_apply_sky05(self):
         """
         test_apply_sky05 --- invalid selection (empty selection result)
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
     
-    #@tsdcal_test_base.exception_case(RuntimeError, '^Unknown interptype: \'.+\'!! Check inputs and try again\.$')
-    @tsdcal_test_base.exception_case(RuntimeError, 'Error in Calibrater::setapply.')
+    #@exception_case(RuntimeError, '^Unknown interptype: \'.+\'!! Check inputs and try again\.$')
+    @exception_case(RuntimeError, 'Error in Calibrater::setapply.')
     def test_apply_sky06(self):
         """
         test_apply_sky06 --- invalid interp value
@@ -768,7 +1069,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         # 'cubic' interpolation along time axis is not supported yet
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='cubic')
     
-    @tsdcal_test_base.exception_case(RuntimeError, '^Applytable \'.+\' is not a caltable format$')
+    @exception_case(RuntimeError, '^Applytable \'.+\' is not a caltable format$')
     def test_apply_sky07(self):
         """
         test_apply_sky07 --- invalid applytable (not caltable)
@@ -825,7 +1126,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='')
 
 def suite():
-    return [tsdcal_test, tsdcal_test_skycal,
-            tsdcal_test_apply]
+    return [tsdcal_test, tsdcal_test_ps,
+            tsdcal_test_otfraster, tsdcal_test_apply]
 
 
