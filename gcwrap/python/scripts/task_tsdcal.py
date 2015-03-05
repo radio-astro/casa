@@ -116,6 +116,8 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
                 cb.specifycal(caltable=outfile,time="",spw=spw,pol=pol,caltype=calmodemap[calmode])
             else:
                 fraction_numeric = to_numeric_fraction(fraction)
+                if noff <= 0 and fraction_numeric >= 0.5:
+                    raise ValueError, 'Too many edge points. fraction must be < 0.5.'
                 cb.selectvis(spw=spw, scan=scan, field=field)
                 cb.setsolve(type=calmodemap[calmode], table=outfile, fraction=fraction_numeric, numedge=noff)
                 cb.solve()
@@ -138,16 +140,24 @@ def inspect_caltype(table):
     return caltype
 
 def to_numeric_fraction(fraction):
-    if len(fraction.strip()) == 0:
-        # invalid, use default
-        fraction_numeric = 0.1
-    else:
-        pos = fraction.strip().find('%') != -1
-        if pos != -1:
-            # percentage 
-            fraction_numeric = float(fraction[:pos]) * 0.01
+    try:
+        if isinstance(fraction, str):
+            if len(fraction.strip()) == 0:
+                # invalid, use default
+                fraction_numeric = 0.1
+            else:
+                pos = fraction.strip().find('%')
+                if pos != -1:
+                    # percentage 
+                    fraction_numeric = float(fraction[:pos]) * 0.01
+                else:
+                    # direct value
+                    fraction_numeric = float(fraction)
         else:
-            # direct value
             fraction_numeric = float(fraction)
+    except Exception, e:
+        casalog.post(str(e), priority='SEVERE', origin='tsdcal')
+        raise RuntimeError('Invalid fraction value (original error message: "%s")'%(str(e)))
+
     return fraction_numeric
     
