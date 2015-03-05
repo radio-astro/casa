@@ -37,7 +37,7 @@ SDMSManager::~SDMSManager()
 // -----------------------------------------------------------------------
 // Fill output MS with data from an input VisBuffer
 // -----------------------------------------------------------------------
-void SDMSManager::fillCubeToOutputMs(vi::VisBuffer2 *vb,Cube<Float> const &data_cube)
+void SDMSManager::fillCubeToOutputMs(vi::VisBuffer2 *vb,Cube<Float> const &data_cube, Cube<Bool> const &flag_cube)
 {
 	setupBufferTransformations(vb);
 
@@ -57,18 +57,23 @@ void SDMSManager::fillCubeToOutputMs(vi::VisBuffer2 *vb,Cube<Float> const &data_
 		weightSpectrumFlatFilled_p = False;
 		weightSpectrumFromSigmaFilled_p = False;
 		fillWeightCols(vb,rowRef);
-		fillCubeToDataCols(vb,rowRef,data_cube);
+		fillCubeToDataCols(vb,rowRef,data_cube, flag_cube);
 		fillIdCols(vb,rowRef);
 	}
 
     return;
 }
 
+void SDMSManager::fillCubeToOutputMs(vi::VisBuffer2 *vb,Cube<Float> const &data_cube)
+{
+  Cube<Bool> const *flag_cube=NULL;
+  fillCubeToOutputMs(vb, data_cube, *flag_cube);
+}
 
 // ----------------------------------------------------------------------------------------
 // Fill main (data) columns which have to be combined together to produce bigger SPWs
 // ----------------------------------------------------------------------------------------
-void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Float> const &data_cube)
+void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Float> const &data_cube, Cube<Bool> const &flag_cube)
 {
 	ArrayColumn<Bool> *outputFlagCol=NULL;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
@@ -167,6 +172,11 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				break;
 			}
 		}
+		//KS: THIS PART ASSUMES INROW==OUTROW
+		if (outputFlagCol != NULL && &flag_cube != NULL)
+		  {
+		    writeCube(flag_cube,*outputFlagCol,rowRef);
+		  }
 	}
 
     // Special case for flag category
