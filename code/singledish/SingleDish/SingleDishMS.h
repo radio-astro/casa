@@ -126,7 +126,7 @@ private:
 			      size_t const plane,
 			      size_t const num_data,
 			      SakuraAlignedArray<float> &out_data);
-  // set a spectrum at the row and plane (polarization) from data cube
+  // set a spectrum at the row and plane (polarization) to data cube
   void set_spectrum_to_cube(Cube<Float> &data_cube,
 			    size_t const row,
 			    size_t const plane,
@@ -139,12 +139,18 @@ private:
   // get flag cube (npol*nchan*nvirow) from visbuffer
   void get_flag_cube(vi::VisBuffer2 const &vb,
 		     Cube<Bool> &flag_cube);
-  // retrieve a flag at the row and plane (polarization) from data cube
+  // retrieve a flag at the row and plane (polarization) from flag cube
   void get_flag_from_cube(Cube<Bool> &flag_cube,
 			  size_t const row,
 			  size_t const plane,
 			  size_t const num_flag,
 			  SakuraAlignedArray<bool> &out_flag);
+  // set a flag at the row and plane (polarization) to flag cube
+  void set_flag_to_cube(Cube<Bool> &flag_cube,
+			size_t const row,
+			size_t const plane,
+			size_t const num_flag,
+			bool in_flag[/*num_data*/]);
   // return true if all channels are flagged
   bool allchannels_flagged(size_t const num_flag, 
 			   bool const* flag);

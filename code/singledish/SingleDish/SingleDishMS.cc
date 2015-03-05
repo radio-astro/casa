@@ -503,6 +503,16 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
     ptr[i] = static_cast<bool>(flag_cube(plane, i, row));
 }
 
+void SingleDishMS::set_flag_to_cube(Cube<Bool> &flag_cube,
+				    size_t const row,
+				    size_t const plane,
+				    size_t const num_flag,
+				    bool *in_flag)
+{
+  for (size_t i=0; i < num_flag; ++i) 
+    flag_cube(plane, i, row) = static_cast<Bool>(in_flag[i]);
+}
+
 bool SingleDishMS::allchannels_flagged(size_t const num_flag, bool const* flag)
 {
   bool res = true;
