@@ -115,29 +115,6 @@ singledishms::scale(float const factor, string const& datacolumn, string const& 
   return rstat;
 }
 
-// bool
-// singledishms::subtract_baseline_OLD(std::vector<bool> const &mask,
-// 				int const order,
-// 				float const clip_threshold_sigma,
-// 				int const num_fitting_max)
-// {
-//   bool rstat(false);
-//   *itsLog << _ORIGIN;
-//   try {
-//     assert_valid_ms();
-//     Vector<Bool> in_mask(mask);
-//     // itsSd->subtract_baseline(in_mask, order,
-//     // 			     clip_threshold_sigma, 
-//     // 			     num_fitting_max);
-//     rstat = true;
-//   } catch  (AipsError x) {
-//     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-// 	    << LogIO::POST;
-//     RETHROW(x);
-//   }
-//   return rstat;
-// }
-
 bool
 singledishms::subtract_baseline(string const& datacolumn,
 				string const& outfile,
@@ -155,6 +132,30 @@ singledishms::subtract_baseline(string const& datacolumn,
 			     toCasaString(spw), toCasaString(pol),
 			     order, clip_threshold_sigma, 
 			     num_fitting_max);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
+singledishms::subtract_baseline_variable(string const& datacolumn,
+					 string const& outfile,
+					 ::casac::variant const& spw,
+					 ::casac::variant const& pol,
+					 string const& blparam)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->subtract_baseline_variable(datacolumn, outfile, 
+				      toCasaString(spw),
+				      toCasaString(pol),
+				      blparam);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

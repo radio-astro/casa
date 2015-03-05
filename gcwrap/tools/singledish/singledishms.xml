@@ -43,7 +43,7 @@ instead. The current state of {\tt sdms} is retained, except for
 the data selection.
 </description>
 <input>
-     <param type="string" name="ms_name">
+     <param type="string" name="ms_name" mustexist="True">
      <description>New MeasurementSet to be processed</description>
      <value></value>
      </param>
@@ -131,44 +131,6 @@ sdms.scale(factor=2.0)
   </example>
 </method>
 
-<!--
-<method type="function" name="subtract_baseline_old">
-  <shortdescription>Invoke baseline subtraction
-  </shortdescription>
-  <description>
-Fit baseline and subtract it from selected spectra
-  </description>
-  <input>
-
-    <param type="boolArray" name="mask">
-      <description>channel mask</description>
-    </param>
-
-    <param type="int" name="order">
-      <description>polynomial order</description>
-      <value>5</value>
-    </param>
-
-    <param type="float" name="clip_threshold_sigma">
-      <description>threshold for clipping in unit of sigma</description>
-      <value>3.0</value>
-    </param>
-
-    <param type="int" name="num_fitting_max">
-      <description>maximum number of recursive clipping</description>
-      <value>1</value>
-    </param>
-
-  </input>
-  <returns type="bool"/>
-  <example>
-sdms.open('m100_sd.ms')
-sdms.set_selection(field='M100')
-sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
-  </example>
-</method>
--->
-
 <method type="function" name="subtract_baseline">
   <shortdescription>Invoke baseline subtraction
   </shortdescription>
@@ -227,6 +189,58 @@ sdms.set_selection(field='M100')
 sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
   </example>
 </method>
+
+
+<method type="function" name="subtract_baseline_variable">
+  <shortdescription>Invoke baseline subtraction by parameters stored in a file.
+  </shortdescription>
+  <description>
+Fit baseline and subtract it from selected spectra.
+Fit parameters for each spectrum are obtained from a text file.
+  </description>
+  <input>
+
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="spw">
+      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="any" name="pol">
+      <description>Select data by polarization(s).</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="string" name="blparam" mustexist="True">
+      <description>The name of text file that stores fit parameters for each spectrum of selected MS</description>
+      <value></value>
+    </param>
+
+  </input>
+  <returns type="bool"/>
+  <example>
+sdms.open('m100_sd.ms')
+sdms.set_selection(field='M100')
+sdms.subtract_baseline_variable('m100_fitparam.txt')
+  </example>
+</method>
+
 
 <method type="function" name="set_selection">
   <shortdescription>Select Measurementset to process</shortdescription>

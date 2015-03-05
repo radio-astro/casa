@@ -11,7 +11,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     try:
         if ((os.path.exists(outfile)) and (not overwrite)):
             raise Exception(outfile+' exists.')
-        if (blfunc.lower().strip() != 'poly'):
+        if (blfunc.lower().strip() not in ['poly', 'variable']):
             raise Exception(blfunc+' is not available.')
         if (maskmode!='list'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
@@ -26,13 +26,22 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                            antenna=str(antenna), timerange=timerange, 
                            scan=scan)#, polarization=pol)
-        sdms.subtract_baseline(datacolumn=datacolumn,
-                               outfile=outfile,
-                               spw=spw,
-                               pol=pol,
-                               order=order, 
-                               clip_threshold_sigma=clipthresh, 
-                               num_fitting_max=clipniter+1)
+        if blfunc in ['poly', 'chebyshev']:
+            sdms.subtract_baseline(datacolumn=datacolumn,
+                                   outfile=outfile,
+                                   spw=spw,
+                                   pol=pol,
+                                   order=order, 
+                                   clip_threshold_sigma=clipthresh, 
+                                   num_fitting_max=clipniter+1)
+        elif blfunc == 'variable':
+            sdms.subtract_baseline_variable(datacolumn=datacolumn,
+                                            outfile=outfile,
+                                            spw=spw,
+                                            pol=pol,
+                                            blparam=blparam)
+        else:
+            raise ValueError, "Unsupported blfunc = %s" % blfunc
 
     except Exception, instance:
         raise Exception, instance
