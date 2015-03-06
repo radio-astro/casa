@@ -5347,12 +5347,14 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				if (mainColumn_p == MS::DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+					setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
 					outputFlagCol = NULL;
 				}
 
+				setTileShape(rowRef,outputMsCols_p->data());
 				transformCubeOfData(vb,rowRef,vb->visCube(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 
 				break;
@@ -5362,6 +5364,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				if (mainColumn_p == MS::CORRECTED_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+					setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
@@ -5370,10 +5373,12 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (iter->second == MS::DATA)
 				{
+					setTileShape(rowRef,outputMsCols_p->data());
 					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
+					setTileShape(rowRef,outputMsCols_p->correctedData());
 					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->correctedData(), outputFlagCol,applicableSpectrum);
 				}
 
@@ -5384,6 +5389,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				if (mainColumn_p == MS::MODEL_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+					setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
@@ -5392,10 +5398,12 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (iter->second == MS::DATA)
 				{
+					setTileShape(rowRef,outputMsCols_p->data());
 					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
+					setTileShape(rowRef,outputMsCols_p->modelData());
 					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->modelData(), outputFlagCol,applicableSpectrum);
 				}
 				break;
@@ -5405,12 +5413,14 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				if (mainColumn_p == MS::FLOAT_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+					setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
 					outputFlagCol = NULL;
 				}
 
+				setTileShape(rowRef,outputMsCols_p->floatData());
 				transformCubeOfData(vb,rowRef,vb->visCubeFloat(),outputMsCols_p->floatData(), outputFlagCol,applicableSpectrum);
 
 				break;
@@ -5581,19 +5591,48 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else if (timeAverage_p)
 		{
 			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::weightSpectrum;
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::weightSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM));
+			}
 			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM),NULL,applicableSpectrum);
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::sigmaSpectrum;
+
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::sigmaSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::SIGMA_SPECTRUM));
+			}
 			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),getOutputWeightColumn(vb,MS::SIGMA_SPECTRUM),NULL,applicableSpectrum);
 		}
 		// When CORRECTED becomes DATA, then SIGMA_SPECTRUM has to be re-defined to 1/sqrt(WEIGHT_SPECTRUM)
 		else if (correctedToData_p)
 		{
 			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::weightSpectrum;
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::weightSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM));
+			}
 			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM),NULL,applicableSpectrum);
 
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::sigmaSpectrum;
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::sigmaSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::SIGMA_SPECTRUM));
+			}
 			// VI/VB only allocates and populates sigmaSpectrum on request
 			// But its contents are not usable for this case
 			// So we should just create a local storage
@@ -5608,9 +5647,24 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else
 		{
 			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::weightSpectrum;
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::weightSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM));
+			}
 			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),getOutputWeightColumn(vb,MS::WEIGHT_SPECTRUM),NULL,applicableSpectrum);
-			if (userBufferMode_p) dataBuffer_p = MSTransformations::sigmaSpectrum;
+
+			if (userBufferMode_p)
+			{
+				dataBuffer_p = MSTransformations::sigmaSpectrum;
+			}
+			else
+			{
+				setTileShape(rowRef,getOutputWeightColumn(vb,MS::SIGMA_SPECTRUM));
+			}
 			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),getOutputWeightColumn(vb,MS::SIGMA_SPECTRUM),NULL,applicableSpectrum);
 		}
 
@@ -5623,6 +5677,26 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 	return;
 }
+
+
+// ----------------------------------------------------------------------------------------
+// Set tile shape
+// ----------------------------------------------------------------------------------------
+template <class T> void MSTransformManager::setTileShape(	RefRows &rowRef,
+															ArrayColumn<T> &outputDataCol)
+{
+
+	IPosition outputCubeShape = getShape();
+	size_t nCorr = outputCubeShape(0);
+	size_t nChan = outputCubeShape(1);
+	ssize_t nRows = 1048576 / (sizeof(T)*nCorr*nChan);
+	IPosition outputPlaneShape(2,nCorr,nChan);
+	IPosition tileShape(3,nCorr,nChan,nRows);
+	outputDataCol.setShape(rowRef.firstRow(),outputPlaneShape,tileShape);
+
+	return;
+}
+
 
 // ----------------------------------------------------------------------------------------
 //
@@ -5684,6 +5758,7 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 	// Write resulting cube
 	if ( (not userBufferMode_p) and flushWeightSpectrum_p)
 	{
+		setTileShape(rowRef,outputCubeCol);
 		writeCube(*weightSpectrum_p,outputCubeCol,rowRef);
 	}
 

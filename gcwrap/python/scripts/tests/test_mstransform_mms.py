@@ -196,6 +196,7 @@ class test_mms_transformations(test_base):
         self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
         self.assertEqual(spw_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
 
+    @unittest.skip('As reported in CAS-7377 now there is a custom tile shape for hypercube and data type')
     def test_shape3(self):
         '''mstransform: DATA and FLAG tileshapes should be the same'''
         self.outputms = "shape3.ms"

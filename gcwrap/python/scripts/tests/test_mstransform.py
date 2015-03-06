@@ -799,6 +799,7 @@ class test_Shape(test_base):
         # Compare both
         self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
 
+    @unittest.skip('As reported in CAS-7377 now there is a custom tile shape for hypercube and data type')
     def test_shape2(self):
         '''mstransform: custom tileshape'''
         self.outputms = "shape2.ms"

@@ -441,6 +441,8 @@ protected:
 									MSTransformations::weightTransformation weightTransformation,
 									Bool flushSpectrumCube);
 
+	template <class T> void setTileShape(RefRows &rowRef,ArrayColumn<T> &outputDataCol);
+
 	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
 	ArrayColumn<Float>& getOutputWeightColumn(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
 	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
