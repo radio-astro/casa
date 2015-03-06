@@ -56,8 +56,8 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
     } else {								\
         DATATYPE *data = (DATATYPE*) PyArray_DATA(obj);			\
 	/*** convert c-style to fortran order ***/			\
-	int *counts = new int[ndims];					\
-	int *strides = new int[ndims];					\
+	npy_intp counts[NPY_MAXDIMS];					\
+	npy_intp strides[NPY_MAXDIMS];					\
 	for ( int i=0; i < ndims; ++i ) {				\
 	    counts[i] = 0;						\
 	    strides[i] = PyArray_STRIDE(obj,i) / itemsize;		\
@@ -73,8 +73,6 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 		counts[j] = 0;						\
 	    }								\
 	}								\
-	delete strides;							\
-	delete counts;							\
     }
 
 #define NUMPY2VECTOR_PLACESTR(TYPE,CONVERT)				\
@@ -89,8 +87,8 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 	}								\
     } else {								\
 	/*** convert c-style to fortran order ***/			\
-	int *counts = new int[ndims];					\
-	int *strides = new int[ndims];					\
+	npy_intp counts[NPY_MAXDIMS];					\
+	npy_intp strides[NPY_MAXDIMS];					\
 	for ( int i=0; i < ndims; ++i ) {				\
 	    counts[i] = 0;						\
 	    strides[i] = PyArray_STRIDE(obj,i);				\
@@ -108,7 +106,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 	    }								\
 	}								\
     }									\
-    delete buf;								\
+    delete [] buf;							\
     }
 
 #define COPY_PYNSTRING(TYPE,NPYTYPE,START, END, ITR)			\
@@ -119,7 +117,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 	strncpy( buf, ptr, itemsize );					\
 	*iter++ = (const char*) buf;					\
     }									\
-    delete buf;
+    delete [] buf;
 
 #define COPY_BUILTIN(TYPE,NPYTYPE, START, END, ITR)				\
     if (sizeof(TYPE) == sizeof (NPYTYPE))					\
@@ -153,13 +151,12 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 	}									\
     }
 
-#ifndef AIPS_64B
 #define NUMPY2VECTOR(TYPE,NPYTYPE,NPY_TYPE,DIRECT_COPY_COND,BOOLCVT,COPY,STRCVT,CPXCVT,CPXIMAG,BTOSTR,ITOSTR,DTOSTR,CTOSTR,ASSIGN,INCR) \
 void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
-    int *dims = (int *)PyArray_DIMS(obj);							\
-    int ndims = PyArray_NDIM(obj);							\
-    int itemsize = PyArray_ITEMSIZE(obj);						\
-    unsigned int size = 1;								\
+    npy_intp *dims = (npy_intp *)PyArray_DIMS(obj);					\
+    int ndims = (int)PyArray_NDIM(obj);							\
+    npy_intp itemsize = (npy_intp)PyArray_ITEMSIZE(obj);				\
+    npy_uintp size = 1;									\
     for (int d=0; d < ndims; ++d) size *= dims[d];					\
     shape.resize(ndims);								\
     vec.resize(size);									\
@@ -268,122 +265,6 @@ void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
 	break;										\
     }											\
 }
-#else
-#define NUMPY2VECTOR(TYPE,NPYTYPE,NPY_TYPE,DIRECT_COPY_COND,BOOLCVT,COPY,STRCVT,CPXCVT,CPXIMAG,BTOSTR,ITOSTR,DTOSTR,CTOSTR,ASSIGN,INCR) \
-void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
-    long *dims = PyArray_DIMS(obj);							\
-    int ndims = PyArray_NDIM(obj);							\
-    int itemsize = PyArray_ITEMSIZE(obj);						\
-    unsigned int size = 1;								\
-    for (int d=0; d < ndims; ++d) size *= dims[d];					\
-    shape.resize(ndims);								\
-    vec.resize(size);									\
-											\
-    copy( dims, dims+ndims, shape.begin() );						\
-    if (DIRECT_COPY_COND && PyArray_CHKFLAGS(obj,NPY_FORTRAN)) {			\
-        NPY_TYPE *data = (NPY_TYPE*) PyArray_DATA(obj);					\
-	COPY( TYPE, NPY_TYPE, data, data+size, vec.begin() );				\
-	return;										\
-    }											\
-											\
-    switch ( PyArray_TYPE(obj) ) {							\
-    case NPY_BOOL:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_bool,BOOLCVT,,CPXIMAG,BTOSTR)			\
-	break;										\
-    case NPY_BYTE:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_byte,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_UBYTE:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_ubyte,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_SHORT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_short,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_USHORT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_ushort,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_INT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_int,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_UINT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_uint,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_LONG:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_long,,,CPXIMAG,ITOSTR)				\
-	break;										\
-    case NPY_ULONG:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_ulong,,,CPXIMAG, ITOSTR)				\
-	break;										\
-    case NPY_LONGLONG:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_longlong,,,CPXIMAG,ITOSTR)			\
-	break;										\
-    case NPY_ULONGLONG:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_ulonglong,,,CPXIMAG,ITOSTR)			\
-	break;										\
-    case NPY_FLOAT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_float,,,CPXIMAG,DTOSTR)				\
-	break;										\
-    case NPY_DOUBLE:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_double,,,CPXIMAG,DTOSTR)				\
-	break;										\
-    case NPY_LONGDOUBLE:								\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_longdouble,,,CPXIMAG,DTOSTR)			\
-	break;										\
-    case NPY_CFLOAT:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_cfloat,,CPXCVT,,CTOSTR)				\
-	break;										\
-    case NPY_CDOUBLE:									\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_cdouble,,CPXCVT,,CTOSTR)				\
-	break;										\
-    case NPY_CLONGDOUBLE:								\
-	NUMPY2VECTOR_PLACEIT(TYPE,npy_clongdouble,,CPXCVT,,CTOSTR) 			\
-	break;										\
-    case NPY_STRING:									\
-	NUMPY2VECTOR_PLACESTR(TYPE,STRCVT)						\
-	break;										\
-    case NPY_OBJECT:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_OBJECT\n" );		\
-	break;										\
-    case NPY_CHAR:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
- 	fprintf( stderr, "cannot handle numpy arrays of: NPY_CHAR\n" ); 		\
-	break;										\
-    case NPY_UNICODE:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_UNICODE\n" );		\
-	break;										\
-    case NPY_VOID:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_VOID\n" ); 		\
-	break;										\
-    case NPY_NTYPES:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_NTYPES\n" );		\
-	break;										\
-    case NPY_NOTYPE:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_NOTYPE\n" );		\
-	break;										\
-    case NPY_USERDEF:									\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: NPY_USERDEF\n" );		\
-	break;										\
-    default:										\
-	vec.resize(0);									\
-	shape.resize(0);								\
-	fprintf( stderr, "cannot handle numpy arrays of: %d\n", PyArray_TYPE(obj) );	\
-	break;										\
-    }											\
-}
-#endif
 
 NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE(obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
@@ -682,8 +563,10 @@ PyObject *map_vector_numpy(const std::vector<TYPE> &vec) {				\
 PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> &shape ) { \
     initialize_numpy( );									\
     PyArray_Descr *type = PyArray_DescrFromType(NUMPY_TYPE);					\
-    npy_intp *dim = new npy_intp[shape.size()];							\
-    copy( shape.begin(), shape.end(), dim );							\
+    npy_intp dim[NPY_MAXDIMS];                 							\
+    for (size_t i = 0; i < shape.size(); i++) {                                                 \
+        dim[i] = (npy_intp)shape[i];                                                            \
+    }                                                                                           \
     PyObject *ary =  PyArray_NewFromDescr( &PyArray_Type, type, shape.size(), dim,		\
 					   NULL /*npy_intp *strides*/,				\
 					   NULL /*char *data*/,					\
@@ -697,7 +580,6 @@ PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> 
 	    ASSIGN;										\
 	}											\
     }												\
-    delete dim;											\
     return ary;											\
 }
 
