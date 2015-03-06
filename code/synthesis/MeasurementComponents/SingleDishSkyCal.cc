@@ -42,6 +42,9 @@
 #include <synthesis/MeasurementComponents/SingleDishSkyCal.h>
 #include <synthesis/CalTables/CTGlobals.h>
 #include <synthesis/CalTables/CTMainColumns.h>
+#include <synthesis/CalTables/CTInterface.h>
+#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 
 // Debug Message Handling
 // if SDCALSKY_DEBUG is defined, the macro debuglog and
@@ -251,7 +254,7 @@ struct DefaultRasterEdgeDetector
 
 struct FixedNumberRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const num)
+  static size_t N(size_t /*numData*/, casa::Float const /*fraction*/, casa::Int const num)
   {
     debuglog << "FixedNumberRasterEdgeDetector" << debugpost;
     if (num < 0) {
@@ -356,7 +359,51 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
   }
   return edgeAsTimeRange;
 }
-
+// Formula for weight scaling factor, WF
+// 1. only one OFF spectrum is used (i.e. no interpolation)
+//
+//     sigma = sqrt(sigma_ON^2 + sigma_OFF^2)
+//           = sigma_ON * sqrt(1 + tau_ON / tau_OFF)
+//
+//     weight = 1 / sigma^2
+//            = 1 / sigma_ON^2 * tau_OFF / (tau_ON + tau_OFF)
+//            = weight_ON * tau_OFF / (tau_ON + tau_OFF)
+//
+//     WF = tau_OFF / (tau_ON + tau_OFF)
+//
+casa::Float calcWeightScale(casa::Double exposureOn, casa::Double exposureOff)
+{
+  return exposureOff / (exposureOn + exposureOff);
+}
+// 2. two OFF spectrum is used (linear interpolation)
+//
+//     sigma_OFF = {(t_OFF2 - t_ON)^2 * sigma_OFF1^2
+//                    + (t_ON - t_OFF1)^2 * sigma_OFF2^2}
+//                  / (t_OFF2 - t_OFF1)^2
+//
+//     sigma = sqrt(sigma_ON^2 + sigma_OFF^2)
+//           = sigma_ON * sqrt(1 + tau_ON / (t_OFF2 - t_OFF1)^2
+//                              * {(t_OFF2 - t_ON)^2 / tau_OFF1
+//                                  + (t_ON - t_OFF1)^2 / tau_OFF2})
+//
+//     weight = weight_ON / (1 + tau_ON / (t_OFF2 - t_OFF1)^2
+//                            * {(t_OFF2 - t_ON)^2 / tau_OFF1
+//                                + (t_ON - t_OFF1)^2 / tau_OFF2})
+//
+//     WF = 1.0 / (1 + tau_ON / (t_OFF2 - t_OFF1)^2
+//                  * {(t_OFF2 - t_ON)^2 / tau_OFF1
+//                      + (t_ON - t_OFF1)^2 / tau_OFF2})
+//
+casa::Float calcWeightScale(casa::Double timeOn, casa::Double exposureOn,
+                            casa::Double timeOff1, casa::Double exposureOff1,
+                            casa::Double timeOff2, casa::Double exposureOff2)
+{
+  casa::Double dt = timeOff2 - timeOff1;
+  casa::Double dt1 = timeOn - timeOff1;
+  casa::Double dt2 = timeOff2 - timeOn;
+  return 1.0f / (1.0f + exposureOn / (dt * dt)
+                 * (dt2 * dt2 / exposureOff1 + dt1 * dt1 / exposureOff2));
+}
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -648,6 +695,16 @@ void SingleDishSkyCal::initSolvePar()
   interval_.resize(nElem());
 }
 
+void SingleDishSkyCal::syncMeta2(const vi::VisBuffer2& vb)
+{
+  // call method in parent class
+  VisCal::syncMeta2(vb);
+
+  // fill interval array with exposure
+  interval_.reference(vb.exposure());
+  debuglog << "SingleDishSkyCal::syncMeta2 interval_= " << interval_ << debugpost;
+}
+
 void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
 {
   debuglog << "SingleDishSkyCal::syncCalMat" << debugpost;
@@ -672,12 +729,87 @@ void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
   debuglog << "currentSky() = " << currentSky().xzPlane(0) << debugpost;
   debuglog << "currentSkyOK() = " << currentSkyOK().xzPlane(0) << debugpost;
 
+  // weight calibration
+  if (calWt())
+    syncWtScale();
+
   debuglog << "SingleDishSkyCal::syncCalMat DONE" << debugpost;
 }
   
 void SingleDishSkyCal::syncDiffMat()
 {
   debuglog << "SingleDishSkyCal::syncDiffMat()" << debugpost;
+}
+
+void SingleDishSkyCal::syncWtScale()
+{
+  debuglog << "syncWtScale" << debugpost;
+  
+  // allocate necessary memory 
+  currWtScale().resize(currentSky().shape());
+
+  // Calculate the weight scaling
+  calcWtScale();
+  
+  debuglog << "syncWtScale DONE" << debugpost;
+}
+
+void SingleDishSkyCal::calcWtScale()
+{
+  debuglog << "calcWtScale" << debugpost;
+  CTInterface cti(*ct_);
+  MSSelection mss;
+  mss.setFieldExpr(String::toString(currField()));
+  mss.setSpwExpr(String::toString(currSpw()));
+  mss.setObservationExpr(String::toString(currObs()));
+  for (Int iAnt = 0; iAnt < nAnt(); ++iAnt) {
+    mss.setAntennaExpr(String::toString(iAnt) + "&&&");
+    TableExprNode ten = mss.toTableExprNode(&cti);
+    NewCalTable temp;
+    try {
+      getSelectedTable(temp, *ct_, ten, "");
+    } catch (AipsError x) {
+      //logSink() << LogIO::WARN
+      //          << "Failed to calculate Weight Scale. Set to 1." << LogIO::POST;
+      //currWtScale() = 1.0f;
+      continue;
+    }
+    temp = temp.sort("TIME");
+    ROScalarColumn<Double> col(temp, "TIME");
+    Vector<Double> timeCol = col.getColumn();
+    col.attach(temp, "INTERVAL");
+    Vector<Double> intervalCol = col.getColumn();
+    size_t nrow = timeCol.size();
+    debuglog << "timeCol = " << timeCol << debugpost;
+    debuglog << "intervalCol = " << intervalCol << debugpost;
+    debuglog << "iAnt " << iAnt << " temp.nrow()=" << temp.nrow() << debugpost;
+    if (currTime() < timeCol[0]) {
+      debuglog << "Use nearest OFF weight (0)" << debugpost;
+      currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[0]);
+    }
+    else if (currTime() > timeCol[nrow-1]) {
+      debuglog << "Use nearest OFF weight (" << nrow-1 << ")" << debugpost;
+      currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[nrow-1]);
+    }
+    else {
+      debuglog << "Use interpolated OFF weight" << debugpost;
+      for (size_t irow = 0; irow < nrow ; ++irow) {
+        if (currTime() == timeCol[irow]) {
+          currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[irow]);
+          break;
+        }
+        else if (currTime() < timeCol[irow]) {
+          currWtScale().xyPlane(iAnt) = calcWeightScale(currTime(), interval_[iAnt],
+                                                        timeCol[irow-1], intervalCol[irow-1],
+                                                        timeCol[irow], intervalCol[irow]);
+          break;
+        }
+      }
+    }
+  }
+  debuglog << "currWtScale() = " << currWtScale().xzPlane(0) << debugpost;
+
+  debuglog << "calcWtScale DONE" << debugpost;
 }
   
 Float SingleDishSkyCal::calcPowerNorm(Array<Float>& /*amp*/, const Array<Bool>& /*ok*/)
@@ -761,7 +893,7 @@ void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<F
     // If requested, update the weights
     if (!trial && calWt()) {
       wtmat.reference(wt.array());
-      //updateWt2(wtmat,*a1,*a2);
+      updateWt2(wtmat,*a1);
     }
     
     if (!trial)
@@ -832,6 +964,24 @@ void SingleDishSkyCal::finalizeSky()
     if (engineF_[ispw]) delete engineF_[ispw];
   }
 
+}
+
+void SingleDishSkyCal::updateWt2(Matrix<Float> &weight, const Int &antenna1)
+{
+  // apply weight scaling factor
+  Matrix<Float> const factor = currWtScale().xyPlane(antenna1);
+  debuglog << "factor.shape() = " << factor.shape() << debugpost;
+  debuglog << "weight.shape() = " << weight.shape() << debugpost;
+  debuglog << "weight = " << weight << debugpost;
+  if (weight.shape() == factor.shape()) {
+    weight *= factor;
+  }
+  else if (weight.shape() == IPosition(2,factor.shape()[0],1)) {
+    weight *= factor(Slice(0,factor.shape()[0]),Slice(0,1));
+  }
+  else {
+    throw AipsError("Shape mismatch between input weight and weight scaling factor");
+  }
 }
 
 //

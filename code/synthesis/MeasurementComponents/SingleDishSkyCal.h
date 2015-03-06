@@ -270,11 +270,20 @@ protected:
   // Invalidate diff cal matrices generically 
   inline virtual void invalidateDiffCalMat() {};
 
+  // overwride syncMeta2
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
+
   // Sync matrices generically for current meta data 
   virtual void syncCalMat(const Bool& doInv=False);
 
   // Synchronize the differentiated calibration 
   virtual void syncDiffMat();
+
+  // Synchronize weight scale factors
+  virtual void syncWtScale();
+
+  // Perform weight scale calculation (specializable)
+  virtual void calcWtScale();
 
   // Normalize a (complex) solution array (generic)
   virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
@@ -314,9 +323,11 @@ protected:
   // Current Sky spectra
   PtrBlock<Cube<Complex> *> currentSky_; // [nSpw]([1,2],nChanMat,nAnt)
   PtrBlock<Cube<Bool> *> currentSkyOK_;  // [nSpw]([1,2],nChanMat,nAnt)
+
 private:
   void initializeSky();
   void finalizeSky();
+  void updateWt2(Matrix<Float> &weight, const Int& antenna1);
 };
 
 class SingleDishPositionSwitchCal : public SingleDishSkyCal 
