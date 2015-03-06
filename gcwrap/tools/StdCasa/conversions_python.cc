@@ -1026,8 +1026,8 @@ ARRAY2PYOBJ(int,PyInt_FromLong(val),PyInt_FromLong(*iter),,)
 ARRAY2PYOBJ(unsigned int,PyInt_FromLong(val),PyInt_FromLong(*iter),,)
 ARRAY2PYOBJ(bool,(val == 0 ? Py_False : Py_True); Py_INCREF(ele),(*iter == false ? Py_False : Py_True),Py_INCREF(vec_val);,)
 ARRAY2PYOBJ(double,PyFloat_FromDouble(val),PyFloat_FromDouble(*iter),,)
-ARRAY2PYOBJ(std::complex<double> ,PyComplex_FromDoubles(val.real(),val.imag()),PyComplex_FromDoubles(cpx.real(),cpx.imag()),,register std::complex<double> cpx = *iter;)
-ARRAY2PYOBJ(casac::complex ,PyComplex_FromDoubles(val.re,val.im),PyComplex_FromDoubles(cpx.re,cpx.im),,register casac::complex cpx = *iter;)
+ARRAY2PYOBJ(std::complex<double> ,PyComplex_FromDoubles(val.real(),val.imag()),PyComplex_FromDoubles(cpx.real(),cpx.imag()),,std::complex<double> cpx = *iter;)
+ARRAY2PYOBJ(casac::complex ,PyComplex_FromDoubles(val.re,val.im),PyComplex_FromDoubles(cpx.re,cpx.im),,casac::complex cpx = *iter;)
 ARRAY2PYOBJ(std::string,PyString_FromString(val.c_str()),PyString_FromString((*iter).c_str()),,)
 
 #define HANDLEVEC2(TYPE,FETCH)												\
