@@ -330,11 +330,17 @@ ia.close()
 #             'sigma': 0.01559417,
 #             'sum':  1087.5}
 # 20150308: update after beam size definition at sdimaging (r32597)
-refstats = {'max': 0.13526395,
-             'min': -0.02606195,
-             'rms': 0.01732169,
-             'sigma': 0.01537722,
-             'sum':  953.07229832}
+#refstats = {'max': 0.13526395,
+#             'min': -0.02606195,
+#             'rms': 0.01732169,
+#             'sigma': 0.01537722,
+#             'sum':  953.07229832}
+# 20150308: update after image parameter change in simanalyze (r32603)
+refstats = {'max': 0.13784169,
+             'min': -0.02484594,
+             'rms': 0.01885981,
+             'sigma': 0.01575659,
+             'sum':  1238.80514997}
 
 
 
@@ -394,11 +400,17 @@ refstats = {'max': 0.13526395,
 #             'sigma': 0.0084565,
 #             'sum':  -216.12}
 # 20150308: update after beam size definition at sdimaging (r32597)
-diffstats = {'max':  0.03337186,
-             'min': -0.064662,
-             'rms': 0.00883923,
-             'sigma': 0.00881279,
-             'sum':  -81.71821998}
+#diffstats = {'max':  0.03337186,
+#             'min': -0.064662,
+#             'rms': 0.00883923,
+#             'sigma': 0.00881279,
+#             'sum':  -81.71821998}
+# 20150308: update after image parameter change in simanalyze (r32603)
+diffstats = {'max':  0.03221679,
+             'min': -0.07377915,
+             'rms': 0.00990815,
+             'sigma': 0.00941917,
+             'sum':  -367.45107187}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

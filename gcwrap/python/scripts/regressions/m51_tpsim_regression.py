@@ -150,12 +150,18 @@ ia.close()
 #              'rms': 0.40548718,
 #              'sigma': 0.37000663,
 #              'sum':  41420.88008615}
-# update after scaling of TP image (r27397)
-refstats = {'max': 4.30645227,
-             'min': -0.73024964,
-             'rms': 0.46436065,
-             'sigma': 0.42372863,
-             'sum':  47434.86051071}
+# # 2015/03/08: update after scaling of TP image (r27397)
+#refstats = {'max': 4.30645227,
+#             'min': -0.73024964,
+#             'rms': 0.46436065,
+#             'sigma': 0.42372863,
+#             'sum':  47434.86051071}
+# 2015/03/08: update after image parameter change in simanalyze (r32603)
+refstats = {'max': 5.25182152,
+             'min': -0.84452724,
+             'rms': 0.558559,
+             'sigma': 0.51158817,
+             'sum':  58747.95095025}
 
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
@@ -202,12 +208,18 @@ ia.close()
 #             'rms': 0.17661846,
 #             'sigma': 0.17582976,
 #             'sum': 4164.18677758}
-# update after beam size definition at sdimaging (r32597)
-diffstats = {'max': 1.46299481,
-             'min': -0.79397476,
-             'rms': 0.2181273,
-             'sigma': 0.2095669,
-             'sum': 15109.65572983}
+# 2015/03/08: update after beam size definition at sdimaging (r32597)
+#diffstats = {'max': 1.46299481,
+#             'min': -0.79397476,
+#             'rms': 0.2181273,
+#             'sigma': 0.2095669,
+#             'sum': 15109.65572983}
+# 2015/03/08: update after image parameter change in simanalyze (r32603)
+diffstats = {'max': 0.96216369,
+             'min': -0.94122034,
+             'rms': 0.21231961,
+             'sigma': 0.21136266,
+             'sum': 5277.29528891}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
