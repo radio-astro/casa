@@ -1,5 +1,6 @@
 from taskinit import *
 from simutil import *
+import sdutil
 import os
 import re
 import pylab as pl
@@ -310,7 +311,6 @@ def simanalyze(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
         #####################################################################
-        beam_current = False
         if image:
 
             # make sure cell is defined
@@ -405,28 +405,25 @@ def simanalyze(
                            tpimage != fileroot+"/"+featherimage:
                         msg("featherimage parameter set to "+featherimage+" but also creating a new total power image "+tpimage,priority="warn",origin='simanalyze')
                         msg("assuming you know what you want, and using featherimage="+featherimage+" in feather",priority="warn",origin='simanalyze')
-#                    else:
-#                        # This forces to use TP image as a model for clean
-#                        if len(modelimage) <= 0:
-#                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
-#                        modelimage = tpimage
                 
                 # Get PB size of TP Antenna
                 # !! aveant will only be set if modifymodel or setpointings and in 
                 # any case it will the the aveant of the INTERFM array - we want the SD
                 if os.path.exists(tpmstoimage):
+                    # antenna diameter
                     tb.open(tpmstoimage+"/ANTENNA")
                     diams = tb.getcol("DISH_DIAMETER")
-                    tb.done()
+                    tb.close()
+                    aveant = pl.mean(diams)
+                    # theoretical antenna beam size
+                    import sdbeamutil
+                    pb_asec = sdbeamutil.primaryBeamArcsec(qa.tos(qa.convert(qa.quantity(model_center),'GHz')),aveant,(0.75 if aveant==12.0 else 0.0),10.0)
                 elif dryrun:
-                    # HACK
-                    diams=[12.]
+                    aveant = 12.0
+                    pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
                 else:
                     raise Exception, tpmstoimage+" not found."
 
-                aveant = pl.mean(diams)
-                # model_center should be set even if we didn't predict this execution
-                pb_asec = pbcoeff*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
                 # default PSF from PB of antenna
                 imbeam = {'major': qa.quantity(pb_asec,'arcsec'),
                           'minor': qa.quantity(pb_asec,'arcsec'),
@@ -439,7 +436,7 @@ def simanalyze(
                 
                 if True: #SF gridding
                     msg("Generating TP image using 'SF' kernel.",origin='simanalyze')
-                    beamsamp = 6.42857
+                    beamsamp = 9
                     sfcell_asec = pb_asec/beamsamp
                     sfcell = qa.tos(qa.quantity(sfcell_asec, "arcsec"))
                     cell_asec = [qa.convert(cell[0],"arcsec")['value'],
@@ -450,7 +447,7 @@ def simanalyze(
                         # small to large cell
                         msg("The requested cell size is too large to invoke SF gridding. Please set cell size <= %f arcsec or grid TP MS '%s' manually" % (sfcell_asec, tpmstoimage),priority="error",origin='simanalyze')
 
-                    sfsupport = 4
+                    sfsupport = 6
                     temp_out = tpimage+"0"
                     temp_cell = [sfcell, sfcell]
                     # too small - is imsize too small to start with?
@@ -474,28 +471,15 @@ def simanalyze(
                     msg(get_taskstr('sdimaging', sdim_param), priority="info")
                     if not dryrun:
                         sdimaging(**sdim_param)
-                        #sdimaging(infiles=[tpmstoimage], gridfunction='SF',
-                        #      convsupport = sfsupport,
-                        #      outfile=temp_out, overwrite=overwrite,
-                        #      imsize=temp_imsize, cell=temp_cell,
-                        #      phasecenter=model_refdir, mode='channel',
-                        #      nchan=model_nchan, start=0, width=1)
                         if not os.path.exists(temp_out):
                             raise RuntimeError, "TP imaging failed."
 
-                        # Define PSF of image
-                        qpb = qa.quantity(pb_asec,"arcsec")
-                        # TODO get the sampling from the ms and put it in here
-                        qpsf0 = myutil.sfBeam1d(qpb, cell=temp_cell[0],
-                                              convsupport=sfsupport)
-                        qpsf1 = myutil.sfBeam1d(qpb, cell=temp_cell[1],
-                                              convsupport=sfsupport)
-                        imbeam['major'] = max(qpsf0, qpsf1)
-                        imbeam['minor'] = min(qpsf0, qpsf1)
-                        imbeam['positionangle'] = qa.quantity(pl.arctan(qa.getvalue(qa.div(qpsf1,qpsf0))), "rad")
                         # Scale image by convolved beam / antenna primary beam
-                        beam_area_ratio = qa.getvalue(qa.convert(qpsf0, "arcsec")) \
-                                          * qa.getvalue(qa.convert(qpsf1, "arcsec")) \
+                        ia.open(temp_out)
+                        imbeam = ia.restoringbeam()
+                        ia.close()
+                        beam_area_ratio = qa.getvalue(qa.convert(imbeam['major'], "arcsec")) \
+                                          * qa.getvalue(qa.convert(imbeam['minor'], "arcsec")) \
                                           / pb_asec**2
                         msg("Scaling TP image intensity by %f." % (beam_area_ratio),origin='simanalyze')
                         temp_in = temp_out
@@ -504,10 +488,6 @@ def simanalyze(
                                outfile=temp_out)
                         if not os.path.exists(temp_out):
                             raise RuntimeError, "TP image scaling failed."
-                        ia.open(temp_out)
-                        beam = ia.restoringbeam()
-                        if len(beam) == 0: ia.setrestoringbeam(beam=imbeam)
-                        ia.close()
                         
                     # Regrid TP image to final resolution
                     msg("Regridding TP image to final resolution",origin='simanalyze')
@@ -550,32 +530,17 @@ def simanalyze(
                     msg(get_taskstr('sdimaging', sdim_param), priority="info")
                     if not dryrun:
                         sdimaging(**sdim_param)
-                        #sdimaging(infiles=[tpmstoimage],gridfunction='PB',
-                        #      outfile=tpimage, overwrite=overwrite,
-                        #      imsize=sdimsize, cell=sdcell,
-                        #      phasecenter=model_refdir, mode='channel',
-                        #      nchan=model_nchan,start=0,width=1)
                     del sdimsize, sdcell
                     # TODO: Define PSF of image here
                     # for now use default 
 
-                # For single dish: manually set the primary beam
-                beam=None
+                # get image beam size form TP image
                 if os.path.exists(tpimage):
                     ia.open(tpimage)
                     beam = ia.restoringbeam()
-                if len(beam) == 0:
-                    msg('setting primary beam information to image.',origin='simanalyze')
-                    beam['major'] = imbeam['major']
-                    beam['minor'] = imbeam['minor']
-                    beam['positionangle'] = imbeam['positionangle']
-                    msg('Primary beam: '+str(beam['major']),origin='simanalyze')
-                    if ia.isopen():
-                        ia.setrestoringbeam(beam=beam)
-                        ia.close()
+                    ia.close()
 
                 if sd_only:
-                    beam_current = True
                     bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
                     bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
                 else: del beam
@@ -695,7 +660,6 @@ def simanalyze(
             if os.path.exists(imagename+".image"):
                 ia.open(imagename+".image")
                 beam = ia.restoringbeam()
-                beam_current = True
                 ia.close()
                 # model has units of Jy/pix - calculate beam area from clean image
                 # (even if we are not plotting graphics)
@@ -784,7 +748,6 @@ def simanalyze(
                 if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
                 ia.open(imagename+".image")
                 beam = ia.restoringbeam()
-                beam_current = True
                 ia.close()
                 # model has units of Jy/pix - calculate beam area from clean image
                 cell = myutil.cellsize(imagename+".image")
@@ -874,10 +837,6 @@ def simanalyze(
             elif sd_only:
                 # imaged and single dish only
                 msfile = tpmstoimage
-#            if sd_only and os.path.exists(sdmsfile):
-#                # use TP ms for UV plot if only SD sim, i.e.,
-#                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
-#                msfile = sdmsfile
             # psf is not available for SD only sim
             if os.path.exists(msfile) and myutil.ismstp(msfile,halt=False):
                 if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
