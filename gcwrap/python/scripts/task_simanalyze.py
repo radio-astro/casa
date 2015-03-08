@@ -1,6 +1,5 @@
 from taskinit import *
 from simutil import *
-import sdutil
 import os
 import re
 import pylab as pl
