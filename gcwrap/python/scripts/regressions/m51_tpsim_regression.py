@@ -157,7 +157,6 @@ refstats = {'max': 4.30645227,
              'sigma': 0.42372863,
              'sum':  47434.86051071}
 
-
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
@@ -198,11 +197,17 @@ ia.close()
 #              'sigma': 0.1733555,
 #              'sum': 10178.15341685}
 # update after scaling of TP image (r27397)
-diffstats = {'max': 0.82301152,
-             'min': -0.80564827,
-             'rms': 0.17661846,
-             'sigma': 0.17582976,
-             'sum': 4164.18677758}
+#diffstats = {'max': 0.82301152,
+#             'min': -0.80564827,
+#             'rms': 0.17661846,
+#             'sigma': 0.17582976,
+#             'sum': 4164.18677758}
+# update after beam size definition at sdimaging (r32597)
+diffstats = {'max': 1.46299481,
+             'min': -0.79397476,
+             'rms': 0.2181273,
+             'sigma': 0.2095669,
+             'sum': 15109.65572983}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

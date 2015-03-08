@@ -324,11 +324,18 @@ ia.close()
 #              'sigma': 0.01543498,
 #              'sum':  986.6099945}
 # 20130917: after scaling of TP image (r27397)
-refstats = {'max': 0.13657,
-             'min': -0.024388,
-             'rms': 0.018054,
-             'sigma': 0.01559417,
-             'sum':  1087.5}
+#refstats = {'max': 0.13657,
+#             'min': -0.024388,
+#             'rms': 0.018054,
+#             'sigma': 0.01559417,
+#             'sum':  1087.5}
+# 20150308: update after beam size definition at sdimaging (r32597)
+refstats = {'max': 0.13526395,
+             'min': -0.02606195,
+             'rms': 0.01732169,
+             'sigma': 0.01537722,
+             'sum':  953.07229832}
+
 
 
 # # reference statistic values for diff image
@@ -375,18 +382,23 @@ refstats = {'max': 0.13657,
 #              'sigma': 0.00890806,
 #              'sum':  -115.29187211}
 # 20131120: after scaling of TP image (r27397)
-diffstats = {'max':  0.03733807,
-             'min': -0.06772561,
-             'rms': 0.00884163,
-             'sigma': 0.00865906,
-             'sum':  -213.66776456}
-
+#diffstats = {'max':  0.03733807,
+#             'min': -0.06772561,
+#             'rms': 0.00884163,
+#             'sigma': 0.00865906,
+#             'sum':  -213.66776456}
 # 20140613 
-diffstats = {'max':  0.031451,
-             'min': -0.064994,
-             'rms': 0.0086476,
-             'sigma': 0.0084565,
-             'sum':  -216.12}
+#diffstats = {'max':  0.031451,
+#             'min': -0.064994,
+#             'rms': 0.0086476,
+#             'sigma': 0.0084565,
+#             'sum':  -216.12}
+# 20150308: update after beam size definition at sdimaging (r32597)
+diffstats = {'max':  0.03337186,
+             'min': -0.064662,
+             'rms': 0.00883923,
+             'sigma': 0.00881279,
+             'sum':  -81.71821998}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
