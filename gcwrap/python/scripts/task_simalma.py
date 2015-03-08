@@ -369,7 +369,7 @@ def simalma(
         resols=[]
         tp_inconfiglist=False
 
-         # check filename consistency, get resolution, etc        
+        # check filename consistency, get resolution, etc        
         for configfile in antennalist:
 
             isalma=0
@@ -1038,8 +1038,10 @@ def simalma(
                     (qa.tos(qimgsize_tp[0]), qa.tos(qimgsize_tp[1])), \
                     priority=v_priority)
                 if tp_kernel.upper() == 'SF':
-                    beamsamp=6.42857
-                    qcell=qa.div(PB12, beamsamp)
+                    beamsamp=9
+                    import sdbeamutil
+                    pb_asec = sdbeamutil.primaryBeamArcsec(qa.tos(qa.convert(qa.quantity(model_center),'GHz')),12.0,0.75,10.0)
+                    qcell=qa.quantity(pb_asec/beamsamp, 'arcsec')
                     cell_tp = [qa.tos(qcell), qa.tos(qcell)]
                     msg("Using fixed cell size for SF grid: %s" % cell_tp[0], \
                        priority=v_priority)
@@ -1136,7 +1138,7 @@ def simalma(
                     task_param = {}
                     task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'sf'
-                    task_param['convsupport'] = 4
+                    task_param['convsupport'] = 6
                     task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
                     task_param['cell'] = cell_tp
@@ -1159,16 +1161,12 @@ def simalma(
                     #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
                     # Parameters for sdimaging
                     task_param = {}
-#                     task_param['infile'] = fileroot+"/"+vis_tp
                     task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'gjinc'
                     task_param['gwidth'] = gwidth
                     task_param['jwidth'] = jwidth
                     task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
-                    # sdimaging doesn't actually take a quantity,
-                    #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
-                    #task_param['cell'] = cell_arcmin
                     task_param['cell'] = cell_tp
                     task_param['phasecenter'] = model_refdir
                     task_param['mode'] = 'channel'
@@ -1186,21 +1184,24 @@ def simalma(
                 # TODO: scale TP image
                 
                 # Set restoring beam
-                # TODO: set proper beam size
-                if tp_kernel.upper() == 'SF':
-                    bmsize = myutil.sfBeam1d(PB12sim, cell=cell_tp[0],
-                                             convsupport=4, sampling=ptgspacing_tp)
-                else: # GJinc
-                    pbunit = PB12sim['unit']
-                    simpb_val = PB12sim['value']
-                    # the acutal HWHM is 3.5% smaller
-                    kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
-                    bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
+                ia.open(temp_out)
+                imbeam = ia.restoringbeam()
+                ia.close()
+                bmsize = imbeam['major']
+#                 if tp_kernel.upper() == 'SF':
+#                     bmsize = myutil.sfBeam1d(PB12sim, cell=cell_tp[0],
+#                                              convsupport=4, sampling=ptgspacing_tp)
+#                 else: # GJinc
+#                     pbunit = PB12sim['unit']
+#                     simpb_val = PB12sim['value']
+#                     # the acutal HWHM is 3.5% smaller
+#                     kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
+#                     bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
                 beam_area_ratio = qa.getvalue(qa.convert(bmsize, 'arcsec'))**2 \
                                   / qa.getvalue(qa.convert(PB12sim, 'arcsec'))**2
                 msg(" ",priority=v_priority)
-                msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
-                         priority=v_priority)
+#                 msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
+#                          priority=v_priority)
                 msg("Scaling TP image intensity by beam area before and after gridding: %f" % beam_area_ratio)
                 #print "- SimPB = %f%s" % (simpb_val, pbunit)
                 #print "- image kernel = %f%s" % (kernel_val, pbunit)
@@ -1209,10 +1210,10 @@ def simalma(
                     immath(imagename=temp_out, mode='evalexpr',
                            expr="IM0*%f" % (beam_area_ratio),
                            outfile=fileroot+"/"+imagename_tp)
-                    ia.open(fileroot+"/"+imagename_tp)
-                    ia.setrestoringbeam(major=bmsize, minor=bmsize,
-                                    pa=qa.quantity("0.0deg"))
-                    ia.close()
+#                     ia.open(fileroot+"/"+imagename_tp)
+#                     ia.setrestoringbeam(major=bmsize, minor=bmsize,
+#                                     pa=qa.quantity("0.0deg"))
+#                     ia.close()
                 
 
                 # Analyze TP image
