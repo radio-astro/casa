@@ -23,6 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id$
 
 #ifndef MS_MSMETADATA_H
 #define MS_MSMETADATA_H
@@ -38,9 +39,9 @@
 namespace casacore {
 
 template <class T> class ArrayColumn;
-class ArrayKey;
-class ScanKey;
-class SubScanKey;
+struct ArrayKey;
+struct ScanKey;
+struct SubScanKey;
 
 // <summary>
 // Class to interrogate  an MS for metadata. Interrogation happens on demand
