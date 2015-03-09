@@ -11,6 +11,18 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 """
+The ALMA receiver band, nominal tsys, and sensitivity info.
+    This information should go elsewhere in the next release
+    The ALMA receiver bands are defined per pipeline convention
+"""
+
+ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 6', \
+    'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
+ALMA_TSYS = [75.0, 86.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
+ALMA_SENSITIVITIES = [0.20, 0.24, 0.27, 0.50, 1.29, 5.32, 8.85] \
+    # mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
+
+"""
 Estimate the optimal solint for the selected bandpass data and return
 the solution in the form of a dictionary
 """
@@ -72,12 +84,17 @@ def estimate_bpsolint (ms, fieldlist, intent, spwidlist, compute_nantennas,
     # from the Tsys dictionary
     tsys_spwlist, scan_list = make_tsyslists(spwidlist, tsys_dict)
 
+    tsystemp_dict = get_mediantemp (ms, tsys_spwlist, scan_list,
+        antenna='', temptype='tsys')
+    if not tsystemp_dict:
+        LOG.info('No Tsys estimates')
+        return {}
+
     # Get the observing characteristics dictionary as a function of spw
     #    This includes the spw configuration, time on source and
     #    integration information
-    obs_dict = get_obsinfo (ms, fieldlist, intent,
-        spwidlist, compute_nantennas=compute_nantennnas,
-        max_fracflagged=maxfracflagged)
+    obs_dict = get_obsinfo (ms, fieldlist, intent, spwidlist,
+        compute_nantennas=compute_nantennas, max_fracflagged=max_fracflagged)
     if not obs_dict:
         LOG.info('No observation scans')
         return {}
@@ -870,15 +887,6 @@ def compute_bpsolint(ms, spwlist, spw_dict, reqPhaseupSnr,
         key: 'nchan_bpsolint'     value: The total number of solint channels
     """
 
-    # The ALMA receiver band, nominal tsys, and sensitivity info.
-    #    This information should go elsewhere in the next release
-    #    The ALMA receiver bands are defined per pipeline convention
-
-    ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 6', \
-        'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
-    ALMA_TSYS = [75.0, 86.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
-    ALMA_SENSITIVITIES = [0.20, 0.24, 0.27, 0.50, 1.29, 5.32, 8.85] \
-        # mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
 
     # Initialize the output solution interval dictionary
     solint_dict = collections.OrderedDict()
