@@ -19,13 +19,15 @@
 #
 
 casa_add_library( singledish
-    SingleDish/SingleDishMS.cc
+    SingleDish/BLParameterParser.cc
     SingleDish/SDMSManager.cc
+    SingleDish/SingleDishMS.cc
 )
 
 install (FILES
-    SingleDish/SingleDishMS.h
+    SingleDish/BLParameterParser.h
     SingleDish/SDMSManager.h
+    SingleDish/SingleDishMS.h
     DESTINATION include/casacode/singledish/SingleDish
 )
 
