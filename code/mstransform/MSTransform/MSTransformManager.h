@@ -418,13 +418,14 @@ protected:
 	void calculateWeightAndSigmaFactors();
 	void calculateNewWeightAndSigmaFactors();
 
-	// From selected MS
+	// Column check
 	void checkFillFlagCategory();
 	void checkFillWeightSpectrum();
 	void checkDataColumnsAvailable();
+	void checkDataColumnsToFill();
+	void colCheckInfo(const String& inputColName, const String& outputColName);
 
 	// Iterator set-up
-	void checkDataColumnsToFill();
 	virtual void setIterationApproach();
 	void generateIterator();
 
@@ -1151,7 +1152,8 @@ protected:
 	String inpMsName_p;
 	String outMsName_p;
 	String datacolumn_p;
-	Bool realmodelcol_p;
+	Bool makeVirtualModelColReal_p;
+	Bool makeVirtualCorrectedColReal_p;
 	Vector<Int> tileShape_p;
 
 	// Data selection parameters
@@ -1209,9 +1211,9 @@ protected:
 	Double maxuvwdistance_p;
 	// uInt minbaselines_p;
 
-        // Calibration parameters
-        Bool calibrate_p;
-        Record callib_p;
+	// Calibration parameters
+	Bool calibrate_p;
+	Record callib_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;
@@ -1299,6 +1301,7 @@ protected:
 	Bool correctedDataColumnAvailable_p;
 	Bool modelDataColumnAvailable_p;
 	Bool floatDataColumnAvailable_p;
+	Bool lagDataColumnAvailable_p;
 	Cube<Bool> *flagCube_p;
 	Cube<Complex> *visCube_p;
 	Cube<Complex> *visCubeCorrected_p;

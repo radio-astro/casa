@@ -641,10 +641,11 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 		else
 		{
 			getShape();
-			weight_p.resize(nCorrelations_p,nRows_p,False);
 
 			if (manager_p->combinespws_p)
 			{
+				weight_p.resize(nCorrelations_p,nRows_p,False);
+
 				if (manager_p->newWeightFactorMap_p.size() > 0)
 				{
 					manager_p->mapAndScaleMatrix(	manager_p->getVisBuffer()->weight(),
@@ -660,6 +661,9 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 			}
 			else if (manager_p->newWeightFactorMap_p.size() > 0)
 			{
+				weight_p.resize(nCorrelations_p,nRows_p,False);
+				weight_p = manager_p->getVisBuffer()->weight();
+
 				// Apply scale factor
 				if ( 	(manager_p->newWeightFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newWeightFactorMap_p.end()) and
 						(manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )
@@ -700,15 +704,15 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 		else
 		{
 			getShape();
-			sigma_p.resize(nCorrelations_p,nRows_p,False);
 
 			if (manager_p->combinespws_p)
 			{
+				sigma_p.resize(nCorrelations_p,nRows_p,False);
+
 				if (manager_p->correctedToData_p)
 				{
 					// Sigma must be redefined to 1/weight when corrected data becomes data
-					weight();
-					sigma_p = weight_p;
+					sigma_p = weight(); // Copy operator implements an actual copy
 					arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
 				}
 				else if (manager_p->newSigmaFactorMap_p.size() > 0)
@@ -727,13 +731,16 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 			else if (manager_p->correctedToData_p)
 			{
 				// Sigma must be redefined to 1/weight when corrected data becomes data
-				weight();
-				sigma_p = weight_p;
+				sigma_p.resize(nCorrelations_p,nRows_p,False);
+				sigma_p = weight(); // Copy operator implements an actual copy
 				arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
 				sigmaTransformed_p = True;
 			}
 			else if (manager_p->newSigmaFactorMap_p.size() > 0)
 			{
+				sigma_p.resize(nCorrelations_p,nRows_p,False);
+				sigma_p = manager_p->getVisBuffer()->sigma();
+
 				// Apply scale factor
 				if ( 	(manager_p->newSigmaFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newSigmaFactorMap_p.end()) and
 						(manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )

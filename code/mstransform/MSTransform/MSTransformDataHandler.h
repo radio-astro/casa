@@ -59,8 +59,9 @@ public:
 		USE_FOR_DATA_WEIGHT_SIGMA_FLAG
 	};
 
-	MSTransformDataHandler(String& theMS, Table::TableOption option, Bool realmodelcol=False);
-	MSTransformDataHandler(MeasurementSet& ms, Bool realmodelcol=False);
+	MSTransformDataHandler(	String& theMS, Table::TableOption option,
+							Bool virtualModelCol=False, Bool virtualCorrectedCol=False);
+	MSTransformDataHandler(MeasurementSet& ms, Bool virtualModelCol=False, Bool virtualCorrectedCol=False);
 	~MSTransformDataHandler();
 
 	// Declared static because it's used in setupMS().
@@ -72,7 +73,8 @@ public:
 	// verifyColumns() after calling this.  Unlike the other version, it knows
 	// about FLOAT_DATA and LAG_DATA.  It throws an exception if a
 	// _specifically_ requested column is absent.
-	static const Vector<MS::PredefinedColumns>& parseColumnNames(String colNameList, const MeasurementSet& ms, Bool realmodelcol=False);
+	static const Vector<MS::PredefinedColumns>& parseColumnNames(	String colNameList, const MeasurementSet& ms,
+																	Bool virtualModelCol=False,Bool virtualCorrectedCol=False);
 
 	// Helper function for parseColumnNames().  Converts col to a list of
 	// MS::PredefinedColumnss, and returns the # of recognized data columns.
@@ -297,7 +299,8 @@ public:
 	Vector<Int> & getAntennaRemapper() {return antNewIndex_p;};
 
 	// Accesors for additional parameters
-	Bool getRealModelColParam() {return realmodelcol_p;};
+	void setVirtualModelCol(Bool virtualModelCol) {virtualModelCol_p = virtualModelCol;};
+	void setVirtualCorrectedCol(Bool virtualCorrectedCol) {virtualCorrectedCol_p = virtualCorrectedCol;};
 
 protected:
 
@@ -363,8 +366,8 @@ protected:
 	Vector<Vector<Slice> > corrSlices_p; // Used by VisIterator::selectCorrelation()
 	Matrix<Double> selTimeRanges_p;
 
-	// CAS-5348 (jagonzal): Make virtual MODEL data column real
-	Bool realmodelcol_p;
+	Bool virtualModelCol_p; // CAS-5348 (jagonzal): Make virtual MODEL data column real
+	Bool virtualCorrectedCol_p; //CAS-7286 (jagonzal): Make virtual CORRECTED data column real
 
 };
 

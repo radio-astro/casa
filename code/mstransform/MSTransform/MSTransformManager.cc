@@ -93,7 +93,8 @@ void MSTransformManager::initialize()
 	inpMsName_p = String("");
 	outMsName_p = String("");
 	datacolumn_p = String("CORRECTED");
-	realmodelcol_p = False;
+	makeVirtualModelColReal_p = False; // MODEL_DATA should always be made real via the datacol param.
+	makeVirtualCorrectedColReal_p = True; // TODO: CORRECTED_DATA should be made real on request
 	tileShape_p.resize(1,False);
 	//TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
 	//determine the tileshape by using MSTileLayout. Otherwise it has to be a
@@ -156,9 +157,9 @@ void MSTransformManager::initialize()
 	maxuvwdistance_p = 0;
 	// minbaselines_p = 0;
 
-        // Cal parameters
+	// Cal parameters
 	calibrate_p = False;
-        callib_p = Record();
+	callib_p = Record();
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
@@ -347,8 +348,8 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		exists = configuration.fieldNumber ("realmodelcol");
 		if (exists >= 0)
 		{
-			configuration.get (exists, realmodelcol_p);
-			if (realmodelcol_p)
+			configuration.get (exists, makeVirtualModelColReal_p);
+			if (makeVirtualModelColReal_p)
 			{
 				if (datacolumn_p.contains("ALL") or datacolumn_p.contains("MODEL"))
 				{
@@ -363,7 +364,7 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 							 << "MODEL_DATA column not selected in datacolumn parameter "
 							 << "Options that include MODEL_DATA are 'MODEL' and 'ALL'"
 							 << LogIO::POST;
-					realmodelcol_p = False;
+					makeVirtualModelColReal_p = False;
 				}
 			}
 		}
@@ -952,33 +953,35 @@ void MSTransformManager::parseTimeAvgParams(Record &configuration)
 	return;
 }
 
+// -----------------------------------------------------------------------
+// Parameter parser for on-the-fly (OTF) calibration
+// -----------------------------------------------------------------------
 void MSTransformManager::parseCalParams(Record &configuration)
 {
 
-        // Nominally no calibration
-        calibrate_p = False; 
+	// Nominally no calibration
+	calibrate_p = False;
 
 	int exists = 0;
 
-	exists = configuration.fieldNumber ("callib");
+	exists = configuration.fieldNumber("callib");
 	if (exists >= 0)
 	{
-                // extract the callib Record
- 	        callib_p = configuration.subRecord(exists);
-		// if the Record is non-trivial, calibration is turned on
-		calibrate_p=callib_p.nfields()>0;
+		// Extract the callib Record
+		callib_p = configuration.subRecord(exists);
+
+		// If the Record is non-trivial, calibration is turned on
+		calibrate_p = callib_p.nfields() > 0;
 
 		if (calibrate_p)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "Calibration is activated" << LogIO::POST;
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+						<< "Calibration is activated" << LogIO::POST;
 		}
-	}
-	else
-	{
-		return;
+
 	}
 
+	return;
 }
 
 
@@ -988,16 +991,22 @@ void MSTransformManager::parseCalParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformManager::open()
 {
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-			<< "Select data" << LogIO::POST;
-
-	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old,realmodelcol_p);
+	// Initialize MSTransformDataHandler to open the MeasurementSet object
+	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
 
 	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeMSBasicStructure,
 	// call therefore we have to use the selected MS always
 	inputMs_p = dataHandler_p->getInputMS();
 	// Note: We always get the input number of channels because we don't know if pre-averaging will be necessary
 	getInputNumberOfChannels();
+
+	// Check available data cols to pass this information on to MSTransformDataHandler which creates the MS structure
+	checkDataColumnsAvailable();
+	checkDataColumnsToFill();
+
+	// Set virtual column operation
+	dataHandler_p->setVirtualModelCol(makeVirtualModelColReal_p);
+	dataHandler_p->setVirtualCorrectedCol(makeVirtualCorrectedColReal_p);
 
 	// Once the input MS is opened we can get the selection indexes,
 	// in this way we also validate the selection parameters
@@ -1017,6 +1026,7 @@ void MSTransformManager::open()
 
 	// Set-up splitter object
 	const String dummyExpr = String("");
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << "Select data" << LogIO::POST;
 	dataHandler_p->setmsselect((const String)spwSelection_p,
 							(const String)fieldSelection_p,
 							(const String)baselineSelection_p,
@@ -1052,6 +1062,7 @@ void MSTransformManager::open()
 	}
 	else
 	{
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << "Create output MS structure" << LogIO::POST;
 		selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p,Table::Scratch);
 	}
 
@@ -1093,9 +1104,6 @@ void MSTransformManager::open()
 	outputMs_p = dataHandler_p->getOutputMS();
 	selectedInputMsCols_p = dataHandler_p->getSelectedInputMSColumns();
 	outputMsCols_p = dataHandler_p->getOutputMSColumns();
-
-	checkDataColumnsAvailable();
-	checkDataColumnsToFill();
 
 	return;
 }
@@ -4024,36 +4032,50 @@ void MSTransformManager::checkFillWeightSpectrum()
 // -----------------------------------------------------------------------
 void MSTransformManager::checkDataColumnsAvailable()
 {
-
 	dataColumnAvailable_p = False;
-	correctedDataColumnAvailable_p = calibrate_p;     // False;
-	floatDataColumnAvailable_p = False;
+	correctedDataColumnAvailable_p = False;
+	modelDataColumnAvailable_p = False;
 
-	if (!selectedInputMsCols_p->data().isNull() && selectedInputMsCols_p->data().isDefined(0))
+
+	floatDataColumnAvailable_p = False;
+	lagDataColumnAvailable_p = False;
+
+
+	// DATA
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 	{
 		dataColumnAvailable_p = True;
 	}
 
-	if (!selectedInputMsCols_p->correctedData().isNull() && selectedInputMsCols_p->correctedData().isDefined(0))
+
+	// CORRECTED_DATA already exists in the input MS
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
 	{
 		correctedDataColumnAvailable_p = True;
 	}
-
-	if (!selectedInputMsCols_p->floatData().isNull() && selectedInputMsCols_p->floatData().isDefined(0))
+	// CORRECTED_DATA does not exist but there is a calibration parameter set available
+	else if (calibrate_p and (makeVirtualCorrectedColReal_p or bufferMode_p))
 	{
-		floatDataColumnAvailable_p = True;
+		correctedDataColumnAvailable_p = True;
+	}
+	// There is no calibration parameter set available
+	else
+	{
+		// TODO: Inform that virtual CORRECTED_DATA is not available
+
+		// Unset makeVirtualModelColReal_p as virtual CORRECTED col. is not available
+		makeVirtualCorrectedColReal_p = False;
 	}
 
-	// Check if MODEL_DATA column is available in the input MS as a column or a model
-	modelDataColumnAvailable_p = False;
 
 	// MODEL_DATA already exists in the input MS
-	if (!selectedInputMsCols_p->modelData().isNull() && selectedInputMsCols_p->modelData().isDefined(0))
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 	{
 		modelDataColumnAvailable_p = True;
 	}
-	// MODEL_DATA does not exist but there is a model available in the SOURCE subtable
-	else if (selectedInputMs_p->source().isColumn(MSSource::SOURCE_MODEL))
+	// MODEL_DATA does not exist but there is a model available in the SOURCE sub-table
+	// MODEL_DATA should not be made real if the user does not specify it implicitly
+	else if (inputMs_p->source().isColumn(MSSource::SOURCE_MODEL) and (makeVirtualModelColReal_p or bufferMode_p))
 	{
 		modelDataColumnAvailable_p = True;
 	}
@@ -4063,7 +4085,7 @@ void MSTransformManager::checkDataColumnsAvailable()
 		modelDataColumnAvailable_p = False;
 
 		// Inform that virtual MODEL_DATA is not available
-		if (realmodelcol_p)
+		if (makeVirtualModelColReal_p)
 		{
 			if (bufferMode_p)
 			{
@@ -4081,8 +4103,22 @@ void MSTransformManager::checkDataColumnsAvailable()
 			}
 		}
 
-		// Unset realmodelcol_p as virtual MODEL col. is not available
-		realmodelcol_p = False;
+		// Unset makeVirtualModelColReal_p as virtual MODEL col. is not available
+		makeVirtualModelColReal_p = False;
+	}
+
+
+	// FLOAT_DATA
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+	{
+		floatDataColumnAvailable_p = True;
+	}
+
+
+	// LAG_DATA
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+	{
+		lagDataColumnAvailable_p = True;
 	}
 
 	return;
@@ -4097,15 +4133,10 @@ void MSTransformManager::checkDataColumnsToFill()
 	Bool mainColSet=False;
 	Bool modelDataChecked = False;
 
-	// This Bool is used below where availability of CORRECTED_DATA is relevant
-	//   calibrate_p will be True if OTF calibration has been arranged; otherwise
-	//   rely on physical availability in the inputMS
-	Bool corrDataAvailOrOTF_p = calibrate_p || selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA));
-
 
 	if (datacolumn_p.contains("ALL"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4113,23 +4144,13 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-
-			if (not bufferMode_p)
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding DATA column to output MS "<< LogIO::POST;
-			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-			}
+			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 
-		if (corrDataAvailOrOTF_p)
+		if (correctedDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4137,23 +4158,13 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
-
-			if (not bufferMode_p)
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
-			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"CORRECTED_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-			}
+			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
 			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
 		}
 
-		if ((selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
+		if (modelDataColumnAvailable_p)
 		{
 			modelDataChecked = True;
 			if (!mainColSet)
@@ -4162,42 +4173,15 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-
-			if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-			{
-				if (not bufferMode_p)
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
-				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-				}
-
-			}
-			else
-			{
-				if (not bufferMode_p)
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
-				}
-				else
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"Virtual MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-				}
-			}
+			colCheckInfo(MS::columnName(MS::MODEL_DATA),MS::columnName(dataColMap_p[MS::MODEL_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 
-			if (corrDataAvailOrOTF_p)
+			if (correctedDataColumnAvailable_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
 			}
-			else if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+			else if (dataColumnAvailable_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromSIGMA;
 			}
@@ -4207,7 +4191,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (floatDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4215,14 +4199,13 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
 			// TODO: FLOAT_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (lagDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4230,8 +4213,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
 
 			// TODO: LAG_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
@@ -4239,7 +4221,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("DATA,MODEL,CORRECTED"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4247,23 +4229,13 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-
-			if (not bufferMode_p)
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding DATA column to output MS "<< LogIO::POST;
-			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-			}
+			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
 		}
 
-		if (corrDataAvailOrOTF_p)
+		if (correctedDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4271,23 +4243,13 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
-
-			if (not bufferMode_p)
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
-			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"CORRECTED_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
-			}
+			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
 			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
 		}
 
-		if ((selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
+		if (modelDataColumnAvailable_p)
 		{
 			modelDataChecked = True;
 			if (!mainColSet)
@@ -4296,31 +4258,15 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-
-			if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-			{
-				if (not bufferMode_p)
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
-				}
-			}
-			else
-			{
-				if (not bufferMode_p)
-				{
-					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
-				}
-			}
+			colCheckInfo(MS::columnName(MS::MODEL_DATA),MS::columnName(dataColMap_p[MS::MODEL_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 
-			if (corrDataAvailOrOTF_p)
+			if (correctedDataColumnAvailable_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
 			}
-			else if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+			else if (dataColumnAvailable_p)
 			{
 				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromSIGMA;
 			}
@@ -4334,7 +4280,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	{
 		Bool mainColSet=False;
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4342,8 +4288,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
@@ -4354,7 +4299,7 @@ void MSTransformManager::checkDataColumnsToFill()
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (floatDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4362,8 +4307,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
 			// TODO: FLOAT_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
@@ -4376,7 +4320,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("FLOAT_DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (floatDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4384,8 +4328,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
 			// TODO: FLOAT_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
@@ -4398,7 +4341,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("LAG_DATA,DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4406,8 +4349,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
@@ -4418,7 +4360,7 @@ void MSTransformManager::checkDataColumnsToFill()
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (lagDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4426,8 +4368,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
 
 			// TODO: LAG_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
@@ -4440,7 +4381,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("LAG_DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (lagDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4448,8 +4389,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding LAG_DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::LAG_DATA),MS::columnName(dataColMap_p[MS::LAG_DATA]));
 
 			// TODO: LAG_DATA is not yet supported by TVI
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
@@ -4462,7 +4402,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (dataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4470,8 +4410,7 @@ void MSTransformManager::checkDataColumnsToFill()
 				mainColSet = True;
 			}
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding DATA column to output MS "<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::DATA),MS::columnName(dataColMap_p[MS::DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
 			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
@@ -4484,7 +4423,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("CORRECTED"))
 	{
-		if (corrDataAvailOrOTF_p)
+		if (correctedDataColumnAvailable_p)
 		{
 			if (!mainColSet)
 			{
@@ -4493,8 +4432,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
 			correctedToData_p = True;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
+			colCheckInfo(MS::columnName(MS::CORRECTED_DATA),MS::columnName(dataColMap_p[MS::CORRECTED_DATA]));
 
 			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
 			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
@@ -4508,7 +4446,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	else if (datacolumn_p.contains("MODEL"))
 	{
 
-		if ((selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
+		if (modelDataColumnAvailable_p)
 		{
 			modelDataChecked = True;
 			if (!mainColSet)
@@ -4518,12 +4456,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			}
 
 			dataColMap_p[MS::MODEL_DATA] = MS::DATA;
-			if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-									"Adding MODEL_DATA column to output MS as DATA "<< LogIO::POST;
-			}
-
+			colCheckInfo(MS::columnName(MS::MODEL_DATA),MS::columnName(dataColMap_p[MS::MODEL_DATA]));
 			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
 			timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
 		}
@@ -4540,29 +4473,64 @@ void MSTransformManager::checkDataColumnsToFill()
 				" is not supported, possible choices are ALL,DATA,CORRECTED,MODEL,FLOAT_DATA,LAG_DATA" << LogIO::POST;
 	}
 
-	if ((realmodelcol_p) and (!modelDataChecked))
-	{
-		dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-		datacolumn_p += String(",MODEL");
-	}
-
 	// Add shortcuts to be used in the context of WeightSpectrum related transformations
 	dataColMap::iterator iter;
-
-	// Check if we are doing CORRECTED_DATA
-	iter = dataColMap_p.find(MS::CORRECTED_DATA);
-	if (iter != dataColMap_p.end()) doingCorrected_p = True;
 
 	// Check if we are doing DATA
 	iter = dataColMap_p.find(MS::DATA);
 	if (iter != dataColMap_p.end()) doingData_p = True;
 
-	// Check if we are doing DATA
+	// Check if we are doing CORRECTED_DATA
+	iter = dataColMap_p.find(MS::CORRECTED_DATA);
+	if (iter != dataColMap_p.end()) doingCorrected_p = True;
+
+	// Check if we are doing MODEL_DATA
 	iter = dataColMap_p.find(MS::MODEL_DATA);
-	if (iter != dataColMap_p.end()) doingData_p = True;
+	if (iter != dataColMap_p.end()) doingModel_p = True;
 
 	return;
 }
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::colCheckInfo(const String& inputColName, const String& outputColName)
+{
+	if (inputMs_p->tableDesc().isColumn(inputColName))
+	{
+		if (not bufferMode_p)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Adding " << outputColName << " column to output MS from input " << inputColName<< " column"
+						<< LogIO::POST;
+		}
+		else
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< inputColName << " column present in input MS will be available from MSTransformBuffer"
+						<< LogIO::POST;
+		}
+	}
+	else
+	{
+		if (not bufferMode_p)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Adding " << outputColName << " column to output MS from input virtual " << inputColName<< " column"
+						<< LogIO::POST;
+		}
+		else
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Virtual " << inputColName << " column present in input MS will be available from MSTransformBuffer"
+						<< LogIO::POST;
+		}
+	}
+
+	return;
+}
+
 
 // -----------------------------------------------------------------------
 // Method to determine sort columns order
@@ -4634,55 +4602,65 @@ void MSTransformManager::setIterationApproach()
 	return;
 }
 
+
 // -----------------------------------------------------------------------
 // Method to generate the initial iterator
 // -----------------------------------------------------------------------
 void MSTransformManager::generateIterator()
 {
-
-        if (calibrate_p) {
-
-	  logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-		   << "Building LayeredVi2Factory w/ calibration activated." << LogIO::POST;
-
-	  // Isolate iteration parametes
-	  vi::IteratingParameters iterpar(0,vi::SortColumns (sortColumns_p,false));
-
-	  // Package the time averaging parameters (if any)
-	  vi::AveragingParameters *tavgpar(NULL);
-	  if (timeAverage_p) {
-	    if (maxuvwdistance_p > 0) timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
-	    // NB: the iteration parameters will not be used in here (see iterpar above)
-	    tavgpar=new vi::AveragingParameters(timeBin_p, 0, 
-						vi::SortColumns(),
-						timeAvgOptions_p, maxuvwdistance_p);
-	  }
-
-	  // Construct the vi via the LayeredVi2Factory
-	  visibilityIterator_p = new vi::VisibilityIterator2 (vi::LayeredVi2Factory (selectedInputMs_p,&iterpar,callib_p,tavgpar));
-	  visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
-	}
-       
-	else
-    
-
-
-	if (timeAverage_p)
+	if (calibrate_p)
 	{
-		if (maxuvwdistance_p > 0) timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
-		vi::AveragingParameters parameters (timeBin_p, 0, vi::SortColumns (sortColumns_p,false), timeAvgOptions_p, maxuvwdistance_p);
-		visibilityIterator_p = new vi::VisibilityIterator2 (vi::AveragingVi2Factory (parameters, selectedInputMs_p));
-		visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
+
+		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+					<< "Building LayeredVi2Factory w/ calibration activated."
+					<< LogIO::POST;
+
+		// Isolate iteration parametes
+		vi::IteratingParameters iterpar(0,vi::SortColumns(sortColumns_p, false));
+
+		// Package the time averaging parameters (if any)
+		vi::AveragingParameters *tavgpar(NULL);
+		if (timeAverage_p)
+		{
+			if (maxuvwdistance_p > 0)
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
+			}
+
+			// NB: the iteration parameters will not be used in here (see iterpar above)
+			tavgpar = new vi::AveragingParameters(timeBin_p, 0, vi::SortColumns(), timeAvgOptions_p, maxuvwdistance_p);
+		}
+
+		// Construct the vi via the LayeredVi2Factory
+		visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar, callib_p,tavgpar));
+		visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
+	}
+	else if (timeAverage_p)
+	{
+		if (maxuvwdistance_p > 0)
+		{
+			timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
+		}
+
+		vi::AveragingParameters parameters(timeBin_p, 0,vi::SortColumns(sortColumns_p, false), timeAvgOptions_p,maxuvwdistance_p);
+
+		visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedInputMs_p));
+
+		visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
 	}
 	else
 	{
-		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns (sortColumns_p,false),
-		                                                   false, NULL,timeBin_p);
+		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false), false, NULL, timeBin_p);
 	}
 
-	if (channelSelector_p != NULL) visibilityIterator_p->setFrequencySelection(*channelSelector_p);
+	if (channelSelector_p != NULL)
+	{
+		visibilityIterator_p->setFrequencySelection(*channelSelector_p);
+	}
+
 	return;
 }
+
 
 // -----------------------------------------------------------------------
 //

@@ -207,6 +207,13 @@ Record parseConfiguration(int argc, char **argv)
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("minbaselines", tmp);
 		}
+		else if (parameter == string("-callib"))
+		{
+			Float calfactor = Float(atof(value.c_str()));
+			Record calrec;
+			calrec.define("calfactor",calfactor);
+			configuration.defineRecord ("callib", calrec);
+		}
 	}
 
 	if (autoMode)
@@ -262,7 +269,12 @@ String produceTmpTransformedMSToCompare(Record configuration, dataColMap &myData
 	configuration.define("realmodelcol",True);
 	configuration.define("usewtspectrum",True);
 	configuration.define("outputms",tmpFileName);
-	configuration.define("datacolumn",string("ALL"));
+	// Define data column as ALL if user didn't specify it
+	if (configuration.fieldNumber ("datacolumn") < 0)
+	{
+		configuration.define("datacolumn",string("ALL"));
+	}
+
 	MSTransformManager *manager = new MSTransformManager(configuration);
 	manager->open();
 	manager->setup();

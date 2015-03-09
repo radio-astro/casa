@@ -35,7 +35,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption option, Bool realmodelcol) :
+MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption option, Bool virtualModelCol,Bool virtualCorrectedCol) :
 		  ms_p(MeasurementSet(theMS, option)),
 		  mssel_p(ms_p),
 		  msc_p(NULL),
@@ -54,7 +54,8 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 		  fitorder_p(-1),
 		  fitspw_p("*"),
 		  fitoutspw_p("*"),
-		  realmodelcol_p(realmodelcol)
+		  virtualModelCol_p(virtualModelCol),
+		  virtualCorrectedCol_p(virtualCorrectedCol)
 {
 	return;
 }
@@ -62,7 +63,7 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool realmodelcol) :
+MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool virtualModelCol,Bool virtualCorrectedCol) :
 		   ms_p(ms),
 		   mssel_p(ms_p),
 		   msc_p(NULL),
@@ -81,7 +82,8 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool realmode
 		   fitorder_p(-1),
 		   fitspw_p("*"),
 		   fitoutspw_p("*"),
-		   realmodelcol_p(realmodelcol)
+		   virtualModelCol_p(virtualModelCol),
+		   virtualCorrectedCol_p(virtualModelCol)
 {
 	return;
 }
@@ -173,7 +175,10 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(String col,const MeasurementSet& msref, Bool realmodelcol)
+const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(	String col,
+																				const MeasurementSet& msref,
+																				Bool virtualModelCol,
+																				Bool virtualCorrectedCol)
 {
 	// Memorize both for efficiency and so that the info
 	// message at the bottom isn't unnecessarily repeated.
@@ -229,7 +234,13 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 			my_colNameVect[nFound - 1] = wanted[i];
 		}
 		// CAS-5348 (jagonzal): Model parameters check is done at construction time
-		else if (wanted[i] == MS::MODEL_DATA and realmodelcol and msref.source().isColumn(MSSource::SOURCE_MODEL))
+		else if (wanted[i] == MS::MODEL_DATA and virtualModelCol)
+		{
+			++nFound;
+			my_colNameVect.resize(nFound, true);
+			my_colNameVect[nFound - 1] = wanted[i];
+		}
+		else if (wanted[i] == MS::CORRECTED_DATA and virtualCorrectedCol)
 		{
 			++nFound;
 			my_colNameVect.resize(nFound, true);
@@ -245,19 +256,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 		}
 	}
 	if (nFound == 0) throw(AipsError("Did not find and select any data columns."));
-
-	/*
-	 * jagonzal: Redundant logging message (this info is already provided by MSTransformManager)
-	 *
-	os << LogIO::NORMAL << "Using ";
-
-	for (uInt i = 0; i < nFound; ++i)
-	{
-		os << MS::columnName(my_colNameVect[i]) << " ";
-	}
-
-	os << "column" << (nFound > 1 ? "s." : ".") << LogIO::POST;
-	*/
 
 	my_colNameStr = col;
 
@@ -779,7 +777,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	}
 
 	// Watch out!  This throws an AipsError if ms_p doesn't have the requested columns.
-	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p,realmodelcol_p);
+	const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname,ms_p,virtualModelCol_p,virtualCorrectedCol_p);
 
 	if (!makeSelection())
 	{
