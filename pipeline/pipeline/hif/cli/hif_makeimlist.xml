@@ -42,13 +42,13 @@ Create a a list of images to be cleaned.
       <value type="string"></value>
   </param>
 
-  <param type="string" name="mode">
-     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
+  <param type="string" name="specmode">
+     <description>Spectral gridding type (mfs, cube, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
-         <value>frequency</value>
+         <value>cube</value>
        </allowed>
   </param>
 
@@ -151,12 +151,12 @@ Create a a list of images to be cleaned.
       </equals>
     </when>
 
-    <when param="mode">
+    <when param="specmode">
       <equals type="string" value="">
       </equals>
       <equals type="string" value="mfs">
       </equals>
-      <equals type="string" value="frequency">
+      <equals type="string" value="cube">
         <default param="outframe"><value type="string"></value></default>
       </equals>
     </when>
@@ -191,12 +191,11 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 --- pipeline parameter arguments which can be set in any pipeline mode
 
-mode -- Frequency specification:
+specmode -- Frequency specification:
     default: 'mfs'
     example:
         mode='mfs' produce one image from all specified data
-        mode='frequency', channels are specified in frequency
-        mode='velocity', channels are specified in velocity
+        mode='cube', channels are specified in frequency
 
 cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields

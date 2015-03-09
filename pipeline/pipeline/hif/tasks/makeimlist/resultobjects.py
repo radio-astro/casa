@@ -31,7 +31,7 @@ class MakeImListResult(basetask.Results):
         cell_width = len('cell')
         imsize_width = len('imsize')
         imagename_width = len('imagename')
-        mode_width = len('mode')
+        specmode_width = len('specmode')
         start_width = len('start')
         width_width = len('width')
         nchan_width = len('nchan')
@@ -47,8 +47,8 @@ class MakeImListResult(basetask.Results):
             imsize_width = max(imsize_width, len(str(target['imsize'])))
             imagename = os.path.basename(target['imagename'])
             imagename_width = max(imagename_width, len(imagename))
-            if 'mode' in target.keys():
-                mode_width = max(mode_width, len(str(target['mode'])))
+            if 'specmode' in target.keys():
+                specmode_width = max(specmode_width, len(str(target['specmode'])))
             if 'start' in target.keys():
                 start_width = max(start_width, len(str(target['start'])))
             if 'width' in target.keys():
@@ -65,7 +65,7 @@ class MakeImListResult(basetask.Results):
         cell_width += 1
         imsize_width += 1
         imagename_width += 1
-        mode_width += 1
+        specmode_width += 1
         start_width += 1
         width_width += 1
         nchan_width += 1
@@ -79,8 +79,8 @@ class MakeImListResult(basetask.Results):
         repr += '{0:{1}}'.format('cell', cell_width)
         repr += '{0:{1}}'.format('imsize', imsize_width)
         repr += '{0:{1}}'.format('imagename', imagename_width)
-        if 'mode' in target.keys():
-            repr += '{0:{1}}'.format('mode', mode_width)
+        if 'specmode' in target.keys():
+            repr += '{0:{1}}'.format('specmode', specmode_width)
         if 'start' in target.keys():
             repr += '{0:{1}}'.format('start', start_width)
         if 'width' in target.keys():
@@ -101,8 +101,8 @@ class MakeImListResult(basetask.Results):
             repr += '{0:{1}}'.format(target['imsize'], imsize_width)
             repr += '{0:{1}}'.format(os.path.basename(target['imagename']),
               imagename_width)
-            if 'mode' in target.keys():
-                repr += '{0:{1}}'.format(target['mode'], mode_width)
+            if 'specmode' in target.keys():
+                repr += '{0:{1}}'.format(target['specmode'], specmode_width)
             if 'start' in target.keys():
                 repr += '{0:{1}}'.format(str(target['start']), start_width)
             if 'width' in target.keys():

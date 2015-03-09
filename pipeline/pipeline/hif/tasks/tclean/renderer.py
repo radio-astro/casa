@@ -9,7 +9,7 @@ import os
 import numpy
 
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays.clean as clean
+import pipeline.infrastructure.displays.tclean as tclean
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -18,7 +18,7 @@ LOG = logging.get_logger(__name__)
 
 
 class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, uri='clean.mako', 
+    def __init__(self, uri='tclean.mako', 
                  description='Produce a cleaned image', 
                  always_rerender=False):
         super(T2_4MDetailsTcleanRenderer, self).__init__(uri=uri,
@@ -101,7 +101,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
 
         # Make the plots
-        plotter = clean.CleanSummary(context, results[0])
+        plotter = tclean.CleanSummary(context, results[0])
         plots = plotter.plot()        
 
         fields = sorted(set([p.parameters['field'] for p in plots]))

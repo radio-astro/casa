@@ -42,13 +42,13 @@ Compute a clean map.
     <value type="string"></value>
   </param>
 
-  <param type="string" name="mode">
-     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
+  <param type="string" name="specmode">
+     <description>Spectral gridding type (mfs, cube, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
-         <value>frequency</value>
+         <value>cube</value>
        </allowed>
   </param>
 
@@ -287,12 +287,12 @@ Compute a clean map.
       </equals>
     </when>
 
-    <when param="mode">
+    <when param="specmode">
       <equals type="string" value="">
       </equals>
       <equals type="string" value="mfs">
       </equals>
-      <equals value="frequency">
+      <equals value="cube">
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
@@ -387,8 +387,8 @@ spw -- Spectral window/channels to image. \'\' for all science data.
     default: ''
     example: '9', '9,11'
 
-mode -- Frequency imaging mode, 'mfs', 'frequency'. \'\' defaults to
-    'frequency' if intent parameter includes 'TARGET' otherwise 'mfs'.
+specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
+    'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
     example: 'mfs', 'mosaic'
 

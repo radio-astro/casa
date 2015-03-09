@@ -13,7 +13,7 @@ class MakeImListInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       imagename=None, intent=None, field=None, spw=None, 
-      uvrange=None, mode=None, outframe=None,
+      uvrange=None, specmode=None, outframe=None,
       imsize=None, cell=None, calmaxpix=None, phasecenter=None,
       nchan=None, start=None, width=None):
 
@@ -73,17 +73,17 @@ class MakeImListInputs(basetask.StandardInputs):
         self._uvrange = value
 
     @property
-    def mode(self):
-        if self._mode is None:
+    def specmode(self):
+        if self._specmode is None:
             if 'TARGET' in self.intent:
                 return 'frequency'
             else:
                 return 'mfs'
-        return self._mode
+        return self._specmode
 
-    @mode.setter
-    def mode(self, value):
-        self._mode = value
+    @specmode.setter
+    def specmode(self, value):
+        self._specmode = value
 
     @property
     def outframe(self):
@@ -343,7 +343,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'cell':cells[spwspec],
                               'imsize':imsizes[(field_intent[0],spwspec)],
                               'phasecenter':phasecenters[field_intent[0]],
-                              'mode':inputs.mode,
+                              'specmode':inputs.specmode,
                               'imagename':imagenames[(field_intent,spwspec)],
                               'start':inputs.start,
                               'width':widths[(field_intent[0],spwspec)],

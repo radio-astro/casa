@@ -732,6 +732,7 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
                 statsmask = '"%s" > 0.1' % os.path.basename(flux)
             else:
                 statsmask = ''
+
         resid_stats = image.statistics(mask=statsmask, robust=False)
         try:
             non_clean_rms = resid_stats['rms'][0]

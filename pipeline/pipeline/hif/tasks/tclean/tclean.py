@@ -1,5 +1,8 @@
 import os
 import shutil
+import numpy
+import itertools
+from casac import casac
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -18,7 +21,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanInputs(cleanbase.CleanBaseInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-       intent=None, field=None, spw=None, uvrange=None, mode=None,
+       intent=None, field=None, spw=None, uvrange=None, specmode=None,
        imagermode=None, outframe=None, imsize=None, cell=None,
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
@@ -28,7 +31,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-           field=field, spw=spw, uvrange=uvrange, mode=mode,
+           field=field, spw=spw, uvrange=uvrange, specmode=specmode,
            imagermode=imagermode, outframe=outframe, imsize=imsize, cell=cell,
            phasecenter=phasecenter, nchan=nchan, start=start, width=width,
            weighting=weighting, robust=robust, noise=noise, npixels=npixels,
@@ -141,12 +144,16 @@ class Tclean(cleanbase.CleanBase):
             #    Assumes source is unpolarized
             #    Make code more efficient (use MS XX and YY correlations) directly.
             #    Update / replace  code when sensitity function is working.
-            model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-              residual_min, rms2d, image_max = \
-              self._do_noise_estimate(stokes=inputs.noiseimage)
-            noise_rms = non_cleaned_rms
-            LOG.info('Noise rms estimate from %s image is %s' % 
-              (inputs.noiseimage, noise_rms))
+            #model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+            #  residual_min, rms2d, image_max = \
+            #  self._do_noise_estimate(stokes=inputs.noiseimage)
+            #noise_rms = non_cleaned_rms
+            #LOG.info('Noise rms estimate from %s image is %s' % 
+            #  (inputs.noiseimage, noise_rms))
+
+            # Get a noise estimate from the CASA sensitivity calculator
+            noise_rms = self._do_sensitivity()
+            LOG.info('Sensitivity estimate from CASA %s' % (noise_rms))
 
 	    # Choose cleaning method.
             if inputs.hm_masking == 'centralquarter':
@@ -212,6 +219,7 @@ class Tclean(cleanbase.CleanBase):
             # previous residual image.
 	    rootname, ext = os.path.splitext(result.residual)
 	    rootname, ext = os.path.splitext(rootname)
+	    #new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 	    new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 	    try:
 	        shutil.rmtree (new_cleanmask)
@@ -287,6 +295,85 @@ class Tclean(cleanbase.CleanBase):
         return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
           residual_min, rms2d, image_max 
 
+    def _do_sensitivity(self):
+        """Compute sensitivity estimate using CASA."""
+
+        context = self.inputs.context
+        inputs = self.inputs
+        field = inputs.field
+        spw = inputs.spw
+
+        # Effective antenna area
+        AgeomPerMS = []
+        msNames = []
+        for msInfo in context.observing_run.measurement_sets:
+            msNames.append(msInfo.name)
+            AgeomPerMS.append(reduce(lambda x,y: x+y, [4.0 * numpy.pi * antenna.diameter**2 for antenna in context.observing_run.measurement_sets[0].antennas]))
+        AgeomPerMS = numpy.array(AgeomPerMS)
+
+        # Aperture efficiency can not yet be used from CalAmpli table.
+        # Assume reasonable fixed value.
+        etaA = 0.9
+        AeffPerMS = etaA * AgeomPerMS
+
+        # Calculate average Tsys
+        caTool = casac.calanalysis()
+        tsysTables = list(context.callibrary.applied.get_caltable('tsys'))
+        if (tsysTables != []):
+            # chain is used to flatten the lists of CalFrom objects (1 per applycal) into a 1-D list
+            tsysCalfroms = [cf for cf in itertools.chain(*context.callibrary.applied.merged().values()) if cf.gaintable in tsysTables]
+            # TODO: There are two maps one for AMPLITUDE and BANDPASS one for PHASE and TARGET.
+            #       They could be different. Need to get only the appropriate one.
+            spwMaps = list(set([cf.spwmap for cf in tsysCalfroms]))
+
+            avgTsysPerTable = []
+            for i in xrange(len(tsysTables)):
+                tsysTable = tsysTables[i]
+                spwMap = spwMaps[i]
+                caTool.open(tsysTable)
+                tsysData = caTool.get(field = field, spw = str(spwMap[int(spw)]))
+                if (len(tsysData.keys()) > 0):
+                    avgTsysPerPol = []
+                    for tsysPerPol in tsysData.itervalues():
+                        if (tsysPerPol['flag'].all() == False):
+                            avgTsysPerPol.append(numpy.ma.average(numpy.ma.array(tsysPerPol['value'], mask=tsysPerPol['flag'])))
+                    if (len(avgTsysPerPol) > 0):
+                        avgTsysPerTable.append(numpy.average(avgTsysPerPol))
+                    else:
+                        avgTsysPerTable.append(1.0)
+                        LOG.warning('No Tsys data found. Using Tsys = 1.0 K.')
+                caTool.close()
+            # TODO: Calculate sensitivity per set of MSs calibrated with
+            #       a given Tsys table.
+            avgTsys = numpy.average(avgTsysPerTable)
+        else:
+            LOG.warning('No Tsys tables found. Using Tsys = 1.0 K.')
+            avgTsys = 1.0
+
+        # Calculate sensitivities
+        sensitivities = []
+        imTool = casac.imager()
+        # Assume one Tsys table per MS for now
+        for i in xrange(len(msNames)):
+            imTool.open(msNames[i])
+            imTool.selectvis(spw = spw, field = field)
+            imTool.defineimage(mode = inputs.specmode, spw = int(spw))
+            imTool.weight('natural')
+            try:
+                result = imTool.sensitivity()
+                sensitivities.append(result[1]['value'] * avgTsysPerTable[i] / AeffPerMS[i])
+            except Exception as e:
+                sensitivities.append(0.1)
+                LOG.warning('Exception in calculating sensitivity. Assuming 0.1 Jy/beam.')
+            imTool.close()
+
+        sensitivity = numpy.average(sensitivities)
+
+        # Save sensitivity in context dictionary for image QA
+        #self.inputs.context.... / results ?
+
+        return sensitivity
+
     def _do_clean(self, iter, stokes, cleanmask, niter, threshold, result):
         """Do basic cleaning.
         """
@@ -301,7 +388,7 @@ class Tclean(cleanbase.CleanBase):
 	    field=inputs.field,
 	    spw=inputs.spw,
 	    uvrange=inputs.uvrange,
-	    mode=inputs.mode,
+	    specmode=inputs.specmode,
 	    imagermode=inputs.imagermode,
 	    outframe=inputs.outframe,
 	    imsize=inputs.imsize,

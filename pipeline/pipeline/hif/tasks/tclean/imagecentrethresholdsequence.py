@@ -30,13 +30,13 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             #   centre quarter for single field
             #   flux > 0.2 for mosaic
             if self.imagermode == 'mosaic':
-                cm = casatools.image.newimagefromimage(infile=self.flux,
+                cm = casatools.image.newimagefromimage(infile=self.residuals[0],
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1.0', verbose=False)
                 cm.done()
             else:
-                cm = casatools.image.newimagefromimage(infile=self.flux,
+                cm = casatools.image.newimagefromimage(infile=self.residuals[0],
                   outfile=new_cleanmask, overwrite=True)
                 cm.set(pixels='0')
                 shape = cm.shape()

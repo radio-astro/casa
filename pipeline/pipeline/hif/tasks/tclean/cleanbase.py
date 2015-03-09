@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-        intent=None, field=None, spw=None, uvrange=None, mode=None,
+        intent=None, field=None, spw=None, uvrange=None, specmode=None,
         imagermode=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
@@ -85,17 +85,17 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._uvrange = value
 
     @property
-    def mode(self):
-        if self._mode is None:
+    def specmode(self):
+        if self._specmode is None:
             if 'TARGET' in self.intent:
-                return 'frequency'
+                return 'cube'
             else:
                 return 'mfs'
-        return self._mode
+        return self._specmode
 
-    @mode.setter
-    def mode(self, value):
-        self._mode = value
+    @specmode.setter
+    def specmode(self, value):
+        self._specmode = value
 
     @property
     def imagermode(self):
@@ -326,7 +326,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Adjust the width to get around problems with increasing / decreasing
 	# frequency with channel issues.
         if inputs.width == '':
-            if inputs.mode != 'mfs':
+            if inputs.specmode != 'mfs':
                 width = clheuristics.width(int(spw.split(',')[0]))
                 #width = inputs.width
             else:
@@ -432,8 +432,9 @@ class CleanBase(basetask.StandardTaskTemplate):
           inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
           inputs.imagename, inputs.stokes, iter)
-        flux_name = '%s.%s.iter%s.flux' % (
-          inputs.imagename, inputs.stokes, iter)
+        #flux_name = '%s.%s.iter%s.flux' % (
+        #  inputs.imagename, inputs.stokes, iter)
+        flux_name = ''
 
         # delete any old files with this naming root
         try:
@@ -443,35 +444,35 @@ class CleanBase(basetask.StandardTaskTemplate):
             pass
 
 	# Call CASA clean.
-        job = casa_tasks.clean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-	    (inputs.imagename, inputs.stokes, iter), spw=inputs.spw,
-	    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
-	    inputs.intent), scan=scanidlist,
-	    mode=inputs.mode, niter=inputs.niter,
-            threshold=inputs.threshold, imagermode=inputs.imagermode,
-	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
-            start=inputs.start, width=inputs.width, imsize=inputs.imsize,
-	    cell=inputs.cell, phasecenter=inputs.phasecenter,
-	    stokes=inputs.stokes,
-            weighting=inputs.weighting, robust=inputs.robust,
-            noise=inputs.noise, npixels=inputs.npixels,
-            restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, usescratch=True)
-	# Call CASA tclean.
-        #job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-	#    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-        #    spw=inputs.spw,
-	#    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-        #    scan=scanidlist, specmode=inputs.mode, niter=inputs.niter+2,
-        #    threshold=inputs.threshold, deconvolver='hogbom',
+        #job = casa_tasks.clean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+	#    (inputs.imagename, inputs.stokes, iter), spw=inputs.spw,
+	#    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
+	#    inputs.intent), scan=scanidlist,
+	#    mode=inputs.mode, niter=inputs.niter,
+        #    threshold=inputs.threshold, imagermode=inputs.imagermode,
 	#    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
         #    start=inputs.start, width=inputs.width, imsize=inputs.imsize,
 	#    cell=inputs.cell, phasecenter=inputs.phasecenter,
 	#    stokes=inputs.stokes,
         #    weighting=inputs.weighting, robust=inputs.robust,
-        #    npixels=inputs.npixels,
+        #    noise=inputs.noise, npixels=inputs.npixels,
         #    restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-        #    mask=inputs.mask)
+        #    mask=inputs.mask, usescratch=True)
+	# Call CASA tclean.
+        job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
+            spw=inputs.spw,
+	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+            scan=scanidlist, specmode=inputs.specmode, niter=inputs.niter+2,
+            threshold=inputs.threshold, deconvolver='hogbom',
+	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+            start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+	    cell=inputs.cell, phasecenter=inputs.phasecenter,
+	    stokes=inputs.stokes,
+            weighting=inputs.weighting, robust=inputs.robust,
+            npixels=inputs.npixels,
+            restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+            mask=inputs.mask)
         self._executor.execute(job)
 
         # Store the model.
