@@ -1282,7 +1282,7 @@ class imsmooth_test(unittest.TestCase):
         mycl = cltool()
         mycl.fromrecord(zz['results'])
         got = mycl.getfluxvalue(0)
-        self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-8)
+        self.assertTrue(abs(got[0]/expected[0] - 1) < 2e-7)
         
     def test_commonbeam(self):
         #"""Test kernel='commonbeam' in imsmooth"""
