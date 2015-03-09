@@ -7,7 +7,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="header" />
 
-<%block name="title">Make clean list</%block>
+<%block name="title">Make image list</%block>
 
 <h2>List of Clean Targets</h2>
 
@@ -29,8 +29,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	            <th>cell</th>
 	            <th>imsize</th>
 	            <th>imagename</th>
-	    %if 'mode' in target.keys():
-	            <th>mode</th>
+	    %if 'specmode' in target.keys():
+	            <th>specmode</th>
 	    %endif
 	    %if 'start' in target.keys():
 	            <th>start</th>
@@ -80,8 +80,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 	            <td>${target['cell']}</td>
 	            <td>${target['imsize']}</td>
 	            <td>${os.path.basename(target['imagename'])}</td>
-	        %if 'mode' in target.keys():
-	                <td>${target['mode']}</td>
+	        %if 'specmode' in target.keys():
+	                <td>${target['specmode']}</td>
 	        %endif
 	        %if 'start' in target.keys():
 	                <td>${target['start']}</td>
