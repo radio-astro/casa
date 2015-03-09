@@ -11,7 +11,7 @@ from . import resultobjects
 import pipeline.infrastructure.casatools as casatools
 from bisect import bisect_left
 import numpy
-from pipeline.hifv.tasks.vlautils import VLAUtils
+from pipeline.hifv.heuristics import find_EVLA_band
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -20,9 +20,6 @@ LOG = infrastructure.get_logger(__name__)
 def _find_spw(vis, bands, context):
     """Identify spw information
     """
-    
-    vlainputs = VLAUtils.Inputs(context)
-    vlautils = VLAUtils(vlainputs)
 
     with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
         channels = table.getcol('NUM_CHAN')
@@ -33,7 +30,7 @@ def _find_spw(vis, bands, context):
     center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
     
     if (bands == []):
-        bands = map(vlautils.find_EVLA_band,center_frequencies)
+        bands = map(find_EVLA_band,center_frequencies)
     
     unique_bands = list(numpy.unique(bands))
     

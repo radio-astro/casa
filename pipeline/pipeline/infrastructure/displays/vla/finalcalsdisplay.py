@@ -122,7 +122,8 @@ class finalDelaysPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -181,7 +182,8 @@ class finalDelaysPerAntennaChart(object):
 	            #plots.append(figfile)
 
 	        except:
-	            LOG.warn("Unable to plot " + filename)
+	            #LOG.warn("Unable to plot " + filename)
+	            print " "
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -242,7 +244,8 @@ class finalphaseGainPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -280,7 +283,8 @@ class finalphaseGainPerAntennaChart(object):
 	            #plots.append(figfile)
 
 	        except:
-	            LOG.warn("Unable to plot " + filename)
+	            #LOG.warn("Unable to plot " + filename)
+	            print " "
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
@@ -338,7 +342,8 @@ class finalbpSolAmpPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -486,7 +491,8 @@ class finalbpSolPhasePerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -629,7 +635,8 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -750,7 +757,8 @@ class finalAmpTimeCalPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -850,7 +858,8 @@ class finalAmpFreqCalPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -974,7 +983,8 @@ class finalPhaseGainCalPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         

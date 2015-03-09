@@ -574,8 +574,10 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         context = inputs.context
         
         m = context.observing_run.measurement_sets[0]
-        numSpws = context.evla['msinfo'][m.name].numSpws
-        channels = context.evla['msinfo'][m.name].channels
+        #numSpws = context.evla['msinfo'][m.name].numSpws
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
+        numSpws = len(channels)
         
         SPWtoflag=''
         
@@ -616,7 +618,8 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             context = inputs.context
             
             m = context.observing_run.measurement_sets[0]
-            quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
+            #quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
+            quack_scan_string = m.get_vla_quackingscans()
             #int_time = context.evla['msinfo'][m.name].int_time
             int_time = m.get_vla_max_integration_time()
             
@@ -640,9 +643,62 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         topSPW=''
 
         #Determination of baseband taken from original EVLA scripted pipeline
-        low_spws = context.evla['msinfo'][m.name].low_spws 
-        high_spws = context.evla['msinfo'][m.name].high_spws
-        channels = context.evla['msinfo'][m.name].channels
+        #-----MS info script part
+        with casatools.TableReader(inputs.vis+'/SPECTRAL_WINDOW') as table:
+            reference_frequencies = table.getcol('REF_FREQUENCY')
+            spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
+            originalBBClist = table.getcol('BBC_NO')
+            channels = table.getcol('NUM_CHAN')
+            
+        sorted_frequencies = sorted(reference_frequencies)
+        sorted_indices = []
+        
+        for ii in range (0,len(sorted_frequencies)):
+            for jj in range (0,len(reference_frequencies)):
+                if (sorted_frequencies[ii] == reference_frequencies[jj]):
+                    sorted_indices.append(jj)
+        
+        spwList = []
+        BBC_bandwidths = []
+        ii = 0
+        
+        while (ii < len(sorted_frequencies)):
+            upper_frequency = sorted_frequencies[ii] + spw_bandwidths[sorted_indices[ii]]
+            BBC_bandwidth = spw_bandwidths[sorted_indices[ii]]
+            thisSpwList = [sorted_indices[ii]]
+            jj = ii + 1
+            while (jj < len(sorted_frequencies)):
+                lower_frequency = sorted_frequencies[jj]
+                if ((math.fabs(lower_frequency - upper_frequency) < 1.0) and \
+                    (originalBBClist[sorted_indices[ii]] == originalBBClist[sorted_indices[jj]])):
+                    thisSpwList.append(sorted_indices[jj])
+                    upper_frequency += spw_bandwidths[sorted_indices[jj]]
+                    BBC_bandwidth += spw_bandwidths[sorted_indices[jj]]
+                    jj += 1
+                    ii += 1
+                else:
+                    jj = len(sorted_frequencies)
+            spwList.append(thisSpwList)
+            BBC_bandwidths.append(BBC_bandwidth)
+            ii += 1        
+        
+        low_spws = []
+        high_spws = []
+
+        for ii in range(0,len(BBC_bandwidths)):
+            if (BBC_bandwidths[ii] > 1.0e9):
+                low_spws.append(spwList[ii][0])
+                high_spws.append(spwList[ii][len(spwList[ii])-1])
+        
+        
+        
+        #----------------
+        
+        
+        
+        #low_spws = context.evla['msinfo'][m.name].low_spws 
+        #high_spws = context.evla['msinfo'][m.name].high_spws
+        #channels = context.evla['msinfo'][m.name].channels
 
         for ii in range(0,len(low_spws)):
             if (ii == 0):

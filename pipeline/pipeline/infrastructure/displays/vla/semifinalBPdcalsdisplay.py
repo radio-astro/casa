@@ -47,7 +47,8 @@ class semifinalBPdcalsSummaryChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
 
@@ -122,7 +123,8 @@ class DelaysPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -218,7 +220,8 @@ class semifinalphaseGainPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -313,7 +316,8 @@ class semifinalbpSolAmpPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -436,7 +440,8 @@ class semifinalbpSolPhasePerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         

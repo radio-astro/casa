@@ -76,8 +76,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         fracFlaggedSolns = 1.0
         
-        critfrac = context.evla['msinfo'][m.name].critfrac
-
+        #critfrac = context.evla['msinfo'][m.name].critfrac
+        critfrac = m.get_vla_critfrac()
         
 
         '''
@@ -276,7 +276,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        #tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
@@ -308,7 +309,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        #tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
+        tst_delay_spw = m.get_vla_tst_delay_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         minBL_for_cal = max(3,int(len(m.antennas)/2.0))
@@ -353,7 +355,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
         #refantlist = RefAntOutput
 
         m = self.inputs.context.observing_run.measurement_sets[0]
-        critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
+        #critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
+        critfrac = m.get_vla_critfrac()
 
         if (fracFlaggedSolns > critfrac):
             RefAntOutput.pop(0)
@@ -367,7 +370,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         m = context.observing_run.measurement_sets[0]
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
+        #tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
+        tst_bpass_spw = m.get_vla_tst_bpass_spw()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal

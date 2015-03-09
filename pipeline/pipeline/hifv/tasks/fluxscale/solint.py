@@ -68,7 +68,8 @@ class Solint(basetask.StandardTaskTemplate):
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
-        soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        #soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         print soltimes
         
         solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
@@ -171,7 +172,8 @@ class Solint(basetask.StandardTaskTemplate):
     def _do_split(self, calMs):
         
         m = self.inputs.context.observing_run.measurement_sets[0]
-        channels = self.inputs.context.evla['msinfo'][m.name].channels
+        #channels = self.inputs.context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
     
         LOG.info("Splitting out calibrators into calibrators.ms")

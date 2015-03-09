@@ -7,6 +7,7 @@ import string
 import types
 
 import numpy
+import pylab
 
 from . import spectralwindow
 from . import measures
@@ -311,6 +312,7 @@ class MeasurementSet(object):
         return int_time
        
     def vla_spws_for_field(self,field):
+        '''VLA spws for field'''
     
         vis = self.name
     
@@ -328,7 +330,7 @@ class MeasurementSet(object):
         return list(spws)
     
     def get_vla_field_ids(self):
-        ''' Find field ids '''
+        ''' Find field ids for VLA'''
         
         vis = self.name
         
@@ -339,7 +341,7 @@ class MeasurementSet(object):
         return field_ids
         
     def get_vla_field_names(self):
-        ''' Find field names  '''
+        ''' Find field names  for VLA'''
         
         vis = self.name
         
@@ -349,7 +351,7 @@ class MeasurementSet(object):
         return field_names
         
     def get_vla_field_spws(self):
-        ''' Find field spws  '''
+        ''' Find field spws for VLA  '''
         
         vis = self.name
         
@@ -362,6 +364,161 @@ class MeasurementSet(object):
             field_spws.append(self.vla_spws_for_field(ii))
        
         return field_spws
+    
+    
+    def get_vla_numchan(self):
+        ''' Get number of channels for VLA'''
+        
+        vis = self.name
+        
+        with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
+            channels = table.getcol('NUM_CHAN')
+            
+        return channels
+    
+    
+    def get_vla_tst_bpass_spw(self):
+        ''' Get VLA test bandpass spws'''
+        
+        vis = self.name
+        tst_delay_spw=''
+        
+        with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
+            channels = table.getcol('NUM_CHAN')
+        
+        numSpws = len(channels)
+        
+        for ispw in range(numSpws):
+            endch1=int(channels[ispw]/3.0)
+            endch2=int(2.0*channels[ispw]/3.0)+1
+            if (ispw<max(range(numSpws))):
+                tst_delay_spw=tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)+','
+                #all_spw=all_spw+str(ispw)+','
+            else:
+                tst_delay_spw=tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)
+                #all_spw=all_spw+str(ispw)
+        
+        tst_bpass_spw=tst_delay_spw
+        
+        return tst_bpass_spw
+    
+    
+    def get_vla_tst_delay_spw(self):
+        ''' Get VLA test bandpass spws'''
+        
+        vis = self.name
+        tst_delay_spw=''
+        
+        with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
+            channels = table.getcol('NUM_CHAN')
+        
+        numSpws = len(channels)
+        
+        for ispw in range(numSpws):
+            endch1=int(channels[ispw]/3.0)
+            endch2=int(2.0*channels[ispw]/3.0)+1
+            if (ispw<max(range(numSpws))):
+                tst_delay_spw=tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)+','
+                #all_spw=all_spw+str(ispw)+','
+            else:
+                tst_delay_spw=tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)
+                #all_spw=all_spw+str(ispw)
+       
+        
+        return tst_delay_spw
+    
+    def get_vla_quackingscans(self):
+        '''Find VLA scans for quacking.  Quack! :) '''
+        
+        vis = self.name
+        with casatools.MSReader(vis) as ms:
+            scan_summary = ms.getscansummary()
+        
+        integ_scan_list = []
+        for scan in scan_summary:
+            integ_scan_list.append(int(scan))
+        sorted_scan_list = sorted(integ_scan_list)
+        
+        scan_list = [1]
+        old_scan = scan_summary[str(sorted_scan_list[0])]['0']
+        
+        old_field = old_scan['FieldId']
+        old_spws = old_scan['SpwIds']
+        for ii in range(1,len(sorted_scan_list)):
+            new_scan = scan_summary[str(sorted_scan_list[ii])]['0']
+            new_field = new_scan['FieldId']
+            new_spws = new_scan['SpwIds']
+            if ((new_field != old_field) or (set(new_spws) != set(old_spws))):
+                scan_list.append(sorted_scan_list[ii])
+                old_field = new_field
+                old_spws = new_spws
+        quack_scan_string = ','.join(["%s" % ii for ii in scan_list])
+        
+        return quack_scan_string
+    
+    
+    def get_vla_critfrac(self):
+        """ Identify bands/basebands/spws
+        """
+        
+        vis = self.name
+        
+        with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
+            spw_names = table.getcol('NAME')
+        
+        
+        # If the dataset is too old to have the bandname in it, assume that
+        # either there are 8 spws per baseband (and allow for one or two for
+        # pointing), or that this is a dataset with one spw per baseband
+
+        if (len(spw_names)>=8):
+            critfrac=0.9/int(len(spw_names)/8.0)
+        else:
+            critfrac=0.9/float(len(spw_names))
+        
+        
+        if '#' in spw_names[0]:
+        #
+        # i assume that if any of the spw_names have '#', they all do...
+        #
+            bands_basebands_subbands = []
+            for spw_name in spw_names:
+                receiver_name, baseband, subband = spw_name.split('#')
+                receiver_band = (receiver_name.split('_'))[1]
+                bands_basebands_subbands.append([receiver_band, baseband, int(subband)])
+            spws_info = [[bands_basebands_subbands[0][0], bands_basebands_subbands[0][1], [], []]]
+            bands = [bands_basebands_subbands[0][0]]
+            for ii in range(len(bands_basebands_subbands)):
+                band,baseband,subband = bands_basebands_subbands[ii]
+                found = -1
+                for jj in range(len(spws_info)):
+                    oband,obaseband,osubband,ospw_list = spws_info[jj]
+                    if band==oband and baseband==obaseband:
+                        osubband.append(subband)
+                        ospw_list.append(ii)
+                        found = jj
+                        break
+                if found >= 0:
+                    spws_info[found] = [oband,obaseband,osubband,ospw_list]
+                else:
+                    spws_info.append([band,baseband,[subband],[ii]])
+                    bands.append(band)
+            #logprint("Bands/basebands/spws are:", logfileout='logs/msinfo.log')
+            for spw_info in spws_info:
+                spw_info_string = spw_info[0] + '   ' + spw_info[1] + '   [' + ','.join(["%d" % ii for ii in spw_info[2]]) + ']   [' + ','.join(["%d" % ii for ii in spw_info[3]]) + ']'
+                #logprint(spw_info_string, logfileout='logs/msinfo.log')
+                
+        # Critical fraction of flagged solutions in delay cal to avoid an
+        # entire baseband being flagged on all antennas
+            critfrac=0.9/float(len(spws_info))
+        elif ':' in spw_names[0]:
+            print("old spw names with :")
+            #logprint("old spw names with :", logfileout='logs/msinfo.log')
+        else:
+            print("unknown spw names")
+    
+        return critfrac
+        
     
     def get_median_integration_time(self, intent=None):
         """Get the median integration time used to get data for the given

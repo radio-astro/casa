@@ -18,11 +18,9 @@ import scipy.optimize as scpo
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 import pipeline.hif.heuristics.findrefant as findrefant
-
-from pipeline.hifv.tasks.vlautils import VLAUtils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -80,7 +78,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
-        field_spws = context.evla['msinfo'][m.name].field_spws
+        #field_spws = context.evla['msinfo'][m.name].field_spws
+        field_spws = m.get_vla_field_spws()
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
         gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
         spw2band = context.evla['msinfo'][m.name].spw2band
@@ -95,8 +94,6 @@ class Fluxboot(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-        vlainputs = VLAUtils.Inputs(context)
-        vlautils = VLAUtils(vlainputs)
         
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
@@ -108,7 +105,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                         EVLA_band = spw2band[myspw]
                     except:
                         LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                        EVLA_band = find_EVLA_band(reference_frequency)
                         
                     LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     
@@ -198,12 +195,12 @@ class Fluxboot(basetask.StandardTaskTemplate):
 
     def _do_powerfit(self, context, fluxscale_result):
         
-        vlainputs = VLAUtils.Inputs(context)
-        vlautils = VLAUtils(vlainputs)
+
         
         
         m = context.observing_run.measurement_sets[0]
-        field_spws = context.evla['msinfo'][m.name].field_spws
+        #field_spws = context.evla['msinfo'][m.name].field_spws
+        field_spws = m.get_vla_field_spws()
         spw2band = context.evla['msinfo'][m.name].spw2band
         bands = spw2band.values()
 
@@ -297,7 +294,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
             
             if bands == []:
                 for ii in range(len(indices)):
-                    bands.append(vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]))
+                    bands.append(find_EVLA_band(center_frequencies[spws[indices[ii]]]))
             else:
                 for ii in range(len(indices)):
                     bands_from_spw.append(spw2band[spws[indices[ii]]])
@@ -322,7 +319,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
 	        #Use frequencies for band mappings
 	        if spw2band.values() == []:
 	            for ii in range(len(indices)):
-		        if vlautils.find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
+		        if find_EVLA_band(center_frequencies[spws[indices[ii]]]) == band:
 			    lfreqs.append(math.log10(center_frequencies[spws[indices[ii]]]))
 			    lfds.append(math.log10(flux_densities[indices[ii]][0]))
 			    lerrs.append((flux_densities[indices[ii]][1])/(flux_densities[indices[ii]][0])/2.303)

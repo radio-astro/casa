@@ -17,10 +17,14 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure.jobrequest import casa_tasks
 import pipeline.infrastructure.logging as logging
 
+import pipeline.infrastructure.api as api
+import pipeline.infrastructure.utils as utils
+
 
 
 # the logger for this module
 LOG = logging.get_logger(__name__)
+
 
 def buildscans(msfile, scd):
     """
@@ -425,26 +429,20 @@ def buildscans(msfile, scd):
     return scandict
 
 
-class VLAUtilsInputs(basetask.StandardInputs):
-    @basetask.log_equivalent_CASA_call
-    def __init__(self, context, vis=None):
-        self._init_properties(vars())
 
-class VLAUtils(basetask.StandardTaskTemplate):
-    
+
+class VLAScanHeuristics(object):
+    def __init__(self, vis):
+        self.vis = vis
     # link the accompanying inputs to this task 
-    Inputs = VLAUtilsInputs
+    #Inputs = VLAUtilsInputs
 
-    def prepare(self):
-        return True
+    #def prepare(self):
+    #    return True
     
-    def analyse(self, results):
-	    return results
-
-
-
+    #def analyse(self, results):
+    #	    return results
     
-        
     def convertspw2band(self):
         """match spw number to EVLA band identifier
         """
@@ -465,18 +463,19 @@ class VLAUtils(basetask.StandardTaskTemplate):
                 spw2band[spw] = 'A'
 
         return spw2band
-
         
-
-
+    
+    
+    
+    
     def makescandict(self):
         """Run Steve's buildscans"""
         
-        with casatools.MSReader(self.inputs.vis) as ms:
+        with casatools.MSReader(self.vis) as ms:
             self.scan_summary = ms.getscansummary()
             self.ms_summary = ms.summary()
         
-        self.scandict = buildscans(self.inputs.vis, self.scan_summary)
+        self.scandict = buildscans(self.vis, self.scan_summary)
         #self.startdate=float(self.ms_summary['BeginTime'])
                
         #with casatools.TableReader(self.inputs.vis) as table:
@@ -515,14 +514,14 @@ class VLAUtils(basetask.StandardTaskTemplate):
         self.spw2band = self.convertspw2band()
         
         return True
-
-
-
-
-
-##############################################################################
-##############################################################################            
-
+        
+        
+        
+    
+    
+    
+    
+    
     def calibratorIntents(self):
         """
             # Identify scans and fields associated with different calibrator intents
@@ -531,17 +530,17 @@ class VLAUtils(basetask.StandardTaskTemplate):
             # 2012.  So test on date:
         """
         
-        with casatools.TableReader(self.inputs.vis+'/SPECTRAL_WINDOW') as table:
+        with casatools.TableReader(self.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
         
         numSpws = len(channels)
         
-        with casatools.MSReader(self.inputs.vis) as ms:
+        with casatools.MSReader(self.vis) as ms:
             ms_summary = ms.summary()
         
         startdate=float(self.ms_summary['BeginTime'])
         
-        with casatools.TableReader(self.inputs.vis+'/STATE') as table:
+        with casatools.TableReader(self.vis+'/STATE') as table:
             intents=casatools.table.getcol('OBS_MODE')
 
         self.bandpass_state_IDs = []
@@ -578,7 +577,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                         self.pointing_state_IDs.append(state_ID)
                         self.calibrator_state_IDs.append(state_ID)
         
-            casatools.table.open(self.inputs.vis)
+            casatools.table.open(self.vis)
         
             if (len(self.flux_state_IDs) == 0):
                 #QA_msinfo='Fail'
@@ -725,7 +724,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
                         self.pointing_state_IDs.append(state_ID)
                         self.calibrator_state_IDs.append(state_ID)   
             
-            casatools.table.open(self.inputs.vis)
+            casatools.table.open(self.vis)
             
             if (len(self.flux_state_IDs) == 0):
                 #QA_msinfo='Fail'
@@ -910,7 +909,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         self.positions = []
 
-        with casatools.TableReader(self.inputs.vis+'/FIELD') as table:
+        with casatools.TableReader(self.vis+'/FIELD') as table:
             self.field_positions = table.getcol('PHASE_DIR')
 
         for ii in range(0,len(self.field_positions[0][0])):
@@ -938,5 +937,3 @@ class VLAUtils(basetask.StandardTaskTemplate):
             self.cal3C84=False
 
         return True
-                
-    

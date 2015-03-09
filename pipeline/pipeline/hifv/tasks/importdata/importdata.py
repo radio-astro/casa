@@ -20,7 +20,8 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.tablereader as tablereader
 import pipeline.infrastructure.utils as utils
 from pipeline.infrastructure import casa_tasks, casatools
-from pipeline.hifv.tasks.vlautils import VLAUtils
+#from pipeline.hifv.tasks.vlautils import VLAUtils
+from pipeline.hifv.heuristics.vlascanheuristics import VLAScanHeuristics
 from pipeline.hif.tasks.common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
@@ -104,23 +105,45 @@ class VLAImportDataResults(basetask.Results):
     def _do_msinfo_heuristics(self, ms, context):
         """Temporarily gets heuristics for VLA via msinfo script
         """
-        vlainputs = VLAUtils.Inputs(context)
-        vlainputs.vis = ms
-        print "Visibility is: " + vlainputs.vis
+        ##vlainputs = VLAUtils.Inputs(context)
+        ##vlainputs.vis = ms
+        ##print "Visibility is: " + vlainputs.vis
         
-        msinfo = VLAUtils(vlainputs)
-        msinfo.identifyspw()
-        msinfo.initialgainspw()
-        msinfo.getFields()
-        msinfo.integrationTime()
-        msinfo.quackingScans()
-        msinfo.basebandspws()
+        #msinfo = VLAUtils(vlainputs)
+        msinfo = VLAScanHeuristics(ms)
+        msinfo.makescandict()
+        #msinfo.identifyspw()
+        #msinfo.initialgainspw()
+        #msinfo.getFields()
+        #msinfo.integrationTime()
+        #msinfo.quackingScans()
+        #msinfo.basebandspws()
         msinfo.calibratorIntents()
-        msinfo.corrStrings()
-        msinfo.getAntennas()
+        #msinfo.corrStrings()
+        #msinfo.getAntennas()
         msinfo.determine3C84()
-        msinfo.identifySubbands()
-            
+        #msinfo.identifySubbands()
+        
+        
+        with casatools.TableReader(ms) as table:
+            scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
+        
+        # Check for missing scans
+        missingScans = 0
+        missingScanStr = ''
+        
+        for i in range(max(scanNums)):
+            if scanNums.count(i+1) == 1: pass
+            else:
+                LOG.warn("WARNING: Scan "+str(i+1)+" is not present")
+                missingScans += 1
+                missingScanStr = missingScanStr+str(i+1)+', '
+        
+        if (missingScans > 0):
+            LOG.warn("WARNING: There were "+str(missingScans)+" missing scans in this MS")
+        else:
+            LOG.info("No missing scans found.")
+
         return msinfo
             
     def __repr__(self):

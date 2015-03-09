@@ -97,7 +97,9 @@ class testgainsPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        #numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
+        
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -108,7 +110,8 @@ class testgainsPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         

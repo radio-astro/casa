@@ -18,7 +18,7 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 
-from pipeline.hifv.tasks.vlautils import VLAUtils
+from pipeline.hifv.heuristics import find_EVLA_band
 import numpy
 
 import itertools
@@ -393,7 +393,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
         standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
-        field_spws = context.evla['msinfo'][m.name].field_spws
+        #field_spws = context.evla['msinfo'][m.name].field_spws
+        field_spws = m.get_vla_field_spws()
         spw2band = context.evla['msinfo'][m.name].spw2band
         bands = spw2band.values()
 
@@ -406,9 +407,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-        vlainputs = VLAUtils.Inputs(context)
-        vlautils = VLAUtils(vlainputs)
-        
+
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 inputs.field = myfield
@@ -425,7 +424,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         EVLA_band = spw2band[spw.id]
                     except:
                         LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                        EVLA_band = find_EVLA_band(reference_frequency)
                     
                     LOG.info("Center freq for spw "+str(spw.id)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     

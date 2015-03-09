@@ -38,7 +38,7 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 from pipeline.hifv.tasks.setmodel import vlasetjy
 
-from pipeline.hifv.tasks.vlautils import VLAUtils
+from pipeline.hifv.heuristics import find_EVLA_band
 
 import pipeline.domain.measures as measures
 import pipeline.extern.asizeof as asizeof
@@ -211,8 +211,7 @@ class SetModel(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-        vlainputs = VLAUtils.Inputs(context)
-        vlautils = VLAUtils(vlainputs)
+
         
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
@@ -230,7 +229,7 @@ class SetModel(basetask.StandardTaskTemplate):
                         EVLA_band = spw2band[myspw]
                     except:
                         LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                        EVLA_band = find_EVLA_band(reference_frequency)
                     
                     LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     model_image = standard_source_names[i] + '_' + EVLA_band + '.im'

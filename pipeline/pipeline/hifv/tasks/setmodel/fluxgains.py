@@ -18,11 +18,9 @@ import numpy
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
 from pipeline.hif.tasks import applycal
-from pipeline.hifv.heuristics import getCalFlaggedSoln, getBCalStatistics
+from pipeline.hifv.heuristics import find_EVLA_band, getCalFlaggedSoln, getBCalStatistics
 from pipeline.hifv.tasks.setmodel.vlasetjy import find_standards, standard_sources
 import pipeline.hif.heuristics.findrefant as findrefant
-
-from pipeline.hifv.tasks.vlautils import VLAUtils
 
 
 
@@ -78,9 +76,6 @@ class Fluxgains(basetask.StandardTaskTemplate):
     
         center_frequencies = map(lambda rf, spwbw: rf + spwbw/2, reference_frequencies, spw_bandwidths)
 
-        vlainputs = VLAUtils.Inputs(context)
-        vlautils = VLAUtils(vlainputs)
-        
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 spws = field_spws[myfield]
@@ -91,7 +86,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
                         EVLA_band = spw2band[myspw]
                     except:
                         LOG.info('Unable to get band from spw id - using reference frequency instead')
-                        EVLA_band = vlautils.find_EVLA_band(reference_frequency)
+                        EVLA_band = find_EVLA_band(reference_frequency)
                         
                     LOG.info("Center freq for spw "+str(myspw)+" = "+str(reference_frequency)+", observing band = "+EVLA_band)
                     

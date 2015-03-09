@@ -46,7 +46,8 @@ class testBPdcalsSummaryChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
 
@@ -124,7 +125,8 @@ class testDelaysPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -215,7 +217,8 @@ class ampGainPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -319,7 +322,8 @@ class phaseGainPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -423,7 +427,8 @@ class bpSolAmpPerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
@@ -553,7 +558,8 @@ class bpSolPhasePerAntennaChart(object):
         field_ids = m.get_vla_field_ids()
         #field_names = context.evla['msinfo'][m.name].field_names
         field_names = m.get_vla_field_names()
-        channels = context.evla['msinfo'][m.name].channels
+        #channels = context.evla['msinfo'][m.name].channels
+        channels = m.get_vla_numchan()
         
         ms_active = m.name
         
