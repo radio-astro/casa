@@ -17,6 +17,7 @@
 
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
+#include <singledish/SingleDish/BLParameterParser.h>
 
 //---for measuring elapse time------------------------
 #include <sys/time.h>
@@ -156,14 +157,16 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   LogIO os(_ORIGIN);
   AlwaysAssert(msname_!="", AipsError);
   // define a column to read data from
-  if (in_column_name == "float_data")
+  if (in_column_name=="float_data") {
     in_column_ = MS::FLOAT_DATA;
-  else if (in_column_name == "corrected_data")
+  }
+  else if (in_column_name=="corrected_data") {
     in_column_ = MS::CORRECTED_DATA;
-  else if (in_column_name == "data")
+  } else if (in_column_name=="data") {
     in_column_ = MS::DATA;
-  else
+  } else {
     throw(AipsError("Invalid data column name"));
+  }
   // destroy SDMSManager
   if (sdh_) delete sdh_;
   // Configure record
@@ -471,6 +474,8 @@ void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
 					  size_t const num_data,
 					  SakuraAlignedArray<float> &out_data)
 {
+  AlwaysAssert(static_cast<size_t>(data_cube.ncolumn())==num_data,
+	       AipsError);
   float *ptr = out_data.data;
   for (size_t i=0; i < num_data; ++i) 
     ptr[i] = static_cast<float>(data_cube(plane, i, row));
@@ -482,6 +487,8 @@ void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
 					  size_t const num_data,
 					  float *in_data)
 {
+  AlwaysAssert(static_cast<size_t>(data_cube.ncolumn())==num_data,
+	       AipsError);
   for (size_t i=0; i < num_data; ++i) 
     data_cube(plane, i, row) = static_cast<Float>(in_data[i]);
 }
@@ -498,6 +505,8 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
 					  size_t const num_flag,
 					  SakuraAlignedArray<bool> &out_flag)
 {
+  AlwaysAssert(static_cast<size_t>(flag_cube.ncolumn())==num_flag,
+	       AipsError);
   bool *ptr = out_flag.data;
   for (size_t i=0; i < num_flag; ++i) 
     ptr[i] = static_cast<bool>(flag_cube(plane, i, row));
@@ -509,9 +518,21 @@ void SingleDishMS::set_flag_to_cube(Cube<Bool> &flag_cube,
 				    size_t const num_flag,
 				    bool *in_flag)
 {
+  AlwaysAssert(static_cast<size_t>(flag_cube.ncolumn())==num_flag,
+	       AipsError);
   for (size_t i=0; i < num_flag; ++i) 
     flag_cube(plane, i, row) = static_cast<Bool>(in_flag[i]);
 }
+
+void SingleDishMS::flag_spectrum_in_cube(Cube<Bool> &flag_cube,
+					 size_t const row,
+					 size_t const plane)
+{
+  uInt const num_flag = flag_cube.ncolumn();
+  for (uInt ichan=0; ichan<num_flag; ++ichan)
+    flag_cube(plane,ichan,row) = true;
+}
+
 
 bool SingleDishMS::allchannels_flagged(size_t const num_flag, bool const* flag)
 {
@@ -750,6 +771,14 @@ void SingleDishMS::scale(float const factor,
 }
 
 
+void SingleDishMS::do_scale(float const factor,
+			    size_t const num_data, float *data)
+{
+  for (size_t i=0; i < num_data; ++i) 
+    data[i] *= factor;
+}
+
+
 // Baseline subtraction by per spectrum fitting parameters
 void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 					      string const& out_ms_name,
@@ -760,158 +789,184 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting baseline using parameters in file, " << param_file << LogIO::POST;
 
-//   // parse fitting parameters in the text file
-//   BLParameterParser parser(param_file);
-//   std::vector<LIBSAKURA_SYMBOL(BaselineType)> 
-//     baseline_types = parser.get_function_types();
-//   map<const LIBSAKURA_SYMBOL(BaselineType), size_t> max_orders;
-//   for (size_t i=0; i < baseline_types.size(); ++i) {
-//     max_orders[baseline_types[i]] 
-//       = parser.get_max_order_for_function_type(baseline_types[i]);
-//   }
+  // parse fitting parameters in the text file
+  BLParameterParser parser(param_file);
+  std::vector<LIBSAKURA_SYMBOL(BaselineType)> 
+    baseline_types = parser.get_function_types();
+  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
+  for (size_t i=0; i < baseline_types.size(); ++i) {
+    max_orders[baseline_types[i]] 
+      = parser.get_max_order(baseline_types[i]);
+  }
 
-//   Block<Int> columns(1);
-//   columns[0] = MS::DATA_DESC_ID;
-//   LIBSAKURA_SYMBOL(Status) status;
-//   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+  // Setup VisIter for input MS
+  Block<Int> columns(1);
+  columns[0] = MS::DATA_DESC_ID;
+  prepare_for_process(in_column_name, out_ms_name, columns, false);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+  // SPW and channelization reservoir
+  Vector<Int> recspw;
+  Matrix<Int> recchan;
+  Vector<size_t> nchan;
+  Vector<Vector<Bool> > in_mask;
+  Vector<bool> nchan_set;
+  parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+  // Baseline Contexts reservoir
+  // key: Sakura_BaselineType enum,
+  // value: a vector of Sakura_BaselineContext for various nchans
+  map< const LIBSAKURA_SYMBOL(BaselineType),
+    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
+  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
+    iter = max_orders.begin();
+  while (iter != max_orders.end() ) {
+    context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>() ;
+    context_reservoir[(*iter).first].clear();
+    ++iter;
+  }
 
-//   prepare_for_process(in_column_name, out_ms_name, columns, false);
-//   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
-//   vi::VisBuffer2 *vb = vi->getVisBuffer();
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+  Vector<size_t> ctx_indices;
+  ctx_indices.resize(nchan.nelements());
 
-//   Vector<Int> recspw;
-//   Matrix<Int> recchan;
-//   Vector<size_t> nchan;
-//   Vector<Vector<Bool> > in_mask;
-//   Vector<bool> nchan_set;
-//   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+  Vector<bool> pol;
+  bool pol_set = false;
+  // Iterate over MS and subtract baseline
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> data_spw = vb->spectralWindows();
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<bool> mask(num_chan);
 
-//   Vector<size_t> ctx_indices;
-//   ctx_indices.resize(nchan.nelements());
-//   map< const LIBSAKURA_SYMBOL(BaselineType),
-//     std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
-//   map<const LIBSAKURA_SYMBOL(BaselineType), size_t>::iterator
-//     iter = max_orders.begin();
-//   while (iter != max_orders.end() ) {
-//     context_reservoir[(*iter).first] = new std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>() ;
-//     ++iter;
-//   }
-//   bl_contexts.clear();
-//   Vector<bool> pol;
-//   bool pol_set = false;
+      bool new_nchan;
+      get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
+      if (new_nchan) {
+	// Generate context for all necessary baseline types
+	map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
+	  iter = max_orders.begin();
+	while (iter != max_orders.end() ) {
+	  get_baseline_context((*iter).first,(*iter).second,
+			       num_chan, nchan, nchan_set, ctx_indices,
+			       context_reservoir[(*iter).first]);
+	  ++iter;
+	}
+      }
+      // get a data cube (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      // get a flag cube (npol*nchan*nrow) from VisBuffer
+      get_flag_cube(*vb, flag_chunk);
 
-//   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
-//     for (vi->origin(); vi->more(); vi->next()) {
-//       Vector<Int> data_spw = vb->spectralWindows();
-//       size_t const num_chan = static_cast<size_t>(vb->nChannels());
-//       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
-//       size_t const num_row = static_cast<size_t>(vb->nRows());
-//       Cube<Float> data_chunk(num_pol,num_chan,num_row);
-//       SakuraAlignedArray<float> spec(num_chan);
-//       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
-//       SakuraAlignedArray<bool> mask(num_chan);
+      if (!pol_set) {
+	get_pol_selection(in_ppp, num_pol, pol);
+	pol_set = true;
+      }
+      // loop over MS rows
+      for (size_t irow=0; irow < num_row; ++irow) {
+  	size_t idx = 0;
+  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	  if (data_spw[irow] == recspw[ispw]) {
+  	    idx = ispw;
+  	    break;
+  	  }
+  	}
 
-//       bool new_nchan;
-//       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
-//       if (new_nchan) {
-// 	// Generate 
-// 	map<const LIBSAKURA_SYMBOL(BaselineType), size_t>::iterator
-// 	  iter = max_orders.begin();
-// 	while (iter != max_orders.end() ) {
-// 	  get_baseline_context(bl_type,(*iter).second,
-// 			       num_chan, nchan, nchan_set, ctx_indices,
-// 			       context_reservoir[(*iter).first]);
-// 	  ++iter;
-// 	}
-//       }
-//       // get a data cube (npol*nchan*nrow) from VisBuffer
-//       get_data_cube_float(*vb, data_chunk);
-//       // get a flag cube (npol*nchan*nrow) from VisBuffer
-//       get_flag_cube(*vb, flag_chunk);
+  	// loop over polarization
+  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  if (!pol(ipol))
+	  { //flag
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    continue;
+	  }
+  	  // get a channel mask from data cube
+  	  // (note that the variable 'mask' is flag in the next line 
+	  // actually, then it will be converted to real mask when 
+	  // taking AND with user-given mask info. this is just for 
+	  // saving memory usage...)
+  	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // skip spectrum if all channels flagged
+	  if (allchannels_flagged(num_chan, mask.data)) continue;
 
-//       if (!pol_set) {
-// 	get_pol_selection(in_ppp, num_pol, pol);
-// 	pol_set = true;
-//       }
-//       // loop over MS rows
-//       for (size_t irow=0; irow < num_row; ++irow) {
-//   	size_t idx = 0;
-//   	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
-//   	  if (data_spw[irow] == recspw[ispw]) {
-//   	    idx = ispw;
-//   	    break;
-//   	  }
-//   	}
+  	  // convert flag to mask by taking logical NOT of flag
+  	  // and then operate logical AND with in_mask
+  	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+  	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+  	  }
+	  // get fitting parameter
+	  BLParameterSet *fit_param = parser.GetFitParameter(irow,ipol);
+	  if (fit_param==NULL)
+	  { //no fit requrested
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    continue;
+	  }
+	  // get mask from BLParameterset and create composit mask
 
-//   	// loop over polarization
-//   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-// 	  if (!pol(ipol)) continue; // TODO: flag
-//   	  // get a channel mask from data cube
-//   	  // (note that the variable 'mask' is flag in the next line 
-// 	  // actually, then it will be converted to real mask when 
-// 	  // taking AND with user-given mask info. this is just for 
-// 	  // saving memory usage...)
-//   	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
-// 	  // skip spectrum if all channels flagged
-// 	  if (allchannels_flagged(num_chan, mask.data)) continue;
+	  // TODO: check for composit flag and flag if no valid channel to fit
 
-//   	  // convert flag to mask by taking logical NOT of flag
-//   	  // and then operate logical AND with in_mask
-//   	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
-//   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
-//   	  }
-// 	  // TODO: check for composit flag and flag if no valid channel to fit
+  	  // get a spectrum from data cube
+  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+  	  // actual execution of single spectrum
+	  LIBSAKURA_SYMBOL(BaselineContext)* context = context_reservoir[fit_param->baseline_type][ctx_indices[idx]];
+	  switch (fit_param->baseline_type) {
+	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	    status = 
+  	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, 
+							       fit_param->npiece,
+							       num_chan,
+							       spec.data,
+							       mask.data,
+							       fit_param->clip_threshold_sigma, 
+							       fit_param->num_fitting_max,
+							       true,
+							       mask.data,
+							       spec.data,
+							       &bl_status);
+	    break;
+	  default:
+	    status = 
+	      LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, 
+						      fit_param->order, 
+						      num_chan, 
+						      spec.data, 
+						      mask.data, 
+						      fit_param->clip_threshold_sigma, 
+						      fit_param->num_fitting_max,
+						      true, 
+						      mask.data, 
+						      spec.data, 
+						      &bl_status);
+	  }
+  	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+	      throw(AipsError("SubtractBaselineFloat() -- NG"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+	      throw(AipsError("SubtractBaselineFloat() -- UnknownError"));
+	    }
+	    //throw(AipsError("SubtractBaselineFloat() failed."));
+  	  }
+  	  // set back a spectrum to data cube
+  	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+  	} // end of polarization loop
+      } // end of chunk row loop
+      // write back data and flag cube to VisBuffer
+      sdh_->fillCubeToOutputMs(vb, data_chunk, flag_chunk);
+    } // end of vi loop
+  } // end of chunk loop
+  finalize_process();
 
-//   	  // get a spectrum from data cube
-//   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
-// 	  // get fitting parameter
-// 	  BLParameterSet fit_param = parser.get_fit_parameter(irow,ipol);
-//   	  // actual execution of single spectrum
-//   	  status = 
-//   	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
-//   						    static_cast<uint16_t>(order), 
-// 						    num_chan, 
-//   						    spec.data, 
-//   						    mask.data, 
-//   						    clip_threshold_sigma, 
-//   						    num_fitting_max,
-//   						    true, 
-//   						    mask.data, 
-//   						    spec.data, 
-//   						    &bl_status);
-//   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-// 	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-// 	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));
-// 	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-// 	      throw(AipsError("SubtractBaselineFloat() -- NG"));
-// 	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-// 	      throw(AipsError("SubtractBaselineFloat() -- UnknownError"));
-// 	    }
-// 	    //throw(AipsError("SubtractBaselineFloat() failed."));
-//   	  }
-//   	  // set back a spectrum to data cube
-//   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
-//   	} // end of polarization loop
-//       } // end of chunk row loop
-//       // write back data cube to VisBuffer
-//       sdh_->fillCubeToOutputMs(vb, data_chunk);
-//     } // end of vi loop
-//   } // end of chunk loop
-//   finalize_process();
-
-//   // destroy baselint contexts
-//   destroy_baseline_contexts(bl_contexts);
-
-//   //double tend = gettimeofday_sec();
-//   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+  // destroy baselint contexts
+  map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
+  while (ctxiter != context_reservoir.end() ) {
+    destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
+    ++ctxiter;
+  }
 }
-
-void SingleDishMS::do_scale(float const factor,
-			    size_t const num_data, float *data)
-{
-  for (size_t i=0; i < num_data; ++i) 
-    data[i] *= factor;
-}
-
 
 }  // End of casa namespace.

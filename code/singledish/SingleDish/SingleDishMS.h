@@ -151,6 +151,12 @@ private:
 			size_t const plane,
 			size_t const num_flag,
 			bool in_flag[/*num_data*/]);
+
+  // flag all channels in a supectrum in cube at the row and plane (polarization)
+  void flag_spectrum_in_cube(Cube<Bool> &flag_cube,
+			     size_t const row,
+			     size_t const plane);
+
   // return true if all channels are flagged
   bool allchannels_flagged(size_t const num_flag, 
 			   bool const* flag);
