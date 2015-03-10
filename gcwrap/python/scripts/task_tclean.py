@@ -287,7 +287,7 @@ def tclean(
         imager.initializeImagers()
         imager.initializeNormalizers()
         t1=time.time();
-        casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+        casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
         ## Init minor cycle elements
         if niter>0:
@@ -297,7 +297,7 @@ def tclean(
             imager.initializeIterationControl()
 
             t1=time.time();
-            casalog.post("***Time for initializing deconvolver(s): "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+            casalog.post("***Time for initializing deconvolver(s): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
             
         ## Make PSF
         if recalcpsf==True:
@@ -306,7 +306,7 @@ def tclean(
             imager.makePSF()
 
             t1=time.time();
-            casalog.post("***Time for making PSF: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+            casalog.post("***Time for making PSF: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
         if niter >=0 : 
 
@@ -315,7 +315,7 @@ def tclean(
                 t0=time.time();
                 imager.runMajorCycle()
                 t1=time.time();
-                casalog.post("***Time for major cycle (recalcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+                casalog.post("***Time for major cycle (recalcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
             ## In case of no deconvolution iterations....
             if niter==0 and recalcres==False:
@@ -328,18 +328,18 @@ def tclean(
                     t0=time.time();
                     imager.runMinorCycle()
                     t1=time.time();
-                    casalog.post("***Time for minor cycle: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+                    casalog.post("***Time for minor cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                     t0=time.time();
                     imager.runMajorCycle()
                     t1=time.time();
-                    casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+                    casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Restore images.
                 t0=time.time();
                 imager.restoreImages()
                 t1=time.time();
-                casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO", "task_tclean");
+                casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Get summary from iterbot
                 retrec=imager.getSummary();
