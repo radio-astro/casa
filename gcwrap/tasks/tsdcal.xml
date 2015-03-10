@@ -150,11 +150,6 @@ spectrum is
       <value></value>
     </param>
 
-    <param type="string" name="pol">
-      <description>select data by polarization IDs, e.g, \'0,1\' (\'\' = all)</description>
-      <value></value>
-    </param>
-
     <param type="string" name="outfile">
       <description>name of output file (See a WARNING in help)</description>
       <value></value>
@@ -375,10 +370,6 @@ spw -- select data by IF IDs (spectral windows)
 scan -- select data by scan numbers
         default: '' (use all scans)
         example: scan='21~23' (scan IDs 21,22,23)
-        this selection is in addition to the other selections to data
-pol -- select data by polarization IDs
-        default: '' (use all polarizations)
-        example: pol='0,1' (polarization IDs 0,1)
         this selection is in addition to the other selections to data
 outfile -- Name of output file
         NOTE if you omit, behavior of the task depends on calmode. 

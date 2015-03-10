@@ -10,7 +10,7 @@ import sdutil
 (cb,) = gentools(['cb'])
 def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
            width=0.5, elongated=False, applytable='',interp='', spwmap={},
-           field='', spw='', scan='', pol='', outfile='', overwrite=False): 
+           field='', spw='', scan='', outfile='', overwrite=False): 
        
     """ Externally specify calibration solutions af various types
     """
@@ -113,7 +113,7 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
             if len(outfile) == 0:
                 raise RuntimeError, 'Output file name must be specified.'
             if calmode=='tsys':
-                cb.specifycal(caltable=outfile,time="",spw=spw,pol=pol,caltype=calmodemap[calmode])
+                cb.specifycal(caltable=outfile,time="",spw=spw,caltype=calmodemap[calmode])
             else:
                 fraction_numeric = to_numeric_fraction(fraction)
                 if noff <= 0 and fraction_numeric >= 0.5:
