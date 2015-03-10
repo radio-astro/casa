@@ -183,7 +183,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 using namespace std;
@@ -1940,7 +1940,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 /// under some compiler version so setting a private variable to be used
 /// a negative number means use all that is available
   numthreads_p= numthreads;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads > 0){
     if(numthreads <= omp_get_max_threads()){
       omp_set_num_threads(numthreads);
@@ -3096,6 +3096,10 @@ Bool Imager::makeimage(const String& type, const String& image,
 
 	return False;
       }
+
+
+    cerr << "cImage shape " << cimageShape << " tile shape " << tileShape << endl;
+
     PagedImage<Complex> cImageImage(TiledShape(cimageShape, tileShape),
 				    cimagecoords,
 				    cImageName);

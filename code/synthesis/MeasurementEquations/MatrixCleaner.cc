@@ -56,7 +56,7 @@
 
 #include <synthesis/MeasurementEquations/MatrixCleaner.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -359,7 +359,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
   AlwaysAssert(itsScalesValid, AipsError);
   ////no need to use all cores if possible
   Int nth=nScalesToClean;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   
     nth=min(nth, omp_get_max_threads());
  
