@@ -993,12 +993,11 @@ class tsdcal_test_apply(tsdcal_test_base):
                         with sdutil.table_selector(self.infile, taql) as tb:
                             flag_org[antenna][spw] = tb.getcol('FLAG')
                             weight_org[antenna][spw] = tb.getcol('WEIGHT')
-                            print 'antenna %s spw %s WEIGHT %s'%(antenna, spw, weight_org[antenna][spw])
                             if 'WEIGHT_SPECTRUM' in tb.colnames() and tb.iscelldefined('WEIGHT_SPECTRUM', 0):
-                                print 'WEIGHT_SPECTRUM is defined for antenna %s spw %s'%(antenna, spw)
+                                #print 'WEIGHT_SPECTRUM is defined for antenna %s spw %s'%(antenna, spw)
                                 weightsp_org[antenna][spw] = tb.getcol('WEIGHT_SPECTRUM')
-                            else:
-                                print 'WEIGHT_SPECTRUM is NOT defined for antenna %s spw %s'%(antenna, spw)
+                            #else:
+                            #    print 'WEIGHT_SPECTRUM is NOT defined for antenna %s spw %s'%(antenna, spw)
                                 
                 # execute test
                 func(self)
