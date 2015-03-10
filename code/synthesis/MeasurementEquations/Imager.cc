@@ -5388,7 +5388,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
 
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
-                                 tempCLs, "_setjy_");
+                                 tempCLs, ms_p->tableName()+"_setjy_");
   }
   if(!foundSrc){
     if(standard == String("SOURCE")){
