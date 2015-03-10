@@ -62,7 +62,7 @@
 #include <synthesis/TransformMachines/SimplePBConvFunc.h> //por SINCOS
 
 #include <synthesis/TransformMachines/WPConvFunc.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -332,7 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    Int ier;
    FFTPack::cfft2i(convSize, convSize, wsaveptr, lsav, ier);
    //////////
-#ifdef HAS_OMP
+#ifdef _OPENMP
    omp_set_nested(0);
 #endif
    //////openmp like to share reference param ...but i don't like to share
@@ -352,10 +352,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      Double twoPiW=2.0*C::pi*sqrt(Double(iw))/uvScale(2);
       //Double twoPiW=2.0*C::pi*Double(iw)/wScale_p;
       Double twoPiW=2.0*C::pi*Double(iw*iw)/cpWscale;
-      //#ifdef HAS_OMP
-      //      omp_set_nested(1);
-      //#endif
-      //#pragma omp parallel for default(none) firstprivate(twoPiW, scr, cor, inner, s0, s1) shared(convSize)
       for (Int iy=-inner/2;iy<inner/2;iy++) {
 	Double m=s1*Double(iy);
 	Double msq=m*m;
@@ -467,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // gridding (about a factor of two)
   convSupport=-1;
   Vector<Int> pcsupp=convSupport;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   omp_set_nested(0);
 #endif
   Bool delsupstor;
@@ -511,6 +507,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << "You may consider reducing the size of your image or use facets"
 	    << LogIO::POST;
   }
+  /*
+  if(1) {
+      CoordinateSystem ftCoords(coords);
+      Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+      AlwaysAssert(directionIndex>=0, AipsError);
+      dc=coords.directionCoordinate(directionIndex);
+      Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+      Vector<Int> shape(2); shape(0)=convSize;shape(1)=convSize;
+      Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
+      ftCoords.replaceCoordinate(*ftdc, directionIndex);
+      delete ftdc; ftdc=0;
+      ostringstream name;
+      name << "FTScreenWproj" ;
+      if(Table::canDeleteTable(name)) Table::deleteTable(name);
+      PagedImage<Complex> thisScreen(IPosition(4, convFunc.shape()(0), convFunc.shape()(1), 1, convFunc.shape()(2)), ftCoords, name);
+      thisScreen.put(convFunc.reform(IPosition(4, convFunc.shape()(0), convFunc.shape()(1), 1, convFunc.shape()(2))));
+  }
+  */
+
+
   // Normalize such that plane 0 sums to 1 (when jumping in
   // steps of convSampling)
   Double pbSum=0.0;

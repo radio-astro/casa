@@ -80,7 +80,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -1100,7 +1100,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Double *dpstor=dphase.getStorage(del);
   Int irow;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
@@ -1435,7 +1435,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 
   Int irow;
   Int nth=1;
- #ifdef HAS_OMP
+ #ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }

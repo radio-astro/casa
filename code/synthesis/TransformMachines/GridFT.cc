@@ -1,5 +1,5 @@
 //# GridFT.cc: Implementation of GridFT class
-//# Copyright (C) 1997-2012
+//# Copyright (C) 1997-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -70,7 +70,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -770,7 +770,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Double cinv=Double(1.0)/C::c;
   Int dow=0;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
@@ -1057,7 +1057,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Double cinv=Double(1.0)/C::c;
   Int dow=0;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }

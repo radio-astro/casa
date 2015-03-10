@@ -46,7 +46,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <ostream>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 

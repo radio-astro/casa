@@ -32,6 +32,7 @@
 #include <synthesis/TransformMachines/PBMathInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 
@@ -177,7 +178,7 @@ namespace casa{
       Block<CountedPtr<Vector<Int> > > convSizes_p;
       Block <CountedPtr<Vector<Int> > > convSupportBlock_p;
       Matrix<Bool> pointingPix_p;
-
+      VisBufferUtil vbUtil_p;
       
     };
 };// end of namespace

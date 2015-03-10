@@ -44,7 +44,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <measures/Measures/UVWMachine.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -111,7 +111,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
 
 
   uInt npart=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   npart= numthreads_p <0 ? omp_get_max_threads() : min(numthreads_p, omp_get_max_threads());
 #endif
   if((nRow/npart)==0) npart=1;
@@ -262,7 +262,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
   }
 
  uInt npart=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
  npart= numthreads_p <0 ? omp_get_max_threads() : min(numthreads_p, omp_get_max_threads());
 #endif
 

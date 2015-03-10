@@ -47,7 +47,7 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Quanta.h>
 #include <measures/Measures.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 

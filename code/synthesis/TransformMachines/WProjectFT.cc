@@ -78,7 +78,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -867,7 +867,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int irow;
   Int dow=1;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
@@ -876,6 +876,9 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   //nth=min(4,nth);
 #endif
+
+
+
 
    #pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)  
 {
@@ -925,6 +928,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
      iysub=1; 
   }
   */
+
+
 
  x0=1;
   y0=1;
@@ -1277,7 +1282,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   const Int * suppstor=convSupport.getStorage(del);
   Int irow;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }

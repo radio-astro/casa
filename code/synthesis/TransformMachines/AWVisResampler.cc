@@ -38,7 +38,7 @@
 #include <typeinfo>
 #include <iomanip>
 #include <synthesis/TransformMachines/FortranizedLoops.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 //#include <casa/BasicMath/Functors.h>
@@ -245,7 +245,7 @@ namespace casa{
     const Int * __restrict__ iGrdPosPtr = igrdpos.getStorage(Dummy);
     T* __restrict__ gridStore = grid.getStorage(Dummy);
     Int Nth = 1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
 

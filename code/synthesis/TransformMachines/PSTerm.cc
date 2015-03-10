@@ -28,7 +28,7 @@
 #include <synthesis/TransformMachines/PSTerm.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nx=screen.shape()(0), ny=screen.shape()(1);
     Int convOrig=nx/2;
     Float xpart, psScale_local=psScale_p;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Int Nth=max(omp_get_max_threads()-2,1);
 #endif
 
@@ -80,12 +80,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int i=0; i<nx;i++)
 	  {
 	    xpart = square(i-convOrig);
-#ifdef HAS_OMP
+#ifdef _OPENMP
 //#pragma omp parallel default(none) firstprivate(xpart,convOrig, i) shared(screen,psScale_local,ny,multiply) num_threads(Nth)
 #pragma omp parallel firstprivate(xpart,convOrig, i) shared(psScale_local,ny,multiply) num_threads(Nth)
 #endif
    {
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #pragma omp for
 #endif
 	    for (Int j=0;j<ny;j++)

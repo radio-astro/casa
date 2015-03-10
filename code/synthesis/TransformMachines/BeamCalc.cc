@@ -41,7 +41,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/BeamCalc.h>
 #include <casa/OS/Timer.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 #if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 4))
@@ -1512,7 +1512,7 @@ namespace casa{
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
     Int Nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
     // Timer tim;
@@ -1778,7 +1778,7 @@ namespace casa{
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
     Int Nth=1, localWhichPoln=whichPoln;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
     // Timer tim;
@@ -2044,7 +2044,7 @@ namespace casa{
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
     Int Nth=1, localWhichPoln=whichPoln;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
     // Timer tim;

@@ -37,7 +37,7 @@
 #include <typeinfo>
 #include <iomanip>
 #include <synthesis/TransformMachines/FortranizedLoops.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 //#include <casa/BasicMath/Functors.h>

@@ -91,7 +91,7 @@
     phaseGradOriginPtr = phaseGradOrigin_l.getStorage(dummy);
     //---------Multi-threading related code ends-----------------
     Int Nth = 1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
     T *iTHNValue = new T[Nth];
@@ -121,7 +121,7 @@
 #pragma omp for
 	for(Int ix=-scaledSupportPtr[0]; ix <= scaledSupportPtr[0]; ix++) 
 	  {
-#ifdef HAS_OMP
+#ifdef _OPENMP
 	    thID=omp_get_thread_num();
 #endif
 	    Int localCFPos[4];localCFPos[2]=localCFPos[3]=0;

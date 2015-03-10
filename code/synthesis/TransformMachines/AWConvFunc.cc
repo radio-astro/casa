@@ -46,7 +46,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <ostream>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -1057,7 +1057,7 @@ namespace casa{
     	cfShape[i]=func.shape()[i];
     convSize = cfShape[0];
 
-#ifdef HAS_OMP
+#ifdef _OPENMP
     Nth = max(omp_get_max_threads()-2,1);
 #endif
     
@@ -1077,7 +1077,7 @@ namespace casa{
 #pragma omp for
 	      for(R=R0;R>R1;R--)
 		{
-#ifdef HAS_OMP
+#ifdef _OPENMP
 		  threadID=omp_get_thread_num();
 #endif
 		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, threadID, R, maxR);
@@ -1333,7 +1333,7 @@ namespace casa{
     LogIO log_l(LogOrigin("AWConvFunc", "prepareConvFunction"));
 
 //     Int Nth=1;
-// #ifdef HAS_OMP
+// #ifdef _OPENMP
 //     Nth=max(omp_get_max_threads()-2,1);
 // #endif
     for (Int irow=0;irow<nRow;irow++)

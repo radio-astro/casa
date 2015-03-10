@@ -74,7 +74,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -342,7 +342,7 @@ void SetJyGridFT::get(VisBuffer& vb, Int row){
 
 
 	    Int npart=1;
-	#ifdef HAS_OMP
+	#ifdef _OPENMP
 	    Int nthreads=omp_get_max_threads();
 	    if (nthreads >3){
 	      npart=4;
