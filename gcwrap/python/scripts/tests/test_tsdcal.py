@@ -3,6 +3,7 @@ import sys
 import shutil
 import re
 import numpy
+import math
 
 from __main__ import default
 from tasks import *
@@ -228,7 +229,6 @@ class tsdcal_test_base(unittest.TestCase):
         for f in files:
             if os.path.exists(f):
                 shutil.rmtree(f)
-            #shutil.copytree(os.path.join(self.datapath,f), f)
             copytree_ignore_subversion(self.datapath, f)
 
         default(task)
@@ -798,6 +798,8 @@ class Interpolator(object):
         self.taql = ''
         self.time = None
         self.data = None
+        self.flag = None
+        self.exposure = None
         self.finterp = getattr(Interpolator,'interp_freq_%s'%(finterp.lower()))
         print 'self.finterp:', self.finterp.__name__
 
@@ -807,34 +809,55 @@ class Interpolator(object):
             self.time = tb.getcol('TIME')
             self.data = tb.getcol('FPARAM')
             self.flag = tb.getcol('FLAG')
+            self.exposure = tb.getcol('INTERVAL')
 
     def interpolate(self, t):
         raise Exception('Not implemented')
-        
+
+    def weightscale_linear(self, dt_on, dt_off0, dt_off1=None, t_on=None, t_off0=None, t_off1=None):
+        if dt_off1 is None:
+            return self.weightscale_nearest(dt_on, dt_off0)
+        else:
+            delta = t_off1 - t_off0
+            delta0 = t_on - t_off0
+            delta1 = t_off1 - t_on
+            sigmasqscale = 1.0 + dt_on / (delta * delta) * (delta1 * delta1 / dt_off0 + delta0 * delta0 / dt_off1) 
+            return 1.0 / sigmasqscale 
+
+    def weightscale_nearest(self, dt_on, dt_off):
+        return dt_off / (dt_on + dt_off)
 
 class LinearInterpolator(Interpolator):
     def __init__(self, table, finterp='linear'):
         super(LinearInterpolator, self).__init__(table, finterp)
 
-    def interpolate(self, t):
+    def interpolate(self, t, tau):
         dt = self.time - t
         index = abs(dt).argmin()
         if dt[index] > 0.0:
             index -= 1
         if index < 0:
             ref = self.data[:,:,0].copy()
+            weightscale = self.weightscale_linear(tau, self.exposure[0])
         elif index >= len(self.time) - 1:
             ref = self.data[:,:,-1].copy()
+            weightscale = self.weightscale_linear(tau, self.exposure[-1])
         else:
             t0 = self.time[index]
             t1 = self.time[index+1]
             d0 = self.data[:,:,index]
             d1 = self.data[:,:,index+1]
-            ref = ((t1 - t) * d0 + (t - t0) * d1) / (t1 - t0)
+            dt0 = t - t0
+            dt1 = t1 - t
+            dt2 = t1 - t0
+            ref = (dt1 * d0 + dt0 * d1) / dt2
+            tau0 = self.exposure[index]
+            tau1 = self.exposure[index+1]
+            weightscale = self.weightscale_linear(tau, tau0, tau1, t, t0, t1)
         flag = self.interpolate_flag(t)
         ref, refflag = self.finterp(ref, flag)
                                
-        return ref, refflag
+        return ref, refflag, weightscale
     
     def interpolate_flag(self, t):
         dt = self.time - t
@@ -856,11 +879,12 @@ class NearestInterpolator(Interpolator):
     def __init__(self, table, finterp='nearest'):
         super(NearestInterpolator, self).__init__(table, finterp)
 
-    def interpolate(self, t):
+    def interpolate(self, t, tau):
         dt = self.time - t
         index = abs(dt).argmin()
+        weightscale = self.weightscale_nearest(tau, self.exposure[index])
         ref, refflag = self.finterp(self.data[:,:,index].copy(), self.flag[:,:,index].copy())
-        return ref, refflag
+        return ref, refflag, weightscale
 
     
 class tsdcal_test_apply(tsdcal_test_base):
@@ -884,6 +908,7 @@ class tsdcal_test_apply(tsdcal_test_base):
     test_apply_sky12 --- apply data (nearestflag for frequency interpolation)
     test_apply_sky13 --- apply data (string applytable input)
     test_apply_sky14 --- apply data (interp='')
+    test_apply_sky15 --- check if WEIGHT_SPECTRUM is updated properly when it exists
     """
     invalid_argument_case = tsdcal_test_base.invalid_argument_case
     exception_case = tsdcal_test_base.exception_case
@@ -905,6 +930,24 @@ class tsdcal_test_apply(tsdcal_test_base):
     def tearDown(self):
         self._tearDown([self.infile, self.applytable])
 
+    def check_weight(self, inweight, outweight, scale):
+        #print 'inweight', inweight
+        #print 'outweight', outweight
+        #print 'scale', scale
+        # shape check
+        self.assertEqual(inweight.shape, outweight.shape, msg='')
+        
+        # weight should not be zero
+        self.assertFalse(any(inweight.flatten() == 0.0), msg='')
+        self.assertFalse(any(outweight.flatten() == 0.0), msg='')
+
+        # check difference
+        expected_weight = inweight * scale
+        diff = abs((outweight - expected_weight) / expected_weight)
+        self.assertTrue(all(diff.flatten() < self.eps),
+                        msg='')
+
+    
     def normal_case(interp='linear', **kwargs):
         """
         Decorator for the test case that is intended to verify
@@ -937,15 +980,26 @@ class tsdcal_test_apply(tsdcal_test_base):
                     spwlist = list(set(spwlist) & set(a['spw']))
                     spwddlist = map(spwidcol.index, spwlist)
 
-                # preserve original flag
+                # preserve original flag and weight
                 flag_org = {}
+                weight_org = {}
+                weightsp_org = {}
                 for antenna in antennalist:
                     flag_org[antenna] = {}
+                    weight_org[antenna] = {}
+                    weightsp_org[antenna] = {}
                     for (spw,spwdd) in zip(spwlist,spwddlist):
                         taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna, antenna, spwdd)
                         with sdutil.table_selector(self.infile, taql) as tb:
                             flag_org[antenna][spw] = tb.getcol('FLAG')
-                
+                            weight_org[antenna][spw] = tb.getcol('WEIGHT')
+                            print 'antenna %s spw %s WEIGHT %s'%(antenna, spw, weight_org[antenna][spw])
+                            if 'WEIGHT_SPECTRUM' in tb.colnames() and tb.iscelldefined('WEIGHT_SPECTRUM', 0):
+                                print 'WEIGHT_SPECTRUM is defined for antenna %s spw %s'%(antenna, spw)
+                                weightsp_org[antenna][spw] = tb.getcol('WEIGHT_SPECTRUM')
+                            else:
+                                print 'WEIGHT_SPECTRUM is NOT defined for antenna %s spw %s'%(antenna, spw)
+                                
                 # execute test
                 func(self)
 
@@ -981,15 +1035,37 @@ class tsdcal_test_apply(tsdcal_test_base):
                         taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna, antenna, spwdd)
                         with sdutil.table_selector(self.infile, taql) as tb:
                             self.assertEqual(tb.nrows(), self.nrow_per_chunk, msg='Number of rows mismatch in antenna %s spw %s'%(antenna, spw))
+                            if weightsp_org[antenna].has_key(spw):
+                                has_weightsp = True
+                                
+                            else:
+                                has_weightsp = False
                             for irow in xrange(tb.nrows()):
                                 t = tb.getcell('TIME', irow)
+                                dt = tb.getcell('INTERVAL', irow)
                                 data = tb.getcell('DATA', irow)
                                 outflag = tb.getcell('FLAG', irow)
                                 corrected = tb.getcell('CORRECTED_DATA', irow)
-                                ref, calflag = interpolator.interpolate(t)
+                                ref, calflag, weightscale = interpolator.interpolate(t, dt)
                                 inflag = flag_org[antenna][spw][:,:,irow]
                                 expected = (data - ref) / ref
                                 expected_flag = numpy.logical_or(inflag, calflag)
+
+                                # weight test
+                                self.assertEqual(tb.iscelldefined('WEIGHT_SPECTRUM', irow), has_weightsp,
+                                                 msg='')
+                                inweight = weight_org[antenna][spw][:,irow]
+                                outweight = tb.getcell('WEIGHT', irow)
+                                if has_weightsp:
+                                    # Need to check WEIGHT_SPECTRUM
+                                    inweightsp = weightsp_org[antenna][spw][:,:,irow]
+                                    outweightsp = tb.getcell('WEIGHT_SPECTRUM', irow)
+
+                                    self.check_weight(inweight, outweight, weightscale)
+                                    self.check_weight(inweightsp, outweightsp, weightscale)
+                                else:
+                                    self.check_weight(inweight, outweight, weightscale)
+                                
                                 #print 'antenna', antenna, 'spw', spw, 'row', irow
                                 #print 'inflag', inflag[:,:12], 'calflag', calflag[:,:12], 'expflag', expected_flag[:,:12], 'outflag', outflag[:,:12]
                                 #print 'ref', ref[:,126:130], 'data', data[:,126:130], 'expected', expected[:,126:130], 'corrected', corrected[:,126:130]
@@ -1111,7 +1187,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear,nearestflag')
         
-    @normal_case()
+    @normal_case(interp='linear')
     def test_apply_sky13(self):
         """
         test_apply_sky13 --- apply data (string applytable input)
@@ -1124,6 +1200,31 @@ class tsdcal_test_apply(tsdcal_test_base):
         test_apply_sky14 --- apply data (interp='')
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='')
+
+    def fill_weightspectrum(func):
+        import functools
+        @functools.wraps(func)
+        def wrapper(self):
+            with sdutil.tbmanager(self.infile, nomodify=False) as tb:
+                self.assertTrue('WEIGHT_SPECTRUM' in tb.colnames(), msg='Internal Error')
+                nrow = tb.nrows()
+                for irow in xrange(nrow):
+                    w = tb.getcell('WEIGHT', irow)
+                    wsp = numpy.ones(tb.getcell('DATA', irow).shape, dtype=float)
+                    for ipol in xrange(len(w)):
+                        wsp[ipol,:] = w[ipol]
+                    tb.putcell('WEIGHT_SPECTRUM', irow, wsp)
+                    self.assertTrue(tb.iscelldefined('WEIGHT_SPECTRUM', irow), msg='Internal Error')
+            func(self)
+        return wrapper
+
+    @fill_weightspectrum
+    @normal_case(interp='linear')
+    def test_apply_sky15(self):
+        """
+        test_apply_sky15 --- check if WEIGHT_SPECTRUM is updated properly when it exists
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
 
 def suite():
     return [tsdcal_test, tsdcal_test_ps,
