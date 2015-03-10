@@ -283,7 +283,8 @@ protected:
   virtual void syncWtScale();
 
   // Perform weight scale calculation (specializable)
-  virtual void calcWtScale();
+  template<class ScalingScheme>
+  void calcWtScale();
 
   // Normalize a (complex) solution array (generic)
   virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);

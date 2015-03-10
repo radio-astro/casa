@@ -359,6 +359,7 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
   }
   return edgeAsTimeRange;
 }
+
 // Formula for weight scaling factor, WF
 // 1. only one OFF spectrum is used (i.e. no interpolation)
 //
@@ -371,10 +372,13 @@ inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
 //
 //     WF = tau_OFF / (tau_ON + tau_OFF)
 //
-casa::Float calcWeightScale(casa::Double exposureOn, casa::Double exposureOff)
+struct SimpleWeightScalingScheme
 {
-  return exposureOff / (exposureOn + exposureOff);
-}
+  static casa::Float SimpleScale(casa::Double exposureOn, casa::Double exposureOff)
+  {
+    return exposureOff / (exposureOn + exposureOff);
+  }
+};
 // 2. two OFF spectrum is used (linear interpolation)
 //
 //     sigma_OFF = {(t_OFF2 - t_ON)^2 * sigma_OFF1^2
@@ -394,16 +398,38 @@ casa::Float calcWeightScale(casa::Double exposureOn, casa::Double exposureOff)
 //                  * {(t_OFF2 - t_ON)^2 / tau_OFF1
 //                      + (t_ON - t_OFF1)^2 / tau_OFF2})
 //
-casa::Float calcWeightScale(casa::Double timeOn, casa::Double exposureOn,
-                            casa::Double timeOff1, casa::Double exposureOff1,
-                            casa::Double timeOff2, casa::Double exposureOff2)
+struct LinearWeightScalingScheme : public SimpleWeightScalingScheme
 {
-  casa::Double dt = timeOff2 - timeOff1;
-  casa::Double dt1 = timeOn - timeOff1;
-  casa::Double dt2 = timeOff2 - timeOn;
-  return 1.0f / (1.0f + exposureOn / (dt * dt)
-                 * (dt2 * dt2 / exposureOff1 + dt1 * dt1 / exposureOff2));
-}
+  static casa::Float InterpolateScale(casa::Double timeOn, casa::Double exposureOn,
+                                     casa::Double timeOff1, casa::Double exposureOff1,
+                                     casa::Double timeOff2, casa::Double exposureOff2)
+  {
+    casa::Double dt = timeOff2 - timeOff1;
+    casa::Double dt1 = timeOn - timeOff1;
+    casa::Double dt2 = timeOff2 - timeOn;
+    return 1.0f / (1.0f + exposureOn / (dt * dt)
+                   * (dt2 * dt2 / exposureOff1 + dt1 * dt1 / exposureOff2));
+  }
+};
+
+// 3. two OFF spectrum is used (nearest interpolation)
+//
+// formulation is same as case 1.
+//
+struct NearestWeightScalingScheme : public SimpleWeightScalingScheme
+{
+  static casa::Float InterpolateScale(casa::Double timeOn, casa::Double exposureOn,
+                                     casa::Double timeOff1, casa::Double exposureOff1,
+                                     casa::Double timeOff2, casa::Double exposureOff2)
+  {
+    casa::Double dt1 = abs(timeOn - timeOff1);
+    casa::Double dt2 = abs(timeOff2 - timeOn);
+    return (dt1 <= dt2) ?
+      SimpleScale(exposureOn, exposureOff1)
+      : SimpleScale(exposureOn, exposureOff2);
+  }
+};
+
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -749,14 +775,20 @@ void SingleDishSkyCal::syncWtScale()
   currWtScale().resize(currentSky().shape());
 
   // Calculate the weight scaling
-  calcWtScale();
+  if (tInterpType() == "nearest") {
+    calcWtScale<NearestWeightScalingScheme>();
+  }
+  else {
+    calcWtScale<LinearWeightScalingScheme>();
+  }
   
   debuglog << "syncWtScale DONE" << debugpost;
 }
 
+template<class ScalingScheme>
 void SingleDishSkyCal::calcWtScale()
 {
-  debuglog << "calcWtScale" << debugpost;
+  debuglog << "calcWtScale<ScalingScheme>" << debugpost;
   CTInterface cti(*ct_);
   MSSelection mss;
   mss.setFieldExpr(String::toString(currField()));
@@ -785,23 +817,23 @@ void SingleDishSkyCal::calcWtScale()
     debuglog << "iAnt " << iAnt << " temp.nrow()=" << temp.nrow() << debugpost;
     if (currTime() < timeCol[0]) {
       debuglog << "Use nearest OFF weight (0)" << debugpost;
-      currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[0]);
+      currWtScale().xyPlane(iAnt) = ScalingScheme::SimpleScale(interval_[iAnt], intervalCol[0]);
     }
     else if (currTime() > timeCol[nrow-1]) {
       debuglog << "Use nearest OFF weight (" << nrow-1 << ")" << debugpost;
-      currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[nrow-1]);
+      currWtScale().xyPlane(iAnt) = ScalingScheme::SimpleScale(interval_[iAnt], intervalCol[nrow-1]);
     }
     else {
       debuglog << "Use interpolated OFF weight" << debugpost;
       for (size_t irow = 0; irow < nrow ; ++irow) {
         if (currTime() == timeCol[irow]) {
-          currWtScale().xyPlane(iAnt) = calcWeightScale(interval_[iAnt], intervalCol[irow]);
+          currWtScale().xyPlane(iAnt) = ScalingScheme::SimpleScale(interval_[iAnt], intervalCol[irow]);
           break;
         }
         else if (currTime() < timeCol[irow]) {
-          currWtScale().xyPlane(iAnt) = calcWeightScale(currTime(), interval_[iAnt],
-                                                        timeCol[irow-1], intervalCol[irow-1],
-                                                        timeCol[irow], intervalCol[irow]);
+          currWtScale().xyPlane(iAnt) = ScalingScheme::InterpolateScale(currTime(), interval_[iAnt],
+                                                                       timeCol[irow-1], intervalCol[irow-1],
+                                                                       timeCol[irow], intervalCol[irow]);
           break;
         }
       }
@@ -809,7 +841,7 @@ void SingleDishSkyCal::calcWtScale()
   }
   debuglog << "currWtScale() = " << currWtScale().xzPlane(0) << debugpost;
 
-  debuglog << "calcWtScale DONE" << debugpost;
+  debuglog << "calcWtScale<ScalingScheme> DONE" << debugpost;
 }
   
 Float SingleDishSkyCal::calcPowerNorm(Array<Float>& /*amp*/, const Array<Bool>& /*ok*/)
