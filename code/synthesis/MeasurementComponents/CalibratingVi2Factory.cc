@@ -109,7 +109,10 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
 					    True); // writable!
     
   // Create output VisibilityIterator
-  CalibratingVi2 *calVI = new CalibratingVi2(vi2,vii2,calpar_p,ms_p->tableName());
+  //   (Get base MS name cleverly, because ms_p might be a reference table)
+  String msantname=ms_p->antenna().tableName();
+  String msname=msantname.before("/ANTENNA");
+  CalibratingVi2 *calVI = new CalibratingVi2(vi2,vii2,calpar_p,msname);
   
   return calVI;
 }

@@ -102,6 +102,15 @@ Calibrater::Calibrater(String msname):
   actRec_()
 {
 
+
+  if (!Table::isReadable(msname))
+    throw(AipsError("MS "+msname+" does not exist."));
+
+
+  logSink() << LogOrigin("Calibrater","") << LogIO::NORMAL
+	    << "Arranging to calibrate MS: "+msname
+	    << LogIO::POST;
+  
   // This is a bare Calibrater, intended to serve a VisEquation 
 
   // We need very little of the usual stuff
