@@ -126,7 +126,7 @@ class tsdcal_test(unittest.TestCase):
         #print fparam[0]
         #print fparam[1]
 
-        subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
+        #subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
         #weight_dict = subt_dict.getcol('WEIGHT')
         weight_dict=tb.getvarcol('WEIGHT')
         print type(weight_dict)
