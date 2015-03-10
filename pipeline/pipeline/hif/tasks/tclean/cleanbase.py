@@ -23,7 +23,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
         intent=None, field=None, spw=None, uvrange=None, specmode=None,
-        imagermode=None, outframe=None, imsize=None, cell=None,
+        gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
 	restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
@@ -98,14 +98,24 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._specmode = value
 
     @property
-    def imagermode(self):
-        if self._imagermode is None:
+    def gridmode(self):
+        if self._gridmode is None:
             return ''
-        return self._imagermode
+        return self._gridmode
 
-    @imagermode.setter
-    def imagermode(self, value):
-         self._imagermode = value
+    @gridmode.setter
+    def gridmode(self, value):
+         self._gridmode = value
+
+    @property
+    def deconvolver(self):
+        if self._deconvolver is None:
+            return ''
+        return self._deconvolver
+
+    @deconvolver.setter
+    def deconvolver(self, value):
+         self._deconvolver = value
 
     @property
     def outframe(self):
@@ -308,9 +318,14 @@ class CleanBase(basetask.StandardTaskTemplate):
             inputs.imagename = clheuristics.imagename(intent=inputs.intent,
                 field=inputs.field, spwspec=inputs.spw)
 
-        # Determine the default imagermode
-        if inputs.imagermode == '':
-            inputs.imagermode = clheuristics.imagermode (inputs.intent,
+        # Determine the default gridmode
+        if inputs.gridmode == '':
+            inputs.gridmode = clheuristics.gridmode (inputs.intent,
+                inputs.field)
+
+        # Determine the default deconvolver
+        if inputs.deconvolver == '':
+            inputs.deconvolver = clheuristics.deconvolver (inputs.intent,
                 inputs.field)
 
         # Determine the phase center.
@@ -463,8 +478,9 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
             spw=inputs.spw,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode, niter=inputs.niter+2,
-            threshold=inputs.threshold, deconvolver='hogbom',
+            scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
+            niter=inputs.niter+2,
+            threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
 	    cell=inputs.cell, phasecenter=inputs.phasecenter,

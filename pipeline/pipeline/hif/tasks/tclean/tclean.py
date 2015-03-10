@@ -22,7 +22,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
        intent=None, field=None, spw=None, uvrange=None, specmode=None,
-       imagermode=None, outframe=None, imsize=None, cell=None,
+       gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
        restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
@@ -31,8 +31,8 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-           field=field, spw=spw, uvrange=uvrange, specmode=specmode,
-           imagermode=imagermode, outframe=outframe, imsize=imsize, cell=cell,
+           field=field, spw=spw, uvrange=uvrange, specmode=specmode, gridmode=gridmode,
+           deconvolver=deconvolver, outframe=outframe, imsize=imsize, cell=cell,
            phasecenter=phasecenter, nchan=nchan, start=start, width=width,
            weighting=weighting, robust=robust, noise=noise, npixels=npixels,
            restoringbeam=restoringbeam, iter=iter, mask=mask, niter=niter,
@@ -164,7 +164,7 @@ class Tclean(cleanbase.CleanBase):
                 elif inputs.hm_cleaning == 'rms':
                     threshold = '%sJy' % (inputs.tlimit * noise_rms)
                 sequence_manager = ImageCentreThresholdSequence(
-                  imagermode=inputs.imagermode, threshold=threshold)
+                  gridmode=inputs.gridmode, threshold=threshold)
 
             elif inputs.hm_masking == 'psfiter':
                 sequence_manager = IterativeSequence(
@@ -389,7 +389,8 @@ class Tclean(cleanbase.CleanBase):
 	    spw=inputs.spw,
 	    uvrange=inputs.uvrange,
 	    specmode=inputs.specmode,
-	    imagermode=inputs.imagermode,
+	    gridmode=inputs.gridmode,
+	    deconvolver=inputs.deconvolver,
 	    outframe=inputs.outframe,
 	    imsize=inputs.imsize,
 	    cell=inputs.cell,

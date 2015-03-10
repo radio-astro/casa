@@ -320,14 +320,17 @@ class MakeImListHeuristics(object):
 
         return valid_data
 
-    def imagermode(self, intent, field):
+    def gridmode(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
         self.field(intent, field)
 
         if self._mosaic:
             return 'mosaic'
         else:
-            return 'csclean'
+            return 'standard'
+
+    def deconvolver(self, intent, field):
+        return 'hogbom'
 
     def phasecenter(self, fields, centreonly=True):
 

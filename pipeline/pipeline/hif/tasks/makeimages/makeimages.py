@@ -159,7 +159,9 @@ class MakeImages(basetask.StandardTaskTemplate):
             clheuristics = makeimlist.MakeImListHeuristics(
                 context=inputs.context, vislist=full_image_target['vis'], \
                 spw=full_image_target['spw'])
-            full_image_target['imagermode'] = clheuristics.imagermode ( \
+            full_image_target['gridmode'] = clheuristics.gridmode ( \
+	        full_image_target['intent'], full_image_target['field'])
+            full_image_target['deconvolver'] = clheuristics.deconvolver ( \
 	        full_image_target['intent'], full_image_target['field'])
 
 	    # set the weighting values.
@@ -217,7 +219,8 @@ class MakeImages(basetask.StandardTaskTemplate):
 #	        tlimit=full_image_target['tlimit'],
 #	        masklimit=full_image_target['masklimit'],
 #	        maxncleans=full_image_target['maxncleans'],
-#		imagermode=None,
+#		gridmode=None,
+#		deconvolver=None,
 #		outframe=None,
 #		restoringbeam=None,
 #		iter=None, 

@@ -10,11 +10,11 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageCentreThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, imagermode, threshold='0.0mJy', niter=1000): 
+    def __init__(self, gridmode, threshold='0.0mJy', niter=1000): 
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
-        self.imagermode = imagermode
+        self.gridmode = gridmode
 	self.threshold = threshold
 	self.niter = niter
         self.iter = None
@@ -29,7 +29,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             # next iteration, 1, should have mask covering central area:
             #   centre quarter for single field
             #   flux > 0.2 for mosaic
-            if self.imagermode == 'mosaic':
+            if self.gridmode == 'mosaic':
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0],
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message

@@ -52,13 +52,23 @@ Compute a clean map.
        </allowed>
   </param>
 
-  <param type="string" name="imagermode" subparam="true">
-     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
+  <param type="string" name="gridmode" subparam="true">
+     <description>Gridding options (standard, mosaic, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
-         <value>csclean</value>
+         <value>standard</value>
          <value>mosaic</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="deconvolver" subparam="true">
+     <description>Minor cycle algorithm (clark, hogbom, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>clark</value>
+         <value>hogbom</value>
        </allowed>
   </param>
 
@@ -224,7 +234,8 @@ Compute a clean map.
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="imagermode"><value type="string"></value></default>
+        <default param="gridmode"><value type="string"></value></default>
+        <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
@@ -242,7 +253,8 @@ Compute a clean map.
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="imagermode"><value type="string"></value></default>
+        <default param="gridmode"><value type="string"></value></default>
+        <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
@@ -390,16 +402,20 @@ spw -- Spectral window/channels to image. \'\' for all science data.
 specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
-    example: 'mfs', 'mosaic'
+    example: 'mfs', 'cube'
 
-imagermode -- Advanced imaging mode e.g. mosaic or Cotton-Schwab clean.
+gridmode -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
       1. The 'field' parameter is converted into a list of field_ids for
          each measurement set in 'vis'.
       2. If there is more than 1 field_id in the list for any measurement 
-         set then imagermode is set to 'mosaic', otherwise it will be set
-         to 'csclean'. 
+         set then gridmode is set to 'mosaic', otherwise it will be set
+         to 'standard'. 
     default: ''
+    'standard'
+
+deconvolver -- Minor cycle algorithm e.g. clark or hogbom clean. \'\' defaults to
+    'clark'
 
 outframe -- The reference frame of the output image. The only supported option
     is 'LSRK'

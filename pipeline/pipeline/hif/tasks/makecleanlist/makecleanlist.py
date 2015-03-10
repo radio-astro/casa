@@ -286,11 +286,12 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         # if nchan is not set then use heuristic code to calculate it
         # for each field/spwspec. The channel width needs to be calculated
         # at the same time.
+        mode = inputs.mode
         nchan = inputs.nchan
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((nchan == -1) and (width == '')):
+        if ((mode != 'mfs') and (nchan == -1) and (width == '')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:

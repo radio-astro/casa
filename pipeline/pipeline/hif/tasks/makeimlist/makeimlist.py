@@ -76,7 +76,7 @@ class MakeImListInputs(basetask.StandardInputs):
     def specmode(self):
         if self._specmode is None:
             if 'TARGET' in self.intent:
-                return 'frequency'
+                return 'cube'
             else:
                 return 'mfs'
         return self._specmode
@@ -286,11 +286,12 @@ class MakeImList(basetask.StandardTaskTemplate):
         # if nchan is not set then use heuristic code to calculate it
         # for each field/spwspec. The channel width needs to be calculated
         # at the same time.
+        specmode = inputs.specmode
         nchan = inputs.nchan
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((nchan == -1) and (width == '')):
+        if ((specmode != 'mfs') and (nchan == -1) and (width == '')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:

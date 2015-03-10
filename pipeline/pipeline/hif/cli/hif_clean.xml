@@ -390,7 +390,7 @@ spw -- Spectral window/channels to image. \'\' for all science data.
 mode -- Frequency imaging mode, 'mfs', 'frequency'. \'\' defaults to
     'frequency' if intent parameter includes 'TARGET' otherwise 'mfs'.
     default: ''
-    example: 'mfs', 'mosaic'
+    example: 'mfs', 'frequency'
 
 imagermode -- Advanced imaging mode e.g. mosaic or Cotton-Schwab clean.
    Derived as follows:
