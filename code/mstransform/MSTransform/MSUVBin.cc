@@ -62,7 +62,7 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
 #include <math.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 #if HAVE_SINCOS
@@ -1903,7 +1903,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   Int ier;
   FFTPack::cfft2i(convSize, convSize, wsaveptr, lsav, ier);
    //////////
-#ifdef HAS_OMP
+#ifdef _OPENMP
    omp_set_nested(0);
 #endif
    //////openmp like to share reference param ...making a copy to reduce shared objects
@@ -1973,7 +1973,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
    convSupport.resize(wConvSize);
     convSupport=-1;
     Vector<Int> pcsupp=convSupport;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   omp_set_nested(0);
 #endif
   Bool delsupstor;
