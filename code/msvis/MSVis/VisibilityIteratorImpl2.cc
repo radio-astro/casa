@@ -958,6 +958,7 @@ VisibilityIteratorImpl2::Cache::Cache()
   hourangTime_p (-1),
   msHasFlagCategory_p(False),
   msHasWeightSpectrum_p (False),
+  msHasSigmaSpectrum_p (False),
   parang0_p (0),
   parang0Time_p (-1),
   parangTime_p (-1)
