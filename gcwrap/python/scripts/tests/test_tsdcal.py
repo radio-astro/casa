@@ -97,26 +97,111 @@ class tsdcal_test(unittest.TestCase):
 
 
     def test01(self):
-        """Test01: Validation when spwmap comprising list"""
+        """Test01: weight = 1/(SIGMA**2) X 1/(FPARAM**2) dictionary version"""
+        #focus on antenna1=0, data_disk_id=1
+        #spwmap_dict={1:[1],3:[3],5:[5],7:[7]}
+
         tid = "01"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
-        spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
-        spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
+        initweights(vis=infile, dobt=True, dowtsp=True)        
+        #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
+        #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
+        
+        spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
-
+        
+                
+        tb.open(infile)
+        sigma00=tb.getcol('SIGMA')[0][0]
+        sigma10=tb.getcol('SIGMA')[1][0]
+        weight00=tb.getcol('WEIGHT')[0][0]
+        weight10=tb.getcol('WEIGHT')[1][0]
+        tb.close()
+        
         tb.open('tsys.cal')
-        fparam_dict=tb.getvarcol('FPARAM')
-        print type(fparam_dict)
-        print 'shape of fparam'
+        sum_fparam0=0
+        sum_fparam1=0
+        for i in range(128):
+            sum_fparam0 += tb.getvarcol('FPARAM')['r1'][0][i][0]
+            sum_fparam1 += tb.getvarcol('FPARAM')['r1'][1][i][0]
+        fparam0_ave=sum_fparam0/128.0
+        fparam1_ave=sum_fparam1/128.0
+        print 'fparam_average_r1_0', fparam0_ave
+        print 'fparam_average_r1_1', fparam1_ave
+        print 'SIGMA00 ', sigma00
+        print 'SIGMA10 ', sigma10
+        print 'WEIGHT00 ', weight00
+        print 'WEIGHT10 ', weight10
+        answer0 = 1/(sigma00**2)*1/(fparam0_ave**2) 
+        answer1 = 1/(sigma10**2)*1/(fparam1_ave**2) 
+        print 'pol0: 1/SIGMA**2 X 1/(FPARAM_ave)**2', answer0
+        print 'pol1: 1/SIGMA**2 X 1/(FPARAM_ave)**2', answer1
+        diff0_percent=(weight00-answer0)/weight00*100
+        diff1_percent=(weight10-answer1)/weight10*100
+        print 'difference between fparam_r1_0 and weight00', diff0_percent, '%' 
+        print 'difference between fparam_r1_1 and weight10', diff1_percent, '%'
+        tb.close()
+
+        
+    def test02(self):
+        """Test02: weight = 1/(SIGMA**2) X 1/(FPARAM**2) list version"""
+        #focus on antenna1=0, data_disk_id=1
+        #spwmap_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+
+        tid = "02"
+        infile = self.infile1
+        tsdcal(infile=infile, calmode='tsys', outfile='tsys2.cal')
+        initweights(vis=infile, dobt=True, dowtsp=True)        
+        spwmap_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+        #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
+        
+        #spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys2.cal', outfile='')
+        
+                
+        tb.open(infile)
+        sigma00=tb.getcol('SIGMA')[0][0]
+        sigma10=tb.getcol('SIGMA')[1][0]
+        weight00=tb.getcol('WEIGHT')[0][0]
+        weight10=tb.getcol('WEIGHT')[1][0]
+        tb.close()
+        
+        tb.open('tsys2.cal')
+        sum_fparam0=0
+        sum_fparam1=0
+        for i in range(128):
+            sum_fparam0 += tb.getvarcol('FPARAM')['r1'][0][i][0]
+            sum_fparam1 += tb.getvarcol('FPARAM')['r1'][1][i][0]
+        fparam0_ave=sum_fparam0/128.0
+        fparam1_ave=sum_fparam1/128.0
+        print 'fparam_average_r1_0', fparam0_ave
+        print 'fparam_average_r1_1', fparam1_ave
+        print 'SIGMA00 ', sigma00
+        print 'SIGMA10 ', sigma10
+        print 'WEIGHT00 ', weight00
+        print 'WEIGHT10 ', weight10
+        answer0 = 1/(sigma00**2)*1/(fparam0_ave**2) 
+        answer1 = 1/(sigma10**2)*1/(fparam1_ave**2) 
+        print 'pol0: 1/SIGMA**2 X 1/(FPARAM_ave)**2', answer0
+        print 'pol1: 1/SIGMA**2 X 1/(FPARAM_ave)**2', answer1
+        diff0_percent=(weight00-answer0)/weight00*100
+        diff1_percent=(weight10-answer1)/weight10*100
+        print 'difference between fparam_r1_0 and weight00', diff0_percent, '%' 
+        print 'difference between fparam_r1_1 and weight10', diff1_percent, '%'
+        tb.close()
+
+
+        #print type(fparam_dict)
+        #print 'shape of fparam'
         #print 'shape of fparam_dict['r29']', fparam_dict['r29'].shape
         #print fparam_dict['r29'][0]
         #print fparam_dict['r29'][1]
-        tb.close()
+        #tb.close()
 
-        tb.open(infile)
+        #tb.open(infile)
 
-        data_dict=tb.getvarcol('DATA')
+        #data_dict=tb.getvarcol('DATA')
 
         #subt=tb.query('', sortlist='ANTENNA1, TIME, SPECTRAL_WINDOW_ID', columns='FPARAM, DATA') 
         #data=subt2.getcol('DATA')
@@ -128,15 +213,15 @@ class tsdcal_test(unittest.TestCase):
 
         #subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
         #weight_dict = subt_dict.getcol('WEIGHT')
-        weight_dict=tb.getvarcol('WEIGHT')
-        print type(weight_dict)
+        #weight_dict=tb.getvarcol('WEIGHT')
+        #print type(weight_dict)
         #print weight_dict['r69']
         #print weight_dict['r69'][0]
         #print weight_dict['r69'][1]
         #print weight_dict
         
         #corrected_data_dict = subt_dict.getcol('CORRECTED_DATA')
-        tb.close()
+        #tb.close()
         #subt_dict.close()
 
         #tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
@@ -157,10 +242,10 @@ class tsdcal_test(unittest.TestCase):
         #print spwmap.all()==spwmap_dict.all()
 
 
-    def test02(self):
-        """Test02: Validation when spwmap comprising dictionary
+    def test03(self):
+        """Test03: Validation when spwmap comprising dictionary
 
-        tid ="02"
+        tid ="03"
         infile=self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys_dic.cal')
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
