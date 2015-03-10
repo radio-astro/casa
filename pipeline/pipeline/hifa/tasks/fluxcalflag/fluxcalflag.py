@@ -169,7 +169,9 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
         if not flux_fields:
             LOG.warning('Field(s) \'%s\' in %s have no data with intent %s' % 
                 (inputs.field, inputs.ms.basename, inputs.intent))
-            return FluxcalFlagResults(inputs.vis)
+            result = FluxcalFlagResults(inputs.vis)
+            result.summaries = summaries
+            return result
 
 	# Get the science spws. In future field.valid_spws should be used.
         science_spws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
@@ -177,7 +179,9 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	if not science_spws:
             LOG.warning('No science spw(s) specified for %s' %
 	        (inputs.ms.basename)) 
-            return FluxcalFlagResults(inputs.vis)
+            result = FluxcalFlagResults(inputs.vis)
+            result.summaries = summaries
+            return result
 
 	# Get all the spws. These will be used to construct refspwmap
         all_spws = inputs.ms.get_spectral_windows(task_arg=inputs.spw,
