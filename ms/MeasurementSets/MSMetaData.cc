@@ -3341,7 +3341,7 @@ std::pair<MDirection, MDirection> MSMetaData::getPointingDirection(
 	else {
 		dir2 = _getInterpolatedDirection(pCols, pidx2, time);
 	}
-	return std::make_pair<MDirection, MDirection>(dir1, dir2);
+	return std::make_pair(dir1, dir2);
 }
 
 MDirection MSMetaData::_getInterpolatedDirection(

@@ -284,20 +284,12 @@ template <typename T> void ImageUtilities::openImage(
 }
 
 template <typename T>
-#if defined(AIPS_CXX11)
-std::shared_ptr<ImageInterface<T> > ImageUtilities::openImage
-#else
-std::tr1::shared_ptr<ImageInterface<T> > ImageUtilities::openImage
-#endif
+SHARED_PTR<ImageInterface<T> > ImageUtilities::openImage
 (const String& fileName)
 {
    ImageInterface<T>* p = 0;
    ImageUtilities::openImage(p, fileName);
-#if defined(AIPS_CXX11)
-   return std::shared_ptr<ImageInterface<T> >(p);
-#else
-   return std::tr1::shared_ptr<ImageInterface<T> >(p);
-#endif
+   return SHARED_PTR<ImageInterface<T> >(p);
 }
 
 } //# NAMESPACE CASACORE - END
