@@ -734,7 +734,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
        
     //do statistics
-    std::tr1::shared_ptr<casa::ImageInterface<float> > tempres_ptr(tempres);
+    SHARED_PTR<casa::ImageInterface<float> > tempres_ptr(tempres);
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     Vector<Int> axes(2);
     axes[0] = 0;
@@ -841,7 +841,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      axes(0)=0; axes(1)=1;
      TempImage<Float> tempIm2(res.shape(), res.coordinates() );
      TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
-     std::tr1::shared_ptr<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
+     SHARED_PTR<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
      // regrid 
      // convolve to a beam = npix
      Vector<Quantity> convbeam(3);

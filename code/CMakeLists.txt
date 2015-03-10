@@ -20,6 +20,8 @@
 
 cmake_minimum_required( VERSION 2.8 )
 
+option (CXX11 "Compile as C++11 if possible" NO)
+
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
 set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
 execute_process( COMMAND ${CASA_svngen} -revision url=${CMAKE_SOURCE_DIR} 
@@ -161,6 +163,16 @@ set( BUILD_SHARED_LIBS ON )
 set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
 
 set( DEFAULT_C_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
+
+# Detect if the compiler supports C++11 if we want to use it.
+if (CXX11)
+    if ((CMAKE_COMPILER_IS_GNUCXX AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.6) OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.3))
+        set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -std=c++11 -DCXX11")
+    else()
+        option(CXX11 "" NO)
+    endif()
+endif()
 
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)

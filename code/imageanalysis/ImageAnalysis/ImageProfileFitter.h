@@ -36,8 +36,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 class ProfileFitResults;
@@ -178,7 +176,7 @@ public:
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
 
-    const Array<std::tr1::shared_ptr<ProfileFitResults> >& getFitters() const;
+    const Array<SHARED_PTR<ProfileFitResults> >& getFitters() const;
 
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.  If the tabular index >= 0, it uses the tabular index for conversion
@@ -215,16 +213,16 @@ private:
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
 	uInt _minGoodPoints;
-	Array<std::tr1::shared_ptr<ProfileFitResults> > _fitters;
+	Array<SHARED_PTR<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
-	std::tr1::shared_ptr<SubImage<Float> > _subImage;
+	SHARED_PTR<SubImage<Float> > _subImage;
 	Record _results;
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
 
-	std::tr1::shared_ptr<TempImage<Float> > _sigma;
+	SHARED_PTR<TempImage<Float> > _sigma;
 	Double _abscissaDivisor;
 
 	const static String _class;
@@ -256,8 +254,8 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	tr1::shared_ptr<ImageInterface<Float> > pFit,
-    	tr1::shared_ptr<ImageInterface<Float> > pResid,
+    	SHARED_PTR<ImageInterface<Float> > pFit,
+    	SHARED_PTR<ImageInterface<Float> > pResid,
         const Bool showProgress=False
     );
 
@@ -280,8 +278,8 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	tr1::shared_ptr<ImageInterface<Float> > pFit,
-    	tr1::shared_ptr<ImageInterface<Float> > pResid,
+    	SHARED_PTR<ImageInterface<Float> > pFit,
+    	SHARED_PTR<ImageInterface<Float> > pResid,
         Bool fitOK,
     	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     	const IPosition& curPos, Lattice<Bool>* const &pFitMask,

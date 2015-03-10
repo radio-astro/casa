@@ -69,8 +69,6 @@
 
 #include <display/QtViewer/InActiveDock.qo.h>
 
-#include <tr1/memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace viewer {
@@ -754,9 +752,9 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 
 	//Slice1D Tool
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
-	std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
+	SHARED_PTR<QtPolylineTool> pos = DYNAMIC_POINTER_CAST<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
 	if (pos) {
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			connect( qrs.get(), SIGNAL(show1DSliceTool()), this, SLOT(showSlicer()));
 
@@ -878,9 +876,9 @@ void QtDisplayPanelGui::showHistogram() {
 void QtDisplayPanelGui::generateHistogramRegionUpdates(){
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
-	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+	SHARED_PTR<QtCrossTool> pos = DYNAMIC_POINTER_CAST<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
 	if (pos) {
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 					const QList<int> &, const QList<int> & ) ),
@@ -901,9 +899,9 @@ void QtDisplayPanelGui::disconnectHistogram() {
 	//Disconnect all the signals and slots
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
-	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+	SHARED_PTR<QtCrossTool> pos = DYNAMIC_POINTER_CAST<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
 	if (pos) {
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			disconnect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 					const QList<int> &, const QList<int> & ) ),
@@ -916,7 +914,7 @@ void QtDisplayPanelGui::resetListenerImage() {
 	if (qdp_ != NULL ){
 		QtDisplayData* mainImage = qdp_->getRegistered( animationImageIndex );
 		if ( mainImage != NULL ) {
-			std::tr1::shared_ptr<ImageInterface<float> > img = mainImage->imageInterface();
+			SHARED_PTR<ImageInterface<float> > img = mainImage->imageInterface();
 			if ( sliceTool != NULL ) {
 				sliceTool->setImage( img );
 				generateSliceRegionUpdates();
@@ -944,10 +942,10 @@ void QtDisplayPanelGui::resetListenerImage() {
 
 		} else {
 			if ( histogrammer != NULL ) {
-				histogrammer->setImage( std::tr1::shared_ptr<ImageInterface<Float> >() );
+				histogrammer->setImage( SHARED_PTR<ImageInterface<Float> >() );
 			}
 			if ( fitTool != NULL ){
-				fitTool->setImage( std::tr1::shared_ptr<ImageInterface<Float> >());
+				fitTool->setImage( SHARED_PTR<ImageInterface<Float> >());
 			}
 		}
 	}
@@ -1069,11 +1067,11 @@ void QtDisplayPanelGui::initFit2DTool() {
 		fitTool->frameChanged( frameIndex );
 
 		//Connect drawing tools so that regions are updated for the fit.
-		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
+		SHARED_PTR<QtRectTool> rect = DYNAMIC_POINTER_CAST<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
 		// one region source is shared among all of the tools...
 		// so there is no need to connect these signals for all of the tools...
 		if ( rect.get( ) != 0 ) {
-			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+			SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
 			if ( qrs ) {
 				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
 					const QList<double> &, const QList<int> &, const QList<int> &,
@@ -1338,7 +1336,7 @@ void QtDisplayPanelGui::createRGBImage( QtDisplayData* coordinateMaster,
 	String imageName = "RGB("+redName+","+greenName+","+blueName+").image";
 	cout << "Image name="<<imageName<<endl;
 
-	std::tr1::shared_ptr<ImageInterface<Float> > imgPtr = coordinateMaster->imageInterface();
+	SHARED_PTR<ImageInterface<Float> > imgPtr = coordinateMaster->imageInterface();
 	/*********************************************************
 	 * SML NOTE:  Need to get image and set in red, blue, green
 	 * before it gets painted - then add it to panel.
@@ -1467,14 +1465,14 @@ int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {
 	return boundedChannel;
 }
 void QtDisplayPanelGui::addDDSlot(String path, String dataType, String displayType,
-		Bool autoRegister, Bool tmpData, std::tr1::shared_ptr<ImageInterface<Float> > img) {
-	//std::tr1::shared_ptr<ImageInterface<Float> > imgPtr(img);
+		Bool autoRegister, Bool tmpData, SHARED_PTR<ImageInterface<Float> > img) {
+	//SHARED_PTR<ImageInterface<Float> > imgPtr(img);
 	addDD( path, dataType, displayType, autoRegister, tmpData, img );
 
 }
 
 QtDisplayData* QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData,
-		std::tr1::shared_ptr<ImageInterface<Float> > img) {
+		SHARED_PTR<ImageInterface<Float> > img) {
 	// create a new DD
 	QtDisplayData* dd = NULL;
 	if ( ! img ) {
@@ -1625,11 +1623,11 @@ void QtDisplayPanelGui::clearTools() {
 		regionDock_->updateRegionStats( );
 	}
 	if ( fitTool != NULL ) {
-		std::tr1::shared_ptr<const ImageInterface<Float> > p;
+		SHARED_PTR<const ImageInterface<Float> > p;
 		fitTool->setImage( p );
 	}
 	if ( histogrammer != NULL ) {
-		std::tr1::shared_ptr< ImageInterface<Float> > p;
+		SHARED_PTR< ImageInterface<Float> > p;
 		histogrammer->setImage( p );
 	}
 }
@@ -1769,7 +1767,7 @@ QtDisplayData* QtDisplayPanelGui::lookForExistingController() {
 		iter--;
 		QtDisplayData* pdd = (*iter);
 		if ( pdd != 0 && pdd->isImage() ) {
-			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface( );
+			SHARED_PTR<ImageInterface<float> > img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
 			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
 				ctrld = pdd;
@@ -1926,7 +1924,7 @@ void QtDisplayPanelGui::hideImageMenus() {
 
 		iter++;
 		if(pdd != 0) {
-			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
+			SHARED_PTR<ImageInterface<float> > img = pdd->imageInterface();
 
 			PanelDisplay* ppd = qdp_->panelDisplay();
 			//cout << "ppd->isCSmaster="
@@ -2325,7 +2323,7 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
 		iter++;
 		if(pdd != 0 && pdd->dataType() == "image") {
 
-			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
+			SHARED_PTR<ImageInterface<float> > img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
 			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img ) {
 				connect(qmr_,  SIGNAL(hideRegionInImage()),
@@ -2354,13 +2352,13 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
 
 void QtDisplayPanelGui::initializeProfile( ){
 	if (profile_ == NULL) {
-		std::tr1::shared_ptr<ImageInterface<float> > emptyImg;
+		SHARED_PTR<ImageInterface<float> > emptyImg;
 		profile_ = new QtProfile(emptyImg, "");
 		profile_->setPath( "" );
 		connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 		connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
-		connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> > )),
-				this, SLOT(addDDSlot(String, String, String, Bool, Bool, std::tr1::shared_ptr<ImageInterface<Float> >)));
+		connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, SHARED_PTR<ImageInterface<Float> > )),
+				this, SLOT(addDDSlot(String, String, String, Bool, Bool, SHARED_PTR<ImageInterface<Float> >)));
 		connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 		connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 		connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
@@ -2403,7 +2401,7 @@ void QtDisplayPanelGui::showImageProfile() {
 	for ( int i = registeredCount - 1; i >= 0; i-- ){
 		QtDisplayData* pdd = qdp_->getRegistered( i );
 		if(pdd != 0 && pdd->isImage()) {
-			std::tr1::shared_ptr<ImageInterface<float> > img = pdd->imageInterface();
+			SHARED_PTR<ImageInterface<float> > img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
 			if (ppd != 0 && img.get() != NULL ) {
 				bool displayDataSupported = profile_->isImageSupported( img );
@@ -2453,11 +2451,11 @@ void QtDisplayPanelGui::showImageProfile() {
 		emit overlay(overlays);
 
 		PanelDisplay* ppd = qdp_->panelDisplay();
-		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+		SHARED_PTR<QtRectTool> rect = DYNAMIC_POINTER_CAST<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 		if ( (rect.get( ) != 0 && ! profileVisible) ||
 			(profiledDDChange && profileVisible) ) {
 			// this is the *new* region implementation... all events come from region source...
-			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+			SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
 			qrs->generateExistingRegionUpdates( );
 		}
 
@@ -2469,7 +2467,7 @@ void QtDisplayPanelGui::showImageProfile() {
 
 
 void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
-	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
+	SHARED_PTR<QtCrossTool> pos = DYNAMIC_POINTER_CAST<QtCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 	if ( pos.get( ) != 0 ) {
 		connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -2480,7 +2478,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 
 		// one region source is shared among all of the tools...
 		// so there is no need to connect these signals for all of the tools...
-		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 
 		if ( qrs ) {
 			connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
@@ -2504,7 +2502,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 
 		}
 	} else {
-		std::tr1::shared_ptr<QtOldCrossTool> pos = std::tr1::dynamic_pointer_cast<QtOldCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
+		SHARED_PTR<QtOldCrossTool> pos = DYNAMIC_POINTER_CAST<QtOldCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 		if ( pos.get( ) != 0 ) {
 			connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -2515,7 +2513,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		}
 	}
 
-	std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+	SHARED_PTR<QtRectTool> rect = DYNAMIC_POINTER_CAST<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 	if ( rect.get( ) != 0 ) {
 		connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -2524,7 +2522,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				rect.get( ), SLOT(setCoordType(const String&)));
 	} else {
-		std::tr1::shared_ptr<QtOldRectTool> rect = std::tr1::dynamic_pointer_cast<QtOldRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+		SHARED_PTR<QtOldRectTool> rect = DYNAMIC_POINTER_CAST<QtOldRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 		if ( rect.get( ) != 0 ) {
 			connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
@@ -2535,7 +2533,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		}
 	}
 
-	std::tr1::shared_ptr<QtEllipseTool> ellipse = std::tr1::dynamic_pointer_cast<QtEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+	SHARED_PTR<QtEllipseTool> ellipse = DYNAMIC_POINTER_CAST<QtEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 	if ( ellipse.get( ) != 0 ) {
 		connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
@@ -2544,7 +2542,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				ellipse.get( ), SLOT(setCoordType(const String&)));
 	} else {
-		std::tr1::shared_ptr<QtOldEllipseTool> ellipse = std::tr1::dynamic_pointer_cast<QtOldEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+		SHARED_PTR<QtOldEllipseTool> ellipse = DYNAMIC_POINTER_CAST<QtOldEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 		if ( ellipse.get( ) != 0 ) {
 			connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType )),
@@ -2555,7 +2553,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		}
 	}
 
-	std::tr1::shared_ptr<QtPolyTool> poly = std::tr1::dynamic_pointer_cast<QtPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
+	SHARED_PTR<QtPolyTool> poly = DYNAMIC_POINTER_CAST<QtPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 	if ( poly.get( ) != 0 ) {
 		connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
@@ -2564,7 +2562,7 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				poly.get( ), SLOT(setCoordType(const String&)));
 	} else {
-		std::tr1::shared_ptr<QtOldPolyTool> poly = std::tr1::dynamic_pointer_cast<QtOldPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
+		SHARED_PTR<QtOldPolyTool> poly = DYNAMIC_POINTER_CAST<QtOldPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 		if ( poly.get( ) != 0 ) {
 			connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType )),
@@ -3243,9 +3241,9 @@ void QtDisplayPanelGui::showSlicer() {
 		sliceTool = new SlicerMainWindow( this );
 		if ( qdp_ != NULL ){
 			PanelDisplay* panelDisplay = qdp_->panelDisplay();
-			std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
+			SHARED_PTR<QtPolylineTool> pos = DYNAMIC_POINTER_CAST<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
 			if (pos) {
-				std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+				SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 				if ( qrs ) {
 					//Image updates
 					connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
@@ -3276,9 +3274,9 @@ void QtDisplayPanelGui::generateSliceRegionUpdates(){
 	if ( qdp_ != NULL ){
 		//Region updates
 		PanelDisplay* panelDisplay = qdp_->panelDisplay();
-		std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
+		SHARED_PTR<QtPolylineTool> pos = DYNAMIC_POINTER_CAST<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
 		if (pos) {
-			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+			SHARED_PTR<viewer::QtRegionSourceKernel> qrs = DYNAMIC_POINTER_CAST<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 			if ( qrs ) {
 				qrs->generateExistingRegionUpdates();
 

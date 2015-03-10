@@ -34,8 +34,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 class LogFile;
@@ -64,13 +62,13 @@ class ImageProfileFitterResults {
 
 public:
 	ImageProfileFitterResults(
-		const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-		const Array<std::tr1::shared_ptr<ProfileFitResults> >* const &fitters,
+		const SHARED_PTR<LogIO> log, const CoordinateSystem& csysIm,
+		const Array<SHARED_PTR<ProfileFitResults> >* const &fitters,
 		const SpectralList& nonPolyEstimates,
-		const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
+		const SHARED_PTR<const SubImage<Float> > subImage, Int fitAxis, Int polyOrder,
 		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
-		const std::tr1::shared_ptr<LogFile> logfile, const String& xUnit,
+		const SHARED_PTR<LogFile> logfile, const String& xUnit,
 		const String& summaryHeader
 	);
 
@@ -161,18 +159,18 @@ private:
 		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
-    const Array<std::tr1::shared_ptr<ProfileFitResults> >* const  _fitters;
+    const Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
 	// on which the fit is performed.
-	const std::tr1::shared_ptr<const SubImage<Float> > _subImage;
+	const SHARED_PTR<const SubImage<Float> > _subImage;
 	Int _polyOrder, _fitAxis;
 	vector<axisType> _axisTypes;
 	Array<String> _worldCoords;
 	Record _results;
 	const static uInt _nOthers, _gsPlane, _lsPlane;
-	std::tr1::shared_ptr<LogFile> _logfile;
-	std::tr1::shared_ptr<LogIO> _log;
+	SHARED_PTR<LogFile> _logfile;
+	SHARED_PTR<LogIO> _log;
    	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
    	const CoordinateSystem _csysIm;
    	String _plpDivisor;
@@ -270,7 +268,7 @@ private:
     void _processSolutions(
     	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
     	Array<Int>& nCompArr, const IPosition& pixel,
-    	std::tr1::shared_ptr<const ProfileFitResults> fitter,
+    	SHARED_PTR<const ProfileFitResults> fitter,
     	const RO_MaskedLatticeIterator<Float>& inIter,
     	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
     	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,

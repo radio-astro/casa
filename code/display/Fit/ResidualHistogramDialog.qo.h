@@ -29,8 +29,7 @@
 #include <display/Fit/ResidualHistogramDialog.ui.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
-
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -49,7 +48,7 @@ namespace casa {
 		ResidualHistogramDialog( const ResidualHistogramDialog& other );
 		ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
 		BinPlotWidget* plotWidget;
-        std::tr1::shared_ptr<const ImageInterface<Float> > residualImage;
+        SHARED_PTR<const ImageInterface<Float> > residualImage;
 		Ui::ResidualHistogramDialogClass ui;
 	};
 }

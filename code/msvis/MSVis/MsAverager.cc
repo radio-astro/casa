@@ -594,7 +594,7 @@ void MsAverager::setAverager(
                            Int chNum = spw(sw).chans(chn);
                            p++;
                            if (aveMode == "SCALAR") {
-                              xxx.real() += fabs(vc(pol, chNum, row));
+                              xxx += Complex(fabs(vc(pol, chNum, row)),0.0);
                            }
                            else {
                               xxx += vc(pol, chNum, row);
@@ -631,7 +631,7 @@ void MsAverager::setAverager(
                            p++;
                            if (vb.flagCube()(pol, chNum, row)) {
                               if (aveMode == "SCALAR") {
-                                 xxx.real() += fabs(vc(pol, chNum, row));
+                                 xxx += Complex(fabs(vc(pol, chNum, row)),0.0);
                               }
                               else {
                                  xxx += vc(pol, chNum, row);
@@ -691,7 +691,7 @@ void MsAverager::setAverager(
                            p++;
                            if (!(vb.flagCube()(pol, chNum, row))) {
                               if (aveMode == "SCALAR") {
-                                 xxx.real() += fabs(vc(pol, chNum, row));
+                                 xxx += Complex(fabs(vc(pol, chNum, row)),0.0);
                               }
                               else {
                                  xxx += vc(pol, chNum, row);

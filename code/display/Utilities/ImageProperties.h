@@ -32,8 +32,6 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Images/ImageInterface.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
     class GaussianBeam;
@@ -55,8 +53,8 @@ namespace casa {
 		public:
 			ImageProperties( );
 			ImageProperties( const std::string &/*path*/ );
-			ImageProperties( std::tr1::shared_ptr<ImageInterface<Float> > );
-			ImageProperties( std::tr1::shared_ptr<ImageInterface<std::complex<float> > > );   /**** throws exception ****/
+			ImageProperties( SHARED_PTR<ImageInterface<Float> > );
+			ImageProperties( SHARED_PTR<ImageInterface<std::complex<float> > > );   /**** throws exception ****/
 			const ImageProperties &operator=( const std::string & );
 
 			bool hasDirectionAxis( ) const {
@@ -125,8 +123,8 @@ namespace casa {
 			std::vector<double> beam_as_vector( const GaussianBeam &beam ) const;
 			std::vector<std::string> beam_as_string_vector( const GaussianBeam &beam ) const;
 			void clear_state( );
-			void initialize_state( std::tr1::shared_ptr<ImageInterface<Float> > image );
-			void reset( std::tr1::shared_ptr<ImageInterface<Float> > image );
+			void initialize_state( SHARED_PTR<ImageInterface<Float> > image );
+			void reset( SHARED_PTR<ImageInterface<Float> > image );
 			void reset( const std::string &path="" );
 			bool status_ok;
 			std::string path_;

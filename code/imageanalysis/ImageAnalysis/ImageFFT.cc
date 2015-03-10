@@ -648,7 +648,7 @@ void ImageFFT::_setSkyCoordinates (
 
 	// FT the CS
 
-	std::tr1::shared_ptr<Coordinate> pC(
+	SHARED_PTR<Coordinate> pC(
 		csys.makeFourierCoordinate(
 			axes, shape.asVector()
 		)
@@ -669,7 +669,7 @@ void ImageFFT::_setCoordinates (
 	const Vector<Bool>& axes,
 	const IPosition& shape
 ) {
-	std::tr1::shared_ptr<Coordinate> pC(
+	SHARED_PTR<Coordinate> pC(
 		cSys.makeFourierCoordinate(axes, shape.asVector())
 	);
 

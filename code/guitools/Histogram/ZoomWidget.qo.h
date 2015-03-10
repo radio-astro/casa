@@ -27,8 +27,7 @@
 
 #include <QtGui/QWidget>
 #include <guitools/Histogram/ZoomWidget.ui.h>
-
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -41,7 +40,7 @@ class ZoomWidget : public QWidget
 
 public:
     ZoomWidget(bool rangeControls, QWidget *parent = 0);
-    void setImage( const std::tr1::shared_ptr<const ImageInterface<float> > image );
+    void setImage( const SHARED_PTR<const ImageInterface<float> > image );
     void setRegion( ImageRegion* region );
     void copyState( ZoomWidget* other );
 
@@ -67,7 +66,7 @@ private:
 
     Ui::ZoomWidgetClass ui;
     QStringList zoomList;
-    std::tr1::shared_ptr<const ImageInterface<float> > image;
+    SHARED_PTR<const ImageInterface<float> > image;
     ImageRegion* region;
 };
 

@@ -23,8 +23,7 @@ template<> void SakuraArrayConverter::CASAToSakura<Complex, float>(
 template<> void SakuraArrayConverter::SakuraToCASA<float, Complex>(
 		uInt const index_in, uInt const index_out, float const *input_data,
 		Complex* pout) {
-	casa::real(pout[index_out]) = input_data[index_in];
-	casa::imag(pout[index_out]) = 0.0;
+	pout[index_out] = Complex(input_data[index_in],0.0);
 }
 
 template<> void SakuraArrayConverter::CASAToSakura<Bool, bool>(

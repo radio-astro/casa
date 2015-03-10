@@ -39,8 +39,6 @@
 #include <QDebug>
 #include <QMenu>
 
-#include <tr1/memory>
-
 using namespace std;
 
 class QwtPlotMarker;
@@ -91,7 +89,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
     	QWidget* parent);
 
-    bool setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img, bool waitOnHistogram = false );
+    bool setImage( const SHARED_PTR<const ImageInterface<Float> > img, bool waitOnHistogram = false );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
@@ -246,7 +244,7 @@ private:
     //Histogram & data
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
-    std::tr1::shared_ptr<const ImageInterface<Float> > image;
+    SHARED_PTR<const ImageInterface<Float> > image;
     QwtPlot binPlot;
     const QString NO_DATA;
     const QString NO_DATA_MESSAGE;

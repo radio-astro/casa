@@ -37,6 +37,23 @@ namespace asdm {
    */
   
   template<class T, class R> class TableStreamReader {
+  private:
+    template <class A, class B, class C>
+    inline A search( A first1, A last1, B first2, B last2, C compare ) {
+	if (first2==last2) return first1;
+	while (first1!=last1) {
+		A it1 = first1;
+		B it2 = first2;
+
+		while ( compare(*it1,*it2) ) {
+			++it1; ++it2;
+			if (it2==last2) return first1;
+			if (it1==last1) return last1;
+		}
+		++first1;
+	}
+	return last1;
+    }
   public:
     /**
      * An empty constructor.
@@ -74,12 +91,14 @@ namespace asdm {
       CharComparator comparator(&tableFile, 10000);
       std::istreambuf_iterator<char> BEGIN(tableFile.rdbuf());
       std::istreambuf_iterator<char> END;
-      std::istreambuf_iterator<char> it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+      //  fails with clang++ 5.1.1 on OSX 10.9...
+      //  std::istreambuf_iterator<char> it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+      std::istreambuf_iterator<char> it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
       if ((it == END) || (tableFile.tellg() > 10000)) { 
 	tableFile.seekg(0);
 	xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\r\n\r\n";
 	it = BEGIN;
-	it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+	it = search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
 	if ((it == END) || (tableFile.tellg() > 10000)) 
 	  throw asdm::ConversionException("failed to detect the beginning of the XML header.", T::name());
       }
@@ -88,7 +107,7 @@ namespace asdm {
       std::string xmlHeader;
       CharCompAccumulator compaccumulator(&xmlHeader, &tableFile, 100000);
       ++it;
-      it = std::search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
+      it = search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
       if ((it == END) || (tableFile.tellg() > 100000)) 
 	throw asdm::ConversionException("failed to detect the beginning of the binary part", T::name());
       ++it;

@@ -80,8 +80,8 @@ namespace casa{
 	    aux.open(name.str().c_str());
 	    if (readFromFile && aux.good()) aux >> Npa >> Nw;
 	    else
-	      throw(SynthesisFTMachineError(String("Error while reading convolution "
-						   "function cache file ")+name));
+	      throw(SynthesisFTMachineError(string("Error while reading convolution "
+						   "function cache file ") + name.str( )));
 	  }
 
 	if (Npa > 0)
@@ -311,7 +311,7 @@ namespace casa{
 			  cfCacheTable_l[paPos].wList.push_back(wVal);
 			  cfCacheTable_l[paPos].muellerList.push_back(mVal);
 			  cfCacheTable_l[paPos].cfNameList.push_back(fileNames[i]);
-			  //			  cerr << paPos << " " << fileNames[i] << endl;
+			  cerr << paPos << " " << fileNames[i] << endl;
 			}
 		    }
 		  pm.update(Double(fileNames.nelements()));
@@ -524,7 +524,7 @@ namespace casa{
     Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
-    //    cerr << "CFC: " << shape << endl;
+    cerr << "CFC: " << shape << endl;
 
     Vector<Double>ref(4);
     ref(0)=ref(1)=ref(2)=ref(3)=0;
@@ -770,8 +770,8 @@ namespace casa{
 	}
       catch(AipsError &x)
 	{
-	  throw(SynthesisFTMachineError(String("Error while writing ")
-					+ name + x.getMesg()));
+	  throw(SynthesisFTMachineError(string("Error while writing ")
+					+ name.str( ) + (string) x.getMesg()));
 	}
   }
   //
@@ -794,8 +794,8 @@ namespace casa{
       }
     catch(AipsError &x)
       {
-	throw(SynthesisFTMachineError(String("Error while writing ")
-				      + Name + x.getMesg()));
+	throw(SynthesisFTMachineError(string("Error while writing ")
+				      + Name.str( ) + (string) x.getMesg()));
       }
   }
   //
@@ -825,7 +825,6 @@ namespace casa{
       {
 	return NOTCACHED;
       }
-    log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
     avgPBReady_p=True;
     return DISKCACHE;
   }
@@ -923,8 +922,8 @@ namespace casa{
 	  }
 	catch(AipsError &x)
 	  {
-	    throw(SynthesisFTMachineError(String("Error while loading \"")+
-					  name + String("\": ") + x.getMesg()));
+	    throw(SynthesisFTMachineError(string("Error while loading \"")+
+					  name.str( ) + string("\": ") + (string) x.getMesg()));
 	  }
       }
     // xconvSupport.resize(wConvSize,True);

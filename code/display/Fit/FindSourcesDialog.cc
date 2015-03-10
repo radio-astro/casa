@@ -397,7 +397,7 @@ namespace casa {
 		ui.sourceTable->setRowCount( 0 );
 		clearSkyOverlay();
 
-		std::tr1::shared_ptr<ImageInterface<Float> > x(image->cloneII());
+		SHARED_PTR<ImageInterface<Float> > x(image->cloneII());
 		ImageAnalysis* analysis = new ImageAnalysis( x );
 		bool validRegion = false;
 		Record region = makeRegion( &validRegion );
@@ -676,7 +676,7 @@ namespace casa {
 		pixelBox = pixelBoxStr.toStdString();
 	}
 
-	void FindSourcesDialog::setImage( std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
+	void FindSourcesDialog::setImage( SHARED_PTR<const ImageInterface<Float> > img ) {
 		image = img;
 		if ( image != NULL ) {
 			const DisplayCoordinateSystem cSys = image->coordinates();

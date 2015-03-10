@@ -30,7 +30,6 @@
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulatorData.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapserData.h>
-#include <tr1/memory>
 
 class QWidget;
 
@@ -72,12 +71,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Support for tabular axes that are frequency.  Returns -1 if there
 		//is no tabular index in the image in frequency units.
-		static int getTabularFrequencyAxisIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img);
+		static int getTabularFrequencyAxisIndex(SHARED_PTR<const ImageInterface<Float> > img);
 
 		static Record getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
 					const Vector<Double>& x, const Vector<Double>& y);
 
-		static std::pair<Vector<Float>,Vector<Float> > getProfile(std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+		static std::pair<Vector<Float>,Vector<Float> > getProfile(SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,
 				const Vector<Double>& x, const Vector<Double>& y, String shape,
 				int tabularAxis, ImageCollapserData::AggregateType, String& unit,
 				const String& coordinateType,

@@ -125,7 +125,7 @@ spectralline* spectralline::search(
 
 	try {
 		if (_detached()) {
-			return false;
+			return 0;
 		}
 		*_log << LogOrigin("spectralline", __FUNCTION__);
 		if (freqRange.size() != 2) {

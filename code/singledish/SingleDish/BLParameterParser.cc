@@ -112,7 +112,12 @@ uint16_t BLParameterParser::GetTypeOrder(BLParameterSet const &bl_param)
 BLParameterSet* BLParameterParser::GetFitParameter(size_t const rowid,size_t const polid)
 {
   LineFinderParameter *lf_param;
-  return &BLParameterSet("",0,0,lf_param,LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
+  // trunk/code/singledish/SingleDish/BLParameterParser.cc:115:10: error: taking the address of a temporary object of type
+  //     'casa::BLParameterSet' [-Waddress-of-temporary]
+  //      return &BLParameterSet("",0,0,lf_param,LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
+  //             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //return &BLParameterSet("",0,0,lf_param,LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
+  return new BLParameterSet("",0,0,lf_param,LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
 }
 
 

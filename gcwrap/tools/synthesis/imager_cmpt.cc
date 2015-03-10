@@ -592,7 +592,7 @@ std::string imager::predictcomp(const std::string& objname,
       *itsLog << LogIO::SEVERE
 	      << "Could not convert time to an epoch measure."
 	      << LogIO::POST;
-      return false;
+      return std::string( );
     }
     *itsLog << LogIO::DEBUG1 << "epoch made" << LogIO::POST;
 
@@ -1589,7 +1589,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
         *itsLog << LogIO::SEVERE
                 << "Could not interpret the reference frequency"
                 << LogIO::POST;
-        return False;
+        return 0;
       }
       casa::String timerange(time);
       casa::String scanstr(scan);

@@ -22,9 +22,6 @@
 #include <imageanalysis/ImageAnalysis/ImagePolProxy.h>
 #include <casa/namespace.h>
 
-#include <memory>
-#include <tr1/memory>
-
 using namespace std;
 
 namespace casac {
@@ -182,7 +179,7 @@ imagepol::depolratio(const std::string& infile, const bool debias, const double 
     Bool rstat(False);
     rstat = itsImPol->depolratio(out, infile, debias, clip, sigma, outfile);
     if (rstat) {
-        std::tr1::shared_ptr<ImageInterface<Float> > x(out);
+        SHARED_PTR<ImageInterface<Float> > x(out);
         return new image(x);
     }
     else {

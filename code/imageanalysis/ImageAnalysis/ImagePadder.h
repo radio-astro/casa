@@ -32,8 +32,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 class MDirection;
 
 namespace casa {

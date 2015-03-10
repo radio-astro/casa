@@ -248,7 +248,7 @@ LibAIR2::AntSetWeight limitedNearestAnt(const LibAIR2::antpos_t &pos,
   s=dist.begin();
   for (size_t j=0; j<limitedn; ++j)
   {
-    res.insert(std::make_pair<double, size_t>(s->first/total, s->second));
+    res.insert(std::make_pair(s->first/total, s->second));
     ++s;
   }
 

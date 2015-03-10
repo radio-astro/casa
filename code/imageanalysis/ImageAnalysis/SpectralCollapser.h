@@ -32,8 +32,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 template <class T> class SubImage;

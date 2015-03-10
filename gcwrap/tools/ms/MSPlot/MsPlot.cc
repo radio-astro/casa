@@ -5855,7 +5855,7 @@ MsPlot::getTimeExprStr( const String& times)
 
     if ( ! checkInit() || ! checkOpenMS() )  { 
        log->FnExit( fnname, clname );
-       return False;
+       return String( );
     }
     
     //# Initialize the Time selection time string.
@@ -5957,7 +5957,7 @@ MsPlot::getTimeExprStr(const String& times, const String& mode)
 
    if (!checkInit() || !checkOpenMS()) { 
       log->FnExit( fnname, clname );
-      return False;
+      return String( );
    }
     
    //# Initialize the Time selection time string.

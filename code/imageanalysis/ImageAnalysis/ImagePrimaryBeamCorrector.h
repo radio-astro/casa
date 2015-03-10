@@ -34,7 +34,6 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
 
 namespace casa {
 

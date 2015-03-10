@@ -4,8 +4,6 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 template <class T>  class ImageMaskedPixelReplacer : public ImageTask<T> {

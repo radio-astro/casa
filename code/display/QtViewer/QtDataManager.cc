@@ -43,7 +43,15 @@
 #include <casa/fstream.h>
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#if defined(__APPLE__)
+#include <functional>
+using std::get;
+using std::function;
+#else
 #include <tr1/functional>
+using std::tr1::get;
+using std::tr1::function;
+#endif
 
 #include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
 #include <images/Images/ImageFITSConverter.h>
@@ -60,10 +68,6 @@
 #include <QTextStream>
 #include <graphics/X11/X_exit.h>
 
-#include <tr1/memory>
-
-using std::tr1::function;
-using std::tr1::get;
 using std::map;
 using std::set;
 
@@ -1442,7 +1446,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *qdd = display_datas[item->text(0)];
 
-		std::tr1::shared_ptr<ImageInterface<Float> > img = qdd->imageInterface();
+		SHARED_PTR<ImageInterface<Float> > img = qdd->imageInterface();
 		if (!img) {
 			img_output_error->setStyleSheet("color: red");
 			img_output_error->setText( "cannot export data, complex images cannot be exported" );

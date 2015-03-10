@@ -1223,11 +1223,11 @@ SPIIF ImageAnalysis::_fitpolynomial(
 		mask, 0, False
 	);
 	delete pMaskRegion;
-    std::tr1::shared_ptr<ImageRegion> region(pRegionRegion);
+    SHARED_PTR<ImageRegion> region(pRegionRegion);
 	IPosition imageShape = subImage.shape();
 
 	// Make subimage from input error image
-	std::tr1::shared_ptr<SubImage<Float> > pSubSigmaImage;
+	SHARED_PTR<SubImage<Float> > pSubSigmaImage;
 	if (!sigmaFile.empty()) {
 		PagedImage<Float> sigmaImage(sigmaFile);
 		if (!sigmaImage.shape().conform(_imageFloat->shape())) {
@@ -1235,7 +1235,7 @@ SPIIF ImageAnalysis::_fitpolynomial(
 				<< LogIO::EXCEPTION;
 		}
 		if (Region.nfields() > 0) {
-			std::tr1::shared_ptr<ImageRegion> pR(
+			SHARED_PTR<ImageRegion> pR(
 				ImageRegion::fromRecord(
 					_log.get(), sigmaImage.coordinates(),
 					sigmaImage.shape(), Region
@@ -1304,7 +1304,7 @@ SPIIF ImageAnalysis::_fitpolynomial(
 	// Copy mask from input image so that we exclude the OTF mask
 	// in the output.  The OTF mask is just used to select what we fit
 	// but should not be copied to the output
-	std::tr1::shared_ptr<SubImage<Float> > pSubImage2(
+	SHARED_PTR<SubImage<Float> > pSubImage2(
 		region.get() != 0
 		? new SubImage<Float> (*_imageFloat, *region, True)
 		: new SubImage<Float> (*_imageFloat, True)
@@ -3386,7 +3386,7 @@ ImageInterface<Float> *
 ImageAnalysis::newimagefromarray(const String& outfile,
 		Array<Float> & pixelsArray, const Record& csys, const Bool linear,
 		const Bool overwrite, const Bool log) {
-	auto_ptr<ImageInterface<Float> > outImage(0);
+	std::auto_ptr<ImageInterface<Float> > outImage(0);
 
 	try {
 		*_log << LogOrigin("ImageAnalysis", "newimagefromarray");

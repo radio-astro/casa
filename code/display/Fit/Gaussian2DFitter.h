@@ -32,8 +32,6 @@
 #include <QString>
 #include <QThread>
 
-#include <tr1/memory>
-
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -47,7 +45,7 @@ namespace casa {
 		Gaussian2DFitter();
 		void run();
 		bool isFitSuccessful() const;
-		void setFitParameters( std::tr1::shared_ptr<const ImageInterface<Float> > image, const String& box,
+		void setFitParameters( SHARED_PTR<const ImageInterface<Float> > image, const String& box,
 		                       int channelNum, const String& estimatesFileName, const String& residualImageFile,
 		                       const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
 		QString getErrorMessage() const;
@@ -56,7 +54,7 @@ namespace casa {
 		QString getResidualImagePath() const;
 		void setFilePath( String path );
 		bool writeRegionFile() const;
-		QList<RegionShape*> toDrawingDisplay( const std::tr1::shared_ptr<const ImageInterface<Float> > image, const QString& colorName) const;
+		QList<RegionShape*> toDrawingDisplay( const SHARED_PTR<const ImageInterface<Float> > image, const QString& colorName) const;
 		virtual ~Gaussian2DFitter();
 
 	private:
@@ -66,9 +64,9 @@ namespace casa {
 		bool successfulFit;
 		bool logFile;
 		ComponentListWrapper fitResultList;
-        std::tr1::shared_ptr<const ImageInterface<Float> > image;
-		std::tr1::shared_ptr<std::pair<Float, Float> > includePixs;
-		std::tr1::shared_ptr<std::pair<Float, Float> > excludePixs;
+        SHARED_PTR<const ImageInterface<Float> > image;
+		SHARED_PTR<std::pair<Float, Float> > includePixs;
+		SHARED_PTR<std::pair<Float, Float> > excludePixs;
 		String pixelBox;
 		String filePath;
 		int channelNumber;

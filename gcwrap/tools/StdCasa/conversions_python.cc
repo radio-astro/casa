@@ -135,8 +135,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
     else {									\
 	NPYTYPE *from = data;							\
 	for ( std::vector<TYPE>::iterator to = ITR; from < END; ++from, ++to ) {\
-	    (*to).real() = (*from).real;					\
-	    (*to).imag() = (*from).imag;					\
+	    *to = TYPE((*from).real,(*from).imag);                              \
 	}									\
     }
 

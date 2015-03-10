@@ -3,7 +3,6 @@
 #define REGION_REGIONSOURCEFACTORY_H_
 #include <display/region/RegionCreator.h>
 #include <display/region/RegionSource.h>
-#include <tr1/memory>
 
 namespace casa {
 

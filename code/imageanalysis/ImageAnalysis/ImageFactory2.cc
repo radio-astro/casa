@@ -94,10 +94,10 @@ CoordinateSystem* ImageFactory::_makeCoordinateSystem(
     return pCS.release();
 }
 
-std::tr1::shared_ptr<TempImage<Complex> > ImageFactory::complexFromFloat(
+SHARED_PTR<TempImage<Complex> > ImageFactory::complexFromFloat(
 	SPCIIF realPart, const Array<Float>& imagPart
 ) {
-	std::tr1::shared_ptr<TempImage<Complex> > newImage(
+	SHARED_PTR<TempImage<Complex> > newImage(
 		new TempImage<Complex>(
 			TiledShape(realPart->shape()),
 			realPart->coordinates()
@@ -117,10 +117,10 @@ std::tr1::shared_ptr<TempImage<Complex> > ImageFactory::complexFromFloat(
 	return newImage;
 }
 
-std::tr1::shared_ptr<TempImage<Float> > ImageFactory::floatFromComplex(
+SHARED_PTR<TempImage<Float> > ImageFactory::floatFromComplex(
 	SPCIIC complexImage, ComplexToFloatFunction function
 ) {
-	std::tr1::shared_ptr<TempImage<Float> > newImage(
+	SHARED_PTR<TempImage<Float> > newImage(
 		new TempImage<Float>(
 			TiledShape(complexImage->shape()),
 			complexImage->coordinates()

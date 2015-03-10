@@ -214,7 +214,7 @@ Bool BeamSkyJones::changed(const VisBuffer& vb, Int row)
 // return True if two directions are close enough to consider the
 // operator unchanged, False otherwise
 Bool BeamSkyJones::directionsCloseEnough(const MDirection &dir1,
-                           const MDirection &dir2) const throw(AipsError)
+                           const MDirection &dir2) const
 {
   Double sep; 
   if (dir1.getRef()!=dir2.getRef())

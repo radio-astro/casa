@@ -47,8 +47,6 @@
 #include <QObject>
 #include <graphics/X11/X_exit.h>
 
-#include <tr1/memory>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -284,7 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//# that will crash QDD.  Do not assume it is non-zero -- im_ may be zero if
 		//# the QDD's image is complex.  However, if it _is_ non-zero, you should
 		//# be able to assume it will exist for the life of the QDD).
-		std::tr1::shared_ptr<ImageInterface<Float> > imageInterface() {
+		SHARED_PTR<ImageInterface<Float> > imageInterface() {
 			return im_;
 		}
 		const viewer::ImageProperties &imageProperties( );
@@ -297,7 +295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		void init();
 		void initImage();
-		void setImage(std::tr1::shared_ptr< ImageInterface<Float> > img);
+		void setImage(SHARED_PTR< ImageInterface<Float> > img);
 		static void setGlobalColorOptions( bool global );
 		void setHistogramColorProperties( bool invert, int logScale );
 
@@ -467,8 +465,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const std::string TYPE_IMAGE;
 		const std::string SKY_CATALOG;
 		const std::string MS;
-		std::tr1::shared_ptr<ImageInterface<Float> > im_;
-		std::tr1::shared_ptr<ImageInterface<Complex> > cim_;
+		SHARED_PTR<ImageInterface<Float> > im_;
+		SHARED_PTR<ImageInterface<Complex> > cim_;
 		DisplayData* dd_;
 
 		std::string name_;

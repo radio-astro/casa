@@ -32,8 +32,6 @@
 #include <imageanalysis/ImageTypedefs.h>
 #include <casa/aips.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 // <summary>
@@ -199,7 +197,7 @@ private:
 	String _doStandardFormat(Double value, const String& unit) const;
 
 	template <class T> Record _calcStatsT(
-		std::tr1::shared_ptr<const ImageInterface<T> > image
+		SHARED_PTR<const ImageInterface<T> > image
 	) const;
 
 

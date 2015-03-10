@@ -160,6 +160,16 @@ set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
+# Detect if the compiler supports C++11 if we want to use it.
+if (CXX11)
+    if ((CMAKE_COMPILER_IS_GNUCXX AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.6) OR
+       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.3))
+        set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -std=c++11 -DCXX11")
+    else()
+        option(CXX11 "" NO)
+    endif()
+endif()
+
 # OpenMP
 find_package( OpenMP )
 if( OPENMP_FOUND )

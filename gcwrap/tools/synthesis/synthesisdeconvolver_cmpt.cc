@@ -61,7 +61,7 @@ synthesisdeconvolver::~synthesisdeconvolver()
 
 casac::record* synthesisdeconvolver::initminorcycle()
 {
-  casac::record* rstat(False);
+  casac::record* rstat(0);
   try {
     rstat = fromRecord(itsDeconvolver->initMinorCycle( ));
   } catch  (AipsError x) {
@@ -72,7 +72,7 @@ casac::record* synthesisdeconvolver::initminorcycle()
 
 casac::record* synthesisdeconvolver::interactivegui(const casac::record& iterbot)
 {
-  casac::record* rstat(False);
+  casac::record* rstat(0);
   try {
     casa::Record recpars = *toRecord( iterbot );
     rstat = fromRecord(itsDeconvolver->interactiveGUI( recpars ));
@@ -84,7 +84,7 @@ casac::record* synthesisdeconvolver::interactivegui(const casac::record& iterbot
 
 casac::record* synthesisdeconvolver::executeminorcycle(const casac::record& iterbot)
 {
-  casac::record* rstat(False);
+  casac::record* rstat(0);
   try {
     casa::Record recpars = *toRecord( iterbot );
     rstat = fromRecord(itsDeconvolver->executeMinorCycle( recpars ));
@@ -96,7 +96,7 @@ casac::record* synthesisdeconvolver::executeminorcycle(const casac::record& iter
 
 bool synthesisdeconvolver::restore()
 {
-  casac::record* rstat(False);
+  casac::record* rstat(0);
   try {
     itsDeconvolver->restore();
   } catch  (AipsError x) {

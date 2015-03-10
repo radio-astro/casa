@@ -34,8 +34,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 class ImageInputProcessor {

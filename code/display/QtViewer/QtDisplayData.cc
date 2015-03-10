@@ -454,7 +454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dd_->setOptions( record, outRecord );
 	}
 
-	void QtDisplayData::setImage(std::tr1::shared_ptr<ImageInterface<Float> > img ) {
+	void QtDisplayData::setImage(SHARED_PTR<ImageInterface<Float> > img ) {
 		im_=img;
 	}
 

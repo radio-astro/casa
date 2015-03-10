@@ -12,7 +12,7 @@
 */
 #ifndef _LIBAIR_CASAWVR_CASAWVR_ERR_HPP__
 #define _LIBAIR_CASAWVR_CASAWVR_ERR_HPP__
-
+#include <string>
 #include <stdexcept>
 
 namespace LibAIR2 {

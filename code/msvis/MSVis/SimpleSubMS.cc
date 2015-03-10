@@ -111,7 +111,7 @@ namespace casa {
     
     // fill or update
     if(!fillDDTables()){
-      return False;
+      return 0;
     }
 
     // SourceIDs need to be remapped around here.  It could not be done in

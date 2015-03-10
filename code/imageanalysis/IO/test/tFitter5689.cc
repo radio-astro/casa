@@ -43,7 +43,7 @@ int main() {
 	int spectralAxisNumber = 3;
 	int nGauss = 1;
 	SpectralList spectralList;
-	std::tr1::shared_ptr<ImageInterface<Float> > image( new PagedImage<Float>( "/home/uniblab/casa/trunk/test/titan2/titanline-small2.image"));
+	SHARED_PTR<ImageInterface<Float> > image( new PagedImage<Float>( "/home/uniblab/casa/trunk/test/titan2/titanline-small2.image"));
 	ImageProfileFitter* fitter = new ImageProfileFitter( image, "", 0, pixelBox,
 			                                 channelStr, "", "",
 			                                 spectralAxisNumber,

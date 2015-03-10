@@ -39,7 +39,7 @@ namespace LibAIR2 {
       return ( f_i == f_end  );
     }
 
-    bool operator< (  const RadioIter & other )
+    bool operator< (  const RadioIter & other ) const
     {
       if (atend())
       {

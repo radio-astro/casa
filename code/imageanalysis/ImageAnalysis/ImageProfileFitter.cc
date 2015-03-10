@@ -241,7 +241,7 @@ Record ImageProfileFitter::fit() {
 					ImageCollapserData::MEAN, "", True
 				);
 				SPIIF collapsed = collapsedSigma.collapse();
-				std::tr1::shared_ptr<TempImage<Float> >ctmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(collapsed);
+				SHARED_PTR<TempImage<Float> >ctmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(collapsed);
 				ThrowIf(
 					! ctmp, "Dynamic cast failed"
 				);
@@ -361,15 +361,15 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
 		sigma->ndim() == _getImage()->ndim()
 		&& sigma->shape() == _getImage()->shape()
 	) {
-		tr1::shared_ptr<ImageInterface<Float> > clone(sigma->cloneII());
-		_sigma = tr1::dynamic_pointer_cast<TempImage<Float> >(clone);
+		SHARED_PTR<ImageInterface<Float> > clone(sigma->cloneII());
+		_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(clone);
 		if (! _sigma) {
-			tr1::shared_ptr<ImageInterface<Float> > x = ImageAnalysis::makeExternalImage(
+			SHARED_PTR<ImageInterface<Float> > x = ImageAnalysis::makeExternalImage(
 				"", sigma->coordinates(), sigma->shape(),
 				*sigma, *_getLog(), False, True, True
 			);
 			if (x) {
-				_sigma = tr1::dynamic_pointer_cast<TempImage<Float> >(x);
+				_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(x);
 				if (! _sigma) {
 					*_getLog() << "Unable to create temporary weights image" << LogIO::EXCEPTION;
 				}
@@ -582,7 +582,7 @@ void ImageProfileFitter::_fitallprofiles() {
 		}
 	}
 	// Create output images with a mask
-	tr1::shared_ptr<ImageInterface<Float> > fitImage, residImage;
+	SHARED_PTR<ImageInterface<Float> > fitImage, residImage;
 	if (
 		! _model.empty()
 		&& ! (
@@ -616,8 +616,8 @@ void ImageProfileFitter::_fitallprofiles() {
 
 // moved from ImageUtilities
 void ImageProfileFitter::_fitProfiles(
-	const tr1::shared_ptr<ImageInterface<Float> > pFit,
-	const tr1::shared_ptr<ImageInterface<Float> > pResid,
+	const SHARED_PTR<ImageInterface<Float> > pFit,
+	const SHARED_PTR<ImageInterface<Float> > pResid,
     const Bool showProgress
 ) {
 	IPosition inShape = _subImage->shape();
@@ -809,8 +809,8 @@ void ImageProfileFitter::_fitProfiles(
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
-    tr1::shared_ptr<ImageInterface<Float> > pFit,
-    tr1::shared_ptr<ImageInterface<Float> > pResid,
+    SHARED_PTR<ImageInterface<Float> > pFit,
+    SHARED_PTR<ImageInterface<Float> > pResid,
     Bool fitOK,
     const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     const IPosition& curPos, Lattice<Bool>* const &pFitMask,
@@ -1036,7 +1036,7 @@ Bool ImageProfileFitter::_isPCFSolutionOK(
 	return True;
 }
 
-const Array<std::tr1::shared_ptr<ProfileFitResults> >& ImageProfileFitter::getFitters() const{
+const Array<SHARED_PTR<ProfileFitResults> >& ImageProfileFitter::getFitters() const{
 	return _fitters;
 }
 

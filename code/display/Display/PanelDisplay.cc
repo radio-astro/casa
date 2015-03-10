@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsGeometrySet(False),
 		//itsWCLI(0),
 		//itsWCHLI(0),
-		itsMWCTools( std::tr1::shared_ptr<MultiWCTool>( ), uInt(10) ) {
+		itsMWCTools( SHARED_PTR<MultiWCTool>( ), uInt(10) ) {
 		myWCLI = new ConstListIter<WorldCanvas* >(itsWCList);
 		//itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
 		//itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
@@ -634,7 +634,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void PanelDisplay::addTool(const String& key, const std::tr1::shared_ptr<MultiWCTool> &value) {
+	void PanelDisplay::addTool(const String& key, const SHARED_PTR<MultiWCTool> &value) {
 		if (!itsMWCTools.isDefined(key)) {
 			itsMWCTools.define(key, value);
 			value->addWorldCanvases(this);
@@ -643,14 +643,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void PanelDisplay::removeTool(const String& key) {
 		if(!itsMWCTools.isDefined(key)) return;
-		std::tr1::shared_ptr<MultiWCTool> tool = itsMWCTools(key);
+		SHARED_PTR<MultiWCTool> tool = itsMWCTools(key);
 		itsMWCTools.remove(key);
 		if ( tool.get( ) == 0 ) return;
 		tool->removeWorldCanvases(this);
 	}
 
-	const std::tr1::shared_ptr<MultiWCTool> PanelDisplay::getTool(const String& key) {
-		if(!itsMWCTools.isDefined(key)) return std::tr1::shared_ptr<MultiWCTool>( );
+	const SHARED_PTR<MultiWCTool> PanelDisplay::getTool(const String& key) {
+		if(!itsMWCTools.isDefined(key)) return SHARED_PTR<MultiWCTool>( );
 		return itsMWCTools(key);
 	}
 

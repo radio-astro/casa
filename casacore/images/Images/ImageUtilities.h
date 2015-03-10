@@ -101,11 +101,7 @@ public:
                          const String& fileName);
 
   template<class T>
-#if defined(AIPS_CXX11)
-  static std::shared_ptr<ImageInterface<T> > openImage (const String& fileName);
-#else
-  static std::tr1::shared_ptr<ImageInterface<T> > openImage (const String& fileName);
-#endif
+  static SHARED_PTR<ImageInterface<T> > openImage (const String& fileName);
 //  </group>
 
 // Copy MiscInfo, ImageInfo, brightness unit and logger (history) from in to out

@@ -32,10 +32,6 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
-namespace std {
-template<class T> class auto_ptr;
-}
-
 namespace casa {
 
 class CoordinateSystem;
@@ -428,7 +424,7 @@ class ImageAnalysis
     	Bool copyMask=True
     );
 
-    Bool isFloat() const { return _imageFloat; }
+    Bool isFloat() const { return _imageFloat ? true : false; }
 
  private:
     //Note:  getFreqProfile has been replaced by imageanalysis/PixelValueManipulator
@@ -468,10 +464,10 @@ class ImageAnalysis
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::tr1::shared_ptr<ImageHistograms<Float> > _histograms;
+    SHARED_PTR<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    std::tr1::shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
+    SHARED_PTR<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 

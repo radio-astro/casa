@@ -27,7 +27,7 @@
 //# $Id$
 
 #ifndef SYNTHESIS_TRANSFORM2_WPROJECTFT_H
-#define SYNTHESIS_WPROJECTFT_H
+#define SYNTHESIS_TRANSFORM2_WPROJECTFT_H
 
 #include <synthesis/TransformMachines2/FTMachine.h>
 #include <casa/Arrays/Matrix.h>

@@ -100,7 +100,7 @@ namespace casa {
 		taskMonitor -> plotMainCurve();
 	}
 
-	const std::tr1::shared_ptr<const ImageInterface<Float> > ProfileTaskFacilitator::getImage( const QString& imageName) const {
+	const SHARED_PTR<const ImageInterface<Float> > ProfileTaskFacilitator::getImage( const QString& imageName) const {
 		return taskMonitor -> getImage( imageName );
 	}
 

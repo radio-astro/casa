@@ -2,8 +2,6 @@
 
 #include <stdcasa/cboost_foreach.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 template<class T> ImageFFTer<T>::ImageFFTer(

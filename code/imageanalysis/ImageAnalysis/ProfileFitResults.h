@@ -25,7 +25,7 @@
 //#
 //# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
-#ifndef IMAGEANALYSIS_ROFILEFITRESULTS_H
+#ifndef IMAGEANALYSIS_PROFILEFITRESULTS_H
 #define IMAGEANALYSIS_PROFILEFITRESULTS_H
 
 #include <imageanalysis/ImageAnalysis/ImageFit1D.h>

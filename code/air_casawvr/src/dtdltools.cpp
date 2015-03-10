@@ -14,7 +14,6 @@
 
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
 
 #include "almawvr/nestedsampler.hxx"
 
@@ -110,16 +109,19 @@ namespace LibAIR2 {
     }
   }
 
+  struct CenFD_bind {
+    WVRAtmoQuantModel &md;
+    CenFD_bind(WVRAtmoQuantModel &md_) : md(md_) { }
+    boost::array<double, 4> operator( ) (double d) { return md.evalFn(d,"n"); }
+  };
+
   void dTdL2_ND(WVRAtmoQuantModel &m,
 		std::vector<double> &res)
   {
-    using namespace boost::lambda;
     Minim::ModelDesc md(m);
+    CenFD_bind bind_instance(m);
     boost::array< boost::array<double, 4> ,3> r=
-      CenFDV<3,4>(bind(&WVRAtmoQuantModel::evalFn, 
-		       &m, 
-		       _1, 
-		       "n"),
+      CenFDV<3,4>(bind_instance,
 		  *md["n"]->p,
 		  0.001);
     const double cv=std::pow(SW_WaterToPath_Simplified(1.0, 
@@ -134,13 +136,10 @@ namespace LibAIR2 {
   void dTdL3_ND(WVRAtmoQuantModel &m,
 		std::vector<double> &res)
   {
-    using namespace boost::lambda;
     Minim::ModelDesc md(m);
+    CenFD_bind bind_instance(m);
     boost::array< boost::array<double, 4> ,4> r=
-      CenFDV<4,4>(bind(&WVRAtmoQuantModel::evalFn, 
-		       &m, 
-		       _1, 
-		       "n"),
+      CenFDV<4,4>(bind_instance,
 		  *md["n"]->p,
 		  0.001);
     const double cv=std::pow(SW_WaterToPath_Simplified(1.0, 
@@ -154,13 +153,10 @@ namespace LibAIR2 {
   void dTdTAtm(WVRAtmoQuantModel &m,
 	       std::vector<double> &res)
   {
-    using namespace boost::lambda;
     Minim::ModelDesc md(m);
+    CenFD_bind bind_instance(m);
     boost::array< boost::array<double, 4> ,2> r=
-      CenFDV<2,4>(bind(&WVRAtmoQuantModel::evalFn, 
-		       &m, 
-		       _1, 
-		       "T"),
+      CenFDV<2,4>(bind_instance,
 		  *md["T"]->p,
 		  0.01);
     res=std::vector<double>(r[1].begin(), r[1].end());

@@ -327,7 +327,7 @@ protected:
   // return True if two directions are close enough to consider the
   // operator unchanged, False otherwise
   Bool directionsCloseEnough(const MDirection &dir1,
-                             const MDirection &dir2) const throw(AipsError);
+                             const MDirection &dir2) const;
   			     
   // return index of compareTelescope, compareAntenna and compareFeed in
   // myTelescopes_p, myAntennaIDs and myFeedIDs; -1 if not found

@@ -31,8 +31,6 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <measures/Measures/MFrequency.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 	template <class T> class ImageInterface;
@@ -48,7 +46,7 @@ namespace casa {
 		virtual QString getFileName() const = 0;
 		virtual QString getImagePath() const =0;
 		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const = 0;
-		virtual SpectralCoordinate getSpectralCoordinate(std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr, Bool& validCoord ) = 0;
+		virtual SpectralCoordinate getSpectralCoordinate(SHARED_PTR<const ImageInterface<Float> > imagePtr, Bool& validCoord ) = 0;
 		virtual Vector<Float> getXValues() const = 0;
 		virtual Vector<Float> getYValues() const = 0;
 		virtual Vector<Float>getZValues() const = 0;
@@ -57,7 +55,7 @@ namespace casa {
 		virtual String getXAxisUnit() const = 0;
 		virtual void postStatus( String str ) = 0;
 		virtual void plotMainCurve() = 0;
-		virtual std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName = "") const = 0;
+		virtual SHARED_PTR<const ImageInterface<Float> > getImage( const QString& imageName = "") const = 0;
 		virtual void getPixelBounds( Vector<double>& xPixels, Vector<double>& yPixels) const = 0;
 		virtual MFrequency::Types getReferenceFrame() const = 0;
 		//Specific to Moments
@@ -65,7 +63,7 @@ namespace casa {
 		virtual QString read( const QString & key ) const = 0;
 		virtual void imageCollapsed(String path, String dataType, String displayType,
 				Bool autoRegister, Bool tmpData,
-				std::tr1::shared_ptr<ImageInterface<Float> > img = std::tr1::shared_ptr<ImageInterface<Float> >())=0;
+				SHARED_PTR<ImageInterface<Float> > img = SHARED_PTR<ImageInterface<Float> >())=0;
 		virtual void setPurpose( ProfileTaskMonitor::PURPOSE purpose ) = 0;
 
 		//Specific to Spectrum Position setting.

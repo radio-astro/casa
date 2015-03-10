@@ -35,7 +35,6 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
 
 namespace casa {
 
@@ -165,7 +164,7 @@ private:
     );
 
     void _reportDetailedStats(
-    	const std::tr1::shared_ptr<const ImageInterface<Float> > tempIm,
+    	const SHARED_PTR<const ImageInterface<Float> > tempIm,
     	const Record& retval
     );
 };

@@ -32,8 +32,6 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
-#include <tr1/memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>

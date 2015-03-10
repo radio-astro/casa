@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 
 #ifndef _MS_MSALYSIS_H_
-#define _MS_MSANALYSIS_H_
+#define _MS_MSALYSIS_H_
 
 // includes
 #include <msvis/MSVis/MSMoments.h>

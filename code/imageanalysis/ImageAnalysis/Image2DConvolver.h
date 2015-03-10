@@ -36,8 +36,6 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
-#include <tr1/memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations

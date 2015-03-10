@@ -274,7 +274,7 @@ namespace casa{
   //     (e.g. a change in the parallactic angle)
   
   // return True if a change occurs somewhere in the buffer
-  Bool IChangeDetector::changed(const VisBuffer &vb) const throw(AipsError)
+  Bool IChangeDetector::changed(const VisBuffer &vb) const
   {
      for (Int i=0;i<vb.nRow();++i)
           if (changed(vb,i)) return True;
@@ -285,7 +285,7 @@ namespace casa{
   // up to row2 (row2=-1 means up to the end of the buffer). The row number,
   // where the change occurs is returned in the row2 parameter
   Bool IChangeDetector::changedBuffer(const VisBuffer &vb, Int row1, 
-		   Int &row2) const throw(AipsError)
+		   Int &row2) const
   {
     if (row1<0) row1=0;
     Int jrow = row2;
@@ -308,7 +308,7 @@ namespace casa{
   }
   
   // a virtual destructor to make the compiler happy
-  IChangeDetector::~IChangeDetector() throw(AipsError) {}
+  IChangeDetector::~IChangeDetector() {}
   
   //
   /////////////////////////////////////////////////////////////////////////////
@@ -322,7 +322,7 @@ namespace casa{
   // set up the tolerance, which determines how much the position angle should
   // change to report the change by this class
   ParAngleChangeDetector::ParAngleChangeDetector(const Quantity &pa_tolerance) 
-               throw(AipsError) : pa_tolerance_p(pa_tolerance.getValue("rad")),
+               : pa_tolerance_p(pa_tolerance.getValue("rad")),
 		    last_pa_p(1000.) {}  // 1000 is >> 2pi, so it is changed
                                          // after construction
   
@@ -332,21 +332,20 @@ namespace casa{
     pa_tolerance_p = (pa_tolerance.getValue("rad"));
   }
   // reset to the state which exist just after construction
-  void ParAngleChangeDetector::reset() throw(AipsError)
+  void ParAngleChangeDetector::reset()
   {
       last_pa_p=1000.; // it is >> 2pi, which would force a changed state
   }
      
   // return parallactic angle tolerance
-  Quantity ParAngleChangeDetector::getParAngleTolerance() const throw(AipsError)
+  Quantity ParAngleChangeDetector::getParAngleTolerance() const
   {
       return Quantity(pa_tolerance_p,"rad");
   }
   
   // return True if a change occurs in the given row since the last call 
   // of update
-  Bool ParAngleChangeDetector::changed(const VisBuffer &vb, Int row) 
-	        const throw(AipsError)
+  Bool ParAngleChangeDetector::changed(const VisBuffer &vb, Int row) const
   {
      if (row<0) row=0;
      //     const Double feed1_pa=vb.feed1_pa()[row];
@@ -370,7 +369,6 @@ namespace casa{
   
   // start looking for a change from the given row of the VisBuffer
   void ParAngleChangeDetector::update(const VisBuffer &vb, Int row) 
-	         throw(AipsError)
   {
      if (row<0) row=0;
      const Double feed1_pa=vb.feed1_pa()[row];

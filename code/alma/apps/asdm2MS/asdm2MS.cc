@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 #define DDPRIORITY 1
-#include <algorithm>
+//#include <algorithm>
 #include <assert.h>
 #include <cmath>
 #include <complex>

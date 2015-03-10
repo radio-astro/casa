@@ -182,7 +182,7 @@ private:
 
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
-	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
+	SHARED_PTR<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
 	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
 	Vector<String> _fixed, _deconvolvedMessages;
 	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed, _correlatedNoise, _useBeamForNoise;
@@ -287,8 +287,8 @@ private:
 		ComponentList& convolvedList, ComponentList& deconvolvedList,
 		Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
 		SPIIF& residualImage, SPIIF& modelImage,
-		std::tr1::shared_ptr<TempImage<Float> >& tImage,
-		std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
+		SHARED_PTR<TempImage<Float> >& tImage,
+		SHARED_PTR<ArrayLattice<Bool> >& initMask,
 		Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
 		Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages, const IPosition& planeShape,
 		const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,

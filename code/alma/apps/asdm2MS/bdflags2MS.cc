@@ -40,14 +40,10 @@ using namespace boost;
 #include <boost/filesystem/convenience.hpp>
 using namespace boost::filesystem;
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/casts.hpp>
-
-using namespace boost::lambda;
-
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
+
+#include <boost/program_options.hpp>
 
 #include <boost/assign/std/vector.hpp> // for 'operator+=()'
 using namespace boost::assign; // bring 'operator+=()' into scope
@@ -64,8 +60,43 @@ using namespace SubscanIntentMod;
 */
 bool debug = (getenv("ASDM_DEBUG") != NULL);
 vector<char> logIndent;
-#define LOGENTER(name) if (debug) {for_each(logIndent.begin(), logIndent.end(), cout << _1); logIndent.push_back('\t'); cout << #name ": entering" << endl;}
-#define LOGEXIT(name)  if (debug) {logIndent.pop_back(); for_each(logIndent.begin(), logIndent.end(), cout << _1); cout << #name ": exiting" << endl;}
+void hack01(char x) { cout << x; }
+struct hack02 {
+  string &acc;
+  hack02(string &a) : acc(a) { }
+  void operator( )(const map<string, unsigned int>::value_type &v) { acc += "\n\t* " + v.first; }
+};
+struct hack03 {
+  DataDescriptionTable &table;
+  vector<DataDescriptionRow*> &acc;
+  hack03(DataDescriptionTable &t, vector<DataDescriptionRow*> &a) : table(t), acc(a) { }
+  void operator( )(const Tag &tag) {
+    acc.push_back( table.getRowByKey(tag) );
+  }
+};
+struct hack04 {
+  vector<string> &acc;
+  hack04(vector<string> &v) : acc(v) { }
+  void operator( )(const Tag &tag) {
+    acc.push_back(tag.toString( ));
+  }
+};
+struct hack05 {
+  vector<pair<string, string> > &acc;
+  hack05(vector<pair<string, string> > &a) : acc(a) { }
+  void operator( )(const DataDescriptionRow *row) {
+    acc.push_back(make_pair(row->getSpectralWindowId( ).toString( ),row->getPolOrHoloId( ).toString( )));
+  }
+};
+struct hack06 {
+  ostringstream &out;
+  hack06(ostringstream &o) : out(o) { }
+  void operator( )(AxisName ax) {
+    out << CAxisName::toString(ax) << " ";
+  }
+};
+#define LOGENTER(name) if (debug) {for_each(logIndent.begin(), logIndent.end(), hack01); logIndent.push_back('\t'); cout << #name ": entering" << endl;}
+#define LOGEXIT(name)  if (debug) {logIndent.pop_back(); for_each(logIndent.begin(), logIndent.end(), hack01); cout << #name ": exiting" << endl;}
 #define LOG(msg) if (debug) {for_each(logIndent.begin(), logIndent.end(), cout << _1); cout << msg << endl;}
 
 /*
@@ -162,7 +193,7 @@ public:
     const T* p1 = items_p + i1;
     i0 = i1;
     LOGEXIT("BDFFlagsConsumer::pair<const T* , const T*>  consume(unsigned int n)");
-    return make_pair<const T*, const T*>(p0, p1);
+    return make_pair(p0, p1);
   }
 }; // end of class BDFFlagConsumer.
 
@@ -239,7 +270,7 @@ public:
     LOGENTER("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
     //cout << numIntegration_ << ", " << numBAL_ << ", " << numDD_ << endl;
     //cout << currIntegration_ << ", " << currBAL_ << ", " << currDD_ << endl;
-    flagCell_vvv[currIntegration_][currBAL_][currDD_] = make_pair<FLAG_SHAPE, FLAG_V>(make_pair<unsigned int, unsigned int> (numChan, ((numPol==3)? 4:numPol)),
+    flagCell_vvv[currIntegration_][currBAL_][currDD_] = make_pair(make_pair(numChan, ((numPol==3)? 4:numPol)),
 										 values);
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
   }
@@ -655,7 +686,7 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
     }
   }
   LOGEXIT("mergeAndPut");
-  return make_pair<uInt, uInt> (iRow0, numFlaggedRows);
+  return make_pair(iRow0, numFlaggedRows);
 }
 
 pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
@@ -704,7 +735,7 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
   }
 
   LOGEXIT("put");
-  return make_pair<uInt, uInt> (iRow0, numFlaggedRows);
+  return make_pair(iRow0, numFlaggedRows);
 }
 
 void loadBDFlags(map<string, unsigned int>& abbrev2bitpos) {
@@ -770,7 +801,8 @@ int main (int argC, char * argV[]) {
   loadBDFlags(abbrev2bitpos);
   
   string abbrevList;
-  for_each (abbrev2bitpos.begin(), abbrev2bitpos.end(), abbrevList += "\n\t* "+bind(&s2ui::value_type::first, _1));
+  hack02 hack02_instance(abbrevList);
+  for_each (abbrev2bitpos.begin(), abbrev2bitpos.end(), hack02_instance);
 
   po::variables_map vm;
 
@@ -1103,24 +1135,21 @@ int main (int argC, char * argV[]) {
 
     vector<Tag> antennaTags = cfgR->getAntennaId();
     vector<string> antennas;
-    for_each(antennaTags.begin(), antennaTags.end(), bind(&vector<string>::push_back, var(antennas), bind(&Tag::toString, _1)));
+    hack04 hack04_instance(antennas);
+    for_each(antennaTags.begin(), antennaTags.end(), hack04_instance);
 
     vector<Tag> dataDescriptionTags = cfgR->getDataDescriptionId();
     vector<DataDescriptionRow *> ddRs;
-    for_each(dataDescriptionTags.begin(), dataDescriptionTags.end(), bind(&vector<DataDescriptionRow*>::push_back, var(ddRs), bind(&DataDescriptionTable::getRowByKey, var(ddT), _1)));
+    hack03 hack03_instance(ddT,ddRs);
+    for_each(dataDescriptionTags.begin(), dataDescriptionTags.end(), hack03_instance);
 
     unsigned int numDD = ddRs.size();
 
     vector<pair<string, string> > dataDescriptions;
+    hack05 hack05_instance(dataDescriptions);
     for_each(ddRs.begin(),
 	     ddRs.end(),
-	     bind(&vector<pair<string, string> >::push_back,
-		  var(dataDescriptions),
-		  bind(&make_pair<string, string>,
-		       bind(&Tag::toString,
-			    bind(&DataDescriptionRow::getSpectralWindowId, *_1)),
-		       bind(&Tag::toString,
-			    bind(&DataDescriptionRow::getPolOrHoloId, *_1)))));
+	     hack05_instance);
 
     string bdfPath = dsName+"/ASDMBinary/"+replace_all_copy(replace_all_copy(mR->getDataUID().getEntityId().toString(), "/", "_"), ":", "_");
     ProcessorType pt = cfgR->getProcessorType();
@@ -1157,7 +1186,8 @@ int main (int argC, char * argV[]) {
 	  const SDMDataObject::BinaryPart & flagsBP = sdosr.dataStruct().flags();
 	  const vector<AxisName> & flagsAxes = flagsBP.axes();
 	  ostringstream oss;
-	  for_each(flagsAxes.begin(), flagsAxes.end(), oss << bind(&CAxisName::toString, _1) << " ");    
+	  hack06 hack06_instance(oss);
+	  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
 	  // Check the validity of the sequence of flags axes.
 	  if (!regex_match(oss.str(), ALMACorrelatorFlagsAxesRegex)) {
 	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA correlator.");
@@ -1209,7 +1239,8 @@ int main (int argC, char * argV[]) {
 	  const SDMDataObject::BinaryPart & flagsBP = sdo.dataStruct().flags();
 	  const vector<AxisName> & flagsAxes = flagsBP.axes();
 	  ostringstream oss;
-	  for_each(flagsAxes.begin(), flagsAxes.end(), oss << bind(&CAxisName::toString, _1) << " ");
+	  hack06 hack06_instance(oss);
+	  for_each(flagsAxes.begin(), flagsAxes.end(), hack06_instance);
 	  // Check the validity of the sequence of flags axes.
 	  if (!regex_match(oss.str(), ALMARadiometerFlagsAxesRegex)) 
 	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA radiometer.");

@@ -1000,7 +1000,7 @@ windows in the dataset and close the tool.
         <method type="function" name="nrows">
             <shortdescription>Get the number of visibilities (from the main table) associated with the MS.</shortdescription>
             <input>
-                <param type="bool" direction="in" name="auto">
+                <param type="bool" direction="in" name="autoc">
                     <description>Include autocorrelation data? If False, only cross correlation rows will be summed.</description>
                     <value>true</value>
                 </param>

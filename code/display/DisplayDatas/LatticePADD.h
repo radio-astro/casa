@@ -36,8 +36,6 @@
 #include <display/Display/DParameterChoice.h>
 #include <display/Display/DParameterRange.h>
 
-#include <tr1/memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class IPosition;
@@ -76,8 +74,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Image-based constructors: >2d and 2d
 		// <group>
-		LatticePADisplayData( std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-		LatticePADisplayData(std::tr1::shared_ptr<ImageInterface<T> > image, const uInt xAxis,
+		LatticePADisplayData( SHARED_PTR<ImageInterface<T> > image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticePADisplayData(SHARED_PTR<ImageInterface<T> > image, const uInt xAxis,
 		                     const uInt yAxis);
 		// </group>
 
@@ -100,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// Get image analyis about object...
 		virtual ImageAnalysis *imageanalysis( ) const;
-		std::tr1::shared_ptr<ImageInterface<Float> > imageinterface( );
+		SHARED_PTR<ImageInterface<Float> > imageinterface( );
 
 
 		// left as pure virtual for implementation in concrete class
@@ -145,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsComplexToRealMethod = method;
 		}
 
-		virtual std::tr1::shared_ptr<MaskedLattice<T> > maskedLattice() {
+		virtual SHARED_PTR<MaskedLattice<T> > maskedLattice() {
 			return itsMaskedLatticePtr;
 		}
 
@@ -192,7 +190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 
 		// The base image cloned at construction.
-		std::tr1::shared_ptr<ImageInterface<T> > itsBaseImagePtr;
+		SHARED_PTR<ImageInterface<T> > itsBaseImagePtr;
 
 		// The base array cloned at construction.
 		Array<T>* itsBaseArrayPtr;
@@ -205,7 +203,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// The masked lattice, effectively referencing one of itsBaseImagePtr
 		// or itsBaseArray, or some sub-region of said.
-		std::tr1::shared_ptr<MaskedLattice<T> > itsMaskedLatticePtr;
+		SHARED_PTR<MaskedLattice<T> > itsMaskedLatticePtr;
 
 		// Says whether the destructor should delete itsMaskedLattice or not
 		Bool itsDeleteMLPointer;

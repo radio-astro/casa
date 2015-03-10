@@ -28,9 +28,8 @@
 #define HISTOGRAMGRAPH_QO_H
 
 #include <QtGui/QWidget>
+#include <casa/Utilities/CountedPtr.h>
 #include <display/region/HistogramGraph.ui.h>
-
-#include <tr1/memory>
 
 namespace casa {
 
@@ -54,7 +53,7 @@ namespace casa {
 		void initPlot();
 		void setIndex( int stackIndex );
 		void setNextEnabled( bool enabled );
-		void setImage( std::tr1::shared_ptr<ImageInterface<float> > image );
+		void setImage( SHARED_PTR<ImageInterface<float> > image );
 		void setImageRegion( ImageRegion* region, int id );
 
 	signals:

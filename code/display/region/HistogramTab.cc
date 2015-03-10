@@ -48,7 +48,7 @@ namespace casa {
 		}
 	}
 
-	void HistogramTab::addImage( std::tr1::shared_ptr<ImageInterface<float> > image ) {
+	void HistogramTab::addImage( SHARED_PTR<ImageInterface<float> > image ) {
 		if ( image != NULL ) {
 			QString graphName = image->name(true).c_str();
 

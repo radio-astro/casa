@@ -35,8 +35,6 @@
 #include <casa/BasicSL/String.h>
 #include <list>
 
-#include <tr1/memory>
-
 namespace casa {
 
 	class PanelDisplay;
@@ -123,7 +121,7 @@ namespace casa {
 
 			RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
-			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			std::list<SHARED_PTR<RegionInfo> > *generate_dds_centers( );
 			ImageRegion *get_image_region( DisplayData* ) const;
 			RegionInfo *newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * );
 
@@ -158,7 +156,7 @@ namespace casa {
 			typedef std::list<display_element> display_list_t;
 			display_list_t display_list;
 
-            std::tr1::shared_ptr<ImageInterface<Float> > generatePVImage( std::tr1::shared_ptr<ImageInterface<Float> >, std::string, int, bool );
+            SHARED_PTR<ImageInterface<Float> > generatePVImage( SHARED_PTR<ImageInterface<Float> >, std::string, int, bool );
 
 		private:
 			bool within_vertex_handle( double x, double y ) const;

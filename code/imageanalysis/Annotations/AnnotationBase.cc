@@ -1056,17 +1056,17 @@ void AnnotationBase::_initColors() {
 	if (_doneColorInit) {
 		return;
 	}
-	_colors = map_list_of
-			("black", BLACK)
-			("blue", BLUE)
-			("cyan", CYAN)
-			("gray", GRAY)
-			("green", GREEN)
-			("magenta", MAGENTA)
-			("orange", ORANGE)
-			("red", RED)
-			("white", WHITE)
-			("yellow", YELLOW);
+	_colors.insert(make_pair("black", BLACK));
+	_colors.insert(make_pair("blue", BLUE));
+	_colors.insert(make_pair("cyan", CYAN));
+	_colors.insert(make_pair("gray", GRAY));
+	_colors.insert(make_pair("green", GREEN));
+	_colors.insert(make_pair("magenta", MAGENTA));
+	_colors.insert(make_pair("orange", ORANGE));
+	_colors.insert(make_pair("red", RED));
+	_colors.insert(make_pair("white", WHITE));
+	_colors.insert(make_pair("yellow", YELLOW));
+
 	for (
 		map<string, RGB>::const_iterator iter=_colors.begin();
 			iter != _colors.end(); iter++

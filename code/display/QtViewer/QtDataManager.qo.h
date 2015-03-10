@@ -53,8 +53,13 @@
 #include <display/Utilities/Lowlevel.h>
 #include <set>
 #include <list>
-#include <tr1/memory>
+#if defined(__APPLE__)
+#include <tuple>
+#define TUPLE std::tuple
+#else
 #include <tr1/tuple>
+#define TUPLE std::tr1::tuple
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -287,7 +292,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return output_name_line_;
 			}
 
-			std::tr1::shared_ptr<QDir> dir( ) {
+			SHARED_PTR<QDir> dir( ) {
 				return dir_;
 			}
 			QLineEdit *dirline( ) {
@@ -300,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			std::set<int> filtered_types_;
 			QLineEdit *dir_entry_;
 			QTreeWidget *tree_;
-			std::tr1::shared_ptr<QDir> dir_;
+			SHARED_PTR<QDir> dir_;
 			notify_func_t notify_func_;
 			QFrame *info_frame_;
 			infofield_list_t *info_fields_;
@@ -356,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         bool collect_vo_parameters( double &ra, double &dec, double &ra_size, double &dec_size, QVariantMap &params );
         void vo_flag_missing_param( QLineEdit *widget );
         // (enabled, gui label, vo parameter name,vo parameter default,entry box)
-        typedef std::tr1::tuple<bool,QString,QString,QString,viewer::dvo::param*> vo_param_t;
+        typedef TUPLE<bool,QString,QString,QString,viewer::dvo::param*> vo_param_t;
         std::vector<vo_param_t> voparameters;
         edu::nrao::casa::dVO dvo;
         std::set<QWidget*> dvo_missing_parameters;

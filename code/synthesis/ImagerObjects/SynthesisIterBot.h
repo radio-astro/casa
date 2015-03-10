@@ -90,8 +90,8 @@ protected:
   virtual void pauseForUserInteraction();
   /////////////// Member Objects
 
-  std::tr1::shared_ptr<SIIterBot_callback> actionRequestSync;
-  std::tr1::shared_ptr<SIIterBot_state> itsLoopController;
+  SHARED_PTR<SIIterBot_callback> actionRequestSync;
+  SHARED_PTR<SIIterBot_state> itsLoopController;
 
     /////////////// All input parameters
 

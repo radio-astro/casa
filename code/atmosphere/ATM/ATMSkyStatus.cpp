@@ -1477,13 +1477,6 @@ Length SkyStatus::WaterVaporRetrieval_fromTEBB(const vector<unsigned int> &spwId
                                         tspill);
 }
   
-  Length SkyStatus::WaterVaporRetrieval_fromTEBB(unsigned int spwId,
-						 const Percent &signalGain,
-						 const Temperature &tebb,
-						 double airmass,
-						 double skycoupling,
-						 const Temperature &tspill);
-  
 Length SkyStatus::WaterVaporRetrieval_fromTEBB(const vector<unsigned int> &spwId,
                                                const vector<Percent> &signalGain,
                                                const vector<Temperature> &v_tebb,

@@ -71,7 +71,7 @@ namespace casa {
 			void loadRegions( const std::string &path, const std::string &type );
 
 			// fetch tool for a particular region type...
-			std::tr1::shared_ptr<RegionTool> tool( region::RegionTypes );
+			SHARED_PTR<RegionTool> tool( region::RegionTypes );
 
 		private:
 
@@ -85,7 +85,7 @@ namespace casa {
 
 			typedef std::pair<double,double> linear_point_type;
 			PanelDisplay *pd;
-			typedef std::map<ToolTypes,std::tr1::shared_ptr<RegionTool> > tool_map;
+			typedef std::map<ToolTypes,SHARED_PTR<RegionTool> > tool_map;
 			tool_map tools;
 
 			// members for keeping track of marked (sticky-selected) regions...

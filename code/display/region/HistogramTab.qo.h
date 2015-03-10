@@ -27,9 +27,8 @@
 #define HISTOGRAMTAB_QO_H
 
 #include <QtGui/QWidget>
+#include <casa/Utilities/CountedPtr.h>
 #include <display/region/HistogramTab.ui.h>
-
-#include <tr1/memory>
 
 namespace casa {
 
@@ -47,7 +46,7 @@ namespace casa {
 
 	public:
 		HistogramTab(QWidget *parent = 0);
-		void addImage( std::tr1::shared_ptr<ImageInterface<float> > image );
+		void addImage( SHARED_PTR<ImageInterface<float> > image );
 		void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
 		void clear();
 		/**

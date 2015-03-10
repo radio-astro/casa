@@ -1048,7 +1048,7 @@ void BJones::calcWtScale() {
 
     // the weight scale factor is just the square of the 
     //   freq-dep normalization
-    cWSi.array()*=pow(calcPowerNorm(A.array(),!Aok.array()),2);
+    cWSi.array()*=(float)pow(calcPowerNorm(A.array(),!Aok.array()),2);
 
     A.next();
     Aok.next();

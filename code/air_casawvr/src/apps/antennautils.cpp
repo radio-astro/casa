@@ -26,7 +26,7 @@ namespace LibAIR2 {
       double d=std::sqrt(std::pow(pos(j,0)-pos(i,0),2)+
 			 std::pow(pos(j,1)-pos(i,1),2)+
 			 std::pow(pos(j,2)-pos(i,2),2));
-      dist.insert(std::make_pair<double, size_t>(d, j));
+      dist.insert(std::make_pair(d, j));
     }
     return dist;
   }
@@ -66,7 +66,7 @@ namespace LibAIR2 {
     s=dist.begin();
     for (size_t j=0; j<n; ++j)
     {
-      res.insert(std::make_pair<double, size_t>(s->first/total, s->second));
+      res.insert(std::make_pair(s->first/total, s->second));
       ++s;
     }
 

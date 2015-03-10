@@ -83,11 +83,16 @@ void QtProgressWidget::setAllowedOperations(bool background, bool pauseResume,
 	// CAS-7042 objc Mac error - autorelease with no pool in place
 	// so creating thread pool and draining it.
 #ifdef QT_MAC_USE_COCOA
+#if 0
         id pool = objc_msgSend(objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+#else
+//      id pool = class_createInstance (objc_getClass("NSAutoreleasePool"),0);        // creates instance of the pool
+//	objc_msgSend(pool, "init");                                                 // initializes it
+#endif
 #endif
         itsProgress_->cancelButton->setEnabled(cancel);
 #ifdef QT_MAC_USE_COCOA
-        objc_msgSend(pool, sel_getUid("drain"));
+//      objc_msgSend(pool, sel_getUid("drain"));
 #endif
     }
     else {

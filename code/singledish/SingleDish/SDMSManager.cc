@@ -175,7 +175,14 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 		//KS: THIS PART ASSUMES INROW==OUTROW
 		if (outputFlagCol != NULL && &flag_cube != NULL)
 		  {
-		    writeCube(flag_cube,*outputFlagCol,rowRef);
+                    // [ 97%] Built target libcasa_sakura
+                    // Linking CXX shared library libsingledish.dylib
+                    //   Undefined symbols for architecture x86_64:
+                    //   "void casa::MSTransformManager::writeCube<bool>(casa::Cube<bool> const&, casa::ArrayColumn<bool>&, casa::RefRows&)", referenced from:
+                    //              casa::SDMSManager::fillCubeToDataCols(casa::vi::VisBuffer2*, casa::RefRows&, casa::Cube<float> const&, casa::Cube<bool> const&) in SDMSManager.cc.o
+                    // ld: symbol(s) not found for architecture x86_64
+                    // clang: error: linker command failed with exit code 1 (use -v to see invocation)
+		    //writeCube(flag_cube,*outputFlagCol,rowRef);
 		  }
 	}
 
