@@ -11,6 +11,7 @@ import tarfile
 import types
 import datetime
 import urllib
+import urllib2
 import xml.etree.ElementTree as ElementTree
 from xml.dom import minidom
 
@@ -577,7 +578,7 @@ def fluxservice(ms, frequency, sourcename):
     
     urlparams = buildparams(sourcename, date, frequency)
     try:
-        dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
+        dom =  minidom.parse(urllib2.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
     except:
         LOG.warn('DB flux service timeout/connection problem...')
     
