@@ -125,6 +125,14 @@ public:
             const String& objectName, const String& methodName,
             const Record& parameters, Record& retValue,
             bool* retValueSet = NULL);
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, Array<Bool>& retValue,
+            bool* retValueSet = NULL);
+    static bool dbusXmlCall(const String& fromName,
+            const String& objectName, const String& methodName,
+            const Record& parameters, Array<Int>& retValue,
+            bool* retValueSet = NULL);
     // </group>
     
 protected:
@@ -221,6 +229,16 @@ protected:
                               parameters, retValue, retValueSet); }
     bool dbusXmlCall(const String& objectName, const String& methodName,
             const Record& parameters, Record& retValue,
+            bool* retValueSet = NULL) {
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
+                              parameters, retValue, retValueSet); }
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, Array<Bool>& retValue,
+            bool* retValueSet = NULL) {
+        return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
+                              parameters, retValue, retValueSet); }
+    bool dbusXmlCall(const String& objectName, const String& methodName,
+            const Record& parameters, Array<Int>& retValue,
             bool* retValueSet = NULL) {
         return dbusXmlCall(dbusSelfRegisteredName(), objectName, methodName,
                               parameters, retValue, retValueSet); }

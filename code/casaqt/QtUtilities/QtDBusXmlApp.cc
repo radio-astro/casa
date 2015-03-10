@@ -64,6 +64,8 @@ DBA_CHELPER(uInt, TpUInt, asuInt)
 DBA_CHELPER(double, TpDouble, asDouble)
 DBA_CHELPER(String, TpString, asString)
 DBA_CHELPER(Record, TpRecord, asRecord)
+DBA_CHELPER(Array<Bool>, TpArrayBool, asArrayBool)
+DBA_CHELPER(Array<Int>, TpArrayInt, asArrayInt)
 
 
 // Private Static //

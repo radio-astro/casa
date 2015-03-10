@@ -82,6 +82,9 @@ void QtDBusXML::extractXML(const QtDBusXML& xml, QString* time, QString* from,
 #define XML_RECORD_ENTRY  "entry"
 #define XML_RECORD_KEY    "key"
 #define XML_RECORD_TYPE   "Type"
+#define XML_ARRAY_ENTRY   "entry"
+#define XML_ARRAY_KEY     "key"
+#define XML_ARRAY_TYPE    "Type"
 
 #define TYPE_BOOL         "bool"
 #define TYPE_INT          "int"
@@ -89,6 +92,8 @@ void QtDBusXML::extractXML(const QtDBusXML& xml, QString* time, QString* from,
 #define TYPE_DOUBLE       "double"
 #define TYPE_STRING       "string"
 #define TYPE_RECORD       "record"
+#define TYPE_ARRAYBOOL    "boolArray"
+#define TYPE_ARRAYINT     "intArray"
 
 
 
@@ -104,6 +109,10 @@ bool QtDBusXML::methodParamIsString(const String& paramName) const {
         return qmethodParamType(QString(paramName.c_str())) == TYPE_STRING; }
 bool QtDBusXML::methodParamIsRecord(const String& paramName) const {
         return qmethodParamType(QString(paramName.c_str())) == TYPE_RECORD; }
+bool QtDBusXML::methodParamIsArrayBool(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_ARRAYBOOL; }
+bool QtDBusXML::methodParamIsArrayInt(const String& paramName) const {
+        return qmethodParamType(QString(paramName.c_str())) == TYPE_ARRAYINT; }
 
 
 
@@ -113,6 +122,8 @@ bool QtDBusXML::returnedIsUInt() const { return qreturnedType() == TYPE_UINT; }
 bool QtDBusXML::returnedIsDouble() const { return qreturnedType() == TYPE_DOUBLE; }
 bool QtDBusXML::returnedIsString() const { return qreturnedType() == TYPE_STRING; }
 bool QtDBusXML::returnedIsRecord() const { return qreturnedType() == TYPE_RECORD; }
+bool QtDBusXML::returnedIsArrayBool() const { return qreturnedType() == TYPE_ARRAYBOOL; }
+bool QtDBusXML::returnedIsArrayInt() const { return qreturnedType() == TYPE_ARRAYINT; }
 
 
 
@@ -148,6 +159,40 @@ void QtDBusXML::setElemText(QDomElement elem, const QString& text) {
         elem.appendChild(elem.ownerDocument().createTextNode(text));
 }
 
+Array<Bool> QtDBusXML::elemToArrayBool(QDomElement value) {
+    Array<Bool> arrBool;
+    QDomNodeList children = value.childNodes();
+    int size(children.size());
+    arrBool.resize(IPosition(1, size));
+    if (children.isEmpty()) {
+	return arrBool;  // empty array
+    }
+
+    QDomElement elem;
+    for(int i = 0; i < size; ++i) {
+        elem = children.at(i).toElement();
+	arrBool(IPosition(1,i)) = qstringToBool(elem.text());
+    }
+    return arrBool;
+}
+
+Array<Int> QtDBusXML::elemToArrayInt(QDomElement value) {
+    Array<Int> arrInt;
+    QDomNodeList children = value.childNodes();
+    int size(children.size());
+    arrInt.resize(IPosition(1, size));
+    if (children.isEmpty()) {
+	return arrInt;  // empty array
+    }
+
+    QDomElement elem;
+    for(int i = 0; i < size; ++i) {
+        elem = children.at(i).toElement();
+	arrInt(IPosition(1,i)) = elem.text().toInt();
+    }
+    return arrInt;
+}
+
 Record QtDBusXML::elemToRecord(QDomElement value) {
     Record rec;
     QDomNodeList children = value.childNodes();
@@ -177,6 +222,10 @@ void QtDBusXML::elemToRecord(Record& rec, QDomElement value) {
         rec.define(key, value.text().toStdString());
     else if(type == TYPE_RECORD)
         rec.defineRecord(key, elemToRecord(value));
+    else if(type == TYPE_ARRAYBOOL)
+        rec.define(key, elemToArrayBool(value));
+    else if(type == TYPE_ARRAYINT)
+        rec.define(key, elemToArrayInt(value));
 }
 
 void QtDBusXML::elemFromRecord(QDomElement elem, const Record& value) {
@@ -218,6 +267,16 @@ void QtDBusXML::elemFromRecord(QDomElement elem, const Record& value) {
             entry.setAttribute(XML_RECORD_TYPE, TYPE_RECORD);
             elemFromRecord(entry, value.asRecord(i));
             break;
+
+	case TpArrayBool:
+            entry.setAttribute(XML_ARRAY_TYPE, TYPE_ARRAYBOOL);
+	    elemFromArrayBool(entry, value.asArrayBool(i));
+	    break;
+            
+	case TpArrayInt:
+            entry.setAttribute(XML_ARRAY_TYPE, TYPE_ARRAYINT);
+	    elemFromArrayInt(entry, value.asArrayInt(i));
+	    break;
             
         default: continue;
         }
@@ -226,6 +285,37 @@ void QtDBusXML::elemFromRecord(QDomElement elem, const Record& value) {
     }
 }
 
+void QtDBusXML::elemFromArrayBool(QDomElement elem, const Array<Bool>& value) {
+    if(elem.isNull()) return;
+
+    QDomElement entry;
+    if (value.size() > 0) {
+	for(unsigned int i = 0; i < value.size(); i++) {
+        	entry = elem.ownerDocument().createElement(XML_ARRAY_ENTRY);
+        	entry.setAttribute(XML_ARRAY_KEY, QString::number(i));
+		entry.setAttribute(XML_ARRAY_TYPE, TYPE_BOOL);
+		setElemText(entry, qstringFromBool(value(IPosition(1, i))));
+		elem.appendChild(entry);
+	}
+    }
+}
+
+void QtDBusXML::elemFromArrayInt(QDomElement elem, const Array<Int>& value) {
+    if(elem.isNull()) return;
+
+    QDomElement entry;
+    if (value.size() > 0) {
+	for(unsigned int i = 0; i < value.size(); i++) {
+        	entry = elem.ownerDocument().createElement(XML_ARRAY_ENTRY);
+        	entry.setAttribute(XML_ARRAY_KEY, QString::number(i));
+		entry.setAttribute(XML_ARRAY_TYPE, TYPE_INT);
+		setElemText(entry, QString::number(value(IPosition(1, i))));
+		elem.appendChild(entry);
+	}
+    }
+}
+
+// ----------------------------------------------------------------------
 
 // Constructors/Destructors //
 
@@ -339,6 +429,20 @@ Record QtDBusXML::methodParamRecord(const QString& paramName) const {
     else return Record();
 }
 
+Array<Bool> QtDBusXML::methodParamArrayBool(const QString& paramName) const {
+    QDomElement elem = methodParam(paramName);
+    if(!elem.isNull() && elem.attribute(XML_METHOD_TYPE) == TYPE_ARRAYBOOL)
+        return elemToArrayBool(elem);
+    else return Array<Bool>();
+}
+
+Array<Int> QtDBusXML::methodParamArrayInt(const QString& paramName) const {
+    QDomElement elem = methodParam(paramName);
+    if(!elem.isNull() && elem.attribute(XML_METHOD_TYPE) == TYPE_ARRAYINT)
+        return elemToArrayInt(elem);
+    else return Array<Int>();
+}
+
 void QtDBusXML::setMethodParam(const QString& paramName, bool value) {
     setMethodParam(paramName, TYPE_BOOL, qstringFromBool(value)); }
 
@@ -358,6 +462,18 @@ void QtDBusXML::setMethodParam(const QString& paramName, const Record& value) {
     QDomElement elem = methodParam(paramName, true);
     elem.setAttribute(XML_METHOD_TYPE, TYPE_RECORD);
     elemFromRecord(elem, value);
+}
+
+void QtDBusXML::setMethodParam(const QString& paramName, const Array<Bool>& value) {
+    QDomElement elem = methodParam(paramName, true);
+    elem.setAttribute(XML_METHOD_TYPE, TYPE_ARRAYBOOL);
+    elemFromArrayBool(elem, value);
+}
+
+void QtDBusXML::setMethodParam(const QString& paramName, const Array<Int>& value) {
+    QDomElement elem = methodParam(paramName, true);
+    elem.setAttribute(XML_METHOD_TYPE, TYPE_ARRAYINT);
+    elemFromArrayInt(elem, value);
 }
 
 Record QtDBusXML::methodParams() const {
@@ -411,6 +527,8 @@ void QtDBusXML::setMethodParams(const Record& parameters) {
         case TpDouble: setMethodParam(name, parameters.asDouble(i)); break;
         case TpString: setMethodParam(name, parameters.asString(i)); break;
         case TpRecord: setMethodParam(name, parameters.asRecord(i)); break;
+        case TpArrayBool: setMethodParam(name, parameters.asArrayBool(i)); break;
+        case TpArrayInt:  setMethodParam(name, parameters.asArrayInt(i)); break;
             
         default: break;
         }

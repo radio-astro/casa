@@ -50,7 +50,8 @@ namespace casa {
 //   <returned type="[TYPE]">[VALUE]</returned>
 // </casa-dbus>
 // Currently supported types for parameters and returned values:
-//   bool, int, uInt, double, String, Records with these types.
+//   bool, int, uInt, double, String, Record, Array<Bool> and
+//   Array<Int>, and Records with these types.
 // For a discussion of what these fields mean, see the documentation for
 // QtDBusXmlApp.
 class QtDBusXML {
@@ -170,6 +171,8 @@ public:
     bool methodParamIsDouble(const String& paramName) const;
     bool methodParamIsString(const String& paramName) const;
     bool methodParamIsRecord(const String& paramName) const;
+    bool methodParamIsArrayBool(const String& paramName) const;
+    bool methodParamIsArrayInt(const String& paramName) const;
     // </group>
     
     // Returns the value of the method parameter with the given name as the
@@ -195,6 +198,12 @@ public:
     Record methodParamRecord(const String& paramName) const {
         return methodParamRecord(QString(paramName.c_str())); }
     Record methodParamRecord(const QString& paramName) const;
+    Array<Bool> methodParamArrayBool(const String& paramName) const {
+        return methodParamArrayBool(QString(paramName.c_str())); }
+    Array<Bool> methodParamArrayBool(const QString& paramName) const;
+    Array<Int> methodParamArrayInt(const String& paramName) const {
+        return methodParamArrayInt(QString(paramName.c_str())); }
+    Array<Int> methodParamArrayInt(const QString& paramName) const;
     // </group>
     
     // Sets the parameter with the given name to the given value (and
@@ -218,6 +227,12 @@ public:
     void setMethodParam(const String& paramName, const Record& value) {
         setMethodParam(QString(paramName.c_str()), value); }
     void setMethodParam(const QString& paramName, const Record& value);
+    void setMethodParam(const String& paramName, const Array<bool>& value) {
+        setMethodParam(QString(paramName.c_str()), value); }
+    void setMethodParam(const QString& paramName, const Array<bool>& value);
+    void setMethodParam(const String& paramName, const Array<int>& value) {
+        setMethodParam(QString(paramName.c_str()), value); }
+    void setMethodParam(const QString& paramName, const Array<int>& value);
     // </group>
     
     // Gets/Sets all method parameter values as a Record.
@@ -243,6 +258,8 @@ public:
     bool returnedIsDouble() const;
     bool returnedIsString() const;
     bool returnedIsRecord() const;
+    bool returnedIsArrayBool() const;
+    bool returnedIsArrayInt() const;
     // </group>
     
     // Returns the returned value as the specified type.  Is invalid if that
@@ -256,6 +273,8 @@ public:
     String returnedString() const { return returnedQString().toStdString(); }
     QString returnedQString() const;
     Record returnedRecord() const;
+    Array<bool> returnedArrayBool() const;
+    Array<int> returnedArrayInt() const;
     // </group>
     
     // Sets the returned value to the given value (and associated type).
@@ -268,6 +287,8 @@ public:
         setReturnedValue(QString(value.c_str())); }
     void setReturnedValue(const QString& value);
     void setReturnedValue(const Record& value);
+    void setReturnedValue(const Array<Bool>& value);
+    void setReturnedValue(const Array<Int>& value);
     // </group>
     
     // Gets/Sets the returned value as a record.  ONLY the first field is used.
@@ -382,6 +403,16 @@ private:
     static Record elemToRecord(QDomElement value);
     static void elemToRecord(Record& rec, QDomElement value);
     static void elemFromRecord(QDomElement elem, const Record& value);
+    // </group>
+    // Converts between a QDomElement and Bool Array for values.
+    // <group>
+    static Array<Bool> elemToArrayBool(QDomElement value);
+    static void elemFromArrayBool(QDomElement elem, const Array<Bool>& value);
+    // </group>
+    // Converts between a QDomElement and Int Array for values.
+    // <group>
+    static Array<Int> elemToArrayInt(QDomElement value);
+    static void elemFromArrayInt(QDomElement elem, const Array<Int>& value);
     // </group>
 };
 
