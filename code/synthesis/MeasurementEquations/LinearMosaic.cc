@@ -41,12 +41,12 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-	LinearMosaic::LinearMosaic (): outImage_p(NULL), outWgt_p(NULL), outImName_p(""), outWgtName_p(""), weightType_p(1){
+	LinearMosaic::LinearMosaic (): outImage_p(NULL), outWgt_p(NULL), outImName_p(""), outWgtName_p(""), weightType_p(1), linmosType_p(2){
 
 
 	}
 	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx,
-			const Int ny, const Quantity cellx, const Quantity celly) :outImage_p(NULL), outWgt_p(NULL) {
+			const Int ny, const Quantity cellx, const Quantity celly, const Int linmostype) :outImage_p(NULL), outWgt_p(NULL), linmosType_p(linmostype) {
 		outImName_p=outim;
 
 		outWgtName_p= outwgt=="" ? outim+String(".weight") : outwgt;
@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 }
 	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
 				const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-				const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
+				const Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype) : linmosType_p(linmostype){
 		Int nchan=ims[0]->shape()[3];
 		Int npol=ims[0]->shape()[2];
 		for (uInt k=0; k< ims.nelements(); ++k){
@@ -73,9 +73,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		makeEmptyImage(outwgt, cs, imcen, nx, ny,npol, nchan);
 		PagedImage<Float> outdiskim(outim);
 		PagedImage<Float> outdiskwgt(outwgt);
-		setOutImages(outdiskim, outdiskwgt, 2);
+		setOutImages(outdiskim, outdiskwgt, 2, 2);
 		makeMosaic(ims, wgtims);
 
+	}
+	void LinearMosaic::setlinmostype(const Int linmostype){
+		linmosType_p=linmostype;
 	}
 	Bool LinearMosaic::makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
 			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
@@ -85,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(ims.nelements() != wgtims.nelements())
 			ThrowCc("Unequal number of images and weight images ");
 		for (uInt k=0; k < ims.nelements(); ++k){
-			retval=retval && addOnToImage(outim, outwgt, *(ims[k]), *(wgtims[k]), k>0, (k==ims.nelements()-1));
+			retval=retval && addOnToImage(outim, outwgt, *(ims[k]), *(wgtims[k]), (k==ims.nelements()-1));
 		}
 		return retval;
 
@@ -102,34 +105,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if(ims.nelements() != wgtims.nelements())
 				ThrowCc("Unequal number of images and weight images ");
 			for (uInt k=0; k < ims.nelements(); ++k){
-				retval=retval && addOnToImage(*outImage_p, *outWgt_p, *(ims[k]), *(wgtims[k]), k>0, (k==ims.nelements()-1));
+				retval=retval && addOnToImage(*outImage_p, *outWgt_p, *(ims[k]), *(wgtims[k]), (k==ims.nelements()-1));
 			}
 			return retval;
 
 		}
-	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int weightType){
+	void LinearMosaic::setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int imageWeightType, const Int weightType){
 		outImage_p=CountedPtr<ImageInterface<Float> >(&outim, False);
 		outWgt_p = CountedPtr<ImageInterface<Float> >(&outwgt, False);
+		imageWeightType_p=imageWeightType;
 		weightType_p=weightType;
 	}
-	void LinearMosaic::setOutImages(const String& outim, const String& outwgt, const Int weightType){
+	void LinearMosaic::setOutImages(const String& outim, const String& outwgt, const Int imageWeightType, const Int weightType){
 			outImage_p=new PagedImage<Float>(outim);
 			outWgt_p = new PagedImage<Float>(outwgt);
+			imageWeightType_p=imageWeightType;
 			weightType_p=weightType;
 	}
 	Bool LinearMosaic::addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
-			  const ImageInterface<Float>& inWgt, Bool outImIsWeighted, Bool unWeightOutIm){
+			  const ImageInterface<Float>& inWgt, Bool unWeightOutIm){
 
+		if(inIm.shape() != inWgt.shape())
+			ThrowCc("Image and Weight image have to be similar...please regrid appropriately");
 		Double meminMB=Double(HostInfo::memoryTotal(true))/1024.0;
 
-		if(!outImIsWeighted){
-
-			if(weightType_p==1)
-				outim.copyData((LatticeExpr<Float>)(outim*outwgt));
-			else if( weightType_p==0)
-				outim.copyData((LatticeExpr<Float>)(outim*outwgt*outwgt));
-			weightType_p=2;
-
+		//if(!outImIsWeighted){
+		{
+			if(linmosType_p==2){
+				if(imageWeightType_p==1)
+					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
+				else if( imageWeightType_p==0)
+					outim.copyData((LatticeExpr<Float>)(outim*outwgt*outwgt));
+				imageWeightType_p=2;
+				if(weightType_p==1)
+					outwgt.copyData((LatticeExpr<Float>)(outwgt*outwgt));
+				weightType_p=2;
+			}
+			if(linmosType_p==1){
+				if(imageWeightType_p==0)
+					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
+				else if( imageWeightType_p==2)
+					outim.copyData((LatticeExpr<Float>)(iif(outwgt > (0.0),
+						       (outim/outwgt), 0)));
+				imageWeightType_p=1;
+				if(weightType_p==2)
+					outwgt.copyData((LatticeExpr<Float>)(sqrt(abs(outwgt))));
+				weightType_p=1;
+			}
 		}
 
 		CoordinateSystem incs=inIm.coordinates();
@@ -158,33 +180,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		TempImage<Float> fullImage(subOutWgt.shape(), subOutIm.coordinates(), meminMB/8.0);
 		TempImage<Float> fullWeight(subOutWgt.shape(), subOutIm.coordinates(), meminMB/8.0);
+		ImageRegrid<Float> regridder;
 		{
-			TempImage<Float> inWeightedIm(inIm.shape(), inIm.coordinates(), meminMB/8.0);
-			inWeightedIm.copyData((LatticeExpr<Float>)(inIm*inWgt));
-			ImageRegrid<Float> regridder;
-			regridder.regrid( fullImage, Interpolate2D::LINEAR,
-					IPosition(2,0,1), inWeightedIm);
-			regridder.regrid( fullWeight, Interpolate2D::LINEAR,
-								IPosition(2,0,1), inWgt);
+
+			if(linmosType_p==2){
+				TempImage<Float> trueWeightIm(inWgt.shape(), inWgt.coordinates(), meminMB/8.0);
+				trueWeightIm.copyData((LatticeExpr<Float>)(inWgt*inWgt));
+				regridder.regrid( fullWeight, Interpolate2D::LINEAR,
+						IPosition(2,0,1), trueWeightIm);
+				TempImage<Float> inWeightedIm(inIm.shape(), inIm.coordinates(), meminMB/8.0);
+				inWeightedIm.copyData((LatticeExpr<Float>)(inIm*inWgt));
+				ImageRegrid<Float> regridder;
+				regridder.regrid( fullImage, Interpolate2D::LINEAR,
+						IPosition(2,0,1), inWeightedIm);
+
+			}
+			else if (linmosType_p==1){
+				regridder.regrid( fullWeight, Interpolate2D::LINEAR,
+										IPosition(2,0,1), inWgt);
+				regridder.regrid( fullImage, Interpolate2D::LINEAR,
+										IPosition(2,0,1), inIm);
+			}
 		}
 
 		subOutWgt.copyData((LatticeExpr<Float>)(subOutWgt+fullWeight));
-		LatticeExprNode elmax = max( outwgt );
-		Float wMax =  elmax.getFloat();
+		//LatticeExprNode elmax = max( outwgt );
+		//Float wMax =  elmax.getFloat();
 		subOutIm.copyData((LatticeExpr<Float>)(subOutIm+fullImage));
-		if(wMax > 0.0){
-			outim.copyData((LatticeExpr<Float>)(outim/wMax));
-			outwgt.copyData((LatticeExpr<Float>)(outwgt/wMax));
-		}
+		//if(wMax > 0.0){
+		//	outim.copyData((LatticeExpr<Float>)(outim/wMax));
+		//	outwgt.copyData((LatticeExpr<Float>)(outwgt/wMax));
+		//}
 		if(unWeightOutIm){
 			outim.copyData((LatticeExpr<Float>)(iif(outwgt > (0.0),
 						       (outim/outwgt), 0)));
-
+			imageWeightType_p=0;
 		}
 
 		return True;
 	}
 
+
+	void LinearMosaic::saultWeightImage(const String& outimname, const Float& fracPeakWgt){
+		if(outImage_p.null())
+			ThrowCc("Mosaic image and weight must be set");
+		PagedImage<Float> outdiskim(outImage_p->shape(), outImage_p->coordinates(), outimname);
+		LatticeExprNode elmax = max( *outWgt_p );
+		Float wMax =  elmax.getFloat();
+		wMax *=fracPeakWgt;
+		LatticeExpr<Float> weightMath;
+		if(imageWeightType_p==0){
+			if(weightType_p==2)
+				weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+									       (*outImage_p), (*outImage_p)*(*outWgt_p)));
+			else if(weightType_p==1)
+				weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+													       (*outImage_p), (*outImage_p)*(*outWgt_p)*(*outWgt_p)));
+		}
+		if(imageWeightType_p==1){
+			if( weightType_p==2)
+				weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+													       (*outImage_p)/sqrt(*outWgt_p), (*outImage_p)*sqrt(*outWgt_p)));
+			else if(weightType_p==1)
+				weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+																	       (*outImage_p)/(*outWgt_p), (*outImage_p)*(*outWgt_p)));
+		}
+		if(imageWeightType_p==2){
+					if( weightType_p==2)
+						weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+															       (*outImage_p)/(*outWgt_p), (*outImage_p)));
+					else if(weightType_p==1)
+						weightMath=(LatticeExpr<Float>)(iif((*outWgt_p) > (wMax),
+																			       (*outImage_p)/((*outWgt_p)*(*outWgt_p)), (*outImage_p)));
+		}
+
+		outdiskim.copyData(weightMath);
+
+
+	}
 	void LinearMosaic::createOutImages(const CoordinateSystem& cs, const Int npol, const Int nchan ){
 		makeEmptyImage(outImName_p, cs, imcen_p, nx_p, ny_p, npol, nchan );
 		makeEmptyImage(outWgtName_p, cs, imcen_p, nx_p, ny_p, npol, nchan );

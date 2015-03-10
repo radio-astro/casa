@@ -47,11 +47,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
 	  LinearMosaic();
 	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-			  const Quantity cellx=Quantity(0.0, "arcsec"), const Quantity celly=Quantity(0.0, "arcsec"));
+			  const Quantity cellx=Quantity(0.0, "arcsec"), const Quantity celly=Quantity(0.0, "arcsec"), const Int linmostype=2);
 	  //Coordinate System of output image along with the different pointing images and weight images
+	  // linmostype 1 or 2.. ie. mosaic in PB or PB^2
 	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
 			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
+			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype=2);
 	  Bool makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
 			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
 			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
@@ -59,12 +60,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
 
 	  // outim is weighted 0: flux correct, 1: flat noise, 2: noise optimal
-	  void setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int weightType=1);
+	  void setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int imageWeightType=1, const Int weightType=2);
 	  // Disk based image of the above
-	  void setOutImages(const String& outim, const String& outwgt, const Int weightType=1);
+	  void setlinmostype(const Int linmostype);
+	  void saultWeightImage(const String& outimname, const Float& fracPeakWgt);
+	  void setOutImages(const String& outim, const String& outwgt, const Int imageWeightType=1, const Int weightType=2);
   private:
 	  Bool addOnToImage(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const ImageInterface<Float>& inIm,
-			  const ImageInterface<Float>& inWgt, Bool outimIsWeighted=False, Bool unWeightOutImage=True);
+			  const ImageInterface<Float>& inWgt, Bool unWeightOutImage=True);
 	  void makeEmptyImage(const String imagename, const CoordinateSystem& cs, const MDirection& imcen, const Int nx, const Int ny, const Int npol, const Int nchan);
 	  void createOutImages(const CoordinateSystem& cs, const Int npol, const Int nchan );
 	  CountedPtr<ImageInterface<Float> > outImage_p, outWgt_p;
@@ -72,7 +75,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Int nx_p, ny_p;
 	  MDirection imcen_p;
 	  Quantity cellx_p, celly_p;
-	  Int weightType_p;
+
+	  Int imageWeightType_p, weightType_p;
+	  Int linmosType_p;
 };
 
 
