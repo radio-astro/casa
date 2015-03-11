@@ -31,7 +31,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                          'high outlier':5,
                          'low outlier':6,
                          'too many flags':7,
-                         'bad quadrant':8}
+                         'bad quadrant':8,
+                         'bad antenna':9}
     flag_reason_key = {1:'max abs',
                        2:'min abs',
                        3:'nmedian',
@@ -39,7 +40,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                        5:'high outlier',
                        6:'low outlier',
                        7:'too many flags',
-                       8:'bad quadrant'}
+                       8:'bad quadrant',
+                       9:'bad antenna'}
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -138,7 +140,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
       flag_maxabs=False, fmax_limit=0.1,
       flag_minabs=False, fmin_limit=0.0,
       flag_bad_quadrant=False, fbq_hilo_limit=7.0,
-      fbq_antenna_frac_limit=0.5, fbq_baseline_frac_limit=0.5):
+      fbq_antenna_frac_limit=0.5, fbq_baseline_frac_limit=0.5,
+      flag_bad_antenna=False, fba_lo_limit=7.0,
+      fba_frac_limit=0.05, fba_number_limit=3, fba_minsample=5):
 
         """
         Generate a list of flagging rules from a set of flagging parameters.
@@ -148,12 +152,17 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # Construct rules from flag properties. If niter is set to curtail
         # the flagging loop then the order that the rules are applied 
         # can be important. For example, 'too many flags' should run after
-        # the other rules, 'bad quadrant' should be run before the others.
+        # the other rules, 'bad quadrant' or 'bad antenna' should be run 
+        # before the others.
         rules = []
         if flag_bad_quadrant:
             rules.append({'name':'bad quadrant', 'hilo_limit':fbq_hilo_limit,
               'frac_limit':fbq_antenna_frac_limit,
               'baseline_frac_limit':fbq_baseline_frac_limit})
+        if flag_bad_antenna:
+            rules.append({'name':'bad antenna', 'lo_limit':fba_lo_limit,
+              'frac_limit':fba_frac_limit, 'number_limit':fba_number_limit,
+              'minsample':fba_minsample})
         if flag_maxabs:
             rules.append({'name':'max abs', 'limit':fmax_limit})
         if flag_minabs:
@@ -525,6 +534,81 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                     flag[i2flag, j2flag] = True
                     flag_reason[i2flag, j2flag] =\
                       self.flag_reason_index[rulename]
+
+                elif rulename == 'bad antenna':
+                    # this test should be run before the others 
+                    # as it depends on no other
+                    # flags having been set by other rules before it
+                    # (because the number of unflagged points
+                    # on entry are part of the test)
+
+                    # Check limits.
+                    mad_max = rule['lo_limit']
+                    frac_limit = rule['frac_limit']
+                    number_limit = rule['number_limit']
+                    minsample = rule['minsample']
+
+                    if 'ANTENNA' in xtitle.upper():
+
+                        i,jant = np.indices(np.shape(data))
+
+                        for ant in range(np.shape(flag)[0]):
+                            ant_data = data[ant,:]
+                            ant_flag = flag[ant,:]
+                            valid_ant_data = ant_data[np.logical_not(ant_flag)]
+
+                            # Sample too small?
+                            if len(valid_ant_data) < minsample:
+                                continue
+
+                            ant_data_median, ant_data_mad = \
+                              arrayflaggerbase.median_and_mad(valid_ant_data)
+
+                            # find low outlier flags first
+                            j_ant = np.arange(np.shape(ant_flag)[0])
+                            j2flag_lo = j_ant[np.logical_and(data_median - ant_data > \
+                              mad_max * data_mad, np.logical_not(ant_flag))]
+ 
+                            # No flagged data?
+                            if len(j2flag_lo) <= 0:
+                                continue
+
+                            # is the antenna bad?
+                            nflags = len(j2flag_lo)
+                            flagsfrac = float(nflags) / float(np.shape(ant_flag)[0])
+
+                            if nflags >= number_limit or \
+                               flagsfrac > frac_limit:
+
+                                # Only once we get here do we actually flag
+                                # the view and the data
+
+                                # first flag the view, specifying the reason
+                                # for each flagged point
+                                i2flag = np.zeros(np.shape(j2flag_lo), np.int)
+                                i2flag += ant
+
+                                ant_flag[j2flag_lo] = True
+                                flag_reason[i2flag, j2flag_lo] = \
+                                  self.flag_reason_index['low outlier']
+
+                                j2flag_bad = j_ant[np.logical_not(ant_flag)]
+                                i2flag_bad = np.zeros(np.shape(j2flag_bad), np.int)
+                                i2flag_bad += ant
+
+                                ant_flag[j2flag_bad] = True
+                                flag_reason[i2flag_bad, j2flag_bad] = \
+                                  self.flag_reason_index['bad antenna']
+
+                                # copy flags back into view
+                                data[ant,:] = ant_data
+                                flag[ant,:] = ant_flag
+
+                                # Just flag the entire antenna in the data
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='bad antenna', filename=table,
+                                  rulename=rulename, spw=spw, pol=pol,
+                                  antenna=ant))
 
                 elif rulename == 'bad quadrant':
                     # this test should be run before the others 
