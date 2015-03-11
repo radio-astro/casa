@@ -486,12 +486,12 @@ vector<int> msmetadata::datadescids(int spw, int pol) {
 	_FUNC(
 		_checkSpwId(spw, False);
 		_checkPolId(pol, False);
-		std::map<std::pair<uInt COMMA uInt> COMMA Int> mymap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		std::map<std::pair<uInt COMMA uInt> COMMA uInt> mymap = _msmd->getSpwIDPolIDToDataDescIDMap();
 		vector<int> ddids;
-		foreach_ (std::pair<std::pair<uInt COMMA uInt> COMMA Int> iter, mymap) {
+		foreach_ (std::pair<std::pair<uInt COMMA uInt> COMMA uInt> iter, mymap) {
 			uInt myspw = iter.first.first;
 			uInt mypol = iter.first.second;
-			Int ddid = iter.second;
+			uInt ddid = iter.second;
 			if (
 				(spw < 0 || (Int)myspw == spw)
 				&& (pol < 0 || (Int)mypol == pol)
@@ -551,7 +551,7 @@ record* msmetadata::exposuretime(
 				return 0;
 			}
 		}
-		std::map<std::pair<uInt COMMA uInt> COMMA Int> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
+		std::map<std::pair<uInt COMMA uInt> COMMA uInt> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
 		std::pair<uInt COMMA uInt> mykey;
 		mykey.first = spwid;
 		mykey.second = polid;
