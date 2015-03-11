@@ -2,14 +2,17 @@
 #define _CASA_BLPARAMETER_PARSER_H_
 
 #include <string>
+#include <map>
 #include <vector>
 //#include<cstdint> //with c++11 support
 #include <climits>
 #include <sstream>
 
-#include <libsakura/sakura.h>
-
 #include <casa/aipstype.h>
+#include <casa/Logging/LogIO.h>
+#include <casa/Logging/LogOrigin.h>
+
+#include <libsakura/sakura.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -50,6 +53,24 @@ struct BLParameterSet {
     npiece = num_piece;
     nwave = nwaves;
   }
+
+  void PrintSummary() {
+    LogIO os(LogOrigin("BLParameterSet","PrintSummary"));
+    os << "- mask: " << baseline_mask << LogIO::POST;
+    os << "- clip: iteration=" << num_fitting_max
+       << ", threshold=" << clip_threshold_sigma << LogIO::POST;
+    os 
+      << "- line finder: "
+      << (line_finder.use_line_finder==1 ? "true" : "false")
+      << ", threshold=" << line_finder.threshold
+      << ", edge=[" << line_finder.edge[0] << ","
+      << line_finder.edge[1] << "], chan_average="
+      << line_finder.chan_avg_limit << LogIO::POST;
+    os << "- baseline: type=" << baseline_type
+       << ", order=" << order << ", npiece=" << npiece
+       << LogIO::POST;
+  }
+
   string baseline_mask;
   uint16_t num_fitting_max;
   float clip_threshold_sigma;
@@ -65,6 +86,7 @@ class BLParameterParser {
 public:
 
   explicit BLParameterParser(string const file_name);
+  ~BLParameterParser();
 
   //Returns false if there is no fitting parameters for the row and pol.
   //Else, returns a baseline fitting parameter of a certain
@@ -82,6 +104,7 @@ public:
 
 private:
   void initialize();
+  void Clearup();
   // parse a file
   void parse(string const file_name);
   // split string by separator character
@@ -95,6 +118,7 @@ private:
 
   // Member variables
   string blparam_file_;
+  std::map<const std::pair<size_t, size_t>, BLParameterSet*> bl_parameters_;
   std::vector<LIBSAKURA_SYMBOL(BaselineType)> baseline_types_;
   uint16_t max_orders_[static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements))];
   // The enum for columns in fitting parameter file

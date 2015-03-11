@@ -1,7 +1,5 @@
 #include <fstream>
 
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/Assert.h>
 
 #include <singledish/SingleDish/BLParameterParser.h>
@@ -19,8 +17,27 @@ BLParameterParser::BLParameterParser(string const file_name)
   blparam_file_ = file_name;
 }
 
+BLParameterParser::~BLParameterParser()
+{
+  Clearup();
+}
+
+void BLParameterParser::Clearup()
+{
+  if (!bl_parameters_.empty()) {
+    map<const pair<size_t, size_t> , BLParameterSet*>::iterator
+      iter = bl_parameters_.begin();
+    while (iter != bl_parameters_.end()) {
+      delete (*iter).second;
+      ++iter;
+    }
+    bl_parameters_.clear();
+  }
+}
+
 void BLParameterParser::initialize()
 {
+  if (!bl_parameters_.empty()) Clearup();
   baseline_types_.resize(0);
   // initialize max orders
   size_t num_type = static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements));
@@ -54,41 +71,31 @@ void BLParameterParser::parse(string const file_name)
     // The order should be
     // ROW,POL,MASK,NITERATION,CLIP_THRES,LF,LF_THRES,LEDGE,REDGE,CHANAVG,BL_TYPE,ORDER,N_PIECE,NWAVE
     // size_t,1,string,uint16_t,float,bool,float,size_t,size_t,size_t,sinusoidal,uint16_t,size_t,vector<size_t>
-    BLParameterSet bl_param;
+    //skip line starting with '#'
+    if (linestr[0]=='#') continue;
+    BLParameterSet *bl_param = new BLParameterSet();
     size_t row_idx, pol_idx;
-    ConvertLineToParam(linestr, row_idx, pol_idx, bl_param);
-    // DEBUG OUTPUT
-    {
-      os << LogIO::DEBUG1 << "Summary of parsed Parameter" << LogIO::POST;
-      os << LogIO::DEBUG1 << "[ROW" << row_idx << ", POL" << pol_idx << "]"
+    ConvertLineToParam(linestr, row_idx, pol_idx, *bl_param);
+    bl_parameters_[make_pair(row_idx, pol_idx)] = bl_param;
+    //Parameter summary output
+    if (true) {
+      os << "Summary of parsed Parameter" << LogIO::POST;
+      os << "[ROW" << row_idx << ", POL" << pol_idx << "]"
 	 << LogIO::POST;
-      os << LogIO::DEBUG1 << "- mask: " << bl_param.baseline_mask
-	 << LogIO::POST;
-      os << LogIO::DEBUG1 << "- clip: iteration=" << bl_param.num_fitting_max
-	 << ", threshold=" << bl_param.clip_threshold_sigma << LogIO::POST;
-      os << LogIO::DEBUG1
-	 << "- line finder: "
-	 << (bl_param.line_finder.use_line_finder==1 ? "true" : "false")
-	 << ", threshold=" << bl_param.line_finder.threshold
-	 << ", edge=[" << bl_param.line_finder.edge[0] << ","
-	 << bl_param.line_finder.edge[1] << "], chan_average="
-	 << bl_param.line_finder.chan_avg_limit << LogIO::POST;
-      os << LogIO::DEBUG1 << "- baseline: type=" << bl_param.baseline_type
-	 << ", order=" << bl_param.order << ", npiece=" << bl_param.npiece
-	 << LogIO::POST;
+      bl_param->PrintSummary();
     }
     // update bealine_types_ list
-    size_t curr_type_idx = static_cast<size_t>(bl_param.baseline_type);
+    size_t curr_type_idx = static_cast<size_t>(bl_param->baseline_type);
     bool new_type = true;
     for (size_t i=0; i<baseline_types_.size(); ++i){
-      if (bl_param.baseline_type==baseline_types_[i]){
+      if (bl_param->baseline_type==baseline_types_[i]){
 	new_type = false;
 	break;
       }
     }
-    if (new_type) baseline_types_.push_back(bl_param.baseline_type);
+    if (new_type) baseline_types_.push_back(bl_param->baseline_type);
     // update max_orders_
-    size_t curr_order = GetTypeOrder(bl_param);
+    size_t curr_order = GetTypeOrder(*bl_param);
     if (curr_order > max_orders_[curr_type_idx])
       max_orders_[curr_type_idx] = curr_order;
   }
@@ -119,6 +126,7 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
   // parse mandatory data
   rowid = ConvertString<size_t>(svec[BLParameters_kRow]);
   polid = ConvertString<size_t>(svec[BLParameters_kPol]);
+  paramset.baseline_mask = svec[BLParameters_kMask];
   size_t num_piece=USHRT_MAX;//SIZE_MAX;
   string const bltype_str = svec[BLParameters_kBaselineType];
   if (bltype_str == "cspline")
@@ -157,7 +165,7 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
   // parse line finder parameter
   LineFinderParameter &lf_param = paramset.line_finder;
   lf_param.use_line_finder = svec[BLParameters_kLineFinder]=="true" ? true : false;;
-  if (!lf_param.use_line_finder)
+  if (lf_param.use_line_finder)
   { // use line finder
     if (svec[BLParameters_kLFThreshold].size()>0)
     {
@@ -200,6 +208,14 @@ uint16_t BLParameterParser::GetTypeOrder(BLParameterSet const &bl_param)
 
 bool BLParameterParser::GetFitParameter(size_t const rowid,size_t const polid, BLParameterSet &bl_param)
 {
+  map<const pair<size_t, size_t> ,BLParameterSet*>::iterator
+    iter = bl_parameters_.begin();
+  iter = bl_parameters_.find(make_pair(rowid, polid));
+  if (iter==bl_parameters_.end()) {
+    // no matching element
+    return false;
+  }
+  bl_param = *(*iter).second;
   return true;
 }
 
