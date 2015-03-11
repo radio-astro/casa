@@ -219,7 +219,6 @@ class Tclean(cleanbase.CleanBase):
             # previous residual image.
 	    rootname, ext = os.path.splitext(result.residual)
 	    rootname, ext = os.path.splitext(rootname)
-	    #new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 	    new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
 	    try:
 	        shutil.rmtree (new_cleanmask)

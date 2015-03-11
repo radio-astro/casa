@@ -105,7 +105,7 @@ class CleanBaseInputs(basetask.StandardInputs):
 
     @gridmode.setter
     def gridmode(self, value):
-         self._gridmode = value
+        self._gridmode = value
 
     @property
     def deconvolver(self):
@@ -115,7 +115,7 @@ class CleanBaseInputs(basetask.StandardInputs):
 
     @deconvolver.setter
     def deconvolver(self, value):
-         self._deconvolver = value
+        self._deconvolver = value
 
     @property
     def outframe(self):
@@ -447,9 +447,11 @@ class CleanBase(basetask.StandardTaskTemplate):
           inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
           inputs.imagename, inputs.stokes, iter)
-        #flux_name = '%s.%s.iter%s.flux' % (
-        #  inputs.imagename, inputs.stokes, iter)
-        flux_name = ''
+        if (inputs.gridmode == 'mosaic'):
+            flux_name = '%s.%s.iter%s.weight' % (
+              inputs.imagename, inputs.stokes, iter)
+        else:
+            flux_name = ''
 
         # delete any old files with this naming root
         try:
@@ -479,7 +481,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             spw=inputs.spw,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
-            niter=inputs.niter+2,
+            pblimit=0.2, niter=max(1, inputs.niter),
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -488,7 +490,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             weighting=inputs.weighting, robust=inputs.robust,
             npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask)
+            mask=inputs.mask, savemodel='modelcolumn')
         self._executor.execute(job)
 
         # Store the model.

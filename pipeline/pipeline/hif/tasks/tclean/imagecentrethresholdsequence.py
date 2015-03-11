@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure as infrastructure
 from .basecleansequence import BaseCleanSequence
@@ -30,10 +32,11 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             #   centre quarter for single field
             #   flux > 0.2 for mosaic
             if self.gridmode == 'mosaic':
-                cm = casatools.image.newimagefromimage(infile=self.residuals[0],
+                cm = casatools.image.newimagefromimage(infile=self.flux,
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
-                cm.calc('1.0', verbose=False)
+                cm.calc('1', verbose=False)
+                cm.calc('replace(%s["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
                 cm.done()
             else:
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0],
