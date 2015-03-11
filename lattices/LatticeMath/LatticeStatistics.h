@@ -437,14 +437,16 @@ protected:
 //
 // Virtual Functions.  See implementation to figure it all out !
 //
+// FIXME: All the beam/image-related stuff needs to be moved out of this class.
 // Get beam volume if possible.  Your lattice needs to be
 // an ImageInterface for you to be able to do this.
 // See for example, class ImageStatistics.  When you provide
 // the beam, then the Flux statistic, if requested, can be
 // computed.  Returns False if beam not available, else True.
-// The implementation here returns False.
+// The implementation here returns False. <src>msg</src> contains a
+// user-friendly explanation if False is returned.
 
-   virtual Bool _getBeamArea (Array<Double>& beamArea) const;
+   virtual Bool _getBeamArea (Array<Double>& beamArea, String& msg) const;
 
    // FIXME The indirect dependence of this class on ImageInterface related
    // issues (eg flux density) breaks encapsulation. All the ImageInterface related code should be
@@ -498,6 +500,9 @@ protected:
 
    // get the storage lattice shape
    inline IPosition _storageLatticeShape() const { return pStoreLattice_p->shape(); }
+
+   // more image-specific necessities :(
+   virtual String _intensityUnit() const { return ""; }
 
 private:
 

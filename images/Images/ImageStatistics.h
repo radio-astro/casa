@@ -162,6 +162,8 @@ protected:
 	AccumType sum, Double beamAreaInPixels
    ) const;
 
+   String _intensityUnit() const;
+
 private:
 // Data
 
@@ -181,7 +183,7 @@ private:
     // Get beam area in pixels if possible. Return False if the beam area could not be
     // calculated.
     virtual Bool _getBeamArea(
-    	Array<Double>& beamArea
+    	Array<Double>& beamArea, String& msg
     ) const;
 
 // List min and max with world coordinates
