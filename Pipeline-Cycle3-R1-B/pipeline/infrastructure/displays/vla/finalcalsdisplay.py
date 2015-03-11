@@ -48,6 +48,7 @@ class finalcalsSummaryChart(object):
                                  #'antenna'     : antPlot,
                                  'showatm'     : False,
                                  'showfdm'     : False,
+                                 'showlines'   : True,
                                  'subplot'     : 11,
                                  'plotrange'   : [],
                                  'figfile'     : figfile}
@@ -402,6 +403,7 @@ class finalbpSolAmpPerAntennaChart(object):
                                  'antenna'     : antPlot,
                                  'showatm'     : False,
                                  'showfdm'     : False,
+                                 'showlines'   : True,
                                  'subplot'     : 11,
                                  'plotrange'   : [0,0,0, ampplotmax],
                                  'overlay'     : 'baseband',
@@ -544,6 +546,7 @@ class finalbpSolPhasePerAntennaChart(object):
                                  'antenna'     : antPlot,
                                  'showatm'     : False,
                                  'showfdm'     : False,
+                                 'showlines'   : True,
                                  'subplot'     : 11,
                                  'plotrange'   : [0,0,-phaseplotmax, phaseplotmax],
                                  'overlay'     : 'baseband',
