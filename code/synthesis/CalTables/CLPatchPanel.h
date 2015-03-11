@@ -305,6 +305,9 @@ private:
   void resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,const Vector<Double>& fout,
 		      Matrix<Float>& tres,Matrix<Bool>& tflg,const Vector<Double>& fin,
 		      String finterp);
+  void resampleFlagsInFreq(Vector<Bool>& flgout,const Vector<Double>& fout,
+                           Vector<Bool>& flgin,const Vector<Double>& fin,
+			   String finterp);
 
   // Baseline index from antenna indices: (assumes a1<=a2 !!)
   //  inline Int blnidx(const Int& a1, const Int& a2, const Int& nAnt) { return  a1*nAnt-a1*(a1+1)/2+a2; };
