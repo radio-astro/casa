@@ -1302,8 +1302,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( imsize.nelements() != 2 ){ err += "imsize must be a vector of 2 Ints\n"; }
     if( cellsize.nelements() != 2 ) { err += "cellsize must be a vector of 2 Quantities\n"; }
 
-    if( nchan>1 and nTaylorTerms>1 )
-      {err += "Cannot have more than one channel with ntaylorterms>1\n";}
+    //// default is nt=2 but deconvolver != mtmfs by default.
+    //    if( nchan>1 and nTaylorTerms>1 )
+    //  {err += "Cannot have more than one channel with ntaylorterms>1\n";}
 
     if( ! stokes.matches("I") && ! stokes.matches("Q") && 
 	! stokes.matches("U") && ! stokes.matches("V") && 

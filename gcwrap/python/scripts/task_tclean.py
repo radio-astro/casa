@@ -111,13 +111,13 @@ def tclean(
     #####################################################
     
     ### Move these checks elsewhere ? 
-    if specmode=='mfs' and ntaylorterms>1 and deconvolver != "mtmfs":
-        casalog.post( "MTMFS is the only available deconvolution algorithm for ntaylorterms>1.\
-                              Please set deconvolver='mtmfs'.", "WARN", "task_tclean" )
+
+    if specmode=='mfs' and ntaylorterms==1 and deconvolver == "mtmfs":
+        casalog.post( "The MTMFS deconvolution algorithm (deconvolver='mtmfs') needs ntaylorterms>1.Please set ntaylorterms=2 (or more). ", "WARN", "task_tclean" )
         return
 
     if specmode!='mfs' and deconvolver=="mtmfs":
-        casalog.post( "The MSMFS algorithm applies only to specmode='mfs'.", "WARN", "task_tclean" )
+        casalog.post( "The MSMFS algorithm (deconvolver='mtmfs') applies only to specmode='mfs'.", "WARN", "task_tclean" )
         return
 
     #####################################################
@@ -128,7 +128,7 @@ def tclean(
     ### This is temporary..... get rid of it.
     if gridmode=='imagemosaic':
         mtype='imagemosaic'
-    elif ntaylorterms>1:
+    elif deconvolver=='mtmfs':
         mtype='multiterm'
     else:
         mtype='default'

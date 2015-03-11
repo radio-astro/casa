@@ -345,7 +345,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="ntaylorterms" subparam="true">
       <description>Number of Taylor coefficients in the spectral model</description>
-      <value type="int">1</value>
+      <value type="int">2</value>
     </param>
 
     <param type="any" name="restoringbeam" subparam="true">
@@ -419,7 +419,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="savemodel"> 
 	    <description>Options to save model at the end (none, virtual, modelcolumn)</description>
-	    <value type="string">"none"</value>
+	    <value type="string">none</value>
 <!--	    <allowed kind="enum">
 	      <value>none</value>
               <value>virtual</value>
@@ -605,7 +605,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
-	 <default param="ntaylorterms"><value>1</value></default>  
+	 <default param="ntaylorterms"><value>2</value></default>  
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="aasp">
