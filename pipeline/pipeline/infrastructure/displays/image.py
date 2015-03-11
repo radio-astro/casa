@@ -36,10 +36,34 @@ flag_color = {'outlier': 'red',
               'nmedian':'darkred',
               'max abs':'pink',
               'min abs':'darkcyan',
-              'bad quadrant':'yellow'}
+              'bad quadrant':'yellow',
+              'bad antenna':'red'}
               
 
 class ImageDisplay(object):
+
+    def _findchunks(self, times):
+        """Return a list of arrays, each containing the indices of a chunk
+        of data i.e. a sequence of equally spaced measurements separated
+        from other chunks by larger time gaps.
+
+        Keyword arguments:
+        times -- Numeric array of times at which the measurements
+                 were taken.
+        """
+        difference = times[1:] - times[:-1]
+        median_diff = np.median(difference)
+
+        chunks = []
+        chunk = [0]
+        for i in np.arange(len(difference)):
+            if difference[i] < 1.5 * median_diff:
+                chunk.append(i+1)
+            else:
+                chunks.append(np.array(chunk))
+                chunk = [i+1]
+        chunks.append(np.array(chunk))
+        return chunks
 
     def plot(self, context, results, reportdir, prefix='',
       change='Flagging', dpi=None):
@@ -341,17 +365,24 @@ class ImageDisplay(object):
         if ytitle.upper() == 'TIME':
             plt.gca().yaxis.set_major_locator(plt.NullLocator())
             if plotnumber==1:
+                # identify chunks of contiguous time
+                chunks = self._findchunks(ydata)
                 base_time = 86400.0*np.floor (ydata[0]/86400.0)
                 tim_plot = ydata - base_time
-                for i,t in enumerate(tim_plot):
+                ax = plt.gca()
+
+                for chunk in chunks:
+                    t = tim_plot[chunk[0]]
                     h = int(np.floor(t/3600.0))
                     t -= h * 3600.0
                     m = int(np.floor(t/60.0))
                     t -= m * 60.0
                     s = int(np.floor(t))
                     tstring = '%sh%sm%ss' % (h,m,s)
-                    plt.text(lims[0]-0.25, i, tstring, fontsize=10,
-                      ha='right', va='bottom')
+                    ax.axhline(chunk[0]-0.5, color='white')
+                    ax.axhline(chunk[-1]+0.5, color='white')
+                    ax.text(lims[0]-0.25, ydata[chunk[0]], tstring,
+                      fontsize=10, ha='right', va='bottom', clip_on=False)
 
         # reset lims to values for image, stops box being pulled off edge
         # of image by other plotting commands.
