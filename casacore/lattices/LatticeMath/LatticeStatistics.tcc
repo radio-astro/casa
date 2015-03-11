@@ -604,14 +604,13 @@ Bool LatticeStatistics<T>::getStats(
 		stats.resize(0);
 		return  True;
 	}
-	//stats(MEAN) = LattStatsSpecialize::getMean(stats(SUM), n);
-	//stats(VARIANCE) = LattStatsSpecialize::getVariance(stats(SUM),                                               stats(SUMSQ), n);
 	stats(SIGMA) = LattStatsSpecialize::getSigma(stats(VARIANCE));
 	stats(RMS) =  LattStatsSpecialize::getRms(stats(SUMSQ), n);
 	stats(FLUX) = 0;
 	if (_canDoFlux()) {
 		Array<Double> beamArea;
-		if (_getBeamArea(beamArea)) {
+		String msg;
+		if (_getBeamArea(beamArea, msg)) {
 			IPosition beamPos = pos;
 			if (posInLattice) {
 				this->_latticePosToStoragePos(beamPos, pos);
@@ -619,6 +618,11 @@ Bool LatticeStatistics<T>::getStats(
 			stats(FLUX) = _flux(stats(SUM), beamArea(beamPos)).getValue();
 		}
 		else {
+			String unit = _intensityUnit();
+			unit.downcase();
+			if (unit.contains("/beam")) {
+				return False;
+			}
 			stats(FLUX) = _flux(stats(SUM), 0).getValue();
 		}
 	}
@@ -728,7 +732,16 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
 		   return False;
 	   }
        Array<Double> beamArea;
-       Bool gotBeamArea = _getBeamArea(beamArea);
+       String msg;
+       Bool gotBeamArea = _getBeamArea(beamArea, msg);
+       if (! gotBeamArea) {
+    	   String unit = this->_intensityUnit();
+    	   unit.downcase();
+    	   ThrowIf(
+    			   unit.contains("/beam"),
+    			   "Unable to compute flux: " + msg
+    	   );
+       }
        retrieveStorageStatistic (sum, SUM, dropDeg);
        ReadOnlyVectorIterator<AccumType> sumIt(sum);
        PtrHolder<ReadOnlyVectorIterator<Double> > beamAreaIter(
@@ -737,7 +750,6 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
        while (!nPtsIt.pastEnd()) {
           for (uInt i=0; i<n1; i++) {
              if (LattStatsSpecialize::hasSomePoints(nPtsIt.vector()(i))) {
-                //sliceIt.vector()(i) = sumIt.vector()(i) / beamAreaIter.vector()(i);
             	sliceIt.vector()(i) = _flux(
             		sumIt.vector()(i), gotBeamArea ? beamAreaIter->vector()(i) : 0
             	).getValue();
@@ -920,7 +932,6 @@ Bool LatticeStatistics<T>::generateStorageLattice() {
     	_algConf.algorithm == StatisticsData::CLASSICAL
     	&& timeOld < timeNew 
     ) {
-    	//cout << "using old method" << endl;
     	// use older method for higher performance in the large loop count
     	// regime
         //timer.mark();
@@ -941,12 +952,9 @@ Bool LatticeStatistics<T>::generateStorageLattice() {
     	collapser.minMaxPos(minPos_p, maxPos_p);
     }
     else {
-    	//cout << "using new method" << endl;
-        //timer.mark();
         _doStatsLoop(nsets, pProgressMeter);
     }
     pProgressMeter = NULL;
-    //cout << "time " << timer.real() << endl;
 
     // Do robust statistics separately as required.
     generateRobust();
@@ -1020,11 +1028,6 @@ void LatticeStatistics<T>::_doStatsLoop(
 			uInt nSublatticeSteps = nelem > 4096*4096
 				? nelem/subLat.advisedMaxPixels()
 				: 1;
-			/*
-			cout << "nelem " << nelem << endl;
-			cout << "nice cursor shape " << subLat.niceCursorShape() << endl;
-			cout << "nsteps " << nsets*nSublatticeSteps << endl;
-			*/
 			progressMeter->init(nsets*nSublatticeSteps);
 		}
 		if(subLat.isMasked()) {
@@ -2897,7 +2900,7 @@ void LatticeStatistics<T>::closePlotting()
 
 template <class T>
 Bool LatticeStatistics<T>::_getBeamArea(
-	Array<Double>& beamArea
+	Array<Double>& beamArea, String& msg
 ) const {
 	if (pStoreLattice_p->ndim() == 1) {
 		beamArea.resize(IPosition(1, 0));
@@ -2910,6 +2913,7 @@ Bool LatticeStatistics<T>::_getBeamArea(
 		beamArea.resize(shape);
 	}
 	beamArea.set(-1.0);
+	msg = "Raw lattices do not support beams";
 	return False;
 }
 
@@ -3297,10 +3301,6 @@ void LatticeStatistics<T>::displayStats (
     AccumType dMin, AccumType dMax,
     AccumType q1, AccumType q3
 ) {
-// Get beam
-
-   //Array<Double> beamArea;
-   //Bool hasBeam = _getBeamArea(beamArea);
 
 // Have to convert LogIO object to ostream before can apply
 // the manipulators.  Also formatting Complex numbers with
@@ -3479,7 +3479,6 @@ void StatsTiledCollapser<T,U>::initAccumulator (uInt n1, uInt n3)
 	   ++iter;
    }
    timer.stop();
-   cout << timer.getReal() << endl;
 }
 
 template <class T, class U>
