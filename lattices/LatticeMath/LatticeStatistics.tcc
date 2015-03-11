@@ -737,10 +737,17 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
        if (! gotBeamArea) {
     	   String unit = this->_intensityUnit();
     	   unit.downcase();
+    	   /*
     	   ThrowIf(
     			   unit.contains("/beam"),
     			   "Unable to compute flux: " + msg
     	   );
+    	   */
+    	   if (unit.contains("/beam")) {
+    		   os_p << LogIO::WARN << "Unable to compute flux density: "
+    				<< msg << LogIO::POST;
+    		   return False;
+    	   }
        }
        retrieveStorageStatistic (sum, SUM, dropDeg);
        ReadOnlyVectorIterator<AccumType> sumIt(sum);
