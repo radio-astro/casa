@@ -900,8 +900,8 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
 	  // get fitting parameter
-	  BLParameterSet *fit_param = parser.GetFitParameter(irow,ipol);
-	  if (fit_param==NULL)
+	  BLParameterSet fit_param;
+	  if (!parser.GetFitParameter(irow,ipol,fit_param))
 	  { //no fit requrested
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    continue;
@@ -913,17 +913,17 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
   	  // actual execution of single spectrum
-	  LIBSAKURA_SYMBOL(BaselineContext)* context = context_reservoir[fit_param->baseline_type][ctx_indices[idx]];
-	  switch (fit_param->baseline_type) {
+	  LIBSAKURA_SYMBOL(BaselineContext)* context = context_reservoir[fit_param.baseline_type][ctx_indices[idx]];
+	  switch (fit_param.baseline_type) {
 	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
 	    status = 
   	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, 
-							       fit_param->npiece,
+							       fit_param.npiece,
 							       num_chan,
 							       spec.data,
 							       mask.data,
-							       fit_param->clip_threshold_sigma, 
-							       fit_param->num_fitting_max,
+							       fit_param.clip_threshold_sigma, 
+							       fit_param.num_fitting_max,
 							       true,
 							       mask.data,
 							       spec.data,
@@ -932,12 +932,12 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  default:
 	    status = 
 	      LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, 
-						      fit_param->order, 
+						      fit_param.order, 
 						      num_chan, 
 						      spec.data, 
 						      mask.data, 
-						      fit_param->clip_threshold_sigma, 
-						      fit_param->num_fitting_max,
+						      fit_param.clip_threshold_sigma, 
+						      fit_param.num_fitting_max,
 						      true, 
 						      mask.data, 
 						      spec.data, 

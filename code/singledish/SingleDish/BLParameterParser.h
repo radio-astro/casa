@@ -5,6 +5,7 @@
 #include <vector>
 //#include<cstdint> //with c++11 support
 #include <climits>
+#include <sstream>
 
 #include <libsakura/sakura.h>
 
@@ -31,10 +32,10 @@ struct LineFinderParameter {
 };
 
 struct BLParameterSet {
-  BLParameterSet(string const blmask, uint16_t const nfit_max,
-		 float const clipthres,
-		 LineFinderParameter *lf_param,
-		 LIBSAKURA_SYMBOL(BaselineType) const bl_type,
+  BLParameterSet(string const blmask="", uint16_t const nfit_max=0,
+		 float const clipthres=0.0,
+		 LineFinderParameter lf_param=LineFinderParameter(),
+    LIBSAKURA_SYMBOL(BaselineType) const bl_type=LIBSAKURA_SYMBOL(BaselineType_kNumElements),
 		 uint16_t const fit_order = USHRT_MAX, //UINT16_MAX,
 		 size_t const num_piece = USHRT_MAX, //SIZE_MAX,
 		 std::vector<size_t> const &nwaves = std::vector<size_t>()
@@ -43,7 +44,7 @@ struct BLParameterSet {
     baseline_mask = blmask;
     num_fitting_max = nfit_max;
     clip_threshold_sigma = clipthres;
-    line_finder = *lf_param;
+    line_finder = lf_param;
     baseline_type = bl_type;
     order = fit_order;
     npiece = num_piece;
@@ -65,8 +66,11 @@ public:
 
   explicit BLParameterParser(string const file_name);
 
-  //Returns a baseline fitting parameter of a certain row and pol ID in MS
-  BLParameterSet* GetFitParameter(size_t const rowid,size_t const polid);
+  //Returns false if there is no fitting parameters for the row and pol.
+  //Else, returns a baseline fitting parameter of a certain
+  //row and pol IDs in MS
+  bool GetFitParameter(size_t const rowid,size_t const polid,
+		       BLParameterSet &bl_param);
 
   //Returns the name of file that stores 
   inline string get_file_name(){return blparam_file_;};
@@ -78,15 +82,22 @@ public:
 
 private:
   void initialize();
+  // parse a file
   void parse(string const file_name);
-  BLParameterSet ConvertLineToParam(string const *linestr);
-
+  // split string by separator character
+  void SplitLine(string const &linestr, char const separator,
+		 std::vector<string> &strvec);
+  // convert a line of string to a BLParameterSet data structure
+  void ConvertLineToParam(string const &linestr, size_t &rowid,
+			  size_t &polid, BLParameterSet &paramset);
+  //Returns order or npiece in BLParameterSet structure depending on datatype.
   uint16_t GetTypeOrder(BLParameterSet const &bl_param);
-  
+
+  // Member variables
   string blparam_file_;
   std::vector<LIBSAKURA_SYMBOL(BaselineType)> baseline_types_;
   uint16_t max_orders_[static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements))];
-
+  // The enum for columns in fitting parameter file
   typedef enum {BLParameters_kRow = 0,
 		BLParameters_kPol,
 		BLParameters_kMask,
@@ -103,6 +114,16 @@ private:
 		BLParameters_kNWave,
 		BLParameters_kNumElements
   } BLParameters;
+
+  //
+  template<typename DataType>
+  inline DataType ConvertString(string const &svalue)
+  {
+    DataType out_value;
+    std::istringstream istr(svalue.data());
+    istr >> out_value;
+    return out_value;
+  };
 
 }; // class BLParameterParser -END
 
