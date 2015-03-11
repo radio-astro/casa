@@ -3098,8 +3098,7 @@ Bool Imager::makeimage(const String& type, const String& image,
       }
 
 
-    cerr << "cImage shape " << cimageShape << " tile shape " << tileShape << endl;
-
+    
     PagedImage<Complex> cImageImage(TiledShape(cimageShape, tileShape),
 				    cimagecoords,
 				    cImageName);
