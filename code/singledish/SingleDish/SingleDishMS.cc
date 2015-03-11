@@ -321,7 +321,6 @@ void SingleDishMS::parse_spw(string const &in_spw,
   Record selrec = sdh_->getSelRec(in_spw);
   rec_spw = selrec.asArrayInt("spw");
   rec_chan = selrec.asArrayInt("channel");
-
   nchan.resize(rec_spw.nelements());
   mask.resize(rec_spw.nelements());
   nchan_set.resize(rec_spw.nelements());
@@ -342,7 +341,7 @@ void SingleDishMS::get_nchan_and_mask(Vector<Int> const &rec_spw,
   new_nchan = false;
   for (size_t i = 0; i < rec_spw.nelements(); ++i) {
     //get nchan by spwid and set to nchan[]
-    for (size_t j = 0; j < data_spw; ++j) {
+    for (size_t j = 0; j < data_spw.nelements(); ++j) {
       if ((!nchan_set(i))&&(data_spw(j) == rec_spw(i))) {
 	bool found = false;
 	for (size_t k = 0; k < nchan.nelements(); ++k) {
@@ -611,6 +610,9 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 
   Vector<size_t> ctx_indices;
   ctx_indices.resize(nchan.nelements());
+  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
+    ctx_indices(ictx) = 0;
+  }
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
   Vector<bool> pol;
@@ -627,17 +629,16 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<bool> mask(num_chan);
 
-      bool new_nchan;
+      bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
       if (new_nchan) {
-	// ----> move nchan check to here
 	get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
 			     static_cast<uint16_t>(order), 
 			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
       }
-      // get a data cube (npol*nchan*nrow) from VisBuffer
+
+      // get a data/flag cube (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
-      // get a flag cube (npol*nchan*nrow) from VisBuffer
       get_flag_cube(*vb, flag_chunk);
 
       if (!pol_set) {
@@ -704,6 +705,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
       sdh_->fillCubeToOutputMs(vb, data_chunk);
     } // end of vi loop
   } // end of chunk loop
+
   finalize_process();
 
   // destroy baselint contexts
