@@ -50,7 +50,8 @@ namespace casa {
   : DataManager    (),
     itsDataManName (dataManName),
     itsBDF         (0),
-    itsOpenBDF     (-1)
+    itsOpenBDF     (-1),
+    itsNBl(0)
   {}
 
   AsdmStMan::AsdmStMan (const String& dataManName,
@@ -58,14 +59,16 @@ namespace casa {
   : DataManager    (),
     itsDataManName (dataManName),
     itsBDF         (0),
-    itsOpenBDF     (-1)
+    itsOpenBDF     (-1),
+    itsNBl(0)
   {}
 
   AsdmStMan::AsdmStMan (const AsdmStMan& that)
   : DataManager    (),
     itsDataManName (that.itsDataManName),
     itsBDF         (0),
-    itsOpenBDF     (-1)
+    itsOpenBDF     (-1),
+    itsNBl(0)
   {}
 
   AsdmStMan::~AsdmStMan()
@@ -514,6 +517,7 @@ namespace casa {
     //
     // Attention !!! If we are in front of Correlator data we must apply the transposition function
     uInt bl;
+    //cerr << "shape0 "<< itsTransposeBLNum_v.size() << endl; 
     if (ix.dataType != 10 ) 
       bl = itsTransposeBLNum_v[rownr - ix.row];
     else
@@ -571,7 +575,7 @@ namespace casa {
     // Deduce the number of antennas from the number of baselines
     uInt numAnt = (uInt) (floor((1 + sqrt(1 + 8*nBl)) / 2 + 0.5));
 
-    // cout << "AsdmStMan::setTransposeBLNum, numAnt=" << numAnt << endl;
+    //cerr << "AsdmStMan::setTransposeBLNum, numAnt=" << numAnt << endl;
     
     uInt blNum = 0;
     map<uInt, map<uInt, uInt> > _mm;
