@@ -431,6 +431,7 @@ void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const bas
       if ((nchan_set[i])&&(nchan[i] == num_chan)) {
 	ctx_indices[i] = idx;
       }
+
     }
 
     LIBSAKURA_SYMBOL(BaselineContext) *context;
@@ -800,6 +801,15 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
     max_orders[baseline_types[i]] 
       = parser.get_max_order(baseline_types[i]);
   }
+  { //DEBUG ouput
+    os << LogIO::DEBUG1 << "Baseline Types = " << baseline_types << LogIO::POST;
+    os << LogIO::DEBUG1 << "Max Orders:"<< LogIO::POST;
+    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter=max_orders.begin();
+    while (iter != max_orders.end() ) {
+      os << LogIO::DEBUG1 << "- type " << (*iter).first << ": " << (*iter).second << LogIO::POST;
+      ++iter;
+    }
+  }
 
   // Setup VisIter for input MS
   Block<Int> columns(1);
@@ -819,18 +829,22 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   // value: a vector of Sakura_BaselineContext for various nchans
   map< const LIBSAKURA_SYMBOL(BaselineType),
     std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
-  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
-    iter = max_orders.begin();
-  while (iter != max_orders.end() ) {
-    context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>() ;
-    context_reservoir[(*iter).first].clear();
-    ++iter;
+  {
+    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
+      iter = max_orders.begin();
+    while (iter != max_orders.end() ) {
+      context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>() ;
+      ++iter;
+    }
   }
 
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
   Vector<size_t> ctx_indices;
   ctx_indices.resize(nchan.nelements());
+  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
+    ctx_indices(ictx) = 0;
+  }
 
   Vector<bool> pol;
   bool pol_set = false;
@@ -841,12 +855,13 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
+      Vector<uInt> orig_rows = vb->rowIds();
       Cube<Float> data_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<bool> mask(num_chan);
 
-      bool new_nchan;
+      bool new_nchan=false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
       if (new_nchan) {
 	// Generate context for all necessary baseline types
@@ -877,7 +892,6 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   	    break;
   	  }
   	}
-
   	// loop over polarization
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
 	  if (!pol(ipol))
@@ -901,10 +915,16 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   	  }
 	  // get fitting parameter
 	  BLParameterSet fit_param;
-	  if (!parser.GetFitParameter(irow,ipol,fit_param))
+	  if (!parser.GetFitParameter(orig_rows[irow],ipol,fit_param))
 	  { //no fit requrested
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    continue;
+	  }
+	  if (true) {
+	    os << "Fitting Parameter" << LogIO::POST;
+	    os << "[ROW" << orig_rows[irow] << ", POL" << ipol << "]"
+	       << LogIO::POST;
+	    fit_param.PrintSummary();
 	  }
 	  // get mask from BLParameterset and create composit mask
 
@@ -913,7 +933,12 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
   	  // actual execution of single spectrum
-	  LIBSAKURA_SYMBOL(BaselineContext)* context = context_reservoir[fit_param.baseline_type][ctx_indices[idx]];
+	  map< const LIBSAKURA_SYMBOL(BaselineType),
+	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > ::iterator
+	    iter = context_reservoir.find(fit_param.baseline_type);
+	  if (iter==context_reservoir.end())
+	    throw(AipsError("Invalid baseline type detected!"));
+	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
 	  switch (fit_param.baseline_type) {
 	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
 	    status = 
