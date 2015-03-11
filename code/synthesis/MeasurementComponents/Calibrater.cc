@@ -731,7 +731,7 @@ Bool Calibrater::setcallib2(Record callib) {
   // Tables exist, so deploy them...
 
   // Local MS object for callib parsing (only)
-  MeasurementSet lms(msname_p);
+  MeasurementSet lms(msname_p,Table::Update);
 
   // Get some global shape info:
   Int MSnAnt = lms.antenna().nrow();
