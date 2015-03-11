@@ -2099,6 +2099,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     vector<MPosition> mObsPosV;
     vector<MFrequency::Types> fromFrameTypeV; // original ref frame of the SPW
     vector<MFrequency::Ref> outFrameV; // new ref frame
+    vector<MRadialVelocity> outRadVelV; // radial velocity correction applied to the new ref frame
     vector<Double> weightScaleV; // the scaling factor for the WEIGHTs
     vector< Vector<Double> > xold; // the frequencies of the original SPW in the old ref frame
     vector< Vector<Double> > xout; // the frequencies of the new SPW in the new ref frame
@@ -2122,6 +2123,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    mObsPosV,
 			    fromFrameTypeV,
 			    outFrameV,
+			    outRadVelV,
 			    weightScaleV,
 			    xold,
 			    xout, 
@@ -2182,6 +2184,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    mObsPosV,
 			    fromFrameTypeV,
 			    outFrameV,
+			    outRadVelV,
 			    weightScaleV,
 			    xold,
 			    xout, 
@@ -2450,7 +2453,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    MRadialVelocity::Ref mRVR = mRV.getRef();
 	    if(mRVR.getType() == MRadialVelocity::GEO){
 	      Quantity mrv = mRV.get("m/s");
-	      radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+	      Quantity offsetMrv = outRadVelV[iDone].get("m/s"); // the radvel by which the out SPW def was shifted 
+	      radVelCorr = MDoppler(mrv-(2.*offsetMrv)); 
 	      if(fabs(mrv.getValue())>1E-6){
 		radVelSignificant = True;
 	      }
@@ -4458,10 +4462,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	Double mRVVal = mrv.getValue();
 	if(fabs(mRVVal)>1E-6){
 	  radVelSignificant = True;
+	  if(verbose){
+	    os << LogIO::NORMAL
+	       << "Note: The given additional radial velocity of " << mRVVal << " m/s will be taken into account."
+	       << LogIO::POST;
+	  }
 	}
-	if(verbose){
+	else if(verbose){
 	  os << LogIO::NORMAL
-	     << "Note: The given additional radial velocity of " << mRVVal << " m/s will be taken into account."
+	     << "Note: The given additional radial velocity is less than 1E-6 m/s and will not be taken into account."
 	     << LogIO::POST;
 	}
       } 
@@ -4544,6 +4553,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 				  vector<MPosition>& mObsPosV,
 				  vector<MFrequency::Types>& fromFrameTypeV,
 				  vector<MFrequency::Ref>& outFrameV,
+				  vector<MRadialVelocity>& outRadVelV,
 				  vector< Double >& weightScaleV, 
 				  vector< Vector<Double> >& xold, 
 				  vector< Vector<Double> >& xout, 
@@ -4582,8 +4592,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     mObsPosV.resize(0);
     fromFrameTypeV.resize(0);
     outFrameV.resize(0);
+    outRadVelV.resize(0);
     weightScaleV.resize(0);
     MFrequency::Ref outFrame;
+    MRadialVelocity outRadVel(Quantity(0, "m/s"), MRadialVelocity::GEO);
     method.resize(0);
     regrid.resize(0);	
     transform.resize(0);	
@@ -4615,7 +4627,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       nextSourceRow = origNumSourceRows - 1;
     }
     else if(!writeTables) { // there is no source table
-      os << LogIO::NORMAL << "Note: MS contains no SOURCE table ..." << LogIO::POST;
+      os << LogIO::NORMAL << "Note: MS does not contain a SOURCE table ..." << LogIO::POST;
       nextSourceRow = -1;
     }
 
@@ -4903,14 +4915,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
 	    if(fabs(mrv.getValue())>1E-6){
 	      radVelSignificant = True;
+	      outRadVel = mRV;
+	      os << LogIO::NORMAL
+		 << "Note: The geocentric radial velocity information (ca. " << mrv.getValue()
+		 << "m/s) from the ephemeris for field " << theFieldIdToUse << " will be taken into account."
+		 << LogIO::POST;
 	    }
-	    os << LogIO::NORMAL
-	       << "Note: The geocentric radial velocity from the ephemeris for field " << theFieldIdToUse << " will be taken into account."
-	       << LogIO::POST;
+	    else{
+	      outRadVel = MRadialVelocity(Quantity(0, "m/s"), MRadialVelocity::GEO);
+	      os << LogIO::NORMAL
+		 << "Note: The geocentric radial velocity from the ephemeris for field " << theFieldIdToUse 
+		 << " is less than 1E-6 m/s and will not be taken into account."
+		 << LogIO::POST;
+
+	    }
 	  } 
 
 	  // also create the reference for storage in the "Done" table
 	  outFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
+	  
 
 	  for(Int i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
@@ -5298,6 +5321,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	mObsPosV.push_back(mObsPos);
 	fromFrameTypeV.push_back(theOldRefFrame);
 	outFrameV.push_back(outFrame);
+	outRadVelV.push_back(outRadVel);
 
       } // end if(!alreadyDone)
       // reference frame transformation and regridding of channel definition completed

@@ -456,6 +456,7 @@ class SubMS
 			   vector<MPosition>& mObsPosV,
 			   vector<MFrequency::Types>& fromFrameTypeV,
 			   vector<MFrequency::Ref>& outFrameV,
+			   vector<MRadialVelocity>& outRadVelV,
 			   vector<Double>& weightScaleV,
 			   vector< Vector<Double> >& xold, 
 			   vector< Vector<Double> >& xout, 
