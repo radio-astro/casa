@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExprGram.cc 21549 2015-01-28 10:01:12Z gervandiepen $
+//# $Id: ImageExprGram.cc 21574 2015-03-10 13:52:15Z gervandiepen $
 
 // ImageExprGram; grammar for image command lines
 
@@ -67,9 +67,16 @@ int imageExprGramParseCommand (const String& command)
 {
     ImageExprGramrestart (ImageExprGramin);
     yy_start = 1;
+    // Save global state for re-entrancy.
+    const char* savStrpImageExprGram = strpImageExprGram;
+    Int savPosImageExprGram= posImageExprGram;
     strpImageExprGram = command.chars();     // get pointer to command string
     posImageExprGram  = 0;                   // initialize string position
-    return ImageExprGramparse();             // parse command string
+    int sts = ImageExprGramparse();          // parse command string
+    // Restore global state.
+    strpImageExprGram = savStrpImageExprGram;
+    posImageExprGram= savPosImageExprGram;
+    return sts;
 }
 
 //# Give the string position.
