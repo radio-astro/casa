@@ -112,8 +112,8 @@ class FlagCmd(object):
       antenna=None, intent=None, pol=None, axisnames=None,
       flagcoords=None, channel_axis=None, reason=None,
       extendfields=None):
-#        print 'FlagCmd intent%s spw%s antenna%s axisnames%s flagcoords%s pol%s reason%s' % (
-#          intent, spw, antenna, axisnames, flagcoords, pol, reason)
+        print 'FlagCmd intent%s spw%s antenna%s axisnames%s flagcoords%s pol%s reason%s' % (
+          intent, spw, antenna, axisnames, flagcoords, pol, reason)
 
         self.filename = filename
         self.rulename = rulename
@@ -136,8 +136,6 @@ class FlagCmd(object):
 
         if pol is not None:
             flagcmd += " correlation='%s'" % pol
-
-        flagcmd += " reason='%s'" % reason
 
         if spw is not None:
             flagcmd += " spw='%s'" % spw
@@ -205,6 +203,8 @@ class FlagCmd(object):
         # the analysis of flagcoords
         if self.antenna is not None and 'antenna' not in flagcmd:
             flagcmd += " antenna='%s'" % (self.antenna)
+
+        flagcmd += " reason='%s'" % reason
 
         flagcmd = flagcmd.strip()
 
