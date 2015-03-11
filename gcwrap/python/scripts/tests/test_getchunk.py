@@ -265,5 +265,25 @@ class getchunk_test(unittest.TestCase):
             expec = 400*i/fac
             self.assertTrue(abs(got - expec) < 1e-4)
 
+    def test_flux_multibeam(self):
+        """Test getprofile() for flux on a multibeam image"""
+        myia = iatool()
+        myia.fromshape("",[10,10,4,5])
+        myia.setbrightnessunit("Jy/beam")
+        for c in range(5):
+            for p in range(4):
+                myia.setrestoringbeam(
+                    major=str(4 + c + p)+"arcsec",
+                    minor=str(3 + c + p)+"arcsec",
+                    pa="20deg",channel=c, polarization=p
+                )
+        self.assertRaises(Exception, myia.getprofile, function='flux', axis=3)
+        self.assertTrue(
+            myia.getprofile(
+                function='flux', axis=3,
+                region=rg.box([0, 0, 0, 0], [9, 9, 0, 4])
+            )
+        )
+
 def suite():
     return [getchunk_test]

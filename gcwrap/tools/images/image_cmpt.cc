@@ -2388,11 +2388,11 @@ record* image::getprofile(
 	const variant& restfreq, const string& frame
 ) {
 	try {
+		_log << _ORIGIN;
 		ThrowIf(
 			detached(), "Unable to create image"
 		);
 		SHARED_PTR<Record> myregion(_getRegion(region, False));
-
 		SHARED_PTR<casa::Quantity> rfreq;
 		if (restfreq.type() != variant::BOOLVEC) {
 			String rf = restfreq.toString();
