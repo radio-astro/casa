@@ -14,6 +14,7 @@ os.system('rm -rf orion.t*')
 
 pathname=os.environ.get('CASAPATH')
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST3/Orion/'
+#datapath='/home/casa/data/trunk/regression/ATST3/Orion/'
 
 print '--Copy data to local directory--'
 mspath='cp -r '+datapath+'orion.ms .'
@@ -53,7 +54,7 @@ mosaic('orion.ms',
        'orion.task',
        'mfs',
        'entropy',
-       niter=35,
+       niter=29,
        sigma='4mJy',
        targetflux='240Jy',
        mask=datapath+'orion.mask6',
@@ -66,7 +67,7 @@ mosaic('orion.ms',
        mosweight=True,
        rmode='norm',
        robust=-1,
-       cyclefactor=4,
+       cyclefactor=5,
        cyclespeedup=500,
        prior='',
        phasecenter=6,
@@ -278,7 +279,7 @@ test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
 	      ('SD Model (MS)',       'flux', 347, ' ', 'SD Model (MS)', 'SD Model MS'),
 	      ('SD Model (MEM)',      'flux', 286, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 259, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 272, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was
