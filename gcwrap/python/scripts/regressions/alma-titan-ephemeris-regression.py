@@ -200,12 +200,19 @@ if(mystep in thesteps):
 
     # verify image properties 
 
-    exppeakm = 3.36615992 
-    exprmsm = 1.13404071 
-    exppeakmb = 0.36783999
-    exprmsmb = 0.01991641
+    # expectation values CASA 4.3
+    #exppeakm = 3.36615992 
+    #exprmsm = 1.13404071 
+    #exppeakmb = 0.36783999
+    #exprmsmb = 0.01991641
+    #exppeakchan = 258
 
-    exppeakchan = 258
+    # expectation values CASA 4.4
+    exppeakm = 3.3441593647
+    exprmsm = 1.13052916527
+    exppeakmb = 0.363690376282
+    exprmsmb = 0.0196652077138
+    exppeakchan = 259
 
     os.system('rm -rf collapsed')
 
@@ -249,7 +256,7 @@ if(mystep in thesteps):
 
 
     if (respeakchan!=exppeakchan):
-        casalog.post( 'ERROR: Peak flux in titan cube should be at channel '+str(exppeakchan)+' but is at '+str(exppeakchan),'WARN')
+        casalog.post( 'ERROR: Peak flux in titan cube should be at channel '+str(exppeakchan)+' but is at '+str(respeakchan),'WARN')
         passed = False
 
     peakmdev = abs(respeakm-exppeakm)/exppeakm*100.
