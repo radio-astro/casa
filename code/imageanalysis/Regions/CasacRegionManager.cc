@@ -294,20 +294,12 @@ Record CasacRegionManager::fromBCS(
 		}
 	}
 	else if (regionPtr != 0) {
-		if (! (regionName.empty() && chans.empty() && stokes.empty())) {
-			*_getLog()
-				<< "regionPtr and regionName, chans, and/or stokes cannot "
-				<< "be simultaneously specified."
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! (regionName.empty() && chans.empty() && stokes.empty()),
+			"regionPtr and regionName, chans, and/or stokes cannot "
+			"be simultaneously specified"
+		);
 		_setRegion(regionRecord, diagnostics, regionPtr);
-        /*
-        if (verbose) {
-			*_getLog() << origin;
-			*_getLog() << LogIO::NORMAL << "Set region from supplied region record"
-				<< LogIO::POST;
-		}
-        */
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else if (! regionName.empty()) {
@@ -763,80 +755,87 @@ String CasacRegionManager::_stokesFromRecord(
 	}
 	uInt stokesBegin = 0;
 	uInt stokesEnd = 0;
-	ImageRegion *imreg = ImageRegion::fromRecord(region, "");
-	Array<Float> blc, trc;
-	Bool oneRelAccountedFor = False;
-	if (imreg->isLCSlicer()) {
-		blc = imreg->asLCSlicer().blc();
-        if ((Int)blc.size() <= polAxis) {
-            *_getLog() << LogIO::WARN << "Cannot determine stokes. "
-               << "blc of input region does not include the polarization coordinate."
-               << LogIO::POST;
-            return stokes;
-        }
-		trc = imreg->asLCSlicer().trc();
-        if ((Int)trc.size() <= polAxis) {
-            *_getLog() << LogIO::WARN << "Cannot determine stokes. "
-               << "trc of input region does not include the polarization coordinate."
-               << LogIO::POST;
-            return stokes;
-        } 
-		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
-		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-		oneRelAccountedFor = True;
-	}
-	else if (
-		RegionManager::isPixelRegion(
-			*(ImageRegion::fromRecord(region, ""))
-		)
-	) {
-		region.toArray("blc", blc);
-		region.toArray("trc", trc);
-		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
-		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
-	}
-	else if (region.fieldNumber("x") >= 0 && region.fieldNumber("y") >= 0) {
-		// world polygon
-		oneRelAccountedFor = True;
-		stokesBegin = 0;
+	if (region.empty()) {
 		stokesEnd = stokesControl == USE_FIRST_STOKES
-			? 0 : shape[polAxis];
-	}
-	else if (region.fieldNumber("blc") >= 0 && region.fieldNumber("blc") >= 0) {
-		// world box
-		Record blcRec = region.asRecord("blc");
-		Record trcRec = region.asRecord("trc");
-		String polField = "*" + String::toString(polAxis + 1);
-		stokesBegin = blcRec.isDefined(polField)
-			? (Int)blcRec.asRecord(
-				String(polField)
-			).asDouble("value")
-			: 0;
-		stokesEnd = trcRec.isDefined(polField)
-			? (Int)blcRec.asRecord(
-				String(polField)
-			).asDouble("value")
-			: stokesControl == USE_FIRST_STOKES
-				? 0
-				: shape[polAxis];
-		if (! blcRec.isDefined(polField)) {
-			oneRelAccountedFor = True;
-		}
+			? 0
+			: csys.stokesCoordinate().stokes().size() - 1;
 	}
 	else {
-		// FIXME not very nice, but until all can be implemented this will have to do
-		*_getLog() << LogIO::WARN << "Stokes cannot be determined because this "
-			<< "region type is not handled yet. But chances are very good this is no need to be alarmed."
-			<< LogIO::POST;
-		return stokes;
-	}
-	if (
-		! oneRelAccountedFor
-		&& region.isDefined("oneRel")
-		&& region.asBool("oneRel")
-	) {
-		stokesBegin--;
-		stokesEnd--;
+		ImageRegion *imreg = ImageRegion::fromRecord(region, "");
+		Array<Float> blc, trc;
+		Bool oneRelAccountedFor = False;
+		if (imreg->isLCSlicer()) {
+			blc = imreg->asLCSlicer().blc();
+			if ((Int)blc.size() <= polAxis) {
+				*_getLog() << LogIO::WARN << "Cannot determine stokes. "
+					<< "blc of input region does not include the polarization coordinate."
+					<< LogIO::POST;
+				return stokes;
+			}
+			trc = imreg->asLCSlicer().trc();
+			if ((Int)trc.size() <= polAxis) {
+				*_getLog() << LogIO::WARN << "Cannot determine stokes. "
+					<< "trc of input region does not include the polarization coordinate."
+					<< LogIO::POST;
+				return stokes;
+			}
+			stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+			stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+			oneRelAccountedFor = True;
+		}
+		else if (
+				RegionManager::isPixelRegion(
+					*(ImageRegion::fromRecord(region, ""))
+				)
+		) {
+			region.toArray("blc", blc);
+			region.toArray("trc", trc);
+			stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
+			stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
+		}
+		else if (region.fieldNumber("x") >= 0 && region.fieldNumber("y") >= 0) {
+			// world polygon
+			oneRelAccountedFor = True;
+			stokesBegin = 0;
+			stokesEnd = stokesControl == USE_FIRST_STOKES
+				? 0 : shape[polAxis];
+		}
+		else if (region.fieldNumber("blc") >= 0 && region.fieldNumber("blc") >= 0) {
+			// world box
+			Record blcRec = region.asRecord("blc");
+			Record trcRec = region.asRecord("trc");
+			String polField = "*" + String::toString(polAxis + 1);
+			stokesBegin = blcRec.isDefined(polField)
+				? (Int)blcRec.asRecord(
+					String(polField)
+				).asDouble("value")
+				: 0;
+			stokesEnd = trcRec.isDefined(polField)
+				? (Int)blcRec.asRecord(
+					String(polField)
+				).asDouble("value")
+				: stokesControl == USE_FIRST_STOKES
+				  ? 0
+				  : shape[polAxis];
+			if (! blcRec.isDefined(polField)) {
+				oneRelAccountedFor = True;
+			}
+		}
+		else {
+			// FIXME not very nice, but until all can be implemented this will have to do
+			*_getLog() << LogIO::WARN << "Stokes cannot be determined because this "
+				<< "region type is not handled yet. But chances are very good this is no need to be alarmed."
+				<< LogIO::POST;
+			return stokes;
+		}
+		if (
+			! oneRelAccountedFor
+			&& region.isDefined("oneRel")
+			&& region.asBool("oneRel")
+		) {
+			stokesBegin--;
+			stokesEnd--;
+		}
 	}
 	for (uInt i=stokesBegin; i<=stokesEnd; i++) {
 		stokes += csys.stokesAtPixel(i);

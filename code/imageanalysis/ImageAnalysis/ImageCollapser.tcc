@@ -335,32 +335,54 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 			}
 		}
 	}
-	Bool n2 = _axes.size() == 2;
-	Bool dirAxesOnlyCollapse =  hasDir && n2;
-	if (dirAxesOnlyCollapse) {
-		Vector<Int>dirAxes = outCoords.directionAxesNumbers();
-		dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
-			|| (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
+
+	Bool copied = False;
+	if (subImage->imageInfo().hasMultipleBeams()) {
+		Int naxes = _axes.size();
+		Bool dirAxesOnlyCollapse =  hasDir && naxes == 2;
+		if (dirAxesOnlyCollapse) {
+			Vector<Int>dirAxes = outCoords.directionAxesNumbers();
+			dirAxesOnlyCollapse = (_axes[0] == dirAxes[0] && _axes[1] == dirAxes[1])
+				|| (_axes[1] == dirAxes[0] && _axes[0] == dirAxes[1]);
+		}
+		if (! dirAxesOnlyCollapse) {
+			// check for degeneracy of spectral or polarization axes
+			Int specAxis = outCoords.spectralAxisNumber(False);
+			Int polAxis = outCoords.polarizationAxisNumber(False);
+			dirAxesOnlyCollapse = True;
+			IPosition shape = subImage->shape();
+			for (Int i=0; i<naxes; i++) {
+				Int axis = _axes[i];
+				if (
+					(axis == specAxis || axis == polAxis)
+					&& shape[axis] > 1
+				) {
+					dirAxesOnlyCollapse = False;
+					break;
+				}
+			}
+		}
+		if (! dirAxesOnlyCollapse) {
+			*this->_getLog() << LogIO::WARN << "Input image has per plane beams "
+				<< "but the collapse is not done exclusively along the direction axes. "
+				<< "The output image will arbitrarily have a single beam which "
+				<< "is the first beam available in the subimage."
+				<< "Thus, the image planes will not be convolved to a common "
+				<< "restoring beam before collapsing. If, however, this is desired, "
+				<< "then run the task imsmooth or the tool method ia.convolve2d() first, "
+				<< "and use the output image of that as the input for collapsing."
+				<< LogIO::POST;
+			ImageUtilities::copyMiscellaneous(tmpIm, *subImage, False);
+			ImageInfo info = subImage->imageInfo();
+			vector<Vector<Quantity> > out;
+			GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
+			info.removeRestoringBeam();
+			info.setRestoringBeam(beam);
+			tmpIm.setImageInfo(info);
+			copied = True;
+		}
 	}
-	if (subImage->imageInfo().hasMultipleBeams() && ! dirAxesOnlyCollapse) {
-		*this->_getLog() << LogIO::WARN << "Input image has per plane beams "
-			<< "but the collapse is not done exclusively along the direction axes. "
-			<< "The output image will arbitrarily have a single beam which "
-			<< "is the first beam available in the subimage."
-			<< "Thus, the image planes will not be convolved to a common "
-			<< "restoring beam before collapsing. If, however, this is desired, "
-			<< "then run the task imsmooth or the tool method ia.convolve2d() first, "
-			<< "and use the output image of that as the input for collapsing."
-			<< LogIO::POST;
-		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, False);
-		ImageInfo info = subImage->imageInfo();
-		vector<Vector<Quantity> > out;
-		GaussianBeam beam = *(info.getBeamSet().getBeams().begin());
-        info.removeRestoringBeam();
-		info.setRestoringBeam(beam);
-		tmpIm.setImageInfo(info);
-	}
-	else {
+	if (! copied) {
 		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, True);
 	}
     return this->_prepareOutputImage(tmpIm);
@@ -453,16 +475,12 @@ template<class T> void ImageCollapser<T>::_doMedian(
 					}
 					miter++;
 				}
-				//kk.resize(data.size());
-				//kk = Vector<T>(data);
 			}
 		}
-		//GenSort<T>::sort(kk);
 		uInt s = data.size();
 		if (s > 0) {
 			sort(data.begin(), data.end());
 		}
-		// uInt s = kk.size();
 		outImage.putAt(
 			s == 0
 				? 0
