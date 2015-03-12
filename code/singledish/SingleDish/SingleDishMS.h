@@ -55,7 +55,16 @@ public:
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);
 
-  // variable fitting parameters stored in a text file
+  //Cubicspline  
+  void subtract_baseline_cspline(string const& in_column_name,
+			 string const& out_ms_name,
+			 string const& in_spw, 
+			 string const& in_ppp, 
+			 int const npiece, 
+			 float const clip_threshold_sigma=3.0, 
+			 int const num_fitting_max=1);
+
+// variable fitting parameters stored in a text file
   void subtract_baseline_variable(string const& in_column_name,
 				  string const& out_ms_name,
 				  string const& in_spw, 

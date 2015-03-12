@@ -762,6 +762,175 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
+//Cubicspline
+void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
+				     string const& out_ms_name,
+				     string const& in_spw,
+				     string const& in_ppp,
+				     int const npiece, 
+				     float const clip_threshold_sigma, 
+				     int const num_fitting_max)
+{
+  LogIO os(_ORIGIN);
+  os << "Fitting and subtracting cubicspline baseline npiece = " << npiece << LogIO::POST;
+  // in_ms = out_ms
+  // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
+  // no iteration is necessary for the processing.
+  // procedure
+  // 1. iterate over MS
+  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+  // 3. fit a polynomial to each spectrum and subtract it
+  // 4. put single spectrum (or a block of spectra) to out_column
+
+  //double tstart = gettimeofday_sec();
+
+  //checking npiece 
+  if (npiece <= 0) {
+    throw(AipsError("npiece must be positive or zero."));
+  }
+
+  Block<Int> columns(1);
+  columns[0] = MS::DATA_DESC_ID;
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+
+  prepare_for_process(in_column_name, out_ms_name, columns, false);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+  Vector<Int> recspw;
+  Matrix<Int> recchan;
+  Vector<size_t> nchan;
+  Vector<Vector<Bool> > in_mask;
+  Vector<bool> nchan_set;
+  parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+
+  // checking nchan
+  // ----> move to inside VI loop
+  /*
+  int min_nchan = static_cast<int>(nchan(0));
+  for (size_t i = 0; i < nchan.nelements(); ++i) {
+    int nch = static_cast<int>(nchan(i));
+    if (nch < min_nchan) min_nchan = nch;
+  }
+  if (min_nchan < 4*npiece) { // for poly and/or chebyshev
+    ostringstream oss;
+    oss << "Order (=" << order << " given) must be smaller than " 
+	<< "the minimum number of channels in the input data (" 
+	<< min_nchan << ").";
+    throw(AipsError(oss.str()));
+  }
+  */
+
+  Vector<size_t> ctx_indices;
+  ctx_indices.resize(nchan.nelements());
+  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
+    ctx_indices(ictx) = 0;
+  }
+  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
+  bl_contexts.clear();
+  Vector<bool> pol;
+  bool pol_set = false;
+
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> data_spw = vb->spectralWindows();
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<bool> mask(num_chan);
+
+      bool new_nchan;
+      get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
+      if (new_nchan) {
+	// ----> move nchan check to here
+	get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), 
+			     static_cast<uint16_t>(npiece), 
+			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
+      }
+      // get a data cube (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      // get a flag cube (npol*nchan*nrow) from VisBuffer
+      get_flag_cube(*vb, flag_chunk);
+
+      if (!pol_set) {
+	get_pol_selection(in_ppp, num_pol, pol);
+	pol_set = true;
+      }
+      // loop over MS rows
+      for (size_t irow=0; irow < num_row; ++irow) {
+  	size_t idx = 0;
+  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	  if (data_spw[irow] == recspw[ispw]) {
+  	    idx = ispw;
+  	    break;
+  	  }
+  	}
+
+  	// loop over polarization
+  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  if (!pol(ipol)) continue;
+  	  // get a channel mask from data cube
+  	  // (note that the variable 'mask' is flag in the next line 
+	  // actually, then it will be converted to real mask when 
+	  // taking AND with user-given mask info. this is just for 
+	  // saving memory usage...)
+  	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // skip spectrum if all channels flagged
+	  if (allchannels_flagged(num_chan, mask.data)) continue;
+
+  	  // convert flag to mask by taking logical NOT of flag
+  	  // and then operate logical AND with in_mask
+  	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+  	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+  	  }
+  	  // get a spectrum from data cube
+  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+  	  // actual execution of single spectrum
+  	  status = 
+  	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
+  						    static_cast<uint16_t>(npiece), 
+						    num_chan, 
+  						    spec.data, 
+  						    mask.data, 
+  						    clip_threshold_sigma, 
+  						    num_fitting_max,
+  						    true, 
+  						    mask.data, 
+  						    spec.data, 
+  						    &bl_status);
+  	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- NoMemory"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- NG"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- UnknownError"));
+	    }
+	    //throw(AipsError("SubtractBaselineCubicSplineFloat() failed."));
+  	  }
+  	  // set back a spectrum to data cube
+  	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+  	} // end of polarization loop
+      } // end of chunk row loop
+      // write back data cube to VisBuffer
+      sdh_->fillCubeToOutputMs(vb, data_chunk);
+    } // end of vi loop
+  } // end of chunk loop
+  finalize_process();
+
+  // destroy baselint contexts
+  destroy_baseline_contexts(bl_contexts);
+
+  //double tend = gettimeofday_sec();
+  //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+}
+
+
+
 void SingleDishMS::scale(float const factor,
 			  string const& in_column_name,
 			  string const& out_ms_name)

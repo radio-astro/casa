@@ -11,7 +11,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     try:
         if ((os.path.exists(outfile)) and (not overwrite)):
             raise Exception(outfile+' exists.')
-        if (blfunc.lower().strip() not in ['poly', 'variable']):
+        if (blfunc.lower().strip() not in ['poly', 'variable', 'cspline']):
             raise Exception(blfunc+' is not available.')
         if (maskmode!='list'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
@@ -40,6 +40,15 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                             spw=spw,
                                             pol=pol,
                                             blparam=blparam)
+        elif blfunc == 'cspline':
+            sdms.subtract_baseline_cspline(datacolumn=datacolumn,
+                                  outfile=outfile,
+                                  spw=spw,
+                                  pol=pol,
+                                  npiece=npiece, 
+                                  clip_threshold_sigma=clipthresh, 
+                                  num_fitting_max=clipniter+1)
+
         else:
             raise ValueError, "Unsupported blfunc = %s" % blfunc
 

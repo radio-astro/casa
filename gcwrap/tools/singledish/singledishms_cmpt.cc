@@ -141,6 +141,34 @@ singledishms::subtract_baseline(string const& datacolumn,
   return rstat;
 }
 
+
+bool
+singledishms::subtract_baseline_cspline(string const& datacolumn,
+				string const& outfile,
+				::casac::variant const& spw,
+				::casac::variant const& pol,
+				int const npiece,
+				float const clip_threshold_sigma,
+				int const num_fitting_max)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->subtract_baseline_cspline(datacolumn, outfile, 
+			     toCasaString(spw), toCasaString(pol),
+			     npiece, clip_threshold_sigma, 
+			     num_fitting_max);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+
 bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
 					 string const& outfile,
