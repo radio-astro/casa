@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -358,25 +359,57 @@ void SingleDishMS::get_nchan_and_mask(Vector<Int> const &rec_spw,
     }
     if (!nchan_set(i)) continue;
     mask(i).resize(nchan(i));
-    for (size_t j = 0; j < mask(i).nelements(); ++j) {
-      mask(i)(j) = False;
+    // generate mask
+    get_mask_from_rec(rec_spw(i), rec_chan, mask(i),true);
+//     for (size_t j = 0; j < mask(i).nelements(); ++j) {
+//       mask(i)(j) = False;
+//     }
+//     std::vector<uInt> edge; // start,end,stride,start,...
+//     edge.clear();
+//     for (size_t j = 0; j < rec_chan.nrow(); ++j) {
+//       if (rec_chan.row(j)(0) == rec_spw(i)) {
+// 	edge.push_back(rec_chan.row(j)(1));
+// 	edge.push_back(rec_chan.row(j)(2));
+// 	edge.push_back(rec_chan.row(j)(3))
+//       }
+//     }
+//     //generate mask
+//     for (size_t j = 0; j < edge.size(); j+=3) {
+//       for (size_t k = edge[j]; k <= edge[j+1]; k+=edge[j+2]) {
+// 	mask(i)(k) = True;
+//       }
+//     }
+  }
+}
+
+void SingleDishMS::get_mask_from_rec(Int spwid,
+				     Matrix<Int> const &rec_chan,
+				     Vector<Bool> &mask, bool initialize)
+{
+  if (initialize) {
+    for (size_t j = 0; j < mask.nelements(); ++j) {
+      mask(j) = False;
     }
-    std::vector<uInt> edge;
-    edge.clear();
-    for (size_t j = 0; j < rec_chan.nrow(); ++j) {
-      if (rec_chan.row(j)(0) == rec_spw(i)) {
-	edge.push_back(rec_chan.row(j)(1));
-	edge.push_back(rec_chan.row(j)(2));
-      }
+  }
+  //construct a list of (start, end, stride, start, end, stride, ...)
+  //from rec_chan for the spwid
+  std::vector<uInt> edge;
+  edge.clear();
+  for (size_t j = 0; j < rec_chan.nrow(); ++j) {
+    if (rec_chan.row(j)(0) == spwid) {
+      edge.push_back(rec_chan.row(j)(1));
+      edge.push_back(rec_chan.row(j)(2));
+      edge.push_back(rec_chan.row(j)(3));
     }
-    //generate mask
-    for (size_t j = 0; j < edge.size(); j+=2) {
-      for (size_t k = edge[j]; k <= edge[j+1]; ++k) {
-	mask(i)(k) = True;
-      }
+  }
+  //generate mask
+  for (size_t j = 0; j < edge.size(); j+=3) {
+    for (size_t k = edge[j]; k <= edge[j+1]; k+=edge[j+2]) {
+      mask(k) = True;
     }
   }
 }
+
 void SingleDishMS::get_pol_selection(string const &in_pol,
 				     size_t const num_pol,
 				     Vector<bool> &pol)
@@ -545,6 +578,19 @@ bool SingleDishMS::allchannels_flagged(size_t const num_flag, bool const* flag)
   }
   return res;
 }
+
+size_t SingleDishMS::NValidMask(size_t const num_mask, bool const* mask)
+{
+  std::size_t nvalid = 0;
+  // the assertion lines had better be replaced with static_assert when c++11 is supported
+  AlwaysAssert(static_cast<std::size_t>(true)==1, AipsError);
+  AlwaysAssert(static_cast<std::size_t>(false)==0, AipsError);
+  for (size_t i = 0; i < num_mask; ++i) {
+    nvalid += static_cast<std::size_t>(mask[i]);
+  }
+  return nvalid;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -927,9 +973,23 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    fit_param.PrintSummary();
 	  }
 	  // get mask from BLParameterset and create composit mask
-
-	  // TODO: check for composit flag and flag if no valid channel to fit
-
+	  if (fit_param.baseline_mask!="") {
+	    stringstream local_spw;
+	    local_spw << data_spw[irow] << ":" << fit_param.baseline_mask;
+	    //cout << "irow = " << orig_rows[irow] << ": Generating local mask with selection " << local_spw.str() << endl;
+	    Record selrec = sdh_->getSelRec(local_spw.str());
+	    Matrix<Int> local_rec_chan = selrec.asArrayInt("channel");
+	    Vector<Bool> local_mask(num_chan,False);
+	    get_mask_from_rec(data_spw[irow], local_rec_chan, local_mask, false);
+	    for (size_t ichan=0; ichan < num_chan; ++ichan) {
+	      mask.data[ichan] = mask.data[ichan] && local_mask[ichan];
+	    }
+	  }
+	  // check for composit mask and flag if no valid channel to fit
+	  if (NValidMask(num_chan, mask.data)) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    continue;
+	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
   	  // actual execution of single spectrum

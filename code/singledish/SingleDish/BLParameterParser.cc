@@ -77,8 +77,8 @@ void BLParameterParser::parse(string const file_name)
     size_t row_idx, pol_idx;
     ConvertLineToParam(linestr, row_idx, pol_idx, *bl_param);
     bl_parameters_[make_pair(row_idx, pol_idx)] = bl_param;
-    //Parameter summary output
-    if (true) {
+    //Parameter summary output (Debugging purpose only)
+    if (false) {
       os << "Summary of parsed Parameter" << LogIO::POST;
       os << "[ROW" << row_idx << ", POL" << pol_idx << "]"
 	 << LogIO::POST;

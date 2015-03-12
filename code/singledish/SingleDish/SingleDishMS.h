@@ -25,12 +25,18 @@ public:
   // Destructor
   ~SingleDishMS();
   
-  // Return the name of the MeasurementSet
+  /* 
+   * Return the name of the MeasurementSet
+   */
   string name() const { return msname_; };
   
   bool close();
 
-  // Select data to process (verbose=T will print summary to logger)
+   /*
+   * Formats selection parameters for single dish processing.
+   * @param [in] selection A Record consists of selection key and values
+   * @param [in] verbose If true, print summary of selection logger
+   */ 
   void set_selection(Record const& selection, bool const verbose=true);
 
   // Multiply a scale factor to selected spectra
@@ -60,9 +66,14 @@ private:
   /////////////////////////
   /// Utility functions ///
   /////////////////////////
-  // initialize member variables
+  /*
+   *  Initializes member variables: in_column_
+   */
   void initialize();
-  // format selection parameters for single dish processing
+   /*
+   * Formats selection parameters for single dish processing.
+   * @param [in] selection A Record consists of selection key and values
+   */ 
   void format_selection(Record &selection);
 
   // retrieve a field by name from Record as casa::String.
@@ -103,6 +114,8 @@ private:
 			  Vector<Vector<Bool> > &mask,
 			  Vector<bool> &nchan_set,
 			  bool &new_nchan);
+  void get_mask_from_rec(Int spwid, Matrix<Int> const &rec_chan,
+			 Vector<Bool> &mask, bool initialize=true);
   void get_pol_selection(string const &in_pol,
 			 size_t const num_pol,
 			 Vector<bool> &pol);
@@ -160,6 +173,9 @@ private:
   // return true if all channels are flagged
   bool allchannels_flagged(size_t const num_flag, 
 			   bool const* flag);
+  // returns the number of channels with true in input mask
+  size_t NValidMask(size_t const num_mask, bool const* mask);
+
   /////////////////////////////////
   /// Array execution functions ///
   /////////////////////////////////
