@@ -172,8 +172,7 @@ def tclean(
     #####################################################
 
     # Put all parameters into dictionaries and check them. 
-    paramList = ImagerParameters("0");
-    paramList.setParams(
+    paramList = ImagerParameters(
         msname =vis,
         field=field,
         spw=spw,

@@ -842,15 +842,8 @@ class PyParallelImagerHelper():
 ######################################################
 
 class ImagerParameters():
+    def __init__(self, 
 
-    #### MPIInterface related changes
-    # These and related changes in this class are not required really
-    # (and not used now), but checking-in to make sure I (SB) check-in
-    # all the code that works for me and will clean this up later.
-    def __init__(self, key="0"):
-        self.defaultKey=key;
-
-    def setParams(self,
                  ## Data Selection
                  msname='',
                  field='',
@@ -933,6 +926,8 @@ class ImagerParameters():
 
                  workdir='',
                  ):
+
+        self.defaultKey="0";
 
         ## Selection params. For multiple MSs, all are lists.
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
