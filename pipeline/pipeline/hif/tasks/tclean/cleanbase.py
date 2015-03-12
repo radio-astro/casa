@@ -481,6 +481,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             spw=inputs.spw,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
+            #pblimit=0.2, niter=inputs.niter,
             pblimit=0.2, niter=max(1, inputs.niter),
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
