@@ -964,6 +964,8 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  if (!parser.GetFitParameter(orig_rows[irow],ipol,fit_param))
 	  { //no fit requrested
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
+	       << ": Fit not requested. Skipping." << LogIO::POST;
 	    continue;
 	  }
 	  if (true) {
@@ -976,7 +978,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  if (fit_param.baseline_mask!="") {
 	    stringstream local_spw;
 	    local_spw << data_spw[irow] << ":" << fit_param.baseline_mask;
-	    //cout << "irow = " << orig_rows[irow] << ": Generating local mask with selection " << local_spw.str() << endl;
+	    //cout << "row " << orig_rows[irow] << ": Generating local mask with selection " << local_spw.str() << endl;
 	    Record selrec = sdh_->getSelRec(local_spw.str());
 	    Matrix<Int> local_rec_chan = selrec.asArrayInt("channel");
 	    Vector<Bool> local_mask(num_chan,False);
@@ -986,35 +988,26 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    }
 	  }
 	  // check for composit mask and flag if no valid channel to fit
-	  if (NValidMask(num_chan, mask.data)) {
+	  if (NValidMask(num_chan, mask.data)==0) {
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
+	       << ": No valid channel to fit. Skipping" << LogIO::POST;
 	    continue;
 	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
   	  // actual execution of single spectrum
 	  map< const LIBSAKURA_SYMBOL(BaselineType),
-	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > ::iterator
+	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
 	    iter = context_reservoir.find(fit_param.baseline_type);
 	  if (iter==context_reservoir.end())
 	    throw(AipsError("Invalid baseline type detected!"));
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
+	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 	  switch (fit_param.baseline_type) {
-	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-	    status = 
-  	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, 
-							       fit_param.npiece,
-							       num_chan,
-							       spec.data,
-							       mask.data,
-							       fit_param.clip_threshold_sigma, 
-							       fit_param.num_fitting_max,
-							       true,
-							       mask.data,
-							       spec.data,
-							       &bl_status);
-	    break;
-	  default:
+	  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	    //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
 	    status = 
 	      LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, 
 						      fit_param.order, 
@@ -1027,7 +1020,33 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 						      mask.data, 
 						      spec.data, 
 						      &bl_status);
+	    break;
+	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	    //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+	    status = 
+	      LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, 
+								 fit_param.npiece,
+								 num_chan,
+								 spec.data,
+								 mask.data,
+								 fit_param.clip_threshold_sigma, 
+								 fit_param.num_fitting_max,
+								 true,
+								 mask.data,
+								 spec.data,
+								 &bl_status);
+	    break;
+	  default:
+	    throw(AipsError("Unsupported baseline type."));
 	  }
+	  //cout << "statistics of baselined spetrum" << endl;
+	  float maxval=-1000.;
+	  float minval=1000.;
+	  for (size_t i=0; i<num_chan;++i){
+	    maxval = max(maxval, spec.data[i]);
+	    minval = min(minval, spec.data[i]);
+	  }
+	  //cout << "- max=" << maxval << ", min=" << minval << endl;
   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
 	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));

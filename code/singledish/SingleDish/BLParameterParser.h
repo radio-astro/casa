@@ -17,7 +17,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 struct LineFinderParameter {
-  LineFinderParameter(bool const use_lf=false, float const thresh=0.0,
+  LineFinderParameter(bool const use_lf=false, float const thresh=5.0,
 		      std::vector<size_t> const &edges=std::vector<size_t>(2,0),
 		      size_t const chavglim=0)
   {
@@ -36,7 +36,7 @@ struct LineFinderParameter {
 
 struct BLParameterSet {
   BLParameterSet(string const blmask="", uint16_t const nfit_max=0,
-		 float const clipthres=0.0,
+		 float const clipthres=3.0,
 		 LineFinderParameter lf_param=LineFinderParameter(),
     LIBSAKURA_SYMBOL(BaselineType) const bl_type=LIBSAKURA_SYMBOL(BaselineType_kNumElements),
 		 uint16_t const fit_order = USHRT_MAX, //UINT16_MAX,
