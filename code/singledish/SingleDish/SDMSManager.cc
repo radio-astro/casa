@@ -182,7 +182,7 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
                     //              casa::SDMSManager::fillCubeToDataCols(casa::vi::VisBuffer2*, casa::RefRows&, casa::Cube<float> const&, casa::Cube<bool> const&) in SDMSManager.cc.o
                     // ld: symbol(s) not found for architecture x86_64
                     // clang: error: linker command failed with exit code 1 (use -v to see invocation)
-		    //writeCube(flag_cube,*outputFlagCol,rowRef);
+		    writeCube(flag_cube,*outputFlagCol,rowRef);
 		  }
 	}
 

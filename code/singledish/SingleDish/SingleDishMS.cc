@@ -563,7 +563,7 @@ void SingleDishMS::flag_spectrum_in_cube(Cube<Bool> &flag_cube,
 {
   uInt const num_flag = flag_cube.ncolumn();
   for (uInt ichan=0; ichan<num_flag; ++ichan)
-    flag_cube(plane,ichan,row) = true;
+    flag_cube(plane,ichan,row) = True;
 }
 
 
@@ -896,6 +896,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   bool pol_set = false;
   // Iterate over MS and subtract baseline
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    //cout << "New chunk" << endl;
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
@@ -906,6 +907,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
       SakuraAlignedArray<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<bool> mask(num_chan);
+      //cout << "New iteration: num_row=" << num_row << ", num_chan=" << num_chan << ", num_pol=" << num_pol << ", spwid=" << data_spw << endl;
 
       bool new_nchan=false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
@@ -931,6 +933,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
       }
       // loop over MS rows
       for (size_t irow=0; irow < num_row; ++irow) {
+	//cout << "Processing original rowid=" << orig_rows[irow] << ", spwid=" << data_spw[irow] << endl;
   	size_t idx = 0;
   	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
   	  if (data_spw[irow] == recspw[ispw]) {
@@ -965,6 +968,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  { //no fit requrested
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
+	       << ", Pol " << ipol
 	       << ": Fit not requested. Skipping." << LogIO::POST;
 	    continue;
 	  }
@@ -991,6 +995,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  if (NValidMask(num_chan, mask.data)==0) {
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
+	       << ", Pol " << ipol
 	       << ": No valid channel to fit. Skipping" << LogIO::POST;
 	    continue;
 	  }
