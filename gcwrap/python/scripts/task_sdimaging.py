@@ -501,10 +501,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         outref = csys.referencecode('direction')[0]
         cell = list(csys.increment(type='direction',format='s')['string'])
         # pointing sampling
-        xSampling, ySampling, angle = sdutil.get_ms_sampling_arcsec(ref_ms_name, spw=self.spw,
+        ref_ms_spw = self.get_selection_param_for_ms(ref_ms_idx,self.spw)
+        ref_ms_field = self.get_selection_param_for_ms(ref_ms_idx,self.field)
+        ref_ms_scan = self.get_selection_param_for_ms(ref_ms_idx,self.scanno)
+        xSampling, ySampling, angle = sdutil.get_ms_sampling_arcsec(ref_ms_name, spw=ref_ms_spw,
                                                                     antenna=selection_ids['baseline'],
-                                                                    field=self.field,
-                                                                    scan=self.scanno,#timerange='',
+                                                                    field=ref_ms_field,
+                                                                    scan=ref_ms_scan,#timerange='',
                                                                     outref=outref)
         casalog.post("Detected raster sampling = [%f, %f] arcsec" %
                      (xSampling, ySampling))
