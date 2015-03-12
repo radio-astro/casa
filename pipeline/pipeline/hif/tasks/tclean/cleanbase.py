@@ -442,8 +442,7 @@ class CleanBase(basetask.StandardTaskTemplate):
           inputs.imagename, inputs.stokes, iter)
         rename_image(old_name=old_model_name, new_name=model_name)
         if (inputs.niter == 0):
-            image_name = '%s.%s.iter%s.residual' % (
-              inputs.imagename, inputs.stokes, iter)
+            image_name = ''
         else:
             image_name = '%s.%s.iter%s.image' % (
               inputs.imagename, inputs.stokes, iter)

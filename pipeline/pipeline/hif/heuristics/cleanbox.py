@@ -768,10 +768,13 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
         LOG.debug('2d rms of residual:%s' % rms2d)
 
     # get max of cleaned result
-    with casatools.ImageReader(restored) as image:
-        clean_stats = image.statistics()
-        image_max = clean_stats['max'][0]
-        LOG.debug('Clean image max: %s' % image_max)
+    if restored != '':
+        with casatools.ImageReader(restored) as image:
+            clean_stats = image.statistics()
+            image_max = clean_stats['max'][0]
+            LOG.debug('Clean image max: %s' % image_max)
+    else:
+        image_max = None
 
     return model_sum, clean_rms, non_clean_rms, residual_max,\
       residual_min, rms2d, image_max

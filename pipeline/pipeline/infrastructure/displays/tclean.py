@@ -46,8 +46,9 @@ class CleanSummary(object):
             iterations.sort()
             for i in iterations:
                 # image for this iteration
-                plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                  r.iterations[i]['image'], reportdir=stage_dir, intent=r.intent))
+                if (r.iterations[i]['image'] != ''):
+                    plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+                      r.iterations[i]['image'], reportdir=stage_dir, intent=r.intent))
 
                 # residual for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
