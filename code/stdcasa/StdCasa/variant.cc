@@ -1523,42 +1523,42 @@ void variant::as( TYPE t, int size ) {
     }
 }
 
-#define GETIT(CONST,RET_TYPE,NAME,TYPE,VAL,DEREF)		\
-CONST RET_TYPE variant::NAME( ) CONST throw(error) {		\
+#define GETIT(CONST,CONST2,RET_TYPE,NAME,TYPE,VAL,DEREF)        \
+CONST RET_TYPE variant::NAME( ) CONST2 throw(error) {           \
     if ( typev != TYPE )					\
 	throw( create_message( #NAME " called for type") );	\
     return DEREF val.VAL;					\
 }
 
-GETIT(const, int,getInt,INT,i,)
-GETIT(const, unsigned int,getuInt,UINT,ui,)
-GETIT(const, long long,getLong,LONG,l,)
-GETIT(const, bool,getBool,BOOL,b,)
-GETIT(const, double,getDouble,DOUBLE,d,)
-GETIT(const, std::complex<double>&,getComplex,COMPLEX,c,*)
-GETIT(const, std::string&,getString,STRING,s,*)
-GETIT(const, std::vector<int>&,getIntVec,INTVEC,iv,*)
-GETIT(const, std::vector<unsigned int>&,getuIntVec,UINTVEC,uiv,*)
-GETIT(const, std::vector<long long>&,getLongVec,LONGVEC,lv,*)
-GETIT(const, std::vector<bool>&,getBoolVec,BOOLVEC,bv,*)
-GETIT(const, std::vector<double>&,getDoubleVec,DOUBLEVEC,dv,*)
-GETIT(const, std::vector<std::complex<double> >&,getComplexVec,COMPLEXVEC,cv,*)
-GETIT(const, std::vector<std::string>&,getStringVec,STRINGVEC,sv,*)
-GETIT(const, record&,getRecord,RECORD,recordv,*)
+GETIT(, const, int,getInt,INT,i,)
+GETIT(, const, unsigned int,getuInt,UINT,ui,)
+GETIT(, const, long long,getLong,LONG,l,)
+GETIT(, const, bool,getBool,BOOL,b,)
+GETIT(, const, double,getDouble,DOUBLE,d,)
+GETIT(const, const, std::complex<double>&,getComplex,COMPLEX,c,*)
+GETIT(const, const, std::string&,getString,STRING,s,*)
+GETIT(const, const, std::vector<int>&,getIntVec,INTVEC,iv,*)
+GETIT(const, const, std::vector<unsigned int>&,getuIntVec,UINTVEC,uiv,*)
+GETIT(const, const, std::vector<long long>&,getLongVec,LONGVEC,lv,*)
+GETIT(const, const, std::vector<bool>&,getBoolVec,BOOLVEC,bv,*)
+GETIT(const, const, std::vector<double>&,getDoubleVec,DOUBLEVEC,dv,*)
+GETIT(const, const, std::vector<std::complex<double> >&,getComplexVec,COMPLEXVEC,cv,*)
+GETIT(const, const, std::vector<std::string>&,getStringVec,STRINGVEC,sv,*)
+GETIT(const, const, record&,getRecord,RECORD,recordv,*)
 
-GETIT(,int&,getIntMod,INT,i,)
-GETIT(,unsigned int&,getuIntMod,UINT,ui,)
-GETIT(,bool&,getBoolMod,BOOL,b,)
-GETIT(,double&,getDoubleMod,DOUBLE,d,)
-GETIT(,std::complex<double>&,getComplexMod,COMPLEX,c,*)
-GETIT(,std::string&,getStringMod,STRING,s,*)
-GETIT(,std::vector<int>&,getIntVecMod,INTVEC,iv,*)
-GETIT(,std::vector<unsigned int>&,getuIntVecMod,UINTVEC,uiv,*)
-GETIT(,std::vector<bool>&,getBoolVecMod,BOOLVEC,bv,*)
-GETIT(,std::vector<double>&,getDoubleVecMod,DOUBLEVEC,dv,*)
-GETIT(,std::vector<std::complex<double> >&,getComplexVecMod,COMPLEXVEC,cv,*)
-GETIT(,std::vector<std::string>&,getStringVecMod,STRINGVEC,sv,*)
-GETIT(,record&,getRecordMod,RECORD,recordv,*)
+GETIT(,,int&,getIntMod,INT,i,)
+GETIT(,,unsigned int&,getuIntMod,UINT,ui,)
+GETIT(,,bool&,getBoolMod,BOOL,b,)
+GETIT(,,double&,getDoubleMod,DOUBLE,d,)
+GETIT(,,std::complex<double>&,getComplexMod,COMPLEX,c,*)
+GETIT(,,std::string&,getStringMod,STRING,s,*)
+GETIT(,,std::vector<int>&,getIntVecMod,INTVEC,iv,*)
+GETIT(,,std::vector<unsigned int>&,getuIntVecMod,UINTVEC,uiv,*)
+GETIT(,,std::vector<bool>&,getBoolVecMod,BOOLVEC,bv,*)
+GETIT(,,std::vector<double>&,getDoubleVecMod,DOUBLEVEC,dv,*)
+GETIT(,,std::vector<std::complex<double> >&,getComplexVecMod,COMPLEXVEC,cv,*)
+GETIT(,,std::vector<std::string>&,getStringVecMod,STRINGVEC,sv,*)
+GETIT(,,record&,getRecordMod,RECORD,recordv,*)
 
 #define PUSHIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT,STRLONG,STRDBL,STRCPX) \
 void variant::push(TYPEX v, bool conform ) {					\
