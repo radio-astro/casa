@@ -131,13 +131,16 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         
         missing = [table for table in result.pool
                    if table not in on_disk and not self._executor._dry_run]        
-        if missing:
-            l = len(missing)
-            msg = ('Gaincal output caltable%s %s %s missing' % 
-                   ('' if l is 1 else 's',
-                    utils.commafy([os.path.basename(ca.gaintable) for ca in missing], False),
-                    'is' if l is 1 else 'are'))
-            LOG.error(msg)
-            raise IOError(msg)
+        #if missing:
+            #l = len(missing)
+            #msg = ('Gaincal output caltable%s %s %s missing' % 
+                   #('' if l is 1 else 's',
+                   #utils.commafy([os.path.basename(ca.gaintable) for ca in missing], False),
+                   #'is' if l is 1 else 'are'))
+            #LOG.error(msg)
+            #raise IOError(msg)
+
+	result.error.clear()
+	result.error.update(missing)
 
         return result
