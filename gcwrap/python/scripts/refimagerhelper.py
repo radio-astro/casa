@@ -784,7 +784,7 @@ class PyParallelImagerHelper():
              joblist = range(numcpu)
              #for k in range(numcpu):
              for k in self.nodeList:
-                  joblist[k] = self.CL.odo('casalog.post("node '+str(k)+' has completed its job")', k)
+                 joblist[k-1] = self.CL.odo('casalog.post("node '+str(k)+' has completed its job")', k)
 
         print 'Blocking for nodes to finish'
         over=False
