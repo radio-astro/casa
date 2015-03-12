@@ -682,6 +682,9 @@ def find_island(searchmask, pixels, grid):
 
 def analyse_clean_result(model, restored, residual, flux, cleanmask):
 
+    if flux == '':
+        flux = None
+
     # get the sum of the model image to find how much flux has been
     # cleaned
     model_sum = None

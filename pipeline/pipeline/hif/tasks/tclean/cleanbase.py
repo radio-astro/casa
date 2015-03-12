@@ -441,8 +441,12 @@ class CleanBase(basetask.StandardTaskTemplate):
         model_name = '%s.%s.iter%s.model' % (
           inputs.imagename, inputs.stokes, iter)
         rename_image(old_name=old_model_name, new_name=model_name)
-        image_name = '%s.%s.iter%s.image' % (
-          inputs.imagename, inputs.stokes, iter)
+        if (inputs.niter == 0):
+            image_name = '%s.%s.iter%s.residual' % (
+              inputs.imagename, inputs.stokes, iter)
+        else:
+            image_name = '%s.%s.iter%s.image' % (
+              inputs.imagename, inputs.stokes, iter)
         residual_name = '%s.%s.iter%s.residual' % (
           inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
@@ -481,8 +485,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             spw=inputs.spw,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
-            #pblimit=0.2, niter=inputs.niter,
-            pblimit=0.2, niter=max(1, inputs.niter),
+            pblimit=0.2, niter=inputs.niter,
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -537,15 +540,16 @@ def rename_image(old_name, new_name):
 def set_miscinfo(name, spw=None, field=None, type=None, iter=None):
     """Define miscellaneous image information
     """
-    with casatools.ImageReader(name) as image:
-        info = image.miscinfo()
-        if spw:
-            info['spw'] = spw
-        if field:
-            info['field'] = field
-        if type:
-            info['type'] = type
-        if iter is not None:
-            info['iter'] = iter
-        image.setmiscinfo(info)
+    if name != '':
+        with casatools.ImageReader(name) as image:
+            info = image.miscinfo()
+            if spw:
+                info['spw'] = spw
+            if field:
+                info['field'] = field
+            if type:
+                info['type'] = type
+            if iter is not None:
+                info['iter'] = iter
+            image.setmiscinfo(info)
 
