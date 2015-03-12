@@ -199,11 +199,19 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # do a phase-only gaincal on the remaining calibrators using the full
         # set of antennas
-        self._do_gaincal(caltable=caltable, field=inputs.transfer,
-	    intent=inputs.transintent, gaintype='G', calmode='p', 
-            solint=inputs.phaseupsolint, antenna=allantenna, 
-            minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
-	    append=True, merge=True)
+	if os.path.exists(caltable):
+            self._do_gaincal(caltable=caltable, field=inputs.transfer,
+	        intent=inputs.transintent, gaintype='G', calmode='p', 
+                solint=inputs.phaseupsolint, antenna=allantenna, 
+                minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
+	        append=True, merge=True)
+	else:
+            LOG.warn('Problem computing phase solution for the flux calibrator')
+            self._do_gaincal(caltable=caltable, field=inputs.transfer,
+	        intent=inputs.transintent, gaintype='G', calmode='p', 
+                solint=inputs.phaseupsolint, antenna=allantenna, 
+                minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
+	        append=False, merge=True)
 
         # now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
@@ -220,8 +228,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # should contain gains for the the same set of antennas for 
         # each of the amplitude and phase calibrators - looking
         # at each spw separately.
-        check_ok = self._check_caltable(caltable=caltable,
-          ms=ms, reference=inputs.reference, transfer=inputs.transfer) 
+	if os.path.exists(caltable):
+            check_ok = self._check_caltable(caltable=caltable,
+                ms=ms, reference=inputs.reference, transfer=inputs.transfer) 
+	else:
+	    check_ok = False
 
         if check_ok:
             # Schedule a fluxscale job using this caltable. This is the result
