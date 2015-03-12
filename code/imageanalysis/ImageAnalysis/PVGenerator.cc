@@ -225,7 +225,6 @@ void PVGenerator::setWidth(const Quantity& q) {
 
 SPIIF PVGenerator::generate() const {
 	*_getLog() << LogOrigin(_class, __func__, WHERE);
-
 	ThrowIf(
 		_start.get() == 0 || _end.get() == 0,
 		"Start and/or end points have not been set"
@@ -387,7 +386,8 @@ SPIIF PVGenerator::generate() const {
 		);
 	}
 
-	// done with this pointer
+	// done with these pointers
+	subImage.reset();
 	imageToRotate.reset();
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
