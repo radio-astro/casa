@@ -20,7 +20,9 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
         if ((type(calmode)==str) and calmode=='tsys'):
             if scan!='':
-                raise Exception,'Scan input must be \'\'(\'\'=all) in calmode=\'tsys\'.'
+                raise UserWarning, 'Scan input must be \'\'(\'\'=all) in calmode=\'tsys\'.'
+            if spw!='':
+                raise UserWarning, 'Spw input must be \'\'(\'\'=all) in calmode=\'tsys\'.'
 
         if ((type(infile)==str) and (os.path.exists(infile))):
             # don't need scr col for this
