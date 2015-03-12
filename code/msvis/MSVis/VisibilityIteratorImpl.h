@@ -1251,6 +1251,9 @@ protected:
     virtual void putCol (ArrayColumn<Float> & column, const Slicer & slicer, const Array<Float> & array);
     virtual void putCol (ArrayColumn<Complex> & column, const Slicer & slicer, const Array<Complex> & array);
 
+    template <class T> void setTileShape(RefRows &rowRef,ArrayColumn<T> &outputDataCol,const IPosition &arrayShape);
+    Bool useCustomTileShape();
+
     // non-virtual, no reason to template this function because Bool is the only type needed
     void putColScalar (ScalarColumn<Bool> & column, const Vector<Bool> & array);
 
@@ -1288,6 +1291,7 @@ private:
     std::map <VisBufferComponents::EnumType, BackWriter *> backWriters_p;
     Columns columns_p;
     VisibilityIterator * vi_p; // [use]
+    Bool useCustomTileShape_p;
 };
 
 } //# NAMESPACE CASA - END

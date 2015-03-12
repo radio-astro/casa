@@ -49,6 +49,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Sort.h>
+#include <casacore/casa/OS/EnvVar.h>
 
 #include <cassert>
 #include <limits>
@@ -154,7 +155,6 @@ VisibilityIteratorReadImpl::initialize (const Block<MeasurementSet> &mss)
 
     selectChannel (blockNGroup, blockStart, blockWidth, blockIncr,
                   blockSpw);
-
 }
 
 
@@ -2886,11 +2886,14 @@ VisibilityIteratorReadImpl::slurp () const
 
 VisibilityIteratorWriteImpl::VisibilityIteratorWriteImpl (VisibilityIterator * vi)
 : vi_p (vi)
-{}
+{
+	useCustomTileShape_p = useCustomTileShape();
+}
 
 VisibilityIteratorWriteImpl::VisibilityIteratorWriteImpl (const VisibilityIteratorWriteImpl & other)
 {
     operator=(other);
+    useCustomTileShape_p = useCustomTileShape();
 }
 
 VisibilityIteratorWriteImpl::~VisibilityIteratorWriteImpl ()
@@ -3209,18 +3212,21 @@ VisibilityIteratorWriteImpl::putDataColumn (DataColumn whichOne,
     case ROVisibilityIterator::Observed:
         if (readImpl->floatDataFound_p) {
             Cube<Float> dataFloat = real (data);
+            if (useCustomTileShape_p) setTileShape(readImpl->selRows_p,columns_p.floatVis_p,dataFloat.shape());
             putCol (columns_p.floatVis_p, dataFloat);
         } else {
+        	if (useCustomTileShape_p) setTileShape(readImpl->selRows_p,columns_p.vis_p,data.shape());
             putCol (columns_p.vis_p, data);
         }
         break;
 
     case ROVisibilityIterator::Corrected:
-
+    	if (useCustomTileShape_p) setTileShape(readImpl->selRows_p,columns_p.corrVis_p,data.shape());
         putCol (columns_p.corrVis_p, data);
         break;
 
     case ROVisibilityIterator::Model:
+    	if (useCustomTileShape_p) setTileShape(readImpl->selRows_p,columns_p.modelVis_p,data.shape());
         putCol (columns_p.modelVis_p, data);
         break;
 
@@ -3298,7 +3304,31 @@ VisibilityIteratorWriteImpl::putCol (ArrayColumn<Complex> &column,
    column.putColumnCells (readImpl->selRows_p, slicer, array);
 }
 
+template <class T> void VisibilityIteratorWriteImpl::setTileShape(	RefRows &rowRef,
+																	ArrayColumn<T> &outputDataCol,
+																	const IPosition &arrayShape)
+{
+	size_t nCorr = arrayShape(0);
+	size_t nChan = arrayShape(1);
+	ssize_t nRows = 1048576 / (sizeof(T)*nCorr*nChan);
+	IPosition outputPlaneShape(2,nCorr,nChan);
+	IPosition tileShape(3,nCorr,nChan,nRows);
+	outputDataCol.setShape(rowRef.firstRow(),outputPlaneShape,tileShape);
 
+	return;
+}
+
+Bool VisibilityIteratorWriteImpl::useCustomTileShape()
+{
+	Bool ret = False;
+	String rank = EnvironmentVariable::get("OMPI_COMM_WORLD_RANK");
+	if (!rank.empty())
+	{
+		ret = True;
+	}
+
+	return ret;
+}
 
 void
 VisibilityIteratorWriteImpl::putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)
