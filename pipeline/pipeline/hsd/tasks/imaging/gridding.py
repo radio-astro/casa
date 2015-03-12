@@ -173,15 +173,9 @@ class GriddingBase(common.SingleDishTaskTemplate):
         num_spectra = len(index_list)
         _counter = 0
         _index = ants[0]
-        num_spectra_per_data = []
+        num_spectra_per_data = dict([(i,0) for i in self.antenna])
         for i in xrange(num_spectra):
-            if _index == ants[i]:
-                _counter += 1
-            else:
-                num_spectra_per_data.append(_counter)
-                _counter = 1
-                _index = ants[i]
-        num_spectra_per_data.append(num_spectra - sum(num_spectra_per_data))
+            num_spectra_per_data[ants[i]] += 1
         LOG.trace('num_spectra_per_data=%s'%(num_spectra_per_data))
 
         LOG.info('Processing %d spectra...' % num_spectra)
@@ -208,7 +202,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
         StorageID = 0
-        for i in xrange(len(DataIn)):
+        for i in self.antenna:
             # read data to SpStorage
             for j in xrange(num_spectra_per_data[i]):
                 x = index_list[StorageID]

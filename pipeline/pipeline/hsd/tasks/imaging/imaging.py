@@ -282,48 +282,50 @@ class SDImaging(common.SingleDishTaskTemplate):
                                                                vislist=exported_mses)
                 imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
-                logrecords.extend(imager_result.logrecords)
-
-                # Additional Step.
-                # Make grid_table and put rms and valid spectral number array 
-                # to the outcome
-                LOG.info('Additional Step. Make grid_table')
-                with casatools.ImageReader(imager_result.outcome) as ia:
-                    cs = ia.coordsys()
-                    dircoords = [i for i in xrange(cs.naxes())
-                                 if cs.axiscoordinatetypes()[i] == 'Direction']
-                    nx = ia.shape()[dircoords[0]]
-                    ny = ia.shape()[dircoords[1]]
-                validsps = []
-                rmss = []
-                observing_pattern = st.pattern[spwids[0]].values()[0]
-                grid_task_class = gridding.gridding_factory(observing_pattern)
-                grid_tables = []
-                grid_input_dict = {}
-                for (ant, spw, pol) in _members:
-                    for p in pol:
-                        if not grid_input_dict.has_key(p):
-                            grid_input_dict[p] = [[ant], [spw]]
-                        else:
-                            grid_input_dict[p][0].append(ant)
-                            grid_input_dict[p][1].append(spw)
-
-                for (pol,ant_spw) in grid_input_dict.items():
-                    _indices = ant_spw[0]
-                    _spwids = ant_spw[1]
-                    _pols = [[pol] for i in _indices]
-                    gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices, 
-                                                             spwid=_spwids, polid=_pols,
-                                                             nx=nx, ny=ny)
-                    gridding_task = grid_task_class(gridding_inputs)
-                    gridding_result = self._executor.execute(gridding_task, merge=True)
-                    grid_tables.append(gridding_result.outcome)
-                    logrecords.extend(gridding_result.logrecords)
-                for i in xrange(len(grid_input_dict)):
-                    validsps.append([r[6] for r in grid_tables[i]])
-                    rmss.append([r[8] for r in grid_tables[i]])
                 
-                if imagename is not None:
+                if imager_result.outcome is not None:
+                    # Imaging was successful, proceed following steps
+                    logrecords.extend(imager_result.logrecords)
+    
+                    # Additional Step.
+                    # Make grid_table and put rms and valid spectral number array 
+                    # to the outcome
+                    LOG.info('Additional Step. Make grid_table')
+                    with casatools.ImageReader(imager_result.outcome) as ia:
+                        cs = ia.coordsys()
+                        dircoords = [i for i in xrange(cs.naxes())
+                                     if cs.axiscoordinatetypes()[i] == 'Direction']
+                        nx = ia.shape()[dircoords[0]]
+                        ny = ia.shape()[dircoords[1]]
+                    validsps = []
+                    rmss = []
+                    observing_pattern = st.pattern[spwids[0]].values()[0]
+                    grid_task_class = gridding.gridding_factory(observing_pattern)
+                    grid_tables = []
+                    grid_input_dict = {}
+                    for (ant, spw, pol) in _members:
+                        for p in pol:
+                            if not grid_input_dict.has_key(p):
+                                grid_input_dict[p] = [[ant], [spw]]
+                            else:
+                                grid_input_dict[p][0].append(ant)
+                                grid_input_dict[p][1].append(spw)
+    
+                    for (pol,ant_spw) in grid_input_dict.items():
+                        _indices = ant_spw[0]
+                        _spwids = ant_spw[1]
+                        _pols = [[pol] for i in _indices]
+                        gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices, 
+                                                                 spwid=_spwids, polid=_pols,
+                                                                 nx=nx, ny=ny)
+                        gridding_task = grid_task_class(gridding_inputs)
+                        gridding_result = self._executor.execute(gridding_task, merge=True)
+                        grid_tables.append(gridding_result.outcome)
+                        logrecords.extend(gridding_result.logrecords)
+                    for i in xrange(len(grid_input_dict)):
+                        validsps.append([r[6] for r in grid_tables[i]])
+                        rmss.append([r[8] for r in grid_tables[i]])
+                    
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
@@ -376,48 +378,50 @@ class SDImaging(common.SingleDishTaskTemplate):
                                                            vislist=exported_mses)
             imager_task = worker.SDImagingWorker(imager_inputs)
             imager_result = self._executor.execute(imager_task, merge=True)
-            logrecords.extend(imager_result.logrecords)
-
-            # Additional Step.
-            # Make grid_table and put rms and valid spectral number array 
-            # to the outcome
-            LOG.info('Additional Step. Make grid_table')
-            with casatools.ImageReader(imager_result.outcome) as ia:
-                cs = ia.coordsys()
-                dircoords = [i for i in xrange(cs.naxes())
-                             if cs.axiscoordinatetypes()[i] == 'Direction']
-                nx = ia.shape()[dircoords[0]]
-                ny = ia.shape()[dircoords[1]]
-            validsps = []
-            rmss = []
-            observing_pattern = st.pattern[combined_spws[0]].values()[0]
-            grid_task_class = gridding.gridding_factory(observing_pattern)
-            grid_tables = []
-            grid_input_dict = {}
-            for (ant, spw, pol) in zip(combined_indices, combined_spws, combined_pols):
-                for p in pol:
-                    if not grid_input_dict.has_key(p):
-                        grid_input_dict[p] = [[ant], [spw]]
-                    else:
-                        grid_input_dict[p][0].append(ant)
-                        grid_input_dict[p][1].append(spw)
-
-            for (pol,ant_spw) in grid_input_dict.items():
-                _indices = ant_spw[0]
-                _spwids = ant_spw[1]
-                _pols = [[pol] for i in _indices]
-                gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices,
-                                                         spwid=_spwids, polid=_pols,
-                                                         nx=nx, ny=ny)
-                gridding_task = grid_task_class(gridding_inputs)
-                gridding_result = self._executor.execute(gridding_task, merge=True)
-                logrecords.extend(gridding_result.logrecords)
-                grid_tables.append(gridding_result.outcome)
-            for i in xrange(len(grid_input_dict)):
-                validsps.append([r[6] for r in grid_tables[i]])
-                rmss.append([r[8] for r in grid_tables[i]])
             
-            if imagename is not None:
+            if imager_result.outcome is not None:
+                # Imaging was successful, proceed following steps
+                logrecords.extend(imager_result.logrecords)
+    
+                # Additional Step.
+                # Make grid_table and put rms and valid spectral number array 
+                # to the outcome
+                LOG.info('Additional Step. Make grid_table')
+                with casatools.ImageReader(imager_result.outcome) as ia:
+                    cs = ia.coordsys()
+                    dircoords = [i for i in xrange(cs.naxes())
+                                 if cs.axiscoordinatetypes()[i] == 'Direction']
+                    nx = ia.shape()[dircoords[0]]
+                    ny = ia.shape()[dircoords[1]]
+                validsps = []
+                rmss = []
+                observing_pattern = st.pattern[combined_spws[0]].values()[0]
+                grid_task_class = gridding.gridding_factory(observing_pattern)
+                grid_tables = []
+                grid_input_dict = {}
+                for (ant, spw, pol) in zip(combined_indices, combined_spws, combined_pols):
+                    for p in pol:
+                        if not grid_input_dict.has_key(p):
+                            grid_input_dict[p] = [[ant], [spw]]
+                        else:
+                            grid_input_dict[p][0].append(ant)
+                            grid_input_dict[p][1].append(spw)
+    
+                for (pol,ant_spw) in grid_input_dict.items():
+                    _indices = ant_spw[0]
+                    _spwids = ant_spw[1]
+                    _pols = [[pol] for i in _indices]
+                    gridding_inputs = grid_task_class.Inputs(context, antennaid=_indices,
+                                                             spwid=_spwids, polid=_pols,
+                                                             nx=nx, ny=ny)
+                    gridding_task = grid_task_class(gridding_inputs)
+                    gridding_result = self._executor.execute(gridding_task, merge=True)
+                    logrecords.extend(gridding_result.logrecords)
+                    grid_tables.append(gridding_result.outcome)
+                for i in xrange(len(grid_input_dict)):
+                    validsps.append([r[6] for r in grid_tables[i]])
+                    rmss.append([r[8] for r in grid_tables[i]])
+                
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
                                                     spwlist=combined_spws,

@@ -49,11 +49,18 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         pols_list = self.inputs.pols
         imagemode = self.inputs.mode
  
-        self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, imagemode, edge)
+        status = self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, imagemode, edge)
  
-        result = SDImagingWorkerResults(task=self.__class__,
-                                 success=True,
-                                 outcome=outfile)
+        if status is True:
+            result = SDImagingWorkerResults(task=self.__class__,
+                                            success=True,
+                                            outcome=outfile)
+        else:
+            # Imaging failed due to missing valid data
+            result = SDImagingWorkerResults(task=self.__class__,
+                                            success=False,
+                                            outcome=None)
+
         result.task = self.__class__
 
         if self.inputs.context.subtask_counter is 0: 
@@ -111,6 +118,12 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
     
         # nx and ny
         index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, pols_list, srctype))
+        
+        if len(index_list) == 0:
+            antenna_name = reference_data.antenna.name
+            LOG.warn('No valid data for source %s antenna %s spw %s. Image will not be created.'%(source_name, antenna_name, spwid))
+            return False
+        
         index_list.sort()
     
         ra = datatable.tb1.getcol('RA').take(index_list)
@@ -259,5 +272,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
 
         # execute job
         self._executor.execute(image_job)
+        
+        return True
             
                 
