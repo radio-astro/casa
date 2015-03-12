@@ -327,7 +327,7 @@ class MakeCleanListHeuristics(object):
         if self._mosaic:
             return 'mosaic'
         else:
-            return 'standard'
+            return 'csclean'
 
     def phasecenter(self, fields, centreonly=True):
 

@@ -125,14 +125,17 @@ class TcleanHeuristics(object):
         imagename = self.namer.get_filename()
         return imagename
 
-    def imagermode(self, intent, field):
+    def gridmode(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
         self.field(intent, field)
 
         if self._mosaic:
             return 'mosaic'
         else:
-            return 'csclean'
+            return 'standard'
+
+    def deconvolver(self, intent, field):
+        return 'hogbom'
 
     def imsize(self, fields, cell, max_pixels=None):
         # get spread of beams
