@@ -722,7 +722,7 @@ static void defineOptions(boost::program_options::options_description &desc,
      "UNTESTED! Estimate the continuum (e.g., due to clouds)")
     ("wvrflag",
      value< std::vector<std::string> >(),
-     "Flag this WVR (labelled with either antenna number or antenna name) as bad, and replace its data with interpolated values ")
+     "Regard this WVR (labelled with either antenna number or antenna name) as bad, and use interpolated values instead")
     ("sourceflag",
      value< std::vector<std::string> >(),
      "Flag the WVR data for this source and do not produce any phase corrections on it")
@@ -758,6 +758,9 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("wvrspw",
      value< std::vector<int> >(),
      "Only use data from these WVR SPWs.")
+    ("refant",
+     value< std::vector<std::string> >(),
+     "Use the WVR data from this antenna for calculating the dT/dL parameters.")
     ;
   p.add("ms", -1);
 }
@@ -941,7 +944,27 @@ int main(int argc,  char* argv[])
 
      // Determine the reference antenna for dTdL calculation
      int refant = -1; 
-     {
+
+     if (vm.count("refant")){
+       LibAIR2::AntSet refants=getAntPars("refant", vm, ms);    
+       for(LibAIR2::AntSet::iterator it=refants.begin(); it != refants.end(); it++){
+	 if(interpImpossibleAnts.count(*it)==0){
+	   refant = *it; // use the first of the given list of possible ref antennas which was OK or which could be interpolated to
+	   break;
+	 }
+	 else{
+	   std::cout << "Given reference antenna " << *it << "==" << anames.left.at(*it) 
+		     << " is flagged and cannot be interpolated." << std::endl;
+	 }	   
+       }
+       if(refant<0){
+	 std::cout << "None of the given reference antennas is usable." << std::endl;
+	 std::cerr << "None of the given reference antennas is usable." << std::endl;
+	 return -1;
+       }
+
+     }
+     else{
        LibAIR2::AntSet wvrants=LibAIR2::WVRAntennas(ms, wvrspws);
        for(LibAIR2::AntSet::iterator it=wvrants.begin(); it != wvrants.end(); it++){
 	 if(interpImpossibleAnts.count(*it)==0){
@@ -949,13 +972,13 @@ int main(int argc,  char* argv[])
 	   break;
 	 }
        }
+       if(refant<0){
+	 std::cout << "No antennas with sufficient WVR data found." << std::endl;
+	 std::cerr << "No antennas with sufficient WVR data found." << std::endl;
+	 return -1;
+       }
      }
 
-     if(refant<0){
-       std::cout << "No antennas with sufficient WVR data found." << std::endl;
-       std::cerr << "No antennas with sufficient WVR data found." << std::endl;
-       return -1;
-     }
      std::cout << "Choosing";
      if(interpwvrs.count(refant)>0){
        std::cout << " (interpolated)";
