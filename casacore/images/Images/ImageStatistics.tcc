@@ -483,7 +483,7 @@ void ImageStatistics<T>::displayStats(
 		Bool hasBeam = _getBeamArea(beamArea, msg);
 		String unit;
 		if (! hasBeam) {
-			unit = _intensityUnit();
+			unit = pInImage_p->units().getName();
 			unit.downcase();
 		}
 		if (hasBeam || ! unit.contains("/beam")) {
@@ -629,10 +629,6 @@ template <class T> Quantum<typename casacore::NumericTraits<T>::PrecisionType> I
 	return Quantum<AccumType>(flux, fUnit);
 }
 
-template <class T> String ImageStatistics<T>::_intensityUnit() const {
-	return pInImage_p->units().getName();
-}
-
 template <class T> Bool ImageStatistics<T>::_computeFlux(
 	Array<AccumType>& flux,const Array<AccumType>& npts, const Array<AccumType>& sum
 ) {
@@ -640,7 +636,7 @@ template <class T> Bool ImageStatistics<T>::_computeFlux(
 	String msg;
 	Bool gotBeamArea = _getBeamArea(beamArea, msg);
 	if (! gotBeamArea) {
-		String unit = _intensityUnit();
+		String unit = pInImage_p->units().getName();
 		unit.downcase();
 		if (unit.contains("/beam")) {
 			os_p << LogIO::WARN << "Unable to compute flux density: "
@@ -669,6 +665,30 @@ template <class T> Bool ImageStatistics<T>::_computeFlux(
 		if (gotBeamArea) {
 			beamAreaIter->next();
 		}
+	}
+	return True;
+}
+
+template <class T>  Bool ImageStatistics<T>::_computeFlux(
+	AccumType& flux, AccumType sum, const IPosition& pos,
+	Bool posInLattice
+) {
+	Array<Double> beamArea;
+	String msg;
+	if (_getBeamArea(beamArea, msg)) {
+		IPosition beamPos = pos;
+		if (posInLattice) {
+			this->_latticePosToStoragePos(beamPos, pos);
+		}
+		flux = _flux(sum, beamArea(beamPos)).getValue();
+	}
+	else {
+		String unit = pInImage_p->units().getName();
+		unit.downcase();
+		if (unit.contains("/beam")) {
+			return False;
+		}
+		flux = _flux(sum, 0).getValue();
 	}
 	return True;
 }
