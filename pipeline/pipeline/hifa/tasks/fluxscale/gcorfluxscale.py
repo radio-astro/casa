@@ -195,19 +195,24 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 	    gaintype='G', calmode='p', solint=inputs.phaseupsolint,
 	    antenna=resantenna, refant=refant, minblperant=minblperant,
 	    phaseupspwmap=None, append=False, merge=False)
-        caltable = r.final.pop().gaintable
+
+	# test for the existence of the caltable
+	try:
+            caltable = r.final.pop().gaintable
+	except:
+            caltable = r.error.pop().gaintable
+            LOG.warn('Cannot compute phase solution table %s for the flux calibrator' % (os.path.basename(caltable)))
 
         # do a phase-only gaincal on the remaining calibrators using the full
         # set of antennas
 	if os.path.exists(caltable):
-            self._do_gaincal(caltable=caltable, field=inputs.transfer,
+            r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
 	        intent=inputs.transintent, gaintype='G', calmode='p', 
                 solint=inputs.phaseupsolint, antenna=allantenna, 
                 minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
 	        append=True, merge=True)
 	else:
-            LOG.warn('Problem computing phase solution for the flux calibrator')
-            self._do_gaincal(caltable=caltable, field=inputs.transfer,
+            r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
 	        intent=inputs.transintent, gaintype='G', calmode='p', 
                 solint=inputs.phaseupsolint, antenna=allantenna, 
                 minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
@@ -215,23 +220,34 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
-        r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
-            intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
-	    calmode='a', solint=inputs.solint, antenna=allantenna, refant=refant,
-	    minblperant=minblperant, phaseupspwmap=phaseupspwmap, append=False, merge=True)
+	try:
+            caltable = r.final.pop().gaintable
+            r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
+                intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
+	        calmode='a', solint=inputs.solint, antenna=allantenna, refant=refant,
+	        minblperant=minblperant, phaseupspwmap=phaseupspwmap, append=False, merge=True)
 
-        # get the gaincal caltable from the results
-        # this is the table that will be fluxscaled
-        caltable = r.final.pop().gaintable
+            # get the gaincal caltable from the results
+            # this is the table that will be fluxscaled
+	    try:
+                caltable = r.final.pop().gaintable
+	    except:
+                caltable = r.error.pop().gaintable
+                LOG.warn('Cannot compute compute the flux scaling table %s' % (os.path.basename(caltable)))
 
-        # To make the following fluxscale reliable the caltable
-        # should contain gains for the the same set of antennas for 
-        # each of the amplitude and phase calibrators - looking
-        # at each spw separately.
-	if os.path.exists(caltable):
-            check_ok = self._check_caltable(caltable=caltable,
-                ms=ms, reference=inputs.reference, transfer=inputs.transfer) 
-	else:
+            # To make the following fluxscale reliable the caltable
+            # should contain gains for the the same set of antennas for 
+            # each of the amplitude and phase calibrators - looking
+            # at each spw separately.
+	    if os.path.exists(caltable):
+                check_ok = self._check_caltable(caltable=caltable,
+                    ms=ms, reference=inputs.reference, transfer=inputs.transfer) 
+	    else:
+	        check_ok = False
+
+	except:
+            caltable = r.error.pop().gaintable
+            LOG.warn('Cannot compute phase solution table %s for the phase and bandpass calibrator' % (os.path.basename(caltable)))
 	    check_ok = False
 
         if check_ok:
@@ -263,8 +279,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 
             except Exception, e:
                 # something has gone wrong, return an empty result
-                LOG.error('Unable to complete flux scaling operation')
-                LOG.exception(e)
+                LOG.error('Unable to complete flux scaling operation for MS %s' % (os.path.basename(inputs.vis)))
+                #LOG.exception(e)
                 return result
 
             finally:
@@ -273,7 +289,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                     os.remove(reffile)
 
         else:
-            LOG.error('Unable to complete flux scaling operation')
+            LOG.error('Unable to complete flux scaling operation for MS %s' % (os.path.basename(inputs.vis)))
             return result 
 
         return result
