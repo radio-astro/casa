@@ -623,8 +623,54 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
             currstat = self._getStats(outfile,ifno)
             self._compareStats(currstat,reference[ifno])
 
+
+class tsdbaseline_csplineTest( tsdbaseline_unittest_base, unittest.TestCase ):
+    """
+    Unit tests for task tsdbaseline blfunc='cspline'.
+
+    This test intends to check whether tsdbaseline in the calmode='cspline' task works properly
+     
+
+    The list of tests:
+    test00 --- blfunc='cspline'
+
+    created 12/03/2015 by Masaya Kuniyoshi
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_calave.ms'
+    #blparamfile_suffix = '_blparam.txt'
+    #outroot = tsdbaseline_unittest_base.taskname+'_multi'
+    #refblparamfile = 'refblparam_multiIF'
+    outfile='out.ms'
+
+
+    def setUp( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdbaseline)
+
+    def tearDown( self ):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        #os.system('rm -rf '+self.outroot+'*')
+    
+    def test00( self ):
+        infile=self.infile
+        outfile=self.outfile
+        datacolumn='float_data'  
+        maskmode='list'
+        blmode='fit'
+        blformat='text'
+        blfunc='cspline'
+        overwrite=True
+        result=tsdbaseline(infile=infile, datacolumn=datacolumn,maskmode=maskmode, blfunc=blfunc, outfile=outfile, overwrite=overwrite)
+        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
+
+
 def suite():
     return [tsdbaseline_basicTest, 
-            tsdbaseline_maskTest, 
+            tsdbaseline_maskTest,
+            tsdbaseline_csplineTest
             #tsdbaseline_multi_IF_test
             ]
