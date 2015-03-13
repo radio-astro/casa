@@ -504,6 +504,10 @@ protected:
    // more image-specific necessities :(
    virtual String _intensityUnit() const { return ""; }
 
+   virtual Bool _computeFlux(
+		Array<AccumType>& flux, const Array<AccumType>& npts, const Array<AccumType>& sum
+   );
+
 private:
 
    const MaskedLattice<T>* pInLattice_p;
@@ -613,7 +617,7 @@ private:
                            PGPlotter& plotter);
 
 // Retrieve a statistic from the storage lattice and return in an array
-   Bool retrieveStorageStatistic (Array<AccumType>& slice, 
+   Bool retrieveStorageStatistic (Array<AccumType>& slice,
                                   const LatticeStatsBase::StatisticsTypes type,
                                   const Bool dropDeg);
 

@@ -507,7 +507,6 @@ Bool LatticeStatistics<T>::setNewLattice(const MaskedLattice<T>& lattice)
    return True;
 }
 
-
 template <class T>
 Bool LatticeStatistics<T>::getConvertedStatistic (Array<T>& stats, 
                                                   LatticeStatsBase::StatisticsTypes type,
@@ -671,10 +670,14 @@ Bool LatticeStatistics<T>::getFullMinMax(T& dataMin, T& dataMax)
    return (maxFull_p > minFull_p);
 }
 
-
-
 // Private functions
 
+template <class T>
+Bool LatticeStatistics<T>::_computeFlux(
+	Array<AccumType>&, const Array<AccumType>&, const Array<AccumType>&
+) {
+	ThrowCc("This object does not support computing fluxes");
+}
 
 template <class T>
 Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice, 
@@ -727,49 +730,15 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
        }
    }
    else if (type==FLUX) {
-	   if (! _canDoFlux()) {
+	   if (_canDoFlux()) {
+		   retrieveStorageStatistic (sum, SUM, dropDeg);
+		   return _computeFlux(slice, nPts, sum);
+	   }
+	   else {
 		   slice.resize(IPosition(0,0));
 		   return False;
 	   }
-       Array<Double> beamArea;
-       String msg;
-       Bool gotBeamArea = _getBeamArea(beamArea, msg);
-       if (! gotBeamArea) {
-    	   String unit = this->_intensityUnit();
-    	   unit.downcase();
-    	   /*
-    	   ThrowIf(
-    			   unit.contains("/beam"),
-    			   "Unable to compute flux: " + msg
-    	   );
-    	   */
-    	   if (unit.contains("/beam")) {
-    		   os_p << LogIO::WARN << "Unable to compute flux density: "
-    				<< msg << LogIO::POST;
-    		   return False;
-    	   }
-       }
-       retrieveStorageStatistic (sum, SUM, dropDeg);
-       ReadOnlyVectorIterator<AccumType> sumIt(sum);
-       PtrHolder<ReadOnlyVectorIterator<Double> > beamAreaIter(
-    		   gotBeamArea ? new ReadOnlyVectorIterator<Double>(beamArea) : 0
-       );
-       while (!nPtsIt.pastEnd()) {
-          for (uInt i=0; i<n1; i++) {
-             if (LattStatsSpecialize::hasSomePoints(nPtsIt.vector()(i))) {
-            	sliceIt.vector()(i) = _flux(
-            		sumIt.vector()(i), gotBeamArea ? beamAreaIter->vector()(i) : 0
-            	).getValue();
-             }
-          }
-          nPtsIt.next();
-          sumIt.next();
-          sliceIt.next();
-          if (gotBeamArea) {
-        	  beamAreaIter->next();
-          }
-       }
-    }
+   }
    else if (type==SIGMA) {
        Array<AccumType> variance;
        retrieveStorageStatistic (variance, VARIANCE, dropDeg);
@@ -2992,7 +2961,6 @@ Bool LatticeStatistics<T>::findNextLabel (String& subLabel,
       }
    }
 
-
 // substring extends to end of string
 
    Int n = iLen - iStart;
@@ -3000,7 +2968,6 @@ Bool LatticeStatistics<T>::findNextLabel (String& subLabel,
    iStart = iLen;
    return True;
 }
-
 
 template <class T>
 void LatticeStatistics<T>::getLabels(String& hLabel, String& xLabel, const IPosition& dPos) const

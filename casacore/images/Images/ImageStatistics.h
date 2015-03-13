@@ -162,7 +162,12 @@ protected:
 	AccumType sum, Double beamAreaInPixels
    ) const;
 
-   String _intensityUnit() const;
+   virtual String _intensityUnit() const;
+
+   virtual Bool _computeFlux(
+		  Array<AccumType>& flux, const Array<AccumType>& npts,
+		  const Array<AccumType>& sum
+   );
 
 private:
 // Data
@@ -202,6 +207,7 @@ private:
            AccumType rms, AccumType sigma, AccumType dMin,
            AccumType dMax, AccumType q1, AccumType q3
    );
+
 
 
   //# Make members of parent class known.

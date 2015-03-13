@@ -633,6 +633,46 @@ template <class T> String ImageStatistics<T>::_intensityUnit() const {
 	return pInImage_p->units().getName();
 }
 
+template <class T> Bool ImageStatistics<T>::_computeFlux(
+	Array<AccumType>& flux,const Array<AccumType>& npts, const Array<AccumType>& sum
+) {
+	Array<Double> beamArea;
+	String msg;
+	Bool gotBeamArea = _getBeamArea(beamArea, msg);
+	if (! gotBeamArea) {
+		String unit = _intensityUnit();
+		unit.downcase();
+		if (unit.contains("/beam")) {
+			os_p << LogIO::WARN << "Unable to compute flux density: "
+				<< msg << LogIO::POST;
+			return False;
+		}
+	}
+	ReadOnlyVectorIterator<AccumType> sumIt(sum);
+	ReadOnlyVectorIterator<AccumType> nPtsIt(npts);
+	VectorIterator<AccumType> fluxIt(flux);
+	PtrHolder<ReadOnlyVectorIterator<Double> > beamAreaIter(
+		gotBeamArea ? new ReadOnlyVectorIterator<Double>(beamArea) : 0
+	);
+	uInt n1 = nPtsIt.vector().nelements();
+	while (!nPtsIt.pastEnd()) {
+		for (uInt i=0; i<n1; ++i) {
+			if (nPtsIt.vector()(i) > 0.5) {
+				fluxIt.vector()(i) = _flux(
+					sumIt.vector()(i), gotBeamArea ? beamAreaIter->vector()(i) : 0
+	            ).getValue();
+			}
+		}
+		nPtsIt.next();
+		sumIt.next();
+		fluxIt.next();
+		if (gotBeamArea) {
+			beamAreaIter->next();
+		}
+	}
+	return True;
+}
+
 template <class T> Bool ImageStatistics<T>::_canDoFlux() const {
 	String unit = pInImage_p->units().getName();
 	return unit.contains("K")
