@@ -1004,12 +1004,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // mveltype is only set when start/step is given in mdoppler
         mveltype=""; 
         //start 
+        String startType("");
+        String widthType("");
         if( inrec.isDefined("start") ) 
           {
             if( inrec.dataType("start") == TpInt ) 
               {
 	        err += readVal( inrec, String("start"), chanStart);
 	        start = String::toString(chanStart);
+                startType="chan";
               }
             else if( inrec.dataType("start") == TpString ) 
               {
@@ -1017,10 +1020,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 if( start.contains("Hz") ) 
                   {
                     stringToQuantity(start,freqStart);
+                    startType="freq";
                   }
                 else if( start.contains("m/s") )
                   {
                     stringToQuantity(start,velStart); 
+                    startType="vel";
                   } 
               }
             else if ( inrec.dataType("start") == TpRecord ) 
@@ -1045,6 +1050,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           }
                         start = recordQMToString(startRecord);
                         stringToQuantity(start,freqStart);
+                        startType="freq";
                       }
                     else if( mtype=="radialvelocity")
                       {
@@ -1057,6 +1063,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           }
                         start = recordQMToString(startRecord);
                         stringToQuantity(start,velStart);
+                        startType="vel";
                       }
                     else if( mtype=="doppler") 
                       {
@@ -1066,13 +1073,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         stringToQuantity(start,velStart);
                         startRecord.get(String("refer"), mveltype);
                         mveltype.downcase();
+                        startType="vel";
                       }
                   }
                 else 
                   {
                     start = recordQMToString(startRecord);
-                    if( start.contains("Hz") ) { stringToQuantity(start,freqStart);}
-                    else if ( start.contains("m/s") ) { stringToQuantity(start,velStart);}
+                    if ( start.contains("Hz") ) 
+                      { 
+                         stringToQuantity(start,freqStart);
+                         startType="freq";
+                      }
+                    else if ( start.contains("m/s") ) 
+                      { 
+                         stringToQuantity(start,velStart);
+                         startType="vel";
+                      }
                     else { err+= String("Unrecognized Quantity unit for start, must contain m/s or Hz\n"); }
                   }
               }
@@ -1086,6 +1102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               {           
 	        err += readVal( inrec, String("width"), chanStep);
                 step = String::toString(chanStep);
+                widthType="chan";
               }
             else if( inrec.dataType("width") == TpString ) 
               {
@@ -1093,10 +1110,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 if( step.contains("Hz") ) 
                   {
                     stringToQuantity(step,freqStep);
+                    widthType="freq";
                   }
                 else if( step.contains("m/s") )
                   {
                     stringToQuantity(step,velStep); 
+                    widthType="vel";
                   } 
               }
             else if ( inrec.dataType("width") == TpRecord ) 
@@ -1121,6 +1140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           }
                         step = recordQMToString(stepRecord);
                         stringToQuantity(step, freqStep);
+                        widthType="freq";
                       }
                     else if( mtype=="radialvelocity")
                       {
@@ -1133,6 +1153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           }
                         step = recordQMToString(stepRecord);
                         stringToQuantity(step,velStep);
+                        widthType="vel";
                       }
                     else if( mtype=="doppler") 
                       {
@@ -1141,19 +1162,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         stringToQuantity(step,velStep);
                         startRecord.get(String("refer"), mveltype);
                         mveltype.downcase();
+                        widthType="vel";
                       }
                   }
                 else 
                   {
                     step = recordQMToString(stepRecord);
-                    if( step.contains("Hz") ) { stringToQuantity(step,freqStep);}
-                    else if ( step.contains("m/s") ) { stringToQuantity(step,velStep);}
+                    if ( step.contains("Hz") ) 
+                      { 
+                        stringToQuantity(step,freqStep);
+                        widthType="freq";
+                      }
+                    else if ( step.contains("m/s") ) 
+                      { 
+                        stringToQuantity(step,velStep);
+                        widthType="vel";
+                      }
                     else { err+= String("Unrecognized Quantity unit for step, must contain m/s or Hz\n"); }
                   }
               }
             else { err += String("step must be an integer, a string, or frequency/velocity in Quantity/Measure\n");}
-            }
+          }
 
+        //check for start, width unit consistentcy
+        if (startType!=widthType && startType!="" &&  widthType!="") 
+           err += String("Cannot mix start and width with different unit types (e.g. km/s vs. Hz)\n");
+ 
         //reffreq (String, Quantity, or Measure)
 	if( inrec.isDefined("reffreq") )
           {
