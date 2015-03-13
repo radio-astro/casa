@@ -14,6 +14,7 @@ class wvrgcal_test(unittest.TestCase):
 
     vis_f = 'multisource_unittest.ms'
     vis_g = 'wvrgcal4quasar_10s.ms'
+    vis_h = 'uid___A002_X8ca70c_X5_shortened.ms'
     ref = ['multisource_unittest_reference.wvr', # ref0
            'multisource_unittest_reference-newformat.wvr', # ref1: test2
            'wvrgcalctest.W', # ref2
@@ -66,6 +67,10 @@ class wvrgcal_test(unittest.TestCase):
                 raise Exception, "Error copying input data"
         if(not os.path.exists(self.vis_g)):
             rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/wvrgcal4quasar_10s.ms .')
+            if rval!=0:
+                raise Exception, "Error copying input data"
+        if(not os.path.exists(self.vis_h)):
+            rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/wvrgcal/input/uid___A002_X8ca70c_X5_shortened.ms .')
             if rval!=0:
                 raise Exception, "Error copying input data"
         for i in range(0,len(self.ref)):
@@ -549,6 +554,22 @@ class wvrgcal_test(unittest.TestCase):
             self.rval = th.compcaltabnumcol(self.out, 'comp.W', 1E-6, colname1='CPARAM', colname2="CPARAM", testspw=7)
                
         self.assertTrue(self.rval)
+
+    def test21(self):
+        '''Test 21:  uid___A002_X8ca70c_X5_shortened.ms - refant handling'''
+        myvis = self.vis_h
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, toffset=0, refant=['DV11','DV12'], wvrflag=['DA41','DV11'])
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
+        if(self.rval):
+            self.assertTrue(rvaldict['Disc_um']==[0.0, 6790.0, 6920.0, 7170.0, 7180.0, 6810.0, 7100.0, 6720.0, 6860.0, 6600.0, 7090.0, 7000.0,
+                                                  6990.0, 6700.0, 7280.0, 7040.0, 7160.0, 6790.0, 6980.0, 6890.0, 7120.0, 0.0, 7080.0, 6970.0,
+                                                  6950.0, 6930.0, 7060.0, 6850.0, 7030.0])
 
 
 def suite():

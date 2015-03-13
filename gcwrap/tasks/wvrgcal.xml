@@ -123,6 +123,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value>False</value>
       </param>
 
+      <param type="stringArray" name="refant">
+	<description>use the WVR data from this antenna for calculating the dT/dL parameters (can give ranked list)</description>
+	<value></value>
+      </param>
+      
+
+
       <!-- ================================================================= -->
     
       <constraints>
@@ -182,7 +189,7 @@ WVRGCAL correction should not be used.
   disperse -- Apply correction for dispersion
              default: False
 
-  wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values
+  wvrflag -- Regard the WVR data for these antenna(s) as bad and use interpolated values instead
              default: [] (none) example: ['DV03','DA05','PM02']           
 
   statfield -- Compute the statistics (Phase RMS, Disc) on this field only
@@ -224,6 +231,13 @@ WVRGCAL correction should not be used.
 
   usefieldtab -- derive the antenna AZ/EL values from the FIELD rather than the POINTING table
 	         default: False
+
+  refant -- use the WVR data from this antenna for calculating the dT/dL parameters (can give ranked list)
+                default: '' (use the first good or interpolatable antenna), 
+                examples: 'DA45' - use DA45 
+                          ['DA45','DV51'] - use DA45 and if that is not good, use DV51 instead
+
+
   </description>
 
   <example>

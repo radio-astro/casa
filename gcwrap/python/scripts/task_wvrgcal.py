@@ -7,7 +7,8 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
 	    scale=None, spw=None, wvrspw=None,
 	    reversespw=None,  cont=None, maxdistm=None,
-	    minnumants=None, mingoodfrac=None, usefieldtab=None):
+	    minnumants=None, mingoodfrac=None, usefieldtab=None, 
+	    refant=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
 	Returns a dictionary containing the RMS of the path length variation
@@ -44,7 +45,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	  disperse -- Apply correction for dispersion										
 	             default: False												
 																
-	  wvrflag -- Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values		
+	  wvrflag -- Regard the WVR data for these antenna(s) as bad and use interpolated values instead		
 	               default: [] (none) example: ['DV03','DA05','PM02']           						
 																
 	  statfield -- Compute the statistics (Phase RMS, Disc) on this field only						
@@ -85,6 +86,11 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 
           usefieldtab -- derive the antenna AZ/EL values from the FIELD rather than the POINTING table
 	                 default: False
+
+	  refant -- use the WVR data from this antenna for calculating the dT/dL parameters (can give ranked list)
+	              default: '' (use the first good or interpolatable antenna), 
+                      examples: 'DA45' - use DA45 
+                                ['DA45','DV51'] - use DA45 and if that is not good, use DV51 instead
 
         """
 	#Python script
@@ -191,6 +197,14 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 					raise Exception, "List elements of parameter wvrflag must be int or string."
 				if (ant != ''):
 					execute_string += ' --wvrflag \"'+str(ant)+'\"'
+		if (type(refant)!=list):
+			refant = [refant]
+		if (len(refant)>0):
+			for ant in refant:
+				if not (type(ant)==int or type(ant)==str):
+					raise Exception, "Parameter refant must be int or string or a list of them."
+				if (ant != ''):
+					execute_string += ' --refant \"'+str(ant)+'\"'
 
 		if not (statfield==None or statfield=="") and type(statfield)==str:
 			execute_string += ' --statfield \"'+ statfield + '\"'
@@ -321,14 +335,14 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			if(rcode == 127):
 				raise Exception, "wvrgcal executable not available."
 			elif(rcode == 255):
-				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'SEVERE')
+				casalog.post(theexecutable+' terminated with exit status '+str(rcode),'SEVERE')
 				return taskrval
 			elif(rcode == 134 or rval==1):
-				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'WARN')
+				casalog.post(theexecutable+' terminated with exit status '+str(rcode),'WARN')
 				casalog.post("No useful input data.",'SEVERE')
 				return taskrval
 			else:
-				casalog.post(theexecutable+' terminated with exit code '+str(rcode),'WARN')
+				casalog.post(theexecutable+' terminated with exit status '+str(rcode),'WARN')
 				return taskrval
 	
 	except Exception, instance:
