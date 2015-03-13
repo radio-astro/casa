@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.63 2015/03/04 04:58:47 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.64 2015/03/13 19:16:50 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.63 2015/03/04 04:58:47 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.64 2015/03/13 19:16:50 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2388,6 +2388,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
 #################
     msFound = False
     mytb.open(caltable)
+    uniqueScanNumbers = sorted(np.unique(mytb.getcol('SCAN_NUMBER')))
     if (ParType == 'Complex'):  # casa >= 3.4
         gain = {}
         for f in range(len(fields)):
@@ -2834,6 +2835,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   matchField = -1
                   matchRow = -1
                   matchTime = -1
+                  if (debug): print "looping over all nRows = %d" % (nRows)
                   for i in range(nRows):
                       if (overlayTimes or overlayAntennas or len(fieldsToPlot)>1 or
                           (nFields>1 and len(fieldlist)<nFields)):
@@ -2842,9 +2844,12 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           # of matching by time until I think of something better.
                           sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,myprint=False)
                       else:
+                          if (overlayBasebands):
+                              sTP = scansToPlot
+                          else:
+                              sTP = scansToPlotPerSpw[ispw]
                           sm = sloppyMatch(uniqueTimes[mytime],times[i],solutionTimeThresholdSeconds,
-#                                           mytime, scansToPlot, scansForUniqueTimes, myprint=False) # task version
-                                 mytime, scansToPlotPerSpw[ispw], scansForUniqueTimes, myprint=False) # au version
+                                           mytime, sTP, scansForUniqueTimes, myprint=False) # au version
                       if ((ant[i]==xant) and (cal_desc_id[i]==ispw) and sm
                           and (mytime in timerangeList)   # this test was added to support multiFieldInTimeOverlay
                           ):
@@ -4976,6 +4981,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               print "AT BOTTOM OF LOOP: Incrementing mytime to %d, setting firstUnflaggedAntennaToPlot to 0" % (mytime)
                           firstUnflaggedAntennaToPlot = 0  # try this
                           doneOverlayTime = False  # added on 08-nov-2012
+                          if (overlayBasebands and (uniqueScanNumbers == sorted(scansToPlot))): 
+                              if (debug): print "Breaking because scans not specified"
+                              break
                 # end of while(mytime) loop
                 if (redisplay == False):
                     spwctr += 1
@@ -6004,7 +6012,9 @@ def DrawBottomLegendPageCoords(msName, uniqueTimesMytime, mysize, figfile):
                   + PLOTBANDPASS_REVISION_STRING.split()[2] + ' = ' \
                   + PLOTBANDPASS_REVISION_STRING.split()[3] + ' ' \
                   + PLOTBANDPASS_REVISION_STRING.split()[4]
-    pb.text(0.1, 0.02, bottomLegend, size=mysize, transform=pb.gcf().transFigure)
+#    The following should be used going forward, as it is better for long VLA names        
+    pb.text(0.04, 0.02, bottomLegend, size=mysize, transform=pb.gcf().transFigure)
+#    pb.text(0.1, 0.02, bottomLegend, size=mysize, transform=pb.gcf().transFigure)
 
 def DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize):
     for a in range(len(antennasToPlot)):
