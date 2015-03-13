@@ -77,6 +77,7 @@ spectrum is
 	<value>tsys</value>
 	<value>apply</value>
         <value>ps,apply</value>
+        <value>tsys,apply</value>
         <value>ps,tsys,apply</value>
         <value>otf,apply</value>
         <value>otf,tsys,apply</value>
@@ -135,6 +136,17 @@ spectrum is
       <value type="dict">{}</value>
     </param>
 
+    <param type="string" name="outfile" subparam="true">
+      <description>name of output file (See a WARNING in help)</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="overwrite" subparam="true">
+      <shortdescription>overwrite the output file if already exists [True, False]</shortdescription>
+      <description>overwrite the output file if already exists</description>
+      <value>False</value>
+    </param>
+
     <param type="string" name="field">
       <description>select data by field IDs and names, e.g. \'3C2*\' (\'\' = all)</description>
       <value></value>
@@ -150,41 +162,45 @@ spectrum is
       <value></value>
     </param>
 
-    <param type="string" name="outfile">
-      <description>name of output file (See a WARNING in help)</description>
-      <value></value>
-    </param>
-
-    <param type="bool" name="overwrite">
-      <shortdescription>overwrite the output file if already exists [True, False]</shortdescription>
-      <description>overwrite the output file if already exists</description>
-      <value>False</value>
-    </param>
-
     <constraints>
       <when param="calmode">
-        <equals value="ps"/>
+        <equals value="ps">
+          <default param="outfile"><value type="string"></value></default>
+          <default param="overwrite"><value type="bool">False</value></default>
+        </equals>
         <equals value="otf">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="width"><value type="double">0.5</value></default>
           <default param="elongated"><value type="bool">False</value></default>
+          <default param="outfile"><value type="string"></value></default>
+          <default param="overwrite"><value type="bool">False</value></default>
         </equals>
         <equals value="otfraster">
           <default param="fraction"><value type="string">10%</value></default>
           <default param="noff"><value type="int">-1</value></default>
+          <default param="outfile"><value type="string"></value></default>
+          <default param="overwrite"><value type="bool">False</value></default>
         </equals>
-<!--
+
         <equals value="tsys">
+          <default param="outfile"><value type="string"></value></default>
+          <default param="overwrite"><value type="bool">False</value></default>
+<!--
           <default param="tsysavg"><value type="bool">False</value></default>
           <default param="tsysspw"><value type="string"/></default>
-        </equals>
 -->
+        </equals>
         <equals value="apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>
         </equals>
         <equals value="ps,apply">
+          <default param="applytable"><value type="string"></value></default>
+          <default param="interp"><value type="string"></value></default>
+          <default param="spwmap"><value type="dict">{}</value></default>
+        </equals>
+        <equals value="tsys,apply">
           <default param="applytable"><value type="string"></value></default>
           <default param="interp"><value type="string"></value></default>
           <default param="spwmap"><value type="dict">{}</value></default>

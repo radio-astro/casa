@@ -10,7 +10,7 @@ import sdutil
 (cb,) = gentools(['cb'])
 def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
            width=0.5, elongated=False, applytable='',interp='', spwmap={},
-           field='', spw='', scan='', outfile='', overwrite=False): 
+           outfile='', overwrite=False, field='', spw='', scan=''): 
        
     """ Externally specify calibration solutions af various types
     """
