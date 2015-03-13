@@ -69,7 +69,7 @@ template<class T> void PixelValueManipulator<T>::setAxes(
 }
 
 template<class T> Record PixelValueManipulator<T>::get () const {
-	SPIIT myclone(this->_getImage()->cloneII());
+    SPIIT myclone(this->_getImage()->cloneII());
 	SPCIIT subImage(
 		SubImageFactory<T>::createSubImage(
 			*myclone, *this->_getRegion(), this->_getMask(),
@@ -78,23 +78,21 @@ template<class T> Record PixelValueManipulator<T>::get () const {
 		).cloneII()
 	);
 	myclone.reset();
-	if (! _axes.empty()) {
+    if (! _axes.empty()) {
 		ImageCollapser<T> collapser(
 			subImage, _axes, False, ImageCollapserData::MEAN,
 			"", False
 		);
 		subImage = collapser.collapse();
 	}
-    Array<T> values;
-    Array<Bool> pixelMask;
-    values = subImage->get(this->_getDropDegen());
-    pixelMask = Array<Bool>(values.shape(), True);
-    if (subImage->hasPixelMask()) {
-    	pixelMask = pixelMask && subImage->pixelMask().get(this->_getDropDegen());
+    Array<T> values = subImage->get(this->_getDropDegen());
+    Array<Bool> mask = Array<Bool>(values.shape(), True);
+    if (subImage->isMasked()) {
+        mask = mask && subImage->getMask(this->_getDropDegen());
     }
     Record ret;
     ret.define("values", values);
-    ret.define("mask", pixelMask);
+    ret.define("mask", mask);
     return ret;
 }
 
