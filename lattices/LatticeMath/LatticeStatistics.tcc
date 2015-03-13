@@ -572,7 +572,6 @@ template <class T> Bool LatticeStatistics<T>::getStatistic(
    return True;
 }
 
-
 template <class T>
 Bool LatticeStatistics<T>::getStats(
 	Vector<AccumType>& stats, const IPosition& pos,
@@ -607,22 +606,8 @@ Bool LatticeStatistics<T>::getStats(
 	stats(RMS) =  LattStatsSpecialize::getRms(stats(SUMSQ), n);
 	stats(FLUX) = 0;
 	if (_canDoFlux()) {
-		Array<Double> beamArea;
-		String msg;
-		if (_getBeamArea(beamArea, msg)) {
-			IPosition beamPos = pos;
-			if (posInLattice) {
-				this->_latticePosToStoragePos(beamPos, pos);
-			}
-			stats(FLUX) = _flux(stats(SUM), beamArea(beamPos)).getValue();
-		}
-		else {
-			String unit = _intensityUnit();
-			unit.downcase();
-			if (unit.contains("/beam")) {
-				return False;
-			}
-			stats(FLUX) = _flux(stats(SUM), 0).getValue();
+		if (! _computeFlux(stats(FLUX), stats(SUM), pos, posInLattice)) {
+			return False;
 		}
 	}
 	return True;
@@ -675,6 +660,14 @@ Bool LatticeStatistics<T>::getFullMinMax(T& dataMin, T& dataMax)
 template <class T>
 Bool LatticeStatistics<T>::_computeFlux(
 	Array<AccumType>&, const Array<AccumType>&, const Array<AccumType>&
+) {
+	ThrowCc("This object does not support computing fluxes");
+}
+
+template <class T>
+Bool LatticeStatistics<T>::_computeFlux(
+	AccumType&, AccumType, const IPosition&,
+	Bool
 ) {
 	ThrowCc("This object does not support computing fluxes");
 }
@@ -2875,26 +2868,6 @@ void LatticeStatistics<T>::closePlotting()
 // virtual functions
 
 template <class T>
-Bool LatticeStatistics<T>::_getBeamArea(
-	Array<Double>& beamArea, String& msg
-) const {
-	if (pStoreLattice_p->ndim() == 1) {
-		beamArea.resize(IPosition(1, 0));
-	}
-	else {
-		IPosition shape(pStoreLattice_p->ndim() - 1);
-		for (uInt i=0; i<shape.nelements(); i++) {
-			shape[i] = pStoreLattice_p->shape()[i];
-		}
-		beamArea.resize(shape);
-	}
-	beamArea.set(-1.0);
-	msg = "Raw lattices do not support beams";
-	return False;
-}
-
-
-template <class T>
 Bool LatticeStatistics<T>::findNextDatum (uInt& iFound, 
                                           const uInt& n,
                                           const Vector<AccumType>& mask,
@@ -3111,24 +3084,18 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(
 template <class T> void LatticeStatistics<T>::_latticePosToStoragePos(
 	IPosition& storagePos, const IPosition& latticePos
 ) {
-    if (latticePos.nelements() != pInLattice_p->ndim()) {
-    	ostringstream oss;
-    	oss << "LatticeStatistics::" << __FUNCTION__
-    		<< "Incorrectly sized position given";
-    	storagePos.resize(0);
-    	throw AipsError(oss.str());
-    }
-
-    if (storagePos.size() < displayAxes_p.size()) {
-    	ostringstream oss;
-    	oss << "LatticeStatistics::" << __FUNCTION__
-    		<< "storage position does not have enough elements";
-    }
-    if (latticePos.size() < displayAxes_p.size()) {
-    	ostringstream oss;
-    	oss << "LatticeStatistics::" << __FUNCTION__
-    		<< "lattice position does not have enough elements";
-    }
+    ThrowIf(
+    	latticePos.nelements() != pInLattice_p->ndim(),
+    	"Incorrectly sized position given"
+    );
+    ThrowIf(
+    	storagePos.size() < displayAxes_p.size(),
+    	"storage position does not have enough elements"
+    );;
+    ThrowIf(
+    	latticePos.size() < displayAxes_p.size(),
+    	"lattice position does not have enough elements"
+    );
     // do NOT resize storagePos. It can have more elements than
     // latticePos as defined by the caller.
     for (uInt i=0; i<displayAxes_p.nelements(); i++) {

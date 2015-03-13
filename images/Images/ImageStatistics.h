@@ -162,11 +162,14 @@ protected:
 	AccumType sum, Double beamAreaInPixels
    ) const;
 
-   virtual String _intensityUnit() const;
-
    virtual Bool _computeFlux(
 		  Array<AccumType>& flux, const Array<AccumType>& npts,
 		  const Array<AccumType>& sum
+   );
+
+   virtual Bool _computeFlux(
+		   AccumType& flux, AccumType sum, const IPosition& pos,
+   		   Bool posInLattice
    );
 
 private:

@@ -436,17 +436,6 @@ protected:
    String error_p;
 //
 // Virtual Functions.  See implementation to figure it all out !
-//
-// FIXME: All the beam/image-related stuff needs to be moved out of this class.
-// Get beam volume if possible.  Your lattice needs to be
-// an ImageInterface for you to be able to do this.
-// See for example, class ImageStatistics.  When you provide
-// the beam, then the Flux statistic, if requested, can be
-// computed.  Returns False if beam not available, else True.
-// The implementation here returns False. <src>msg</src> contains a
-// user-friendly explanation if False is returned.
-
-   virtual Bool _getBeamArea (Array<Double>& beamArea, String& msg) const;
 
    // FIXME The indirect dependence of this class on ImageInterface related
    // issues (eg flux density) breaks encapsulation. All the ImageInterface related code should be
@@ -501,11 +490,24 @@ protected:
    // get the storage lattice shape
    inline IPosition _storageLatticeShape() const { return pStoreLattice_p->shape(); }
 
-   // more image-specific necessities :(
-   virtual String _intensityUnit() const { return ""; }
-
    virtual Bool _computeFlux(
 		Array<AccumType>& flux, const Array<AccumType>& npts, const Array<AccumType>& sum
+   );
+
+   virtual Bool _computeFlux(
+		   AccumType& flux, AccumType sum, const IPosition& pos,
+		   Bool posInLattice
+   );
+
+   // convert a position in the input lattice to the corresponding
+   // position in the stats storage lattice. The number of elements
+   // in storagePos will not be changed and only the first N elements
+   // will be modified where N = the number of elements in latticePos.
+   // <src>storagePos</src> must therefore have at least as many elements
+   // as <src>latticePos</src>. Returns False if
+   //<src>latticePos</src> is inconsistent with the input lattice.
+   void _latticePosToStoragePos(
+		   IPosition& storagePos, const IPosition& latticePos
    );
 
 private:
@@ -637,17 +639,6 @@ private:
 
 // Stretch min and max by 5%
    void stretchMinMax (AccumType& dMin, AccumType& dMax) const;
-
-   // convert a position in the input lattice to the corresponding
-   // position in the stats storage lattice. The number of elements
-   // in storagePos will not be changed and only the first N elements
-   // will be modified where N = the number of elements in latticePos.
-   // <src>storagePos</src> must therefore have at least as many elements
-   // as <src>latticePos</src>. Returns False if
-   //<src>latticePos</src> is inconsistent with the input lattice.
-   void _latticePosToStoragePos(
-		 IPosition& storagePos, const IPosition& latticePos
-   );
 
    CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > _createStatsAlgorithm() const;
 

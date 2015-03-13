@@ -148,7 +148,7 @@ int main() {
     	}
     	{
     		writeTestString(
-    			"test getConvertedStatistic(FLUX)"
+    			"test getConvertedStatistic(FLUX) and getStats() for FLUX"
     		);
     		CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
     		IPosition shape(3, 10, 15, 20);
@@ -178,10 +178,17 @@ int main() {
 				stats.getConvertedStatistic (flux, LatticeStatsBase::FLUX), AipsError
 			);
 			AlwaysAssert(flux.shape() == IPosition(1, 20), AipsError);
+			Vector<Double> statVals;
 			Double area = beam.getArea("arcmin2");
 			for (uInt i=0; i<20; ++i) {
 				Float expFlux = sum(arr(IPosition(3,0,0,i), IPosition(3, 9, 14, i)))/area;
 				AlwaysAssert(near(flux(IPosition(1,i)), expFlux), AipsError);
+				AlwaysAssert(
+					stats.getStats(
+						statVals, IPosition(1, i), False
+					), AipsError
+				);
+				AlwaysAssert(near(statVals[LatticeStatsBase::FLUX], expFlux), AipsError);
 			}
 			tim.setUnits("K");
 			stats = ImageStatistics<Float>(tim);
@@ -199,6 +206,12 @@ int main() {
 			for (uInt i=0; i<20; ++i) {
 				Float expFlux = sum(arr(IPosition(3,0,0,i), IPosition(3, 9, 14, i)))*3600;
 				AlwaysAssert(near(flux(IPosition(1,i)), expFlux), AipsError);
+				AlwaysAssert(
+					stats.getStats(
+						statVals, IPosition(1, i), False
+					), AipsError
+				);
+				AlwaysAssert(near(statVals[LatticeStatsBase::FLUX], expFlux), AipsError);
 			}
     	}
         cout << "ok" << endl;
