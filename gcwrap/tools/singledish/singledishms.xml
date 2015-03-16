@@ -154,6 +154,11 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
+    <param type="string" name="bltable">
+      <description>The name of Baseline Table to be output</description>
+      <value></value>
+    </param>
+
     <param type="any" name="spw">
       <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
       <any type="variant"/>
@@ -211,6 +216,11 @@ Fit baseline and subtract it from selected spectra
 
     <param type="string" name="outfile">
       <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bltable">
+      <description>The name of Baseline Table to be output</description>
       <value></value>
     </param>
 
@@ -274,6 +284,11 @@ Fit parameters for each spectrum are obtained from a text file.
 
     <param type="string" name="outfile">
       <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bltable">
+      <description>The name of Baseline Table to be output</description>
       <value></value>
     </param>
 

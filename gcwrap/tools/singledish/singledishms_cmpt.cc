@@ -118,6 +118,7 @@ singledishms::scale(float const factor, string const& datacolumn, string const& 
 bool
 singledishms::subtract_baseline(string const& datacolumn,
 				string const& outfile,
+				string const& bltable,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
 				int const order,
@@ -128,7 +129,7 @@ singledishms::subtract_baseline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline(datacolumn, outfile, 
+    itsSd->subtract_baseline(datacolumn, outfile, bltable, 
 			     toCasaString(spw), toCasaString(pol),
 			     order, clip_threshold_sigma, 
 			     num_fitting_max);
@@ -145,6 +146,7 @@ singledishms::subtract_baseline(string const& datacolumn,
 bool
 singledishms::subtract_baseline_cspline(string const& datacolumn,
 				string const& outfile,
+				string const& bltable,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
 				int const npiece,
@@ -155,7 +157,7 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_cspline(datacolumn, outfile, 
+    itsSd->subtract_baseline_cspline(datacolumn, outfile, bltable, 
 			     toCasaString(spw), toCasaString(pol),
 			     npiece, clip_threshold_sigma, 
 			     num_fitting_max);
@@ -172,6 +174,7 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
 bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
 					 string const& outfile,
+					 string const& bltable,
 					 ::casac::variant const& spw,
 					 ::casac::variant const& pol,
 					 string const& blparam)
@@ -180,7 +183,7 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_variable(datacolumn, outfile, 
+    itsSd->subtract_baseline_variable(datacolumn, outfile, bltable, 
 				      toCasaString(spw),
 				      toCasaString(pol),
 				      blparam);

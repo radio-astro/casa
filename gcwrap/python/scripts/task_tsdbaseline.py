@@ -11,12 +11,21 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     try:
         if ((os.path.exists(outfile)) and (not overwrite)):
             raise Exception(outfile+' exists.')
-        if (blfunc.lower().strip() not in ['poly', 'variable', 'cspline']):
-            raise Exception(blfunc+' is not available.')
         if (maskmode!='list'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
         if (blfunc=='variable' and not os.path.exists(blparam)):
             raise ValueError, "input file '%s' does not exists" % blparam
+        if blmode == 'fit':
+            blout_exists = False
+            if (isinstance(bloutput, str) and os.path.exists(bloutput)):
+                blout_exists = True
+            elif isinstance(bloutput, list):
+                for blout in bloutput:
+                    if os.path.exists(blout):
+                        blout_exists = True
+                        break
+            if blout_exists:
+                raise ValueError, "file(s) specified in bloutput exists."
 
         if (spw == ''): spw = '*'
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
@@ -29,26 +38,28 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         if blfunc in ['poly', 'chebyshev']:
             sdms.subtract_baseline(datacolumn=datacolumn,
                                    outfile=outfile,
+                                   bltable=bloutput,
                                    spw=spw,
                                    pol=pol,
                                    order=order, 
                                    clip_threshold_sigma=clipthresh, 
                                    num_fitting_max=clipniter+1)
+        elif blfunc == 'cspline':
+            sdms.subtract_baseline_cspline(datacolumn=datacolumn,
+                                           outfile=outfile,
+                                           bltable=bloutput,
+                                           spw=spw,
+                                           pol=pol,
+                                           npiece=npiece, 
+                                           clip_threshold_sigma=clipthresh, 
+                                           num_fitting_max=clipniter+1)
         elif blfunc == 'variable':
             sdms.subtract_baseline_variable(datacolumn=datacolumn,
                                             outfile=outfile,
+                                            bltable=bloutput,
                                             spw=spw,
                                             pol=pol,
                                             blparam=blparam)
-        elif blfunc == 'cspline':
-            sdms.subtract_baseline_cspline(datacolumn=datacolumn,
-                                  outfile=outfile,
-                                  spw=spw,
-                                  pol=pol,
-                                  npiece=npiece, 
-                                  clip_threshold_sigma=clipthresh, 
-                                  num_fitting_max=clipniter+1)
-
         else:
             raise ValueError, "Unsupported blfunc = %s" % blfunc
 
