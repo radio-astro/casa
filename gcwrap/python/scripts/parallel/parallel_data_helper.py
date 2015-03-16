@@ -866,7 +866,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         selection = self.__getSelectionFilter()
         
         # Get partition map
-        partitionMap = ph.getPartitonMap(msfilename, numSubMS, selection, axis=['field','spw','scan'],plotMode=2)
+        partitionMap = ph.getPartitonMap(msfilename, numSubMS, selection, axis=['field','spw','scan'],plotMode=0)
 
         # Iterate over list of subMSs
         for subms in partitionMap:
