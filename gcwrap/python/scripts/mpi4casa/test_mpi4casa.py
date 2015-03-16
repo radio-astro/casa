@@ -883,7 +883,7 @@ class test_MPIInterface(unittest.TestCase):
         
         MPIInterface.set_log_mode('redirect')
         self.sc = MPIInterface.getCluster()
-        self.CL = self.sc._cluster
+        self.CL = self.sc._cluster                  
         
     def test_PyParallelImagerHelper_interface(self):
         
@@ -897,8 +897,9 @@ class test_MPIInterface(unittest.TestCase):
         self.assertEqual(engines,range(1,MPIEnvironment.mpi_world_size),"Error getting list of engines")
         
         # Get nodes
-        nodes = self.CL.get_nodes()
-        self.assertTrue(socket.gethostname() in nodes,"Error getting list of nodes")
+        if int(os.environ['OMPI_COMM_WORLD_LOCAL_SIZE'])>1:
+            nodes = self.CL.get_nodes()
+            self.assertTrue(socket.gethostname() in nodes,"Error getting list of nodes")
         
         # Run imports in all engines
         self.CL.pgc('import os')
