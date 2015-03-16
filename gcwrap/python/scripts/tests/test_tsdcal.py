@@ -97,10 +97,11 @@ class tsdcal_test(unittest.TestCase):
 
 
     def test01(self):
-        """Test01: weight = 1/(SIGMA**2) X 1/(FPARAM**2) dictionary version"""
+        """Test01: weight = 1/(SIGMA**2) X 1/(FPARAM_ave**2) dictionary version"""
         #focus on antenna1=0, data_disk_id=1
         #spwmap_dict={1:[1],3:[3],5:[5],7:[7]}
 
+        
         tid = "01"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
@@ -142,13 +143,14 @@ class tsdcal_test(unittest.TestCase):
         print 'difference between fparam_r1_0 and weight00', diff0_percent, '%' 
         print 'difference between fparam_r1_1 and weight10', diff1_percent, '%'
         tb.close()
-
+            
         
     def test02(self):
-        """Test02: weight = 1/(SIGMA**2) X 1/(FPARAM**2) list version"""
+        """Test02: weight = 1/(SIGMA**2) X 1/(FPARAM_ave**2) list version"""
         #focus on antenna1=0, data_disk_id=1
         #spwmap_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
 
+        
         tid = "02"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys2.cal')
@@ -190,7 +192,7 @@ class tsdcal_test(unittest.TestCase):
         print 'difference between fparam_r1_0 and weight00', diff0_percent, '%' 
         print 'difference between fparam_r1_1 and weight10', diff1_percent, '%'
         tb.close()
-
+        
 
         #print type(fparam_dict)
         #print 'shape of fparam'
@@ -243,16 +245,123 @@ class tsdcal_test(unittest.TestCase):
 
 
     def test03(self):
-        """Test03: Validation when spwmap comprising dictionary
+        """Test03: Validation of CORRECTED_DATA = DATA X FPARAM (spwmap={1:[1], 3:[3], 5:[5], 7:[7]})""" 
 
         tid ="03"
         infile=self.infile1
-        tsdcal(infile=infile, calmode='tsys', outfile='tsys_dic.cal')
+        tsysfile='tsys3.cal'
+        
+        
+        #tsys table is produced 
+        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
-        spwmap={1:[9],3:[11],5:[13],7:[15]}
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable='tsys_dic.cal', outfile='')
+        spwmap={1:[1],3:[3],5:[5],7:[7]}
+        initweights(vis=infile, dobt=True, dowtsp=True)
+        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')
+    
+       
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)
+       
+                
+        tb.open(infile)
+        corrected_data=tb.getvarcol('CORRECTED_DATA')['r1'][0][0][0]
+        data=tb.getvarcol('DATA')['r1'][0][0][0]
+        tb.close()
+
+         
+        tb.open(tsysfile)
+        fparam= tb.getvarcol('FPARAM')['r1'][0][0][0]
+        tb.close()
+                
+        print "CORRECTED_DATA", corrected_data
+        print "DATA", data
+        print "FPARAM", fparam
+        diff = corrected_data.real - (data.real*fparam)
+        diff_per = (diff/corrected_data.real)*100 
+        print "difference between CORRECTED_DATA and DATA X FPARAM", diff_per, "%" 
+    
+       
+    def test04(self):
+        """Test04: Validation of CORRECTED_DATA = DATA X FPARAM 
+        (spwmap={1:[9], 3:[11], 5:[13], 7:[15]})
+        antanna1=0, DATA_DISC_ID=9, FPARAM_average
         """
         
+        
+        tid ="04"
+        infile=self.infile1
+        tsysfile='tsys4.cal'
+    
+        #tsys table is produced 
+        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
+        #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
+        spwmap={1:[9],3:[11],5:[13],7:[15]}
+        initweights(vis=infile, dobt=True, dowtsp=True)
+        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
+             
+        tb.open(infile)
+        corrected_data=tb.getvarcol('CORRECTED_DATA')['r2'][0][0][0]
+        data=tb.getvarcol('DATA')['r2'][0][0][0]
+        tb.close()
+         
+        tb.open(tsysfile)
+        sum_fparam=0
+        for i in range(128):
+            fparam= tb.getvarcol('FPARAM')['r1'][0][i][0]
+            sum_fparam += fparam
+        fparam_ave=sum_fparam/128.0    
+        tb.close()
+                
+        print "CORRECTED_DATA", corrected_data
+        print "DATA", data
+        print "FPARAM average(128ch)", fparam_ave
+        diff = corrected_data.real - (data.real*fparam_ave)
+        diff_per = (diff/corrected_data.real)*100 
+        print "difference between CORRECTED_DATA and DATA X FPARAM_average(128)", diff_per, "%" 
+    
+
+
+    def test05(self):
+        """Test05: Validation of CORRECTED_DATA = DATA X FPARAM 
+        (spwmap={1:[9], 3:[11], 5:[13], 7:[15]})
+        antanna1=0, DATA_DISC_ID=9, FPARAM_average
+        """
+        
+        
+        tid ="05"
+        infile=self.infile1
+        tsysfile='tsys5.cal'
+    
+        #tsys table is produced 
+        tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
+        #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
+        spwmap={1:[9],3:[11],5:[13],7:[15]}
+        initweights(vis=infile, dobt=True, dowtsp=True)
+        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
+             
+        tb.open(infile)
+        corrected_data=tb.getvarcol('CORRECTED_DATA')['r2'][0][0][0]
+        data=tb.getvarcol('DATA')['r2'][0][0][0]
+        tb.close()
+         
+        tb.open(tsysfile)
+        fparam= tb.getvarcol('FPARAM')['r1'][0][0][0]
+        tb.close()
+                
+        print "CORRECTED_DATA", corrected_data
+        print "DATA", data
+        print "FPARAM", fparam
+        diff = corrected_data.real - (data.real*fparam)
+        diff_per = (diff/corrected_data.real)*100 
+        print "difference between CORRECTED_DATA and DATA X FPARAM", diff_per, "%" 
+    
+
+
+
+
+
 
 class tsdcal_test_base(unittest.TestCase):
     """
