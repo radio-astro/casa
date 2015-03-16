@@ -244,7 +244,7 @@ class WvrgcalInputs(basetask.StandardInputs):
 
 class Wvrgcal(basetask.StandardTaskTemplate):
     Inputs = WvrgcalInputs
-
+    
     def __init__(self, inputs):
         super(Wvrgcal, self).__init__(inputs)
     
@@ -252,7 +252,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         inputs = self.inputs
         result = resultobjects.WvrgcalResult(vis=inputs.vis)        
         jobs = []
-
+        
         # get parameters that can be set from outside or which will be derived
         # from heuristics otherwise
         wvrheuristics = wvrgcal_heuristic.WvrgcalHeuristics(
@@ -260,7 +260,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
           tie=inputs.tie, hm_smooth = inputs.hm_smooth, smooth=inputs.smooth,
           sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           segsource=inputs.segsource)
-
+        
         # return an empty results object if no WVR data available
         if not wvrheuristics.wvr_available():
             # only 12m antennas are expected to have WVRs fitted
@@ -268,22 +268,22 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 LOG.error('WVR data expected but not found in %s'
                           '' % os.path.basename(inputs.vis))
             return result
-	elif len([a for a in inputs.ms.antennas if a.diameter == 12.0]) <= 1:
-	    # WVR data available for only 1 antenna
+        elif len([a for a in inputs.ms.antennas if a.diameter == 12.0]) <= 1:
+            # WVR data available for only 1 antenna
             LOG.error('WVR data available for only 1 antenna in %s'
                           '' % os.path.basename(inputs.vis))
             return result
-
+        
         if inputs.hm_toffset == 'automatic':
             toffset = wvrheuristics.toffset()
         else:
             toffset = inputs.toffset
-
+        
         if inputs.segsource is None:
             segsource = wvrheuristics.segsource()
         else:
             segsource = inputs.segsource
-
+        
         if inputs.hm_tie == 'automatic':
             tie = wvrheuristics.tie()
         else:
@@ -291,17 +291,17 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # add tie to results object for display in the weblog. Tie is not spw
         # dependent, so we can add it early.
         result.tie = tie
-
+        
         if inputs.sourceflag is None:
             sourceflag = wvrheuristics.sourceflag()
         else:
             sourceflag = inputs.sourceflag
-
+        
         if inputs.nsol is None:
             nsol = wvrheuristics.nsol()
         else:
             nsol = inputs.nsol
-
+        
         # get parameters that must be set from outside
         disperse = inputs.disperse
         wvrflag = inputs.wvrflag
@@ -309,22 +309,22 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         maxdistm = inputs.maxdistm
         minnumants = inputs.minnumants
         mingoodfrac = inputs.mingoodfrac
-
+        
         # smooth may vary with spectral window so need to ensure we calculate
         # results that can cover them all
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spwids = [spw.id for spw in science_spws]
-	wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if \
+        wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if \
 	    spw.num_channels==4 and 'WVR' in spw.intents])
-
+        
         smooths_done = set()
         callist = []
         caltables = []
         for spw in science_spwids:
             if inputs.hm_smooth == 'automatic':
                 #smooth = wvrheuristics.smooth(spw)
-		# Force the smooth heuristics to a single value
+                # Force the smooth heuristics to a single value
                 # (If integration times vary between spws this may not be
                 # the right thing to do). Integration times varying between
                 # intents within an spw then it is right to smooth according
@@ -332,7 +332,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 smooth = wvrheuristics.smoothall(science_spwids)
             else:
                 smooth = inputs.smooth
-
+            
             # prepare to run the wvrgcal task if necessary
             caltable = caltable_heuristic.WvrgCaltable()
             caltable = caltable(output_dir=inputs.output_dir,
@@ -341,7 +341,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             if smooth not in smooths_done:
                 # different caltable for each smoothing, remove old versions
                 shutil.rmtree(caltable, ignore_errors=True)
-
+                
                 task = casa_tasks.wvrgcal(vis=inputs.vis, caltable=caltable,
                                           toffset=toffset, segsource=segsource,
                                           tie=tie, sourceflag=sourceflag, 
@@ -353,9 +353,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
 					  spw=science_spwids,
 					  wvrspw=[wvr_spwids[0]])
                 jobs.append(task)
-
+                
                 smooths_done.add(smooth)
-
+            
             # add this wvrg table to the callibrary for this spw
             calto = callibrary.CalTo(vis=inputs.vis, spw=spw)
             calfrom = callibrary.CalFrom(caltable, caltype='wvr', spwmap=[],
@@ -363,12 +363,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
             caltables.append(caltable)
-
-
+        
+        
         # execute the jobs
         for job in jobs:
             job_result = self._executor.execute(job)
-
+            
             # update results.wvrflag if necessary
             job_name = np.array(job_result['Name'])
             job_flag = np.array(job_result['Flag'])
@@ -382,22 +382,22 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             wvrflag_set = set(result.wvrflag)
             wvrflag_set.update(job_wvrflag)
             result.wvrflag = list(wvrflag_set)
-
+            
             result.wvr_infos = self._get_wvrinfos(job_result)
- 
+        
         LOG.info('wvrgcal complete')
-
+        
         # removed any 'unsmoothed' wvrcal tables generated by the wvrgcal jobs
         for caltable in caltables:
             shutil.rmtree('%s_unsmoothed' % caltable, ignore_errors=True)
-
+        
         result.pool[:] = callist
-
+        
         return result
-
+    
     def analyse(self, result):
         inputs = self.inputs
-
+        
         # check that the caltable was actually generated
         on_disk = [ca for ca in result.pool
                    if ca.exists() or self._executor._dry_run]
@@ -405,10 +405,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                    if ca not in on_disk and not self._executor._dry_run]
         result.error.clear()
         result.error.update(missing)
-
+        
         # wvrcal files to be applied
         result.final[:] = on_disk
-
+        
         qa_intent = inputs.qa_intent.strip()
         if not qa_intent:
             return result
@@ -416,16 +416,16 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # calculate the qa results if required
         if not result.final:
             return result
-
+        
         # get the spw for which qa results are needed
         atmheuristics = atm_heuristic.AtmHeuristics(context=inputs.context,
           vis=inputs.vis) 
         if inputs.qa_spw == '':
-#            inputs.qa_spw = atmheuristics.spwid_rank_by_frequency()
+            #inputs.qa_spw = atmheuristics.spwid_rank_by_frequency()
             qa_spw_list = atmheuristics.spwid_rank_by_opacity()
         else:
             qa_spw_list = inputs.qa_spw.split(',')
-
+        
         for qa_spw in qa_spw_list:
             LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %
               (os.path.basename(inputs.vis), qa_spw))
@@ -436,7 +436,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             try:
                 # do a bandpass calibration
                 result.qa_wvr.bandpass_result = self._do_qa_bandpass(inputs)
-        
+                
                 # do a phase calibration on the bandpass and phase
                 # calibrators with B preapplied
                 LOG.info('qa: calculating phase calibration with B applied')
@@ -447,28 +447,28 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 break
             except:
                 LOG.warning('qa: wvrgcal QA calculation failed')
-
-
+        
+        
         # accept this result object, thus adding the WVR table to the 
         # callibrary
         LOG.debug('qa: accept WVR results into copy of context')
         result.accept(inputs.context)
-
+        
         # do a phase calibration on the bandpass and phase calibrators, now 
         # with B *and* WVR preapplied.
         LOG.info('qa: calculating phase calibration with B and WVR applied')
         wvr_result = self._do_wvr_gaincal(inputs)            
-
+        
         nowvr_caltable = nowvr_result.inputs['caltable']
         wvr_caltable = wvr_result.inputs['caltable']
         result.qa_wvr.gaintable_wvr = wvr_caltable
-
+        
         LOG.info('qa: calculate ratio no-WVR phase RMS / with-WVR phase rms')
         wvrg_qa.calculate_view(inputs.context, nowvr_caltable,
-                                wvr_caltable, result.qa_wvr)
-
+                                wvr_caltable, result.qa_wvr, qa_intent)
+        
         wvrg_qa.calculate_qa_numbers(result.qa_wvr)
-
+        
         # if the qa score indicates that applying the wvrg file will
         # make things worse then remove it from the results so that
         # it cannot be accepted into the context.
@@ -477,9 +477,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                         '(%s) and will not be applied' %
                         (result.qa_wvr.overall_score, inputs.accept_threshold))
             result.final[:] = []
-
+        
         return result
-
+    
     def _do_qa_bandpass(self, inputs):
         """
         Create a bandpass caltable for QA analysis, returning the result of
@@ -497,7 +497,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             result = self._do_new_qa_bandpass(inputs)
             inputs.bandpass_result = result
             return result
-        
+    
     def _do_user_qa_bandpass(self, inputs):
         """
         Accept and return the bandpass result affixed to the inputs.
@@ -529,18 +529,18 @@ class Wvrgcal(basetask.StandardTaskTemplate):
 		'hm_phaseup'  : 'manual',
 		'hm_bandpass' : 'fixed',
                 'solint'      : 'inf,7.8125MHz'}
-
+        
         inputs = bandpass.ALMAPhcorBandpass.Inputs(inputs.context, **args)        
         task = bandpass.ALMAPhcorBandpass(inputs)
         result = self._executor.execute(task, merge=True)
-
+        
         return result
     
     def _do_nowvr_gaincal(self, inputs):
         # do a phase calibration on the bandpass and phase
         # calibrators with B preapplied
         LOG.info('Calculating phase calibration with B applied')
-
+        
         if inputs.nowvr_result:
             # if table already exists use it
             LOG.debug('Reusing WVR-uncorrected gain result for RMS:\n %s' %
@@ -576,16 +576,16 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 'solint' : 'int',
                 'calmode': 'p',
                 'minsnr' : 0.0}
-
+        
         inputs = gaincal.GTypeGaincal.Inputs(inputs.context, **args)
-
+        
         # give calling code a chance to customise the caltable name via the
         # callback passed as an argument
         inputs.caltable = caltable_namer(inputs.caltable)
         
         task = gaincal.GTypeGaincal(inputs)
         result = self._executor.execute(task, merge=False)
-
+        
         return result
 
     def _get_nowvr_caltable_namer(self, inputs):
@@ -600,7 +600,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             return new_caltable_name
         
         return caltable_namer
-        
+    
     def _get_wvr_caltable_namer(self, inputs):
         """        
         Returns a function that inserts a ''.flagged_<N>_antennas.wvr' component into a
@@ -620,13 +620,13 @@ class Wvrgcal(basetask.StandardTaskTemplate):
     def _get_wvrinfos(self, result):
         to_microns = lambda x : measures.Distance(x, 
                                                   measures.DistanceUnits.MICROMETRE)
-    
+        
         # copy result in case we need it unaltered elsewhere, then convert raw
         # values to domain measures    
         copied = dict(result)
         copied['RMS_um'] = [to_microns(v) for v in copied['RMS_um']]
         copied['Disc_um'] = [to_microns(v) for v in copied['Disc_um']]
-    
+        
         attrs = ['Name', 'WVR', 'Flag', 'RMS_um', 'Disc_um']
         zipped = zip(*[copied.get(attr) for attr in attrs])
         wvr_infos = [WVRInfo(*row) for row in zipped]

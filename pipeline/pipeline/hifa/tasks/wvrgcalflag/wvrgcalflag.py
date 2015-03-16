@@ -57,8 +57,8 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('flag_intent')
 
-	# This is a somewhat complicated way to get the default
-	# intent.
+        # This is a somewhat complicated way to get the default
+        # intent.
         if self._flag_intent is None:
             # default to the intent that would be used for bandpass
             # calibration
@@ -112,7 +112,6 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
     
     def prepare(self):
         inputs = self.inputs
-        jobs = []
 
         # scratch area where hif_wvrgcal can store its B calibration 
         # result
@@ -130,7 +129,7 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth,
           scale=inputs.scale, maxdistm=inputs.maxdistm,
           minnumants=inputs.minnumants, mingoodfrac=inputs.mingoodfrac,
-	  flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
+          flag_intent=inputs.flag_intent, qa_intent=inputs.qa_intent,
           qa_bandpass_intent=inputs.qa_bandpass_intent)
         datatask = WvrgcalflagWorker(datainputs)
 
@@ -219,7 +218,7 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
           maxdistm=inputs.maxdistm, minnumants=inputs.minnumants,
-	  mingoodfrac=inputs.mingoodfrac, qa_intent=inputs.qa_intent,
+          mingoodfrac=inputs.mingoodfrac, qa_intent=inputs.qa_intent,
           qa_bandpass_intent=inputs.qa_bandpass_intent,
           accept_threshold=0.0,
           bandpass_result=self.result.bandpass_result,
@@ -241,44 +240,39 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         # take note of any antennas flagged by wvrgcal itself
         self.result.wvrflag = result.wvrflag
 
-        # copy the views for the flag_intent from the QA section of the
-        # wvrgcal result
+        # get the intents from the MS
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        fields = ms.fields
-        intent_list = self.inputs.flag_intent.split(',')
-        intent_fields = set()
-        for intent in intent_list:
-            intent_fields = [(fld.name,fld.id) for fld in fields if intent
-              in fld.intents]
-            if intent_fields:
-                LOG.info('flagging views will use %s data' % intent)
+        ms_intent_list = ms.intents
+
+        # test if the flagging intents are present in the MS
+        flag_intent_list = self.inputs.flag_intent.split(',')
+        for flag_intent in flag_intent_list:
+            intent_available = [intent for intent in ms_intent_list if flag_intent in intent]
+            if intent_available:
+                LOG.info('flagging views will use %s data' % flag_intent)
             else:
-                LOG.warning('no data for intent %s' % intent)
-        if not intent_fields:
+                LOG.warning('no data for intent %s' % flag_intent)
+        if not intent_available:
             LOG.warning('no data fits flag_intent %s, no flagging will be done' %
               self.inputs.flag_intent)
 
+        # from the QA section of the wvrgcal result, copy those views for which 
+        # the intent matches the flag_intent 
         for description in result.qa_wvr.descriptions():
-            add = False
-            for intent_field in intent_fields:
-                if ('Field:%s' % intent_field[0] in description) and \
-                  ('ID:%s' % intent_field[1] in description):
-                    add = True
-                    break
-                
-            if add:
-                # set antennas specified by the wvrflag parameter in the 
-                # flagging image to show that these data are already 'flagged'
-                # (i.e. interpolated)
-                image = result.qa_wvr.last(description)
-                ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
-                wvrflagids = []
-                for ant_name in self.result.wvrflag:
-                    ant_id = [id for id in ant_names if 
-                              ant_names[id]==ant_name]
-                    wvrflagids += ant_id
-                image.setflags(axisname='Antenna', indices=wvrflagids)
-                self.result.addview(description, image)
+            for flag_intent in flag_intent_list:
+                if ('Intent:%s' % flag_intent in description):
+                    # set antennas specified by the wvrflag parameter in the 
+                    # flagging image to show that these data are already 'flagged'
+                    # (i.e. interpolated)
+                    image = result.qa_wvr.last(description)
+                    ant_names, ant_ids = commonhelpermethods.get_antenna_names(ms)
+                    wvrflagids = []
+                    for ant_name in self.result.wvrflag:
+                        ant_id = [id for id in ant_names if 
+                                  ant_names[id]==ant_name]
+                        wvrflagids += ant_id
+                    image.setflags(axisname='Antenna', indices=wvrflagids)
+                    self.result.addview(description, image)
  
         # populate other parts of result
         self.result.pool[:] = result.pool[:]
