@@ -598,6 +598,7 @@ size_t SingleDishMS::NValidMask(size_t const num_mask, bool const* mask)
 ////////////////////////////////////////////////////////////////////////
 void SingleDishMS::subtract_baseline(string const& in_column_name,
 				     string const& out_ms_name,
+				     string const& out_bltable_name,
 				     string const& in_spw,
 				     string const& in_ppp,
 				     int const order, 
@@ -752,6 +753,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 //Cubicspline
 void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 				     string const& out_ms_name,
+				     string const& out_bltable_name,
 				     string const& in_spw,
 				     string const& in_ppp,
 				     int const npiece, 
@@ -987,6 +989,7 @@ void SingleDishMS::do_scale(float const factor,
 // Baseline subtraction by per spectrum fitting parameters
 void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 					      string const& out_ms_name,
+					      string const& out_bltable_name,
 					      string const& in_spw,
 					      string const& in_ppp,
 					      string const& param_file)

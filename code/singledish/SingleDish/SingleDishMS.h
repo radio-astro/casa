@@ -49,6 +49,7 @@ public:
   // (polynomial, write results in new MS)
   void subtract_baseline(string const& in_column_name,
 			 string const& out_ms_name,
+			 string const& out_bltable_name,
 			 string const& in_spw, 
 			 string const& in_ppp, 
 			 int const order, 
@@ -58,6 +59,7 @@ public:
   //Cubicspline  
   void subtract_baseline_cspline(string const& in_column_name,
 			 string const& out_ms_name,
+			 string const& out_bltable_name,
 			 string const& in_spw, 
 			 string const& in_ppp, 
 			 int const npiece, 
@@ -67,6 +69,7 @@ public:
 // variable fitting parameters stored in a text file
   void subtract_baseline_variable(string const& in_column_name,
 				  string const& out_ms_name,
+				  string const& out_bltable_name,
 				  string const& in_spw, 
 				  string const& in_ppp, 
 				  string const& param_file);
