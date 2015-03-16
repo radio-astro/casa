@@ -638,23 +638,6 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
-  // checking nchan
-  // ----> move to inside VI loop
-  /*
-  int min_nchan = static_cast<int>(nchan(0));
-  for (size_t i = 0; i < nchan.nelements(); ++i) {
-    int nch = static_cast<int>(nchan(i));
-    if (nch < min_nchan) min_nchan = nch;
-  }
-  if (min_nchan < order + 1) { // for poly and/or chebyshev
-    ostringstream oss;
-    oss << "Order (=" << order << " given) must be smaller than " 
-	<< "the minimum number of channels in the input data (" 
-	<< min_nchan << ").";
-    throw(AipsError(oss.str()));
-  }
-  */
-
   Vector<size_t> ctx_indices;
   ctx_indices.resize(nchan.nelements());
   for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
@@ -669,6 +652,9 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      if (num_chan < order + 1) {
+	throw(AipsError("subtract_baseline: nchan must be greater than order value."));
+      }
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol,num_chan,num_row);
@@ -735,14 +721,15 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   						    spec.data, 
   						    &bl_status);
   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+	    if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+	      throw(AipsError("SubtractBaselineFloat() -- InvalidArgument"));
+	    } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
 	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));
 	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
 	      throw(AipsError("SubtractBaselineFloat() -- NG"));
 	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
 	      throw(AipsError("SubtractBaselineFloat() -- UnknownError"));
 	    }
-	    //throw(AipsError("SubtractBaselineFloat() failed."));
   	  }
   	  // set back a spectrum to data cube
   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
