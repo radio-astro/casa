@@ -164,17 +164,17 @@ Float CleanImageSkyModel::maxField(Vector<Float>& imagemax,
   imagemax=-1e20;
   imagemin=1e20;
 
-  // Find maximum of ggS for scaling in maximg
-  Float maxggS=0.0;
-  for (Int model=0;model<numberOfModels();model++) {
-    LatticeExprNode LEN = max(LatticeExpr<Float>(ggS(model)));
-    Float thisMax = LEN.getFloat();
-    if(thisMax>maxggS) maxggS=thisMax;
-  }
+ 
+ 
 
   // Loop over all models
   for (Int model=0;model<numberOfModels();model++) {
-
+    // Find maximum of ggS for scaling in maximg
+    Float maxggS=0.0;  
+    {
+      LatticeExprNode LEN = max(LatticeExpr<Float>(ggS(model)));
+      maxggS = LEN.getFloat();
+    }
     // Remember that the residual image can be either as specified
     // or created specially.
     ImageInterface<Float>* imagePtr=0;

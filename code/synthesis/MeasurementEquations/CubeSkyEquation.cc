@@ -464,7 +464,13 @@ void CubeSkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs)
 void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   //lets try to make the psf directly
   LogIO os(LogOrigin("SkyEquation", "makeMosaicPSF"));
-  makeSimplePSF(psfs);
+  Bool centered=True;
+  try{
+    makeSimplePSF(psfs);
+  }
+  catch(...){
+    centered=False;
+  }
   Int xpos;
   Int ypos;
   Matrix<Float> psfplane;
@@ -472,16 +478,11 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   StokesImageUtil::locatePeakPSF(*(psfs[0]), xpos, ypos, peak, psfplane);
   Int nx=psfplane.shape()(0);
   Int ny=psfplane.shape()(1);
-  Bool centered=True;
+ 
   // lets ignore  misers who made 10x10 pixel images
-  centered=(abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
+  centered=centered && (abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
 
-  /////////////////////
-  //  cout << "nx " << nx << " ny " << ny << " xpos " << xpos << " ypos " << ypos << " peak " << peak << endl;
-  //PagedImage<Float> thisScreen(psfs[0]->shape(), psfs[0]->coordinates(), "PSF__.psf");
-  //thisScreen.copyData(*(psfs[0]));
 
-  ///////////////////////////////
   if(centered){
     //for cubes some of the planes may not have a central peak
     Int nchana= (psfs[0])->shape()(3);
@@ -714,6 +715,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                blockChanWidth_p, blockChanInc_p, blockSpw_p);
     //    Timers tCheckVisRows=Timers::getTime();
     checkVisIterNumRows(*rvi_p);
+ 
     VisBufferAutoPtr vb (rvi_p);
 
     //    Timers tVisAutoPtr=Timers::getTime();
@@ -808,6 +810,12 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	Int oldmsid=-1;
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
+	      //cerr << "nrow " << vb->nRow() << " ";
+	      //  Bool anychanIn=False;
+	      //for(Int model=0; model < (sm_->numberOfModels()) ; ++model)
+	      //anychanIn=anychanIn || iftm_p[model]->matchChannel(vb->spectralWindow(), *vb);
+	      //if(anychanIn)
+	      {
 	      if(myStopSig.gotStopSignal())
 		throw(AipsError("Terminating..."));
                 //	      Timers tInitModel=Timers::getTime();
@@ -833,10 +841,10 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
   //#pragma omp section
-		if(!useCorrected)
-		  vb->visCube();
-		else
-		  vb->correctedVisCube();
+		//if(!useCorrected)
+		//  vb->visCube();
+		//else
+		//  vb->correctedVisCube();
  }
 
  }                //saving the model for self-cal most probably
@@ -886,8 +894,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 // aGetRes += tPutSlice - tGetRes;
                 // aPutSlice += tDoneGridding - tPutSlice;
                 // aExtra += tDoneGridding - tInitModel;
-            }
-        }
+	      }
+	    }
+	}
 
         //	Timers tFinalizeGetSlice=Timers::getTime();
         finalizeGetSlice();
@@ -1752,20 +1761,22 @@ void CubeSkyEquation::fixImageScale()
   // is implemented somewhat differently.
   // We also keep the fluxScale(mod) images around to
   // undo the weighting.
-  Float ggSMax=0.0;
-  for (Int model=0;model<sm_->numberOfModels();model++) {
-    
-    LatticeExprNode LEN = max( sm_->ggS(model) );
-    ggSMax =  max(ggSMax,LEN.getFloat());
-  }
-  ggSMax_p=ggSMax;
-  Float ggSMin1;
-  Float ggSMin2;
-  
-  ggSMin1 = ggSMax * constPB_p * constPB_p;
-  ggSMin2 = ggSMax * minPB_p * minPB_p;
-  
+ 
   for (Int model=0;model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 );model++) {
+
+    Float ggSMax=0.0;
+    {
+      
+      LatticeExprNode LEN = max( sm_->ggS(model) );
+      ggSMax =  max(ggSMax,LEN.getFloat());
+    }
+    Float ggSMin1;
+    Float ggSMin2;
+  
+  
+    ggSMin1 = ggSMax * constPB_p * constPB_p;
+    ggSMin2 = ggSMax * minPB_p * minPB_p;
+
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
       
       
@@ -1843,8 +1854,7 @@ void CubeSkyEquation::fixImageScale()
 	    LatticeExprNode LEN1 = min( ggSSub );
 	    os << LogIO::DEBUG1
 	       << "Max " << planeMax << " min " << LEN1.getFloat() << LogIO::POST;
-	    
-	    //////////
+	    ////////////
 	    ///As we chop the image later...the weight can vary per channel
 	    ///lets be conservative and go to 1% of ggsMin2
 	    if(planeMax !=0){
@@ -1865,6 +1875,8 @@ void CubeSkyEquation::fixImageScale()
 				      (planeMax))));
 	      }
 	      
+	     
+
 	      //ggSSub.copyData( (LatticeExpr<Float>) 
 	      //		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
 	      //		      planeMax)));

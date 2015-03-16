@@ -316,7 +316,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
   }
 
     
-  Float maxggS=0.0;
+  Vector<Float> maxggS(nmodels,0.0);
   Bool lastCycleWriteModel=False;
 
   while(absmax>=threshold()&&maxIterations<numberIterations()&&!stop && !diverging) {
@@ -353,8 +353,8 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
     if(cycle==1) {
       for (Int model=0;model<numberOfModels();model++) {
 	LatticeExprNode LEN = max(LatticeExpr<Float>(ggS(model)));
-	Float thisMax = LEN.getFloat();
-	if(thisMax>maxggS) maxggS=thisMax;
+	maxggS[model] = LEN.getFloat();
+ 
 	if(0) {
 	  ostringstream name;
 	  name << "ggS";
@@ -365,7 +365,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 	}
       }
       os << LogIO::NORMAL1 // Loglevel INFO
-         << "Maximum sensitivity = " << 1.0/sqrt(maxggS)
+         << "Maximum sensitivity = " << 1.0/sqrt(max(maxggS))
 	 << " Jy/beam" << LogIO::POST;
     }
 
@@ -375,7 +375,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
       PagedImage<Float> thisCycleImage(residual(0).shape(),
 				       residual(0).coordinates(),
 				       name.str());
-      thisCycleImage.copyData(LatticeExpr<Float>(sqrt(ggS(0)/maxggS)*residual(0)));
+      thisCycleImage.copyData(LatticeExpr<Float>(sqrt(ggS(0)/maxggS[0])*residual(0)));
     }
 
     absmax=maxField(resmax, resmin);
@@ -537,7 +537,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		//Trouble..
 		Array<Float>  residu(imageStepli.cursor());
 		Cube<Float> resid(residu.nonDegenerate(3));
-		Cube<Float> weight(sqrt(ggSli.cursor().nonDegenerate(3)/maxggS));
+		Cube<Float> weight(sqrt(ggSli.cursor().nonDegenerate(3)/maxggS[model]));
 
 
 		for (Int iy=0;iy<ny;iy++) {
