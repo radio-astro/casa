@@ -14,7 +14,6 @@ class SetjyHelper():
         
     def resetModelCol(self):
         rstatus = True
-        #os.environ['CASA_ENGINE']='OK' 
         # Hide the log info
         casalog.post("Resetting the log filter to WARN", "DEBUG")
         casalog.post("Initialize the MODEL columns of sub-MSs to default 1", "DEBUG")
@@ -516,18 +515,19 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
             retval = myms.nrow()
             myms.close()
         except Exception, instance:
-            if ismms:
-                 casalog.post('nselrows: %s' % instance,'WARN')
-            else:
+            #if ismms:
+            #     casalog.post('nselrows: %s' % instance,'WARN')
+            #else:
                  # this is probably redundant as the exception will be handle in setjy()
                  #casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
-                 pass
+            #     pass
             
             myms.close()
-            if not ismms: 
-                raise Exception, instance
-            else:
-                casalog.post('Proceed as it appears to be dealing with a MMS...','DEBUG')
+            #if not ismms: 
+            #    raise Exception, instance
+            raise Exception, instance
+            #else:
+            #    casalog.post('Proceed as it appears to be dealing with a MMS...','DEBUG')
 
     return retval
 
