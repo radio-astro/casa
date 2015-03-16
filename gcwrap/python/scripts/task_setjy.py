@@ -14,11 +14,16 @@ class SetjyHelper():
         
     def resetModelCol(self):
         rstatus = True
-        
+        #os.environ['CASA_ENGINE']='OK' 
         # Hide the log info
         casalog.post("Resetting the log filter to WARN", "DEBUG")
         casalog.post("Initialize the MODEL columns of sub-MSs to default 1", "DEBUG")
         casalog.filter('WARN')
+        if os.environ.has_key('CASA_ENGINE'):
+            casalog.filter('WARN','MSSelectionNullSelection')
+        else:
+            casalog.filter('WARN')
+
         myms = mstool()
         try:
             try:
@@ -39,7 +44,11 @@ class SetjyHelper():
         except:
             rstatus = False
                 
-        casalog.filter('INFO')
+        if os.environ.has_key('CASA_ENGINE'):
+            casalog.filter('INFO','MSSelectionNullSelection')
+        else:
+            casalog.filter('INFO')
+
         return rstatus
 
 
@@ -518,7 +527,7 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
             if not ismms: 
                 raise Exception, instance
             else:
-                casalog.post('Proceed as it appears to be dealing with a MMS...')
+                casalog.post('Proceed as it appears to be dealing with a MMS...','DEBUG')
 
     return retval
 
