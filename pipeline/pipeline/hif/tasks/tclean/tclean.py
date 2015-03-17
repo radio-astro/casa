@@ -307,7 +307,7 @@ class Tclean(cleanbase.CleanBase):
         msNames = []
         for msInfo in context.observing_run.measurement_sets:
             msNames.append(msInfo.name)
-            AgeomPerMS.append(reduce(lambda x,y: x+y, [4.0 * numpy.pi * antenna.diameter**2 for antenna in context.observing_run.measurement_sets[0].antennas]))
+            AgeomPerMS.append(reduce(lambda x,y: x+y, [numpy.pi / 4.0 * antenna.diameter**2 for antenna in context.observing_run.measurement_sets[0].antennas]))
         AgeomPerMS = numpy.array(AgeomPerMS)
 
         # Aperture efficiency can not yet be used from CalAmpli table.
@@ -362,8 +362,8 @@ class Tclean(cleanbase.CleanBase):
                 result = imTool.sensitivity()
                 sensitivities.append(result[1]['value'] * avgTsysPerTable[i] / AeffPerMS[i])
             except Exception as e:
-                sensitivities.append(0.1)
-                LOG.warning('Exception in calculating sensitivity. Assuming 0.1 Jy/beam.')
+                sensitivities.append(0.01)
+                LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
             imTool.close()
 
         sensitivity = numpy.average(sensitivities)
