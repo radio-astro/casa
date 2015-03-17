@@ -1243,6 +1243,18 @@ imager::sensitivity(const bool async, ::casac::record& pointsource, double& rela
    Bool rstat(False);
    if(hasValidMS_p){
       try{ 
+
+	// Warn of pending deprecation
+	*itsLog << LogIO::WARN
+		<< "This function, as currently implemented, will be removed in CASA v.4.5."
+		<< endl
+		<< " Please consider using the 'apparentsens' function, which will"
+		<< endl
+		<< " generally be more accurate if your weights are properly calibrated"
+		<< endl
+		<< " (and doesn't require independent knowledge of Tsys/Aeff)."
+		<< LogIO::POST;
+
         casa::Quantity qpointsource;
 	Vector<Vector<Double> > sumwtChan, sumwtsqChan, sumInverseVarianceChan;
 	Vector<Vector<Int> >nData;
@@ -1274,6 +1286,28 @@ imager::sensitivity(const bool async, ::casac::record& pointsource, double& rela
 	//   }
 	senrec = *fromRecord(retrec);
         pointsource = *recordFromQuantity(qpointsource);
+      }
+      catch(AipsError x){
+         //*itsLog << LogIO::SEVERE << "Exception Reported: "
+          //       << x.getMesg() << LogIO::POST;
+	 RETHROW(x);
+      }
+   }
+   else{
+      *itsLog << LogIO::SEVERE
+              << "No MeasurementSet has been assigned, please run open."
+              << LogIO::POST;
+   }
+   return rstat;
+}
+
+bool
+imager::apparentsens(const bool async, double& pointsource, double& relative)
+{
+   Bool rstat(False);
+   if(hasValidMS_p){
+      try{ 
+        rstat = itsImager->apparentSensitivity(pointsource, relative);
       }
       catch(AipsError x){
          //*itsLog << LogIO::SEVERE << "Exception Reported: "

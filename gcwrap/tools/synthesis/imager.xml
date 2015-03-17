@@ -2940,26 +2940,32 @@ It is to be used after you have used <link anchor="imager:imager.clean.function"
    <shortdescription>Calculate rms  sensitivity</shortdescription>
    
 <description>
+
+NB: The implementation in this function will be removed for CASA v4.5.
+We now recommend that the im.apparentsens() function be used instead
+of this one, especially if their weights are initialized and
+calibrated.
+
 Calculate the point source sensitivity for the selected data, both
 absolutely and relatively (to that for natural weighting).
 
 To do the calculation, we use the imaging weights (in the 
-column called IMAGING\_WEIGHT) and the specified sigma per point
-(in the column SIGMA). Therefore, this includes all the effects
-of <link anchor="imager:imager.weight.function">weight</link> and <link anchor="imager:imager.filter.function">filter</link>.
+column called IMAGING\_WEIGHT) as calculated from the WEIGHT column,
+and an estimate of the effective net bandwidth and integration time.
+The calculation therefore includes all the effects
+of <link anchor="imager:imager.weight.function">weight</link> and 
+<link anchor="imager:imager.filter.function">filter</link>.
 
 The output is an array with mixed elements.  Counting from zero, the
-second element (out[1]) is the sensitivity, third element is the
+second element (out[1]) is the net sensitivity, third element is the
 ratio of the reduction in sensitivity due to the chosen weighting
 scheme.  This ratio is 1.0 for Natural weight and greater than one for
-all other weighting schemes.  Multiply the sensitivity (the second
-element) by this number to get the sensitivity for the chosen
-weighting scheme (NOTE: Further testing is required of this value and
-hence this is kept separate for now).
+all other weighting schemes.  (NOTE: Further testing is required of
+this value and hence this is kept separate for now).
 
 The sensitivity calculations require Tsys and collecting area of
 the antenna. These quantities are not known from the MS.  The
-sensitivity is there returned in units of Jy m\^2/K.  Multiplying the
+sensitivity is therefore returned in units of Jy m\^2/K.  Multiplying the
 second elements with the ration of the Tsys and effective antenna
 collecting area will give the sensitivity in Jy/beam units.
 
@@ -3001,6 +3007,100 @@ Hz), the sum of weights and the absolute spectral window IDs used.
 a=im.sensitivity(false);
 print 'Sensitivity =', a[1];
 print 'Relative to Natural Weighting = ', a[2];
+
+</example>
+
+
+</method>
+   <method type="function" name="apparentsens">
+   <shortdescription>Calculate rms sensitivity directly from weights</shortdescription>
+   
+<description>
+
+This function calculates the point source sensitivity for the data
+selected by im.selectvis(...), and according to the imaging weighting
+parameters specified in im.weight(...) and im.defineimage(...).  The
+calculation is performed solely using the weight information stored in
+the MS WEIGHT column (WEIGHT_SPECTRUM tbd), and as adjusted by the net
+imaging weighting function (natural, uniform, robust, taper, etc.).
+Therefore, it is assumed that the MS WEIGHTs have been properly
+initialized and calibrated along with the visibility data.  As long as
+the WEIGHTs are in the inverse square units of the visibilities (i.e.,
+inverse variance weights), the calculation should yield the real
+theoretical imaging sensitivity for data at any stage of the
+calibration (though data at early and intermediate stages of
+calibration may not be sufficiently coherent for imaging at high--or
+even modest--fidelity).
+
+Two values are reported in the logger and returned (see example
+below). First, the apparent sensitivity (in the units implied by the
+WEIGHTs' units), for the specified imaging weighting scheme.  Second,
+a unitless factor describing the ratio of the apparent sensitivity to
+that obtained with pure 'natural' weighting (the nominal peak
+sensitivity).  When 'natural' weighting is selected, this ratio factor
+will be 1.0; all other weighting choices will yield an apparent
+sensitivity ratio greater than 1.0.
+
+Currently, this function reports only the continuum sensitivity for
+the selected data, and in particular, for the aggregate bandwidth
+indicated by the spectral window selection.  The calculation further
+assumes that the visibility samples are each entirely independent
+(i.e., no redundant samples such as would occur for overlapping
+spectral windows).
+
+A future version of this function will support reporting a sensitivity
+spectrum for the spectral line case (including support for
+WEIGHT_SPECTRUM).  For now, spectral line sensitivity may be
+reasonably estimated by dividing the reported sensitivity by the
+square root of the fractional bandwidth of a single image channel, or
+by selecting a bandwidth matching the width of a single image channel.
+
+
+</description>
+<output>
+     <param type="double" name="pointsource">
+     <description>Calculated apparent point source sensitivity (in units implied by the MS weights)</description>
+     </param>
+
+     <param type="double" name="relative">
+     <description>Ratio of apparent sensitivity relative to natural weighting</description>
+     </param>
+
+</output>
+<input>
+     <param type="bool" direction="in" name="async">
+     <description>Run asynchronously in the background</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+<example>
+
+# open and set up selection and image plane parameters
+im.open('mydata.ms')
+im.selectvis(field='2',spw='0')
+im.defineimage(mode='mfs',spw=0,stokes='I',cellx='15arcsec',celly='15arcsec',nx=256,ny=256)
+
+# report natural weighting sensitivity
+im.weight(type='natural')
+nat=im.apparentsens();
+print 'Natural Sensitivity =', nat[1];
+print 'Relative to Natural Weighting = ', nat[2];
+
+# switch to uniform weighting
+im.weight(type='uniform')
+uni=im.apparentsens();
+print 'Uniform Sensitivity =', uni[1];
+print 'Relative to Natural Weighting = ', uni[2];
+
+# switch to briggs weighting
+im.weight(type='briggs',robust=0.0)
+rob=im.apparentsens();
+print 'Briggs Sensitivity =', rob[1];
+print 'Relative to Natural Weighting = ', rob[2];
+
+im.close()
 
 </example>
 
