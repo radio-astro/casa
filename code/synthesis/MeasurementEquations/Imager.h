@@ -342,6 +342,11 @@ class Imager
 		   Vector<Vector<Double> >& sumwtsqChan,
 		   Vector<Vector<Double> >& sumInverseVarianceChan);
   
+  // Apparent sensitivity calculator 
+  //   Accounts for gridding weights and assumes MS weights have correct units
+  Bool apparentSensitivity(Double& effSensitivity,
+			   Double& relToNat);
+
   // Make plain image + keep the complex image as well if complexImageName != "".
   Bool makeimage(const String& type, const String& imageName,
                  const String& complexImageName="", const Bool verbose=true);

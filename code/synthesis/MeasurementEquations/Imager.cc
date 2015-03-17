@@ -2840,10 +2840,7 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   try {
     
     os << LogIO::NORMAL // Loglevel INFO
-       << "Calculating sensitivity from imaging weights and from SIGMA column"
-       << LogIO::POST;
-    os << LogIO::NORMAL // Loglevel INFO
-       << "(assuming that SIGMA column is correct, otherwise scale appropriately)"
+       << "Calculating sensitivity from imaging weights and from effective bandwidth and integration time"
        << LogIO::POST;
     
     this->lock();
@@ -2853,7 +2850,7 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
 			    effectiveBandwidth, effectiveIntegration, nBaselines,nData, sumwtChan, 
 			    sumwtsqChan, sumInverseVarianceChan);
     os << LogIO::NORMAL << "RMS Point source sensitivity  : " // Loglevel INFO
-       << pointsourcesens.get("Jy").getValue() << " Jy/beam"
+       << pointsourcesens.get("Jy").getValue() << " Jy.m2/K"
        << LogIO::POST;
     os << LogIO::NORMAL // Loglevel INFO
        << "Relative to natural weighting : " << relativesens << LogIO::POST;
@@ -2868,6 +2865,87 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
   } 
   return True;
 }
+
+Bool Imager::apparentSensitivity(Double& effSensitivity,
+				 Double& relToNat) {
+  if(!valid()) return False;
+  LogIO os(LogOrigin("imager", "apparentSensitivity()", WHERE));
+  
+  try {
+
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Calculating apparent sensitivity from MS weights, as modified by gridding weight function"
+       << LogIO::POST;
+    os << LogIO::NORMAL // Loglevel INFO
+       << "(assuming that MS weights have correct scale and units)"
+       << LogIO::POST;
+    
+    this->lock();
+    
+    Double sumNatWt=0.0;
+    Double sumGridWt=0.0;
+    Double sumGridWt2OverNatWt=0.0;
+    
+    Float iNatWt(0.0),iGridWt(0.0);
+    
+    ROVisibilityIterator& vi(*rvi_p);
+    VisBuffer vb(vi);
+    Bool doWtSp=vb.existsWeightSpectrum();
+    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+      for (vi.origin();vi.more();vi++) {
+	Int nRow=vb.nRow();
+	Vector<Bool> rowFlags=vb.flagRow();
+	Matrix<Bool> flag = vb.flag();
+	
+	Vector<Int>& a1(vb.antenna1()), a2(vb.antenna2());
+	
+	for (Int row=0; row<nRow; row++) {
+	  if (!rowFlags(row) && a1(row)!=a2(row)) {  // exclude ACs
+	    iNatWt=2.0f*vb.weight()(row);
+	    for (Int ich=0;ich<vb.nChannel();++ich) {
+	      if(!flag(ich,row)&&(iNatWt>0.0)) {
+		iGridWt=2.0f*vb.imagingWeight()(ich,row);
+		sumNatWt+=(iNatWt);
+		sumGridWt+=(iGridWt);
+		sumGridWt2OverNatWt+=(iGridWt*iGridWt/iNatWt);
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    
+    if (sumNatWt==0.0) {
+      os << "Cannot calculate sensitivity: sum of selected natural weights is zero" << LogIO::EXCEPTION;
+    }
+    if (sumGridWt==0.0) {
+      os << "Cannot calculate sensitivity: sum of gridded weights is zero" << LogIO::EXCEPTION;
+    }
+
+    effSensitivity = sqrt(sumGridWt2OverNatWt)/sumGridWt;
+    Double natSensitivity = 1.0/sqrt(sumNatWt);
+    relToNat=effSensitivity/natSensitivity;
+
+    os << LogIO::NORMAL << "RMS Point source sensitivity  : " // Loglevel INFO
+       << effSensitivity      //  << " Jy/beam"       // actually, units are arbitrary
+       << LogIO::POST;
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Relative to natural weighting : " << relToNat << LogIO::POST;
+
+    this->unlock();
+    return True;
+  } catch (AipsError x) {
+    this->unlock();
+    throw(x);
+    return False;
+  } 
+  return True;
+    
+}
+
+
+
+
 
 // Calculate various sorts of image. Only one image
 // can be calculated at a time. The complex Image make
