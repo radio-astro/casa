@@ -380,7 +380,8 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
     Basic unit tests for task tsdbaseline. No interactive testing.
 
     The list of tests:
-    test001 --- test polynominal baseline with maskmode = 'list'
+    test000 --- test polynominal baselining with no mask (maskmode = 'list')
+    test001 --- test cubic spline baselining with no mask (maskmode = 'list')
     test050 --- test existing file as outfile with overwrite=False (raises an exception)
     test051 --- test no data after selection (raises an exception)
 
@@ -414,18 +415,21 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         #os.system('rm -rf '+self.outroot+'*')
 
-    def test001( self ):
-        """Basic Test 001: simple successful case: maskmode = 'list' and masklist=[] (all channels)"""
-        tid = '001'
+    def test000( self ):
+        """Basic Test 000: simple successful case: blfunc = 'poly', maskmode = 'list' and masklist=[] (no mask)"""
+        tid = '000'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
-        datacolumn='float_data'
-        mode = 'list'
+        datacolumn = 'float_data'
+        maskmode = 'list'
+        blfunc = 'poly'
         spw = '2'
         pol = '1'
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,
-                             maskmode=mode,outfile=outfile,
-                             spw=spw,pol=pol)
+        overwrite = True
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             maskmode=maskmode, blfunc=blfunc, 
+                             spw=spw, pol=pol, outfile=outfile,
+                             overwrite=overwrite)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -447,6 +451,26 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
                      }
 
         self._compareStats(theresult, reference)
+
+    def test001( self ):
+        """Basic Test 001: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
+        tid = '001'
+        infile = self.infile
+        outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'  
+        maskmode = 'list'
+        blfunc = 'cspline'
+        overwrite = True
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             maskmode=maskmode, blfunc=blfunc,
+                             #spw=spw, pol=pol,
+                             outfile=outfile,
+                             overwrite=overwrite)
+        self.assertEqual(result, None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        #***
+        #*** check if baseline is correctlt fit and subtracted ***
+        #***
 
     def test050( self ):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
@@ -567,9 +591,7 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
     for data that has multiple IFs whose nchan differ each other. 
 
     The list of tests:
-    test0 --- test multi IF data input
-
-    created 24/02/2012 by Takeshi Nakazato
+    test200 --- test multi IF data input
     """
     # Input and output names
     infile = 'testMultiIF.asap'
@@ -588,8 +610,8 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
 
-    def test01multi( self ):
-        """test01multi: Test the task works with multi IF data"""
+    def test200( self ):
+        """test200: Test the task works with multi IF data"""
         infile = self.infile
         mode = "list"
         blfunc = "poly"
@@ -624,53 +646,8 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
             self._compareStats(currstat,reference[ifno])
 
 
-class tsdbaseline_csplineTest( tsdbaseline_unittest_base, unittest.TestCase ):
-    """
-    Unit tests for task tsdbaseline blfunc='cspline'.
-
-    This test intends to check whether tsdbaseline in the calmode='cspline' task works properly
-     
-
-    The list of tests:
-    test00 --- blfunc='cspline'
-
-    created 12/03/2015 by Masaya Kuniyoshi
-    """
-    # Input and output names
-    infile='OrionS_rawACSmod_calave.ms'
-    #blparamfile_suffix = '_blparam.txt'
-    #outroot = tsdbaseline_unittest_base.taskname+'_multi'
-    #refblparamfile = 'refblparam_multiIF'
-    outfile='out.ms'
-
-
-    def setUp( self ):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-        default(tsdbaseline)
-
-    def tearDown( self ):
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        #os.system('rm -rf '+self.outroot+'*')
-    
-    def test00( self ):
-        infile=self.infile
-        outfile=self.outfile
-        datacolumn='float_data'  
-        maskmode='list'
-        blmode='fit'
-        blformat='text'
-        blfunc='cspline'
-        overwrite=True
-        result=tsdbaseline(infile=infile, datacolumn=datacolumn,maskmode=maskmode, blfunc=blfunc, outfile=outfile, overwrite=overwrite)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-
-
 def suite():
     return [tsdbaseline_basicTest, 
-            tsdbaseline_maskTest,
-            tsdbaseline_csplineTest
+            tsdbaseline_maskTest
             #tsdbaseline_multi_IF_test
             ]
