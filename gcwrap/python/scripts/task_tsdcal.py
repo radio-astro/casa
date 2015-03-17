@@ -198,7 +198,15 @@ def temporary_calibration(calmode, arg_template, **kwargs):
 def handle_composite_mode(args):
     kwargs = args.copy()
     calmodes = kwargs['calmode'].split(',')
-    precalibrations = list(kwargs['applytable'][:])
+    _applytable = kwargs['applytable']
+    if isinstance(_applytable, str):
+        if len(_applytable) > 0:
+            precalibrations = [_applytable]
+        else:
+            precalibrations = []
+    else:
+        precalibrations = list(_applytable[:])
+    
     applytable_list = []
     try:
         # sky calibration
