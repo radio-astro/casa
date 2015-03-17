@@ -483,7 +483,28 @@ class DataTableImpl( object ):
                         for row in rows:
                             tref = self.tb1.getcell('TIME', row)
                             itsys = _interpolate(atsys, tsys_time, tref)
-                            self.tb1.putcell('TSYS', row, itsys)                
+                            self.tb1.putcell('TSYS', row, itsys)
+
+    def _update_flag(self, context, infile):
+        LOG.info('Updating online flag for %s'%(os.path.basename(infile)))
+        antenna = context.observing_run.st_names.index(os.path.basename(infile))
+        LOG.info('antenna=%s'%(antenna))
+        antennas = self.tb1.getcol('ANTENNA')
+        rows = self.tb1.getcol('ROW')
+        flag_permanent = self.tb2.getcol('FLAG_PERMANENT')
+        online_flag = flag_permanent[OnlineFlagIndex,:]           
+        index = numpy.where(antennas == antenna)
+        myrows = rows[index]
+        with casatools.TableReader(infile) as tb:
+            #for i in index:
+            #    row = rows[i]
+            #    LOG.info('index %s row %s'%(i,row))
+            for i in index[0]:
+                row = rows[i]
+                flagrow = tb.getcell('FLAGROW', row)
+                flag = tb.getcell('FLAGTRA', row)
+                online_flag[i] = (flagrow == 0 and any(flag == 0))
+        self.tb2.putcol('FLAG_PERMANENT', flag_permanent)
         
 def map_spwchans(atm_spw, science_spw):
     atm_nchan = atm_spw.nchan
