@@ -1136,21 +1136,26 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
     # Generate list of taql commands
     for subms in submScanDdiMap:
         # Initialize taql command
-        initialized = False
-        mytaql = ''
-        # Iterate over scan/ddi pairs for this subms
+        from collections import defaultdict
+        dmytaql = defaultdict(list)
+
         for pair in range(len(submScanDdiMap[subms]['scanList'])):
             # Get scan/ddi for this pair
             ddi = submScanDdiMap[subms]['ddiList'][pair]
             scan = submScanDdiMap[subms]['scanList'][pair]
-            
-            joinClause = ' OR'
-            if not initialized:
-                joinClause = ''
-                initialized = True 
-                
-            mytaql = mytaql + joinClause + ' (DATA_DESC_ID==%i AND SCAN_NUMBER==%i)' % (ddi,scan)
-            
+            dmytaql[ddi].append(scan)
+
+        mytaql = []
+        for ddi, scans in dmytaql.items():
+            # TODO: does taql do this optimization for us?
+            if len(scans) == 1:
+                mytaql.append(('(DATA_DESC_ID==%i && SCAN_NUMBER==%i)') % (ddi, scans[0]))
+            else:
+                scansel = '[' + ', '.join([str(x) for x in scans]) + ']'
+                mytaql.append(('(DATA_DESC_ID==%i && (SCAN_NUMBER IN %s))') % (ddi, scansel))
+
+        mytaql = ' OR '.join(mytaql)
+
         # Store taql
         submScanDdiMap[subms]['taql'] = mytaql
 
@@ -1283,4 +1288,4 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,filename,idLabel,plot
     
     
      
-     
+
