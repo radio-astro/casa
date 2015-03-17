@@ -390,12 +390,13 @@ void printExpectedPerf(const LibAIR2::ArrayGains &g,
 void statTimeMask(const casa::MeasurementSet &ms,
 		  const boost::program_options::variables_map &vm,
 		  std::vector<std::pair<double, double> > &tmask,
-		  const std::vector<size_t> &sortedI)
+		  const std::vector<size_t> &sortedI,
+		  const std::vector<int> &wvrspws)
 {
   std::vector<int> flds;
   std::vector<double> time;
   std::vector<int> src;
-  LibAIR2::fieldIDs(ms, 
+  LibAIR2::fieldIDs(ms,
 		   time,
 		   flds,
 		   src,
@@ -412,11 +413,12 @@ void statTimeMask(const casa::MeasurementSet &ms,
   {
     std::set<size_t> fselect=LibAIR2::getSrcFields(ms,
 						  vm["statsource"].as<std::vector<std::string> >()[0]);
+
     LibAIR2::fieldTimes(time,
 		       flds,
 		       spws,
 		       fselect,
-		       0,
+		       (size_t) wvrspws[0],
 		       tmask);    
   }
   else
@@ -447,7 +449,7 @@ void statTimeMask(const casa::MeasurementSet &ms,
 		       flds,
 		       spws,
 		       fselect,
-		       0,
+		       (size_t) wvrspws[0],
 		       tmask);
   }
   LibAIR2::printStatTimes(std::cout,
@@ -1062,7 +1064,6 @@ int main(int argc,  char* argv[])
 //       }
 
 	   inp=FieldMidPointI(*d,
-			      time,
 			      fb,
 			      useID,
 			      refant);
@@ -1143,23 +1144,21 @@ int main(int argc,  char* argv[])
 	
 	if (vm.count("segsource"))
 	{
-	   std::vector<int> flds;
-	   std::vector<double> time;
-	   std::vector<int> src;
-	   LibAIR2::fieldIDs(ms, 
-			    time,
-			    flds,
-			    src,
-			    sortedI);
+	  //std::vector<int> flds;
+	  //std::vector<double> time;
+	  //std::vector<int> src;
+	  //LibAIR2::fieldIDs(ms, 
+	  //		    time,
+	  //		    flds,
+	  //		    src,
+	  //		    sortedI);
 	   
-	   coeffs.reset(LibAIR2::SimpleMultiple(//*d, 
-					       time,
-					       fb,
-					       rlist));   
+	  coeffs.reset(LibAIR2::SimpleMultiple(fb,
+						rlist));   
 	}
 	else
 	{
-	   coeffs.reset(LibAIR2::ALMAAbsProcessor(inp, rlist));
+	  coeffs.reset(LibAIR2::ALMAAbsProcessor(inp, rlist));
 	}  
 	
      }
@@ -1181,9 +1180,8 @@ int main(int argc,  char* argv[])
 	g.blankSources(flagset);
      }
      
-     
      std::vector<std::pair<double, double> > tmask;
-     statTimeMask(ms, vm, tmask, sortedI);
+     statTimeMask(ms, vm, tmask, sortedI, wvrspws);
      
      std::vector<double> pathRMS;
      g.pathRMSAnt(tmask, pathRMS);

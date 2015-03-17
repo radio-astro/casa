@@ -48,7 +48,7 @@ namespace LibAIR2 {
 	     <<std::endl
 	     <<"Developed by B. Nikolic at the University of Cambridge as part of EU FP6 ALMA Enhancement"
 	     <<std::endl
-	     <<"Maintained since 2013 by the European Southern Observatory as part of the ALMA project"
+	     <<"Maintained and extended since 2013 by the European Southern Observatory as part of the ALMA project"
 	     <<std::endl
 	     <<"GPLv2 License -- you have a right to the source code"
 	     <<std::endl

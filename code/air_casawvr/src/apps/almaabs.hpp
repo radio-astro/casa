@@ -104,7 +104,6 @@ namespace LibAIR2 {
       \param states Consider only data with one of these state IDs
    */
   ALMAAbsInpL FieldMidPointI(const InterpArrayData &d,
-			     const std::vector<double> &time,
 			     const std::vector<std::pair<double, double> >  &fb,
 			     const std::set<size_t> &states,
 			     int refant);
@@ -147,9 +146,7 @@ namespace LibAIR2 {
       Separate retrieval for each new field
   */
   dTdLCoeffsSingleInterpolated *
-  SimpleMultiple(//const InterpArrayData &d,
-		 const std::vector<double> &time,
-		 const std::vector<std::pair<double, double> > &fb,
+  SimpleMultiple(const std::vector<std::pair<double, double> > &fb,
 		 boost::ptr_list<ALMAResBase> &r);
 
   

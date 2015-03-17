@@ -143,7 +143,7 @@ namespace LibAIR2 {
     {
       size_t i = sortedI[ii];
 
-      spw[i]=map[dd(i)];
+      spw[ii]=map[dd(i)];
     }
   }
 

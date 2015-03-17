@@ -67,9 +67,9 @@ namespace LibAIR2 {
 		     std::vector<double> &res,
 		     std::vector<double> &c2) const =0;
 
-    virtual void print(std::ostream &os)
-    {
-    };
+    //virtual void print(std::ostream &os)
+    //{
+    //};
 
     /** \brief Return a representative set of coefficients
 	

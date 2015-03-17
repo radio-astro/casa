@@ -204,7 +204,6 @@ namespace LibAIR2 {
   }
 
   ALMAAbsInpL FieldMidPointI(const InterpArrayData &d,
-			     const std::vector<double> &time,
 			     const std::vector<std::pair<double, double> >  &fb,
 			     const std::set<size_t> &states,
 			     int refant)
@@ -442,9 +441,7 @@ namespace LibAIR2 {
 
 
   dTdLCoeffsSingleInterpolated *
-  SimpleMultiple(//const InterpArrayData &d,
-		 const std::vector<double> &time,
-		 const std::vector<std::pair<double, double> > &fb,
+  SimpleMultiple(const std::vector<std::pair<double, double> > &fb,
 		 boost::ptr_list<ALMAResBase> &r)
   {
 
