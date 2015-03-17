@@ -1,6 +1,8 @@
 import sys
 import os
 import numpy
+import numpy.random as random
+import shutil
 
 from taskinit import *
 from applycal import applycal
@@ -14,7 +16,11 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
        
     """ Externally specify calibration solutions af various types
     """
-
+    # composite mode support
+    if calmode.find(',') != -1:
+        handle_composite_mode(locals())
+        return
+            
     #Python script
     try:
 
@@ -163,3 +169,73 @@ def to_numeric_fraction(fraction):
 
     return fraction_numeric
     
+def temporary_name(calmode):
+    num_trial = 100
+    for i in xrange(num_trial):
+        number = random.random_integers(num_trial)
+        name = ('__tsdcal_composite_mode_%s_%3s.tab'%(calmode,number)).replace(' ','0')
+        if not os.path.exists(name):
+            return name
+    raise RuntimeError, 'Failed to configure temporary caltable name.'
+
+def temporary_calibration(calmode, arg_template, **kwargs):
+    caltable = temporary_name(calmode)
+    myargs = arg_template.copy()
+    myargs['calmode'] = calmode
+    myargs['outfile'] = caltable
+    # try to keep the existing file although
+    # outfile should never point to existing file
+    myargs['overwrite'] = False
+    # optional argument for tsdcal
+    for (k,v) in kwargs.items():
+        if myargs.has_key(k):
+            myargs[k] = v
+    tsdcal(**myargs)
+    if not os.path.exists(caltable):
+        raise RuntimeError, 'Failed to create temporary caltable.'
+    return caltable
+
+def handle_composite_mode(args):
+    kwargs = args.copy()
+    calmodes = kwargs['calmode'].split(',')
+    precalibrations = list(kwargs['applytable'][:])
+    applytable_list = []
+    try:
+        # sky calibration
+        if 'ps' in calmodes:
+            # ps calibration
+            applytable_list.append(
+                temporary_calibration('ps', kwargs, spwmap={})
+                )
+        elif 'otfraster' in calmodes:
+            # otfraster calibration
+            applytable_list.append(
+                temporary_calibration('otfraster', kwargs, spwmap={})
+                )
+        elif 'otf' in calmodes:
+            # otf calibration
+            applytable_list.append(
+                temporary_calibration('otf', kwargs, spwmap={})
+                )
+
+        # Tsys calibration
+        if 'tsys' in calmodes:
+            applytable_list.append(
+                temporary_calibration('tsys', kwargs, field='', spw='', scan='')
+                )
+
+        # apply temporary caltables
+        if 'apply' in calmodes:
+            if len(applytable_list) == 0:
+                raise RuntimeError, "No applytable has been created/registered."
+            myargs = kwargs.copy()
+            myargs['calmode'] = 'apply'
+            myargs['applytable'] = precalibrations + applytable_list
+            tsdcal(**myargs)
+
+    finally:
+        # clean up temporary tables
+        for _table in applytable_list:
+            if os.path.exists(_table):
+                casalog.post('removing \'%s\''%(_table), priority='DEBUG')
+                shutil.rmtree(_table)
