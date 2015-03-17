@@ -2360,9 +2360,9 @@ void MSMetaData::_createSubScanRecords(
 		subScanRec.define("begin time", props.beginTime);
 		subScanRec.define("end time", props.endTime);
 		subScanRec.define("state IDs", Vector<Int>(props.stateIDs.begin(), props.stateIDs.size(), 0));
-		subScanRec.define("field ID", subScanIter->fieldID);
+		//subScanRec.define("field ID", subScanIter->fieldID);
 		_createTimeStampRecords(subScanRec, props);
-		parent.defineRecord(String::toString(subScanCount), subScanRec);
+		parent.defineRecord("fieldID=" + String::toString(subScanIter->fieldID), subScanRec);
 		++subScanCount;
 		++subScanIter;
 	}
