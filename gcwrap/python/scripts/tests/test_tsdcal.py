@@ -1103,6 +1103,11 @@ class tsdcal_test_apply(tsdcal_test_base):
     test_apply_sky13 --- apply data (string applytable input)
     test_apply_sky14 --- apply data (interp='')
     test_apply_sky15 --- check if WEIGHT_SPECTRUM is updated properly when it exists
+    test_apply_sky16 --- apply both sky table and Tsys table simultaneously
+    test_apply_composite00 --- on-the-fly application of sky table ('ps,apply')
+    test_apply_composite01 --- on-the-fly application of sky table with existing Tsys table
+    test_apply_composite02 --- on-the-fly application of sky and tsys tables ('ps,tsys,apply')
+    test_apply_composite03 --- on-the-fly application of sky table ('otfraster,apply')
     """
     invalid_argument_case = tsdcal_test_base.invalid_argument_case
     exception_case = tsdcal_test_base.exception_case
@@ -1142,7 +1147,7 @@ class tsdcal_test_apply(tsdcal_test_base):
                         msg='')
 
     
-    def normal_case(interp='linear', **kwargs):
+    def normal_case(interp='linear', tsys=1.0, **kwargs):
         """
         Decorator for the test case that is intended to verify
         normal execution result.
@@ -1150,6 +1155,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         interp --- interpolation option ('linear', 'nearest', '*flag')
                    comma-separated list is allowed and it will be
                    interpreted as '<interp for time>,<intep for freq>'
+        tsys --- tsys scaling factor
         selection --- data selection parameter as dictionary
         """
         def wrapper(func):
@@ -1241,7 +1247,7 @@ class tsdcal_test_apply(tsdcal_test_base):
                                 corrected = tb.getcell('CORRECTED_DATA', irow)
                                 ref, calflag, weightscale = interpolator.interpolate(t, dt)
                                 inflag = flag_org[antenna][spw][:,:,irow]
-                                expected = (data - ref) / ref
+                                expected = tsys * (data - ref) / ref
                                 expected_flag = numpy.logical_or(inflag, calflag)
 
                                 # weight test
@@ -1249,15 +1255,16 @@ class tsdcal_test_apply(tsdcal_test_base):
                                                  msg='')
                                 inweight = weight_org[antenna][spw][:,irow]
                                 outweight = tb.getcell('WEIGHT', irow)
+                                tsyssq = tsys * tsys
                                 if has_weightsp:
                                     # Need to check WEIGHT_SPECTRUM
                                     inweightsp = weightsp_org[antenna][spw][:,:,irow]
                                     outweightsp = tb.getcell('WEIGHT_SPECTRUM', irow)
 
-                                    self.check_weight(inweight, outweight, weightscale)
-                                    self.check_weight(inweightsp, outweightsp, weightscale)
+                                    self.check_weight(inweight, outweight, weightscale / tsyssq)
+                                    self.check_weight(inweightsp, outweightsp, weightscale / tsyssq)
                                 else:
-                                    self.check_weight(inweight, outweight, weightscale)
+                                    self.check_weight(inweight, outweight, weightscale / tsyssq)
                                 
                                 #print 'antenna', antenna, 'spw', spw, 'row', irow
                                 #print 'inflag', inflag[:,:12], 'calflag', calflag[:,:12], 'expflag', expected_flag[:,:12], 'outflag', outflag[:,:12]
@@ -1418,6 +1425,71 @@ class tsdcal_test_apply(tsdcal_test_base):
         test_apply_sky15 --- check if WEIGHT_SPECTRUM is updated properly when it exists
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=self.applytable, interp='linear')
+
+    def modify_tsys(func):
+        import functools
+        @functools.wraps(func)
+        def wrapper(self):
+            with sdutil.tbmanager(os.path.join(self.infile,'SYSCAL'), nomodify=False) as tb:
+                tsel = tb.query('SPECTRAL_WINDOW_ID IN [1,3]', sortlist='ANTENNA_ID,SPECTRAL_WINDOW_ID,TIME')
+                try:
+                    nrow = tsel.nrows()
+                    tsys = 100.0
+                    for irow in xrange(nrow):
+                        tsys_spectrum = tsel.getcell('TSYS_SPECTRUM', irow)
+                        tsys_spectrum[:] = 100.0
+                        tsel.putcell('TSYS_SPECTRUM', irow, tsys_spectrum)
+                        #tsys += 100.0
+                finally:
+                    tsel.close()
+            func(self)
+        return wrapper
+
+    @normal_case()
+    def test_apply_composite00(self):
+        """
+        test_apply_composite00 --- on-the-fly application of sky table ('ps,apply')
+        """
+        tsdcal(infile=self.infile, calmode='ps,apply')
+
+    @modify_tsys
+    @normal_case(tsys=100.0)
+    def test_apply_composite01(self):
+        """
+        test_apply_composite01 --- on-the-fly application of sky table with existing Tsys table
+        """
+        # generate Tsys table
+        tsystable = self.infile.rstrip('/') + '.tsys'
+        tsdcal(infile=self.infile, calmode='tsys', outfile=tsystable)
+
+        try:
+            # generate Tsys table
+            tsdcal(infile=self.infile, calmode='tsys', outfile=tsystable)
+            
+            # apply
+            tsdcal(infile=self.infile, calmode='ps,apply', applytable=tsystable,
+                   spwmap={1:[9], 3:[11]})
+        finally:
+            if os.path.exists(tsystable):
+                shutil.rmtree(tsystable)
+
+    @modify_tsys
+    @normal_case(tsys=100.0)
+    def test_apply_composite02(self):
+        """
+        test_apply_composite02 --- on-the-fly application of sky and tsys tables ('ps,tsys,apply')
+        """
+        tsdcal(infile=self.infile, calmode='ps,tsys,apply',
+               spwmap={1:[9], 3:[11]})
+
+    @modify_tsys
+    @normal_case(tsys=100.0)
+    def test_apply_composite03(self):
+        """
+        test_apply_composite03 --- on-the-fly application of sky table ('otfraster,apply')
+        """
+        tsdcal(infile=self.infile, calmode='tsys,apply', applytable=self.applytable,
+               spwmap={1:[9], 3:[11]})
 
 def suite():
     return [tsdcal_test, tsdcal_test_ps,
