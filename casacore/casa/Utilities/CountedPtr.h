@@ -30,7 +30,7 @@
 
 #include <casacore/casa/aips.h>
 
-#if defined AIPS_CXX11 || defined(__APPLE__)
+#if (defined(AIPS_CXX11) || (defined(__APPLE_CC__) && __APPLE_CC__ > 5621))
 #include <memory>
 ///#elif defined HAVE_BOOST
 ///#include <boost/shared_ptr.hpp>
