@@ -71,11 +71,12 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="string" name="maskmode" ignorecase="true">
-        <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription>
+<!--        <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription> -->
+        <shortdescription>mode of setting additional channel masks. only \'list\' is available now.</shortdescription>
         <description>mode of setting additional channel masks</description>
-        <value>auto</value>
+        <value>list</value>
         <allowed kind="enum">
-            <value>auto</value>
+<!--            <value>auto</value> -->
             <value>list</value>
 <!--            <value>interact</value> -->
         </allowed>
@@ -233,12 +234,12 @@ pipeline processing for huge dataset.
 
     <constraints>
             <when param="maskmode">
+                <equals value="list"/>
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="avg_limit"><value>4</value></default>
                         <default param="edge"><value type='vector'><value>0</value></value></default>
                 </equals>
-                <equals value="list"/>
                 <equals value="interact"/>
             </when>
             <when param="blmode">
@@ -338,8 +339,8 @@ pol -- select data by polarization IDs
 maskmode -- mode of setting additional channel masks. When blmode='apply'
              and/or blfunc='variable', maskmode and its subparameters
              are ignored.
-        options: 'auto', 'list', or 'interact'
-        default: 'auto'
+        options: 'list' ('auto' and 'interact' will be available later)
+        default: 'list'
         example: maskmode='auto' runs linefinder to detect line regions 
                  to be excluded from fitting. this mode requires three 
                  expandable parameters: thresh, avg_limit, and edge.
