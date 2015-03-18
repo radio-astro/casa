@@ -28,6 +28,7 @@ casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   cl2skycat.py
   cluster.py
   cmpmses.py
+  commongrid.py
   drawmaskinimage.py
   field2skycat.py
   find_autocorr.py
