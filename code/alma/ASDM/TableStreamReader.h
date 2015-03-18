@@ -35,7 +35,80 @@ namespace asdm {
    * @param T The parameter T must be the type of one of the tables which can be found in an ASDM (e.g. AntennaTable)
    * @param R The parameter R must be the type of the rows which make the content of a table of type T (e.g. AntennaRow is T is AntennaTable).
    */
-  
+
+template< class IterT, class IterDerefT >
+class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, IterDerefT, ptrdiff_t, IterDerefT*, IterDerefT& > {
+    struct cache {
+		std::vector<IterDerefT> store;
+		size_t last;
+		cache( ) : last(0) { }
+		void push_back(IterDerefT v) { store.push_back(v); last = store.size( ); }
+		cache( const cache &other ) : store(other.store), last(other.last) { }
+	};
+    public:
+		explicit caching_iterator( IterT iter ) : cache_( new cache( ) ), ref_iter(iter) { }
+		caching_iterator( const caching_iterator< IterT, IterDerefT > &other ) : cache_( new cache( *other.cache_) ), ref_iter(other.ref_iter) { }
+
+		~caching_iterator( ) { dealloc( ); }
+
+	    caching_iterator< IterT, IterDerefT > & operator=( const caching_iterator< IterT, IterDerefT > &other ) {
+			if( this != &other ) {
+				dealloc( );
+				cache_ = new cache( *other.cache_ );
+			}
+		}
+
+	    caching_iterator< IterT, IterDerefT > &operator++( ) {
+			if ( cache_->last >= 0 && cache_->last < cache_->store.size( ) ) cache_->last++;
+			else {
+				cache_->push_back(*ref_iter);
+				++ref_iter;
+			}
+			return *this;
+		}
+
+	    caching_iterator< IterT, IterDerefT > operator++( int ) {
+			caching_iterator< IterT, IterDerefT > temp = *this;
+			++*this;
+			return temp;
+		}
+
+	    caching_iterator< IterT, IterDerefT > &operator--( ) {
+			if ( cache_->last > 0 ) {
+				if ( cache_->last == cache_->store.size( ) ) {
+					cache_->push_back(*ref_iter);
+					cache_->last--;
+				}
+				cache_->last--;
+			}
+			return *this;
+		}
+
+	    caching_iterator< IterT, IterDerefT > operator--( int ) {
+			caching_iterator< IterT, IterDerefT > temp = *this;
+			--*this;
+			return temp;
+		}
+	
+		bool operator==( const caching_iterator< IterT, IterDerefT > &other ) const {
+			if ( ref_iter != other.ref_iter ) return false;
+			return cache_->last == cache_->store.size( );
+		}
+
+		bool operator!=( const caching_iterator< IterT, IterDerefT > &other ) const {
+			return !( *this == other );
+		}
+
+		IterDerefT operator*( ) const {
+			return cache_->last < cache_->store.size( ) ? cache_->store[cache_->last] : *ref_iter;
+		}
+	
+	private:
+		cache *cache_;
+		IterT ref_iter;
+		void dealloc( ) { delete cache_; }
+};
+
   template<class T, class R> class TableStreamReader {
   public:
     /**
@@ -71,10 +144,11 @@ namespace asdm {
 
       // Locate the xmlPartMIMEHeader.
       std::string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
-      CharComparator comparator(&tableFile, 10000);
-      std::istreambuf_iterator<char> BEGIN(tableFile.rdbuf());
-      std::istreambuf_iterator<char> END;
-      std::istreambuf_iterator<char> it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
+      CharComparator comparator(50000);
+      caching_iterator<std::istreambuf_iterator<char>,char> BEGIN((std::istreambuf_iterator<char>( tableFile.rdbuf() )));;
+      caching_iterator<std::istreambuf_iterator<char>,char> END((std::istreambuf_iterator<char>( )));
+      caching_iterator<std::istreambuf_iterator<char>,char> it(std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator));
+
       if ((it == END) || (tableFile.tellg() > 10000)) { 
 	tableFile.seekg(0);
 	xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\r\n\r\n";

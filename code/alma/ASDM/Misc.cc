@@ -572,25 +572,25 @@ namespace asdm {
     return output;  // for multiple << operators.
   }
 
-  CharComparator::CharComparator(std::ifstream * is_p, off_t limit):is_p(is_p), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
+  CharComparator::CharComparator( off_t limit ): count(0), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
 
   bool CharComparator::operator() (char cl, char cr) {
-    if (asdmDebug_p) cout << "Entering CharComparator::operator()" << endl;
-    if (is_p && is_p->tellg() > limit) 
+    if (asdmDebug_p) cout << "Entering CharComparator::operator():" << count << endl;
+    if ( limit > 0 && count++ > limit)
       return true;
     else 
       return toupper(cl) == cr;
-    if (asdmDebug_p) cout << "Exiting CharComparator::operator()" << endl;
+    if (asdmDebug_p) cout << "Exiting CharComparator::operator():" << count << endl;
   }
 
   CharCompAccumulator::CharCompAccumulator(std::string* accumulator_p, std::ifstream * is_p, off_t limit): accumulator_p(accumulator_p),
-													 is_p(is_p),
+													   is_p(is_p),
 													   limit(limit) {nEqualChars = 0; asdmDebug_p = getenv("ASDM_DEBUG");}
   bool CharCompAccumulator::operator()(char cl, char cr) {
     if (asdmDebug_p) cout << "Entering CharCompAccumulator::operator()" << endl;
     bool result = false;
     // Are we beyond the limit ?
-    if (is_p && is_p->tellg() > limit) 
+    if (is_p && is_p->tellg( ) > limit) 
       result = true;      // Yes
     else {                // No
       if (toupper(cl) == toupper(cr)) {

@@ -28,6 +28,7 @@
  */
 
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <string> 
 #include <vector>
@@ -430,11 +431,11 @@ namespace asdm {
    */
   class CharComparator {
   public:
-    CharComparator(std::ifstream * is_p = NULL, off_t limit = 0);
+    CharComparator(off_t limit = 0);
     bool operator() (char cl, char cr);
 
   private:
-    std::ifstream* is_p;
+    off_t count;
     off_t limit;
     char* asdmDebug_p; 
   };
