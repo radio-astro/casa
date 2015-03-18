@@ -359,6 +359,17 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                 inmaskshp = ia.shape()
                 inmaskcsys = ia.coordsys()
                 ia.close()
+                regridmethod = 'linear'
+                if inmaskcsys.torecord().has_key('spectral2'):
+                    inspecdelt = inmaskcsys.torecord()['spectral2']['wcs']['cdelt']
+                    ia.open(tmp_outmaskimage)
+                    ocsys=ia.coordsys()
+                    oshp=ia.shape() 
+                    ia.close()
+                    outspecdelt = ocsys.torecord()['spectral2']['wcs']['cdelt']
+                    if outspecdelt < inspecdelt:
+                       regridmethod='nearest'
+
 		if inmaskshp[3]!=1 and ((inpfreqs==[] and outfreqs==[]) \
                     or (inpfreqs=='' and outfreqs=='')):
 		    # unless inpimage is continuum, skip chan selection part and regrid 
@@ -424,6 +435,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         
                         # do it for input mask image (not the template )
                         inpfreqlist = translatefreqrange(inpfreqs,inmaskcsys)
+                        #print "inpfreqlist=",inpfreqlist
                         # close input image
                         if ia.isopen():
                             ia.close()
@@ -433,8 +445,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                             #do not regrid, use input image
                             shutil.copytree(tmp_maskimage,tmp_regridim)
                         else:
-                            regridmask(tmp_maskimage,inpimage,tmp_regridim,chanrange=inpfreqlist)
+                            regridmask(tmp_maskimage,inpimage,tmp_regridim,chanrange=inpfreqlist,method=regridmethod)
+                            #regridmask(tmp_maskimage,inpimage,tmp_regridim,chanrange=inpfreqlist)
                             # find edge masks (nonzero planes)
+                            ##shutil.copytree(tmp_regridim,'saved_'+tmp_regridim)
                             ia.open(tmp_regridim)
                             sh=ia.shape()
                             chanlist=range(sh[3])
@@ -462,9 +476,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                                 casalog.post("Determined non-zero channel range to be "+str(indlo)+"~"+str(indhi), 'DEBUG1')
 
                         # find channel indices for given outfreqs
-                        ia.open(tmp_outmaskimage)
-                        ocsys=ia.coordsys()
-                        oshp=ia.shape() 
+                        #ia.open(tmp_outmaskimage)
+                        #ocsys=ia.coordsys()
+                        #oshp=ia.shape() 
                         outfreqlist = translatefreqrange(outfreqs,ocsys)
                         rtn=ocsys.findcoordinate('spectral')
                         px=rtn['pixel'][0]
@@ -479,12 +493,14 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         " "+qa.tos(outfreqlist[0])+"->  p2="+str(p2))
                         if len(inpfreqs)==1:
                             inpfreqchans=inpfreqs
+                        elif inpfreqs.find('~'):
+                            inpfreqchans=range(indlo,indhi+1)
                         else:
                             inpfreqchans=[indlo,indhi]
                         outfreqchans=range(int(round(p1)),int(round(p2))+1)
                         #print "inpfreqchans=",inpfreqchans
                         #print "outfreqchans=",outfreqchans
-
+                        
                         expandchanmask(tmp_regridim,inpfreqchans,tmp_outmaskimage,outfreqchans)
 
 #		        usechanims={}  # list of input mask to be use for each outpfreq
@@ -509,7 +525,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     if os.path.isdir(tmp_outmaskimage):
 		        #print "Removing %s" % tmp_outmaskimage
 		        shutil.rmtree(tmp_outmaskimage)
-                    regridmask(tmp_maskimage,outparentim,tmp_outmaskimage)
+                    #regridmask(tmp_maskimage,outparentim,tmp_outmaskimage)
+                    regridmask(tmp_maskimage,inpimage,tmp_outmaskimage,method=regridmethod)
 		    ia.remove()
 		    #print "closing after regrid"
 		    ia.open(tmp_outmaskimage) # reopen output tmp image
