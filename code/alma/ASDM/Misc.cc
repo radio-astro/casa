@@ -571,16 +571,15 @@ namespace asdm {
     output << "Origin=" << s << ",Version=" << p.version_ << ",LoadTablesOnDemand=" << p.loadTablesOnDemand_ << ",CheckRowUniqueness=" << p.checkRowUniqueness_;
     return output;  // for multiple << operators.
   }
-
-  CharComparator::CharComparator( off_t limit ): count(0), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
+  CharComparator::CharComparator(std::ifstream * is_p, off_t limit):is_p(is_p), limit(limit){asdmDebug_p = getenv("ASDM_DEBUG");}
 
   bool CharComparator::operator() (char cl, char cr) {
-    if (asdmDebug_p) cout << "Entering CharComparator::operator():" << count << endl;
-    if ( limit > 0 && count++ > limit)
+    if (asdmDebug_p) cout << "Entering CharComparator::operator()" << endl;
+    if (is_p && is_p->tellg() > limit)
       return true;
     else 
       return toupper(cl) == cr;
-    if (asdmDebug_p) cout << "Exiting CharComparator::operator():" << count << endl;
+    if (asdmDebug_p) cout << "Exiting CharComparator::operator()" << endl;
   }
 
   CharCompAccumulator::CharCompAccumulator(std::string* accumulator_p, std::ifstream * is_p, off_t limit): accumulator_p(accumulator_p),

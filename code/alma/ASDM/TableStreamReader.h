@@ -144,7 +144,7 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
 
       // Locate the xmlPartMIMEHeader.
       std::string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
-      CharComparator comparator(50000);
+      CharComparator comparator(&tableFile, 10000);
       caching_iterator<std::istreambuf_iterator<char>,char> BEGIN((std::istreambuf_iterator<char>( tableFile.rdbuf() )));;
       caching_iterator<std::istreambuf_iterator<char>,char> END((std::istreambuf_iterator<char>( )));
       caching_iterator<std::istreambuf_iterator<char>,char> it(std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator));

@@ -431,11 +431,11 @@ namespace asdm {
    */
   class CharComparator {
   public:
-    CharComparator(off_t limit = 0);
+    CharComparator(std::ifstream * is_p = NULL, off_t limit = 0);
     bool operator() (char cl, char cr);
 
   private:
-    off_t count;
+    std::ifstream* is_p;
     off_t limit;
     char* asdmDebug_p; 
   };
