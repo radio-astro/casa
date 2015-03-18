@@ -868,6 +868,38 @@ class test_partition_balanced(test_base):
         partition(self.vis, outputvis=self.outputms,separationaxis='auto',numsubms=64,flagbackup=False)
         listpartition_dict = listpartition(self.outputms, createdict=True)       
         self.assertEqual(len(listpartition_dict), 4, "Number of subMS should be 3")          
+
+
+class test_partition_balanced_multiple_scan(test_base):
+    ''' test file with multiple scan ids per ddi '''
+    def setUp(self):
+        # Define the root for the data files
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
+
+        self.vis = 'CAS-5076.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+
+        if os.system('which rsync 2>&1 > %s' % os.path.devnull):
+            os.system('rsync -aLC '+datapath + self.vis +' .')
+        else:
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+
+        self.outputms = 'test_partitition_CAS-5076.ms'
+        default('partition')
+
+    def tearDown(self):
+        os.system("rm -rf " + self.vis)
+        os.system("rm -rf " + self.outputms)
+
+    def test_partition_balanced_multiple_scan(self):
+        partition(self.vis, outputvis=self.outputms, separationaxis='auto', numsubms=2, disableparallel=True)
+        listpartition_dict = listpartition(self.outputms, createdict=True)
+        self.assertEqual(len(listpartition_dict), 2)
+        self.assertEqual(len(listpartition_dict[0]['scanId']), 26)
+        self.assertEqual(len(listpartition_dict[1]['scanId']), 26)
+        self.assertEqual(sum([x['nrows'] for x in listpartition_dict[1]['scanId'].values()]), 4344)
+        self.assertEqual(sum([x['nrows'] for x in listpartition_dict[0]['scanId'].values()]), 4344)
         
 
 # Cleanup class 
@@ -887,22 +919,5 @@ def suite():
             test_partiton_subtables_evla,
             test_partiton_subtables_alma,
             test_partition_balanced,
+            test_partition_balanced_multiple_scan,
             partition_cleanup]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
