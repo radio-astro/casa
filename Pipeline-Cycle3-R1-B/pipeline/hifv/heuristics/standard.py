@@ -13,6 +13,6 @@ class Standard(api.Heuristic):
             return 'Butler-JPL-Horizons 2012'
             #return 'Butler-JPL-Horizons 2010'
         elif field.isdisjoint(self.ephemeris_fields):
-            return 'Perley-Butler 2010'
+            return 'Perley-Butler 2013'
         else:
             raise Exception, 'not all fields in same standard'
