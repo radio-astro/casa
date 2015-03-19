@@ -162,7 +162,10 @@ public:
 
   // Return the type of this calibration matrix (actual type of derived class).
   //    (Must be implemented in specializations!)
-  virtual Type type() { return VisCal::T; }
+  //
+  // 2015/03/19 (gmoellen): Use VisCal::M here, so that it is sorted 
+  //    correctly in the VisEquation relative to "B TSYS"
+  virtual Type type() { return VisCal::M; }
   
   // Return type name as string (ditto)
   virtual String typeName()     { return "SD SKY"; };

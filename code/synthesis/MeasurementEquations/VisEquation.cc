@@ -119,21 +119,6 @@ void VisEquation::setapply(PtrBlock<VisCal*>& vcin) {
 	sort.sortKey(&key(0),TpInt);
 	sort.sort(order,uInt(napp_));
       }
-
-      // Specific order handling for single dish calibration
-      // 2015/03/17 Takeshi Nakazato
-      Int head = 0;
-      Int tail = napp_ - 1;
-      for (Int i = 0; i < napp_; ++i) {
-        if (vc()[i]->typeName().contains("SDSKY")) {
-          order[head] = i;
-          head++;
-        }
-        else if (vc()[i]->typeName().contains("B TSYS")) {
-          order[tail] = i;
-          tail--;
-        }
-      }
       
       // Assign VisCals in sorted order
       if (prtlev()>2) cout << "Sorted VisCals:" << endl;
