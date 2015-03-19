@@ -154,6 +154,8 @@ private:
 
     static const String _class;
 
+    String _configureAlgorithm();
+
     // moved from ImageAnalysis
     // See if the combination of the 'region' and 'mask' ImageRegions have changed
     static Bool _haveRegionsChanged (
@@ -167,6 +169,7 @@ private:
     	const SHARED_PTR<const ImageInterface<Float> > tempIm,
     	const Record& retval
     );
+
 };
 }
 

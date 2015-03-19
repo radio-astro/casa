@@ -288,8 +288,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 	uInt width = 13;
 	Vector<Vector<String> > coords(reportAxes.size());
 	for (uInt i=0; i<reportAxes.size(); ++i) {
-		Vector<Double> indices(imShape[reportAxes[i]]);
-		indgen(indices);
+		Vector<Double> indices = indgen(imShape[reportAxes[i]], 0.0, 1.0);
 		uInt prec = reportAxes[i] == freqCol ? 9 : 5;
 		ImageUtilities::pixToWorld(
 			coords[i], csys, reportAxes[i], _axes,
@@ -358,9 +357,8 @@ Record ImageStatsCalculator::statistics(
 		mtmp = "";
 	}
 	SPIIF clone(_getImage()->cloneII());
-	Record regionRec = *_getRegion();
 	_subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *clone, regionRec, mtmp,
+		pRegionRegion, pMaskRegion, *clone, *_getRegion(), mtmp,
 		(_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
 		_getStretch()
 	);
@@ -370,20 +368,22 @@ Record ImageStatsCalculator::statistics(
 	// information to the logger.
 	// NOTE: ImageStatitics can't do this because it only gets the _subImage
 	//       not a region and the full image.
+	IPosition shape = _subImage.shape();
 	IPosition blc(_subImage.ndim(), 0);
-	IPosition trc(_subImage.shape() - 1);
+	IPosition trc(shape - 1);
 	if (pRegionRegion != 0) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-				_getImage()->coordinates(), _getImage()->shape());
+			_getImage()->coordinates(), _getImage()->shape()
+		);
 		Slicer sl = latRegion.slicer();
 		blc = sl.start();
 		trc = sl.end();
 	}
 	// for precision
 	CoordinateSystem csys = _getImage()->coordinates();
-	Bool hasDirectionCoordinate = (csys.findCoordinate(Coordinate::DIRECTION) >= 0);
+	//Bool hasDirectionCoordinate = (csys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
-	if (hasDirectionCoordinate) {
+	if (csys.hasDirectionCoordinate()) {
 		DirectionCoordinate dirCoord = csys.directionCoordinate(0);
 		Vector<String> dirUnits = dirCoord.worldAxisUnits();
 		Vector<Double> dirIncs = dirCoord.increment();
@@ -420,42 +420,7 @@ Record ImageStatsCalculator::statistics(
 	}
     // prevent the table of stats we no longer use from being logged
     _statistics->setListStats(False);
-    String myAlg;
-	switch (_algConf.algorithm) {
-	case StatisticsData::CHAUVENETCRITERION:
-		_statistics->configureChauvenet(_algConf.zs, _algConf.mi);
-		myAlg = "Chauvenet Criterion/Z-score";
-		break;
-	case StatisticsData::CLASSICAL:
-		switch (_prefClassStatsAlg) {
-		case AUTO:
-			_statistics->configureClassical();
-			break;
-		case TILED_APPLY:
-			_statistics->configureClassical(0, 0, 1, 1);
-			break;
-		case STATS_FRAMEWORK:
-			_statistics->configureClassical(1, 1, 0, 0);
-			break;
-		default:
-			ThrowCc("Unhandled classical stats type");
-		}
-		myAlg = "Classic";
-		break;
-	case StatisticsData::FITTOHALF:
-		_statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
-		myAlg = "Fit-to-Half";
-		break;
-	case StatisticsData::HINGESFENCES:
-		_statistics->configureHingesFences(_algConf.hf);
-		myAlg = "Hinges-Fences";
-		break;
-	default:
-		ThrowCc(
-			"Logic Error: Unhandled statistics algorithm "
-			+ String::toString(_algConf.algorithm)
-		);
-	}
+    String myAlg = _configureAlgorithm();
 	if (_list) {
 		*_getLog() << myOrigin << LogIO::NORMAL;
 		String algInfo = "Statistics calculated using "
@@ -522,8 +487,8 @@ Record ImageStatsCalculator::statistics(
 			for (Int i=0; i<(Int)_axes.size(); ++i) {
 				if (_axes[i] == spAxis || _axes[i] == poAxis) {
 					*_getLog() << LogIO::WARN << "At least one cursor axis contains multiple beams. "
-							<< "You should thus use care in interpreting these statistics. Flux densities "
-							<< "will not be computed." << LogIO::POST;
+						<< "You should thus use care in interpreting these statistics. Flux densities "
+						<< "will not be computed." << LogIO::POST;
 					doFlux = False;
 					break;
 				}
@@ -582,7 +547,6 @@ Record ImageStatsCalculator::statistics(
 	}
 	statsout.define("blc", blc.asVector());
 	statsout.define("blcf", blcf);
-
 	statsout.define("trc", trc.asVector());
 	statsout.define("trcf", trcf);
 	String tmp;
@@ -621,6 +585,46 @@ Record ImageStatsCalculator::statistics(
 
 void ImageStatsCalculator::setRobust(Bool b) {
     _robust = b;
+}
+
+String ImageStatsCalculator::_configureAlgorithm() {
+	String myAlg;
+	switch (_algConf.algorithm) {
+	case StatisticsData::CHAUVENETCRITERION:
+		_statistics->configureChauvenet(_algConf.zs, _algConf.mi);
+		myAlg = "Chauvenet Criterion/Z-score";
+		break;
+	case StatisticsData::CLASSICAL:
+		switch (_prefClassStatsAlg) {
+		case AUTO:
+			_statistics->configureClassical();
+			break;
+		case TILED_APPLY:
+			_statistics->configureClassical(0, 0, 1, 1);
+			break;
+		case STATS_FRAMEWORK:
+			_statistics->configureClassical(1, 1, 0, 0);
+			break;
+		default:
+			ThrowCc("Unhandled classical stats type");
+		}
+		myAlg = "Classic";
+		break;
+	case StatisticsData::FITTOHALF:
+		_statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
+		myAlg = "Fit-to-Half";
+		break;
+	case StatisticsData::HINGESFENCES:
+		_statistics->configureHingesFences(_algConf.hf);
+		myAlg = "Hinges-Fences";
+		break;
+	default:
+		ThrowCc(
+			"Logic Error: Unhandled statistics algorithm "
+			+ String::toString(_algConf.algorithm)
+		);
+	}
+	return myAlg;
 }
 
 Bool ImageStatsCalculator::_haveRegionsChanged(
