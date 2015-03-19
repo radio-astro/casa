@@ -119,7 +119,8 @@ public:
                          const SortColumns & sortColumns = SortColumns (),
                          const AveragingOptions & options = AveragingOptions (),
                          Double maxUvwDistance = 0,
-                         WeightScaling * weightScalingForAveraging = 0);
+                         WeightScaling * weightScalingForAveraging = 0,
+                         Bool isWriteable = False);
 
     AveragingParameters (const AveragingParameters & other);
 
@@ -131,6 +132,7 @@ public:
     const AveragingOptions & getOptions() const;
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
+    Bool isWriteable () const;
 
     void setAveragingInterval (Double);
     void setChunkInterval (Double);
@@ -138,6 +140,7 @@ public:
     void setOptions (const AveragingOptions &);
     void setMaxUvwDistance (Double);
     void setWeightScaling (WeightScaling *);
+    void setWritable (Bool isWritable);
 
 private:
 
@@ -150,6 +153,7 @@ private:
     Double maxUvwDistance_p;
     SortColumns sortColumns_p;
     WeightScaling * weightScaling_p;
+    Bool isWritable_p;
 
     VisBufferComponents2 allDataColumns () const;
 

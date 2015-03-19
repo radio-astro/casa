@@ -228,18 +228,18 @@ Record parseConfiguration(int argc, char **argv)
 
 			// Generate filename
 			string filename(res[0]);
-			filename += string("/data/regression/unittest/mstransform/Four_ants_3C286.ms");
+			filename += string("/data/regression/unittest/flagdata/Four_ants_3C286.ms");
 
 			// Check if file exists
-			string command = string ("ls ") + filename + string(" &> /dev/null");
+			string command = string ("cp -r ") + filename + string(" .");
 			Int exists = system(command.c_str());
 			if (exists == 0)
 			{
-				configuration.define ("inputms", filename);
+				configuration.define ("inputms", String("Four_ants_3C286.ms"));
 				configuration.define ("timeaverage", True);
-				configuration.define ("timebin", "2s");
+				configuration.define ("timebin", "4s");
 				configuration.define ("chanaverage", True);
-				configuration.define ("chanbin", 2);
+				configuration.define ("chanbin", 4);
 				configuration.define ("datacolumn", string("ALL"));
 			}
 			else
@@ -1099,6 +1099,53 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			// CAS-7315: Phase shifting
 			visBuffer->phaseCenterShift(0.1,0.1);
 			visBufferRef->phaseCenterShift(0.1,0.1);
+
+			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
+
+			IPosition shape = visBuffer->getShape();
+			Cube<Bool> flagCube(visBuffer->getShape(),False);
+			size_t nCorr = shape(0);
+			size_t nChan = shape(1);
+			size_t nRows = shape(2);
+
+			// Switch each other buffer the sign of the flag of the first block of channels
+			Bool firstChanBlockFlag;
+			if (buffer % 2)
+			{
+				firstChanBlockFlag = True;
+			}
+			else
+			{
+				firstChanBlockFlag = False;
+			}
+
+			// Fill flag cube alternating flags per blocks channels
+			for (size_t row_i =0;row_i<nRows;row_i++)
+			{
+				for (size_t chan_i =0;chan_i<nChan;chan_i++)
+				{
+					// Set the flags in each other block of channels
+					Bool chanBlockFlag;
+					if (chan_i % 2)
+					{
+						chanBlockFlag = firstChanBlockFlag;
+					}
+					else
+					{
+						chanBlockFlag = !firstChanBlockFlag;
+					}
+
+					for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+					{
+						flagCube(corr_i,chan_i,row_i) = chanBlockFlag;
+					}
+				}
+			}
+
+			visIter->writeFlag(flagCube);
+
+			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
+
 
 			visIter->next();
 			visIterRef.next();

@@ -992,7 +992,16 @@ void MSTransformManager::parseCalParams(Record &configuration)
 void MSTransformManager::open()
 {
 	// Initialize MSTransformDataHandler to open the MeasurementSet object
-	dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
+	if (bufferMode_p)
+	{
+		// In buffer mode we may have to modify the flags
+		dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Update);
+	}
+	else
+	{
+		dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Old);
+	}
+
 
 	// WARNING: Input MS is re-set at the end of a successful MSTransformDataHandler::makeMSBasicStructure,
 	// call therefore we have to use the selected MS always
@@ -4608,6 +4617,9 @@ void MSTransformManager::setIterationApproach()
 // -----------------------------------------------------------------------
 void MSTransformManager::generateIterator()
 {
+	Bool isWritable = False;
+	if (bufferMode_p) isWritable = True;
+
 	if (calibrate_p)
 	{
 
@@ -4642,7 +4654,7 @@ void MSTransformManager::generateIterator()
 			timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
 		}
 
-		vi::AveragingParameters parameters(timeBin_p, 0,vi::SortColumns(sortColumns_p, false), timeAvgOptions_p,maxuvwdistance_p);
+		vi::AveragingParameters parameters(timeBin_p, 0,vi::SortColumns(sortColumns_p, false), timeAvgOptions_p,maxuvwdistance_p,NULL,isWritable);
 
 		visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedInputMs_p));
 
@@ -4650,7 +4662,7 @@ void MSTransformManager::generateIterator()
 	}
 	else
 	{
-		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false), false, NULL, timeBin_p);
+		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false), isWritable, NULL, timeBin_p);
 	}
 
 	if (channelSelector_p != NULL)

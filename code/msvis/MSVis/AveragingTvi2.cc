@@ -2030,6 +2030,9 @@ AveragingTvi2::origin ()
 
     getVii()->origin();
 
+    startBuffer_p = -1;
+    endBuffer_p = -1;
+
     // Get the first subchunk ready.
 
     produceSubchunk ();
@@ -2059,7 +2062,14 @@ AveragingTvi2::produceSubchunk ()
     Int nBaselines = nAntennas() * (nAntennas() -1) / 2;
         // This is just a heuristic to keep output VBs from being too small
 
+    if (getVii()->more())
+    {
+        startBuffer_p = endBuffer_p + 1;
+    }
+
     while (getVii()->more()){
+
+    	endBuffer_p += 1;
 
         const VisBuffer2 * vb = getVii()->getVisBuffer();
 
@@ -2197,6 +2207,43 @@ Matrix<Float> AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> 
 	}
 
     return result;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
+{
+	getVii()->origin();
+	uInt currentBuffer = 0;
+	while (getVii()->more())
+	{
+		if ((currentBuffer >= startBuffer_p) and (currentBuffer <= endBuffer_p))
+		{
+			getVii()->writeFlag(flag);
+		}
+
+		currentBuffer += 1;
+
+		if (currentBuffer > endBuffer_p)
+		{
+			break;
+		}
+		else
+		{
+			getVii()->next();
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void AveragingTvi2::writeFlagRow (const Vector<Bool> & rowflags)
+{
+	return;
 }
 
 } // end namespace vi

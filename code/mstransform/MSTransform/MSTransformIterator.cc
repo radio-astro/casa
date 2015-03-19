@@ -142,6 +142,91 @@ void MSTransformIterator::next ()
 	return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformIterator::writeFlag (const Cube<Bool> & flag)
+{
+	// Get transformed shape
+	IPosition transformedShape = manager_p->getShape();
+
+	// Check that user is providing a cube with the right output shape
+	if (flag.shape() != transformedShape)
+	{
+		manager_p->logger_p << LogIO::WARN << LogOrigin("MSTransformIterator", __FUNCTION__)
+				<< "Shape of input cube " << flag.shape()
+				<< " does not match transformed shape " << transformedShape
+				<< LogIO::POST;
+
+		return;
+	}
+
+	// Expand channel dimension
+	if (manager_p->channelAverage_p)
+	{
+		// Get original shape
+		IPosition inputShape = manager_p->getVisBuffer()->getShape();
+		size_t nCorr = inputShape(0);
+		size_t nChan = inputShape(1);
+		size_t nRows = inputShape(2);
+
+		// Create an un-flagged flag cube matching the input shape
+		Cube<Bool> propagatedInputFlag(inputShape,False);
+
+		// Map input-output channel
+		uInt binCounts = 0;
+		uInt transformedIndex = 0;
+		Vector<uInt> inputOutputChan(nChan);
+		uInt spw = manager_p->getVisBuffer()->spectralWindows()[0];
+		uInt chanbin = manager_p->freqbinMap_p[spw];
+		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		{
+			binCounts += 1;
+
+			if (binCounts > chanbin)
+			{
+				binCounts = 1;
+				transformedIndex += 1;
+			}
+
+			inputOutputChan(chan_i) = transformedIndex;
+		}
+
+		// Propagate chan-avg flags
+		for (size_t row_i =0;row_i<nRows;row_i++)
+		{
+			for (size_t chan_i =0;chan_i<nChan;chan_i++)
+			{
+				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+				{
+					propagatedInputFlag(corr_i,chan_i,row_i) = flag(corr_i,inputOutputChan(chan_i),row_i);
+				}
+			}
+		}
+
+		manager_p->getVisIter()->writeFlag(propagatedInputFlag);
+
+	}
+	else
+	{
+		manager_p->getVisIter()->writeFlag(flag);
+	}
+
+	manager_p->selectedInputMs_p->flush();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformIterator::writeFlagRow (const Vector<Bool> & rowflags)
+{
+	manager_p->getVisIter()->writeFlag(rowflags);
+
+	return;
+}
+
 
 } //# NAMESPACE CASA - END
 

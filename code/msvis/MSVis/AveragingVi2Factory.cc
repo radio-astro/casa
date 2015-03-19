@@ -23,7 +23,8 @@ AveragingParameters::AveragingParameters ()
   averagingOptions_p (AveragingOptions ()),
   chunkInterval_p (0),
   sortColumns_p (SortColumns ()),
-  weightScaling_p (0)
+  weightScaling_p (0),
+  isWritable_p(False)
 {}
 
 AveragingParameters::AveragingParameters (Double averagingInterval,
@@ -31,13 +32,15 @@ AveragingParameters::AveragingParameters (Double averagingInterval,
                                           const SortColumns & sortColumns,
                                           const AveragingOptions & options,
                                           Double maxUvwDistance,
-                                          WeightScaling * weightScalingForAveraging)
+                                          WeightScaling * weightScalingForAveraging,
+                                          Bool isWriteable)
 : averagingInterval_p (averagingInterval),
   averagingOptions_p (options),
   chunkInterval_p (chunkInterval),
   maxUvwDistance_p (maxUvwDistance),
   sortColumns_p (sortColumns),
-  weightScaling_p (weightScalingForAveraging)
+  weightScaling_p (weightScalingForAveraging),
+  isWritable_p(isWriteable)
 {
     Assert (averagingInterval > 0);
     Assert (chunkInterval >= 0);
@@ -64,6 +67,7 @@ AveragingParameters::operator= (const AveragingParameters & other)
         maxUvwDistance_p = other.maxUvwDistance_p;
         sortColumns_p = other.sortColumns_p;
         weightScaling_p = other.weightScaling_p;
+        isWritable_p = other.isWritable_p;
 
         validate ();
     }
@@ -120,6 +124,13 @@ AveragingParameters::getWeightScaling () const
     return weightScaling_p;
 }
 
+Bool
+AveragingParameters::isWriteable () const
+{
+    return isWritable_p;
+}
+
+
 void
 AveragingParameters::setChunkInterval (Double value)
 {
@@ -162,6 +173,12 @@ void
 AveragingParameters::setWeightScaling (WeightScaling * value)
 {
     weightScaling_p = value;
+}
+
+void
+AveragingParameters::setWritable (Bool isWritable)
+{
+    isWritable_p = isWritable;
 }
 
 void
@@ -305,6 +322,7 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
     Double chunkInterval = parameters_p.getChunkInterval ();
     Double chunkRatio = ceil (chunkInterval / parameters_p.getAveragingInterval ());
     chunkInterval = parameters_p.getAveragingInterval () * chunkRatio;
+    Bool isWriteable = parameters_p.isWriteable();
 
     // Create a simple VI implementation to perform the reading.
 
@@ -313,7 +331,7 @@ AveragingVi2Factory::createVi (VisibilityIterator2 * vi2) const
                                                                   parameters_p.getSortColumns (),
                                                                   chunkInterval,
                                                                   VbPlain,
-                                                                  False);
+                                                                  isWriteable);
 
     vii2->setWeightScaling (parameters_p.getWeightScaling());
 

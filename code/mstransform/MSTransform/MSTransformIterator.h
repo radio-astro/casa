@@ -54,6 +54,9 @@ public:
     Bool more () const;
     void next ();
 
+    void writeFlag (const Cube<Bool> & flag);
+    void writeFlagRow (const Vector<Bool> & rowflags);
+
 private:
 	MSTransformManager *manager_p;
 	MSTransformBufferImpl *buffer_p;

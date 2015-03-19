@@ -65,6 +65,9 @@ public:
     void next ();
     Bool more () const;
 
+    void writeFlag (const Cube<Bool> & flag);
+    void writeFlagRow (const Vector<Bool> & rowflags);
+
     static Float weightToSigma (Float weight);
     static Float sigmaToWeight (Float sigma);
     static Vector<Float> average (const Matrix<Float> &data, const Matrix<Bool> &flags);
@@ -95,6 +98,8 @@ private:
     Bool subchunkExists_p;
     avg::VbAvg * vbAvg_p;
     WeightScaling * weightScaling_p;
+    uInt startBuffer_p;
+    uInt endBuffer_p;
 };
 
 } // end namespace vi
