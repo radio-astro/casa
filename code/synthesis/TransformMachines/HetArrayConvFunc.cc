@@ -372,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
     }
     
-    
+
     DirectionCoordinate dc=dc_p;
     //where in the image in pixels is this pointing
     Vector<Double> pixFieldDir(2);
@@ -443,12 +443,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (uInt k=0; k < ndish; ++k){
       
 	for (uInt j =k ; j < ndish; ++j){
-	  //Timer tim;
+	  Timer tim;
 	  //Matrix<Complex> screen(convSize_p, convSize_p);
 	  //screen=1.0;
 	  //pBScreen.putSlice(screen, start);
 	  //cerr << "k " << k << " shape " << pBScreen.shape() <<  " direction1 " << direction1_p << " direction2 " << direction2_p << endl;
-	  //tim.mark(); 
+	 
 	  //pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
 	 IPosition blcin(4, 0, 0, 0, 0);
@@ -456,6 +456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 for (Int kk=0; kk < nBeamChans; ++kk){
 	   blcin[3]=kk;
 	   trcin[3]=kk;
+	   //    tim.mark(); 
 	   //cerr << "Doing channel " << kk << endl;
 	   Slicer slin(blcin, trcin, Slicer::endIsLast);
 	   SubImage<Complex> subim(pBScreen, slin, True);
@@ -464,8 +465,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  //Then the other
 	   (antMath_p[j])->applyVP(subim, subim, direction2_p);
-	  //tim.show("After Apply ");
-	  //tim.mark();
+	   //tim.show("After Apply ");
+	   //tim.mark();
 	   //pB2Screen.set(Complex(1.0,0.0));
 	   SubImage<Complex> subim2(pB2Screen, slin, True);
 	   subim2.set(Complex(1.0,0.0));
@@ -476,11 +477,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	   //tim.show("After Apply2 ");
 	   //tim.mark();
-	   subim.copyData((LatticeExpr<Complex>) (iif(abs(subim)> 5e-2, subim, 0)));
-	   subim2.copyData((LatticeExpr<Complex>) (iif(abs(subim2)> 25e-4, subim2, 0)));
+	   //subim.copyData((LatticeExpr<Complex>) (iif(abs(subim)> 5e-2, subim, 0)));
+	   //subim2.copyData((LatticeExpr<Complex>) (iif(abs(subim2)> 25e-4, subim2, 0)));
 	    LatticeFFT::cfft2d(subim);
 	    LatticeFFT::cfft2d(subim2);
-
+	    //  tim.show("after ffts ");
        
 
 	 }
@@ -606,11 +607,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doneMainConv_p[actualConvIndex_p]=True;
       convFunctions_p.resize(actualConvIndex_p+1);
       convWeights_p.resize(actualConvIndex_p+1);
+      convSupportBlock_p.resize(actualConvIndex_p+1);
+    
       convFunctions_p[actualConvIndex_p]= new Array<Complex>();
       convWeights_p[actualConvIndex_p]= new Array<Complex>();
+      convSupportBlock_p[actualConvIndex_p]=new Vector<Int>();
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
-      //cerr << "new ConvSize " << newConvSize << endl;
       Int lattSize=convFuncTemp.shape()(0);
+      (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
       if(newConvSize < lattSize){
 	IPosition blc(5, (lattSize/2)-(newConvSize/2),
 		      (lattSize/2)-(newConvSize/2),0,0,0);
@@ -630,10 +634,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.get();
 	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.get();
       }
+      
 
     }
     else{
       convSize_p=max(*convSizes_p[actualConvIndex_p]);
+      convSupport_p.resize();
+      convSupport_p=*convSupportBlock_p[actualConvIndex_p];
     }
     /*
     rowMap.resize(vb.nRow());
@@ -649,8 +656,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     convSupportBlock_p.resize(actualConvIndex_p+1);
     convSizes_p.resize(actualConvIndex_p+1);
-    convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(ndishpair);
-    (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
+    //convSupportBlock_p[actualConvIndex_p]=new Vector<Int>(ndishpair);
+    //(*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
     convSizes_p[actualConvIndex_p]=new Vector<Int> (ndishpair);
     
     /*    convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p, ndishpair);
@@ -663,13 +670,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFunc_p=(*convFunctions_p[actualConvIndex_p]);
     weightConvFunc_p.resize();
     weightConvFunc_p=(*convWeights_p[actualConvIndex_p]);
+    //convSupport_p.resize();
+    //convSupport_p=(*convSupportBlock_p[actualConvIndex_p]);
     Bool delc; Bool delw;
     Double dirX=pixFieldDir(0);
     Double dirY=pixFieldDir(1);
     Complex *convstor=convFunc_p.getStorage(delc);
     Complex *weightstor=weightConvFunc_p.getStorage(delw);
     Int elconvsize=convSize_p;
-    //cerr << "SHAPES " << convFunc_p.shape() << "     " << weightConvFunc_p.shape() << endl;
 
 #pragma omp parallel default(none) firstprivate(convstor, weightstor, dirX, dirY, elconvsize, ndishpair, nBeamChans, nBeamPols)
     {
