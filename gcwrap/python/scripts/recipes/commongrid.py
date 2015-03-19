@@ -63,25 +63,26 @@ def commongrid(vis=[], spws=[], widths=[],
         for myms in vis:
             mymst.open(myms)
             grids.append([])
-            for myspw in spws:
+            for i in range(0,len(spws)):
                 if mode=='velocity':
-                    grids[len(grids)-1].append(mymst.cvelfreqs(spwids=[myspw],
+                    grids[len(grids)-1].append(mymst.cvelfreqs(spwids=[spws[i]],
                                                                mode=mode,
-                                                               width=widths[myspw],
+                                                               width=widths[i],
                                                                outframe=outframe,
                                                                veltype=veltype,
-                                                               restfreq=restfreqs[myspw])
+                                                               restfreq=restfreqs[i])
                                                )
 
                 else:
-                    grids[len(grids)-1].append(mymst.cvelfreqs(spwids=[myspw],
+                    grids[len(grids)-1].append(mymst.cvelfreqs(spwids=[spws[i]],
                                                                mode=mode,
-                                                               width=widths[myspw],
+                                                               width=widths[i],
                                                                outframe=outframe)
                                                )
         mymst.close()
     except:
         print "ERROR when determining grids."
+        print sys.exc_info()
         return False
 
 
@@ -121,12 +122,12 @@ def commongrid(vis=[], spws=[], widths=[],
         print 'restfreqs = ',; print restfreqs
 
     print 'for myms in mymss:'
-    print '    for myspw in myspws:'
-    thecommand = 'cvel(vis=myms, mode=\'frequency\', spw=str(myspw), outframe=\''+outframe+\
+    print '    for i in range(0,len(myspws)):'
+    thecommand = 'cvel(vis=myms, mode=\'frequency\', spw=myspws[i], outframe=\''+outframe+\
                   '\',\n        '+\
-                  'start=str(startfreqs[myspw])+\'Hz\', width=str(widths[myspw])+'+\
-                  '\'Hz\', nchan=nchans[myspw],\n        '+\
-                  'outputvis=\'cvel_\'+myms+\'_spw\'+str(myspw))'
+                  'start=str(startfreqs[i])+\'Hz\', width=str(widths[i])+'+\
+                  '\'Hz\', nchan=nchans[i],\n        '+\
+                  'outputvis=\'cvel_\'+myms+\'_spw\'+str(myspws[i]))'
     print '      '+thecommand
 
     rval = {}
