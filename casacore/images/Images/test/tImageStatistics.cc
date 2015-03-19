@@ -141,8 +141,6 @@ int main() {
 					else {
 						AlwaysAssert(allTrue(myStats == exp), AipsError);
 					}
-
-
 				}
 			}
     	}
@@ -170,7 +168,7 @@ int main() {
 			AlwaysAssert(
 				stats.getConvertedStatistic (flux, LatticeStatsBase::FLUX), AipsError
 			);
-			AlwaysAssert(near(*flux.begin(), 529348.9), AipsError);
+			AlwaysAssert(near(*flux.begin(), 111724.9893), AipsError);
 			Vector<Int> axes(2, 0);
 			axes[1] = 1;
 			stats.setAxes(axes);
@@ -195,7 +193,7 @@ int main() {
 			AlwaysAssert(
 				stats.getConvertedStatistic (flux, LatticeStatsBase::FLUX), AipsError
 			);
-			AlwaysAssert(near(*flux.begin(), 1.61946e10), AipsError);
+			AlwaysAssert(near(*flux.begin(), 3.4180507464507e9), AipsError);
 			axes = Vector<Int>(2, 0);
 			axes[1] = 1;
 			stats.setAxes(axes);
