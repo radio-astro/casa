@@ -44,7 +44,7 @@ def commongrid(vis=[], spws=[], widths=[],
         for i in range(0,len(spws)):
             widthlist.append(widths)
         widths = widthlist
-        print "Expanding widths parameter to ", widths
+        print "# Expanding widths parameter to ", widths
 
     if len(spws)!=len(widths):
         print "ERROR: the lists in parameters spws and widths must have the same length"
@@ -54,8 +54,6 @@ def commongrid(vis=[], spws=[], widths=[],
         print "ERROR: the lists in parameters spws and restfreqs must have the same length"
         return False
 
-    print 'Using outframe = ', outframe
-    
     mymst = mstool()
     grids = []
 
@@ -118,8 +116,6 @@ def commongrid(vis=[], spws=[], widths=[],
     print 'startfreqs = ',; print startfreqs
     print 'widths = ',; print widths
     print 'nchans = ',; print nchans
-    if (mode=='velocity'):
-        print 'restfreqs = ',; print restfreqs
 
     print 'for myms in mymss:'
     print '    for i in range(0,len(myspws)):'
@@ -128,7 +124,7 @@ def commongrid(vis=[], spws=[], widths=[],
                   'start=str(startfreqs[i])+\'Hz\', width=str(widths[i])+'+\
                   '\'Hz\', nchan=nchans[i],\n        '+\
                   'outputvis=\'cvel_\'+myms+\'_spw\'+str(myspws[i]))'
-    print '      '+thecommand
+    print '        '+thecommand
 
     rval = {}
     rval['outframe'] = outframe
