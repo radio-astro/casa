@@ -472,6 +472,53 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #*** check if baseline is correctlt fit and subtracted ***
         #***
 
+        tb.open(outfile)
+        sum_pol0=0
+        sum_pol1=0
+        sum_pol0_=0
+        sum_pol1_=0
+        
+        for i in range(8191):
+            sum_pol0  += tb.getvarcol('FLOAT_DATA')['r1'][0][i][0]
+            sum_pol1  += tb.getvarcol('FLOAT_DATA')['r1'][1][i][0]
+            sum_pol0_ += (tb.getvarcol('FLOAT_DATA')['r1'][0][i][0])**2
+            sum_pol1_ += (tb.getvarcol('FLOAT_DATA')['r1'][1][i][0])**2
+           
+        average_sum_pol0 = sum_pol0/8191.0
+        average_sum_pol1 = sum_pol1/8191.0
+
+        average_sum_pol0_ = sum_pol0_/8191.0
+        average_sum_pol1_ = sum_pol1_/8191.0
+        sigma_pol0= (average_sum_pol0_ - average_sum_pol0)**0.5
+        sigma_pol1= (average_sum_pol1_ - average_sum_pol1)**0.5
+        tb.close()
+
+
+        tb.open(infile)
+        sum_orig_pol0=0
+        sum_orig_pol1=0
+        sum_orig_pol0_=0 
+        sum_orig_pol1_=0 
+        
+        for i in range(8191):
+            sum_orig_pol0  += tb.getvarcol('FLOAT_DATA')['r1'][0][i][0]
+            sum_orig_pol1  += tb.getvarcol('FLOAT_DATA')['r1'][1][i][0]
+            sum_orig_pol0_ += (tb.getvarcol('FLOAT_DATA')['r1'][0][i][0])**2
+            sum_orig_pol1_ += (tb.getvarcol('FLOAT_DATA')['r1'][1][i][0])**2
+                 
+        average_sum_orig_pol0 = sum_orig_pol0/8191.0
+        average_sum_orig_pol1 = sum_orig_pol1/8191.0
+        average_sum_orig_pol0_ = sum_orig_pol0_/8191.0
+        average_sum_orig_pol1_ = sum_orig_pol1_/8191.0
+        sigma_orig_pol0= (average_sum_orig_pol0_ - average_sum_orig_pol0)**0.5
+        sigma_orig_pol1= (average_sum_orig_pol1_ - average_sum_orig_pol1)**0.5
+        tb.close()
+
+        print 'Standard deviation of the original data (pol0)', sigma_orig_pol0
+        print 'Standard deviation of the data (pol0) after cspline', sigma_pol0
+        print 'Standard deviation of the original data (pol1)', sigma_orig_pol1
+        print 'Standard deviation of the original data (pol1) after cspline', sigma_pol1
+
     def test050( self ):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
         infile = self.infile
