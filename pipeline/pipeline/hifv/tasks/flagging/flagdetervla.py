@@ -66,6 +66,7 @@ from __future__ import absolute_import
 import os
 import types
 import string
+import math
 
 import flaghelper
 
