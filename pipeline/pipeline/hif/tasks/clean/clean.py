@@ -3,6 +3,7 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.pipelineqa as pipelineqa
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -157,15 +158,18 @@ class Clean(cleanbase.CleanBase):
                 elif inputs.hm_cleaning == 'rms':
                     threshold = '%sJy' % (inputs.tlimit * noise_rms)
                 sequence_manager = ImageCentreThresholdSequence(
-                  imagermode=inputs.imagermode, threshold=threshold)
+                  imagermode=inputs.imagermode, threshold=threshold,
+                  sensitivity=noise_rms)
 
             elif inputs.hm_masking == 'psfiter':
                 sequence_manager = IterativeSequence(
-                  maxncleans=inputs.maxncleans)
+                  maxncleans=inputs.maxncleans,
+                  sensitivity=noise_rms)
 
             elif inputs.hm_masking == 'psfiter2':
                 sequence_manager = IterativeSequence2(
-                  maxncleans=inputs.maxncleans)
+                  maxncleans=inputs.maxncleans,
+                  sensitivity=noise_rms)
     
             result = self._do_iterative_imaging(
               sequence_manager=sequence_manager, result=result)
@@ -179,6 +183,11 @@ class Clean(cleanbase.CleanBase):
 	return result
 
     def analyse(self, result):
+
+        # Perform QA here if this is a sub-task
+        context = self.inputs.context
+        pipelineqa.registry.do_qa(context, result)
+
         return result
 
     def _do_iterative_imaging (self, sequence_manager, result):
@@ -188,7 +197,7 @@ class Clean(cleanbase.CleanBase):
         LOG.info('Compute the dirty image')
         iter = 0
         result = self._do_clean (iter=iter, stokes='I', cleanmask='',
-          niter=0, threshold='0.0mJy', result=None) 
+          niter=0, threshold='0.0mJy', sensitivity=sequence_manager.sensitivity, result=None) 
 
 	# Give the result to the sequence_manager for analysis
 	model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
@@ -235,7 +244,7 @@ class Clean(cleanbase.CleanBase):
 
 	    result = self._do_clean (iter=iter, stokes='I',
               cleanmask=new_cleanmask, niter=seq_result.niter, 
-              threshold=threshold, result=result) 
+              threshold=threshold, sensitivity=sequence_manager.sensitivity, result=result) 
 
             # Give the result to the clean 'sequencer'
 	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
@@ -244,6 +253,9 @@ class Clean(cleanbase.CleanBase):
 	      psf=result.psf, model= result.model, restored=result.image, residual= \
 	      result.residual, flux=result.flux, cleanmask=new_cleanmask, \
 	      threshold=seq_result.threshold)
+
+            # Keep RMS for QA
+            result.set_rms(non_cleaned_rms)
 
 	    LOG.info('Clean image iter %s stats' % iter)
 	    LOG.info('    Clean rms %s', cleaned_rms)
@@ -263,7 +275,7 @@ class Clean(cleanbase.CleanBase):
 	try:
             LOG.info("Compute the 'noise' image")
             result = self._do_clean (iter=0, stokes=stokes, 
-              cleanmask='', niter=0, threshold='0.0mJy', result=None)
+              cleanmask='', niter=0, threshold='0.0mJy', sensitivity=0.0, result=None)
 	    if result.empty():
                 raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image' % (
                   inputs.intent, inputs.field, inputs.spw, stokes)
@@ -287,7 +299,7 @@ class Clean(cleanbase.CleanBase):
         return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
           residual_min, rms2d, image_max 
 
-    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, result):
+    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, sensitivity, result):
         """Do basic cleaning.
         """
 
@@ -320,6 +332,7 @@ class Clean(cleanbase.CleanBase):
 	    mask=cleanmask,
 	    niter=niter,
 	    threshold=threshold,
+            sensitivity=sensitivity,
 	    result=result)
 	clean_task = cleanbase.CleanBase(clean_inputs)
 

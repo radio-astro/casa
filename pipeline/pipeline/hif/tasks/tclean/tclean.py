@@ -6,6 +6,7 @@ from casac import casac
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.pipelineqa as pipelineqa
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -147,13 +148,13 @@ class Tclean(cleanbase.CleanBase):
             #model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
             #  residual_min, rms2d, image_max = \
             #  self._do_noise_estimate(stokes=inputs.noiseimage)
-            #noise_rms = non_cleaned_rms
+            #sensitivity = non_cleaned_rms
             #LOG.info('Noise rms estimate from %s image is %s' % 
-            #  (inputs.noiseimage, noise_rms))
+            #  (inputs.noiseimage, sensitivity))
 
             # Get a noise estimate from the CASA sensitivity calculator
-            noise_rms = self._do_sensitivity()
-            LOG.info('Sensitivity estimate from CASA %s' % (noise_rms))
+            sensitivity = self._do_sensitivity()
+            LOG.info('Sensitivity estimate from CASA %s' % (sensitivity))
 
 	    # Choose cleaning method.
             if inputs.hm_masking == 'centralquarter':
@@ -162,17 +163,20 @@ class Tclean(cleanbase.CleanBase):
                 elif inputs.hm_cleaning == 'sensitivity':
                     raise Exception, 'sensitivity threshold not yet implemented'
                 elif inputs.hm_cleaning == 'rms':
-                    threshold = '%sJy' % (inputs.tlimit * noise_rms)
+                    threshold = '%sJy' % (inputs.tlimit * sensitivity)
                 sequence_manager = ImageCentreThresholdSequence(
-                  gridmode=inputs.gridmode, threshold=threshold)
+                  gridmode=inputs.gridmode, threshold=threshold,
+                  sensitivity=sensitivity)
 
             elif inputs.hm_masking == 'psfiter':
                 sequence_manager = IterativeSequence(
-                  maxncleans=inputs.maxncleans)
+                  maxncleans=inputs.maxncleans,
+                  sensitivity=sensitivity)
 
             elif inputs.hm_masking == 'psfiter2':
                 sequence_manager = IterativeSequence2(
-                  maxncleans=inputs.maxncleans)
+                  maxncleans=inputs.maxncleans,
+                  sensitivity=sensitivity)
     
             result = self._do_iterative_imaging(
               sequence_manager=sequence_manager, result=result)
@@ -186,6 +190,11 @@ class Tclean(cleanbase.CleanBase):
 	return result
 
     def analyse(self, result):
+
+        # Perform QA here if this is a sub-task
+        context = self.inputs.context
+        pipelineqa.registry.do_qa(context, result)
+
         return result
 
     def _do_iterative_imaging (self, sequence_manager, result):
@@ -195,7 +204,7 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('Compute the dirty image')
         iter = 0
         result = self._do_clean (iter=iter, stokes='I', cleanmask='',
-          niter=0, threshold='0.0mJy', result=None) 
+          niter=0, threshold='0.0mJy', sensitivity=sequence_manager.sensitivity, result=None) 
 
 	# Give the result to the sequence_manager for analysis
 	model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
@@ -242,7 +251,7 @@ class Tclean(cleanbase.CleanBase):
 
 	    result = self._do_clean (iter=iter, stokes='I',
               cleanmask=new_cleanmask, niter=seq_result.niter, 
-              threshold=threshold, result=result) 
+              threshold=threshold, sensitivity=sequence_manager.sensitivity, result=result) 
 
             # Give the result to the clean 'sequencer'
 	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
@@ -251,6 +260,9 @@ class Tclean(cleanbase.CleanBase):
 	      psf=result.psf, model= result.model, restored=result.image, residual= \
 	      result.residual, flux=result.flux, cleanmask=new_cleanmask, \
 	      threshold=seq_result.threshold)
+
+            # Keep RMS for QA
+            result.set_rms(non_cleaned_rms)
 
 	    LOG.info('Clean image iter %s stats' % iter)
 	    LOG.info('    Clean rms %s', cleaned_rms)
@@ -270,7 +282,7 @@ class Tclean(cleanbase.CleanBase):
 	try:
             LOG.info("Compute the 'noise' image")
             result = self._do_clean (iter=0, stokes=stokes, 
-              cleanmask='', niter=0, threshold='0.0mJy', result=None)
+              cleanmask='', niter=0, threshold='0.0mJy', sensitivity=0.0, result=None)
 	    if result.empty():
                 raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image' % (
                   inputs.intent, inputs.field, inputs.spw, stokes)
@@ -373,7 +385,7 @@ class Tclean(cleanbase.CleanBase):
 
         return sensitivity
 
-    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, result):
+    def _do_clean(self, iter, stokes, cleanmask, niter, threshold, sensitivity, result):
         """Do basic cleaning.
         """
 
@@ -407,6 +419,7 @@ class Tclean(cleanbase.CleanBase):
 	    mask=cleanmask,
 	    niter=niter,
 	    threshold=threshold,
+	    sensitivity=sensitivity,
 	    result=result)
 	clean_task = cleanbase.CleanBase(clean_inputs)
 

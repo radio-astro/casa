@@ -10,12 +10,13 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageCentreThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, imagermode, threshold='0.0mJy', niter=1000): 
+    def __init__(self, imagermode, threshold='0.0mJy', sensitivity=0.0, niter=1000): 
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
         self.imagermode = imagermode
 	self.threshold = threshold
+	self.sensitivity = sensitivity
 	self.niter = niter
         self.iter = None
         self.result = BoxResult()
@@ -49,11 +50,13 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
           
             self.result.cleanmask = new_cleanmask
             self.result.threshold = self.threshold
+            self.result.sensitivity = self.sensitivity
             self.result.niter =  self.niter
             self.result.iterating = True
 	else:
             self.result.cleanmask = ''
             self.result.threshold = '0.0mJy'
+            self.result.sensitivity = 0.0
             self.result.niter =  0
             self.result.iterating = False
 

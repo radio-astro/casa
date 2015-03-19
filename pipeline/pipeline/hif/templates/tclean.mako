@@ -3,6 +3,7 @@ import os.path
 import pipeline.infrastructure.casatools as casatools
 import pipeline.hif.tasks.clean.renderer as clean_renderer
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 columns = {'cleanmask' : 'Clean Mask',
 		   'image' : 'Image',
@@ -22,7 +23,7 @@ def get_plot(plots, field, spw, i, colname):
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
 
-<%block name="title">Clean/CleanList/MakeImages</%block>
+<%block name="title">Tclean/MakeImages</%block>
 
 <h2>Image Details</h2>
 
@@ -52,9 +53,9 @@ def get_plot(plots, field, spw, i, colname):
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="7">${field}</td>
-                                <td rowspan="7">${spw}</td>
-                                <td rowspan="7">${pol}</td>
+                                <td rowspan="8">${field}</td>
+                                <td rowspan="8">${spw}</td>
+                                <td rowspan="8">${pol}</td>
 								<th>frequency</th>
 								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
                                 <% 
@@ -70,7 +71,7 @@ def get_plot(plots, field, spw, i, colname):
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
                                     %>
-                                <td rowspan="6">
+                                <td rowspan="7">
 										<a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
 										  <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 										       title="Iteration ${final_iter}: image"
@@ -126,6 +127,14 @@ def get_plot(plots, field, spw, i, colname):
                                 %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
                                             <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
                                                 info_dict[(field,str(spw),pol,'width')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                        <th>score</th>
+                                %if info_dict.get((field,str(spw),pol,'score')) is not None:
+                                            <td><span class="badge ${rendererutils.get_badge_class(info_dict[(field,str(spw),pol,'score')])}">${'%0.2f' % (info_dict[(field,str(spw),pol,'score')].score)}</span></td>
                                 %else:
                                             <td>-</td>
                                 %endif

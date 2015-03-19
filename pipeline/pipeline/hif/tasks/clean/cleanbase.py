@@ -27,7 +27,7 @@ class CleanBaseInputs(basetask.StandardInputs):
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
 	restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-	result=None):
+	sensitivity=None, result=None):
 
         self._init_properties(vars())
 
@@ -264,6 +264,16 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._threshold = value
 
     @property
+    def sensitivity(self):
+        if self._sensitivity is None:
+            return 0.0
+        return self._sensitivity
+
+    @sensitivity.setter
+    def sensitivity(self, value):
+        self._sensitivity = value
+
+    @property
     def niter(self):
         if self._niter is None:
             return 500
@@ -489,6 +499,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             set_miscinfo(name=inputs.mask, spw=inputs.spw, field=inputs.field,
 	        type='cleanmask', iter=iter)
         result.set_cleanmask(iter=iter, image=inputs.mask)
+
+        # Keep threshold and sensitivity for QA
+        result.set_threshold(inputs.threshold)
+        result.set_sensitivity(inputs.sensitivity)
 
         return result
 

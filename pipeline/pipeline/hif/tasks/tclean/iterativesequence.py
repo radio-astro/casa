@@ -10,10 +10,11 @@ LOG = infrastructure.get_logger(__name__)
 
 class IterativeSequence(BaseCleanSequence):
 
-    def __init__(self, maxncleans):
+    def __init__(self, maxncleans, sensitivity):
         BaseCleanSequence.__init__(self)
 
 	self.maxncleans = maxncleans
+	self.sensitivity = sensitivity
 
         self.sidelobe_ratio = None
         self.psf = None

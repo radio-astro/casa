@@ -14,6 +14,7 @@ class BoxResult(basetask.Results):
     def __init__(self):
         super(BoxResult, self).__init__()        
         self.threshold = None
+        self.sensitivity = None
         self.cleanmask = None
         self.island_peaks = None
 
@@ -36,14 +37,13 @@ class TcleanResult(basetask.Results):
         self._model = None
         self._flux = None
         self.iterations = collections.defaultdict(dict)
+        self._sensitivity = 0.0
+        self._threshold = 0.0
+        self._rms = 0.0
 
     def empty(self):
         return not(self._psf or self._model or self._flux or 
           self.iterations!={})
-
-    @property
-    def flux(self):
-        return self._flux
 
     # this is used to generate a pipeline product, not used by weblog
     @property
@@ -54,6 +54,10 @@ class TcleanResult(basetask.Results):
         imageplot = displays.sky.plotfilename(image=image,
           reportdir=self.plotdir)
         return imageplot
+
+    @property
+    def flux(self):
+        return self._flux
 
     def set_flux(self, image):
         if self._flux is None:
@@ -114,6 +118,27 @@ class TcleanResult(basetask.Results):
 
     def set_residual(self, iter, image):
         self.iterations[iter]['residual'] = image
+
+    @property
+    def threshold(self):
+        return self._threshold
+
+    def set_threshold(self, threshold):
+        self._threshold = threshold
+
+    @property
+    def sensitivity(self):
+        return self._sensitivity
+
+    def set_sensitivity(self, sensitivity):
+        self._sensitivity = sensitivity
+
+    @property
+    def rms(self):
+        return self._rms
+
+    def set_rms(self, rms):
+        self._rms = rms
 
     def __repr__(self):
         repr = 'Tclean:\n'
