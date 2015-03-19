@@ -9337,8 +9337,7 @@ statistics that you can plot:
 
 \item {\stfaf sum} - the sum of the pixel values: $\sum I_i$
 
-\item {\stfaf flux} - the integrated flux density if the beam is defined and
-the brightness units are $Jy/beam$
+\item {\stfaf flux} - flux or flux density, see below for details
 
 \item {\stfaf sumsq} - the sum of the squares of the pixel values: $\sum I_i^2$
 
@@ -9504,6 +9503,41 @@ Several types of statistical algorithms are supported:
   6.0      253,398,672
   6.5    6,225,098,696
   7.0  195,341,107,722
+  
+NOTES ON FLUX DENSITIES AND FLUXES
+
+Fluxes and flux densities are not computed if any of the following conditions is met:
+
+1. The image does not have a direction coordinate
+2. The image does not have a intensity-like brightness unit. Examples of such units
+   are Jy/beam (in which case the image must also have a beam) and K.
+3. There are no direction axes in the cursor axes that are used.
+4. If the (specified region of the) image has a non-degenerate spectral axis,
+   and the image has multiple beams or a tablular spectral axis (axis with varying
+   increments)
+5. Any axis that is not a direction nor a spectral axis that is included in the cursor
+   axes is not degenerate within in the specified region
+
+Note that condition 4 may be removed in the future.
+
+In cases where none of the above conditions is met, the flux density(ies) (intensities
+integrated over direction planes) will be computed if any of the following conditions
+are met:
+
+1. The image has no spectral coordinate
+2. The cursor axes do not include the spectral axis
+3. The spectral axis in the chosen region is degenerate
+
+In the case where there is a nondegenerate spectral axis that is included in the cursor
+axes, the flux (flux density integrated over spectral planes) will be computed. In this
+case, the spectral portion of the flux unit will be the velocity unit of the spectral
+coordinate if it has one (eg, if the brightness unit is Jy/beam and the velocity unit is
+km/s, the flux will have units of Jy.km/s). If not, the spectral portion of the flux unit
+will be the frequency unit of the spectral axis (eg, if the brightness unit is K and the
+frequency unit is Hz, the resulting flux unit will be K.arcsec2.Hz). 
+
+In both cases of flux density or flux being computed, the resulting numerical value is
+assigned to the "flux" key in the output dictionary.
 
 </description>
 
