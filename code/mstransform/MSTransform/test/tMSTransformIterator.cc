@@ -421,7 +421,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
 	// Access Transformed SPW sub-tables
-	MSSpectralWindow transformedSpwTable =  visIter->ms().spectralWindow();
+	MSField fieldSubTable = visIter->ms().field();
+	MSFieldColumns fieldeCols(fieldSubTable);
+	Vector<String> sourceNames = fieldeCols.name().getColumn();
 
 	visIter->originChunks();
 	visIterRef.originChunks();
@@ -559,7 +561,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			else
 			{
 				cout << GREEN;
-				cout 	<< "=>fieldId match"<< endl;
+				cout << "=>fieldId match"<< endl;
+				cout << "Source is " << sourceNames(visBuffer->fieldId()[0]).c_str() << endl;
 			}
 
 
