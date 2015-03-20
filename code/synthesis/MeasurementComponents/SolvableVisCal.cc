@@ -2857,7 +2857,7 @@ void SolvableVisCal::calcPar() {
   else {
     if (parType()==VisCalEnum::COMPLEX)
       // Call w/ fiducial freq for phase-delay correction
-      // TBD: improve freq spec
+      // TBD: improve freq spec, e.g., use spw center freq rather than _selected_ center
       newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
     else
       // No freq info at all
@@ -3069,10 +3069,11 @@ void SolvableVisCal::createMemCalTable() {
 	calwid.resize(1);
 	calres.resize(1);
 	caleff.resize(1);
-	calfreq(0)=mean(chfr(Slice(startChan(),nChanPar())));
-	calwid(0)=sum(chwid(Slice(startChan(),nChanPar())));
-	calres(0)=sum(chres(Slice(startChan(),nChanPar())));
-	caleff(0)=sum(cheff(Slice(startChan(),nChanPar())));
+	// Use simple mean freq, and aggregate bandwidth
+	calfreq(0)=mean(chfr);
+	calwid(0)=sum(chwid);
+	calres(0)=sum(chres);
+	caleff(0)=sum(cheff);
       }
     }
     //    cout << "nchan=" << nchan << " calfreq.nelements() = " << calfreq.nelements() << " " << calfreq << endl;
@@ -3088,6 +3089,76 @@ void SolvableVisCal::createMemCalTable() {
     }
     else
       ncc.spectralWindow().flagRow().put(ispw,True);
+  }
+
+  // When combining in spw, further revise freq info to average over combined spws
+  //  Only for freqDepPar()=False types, for now (nothing bandpass-like)
+  //  NB: Currently, this will only handle a single aggregation..., e.g., not CAS-5687
+  if (combspw() && !freqDepPar()) {
+
+    try {
+
+    Matrix<Double> chanFreq,chanWidth,effectiveBW;
+    ncc.spectralWindow().chanFreq().getColumn(chanFreq,True);
+    ncc.spectralWindow().chanWidth().getColumn(chanWidth,True);
+    ncc.spectralWindow().effectiveBW().getColumn(effectiveBW,True);
+
+    // Insist on a single channel!   (NO BANDPASS-LIKE TYPES!)
+    Int nChan=chanFreq.shape()[0];
+    AlwaysAssert(nChan==1,AipsError);
+
+    Vector<Bool> spwmask=(spwMap()>-1);
+    Int outSpw=Vector<Int>(spwMap()(spwmask).getCompressedArray())[0];
+
+    // If only one chan, then the chanWidth should span the the whole spw range
+    //  NB: this is done before the chanFreq are revised, below
+    //  NB: Disabled for now, since centroid freq +/- wid/2 doesn't actually
+    //      cover the input spw range, in general....more thought necessary here
+    //      So keep the single spw width, for now, for which there remains
+    //      a reasonable argument (the phase correction is ~appropriate over this
+    //      limited range without further refinement...)  (the width isn't used
+    //      decisively anywhere yet, in any case)
+    if (False) {
+      
+      Vector<Double> f(chanFreq.row(0));
+      Vector<Double> chW(chanWidth.row(0));
+      Vector<Double> flo=f-chW/2.0;
+      Vector<Double> fhi=f+chW/2.0;
+
+      if (allGT(fhi,flo))
+	// USB  (positive result)
+	chW(outSpw)=max(fhi(spwmask))-min(flo(spwmask));
+      else
+	// LSB  (negative result)
+	chW(outSpw)=min(fhi(spwmask))-max(flo(spwmask));
+
+    }
+
+    // Assumes single channel!
+    Vector<Double> f(chanFreq.row(0));
+    Vector<Double> ebw(effectiveBW.row(0));
+    Double meanfreq=sum(f(spwmask)*ebw(spwmask));
+    Double sumebw=sum(ebw(spwmask));
+    meanfreq/=sumebw;
+    
+    f(outSpw)=meanfreq;
+    ebw(outSpw)=sumebw;
+
+    /*
+    cout << "spwmask = " << boolalpha << spwmask << endl;
+    cout << "chanFreq(:,outSpw)    = " << chanFreq.column(outSpw) << endl;
+    cout << "chanWidth(:,outSpw)   = " << chanWidth.column(outSpw) << endl;
+    cout << "effectiveBW(:,outSpw) = " << effectiveBW.column(outSpw) << endl;
+    */
+
+
+    ncc.spectralWindow().chanFreq().putColumn(chanFreq);
+    ncc.spectralWindow().chanWidth().putColumn(chanWidth);
+    ncc.spectralWindow().effectiveBW().putColumn(effectiveBW);
+    }
+    catch (...) {
+      throw(AipsError("Error calculating solution frequencies w/ combine='spw'"));
+    }
   }
 
 }
