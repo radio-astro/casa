@@ -451,24 +451,17 @@ void ImageStatistics<T>::displayStats(
 		Array<Double> beamArea;
 		String msg;
 		Bool hasBeam = _getBeamArea(beamArea, msg);
-		String unit;
-		if (! hasBeam) {
-			unit = pInImage_p->units().getName();
-			unit.downcase();
-		}
-		if (hasBeam || ! unit.contains("/beam")) {
-			Bool isFluxDensity;
-			Quantum<AccumType> qFlux = _flux(
-				isFluxDensity, sum, hasBeam ? *(beamArea.begin()) : 0
-			);
-			AccumType val = qFlux.getValue();
-			String unit = qFlux.getFullUnit().getName();
-			oss << "         -- flux" << (isFluxDensity ? " density" : "")
-				<< " [flux]:" << (isFluxDensity ? "" : "        ")
-				<< "                    " << val << " " << unit;
-			messages.push_back(oss.str());
-			oss.str("");
-		}
+		Bool isFluxDensity;
+		Quantum<AccumType> qFlux = _flux(
+			isFluxDensity, sum, hasBeam ? *(beamArea.begin()) : 0
+		);
+		AccumType val = qFlux.getValue();
+		String unit = qFlux.getFullUnit().getName();
+		oss << "         -- flux" << (isFluxDensity ? " density" : "")
+			<< " [flux]:" << (isFluxDensity ? "" : "        ")
+			<< "                    " << val << " " << unit;
+		messages.push_back(oss.str());
+		oss.str("");
 	}
 	if (LattStatsSpecialize::hasSomePoints(nPts)) {
 		oss << "         -- number of points [npts]:                " << nPts;
@@ -584,6 +577,7 @@ template <class T> Quantum<typename ImageStatistics<T>::AccumType> ImageStatisti
 	isFluxDensity = True;
 	Quantum<AccumType> flux(0, "");
 	String sbunit = pInImage_p->units().getName();
+	Bool intensityBeamBased = False;
 	if (sbunit.contains("K")) {
 		String areaUnit = "arcsec2";
 		flux.setUnit(sbunit + "." + areaUnit);
@@ -594,12 +588,16 @@ template <class T> Quantum<typename ImageStatistics<T>::AccumType> ImageStatisti
 	else {
 		flux.setUnit("Jy");
 		if (sbunit.contains("/beam")) {
+			intensityBeamBased = True;
 			uInt iBeam = sbunit.find("/beam");
-			flux.setValue(sum/beamAreaInPixels);
+			if (beamAreaInPixels > 0) {
+				flux.setValue(sum/beamAreaInPixels);
+			}
 			flux.setUnit(sbunit.substr(0, iBeam) + sbunit.substr(iBeam+5));
 		}
 	}
 	if (pInImage_p->coordinates().hasSpectralAxis()) {
+
 		Int specAxis = pInImage_p->coordinates().spectralAxisNumber(False);
 		Vector<Int>::const_iterator myend = cursorAxes_p.end();
 		if (
@@ -607,6 +605,20 @@ template <class T> Quantum<typename ImageStatistics<T>::AccumType> ImageStatisti
 			&& std::find(cursorAxes_p.begin(), myend, specAxis) != myend
 		) {
 			// integrate over nondegenerate spectral axis
+			if (intensityBeamBased && pInImage_p->imageInfo().hasMultipleBeams()) {
+				// the resolution varies by channel, so the previously computed
+				// value based on the passed in sum is bogus because the beam area
+				// varies
+				vector<Int> newCursorAxes = cursorAxes_p.tovector();
+				newCursorAxes.erase(
+					std::find(newCursorAxes.begin(), newCursorAxes.end(), specAxis)
+				);
+				ImageStatistics<T> newStats(*this);
+				newStats.setAxes(Vector<Int>(newCursorAxes));
+				Array<AccumType> fluxDensities;
+				newStats.getStatistic(fluxDensities, LatticeStatsBase::FLUX);
+				flux.setValue(casa::sum(fluxDensities));
+			}
 			const SpectralCoordinate& spCoord = pInImage_p->coordinates().spectralCoordinate();
 			Quantity inc(0, "");
 			if (spCoord.restFrequency() > 0) {
@@ -665,7 +677,7 @@ template <class T> Bool ImageStatistics<T>::_computeFlux(
 	if (! gotBeamArea) {
 		String unit = pInImage_p->units().getName();
 		unit.downcase();
-		if (unit.contains("/beam")) {
+		if (unit.contains("/beam") && ! pInImage_p->imageInfo().hasMultipleBeams()) {
 			os_p << LogIO::WARN << "Unable to compute flux density: "
 				<< msg << LogIO::POST;
 			return False;
@@ -762,14 +774,11 @@ template <class T> Bool ImageStatistics<T>::_canDoFlux() const {
 		if (
 			shape[specAxis] > 1
 			&& std::find(curBegin, curEnd, specAxis) != curEnd
-			&& (
-				pInImage_p->imageInfo().hasMultipleBeams()
-				|| csys.spectralCoordinate().isTabular()
-			)
+			&& csys.spectralCoordinate().isTabular()
 		) {
-			// image has multiple beams or spectral axis is tabular,
+			// spectral axis is tabular,
 			// spectral axis is nondegenerate and a cursor axis
-			// FIXME the mutliple beams and tabular constraints can
+			// FIXME the tabular constraints can
 			// be removed, but that will take a bit of work
 			return False;
 		}

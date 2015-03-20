@@ -211,11 +211,45 @@ int main() {
 				);
 				AlwaysAssert(near(statVals[LatticeStatsBase::FLUX], expFlux), AipsError);
 			}
+			Vector<GaussianBeam> beams(20);
+			Vector<GaussianBeam>::iterator bIter = beams.begin();
+			Vector<GaussianBeam>::iterator bEnd = beams.end();
+			uInt count = 0;
+			while (bIter != bEnd) {
+				*bIter = GaussianBeam(
+					Quantity(3 + count, "arcmin"),
+					Quantity(2.5, "arcmin"),
+					Quantity(30, "deg")
+		    	);
+				++count;
+				++bIter;
+			}
+			ImageBeamSet beamSet(beams);
+			ImageInfo ii = tim.imageInfo();
+			ii.setBeams(beamSet);
+    		tim.setUnits("Jy/beam");
+			tim.setImageInfo(ii);
+			stats = ImageStatistics<Float> (tim);
+			stats.setAxes(indgen(2, 0, 1));
+			Array<Float> fluxDensities;
+			AlwaysAssert(
+				stats.getConvertedStatistic (
+					fluxDensities, LatticeStatsBase::FLUX
+				), AipsError
+			);
+			cout << "flux densities " << fluxDensities << endl;
+			// 0.2110611 is channel width in km/s
+			Double expected = sum(fluxDensities) * 0.2110611;
+			stats.setAxes(Vector<Int>());
+			AlwaysAssert(
+				stats.getConvertedStatistic(flux, LatticeStatsBase::FLUX),
+				AipsError
+			);
+			AlwaysAssert(near(*flux.begin(), expected), AipsError);
     	}
         cout << "ok" << endl;
     }
-    catch (AipsError x) {
-
+    catch (const AipsError& x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
         return 1;
     } 
