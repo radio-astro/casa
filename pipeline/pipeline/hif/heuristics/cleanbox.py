@@ -708,11 +708,7 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
         LOG.todo('Cannot use dirname in mask')
         clean_rms = None
         if cleanmask is not None and os.path.exists(cleanmask):
-            if flux is not None and os.path.exists(flux):
-                statsmask = '"%s" > 0.1 && "%s" > 0.1' % (
-                  os.path.basename(cleanmask), os.path.basename(flux))
-            else:
-                statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
+            statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
             resid_clean_stats = image.statistics(mask=statsmask, 
               robust=False)
             try:
@@ -725,16 +721,9 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
         # and the rms of the residual image outside the cleaned area
         non_clean_rms = None
         if cleanmask is not None and os.path.exists(cleanmask):
-            if flux is not None and os.path.exists(flux):
-                statsmask = '"%s" < 0.1 && "%s" > 0.1' % (
-                  os.path.basename(cleanmask), os.path.basename(flux))
-            else:
-                statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
+            statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
         else:
-            if flux is not None and os.path.exists(flux):
-                statsmask = '"%s" > 0.1' % os.path.basename(flux)
-            else:
-                statsmask = ''
+            statsmask = ''
 
         resid_stats = image.statistics(mask=statsmask, robust=False)
         try:
