@@ -51,6 +51,7 @@ import pipeline.infrastructure.imagelibrary as imagelibrary
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
 
+from . import manifest
 
 class ExportDataInputs(basetask.StandardInputs):
     """
@@ -267,23 +268,35 @@ class ExportData(basetask.StandardTaskTemplate):
 	# 'self.inputs' everywhere
 	inputs = self.inputs
 
+	# Get the parent ous ousstatus name. This is the sanitized ous
+	# status uid
+	ps = inputs.context.project_structure
+	if ps is None:
+	    oussid = 'unknown'
+	elif ps.ousstatus_entity_id == 'unknown':
+	    oussid = 'unknown'
+	else:
+	    oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+
+	# Initialize the manifest document and the top level ous status.
+	pipemanifest = self._init_pipemanifest(oussid)
+	ouss = pipemanifest.set_ous(oussid)
+
 	# Force inputs.vis to be a list.
 	vislist = inputs.vis
 	if type(vislist) is types.StringType:
 	    vislist = [vislist,]
 
 	# Locate and copy the pipeline processing request.
+	#     There should normally be at most one pipeline processing request.
+        #     In interactive mode there is no PPR.
         ppr_files = self._export_pprfile (inputs.context, inputs.output_dir,
 	    inputs.products_dir, inputs.pprfile)
-	# There should normally be at most one pipeline processing request.
-        # In interactive mode there is no PPR.
         if (ppr_files != []):
             ppr_file = os.path.basename(ppr_files[0])
+	    pipemanifest.add_pprfile (ouss, os.path.basename(ppr_file))
         else:
             ppr_file = None
-
-	# Save list of ppr files in a file.
-	#     TBD if necessary
 
 	# Loop over the measurements sets in the working directory and 
 	# save the final flags using the flag manager. 
@@ -300,9 +313,6 @@ class ExportData(basetask.StandardTaskTemplate):
 		inputs.products_dir)
 	    flag_version_list.append(flag_version_file)
 
-	 # Save the list of flag versions in a file.
-	 #     TBD if necessary
-
         # Loop over the measurements sets in the working directory, and
 	# create the calibration apply file(s) in the products directory. 
 	apply_file_list = []
@@ -310,9 +320,6 @@ class ExportData(basetask.StandardTaskTemplate):
 	    apply_file =  self._export_final_applylist (inputs.context, \
 	        visfile, inputs.products_dir)
 	    apply_file_list.append (apply_file)
-
-	# Save the list of calibration apply files in a file.
-	#     TBD if necessary
 
 	# Create the ordered vis dictionary
 	#    The keys are the base vis names
@@ -331,38 +338,48 @@ class ExportData(basetask.StandardTaskTemplate):
 	# Export tar files of the calibration tables one per session
 	caltable_file_list = []
 	for i in range(len(session_names)):
-	    caltable_file = self._export_final_calfiles (inputs.context,
+	    caltable_file = self._export_final_calfiles (inputs.context, oussid, 
 	        session_names[i], session_vislists[i], inputs.products_dir)
 	    caltable_file_list.append (caltable_file)
 
-	# Save the list of session calibration tar files
-	#     TBD if necessary
-
 	# Create the ordered session dictionary
 	#    The keys are the session names
-	#    The values are a tuple containing the 
+	#    The values are a tuple containing the vislist and the caltables 
 	sessiondict = collections.OrderedDict()
 	for i in range(len(session_names)):
 	    sessiondict[session_names[i]] = \
 	        ([os.path.basename(visfile) for visfile in session_vislists[i]], \
 		os.path.basename(caltable_file_list[i])) 
+	for session_name in sessiondict:
+	    session = pipemanifest.set_session(ouss, session_name)
+	    pipemanifest.add_caltables(session, sessiondict[session_name][1])
+	    for vis_name in sessiondict[session_name][0]:
+	        pipemanifest.add_asdm (session, vis_name, visdict[vis_name][0],
+		    visdict[vis_name][1])
 
 	# Export a tar file of the web log
-	weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
+	weblog_file = self._export_weblog (inputs.context, inputs.products_dir,
+	    oussid)
+	pipemanifest.add_weblog (ouss, os.path.basename(weblog_file))
 
 	# Export the processing log independently of the web log
 	casa_commands_file = self._export_casa_commands_log (inputs.context,
-	    inputs.context.logs['casa_commands'], inputs.products_dir)
+	    inputs.context.logs['casa_commands'], inputs.products_dir, oussid)
+	pipemanifest.add_casa_cmdlog (ouss,
+	    os.path.basename(casa_commands_file))
 
 	# Export the processing script independently of the web log
 	casa_pipescript = self._export_casa_script (inputs.context,
-	    inputs.context.logs['pipeline_script'], inputs.products_dir)
-	    #'casa_pipescript.py', inputs.products_dir)
+	    inputs.context.logs['pipeline_script'], inputs.products_dir,
+	    oussid)
+	pipemanifest.add_pipescript (ouss, os.path.basename(casa_pipescript))
 
 	# Export the restore script
 	casa_restore_script = self._export_casa_restore_script (inputs.context,
 	    inputs.context.logs['pipeline_restore_script'],
-	    inputs.products_dir, vislist, session_list)
+	    inputs.products_dir, oussid, vislist, session_list)
+	pipemanifest.add_restorescript (ouss,
+	    os.path.basename(casa_restore_script))
 
 	# Export calibrator images to FITS
 	LOG.info ('Exporting calibrator source images')
@@ -373,11 +390,22 @@ class ExportData(basetask.StandardTaskTemplate):
 	calimages_list, calimages_fitslist = self._export_images ( \
 	    inputs.context, True, calintents_list, inputs.calimages, \
 	    inputs.products_dir)
+	pipemanifest.add_images (ouss,
+	    [os.path.basename(image) for image in calimages_fitslist], \
+	    'calibrator')
 
 	# Export science target images to FITS
 	LOG.info ('Exporting target source images')
-	targetimages_list, targetimages_fitslist = self._export_images (inputs.context, False,
-	    ['TARGET'], inputs.targetimages, inputs.products_dir)
+	targetimages_list, targetimages_fitslist = self._export_images ( \
+	    inputs.context, False, ['TARGET'], inputs.targetimages, \
+	    inputs.products_dir)
+	pipemanifest.add_images (ouss,
+	    [os.path.basename(image) for image in targetimages_fitslist], \
+	    'target')
+
+	# Export the pipeline manifest file
+	casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
+	    'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
 
 	# Return the results object, which will be used for the weblog
 	return ExportDataResults(pprequest=ppr_file, \
@@ -401,6 +429,14 @@ class ExportData(basetask.StandardTaskTemplate):
 	:rtype: :class:~`ExportDataResults`		
 	"""
 	return results
+
+    def _init_pipemanifest (self, oussid):
+	'''
+	Initialize the pipeline manifest
+	'''
+
+        pipemanifest = manifest.PipelineManifest(oussid) 
+	return pipemanifest
 
     def _export_pprfile (self, context, output_dir, products_dir, pprfile):
 
@@ -595,7 +631,7 @@ class ExportData(basetask.StandardTaskTemplate):
 	        
 	return wksessions, session_names, session_vis_list
 
-    def _export_final_calfiles (self, context, session, vislist, products_dir):
+    def _export_final_calfiles (self, context, oussid, session, vislist, products_dir):
 
 	"""
 	Save the final calibration tables in a tarfile one file
@@ -607,13 +643,14 @@ class ExportData(basetask.StandardTaskTemplate):
 	cwd = os.getcwd()
 	os.chdir (context.output_dir)
 
-	ps = context.project_structure
-	if ps is None:
-	    ousid = ''
-	elif ps.ousstatus_entity_id == 'unknown':
-	    ousid = ''
-	else:
-	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) + '.'
+	#ps = context.project_structure
+	#if ps is None:
+	    #ousid = ''
+	#elif ps.ousstatus_entity_id == 'unknown':
+	    #ousid = ''
+	#else:
+	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) + '.'
+	ousid = oussid + '.'
 
 	# Define the name of the output tarfile
         tarfilename = ousid + session + '.caltables.tar.gz'
@@ -651,7 +688,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	return tarfilename
 
-    def _export_weblog (self, context, products_dir):
+    def _export_weblog (self, context, products_dir, oussid):
 
 	"""
 	Save the processing web log to a tarfile
@@ -669,8 +706,8 @@ class ExportData(basetask.StandardTaskTemplate):
 	elif ps.ousstatus_entity_id == 'unknown':
             tarfilename = 'weblog.tar.gz'
 	else:
-	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) 
-            tarfilename = ousid + '.weblog.tar.gz'
+	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) 
+            tarfilename = oussid + '.weblog.tar.gz'
 
 	LOG.info('Saving final weblog in %s' % (tarfilename))
 
@@ -685,7 +722,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	return tarfilename
 
-    def _export_casa_commands_log (self, context, casalog_name, products_dir):
+    def _export_casa_commands_log (self, context, casalog_name, products_dir, oussid):
 
 	"""
 	Save the CASA commands file.
@@ -699,9 +736,9 @@ class ExportData(basetask.StandardTaskTemplate):
 	    casalog_file = os.path.join (context.report_dir, casalog_name)
 	    out_casalog_file = os.path.join (products_dir, casalog_name) 
 	else:
-	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 	    casalog_file = os.path.join (context.report_dir, casalog_name)
-	    out_casalog_file = os.path.join (products_dir, ousid + '.' + casalog_name)
+	    out_casalog_file = os.path.join (products_dir, oussid + '.' + casalog_name)
 
 	LOG.info('Copying casa commands log %s to %s' % \
 	        (casalog_file, out_casalog_file))
@@ -710,7 +747,7 @@ class ExportData(basetask.StandardTaskTemplate):
 
 	return os.path.basename(out_casalog_file)
 
-    def _export_casa_restore_script (self, context, script_name, products_dir, vislist, session_list):
+    def _export_casa_restore_script (self, context, script_name, products_dir, oussid, vislist, session_list):
 
 	"""
 	Save the CASA restore scropt.
@@ -725,9 +762,9 @@ class ExportData(basetask.StandardTaskTemplate):
 	    script_file = os.path.join (context.report_dir, script_name)
 	    out_script_file = os.path.join (products_dir, script_name) 
 	else:
-	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 	    script_file = os.path.join (context.report_dir, script_name)
-	    out_script_file = os.path.join (products_dir, ousid + '.' + script_name)
+	    out_script_file = os.path.join (products_dir, oussid + '.' + script_name)
 
 	LOG.info('Creating casa restore script %s' %  (script_file))
 
@@ -758,7 +795,7 @@ finally:
 
 	return os.path.basename (out_script_file)
 
-    def _export_casa_script (self, context, casascript_name, products_dir):
+    def _export_casa_script (self, context, casascript_name, products_dir, oussid):
 
 	"""
 	Save the CASA script.
@@ -772,9 +809,9 @@ finally:
 	    casascript_file = os.path.join (context.report_dir, casascript_name)
 	    out_casascript_file = os.path.join (products_dir, casascript_name) 
 	else:
-	    ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+	    #ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
 	    casascript_file = os.path.join (context.report_dir, casascript_name)
-	    out_casascript_file = os.path.join (products_dir, ousid + '.' + casascript_name)
+	    out_casascript_file = os.path.join (products_dir, oussid + '.' + casascript_name)
 
 	LOG.info('Copying casa script file %s to %s' % \
 	        (casascript_file, out_casascript_file))
@@ -783,6 +820,16 @@ finally:
 
 	return os.path.basename(out_casascript_file)
 
+    def _export_pipe_manifest(self, context, oussid, manifest_name, products_dir, pipemanifest):
+
+	"""
+	Save the manifest file.
+	"""
+
+	out_manifest_file = os.path.join (products_dir, oussid + '.' + manifest_name)
+	LOG.info('Creating manifest file %s' % (out_manifest_file))
+	if not self._executor._dry_run:
+	    pipemanifest.write(out_manifest_file)
 
     def _export_images (self, context, calimages, intents, images,
         products_dir):
@@ -790,6 +837,7 @@ finally:
 	"""
 	Export the images to FITS files.
 	"""
+
 
         # Create the image list
 	images_list = []
