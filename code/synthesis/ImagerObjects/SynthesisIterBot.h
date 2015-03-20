@@ -125,7 +125,7 @@ protected:
 
  private:
   Vector<String> itsImageList;
-  Vector<Int> itsNTermList;
+  Vector<Bool> itsMultiTermList;
   Vector<Int> itsActionCodes;
   CountedPtr<InteractiveMasking> itsInteractiveMasker;
 

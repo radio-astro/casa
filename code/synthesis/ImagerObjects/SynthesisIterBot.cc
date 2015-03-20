@@ -254,17 +254,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Record allnames = iterpars.subRecord(RecordFieldId("allimages"));
 		      uInt nfields = allnames.nfields();
 		      itsImageList.resize( nfields );
-		      itsNTermList.resize( nfields );
+		      itsMultiTermList.resize( nfields ); itsMultiTermList=False;
 		      for ( uInt fld=0; fld<nfields; fld++ )
 			{
 			  Record onename = allnames.subRecord( RecordFieldId(String::toString(fld)) );
-			  if( onename.isDefined("imagename") && onename.isDefined("ntaylorterms") )
+			  if( onename.isDefined("imagename") && onename.isDefined("multiterm") )
 			    {
 			      onename.get( RecordFieldId("imagename"), itsImageList[fld] );
-			      onename.get( RecordFieldId("ntaylorterms"), itsNTermList[fld] );
+			      onename.get( RecordFieldId("multiterm"), itsMultiTermList[fld] );
 			    }
 			}
-		      //cout << "Image List : " << itsImageList << " nterms : " << itsNTermList << endl;
+		      //cout << "Image List : " << itsImageList << " nterms : " << itsMultiTermList << endl;
 		    } else {
 		      throw( AipsError("Need image names and nterms in iteration parameter list") );
 		    }
@@ -321,7 +321,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    {
 		      if ( itsActionCodes[ind] ==0 )
 			{
-			  String imageName = itsImageList[ind]+".residual"+(itsNTermList[ind]>1?".tt0":"");
+			  String imageName = itsImageList[ind]+".residual"+(itsMultiTermList[ind]?".tt0":"");
 			  String maskName = itsImageList[ind] + ".mask";
 			  //cout << "Before interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << strthresh << "  cyclethresh : " << strcycthresh << endl;
 			  itsActionCodes[ind] = itsInteractiveMasker->interactivemask(imageName, maskName,

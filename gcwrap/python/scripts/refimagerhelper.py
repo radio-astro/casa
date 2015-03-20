@@ -1041,11 +1041,12 @@ class ImagerParameters():
 
         ### Copy them from 'impars' to 'normpars' and 'decpars'
         self.iterpars['allimages']={}
-        self.iterpars['allntaylorterms']={}
+#        self.iterpars['allntaylorterms']={}
         for immod in self.allimpars.keys() :
             self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
-            self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
+            self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'multiterm': (self.alldecpars[immod]['deconvolver']=='mtmfs') }
+##            self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
 
 #            if len(self.allnormpars[immod]['workdir'])==0:
 #                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'

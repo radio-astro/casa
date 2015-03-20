@@ -283,14 +283,14 @@ namespace casa{
       prev_mask_id_p=0;
       dbus::variant image_id = viewer_p->load(image, "raster", clean_panel_p);
       if ( image_id.type() != dbus::variant::INT ) {
-	os << LogIO::WARN << "failed to load image" << LogIO::POST;
+	os << LogIO::WARN << "failed to load residual image in viewer : " << image << LogIO::POST;
 	return False;
       }
       image_id_p = image_id.getInt( );
       
       dbus::variant mask_id = viewer_p->load(mask, "contour", clean_panel_p);
       if ( mask_id.type() != dbus::variant::INT ) {
-	os << "failed to load mask" << LogIO::WARN << LogIO::POST;
+	os << "failed to load mask in viewer : " << mask << LogIO::WARN << LogIO::POST;
 	return False;
       }
       mask_id_p = mask_id.getInt( );
