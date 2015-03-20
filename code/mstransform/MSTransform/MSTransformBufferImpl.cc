@@ -38,6 +38,19 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 
 	rowIdOffset_p = 0;
 
+	if (not manager_p->reindex_p)
+	{
+		manager_p->inputOutputObservationIndexMap_p.clear();
+		manager_p->inputOutputArrayIndexMap_p.clear();
+		manager_p->inputOutputScanIndexMap_p.clear();
+		manager_p->inputOutputScanIntentIndexMap_p.clear();
+		manager_p->inputOutputFieldIndexMap_p.clear();
+		manager_p->inputOutputSPWIndexMap_p.clear();
+		manager_p->inputOutputDDIndexMap_p.clear();
+		manager_p->inputOutputAntennaIndexMap_p.clear();
+		manager_p->outputInputSPWIndexMap_p.clear();
+	}
+
 	return;
 }
 

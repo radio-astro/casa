@@ -214,6 +214,11 @@ Record parseConfiguration(int argc, char **argv)
 			calrec.define("calfactor",calfactor);
 			configuration.defineRecord ("callib", calrec);
 		}
+		else if (parameter == string("-reindex"))
+		{
+			Bool tmp = Bool(atoi(value.c_str()));
+			configuration.define ("reindex", tmp);
+		}
 	}
 
 	if (autoMode)

@@ -1221,6 +1221,7 @@ protected:
 	// Buffer handling parameters
 	Bool bufferMode_p;
 	Bool userBufferMode_p;
+	Bool reindex_p;
 
 	// MS-related members
 	MSTransformDataHandler *dataHandler_p;

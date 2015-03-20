@@ -248,6 +248,7 @@ void MSTransformManager::initialize()
 	// Buffer handling members
 	bufferMode_p = False;
 	userBufferMode_p = False;
+	reindex_p = True;
 	spectrumReshape_p = False;
 	cubeTransformation_p = False;
 	dataColumnAvailable_p = False;
@@ -325,6 +326,23 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		if (exists >= 0)
 		{
 			configuration.get (exists, outMsName_p);
+		}
+
+		exists = configuration.fieldNumber ("reindex");
+		if (exists >= 0)
+		{
+			configuration.get (exists, reindex_p);
+
+			if (reindex_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Re-index is enabled " << LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Re-index is disabled " << LogIO::POST;
+			}
 		}
 	}
 	else
