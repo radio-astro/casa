@@ -454,6 +454,8 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
 
     def test001( self ):
         """Basic Test 001: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
+        print ""
+
         tid = '001'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -461,63 +463,81 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         maskmode = 'list'
         blfunc = 'cspline'
         overwrite = True
+        npiece = 3
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             maskmode=maskmode, blfunc=blfunc,
+                             maskmode=maskmode, blfunc=blfunc,npiece=npiece,
                              #spw=spw, pol=pol,
-                             outfile=outfile,
-                             overwrite=overwrite)
+                             outfile=outfile,overwrite=overwrite)
         self.assertEqual(result, None,
                          msg="The task returned '"+str(result)+"' instead of None")
         #***
         #*** check if baseline is correctlt fit and subtracted ***
         #***
 
-        tb.open(outfile)
-        sum_pol0=0
-        sum_pol1=0
-        sum_pol0_=0
-        sum_pol1_=0
+        #r1:antenna1=0, data_disc_id=0
+        #r2:antenna1=0, data_disc_id=1
+        #r3:antenna1=0, data_disc_id=2
+        #r4:antenna1=0, data_disc_id=3
         
-        for i in range(8191):
-            sum_pol0  += tb.getvarcol('FLOAT_DATA')['r1'][0][i][0]
-            sum_pol1  += tb.getvarcol('FLOAT_DATA')['r1'][1][i][0]
-            sum_pol0_ += (tb.getvarcol('FLOAT_DATA')['r1'][0][i][0])**2
-            sum_pol1_ += (tb.getvarcol('FLOAT_DATA')['r1'][1][i][0])**2
+
+        all_rows=['r1','r2','r3','r4']
+        ch=8192 #8192
+        for row in all_rows:
+            # after cspline
+            tb.open(outfile)
+            sum_pol0=0.0
+            sum_pol1=0.0
+            _sum_pol0=0.0
+            _sum_pol1=0.0
+        
+            for i in range(ch):
+                sum_pol0  += tb.getvarcol('FLOAT_DATA')[row][0][i][0]
+                sum_pol1  += tb.getvarcol('FLOAT_DATA')[row][1][i][0]
+                _sum_pol0 += (tb.getvarcol('FLOAT_DATA')[row][0][i][0])**2
+                _sum_pol1 += (tb.getvarcol('FLOAT_DATA')[row][1][i][0])**2
            
-        average_sum_pol0 = sum_pol0/8191.0
-        average_sum_pol1 = sum_pol1/8191.0
+            average_sum_pol0 = sum_pol0/float(ch)
+            average_sum_pol1 = sum_pol1/float(ch)
 
-        average_sum_pol0_ = sum_pol0_/8191.0
-        average_sum_pol1_ = sum_pol1_/8191.0
-        sigma_pol0= (average_sum_pol0_ - average_sum_pol0)**0.5
-        sigma_pol1= (average_sum_pol1_ - average_sum_pol1)**0.5
-        tb.close()
+            _average_sum_pol0 = _sum_pol0/float(ch)
+            _average_sum_pol1 = _sum_pol1/float(ch)
 
+            sigma_pol0= (_average_sum_pol0 - average_sum_pol0**2.0)**0.5
+            sigma_pol1= (_average_sum_pol1 - average_sum_pol1**2.0)**0.5
+            tb.close()
 
-        tb.open(infile)
-        sum_orig_pol0=0
-        sum_orig_pol1=0
-        sum_orig_pol0_=0 
-        sum_orig_pol1_=0 
+            # before cspline
+            tb.open(infile)
+            sum_orig_pol0=0.0
+            sum_orig_pol1=0.0
+            _sum_orig_pol0=0.0 
+            _sum_orig_pol1=0.0 
         
-        for i in range(8191):
-            sum_orig_pol0  += tb.getvarcol('FLOAT_DATA')['r1'][0][i][0]
-            sum_orig_pol1  += tb.getvarcol('FLOAT_DATA')['r1'][1][i][0]
-            sum_orig_pol0_ += (tb.getvarcol('FLOAT_DATA')['r1'][0][i][0])**2
-            sum_orig_pol1_ += (tb.getvarcol('FLOAT_DATA')['r1'][1][i][0])**2
+            for i in range(ch):
+                sum_orig_pol0  += tb.getvarcol('FLOAT_DATA')[row][0][i][0]
+                sum_orig_pol1  += tb.getvarcol('FLOAT_DATA')[row][1][i][0]
+                _sum_orig_pol0 += (tb.getvarcol('FLOAT_DATA')[row][0][i][0])**2.0
+                _sum_orig_pol1 += (tb.getvarcol('FLOAT_DATA')[row][1][i][0])**2.0
                  
-        average_sum_orig_pol0 = sum_orig_pol0/8191.0
-        average_sum_orig_pol1 = sum_orig_pol1/8191.0
-        average_sum_orig_pol0_ = sum_orig_pol0_/8191.0
-        average_sum_orig_pol1_ = sum_orig_pol1_/8191.0
-        sigma_orig_pol0= (average_sum_orig_pol0_ - average_sum_orig_pol0)**0.5
-        sigma_orig_pol1= (average_sum_orig_pol1_ - average_sum_orig_pol1)**0.5
-        tb.close()
+            average_sum_orig_pol0 = sum_orig_pol0/float(ch)
+            average_sum_orig_pol1 = sum_orig_pol1/float(ch)
 
-        print 'Standard deviation of the original data (pol0)', sigma_orig_pol0
-        print 'Standard deviation of the data (pol0) after cspline', sigma_pol0
-        print 'Standard deviation of the original data (pol1)', sigma_orig_pol1
-        print 'Standard deviation of the original data (pol1) after cspline', sigma_pol1
+            _average_sum_orig_pol0 = _sum_orig_pol0/float(ch)
+            _average_sum_orig_pol1 = _sum_orig_pol1/float(ch)
+            
+            sigma_orig_pol0= (_average_sum_orig_pol0 - average_sum_orig_pol0**2.0)**0.5
+            sigma_orig_pol1= (_average_sum_orig_pol1 - average_sum_orig_pol1**2.0)**0.5
+            
+            tb.close()
+
+            print ''
+            print row, 'npiece: ', npiece
+            #print 'average before cspline (pol0)',average_sum_orig_pol0
+            #print '_average before cspline(pol0)', _average_sum_orig_pol0
+            print '1sigma before cspline (pol0)', sigma_orig_pol0
+            print '1sigma after cspline (pol0)', sigma_pol0
+            print '1sigma before cspline (pol1)', sigma_orig_pol1
+            print '1sigma after cspline (pol1) ', sigma_pol1
 
     def test050( self ):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
