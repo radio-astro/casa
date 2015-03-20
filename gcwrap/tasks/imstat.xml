@@ -324,8 +324,7 @@ Fluxes and flux densities are not computed if any of the following conditions is
    are Jy/beam (in which case the image must also have a beam) and K.
 3. There are no direction axes in the cursor axes that are used.
 4. If the (specified region of the) image has a non-degenerate spectral axis,
-   and the image has multiple beams or a tablular spectral axis (axis with varying
-   increments)
+   and the image has a tablular spectral axis (axis with varying increments)
 5. Any axis that is not a direction nor a spectral axis that is included in the cursor
    axes is not degenerate within in specified region
 
