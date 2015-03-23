@@ -283,5 +283,12 @@ class rg_fromtextfile_test(unittest.TestCase):
         subi.done()
         self.assertTrue((got == expec).all())
         
+    def test_1000(self):
+        """Test a large number of regions, CAS-7405"""
+        self.ia.open(datapath + "1000regtest.im")
+        self.assertTrue(self.ia.statistics()['npts'][0] == 331*331)
+        self.assertTrue(self.ia.statistics(region=datapath + "1000circles.txt")['npts'][0] == 13679)
+        self.ia.done()
+
 def suite():
     return [rg_fromtextfile_test]
