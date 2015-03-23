@@ -4271,8 +4271,7 @@ record* image::statistics(
 		}
 		else {
 			_stats->setMask(mtmp);
-			SHARED_PTR<Record> regionRec2(_getRegion(region, False));
-			_stats->setRegion(*regionRec2);
+			_stats->setRegion(regionRec ? *regionRec : Record());
 		}
 		String myalg = algorithm;
 		myalg.downcase();
