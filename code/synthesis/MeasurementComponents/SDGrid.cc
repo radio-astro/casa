@@ -85,7 +85,7 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1)
+    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1)
 {
   lastIndex_p=0;
 }
@@ -97,7 +97,7 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -110,7 +110,7 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1)
+    minWeight_p(0.), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1)
 {
   lastIndex_p=0;
 }
@@ -122,7 +122,9 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1),
+    msId_p(-1)
+
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -136,7 +138,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
-    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight), lastAntID_p(-1), msId_p(-1)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -178,6 +180,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     userSetSupport_p=other.userSetSupport_p;
     lastIndex_p=0;
     lastAntID_p=-1;
+    msId_p=-1;
     useImagingWeight_p=other.useImagingWeight_p;
   };
   return *this;
@@ -428,9 +431,15 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     Bool nullPointingTable=(act_mspc.nrow() < 1);
     // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row));
     Int pointIndex=-1;
-    if(!nullPointingTable)
+    if(!nullPointingTable){
+      //if(vb.newMS()) This thing is buggy...using msId change
+      if(vb.msId() != msId_p){
+	lastIndex_p=0;
+	msId_p=vb.msId();
+      }
       pointIndex=getIndex(act_mspc, vb.time()(row), 
 			  vb.timeInterval()(row));
+    }
     if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
       ostringstream o;
       o << "Failed to find pointing information for time " <<
@@ -1380,6 +1389,11 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   nullPointingTable=(act_mspc.nrow() < 1);
   Int pointIndex=-1;
   if(!nullPointingTable){
+    ///if(vb.newMS())  vb.newMS does not work well using msid 
+    if(vb.msId() != msId_p){
+      lastIndex_p=0;
+      msId_p=vb.msId();
+    }
     pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
     
   }
