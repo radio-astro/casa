@@ -336,12 +336,17 @@ ia.close()
 #             'sigma': 0.01537722,
 #             'sum':  953.07229832}
 # 20150308: update after image parameter change in simanalyze (r32603)
-refstats = {'max': 0.13784169,
-             'min': -0.02484594,
-             'rms': 0.01885981,
-             'sigma': 0.01575659,
-             'sum':  1238.80514997}
-
+#refstats = {'max': 0.13784169,
+#             'min': -0.02484594,
+#             'rms': 0.01885981,
+#             'sigma': 0.01575659,
+#             'sum':  1238.80514997}
+# 20150323: update after image parameter change in HetArrayConvFunc (r32748)
+refstats = {'max': 0.1385,
+             'min': -0.025011,
+             'rms': 0.019215,
+             'sigma': 0.016102,
+             'sum':  1257.2}
 
 
 # # reference statistic values for diff image
@@ -406,11 +411,17 @@ refstats = {'max': 0.13784169,
 #             'sigma': 0.00881279,
 #             'sum':  -81.71821998}
 # 20150308: update after image parameter change in simanalyze (r32603)
-diffstats = {'max':  0.03221679,
-             'min': -0.07377915,
-             'rms': 0.00990815,
-             'sigma': 0.00941917,
-             'sum':  -367.45107187}
+#diffstats = {'max':  0.03221679,
+#             'min': -0.07377915,
+#             'rms': 0.00990815,
+#             'sigma': 0.00941917,
+#             'sum':  -367.45107187}
+# 20150308: update after image parameter change in HetArrayConvFunc.cc (r32748)
+diffstats = {'max':  0.03277,
+             'min': -0.073614,
+             'rms': 0.010518,
+             'sigma': 0.010015,
+             'sum':  -385.33}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
