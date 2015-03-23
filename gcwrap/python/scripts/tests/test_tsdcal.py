@@ -1460,7 +1460,6 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         # generate Tsys table
         tsystable = self.infile.rstrip('/') + '.tsys'
-        tsdcal(infile=self.infile, calmode='tsys', outfile=tsystable)
 
         try:
             # generate Tsys table
