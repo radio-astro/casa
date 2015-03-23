@@ -48,7 +48,7 @@ AsciiAnnotationFileLine::AsciiAnnotationFileLine(
 }
 
 AsciiAnnotationFileLine::AsciiAnnotationFileLine(
-	const AnnotationBase * const annotationBase
+	CountedPtr<const AnnotationBase> annotationBase
 ) : _type(ANNOTATION), _comment(""),
 	_annotationBase(annotationBase),
 	_globals() {}
@@ -80,7 +80,7 @@ map<AnnotationBase::Keyword, String> AsciiAnnotationFileLine::getGloabalParams()
 	return _globals;
 }
 
-const AnnotationBase* AsciiAnnotationFileLine::getAnnotationBase() const {
+CountedPtr<const AnnotationBase> AsciiAnnotationFileLine::getAnnotationBase() const {
 	return _annotationBase;
 }
 

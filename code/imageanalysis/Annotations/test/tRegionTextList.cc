@@ -115,22 +115,24 @@ int main () {
 				AnnotationBase::Type type = ann->getType();
 				switch (type ) {
 				case AnnotationBase::ELLIPSE: {
+					cout << lines2[i] << endl;
 					const AnnEllipse *ell = dynamic_cast<const AnnEllipse *>(ann);
 					cout << "major" << ell->getSemiMajorAxis().getValue("arcsec") << endl;
 					cout << "minor" << ell->getSemiMinorAxis().getValue("arcsec") << endl;
 					cout << "pa " << ell->getPositionAngle() << endl;
-					throw AipsError("got ellipse");
+					AlwaysAssert(near(ell->getSemiMajorAxis().getValue("arcsec"), 1e-8, 120.0), AipsError);
+					AlwaysAssert(near(ell->getSemiMinorAxis().getValue("arcsec"), 1e-8, 80.0), AipsError);
+					AlwaysAssert(near(ell->getPositionAngle().getValue("deg"), 0.0), AipsError);
 					break;
 				}
 				case AnnotationBase::CIRCLE:
+					throw AipsError("got circle, should be ellipse because pixels are not square");
 					cout << "circle" << endl;;
 					break;
 				default:
 					throw AipsError("bad region");
 				}
-
 			}
-
 		}
 	}
 	catch (const AipsError& x) {
@@ -139,7 +141,6 @@ int main () {
 			<< LogIO::POST;
 		return 1;
 	}
-
 	cout << "OK" << endl;
 	return 0;
 }

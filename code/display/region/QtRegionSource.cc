@@ -356,21 +356,21 @@ namespace casa {
 				const casa::Vector<AsciiAnnotationFileLine> &lines = region_list.getLines( );
 				for ( uInt i=0; i < lines.size( ); ++i ) {
 					if ( lines[i].getType() == AsciiAnnotationFileLine::ANNOTATION ) {
-						const AnnotationBase* annotation = lines[i].getAnnotationBase();
+						CountedPtr<const AnnotationBase> annotation = lines[i].getAnnotationBase();
 						const AnnRectBox *rectangle=0;
 						const AnnEllipse *ellipse=0;
 						const AnnSymbol *symbol=0;
 						const AnnPolygon *polygon = 0;
 						const AnnPolyline *polyline = 0;
-						if ( (rectangle=dynamic_cast<const AnnRectBox*>(annotation)) ) {
+						if ( (rectangle=dynamic_cast<const AnnRectBox*>(annotation.get())) ) {
 							load_crtf_rectangle( wc, cstype, rectangle );
-						} else if ( (ellipse = dynamic_cast<const AnnEllipse*>(annotation)) ) {
+						} else if ( (ellipse = dynamic_cast<const AnnEllipse*>(annotation.get())) ) {
 							load_crtf_ellipse( wc, cstype, ellipse );
-						} else if ( (symbol = dynamic_cast<const AnnSymbol*>(annotation)) ) {
+						} else if ( (symbol = dynamic_cast<const AnnSymbol*>(annotation.get())) ) {
 							load_crtf_point( wc, cstype, symbol );
-						} else if ( (polygon = dynamic_cast<const AnnPolygon*>(annotation)) ) {
+						} else if ( (polygon = dynamic_cast<const AnnPolygon*>(annotation.get())) ) {
 							load_crtf_polygon( wc, cstype, polygon );
-						} else if ( (polyline = dynamic_cast<const AnnPolyline*>(annotation)) ) {
+						} else if ( (polyline = dynamic_cast<const AnnPolyline*>(annotation.get())) ) {
 							load_crtf_polyline( wc, cstype, polyline );
 						}
 					}

@@ -27,6 +27,8 @@
 
 namespace casa {
 
+class WCDifference;
+
 // <summary>
 // An ordered list of annotations and comments representing an ascii region file.
 // </summary>
@@ -56,7 +58,7 @@ public:
 	// is used for constructing an annotation list on the fly, possibly
 	// to be written to a file when complete. Do not use this constructor
 	// if you want to determine the final composite region.
-	RegionTextList(const Bool deletePointersOnDestruct=True);
+	RegionTextList();
 
 	// create an empty list which can be appended to. This constructor
 	// is used for constructing an annotation list on the fly, possibly
@@ -69,8 +71,7 @@ public:
 	// shape are set to good initially.
 	RegionTextList(
 		const CoordinateSystem& csys,
-		const IPosition shape,
-		const Bool deletePointersOnDestruct=True
+		const IPosition shape
 	);
 
 	// create a list by reading it from a file.
@@ -83,8 +84,7 @@ public:
 	RegionTextList(
 		const String& filename, const CoordinateSystem& csys,
 		const IPosition shape,
-		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION,
-		const Bool deletePointersOnDestruct=True
+		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
 	);
 
 	// create a list by reading it from a text string.
@@ -96,8 +96,7 @@ public:
 	// shape are set to good initially.
 	RegionTextList(
 		const CoordinateSystem& csys, const String& text,
-		const IPosition shape,
-		const Bool deletePointersOnDestruct=True
+		const IPosition shape
 	);
 	//</group>
 
@@ -120,19 +119,23 @@ public:
 	ostream& print(ostream& os) const;
 
 	// get the composite region.
-	WCRegion* getRegion() const;
+	CountedPtr<const WCRegion> getRegion() const;
 
 	// get the composite region as a region record.
 	Record regionAsRecord() const;
 
 private:
 	Vector<AsciiAnnotationFileLine> _lines;
-	Bool _deletePointersOnDestruct;
-	PtrBlock<WCRegion *> _regions;
+	//Bool _deletePointersOnDestruct;
+	vector<CountedPtr<const WCRegion> > _regions;
 	CoordinateSystem _csys;
 	IPosition _shape;
 	Bool _canGetRegion;
-
+	// if false, then the corresponding region is complementary to
+	// the result of the previous region operations in the sequence
+	vector<Bool> _union;
+	mutable vector<CountedPtr<const WCDifference> > _myDiff;
+	mutable CountedPtr<const WCRegion> _composite;
 };
 
 inline ostream &operator<<(ostream& os, const RegionTextList& list) {

@@ -113,7 +113,7 @@ ImageRegion AnnRegion::asImageRegion() const {
 	return _imageRegion;
 }
 
-WCRegion*  AnnRegion::getRegion() const {
+CountedPtr<const WCRegion>  AnnRegion::getRegion() const {
 	return _imageRegion.asWCRegionPtr()->cloneRegion();
 }
 
@@ -154,7 +154,6 @@ Bool AnnRegion::setFrequencyLimits(
 	else {
 		return False;
 	}
-
 }
 
 void AnnRegion::_setDirectionRegion(const ImageRegion& region) {

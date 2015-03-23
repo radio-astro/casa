@@ -32,48 +32,38 @@
 
 namespace casa {
 
-
-RegionTextList::RegionTextList(
-	const Bool deletePointersOnDestruct
-) : _lines(Vector<AsciiAnnotationFileLine>(0)),
-	_deletePointersOnDestruct(deletePointersOnDestruct),
+RegionTextList::RegionTextList()
+	: _lines(),
 	_csys(CoordinateSystem()), _shape(IPosition()),
-	_canGetRegion(False) {}
+	_canGetRegion(False), _union(), _composite() {}
 
 
 RegionTextList::RegionTextList(
 	const CoordinateSystem& csys,
-	const IPosition shape,
-	const Bool deletePointersOnDestruct
-) : _lines(Vector<AsciiAnnotationFileLine>(0)),
-	_deletePointersOnDestruct(deletePointersOnDestruct),
-	_csys(csys),_shape(shape), _canGetRegion(True) {}
+	const IPosition shape
+) : _lines(),
+	_csys(csys),_shape(shape), _canGetRegion(True), _union(), _composite() {}
 
 RegionTextList::RegionTextList(
 	const String& filename, const CoordinateSystem& csys,
 	const IPosition shape,
-	const Int requireAtLeastThisVersion,
-	const Bool deletePointersOnDestruct
-) : _lines(Vector<AsciiAnnotationFileLine>(0)),
-_deletePointersOnDestruct(deletePointersOnDestruct),
-	_csys(csys), _shape(shape), _canGetRegion(True) {
+	const Int requireAtLeastThisVersion
+) : _lines(),
+	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
 	RegionTextParser parser(filename, csys, shape, requireAtLeastThisVersion);
-	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
-	for (
-		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
-		iter != lines.end(); iter++
-	) {
+	vector<AsciiAnnotationFileLine> lines = parser.getLines();
+	vector<AsciiAnnotationFileLine>::const_iterator iter = lines.begin();
+	vector<AsciiAnnotationFileLine>::const_iterator end = lines.end();
+	while (iter != end) {
 		addLine(*iter);
+		++iter;
 	}
 }
 
 RegionTextList::RegionTextList(
 	const CoordinateSystem& csys, const String& text,
-	const IPosition shape,
-	const Bool deletePointersOnDestruct
-) : _lines(Vector<AsciiAnnotationFileLine>(0)),
-_deletePointersOnDestruct(deletePointersOnDestruct),
-	_csys(csys), _shape(shape), _canGetRegion(True) {
+	const IPosition shape) : _lines(),
+	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
 	RegionTextParser parser(csys, shape, text);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
@@ -84,86 +74,94 @@ _deletePointersOnDestruct(deletePointersOnDestruct),
 	}
 }
 
-RegionTextList::~RegionTextList() {
-	if (_deletePointersOnDestruct) {
-		for (
-			Vector<AsciiAnnotationFileLine>::const_iterator iter = _lines.begin();
-			iter != _lines.end(); iter++
-		) {
-			if (iter->getType() == AsciiAnnotationFileLine::ANNOTATION) {
-				delete (iter->getAnnotationBase());
-			}
-		}
-	}
-}
+RegionTextList::~RegionTextList() {}
 
 void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 	AsciiAnnotationFileLine x = line;
 	_lines.resize(_lines.size()+1, True);
 	_lines[_lines.size()-1] = x;
 	if (x.getType() == AsciiAnnotationFileLine::ANNOTATION && _canGetRegion) {
-		const AnnotationBase * const annotation = x.getAnnotationBase();
+		CountedPtr<const AnnotationBase> annotation = x.getAnnotationBase();
 		if (annotation->isRegion()) {
-			const AnnRegion *region = dynamic_cast<const AnnRegion *>(x.getAnnotationBase());
+			const AnnRegion *region = dynamic_cast<const AnnRegion *>(annotation.get());
 			if (! region->isAnnotationOnly()) {
-				_regions.resize(_regions.size() + 1);
-
-				WCRegion *wcregion = region->getRegion();
-				if (region->isDifference()) {
-					if (_regions.size() == 1) {
-						Vector<Double> blc, trc;
-						_csys.toWorld(blc, IPosition(_csys.nPixelAxes(), 0));
-						_csys.toWorld(trc, _shape);
-						Vector<Quantity> qblc(blc.size()), qtrc(trc.size());
-						Vector<String> wUnits = _csys.worldAxisUnits();
-						Vector<Int> absRel(blc.size(), RegionType::Abs);
-						for (uInt i=0; i<qblc.size(); i++) {
-							qblc[i] = Quantity(blc[i], wUnits[i]);
-							qtrc[i] = Quantity(blc[i], wUnits[i]);
-						}
-						WCBox x;
-						_regions[0] = new WCBox(qblc, qtrc, _csys, absRel);
+				CountedPtr<const WCRegion> wcregion = region->getRegion();
+				if (region->isDifference() && _regions.size() == 0) {
+					Vector<Double> blc, trc;
+					_csys.toWorld(blc, IPosition(_csys.nPixelAxes(), 0));
+					_csys.toWorld(trc, _shape);
+					Vector<Quantity> qblc(blc.size()), qtrc(trc.size());
+					Vector<String> wUnits = _csys.worldAxisUnits();
+					Vector<Int> absRel(blc.size(), RegionType::Abs);
+					for (uInt i=0; i<qblc.size(); i++) {
+						qblc[i] = Quantity(blc[i], wUnits[i]);
+						qtrc[i] = Quantity(blc[i], wUnits[i]);
 					}
-					else {
-						_regions[_regions.size() - 1] = new WCDifference(
-							*_regions[_regions.size() - 2],
-							*wcregion
-						);
-					}
+					_regions.push_back(new WCBox(qblc, qtrc, _csys, absRel));
+					_union.push_back(True);
 				}
-				else {
-					if (_regions.size() == 1) {
-						_regions[0] = wcregion;
-					}
-					else {
-						_regions[_regions.size() - 1] = new WCUnion(
-							*_regions[_regions.size() - 2],
-							*wcregion
-						);
-					}
-				}
+				_regions.push_back(wcregion);
+				_union.push_back(! region->isDifference());
+				_composite = NULL;
 			}
 		}
 	}
 }
 
 Record RegionTextList::regionAsRecord() const {
-	if (_regions.size() == 0) {
-		throw AipsError("No regions found");
-	}
+	ThrowIf(_regions.size() == 0, "No regions found");
 	return getRegion()->toRecord("");
 }
 
-WCRegion* RegionTextList::getRegion() const {
-	if (! _canGetRegion) {
-		throw AipsError(
-			"Object constructed with too little information for forming composite region. Use another constructor."
-		);
+CountedPtr<const WCRegion> RegionTextList::getRegion() const {
+	if (_composite) {
+		return _composite;
 	}
+	ThrowIf(
+		! _canGetRegion,
+		"Object constructed with too little information "
+		"for forming composite region. Use another constructor."
+	);
 	if (_regions.size() == 0) {
 		return 0;
 	}
-	return _regions[_regions.size() - 1];
+	if (_regions.size() == 1) {
+		_composite = _regions[0];
+		return _composite;
+	}
+	vector<Bool>::const_iterator iter = _union.begin();
+	vector<Bool>::const_iterator end = _union.end();
+	vector<Bool>::const_iterator foundDifference = std::find(iter, end, False);
+	PtrBlock<const WCRegion *> unionRegions;
+	if (foundDifference == end) {
+		// no complementary regions, just union the whole lot
+		unionRegions.resize(_regions.size());
+		for (uInt i=0; i<_regions.size(); ++i) {
+			unionRegions[i] = _regions[i].get();
+		}
+		_composite = new WCUnion(False, unionRegions);
+		return _composite;
+	}
+	uInt count = 0;
+	while(iter != end) {
+		if (*iter) {
+			unionRegions.resize(unionRegions.size() + 1);
+			unionRegions[_regions.size() - 1] = _regions[count].get();
+		}
+		else {
+			WCUnion myUnion(False, unionRegions);
+			const WCDifference *myDiff = new WCDifference(myUnion, *_regions[count]);
+			_myDiff.push_back(CountedPtr<const WCDifference>(myDiff));
+			unionRegions.resize(1);
+			unionRegions[0] = myDiff;
+		}
+		++count;
+		++iter;
+	}
+	_composite = (unionRegions.size() == 1)
+		? unionRegions[0]
+		: new WCUnion(False, unionRegions);
+	return _composite;
 }
 
 uInt RegionTextList::nLines() const {
@@ -173,9 +171,7 @@ uInt RegionTextList::nLines() const {
 AsciiAnnotationFileLine RegionTextList::lineAt(
 	const uInt i
 ) const {
-	if (i >= _lines.size()) {
-		throw AipsError("Index out of range");
-	}
+	ThrowIf(i >= _lines.size(), "Index out of range");
 	return _lines[i];
 }
 
@@ -203,6 +199,5 @@ ostream& RegionTextList::print(ostream& os) const {
 	}
 	return os;
 }
-
 
 }

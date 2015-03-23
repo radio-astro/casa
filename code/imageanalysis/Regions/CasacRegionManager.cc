@@ -989,10 +989,9 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 		"The specified spectral range " + specification
 		+ " does not intersect the image spectral range."
 	);
-	const AnnRegion *reg = dynamic_cast<const AnnRegion*>(
-		parser.getLines()[0].getAnnotationBase()
-	);
-
+	CountedPtr<const AnnotationBase> ann = parser.getLines()[0].getAnnotationBase();
+	const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann.get());
+	ThrowIf(! reg, "Dynamic cast failed");
 	vector<Double> drange = reg->getSpectralPixelRange();
 	range[0] = uInt(max(0.0, floor(drange[0] + 0.5)));
 	range[1] = uInt(floor(drange[1] + 0.5));

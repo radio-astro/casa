@@ -521,8 +521,8 @@ namespace casa {
                 Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
                 for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
                     if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
-                    const AnnotationBase* ann = aaregions[i].getAnnotationBase();
-                    const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann);
+                    CountedPtr<const AnnotationBase> ann = aaregions[i].getAnnotationBase();
+                    const AnnRegion *reg = dynamic_cast<const AnnRegion*>(ann.get());
                     AnnotationBase::Direction points = ann->getDirections( );
                     switch ( ann->getType( ) ) {
                     case AnnotationBase::SYMBOL: {
@@ -579,7 +579,7 @@ namespace casa {
                         if ( ptit == tools.end( ) ) continue;
                         String pos = ann->getLabelPosition( );
 
-                        const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann);
+                        const AnnSymbol *sym_obj = dynamic_cast<const AnnSymbol*>(ann.get());
                         if ( sym_obj == 0 ) continue;
 
                         AnnSymbol::Symbol sym = sym_obj->getSymbol( );
@@ -713,7 +713,7 @@ namespace casa {
                             continue;
                         }
 
-                        const AnnEllipse *el = dynamic_cast<const AnnEllipse*>(ann);
+                        const AnnEllipse *el = dynamic_cast<const AnnEllipse*>(ann.get());
 
                         double pos_angle = el->getPositionAngle( ).getValue("deg");
 

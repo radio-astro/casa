@@ -58,7 +58,7 @@ RegionTextParser::RegionTextParser(
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
-	_lines(Vector<AsciiAnnotationFileLine>(0)),
+	_lines(),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
 	_fileVersion(-1), _imShape(imShape), _regions(0) {
 	RegularFile file(filename);
@@ -83,7 +83,7 @@ RegionTextParser::RegionTextParser(
 	_setInitialGlobals();
 	RegularFileIO fileIO(file);
 	Int bufSize = 4096;
-	char *buffer = new char[bufSize];
+	PtrHolder<char> buffer(new char[bufSize], True);
 	int nRead;
 	String contents;
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
@@ -99,7 +99,7 @@ RegionTextParser::RegionTextParser(
 		_determineVersion(chunk, filename, requireAtLeastThisVersion);
 	}
 	contents += chunk;
-	delete [] buffer;
+	//delete [] buffer;
 	_parse(contents, filename);
 }
 
@@ -109,7 +109,7 @@ RegionTextParser::RegionTextParser(
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
-	_lines(Vector<AsciiAnnotationFileLine>(0)),
+	_lines(),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
 	_fileVersion(-1), _imShape(imShape), _regions(0) {
 	if (! _csys.hasDirectionCoordinate()) {
@@ -132,7 +132,7 @@ Int RegionTextParser::getFileVersion() const {
 	return _fileVersion;
 }
 
-Vector<AsciiAnnotationFileLine> RegionTextParser::getLines() const {
+vector<AsciiAnnotationFileLine> RegionTextParser::getLines() const {
 	return _lines;
 }
 
@@ -159,7 +159,7 @@ void RegionTextParser::_determineVersion(
 		while (! done) {
 			try {
 				_fileVersion = String::toInt(vString.substr(0, count));
-				count++;
+				++count;
 				if (_fileVersion == oldVersion) {
 					done = True;
 				}
@@ -208,8 +208,8 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
 	Vector<Quantity> qFreqs(2, Quantity(0));
-	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
-		lineCount++;
+	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); ++iter) {
+		++lineCount;
 		Bool annOnly = False;
 		ostringstream preambleoss;
 		preambleoss << fileDesc + " line# " << lineCount << ": ";
@@ -250,7 +250,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			map<AnnotationBase::Keyword, String> gParms;
 			for (
 				ParamSet::const_iterator iter=newParams.begin();
-				iter != newParams.end(); iter++
+				iter != newParams.end(); ++iter
 			) {
 				gParms[iter->first] = iter->second.stringVal;
 			}
@@ -316,7 +316,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		ParamSet globalsLessLocal = _currentGlobals;
 		for (
 			ParamSet::const_iterator iter=newParams.begin();
-			iter != newParams.end(); iter++
+			iter != newParams.end(); ++iter
 		) {
 			AnnotationBase::Keyword key = iter->first;
 			if (globalsLessLocal.find(key) != globalsLessLocal.end()) {
@@ -327,10 +327,10 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		uInt i = 0;
 		for (
 			ParamSet::const_iterator iter=globalsLessLocal.begin();
-			iter != globalsLessLocal.end(); iter++
+			iter != globalsLessLocal.end(); ++iter
 		) {
 			_globalKeysToApply[i] = iter->first;
-			i++;
+			++i;
 		}
 		_createAnnotation(
 			annType, qDirs, qFreqs, quantities, textString,
@@ -342,8 +342,11 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 }
 
 void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {
+	/*
 	_lines.resize(_lines.size()+1, True);
 	_lines[_lines.size()-1] = line;
+	*/
+	_lines.push_back(line);
 }
 
 AnnotationBase::Type RegionTextParser::_getAnnotationType(
@@ -360,7 +363,7 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 	const static Regex startTwoPair("^" + sTwoPair);
 	const static Regex startOnePairAndText("^" + sOnePairAndText);
 	const static String sTwoPairOneSingle = bTwoPair
-			+ ",[[:space:]]*[^\\[,]+[[:space:]]*\\]";
+		+ ",[[:space:]]*[^\\[,]+[[:space:]]*\\]";
 	const static Regex startTwoPairOneSingle("^" + sTwoPairOneSingle);
 	const static Regex startOnePairOneSingle("^" + sOnePairOneSingle);
 	consumeMe.trim();
@@ -383,12 +386,11 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 			);
 		}
 		break;
-
 	case AnnotationBase::CENTER_BOX:
-		if (! consumeMe.contains(startTwoPair)) {
-			*_log << preamble << "Illegal center box specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startTwoPair),
+			preamble + "Illegal center box specification " + consumeMe
+		);
 		qDirs.resize(2);
 		quantities.resize(2);
 		{
@@ -400,10 +402,10 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		break;
 	case AnnotationBase::ROTATED_BOX:
-		if (! consumeMe.contains(startTwoPairOneSingle)) {
-			*_log << preamble << "Illegal rotated box specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startTwoPairOneSingle),
+			preamble + "Illegal rotated box specification " + consumeMe
+		);
 		qDirs.resize(2);
 		quantities.resize(3);
 		{
@@ -415,12 +417,11 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 			quantities[2] = qs[4];
 		}
 		break;
-
 	case AnnotationBase::POLYGON:
-		if (! consumeMe.contains(startNPair)) {
-			*_log << preamble << "Illegal polygon specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startNPair),
+			preamble + "Illegal polygon specification " + consumeMe
+		);
 		{
 			Vector<Quantity> qs = _extractNQuantityPairs(
 				consumeMe, preamble
@@ -430,10 +431,10 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		break;
 	case AnnotationBase::CIRCLE:
-		if (! consumeMe.contains(startOnePairOneSingle)) {
-			*_log << preamble << "Illegal circle specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startOnePairOneSingle),
+			preamble + "Illegal circle specification " + consumeMe
+		);
 		qDirs.resize(2);
 		quantities.resize(1);
 		{
@@ -446,10 +447,10 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		break;
 	case AnnotationBase::ANNULUS:
-		if (! consumeMe.contains(startTwoPair)) {
-			*_log << preamble << "Illegal annulus specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startTwoPair),
+			preamble + "Illegal annulus specification " + consumeMe
+		);
 		qDirs.resize(2);
 		quantities.resize(2);
 		{
@@ -711,7 +712,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 
 				for (
 					Vector<String>::const_iterator iter=pair.begin();
-					iter != pair.end(); iter++
+					iter != pair.end(); ++iter
 				) {
 					if (! iter->matches(rInt)) {
 						log << preamble << "Illegal label offset specification, "
@@ -747,7 +748,7 @@ RegionTextParser::_getCurrentParamSet(
 	ParamSet::const_iterator end = newParams.end();
 	for (
 		ParamSet::const_iterator iter=newParams.begin();
-		iter!=end; iter++
+		iter!=end; ++iter
 	) {
 		currentParams[iter->first] = iter->second;
 	}
@@ -793,7 +794,7 @@ void RegionTextParser::_createAnnotation(
 	const Bool annOnly, const Bool isDifference,
 	const String& preamble
 ) {
-	AnnotationBase *annotation = 0;
+	CountedPtr<AnnotationBase> annotation;
 	Vector<Stokes::StokesTypes> stokes(0);
 	if (
 		currentParamSet.find(AnnotationBase::CORR) != currentParamSet.end()
@@ -847,7 +848,7 @@ void RegionTextParser::_createAnnotation(
 			{
 				Vector<Quantity> x(qDirs.size()/2);
 				Vector<Quantity> y(qDirs.size()/2);
-				for (uInt i=0; i<x.size(); i++) {
+				for (uInt i=0; i<x.size(); ++i) {
 					x[i] = qDirs[2*i];
 					y[i] = qDirs[2*i + 1];
 				}
@@ -924,7 +925,7 @@ void RegionTextParser::_createAnnotation(
 			);
 			break;
 		default:
-			throw AipsError(
+			ThrowCc(
 				preamble + "Logic error. Unhandled type "
 					+  String::toString(annType) + " in switch statement"
 			);
@@ -938,20 +939,20 @@ void RegionTextParser::_createAnnotation(
 			<< "be ignored. The related message is: " << x.getMesg() << LogIO::POST;
 		return;
 	}
-	catch (ToLCRegionConversionError x) {
+	catch (const ToLCRegionConversionError& x) {
 		*_log << LogIO::WARN << preamble
 			<< "Error converting world region to lattice region which probably indicates "
 			<< "the region lies outside of the image. This region will be ignored."
 			<< "The related message is: " << x.getMesg() << LogIO::POST;
 		return;
 	}
-	catch (AipsError x) {
-		*_log << preamble << x.getMesg() << LogIO::EXCEPTION;
+	catch (const AipsError& x) {
+		ThrowCc(preamble + x.getMesg());
 	}
 	if (annotation->isRegion()) {
-		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
+		dynamic_cast<AnnRegion *>(annotation.get())->setDifference(isDifference);
 		if (! annOnly) {
-			_regions++;
+			++_regions;
 		}
 	}
 	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
@@ -1177,7 +1178,7 @@ Vector<Quantity> RegionTextParser::_extractTwoQuantityPairs(
 	Array<String> pairs = _extractTwoPairs(end, mySubstring);
 	Vector<Quantity> quantities(4);
 
-	for (uInt i=0; i<4; i++) {
+	for (uInt i=0; i<4; ++i) {
 		String desc("string " + String::toString(i));
 		String value = pairs(IPosition(2, i/2, i%2));
 		if (! readQuantity(quantities[i], value)) {
@@ -1219,7 +1220,7 @@ Vector<Quantity> RegionTextParser::_extractSingleQuantityPair(
 	Vector<String> pair = _extractSinglePair(mySubstring);
 	Vector<Quantity> quantities(2);
 
-	for (uInt i=0; i<2; i++) {
+	for (uInt i=0; i<2; ++i) {
 		String value = pair[i];
 		if (! readQuantity(quantities[i], value)) {
 			*_log << preamble << "Could not convert "
@@ -1234,10 +1235,10 @@ RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) {
 	Int maxn = Stokes::NumberOfTypes;
-	string *res = new string[maxn];
+	PtrHolder<string> res(new string[maxn], True);
 	Int nStokes = split(stokes, res, maxn, ",");
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
-	for (Int i=0; i<nStokes; i++) {
+	for (Int i=0; i<nStokes; ++i) {
 		String x(res[i]);
 		x.trim();
 		myTypes[i] = Stokes::type(x);
@@ -1245,7 +1246,7 @@ RegionTextParser::_stokesFromString(
 			throw AipsError(preamble + "Unknown correlation type " + x);
 		}
 	}
-	delete [] res;
+	//delete [] res;
 	return myTypes;
 }
 

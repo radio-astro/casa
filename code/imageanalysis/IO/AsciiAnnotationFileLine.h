@@ -69,7 +69,7 @@ public:
 
 	AsciiAnnotationFileLine(const String& comment);
 
-	AsciiAnnotationFileLine(const AnnotationBase * const annotationBase);
+	AsciiAnnotationFileLine(CountedPtr<const AnnotationBase> annotationBase);
 
 	AsciiAnnotationFileLine(const map<AnnotationBase::Keyword, String>& globals);
 
@@ -79,7 +79,7 @@ public:
 
 	map<AnnotationBase::Keyword, String> getGloabalParams() const;
 
-	const AnnotationBase* getAnnotationBase() const;
+	CountedPtr<const AnnotationBase> getAnnotationBase() const;
 
 	Type getType() const;
 
@@ -88,7 +88,7 @@ public:
 private:
 	Type _type;
 	String _comment;
-	const AnnotationBase  *_annotationBase;
+	CountedPtr<const AnnotationBase> _annotationBase;
 	map<AnnotationBase::Keyword, String> _globals;
 
 };

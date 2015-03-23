@@ -65,7 +65,7 @@ public:
 
 	virtual ImageRegion asImageRegion() const;
 
-	virtual WCRegion* getRegion() const;
+	virtual CountedPtr<const WCRegion> getRegion() const;
 
 	// returns True unless overridden.
 	virtual Bool isRegion() const;
@@ -154,8 +154,6 @@ protected:
 	// defined in the direction plane
 	void _setDirectionRegion(const ImageRegion& region);
 
-
-
 private:
 
 	Bool _isAnnotationOnly;
@@ -165,7 +163,6 @@ private:
 	vector<Double> _spectralPixelRange;
 
 	static const String _class;
-
 
 	WCBox _makeExtensionBox(
 		const Vector<Quantity>& freqRange,

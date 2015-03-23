@@ -99,7 +99,7 @@ public:
 
 	Int getFileVersion() const;
 
-	Vector<AsciiAnnotationFileLine> getLines() const;
+	vector<AsciiAnnotationFileLine> getLines() const;
 
 	// get the parameter set from a line of <src>text</src>. <src>preamble</src> is prepended to exception messages.
 	static ParamSet getParamSet(
@@ -119,7 +119,7 @@ private:
 	CoordinateSystem _csys;
 	std::auto_ptr<LogIO> _log;
 	ParamSet _currentGlobals;
-	Vector<AsciiAnnotationFileLine> _lines;
+	vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
 	Int _fileVersion;
 	IPosition _imShape;
