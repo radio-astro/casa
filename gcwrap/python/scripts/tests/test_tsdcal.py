@@ -81,7 +81,7 @@ class tsdcal_test(unittest.TestCase):
         tb.close()
         subt2.close()
 
-        if tsys1.all() == tsys2.all():
+        if (tsys1 == tsys2).all():
             print ''
             print 'The shape of the MS/SYSCAL/TSYS_SPECTRUM', tsys1.shape
             print 'The shape of the FPARAM extracted with tsdcal', tsys2.shape  
@@ -327,7 +327,7 @@ class tsdcal_test(unittest.TestCase):
         (spwmap={1:[9], 3:[11], 5:[13], 7:[15]})
         antanna1=0, DATA_DISC_ID=9, FPARAM_average
         """
-        
+        print '' 
         
         tid ="05"
         infile=self.infile1
@@ -359,6 +359,70 @@ class tsdcal_test(unittest.TestCase):
     
 
 
+    def test06(self):
+        """Test06: weight_spectrum = 1/(SIGMA**2) X 1/(FPARAMx**2) dictionary version"""
+        #focus on antenna1=0, data_disk_id=1
+        #spwmap_dict={1:[1],3:[3],5:[5],7:[7]}
+
+        
+        tid = "06"
+        infile = self.infile1
+        tsdcal(infile=infile, calmode='tsys', outfile='tsys6.cal')
+        initweights(vis=infile, dobt=True, dowtsp=True)        
+        #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
+        #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
+        
+        spwmap_dict={1:[1],3:[3],5:[5],7:[7]}        
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys6.cal', interp='nearest', outfile='')
+        
+        row=0
+
+        tb.open(infile)
+
+
+        sigma=tb.getcell('SIGMA', row)
+        #sigma10=tb.getcell('SIGMA', 0)[1]
+        
+        
+        weight_spectrum=tb.getcell('WEIGHT_SPECTRUM', row)
+        #weight_spectrum=tb.getcell('WEIGHT_SPECTRUM')
+        
+        
+        total_ch=tb.getcell('WEIGHT_SPECTRUM',row).shape[1]
+        tb.close()
+        
+        tb.open('tsys.cal')
+        #fparam00=tb.getcell('FPARAM', 0)[0][0]
+        #fparam10=tb.getcell('FPARAM', 0)[1][0]
+        fparam=tb.getcell('FPARAM', row)
+        
+
+        #sum_fparam0=0
+        #sum_fparam1=0
+        #for i in range(128):
+        #    sum_fparam0 += tb.getvarcol('FPARAM')['r1'][0][i][0]
+        #    sum_fparam1 += tb.getvarcol('FPARAM')['r1'][1][i][0]
+        #fparam0_ave=sum_fparam0/128.0
+        #fparam1_ave=sum_fparam1/128.0
+        #print 'fparam_average_r1_0', fparam0_ave
+        #print 'fparam_average_r1_1', fparam1_ave
+        
+        for ch in range(total_ch):
+            #print 'SIGMA00 ', sigma[0]
+            #print 'SIGMA10 ', sigma[1]
+            #print 'WEIGHT_SPECTRUM00 ', weight_spectrum[0][ch]
+            #print 'WEIGHT_SPECTRUM10 ', weight_spectrum[1][ch]
+            answer0 = 1/(sigma[0]**2)*1/(fparam[0][ch]**2) 
+            answer1 = 1/(sigma[1]**2)*1/(fparam[1][ch]**2) 
+            #print 'pol0: 1/SIGMA**2 X 1/(FPARAM)**2', answer0
+            #print 'pol1: 1/SIGMA**2 X 1/(FPARAM)**2', answer1
+            diff0_percent=(weight_spectrum[0][ch]-answer0)/weight_spectrum[0][ch]*100
+            diff1_percent=(weight_spectrum[1][ch]-answer1)/weight_spectrum[1][ch]*100
+            print 'pol0 & pol1 ch '+ str(ch)+ ': diff between 1/SIGMA**2 X 1/(FPARAM['+str(ch)+'])**2 and WEIGHT_SPECTRUM['+ str(ch)+']' , diff0_percent, '%', diff1_percent, '%' 
+            #print 'pol1 ch '+ str(ch)+ ': diff between 1/SIGMA**2 X 1/(FPARAM['+str(ch)+'])**2 and WEIGHT_SPECTRUM['+ str(ch)+']' , diff1_percent, '%' 
+        
+        tb.close()
+            
 
 
 
