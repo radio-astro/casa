@@ -441,7 +441,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                                  'listmodels'     : False,
                                  'scalebychan'    : True,
                                  'fluxdensity'    : -1,
-                                 'standard'       : 'Perley-Butler 2013',
+                                 'standard'       : inputs.standard,
                                  'usescratch'     : True}
                     
                     jobs.append(casa_tasks.setjy(**task_args))
