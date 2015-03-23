@@ -314,74 +314,30 @@ class Tclean(cleanbase.CleanBase):
         field = inputs.field
         spw = inputs.spw
 
-        # Effective antenna area
-        AgeomPerMS = []
-        msNames = []
-        for msInfo in context.observing_run.measurement_sets:
-            msNames.append(msInfo.name)
-            AgeomPerMS.append(reduce(lambda x,y: x+y, [numpy.pi / 4.0 * antenna.diameter**2 for antenna in context.observing_run.measurement_sets[0].antennas]))
-        AgeomPerMS = numpy.array(AgeomPerMS)
-
-        # Aperture efficiency can not yet be used from CalAmpli table.
-        # Assume reasonable fixed value.
-        etaA = 0.9
-        AeffPerMS = etaA * AgeomPerMS
-
-        # Calculate average Tsys
-        caTool = casac.calanalysis()
-        tsysTables = list(context.callibrary.applied.get_caltable('tsys'))
-        if (tsysTables != []):
-            # chain is used to flatten the lists of CalFrom objects (1 per applycal) into a 1-D list
-            tsysCalfroms = [cf for cf in itertools.chain(*context.callibrary.applied.merged().values()) if cf.gaintable in tsysTables]
-            # TODO: There are two maps one for AMPLITUDE and BANDPASS one for PHASE and TARGET.
-            #       They could be different. Need to get only the appropriate one.
-            spwMaps = list(set([cf.spwmap for cf in tsysCalfroms]))
-
-            avgTsysPerTable = []
-            for i in xrange(len(tsysTables)):
-                tsysTable = tsysTables[i]
-                spwMap = spwMaps[i]
-                caTool.open(tsysTable)
-                tsysData = caTool.get(field = field, spw = str(spwMap[int(spw)]))
-                if (len(tsysData.keys()) > 0):
-                    avgTsysPerPol = []
-                    for tsysPerPol in tsysData.itervalues():
-                        if (tsysPerPol['flag'].all() == False):
-                            avgTsysPerPol.append(numpy.ma.average(numpy.ma.array(tsysPerPol['value'], mask=tsysPerPol['flag'])))
-                    if (len(avgTsysPerPol) > 0):
-                        avgTsysPerTable.append(numpy.average(avgTsysPerPol))
-                    else:
-                        avgTsysPerTable.append(1.0)
-                        LOG.warning('No Tsys data found. Using Tsys = 1.0 K.')
-                caTool.close()
-            # TODO: Calculate sensitivity per set of MSs calibrated with
-            #       a given Tsys table.
-            avgTsys = numpy.average(avgTsysPerTable)
-        else:
-            LOG.warning('No Tsys tables found. Using Tsys = 1.0 K.')
-            avgTsys = 1.0
-
         # Calculate sensitivities
-        sensitivities = []
+        sensitivitySquares = []
         imTool = casac.imager()
-        # Assume one Tsys table per MS for now
-        for i in xrange(len(msNames)):
-            imTool.open(msNames[i])
+        for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
+            imTool.open(msName)
             imTool.selectvis(spw = spw, field = field)
-            imTool.defineimage(mode = inputs.specmode, spw = int(spw))
-            imTool.weight('natural')
+            imTool.defineimage(mode = inputs.specmode, \
+                               spw = int(spw), \
+                               cellx = inputs.cell[0], \
+                               celly = inputs.cell[0], \
+                               nx = inputs.imsize[0], \
+                               ny = inputs.imsize[1])
+            # TODO: Mosaic switch needed ?
+            imTool.weight(type=inputs.weighting, robust=inputs.robust)
+
             try:
-                result = imTool.sensitivity()
-                sensitivities.append(result[1]['value'] * avgTsysPerTable[i] / AeffPerMS[i])
+                result = imTool.apparentsens()
+                sensitivitySquares.append(result[1]**2)
             except Exception as e:
-                sensitivities.append(0.01)
+                sensitivitySquares.append(0.01**2)
                 LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
             imTool.close()
 
-        sensitivity = numpy.average(sensitivities)
-
-        # Save sensitivity in context dictionary for image QA
-        #self.inputs.context.... / results ?
+        sensitivity = numpy.sqrt(numpy.average(sensitivitySquares))
 
         return sensitivity
 
