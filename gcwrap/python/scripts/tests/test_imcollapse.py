@@ -490,10 +490,12 @@ class imcollapse_test(unittest.TestCase):
         """ imcollapse: test tabular spectral axis has correct collapsed reference value """
         image = self.tabular_spectral_image
         for chans in ["2445~2555", "range=[2445pix,2555pix]"]:
+            print "aa"
             mytool = run_collapse(
                 image, "mean", 2, "", "", "",
                 chans, "", "", False
             )
+            print "ab"
             expected = 98318505973583.641
             got = mytool.toworld([0,0,0])["numeric"][2]
             mytool.done()
