@@ -52,7 +52,7 @@ protected:
 private:
   Block<Int> userSortCols_;
 
-}; // class SingleDishMS -END
+}; // class SDMSManager -END
 
 
 } //# NAMESPACE CASA - END

@@ -5986,6 +5986,9 @@ template <class T> void MSTransformManager::writeCube(	const Cube<T> &inputCube,
 	return;
 }
 
+// explicit instatiation for the use from SDMSManager
+template void MSTransformManager::writeCube<Bool>(const Cube<Bool> &, ArrayColumn<Bool> &, RefRows &);
+
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
