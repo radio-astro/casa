@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CountedPtr.h 21534 2014-12-31 15:18:51Z gervandiepen $
+//# $Id: CountedPtr.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #ifndef CASA_COUNTEDPTR_H
 #define CASA_COUNTEDPTR_H
@@ -32,8 +32,6 @@
 
 #if (defined(AIPS_CXX11) || (defined(__APPLE_CC__) && __APPLE_CC__ > 5621))
 #include <memory>
-///#elif defined HAVE_BOOST
-///#include <boost/shared_ptr.hpp>
 #define SHARED_PTR std::shared_ptr
 #define DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
 #define CONST_POINTER_CAST std::const_pointer_cast

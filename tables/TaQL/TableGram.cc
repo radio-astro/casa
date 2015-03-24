@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: TableGram.cc 21574 2015-03-10 13:52:15Z gervandiepen $
 
 // TableGram; grammar for table command lines
 
@@ -72,9 +72,16 @@ int tableGramParseCommand (const String& command)
 {
     TableGramrestart (TableGramin);
     yy_start = 1;
+    // Save global state for re-entrancy.
+    const char* savStrpTableGram = strpTableGram;
+    Int savPosTableGram= posTableGram;
     strpTableGram = command.chars();     // get pointer to command string
     posTableGram  = 0;                   // initialize string position
-    return TableGramparse();             // parse command string
+    int sts = TableGramparse();          // parse command string
+    // Restore global state.
+    strpTableGram = savStrpTableGram;
+    posTableGram= savPosTableGram;
+    return sts;
 }
 
 //# Give the string position.

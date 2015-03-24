@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeArray.h 21538 2015-01-07 09:08:57Z gervandiepen $
+//# $Id: ExprNodeArray.h 21577 2015-03-18 15:00:56Z gervandiepen $
 
 #ifndef TABLES_EXPRNODEARRAY_H
 #define TABLES_EXPRNODEARRAY_H
@@ -74,6 +74,11 @@ public:
     // </group>
 
     ~TableExprNodeArray();
+
+    // Turn a constant array with one element into a scalar.
+    // It returns a zero pointer if not possible.
+    // The default implementation returns 0.
+    virtual TableExprNodeRep* makeConstantScalar();
 
     // Get the shape of the array in the given row.
     // This default implementation evaluates the value and returns its shape.

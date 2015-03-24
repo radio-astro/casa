@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeHandler.cc 21565 2015-02-18 09:15:05Z gervandiepen $
+//# $Id: TaQLNodeHandler.cc 21577 2015-03-18 15:00:56Z gervandiepen $
 
 #include <casacore/tables/TaQL/TaQLNodeHandler.h>
 #include <casacore/tables/TaQL/TaQLNode.h>
@@ -202,7 +202,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     case TaQLBinaryNodeRep::B_LE:
       return new TaQLNodeHRValue (left <= right);
     case TaQLBinaryNodeRep::B_IN:
-      return new TaQLNodeHRValue (left.in (right));
+      return new TaQLNodeHRValue (left.in (right, node.style()));
     case TaQLBinaryNodeRep::B_INDEX:
       break;
     case TaQLBinaryNodeRep::B_EQREGEX:

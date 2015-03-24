@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSMetaData.cc 21531 2014-12-24 11:46:02Z gervandiepen $
+//# $Id: tMSMetaData.cc 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #include <casacore/casa/aips.h>
 

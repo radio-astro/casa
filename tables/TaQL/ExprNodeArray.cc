@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeArray.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: ExprNodeArray.cc 21577 2015-03-18 15:00:56Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprNode.h>
 #include <casacore/tables/TaQL/ExprNodeArray.h>
@@ -61,6 +61,65 @@ TableExprNodeArray::TableExprNodeArray (NodeDataType dtype, OperType otype,
 
 TableExprNodeArray::~TableExprNodeArray()
 {}
+
+TableExprNodeRep* TableExprNodeArray::makeConstantScalar()
+{
+  if (isConstant()) {
+    switch (dataType()) {
+    case NTBool:
+      {
+        Array<Bool> arr = getArrayBool(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstBool (arr.data()[0]);
+        }
+      }
+      break;
+    case NTInt:
+      {
+        Array<Int64> arr = getArrayInt(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstInt (arr.data()[0]);
+        }
+      }
+      break;
+    case NTDouble:
+      {
+        Array<Double> arr = getArrayDouble(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstDouble (arr.data()[0]);
+        }
+      }
+      break;
+    case NTComplex:
+      {
+        Array<DComplex> arr = getArrayDComplex(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstDComplex (arr.data()[0]);
+        }
+      }
+      break;
+    case NTString:
+      {
+        Array<String> arr = getArrayString(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstString (arr.data()[0]);
+        }
+      }
+      break;
+    case NTDate:
+      {
+        Array<MVTime> arr = getArrayDate(0);
+        if (arr.size() == 1) {
+          return new TableExprNodeConstDate (arr.data()[0]);
+        }
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  return 0;
+}
 
 const IPosition& TableExprNodeArray::getShape (const TableExprId& id)
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFBase.h 21569 2015-02-18 14:42:54Z gervandiepen $
+//# $Id: UDFBase.h 21577 2015-03-18 15:00:56Z gervandiepen $
 
 #ifndef TABLES_UDFBASE_H
 #define TABLES_UDFBASE_H
@@ -114,7 +114,7 @@ namespace casacore {
   // <tr>
   //  <td><src>getXXX</src></td>
   //  <td>these are virtual get functions for each possible data type. The
-  //      get functions matching the data types that set by the setup
+  //      get functions matching the data types set by the setup
   //      function need to be implemented.
   //      The <src>get</src> functions have an argument TableExprId
   //      defining the table row (or record) for which the function has
@@ -124,7 +124,7 @@ namespace casacore {
   //      objects in an aggregation group can be retrieved.
   //      <srcblock>
   //        const TableExprIdAggr& aid = TableExprIdAggr::cast (id);
-  //        const vector<TableExprId>& ids = aid.result().ids(id.groupnr());
+  //        const vector<TableExprId>& ids = aid.result().ids(id.rownr());
   //      </srcblock>
   //  </td>
   // </tr>

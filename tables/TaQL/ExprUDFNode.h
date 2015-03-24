@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNode.h 21538 2015-01-07 09:08:57Z gervandiepen $
+//# $Id: ExprUDFNode.h 21576 2015-03-18 09:03:37Z gervandiepen $
 
 #ifndef TABLES_EXPRUDFNODE_H
 #define TABLES_EXPRUDFNODE_H
@@ -83,13 +83,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     // Destructor
     virtual ~TableExprUDFNode();
 
+    // Is the UDF an aggregate function?
+    Bool isAggregate() const
+      { return itsUDF->isAggregate(); }
+
     // Get the nodes representing an aggregate function.
     virtual void getAggrNodes (vector<TableExprNodeRep*>& aggr);
 
     // Get the nodes representing a table column.
     virtual void getColumnNodes (vector<TableExprNodeRep*>& cols);
   
-    // UDFs do not need a TableExprGroupFuncBase, so null is returned.
+    // UDFs do not need a TableExprGroupFuncBase,
+    // so TableExprGroupNull is returned.
     CountedPtr<TableExprGroupFuncBase> makeGroupAggrFunc();
 
     // Functions to get the desired result of a function
