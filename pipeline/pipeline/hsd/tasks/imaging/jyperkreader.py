@@ -127,7 +127,13 @@ def associate(context, factors):
         data = factors.data
         for ms in context.observing_run.measurement_sets:
             session_name = ms.session
-            session_id = int(session_name.split('_')[-1])
+            if session_name == 'Session_default':
+                # Session_default is not supported, use Session_1 instead
+                LOG.warn('Session for %s is \'Session_default\'. Use \'Session_1\' for application of Jy/K factor. '%(ms.basename))
+                session_id = 1
+            else:
+                # session_name should be 'Session_X' where X is an integer
+                session_id = int(session_name.split('_')[-1])
             #print 'ms', ms.basename, 'session_id', session_id
             session_list = numpy.array(map(lambda x: int(x), data['sessionID']))
             #print 'session_list', session_list
