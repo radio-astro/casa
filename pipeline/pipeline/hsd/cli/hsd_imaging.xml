@@ -19,6 +19,11 @@
 	</allowed>
     </param>
 
+    <param type="string" name="reffile">
+        <description>File of Jy/K conversion factor</description>
+        <value></value>
+    </param>
+    
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -57,11 +62,6 @@
             <value type="string"></value>
     </param>
 
-    <param type="string" name="reffile" subparam="true">
-        <description>Path to file with Jy/K conversion factors</description>
-        <value></value>
-    </param>
-    
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -82,7 +82,6 @@
                 <default param="spw"><value type="string"></value></default>
                 <default param="scan"><value type="string"></value></default>
                 <default param="pol"><value type="string"></value></default>
-                <default param="reffile"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -92,7 +91,6 @@
                 <default param="spw"><value type="string"></value></default>
                 <default param="scan"><value type="string"></value></default>
                 <default param="pol"><value type="string"></value></default>
-                <default param="reffile"><value type="string"></value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -124,6 +122,51 @@ mode -- imaging mode controls imaging parameters in the task.
    for amplitude calibrator)
    default: 'line'
    options: 'line', 'ampcal',
+
+reffile -- Path to a file containing Jy/K factors for science data, which 
+    must be provided by associating calibrator reduction or the observatory 
+    measurements. Jy/K factor must take into account all efficiencies, i.e.,
+    it must be a direct conversion factor from Ta* to Jy. The file must be 
+    in either MS-based or session-based format. The MS-based format must 
+    be in an CSV format with five fields: MS name, antenna name, spectral 
+    window id, polarization string, and Jy/K conversion factor. Example for 
+    the file is as follows:
+    
+        MS,Antenna,Spwid,Polarization,Factor
+        uid___A002_X316307_X6f.ms,CM03,5,XX,10.0
+        uid___A002_X316307_X6f.ms,CM03,5,YY,12.0
+        uid___A002_X316307_X6f.ms,PM04,5,XX,2.0
+        uid___A002_X316307_X6f.ms,PM04,5,YY,5.0
+        
+    The first line in the above example is a header which may or may not 
+    exist. Example for the session-based format is as follows:
+    
+        #OUSID=XXXXXX
+        #OBJECT=Uranus
+        #FLUXJY=yy,zz,aa
+        #FLUXFREQ=YY,ZZ,AA
+        #sessionID,ObservationStartDate(UTC),ObservationEndDate(UTC),Antenna,BandCenter(MHz),BandWidth(MHz),POL,Factor
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,CM02,86243.0,500.0,I,10.0
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,CM02,86243.0,1000.0,I,30.0
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,CM03,86243.0,500.0,I,50.0
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,CM03,86243.0,1000.0,I,70.0
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,ANONYMOUS,86243.0,500.0,I,30.0
+        1,2011-11-11 01:00:00,2011-11-11 01:30:00,ANONYMOUS,86243.0,1000.0,I,50.0
+        2,2011-11-13 01:45:00,2011-11-13 02:15:00,PM04,86243.0,500.0,I,90.0
+        2,2011-11-13 01:45:00,2011-11-13 02:15:00,PM04,86243.0,1000.0,I,110.0
+        2,2011-11-13 01:45:00,2011-11-13 02:15:00,ANONYMOUS,86243.0,500.0,I,90.0
+        2,2011-11-13 01:45:00,2011-11-13 02:15:00,ANONYMOUS,86243.0,1000.0,I,110.0
+        
+    The line starting with '#' indicates a meta data section and header. 
+    The header must exist. The lines whose antenna name is 'ANONYMOUS' 
+    are used when there is no meaurement for specific antenna in the session. 
+    In the above example, if science observation of session 1 contains the 
+    antenna PM04, Jy/K factor for ANONYMOUS antenna will be applied since there 
+    is no measurement for PM04 in session 1. 
+    If no file name is specified or specified file doesn't exist, all Jy/K factors 
+    are set to 1.0. 
+    default: ''
+    example: '', 'working/jyperk.csv'
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
@@ -160,25 +203,6 @@ pol -- Data selection by pol.
    default: '' (all polarizations)
    example: '0' (generate caltable for pol 0)
             ['0~1','0'] (pol 0 and 1 for first data, only 0 for second)
-
-reffile -- Path to a file containing Jy/K factors for science data, which 
-    must be provided by associating calibrator reduction or the observatory 
-    measurements. Jy/K factor must take into account all efficiencies, i.e.,
-    it must be a direct conversion factor from Ta* to Jy. The file must be 
-    in CSV format with five fields: MS name, antenna name, spectral window 
-    id, polarization string, and Jy/K conversion factor. Example for the 
-    file is as follows:
-    
-        MS,Antenna,Spwid,Polarization,Factor
-        uid___A002_X316307_X6f.ms,CM03,5,XX,10.0
-        uid___A002_X316307_X6f.ms,CM03,5,YY,12.0
-        uid___A002_X316307_X6f.ms,PM04,5,XX,2.0
-        uid___A002_X316307_X6f.ms,PM04,5,YY,5.0
-        
-    The first line in the above example is a header which may or may not 
-    exist. By default all Jy/K factors are set to 1.0. 
-    default: ''
-    example: '', 'working/jyperk.csv'
 
 --- pipeline task execution modes
 
