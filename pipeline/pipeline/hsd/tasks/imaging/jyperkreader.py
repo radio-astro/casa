@@ -38,12 +38,12 @@ def read_session_based(context, reffile):
             if line[0] == '#':
                 # header
                 meta = parser.parse_header(line)
-                print meta
+                #print meta
                 storage.register_meta(meta)
             else:
                 # data
                 data = parser.parse_data(line)
-                print data
+                #print data
                 storage.register_data(data)
                 
     with associate(context, storage) as f:
@@ -139,7 +139,7 @@ def associate(context, factors):
             antenna_list = data['Antenna']
     
             factor_list = numpy.array(map(lambda x: float(x), data['Factor']))
-            print factor_list
+            #print factor_list
             
             spws = ms.get_spectral_windows()
             bandcenter = numpy.array(map(lambda x: float(x) * 1.0e6, data['BandCenter(MHz)']))
@@ -179,7 +179,7 @@ def associate(context, factors):
                     #print f[0], _best_score
                     for _i in f[1:]:
                         coverage = inspect_coverage(min_freq, max_freq, range_min[_i], range_max[_i])
-                        print _i, coverage
+                        #print _i, coverage
                         if coverage > _best_score:
                             best_index = _i
                             _best_score = coverage
