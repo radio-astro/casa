@@ -7,6 +7,7 @@ import numpy
 import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casatools
 from .. import common
+from . import jyperkreader
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -41,7 +42,9 @@ class IntensityScaling(common.SingleDishTaskTemplate):
         else:
             # do scaling
             # read scaling factor list
-            factors_list = read_scaling_factor(reffile)
+            #factors_list = read_scaling_factor(reffile)
+            factors_list = jyperkreader.read(self.inputs.context, reffile)
+            LOG.debug('factors_list=%s'%(factors_list))
             
             # generate scaling factor dictionary
             factors = rearrange_factors_list(factors_list)
@@ -80,7 +83,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                             if spw.nchan == 4:
                                 # skip WVR
                                 continue
-                            elif spw.is_target:
+                            elif spw.is_target and spw.nchan > 1:
                                 if factors[vis][ant].has_key(spwid):
                                     factors_per_pol = factors[vis][ant][spwid]
                                     self._do_scaling(st, spwid, factors_per_pol)
@@ -129,6 +132,13 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                          'PFtotal',
                          'PFlinear',
                          'Pangle'])
+        
+        # factor for Stokes I can be applied to 'XX', 'YY', 'RR', 'LL' if 
+        # specific factor for those correlations don't exist
+        compatible_corrtype = dict(((k,[k]) for k in stokes_enum))
+        for corr in ['XX', 'YY', 'RR', 'LL']:
+            compatible_corrtype[corr].append('I')
+        
         #LOG.info('Applying %s to (%s,%s)'%(factors, ms_name, spwid))
         with casatools.TableReader(os.path.join(ms_abspath, 'DATA_DESCRIPTION')) as tb:
             spwid_list = tb.getcol('SPECTRAL_WINDOW_ID')
@@ -145,6 +155,17 @@ class IntensityScaling(common.SingleDishTaskTemplate):
             for corr in corr_type:
                 if factors.has_key(corr):
                     factor.append(factors[corr])
+                elif len(compatible_corrtype[corr]) > 1:
+                    # try factor for another correlation type 
+                    compatible_factor_found = False
+                    for ccorr in compatible_corrtype[corr][1:]:
+                        if factors.has_key(ccorr):
+                            factor.append(factors[ccorr])
+                            compatible_factor_found = True
+                            break
+                    if compatible_factor_found == False:
+                        LOG.info('Scaling factor for (%s, %s, %s) is missing. Use 1.0'%(vis,spwid,corr))
+                        factor.append(1.0)
                 else:
                     LOG.info('Scaling factor for (%s, %s, %s) is missing. Use 1.0'%(vis,spwid,corr))
                     factor.append(1.0)
@@ -178,7 +199,7 @@ def read_scaling_factor(reffile):
         reader = csv.reader(f)
         # Check if first line is header or not
         line = reader.next()
-        if line[0].strip() == 'MS':
+        if line[0].strip().upper() == 'MS':
             # must be a header
             pass
         elif len(line) == 5:
