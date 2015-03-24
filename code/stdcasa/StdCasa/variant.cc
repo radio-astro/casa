@@ -361,8 +361,6 @@ std::vector<bool> variant::toBoolVec( ) const {
     break;									\
     }
 
-typedef unsigned int uInt;
-
 std::string variant::toString( bool no_brackets ) const {
     switch( typev ) {
 	case BOOL:
@@ -445,6 +443,8 @@ TYPE variant::NAME( ) const {							\
 	    return (TYPE) (val.b ? 1 : 0);					\
 	case INT:								\
 	    return (TYPE) val.i;						\
+	case UINT:								\
+	    return (TYPE) val.ui;						\
 	case DOUBLE:								\
 	    return (TYPE) val.d;						\
 	case COMPLEX:								\
@@ -470,11 +470,8 @@ TYPE variant::NAME( ) const {							\
 }
 
 TONUMERIC(toInt,int,int)
+TONUMERIC(touInt,uInt,uInt)
 TONUMERIC(toDouble,double,double)
-
-unsigned int variant::touInt() const {
-   return (unsigned int) (val.ui);
-}
 
 long long variant::toLong() const {
    return (long long) (val.l);
@@ -739,6 +736,7 @@ TYPE &variant::NAME( ) {							\
 }
 
 ASNUMERIC(asInt,int,int,INT,i)
+ASNUMERIC(asuInt,uInt,uInt,UINT,ui)
 ASNUMERIC(asDouble,double,double,DOUBLE,d)
 
 
@@ -1484,6 +1482,9 @@ void variant::as( TYPE t, int size ) {
 	case INT:
 	    asInt();
 	    break;
+	case UINT:
+	    asuInt();
+	    break;
 	case LONG:
 	    asInt();
 	    break;
@@ -1575,6 +1576,9 @@ void variant::push(TYPEX v, bool conform ) {					\
 	case INT:								\
 	    asIntVec().push_back((int) STRINT(v BOOLTWEAK));			\
 	    break;								\
+	case UINT:								\
+	    asuIntVec().push_back((uInt) STRINT(v BOOLTWEAK));			\
+	    break;								\
 	case LONG:								\
 	    asLongVec().push_back((long long) STRLONG(v BOOLTWEAK));			\
 	    break;								\
@@ -1628,6 +1632,7 @@ void variant::push(TYPEX v, bool conform ) {					\
 PUSHIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , , )
 PUSHIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0 && v.imag() == 0 ? false : true ,.real()              ,               , , , , , )
 PUSHIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PUSHIMPL(uInt               ,UINT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PUSHIMPL(long long          ,LONG     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PUSHIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PUSHIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint,stringtolong, stringtodouble ,stringtocomplex )
@@ -1652,6 +1657,11 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 		asIntVec(index+1)[index] = (int) (STRINT(v BOOLTWEAK));		\
 	    else								\
 		val.i = (int) (STRINT(v BOOLTWEAK));				\
+	case UINT:								\
+	    if ( index > 0 )							\
+		asuIntVec(index+1)[index] = (uInt) (STRINT(v BOOLTWEAK));	\
+	    else								\
+		val.ui = (uInt) (STRINT(v BOOLTWEAK));				\
 	    break;								\
 	case LONG:								\
 	    if ( index > 0 )							\
@@ -1724,6 +1734,7 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 PLACEIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , , )
 PLACEIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0.0 && v.imag() == 0.0 ? false : true ,.real()              ,               , , , , , )
 PLACEIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PLACEIMPL(uInt               ,UINT    ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PLACEIMPL(long long                ,LONG     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PLACEIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
 PLACEIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint, stringtolong, stringtodouble ,stringtocomplex )
@@ -1732,6 +1743,7 @@ PLACEIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoin
 std::string variant::create_message( const std::string s ) const {
     std::string type = (typev == BOOL ? "bool" :
 			typev == INT ? "int" :
+			typev == UINT ? "uint" :
 			typev == DOUBLE ? "double" :
 			typev == STRING ? "string" :
 			typev == BOOLVEC ? "boolvec" :
@@ -1772,6 +1784,9 @@ void variant::resize( int size ) {
 		break;
 	    case INT:
 		asIntVec(size);
+		break;
+	    case UINT:
+		asuIntVec(size);
 		break;
 	    case LONG:
 		asLongVec(size);

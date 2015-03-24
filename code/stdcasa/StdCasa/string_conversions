@@ -1,6 +1,10 @@
 #ifndef __casac_string_conversions__
 #define __casac_string_conversions__
 
+#include <cstdlib>
+
+typedef unsigned int uInt;
+
 bool stringtobool( const std::string &str ) {
     const char *data = str.data();
     while ( *data && isspace(*data) ) ++data;
@@ -23,6 +27,11 @@ bool stringtobool( const std::string &str ) {
 inline int stringtoint( const std::string &str ) {
     const char *data = str.data();
     return atoi(data);
+}
+
+inline unsigned int stringtouInt( const std::string &str ) {
+    const char *data = str.data();
+    return strtoul(data, NULL, 10);
 }
 
 inline long long stringtolong( const std::string &str ) {
@@ -59,6 +68,16 @@ inline std::string PTR int ## NAME( int i ) {			\
 inline std::string PTR NAME( int i ) {					\
     char buff[256];							\
     sprintf( buff, "%d", i );						\
+    return NEW std::string( (const char *) buff );			\
+}									\
+inline std::string PTR uInt ## NAME( uInt i ) {			\
+    char buff[256];							\
+    sprintf( buff, "%u", i );						\
+    return NEW std::string( (const char *) buff );			\
+}									\
+inline std::string PTR NAME( uInt i ) {					\
+    char buff[256];							\
+    sprintf( buff, "%u", i );						\
     return NEW std::string( (const char *) buff );			\
 }									\
 inline std::string PTR long ## NAME( long long  l ) {					\

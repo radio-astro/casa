@@ -205,6 +205,7 @@ class variant {
 
 	void place(bool, unsigned int index, bool conform = true);
 	void place(int, unsigned int index, bool conform = true);
+	void place(unsigned int, unsigned int index, bool conform = true);
 	void place(long long, unsigned int index, bool conform = true);
 	void place(double, unsigned int index, bool conform = true);
 	void place(std::vector<long long>, unsigned int index, bool conform = true);
