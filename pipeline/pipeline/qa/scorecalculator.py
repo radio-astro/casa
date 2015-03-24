@@ -3,6 +3,7 @@ Created on 9 Jan 2014
 
 @author: sjw
 '''
+import os
 import collections
 import datetime
 import operator
@@ -24,7 +25,8 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_missing_bandpass_snrs',                     # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
-           'score_setjy_measurements',         
+	   'score_file_exists',
+           'score_setjy_measurements',
            'score_missing_intents',
            'score_ephemeris_coordinates',
            'score_online_shadow_agents',
@@ -930,3 +932,94 @@ def score_derived_fluxes_snr(ms, measurements):
         shortmsg = 'Low SNR derived fluxes'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_file_exists(filedir, filename, filetype):
+    '''
+    Score the existence of a file
+        1.0 if it exist
+	0.0 if it does not
+    '''
+
+    file = os.path.join(filedir, os.path.basename(filename)) 
+    if filename is None:
+        score = 1.0
+        longmsg = 'The %s file is undefined' % (filetype)
+        shortmsg = 'The %s file is undefined' % (filetype)
+    elif os.path.exists(file):
+        score = 1.0
+        longmsg = 'The %s file has been exported' % (filetype)
+        shortmsg = 'The %s file has been exported' % (filetype)
+    else:
+        score = 0.0
+        longmsg = 'The %s file %s does not exist' % (filetype, os.path.basename(filename))
+        shortmsg = 'The %s file does not exist' % (filetype)
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_flags_exist(filedir, visdict):
+    '''
+    Score the existence of a file
+        1.0 if the all exist
+	n / nexpected if some of them exist
+	0.0 if none exist
+    '''
+
+    nexpected = len(visdict)
+    nfiles = 0; missing=[]
+    for visname in visdict:
+        file = os.path.join(filedir, os.path.basename(visdict[visname][0])) 
+        if os.path.exists(file):
+	    nfiles = nfiles + 1
+	else:
+	    missing.append(ps.path.basename(visdict[visname][0]))
+
+    if nfiles <= 0:
+        score = 0.0
+        longmsg = 'Final flag version files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final flags version files'
+    elif nfiles < nexpected:
+        score = float (nfiles) / float (nexpected)
+        longmsg = 'Final flag version files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final flags version files'
+    else:
+        score = 1.0
+        longmsg = 'No missing final flag version files'
+        shortmsg = 'No missing final flags version files'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_applycmds_exist(filedir, visdict):
+    '''
+    Score the existence of a file
+        1.0 if the all exist
+	n / nexpected if some of them exist
+	0.0 if none exist
+    '''
+
+    nexpected = len(visdict)
+    nfiles = 0; missing=[]
+    for visname in visdict:
+        file = os.path.join(filedir, os.path.basename(visdict[visname][1])) 
+        if os.path.exists(file):
+	    nfiles = nfiles + 1
+	else:
+	    missing.append(os.path.basename(visdict[visname][1]))
+
+    if nfiles <= 0:
+        score = 0.0
+        longmsg = 'Final apply commands files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final apply commands files'
+    elif nfiles < nexpected:
+        score = float (nfiles) / float (nexpected)
+        longmsg = 'Final apply commands files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing final apply commands files'
+    else:
+        score = 1.0
+        longmsg = 'No missing final apply commands files'
+        shortmsg = 'No missing final apply commands files'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
