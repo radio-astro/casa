@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SubLattice.h 21549 2015-01-28 10:01:12Z gervandiepen $
+//# $Id: SubLattice.h 21572 2015-03-03 12:22:11Z gervandiepen $
 
 #ifndef LATTICES_SUBLATTICE_H
 #define LATTICES_SUBLATTICE_H
@@ -96,11 +96,10 @@ public:
   // while for the non-const version one has to specify if the SubLattice
   // should be writable (if the original lattice is non-writable, the
   // SubLattice is always set to non-writable).
+  // <note>In the 2nd case the lattice could have been declared const,
+  // but is not to indicate it can be changed. </note>
   // <group>
   SubLattice (const Lattice<T>& lattice, AxesSpecifier=AxesSpecifier());
-
-  // according to Ger, even though lattice could be declared const it is
-  // purposefully not to indicate that the data can change.
   SubLattice (Lattice<T>& lattice, Bool writableIfPossible,
 	      AxesSpecifier=AxesSpecifier());
   // </group>
@@ -114,9 +113,6 @@ public:
   // but is not to indicate it can be changed. </note>
   // <group>
   SubLattice (const MaskedLattice<T>& lattice, AxesSpecifier=AxesSpecifier());
-
-  // according to Ger, even though lattice could be declared const it is
-  // purposefully not to indicate that the data can change.
   SubLattice (MaskedLattice<T>& lattice, Bool writableIfPossible,
 	      AxesSpecifier=AxesSpecifier());
   // </group>
@@ -136,8 +132,6 @@ public:
 	      Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
   SubLattice (const MaskedLattice<T>& lattice, const LatticeRegion& region,
 	      AxesSpecifier=AxesSpecifier());
-  // according to Ger, even though lattice could be declared const it is
-  // purposefully not to indicate that the data can change.
   SubLattice (MaskedLattice<T>& lattice, const LatticeRegion& region,
 	      Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
   // </group>
@@ -284,7 +278,7 @@ public:
 
   // Convert the specified position in the sublattice to the corresponding
   // position in the parent lattice.
-  inline IPosition positionInParent(const IPosition& subLatticePosition) const
+  IPosition positionInParent(const IPosition& subLatticePosition) const
   {
     if (itsAxesMap.isRemoved()) {
       return itsRegion.convert (itsAxesMap.posToOld(subLatticePosition));
@@ -301,9 +295,7 @@ public:
   // a new SubLattice<T> object.
   void setRegion (const Slicer& slicer);
 
-
 protected:
-
   // Set the region object.
   // It also fills in the parent pointer when the SubLattice is taken
   // from a MaskedLattice.
@@ -313,7 +305,7 @@ protected:
   void setRegion();
   // </group>
 
-  // Set the various pointer needed to construct the object.
+  // Set the various pointers needed to construct the object.
   // One of the pointers should be zero.
   // It takes over the pointer and deletes the object in the destructor.
   void setPtr (Lattice<T>* latticePtr,

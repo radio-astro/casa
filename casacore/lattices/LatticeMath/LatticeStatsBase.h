@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeStatsBase.h 21551 2015-01-29 09:15:47Z gervandiepen $
+//# $Id: LatticeStatsBase.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #ifndef LATTICES_LATTICESTATSBASE_H
 #define LATTICES_LATTICESTATSBASE_H
@@ -62,18 +62,10 @@ class Regex;
 // </synopsis>
 //
 // <example>
-// <srcBlock>
+// <srcblock>
 //    Vector<Int> statsToPlot = LatticeStatsBase::toStatisticTypes("mean,rms,sigma");
-// </srcBlock>
+// </srcblock>
 // </example>
-//
-// <motivation>
-// My sensibilities were offended at having to say
-//
-//    <src>Vector<Int> statsToPlot = LatticeStatistics<Float>::toStatisticTypes("mean,rms,sigma");</src>
-//
-// when the <src><Float></src> was meaningless.
-// </motivation>
 //
 // <todo asof="yyyy/mm/dd">
 // </todo>

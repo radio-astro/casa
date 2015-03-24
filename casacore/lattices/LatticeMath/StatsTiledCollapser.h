@@ -31,7 +31,7 @@
 //# Includes
 #include <casacore/casa/aips.h>
 
-namespace casa {
+namespace casacore {
 
 
 // <summary> Generate statistics, tile by tile, from a masked lattice </summary>

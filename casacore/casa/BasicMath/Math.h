@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: Math.h 21572 2015-03-03 12:22:11Z gervandiepen $
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
@@ -297,7 +297,7 @@ inline Bool isNaN (const Float& val)
 }
 inline Bool isNaN(Double val)
 {
-  return ( std::isnan((double)val) );
+  return ( std::isnan(val) );
 }
 // </group>
 

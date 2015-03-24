@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeHistograms.h 21549 2015-01-28 10:01:12Z gervandiepen $
+//# $Id: LatticeHistograms.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #ifndef LATTICES_LATTICEHISTOGRAMS_H
 #define LATTICES_LATTICEHISTOGRAMS_H

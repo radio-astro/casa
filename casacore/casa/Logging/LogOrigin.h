@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogOrigin.h 21572 2015-03-03 12:22:11Z gervandiepen $
+//# $Id: LogOrigin.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #ifndef CASA_LOGORIGIN_H
 #define CASA_LOGORIGIN_H
@@ -156,8 +156,8 @@ public:
     // <src>where</src> will be defined with the <src>WHERE</src> macro.
     LogOrigin &sourceLocation(const SourceLocation *where);
 
-    // Returns <src>class::function</src> for a member function, or
-    // <src>::function</src> for a global function.
+    // Returns <src>class\::function</src> for a member function, or
+    // <src>\::function</src> for a global function.
     String fullName() const;
 
     // Turn the entire origin into a String.

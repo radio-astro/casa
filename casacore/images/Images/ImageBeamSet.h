@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageBeamSet.h 21563 2015-02-16 07:05:15Z gervandiepen $
+//# $Id: ImageBeamSet.h 21575 2015-03-12 10:32:41Z gervandiepen $
 
 #ifndef IMAGES_IMAGEBEAMSET_H
 #define IMAGES_IMAGEBEAMSET_H

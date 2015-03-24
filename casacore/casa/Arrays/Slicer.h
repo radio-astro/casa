@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slicer.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: Slicer.h 21572 2015-03-03 12:22:11Z gervandiepen $
 
 #ifndef CASA_SLICER_H
 #define CASA_SLICER_H
@@ -394,7 +394,7 @@ public:
     // Are all values fixed (i.e., no MimicSource given)?
     Bool isFixed() const;
 
-    // set the start and end positions. No explicit checking is done that
+    // Set the start and end positions. No explicit checking is done that
     // the input parameters make sense, so you must be certain if you
     // call these. These are useful if you have a loop with many iterations
     // and you do not wish the overhead of creating a new Slicer object
@@ -402,9 +402,14 @@ public:
     // the start and end positions. Other than for performance reasons,
     // these methods should not be called and you should prefer the
     // error checking provided by constructing a new Slicer object.
-    inline void setStart(const IPosition& start) { start_p = start; }
-
-    inline void setEnd(const IPosition& end) { end_p = end; }
+    // Note that the length is not updated, so in principle care should
+    // be taken that the length does not change.
+    // <group>
+    void setStart (const IPosition& start)
+      { start_p = start; }
+    void setEnd (const IPosition& end)
+      { end_p = end; }
+    // </group>
 
 
 private:
@@ -423,7 +428,7 @@ private:
 
     // Check the given start, end/length and stride.
     // Fill in the length or end.
-    // It also call <src>fillFixed</src> to fill the fixed flag.
+    // It also calls <src>fillFixed</src> to fill the fixed flag.
     void fillEndLen();
 
     // Fill in start, len and stride from a Slice.
