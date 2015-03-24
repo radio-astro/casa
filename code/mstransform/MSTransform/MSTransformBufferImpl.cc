@@ -31,11 +31,6 @@ namespace casa
 MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 {
 	manager_p = manager;
-
-	MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
-	MSSpWindowColumns spwCols(spwTable);
-	spwFrequencies_p.reference(spwCols.chanFreq());
-
 	rowIdOffset_p = 0;
 
 	if (not manager_p->reindex_p)
@@ -49,6 +44,16 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 		manager_p->inputOutputDDIndexMap_p.clear();
 		manager_p->inputOutputAntennaIndexMap_p.clear();
 		manager_p->outputInputSPWIndexMap_p.clear();
+
+		MSSpectralWindow spwTable = manager_p->selectedInputMs_p->spectralWindow();
+		MSSpWindowColumns spwCols(spwTable);
+		spwFrequencies_p.reference(spwCols.chanFreq());
+	}
+	else
+	{
+		MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
+		MSSpWindowColumns spwCols(spwTable);
+		spwFrequencies_p.reference(spwCols.chanFreq());
 	}
 
 	return;
@@ -1201,6 +1206,7 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 		else
 		{
 			getShape();
+			spectralWindows();
 			frequencies_p.resize(nChannels_p,False);
 			Vector<Double> frequencies = spwFrequencies_p(spectralWindows_p(rowInBuffer));
 
