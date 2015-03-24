@@ -26,6 +26,9 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
 	   'score_file_exists',
+	   'score_flags_exist',
+	   'score_applycmds_exist',
+	   'score_caltables_exist',
            'score_setjy_measurements',
            'score_missing_intents',
            'score_ephemeris_coordinates',
@@ -993,7 +996,7 @@ def score_flags_exist(filedir, visdict):
 @log_qa
 def score_applycmds_exist(filedir, visdict):
     '''
-    Score the existence of a file
+    Score the existence of the files
         1.0 if the all exist
 	n / nexpected if some of them exist
 	0.0 if none exist
@@ -1023,3 +1026,34 @@ def score_applycmds_exist(filedir, visdict):
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
+@log_qa
+def score_caltables_exist(filedir, sessiondict):
+    '''
+    Score the existence of the files
+        1.0 if the all exist
+	n / nexpected if some of them exist
+	0.0 if none exist
+    '''
+    nexpected = len(sessiondict)
+    nfiles = 0; missing=[]
+    for sessionname in sessiondict:
+        file = os.path.join(filedir, os.path.basename(sessiondict[sessionname][1])) 
+        if os.path.exists(file):
+	    nfiles = nfiles + 1
+	else:
+	    missing.append(os.path.basename(sessiondict[sessionname][1]))
+
+    if nfiles <= 0:
+        score = 0.0
+        longmsg = 'Caltables files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing caltables files'
+    elif nfiles < nexpected:
+        score = float (nfiles) / float (nexpected)
+        longmsg = 'Caltables files %s are missing' % (','.join(missing))
+        shortmsg = 'Missing caltables files'
+    else:
+        score = 1.0
+        longmsg = 'No missing caltables files'
+        shortmsg = 'No missing caltables files'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
