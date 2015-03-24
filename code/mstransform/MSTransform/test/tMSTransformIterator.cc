@@ -1112,6 +1112,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 			IPosition shape = visBuffer->getShape();
 			Cube<Bool> flagCube(visBuffer->getShape(),False);
+			Vector<Bool> flagCubeRow(visBuffer->getShape()(2),False);
 			size_t nCorr = shape(0);
 			size_t nChan = shape(1);
 			size_t nRows = shape(2);
@@ -1130,6 +1131,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			// Fill flag cube alternating flags per blocks channels
 			for (size_t row_i =0;row_i<nRows;row_i++)
 			{
+				flagCubeRow(row_i) = firstChanBlockFlag;
+
 				for (size_t chan_i =0;chan_i<nChan;chan_i++)
 				{
 					// Set the flags in each other block of channels
@@ -1151,6 +1154,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			visIter->writeFlag(flagCube);
+			visIter->writeFlagRow(flagCubeRow);
 
 			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
 

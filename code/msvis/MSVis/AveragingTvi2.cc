@@ -2243,6 +2243,27 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 // -----------------------------------------------------------------------
 void AveragingTvi2::writeFlagRow (const Vector<Bool> & rowflags)
 {
+	getVii()->origin();
+	uInt currentBuffer = 0;
+	while (getVii()->more())
+	{
+		if ((currentBuffer >= startBuffer_p) and (currentBuffer <= endBuffer_p))
+		{
+			getVii()->writeFlagRow(rowflags);
+		}
+
+		currentBuffer += 1;
+
+		if (currentBuffer > endBuffer_p)
+		{
+			break;
+		}
+		else
+		{
+			getVii()->next();
+		}
+	}
+
 	return;
 }
 
