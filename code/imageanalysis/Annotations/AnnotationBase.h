@@ -325,6 +325,9 @@ public:
 
 protected:
 
+	// if <src>freqRefFrame</src> or <src>dopplerString</src> are empty,
+	// the values from the spectral coordinate of csys will be used, if one
+	// exists. if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
 	AnnotationBase(
 		const Type type, const String& dirRefFrameString,
 		const CoordinateSystem& csys, const Quantity& beginFreq,
