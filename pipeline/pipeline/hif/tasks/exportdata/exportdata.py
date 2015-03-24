@@ -247,7 +247,9 @@ class ExportData(basetask.StandardTaskTemplate):
     - Saves the final set of caltables per session in a compressed /
       tarred file containing CASA tables
     - Saves the final web log in a compressed / tarred file
-    - Saves the final processing log in a text file
+    - Saves the final CASA command log in a text file
+    - Saves the final pipeline script in a Python file
+    - Saves the final pipeline restore script in a Python file
     - Saves the images in FITS cubes one per target and spectral window
     """
 
@@ -255,8 +257,8 @@ class ExportData(basetask.StandardTaskTemplate):
     Inputs = ExportDataInputs
 
     # Override the default behavior for multi-vis tasks
-    def is_multi_vis_task(self):
-        return True
+    #def is_multi_vis_task(self):
+        #return True
 
     def prepare(self):
         """
