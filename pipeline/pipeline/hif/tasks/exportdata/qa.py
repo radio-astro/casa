@@ -32,7 +32,9 @@ class ExportDataQAHandler(pqa.QAResultHandler):
 	    result.visdict)
 	score7 = self._applycmds_exist (result.inputs['products_dir'],
 	    result.visdict)
-        scores = [score1, score2, score3, score4, score5, score6, score7]
+	score8 = self._caltables_exist (result.inputs['products_dir'],
+	    result.sessiondict)
+        scores = [score1, score2, score3, score4, score5, score6, score7, score8]
 	    
         result.qa.pool[:] = scores
 	result.qa.all_unity_longmsg = \
@@ -84,6 +86,12 @@ class ExportDataQAHandler(pqa.QAResultHandler):
         Check for the existence of the applycal commands files
         '''
         return qacalc.score_applycmds_exist(products_dir, visdict)
+
+    def _caltables_exist(self, products_dir, sessiondict):
+        '''
+        Check for the existence of the session / caltables files
+        '''
+        return qacalc.score_caltables_exist(products_dir, sessiondict)
 
 
 class ExportDataListQAHandler(pqa.QAResultHandler):
