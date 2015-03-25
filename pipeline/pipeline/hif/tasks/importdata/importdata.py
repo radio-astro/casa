@@ -59,7 +59,7 @@ class ImportDataInputs(basetask.StandardInputs):
             return self._session
         
         # current default - return all intents
-        return 'Session_default'
+        return 'session_1'
     
     @session.setter
     def session(self, value):
