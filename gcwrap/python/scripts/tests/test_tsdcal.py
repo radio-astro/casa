@@ -1336,24 +1336,19 @@ class tsdcal_test_apply(tsdcal_test_base):
                                 
                                 self.assertEqual(corrected.shape, expected.shape, msg='Shape mismatch in antenna %s spw %s row %s (expeted %s actual %s)'%(antenna,spw,irow,list(expected.shape),list(corrected.shape)))
                                 npol, nchan = corrected.shape
-                                for ipol in xrange(npol):
-                                    for ichan in xrange(nchan):
-                                        # data
-                                        _expected = expected[ipol,ichan]
-                                        _corrected = corrected[ipol,ichan]
-                                        if abs(_expected) < 1.0e-7:
-                                        #if _expected == 0.0:
-                                            # this happens either expected value is 0.0
-                                            # or loss of significant digits
-                                            diff = abs(_corrected - _expected)
-                                        else:
-                                            diff = abs((_corrected - _expected) / _expected)
-                                        self.assertLess(diff, self.eps, msg='Calibrated result differ in antenna %s spw %s row %s pol %s chan %s (expected %s actual %s diff %s)'%(antenna,spw,irow,ipol,ichan,_expected,_corrected,diff))
 
-                                        # flag
-                                        _outflag = outflag[ipol,ichan]
-                                        _expected_flag = expected_flag[ipol,ichan]
-                                        self.assertEqual(_outflag, _expected_flag, msg='Resulting flag differ in antenna%s spw %s row %s pol %s chan %s (expected %s actual %s)'%(antenna,spw,irow,ipol,ichan,_expected_flag,_outflag))
+                                # verify data
+                                diff = numpy.ones(expected.shape,dtype=float)
+                                small_data = numpy.where(abs(expected) < 1.0e-7)
+                                diff[small_data] = abs(corrected[small_data] - expected[small_data])
+                                regular_data = numpy.where(abs(expected) >= 1.0e-7)
+                                diff[regular_data] = abs((corrected[regular_data] - expected[regular_data]) / expected[regular_data])
+                                self.assertTrue(all(diff.flatten() < self.eps), msg='Calibrated result differ in antenna %s spw %s row %s (expected %s actual %s diff %s)'%(antenna,spw,irow,expected,corrected,diff))
+                                
+                                
+                                
+                                # verify flag
+                                self.assertTrue(all(outflag.flatten() == expected_flag.flatten()), msg='Resulting flag differ in antenna%s spw %s row %s (expected %s actual %s)'%(antenna,spw,irow,expected_flag,outflag))
                     
             return _wrapper
         return wrapper
