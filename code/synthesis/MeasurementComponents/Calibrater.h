@@ -179,6 +179,7 @@ class Calibrater
   Bool corrupt();
 
   // Initialize sigma/weight, and possibly weight_spectrum
+  Bool initWeights(String wtmode, Bool dowtsp=False);
   Bool initWeights(Bool doBT=True, Bool dowtsp=False);
 
   // Solve for a given calibration component

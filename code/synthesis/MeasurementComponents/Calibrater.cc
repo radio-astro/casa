@@ -1664,6 +1664,318 @@ Bool Calibrater::corrupt() {
 }
 
 
+Bool Calibrater::initWeights(String wtmode, Bool dowtsp) {
+
+  logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
+  Bool retval = true;
+
+  try {
+
+    if (!ok())
+      throw(AipsError("Calibrater not prepared for initWeights!"));
+
+    // An enum for the requested wtmode
+    enum wtInitModeEnum {
+      NONE,    // ambiguous, will complain
+      ONES,    // SIGMA=1.0, propagate to WEIGHT, WEIGHT_SEPCTRUM
+      NYQ,      // SIGMA=f(df,dt), propagate to WEIGHT, WEIGHT_SEPCTRUM
+      SIGMA,   // SIGMA as is, propagate to WEIGHT, WEIGHT_SEPCTRUM
+      WEIGHT,  // SIGMA, WEIGHT as are, propagate to WEIGHT_SEPCTRUM (if requested)
+      DELWTSP,  // just delete WEIGHT_SPECTRUM if it exists
+      DELSIGSP,  // just delete SIGMA_SPECTRUM if it exists
+    };
+    
+    // Translate mode String to enum value
+    wtInitModeEnum initmode(NONE);
+    if (wtmode=="ones") initmode=ONES;
+    else if (wtmode=="nyq") initmode=NYQ;
+    else if (wtmode=="sigma") initmode=SIGMA;
+    else if (wtmode=="weight") initmode=WEIGHT;
+    else if (wtmode=="delwtsp") initmode=DELWTSP;
+    else if (wtmode=="delsigsp") initmode=DELSIGSP;
+
+    // Detect WEIGHT_SPECTRUM
+    TableDesc mstd = ms_p->actualTableDesc();
+    String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
+    Bool wtspexists=mstd.isColumn(colWtSp);
+    String colSigSp=MS::columnName(MS::SIGMA_SPECTRUM);
+    Bool sigspexists=mstd.isColumn(colSigSp);
+
+    // Some log info
+    switch (initmode) {
+    case DELWTSP: {
+      if (wtspexists) {
+	if (True || ms_p->canRemoveColumn(colWtSp)) {
+	  logSink() << "Removing WEIGHT_SPECTRUM." << LogIO::POST;
+	  ms_p->removeColumn(colWtSp);
+	}
+	else
+	  logSink() << "Sorry, WEIGHT_SPECTRUM is not removable." << LogIO::POST;
+      }
+      else
+	logSink() << "WEIGHT_SPECTRUM already absent." << LogIO::POST;
+
+      // Nothing more to do here
+      return True;
+      break;
+    }
+    case DELSIGSP: {
+      if (sigspexists) {
+	if (True || ms_p->canRemoveColumn(colSigSp)) {
+	  logSink() << "Removing SIGMA_SPECTRUM." << LogIO::POST;
+	  ms_p->removeColumn(colSigSp);
+	}
+	else
+	  logSink() << "Sorry, SIGMA_SPECTRUM is not removable." << LogIO::POST;
+      }
+      else
+	logSink() << "SIGMA_SPECTRUM already absent." << LogIO::POST;
+
+      // Nothing more to do here
+      return True;
+      break;
+    }
+    case NONE: {
+      throw(AipsError("Unrecognized wtmode specified: "+wtmode));
+      break;
+    }
+    case ONES: {
+      logSink() << "Initializing SIGMA and WEIGHT with 1.0" << LogIO::POST;
+      break;
+    }
+    case NYQ: {
+      logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." 
+		<< LogIO::POST;
+      break;
+    }
+    case SIGMA: {
+      logSink() << "Initializing WEIGHT according to existing SIGMA." << LogIO::POST;
+      break;
+    }
+    case WEIGHT: {
+      // Complain if dowtsp==F, because otherwise we have nothing to do
+      if (!dowtsp)
+	throw(AipsError("Specified wtmode requires dowtsp=T"));
+      break;
+    } 
+    }
+
+    // Force dowtsp if the column already exists
+    if (wtspexists && !dowtsp) {
+      logSink() << "Found WEIGHT_SPECTRUM; will force its initialization." << LogIO::POST;
+      dowtsp=True;
+    }
+
+    // Report that we are initializing the WEIGHT_SPECTRUM, and prepare to do so.
+    if (dowtsp) {
+
+      // Ensure WEIGHT_SPECTRUM really exists at all 
+      //   (often it exists but is empty)
+      if (!wtspexists) {
+	logSink() << "Creating WEIGHT_SPECTRUM." << LogIO::POST;
+
+	// Nominal defaulttileshape
+	IPosition dts(3,4,32,1024); 
+
+	// Discern DATA's default tile shape and use it
+	const Record dminfo=ms_p->dataManagerInfo();
+	for (uInt i=0;i<dminfo.nfields();++i) {
+	  Record col=dminfo.asRecord(i);
+	  //if (upcase(col.asString("NAME"))=="TILEDDATA") {
+	  if (anyEQ(col.asArrayString("COLUMNS"),String("DATA"))) {
+	    dts=IPosition(col.asRecord("SPEC").asArrayInt("DEFAULTTILESHAPE"));
+	    //cout << "Found DATA's default tile: " << dts << endl;
+	    break;
+	  }
+	}
+
+	// Add the column
+	String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
+	TableDesc tdWtSp;
+	tdWtSp.addColumn(ArrayColumnDesc<Float>(colWtSp,"weight spectrum", 2));
+	TiledShapeStMan wtSpStMan("TiledWgtSpectrum",dts);
+	ms_p->addColumn(tdWtSp,wtSpStMan);
+      }
+      else
+	logSink() << "Found WEIGHT_SPECTRUM." << LogIO::POST;
+
+
+      logSink() << "Initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)." << LogIO::POST;
+
+    }
+
+    // Arrange for iteration over data
+    //  TBD: Be sure this sort is optimal for creating WS?
+    Block<Int> columns;
+    // include scan iteration
+    columns.resize(5);
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER;
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    vi::SortColumns sc(columns);
+    vi::VisibilityIterator2 vi2(*ms_p,sc,True);
+    vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+    ROMSColumns mscol(*ms_p);
+    const ROMSSpWindowColumns& msspw(mscol.spectralWindow());
+    uInt nSpw=msspw.nrow();
+    Vector<Double> effChBw(nSpw,0.0);
+    for (uInt ispw=0;ispw<nSpw;++ispw) {
+      effChBw[ispw]=mean(msspw.effectiveBW()(ispw));
+    }
+
+    Int ivb(0);
+    for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk()) {
+
+      for (vi2.origin(); vi2.more(); vi2.next(),++ivb) {
+
+	Int spw = vb->spectralWindows()(0);
+
+	Int nrow=vb->nRows();
+	Int nchan=vb->nChannels();
+	Int ncor=vb->nCorrelations();
+
+	// Vars for new sigma/weight info
+
+	// Prepare for WEIGHT_SPECTRUM, if nec.
+	Cube<Float> newwtsp(0,0,0);
+	if (dowtsp) {
+	  newwtsp.resize(ncor,nchan,nrow);
+	  newwtsp.set(1.0);
+	}
+
+	// Handle non-trivial modes
+	switch (initmode) {
+	// Init WEIGHT, SIGMA  with ones
+	case ONES: {
+
+	  Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+	  newwt.set(1.0);
+	  newsig.set(1.0);
+
+	  // Arrange write-back of both SIGMA and WEIGHT
+	  vb->setSigma(newsig);
+	  vb->setWeight(newwt);
+
+	  // NB: newwtsp already ready
+
+	  break;
+	}	  
+
+	// Init WEIGHT, SIGMA  from bandwidth & time
+	case NYQ: {
+
+	  Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+	  newwt.set(1.0);
+	  newsig.set(1.0);
+
+	  // Detect ACs
+	  const Vector<Int> a1(vb->antenna1());
+	  const Vector<Int> a2(vb->antenna2());
+	  Vector<Bool> ac(a1==a2);
+	  
+	  // XCs need an extra factor of 2
+	  Vector<Float> xcfactor(nrow,2.0);
+	  xcfactor(ac)=1.0;   // (but not ACs)
+	  
+	  // The row-wise integration time
+	  Vector<Float> expo(nrow);
+	  convertArray(expo,vb->exposure());
+
+	  // Set weights to channel bandwidth first.
+	  newwt.set(Float(effChBw(spw)));
+	  
+	  // For each correlation, apply exposure and xcfactor
+	  for (Int icor=0;icor<ncor;++icor) {
+
+	    Vector<Float> wt(newwt.row(icor));
+	    wt*=expo;
+	    wt*=xcfactor;
+	    if (dowtsp) {
+	      for (Int ich=0;ich<nchan;++ich) {
+		Vector<Float> wtspi(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()).nonDegenerate(IPosition(1,2)));
+		wtspi=wt;
+	      }
+	    }
+	  }
+
+	  // sig from wt is inverse sqrt
+	  newsig=1.0f/sqrt(newwt);
+
+	  // Arrange write-back of both SIGMA and WEIGHT
+	  vb->setSigma(newsig);
+	  vb->setWeight(newwt);
+
+	  break;
+	}
+	// Init WEIGHT from SIGMA 
+	case SIGMA: {
+
+	  Matrix<Float> newwt(ncor,nrow);
+	  newwt.set(FLT_EPSILON);        // effectively zero, but strictly not zero
+
+	  Matrix<Float> sig;
+	  sig.assign(vb->sigma());       // access existing SIGMA
+
+	  LogicalArray mask(sig==0.0f);  // mask out unphysical SIGMA
+	  sig(mask)=1.0f;
+
+	  newwt=1.0f/square(sig);
+	  newwt(mask)=FLT_EPSILON;       // effectively zero
+
+	  // Writeback WEIGHT
+	  vb->setWeight(newwt);
+	  
+	  if (dowtsp) {
+	    for (Int ich=0;ich<nchan;++ich) {
+	      Matrix<Float> wtspi(newwtsp(Slice(),Slice(ich,1,1),Slice()).nonDegenerate(IPosition(2,0,2)));
+	      wtspi=newwt;
+	    }
+	  }
+
+	  break;
+	}
+	// Init WEIGHT_SPECTRUM from WEIGHT
+	case WEIGHT: {
+	  const Matrix<Float> wt(vb->weight()); // access existing WEIGHT
+	  for (Int ich=0;ich<nchan;++ich) {
+	    Matrix<Float> wtspi(newwtsp(Slice(),Slice(ich,1,1),Slice()).nonDegenerate(IPosition(2,0,2)));
+	    wtspi=wt;
+	  }
+	  break;
+	} 
+	default: {
+	  throw(AipsError("Problem in weight initialization loop."));
+	}
+	}
+
+	// Force writeback to disk
+	vb->writeChangesBack();
+	
+	// Handle WEIGHT_SPECTRUM
+	if (dowtsp)
+	  vb->initWeightSpectrum(newwtsp);
+
+      }
+    }
+
+  }
+  catch (AipsError x) {
+    logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+             << LogIO::POST;
+
+    logSink() << "Resetting all calibration application settings." << LogIO::POST;
+    unsetapply();
+
+    throw(AipsError("Error in Calibrater::initWeights."));
+    retval = False;  // Not that it ever gets here...
+  }
+  return retval;
+}
+
 Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
 
   logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
@@ -1824,7 +2136,7 @@ Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
     logSink() << "Resetting all calibration application settings." << LogIO::POST;
     unsetapply();
 
-    throw(AipsError("Error in Calibrater::initWeights."));
+    throw(AipsError("Error in Calibrater::initWeightsOLD."));
     retval = False;  // Not that it ever gets here...
   }
   return retval;
