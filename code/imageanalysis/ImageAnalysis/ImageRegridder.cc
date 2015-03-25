@@ -199,7 +199,6 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 		);
 	}
 	else {
-		cout << "output stokes " << _getOutputStokes() << endl;
 		// Only include the wanted stokes
 		SHARED_PTR<ImageConcat<Float> > concat(
 			new ImageConcat<Float>(
@@ -421,7 +420,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 
 Bool ImageRegridder::_doImagesOverlap(
 	SPCIIF image0, SPCIIF image1
-) {
+) const {
 	const CoordinateSystem csys0 = image0->coordinates();
 	const CoordinateSystem csys1 = image1->coordinates();
 	IPosition shape0 = image0->shape();
@@ -435,21 +434,48 @@ Bool ImageRegridder::_doImagesOverlap(
 	) {
 		const DirectionCoordinate dc0 = csys0.directionCoordinate();
 		DirectionCoordinate dc1 = csys1.directionCoordinate();
-		Bool sameFrame = dc0.directionType(True) == dc1.directionType(True);
-		if (!sameFrame) {
-			dc1.setReferenceConversion(dc0.directionType(True));
-		}
 		Vector<Int> dirShape0 = md0.directionShape();
 		Vector<Int> dirShape1 = md1.directionShape();
-		Vector<std::pair<Double, Double> > corners0 = _getDirectionCorners(
-			dc0, dirShape0
-		);
-		Vector<std::pair<Double, Double> > corners1 = _getDirectionCorners(
-			dc1, dirShape1
-		);
-		overlap = _doRectanglesIntersect(corners0, corners1);
-		if (! overlap) {
-			return False;
+		Vector<Double> inc0 = dc0.increment();
+		Vector<Double> inc1 = dc1.increment();
+		Vector<String> units0 = dc0.worldAxisUnits();
+		Vector<String> units1 = dc1.worldAxisUnits();
+		Bool reallyBig = False;
+		Quantity extent;
+		Quantity oneDeg(1, "deg");
+		for (uInt i=0; i<2; ++i) {
+			extent = Quantity(dirShape0[i]*abs(inc0[i]), units0[i]);
+			if (extent > oneDeg) {
+				reallyBig = True;
+				break;
+			}
+			extent = Quantity(dirShape1[i]*abs(inc1[i]), units1[i]);
+			if (extent > oneDeg) {
+				reallyBig = True;
+				break;
+			}
+		}
+		if (reallyBig) {
+			*this->_getLog() << LogOrigin("ImageRegridder", __func__)
+				<< LogIO::WARN << "At least one of the images "
+				<< "exceeds one degree on at one side, not checking "
+				<< "for direction plane overlap." << LogIO::POST;
+		}
+		else {
+			Bool sameFrame = dc0.directionType(True) == dc1.directionType(True);
+			if (!sameFrame) {
+				dc1.setReferenceConversion(dc0.directionType(True));
+			}
+			Vector<std::pair<Double, Double> > corners0 = _getDirectionCorners(
+				dc0, dirShape0
+			);
+			Vector<std::pair<Double, Double> > corners1 = _getDirectionCorners(
+				dc1, dirShape1
+			);
+			overlap = _doRectanglesIntersect(corners0, corners1);
+			if (! overlap) {
+				return False;
+			}
 		}
 	}
 	if (
@@ -534,7 +560,6 @@ Bool ImageRegridder::_doRectanglesIntersect(
 	const Vector<std::pair<Double, Double> >& corners0,
 	const Vector<std::pair<Double, Double> >& corners1
 ) {
-
 	Double minx0 = corners0[0].first;
 	Double maxx0 = minx0;
 	Double miny0 = corners0[0].second;
@@ -543,7 +568,6 @@ Bool ImageRegridder::_doRectanglesIntersect(
 	Double maxx1 = minx1;
 	Double miny1 = corners1[0].second;
 	Double maxy1 = miny1;
-
 	for (uInt i=1; i<4; i++) {
 		minx0 = min(minx0, corners0[i].first);
 		maxx0 = max(maxx0, corners0[i].first);

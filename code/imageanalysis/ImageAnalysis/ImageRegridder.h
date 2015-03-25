@@ -104,10 +104,10 @@ private:
 
 	SPIIF _regridByVelocity() const;
 
-	static Bool _doImagesOverlap(
+	Bool _doImagesOverlap(
 		SPCIIF image0,
 		SPCIIF image1
-	);
+	) const;
 
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(
 		const DirectionCoordinate& dc,
