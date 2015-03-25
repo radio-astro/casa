@@ -1131,30 +1131,36 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			// Fill flag cube alternating flags per blocks channels
 			for (size_t row_i =0;row_i<nRows;row_i++)
 			{
-				flagCubeRow(row_i) = firstChanBlockFlag;
-
-				for (size_t chan_i =0;chan_i<nChan;chan_i++)
+				// Row completely flagged
+				if (row_i % 2)
 				{
-					// Set the flags in each other block of channels
-					Bool chanBlockFlag;
-					if (chan_i % 2)
+					flagCube.xyPlane(row_i) = True;
+				}
+				else
+				{
+					for (size_t chan_i =0;chan_i<nChan;chan_i++)
 					{
-						chanBlockFlag = firstChanBlockFlag;
-					}
-					else
-					{
-						chanBlockFlag = !firstChanBlockFlag;
-					}
+						// Set the flags in each other block of channels
+						Bool chanBlockFlag;
+						if (chan_i % 2)
+						{
+							chanBlockFlag = firstChanBlockFlag;
+						}
+						else
+						{
+							chanBlockFlag = !firstChanBlockFlag;
+						}
 
-					for (size_t corr_i =0;corr_i<nCorr;corr_i++)
-					{
-						flagCube(corr_i,chan_i,row_i) = chanBlockFlag;
+						for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+						{
+							flagCube(corr_i,chan_i,row_i) = chanBlockFlag;
+						}
 					}
 				}
 			}
 
+			// Not needed according to the flag cube - flag row convention agreement
 			visIter->writeFlag(flagCube);
-			visIter->writeFlagRow(flagCubeRow);
 
 			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
 

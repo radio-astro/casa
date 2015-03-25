@@ -164,55 +164,33 @@ void MSTransformIterator::writeFlag (const Cube<Bool> & flag)
 	// Expand channel dimension
 	if (manager_p->channelAverage_p)
 	{
-		// Get original shape
-		IPosition inputShape = manager_p->getVisBuffer()->getShape();
-		size_t nCorr = inputShape(0);
-		size_t nChan = inputShape(1);
-		size_t nRows = inputShape(2);
+		Cube<Bool> expandedFlagCube;
+		propagateChanAvgFlags(flag,expandedFlagCube);
+		manager_p->getVisIter()->writeFlag(expandedFlagCube);
 
-		// Create an un-flagged flag cube matching the input shape
-		Cube<Bool> propagatedInputFlag(inputShape,False);
-
-		// Map input-output channel
-		uInt binCounts = 0;
-		uInt transformedIndex = 0;
-		Vector<uInt> inputOutputChan(nChan);
-		uInt spw = manager_p->getVisBuffer()->spectralWindows()[0];
-		uInt chanbin = manager_p->freqbinMap_p[spw];
-		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		// Also write FLAG_ROW consistent with FLAG cube
+		if (not manager_p->timeAverage_p)
 		{
-			binCounts += 1;
-
-			if (binCounts > chanbin)
-			{
-				binCounts = 1;
-				transformedIndex += 1;
-			}
-
-			inputOutputChan(chan_i) = transformedIndex;
+			// Calculate output FLAG_ROW based on expanded flagCube
+			// Because we have to take into account also the dropped channels
+			Vector<Bool> flagRow;
+			calculateFlagRow(expandedFlagCube,flagRow);
+			manager_p->getVisIter()->writeFlagRow(flagRow);
 		}
-
-		// Propagate chan-avg flags
-		for (size_t row_i =0;row_i<nRows;row_i++)
-		{
-			for (size_t chan_i =0;chan_i<nChan;chan_i++)
-			{
-				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
-				{
-					propagatedInputFlag(corr_i,chan_i,row_i) = flag(corr_i,inputOutputChan(chan_i),row_i);
-				}
-			}
-		}
-
-		manager_p->getVisIter()->writeFlag(propagatedInputFlag);
-
 	}
 	else
 	{
 		manager_p->getVisIter()->writeFlag(flag);
-	}
 
-	manager_p->selectedInputMs_p->flush();
+		// Also write FLAG_ROW consistent with FLAG cube
+		if (not manager_p->timeAverage_p)
+		{
+			// In this case we can use the input flag directly
+			Vector<Bool> flagRow;
+			calculateFlagRow(flag,flagRow);
+			manager_p->getVisIter()->writeFlagRow(flagRow);
+		}
+	}
 
 	return;
 }
@@ -237,27 +215,130 @@ void MSTransformIterator::writeFlagRow (const Vector<Bool> & rowflags)
 	manager_p->getVisIter()->writeFlagRow(rowflags);
 
 
-	// To implement the FLAG_ROW convention we have to produce a flag cube flagged
-	// in the planes corresponding to the he rows that have FLAG_ROW set to true
-	Cube<Bool> flagCube;
-	Bool flagCubeModified = False;
-	flagCube = buffer_p->flagCube(); // Copy flags from input buffer
-	for (size_t row_i =0;row_i<rowflags.size();row_i++)
+	if (not manager_p->timeAverage_p)
 	{
-		if (rowflags(row_i))
+		// To implement the FLAG_ROW convention we have to produce a flag cube flagged
+		// in the planes corresponding to the he rows that have FLAG_ROW set to true
+		Cube<Bool> flagCube;
+		Bool flagCubeModified = False;
+		flagCube = buffer_p->flagCube(); // Copy flags from input buffer
+		for (size_t row_i =0;row_i<rowflags.size();row_i++)
 		{
-			flagCubeModified = True;
-			flagCube.xyPlane(row_i) = True;
+			if (rowflags(row_i))
+			{
+				flagCubeModified = True;
+				flagCube.xyPlane(row_i) = True;
+			}
+		}
+
+		if (flagCubeModified)
+		{
+			Cube<Bool> expandedFlagCube;
+			propagateChanAvgFlags(flagCube,expandedFlagCube);
+			manager_p->getVisIter()->writeFlag(expandedFlagCube);
 		}
 	}
 
-	if (flagCubeModified)
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Utility method to propagate the flags for the channel average case
+// -----------------------------------------------------------------------
+void MSTransformIterator::propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube)
+{
+	// Get original shape
+	IPosition inputShape = manager_p->getVisBuffer()->getShape();
+	size_t nCorr = inputShape(0);
+	size_t nChan = inputShape(1);
+	size_t nRows = inputShape(2);
+
+	// Get transformed shape
+	IPosition transformedShape = manager_p->getShape();
+	size_t nTransChan = transformedShape(1);
+
+	// Reshape flag cube to match the input shape
+	expandedFlagCube.resize(inputShape,False);
+	expandedFlagCube = False;
+
+	// Map input-output channel
+	uInt binCounts = 0;
+	uInt transformedIndex = 0;
+	Vector<uInt> inputOutputChan(nChan);
+	uInt spw = manager_p->getVisBuffer()->spectralWindows()[0];
+	uInt chanbin = manager_p->freqbinMap_p[spw];
+	for (size_t chan_i =0;chan_i<nChan;chan_i++)
 	{
-		writeFlag(flagCube);
+		binCounts += 1;
+
+		if (binCounts > chanbin)
+		{
+			binCounts = 1;
+			transformedIndex += 1;
+		}
+
+		inputOutputChan(chan_i) = transformedIndex;
 	}
 
+	// Propagate chan-avg flags
+	uInt outChan;
+	for (size_t row_i =0;row_i<nRows;row_i++)
+	{
+		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		{
+			outChan = inputOutputChan(chan_i);
+			if (outChan < nTransChan) // outChan >= nChan  may happen when channels are dropped
+			{
+				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+				{
+					expandedFlagCube(corr_i,chan_i,row_i) = avgFlagCube(corr_i,outChan,row_i);
+				}
+			}
+		}
+	}
 
-	manager_p->selectedInputMs_p->flush();
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Utility method to calculate FLAG_ROW from flag cube with the applicable convention
+// -----------------------------------------------------------------------
+void MSTransformIterator::calculateFlagRow (const Cube<Bool> &flagCube, Vector<Bool> &flagRow)
+{
+	// Get original shape
+	IPosition shape = flagCube.shape();
+	size_t nCorr = shape(0);
+	size_t nChan = shape(1);
+	size_t nRows = shape(2);
+
+	// Reshape flag cube to match the input shape
+	flagRow.resize(nRows,False);
+	flagRow = False;
+
+	Bool rowFlagValue = False;
+	for (size_t row_i =0;row_i<nRows;row_i++)
+	{
+		rowFlagValue = True;
+		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		{
+			if (rowFlagValue)
+			{
+				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+				{
+					if (not flagCube(corr_i,chan_i,row_i))
+					{
+						rowFlagValue = False;
+						break;
+					}
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		flagRow(row_i) = rowFlagValue;
+	}
 
 	return;
 }

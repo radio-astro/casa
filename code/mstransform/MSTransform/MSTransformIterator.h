@@ -57,6 +57,11 @@ public:
     void writeFlag (const Cube<Bool> & flag);
     void writeFlagRow (const Vector<Bool> & rowflags);
 
+protected:
+
+    void calculateFlagRow (const Cube<Bool> &flagCube, Vector<Bool> &flagRow);
+    void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
+
 private:
 	MSTransformManager *manager_p;
 	MSTransformBufferImpl *buffer_p;
