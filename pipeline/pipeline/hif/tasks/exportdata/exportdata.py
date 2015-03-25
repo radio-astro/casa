@@ -257,8 +257,8 @@ class ExportData(basetask.StandardTaskTemplate):
     Inputs = ExportDataInputs
 
     # Override the default behavior for multi-vis tasks
-    #def is_multi_vis_task(self):
-        #return True
+    def is_multi_vis_task(self):
+        return True
 
     def prepare(self):
         """
