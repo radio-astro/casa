@@ -111,6 +111,29 @@ std::pair<ComponentList, ComponentList> ImageFitter::fit() {
 	_useBeamForNoise = _correlatedNoise && ! _noiseFWHM.get()
 		&& _getImage()->imageInfo().hasBeam();
 
+	{
+		// CAS-6971
+		String msg;
+		if (_noiseFWHM.get() && ! _correlatedNoise) {
+			msg = "Specified noise FWHM is less than a pixel "
+				"width, so uncertainties will be computed "
+				"assuming uncorrelated pixel noise.";
+		}
+		else if (! _noiseFWHM.get()) {
+			if (_getImage()->imageInfo().hasBeam()) {
+				msg = "noise FWHM not specified, so uncertainties "
+					"will be computed using the beam geometric mean "
+					"FWHM as the pixel noise correlation FWHM";
+			}
+			else {
+				msg = "noise FWHM not specified and image has no "
+					"beam, so uncertainties will be computed "
+					"assuming pixel noise is uncorrelated.";
+			}
+		}
+		*_getLog() << LogOrigin(getClass(), __func__)
+			<< LogIO::NORMAL << msg << LogIO::POST;
+	}
 	String errmsg;
 	ImageStatsCalculator myStats(
 		_getImage(), _getRegion(), "", False
@@ -537,11 +560,6 @@ void ImageFitter::setNoiseFWHM(Double d) {
 		)
 	);
 	_correlatedNoise = d >= 1;
-	if (! _correlatedNoise) {
-		*_getLog() << LogIO::WARN << "noiseFWHM is less than a pixel width, "
-			<< "using uncorrelated noise expressions to calculate uncertainties"
-			<< LogIO::POST;
-	}
 }
 
 Quantity ImageFitter::_pixelWidth() {
@@ -625,11 +643,13 @@ void ImageFitter::_calculateErrors() {
 				sqrt(beam.getMajor()*beam.getMinor()).get("arcsec")
 			)
 		);
+		/*
 		*_getLog() << LogOrigin(getClass(), __func__)
 			<< LogIO::NORMAL << "Noise correlation scale length not specified but "
 			<< "image has beam(s), will use the geometric mean of beam axes, "
 			<< *_noiseFWHM << ", for noise correlation scale length and will "
 			<< "calculate errors using correlated noise equations." << LogIO::POST;
+			*/
 	}
 	Double signalToNoise = 0;
 	for (uInt i=0; i<ncomps; i++) {
@@ -1676,131 +1696,6 @@ void ImageFitter::_fitskyExtractBeam(
 	parameters(5) = dParameters(2);
 }
 
-/*
-void ImageFitter::_encodeSkyComponentError(
-		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
-		const Vector<Double>& parameters, const Vector<Double>& errors,
-		Stokes::StokesTypes stokes, Bool xIsLong) const
-// Input
-//   facToJy = conversion factor to Jy
-//   pars(0) = peak flux  image units
-//   pars(1) = x cen    abs pix
-//   pars(2) = y cen    abs pix
-//   pars(3) = major    pix
-//   pars(4) = minor    pix
-//   pars(5) = pa radians (pos +x -> +y)
-//
-//   error values will be zero for _fixed parameters
-{
-	//
-	// Flux. The fractional error of the integrated and peak flux
-	// is the same.  errorInt = Int * (errorPeak / Peak) * facToJy
-	// TODO it is? why is that? The error in the flux density has not
-	// been propogated correctly, because the (implicit) error in facToJy
-	// is not being caried along. This error arises because the size (major*minor axex)
-	// is not error free.
-	Flux<Double> flux = sky.flux(); // Integral
-	Vector<Double> valueInt;
-	flux.value(valueInt);
-	Vector<Double> tmp(4, 0.0);
-	if (errors(0) > 0.0) {
-		Double rat = (errors(0) / parameters(0)) * facToJy;
-		if (stokes == Stokes::I) {
-			tmp(0) = valueInt(0) * rat;
-		} else if (stokes == Stokes::Q) {
-			tmp(1) = valueInt(1) * rat;
-		} else if (stokes == Stokes::U) {
-			tmp(2) = valueInt(2) * rat;
-		} else if (stokes == Stokes::V) {
-			tmp(3) = valueInt(3) * rat;
-		} else {
-			// TODO handle stokes in addition to I,Q,U,V. For now, treat other stokes like stokes I.
-			tmp(0) = valueInt(0) * rat;
-		}
-		flux.setErrors(tmp(0), tmp(1), tmp(2), tmp(3));
-	}
-	// Shape.  Only TwoSided shapes have something for me to do
-	IPosition pixelAxes(2);
-	pixelAxes(0) = 0;
-	pixelAxes(1) = 1;
-	if (!xIsLong) {
-		pixelAxes(1) = 0;
-		pixelAxes(0) = 1;
-	}
-	ComponentShape& shape = sky.shape();
-	TwoSidedShape* pS = dynamic_cast<TwoSidedShape*> (&shape);
-	Vector<Double> dParameters(5);
-	GaussianBeam wParameters;
-	static const Quantity qzero(0, "deg");
-	if (pS) {
-		if (errors(3) > 0.0 || errors(4) > 0.0 || errors(5) > 0.0) {
-			dParameters(0) = parameters(1); // x
-			dParameters(1) = parameters(2); // y
-			// Use the pixel to world converter by pretending the width
-			// errors are widths.  The minor error may be greater than major
-			// error so beware as the widths converted will flip them about.
-			// The error in p.a. is just the input error value as its
-			// already angular.
-			// Major
-
-			// widths cannot be zero or exceptions will be thrown, so if either axis
-			// is fixed so that its error is 0, make it a very small number instead for
-			// the call to pixelWidthsToWorld
-			static const Double epsilon = 1e-9;
-			dParameters(2) = errors(3) == 0 ? epsilon : errors(3);
-			// Minor
-			dParameters(3) = errors(4) == 0 ? epsilon : errors(4);
-			// PA
-			dParameters(4) = parameters(5);
-			// If flipped, it means pixel major axis morphed into world minor
-			// Put back any zero errors as well.
-			Bool flipped = SkyComponentFactory::pixelWidthsToWorld(
-				wParameters,
-				dParameters, csys, pixelAxes, False
-			);
-			Quantity paErr(errors(5), "rad");
-			if (flipped) {
-				pS->setErrors(
-					errors(4) == 0 ? qzero : wParameters.getMinor(),
-					errors(3) == 0 ? qzero : wParameters.getMajor(),
-					paErr
-				);
-			}
-			else {
-				pS->setErrors(
-					errors(3) == 0 ? qzero : wParameters.getMajor(),
-					errors(4) == 0 ? qzero : wParameters.getMinor(),
-					paErr
-				);
-			}
-		}
-	}
-	// Position.  Use the pixel to world widths converter again.
-	// Or do something simpler ?
-	// X
-	dParameters(2) = errors(1) == 0 ? 1e-8 : errors(1);
-	// Y
-	dParameters(3) = errors(2) == 0 ? 1e-8 : errors(2);
-	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
-	Bool flipped = SkyComponentFactory::pixelWidthsToWorld(
-			wParameters, dParameters,
-			csys, pixelAxes, False
-		);
-	// TSS::setRefDirErr interface has lat first
-	if (flipped) {
-		pS->setRefDirectionError(
-				errors(2) == 0 ? qzero : wParameters.getMinor(),
-				errors(1) == 0 ? qzero : wParameters.getMajor()
-			);
-	}
-	else {
-		pS->setRefDirectionError(
-			errors(2) == 0 ? qzero : wParameters.getMajor(),
-			errors(1) == 0 ? qzero : wParameters.getMinor()
-		);
-	}
-}
-*/
 
 
 
