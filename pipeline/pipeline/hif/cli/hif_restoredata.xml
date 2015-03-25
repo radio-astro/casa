@@ -109,7 +109,7 @@ vis -- List of raw visibility  data files to be restored. Assumed to be
    example: vis=['uid___A002_X30a93d_X43e']
 
 session -- List of sessions one per visibility file. 
-   default: None 
+   default: []
    example: session=['session_3']
 
 products_dir -- Name of the data products directory. Currently not
@@ -123,7 +123,7 @@ rawdata_dir -- Name of the rawdata subdirectory.
 
 lazy -- Use the lazy fillter option
    default: False
-   example: lazy=Treu
+   example: lazy=True
 
 
 

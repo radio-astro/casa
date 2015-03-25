@@ -120,7 +120,7 @@ session -- List of sessions to which the visibility files belong. Defaults
    to a single session containing all the visibility files, otherwise
    a session must be assigned to each vis file.
    default: []
-   example: session=['Session_1', 'Sessions_2']
+   example: session=['session_1', 'session_2']
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs
