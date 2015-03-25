@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: MemoryTable.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_MEMORYTABLE_H
 #define TABLES_MEMORYTABLE_H
@@ -97,6 +97,9 @@ public:
   // Is the table stored in big or little endian format?
   // It returns the endian format of the machine.
   virtual Bool asBigEndian() const;
+
+  // Get the storage option used for the table.
+  virtual const StorageOption& storageOption() const;
 
   // Is the table in use (i.e. open) in another process?
   // It always returns False.

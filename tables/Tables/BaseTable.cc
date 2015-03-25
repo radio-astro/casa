@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: BaseTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/casa/aips.h>
 #include <casacore/tables/Tables/BaseTable.h>
@@ -1016,6 +1016,12 @@ void BaseTable::showStructure (ostream& os, Bool showDataMans, Bool showColumns,
   os << endl;
   os << nrow() << " rows, " << tdesc.ncolumn() << " columns (using "
      << dminfo.nfields() << " data managers)" <<endl;
+  const StorageOption& stopt = storageOption();
+  if (stopt.option() == StorageOption::MultiFile) {
+    os << "  Stored as MultiFile with blocksize " << stopt.blockSize() << endl;
+  } else if (stopt.option() == StorageOption::MultiHDF5) {
+    os << "  Stored as MultiHDF5 with blocksize " << stopt.blockSize() << endl;
+  }
   showStructureExtra (os);
   uInt maxl = 0;
   for (uInt i=0; i<tdesc.ncolumn(); ++i) {

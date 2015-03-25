@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StArrayFile.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: StArrayFile.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_STARRAYFILE_H
 #define TABLES_STARRAYFILE_H
@@ -38,7 +38,7 @@
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
-class MultiFile;
+class MultiFileBase;
 class IPosition;
 
 
@@ -139,7 +139,7 @@ public:
     StManArrayFile (const String& name, ByteIO::OpenOption,
 		    uInt version=0, Bool bigEndian=True,
 		    uInt bufferSize=0,
-                    MultiFile* mfile=0);
+                    MultiFileBase* mfile=0);
 
     // Close the possibly opened file.
     ~StManArrayFile();

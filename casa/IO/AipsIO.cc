@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIO.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: AipsIO.cc 21582 2015-03-24 14:43:31Z gervandiepen $
 
 #include <casacore/casa/IO/AipsIO.h>
 #include <casacore/casa/IO/TypeIO.h>
@@ -57,7 +57,7 @@ AipsIO::AipsIO()
 {}
 
 AipsIO::AipsIO (const String& fileName, ByteIO::OpenOption fop,
-		uInt filebufSize, MultiFile* mfile)
+		uInt filebufSize, MultiFileBase* mfile)
 : opened_p (0),
   maxlev_p (10),
   objlen_p (10),
@@ -98,7 +98,7 @@ AipsIO::~AipsIO()
 
 
 void AipsIO::open (const String& fileName, ByteIO::OpenOption fop,
-		   uInt filebufSize, MultiFile* mfile)
+		   uInt filebufSize, MultiFileBase* mfile)
 {
     // Initialize everything for the open.
     openInit (fop);

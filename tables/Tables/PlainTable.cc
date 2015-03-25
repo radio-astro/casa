@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: PlainTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/casa/aips.h>
 #include <casacore/tables/Tables/PlainTable.h>
@@ -342,6 +342,11 @@ void PlainTable::renameSubTables (const String& newName,
 Bool PlainTable::asBigEndian() const
 {
     return bigEndian_p;
+}
+
+const StorageOption& PlainTable::storageOption() const
+{
+    return colSetPtr_p->storageOption();
 }
 
 Bool PlainTable::isMultiUsed (Bool checkSubTables) const

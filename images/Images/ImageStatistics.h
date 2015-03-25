@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageStatistics.h 21560 2015-02-11 14:00:31Z gervandiepen $
+//# $Id: ImageStatistics.h 21586 2015-03-25 13:46:25Z gervandiepen $
 
 #ifndef IMAGES_IMAGESTATISTICS_H
 #define IMAGES_IMAGESTATISTICS_H

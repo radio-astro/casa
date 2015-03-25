@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StArrayFile.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: StArrayFile.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/tables/DataMan/StArrayFile.h>
 #include <casacore/casa/OS/RegularFile.h>
@@ -46,7 +46,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 StManArrayFile::StManArrayFile (const String& fname, ByteIO::OpenOption fop,
 				uInt version, Bool bigEndian,
-				uInt bufferSize, MultiFile* mfile)
+				uInt bufferSize, MultiFileBase* mfile)
 : leng_p    (16),
   version_p (version),
   hasPut_p  (False)

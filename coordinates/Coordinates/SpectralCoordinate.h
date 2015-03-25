@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralCoordinate.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: SpectralCoordinate.h 21586 2015-03-25 13:46:25Z gervandiepen $
 
 
 #ifndef COORDINATES_SPECTRALCOORDINATE_H

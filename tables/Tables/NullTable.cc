@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: NullTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/tables/Tables/NullTable.h>
 #include <casacore/tables/Tables/Table.h>
@@ -64,6 +64,12 @@ Bool NullTable::isMultiUsed (Bool) const
 {
   throwError ("isMultiUsed");
   return False;
+}
+
+const StorageOption& NullTable::storageOption() const
+{
+  throwError ("storageOption");
+  return storageOption();          // to satisfy compiler
 }
 
 const TableLock& NullTable::lockOptions() const

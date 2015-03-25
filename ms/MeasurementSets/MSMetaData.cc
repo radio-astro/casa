@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSMetaData.cc 21562 2015-02-16 07:03:44Z gervandiepen $
+//# $Id: MSMetaData.cc 21586 2015-03-25 13:46:25Z gervandiepen $
 
 #include <casacore/ms/MeasurementSets/MSMetaData.h>
 
@@ -626,12 +626,12 @@ std::map<ScanKey, std::set<Int> > MSMetaData::_getScanToStatesMap() const {
 		//_getSubScanProperties(subScanProps, scanProps, arrayProps);
 		map<SubScanKey, SubScanProperties>::const_iterator iter = subScanProps.begin();
 		map<SubScanKey, SubScanProperties>::const_iterator end = subScanProps.end();
-		//ScanKey key;
+		ScanKey key;
 		while (iter != end) {
 			SubScanKey subKey = iter->first;
-			//key.obsID = subKey.obsID;
-			//key.arrayID = subKey.arrayID;
-			//key.scan = subKey.scan;
+			key.obsID = subKey.obsID;
+			key.arrayID = subKey.arrayID;
+			key.scan = subKey.scan;
 			SubScanProperties subProps = iter->second;
 			myScanToStatesMap[scanKey(subKey)].insert(subProps.stateIDs.begin(), subProps.stateIDs.end());
 			++iter;
@@ -3748,7 +3748,7 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		spwInfo[i].name = name[i];
 		if (myHasBBCNo) {
 			spwInfo[i].bbcno = bbcno[i];
-		    if (name[i].contains(rxSqld)) {
+		    if(name[i].contains(rxSqld)) {
 		    	sqldSpw.insert(i);
 		    }
 		}
@@ -3763,12 +3763,10 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo2(
 		) {
 			fdmSpw.insert(i);
 		}
-		else if (
-			spwInfo[i].nchans == 1 && ! name[i].contains("FULL_RES")
-		) {
+		else if (spwInfo[i].nchans==1) {
 			avgSpw.insert(i);
 		}
-		else if (spwInfo[i].nchans == 4) {
+		else if (spwInfo[i].nchans==4) {
 			wvrSpw.insert(i);
 		}
 		else {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: DataManager.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 
 //# Includes
@@ -119,7 +119,7 @@ void DataManager::setTsmOption (const TSMOption& tsmOption)
   tsmOption_p = tsmOption;
 }
 
-void DataManager::setMultiFile (MultiFile* mfile)
+void DataManager::setMultiFile (MultiFileBase* mfile)
 {
   multiFile_p = mfile;
   // Only caching can be used with a MultiFile.

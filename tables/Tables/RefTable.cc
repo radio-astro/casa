@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: RefTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/tables/Tables/RefTable.h>
 #include <casacore/tables/Tables/RefColumn.h>
@@ -210,6 +210,11 @@ void RefTable::reopenRW()
 Bool RefTable::asBigEndian() const
 {
     return baseTabPtr_p->asBigEndian();
+}
+
+const StorageOption& RefTable::storageOption() const
+{
+    return baseTabPtr_p->storageOption();
 }
 
 Bool RefTable::isMultiUsed (Bool) const

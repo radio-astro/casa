@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tAipsIO.cc 21505 2014-11-21 11:43:02Z gervandiepen $
+//# $Id: tAipsIO.cc 21582 2015-03-24 14:43:31Z gervandiepen $
 
 //# Includes
 
@@ -31,6 +31,7 @@
 #include <casacore/casa/IO/MemoryIO.h>
 #include <casacore/casa/IO/RawIO.h>
 #include <casacore/casa/IO/MultiFile.h>
+#include <casacore/casa/IO/MultiHDF5.h>
 #include <casacore/casa/BasicSL/Complex.h>
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Exceptions/Error.h>

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FitsIDItoMS.cc 21532 2014-12-24 12:52:41Z gervandiepen $
+//# $Id: FitsIDItoMS.cc 21580 2015-03-24 08:37:00Z gervandiepen $
 
 #include <casacore/msfits/MSFits/FitsIDItoMS.h> 
 #include <casacore/casa/Arrays/ArrayIO.h> 
@@ -157,14 +157,14 @@ SimpleOrderedMap<Int,Int> FITSIDItoMS1::antIdFromNo(-1); // initialize the class
 //	
 // Constructor
 //	
-FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& initFirstMain)
+  FITSIDItoMS1::FITSIDItoMS1(FitsInput& fitsin, const Int& obsType, const Bool& initFirstMain)
   : BinaryTableExtension(fitsin),
     itsNrMSKs(10),
     itsMSKC(itsNrMSKs," "),
     itsMSKN(itsNrMSKs," "),
     itsMSKV(itsNrMSKs," "),
     itsgotMSK(itsNrMSKs,False),
-    infile_p(fitsin),
+    ///infile_p(fitsin),
     itsObsType(obsType),
     msc_p(0)
 {
