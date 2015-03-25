@@ -713,7 +713,7 @@ uniqueIntV(std::vector<int> &ulist, const Vector<Int> &list) {
 }
 
 bool
-calibrater::initweights(const bool dobt, const bool dowtsp)
+calibrater::initweights(const std::string& wtmode, const bool dowtsp)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -732,10 +732,10 @@ calibrater::initweights(const bool dobt, const bool dowtsp)
     itsCalibrater->writeHistory(os);
     
     // Initialize the SIGMA, WEIGHT, and (optionally) WEIGHT_SPECTRUM columns
-    retval = itsCalibrater->initWeights(dobt,dowtsp);
+    retval = itsCalibrater->initWeights(wtmode,dowtsp);
     AlwaysAssert (retval, AipsError);
     
-    os << "Finished initializing sigmas/weights." << LogIO::POST;
+    os << "Finished initweights." << LogIO::POST;
     
   } catch(AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

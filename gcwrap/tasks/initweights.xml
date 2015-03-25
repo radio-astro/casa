@@ -13,9 +13,17 @@
 		<description>Name of input visibility file (MS)</description>
 		<value></value>
 	</param>
-	<param type="bool" name="dobt">
-		<description>Initialize according to bandwidth and integration time; else unity.</description>
-		<value>True</value>
+	<param type="string" name="wtmode">
+		<description>Initialization mode</description>
+		<value>nyq</value>
+                <allowed kind="enum">
+                       <value>nyq</value>
+                       <value>sigma</value>
+                       <value>weight</value>
+                       <value>ones</value>
+                       <value>delwtsp</value>
+                       <value>delsigsp</value>
+                </allowed>
 	</param>
 	<param type="bool" name="dowtsp">
 		<description>Initialize the WEIGHT_SPECTRUM column.</description>
@@ -29,28 +37,54 @@
       This task provides for initialization of the weight information
       in the MS.  For ALMA and EVLA data, it should not generally be
       necessary to use this task, as the weight information should 
-      have been initialized fill time (v4.2.2 and later).
+      have been initialized properly at fill time (v4.2.2 and later).
 
-      If dobt=T, then the initialization will be according to the
-      channel bandwidth and integration time.  This is formally
-      corrected for normalized visibility data (e.g., ALMA).  For
-      the EVLA, this is correct if switched-power and bandpass 
-      calibration will later be applied.
+      Several initialization modes are supported via the wtmode parameter.
 
-      If dobt=F, then the initialization value will be unity (1.0).
-      This is ok if the channel bandwidth and integration time are uniform
-      for all spectral windows and scans.  If this condition is not
-      met, then there will be disproprotionate weights within the MS.
-    
-      If dowtsp=T, then the WEIGHT_SPECTRUM colum will also be
-      initialized (uniformly in channel).  If necessary, the 
-      WEIGHT_SPECTRUM column will be created.  Use of the 
-      WEIGHT_SPECTRUM column is only meaningful
+      If wtmode='nyq' (the default), SIGMA and WEIGHT will be
+      initialized according to bandwidth and integration time.  This
+      is the theoretically correct mode for raw normalized visibilities.
+      (e.g., ALMA).  For the EVLA, this is correct if switched-power
+      and bandpass calibration will later be applied.  
+
+      If wtmode='sigma', WEIGHT will be initialized according to the
+      existing SIGMA column.  
+
+      If mode='weight', WEIGHT_SPECTRUM will be initialized according
+      to the existing WEIGHT column; dowtspec=T must be specified in
+      this case.
+ 
+      If wtmode='ones', SIGMA and WEIGHT will be initialized with 1.0,
+      globally.  This is a traditional means of initializing weight
+      information, and is adequate when the integration time and 
+      bandwidth are uniform. It is not recommended for modern
+      instruments (ALMA, EVLA), where variety in observational setups
+      is common, and properly initialized and calibrated weights
+      will be used for imaging sensitivity estimates.
+
+      For the above wtmodes, if dowtspec=T (or if the WEIGHT_SPECTRUM
+      column already exists), the WEIGHT_SPECTRUM column will be
+      initialized (uniformly in channel), in a manner consistent with
+      the disposition of the WEIGHT column.  If the WEIGHT_SPECTRUM 
+      column does not exist, dowtsp=T will force its creation.
+      Use of the WEIGHT_SPECTRUM column is only meaningful
       for ALMA data which will be calibrated with channelized
-      Tsys information, or if the weights will be manually set
-      in a channelized manner after calibration (a task for this
-      is currently under development).
+      Tsys information, or if the weights will become channelized
+      after calibration, e.g., via averaging over time- and 
+      channel-dependent flagging.  (A task for channel-dependent
+      weight estimation from the data itself is also currently under
+      development).
 
+      Two additional modes are available for managing the spectral
+      weight info columns; these should be used with extreme care: If
+      wtmode='delwtsp', the WEIGHT_SPECTRUM column will be deleted (if
+      it exists).  If wtmode='delsigsp', the SIGMA_SPECTRUM column
+      will be deleted (if it exists).  Note that creation of
+      SIGMA_SPECTRUM is not supported via this method.
+
+      Note that this task does not support any prior selection.  
+      Intialization of the weight information must currently be done 
+      globally or not at all.  This is to maintain consistency.
 
  </example>
  </task>

@@ -2,7 +2,7 @@ import os
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def initweights(vis=None,dobt=None,dowtsp=None):
+def initweights(vis=None,wtmode=None,dowtsp=None):
 
         casalog.origin('initweights')
 
@@ -22,7 +22,7 @@ def initweights(vis=None,dobt=None,dowtsp=None):
 			# ... and we are asked to do something...
 			# open without adding anything!
 			mycb.open(vis,compress=False,addcorr=False,addmodel=False)
-			mycb.initweights(dobt=dobt,dowtsp=dowtsp)
+			mycb.initweights(wtmode=wtmode,dowtsp=dowtsp)
 			mycb.close()
 		else:
                         raise Exception, 'Visibility data set not found - please verify the name'
@@ -31,7 +31,7 @@ def initweights(vis=None,dobt=None,dowtsp=None):
         	ms.open(vis,nomodify=False)
         	ms.writehistory(message='taskname = initweights',origin='initweights')
         	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='initweights')
-		ms.writehistory(message='dobt        = "'+str(dobt)+'"',origin='initweights')
+		ms.writehistory(message='wtmode      = "'+wtmode+'"',origin='initweights')
 		ms.writehistory(message='dowtsp      = "'+str(dowtsp)+'"',origin='initweights')
 		ms.close()
 
