@@ -59,7 +59,7 @@ class finalcalsSummaryChart(object):
         task.execute(dry_run=False)
         '''
         
-        casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+        casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
         
 
 
@@ -179,7 +179,7 @@ class finalDelaysPerAntennaChart(object):
 	        
 	        
 	            
-	            casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            
 	            #plots.append(figfile)
 
@@ -428,7 +428,7 @@ class finalbpSolAmpPerAntennaChart(object):
 	            '''
 	            
 	            
-	            casa.plotcal(caltable='finalBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
+	            casa.plotcal(caltable='finalBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
 	            
 	            #plots.append(figfile)
 
@@ -574,7 +574,7 @@ class finalbpSolPhasePerAntennaChart(object):
 	            '''
 
 	            
-	            casa.plotcal(caltable='finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o-', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile).execute()
+	            casa.plotcal(caltable='finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile).execute()
 	            
 	            
 	            #plots.append(figfile)
