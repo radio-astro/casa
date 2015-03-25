@@ -407,6 +407,9 @@ class Fluxboot(basetask.StandardTaskTemplate):
         
         LOG.info("Setting power-law fit in the model column")
         
+        #Sort weblog results by frequency
+        weblog_results = sorted(weblog_results, key=lambda k: k['freq']) 
+        
         return results, weblog_results, spindex_results
                 
     def _do_setjy(self, calMs, results):

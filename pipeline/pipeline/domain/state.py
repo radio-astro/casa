@@ -180,9 +180,9 @@ class StateVLA(State):
         'CALIBRATE_BANDPASS#ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS.ON_SOURCE'       : 'BANDPASS',
         'CALIBRATE_BANDPASS_ON_SOURCE'       : 'BANDPASS',
-        'CALIBRATE_AMPLI#ON_SOURCE'          : 'AMPLITUDE',
-        'CALIBRATE_AMPLI.ON_SOURCE'          : 'AMPLITUDE',
-        'CALIBRATE_AMPLI_ON_SOURCE'          : 'AMPLITUDE',
+        'CALIBRATE_AMPLI#ON_SOURCE'          : 'PHASE',  #Was amplitude
+        'CALIBRATE_AMPLI.ON_SOURCE'          : 'PHASE',  #Was amplitude
+        'CALIBRATE_AMPLI_ON_SOURCE'          : 'PHASE',  #Was amplitude
         'CALIBRATE_FLUX#ON_SOURCE'           : 'AMPLITUDE',
         'CALIBRATE_FLUX.ON_SOURCE'           : 'AMPLITUDE',
         'CALIBRATE_FLUX_ON_SOURCE'           : 'AMPLITUDE',
@@ -214,11 +214,10 @@ class StateVLA(State):
         'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE',
         'OBSERVE_TARGET.OFF_SOURCE'          : 'REFERENCE',
         'OBSERVE_TARGET_OFF_SOURCE'          : 'REFERENCE',
-        'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
         'CALIBRATE_BANDPASS#UNSPECIFIED'     : 'BANDPASS',    
         'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
         'CALIBRATE_PHASE#UNSPECIFIED'        : 'PHASE',
-        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'AMPLITUDE'
+        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE'  #Was amplitude
     }
     
     def __init__(self, state_id, obs_mode):

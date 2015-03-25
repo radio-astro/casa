@@ -51,13 +51,13 @@ $(document).ready(function() {
     <h4>Plots: <br> <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, finaldelay_subpages[ms]), pcontext.report_dir)}">Final delay plots</a> |
         <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, phasegain_subpages[ms]), pcontext.report_dir)}">Gain phase </a> |
+           href="${os.path.relpath(os.path.join(dirname, phasegain_subpages[ms]), pcontext.report_dir)}">BP initial gain phase </a> |
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, bpsolamp_subpages[ms]), pcontext.report_dir)}">BP Amp solution </a> |
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, bpsolphase_subpages[ms]), pcontext.report_dir)}">BP Phase solution </a> |
         <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, bpsolphaseshort_subpages[ms]), pcontext.report_dir)}">BP Phase (short) solution </a> |
+           href="${os.path.relpath(os.path.join(dirname, bpsolphaseshort_subpages[ms]), pcontext.report_dir)}">BP Phase (short) gain solution </a> |
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, finalamptimecal_subpages[ms]), pcontext.report_dir)}">Final amp time cal </a> |
         <a class="replace"

@@ -193,7 +193,7 @@ class Antpos(basetask.StandardTaskTemplate):
         calfrom = callibrary.CalFrom(gencal_args['caltable'],
                                      caltype='antpos',
 				     spwmap=[],
-				     interp='')
+				     interp='', calwt=False)
 
         calapp = callibrary.CalApplication(calto, calfrom)
 
