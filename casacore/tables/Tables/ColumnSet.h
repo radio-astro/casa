@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnSet.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: ColumnSet.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_COLUMNSET_H
 #define TABLES_COLUMNSET_H
@@ -105,6 +105,10 @@ public:
 
     // Rename the necessary subtables in the column keywords.
     void renameTables (const String& newName, const String& oldName);
+
+    // Get the storage option.
+    const StorageOption& storageOption() const
+      { return storageOpt_p; }
 
     // Are subtables used in other processes.
     Bool areTablesMultiUsed() const;
@@ -312,7 +316,7 @@ private:
     //# Declare the variables.
     TableDesc*                      tdescPtr_p;
     StorageOption                   storageOpt_p;
-    MultiFile*                      multiFile_p;
+    MultiFileBase*                  multiFile_p;
     Int64                           nrrow_p;        //# #rows
     BaseTable*                      baseTablePtr_p;
     TableLockData*                  lockPtr_p;      //# lock object

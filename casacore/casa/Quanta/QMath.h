@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QMath.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: QMath.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #ifndef CASA_QMATH_H
 #define CASA_QMATH_H
@@ -229,9 +229,9 @@ Quantum<Qtype> max(const Quantum<Qtype> &left, const Quantum<Qtype> &other);
 // <group name="foreign">
 Int ceil(const Int &val);
 Int floor(const Int &val);
-#if ! defined(AIPS_CXX11) && !defined(__APPLE__)
+#if !(defined(AIPS_CXX11) || (defined(__APPLE_CC__) && __APPLE_CC__ > 5621))
 Float real(const Float &val);
-Double real(const Double&val);
+Double real(const Double &val);
 #endif
 Array<Complex> operator *(const Array<Complex> &in, Double f);
 Array<Complex> operator /(const Array<Complex> &in, Double f);

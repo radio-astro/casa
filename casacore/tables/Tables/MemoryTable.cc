@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: MemoryTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 
 #include <casacore/tables/Tables/MemoryTable.h>
@@ -103,6 +103,11 @@ void MemoryTable::reopenRW()
 Bool MemoryTable::asBigEndian() const
 {
   return HostInfo::bigEndian();
+}
+
+const StorageOption& MemoryTable::storageOption() const
+{
+  return colSetPtr_p->storageOption();
 }
 
 Bool MemoryTable::isMultiUsed (Bool) const

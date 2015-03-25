@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DirectionCoordinate.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: DirectionCoordinate.cc 21572 2015-03-03 12:22:11Z gervandiepen $
 
 
 #include <casacore/coordinates/Coordinates/DirectionCoordinate.h>

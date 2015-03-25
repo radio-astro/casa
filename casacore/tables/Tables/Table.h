@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: Table.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -415,6 +415,9 @@ public:
 
     // Get the endian format in which the table is stored.
     Table::EndianFormat endianFormat() const;
+
+    // Get the storage option used for the table.
+    const StorageOption& storageOption() const;
 
     // Is the table used (i.e. open) in this process.
     static Bool isOpened (const String& tableName);
@@ -1087,6 +1090,8 @@ inline void Table::flush (Bool fsync, Bool recursive)
 inline void Table::resync()
     { baseTabPtr_p->resync(); }
 
+inline const StorageOption& Table::storageOption() const
+    { return baseTabPtr_p->storageOption(); }
 inline Bool Table::isMultiUsed(Bool checkSubTables) const
     { return baseTabPtr_p->isMultiUsed(checkSubTables); }
 inline const TableLock& Table::lockOptions() const

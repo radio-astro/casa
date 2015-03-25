@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: BaseTable.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_BASETABLE_H
 #define TABLES_BASETABLE_H
@@ -33,6 +33,7 @@
 #include <casacore/casa/aips.h>
 #include <casacore/tables/Tables/TableInfo.h>
 #include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/StorageOption.h>
 #include <casacore/casa/Utilities/Compare.h>
 #include <casacore/casa/Utilities/CountedPtr.h>
 #include <casacore/casa/BasicSL/String.h>
@@ -120,6 +121,9 @@ public:
 
     // Is the table stored in big or little endian format?
     virtual Bool asBigEndian() const = 0;
+
+    // Get the storage option used for the table.
+    virtual const StorageOption& storageOption() const = 0;
 
     // Is the table in use (i.e. open) in another process?
     // If <src>checkSubTables</src> is set, it is also checked if

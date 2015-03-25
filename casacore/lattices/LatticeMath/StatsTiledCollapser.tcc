@@ -26,7 +26,7 @@
 
 #include <casacore/lattices/LatticeMath/StatsTiledCollapser.h>
 
-namespace casa {
+namespace casacore {
 
 template <class T, class U>
 StatsTiledCollapser<T,U>::StatsTiledCollapser(

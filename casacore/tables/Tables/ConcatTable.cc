@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: ConcatTable.cc 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #include <casacore/tables/Tables/ConcatTable.h>
 #include <casacore/tables/Tables/ConcatColumn.h>
@@ -169,6 +169,11 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   Bool ConcatTable::asBigEndian() const
   {
     return baseTabPtr_p[0]->asBigEndian();
+  }
+
+  const StorageOption& ConcatTable::storageOption() const
+  {
+    return baseTabPtr_p[0]->storageOption();
   }
 
   Bool ConcatTable::isMultiUsed (Bool) const

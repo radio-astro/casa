@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FitsIDItoMS.h 21531 2014-12-24 11:46:02Z gervandiepen $
+//# $Id: FitsIDItoMS.h 21580 2015-03-24 08:37:00Z gervandiepen $
 //# Mod 2010: DP
 
 #ifndef MS_FITSIDITOMS_H
@@ -270,7 +270,7 @@ protected:
   Vector<Bool>   itsgotMSK;
   
   
-  FitsInput &infile_p;
+  ///FitsInput &infile_p;
   String msFile_p;
   Vector<Int> nPixel_p,corrType_p;
   Block<Int> corrIndex_p;
@@ -286,7 +286,7 @@ protected:
   MFrequency::Types freqsys_p;
   Double restfreq_p;
   LogIO* itsLog;
-  Int nIF_p;
+  ///Int nIF_p;
   Double startTime_p;
   Double lastTime_p;
   Int itsObsType;

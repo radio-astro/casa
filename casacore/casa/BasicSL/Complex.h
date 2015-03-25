@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: Complex.h 21578 2015-03-18 15:01:43Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -344,7 +344,7 @@ Complex erfc(const Complex &in);
 namespace std { 
   inline float  conj(float  x) { return x; }
   inline double conj(double x) { return x; }
-#if !defined(AIPS_CXX11) && !defined(__APPLE__)
+#if !(defined(AIPS_CXX11) || (defined(__APPLE_CC__) && __APPLE_CC__ > 5621))
   inline float  real(float  x) { return x; }
   inline double real(double x) { return x; }
   inline float  imag(float   ) { return 0; }

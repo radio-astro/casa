@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageUtilities2.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+//# $Id: ImageUtilities2.tcc 21575 2015-03-12 10:32:41Z gervandiepen $
 
 #ifndef IMAGES_IMAGEUTILITIES2_TCC
 #define IMAGES_IMAGEUTILITIES2_TCC
@@ -289,7 +289,7 @@ SHARED_PTR<ImageInterface<T> > ImageUtilities::openImage
 {
    ImageInterface<T>* p = 0;
    ImageUtilities::openImage(p, fileName);
-   return SHARED_PTR<ImageInterface<T> >(p);
+   return SHARED_PTR<ImageInterface<T> > (p);
 }
 
 } //# NAMESPACE CASACORE - END

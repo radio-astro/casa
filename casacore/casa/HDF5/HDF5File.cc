@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5File.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: HDF5File.cc 21585 2015-03-25 13:28:02Z gervandiepen $
 
 //# Includes
 #include <casacore/casa/HDF5/HDF5File.h>
@@ -75,6 +75,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   void HDF5File::close()
   {
     if (isValid()) {
+      // Do not check for errors.
+      // If the same file is opened twice, HDF5 will close the file on
+      // the first occasion and gives an error for the second close.
+      H5Fflush (getHid(), H5F_SCOPE_LOCAL);
       H5Fclose (getHid());
       clearHid();
     }

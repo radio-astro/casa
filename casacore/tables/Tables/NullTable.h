@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
+//# $Id: NullTable.h 21583 2015-03-24 14:44:38Z gervandiepen $
 
 #ifndef TABLES_NULLTABLE_H
 #define TABLES_NULLTABLE_H
@@ -79,6 +79,7 @@ public:
   // <group>
   virtual void reopenRW();
   virtual Bool asBigEndian() const;
+  virtual const StorageOption& storageOption() const;
   virtual Bool isMultiUsed (Bool checkSubTable) const;
   virtual const TableLock& lockOptions() const;
   virtual void mergeLock (const TableLock& lockOptions);

@@ -42,10 +42,12 @@
 
 // <group name=Complexfwd>
 
+#ifdef AIPS_CXX11
 #include <complex>
-
-#if ! defined(AIPS_CXX11)
-using std::norm;
+#else
+namespace std {
+  template<typename T> struct complex;
+}
 #endif
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN

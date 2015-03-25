@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCHDF5Mask.cc 21549 2015-01-28 10:01:12Z gervandiepen $
+//# $Id: LCHDF5Mask.cc 21585 2015-03-25 13:28:02Z gervandiepen $
 
 #include <casacore/lattices/LRegions/LCHDF5Mask.h>
 #include <casacore/tables/Tables/TableRecord.h>
@@ -44,7 +44,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 	      latticeShape.shape()-1, latticeShape.shape())
   {
     setBoundingBox (itsBox.boundingBox());
-    itsMask = HDF5Lattice<Bool> (latticeShape, file, maskName, "Masks");
+    itsMask = HDF5Lattice<Bool> (latticeShape, file, maskName, "masks");
     setMaskPtr (itsMask);
   }
 
@@ -61,7 +61,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 			"shape of mask and box differ"));
     }
     setBoundingBox (itsBox.boundingBox());
-    itsMask = HDF5Lattice<Bool> (box.latticeShape(), file, maskName, "Masks");
+    itsMask = HDF5Lattice<Bool> (box.latticeShape(), file, maskName, "masks");
     setMaskPtr (itsMask);
   }
 
@@ -176,7 +176,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 				      const String& tableName)
   {
     HDF5Lattice<Bool> mask(rec.asString("filename"), rec.asString("maskname"),
-			   "Masks");
+			   "masks");
     LCBox* boxPtr = (LCBox*)(LCRegion::fromRecord (rec.asRecord("box"),
 						   tableName));
     LCHDF5Mask* regPtr = new LCHDF5Mask (mask, *boxPtr);

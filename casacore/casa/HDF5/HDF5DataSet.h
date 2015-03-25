@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5DataSet.h 21538 2015-01-07 09:08:57Z gervandiepen $
+//# $Id: HDF5DataSet.h 21582 2015-03-24 14:43:31Z gervandiepen $
 
 #ifndef CASA_HDF5DATASET_H
 #define CASA_HDF5DATASET_H
@@ -91,6 +91,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Bool*);
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
+		 const IPosition& tileShape, const uChar*);
+    HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Int*);
     HDF5DataSet (const HDF5Object&, const String&, const IPosition& shape,
 		 const IPosition& tileShape, const Int64*);
@@ -108,6 +110,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     // It checks if the internal type matches the given type.
     // <group>
     HDF5DataSet (const HDF5Object&, const String&, const Bool*);
+    HDF5DataSet (const HDF5Object&, const String&, const uChar*);
     HDF5DataSet (const HDF5Object&, const String&, const Int*);
     HDF5DataSet (const HDF5Object&, const String&, const Int64*);
     HDF5DataSet (const HDF5Object&, const String&, const Float*);
@@ -143,6 +146,9 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
     // Put a section of data.
     void put (const Slicer&, const void* buf);
+
+    // Extend the dataset if an axis in the new shape is larger.
+    void extend (const IPosition& shape);
 
     // Helper functions to convert shapes.
     // It reverses the axes, because HDF5 uses C-order.

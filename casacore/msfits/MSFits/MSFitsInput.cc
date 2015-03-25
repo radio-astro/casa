@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsInput.cc 21532 2014-12-24 12:52:41Z gervandiepen $
+//# $Id: MSFitsInput.cc 21580 2015-03-24 08:37:00Z gervandiepen $
 //
 
 #include <casacore/msfits/MSFits/MSFitsInput.h>
