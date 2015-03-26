@@ -944,12 +944,14 @@ def score_file_exists(filedir, filename, filetype):
 	0.0 if it does not
     '''
 
-    file = os.path.join(filedir, os.path.basename(filename)) 
     if filename is None:
         score = 1.0
         longmsg = 'The %s file is undefined' % (filetype)
         shortmsg = 'The %s file is undefined' % (filetype)
-    elif os.path.exists(file):
+        return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+    file = os.path.join(filedir, os.path.basename(filename)) 
+    if os.path.exists(file):
         score = 1.0
         longmsg = 'The %s file has been exported' % (filetype)
         shortmsg = 'The %s file has been exported' % (filetype)
