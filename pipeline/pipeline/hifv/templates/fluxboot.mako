@@ -124,7 +124,7 @@ $(document).ready(function() {
 	</thead>
 	<tbody>   
   
-    % for row in sorted(weblog_results[ms], key=lambda p: p['freq']):
+    % for row in sorted(weblog_results[ms], key=lambda p: float(p['freq'])):
     
 
 	
