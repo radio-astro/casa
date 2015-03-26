@@ -12,6 +12,7 @@ Unit tests for task fixvis.
 Features tested:                                                       
   1. Do converted directions in the FIELD table have the right shape? 
   2. Does the phase center shifting result in the expected shifts?
+  3. Does the distances parameter work
 
 Note: The equinox_vis regression is a more general test of fixvis.
 '''
@@ -97,13 +98,13 @@ class fixvis_test1(unittest.TestCase):
                 
         self.assertTrue(retValue['success'])
         
-    def _fixvis_and_get_stats(self, phasecent):
+    def _fixvis_and_get_stats(self, phasecent, dist=""):
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
         mystats = ''
         try:
             self.res = fixvis(inpms2, outms2, field='0', refcode=refcode,
-                              phasecenter=phasecent)
+                              phasecenter=phasecent, distances=dist)
             self.assertTrue(self.res)
             mystats = self._get_stats(0, 'testy')
         except:
@@ -354,6 +355,27 @@ class fixvis_test1(unittest.TestCase):
     ##     self.res = fixvis(inpms2, outms2, field='0', refcode=refcode,
     ##                       phasecenter='-0d0m3s 0deg', observation='0')
     ##     self.assertFalse(self.res)
+
+
+    def test14(self):
+        '''Test14: Apply trivial phase center shift, i.e. none, and use distances (list) parameter to refocus.'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+
+        mystats = self._fixvis_and_get_stats('J2000 18h00m02.3092s -29d59m29.9987s', ['100AU'])
+        self.assertTrue(mystats['maxposf'] == '18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos'] == [64, 64, 0, 0]).all())
+
+    def test15(self):
+        '''Test15: Apply trivial phase center shift, i.e. none, and use distances (str) parameter to refocus.'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+
+        mystats = self._fixvis_and_get_stats('J2000 18h00m02.3092s -29d59m29.9987s', '100AU')
+        self.assertTrue(mystats['maxposf'] == '18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos'] == [64, 64, 0, 0]).all())
+
+
     
 def suite():
     return [fixvis_test1]        

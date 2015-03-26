@@ -48,6 +48,11 @@ Recalculates (u, v, w) and/or changes Phase Center
       <description>use this direction as phase center</description>
       <value></value>
     </param>
+    <param type="any" name="distances">
+      <description>(experimental) List of the distances (as quanta) of the fields selected by field.</description>
+      <any type="variant"/>
+      <value>""</value>
+    </param>
     <param type="string" name="datacolumn">
       <description>when applying a phase center shift, modify visibilities only in this/these column(s)</description>
       <value>all</value>
@@ -83,6 +88,14 @@ to "all" (DATA, CORRECTED, and MODEL).
                phasecenter. The RA offset can be given in units of time or angle. If given 
                as a time, it is applied as is. If given as an angle, it is corrected for 
                the cos(DEC) before it is applied.
+
+    distances -- (experimental) List of the distances (as quanta) of the fields selected by field
+                 to be used for refocussing.
+                 If empty, the distances of all fields are assumed to be infinity.
+                 If not a list but just a single value is given, this is applied to
+                 all fields.
+                 default: []
+                 examples: ['2E6km', '3E6km']   '15au'
 
     datacolumn -- when applying a phase center shift, modify visibilities only in 
                   this/these column(s)

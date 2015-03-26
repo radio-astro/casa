@@ -1,7 +1,7 @@
 from taskinit import *
 import shutil
 
-def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', datacolumn='all'):
+def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', distances='', datacolumn='all'):
     """
     Input Parameters
     vis        -- Name of the input visibility set
@@ -22,6 +22,14 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
                      example: 'J2000 9h25m00s 05d12m00s'
                      If given without the equinox, e.g. '0h01m00s 00d12m00s', the parameter
                      is interpreted as a pair of offsets in RA and DEC to the present phasecenter.
+
+    distances -- (experimental) List of the distances (as quanta) of the fields selected by field
+                 to be used for refocussing.
+                 If empty, the distances of all fields are assumed to be infinity.
+                 If not a list but just a single value is given, this is applied to
+                 all fields.
+                 default: []
+                 examples: ['2E6km', '3E6km']   '15au'
 
     datacolumn -- when applying a phase center shift, modify visibilities only in this/these column(s)
                   default: 'all' (DATA, CORRECTED, and MODEL)
@@ -48,7 +56,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
             shutil.rmtree(outputvis, ignore_errors=True)
             shutil.copytree(vis, outputvis)
 
-        # me is also used, but not in a state-altering way.
+        # me and qa are also used, but not in a state-altering way.
         tbt, myms, myim = gentools(['tb', 'ms', 'im'])
         
         if(field==''):
@@ -59,6 +67,40 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
             return False
+
+        thedistances = []
+
+        if(distances==""):
+            distances = []
+        elif(distances!=[]):
+            if(type(distances)==str and qa.isquantity(distances)):
+                thedist = qa.canonical(distances)
+                if(thedist['unit']=='m'): # a length
+                    for f in fields: # put nfields copies into the list
+                        thedistances.append(thedist['value'])
+                else:
+                    casalog.post("Parameter distances needs to contain quanta with units of length.", 'SEVERE')                
+                    return False
+            elif(type(distances)==list):
+                if(len(fields)!=len(distances)):
+                    casalog.post("You selected "+str(len(fields))+" fields but gave only "+str(len(distances))+" distances,", 'SEVERE')
+                    return False
+                else:
+                    for d in distances:
+                        if(qa.isquantity(d)):
+                            thedist = qa.canonical(d)
+                            if(thedist['unit']=='m'): # a length
+                                thedistances.append(thedist['value'])
+                            else:
+                                casalog.post("Parameter distances needs to contain quanta with units of length.", 'SEVERE')       
+                                return False
+            else:
+                casalog.post("Invalid parameter distances.", 'SEVERE')       
+                return False
+
+
+        if(thedistances!=[]):
+            casalog.post('Will refocus to the given distances: '+str(distances), 'NORMAL')
         
         #determine therefcode, the reference frame to be used for the output UVWs
         tbt.open(outputvis+"/FIELD")
@@ -159,7 +201,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
                                                  therefcode, reuse, numfields,
                                                  ckwdict, theoldref, theoldrefstr,
                                                  isvarref, flddict, datacolumn,
-                                                 allselected)
+                                                 allselected, thedistances)
                 if commonoldrefstr == False:
                     return False
         #endif change phasecenter
@@ -233,7 +275,8 @@ def get_oldref(outputvis, tbt):
 
 def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
                    therefcode, reuse, numfields, ckwdict, theoldref,
-                   theoldrefstr, isvarref, flddict, datacol, allselected):
+                   theoldrefstr, isvarref, flddict, datacol, allselected,
+                   thedistances):
     """Modify the UVW and visibilities of field fld."""
     viaoffset = False
     thenewra_rad = 0.
@@ -399,9 +442,12 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
             fldids.append(i)
             phdirs.append(theoldphasecenter)
 
+    if thedistances==[]:
+        thedistances = 0. # the default value
+
     # 
     myim.open(outputvis, usescratch=False)
-    myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode, datacolumn=datacol)
+    myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode, datacolumn=datacol, distances=thedistances)
     myim.close()
     return commonoldrefstr
 
