@@ -217,7 +217,9 @@ class StateVLA(State):
         'CALIBRATE_BANDPASS#UNSPECIFIED'     : 'BANDPASS',    
         'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
         'CALIBRATE_PHASE#UNSPECIFIED'        : 'PHASE',
-        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE'  #Was amplitude
+        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE',  #Was amplitude
+        'UNSPECIFIED#UNSPECIFIED'            : 'UNKNOWN',
+        'SYSTEM_CONFIGURATION'               : 'SYSTEM_CONFIGURATION'
     }
     
     def __init__(self, state_id, obs_mode):
