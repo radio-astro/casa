@@ -1097,7 +1097,15 @@ class T2_4MDetailsRenderer(object):
                 l.inputs = result.inputs
                 if hasattr(result, 'taskname'):
                     l.taskname = result.taskname
+
+                # the newly-created ResultsList wrapper is missing a QA pool. However,
+                # as there is only ever one task added to the list we can safely assume
+                # that the pool for the wrapper should equal that of the child. 
+                if hasattr(result, 'qa'):
+                    l.qa = result.qa
+
                 result = l
+
             task = result[0].task
             
             # find the renderer appropriate to the task..
