@@ -820,8 +820,8 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
                 tsysspectrum = tsysspectra[pol].last(description)
                 if tsysspectrum.pol==corr_type[pol][0]:
                     if spectrumstack is None:
-                        spectrumstack = tsysspectrum.data
-                        flagstack = tsysspectrum.flag
+                        spectrumstack = np.vstack((tsysspectrum.data,))
+                        flagstack = np.vstack((tsysspectrum.flag,))
                     else:
                         spectrumstack = np.vstack((tsysspectrum.data,
                           spectrumstack))
@@ -941,8 +941,8 @@ class TsysflagspectraWorker(basetask.StandardTaskTemplate):
                 tsysspectrum = tsysspectra[pol].last(description)
                 if tsysspectrum.pol==corr_type[pol][0]:
                     if spectrumstack is None:
-                        spectrumstack = tsysspectrum.data
-                        flagstack = tsysspectrum.flag
+                        spectrumstack = np.vstack((tsysspectrum.data,))
+                        flagstack = np.vstack((tsysspectrum.flag,))
                     else:
                         spectrumstack = np.vstack((tsysspectrum.data,
                           spectrumstack))
