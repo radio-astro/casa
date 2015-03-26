@@ -451,9 +451,11 @@ class ExportData(basetask.StandardTaskTemplate):
         if pprfile == '':
 	    ps = context.project_structure
 	    if ps is None:
-	        pprtemplate = 'PPR_*.xml'
+	        #pprtemplate = 'PPR_*.xml'
+	        pprtemplate = None
 	    elif ps.ppr_file == '':
-	        pprtemplate = 'PPR_*.xml'
+	        #pprtemplate = 'PPR_*.xml'
+	        pprtemplate = None
 	    else:
 	        pprtemplate = os.path.basename(ps.ppr_file)
         else:
@@ -463,10 +465,11 @@ class ExportData(basetask.StandardTaskTemplate):
 	# to be copied to the data products directory. Normally there
 	# should be only one match but if there are more copy them all.
 	pprmatches = []
-	for file in os.listdir(output_dir):
-	    if fnmatch.fnmatch (file, pprtemplate):
-	        LOG.debug('Located pipeline processing request %s' % (file))
-	        pprmatches.append (os.path.join(output_dir, file))
+	if pprtemplate is not None:
+	    for file in os.listdir(output_dir):
+	        if fnmatch.fnmatch (file, pprtemplate):
+	            LOG.debug('Located pipeline processing request %s' % (file))
+	            pprmatches.append (os.path.join(output_dir, file))
 
 	# Copy the pipeline processing request files.
 	for file in pprmatches: 
