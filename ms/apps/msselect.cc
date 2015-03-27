@@ -25,7 +25,7 @@
 //#
 //# $Id: msselect.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casacore/ms/MeasurementSets/MSSelection.h>
+#include <casacore/ms/MSSel/MSSelection.h>
 #include <casacore/tables/Tables/TableRecord.h>
 #include <casacore/casa/Inputs/Input.h>
 #include <casacore/casa/OS/DirectoryIterator.h>
