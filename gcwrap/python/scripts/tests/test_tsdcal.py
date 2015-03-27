@@ -376,37 +376,16 @@ class tsdcal_test(unittest.TestCase):
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys6.cal', interp='nearest', outfile='')
         
         row=0
+        eps = 1.0e-1
 
         tb.open(infile)
-
-
         sigma=tb.getcell('SIGMA', row)
-        #sigma10=tb.getcell('SIGMA', 0)[1]
-        
-        
         weight_spectrum=tb.getcell('WEIGHT_SPECTRUM', row)
-        #weight_spectrum=tb.getcell('WEIGHT_SPECTRUM')
-        
-        
         total_ch=tb.getcell('WEIGHT_SPECTRUM',row).shape[1]
         tb.close()
         
         tb.open('tsys.cal')
-        #fparam00=tb.getcell('FPARAM', 0)[0][0]
-        #fparam10=tb.getcell('FPARAM', 0)[1][0]
         fparam=tb.getcell('FPARAM', row)
-        
-
-        #sum_fparam0=0
-        #sum_fparam1=0
-        #for i in range(128):
-        #    sum_fparam0 += tb.getvarcol('FPARAM')['r1'][0][i][0]
-        #    sum_fparam1 += tb.getvarcol('FPARAM')['r1'][1][i][0]
-        #fparam0_ave=sum_fparam0/128.0
-        #fparam1_ave=sum_fparam1/128.0
-        #print 'fparam_average_r1_0', fparam0_ave
-        #print 'fparam_average_r1_1', fparam1_ave
-        
         for ch in range(total_ch):
             #print 'SIGMA00 ', sigma[0]
             #print 'SIGMA10 ', sigma[1]
@@ -415,12 +394,18 @@ class tsdcal_test(unittest.TestCase):
             answer0 = 1/(sigma[0]**2)*1/(fparam[0][ch]**2) 
             answer1 = 1/(sigma[1]**2)*1/(fparam[1][ch]**2) 
             #print 'pol0: 1/SIGMA**2 X 1/(FPARAM)**2', answer0
-            #print 'pol1: 1/SIGMA**2 X 1/(FPARAM)**2', answer1
-            diff0_percent=(weight_spectrum[0][ch]-answer0)/weight_spectrum[0][ch]*100
-            diff1_percent=(weight_spectrum[1][ch]-answer1)/weight_spectrum[1][ch]*100
-            print 'pol0 & pol1 ch '+ str(ch)+ ': diff between 1/SIGMA**2 X 1/(FPARAM['+str(ch)+'])**2 and WEIGHT_SPECTRUM['+ str(ch)+']' , diff0_percent, '%', diff1_percent, '%' 
-            #print 'pol1 ch '+ str(ch)+ ': diff between 1/SIGMA**2 X 1/(FPARAM['+str(ch)+'])**2 and WEIGHT_SPECTRUM['+ str(ch)+']' , diff1_percent, '%' 
-        
+            #print 'pol1: 1/SIGMA**2 X 1/(FPARAM)**2', answer1i
+            diff0=weight_spectrum[0][ch]-answer0
+            diff1=weight_spectrum[1][ch]-answer1
+            diff0_percent= diff0/weight_spectrum[0][ch]*100
+            diff1_percent= diff1/weight_spectrum[1][ch]*100
+
+            #diff0_percent=(weight_spectrum[0][ch]-answer0)/weight_spectrum[0][ch]*100
+            #diff1_percent=(weight_spectrum[1][ch]-answer1)/weight_spectrum[1][ch]*100
+            print ''
+            print 'pol0 & pol1 ch '+ str(ch)+ ': diff between 1/SIGMA**2 X 1/(FPARAM['+str(ch)+'])**2 and WEIGHT_SPECTRUM['+ str(ch)+']' , diff0, diff1
+            print diff0_percent, '%', diff1_percent, '%'
+            #self.assertTrue(diff0 < eps, msg='The error is small enough')
         tb.close()
             
 
