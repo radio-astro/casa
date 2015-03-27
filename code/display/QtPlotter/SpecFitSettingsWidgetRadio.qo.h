@@ -115,6 +115,7 @@ namespace casa {
 		SpecFitThread* specFitThread;
 		QProgressDialog progressDialog;
 		GaussianEstimateDialog gaussEstimateDialog;
+		Record regionRecord;
 
 
 		QString outputLogPath;

@@ -2431,10 +2431,10 @@ namespace casa {
 			npoints_old = wcArraySize;
 			changePlotType(plotMode->currentText());
 		} else {
-			if (npoints==1 & npoints_old!=1) {
+			if ((npoints==1) & (npoints_old!=1)) {
 				npoints_old = npoints;
 				changePlotType(plotMode->currentText());
-			} else if (npoints!=1 & npoints_old==1) {
+			} else if ((npoints!=1) & (npoints_old==1)) {
 				npoints_old = npoints;
 				changePlotType(plotMode->currentText());
 			}
@@ -2978,7 +2978,7 @@ namespace casa {
 		return unitPerChannel;
 	}
 
-	String QtProfile::getRegionShape(){
+	String QtProfile::getRegionShape() const {
 			String shape( "");
 			if ( profileType == RECTPROF ){
 				shape = SHAPE_RECTANGLE;
@@ -3201,6 +3201,14 @@ namespace casa {
 	}
 	Vector<Float> QtProfile::getZValues() const {
 		return z_eval;
+	}
+
+	Vector<Double> QtProfile::getRegionXValues() const {
+		return lastWX;
+	}
+
+	Vector<Double> QtProfile::getRegionYValues() const {
+		return lastWY;
 	}
 
 	QString QtProfile::getYUnit() const {

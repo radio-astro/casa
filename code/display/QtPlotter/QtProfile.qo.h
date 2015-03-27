@@ -148,11 +148,14 @@ namespace casa {
 		Vector<Float> getXValues() const;
 		Vector<Float> getYValues() const;
 		Vector<Float> getZValues() const;
+		Vector<Double> getRegionXValues() const;
+		Vector<Double> getRegionYValues() const;
 		QString getYUnit() const;
 		QString getYUnitPrefix() const;
 		String getXAxisUnit() const;
 		QString getFileName() const;
 		QString getImagePath() const;
+		String getRegionShape() const;
 		SHARED_PTR<const ImageInterface<Float> > getImage( const QString& imageName="") const;
 		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const;
 		void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
@@ -268,7 +271,7 @@ namespace casa {
 		SpectralCoordinate getSpectralAxis( SHARED_PTR<const ImageInterface<Float> > imagePtr, Bool& valid );
 		void resetXUnits( bool spectralAxis);
 		void updateSpectralReferenceFrame();
-		String getRegionShape();
+
 		int computeCB( const String& xa, const String& ya, const String& za );
 		void getBeamInfo( SHARED_PTR<const ImageInterface<Float> > imagePtr, Double& beamArea, Double& beamSolidAngle) const;
 		SpectralCoordinate getSpectralCoordinate( SHARED_PTR<const ImageInterface<Float> > imagePtr, Bool& valid );
@@ -415,6 +418,7 @@ namespace casa {
 
 		QtProfile::PlotType  itsPlotType;
 		QtProfile::ErrorType itsErrorType;
+
 
 		LogIO *itsLog;
 		Int ordersOfM_;

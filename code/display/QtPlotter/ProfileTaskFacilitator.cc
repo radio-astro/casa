@@ -85,6 +85,14 @@ namespace casa {
 		return taskMonitor -> getZValues();
 	}
 
+	Vector<Double> ProfileTaskFacilitator::getRegionXValues() const {
+		return taskMonitor->getRegionXValues();
+	}
+
+	Vector<Double> ProfileTaskFacilitator::getRegionYValues() const {
+		return taskMonitor->getRegionYValues();
+	}
+
 	QString ProfileTaskFacilitator::getYUnit() const {
 		return taskMonitor -> getYUnit();
 	}
@@ -102,6 +110,10 @@ namespace casa {
 
 	const SHARED_PTR<const ImageInterface<Float> > ProfileTaskFacilitator::getImage( const QString& imageName) const {
 		return taskMonitor -> getImage( imageName );
+	}
+
+	const String ProfileTaskFacilitator::getRegionShape() const {
+		return taskMonitor->getRegionShape();
 	}
 
 	const String ProfileTaskFacilitator::getPixelBox() const {

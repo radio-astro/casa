@@ -50,9 +50,12 @@ namespace casa {
 		virtual Vector<Float> getXValues() const = 0;
 		virtual Vector<Float> getYValues() const = 0;
 		virtual Vector<Float>getZValues() const = 0;
+		virtual Vector<Double> getRegionXValues() const = 0;
+		virtual Vector<Double> getRegionYValues() const = 0;
 		virtual QString getYUnit() const = 0;
 		virtual QString getYUnitPrefix() const = 0;
 		virtual String getXAxisUnit() const = 0;
+		virtual String getRegionShape() const = 0;
 		virtual void postStatus( String str ) = 0;
 		virtual void plotMainCurve() = 0;
 		virtual SHARED_PTR<const ImageInterface<Float> > getImage( const QString& imageName = "") const = 0;

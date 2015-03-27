@@ -71,11 +71,14 @@ namespace casa {
 		virtual Vector<Float> getXValues() const;
 		virtual Vector<Float> getYValues() const;
 		virtual Vector<Float> getZValues() const;
+		virtual Vector<Double> getRegionXValues() const;
+		virtual Vector<Double> getRegionYValues() const;
 		virtual QString getYUnit() const;
 		virtual QString getYUnitPrefix() const;
 		virtual String getXAxisUnit() const;
 		virtual const SHARED_PTR<const ImageInterface<Float> > getImage( const QString& name="") const;
 		virtual const String getPixelBox() const;
+		virtual const String getRegionShape() const;
 
 		bool isOptical();
 		void setOptical( bool optical );

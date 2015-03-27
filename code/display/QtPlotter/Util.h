@@ -36,6 +36,7 @@ class QWidget;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	template <class T> class ImageInterface;
+	class ImageRegion;
 
 	class Util {
 
@@ -81,12 +82,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				int tabularAxis, ImageCollapserData::AggregateType, String& unit,
 				const String& coordinateType,
 				const Quantity *const restFreq=0, const String& frame="");
+		/**
+		 * Returns the record of a 3-dimension region with the base in the shape of
+		 * an ellipse and height given by the channel range.
+		 * @param cSys the image coordinate system.
+		 * @param x the x-coordinates of the ellipse bounding box.
+		 * @param y the y-coordinates of the ellipse bounding box.
+		 * @return a Record describing cylindrical volume with a elliptical base.
+		 */
+		static Record getEllipticalRegion3D( const DisplayCoordinateSystem& cSys,
+						const Vector<Double>& x, const Vector<Double>& y,
+						int channelMin, int channelMax, int spectralAxisNumber);
 
+		/**
+		 * Returns the record of a 3-dimension region with the base in the shape of
+		 * a polygon and height given by the channel range.
+		 * @param cSys the image coordinate system.
+		 * @param x the x-coordinates of the polygon corner points.
+		 * @param y the y-coordinates of the polygon corner points.
+		 * @return a Record describing cylindrical volume with a polygonal base.
+		 */
+
+		static Record getPolygonalRegion3D( const DisplayCoordinateSystem& cSys,
+						const Vector<Double>& x, const Vector<Double>& y,
+						int channelMin, int channelMax, int spectralAxisNumber);
+
+		/**
+		 * Return a 2D region in the shape of an ellipse.
+		 * @param cSys the image coordinate system.
+		 * @param x the x-coordinates of the ellipse bounding box.
+		 * @param y the y-coordinates of the ellipse bounding box.
+		 * @return the 2D image region of the ellipse.
+		 */
+		static ImageRegion* getEllipsoid(const DisplayCoordinateSystem& cSys,
+							const Vector<Double>& x, const Vector<Double>& y);
+		/**
+		 * Return a 2D region in the shape of a polygon.
+		 * @param cSys the image coordinate system.
+		 * @param x the x-coordinates of the polygon corner points.
+		 * @param y the y-coordinates of the polygon corner points.
+		 * @return the 2D image region of the polygon.
+		 */
+		static ImageRegion* getPolygon(const DisplayCoordinateSystem& cSys,
+					const Vector<Double>& x, const Vector<Double>& y);
 	private:
 		Util();
 		virtual ~Util();
 		static double toRadians( double degrees );
 		static double toDecimalDegrees( int hrs, int mins, float seconds );
+		static Record make3DRegion( const DisplayCoordinateSystem& cSys, ImageRegion* shape3D,
+					int channelMin, int channelMax, int spectralAxisNumber );
+
 		static const double PI;
 		static const double TIME_CONV;
 		static const double RAD_DEGREE_CONVERSION;

@@ -24,12 +24,16 @@
 //#
 #include <display/QtPlotter/Util.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Regions/ImageRegion.h>
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/WCEllipsoid.h>
+#include <images/Regions/WCExtension.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
+#include <imageanalysis/Annotations/AnnPolygon.h>
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -266,6 +270,131 @@ namespace casa {
 		return coreName;
 	}
 
+	Record Util::make3DRegion( const DisplayCoordinateSystem& cSys, ImageRegion* shape3D,
+			int channelMin, int channelMax, int spectralAxisIndex ){
+		Record regionRecord;
+		if ( shape3D != NULL ){
+			//Make an extension box in the spectral direction.
+			bool spectralAxis = cSys.hasSpectralAxis();
+			if ( spectralAxis ) {
+				uInt nExtendAxes = 1;
+				IPosition pixelAxes(nExtendAxes);
+				if (spectralAxisIndex > 0) {
+					pixelAxes[0] = spectralAxisIndex;
+					int pixelAxesCount = pixelAxes.size();
+					Vector<Int> absRel(pixelAxesCount, RegionType::Abs);
+					Vector<Quantity> minRange(pixelAxesCount);
+					Vector<Quantity> maxRange(pixelAxesCount);
+					minRange[0]=Quantity( channelMin, "pix" );
+					maxRange[0] = Quantity( channelMax, "pix");
+					WCBox wbox(minRange, maxRange, pixelAxes, cSys, absRel);
+					WCExtension extension( *shape3D, wbox);
+					ImageRegion extendedRegion (extension);
+					regionRecord = extendedRegion.toRecord("");
+				}
+				else {
+					qDebug() << "No elliptical 3D region - missing spectral axis.";
+				}
+			}
+			else {
+				qDebug() << "Could not make ellipsoid.";
+			}
+		}
+		return regionRecord;
+	}
+
+	Record Util::getEllipticalRegion3D( const DisplayCoordinateSystem& cSys,
+				const Vector<Double>& x, const Vector<Double>& y,
+				int channelMin, int channelMax, int spectralAxisNumber ){
+
+		ImageRegion* ellipsoid = getEllipsoid( cSys, x, y);
+		Record regionRecord = make3DRegion( cSys, ellipsoid, channelMin, channelMax, spectralAxisNumber );
+		return regionRecord;
+	}
+
+	Record Util::getPolygonalRegion3D( const DisplayCoordinateSystem& cSys,
+				const Vector<Double>& x, const Vector<Double>& y,
+				int channelMin, int channelMax, int spectralAxisNumber){
+		ImageRegion* polygon = getPolygon( cSys,x,y);
+		Record regionRecord = make3DRegion( cSys, polygon, channelMin, channelMax, spectralAxisNumber );
+		return regionRecord;
+	}
+
+	ImageRegion* Util::getPolygon(const DisplayCoordinateSystem& cSys,
+			const Vector<Double>& x, const Vector<Double>& y){
+		ImageRegion* polygon = NULL;
+		const String radUnits( "rad");
+		RegionManager regMan;
+		int n = x.size();
+		Vector<Quantity> xvertex(n);
+		Vector<Quantity> yvertex(n);
+		for (Int k = 0; k < n; ++k) {
+			xvertex[k] = Quantity(x[k], radUnits);
+			yvertex[k] = Quantity(y[k], radUnits);
+		}
+		int directionIndex = cSys.findCoordinate( Coordinate::DIRECTION );
+		if ( directionIndex >= 0 ){
+			Vector<Int> dirPixelAxis = cSys.pixelAxes(directionIndex);
+			Vector<Int> pixax(2);
+			pixax(0) = dirPixelAxis[0];
+			pixax(1) = dirPixelAxis[1];
+			polygon = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
+		}
+		return polygon;
+	}
+
+	ImageRegion* Util::getEllipsoid(const DisplayCoordinateSystem& cSys,
+			const Vector<Double>& x, const Vector<Double>& y){
+		Vector<Quantity> center(2);
+		Vector<Quantity> radius(2);
+		ImageRegion* imageRegion = NULL;
+		if ( x.size() == 2 && y.size() == 2 ){
+			const String radUnits( "rad");
+			center[0] = Quantity( (x[0]+x[1])/2, radUnits );
+			center[1] = Quantity( (y[0]+y[1])/2, radUnits );
+
+			MDirection::Types type = MDirection::N_Types;
+			int directionIndex = cSys.findCoordinate( Coordinate::DIRECTION );
+			if ( directionIndex >= 0 ){
+				uInt dirIndex = static_cast<uInt>(directionIndex);
+				type = cSys.directionCoordinate(dirIndex).directionType(true);
+
+				Vector<Double> qCenter(2);
+				qCenter[0] = center[0].getValue();
+				qCenter[1] = center[1].getValue();
+				MDirection mdcenter( Quantum<Vector<Double> >(qCenter,radUnits), type );
+
+				Vector<Double> blc_rad_x(2);
+				blc_rad_x[0] = x[0];
+				blc_rad_x[1] = center[1].getValue();
+				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,radUnits),type );
+
+				Vector<Double> blc_rad_y(2);
+				blc_rad_y[0] = center[0].getValue();
+				blc_rad_y[1] = y[0];
+				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,radUnits),type );
+
+				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+				radius[0] = Quantity(xdistance, radUnits );
+				radius[1] = Quantity(ydistance, radUnits );
+
+				Vector<Int> pixax(2);
+				Vector<Int> dirPixelAxis = cSys.pixelAxes(directionIndex);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+				WCEllipsoid ellipsoid( center, radius, IPosition(dirPixelAxis), cSys);
+				imageRegion = new ImageRegion( ellipsoid );
+			}
+		}
+		else {
+			qDebug() << "Invalid size (2) for an ellipse: "<<x.size()<<" and "<<y.size();
+		}
+		return imageRegion;
+	}
+
+
+
 	Record Util::getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
 			const Vector<Double>& x, const Vector<Double>& y){
 		const String radUnits( "rad");
@@ -291,55 +420,18 @@ namespace casa {
 				delete imagregRecord;
 			}
 			else if ( shape == QtProfile::SHAPE_ELLIPSE ){
-				Vector<Quantity> center(2);
-				Vector<Quantity> radius(2);
-				center[0] = Quantity( (x[0]+x[1])/2, radUnits );
-				center[1] = Quantity( (y[0]+y[1])/2, radUnits );
-
-				MDirection::Types type = MDirection::N_Types;
-				uInt dirIndex = static_cast<uInt>(directionIndex);
-				type = cSys.directionCoordinate(dirIndex).directionType(true);
-
-				Vector<Double> qCenter(2);
-				qCenter[0] = center[0].getValue();
-				qCenter[1] = center[1].getValue();
-				MDirection mdcenter( Quantum<Vector<Double> >(qCenter,radUnits), type );
-				Vector<Double> blc_rad_x(2);
-				blc_rad_x[0] = x[0];
-				blc_rad_x[1] = center[1].getValue();
-				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,radUnits),type );
-
-				Vector<Double> blc_rad_y(2);
-				blc_rad_y[0] = center[0].getValue();
-				blc_rad_y[1] = y[0];
-				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,radUnits),type );
-
-				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
-				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
-				radius[0] = Quantity(xdistance, radUnits );
-				radius[1] = Quantity(ydistance, radUnits );
-
-				Vector<Int> pixax(2);
-				pixax(0) = dirPixelAxis[0];
-				pixax(1) = dirPixelAxis[1];
-				WCEllipsoid* ellipsoid = new WCEllipsoid( center, radius, IPosition(dirPixelAxis), cSys);
-				regionRecord = ellipsoid->toRecord("");
-				delete ellipsoid;
+				ImageRegion* ellipsoid = getEllipsoid( cSys, x, y );
+				if ( ellipsoid != NULL ){
+					regionRecord = ellipsoid->toRecord("");
+					delete ellipsoid;
+				}
 			}
 			else if ( shape == QtProfile::SHAPE_POLY ){
-				int n = x.size();
-				Vector<Quantity> xvertex(n);
-				Vector<Quantity> yvertex(n);
-				for (Int k = 0; k < n; ++k) {
-					xvertex[k] = Quantity(x[k], radUnits);
-					yvertex[k] = Quantity(y[k], radUnits);
+				ImageRegion* polygon = getPolygon( cSys, x, y );
+				if ( polygon != NULL ){
+					regionRecord = polygon->toRecord(String(""));
+					delete polygon;
 				}
-				Vector<Int> pixax(2);
-				pixax(0) = dirPixelAxis[0];
-				pixax(1) = dirPixelAxis[1];
-				ImageRegion* imagreg = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
-				regionRecord = imagreg->toRecord(String(""));
-				delete imagreg;
 			}
 			else if ( shape == QtProfile::SHAPE_POINT ){
 				//Try a rectangle with blc=trc;

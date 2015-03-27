@@ -482,7 +482,6 @@ namespace casa {
 							Bool validSpec;
 							SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
 							peakVal = curve.convertValue( peakVal, centerVal, displayYUnits, newUnitStr, xUnits, coord );
-
 							GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 							estimate->fixByString( fixedStr.toStdString());
 							spectralList.add( *estimate );
@@ -516,10 +515,10 @@ namespace casa {
 	}
 
 	void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ) {
-
 		reset();
 		QString fitCurveName = ui.curveComboBox->currentText();
 		SHARED_PTR<const ImageInterface<float> > image = getImage( fitCurveName );
+		//SHARED_PTR<ImageInterface<Float> > image( new PagedImage<Float>( "/home/achillea/casa/trunk/test/titan2/titanline-small2.image"));
 		const String pixelBox = getPixelBox();
 
 		Bool validSpectralList;
@@ -542,11 +541,40 @@ namespace casa {
 			//spectral axis.
 			DisplayCoordinateSystem cSys = image -> coordinates();
 			Int spectralAxisNumber = cSys.spectralAxisNumber();
-
-			//Initialize the fitter
-			fitter = new ImageProfileFitter( image, "", 0, pixelBox,
+			String regionShape = getRegionShape();
+			if ( regionShape == "rectangle" || regionShape == "point" ){
+				//Initialize the fitter
+				fitter = new ImageProfileFitter( image, "", 0, pixelBox,
 			                                 channelStr, "", "", spectralAxisNumber, static_cast<uInt>(nGauss), "",
 			                                 spectralList);
+			}
+			//CAS-5689 For elliptical regions we cannot pass in a pixel box
+			//but must use a region record instead.
+			else if ( regionShape == "ellipse" || regionShape == "polygon"){
+				Vector<double> regionXValues = getRegionXValues();
+				Vector<double> regionYValues = getRegionYValues();
+				//Make a 3D region of the appropriate 2D shape.
+				if ( regionShape == "ellipse"){
+					regionRecord = Util::getEllipticalRegion3D( cSys,
+										regionXValues, regionYValues,
+										startChannelIndex, endChannelIndex, spectralAxisNumber);
+
+				}
+				else if ( regionShape == "polygon"){
+					regionRecord = Util::getPolygonalRegion3D( cSys,
+									regionXValues, regionYValues,
+									startChannelIndex, endChannelIndex, spectralAxisNumber );
+				}
+
+				//Initialize the fitter
+				fitter = new ImageProfileFitter( image, "", &regionRecord, "",
+											 "", "", "", spectralAxisNumber, static_cast<uInt>(nGauss), "",
+											 spectralList);
+			}
+			else {
+				qDebug() << "Unrecognized region shape could not be fit: "<< regionShape.c_str();
+				return;
+			}
 
 			//Tell the fitter if we want to include a polynomial
 			if ( fitPoly ) {
