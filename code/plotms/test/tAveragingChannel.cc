@@ -70,7 +70,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     // Export format for all tests
     PlotExportFormat::Type type = PlotExportFormat::JPG;
     // File size should be the same for first 3 cases
-    int noAveragingSizeMin = 265000;
+    int noAveragingSizeMin = 263000;
     int noAveragingSizeMax = 266000;
 
     // start with no averaging
@@ -119,7 +119,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok3 = app.save(format3);
 	cout << "tAveragingChannel test 3 - result of save=" << ok3 <<endl;
         // This plot file should be smaller because of averaging
-	bool okOutput3 = tUtil::checkFile( outFile3, 185000, 186000, -1 );
+	bool okOutput3 = tUtil::checkFile( outFile3, 180000, 185000, -1 );
 	cout << "tAveragingChannel test 3 - result of third saved file check="<<okOutput3<<endl;
 
 	if ( okOutput  && okOutput2 && okOutput3 ){

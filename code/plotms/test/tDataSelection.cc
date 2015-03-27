@@ -68,7 +68,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tDataSelection - result of save="<<ok<<endl;
     
-	bool okOutput = tUtil::checkFile( outFile, 70000, 86000, -1 );
+	bool okOutput = tUtil::checkFile( outFile, 70000, 90000, -1 );
 	cout << "tDataSelection - result of first saved file check="<<okOutput<<endl;
 	if ( okOutput ){
 		cout << "tDataSelection Pass!"<<endl;

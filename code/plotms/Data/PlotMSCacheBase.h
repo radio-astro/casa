@@ -31,6 +31,7 @@
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
+#include <plotms/PlotMS/PlotMSCalibration.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
@@ -145,6 +146,7 @@ public:
 		    const PlotMSSelection& selection,
 		    const PlotMSAveraging& averaging,
 		    const PlotMSTransformations& transformations,
+		    const PlotMSCalibration& calibration,
 		    /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
   
   // Clears the cache of all stored values.  This should be called when the
@@ -201,6 +203,9 @@ public:
   inline Double getWtxAmp(Int chnk, Int irel) { return *(wtxamp_[chnk]->data()+irel); }
 
   inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
+
+  inline Double getSigma(Int chnk,Int irel) { return *(sigma_[chnk]->data()+irel); };
+  inline Double getSigmaSp(Int chnk,Int irel) { return *(sigmasp_[chnk]->data()+irel); };
 
   inline Double getObsid(Int chnk,Int irel) { return *(obsid_[chnk]->data()+irel); };
   inline Double getIntent(Int chnk,Int irel) { return *(intent_[chnk]->data()+irel); };
@@ -356,6 +361,7 @@ protected:
   PtrBlock<Vector<Bool>*> flagrow_;
   
   PtrBlock<Array<Float>*> wt_,wtsp_;
+  PtrBlock<Array<Float>*> sigma_,sigmasp_;
 
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Int>*> antenna_;
@@ -383,6 +389,7 @@ protected:
   PlotMSSelection selection_;
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
+  PlotMSCalibration calibration_;
 
   // Axes mask
   vector<Vector<Bool> > netAxesMask_;

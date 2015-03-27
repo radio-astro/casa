@@ -121,7 +121,7 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     //The following axis have units which are proportion to Jansky, but are
     //time varying so Jansky is not accurate.  For now, we are not including
     //units with them.
-    //AMP, REAL, IMAG, GAMP, GPHASE, GREAL, GIMAG, SWP
+    //AMP, REAL, IMAG, GAMP, GPHASE, GREAL, GIMAG, SWP, SIGMA
     }
 }
 

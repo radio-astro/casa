@@ -1,5 +1,5 @@
-//# MSCacheVolMeter.h: Definition of MSCache Volume meter
-//# Copyright (C) 2009
+//# PlotMSCalibrationWidget.qo.h: GUI widget for PlotMSCalibration
+//# Copyright (C) 2015
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -24,56 +24,44 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef MSCACHEVOLMETER_H_
-#define MSCACHEVOLMETER_H_
+#ifndef PLOTMSCALIBRATIONWIDGET_QO_H_
+#define PLOTMSCALIBRATIONWIDGET_QO_H_
 
-#include <plotms/PlotMS/PlotMSConstants.h>
-#include <plotms/PlotMS/PlotMSAveraging.h>
+#include <plotms/Gui/PlotMSCalibrationWidget.ui.h>
+#include <plotms/PlotMS/PlotMSCalibration.h>
+#include <casaqt/QtUtilities/QtEditingWidget.qo.h>
 
-#include <casa/aips.h>
-#include <casa/Arrays.h>
-#include <casa/Containers/Block.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casa/namespace.h>
 
 namespace casa {
 
-class MSCacheVolMeter {
-
+// Widget for editing a PlotMSCalibration object.
+  class PlotMSCalibrationWidget : public QtEditingWidget, Ui::CalibWidget {
+    Q_OBJECT
+    
 public:
-
-  // Constructor/Destructor
-  MSCacheVolMeter();
-  MSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
-		   const Vector<Vector<Slice> >& chansel,
-		   const Vector<Vector<Slice> >& corrsel);
-  ~MSCacheVolMeter();
-
-  // reset (as if default ctor was run)
-  void reset();
-
-  // add in via a VisBuffer
-  void add(const vi::VisBuffer2* vb);
-
-  // add in via counts
-  void add(Int DDID,Int nRows);
-
-  // evaluate the volume for specified axes, and complain if 
-  String evalVolume(map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
+    // Constructor that takes an optional parent.
+    PlotMSCalibrationWidget(QWidget* parent = NULL);
+    
+    // Destructor.
+    ~PlotMSCalibrationWidget();
+    
+    
+    // Gets/Sets the currently displayed value.
+    // <group>
+    PlotMSCalibration getValue() const;
+    void setValue(const PlotMSCalibration& calibration);
+    // </group>
 
 private:
-
-  // The number of DATA_DESCRIPTIONs
-  Int nDDID_;
-
-  // Counters
-  Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
-
-  // The number of antennas (max)
-  Int nAnt_;
+    
+    PlotMSCalibration itsValue_;
+    String itsFile_;
+    Record itsRecord_;
+    bool itsFlag_;
 
 };
 
 }
 
-#endif /* MSCACHEVOLMETER_H_ */
+#endif /* PLOTMSCALIBRATIONWIDGET_QO_H_ */

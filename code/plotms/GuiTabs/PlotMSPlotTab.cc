@@ -29,6 +29,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/GuiTabs/PlotMSAxesTab.qo.h>
 #include <plotms/GuiTabs/PlotMSCacheTab.qo.h>
+#include <plotms/GuiTabs/PlotMSCalibrationTab.qo.h>
 #include <plotms/GuiTabs/PlotMSCanvasTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDataTab.qo.h>
 #include <plotms/GuiTabs/PlotMSDataSummaryTab.qo.h>
@@ -238,10 +239,17 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
     if(itsCurrentParameters_ != NULL) {
 
         PlotMSPlotParameters params = currentlySetParameters();
+	/*
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
                      *cd = itsCurrentParameters_->typedGroup<PMS_PP_MSData>();
         PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>(),
                     *cc = itsCurrentParameters_->typedGroup<PMS_PP_Cache>();
+	*/
+        PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>();
+        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
+
+        PMS_PP_MSData* cd = itsCurrentParameters_->typedGroup<PMS_PP_MSData>();
+        PMS_PP_Cache*cc = itsCurrentParameters_->typedGroup<PMS_PP_Cache>();
 
         // Redo the plot if any of:
         //   1) Parameters have changed, 
@@ -251,7 +259,7 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
         //       imitate case #1.
         //	 4) User has changed check box indicating we have changed from non-plotting to plotting.
 		//
-		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
+		// note as of Aug 2010: .cacheReady() seems to return false even if cache was cancelled.
         bool paramsChanged = params != *itsCurrentParameters_;
         bool cancelledCache = !itsCurrentPlot_->cache().cacheReady();
         if (forceReload)    {
@@ -501,6 +509,29 @@ void  PlotMSPlotTab::insertData(int index){
 	insertDataSubtab( index );
 }
 
+PlotMSCalibrationTab* PlotMSPlotTab::addCalibrationSubtab ()
+{
+     return insertCalibrationSubtab (itsSubtabs_.size ());
+}
+
+void PlotMSPlotTab::insertCalibration (int index){
+	insertCalibrationSubtab( index );
+}
+
+PlotMSCalibrationTab* PlotMSPlotTab::insertCalibrationSubtab (int index)
+{
+     PlotMSCalibrationTab *tab = NULL;
+     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+          tab = dynamic_cast < PlotMSCalibrationTab * >(t);
+          if (tab != NULL)
+               break;
+     }
+     if (tab == NULL)
+          tab = new PlotMSCalibrationTab (this, itsPlotter_);
+     insertSubtab (index, tab);
+     return tab;
+}
+
 PlotMSDisplayTab*  PlotMSPlotTab::addDisplaySubtab ()
 {
      return insertDisplaySubtab (itsSubtabs_.size ());
@@ -609,7 +640,6 @@ void  PlotMSPlotTab::insertTransformations (int index){
 // Private //
 
 void PlotMSPlotTab::setupForPlot() {
-
     tabWidget->setEnabled(itsCurrentPlot_ != NULL);
     
     if(itsCurrentParameters_ != NULL){
@@ -626,13 +656,23 @@ void PlotMSPlotTab::setupForPlot() {
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-    insertData(0);
-    insertAxes(1);
-    insertIterate(2);
-    insertTransformations(3);
-    insertDisplay(4);
-    insertCanvas(5);
-    clearAfter(6);
+	
+    int idx=0;
+    insertData(idx);
+    ++idx;
+    insertCalibration(idx);
+    ++idx;
+    insertAxes(idx);
+    ++idx;
+    insertIterate(idx);
+    ++idx;
+    insertTransformations(idx);
+    ++idx;
+    insertDisplay(idx);
+    ++idx;
+    insertCanvas(idx);
+    ++idx;
+    clearAfter(idx);
 
     // TODO update tool buttons
     

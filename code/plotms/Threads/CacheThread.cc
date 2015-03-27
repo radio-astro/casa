@@ -28,6 +28,9 @@
 #include <plotms/Threads/ThreadCommunication.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <msvis/MSVis/UtilJ.h>
+#include <casa/Logging/LogMessage.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/LogFilter.h>
 #include <QDebug>
 
 namespace casa {
@@ -78,6 +81,10 @@ void CacheThread::setTransformations( PlotMSTransformations transforms ){
 	itsTransformations = transforms;
 }
 
+void CacheThread::setCalibration( PlotMSCalibration calibration ){
+	itsCalibration = calibration;
+}
+
 void CacheThread::setPlot( PlotMSPlot* plot ){
 	itsPlot = plot;
 }
@@ -89,8 +96,12 @@ PlotMSPlot* CacheThread::getPlot(){
 bool CacheThread::doWork(){
 	bool success = true;
 
-	 // Make sure axes data vector is same length as axes vector.
+	// change casalog filter level to remove MSTransformManager messages
+	LogMessage::Priority priority = LogMessage::WARN;
+        LogFilter filter(priority);
+        LogSink().globalSink().filter(filter);
 
+	 // Make sure axes data vector is same length as axes vector.
 	if(itsAxesData.size() != workAxes.size()){
 		 itsAxesData.resize(workAxes.size(), PMS::DEFAULT_DATACOLUMN);
 	}
@@ -98,8 +109,10 @@ bool CacheThread::doWork(){
 		// Load
 		if( itsLoad ) {
 			if ( itsCache ){
-				itsCache->load(workAxes, itsAxesData, itsMSName, itsSelection,
-						itsAveraging, itsTransformations, threadController );
+				itsCache->load(workAxes, itsAxesData, itsMSName, 
+					itsSelection, itsAveraging,
+					itsTransformations, itsCalibration,
+					threadController );
 			}
 			else {
 				throw(AipsError("Problem in Cache Thread::run A"));

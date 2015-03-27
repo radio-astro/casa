@@ -84,6 +84,7 @@ const String PMS_PP_MSData::REC_FILENAME = "filename";
 const String PMS_PP_MSData::REC_SELECTION = "selection";
 const String PMS_PP_MSData::REC_AVERAGING = "averaging";
 const String PMS_PP_MSData::REC_TRANSFORMATIONS = "transformations";
+const String PMS_PP_MSData::REC_CALIBRATION = "calibration";
 
 
 PMS_PP_MSData::PMS_PP_MSData(PlotFactoryPtr factory)
@@ -114,6 +115,7 @@ Record PMS_PP_MSData::toRecord() const
 	rec.defineRecord(REC_SELECTION, itsSelection_.toRecord());
 	rec.defineRecord(REC_AVERAGING, itsAveraging_.toRecord());
 	rec.defineRecord(REC_TRANSFORMATIONS, itsTransformations_.toRecord());
+	rec.defineRecord(REC_CALIBRATION, itsCalibration_.toRecord());
 	return rec;
 }
 
@@ -156,8 +158,16 @@ void PMS_PP_MSData::fromRecord(const Record& record)
 			valuesChanged = true;
 		}
 	}
-
-
+	if (record.isDefined(REC_CALIBRATION) && record.dataType(REC_CALIBRATION) == TpRecord)
+	{
+		PlotMSCalibration tmp(itsCalibration_);
+		tmp.fromRecord(record.asRecord(REC_CALIBRATION));
+		if (itsCalibration_ != tmp)
+		{
+			itsCalibration_ = tmp;
+			valuesChanged = true;
+		}
+	}
 
 	if (valuesChanged) updated();
 }
@@ -178,6 +188,7 @@ PMS_PP_MSData& PMS_PP_MSData::assign(const PMS_PP_MSData* o){
 		itsSelection_ = o->itsSelection_;
 		itsAveraging_ = o->itsAveraging_;
 		itsTransformations_ = o->itsTransformations_;
+		itsCalibration_ = o->itsCalibration_;
 		updated();
 	}
 	return *this;
@@ -192,6 +203,7 @@ bool PMS_PP_MSData::operator==(const Group& other) const
 	if (itsSelection_ != o->itsSelection_) return false;
 	if (itsAveraging_ != o->itsAveraging_) return false;
 	if (itsTransformations_ != o->itsTransformations_) return false;
+	if (itsCalibration_ != o->itsCalibration_) return false;
 	return true;
     		}
 
@@ -203,6 +215,7 @@ void PMS_PP_MSData::setDefaults()
 	itsSelection_ = PlotMSSelection();
 	itsAveraging_ = PlotMSAveraging();
 	itsTransformations_ = PlotMSTransformations();
+	itsCalibration_ = PlotMSCalibration();
 }
 
 

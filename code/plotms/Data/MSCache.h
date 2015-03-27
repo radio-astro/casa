@@ -40,9 +40,11 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <msvis/MSVis/VisIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <measures/Measures/MFrequency.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 
 namespace casa {
 
@@ -82,36 +84,44 @@ protected:
   virtual void loadIt(vector<PMS::Axis>& loadAxes,
 		      vector<PMS::DataColumn>& loadData,
 		      /*PlotMSCacheThread**/ThreadCommunication* thread = NULL);
+
   //Returns whether or not the ephemeris data has been
-    //attached to a field - radial velocity and rho.
+  //attached to a field - radial velocity and rho.
   virtual bool isEphemeris();
 private:
     
   // Forbid copy for now
   MSCache(const MSCache&);
 
-  // Setup the VisIter
+  // THIS IS A TEST:
+  vi::VisibilityIterator2* setUpBasicVisIter(const String& msname, 
+	PlotMSSelection& selection);
+  void setUpVolMeter();
+
+  // Set up the VisIter
   void setUpVisIter(const String& msname,
 		    PlotMSSelection& selection,
-		    Bool readonly=True,
-		    Bool chanselect=True,
-		    Bool corrselect=True);
+		    PlotMSCalibration& calibration,
+		    String dataColumn,
+		    Bool readonly=True);
 
   // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi,/*PlotMSCacheThread**/ThreadCommunication* thread);  // old
-  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging,/*PlotMSCacheThread**/ThreadCommunication* thread);
+  void countChunks(vi::VisibilityIterator2& vi,
+                   /*PlotMSCacheThread**/ThreadCommunication* thread);
+  // Count the chunks with averaging
+  void countChunks(vi::VisibilityIterator2& vi,
+		   Vector<Int>& nIterPerAve, 
+                   /*PlotMSCacheThread**/ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)
   void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
 
   // Loop over VisIter, filling the cache
-  void loadChunks(ROVisibilityIterator& vi,
+  void loadChunks(vi::VisibilityIterator2& vi,
 		  const vector<PMS::Axis> loadAxes,
 		  const vector<PMS::DataColumn> loadData,
-		  const PlotMSAveraging& averaging,
 		  /*PlotMSCacheThread**/ThreadCommunication* thread);
-  void loadChunks(ROVisibilityIterator& vi,
+  void loadChunks(vi::VisibilityIterator2& vi,
 		  const PlotMSAveraging& averaging,
 		  const Vector<Int>& nIterPerAve,
 		  const vector<PMS::Axis> loadAxes,
@@ -120,7 +130,7 @@ private:
 
   // Force read on vb for requested axes 
   //   (so pre-cache averaging treats all data it should)
-  void forceVBread(VisBuffer& vb,
+  void forceVBread(vi::VisBuffer2* vb,
 		   vector<PMS::Axis> loadAxes,
 		   vector<PMS::DataColumn> loadData);
 
@@ -130,14 +140,14 @@ private:
 		   PlotMSVBAverager& vba);
 
   // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
+  void loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
 
   // Set flags in the MS
   virtual void flagToDisk(const PlotMSFlagging& flagging,
 			  Vector<Int>& chunks, 
 			  Vector<Int>& relids,
-			  Bool flag,
+			  Bool setFlag,
 			  PlotMSIndexer* indexer, int dataIndex);
 
   // Create map of intent names to "intent ids" 
@@ -156,14 +166,13 @@ private:
   Vector<Int> nVBPerAve_;
 
   // VisIterator pointer
-  ROVisIterator* rvi_p;
-  VisIterator* wvi_p;
-
-  // VisBufferUtil for freq/vel calculations
-  VisBufferUtil vbu_;
+  vi::VisibilityIterator2* vi_p;
 
   // Volume meter for volume calculation
   MSCacheVolMeter vm_;
+
+  // Set frame from VI if not specified by user (for VI2::getFrequencies)
+  MFrequency::Types freqFrame_;
 
   bool ephemerisAvailable;
 };

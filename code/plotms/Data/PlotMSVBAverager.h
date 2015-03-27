@@ -29,8 +29,10 @@
 #define PLOTMSVBAVERAGER_H
 
 #include <casa/aips.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/CalVisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/Matrix.h>
+#include <casa/Arrays/Cube.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -44,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <prerequisite>
-//   <li> VisBuffer
+//   <li> VisBuffer2
 // </prerequisite>
 //
 // <etymology>
@@ -74,42 +76,39 @@ class PlotMSVBAverager
 public:
   // Construct from the number of antennas, the averaging interval and
   // the pre-normalization flag
-  PlotMSVBAverager(Int nAnt,Bool chanDepWt);
+  PlotMSVBAverager(Int nAnt);
 
   // Null destructor
   ~PlotMSVBAverager();
 
   // Set up baseline averaging
   inline void setBlnAveraging(Bool doBln) { 
-    blnAve_p=doBln; if (doBln) setAntAveraging(False); };
-  // Set up baseline averaging
+    blnAve_p = doBln; if (doBln) setAntAveraging(False); };
+  // Set up antenna averaging
   inline void setAntAveraging(Bool doAnt) { 
-    antAve_p=doAnt; if (doAnt) setBlnAveraging(False); };
-
+    antAve_p = doAnt; if (doAnt) setBlnAveraging(False); };
   // Set scalar averaging flag 
   inline void setScalarAve(Bool doScalar) { 
     //    cout << "Using " << (doScalar ? "SCALAR" : "VECTOR") << " averaging." << endl;
     inCoh_p = doScalar; };
   
   // Control which data column to average
-  inline void setNoData() {doVC_p=doMVC_p=doCVC_p=doWC_p=doUVW_p=False;};
-  inline void setDoVC()  {doVC_p= doWC_p=True;};
-  inline void setDoMVC() {doMVC_p=doWC_p=True;};
-  inline void setDoCVC() {doCVC_p=doWC_p=True;};
-  inline void setDoFC()  {doFC_p= doWC_p=True;};
-  inline void setDoUVW() {doUVW_p=True;};
+  inline void setNoData() {doVC_p = doMVC_p = doCVC_p = doFC_p = doWC_p = 
+				doUVW_p = False;};
+  inline void setDoVC()  {doVC_p  = doWC_p = True;};
+  inline void setDoMVC() {doMVC_p = doWC_p = True;};
+  inline void setDoCVC() {doCVC_p = doWC_p = True;};
+  inline void setDoFC()  {doFC_p  = doWC_p = True;};
+  inline void setDoUVW() {doUVW_p = True;};
 
   // Accumulate a VisBuffer
-  inline void accumulate (VisBuffer& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
+  inline void accumulate (vi::VisBuffer2& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
 
-  // Finalize averaging, and return the result
+  // Finalize averaging
   void finalizeAverage();
 
   // Return a reference to the result
-  // TBD: is it ok to return a CVB as a VB reference?  (do I need an
-  //      explicit cast here?
-  VisBuffer& aveVisBuff() { return avBuf_p; }
-  CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
+  vi::VisBuffer2& aveVisBuff() { return *avBuf_p; }
 
 private:
   // Prohibit null constructor, copy constructor and assignment for now
@@ -121,15 +120,14 @@ private:
   Int& prtlev() { return prtlev_; };
 
   // Initialize the next accumulation interval
-  //  (should this be public?)
-  void initialize(VisBuffer& vb);
+  void initialize(vi::VisBuffer2& vb);
 
   // Different accumulate versions
-  void simpAccumulate (VisBuffer& vb);  // ordinary
-  void antAccumulate (VisBuffer& vb);   // antenna-based averaging version
+  void simpAccumulate (vi::VisBuffer2& vb);  // ordinary
+  void antAccumulate (vi::VisBuffer2& vb);   // antenna-based averaging version
 
   // Verify zero or two crosshands present (if antAve_p)
-  void verifyCrosshands(VisBuffer& vb);
+  void verifyCrosshands(vi::VisBuffer2& vb);
 
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int baseline(const Int& ant1, const Int& ant2);
@@ -169,7 +167,7 @@ private:
   Bool doVC_p, doMVC_p, doCVC_p, doFC_p, doUVW_p, doWC_p;
 
   // Accumulation buffer
-  CalVisBuffer avBuf_p;
+  vi::VisBuffer2* avBuf_p;
 
   // Keep track of initialization state
   Bool initialized_p;
@@ -180,6 +178,20 @@ private:
   // Diagnostic print level
   Int prtlev_;
 
+    // Mutable arrays, set in avBuf_p when finalized
+    Cube<Complex> avgVisCube_;
+    Cube<Complex> avgModelCube_;
+    Cube<Complex> avgCorrectedCube_;
+    Cube<Float> avgFloatCube_;
+    Cube<Bool> avgFlagCube_;
+    Vector<Bool> avgFlagRow_;
+    Cube<Float> avgWeight_;
+    Matrix<Double> avgUvw_;
+    Vector<Int> avgAntenna1_;
+    Vector<Int> avgAntenna2_;
+    Vector<Double> avgTime_;
+    Vector<Double> avgTimeInterval_;
+    Vector<Int> avgScan_;
 };
 
 

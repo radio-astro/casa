@@ -24,6 +24,7 @@ set( QT4_LIBRARIES ${QT_LIBRARIES} )
 qt4_wrap_cpp( outfiles_qoh
   Gui/PlotMSAveragingWidget.qo.h
   Gui/PlotMSAxisWidget.qo.h
+  Gui/PlotMSCalibrationWidget.qo.h
   Gui/PlotMSFlaggingWidget.qo.h
   Gui/PlotMSLoggerWidget.qo.h
   Gui/PlotMSPlotter.qo.h
@@ -34,6 +35,7 @@ qt4_wrap_cpp( outfiles_qoh
   GuiTabs/PlotMSAnnotatorTab.qo.h
   GuiTabs/PlotMSAxesTab.qo.h
   GuiTabs/PlotMSCacheTab.qo.h
+  GuiTabs/PlotMSCalibrationTab.qo.h
   GuiTabs/PlotMSCanvasTab.qo.h
   GuiTabs/PlotMSDataCollapsible.qo.h
   GuiTabs/PlotMSDataSummaryTab.qo.h
@@ -57,6 +59,7 @@ qt4_wrap_cpp( outfiles_qoh
 casa_qt4_wrap_ui( outfiles_ui
   Gui/PlotMSAveragingWidget.ui
   Gui/PlotMSAxisWidget.ui
+  Gui/PlotMSCalibrationWidget.ui
   Gui/PlotMSFlaggingWidget.ui
   Gui/PlotMSPlotter.ui
   Gui/PlotMSSummaryDialog.ui
@@ -65,6 +68,7 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSAnnotatorTab.ui
   GuiTabs/PlotMSAxesTab.ui
   GuiTabs/PlotMSCacheTab.ui
+  GuiTabs/PlotMSCalibrationTab.ui
   GuiTabs/PlotMSCanvasTab.ui
   GuiTabs/PlotMSDataTab.ui
   GuiTabs/PlotMSDataCollapsible.ui
@@ -145,6 +149,7 @@ casa_add_library( plotms
   Gui/PlotMSAnnotator.cc
   Gui/PlotMSAveragingWidget.cc
   Gui/PlotMSAxisWidget.cc
+  Gui/PlotMSCalibrationWidget.cc
   Gui/PlotMSFlaggingWidget.cc
   Gui/PlotMSLoggerWidget.cc
   Gui/PlotMSPlotter.cc
@@ -155,6 +160,7 @@ casa_add_library( plotms
   GuiTabs/PlotMSAnnotatorTab.cc
   GuiTabs/PlotMSAxesTab.cc
   GuiTabs/PlotMSCacheTab.cc
+  GuiTabs/PlotMSCalibrationTab.cc
   GuiTabs/PlotMSCanvasTab.cc
   GuiTabs/PlotMSDataCollapsible.cc
   GuiTabs/PlotMSDataSummaryTab.cc
@@ -171,6 +177,7 @@ casa_add_library( plotms
   GuiTabs/PlotMSTransformationsTab.cc
   PlotMS/PlotMSAveraging.cc
   PlotMS/PlotMS.cc
+  PlotMS/PlotMSCalibration.cc
   PlotMS/PlotMSConstants.cc
   PlotMS/PlotMSDBusApp.cc
   PlotMS/PlotMSExportParam.cc
@@ -210,6 +217,7 @@ INSTALL (FILES
         Gui/PlotMSAnnotator.h
         Gui/PlotMSAveragingWidget.qo.h
         Gui/PlotMSAxisWidget.qo.h
+        Gui/PlotMSCalibrationWidget.qo.h
         Gui/PlotMSFlaggingWidget.qo.h
         Gui/PlotMSLoggerWidget.qo.h
         Gui/PlotMSPlotter.qo.h
@@ -223,6 +231,7 @@ INSTALL (FILES
         GuiTabs/PlotMSAnnotatorTab.qo.h
         GuiTabs/PlotMSAxesTab.qo.h
         GuiTabs/PlotMSCacheTab.qo.h
+        GuiTabs/PlotMSCalibrationTab.qo.h
         GuiTabs/PlotMSCanvasTab.qo.h
         GuiTabs/PlotMSDataCollapsible.qo.h
         GuiTabs/PlotMSDataSummaryTab.qo.h
@@ -242,6 +251,7 @@ INSTALL (FILES
 INSTALL (FILES
         PlotMS/PlotMS.h
         PlotMS/PlotMSAveraging.h
+        PlotMS/PlotMSCalibration.h
         PlotMS/PlotMSConstants.h
         PlotMS/PlotMSDBusApp.h
         PlotMS/PlotMSExportParam.h

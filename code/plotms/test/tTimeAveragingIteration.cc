@@ -101,7 +101,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tTimeAveragingIteration:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile1, 100000, 102000, -1 );
+	ok = tUtil::checkFile( outFile1, 95000, 102000, -1 );
 	cout << "tTimeAveragingIteration:: Result of  save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

@@ -414,22 +414,22 @@ void PlotMSIndexer::setUpIndexing() {
 	iantmax_.reference(chsh.row(3));
 
 	idatamax_.resize(nChunk());
-	idatamax_=chsh.row(0);
-	idatamax_*=chsh.row(1);
-	idatamax_*=chsh.row(2);
+	idatamax_ = chsh.row(0);
+	idatamax_ *= chsh.row(1);
+	idatamax_ *= chsh.row(2);
 
 	ichanbslnmax_.resize(nChunk());
-	ichanbslnmax_=chsh.row(1);
-	ichanbslnmax_*=chsh.row(2);
+	ichanbslnmax_ = chsh.row(1);
+	ichanbslnmax_ *= chsh.row(2);
 
 	nperchan_.resize(nChunk());
 	nperchan_.set(1);
-	if (plotmscache_->netAxesMask_[dataIndex](0)) nperchan_*=chsh.row(0);
+	if (plotmscache_->netAxesMask_[dataIndex](0)) nperchan_ *= chsh.row(0);
 
 	nperbsln_.resize(nChunk());
 	nperbsln_.set(1);
-	if (plotmscache_->netAxesMask_[dataIndex](0)) nperbsln_*=chsh.row(0);
-	if (plotmscache_->netAxesMask_[dataIndex](1)) nperbsln_*=chsh.row(1);
+	if (plotmscache_->netAxesMask_[dataIndex](0)) nperbsln_ *= chsh.row(0);
+	if (plotmscache_->netAxesMask_[dataIndex](1)) nperbsln_ *= chsh.row(1);
 
 	nperant_.reference(nperbsln_);
 
@@ -443,12 +443,12 @@ void PlotMSIndexer::setUpIndexing() {
 */
 
 	// Set up method pointers for the chosen axes
-	setMethod(getXFromCache_,currentX_);
-	setMethod(getYFromCache_,currentY_);
+	setMethod(getXFromCache_, currentX_);
+	setMethod(getYFromCache_, currentY_);
 
 	// And the indexers
-	setIndexer(XIndexer_,currentX_);
-	setIndexer(YIndexer_,currentY_);
+	setIndexer(XIndexer_, currentX_);
+	setIndexer(YIndexer_, currentY_);
 
 	//  cout << "done." << endl;
 
@@ -467,10 +467,10 @@ void PlotMSIndexer::setUpIndexing() {
 	switch (iterAxis_) {
 	case PMS::ANTENNA: {
 		nSegment_=0;
-		for (Int ich=0;ich<nChunk();++ich)
+		for (Int ich=0; ich<nChunk(); ++ich)
 			// only check for non-empty chunks
 			if (plotmscache_->goodChunk(ich)) {
-				for (Int ibl=0;ibl<chsh(2,ich);++ibl)
+				for (Int ibl=0; ibl<chsh(2,ich); ++ibl)
 					if ( (*(plotmscache_->antenna1_[ich]->data()+ibl) == iterValue_) ||
 							(*(plotmscache_->antenna2_[ich]->data()+ibl) == iterValue_) )
 						++nSegment_;
@@ -479,7 +479,7 @@ void PlotMSIndexer::setUpIndexing() {
 	}
 	case PMS::TIME : {
 		nSegment_ = 0;
-		for ( Int ich=0; ich<nChunk();++ich ){
+		for ( Int ich=0; ich<nChunk(); ++ich ){
 			if (plotmscache_->goodChunk(ich)){
 				if (plotmscache_->getTime(ich, 0) == plotmscache_->getTime(iterValue_,0)){
 					++nSegment_;
@@ -490,7 +490,7 @@ void PlotMSIndexer::setUpIndexing() {
 	}
 	default:
 		// most iteration axis have nChunk segments
-		nSegment_=nChunk();
+		nSegment_ = nChunk();
 	}
 
 	// Size up and initialize the indexing helpers and counters
@@ -529,7 +529,7 @@ void PlotMSIndexer::setUpIndexing() {
 	}
 	double iterTime = plotmscache_->time_[iterValue_];
 
-	for (Int ic=0;ic<nChunk();++ic) {
+	for (Int ic=0; ic<nChunk(); ++ic) {
 
 		// skip this chunk if empty
 		if (!plotmscache_->goodChunk(ic)){
@@ -613,8 +613,8 @@ void PlotMSIndexer::setUpIndexing() {
 	}
 
 	// Contract nSegment_ if we aren't using them all
-	if (iseg+1<nSegment_) {
-		nSegment_=iseg+1;
+	if (iseg+1 < nSegment_) {
+		nSegment_ = iseg+1;
 
 		// Cope with no segments found
 		//  (this happens when all data is flagged, time-averaging is on,
@@ -629,9 +629,9 @@ void PlotMSIndexer::setUpIndexing() {
 	}
 
 	// Fill cumulative counter
-	nCumulPoints_(0)=nSegPoints_(0);
-	for (Int iseg=1;iseg<nSegment_;++iseg)
-		nCumulPoints_(iseg)=nCumulPoints_(iseg-1)+nSegPoints_(iseg);
+	nCumulPoints_(0) = nSegPoints_(0);
+	for (Int iseg=1; iseg<nSegment_; ++iseg)
+		nCumulPoints_(iseg) = nCumulPoints_(iseg-1) + nSegPoints_(iseg);
 
 	nPoints_.reference(nSegPoints_);
 	nCumulative_.reference(nCumulPoints_);
@@ -800,6 +800,13 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		getmethod = &PlotMSCacheBase::getWtSp;
 		break;
 
+	case PMS::SIGMA:
+		getmethod = &PlotMSCacheBase::getSigma;
+		break;
+	case PMS::SIGMASP:
+		getmethod = &PlotMSCacheBase::getSigmaSp;
+		break;
+
 	case PMS::AZ0:
 		getmethod = &PlotMSCacheBase::getAz0;
 		break;
@@ -879,6 +886,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 
 		// corr-,bsln-dep
 	case PMS::WT:
+	case PMS::SIGMA:
 		indexmethod = &PlotMSIndexer::getIndex1010;
 		break;
 
@@ -897,6 +905,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 	case PMS::OPAC:
 	case PMS::WTxAMP:
 	case PMS::WTSP:
+	case PMS::SIGMASP:
 		indexmethod = &PlotMSIndexer::getIndex1110;
 		break;
 
@@ -1321,10 +1330,10 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 		}
 	}
 
-	//  cout << "Found " << nFound << " points to " << (flag ? "flag." : "unflag.") << endl;
+	//cout << "Found " << nFound << " points to " << (flag ? "flag." : "unflag.") << endl;
 
 	// Apply (un)flags only if some found
-	if (nFound>0) {
+	if (nFound > 0) {
 		// Refresh the plot mask to reflect newly flagged data
 		//  TBD: only do chunks that need it!
 		plotmscache_->setPlotMask(dataIndex);

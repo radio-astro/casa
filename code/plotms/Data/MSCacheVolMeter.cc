@@ -37,7 +37,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
 #include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -142,18 +142,17 @@ void MSCacheVolMeter::reset() {
 }
 
 
-void MSCacheVolMeter::add(Int DDID,Int nRows) {
+void MSCacheVolMeter::add(Int DDID, Int nRows) {
 	++nPerDDID_(DDID);
-	nRowsPerDDID_(DDID)+=nRows;
+	nRowsPerDDID_(DDID) += nRows;
 }
 
-void MSCacheVolMeter::add(const VisBuffer& vb) {
-	this->add(vb.dataDescriptionId(),vb.nRow());
+void MSCacheVolMeter::add(const vi::VisBuffer2* vb) {
+	this->add(vb->dataDescriptionIds()(0), vb->nRows());
 }
 
 String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask) {
-
-	/*
+  /*
   cout << "nPerDDID_     = " << nPerDDID_ << endl;
   cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
   cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
@@ -167,8 +166,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
   cout << "sizeof(uInt64)   = " << sizeof(uInt64) << endl;
   cout << "sizeof(Float)  = " << sizeof(Float) << endl;
   cout << "sizeof(Double) = " << sizeof(Double) << endl;
-	 */
-
+  */
 	uInt64 totalVol(0);
 	for (map<PMS::Axis,Bool>::iterator pAi=axes.begin();
 			pAi!=axes.end(); ++pAi) {
@@ -218,6 +216,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::REAL:
 			case PMS::IMAG:
 			case PMS::WTSP:
+			case PMS::SIGMASP:
 				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
 				break;
 			case PMS::FLAG:
@@ -227,6 +226,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 				axisVol=sizeof(Bool)*sum(nRowsPerDDID_);
 				break;
 			case PMS::WT:
+			case PMS::SIGMA:
 				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nCorrPerDDID_);
 				break;
 			case PMS::AZ0:
@@ -284,10 +284,10 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 	// Finally, count the total points for the plot:
 	Vector<uInt64> nPointsPerDDID(nDDID_,0);
 	nPointsPerDDID(nPerDDID_>uInt64(0))=1;
-	if (axesmask(0)) nPointsPerDDID*=nCorrPerDDID_;
-	if (axesmask(1)) nPointsPerDDID*=nChanPerDDID_;
-	if (axesmask(2)) nPointsPerDDID*=nRowsPerDDID_;
-	if (axesmask(3)) nPointsPerDDID*=uInt64(nAnt_);
+	if (axesmask(0)) nPointsPerDDID *= nCorrPerDDID_;
+	if (axesmask(1)) nPointsPerDDID *= nChanPerDDID_;
+	if (axesmask(2)) nPointsPerDDID *= nRowsPerDDID_;
+	if (axesmask(3)) nPointsPerDDID *= uInt64(nAnt_);
 
 	uInt64 totalPoints=sum(nPointsPerDDID);
 

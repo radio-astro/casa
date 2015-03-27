@@ -132,6 +132,7 @@ void ActionCacheLoad::setUpWorkParameters(CacheThread* cacheThread, int plotInde
 		cacheThread->setSelection(  paramsData->selection() );
 		cacheThread->setAveraging( paramsData->averaging() );
 		cacheThread->setTransformations(paramsData->transformations());
+		cacheThread->setCalibration(paramsData->calibration());
 		cacheThread->setSetupPlot( setupPlot );
 	}
 }

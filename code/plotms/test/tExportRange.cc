@@ -89,7 +89,7 @@ void exportAsPDF( PlotMSApp& app ){
 
     PlotExportFormat::Type type = PlotExportFormat::PDF;
     cout << "Exporting PDF"<<endl;
-    exportPlot(  app, outFile, type, "PDF", 60000, 75000);
+    exportPlot(  app, outFile, type, "PDF", 60000, 78000);
 
 }
 

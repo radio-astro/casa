@@ -69,6 +69,7 @@ const String PlotMSDBusApp::PARAM_PLOTINDEX = "plotIndex";
 const String PlotMSDBusApp::PARAM_PRIORITY = "priority";
 const String PlotMSDBusApp::PARAM_SELECTION = "selection";
 const String PlotMSDBusApp::PARAM_TRANSFORMATIONS = "transformations";
+const String PlotMSDBusApp::PARAM_CALIBRATION = "calibration";
 const String PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY = "updateImmediately";
 const String PlotMSDBusApp::PARAM_WIDTH = "width";
 
@@ -381,6 +382,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 						d->averaging().toRecord(true));
 				ret.defineRecord(PARAM_SELECTION, d->selection().toRecord());
 				ret.defineRecord(PARAM_TRANSFORMATIONS, d->transformations().toRecord());
+				ret.defineRecord(PARAM_CALIBRATION, d->calibration().toRecord());
 			}
 
 			if(c != NULL) {
@@ -475,6 +477,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 				parameters.dataType(PARAM_FILENAME) == TpString){
 			ppdata->setFilename(parameters.asString(PARAM_FILENAME));
 		}
+		
 		if(parameters.isDefined(PARAM_SELECTION) &&
 				parameters.dataType(PARAM_SELECTION) == TpRecord) {
 			PlotMSSelection sel = ppdata->selection();
@@ -494,6 +497,13 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 			PlotMSTransformations trans = ppdata->transformations();
 			trans.fromRecord(parameters.asRecord(PARAM_TRANSFORMATIONS));
 			ppdata->setTransformations(trans);
+		}
+
+		if(parameters.isDefined(PARAM_CALIBRATION) &&
+				parameters.dataType(PARAM_CALIBRATION) == TpRecord) {
+			PlotMSCalibration calib = ppdata->calibration();
+			calib.fromRecord(parameters.asRecord(PARAM_CALIBRATION));
+			ppdata->setCalibration(calib);
 		}
 
 		if(parameters.isDefined(PARAM_ITERATE) &&

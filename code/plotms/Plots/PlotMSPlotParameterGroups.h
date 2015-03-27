@@ -34,6 +34,7 @@
 #include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
+#include <plotms/PlotMS/PlotMSCalibration.h>
 #include <plotms/PlotMS/PlotMSLabelFormat.h>
 
 #include <casa/namespace.h>
@@ -170,7 +171,6 @@ public:
 		}
 	}
 
-
 	const PlotMSSelection & selection() const {
 		return itsSelection_;
 	}
@@ -203,21 +203,34 @@ public:
 		}
 	}
 
+
+	const PlotMSCalibration & calibration() const {
+		return itsCalibration_;
+	}
+	void setCalibration (const PlotMSCalibration & value) {
+		if (itsCalibration_ != value) {
+			itsCalibration_ = value;
+			updated();
+		}
+	}
+
 private:
 	//Does the work of the operator=()s.
 	PMS_PP_MSData& assign(const PMS_PP_MSData* other);
 
 	/* Parameters' values */
-	PlotMSSelection itsSelection_;
 	String itsFilename_;
+	PlotMSSelection itsSelection_;
 	PlotMSAveraging itsAveraging_;
 	PlotMSTransformations itsTransformations_;
+	PlotMSCalibration itsCalibration_;
 
 	/* Key strings for Record */
-	static const String REC_SELECTION;
 	static const String REC_FILENAME;
+	static const String REC_SELECTION;
 	static const String REC_AVERAGING;
 	static const String REC_TRANSFORMATIONS;
+	static const String REC_CALIBRATION;
 
 
 	void setDefaults();

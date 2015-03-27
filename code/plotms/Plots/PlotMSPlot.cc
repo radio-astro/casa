@@ -1762,6 +1762,8 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		canvas->setTitle(title);
 	}
 
+	
+
 	// Grids
 	canvas->showGrid(canvParams->gridMajorShown(), canvParams->gridMinorShown(),
 			canvParams->gridMajorShown(), canvParams->gridMinorShown());

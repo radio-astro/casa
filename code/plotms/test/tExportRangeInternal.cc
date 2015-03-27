@@ -101,7 +101,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangeInternal:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile1, 250000, 261000, -1 );
+	ok = tUtil::checkFile( outFile1, 250000, 263000, -1 );
 	cout << "tExportRangeInternal:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.

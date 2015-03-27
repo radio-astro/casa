@@ -30,6 +30,7 @@
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
+#include <plotms/PlotMS/PlotMSCalibration.h>
 
 namespace casa {
 
@@ -51,6 +52,7 @@ public:
 	void setSelection( PlotMSSelection selection );
 	void setAveraging( PlotMSAveraging averaging );
 	void setTransformations( PlotMSTransformations transforms );
+	void setCalibration( PlotMSCalibration calibration );
 	virtual ~CacheThread();
 protected:
 	virtual bool doWork();
@@ -72,6 +74,7 @@ private:
 	PlotMSSelection itsSelection;
 	PlotMSAveraging itsAveraging;
 	PlotMSTransformations itsTransformations;
+	PlotMSCalibration itsCalibration;
 	PlotMSPlot* itsPlot;
 };
 

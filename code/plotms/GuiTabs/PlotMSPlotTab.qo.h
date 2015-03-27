@@ -39,6 +39,7 @@ namespace casa {
 //# Forward declarations.
 class PlotMSAxesTab;
 class PlotMSCacheTab;
+class PlotMSCalibrationTab;
 class PlotMSCanvasTab;
 class PlotMSDataTab;
 class PlotMSDisplayTab;
@@ -207,6 +208,9 @@ protected:
     PlotMSCacheTab* addCacheSubtab();
     PlotMSCacheTab* insertCacheSubtab(int index);
     void insertCache(int index);
+    PlotMSCalibrationTab* addCalibrationSubtab();
+    PlotMSCalibrationTab* insertCalibrationSubtab(int index);
+    void insertCalibration(int index);
     PlotMSCanvasTab* addCanvasSubtab();
     PlotMSCanvasTab* insertCanvasSubtab(int index);
     void insertCanvas(int index);

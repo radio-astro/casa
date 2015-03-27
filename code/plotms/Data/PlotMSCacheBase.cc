@@ -38,7 +38,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
 #include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
@@ -245,6 +245,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		const PlotMSSelection& selection,
 		const PlotMSAveraging& averaging,
 		const PlotMSTransformations& transformations,
+		const PlotMSCalibration& calibration,
 		ThreadCommunication* thread) {
 
 	// TBD:
@@ -280,10 +281,12 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	selection_ = selection;
 	averaging_ = averaging;
 	transformations_ = transformations;
+	calibration_ = calibration;
 
 	//logLoad(selection_.summary());
 	logLoad(transformations_.summary());
 	logLoad(averaging_.summary());
+	logLoad(calibration_.summary());
 
 	// Trap (currently) unsupported modes
 	for ( int i = 0; i < dataCount; i++ ){
@@ -558,6 +561,9 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 
 			case PMS::WTSP: PMSC_DELETE(wtsp_) break;
 
+			case PMS::SIGMA: PMSC_DELETE(sigma_) break;
+			case PMS::SIGMASP: PMSC_DELETE(sigmasp_) break;
+
 			case PMS::AZ0: az0_.resize(0); break;
 			case PMS::EL0: el0_.resize(0); break;
 			case PMS::RADIAL_VELOCITY: radialVelocity_.resize(0); break;
@@ -775,14 +781,13 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 
 		// Escape if (full) baseline averaging is on, since we won't find any iterations
 		if (averaging_.baseline())
-			throw(AipsError("Iteration over baseline not supported with full baseline averaging."));
+			throw(AipsError("Iteration over antenna not supported with full baseline averaging."));
 
 		// Revise axes mask, etc., to ensure baseline-dependence
 		if (!netAxesMask_[dataIndex](2)) {
 			netAxesMask_[dataIndex](2)=True;
 			setPlotMask( dataIndex );
 		}
-
 		// Find the limited list of _occuring_ antenna indices
 		Vector<Int> antList(nAnt_);
 		Vector<Bool> antMask(nAnt_,False);
@@ -1008,6 +1013,9 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 
 	wtsp_.resize(nChunk_,False,True);
 
+	sigma_.resize(nChunk_,False,True);
+	sigmasp_.resize(nChunk_,False,True);
+
 	az0_.resize(nChunk_,True);
 	el0_.resize(nChunk_,True);
 	radialVelocity_.resize(nChunk_,True);
@@ -1052,6 +1060,8 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		wt_[ic] = new Matrix<Float>();
 		wtxamp_[ic] = new Array<Float>();
 		wtsp_[ic] = new Array<Float>();
+		sigma_[ic] = new Array<Float>();
+		sigmasp_[ic] = new Array<Float>();
 		antenna_[ic] = new Vector<Int>();
 		az_[ic] = new Vector<Double>();
 		el_[ic] = new Vector<Double>();
@@ -1106,6 +1116,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::FLAG:
 	case PMS::WTxAMP:
 	case PMS::WTSP:
+	case PMS::SIGMASP:
 		axismask(Slice(0,3,1))=True;
 		break;
 	case PMS::CHANNEL:
@@ -1135,6 +1146,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 		axismask(2)=True;
 		break;
 	case PMS::WT:
+	case PMS::SIGMA:
 		axismask(0)=True;
 		axismask(2)=True;
 		break;
@@ -1187,7 +1199,8 @@ void PlotMSCacheBase::setPlotMask( int dataIndex ) {
 	//deletePlotMask();
 	plmask_[dataIndex].resize(nChunk());
 	plmask_[dataIndex].set(NULL);
-	for (Int ichk=0;ichk<nChunk();++ichk) {
+
+	for (Int ichk=0; ichk<nChunk(); ++ichk) {
 		plmask_[dataIndex][ichk] = new Array<Bool>();
 		// create a collapsed version of the flags for this chunk
 		setPlotMask(dataIndex, ichk);
@@ -1269,6 +1282,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 	case PMS::WT:
 	case PMS::WTxAMP:
 	case PMS::WTSP:
+	case PMS::SIGMA:
+	case PMS::SIGMASP:
 	case PMS::ANTENNA:
 	case PMS::AZIMUTH:
 	case PMS::ELEVATION:
@@ -1315,6 +1330,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 			else if(axis == PMS::WT)       n += wt_[i]->size();
 			else if(axis == PMS::WTxAMP)   n += wtxamp_[i]->size();
 			else if(axis == PMS::WTSP)     n += wtsp_[i]->size();
+			else if(axis == PMS::SIGMA)    n += sigma_[i]->size();
+			else if(axis == PMS::SIGMASP)  n += sigmasp_[i]->size();
 			else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
 			else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
 			else if(axis == PMS::ELEVATION)n += el_[i]->size();
