@@ -1920,14 +1920,15 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   /////////////////////////////////
    //////////////////////////////////////////
    
-   for (Int iy=-inner/2;iy<inner/2;iy++) {
+   /*for (Int iy=-inner/2;iy<inner/2;iy++) {
      
      ggridder.correctX1D(correction, iy+inner/2);
      corr.row(iy+inner/2)=correction;
    }
    
-   Bool cpcor;
-   Complex *cor=corr.getStorage(cpcor);
+   */
+   //Bool cpcor;
+   //Complex *cor=corr.getStorage(cpcor);
   Double s1=sampling(1);
   Double s0=sampling(0);
   ///////////Por FFTPack
@@ -1948,7 +1949,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
    Int cpConvSamp=convSampling;
   
    //Float max0=1.0;
-#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, maxptr, cpWscale,inner, cor ) 
+#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, maxptr, cpWscale,inner ) 
 
   for (Int iw=0; iw< cpWConvSize;iw++) {
     // First the w term
