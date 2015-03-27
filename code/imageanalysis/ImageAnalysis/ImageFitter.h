@@ -66,13 +66,6 @@ class ImageFitter : public ImageTask<Float> {
 	// </example>
 
 public:
-	/*
-	enum CompListWriteControl {
-		NO_WRITE,
-		WRITE_NO_REPLACE,
-		OVERWRITE
-	};
-	*/
 
 	// constructor appropriate for API calls.
 	// Parameters:

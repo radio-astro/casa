@@ -85,7 +85,7 @@ public:
   // image's coordinate system, the output axex order will always be preserved.
 
   static SubImage<T> createSubImage(
-	  ImageRegion*& outRegion, ImageRegion*& outMask,
+	  CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
       ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *const &os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),

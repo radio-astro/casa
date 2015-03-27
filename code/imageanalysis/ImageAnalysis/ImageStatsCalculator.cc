@@ -350,8 +350,8 @@ Record ImageStatsCalculator::statistics(
 ) {
 	LogOrigin myOrigin(_class, __func__);
 	*_getLog() << myOrigin;
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
+	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
+	//ImageRegion* pMaskRegion = 0;
 	String mtmp = _getMask();
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
@@ -371,7 +371,7 @@ Record ImageStatsCalculator::statistics(
 	IPosition shape = _subImage.shape();
 	IPosition blc(_subImage.ndim(), 0);
 	IPosition trc(shape - 1);
-	if (pRegionRegion != 0) {
+	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
 			_getImage()->coordinates(), _getImage()->shape()
 		);
@@ -411,7 +411,7 @@ Record ImageStatsCalculator::statistics(
 		_statistics->resetError();
 		if (
 		    _haveRegionsChanged(
-				pRegionRegion, pMaskRegion,
+				pRegionRegion.get(), pMaskRegion.get(),
 				_oldStatsRegion.get(), _oldStatsMask.get()
 			)
 		) {
@@ -460,8 +460,8 @@ Record ImageStatsCalculator::statistics(
 	// Assign old regions to current regions
 	_oldStatsMask.reset(0);
 
-	_oldStatsRegion.reset(pRegionRegion);
-	_oldStatsMask.reset(pMaskRegion);
+	_oldStatsRegion = pRegionRegion;
+	_oldStatsMask = pMaskRegion;
 	//_oldStatsStorageForce = _disk;
 	// Set cursor axes
 	*_getLog() << myOrigin;

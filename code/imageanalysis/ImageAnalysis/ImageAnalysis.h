@@ -467,7 +467,7 @@ class ImageAnalysis
     SHARED_PTR<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    SHARED_PTR<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
+    CountedPtr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 

@@ -1214,16 +1214,17 @@ SPIIF ImageAnalysis::_fitpolynomial(
 		}
 	}
 	// Make SubImage from input image
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
+	CountedPtr<ImageRegion> region, pMaskRegion;
+	//ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
+		region, pMaskRegion,
 		*_imageFloat,// *(ImageRegion::tweakedRegionRecord(&Region)),
 		Region,
 		mask, 0, False
 	);
-	delete pMaskRegion;
-    SHARED_PTR<ImageRegion> region(pRegionRegion);
+	//delete pMaskRegion;
+    pMaskRegion = NULL;
+    //SHARED_PTR<ImageRegion> region(pRegionRegion);
 	IPosition imageShape = subImage.shape();
 
 	// Make subimage from input error image
@@ -1469,8 +1470,8 @@ Record ImageAnalysis::histograms(
 ) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin(className(), __func__);
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
+	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
+	//ImageRegion* pMaskRegion = 0;
 
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *_imageFloat,
@@ -1508,7 +1509,7 @@ Record ImageAnalysis::histograms(
 			// changed, _histograms will already have been set to 0
 			_histograms->resetError();
 			if (
-				_haveRegionsChanged(pRegionRegion, pMaskRegion)
+				_haveRegionsChanged(pRegionRegion.get(), pMaskRegion.get())
 			) {
 				_histograms->setNewImage(subImage);
 			}
@@ -1516,8 +1517,8 @@ Record ImageAnalysis::histograms(
 	}
 
 	//
-	pOldHistRegionRegion_p.reset(pRegionRegion);
-	pOldHistMaskRegion_p.reset(pMaskRegion);
+	pOldHistRegionRegion_p = pRegionRegion;
+	pOldHistMaskRegion_p = pMaskRegion;
 	oldHistStorageForce_p = disk;
 
 	// Set cursor axes
@@ -1885,8 +1886,8 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	Vector<Double> absPixel; // Output
 
 	// Make subimage
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
+	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
+	//ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
@@ -1901,15 +1902,14 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 		blc.resize(subImage.ndim());
 		blc = 0.0;
 	}
-	delete pRegionRegion;
-	delete pMaskRegion;
-
+	//delete pRegionRegion;
+	//delete pMaskRegion;
+    pRegionRegion = NULL;
+    pMaskRegion = NULL;
 	// Find it
 	ImageSourceFinder<Float> sf(subImage);
 	Double cutoff = 0.1;
-	sky
-			= sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint,
-					width);
+	sky = sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint, width);
 	//absPixel += 1.0;
 
 	// modify to show dropped degenerate axes values???

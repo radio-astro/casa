@@ -31,12 +31,14 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <images/Images/ImageStatistics.h>
-
+//#include <casa/Utilities/CountedPtr.h>
 #include <casa/namespace.h>
 
 #include <memory>
 
 namespace casa {
+
+template <class T> class CountedPtr;
 
 class ImageStatsCalculator: public ImageTask<Float> {
     // <summary>
@@ -144,7 +146,7 @@ protected:
 
 private:
     std::auto_ptr<ImageStatistics<Float> > _statistics;
-    std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
+    CountedPtr<ImageRegion> _oldStatsRegion, _oldStatsMask;
     Vector<Int> _axes;
     Vector<Float> _includepix, _excludepix;
     Bool _list, _disk, _robust, _verbose;

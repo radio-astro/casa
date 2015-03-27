@@ -38,12 +38,16 @@
 
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 
+//debug
+#include <tables/Tables/PlainTable.h>
+
+
 namespace casa {
 
 template<class T> SubImageFactory<T>::SubImageFactory() {}
 
 template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
-	ImageRegion*& outRegion, ImageRegion*& outMask,
+	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
@@ -51,12 +55,12 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 ) {
     // The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
-	std::auto_ptr<ImageRegion> outMaskMgr(0);
+	//CountedPtr<ImageRegion> outMaskMgr(0);
     if (! mask.empty()) {
     	String mymask = mask;
     	for (uInt i=0; i<2; i++) {
     		try {
-    			outMaskMgr.reset(ImageRegion::fromLatticeExpression(mymask));
+    			outMask = ImageRegion::fromLatticeExpression(mymask);
     			break;
     		}
     		catch (const AipsError& x) {
@@ -69,32 +73,26 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     		}
     	}
     }
-    if (outMaskMgr.get() != 0) {
-    	const WCLELMask *myWMask = dynamic_cast<const WCLELMask *>(
-    		outMaskMgr->asWCRegionPtr()
-    	);
-    	if (myWMask) {
-    		const ImageExpr<Bool> *myExpression = myWMask->getImageExpr();
-    		if (
-    			myExpression
-    			&& ! myExpression->shape().isEqual(inImage.shape())
-    		) {
-    			ThrowIf(
-    				! extendMask,
-    				"The input image shape and mask shape are different and it was specified "
-    				"that the mask should not be extended, so the mask cannot be applied to the "
-    				"(sub)image. Specifying that the mask should be extended may resolve the issue"
-    			);
-    			try {
-    				const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
-    				const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
-    				const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
-    				ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
-    				outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
-    			}
-    			catch (const AipsError& x) {
-    				ThrowCc("Unable to extend mask: " + x.getMesg());
-    			}
+    if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
+    	const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
+    		outMask->asWCRegionPtr()
+    	)->getImageExpr();
+    	if (
+    		myExpression
+    		&& ! myExpression->shape().isEqual(inImage.shape())
+    	) {
+    		ThrowIf(
+    			! extendMask,
+    			"The input image shape and mask shape are different and it was specified "
+    			"that the mask should not be extended, so the mask cannot be applied to the "
+    			"(sub)image. Specifying that the mask should be extended may resolve the issue"
+    		);
+    		try {
+    			ExtendImage<Bool> exIm(*myExpression, inImage.shape(), inImage.coordinates());
+    			outMask = new ImageRegion(LCMask(exIm));
+    		}
+    		catch (const AipsError& x) {
+    			ThrowCc("Unable to extend mask: " + x.getMesg());
     		}
     	}
     }
@@ -102,23 +100,23 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
-        subImage = (outMaskMgr.get() == 0)
+        subImage = (! outMask)
 			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
 			: SubImage<T>(
-				inImage, *outMaskMgr,
+				inImage, *outMask,
 				writableIfPossible, axesSpecifier, preserveAxesOrder
 			);
 	}
 	else {
-		std::auto_ptr<ImageRegion> outRegionMgr(
+		/*std::auto_ptr<ImageRegion> */ outRegion = (
 			ImageRegion::fromRecord(
 				os, inImage.coordinates(),
 				inImage.shape(), region
 			)
 		);
-		if (outMaskMgr.get() == 0) {
+		if (! outMask) {
             subImage = SubImage<T>(
-				inImage, *outRegionMgr,
+				inImage, *outRegion,
 				writableIfPossible, axesSpecifier,
 				preserveAxesOrder
 			);
@@ -128,19 +126,17 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
             // SubImage construction after this one will properly account
             // for the axes specifier
             SubImage<T> subImage0(
-				inImage, *outMaskMgr, writableIfPossible,
+				inImage, *outMask, writableIfPossible,
 				AxesSpecifier(),
 				preserveAxesOrder
 			);
 			subImage = SubImage<T>(
-				subImage0, *outRegionMgr,
+				subImage0, *outRegion,
 				writableIfPossible, axesSpecifier,
 				preserveAxesOrder
 			);
 		}
-		outRegion = outRegionMgr.release();
 	}
-	outMask = outMaskMgr.release();
 	return subImage;
 }
 
@@ -150,15 +146,15 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
 	Bool extendMask, Bool preserveAxesOrder
 ) {
-	ImageRegion *pRegion = 0;
-	ImageRegion *pMask = 0;
+	CountedPtr<ImageRegion> pRegion;
+	CountedPtr<ImageRegion> pMask;
 	SubImage<T> mySubim = createSubImage(
 		pRegion, pMask, inImage, region,
 		mask, os, writableIfPossible, axesSpecifier,
 		extendMask, preserveAxesOrder
 	);
-	delete pRegion;
-	delete pMask;
+	//delete pRegion;
+	//delete pMask;
     return mySubim;
 }
 
