@@ -85,11 +85,7 @@ class ia_subimage_test(unittest.TestCase):
         self.myia.done()
         # FIXME need to figure out why this table is left open when test_stretch throws
         # reasonable exception (CAS-4890)
-        cache = tb.showcache()
-        if len(cache) > 0:
-            for t in cache:
-                self.assertTrue(t.find("mask3.im") >= 0)
-            
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_stretch(self):
         """Test the stretch parameter"""
@@ -115,11 +111,8 @@ class ia_subimage_test(unittest.TestCase):
         myia.open(imname)
         mm = myia.subimage("", mask=mask2, stretch=True)
         myia.done()
-        print "*** mychache 1 ****************************" + str(tb.showcache())
         mm.done()
-        print "*** mychache 2 *****************************" + str(tb.showcache())
         self.assertTrue(len(tb.showcache()) == 0)
-
         self.assertTrue(imsubimage(imname, outfile="stretch2", mask=mask2, stretch=True))
         mask3 = "mask3.im > 10"
         zz = None
@@ -130,9 +123,10 @@ class ia_subimage_test(unittest.TestCase):
             self.asertTrue(False)
         except:
             pass
-#        self.assertRaises(Exception, myia.subimage, "", mask=mask3, stretch=True)
         myia.done()
-        self.assertFalse(imsubimage(imname, "", mask=mask3, stretch=True))
+        myia.done()
+        self.assertFalse(imsubimage(imname, "junk", mask=mask3, stretch=True))
+
 
     def test_beams(self):
         """ Test per plane beams """
