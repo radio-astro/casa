@@ -97,7 +97,7 @@ using the CASA task <b>gencal</b>.</p>
 	               </tr>
 	               </thead>
 	               <tbody>
-	               % for key, value in single_result.antcorrect.iteritems():
+	               % for key, value in sorted(single_result.antcorrect.iteritems()):
 		           <tr>
 		               <td>${key}</td>
 			       <td>${value[0]}</td>

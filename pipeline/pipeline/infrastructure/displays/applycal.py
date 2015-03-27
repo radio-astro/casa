@@ -144,6 +144,9 @@ class PlotmsLeaf(object):
 #                 LOG.exception(ex)
 #                 return None
         parameters={'vis' : self._vis}
+        
+        domain_spws = self._ms.get_spectral_windows(self._spw)
+        parameters['receiver'] = sorted(set(spw.band for spw in domain_spws))
 
         if self._field != '':
             parameters['field'] = self._field_label
