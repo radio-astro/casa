@@ -3,20 +3,20 @@
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 
-//# Copyright (C) 2014
+//# Copyright (C) 2014-2015
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
+//# under the terms of the GNU  General Public License as published by
+//# the Free Software Foundation; either version 3 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  General Public
 //# License for more details.
 //#
-//# You should have received a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU  General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
@@ -384,6 +384,16 @@ Bool MSUVBin::fillNewBigOutputMS(){
 			msc.data().getColumn(elslice, grid);
 			msc.weightSpectrum().getColumn(elslice, wghtSpec);
 			msc.flag().getColumn(elslice, flag);
+			//multiply the data with weight here
+			{
+			  for (Int iz=0; iz< grid.shape()(2); ++iz){
+			    for(Int iy=0; iy < grid.shape()(1); ++iy){
+			      for(Int ix=0; ix < grid.shape()(0); ++ix){
+				grid(ix,iy,iz)= grid(ix,iy,iz)*wghtSpec(ix,iy,iz);
+			      }
+			    }
+			  }
+			}
 
 		}
 		else{
@@ -399,8 +409,8 @@ Bool MSUVBin::fillNewBigOutputMS(){
 		ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
                          "", "", "", True);
 		Double rowsDone=0.0;
-		for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
-	  for(iter.origin(); iter.more(); iter.next()){
+     for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
+	for(iter.origin(); iter.more(); iter.next()){
 	    if(doW_p)
 	      gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
 			   ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
@@ -412,6 +422,17 @@ Bool MSUVBin::fillNewBigOutputMS(){
 	  }
 
 	}
+
+     //Weight Correct the data
+     {
+       for (Int iz=0; iz< grid.shape()(2); ++iz){
+	 for(Int iy=0; iy < grid.shape()(1); ++iy){
+	   for(Int ix=0; ix < grid.shape()(0); ++ix){
+	     grid(ix,iy,iz)= (!flag(ix,iy,iz) && wghtSpec(ix,iy, iz) !=0) ? grid(ix,iy,iz)/wghtSpec(ix,iy,iz): Complex(0);
+	   }
+	 }
+       }
+     }
 
 	saveData(grid, flag, rowFlag, wghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan);
 	}
@@ -1246,8 +1267,8 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				    //SINCOS(phaseCorr, s, c);
 				    //  toB=toB*Complex(c,s);
 				      grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
-					= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)*wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow)
-					   + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
+					= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
+					   + toB); ///(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
 				      flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow)=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
@@ -1297,6 +1318,11 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   //locateuvw(locu v, vb.uvw());
   Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
   //cerr << "support " << convSupport << endl;
+  Vector<Double> phasor;
+  Matrix<Double> eluvw;
+  eluvw=vb.uvw();
+  Bool needRot=vbutil_p.rotateUVW(vb, phaseCenter_p, eluvw, phasor);
+  Vector<Double> invLambda=visFreq/C::c;
   for (Int k=0; k < vb.nRows(); ++k){
     if(!vb.flagRow()[k]){
       Int locu, locv, locw,supp, offu, offv;
@@ -1334,10 +1360,17 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		      }
 		    }
 		  }
+		  Complex elphas(1.0, 0.0);
 		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
 		    if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
 		      //Double outChanFreq;
 		      //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
+		      if(needRot){
+			Double phasmult=phasor(k)*invLambda(chan);
+			Double s, c;
+			SINCOS(phasmult, s, c);
+			elphas=Complex(c, s);
+		      }
 		      if(fracbw > 0.05)
 		      {
 		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
@@ -1379,16 +1412,18 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				  //   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
 				  Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt:
 				    vb.visCube()(pol,chan,k)*vb.weight()(pol,k)*cwt;
+				  if(needRot)
+				    toB *=elphas;
 				    //  Double s, c;
 				    //SINCOS(phaseCorr, s, c);
 				    //  toB=toB*Complex(c,s);
 				  //Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
 				  //////////////TESTING
-				  Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
+				  Float elwgt=vb.weight()(pol,k)* real(cwt);
 				  ///////////////////////////
 				  grid(polMap_p(pol),lechan, newrow[jj])
-				    = (grid(polMap_p(pol),lechan, newrow[jj])*wghtSpec(polMap_p(pol),lechan,newrow[jj])
-					   + toB)/(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
+				    = (grid(polMap_p(pol),lechan, newrow[jj])// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
+				       + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
 				      flag(polMap_p(pol), lechan, newrow[jj])=False;
 				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
 				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
@@ -1940,8 +1975,8 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 	  SINCOS(phase, sval, cval);
 	  
 	  Complex comval(cval, sval);
-	  scr[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
-	  //scr[ind]=comval;
+	  //scr[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
+	  scr[ind]=comval;
 	  
 	}
       }
@@ -2024,13 +2059,34 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 
   // Normalize such that plane 0 sums to 1 (when jumping in
   // steps of convSampling)
-  Double pbSum=0.0;
-  for (Int iy=-convSupport(0);iy<=convSupport(0);iy++) {
-    for (Int ix=-convSupport(0);ix<=convSupport(0);ix++) {
-      pbSum+=real(convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,0));
+  Complex pbSum=0.0;
+  for (Int iz=0; iz< convSupport.shape()[0]; ++iz){
+    pbSum=0.0;
+  for (Int iy=-convSupport(iz);iy<=convSupport(iz);iy++) {
+    for (Int ix=-convSupport(iz);ix<=convSupport(iz);ix++) {
+      pbSum+=convFunc(abs(ix)*cpConvSamp,abs(iy)*cpConvSamp,iz);
     }
   }
-  //cerr << "pbSum " << pbSum << endl;
+  convFunc.xyPlane(iz) = convFunc.xyPlane(iz)/Complex(pbSum);
+  }
+  cerr << "pbSum " << pbSum << endl;
+
+   Int newConvSize=2*(max(convSupport)+2)*convSampling;
+  
+  if(newConvSize < convSize){
+    IPosition blc(3, 0,0,0);
+    IPosition trc(3, (newConvSize/2-2),
+		  (newConvSize/2-2),
+		  convSupport.shape()(0)-1);
+   
+    Cube<Complex> newConvFunc=convFunc(blc,trc);
+    convFunc.resize();
+    convFunc=newConvFunc;
+    // convFunctions_p[actualConvIndex_p]->assign(Cube<Complex>(convFunc(blc,trc)));
+    convSize=newConvSize;
+    cerr << "new convsize " << convSize << endl;
+  }
+
 
   //////////////////////TESTING
   //convFunc*=Complex(1.0/5.4, 0.0);
@@ -2059,7 +2115,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   /////Write out the SF correction image
   String corrim=outMSName_p+String("/WprojCorrection.image");
   Path elpath(corrim);
-  cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images for to a flat noise state " << endl;
+  cerr << "Saving the correction image " << elpath.absoluteName() << "\nIt should be used to restore images to a flat noise state " << endl;
   if(!Table::isReadable(corrim)){
     ConvolveGridder<Double, Float>elgridder(IPosition(2, nx_p, ny_p),
 					      uvScale, uvOffset,
@@ -2089,10 +2145,11 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     LatticeIterator<Float> lix(thisScreen, lsx);
     for(lix.reset();!lix.atEnd();lix++) {
       Int iy=lix.position()(1);
-      elgridder.correctX1D(correction, iy);
+      //elgridder.correctX1D(correction, iy);
     
       for (Int ix=0;ix<nx_p; ++ix) {
-	correction(ix)*=sincConv(ix)*sincConv(iy);
+	correction(ix)=sincConv(ix)*sincConv(iy);
+	//correction(ix)*=sincConv(ix)*sincConv(iy);
       }
       lix.rwVectorCursor()=correction;
     }

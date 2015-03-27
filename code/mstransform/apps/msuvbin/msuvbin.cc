@@ -1,11 +1,11 @@
 /*
 //#MSBin functionality on the command line
-//# Copyright (C) 2014-205
+//# Copyright (C) 2014-2015
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or (at your option)
+//# Software Foundation; either version 3 of the License, or (at your option)
 //# any later version.
 //#
 //# This program is distributed in the hope that it will be useful, but WITHOUT
@@ -49,13 +49,17 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2015/02/15 by CM MLLN, HTST");
+  inp.version("2015/03/27 by CM MLLN, HTST");
   // Title of CM  i.e Code Monkey is
   //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
   inp.create("vis", "ngc5921.ms", "MS to be binned");
   inp.create("outvis", "OutMS.ms", "Output MS");
   inp.create("field", "*", "fields to use from input ms");
   inp.create("spw", "*", "spw selection to use on input ms");
+  inp.create("antenna", "", "antenna selection expression");
+  inp.create("scan", "", "scans to use for gridding");
+  inp.create("uvrange", "", "uvrange expression to data");
+  inp.create("taql", "", "TaQl expression for data selection");
   inp.create("phasecenter", "e.g J2000 19h20m00 -5d00m00 or fieldid", "phasecenter of gridded vis");
   inp.create("nx", "200", "number of pixel along x direction" );
   inp.create("ny", "200", "number of pixel along y direction" );
@@ -109,7 +113,11 @@ int main(int argc, char **argv) {
   Quantity fstep=qh.asQuantity();
   String field=inp.getString("field");
   String spw=inp.getString("spw");
-  
+  String baseline=inp.getString("antenna");
+  String scan=inp.getString("scan");
+  String uvrange=inp.getString("uvrange");
+  String taql=inp.getString("taql");
+
   cerr << "field  " << field << " spw " << spw << endl;
 
   Float memFrac=Float(inp.getDouble("memfrac"));
@@ -117,7 +125,7 @@ int main(int argc, char **argv) {
   
   MSUVBin binner(phaseCenter, nx,
 		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac, doW);
-  binner.selectData(msname, spw, field);
+  binner.selectData(msname, spw, field, baseline, scan, uvrange, taql);
   binner.setOutputMS(outMS);
   binner.fillOutputMS();
   
