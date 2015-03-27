@@ -31,8 +31,8 @@
 
 #include <msvis/MSVis/SubMS.h>
 #include <asdmstman/AsdmStMan.h>
-#include <ms/MeasurementSets/MSSelection.h>
-//#include <ms/MeasurementSets/MSTimeGram.h>
+#include <ms/MSSel/MSSelection.h>
+//#include <ms/MSSel/MSTimeGram.h>
 //#include <tables/TaQL/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>

@@ -51,7 +51,7 @@
 
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 
 
 #include <synthesis/ImagerObjects/SIIterBot.h>

@@ -52,7 +52,7 @@
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSIter.h>
 #include <tables/Tables/PlainTable.h>

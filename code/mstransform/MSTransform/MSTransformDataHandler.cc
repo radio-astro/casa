@@ -23,7 +23,7 @@
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <tables/Tables/TableProxy.h>
 #include <tables/TaQL/TableParse.h>
-#include <ms/MeasurementSets/MSMetaData.h>
+#include <ms/MSOper/MSMetaData.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

@@ -84,7 +84,7 @@ Double sigToWeight(Double sig);
 // These forward declarations are so the corresponding .h files don't have to
 // be included in this .h file, but it's only worth it if a lot of other files
 // include this file.
-class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
+class MSSelection; // #include <ms/MSSel/MSSelection.h>
 class VBRemapper;
 
   // // These typedefs are necessary because a<b::c> doesn't work.

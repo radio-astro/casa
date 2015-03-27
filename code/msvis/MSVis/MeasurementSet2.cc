@@ -1,5 +1,5 @@
 #include <msvis/MSVis/MeasurementSet2.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <tables/Tables.h>
 
 namespace casa {

@@ -28,10 +28,10 @@
 #include <msvis/MSVis/MSMoments.h>
 #include <casa/Exceptions/Error.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <ms/MeasurementSets/MSIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSConcat.h>
+#include <ms/MSOper/MSConcat.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Time.h>
 #include <casa/OS/File.h>

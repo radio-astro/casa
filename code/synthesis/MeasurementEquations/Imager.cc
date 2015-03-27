@@ -94,12 +94,12 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSDataDescIndex.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
+#include <ms/MSSel/MSDataDescIndex.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
-#include <ms/MeasurementSets/MSSummary.h>
+#include <ms/MSSel/MSSourceIndex.h>
+#include <ms/MSOper/MSSummary.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/MeasurementEquations/Feather.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>

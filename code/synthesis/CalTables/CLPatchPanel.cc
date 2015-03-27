@@ -32,9 +32,9 @@
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Utilities/GenSort.h>
 
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectableTable.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 
 #include <casa/aips.h>
 

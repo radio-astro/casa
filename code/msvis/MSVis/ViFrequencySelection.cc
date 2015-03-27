@@ -1,6 +1,6 @@
 #include <msvis/MSVis/ViFrequencySelection.h>
 #include <msvis/MSVis/UtilJ.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 
 #include <utility>
 

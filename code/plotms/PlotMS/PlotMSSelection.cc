@@ -27,7 +27,7 @@
 #include <plotms/PlotMS/PlotMSSelection.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTInterface.h>
 #include <QDebug>

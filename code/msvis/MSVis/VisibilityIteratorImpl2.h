@@ -29,7 +29,7 @@
 #define MSVIS_VISIBILITYITERATORIMPL2_H
 
 #include <casa/aips.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 #include <msvis/MSVis/ViImplementation2.h>
 #include <msvis/MSVis/ViColumns2.h>
 #include <tables/Tables/ArrayColumn.h>

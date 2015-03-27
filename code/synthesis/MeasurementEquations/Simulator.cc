@@ -58,7 +58,7 @@
 #include <msvis/MSVis/VisSetUtil.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
-#include <ms/MeasurementSets/NewMSSimulator.h>
+#include <ms/MSOper/NewMSSimulator.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/UnitMap.h>
@@ -72,7 +72,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
-#include <ms/MeasurementSets/MSSummary.h>
+#include <ms/MSOper/MSSummary.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <synthesis/MeasurementComponents/ImageSkyModel.h>
 #include <synthesis/MeasurementComponents/SimACohCalc.h>

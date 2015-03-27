@@ -36,12 +36,12 @@
 #include <measures/Measures/MRadialVelocity.h>
 #include <tables/TaQL/ExprNode.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
+#include <ms/MSSel/MSSelectionError.h>
+#include <ms/MSSel/MSSelectionErrorHandler.h>
+#include <ms/MSSel/MSSelectableTable.h>
 #include <casa/Containers/OrderedMap.h>
 #include <casa/Containers/MapIO.h>
 #include <synthesis/CalTables/NewCalTable.h>

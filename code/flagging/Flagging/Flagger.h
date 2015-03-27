@@ -32,7 +32,7 @@
 #include <flagging/Flagging/FlagVersion.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>

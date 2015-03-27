@@ -53,7 +53,7 @@
 #include <components/ComponentModels/SpectralIndex.h>
 #include <components/ComponentModels/SkyComponent.h>
 
-#include <ms/MeasurementSets/MSSummary.h>
+#include <ms/MSOper/MSSummary.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>

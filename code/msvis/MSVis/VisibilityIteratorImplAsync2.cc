@@ -33,7 +33,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Sort.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
+#include <ms/MSSel/MSSpwIndex.h>
 #include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisBuffer2.h>

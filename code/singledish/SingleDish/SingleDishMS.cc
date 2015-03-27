@@ -12,7 +12,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisSetUtil.h>
 

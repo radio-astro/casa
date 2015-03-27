@@ -40,8 +40,8 @@
 #include <tables/TaQL/ExprNode.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
+#include <ms/MSSel/MSSelectionError.h>
+#include <ms/MSSel/MSSelectableTable.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 

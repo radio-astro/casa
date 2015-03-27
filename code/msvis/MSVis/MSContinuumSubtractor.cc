@@ -31,8 +31,8 @@
 #include <measures/Measures/Stokes.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelector.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelector.h>
+#include <ms/MSSel/MSSelection.h>
 //#include <ms/MeasurementSets/MSRange.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
 #include <msvis/MSVis/VisSet.h>

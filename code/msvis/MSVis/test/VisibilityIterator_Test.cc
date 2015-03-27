@@ -11,7 +11,7 @@
 #include <tables/DataMan/TiledDataStMan.h>
 #include <tables/DataMan/TiledShapeStMan.h>
 #include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/NewMSSimulator.h>
+#include <ms/MSOper/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisBuffer.h>

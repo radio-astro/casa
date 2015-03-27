@@ -4,7 +4,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Quanta/MVTime.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 #include <casa/Arrays.h>
 
 #include <algorithm>

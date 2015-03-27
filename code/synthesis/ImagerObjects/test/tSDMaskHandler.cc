@@ -55,7 +55,7 @@
 #include <images/Regions/ImageRegion.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MSSel/MSSourceIndex.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/ImagerObjects/SDMaskHandler.h>
 

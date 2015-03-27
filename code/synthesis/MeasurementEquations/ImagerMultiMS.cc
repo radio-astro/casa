@@ -35,8 +35,8 @@
 
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSDataDescIndex.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSDataDescIndex.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>

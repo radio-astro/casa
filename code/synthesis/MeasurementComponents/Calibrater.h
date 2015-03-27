@@ -39,7 +39,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <msvis/MSVis/VisibilityProcessing.h>
 #include <msvis/MSVis/ViFrequencySelection.h>
 

@@ -30,7 +30,7 @@
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSummary.h>
+#include <ms/MSOper/MSSummary.h>
 #include <casa/Logging/LogFilter.h>
 #include <QDebug>
 

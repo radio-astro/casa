@@ -50,7 +50,7 @@
 #include <casa/namespace.h>
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MSSel/MSSourceIndex.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <measures/Measures/VelocityMachine.h>
 

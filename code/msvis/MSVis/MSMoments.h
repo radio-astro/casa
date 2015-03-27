@@ -35,8 +35,8 @@
 #include <casa/Arrays/Slicer.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/StokesConverter.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <ms/MeasurementSets/MSSelectionKeywords.h>
+#include <ms/MSOper/MSDerivedValues.h>
+#include <ms/MSSel/MSSelectionKeywords.h>
 //#include <images/Images/MomentsBase.h>
 #include <imageanalysis/ImageAnalysis/MomentCalculator.h>
 

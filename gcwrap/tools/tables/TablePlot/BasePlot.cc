@@ -3237,7 +3237,7 @@ Int BasePlot::flagData(Int direction, String msname, String spwexpr,
    //}
 
    /* 
-   #include <ms/MeasurementSets/MSSelection.h>
+   #include <ms/MSSel/MSSelection.h>
    #include <ms/MeasurementSets/MeasurementSet.h>
    MS itsSelectedMS; 
    try {

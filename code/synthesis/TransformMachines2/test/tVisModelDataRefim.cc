@@ -31,7 +31,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <tables/TaQL/ExprNode.h>
 #include <measures/Measures/MeasTable.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 
 #include <synthesis/TransformMachines2/VisModelData.h>
 #include <synthesis/TransformMachines2/FTMachine.h>

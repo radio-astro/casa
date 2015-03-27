@@ -35,7 +35,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
@@ -57,7 +57,7 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/BasicMath/Random.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <casa/Arrays/ArrayAccessor.h>
 #include <cstdarg>
 

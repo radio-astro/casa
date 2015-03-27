@@ -39,9 +39,9 @@
 #include <casa/Arrays/ArrayPartMath.h>
 //#include <casa/Arrays/ArrayMath.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSFieldIndex.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSFieldIndex.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>

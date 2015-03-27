@@ -52,7 +52,7 @@
 #include <ms/MeasurementSets/MSFeedColumns.h>
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSFieldIndex.h>
+#include <ms/MSSel/MSFieldIndex.h>
 #include <ms/MeasurementSets/MSObsColumns.h>
 #include <ms/MeasurementSets/MSObservation.h>
 #include <ms/MeasurementSets/MSPolColumns.h>

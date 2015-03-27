@@ -32,7 +32,7 @@
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
-#include <ms/MeasurementSets/MS1ToMS2Converter.h>
+#include <ms/MSOper/MS1ToMS2Converter.h>
 #include <display/Display/Options.h>
 
 #include <QFileDialog>

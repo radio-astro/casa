@@ -26,19 +26,19 @@
 //# $Id$
 //----------------------------------------------------------------------------
 
-#include <ms/MeasurementSets/MSObservationGram.h>
-#include <ms/MeasurementSets/MSScanGram.h>
+#include <ms/MSSel/MSObservationGram.h>
+#include <ms/MSSel/MSScanGram.h>
 #include <synthesis/CalTables/CTSelection.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSAntennaGram.h>
-#include <ms/MeasurementSets/MSCorrGram.h>
-#include <ms/MeasurementSets/MSFieldGram.h>
-#include <ms/MeasurementSets/MSSpwGram.h>
-#include <ms/MeasurementSets/MSTimeGram.h>
-#include <ms/MeasurementSets/MSPolnGram.h>
+#include <ms/MSSel/MSAntennaGram.h>
+#include <ms/MSSel/MSCorrGram.h>
+#include <ms/MSSel/MSFieldGram.h>
+#include <ms/MSSel/MSSpwGram.h>
+#include <ms/MSSel/MSTimeGram.h>
+#include <ms/MSSel/MSPolnGram.h>
 //#include <casa/Containers/Record.h>
 #include <tables/TaQL/RecordGram.h>
-#include <ms/MeasurementSets/MSAntennaParse.h>
+#include <ms/MSSel/MSAntennaParse.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

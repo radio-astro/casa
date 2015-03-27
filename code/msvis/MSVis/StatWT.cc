@@ -32,7 +32,7 @@
 #include <msvis/MSVis/VisBuffGroupAcc.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <casa/Arrays/ArrayMath.h>
 
 namespace casa {

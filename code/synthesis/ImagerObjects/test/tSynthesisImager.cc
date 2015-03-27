@@ -50,7 +50,7 @@
 #include <casa/namespace.h>
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MSSel/MSSourceIndex.h>
 
 int main(int argc, char **argv)
 {

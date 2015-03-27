@@ -46,7 +46,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 
 #include <measures/Measures/MeasTable.h>
 

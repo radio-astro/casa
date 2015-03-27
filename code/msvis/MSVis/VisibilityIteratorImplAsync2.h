@@ -39,7 +39,7 @@
 #include <measures/Measures/MDoppler.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/Stokes.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>

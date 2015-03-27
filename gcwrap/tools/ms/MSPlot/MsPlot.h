@@ -47,7 +47,7 @@
 #include <tools/tables/TablePlot/TablePlot.h>
 #include <tools/tables/TablePlot/PanelParams.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 
 //# MsPlot includes
 #include <measures/Measures/MPosition.h>

@@ -27,7 +27,7 @@
 //# $Id: MSRange.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #include <casacore/ms/MeasurementSets/MSRange.h>
-#include <casacore/ms/MeasurementSets/MSSelector.h>
+#include <casacore/ms/MSSel/MSSelector.h>
 
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>

@@ -30,7 +30,7 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 
 // Measurement Set Selection
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 
 // Data handling
 #include <mstransform/MSTransform/MSTransformDataHandler.h>

@@ -40,8 +40,8 @@
 #include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MDirection.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMetaData.h>
-#include <ms/MeasurementSets/MSKeys.h>
+#include <ms/MSOper/MSMetaData.h>
+#include <ms/MSOper/MSKeys.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/regex.hpp>

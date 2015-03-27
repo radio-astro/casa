@@ -43,11 +43,11 @@
 #include <msfits/MSFits/MSFitsIDI.h>
 #include <fits/FITS/FITSReader.h>
 #include <ms/MeasurementSets/MSRange.h>
-#include <ms/MeasurementSets/MSSummary.h>
-#include <ms/MeasurementSets/MSLister.h>
-#include <ms/MeasurementSets/MSConcat.h>
-#include <ms/MeasurementSets/MSFlagger.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSOper/MSSummary.h>
+#include <ms/MSOper/MSLister.h>
+#include <ms/MSOper/MSConcat.h>
+#include <ms/MSOper/MSFlagger.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
 
 #include <measures/Measures/MeasTable.h>

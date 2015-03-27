@@ -28,8 +28,8 @@
 #include <casa/Utilities/Sort.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
-#include <ms/MeasurementSets/MSDataDescIndex.h>
+#include <ms/MSSel/MSSpwIndex.h>
+#include <ms/MSSel/MSDataDescIndex.h>
 #include <msvis/MSVis/MSUtil.h>
 #include <casa/Arrays/ArrayMath.h>
 

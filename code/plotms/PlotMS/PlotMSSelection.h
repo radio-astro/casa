@@ -28,7 +28,7 @@
 #define PLOTMSSELECTION_H_
 
 #include <casa/Containers/Record.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>
@@ -43,7 +43,7 @@ class MeasurementSet;
 class NewCalTable;
 
 // Specifies an MS selection.  See the mssSetData method in
-// ms/MeasurementSets/MSSelectionTools.h for details.
+// ms/MSSel/MSSelectionTools.h for details.
 class PlotMSSelection {
 public:
     // Static //
@@ -89,7 +89,7 @@ public:
     String toStringShort() const;
 
     // Applies this selection using the first MS into the second MS.  (See the
-    // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
+    // mssSetData method in ms/MSSel/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
                Vector<Vector<Slice> >& chansel,
 	       Vector<Vector<Slice> >& corrsel);

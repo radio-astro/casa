@@ -45,7 +45,7 @@
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <scimath/Mathematics/RigidVector.h>
 
-#include <ms/MeasurementSets/MSDerivedValues.h>
+#include <ms/MSOper/MSDerivedValues.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisImagingWeight.h>
 #include <msvis/MSVis/VisibilityIterator.h>

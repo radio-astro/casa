@@ -1,6 +1,6 @@
 #include "MsFactory.h"
 #include <synthesis/MSVis/UtilJ.h>
-#include <ms/MeasurementSets/NewMSSimulator.h>
+#include <ms/MSOper/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
 #include <tables/DataMan/TiledShapeStMan.h>
 

@@ -51,7 +51,7 @@
 #include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MRadialVelocity.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 #include <tables/Tables/Table.h>

@@ -35,8 +35,8 @@
 #include <casa/namespace.h>
 
 #include <synthesis/CalTables/CTInterface.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 
 // <summary>
 // Test program for RIorAParray class.

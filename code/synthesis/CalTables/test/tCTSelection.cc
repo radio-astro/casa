@@ -28,9 +28,9 @@
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTInterface.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 //#include <synthesis/CalTables/CTSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <casa/OS/Timer.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>

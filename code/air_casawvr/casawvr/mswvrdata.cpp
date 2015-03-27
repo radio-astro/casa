@@ -23,7 +23,7 @@
 #include <casacore/ms/MeasurementSets/MSProcessor.h>
 #include <casacore/ms/MeasurementSets/MSColumns.h>
 #include <casacore/casa/Utilities/GenSort.h>
-#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MSOper/MSDerivedValues.h>
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/MVTime.h>

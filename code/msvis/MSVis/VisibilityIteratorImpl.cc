@@ -33,7 +33,7 @@
 ////#include <synthesis/TransformMachines/VisModelData.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
+#include <ms/MSSel/MSSpwIndex.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableRecord.h>

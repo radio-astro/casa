@@ -38,7 +38,7 @@
 #include <coordinates/Coordinates/Projection.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSRange.h>
-#include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MSSel/MSSelection.h>
 #include <casa/BasicSL/Constants.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>

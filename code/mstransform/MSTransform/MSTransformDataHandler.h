@@ -27,8 +27,8 @@
 #include <ms/MeasurementSets.h>
 
 // Measurement Set Selection
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 
 // Needed by setupMS
 #include <tables/Tables.h>

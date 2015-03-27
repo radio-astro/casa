@@ -42,7 +42,7 @@
 #include <synthesis/CalTables/BJonesMBuf.h>
 #include <synthesis/CalTables/BJonesMCol.h>
 #include <synthesis/CalTables/NewCalTable.h>
-#include <ms/MeasurementSets/MSSpWindowIndex.h>
+#include <ms/MSSel/MSSpWindowIndex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

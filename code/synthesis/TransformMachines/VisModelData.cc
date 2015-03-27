@@ -35,10 +35,10 @@
 #include <casa/Logging/LogIO.h>
 #include <tables/Tables/ScaRecordColDesc.h>
 #include <components/ComponentModels/ComponentList.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSSource.h>
-#include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MSSel/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSourceColumns.h>
 
 #include <msvis/MSVis/VisBuffer.h>

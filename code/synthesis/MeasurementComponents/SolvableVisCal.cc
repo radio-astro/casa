@@ -54,8 +54,8 @@
 #include <synthesis/CalTables/CTGlobals.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <synthesis/CalTables/CTInterface.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <casa/sstream.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>

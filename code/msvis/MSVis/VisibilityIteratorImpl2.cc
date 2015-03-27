@@ -34,8 +34,8 @@
 #include <casa/Utilities.h>
 #include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSpwIndex.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 //#include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/MeasurementSet2.h>

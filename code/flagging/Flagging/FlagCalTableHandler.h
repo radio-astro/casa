@@ -24,7 +24,7 @@
 #define FlagCalTableHandler_H_
 
 #include <flagging/Flagging/FlagDataHandler.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTInterface.h>
 #include <synthesis/CalTables/CTIter.h>

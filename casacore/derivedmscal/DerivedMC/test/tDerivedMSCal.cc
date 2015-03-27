@@ -26,7 +26,7 @@
 //# $Id: tDerivedMSCal.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #include <casacore/derivedmscal/DerivedMC/DerivedMSCal.h>
-#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MSOper/MSDerivedValues.h>
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSMainColumns.h>
 #include <casacore/ms/MeasurementSets/MSAntennaColumns.h>

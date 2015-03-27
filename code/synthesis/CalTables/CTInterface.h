@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
+#include <ms/MSSel/MSSelectableTable.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTEnums.h>
