@@ -89,6 +89,10 @@ void setPlotMSAveraging_(const PlotMSAveraging& averaging,
 void setPlotMSTransformations_(const PlotMSTransformations& trans,
         const bool updateImmediately, const int plotIndex);
 
+// Helper method for setting the MS calibration.
+void setPlotMSCalibration_(const PlotMSCalibration& calib,
+        const bool updateImmediately, const int plotIndex);
+
 // Helper method for setting the iteration parameters
 void setPlotMSIterate_(const PlotMSIterParam& iter,
         const bool updateImmediately, const int plotIndex);

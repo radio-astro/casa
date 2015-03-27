@@ -1,6 +1,7 @@
 import os
 import time
 from taskinit import *
+from callibrary import *  # to convert cal lib file to dict
 
 def plotms(vis=None, 
            gridrows=None, gridcols=None,
@@ -34,7 +35,8 @@ def plotms(vis=None,
            showlegend=None, legendposition=None,   
            plotfile=None, expformat=None, exprange=None,
            highres=None, overwrite=None, 
-           showgui=None, clearplots=None
+           showgui=None, clearplots=None,
+	   callib=None
 ):
 
 # we'll add these later
@@ -178,13 +180,14 @@ def plotms(vis=None,
                     Exterior legends can be located on the right, left, top, or bottom.
                     default: 'upperright'
     clearplots -- clear existing plots so that the new ones coming in can replace them.                 
-    
+    callib -- calibration library dictionary or filename for on-the-fly calibration
+
     """
     # Check if DISPLAY environment variable is set.
     if os.getenv('DISPLAY') == None:
         casalog.post('ERROR: DISPLAY environment variable is not set!  Cannot open plotms.', 'SEVERE')
         return False
-    
+
     if plotfile:
         if not os.path.dirname(plotfile):
             # CAS-7148: Use dir that user cd'ed to in casapy session
@@ -210,6 +213,7 @@ def plotms(vis=None,
         synonyms['rho']='Distance (rho) [km]'
         synonyms['weight'] = 'wt'
         synonyms['weightspectrum'] = 'wtsp'
+        synonyms['sigmaspectrum'] = 'sigmasp'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = synonyms['uvdist_l']='uvwave'
         synonyms['amplitude'] = 'amp'
@@ -239,8 +243,8 @@ def plotms(vis=None,
 
         vis = vis.strip()
         if len(vis) > 0:
-            vis = os.path.abspath(vis) 
-        
+            vis = os.path.abspath(vis)
+
         if not plotindex:
             plotindex = 0  
         if plotindex < 0:
@@ -350,9 +354,33 @@ def plotms(vis=None,
             restfreq=''
             veldef='RADIO'
             shift=[0.0,0.0]
+		
         pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],
                                     False, plotindex)
-        
+
+	# Set calibration
+	if not callib:
+		useCallib = False
+		callibFile = ''
+		callibRec = {}
+	elif isinstance(callib, dict):
+		useCallib = True
+		callibFile = ''
+		callibRec = callib
+	elif isinstance(callib, str):
+		callibFile = callib.strip()
+		if len(callibFile) > 0:
+			callibFile = os.path.abspath(callib)
+			try:
+       				mycallib = callibrary()
+				mycallib.read(callibFile)
+				callibRec = mycallib.cld
+				useCallib = True
+			except:
+				casalog.post("Cannot validate callib file")
+				raise RuntimeError("Cannot validate callib file")
+	pm.setPlotMSCalibration(useCallib, callibFile, callibRec, False, plotindex) 
+
         # Set flag extension
         # for now, some options here are not available:
         # pm.setFlagExtension(extendflag, extcorrelation, extchannel, extspw, extantenna, exttime, extscans, extfield)
@@ -583,7 +611,7 @@ def plotms(vis=None,
 
         pm.setXRange((xrange<=0.), plotrange[0],plotrange[1], False, plotindex)
         pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False, plotindex)
-        
+
         # Update
         plotUpdated = pm.update()
         if not plotUpdated:

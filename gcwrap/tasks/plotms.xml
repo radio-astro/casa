@@ -116,6 +116,9 @@ MS Parameters
       <value>wt*amp</value>
       <value>wtsp</value>
       <value>weightspectrum</value>
+      <value>sigma</value>
+      <value>sigmasp</value>
+      <value>sigmaspectrum</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -208,6 +211,9 @@ MS Parameters
       <value>wt*amp</value>
       <value>wtsp</value>
       <value>weightspectrum</value>
+      <value>sigma</value>
+      <value>sigmasp</value>
+      <value>sigmaspectrum</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
@@ -849,6 +855,10 @@ Export plot as image Parameters
      	<value>True</value>
      </param>
      
+     <param type="string" name="callib">
+     	<description>Calibration library filename or dictionary for on-the-fly calibration.</description>
+     </param>
+     
      
 <!--
 ###############################################################################
@@ -1009,6 +1019,9 @@ Constraints
       <equals value="wtsp"/>
        <equals value="weight"/>
        <equals value="weightspectrum"/>
+       <equals value="sigma"/>
+       <equals value="sigmasp"/>
+       <equals value="sigmaspectrum"/>
       <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
@@ -1088,6 +1101,9 @@ Constraints
       <equals value="wtsp"/>
        <equals value="weight"/>
        <equals value="weightspectrum"/>
+       <equals value="sigma"/>
+       <equals value="sigmasp"/>
+       <equals value="sigmaspectrum"/>
       <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
@@ -1625,11 +1641,13 @@ Constraints
         overwrite -- Overwrite plot file if it already exists?
                      default: false
       
-<!--
+    callib -- calibration library filename or dictionary
+                default: '' 
     
     showgui - Whether or not to display the plotting GUI
               default: True; example showgui=False
 
+<!--
 
         extspw - extend flags based on spw?
                   default: False.

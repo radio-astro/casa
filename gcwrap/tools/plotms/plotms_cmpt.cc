@@ -189,6 +189,7 @@ string plotms::getPlotMSFilename(const int plotIndex) {
     launchApp();
     GETSINGLEPLOTSTR(FILENAME) }
 
+
 void plotms::setPlotMSSelection(const string& field, const string& spw,
         const string& timerange, const string& uvrange,
         const string& antenna, const string& scan, const string& corr,
@@ -325,6 +326,46 @@ record* plotms::getPlotMSTransformations(const int plotIndex) {
   GETSINGLEPLOTREC(TRANSFORMATIONS) 
 }
 
+
+void plotms::setPlotMSCalibration(const bool use, 
+				const std::string& filename,
+				const record& callib,
+				const bool updateImmediately, 
+				const int plotIndex) {
+    PlotMSCalibration pmscalib;
+    
+    pmscalib.setUseCallib(use);
+    pmscalib.setCallibFile(filename);
+    pmscalib.setCallibRec(*toRecord(callib));
+    setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
+}
+
+void plotms::setPlotMSCalibrationRec(const record& calibration, 
+					 const bool updateImmediately, 
+					 const int plotIndex) {
+    Record* calib1 = toRecord(calibration);
+    PlotMSCalibration pmscalib;
+    pmscalib.fromRecord(*calib1);
+    delete calib1;
+    
+    setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
+}
+
+void plotms::setcallib(const record& callib, const bool updateImmediately,
+			const int plotIndex) {
+    PlotMSCalibration pmscalib;
+    
+    pmscalib.setUseCallib(True);
+    pmscalib.setCallibFile("");
+    pmscalib.setCallibRec(*(toRecord(callib)));
+    
+    setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
+}
+
+record* plotms::getPlotMSCalibration(const int plotIndex) {
+  launchApp();
+  GETSINGLEPLOTREC(CALIBRATION) 
+}
 
 
 void plotms::setColorizeFlag(const bool colorize, const bool updateImmediately, const int plotIndex) 
@@ -837,6 +878,19 @@ void plotms::setPlotMSTransformations_(const PlotMSTransformations& trans,
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
 }
+
+void plotms::setPlotMSCalibration_(const PlotMSCalibration& calib,
+        const bool updateImmediately, const int plotIndex) {
+    launchApp();
+    Record params;
+
+    params.defineRecord(PlotMSDBusApp::PARAM_CALIBRATION, calib.toRecord());
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, /*true*/asyncCall);
+}
+
 
 void plotms::setPlotMSIterate_(const PlotMSIterParam& iter,
 			       const bool updateImmediately, const int plotIndex) {

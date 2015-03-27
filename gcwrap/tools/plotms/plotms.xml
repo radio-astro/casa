@@ -326,6 +326,39 @@ Gets the MS filename for the plot at the given index.
   </returns>
 </method>
 
+<method type="function" name="setcallib">
+  <keyword>setcallib</keyword>
+  
+  <shortdescription>Sets the calibration parameters.</shortdescription>
+  
+  <description>
+Sets the calibration parameters for the plot at the given index, using a
+record.  If updateImmediately is true, this change takes effect immediately IF
+the plotms window is currently shown; otherwise it will only be applied next
+time update() and/or show() is called.
+  </description>
+  
+  <input>
+    <param type="record" name="callib">
+      <description>calibration parameters, in record form</description>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
 <method type="function" name="setPlotMSSelection">
   <keyword>setPlotMSSelection</keyword>
   
@@ -655,6 +688,51 @@ and/or show() is called.
   <returns />
 </method>
 
+<method type="function" name="setPlotMSCalibration">
+  <keyword>setPlotMSCalibration</keyword>
+  
+  <shortdescription>Sets the MS calibration parameters.</shortdescription>
+  
+  <description>
+Sets the MS calibration parameters for the plot at the given index, using
+individual values.  These parameters may be in a record (python dictionary) or
+a file.  If updateImmediately is true, this change takes effect immediately IF
+the plotms window is currently shown; otherwise it will only be applied next
+time update() and/or show() is called.
+  </description>
+  
+  <input>
+    <param type="bool" name="use">
+      <description>Indicates whether to use a calibration library for on-the-fly calibration.</description>
+      <value>false</value>
+    </param>
+    
+    <param type="string" name="filename">
+      <description>Calibration Library filename</description>
+      <value />
+    </param>
+    
+    <param type="record" name="callib">
+      <description>Rest frequency (w/ units) to use when calculating velocities</description>
+      <value />
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
 <method type="function" name="setPlotMSIterate">
   <keyword>setPlotMSIterate</keyword>
   
@@ -735,7 +813,7 @@ otherwise it will only be applied next time update() and/or show() is called.
   
   <input>
     <param type="record" name="transformations">
-      <description>MS averaging parameters, in record form</description>
+      <description>MS transformations parameters, in record form</description>
     </param>
     
     <param type="bool" name="updateImmediately">
@@ -777,6 +855,64 @@ Gets the MS transformations parameters for the plot at the given index as a reco
     <description>MS transformations parameters, in record form</description>
   </returns>
 </method>
+
+<method type="function" name="setPlotMSCalibrationRec">
+  <keyword>setPlotMSCalibrationRec</keyword>
+  
+  <shortdescription>Sets the MS calibration parameters.</shortdescription>
+  
+  <description>
+Sets the MS calibration parameters for the plot at the given index, using a
+record (see PlotMSCalibration::toRecord()).  If updateImmediately is true, this
+change takes effect immediately IF the plotms window is currently shown;
+otherwise it will only be applied next time update() and/or show() is called.
+  </description>
+  
+  <input>
+    <param type="record" name="calibration">
+      <description>MS calibration parameters, in record form</description>
+    </param>
+    
+    <param type="bool" name="updateImmediately">
+      <description>whether to apply this change immediately, IF the window is currently shown</description>
+      <value>true</value>
+    </param>
+    
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns />
+</method>
+
+<method type="function" name="getPlotMSCalibration">
+  <keyword>getPlotMSCalibration</keyword>
+  
+  <shortdescription>Gets the MS calibration parameters.</shortdescription>
+  
+  <description>
+Gets the MS calibration parameters for the plot at the given index as a record
+(see PlotMSCalibration::toRecord()).
+  </description>
+  
+  <input>
+    <param type="int" name="plotIndex">
+      <description>Index of the plot (0-based).</description>
+      <value>0</value>
+    </param>
+  </input>
+  
+  <example />
+  
+  <returns type="record">
+    <description>MS calibration parameters, in record form</description>
+  </returns>
+</method>
+
 
 <method type="function" name="setExportRange">
   <keyword>setExportRange</keyword>

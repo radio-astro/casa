@@ -5,6 +5,7 @@
 #include <plotms/PlotMS/PlotMSIterParam.h>
 #include <plotms/PlotMS/PlotMSSelection.h>
 #include <plotms/PlotMS/PlotMSTransformations.h>
+#include <plotms/PlotMS/PlotMSCalibration.h>
 #include <tools/utils/CasapyWatcher.h>
 #include <casaqt/QtUtilities/QtDBusApp.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>

@@ -141,7 +141,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self.assertTrue(os.path.isfile(self.plotfile_jpg))
         plotSize = os.path.getsize(self.plotfile_jpg)
-        self.assertTrue(plotSize > 85000)
+        self.assertTrue(plotSize > 84000)
         self.assertTrue(plotSize < 95000)
     
     def stest004(self):
@@ -378,7 +378,7 @@ class plotms_test1(test_base):
                           gridrows=1, gridcols=1)
         self.assertTrue(self.res)
         # Note that if coloraxis arg reverts to default the plot will be ~180000
-        self._checkPlotFile(200000, self.plotfile_jpg)
+        self._checkPlotFile(190000, self.plotfile_jpg)
  
     def stest013(self):
         '''Plotms 13: Test that we can colorize by averaged time on an elevation x amp plot.'''
@@ -535,7 +535,7 @@ class plotms_test1(test_base):
             self._checkPlotFile(60000, self.plotFiles[i]) 
         print  
         
-    def stest021(self):
+    def test021(self):
         '''Plotms 21: Test that model/data works.'''
         self.plotfile_jpg = self.outputDir + "testPlot021.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -676,7 +676,7 @@ class plotms_test1(test_base):
         '''Check the second page got saved'''
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
         print 'Plot2 file size is ', os.path.getsize(self.plotfile2_jpg)
-        self._checkPlotFile(64000, self.plotfile2_jpg)
+        self._checkPlotFile(60000, self.plotfile2_jpg)
         print    
         
     def stest027(self):
@@ -760,7 +760,7 @@ class plotms_test1(test_base):
                           plotfile=self.plotfile_jpg, expformat='jpg')
         
         self.assertTrue(self.res)
-        self._checkPlotFile(249000, self.plotfile_jpg)      
+        self._checkPlotFile(247000, self.plotfile_jpg)      
         
     def stest029(self):
         '''Plotms 29: Test that generation of a single plot with two y-axes using identical data returns false.'''
@@ -808,7 +808,7 @@ class plotms_test1(test_base):
         
         '''Plot amp vs time and amp vs time. '''
         for  i in range(0, len(self.plotFiles)):
-            self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms', 
+            self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms', 
                           xaxis='uvdist', yaxis='amp',ydatacolumn='model',
                           spw='9', scan='7',
                           showgui=False,            
@@ -853,7 +853,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
     
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms', 
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms', 
                           xaxis='uvdist', yaxis='amp',ydatacolumn='model', gridrows=1, gridcols=1,
                           spw='0', scan='2,4,6,8', 
                           plotrange=[0,0,0,0], avgscan=False, avgbaseline=False, coloraxis='spw',
@@ -863,7 +863,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(13000, self.plotFile)   
         
-        self.res =plotms(vis='/home/uniblab/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms',xaxis="freq",xdatacolumn="",yaxis="amp",
+        self.res =plotms(vis='/home/groot/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms',xaxis="freq",xdatacolumn="",yaxis="amp",
 ydatacolumn="corrected",selectdata=True,field="1",spw="",timerange="",
 uvrange="",antenna="",scan="2,3",correlation="LL,RR",array="",
 observation="",intent="", msselect="",averagedata=True,avgchannel="",avgtime="1e8s",
@@ -879,7 +879,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         print 'Result from plotms2=', self.res
         self.assertTrue(self.res)
         self._checkPlotFile(15000, self.plotFile2)        
-        '''self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms', 
+        '''self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms', 
                           xaxis='uvdist', yaxis='amp',ydatacolumn='model',
                           spw='0', scan='2,3,4,8',
                           plotrange=[0,0,0,0], avgscan=False, avgbaseline=False, coloraxis='spw',
@@ -891,7 +891,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest033(self):
         print
         '''Plotms 33: CAS-6813, Iteration problem with two spws in a row'''
-        plotFile = '/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms'
+        plotFile = '/home/groot/casa/trunk/test/Plotms/Maw/maw.ms'
         self.plotfile1_jpg = "/tmp/testPlot033.jpg"
         self.plotfile2_jpg = "/tmp/testPlot0332.jpg"
     
@@ -1030,7 +1030,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         #Overplot in the same panel.
         print ''
         print 'Test plot 3'
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', 
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/Maw/maw.ms', 
                           clearplots=False, 
                           plotindex=1, rowindex=0, colindex=1,
                           gridrows=2, gridcols=2,
@@ -1057,7 +1057,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           showgui=False, 
                           customsymbol=True, symbolshape='diamond', symbolsize=5,
                           symbolcolor='ff0000')
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', 
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/Maw/maw.ms', 
                           clearplots=False, 
                           plotindex=1, rowindex=0, colindex=0,
                           gridrows=2, gridcols=2,
@@ -1075,7 +1075,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         #self._checkPlotFile(94000, self.plotfile_jpg)
      
-    def stest038(self):
+    def test038(self):
         '''Plotms 38: Test for CAS-6975 overplotting problem.'''
         self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -1084,18 +1084,18 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X8666c7_X1fa.ms.split.cal',
                           spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
                           field="0",correlation="XX", showgui=False)
         self.assertTrue( self.res )
         '''Do an overplot with a different file'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal.mapall',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X8666c7_X1fa.ms.split.cal.mapall',
                           spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
                           field="0",correlation="XX", showgui=False, plotindex=1, clearplots=False, 
                           plotfile=self.plotfile_jpg )
         
         self.assertTrue(self.res)
-        self._checkPlotFile(48000, self.plotfile_jpg)   
+        self._checkPlotFile(50000, self.plotfile_jpg)   
         print
         
     def stest039( self ):
@@ -1107,24 +1107,24 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
                           showgui=False, gridrows=2, rowindex=0, colindex=0)
-        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        '''plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="DV01",
                           gridrows=2, rowindex=0, colindex=0)'''
         self.assertTrue( self.res )
         '''Do an overplot with a different file'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
                           showgui=False, plotindex=1, clearplots=False, gridrows=2, rowindex=1, colindex = 0, 
                           plotfile=self.plotfile_jpg )
-        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        '''plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="!DV01",
                           gridrows=2, rowindex=1, colindex=0,plotindex=1,clearplots=False)'''
         
         self.assertTrue(self.res)
-        self._checkPlotFile(60000, self.plotfile_jpg)   
+        self._checkPlotFile(45000, self.plotfile_jpg)   
         print
         
     def stest040( self ):
@@ -1136,20 +1136,20 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
                           showgui=False,customsymbol=True,symbolshape='diamond',symbolsize=5,symbolcolor='00ff00')
-        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        '''plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="DV01",
                           customsymbol=True,symbolshape='diamond',
                           symbolsize=5,symbolcolor='00ff00')'''
         self.assertTrue( self.res )
         '''Do an overplot with a different file'''
-        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
                           showgui=False, plotindex=1, clearplots=False, customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff', 
                           plotfile=self.plotfile_jpg )
-        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+        '''plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
                           xaxis="time",yaxis="amp",antenna="!DV01",
                           plotindex=1, clearplots=False, 
                           customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff' )'''
@@ -1169,14 +1169,14 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot check that a custom flagged symbol has been set'''
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/titan.ms',
                           xaxis="time",yaxis="amp",avgtime="1000",
                           showgui=False,
                           customflaggedsymbol=True,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
                           plotfile = self.plotfile_jpg)
         self.assertTrue( self.res )
         self._checkPlotFile( 50000, self.plotfile_jpg )
-        plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+        plotms(vis='/home/groot/casa/trunk/test/Plotms/titan.ms',
                           xaxis="time",yaxis="amp",avgtime="1000",
                           showgui = False,
                           customflaggedsymbol=False,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
@@ -1188,7 +1188,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest042( self ):
         '''Plotms 42:  CAS-7050:  (Pipeline) With iteration plots and bad selections you should be able to tell what plots are skipped.'''
         '''The expectation is the plot with the bad spw, 100, will be skipped'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/Maw/maw.ms"
         self.plotfile_jpg = self.outputDir + "testPlot042.jpg"
         self.plotfile_jpg1 = self.outputDir + "testPlot042_Spw10.jpg"
         self.plotfile_jpg2 = self.outputDir + "testPlot042_Spw11_2.jpg"
@@ -1263,7 +1263,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest044( self ):
         '''Plotms 44:  CAS-7050:  (Pipeline) Check that if you specify the first 3 antenna and iterate over
            antenna then you only get 3 iteration plots'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot044.jpg"
         self.plotfile_jpg1 = self.outputDir + "testPlot044_AntennaDA43@A075.jpg"
         self.plotfile_jpg2 = self.outputDir + "testPlot044_AntennaDA45@A070_2.jpg"
@@ -1287,7 +1287,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( self.res )
         self._checkPlotFile( 125000, self.plotfile_jpg1 )
         self._checkPlotFile( 125000, self.plotfile_jpg2 )
-        self._checkPlotFile( 125000, self.plotfile_jpg3 )
+        self._checkPlotFile( 123000, self.plotfile_jpg3 )
         fileCount = self._getFileCount( self.outputDir, "testPlot044_" )
         self.assertTrue( fileCount == 3 )
         print 
@@ -1295,7 +1295,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest045( self ):
         '''Plotms 45:  CAS-7050:  (Pipeline) Check antenna with a range that includes only one valid antenna and iterate over
            antenna then you only get 1 iteration plot'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot045.jpg"
         self.plotfile_jpg1 = self.outputDir + "testPlot045_AntennaDV24@A088.jpg"
        
@@ -1320,7 +1320,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest046( self ):
         '''Plotms 46:  CAS-7050:  (Pipeline) Iterate on antenna, but don't select.  
              Make sure there are 22 iteration plots'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot046.jpg"
         #self.plotfile_jpg1 = self.outputDir + "testPlot045_AntennaDV24@A08.jpg"
        
@@ -1344,7 +1344,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest047( self ):
         '''Plotms 47:  CAS-7050:  (Pipeline) Iterate on antenna with an empty selection.  
              Make sure there are NO iteration plots'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot047.jpg"
        
         print 'Writing NO plots '
@@ -1359,9 +1359,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertFalse( self.res )
         print  
         
-    def test048( self ):
+    def stest048( self ):
         '''Plotms 48:  CAS-7074:  xsharedaxis needs to be a subparameter of global'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/Maw/maw.ms"
         self.plotfile_jpg = self.outputDir + "testPlot048.jpg"
        
          
@@ -1374,9 +1374,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertFalse( self.res )
         print 
         
-    def test049( self ):
+    def stest049( self ):
         '''Plotms 49:  CAS-7074:  (Pipeline) Iterate on baseline with a 2x2 grid, check that shared axis works'''
-        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot049.jpg"
        
         print 'Writing to ', self.plotfile_jpg
