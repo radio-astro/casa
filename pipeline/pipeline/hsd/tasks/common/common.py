@@ -19,10 +19,11 @@ class SingleDishInputs(basetask.StandardInputs):
 
     def to_casa_args(self):
         args = self._get_task_args(ignore=('infiles','vis','output_dir'))
-        if isinstance(self.infiles, list):
-            args['infile'] = self.infiles[0]
-        else:
-            args['infile'] = self.infiles
+        if hasattr(self, 'infiles'):
+            if isinstance(self.infiles, list):
+                args['infile'] = self.infiles[0]
+            else:
+                args['infile'] = self.infiles
         keys = ('iflist','pollist','scanlist')
         for (k,v) in args.items():
             if k in keys and v is None:
