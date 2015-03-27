@@ -7,7 +7,7 @@
 #include "Entity.h"
 #include "EndianStream.h"
 #include "ConversionException.h"
-
+#include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -35,91 +35,20 @@ namespace asdm {
    * @param T The parameter T must be the type of one of the tables which can be found in an ASDM (e.g. AntennaTable)
    * @param R The parameter R must be the type of the rows which make the content of a table of type T (e.g. AntennaRow is T is AntennaTable).
    */
-
-template< class IterT, class IterDerefT >
-class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, IterDerefT, ptrdiff_t, IterDerefT*, IterDerefT& > {
-    struct cache {
-		std::vector<IterDerefT> store;
-		size_t last;
-		cache( ) : last(0) { }
-		void push_back(IterDerefT v) { store.push_back(v); last = store.size( ); }
-		cache( const cache &other ) : store(other.store), last(other.last) { }
-	};
-    public:
-		explicit caching_iterator( IterT iter ) : cache_( new cache( ) ), ref_iter(iter) { }
-		caching_iterator( const caching_iterator< IterT, IterDerefT > &other ) : cache_( new cache( *other.cache_) ), ref_iter(other.ref_iter) { }
-
-		~caching_iterator( ) { dealloc( ); }
-
-	    caching_iterator< IterT, IterDerefT > & operator=( const caching_iterator< IterT, IterDerefT > &other ) {
-			if( this != &other ) {
-				dealloc( );
-				cache_ = new cache( *other.cache_ );
-			}
-		}
-
-	    caching_iterator< IterT, IterDerefT > &operator++( ) {
-			if ( cache_->last >= 0 && cache_->last < cache_->store.size( ) ) cache_->last++;
-			else {
-				cache_->push_back(*ref_iter);
-				++ref_iter;
-			}
-			return *this;
-		}
-
-	    caching_iterator< IterT, IterDerefT > operator++( int ) {
-			caching_iterator< IterT, IterDerefT > temp = *this;
-			++*this;
-			return temp;
-		}
-
-	    caching_iterator< IterT, IterDerefT > &operator--( ) {
-			if ( cache_->last > 0 ) {
-				if ( cache_->last == cache_->store.size( ) ) {
-					cache_->push_back(*ref_iter);
-					cache_->last--;
-				}
-				cache_->last--;
-			}
-			return *this;
-		}
-
-	    caching_iterator< IterT, IterDerefT > operator--( int ) {
-			caching_iterator< IterT, IterDerefT > temp = *this;
-			--*this;
-			return temp;
-		}
-	
-		bool operator==( const caching_iterator< IterT, IterDerefT > &other ) const {
-			if ( ref_iter != other.ref_iter ) return false;
-			return cache_->last == cache_->store.size( );
-		}
-
-		bool operator!=( const caching_iterator< IterT, IterDerefT > &other ) const {
-			return !( *this == other );
-		}
-
-		IterDerefT operator*( ) const {
-			return cache_->last < cache_->store.size( ) ? cache_->store[cache_->last] : *ref_iter;
-		}
-	
-	private:
-		cache *cache_;
-		IterT ref_iter;
-		void dealloc( ) { delete cache_; }
-};
-
+  
   template<class T, class R> class TableStreamReader {
   public:
     /**
      * An empty constructor.
      */
-    TableStreamReader(){currentState = S_CLOSED; readBuffer = (char *) malloc (READBUFFERSIZE);}
+    TableStreamReader(){currentState = S_CLOSED; readBuffer = (char *) malloc (READBUFFERSIZE);  boundary_1 = "" ;}
 
     /**
      * The destructor.
      */
     virtual ~TableStreamReader(){;}
+
+ 
 
     /**
      * Opens a file expected to contain an ASDM table of type T with rows of type R.
@@ -134,39 +63,20 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
       if (!tableFile.is_open())
 	throw asdm::ConversionException("Could not open file " + tablePath, T::name());
 
-      //streambuf * sb_p = tableFile.rdbuf()->pubsetbuf(readBuffer, READBUFFERSIZE);
-      //cout << (unsigned long long) sb_p << endl;
-
       // Determine the size of the file.
       struct stat filestatus;
       stat( tablePath.c_str(), &filestatus);
       fileSizeInBytes = filestatus.st_size;
 
-      // Locate the xmlPartMIMEHeader.
-      std::string xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\n\n";
-      CharComparator comparator(&tableFile, 10000);
-      caching_iterator<std::istreambuf_iterator<char>,char> BEGIN((std::istreambuf_iterator<char>( tableFile.rdbuf() )));;
-      caching_iterator<std::istreambuf_iterator<char>,char> END((std::istreambuf_iterator<char>( )));
-      caching_iterator<std::istreambuf_iterator<char>,char> it(std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator));
+      // And start parsing the content.
 
-      if ((it == END) || (tableFile.tellg() > 10000)) { 
-	tableFile.seekg(0);
-	xmlPartMIMEHeader = "CONTENT-ID: <HEADER.XML>\r\n\r\n";
-	it = BEGIN;
-	it = std::search(BEGIN, END, xmlPartMIMEHeader.begin(), xmlPartMIMEHeader.end(), comparator);
-	if ((it == END) || (tableFile.tellg() > 10000)) 
-	  throw asdm::ConversionException("failed to detect the beginning of the XML header.", T::name());
-      }
-      // Locate the binaryPartMIMEHeader while accumulating the characters of the xml header.	
-      std::string binPartMIMEHeader = "--MIME_BOUNDARY\nCONTENT-TYPE: BINARY/OCTET-STREAM\nCONTENT-ID: <CONTENT.BIN>\n\n";
-      std::string xmlHeader;
-      CharCompAccumulator compaccumulator(&xmlHeader, &tableFile, 100000);
-      ++it;
-      it = std::search(it, END, binPartMIMEHeader.begin(), binPartMIMEHeader.end(), compaccumulator);
-      if ((it == END) || (tableFile.tellg() > 100000)) 
-	throw asdm::ConversionException("failed to detect the beginning of the binary part", T::name());
-      ++it;
-      xmlHeader.erase(xmlHeader.end() - (binPartMIMEHeader.size() + 1), xmlHeader.end());
+      boundary_1 = requireMIMEHeader();
+      //cout << "boundary_1 = " << boundary_1 << endl;
+
+      requireBoundary(boundary_1, 0);
+      
+      skipUntilEmptyLine(10);
+      std::string xmlHeader = accumulateUntilBoundary(boundary_1, 100);
 
       //
       // We have the xmlHeader , let's parse it.
@@ -174,7 +84,7 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
       xmlDoc *doc;
       doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
       if ( doc == NULL ) 
-	throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", T::name());
+	throw asdm::ConversionException("Failed to parse the xmlHeader into a DOM structure.", T::name());
           
       xmlNode* root_element = xmlDocGetRootElement(doc);
       if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
@@ -212,7 +122,7 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
 	if (byteOrderAttr == 0) 
 	  throw asdm::ConversionException("Could not find the element '/"+T::name()+"Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader +"'.", T::name());
       
-	string byteOrderValue = string((const char*) byteOrderAttr->children->content);
+	string byteOrderValue = std::string((const char*) byteOrderAttr->children->content);
 	if (!(byteOrder = asdm::ByteOrder::fromString(byteOrderValue)))
 	  throw asdm::ConversionException("No valid value retrieved for the element '/"+T::name()+"Table/BulkStoreRef/@byteOrder'. Invalid XML header '" + xmlHeader + "'.", T::name());
 		
@@ -230,6 +140,9 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
 	  childOfAttributes = childOfAttributes->next;
 	}
       }
+      
+      skipUntilEmptyLine(10);
+
       // Create an EndianIFStream from the substring containing the binary part.
       eifs = asdm::EndianIFStream (&tableFile, byteOrder);
     
@@ -321,6 +234,9 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
   private:
     std::string			tablePath;
     std::ifstream		tableFile;
+    std::string	                currentLine;
+    std::string	                boundary_1;
+
     off_t                       fileSizeInBytes;
     asdm::EndianIFStream	eifs;
     std::vector<std::string>	attributesSeq;
@@ -335,7 +251,7 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
     enum Transition {T_OPEN, T_CHECK, T_RESET, T_READ, T_CLOSE};
     State currentState;
 
-    void checkState(Transition t, const string& methodName) const {
+    void checkState(Transition t, const std::string& methodName) const {
       switch (currentState) {
       case S_CLOSED:
 	if (t == T_OPEN) return;
@@ -343,7 +259,7 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
       case S_OPENED:
 	if (t == T_CHECK || t == T_RESET || t == T_READ || t == T_CLOSE) return;
       }
-      throw ConversionException("Invalid call of method '" + methodName + "' in the current context.", T::name());
+      throw asdm::ConversionException("Invalid call of method '" + methodName + "' in the current context.", T::name());
     }
     /**
      * Empty the local storage containing the rows obtained during the last read operation.
@@ -353,6 +269,158 @@ class caching_iterator : public std::iterator< std::bidirectional_iterator_tag, 
 	if (rows[i]) delete rows[i];
       rows.clear();
     }
-  };
+
+    void skipUntilEmptyLine(int maxSkips) {
+      // cout << "Entering skipUntilEmptyLine" << endl;
+      int numSkips = 0;
+      std::string line;
+      do {
+	line = trim(nextLine());
+	numSkips++;
+      } 
+      while (line.size() != 0 && numSkips <= maxSkips);
+      
+      if (numSkips > maxSkips) {
+	ostringstream oss;
+	oss << "could not find an empty line is less than " << maxSkips + 1 << " lines." << endl;
+	throw asdm::ConversionException(oss.str(), T::name());
+      } 
+      // cout << "Exiting skipUntilEmptyLine" << endl;
+    }
+
+    std::string nextLine() {
+      unsigned long long whereAmI = tableFile.tellg();
+      getline(tableFile, currentLine);
+      if (tableFile.fail()) {
+	std::ostringstream oss ;
+	oss << "TableStreamReader::nextLine() : I could not read a line in '" << tablePath <<  "' at position " << whereAmI << ".";
+	throw asdm::ConversionException(oss.str(), T::name());
+      }
+      // cout << "nextLine has read '" << currentLine << "'" << endl;
+      return currentLine;
+    }  
+
+    pair<std::string, std::string> headerField2Pair(const std::string& hf){
+    std::string name, value;
+    size_t colonIndex = hf.find(":");
+    if (colonIndex == std::string::npos)
+      throw asdm::ConversionException(" could not detect a well formed MIME header field in '"+hf+"'", T::name());
+
+    if (colonIndex > 0) {
+      name = hf.substr(0, colonIndex);
+      trim(name);
+    }
+
+    if (colonIndex < hf.size()) {
+      value = hf.substr(colonIndex+1);
+      trim(value);
+    }
+
+    return make_pair(name, value);
+}
+
+std::string requireMIMEHeader() {
+  // MIME-Version
+  pair<std::string, std::string>name_value(headerField2Pair(nextLine()));
+// cout << name_value.first << "=" << name_value.second << endl;
+// if (currentLine != "MIME-Version: 1.0") // a work around for the case when the very first character is not the expected "M" (happened with some corrupted data).
+if (! boost::algorithm::iends_with(currentLine, "IME-Version: 1.0"))
+  throw asdm::ConversionException("'MIME-Version: 1.0' missing at the very beginning of the file '"+ tablePath +"'.", T::name());
+
+// Content-Type
+boundary_1 = requireBoundaryInCT(requireHeaderField("CONTENT-TYPE").second);
+
+// cout << "boundary_1 =" << boundary_1 << endl;
+
+// Content-Description
+//name_value = requireHeaderField("CONTENT-DESCRIPTION");
+
+// Content-Location
+//name_value = requireHeaderField("CONTENT-LOCATION");
+
+// Look for an empty line in the at most 10 subsequent lines.
+skipUntilEmptyLine(20);
+
+return boundary_1;
+}    
+
+pair<std::string, std::string> requireHeaderField(const std::string & hf) {
+  std::string s = trim_copy(nextLine());
+  while (boost::algorithm::iends_with(s, ";")) {
+    s += trim_copy(nextLine());
+  }
+  pair<std::string, std::string> hf2pair(headerField2Pair(s));
+if (to_upper_copy(hf2pair.first) != hf)
+  throw asdm::ConversionException("read '" + currentLine + "'. Was expecting '" + hf + "'...", T::name());
+return hf2pair;
+}
+
+void requireBoundary(const std::string& boundary, int maxLines) {
+  // cout << "Entering require boundary with boundary == '" << boundary << "' and maxLines = " << maxLines << endl; 
+  int numLines = 0;
+  std::string dashdashBoundary = "--"+boundary;
+  std::string line = nextLine();
+  while ((numLines <= maxLines) && (line.compare(dashdashBoundary) != 0)) {
+    numLines++;
+    line = nextLine();
+  }
+
+  if (numLines > maxLines) {
+    ostringstream oss;
+    oss << "could not find the boundary std::string '"<< boundary << "' in less than " << maxLines + 1 << " lines." << endl;
+    throw asdm::ConversionException(oss.str(), T::name());
+  }
+}
+
+std::string accumulateUntilBoundary(const std::string& boundary, int maxLines) {
+  // cout << "Entering accumulateUntilBoundary with maxLines = " << maxLines << endl;
+  int numLines = 0;
+  std::string line ;
+  std::string result;
+  line=trim(nextLine());
+  while ( numLines <= maxLines && line.find("--"+boundary) == std::string::npos ) {
+    result += line;
+    line=trim(nextLine());
+    numLines++;
+  }
+  
+  if (numLines > maxLines) {
+    ostringstream oss;
+    oss << "could not find the boundary std::string '"<< boundary << "' in less than " << maxLines + 1 << " lines." << endl;
+    throw asdm::ConversionException(oss.str(), T::name());    
+  }
+  return result;
+}
+
+std::string requireBoundaryInCT(const std::string& ctValue) {
+  vector<std::string> cvValueItems;
+ 
+split (cvValueItems, ctValue, is_any_of(";"));
+vector<std::string> cvValueItemsNameValue;
+for ( vector<std::string>::const_iterator iter = cvValueItems.begin(); iter != cvValueItems.end() ; iter++ ) {
+  cvValueItemsNameValue.clear();
+  split(cvValueItemsNameValue, *iter, is_any_of("="));
+  string boundary;
+  if ((cvValueItemsNameValue.size() > 1) && (to_upper_copy(trim_copy(cvValueItemsNameValue[0])) == "BOUNDARY") && (unquote(cvValueItemsNameValue[1], boundary).size() > 0))
+    return boundary;
+													     }
+throw asdm::ConversionException("could not find a boundary definition in '" + ctValue + "'.", T::name());
+}
+string unquote(const string& s, string& unquoted) {
+  if (s.size() >= 2) 
+    if (((s.at(0) == '"') && (s.at(s.size()-1) == '"')) || ((s.at(0) == '\'') && (s.at(s.size()-1) == '\''))) {
+      if (s.size() == 2)
+	unquoted = "";
+      else
+	unquoted = s.substr(1, s.size() - 2);
+    }
+    else
+      unquoted = s;
+  else
+    unquoted = s;
+  return unquoted;
+}
+
+};
 } // end namespace asdm
 #endif
