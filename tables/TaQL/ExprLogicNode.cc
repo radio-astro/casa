@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprLogicNode.cc 21577 2015-03-18 15:00:56Z gervandiepen $
+//# $Id: ExprLogicNode.cc 21591 2015-03-27 09:52:45Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprLogicNode.h>
 #include <casacore/tables/TaQL/ExprDerNode.h>
@@ -293,19 +293,21 @@ void TableExprNodeINInt::convertConstChild()
     // Convert set/array to a Bool array (for direct lookup) if the range
     // is sufficiently small.
     Array<Int64> arr = rnode_p->getArrayInt(0);
-    minMax (itsMin, itsMax, arr);
-    Int64 sz = itsMax - itsMin + 1;
-    if (sz <= 1024*1024) {
-      itsIndex.resize (sz);
-      itsIndex = False;
-      Array<Int64>::const_iterator arrend = arr.end();
-      for (Array<Int64>::const_iterator iter=arr.begin();
-           iter!=arrend; ++iter) {
-        itsIndex[*iter - itsMin] = True;
-      }
-      if (itsDoTracing) {
-        cout << "  created IN index of size " << sz
-             <<" offset=" << itsMin << endl;
+    if (! arr.empty()) {
+      minMax (itsMin, itsMax, arr);
+      Int64 sz = itsMax - itsMin + 1;
+      if (sz <= 1024*1024) {
+        itsIndex.resize (sz);
+        itsIndex = False;
+        Array<Int64>::const_iterator arrend = arr.end();
+        for (Array<Int64>::const_iterator iter=arr.begin();
+             iter!=arrend; ++iter) {
+          itsIndex[*iter - itsMin] = True;
+        }
+        if (itsDoTracing) {
+          cout << "  created IN index of size " << sz
+               <<" offset=" << itsMin << endl;
+        }
       }
     }
   }
