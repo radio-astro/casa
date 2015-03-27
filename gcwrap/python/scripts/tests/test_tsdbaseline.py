@@ -436,6 +436,7 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         # uncomment the next line once blparam file can be output
         #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
         results = self._getStats(outfile, '', pol)
+        print self._getStats(outfile, '', pol)
         theresult = None
         for i in range(len(results)):
             if (results[i]['pol'] == int(pol)):

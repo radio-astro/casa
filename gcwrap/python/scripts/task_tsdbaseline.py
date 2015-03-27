@@ -39,6 +39,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.subtract_baseline(datacolumn=datacolumn,
                                    outfile=outfile,
                                    bltable=bloutput,
+                                   dosubtract=dosubtract,
                                    spw=spw,
                                    pol=pol,
                                    order=order, 
@@ -48,6 +49,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.subtract_baseline_cspline(datacolumn=datacolumn,
                                            outfile=outfile,
                                            bltable=bloutput,
+                                           dosubtract=dosubtract,
                                            spw=spw,
                                            pol=pol,
                                            npiece=npiece, 
@@ -57,6 +59,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             sdms.subtract_baseline_variable(datacolumn=datacolumn,
                                             outfile=outfile,
                                             bltable=bloutput,
+                                            dosubtract=dosubtract,
                                             spw=spw,
                                             pol=pol,
                                             blparam=blparam)

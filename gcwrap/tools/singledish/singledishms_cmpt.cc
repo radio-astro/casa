@@ -119,6 +119,7 @@ bool
 singledishms::subtract_baseline(string const& datacolumn,
 				string const& outfile,
 				string const& bltable,
+				bool const dosubtract,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
 				int const order,
@@ -129,7 +130,7 @@ singledishms::subtract_baseline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline(datacolumn, outfile, bltable, 
+    itsSd->subtract_baseline(datacolumn, outfile, bltable, dosubtract,
 			     toCasaString(spw), toCasaString(pol),
 			     order, clip_threshold_sigma, 
 			     num_fitting_max);
@@ -147,6 +148,7 @@ bool
 singledishms::subtract_baseline_cspline(string const& datacolumn,
 				string const& outfile,
 				string const& bltable,
+				bool const dosubtract,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
 				int const npiece,
@@ -158,9 +160,9 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
   try {
     assert_valid_ms();
     itsSd->subtract_baseline_cspline(datacolumn, outfile, bltable, 
-			     toCasaString(spw), toCasaString(pol),
-			     npiece, clip_threshold_sigma, 
-			     num_fitting_max);
+				     dosubtract, toCasaString(spw), 
+				     toCasaString(pol), npiece, 
+				     clip_threshold_sigma, num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -175,6 +177,7 @@ bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
 					 string const& outfile,
 					 string const& bltable,
+					 bool const dosubtract,
 					 ::casac::variant const& spw,
 					 ::casac::variant const& pol,
 					 string const& blparam)
@@ -184,9 +187,8 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
   try {
     assert_valid_ms();
     itsSd->subtract_baseline_variable(datacolumn, outfile, bltable, 
-				      toCasaString(spw),
-				      toCasaString(pol),
-				      blparam);
+				      dosubtract, toCasaString(spw),
+				      toCasaString(pol), blparam);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

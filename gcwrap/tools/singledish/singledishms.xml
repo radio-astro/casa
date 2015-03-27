@@ -159,6 +159,11 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
+    <param type="bool" name="dosubtract">
+      <description>Execute baseline subtraction from the input data</description>
+      <value>true</value>
+    </param>
+
     <param type="any" name="spw">
       <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
       <any type="variant"/>
@@ -222,6 +227,11 @@ Fit baseline and subtract it from selected spectra
     <param type="string" name="bltable">
       <description>The name of Baseline Table to be output</description>
       <value></value>
+    </param>
+
+    <param type="bool" name="dosubtract">
+      <description>Execute baseline subtraction from the input data</description>
+      <value>true</value>
     </param>
 
     <param type="any" name="spw">
@@ -290,6 +300,11 @@ Fit parameters for each spectrum are obtained from a text file.
     <param type="string" name="bltable">
       <description>The name of Baseline Table to be output</description>
       <value></value>
+    </param>
+
+    <param type="bool" name="dosubtract">
+      <description>Execute baseline subtraction from the input data</description>
+      <value>true</value>
     </param>
 
     <param type="any" name="spw">

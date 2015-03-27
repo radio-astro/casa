@@ -111,12 +111,12 @@ pipeline processing for huge dataset.
         <shortdescription>format(s) of file(s) in which best-fit parameters are written [\'text\', \'csv\', \'table\' or \'\']</shortdescription>
         <description>format(s) of file(s) in which best-fit parameters are written</description>
         <any type="variant" limittypes="string stringArray"/>
-        <value type="string">text</value>
+        <value type="string">table</value>
         <allowed kind="enum">
-            <value>text</value>
-            <value>csv</value>
             <value>table</value>
-            <value></value>
+            <!-- <value>text</value> -->
+            <!-- <value>csv</value> -->
+            <!-- <value></value> -->
         </allowed>
     </param>
 
@@ -132,14 +132,15 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="string" name="blfunc" ignorecase="true">
-        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</shortdescription>
+        <!-- shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</shortdescription -->
+        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</shortdescription>
         <description>baseline model function</description>
         <value>poly</value>
         <allowed kind="enum">
             <value>poly</value>
             <value>chebyshev</value>
             <value>cspline</value>
-            <value>sinusoid</value>
+            <!-- <value>sinusoid</value> -->
             <value>variable</value>
         </allowed>
     </param>
@@ -245,7 +246,7 @@ pipeline processing for huge dataset.
             <when param="blmode">
                 <equals value="fit">
                         <default param="dosubtract"><value>True</value></default>
-                        <default param="blformat"><value type="string">text</value></default>
+                        <default param="blformat"><value type="string">table</value></default>
                         <default param="bloutput"><value type="string"></value></default>
                 </equals>
                 <equals value="apply">
@@ -268,7 +269,7 @@ pipeline processing for huge dataset.
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
                 </equals>
-                <equals value="sinusoid">
+                <!--equals value="sinusoid">
                         <default param="applyfft"><value>True</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
@@ -276,7 +277,7 @@ pipeline processing for huge dataset.
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
-                </equals>
+                </equals-->
                 <equals value="variable">
                         <default param="blparam"><value type="string"></value></default>
                 </equals>
@@ -381,7 +382,11 @@ blmode -- baselining mode.
                  in the baseline table, then subtracts it from each 
                  spectrum. 
     &gt;&gt;&gt; blmode expandable parameters
-        dosubtract -- execute baseline subtraction in addition to fitting
+        dosubtract -- execute baseline subtraction in addition to fitting.
+                      Note that dosubtract=False will be ignored if 
+                      bloutput is given, that is, baseline subtraction 
+                      will be always executed for the input MS in case 
+                      bloutput is not specified.
                 options: (bool) True, False
                 default: True
         blformat -- format(s) of file(s) in which best-fit parameters are 
@@ -412,7 +417,8 @@ blmode -- baselining mode.
                 default: ''
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 
           set, blfunc and its subparameters are ignored.
-        options: 'poly', 'chebyshev', 'cspline', 'sinusoid', or 'variable'
+        options: 'poly', 'chebyshev', 'cspline' or 'variable'
+                 ('sinusoid' will be available later)
         default: 'poly'
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
