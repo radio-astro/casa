@@ -4,14 +4,15 @@
 #include <iostream>
 #include <string>
 
-#include <libsakura/sakura.h>
-
 #include <casa/aipstype.h>
 #include <casa/Containers/Record.h>
 #include <casa_sakura/SakuraAlignedArray.h>
+#include <libsakura/sakura.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <singledish/SingleDish/SDMSManager.h>
+
+#include "BaselineTable.h"
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -50,6 +51,7 @@ public:
   void subtract_baseline(string const& in_column_name,
 			 string const& out_ms_name,
 			 string const& out_bltable_name,
+			 bool const& do_subtract,
 			 string const& in_spw, 
 			 string const& in_ppp, 
 			 int const order, 
@@ -60,16 +62,18 @@ public:
   void subtract_baseline_cspline(string const& in_column_name,
 			 string const& out_ms_name,
 			 string const& out_bltable_name,
+			 bool const& do_subtract,
 			 string const& in_spw, 
 			 string const& in_ppp, 
 			 int const npiece, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);
 
-// variable fitting parameters stored in a text file
+  // variable fitting parameters stored in a text file
   void subtract_baseline_variable(string const& in_column_name,
 				  string const& out_ms_name,
 				  string const& out_bltable_name,
+				  bool const& do_subtract,
 				  string const& in_spw, 
 				  string const& in_ppp, 
 				  string const& param_file);
@@ -128,6 +132,7 @@ private:
 			  bool &new_nchan);
   void get_mask_from_rec(Int spwid, Matrix<Int> const &rec_chan,
 			 Vector<Bool> &mask, bool initialize=true);
+  void get_masklist_from_mask(size_t const num_chan, bool const *mask, Vector<uInt> &masklist);
   void get_pol_selection(string const &in_pol,
 			 size_t const num_pol,
 			 Vector<bool> &pol);

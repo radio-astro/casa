@@ -10,16 +10,9 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <libsakura/sakura.h>
 
 namespace casa {
-
-typedef enum {
-  BaselineType_Polynomial,
-  BaselineType_Chebyshev,
-  BaselineType_CubicSpline,
-  BaselineType_Sinusoid,
-  BaselineType_NumElements
-} BaselineType;
 
 class BaselineTable {
 public:
@@ -41,128 +34,97 @@ public:
   uInt nrow() {return table_.nrow();}
 
   Vector<uInt> getScan() const {return scanCol_.getColumn();}
-  Vector<uInt> getCycle() const {return cycleCol_.getColumn();}
   Vector<uInt> getBeam() const {return beamCol_.getColumn();}
   Vector<uInt> getIF() const {return ifCol_.getColumn();}
-  Vector<uInt> getPol() const {return polCol_.getColumn();}
   Vector<Double> getTime() const {return timeCol_.getColumn();}
 
   void save(const std::string &filename);
-  void setdata(uInt irow, uInt scanno, uInt cycleno, 
-               uInt beamno, uInt ifno, uInt polno, 
+  void setdata(uInt irow, uInt scanno, 
+               uInt beamno, uInt ifno, 
                uInt freqid, Double time, 
-	       Bool apply,
-               BaselineType ftype, 
-	       Vector<Int> fpar, 
-	       Vector<Float> ffpar, 
-               Vector<uInt> mask,
-               Vector<Float> res,
-               Float rms, 
+	       Array<Bool> apply,
+               Array<uInt> ftype, 
+	       Array<Int> fpar, 
+	       Array<Float> ffpar, 
+               Array<uInt> mask,
+	       Array<Float> res,
+               Array<Float> rms, 
                uInt nchan, 
-	       Float cthres,
-               uInt citer, 
-	       Float lfthres, 
-	       uInt lfavg, 
-	       Vector<uInt> lfedge);
-  void appenddata(int scanno, int cycleno, 
-		  int beamno, int ifno, int polno, 
-		  int freqid, Double time, 
-		  bool apply, 
-		  BaselineType ftype, 
-		  vector<int> fpar, 
-		  vector<float> ffpar, 
-		  Vector<uInt> mask,
-		  vector<float> res,
-		  float rms,
-		  int nchan, 
-		  float cthres,
-		  int citer, 
-		  float lfthres, 
-		  int lfavg, 
-		  vector<int> lfedge);
-  void appenddata(int scanno, int cycleno, 
-		  int beamno, int ifno, int polno, 
-		  int freqid, Double time, 
-		  bool apply, 
-		  BaselineType ftype, 
-		  int fpar, 
-		  vector<float> ffpar, 
-		  Vector<uInt> mask,
-		  vector<float> res,
-		  float rms,
-		  int nchan, 
-		  float cthres,
-		  int citer, 
-		  float lfthres, 
-		  int lfavg, 
-		  vector<int> lfedge);
-  void appenddata(uInt scanno, uInt cycleno, 
-                  uInt beamno, uInt ifno, uInt polno, 
+	       Array<Float> cthres,
+               Array<uInt> citer, 
+	       Array<Float> lfthres, 
+	       Array<uInt> lfavg, 
+	       Array<uInt> lfedge);
+  void appenddata(uInt scanno, 
+                  uInt beamno, uInt ifno, 
                   uInt freqid, Double time, 
-		  Bool apply,
-		  BaselineType ftype, 
-		  Vector<Int> fpar, 
-		  Vector<Float> ffpar, 
-		  Vector<uInt> mask,
-		  Vector<Float> res,
-		  Float rms, 
+		  Array<Bool> apply,
+		  Array<uInt> ftype, 
+		  Array<Int> fpar, 
+		  Array<Float> ffpar, 
+		  Array<uInt> mask,
+		  Array<Float> res,
+		  Array<Float> rms, 
 		  uInt nchan, 
-		  Float cthres,
-		  uInt citer, 
-		  Float lfthres, 
-		  uInt lfavg, 
-		  Vector<uInt> lfedge);
-  void appendbasedata(int scanno, int cycleno, 
-		      int beamno, int ifno, int polno, 
+		  Array<Float> cthres,
+		  Array<uInt> citer, 
+		  Array<Float> lfthres, 
+		  Array<uInt> lfavg, 
+		  Array<uInt> lfedge);
+  void appendbasedata(int scanno, 
+		      int beamno, int ifno, 
 		      int freqid, Double time);
   void setresult(uInt irow, 
 		 Vector<Float> res, 
-		 Float rms);
+		 Array<Float> rms);
   uInt nchan(uInt ifno);
-  Vector<Bool> getApply() {return applyCol_.getColumn();}
-  bool getApply(int irow);
-  Vector<uInt> getFunction() {return ftypeCol_.getColumn();}
-  Vector<BaselineType> getFunctionNames();
-  BaselineType getFunctionName(int irow);
+
+  Matrix<Bool> getApply() {return applyCol_.getColumn();}
+  ////bool getApply(int irow, int ipol);
+  void setApply(int irow, int ipol, bool apply);
+  ////Matrix<uInt> getFunction() {return ftypeCol_.getColumn();}
+  ////Matrix<BaselineType> getFunctionNames();
+  ////BaselineType getFunctionName(int irow, int ipol);
   Matrix<Int> getFuncParam() {return fparCol_.getColumn();}
-  std::vector<int> getFuncParam(int irow);
+  ////std::vector<int> getFuncParam(int irow, int ipol);
   Matrix<Float> getFuncFParam() {return ffparCol_.getColumn();}
   Matrix<uInt> getMaskList() {return maskCol_.getColumn();}
-  std::vector<bool> getMask(int irow);
+  ////std::vector<bool> getMask(int irow, int ipol);
   Matrix<Float> getResult() {return resCol_.getColumn();}
-  Vector<Float> getRms() {return rmsCol_.getColumn();}
+  Matrix<Float> getRms() {return rmsCol_.getColumn();}
   Vector<uInt> getNChan() {return nchanCol_.getColumn();}
   uInt getNChan(int irow);
-  Vector<Float> getClipThreshold() {return cthresCol_.getColumn();}
-  Vector<uInt> getClipIteration() {return citerCol_.getColumn();}
-  Vector<Float> getLineFinderThreshold() {return lfthresCol_.getColumn();}
-  Vector<uInt> getLineFinderChanAvg() {return lfavgCol_.getColumn();}
+  Matrix<Float> getClipThreshold() {return cthresCol_.getColumn();}
+  Matrix<uInt> getClipIteration() {return citerCol_.getColumn();}
+  Matrix<Float> getLineFinderThreshold() {return lfthresCol_.getColumn();}
+  Matrix<uInt> getLineFinderChanAvg() {return lfavgCol_.getColumn();}
   Matrix<uInt> getLineFinderEdge() {return lfedgeCol_.getColumn();}
-  void setApply(int irow, bool apply);
+
   std::vector<bool> getMaskFromMaskList(uInt const nchan, std::vector<int> const& masklist);
 
 private:
-  void setbasedata(uInt irow, uInt scanno, uInt cycleno,
-                   uInt beamno, uInt ifno, uInt polno, 
+  void setbasedata(uInt irow, uInt scanno, 
+                   uInt beamno, uInt ifno, 
                    uInt freqid, Double time);
   Table table_, originaltable_;
-  ScalarColumn<uInt> scanCol_, cycleCol_, beamCol_, ifCol_, polCol_, freqidCol_;
+  ScalarColumn<uInt> scanCol_, beamCol_, ifCol_, freqidCol_;
   ScalarColumn<Double> timeCol_;
   MEpoch::ScalarColumn timeMeasCol_;
 
-  static const String name_ ;
-  ScalarColumn<Bool> applyCol_;
-  ScalarColumn<uInt> ftypeCol_;
+  static const String name_;
+
+  ArrayColumn<Bool> applyCol_;
+  ArrayColumn<uInt> ftypeCol_;
   ArrayColumn<Int> fparCol_;
   ArrayColumn<Float> ffparCol_;
   ArrayColumn<uInt> maskCol_;
   ArrayColumn<Float> resCol_;
-  ScalarColumn<Float> rmsCol_;
+  ArrayColumn<Float> rmsCol_;
   ScalarColumn<uInt> nchanCol_;
-  ScalarColumn<Float> cthresCol_;
-  ScalarColumn<uInt> citerCol_;
-  ScalarColumn<Float> lfthresCol_;
-  ScalarColumn<uInt> lfavgCol_;
+  ArrayColumn<Float> cthresCol_;
+  ArrayColumn<uInt> citerCol_;
+  ArrayColumn<Float> lfthresCol_;
+  ArrayColumn<uInt> lfavgCol_;
   ArrayColumn<uInt> lfedgeCol_;
 };
 

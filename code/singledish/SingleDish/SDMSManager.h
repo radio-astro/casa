@@ -27,6 +27,7 @@ public:
 		      bool addDefaultSortCols=false);
 
   Record getSelRec(string const &spw);
+  MeasurementSet getMS();
 
   //SDMSManager &operator=(SDMSManager const &other);
   // Destructor
