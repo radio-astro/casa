@@ -767,11 +767,12 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	}
   	// loop over polarization
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  apply_mtx[0][ipol] = True;
+	  // skip spectrum not selected by pol
 	  if (!pol(ipol)) {
 	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
-	  apply_mtx[0][ipol] = True;
   	  // get a channel mask from data cube
   	  // (note that the variable 'mask' is flag in the next line 
 	  // actually, then it will be converted to real mask when 
@@ -779,7 +780,10 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	  // saving memory usage...)
   	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
 	  // skip spectrum if all channels flagged
-	  if (allchannels_flagged(num_chan, mask.data)) continue;
+	  if (allchannels_flagged(num_chan, mask.data)) {
+	    apply_mtx[0][ipol] = False;
+	    continue;
+	  }
 
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
