@@ -59,7 +59,6 @@ public:
 
 protected:
 
-    void calculateFlagRow (const Cube<Bool> &flagCube, Vector<Bool> &flagRow);
     void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
 
 private:

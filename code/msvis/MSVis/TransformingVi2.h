@@ -543,6 +543,9 @@ public:
     virtual Bool hasWeightScaling () const;
     virtual CountedPtr<WeightScaling> getWeightScaling () const;
 
+    // Library of static transformations available for all TVIs
+    static void calculateFlagRowFromFlagCube (const Cube<Bool> &flagCube, Vector<Bool> &flagRow);
+
 protected:
 
     TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi);

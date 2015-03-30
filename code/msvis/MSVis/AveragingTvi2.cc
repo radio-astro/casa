@@ -2214,6 +2214,10 @@ Matrix<Float> AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> 
 // -----------------------------------------------------------------------
 void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 {
+	// Calculate FLAG_ROW from flag
+	Vector<Bool> flagRow;
+	TransformingVi2::calculateFlagRowFromFlagCube(flag,flagRow);
+
 	getVii()->origin();
 	uInt currentBuffer = 0;
 	while (getVii()->more())
@@ -2221,6 +2225,7 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 		if ((currentBuffer >= startBuffer_p) and (currentBuffer <= endBuffer_p))
 		{
 			getVii()->writeFlag(flag);
+			getVii()->writeFlagRow(flagRow);
 		}
 
 		currentBuffer += 1;

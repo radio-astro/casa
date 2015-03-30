@@ -847,6 +847,50 @@ TransformingVi2::getWeightScaling () const
     return getVii()->getWeightScaling();
 }
 
+// -----------------------------------------------------------------------
+// Utility method to calculate FLAG_ROW from flag cube with the applicable convention
+// -----------------------------------------------------------------------
+void TransformingVi2::calculateFlagRowFromFlagCube (const Cube<Bool> &flagCube, Vector<Bool> &flagRow)
+{
+	// Get original shape
+	IPosition shape = flagCube.shape();
+	size_t nCorr = shape(0);
+	size_t nChan = shape(1);
+	size_t nRows = shape(2);
+
+	// Reshape flag cube to match the input shape
+	flagRow.resize(nRows,False);
+	flagRow = False;
+
+	Bool rowFlagValue = False;
+	for (size_t row_i =0;row_i<nRows;row_i++)
+	{
+		rowFlagValue = True;
+		for (size_t chan_i =0;chan_i<nChan;chan_i++)
+		{
+			if (rowFlagValue)
+			{
+				for (size_t corr_i =0;corr_i<nCorr;corr_i++)
+				{
+					if (not flagCube(corr_i,chan_i,row_i))
+					{
+						rowFlagValue = False;
+						break;
+					}
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+		flagRow(row_i) = rowFlagValue;
+	}
+
+	return;
+}
+
+
 
 } // end namespace vi
 
