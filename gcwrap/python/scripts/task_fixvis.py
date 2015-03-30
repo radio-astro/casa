@@ -83,7 +83,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
                     return False
             elif(type(distances)==list):
                 if(len(fields)!=len(distances)):
-                    casalog.post("You selected "+str(len(fields))+" fields but gave only "+str(len(distances))+" distances,", 'SEVERE')
+                    casalog.post("You selected "+str(len(fields))+" fields but gave "+str(len(distances))+" distances,", 'SEVERE')
                     return False
                 else:
                     for d in distances:
