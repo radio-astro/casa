@@ -35,6 +35,7 @@ from h_init_cli import h_init_cli as h_init
 from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
 from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
 from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
+from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
 from hsd_mstoscantable_cli import hsd_mstoscantable_cli as hsd_mstoscantable
 from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
 from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
@@ -74,6 +75,9 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
         
         # Tsys calibration
         hifa_tsyscal (pipelinemode=pipelinemode)
+        
+        # Flag system temperature calibration
+        hifa_tsysflag (pipelinemode=pipelinemode)
         
         # Convert MSs to Scantables
         hsd_mstoscantable (pipelinemode=pipelinemode)
