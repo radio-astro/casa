@@ -304,13 +304,7 @@ class ImageAnalysis
     Record toworld(const Vector<double>& value, const String& format = "n") const;
 
     Bool detached();
-/*
-    Record setregion(const Vector<Int>& blc, const Vector<Int>& trc, 
-                      const String& infile = "");
 
-    Record setboxregion(const Vector<Double>& blc, const Vector<Double>& trc,
-                        const Bool frac = False, const String& infile = "");
-*/
     //make test image...cube or 2d (default)
     bool maketestimage(const String& outfile="", const Bool overwrite=False, 
                        const String& imagetype="2d");
@@ -337,66 +331,6 @@ class ImageAnalysis
                                              const Int whichhdu = 0, 
                                              const Bool zeroblanks = False, 
                                              const Bool overwrite = False);
-
-
-    /**
-      * Populates two vectors, zxaxisval and zyaxisval, representing
-      * values along an axis (usually the spectral axis) with a corresponding
-      * summary intensity computed based on the region passed in.
-      *
-      * @param x a Vector of x-coordinates describing a region.
-      * @param y a Vector of y-coordinates describing a region.  Together, (x,y)
-      * 		describe the region.  So for a point region, both vectors would have
-      * 		length one.  For a rectangular reqion, they would describe the blc and
-      * 		trc points of the rectangle.  For a polygonal region, the vectors would
-      * 		have undetermined length and together be the coordinates of the corners
-      * 		of the polygon.
-      * @param zxaxisval contains the x-coordinates of the frequency profile.
-      * @param zyaxisval contains the y-coordinates of the frequency profile.
-      * @param xytype the coordinate system used by the input vectors x,y.  "world"
-      *      is the default, but an alternative might be "pixel".
-      * @param specaxis -values include "pixel", "frequency", "radio velocity"
-      *      "optical velocity", "wavelength" or "air wavelength"
-      * @param whichStokes - a parameter that is currently not being used by the
-      * 		profiler (not sure of the purpose).
-      * @param whichTabular - find a frequency profile along a tabular axis instead of
-      * 		the spectral axis.  This one was put in because people wanted to profile
-      * 		images that had tabular axes, but not spectral axes.  The idea is that if
-      * 		it is not at its default value of -1, then the method will use the specified
-      * 		tabular axis.
-      * @param whichLinear - another one that is currently not being used (not sure of the purpose).
-      * @param xunits - the units for the spectral (z) axis.  Possible values are
-      * 	    Hz, MHz, MHz, GHz, m/s, km/s, mm, um, nm, Angstrom
-      * @param specframe - String form of the MFrequency types such as TOPO, BARY, etc
-      * @param combineType - Method used for combining pixels.  Current values are an enum
-      * 	    in the PlotType enum of QtProfile.qo.h: PMEAN, PMEDIAN, PSUM, PFLUX.  For error
-      * 	    plotting and overplotting, the profiler also seems to be passing values in from
-      * 	    the ExtrType enum:  MEAN, MEDIAN, SUM, MSE, RMSE, SQRTSUM, NSQRTSUM, FLUX, EFLUX
-      * @param whichQuality - the profiler is not making any use of this one (passing in a
-      * 	    default value).  Not sure what it is there for.
-      * @param restValue - Specify a different rest frequency.  Currently the user can reset
-      * 	    the rest frequency for the image, and when they do this, a new frequency profile
-      * 	    is computed with the new rest value.
-      * @param beamChannel - currently this is only used when the combine type is FLUX.
-      * @param shape - this was added to distinguish 'rectangle' regions from 'ellipse'
-      * 	       regions (when the vectors x and y both have size 2).  Other types of region
-      * 	       can be distinguished from the size of the x,y vectors.
-      */
-    /*Bool getFreqProfile(const Vector<Double>& x,
-			const Vector<Double>& y,
-			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-			const String& xytype="world",
-			const String& specaxis="freq",
-			const Int& whichStokes=0,
-			const Int& whichTabular=-1,
-			const Int& whichLinear=0,
-			const String& xunits="",
-			const String& specframe="",
-			const Int &combineType=0,
-			const Int& whichQuality=0,
-			const String& restValue="",
-			Int beamChannel = -1,
-			const String& shape="rectangle");*/
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -427,35 +361,6 @@ class ImageAnalysis
     Bool isFloat() const { return _imageFloat ? true : false; }
 
  private:
-    //Note:  getFreqProfile has been replaced by imageanalysis/PixelValueManipulator
-    //Used for single point extraction.
-    //Functions to get you back a spectral profile at direction position x, y.
-     //x, y are to be in the world coord value or pixel value...user specifies
-     //by parameter xytype ("world" or "pixel").
-     //On success returns true
-     //return value of profile is in zyaxisval, zxaxisval contains the spectral
-     //values at which zyaxisval is evaluated its in the spectral type
-     //specified by specaxis...possibilities are "pixel", "frequency", "radio velocity"
-     //"optical velocity", "wavelength" or "air wavelength" (the code checks for the
-     //keywords "pixel", "freq", "vel", "optical", and "radio" in the string)
-     // if "vel" is found but no "radio" or "optical", the full relativistic velocity
-     // is generated (MFrequency::RELATIVISTIC)
-     // xunits determines the units of the x-axis values...default is "GHz" for
-     // freq and "km/s" for vel, "mm" for wavelength and "um" for "air wavelength"
-     //PLEASE note that the returned value of zyaxisval are the units of the image
-     //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
-     /*Bool getFreqProfile(const Vector<Double>& xy,
-    		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-    		 const String& xytype="world",
-    		 const String& specaxis="freq",
-    		 const Int& whichStokes=0,
-    		 const Int& whichTabular=-1,
-    		 const Int& whichLinear=0,
-    		 const String& xunits="",
-    		 const String& specframe="",
-    		 const Int& whichQuality=0,
-    		 const String& restValue="");*/
-    
     SPIIF _imageFloat;
     SPIIC _imageComplex;
 
@@ -516,17 +421,6 @@ class ImageAnalysis
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
 
-
-    //Note:  getSpectralAxisVal has been replaced by imageanalysis/PixelValueManipulator
-
-    //return a vector of the spectral axis values in units requested
-    //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a
-    //valid tabular axis is specified (>=0) it takes precedence over the
-    //spectral axis.
-    /*Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal,
-                            const CoordinateSystem& cSys, const String& xunits, 
-                            const String& freqFrame="", const String& restValue="",
-                            int tabularAxisIndex = -1);*/
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
