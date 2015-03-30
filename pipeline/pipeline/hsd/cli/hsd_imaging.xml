@@ -21,7 +21,7 @@
 
     <param type="string" name="reffile">
         <description>File of Jy/K conversion factor</description>
-        <value></value>
+        <value>jyperk.csv</value>
     </param>
     
     <param type="string" name="pipelinemode">
@@ -165,7 +165,7 @@ reffile -- Path to a file containing Jy/K factors for science data, which
     is no measurement for PM04 in session 1. 
     If no file name is specified or specified file doesn't exist, all Jy/K factors 
     are set to 1.0. 
-    default: ''
+    default: 'jyperk.csv'
     example: '', 'working/jyperk.csv'
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
