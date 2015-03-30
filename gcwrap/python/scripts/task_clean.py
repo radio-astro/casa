@@ -477,6 +477,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
            #
            # Moved getAlgorithm() to here so that multifield is set using outlier file.
            #
+            if(psfmode=='clark' and not (stokes=="I" or stokes=="IQUV" or stokes=="IV")):
+                psfmode='clarkstokes'
+
             localAlgorithm = getAlgorithm(psfmode, imagermode, gridmode, mode, 
                                           multiscale, multifield, facets, nterms,
                                           'clark');

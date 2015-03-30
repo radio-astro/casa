@@ -3412,7 +3412,7 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
     if((type(multiscale)==list) and 
        (len(multiscale) > 0) and
        (sum(multiscale) > 0)): alg = 'multiscale';
-    elif ((psfmode == 'clark') or (psfmode == 'hogbom')): alg=psfmode;
+    elif ((psfmode == 'clark') or (psfmode == 'clarkstokes') or (psfmode == 'hogbom')): alg=psfmode;
 
     if ((imagermode == '') and (multifield)): addMultiField=True;
     if (imagermode == 'mosaic'):              addMultiField=True;
