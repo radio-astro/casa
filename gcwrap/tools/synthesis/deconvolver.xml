@@ -37,8 +37,10 @@ used to generate various types of images. Note that
 a new executable is started every time the constructor
 is called. 
 
-This returns a Glish variable containing the tool functions of
-deconvolver.
+example
+mydecon=casac.deconvolver()
+mydecon.open('dirty.image', 'psf.image')
+
 </description>
 <input>
 
@@ -55,7 +57,8 @@ deconvolver.
 <returns type="casadeconvolver">deconvolver tool</returns>
 <example>
 
-deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
+deco=casac.deconvolver()
+deco.open('3C273XC1.dirty', '3C273XC1.psf')      
 deco.clean(model='3C273XC1.clean', niter=10000, gain=0.2)
 deco.close()
 
@@ -63,56 +66,6 @@ deco.close()
 </method>
 
  
-   <method type="constructor" name="deconvolvertester">
-   <shortdescription>Construct a deconvolver tool for testing</shortdescription>
-   
-<description>
-This creates a {\tt deconvolver} tool that one can use for testing. A standard
-MeasurementSet is created and then used to initialize imager, which in 
-turn is used to generate a dirty image and PSF. The dataset
-used is an observation of 3C273 at 8GHz using the C-configuration of
-the VLA. It is part of the {\aipspp} distribution.
-</description>
-<input>
-
-     <param type="string" name="filename">
-     <description>Name of MS to create</description>
-     <value>3C273XC1.ms</value>
-     </param>
-
-     <param type="int" name="size">
-     <description>Number of pixels on a side</description>
-     <value>256</value>
-     </param>
-
-     <param type="any" name="cell">
-     <any type="variant"/>
-     <description>cel size</description>
-     <value>0.7arcsec</value>
-     </param>
-
-     <param type="string" name="stokes">
-     <description>Stokes parameters to image (e.g. 'IQUV')</description>
-     <value>IV</value>
-     <value>IQU</value>
-     <value>IQUV</value>
-     <value>I</value>
-     </param>
-
-     <param type="string" name="coordinates">
-     <description>Coordinate system to use e.g. 'j2000,'gal'</description>
-     <value>b1950</value>
-     </param>
-</input>
-<returns type="casadeconvolver">deconvolver tool</returns>
-<example>
-
-deco:=deconvolvertester(coordinates='gal',size=1024)
-deco.clean(model='3C273XC1.clean');
-deco.close()
-
-</example>
-</method>
 
  
    <method type="function" name="open">
@@ -169,9 +122,9 @@ until a <link anchor="deconvolver:deconvolver.done.function">done</link> tool fu
 <returns type="bool"/>
 <example>
 
-deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
-deco.clean(model='3C273XC1.clean');
-deco.close()
+dc.open('3C273XC1.dirty', '3C273XC1.psf')      
+dc.clean(model='3C273XC1.clean');
+dc.close()
 
 </example>
 </method>
@@ -188,10 +141,10 @@ you no longer need it.
 <returns type="bool"/>
 <example>
 
-deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
-deco.clean(model='3C273XC1.clean');
-deco.close()
-deco.done()
+dc.open('3C273XC1.dirty', '3C273XC1.psf')      
+dc.clean(model='3C273XC1.clean');
+dc.close()
+dc.done()
 
 </example>
 </method>
@@ -212,8 +165,8 @@ default logger. This includes:
 <returns type="bool"/>
 <example>
 
-deco:=deconvolver('3C273XC1.dirty', '3C273XC1.psf')      
-deco.summary()
+dc.open('3C273XC1.dirty', '3C273XC1.psf')      
+dc.summary()
 
 </example>
 </method>
@@ -268,15 +221,15 @@ this requirement.
 <returns type="bool"/>
 <example>
 
-deco.boxmask(mask='bigmask', blc=[56,45,1,1], trc=[87,93,4,1])
-deco.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
+dc.boxmask(mask='bigmask', blc=[56,45,1,1], trc=[87,93,4,1])
+dc.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 </example>
-<comments>
+
 Makes the image bigmask, and then sets it to unity for all points in
 the region bounded by the blc and trc.  Then cleans using it as the
 mask.
-</comments>
+
 </method>
 
  <method type="function" name="regionmask">
@@ -406,8 +359,8 @@ threshold.
 <returns type="bool"/>
 <example>
 
-imgr.clipimage(image='clean', threshold='50mJy')
-imgr.selfcal(cal='mycal', model='clean');
+dc.clipimage(image='clean', threshold='50mJy')
+###the ft that model into an MS and do gaincal for e.g
 
 </example>
 </method>
@@ -881,7 +834,7 @@ for details about ``methods'' used to update the GUI.
   <returns type="record"/>
   <example>
     
-    deco.clean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
+    dc.clean(image='3C273XC1.clean.image', model='3C273XC1.clean.model',
     mask='3C283XC1.mask', niter=1000, gain=0.25, threshold=0.03)
 
   </example>
@@ -923,7 +876,7 @@ sizes are set via a power law, or give a vector of scale sizes in pixels.
 <returns type="bool"/>
 <example>
 
-deco.setscales(6);
+dc.setscales(6);
 
 </example>
 </method>
