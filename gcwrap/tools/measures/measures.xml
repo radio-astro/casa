@@ -657,8 +657,12 @@ observatory will give you the position of an observatory as given in the
 system. At the time of writing the following observatories are recognised
 (but check e.g. the position GUI for currently known ones, or the
 me.obslist() tool function):
-{\em ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM PDB IRAM\_PDB
- JCMT MOPRA MOST NRAO12M NRAO\_GBT PKS SAO SMA VLA VLBA WSRT}.
+{\em'ALMA' 'ARECIBO' 'ATCA' 'BIMA' 'CLRO' 'DRAO' 'DWL' 'GB' 'GBT' 'GMRT'
+ 'IRAM PDB' 'IRAM\_PDB' 'JCMT' 'MOPRA' 'MOST' 'NRAO12M' 'NRAO\_GBT' 'PKS'
+ 'SAO SMA' 'SMA' 'VLA' 'VLBA' 'WSRT' 'ATF' 'ATA' 'CARMA' 'ACA' 'OSF'
+ 'OVRO\_MMA' 'EVLA' 'ASKAP' 'APEX' 'SMT' 'NRO' 'ASTE' 'LOFAR' 'MeerKAT'
+ 'KAT-7' 'EVN' 'LWA1' 'PAPER\_SA' 'PAPER_GB' 'e-MERLIN' 'MERLIN2'
+ 'Effelsberg' 'MWA32T' }.
 </description>
 <example>
 
@@ -676,12 +680,11 @@ print me.observatory('ATCA')
    <method type="function" name="obslist">
    <shortdescription>get a list of known observatories</shortdescription>
    
-<returns type="any">
-<any type="variant"/>
+<returns type="stringArray">
 <shortdescription>position measure</shortdescription>
 </returns>
 <description>
-obslist will give you a string with the space separated list of
+obslist will give you an array of strings of the 
 observatories known in the Observatories table.
 </description>
 <!-- (see <link
@@ -690,9 +693,13 @@ anchor="measuresdata">measuresdata</link> module). -->
 
 print "\t----\t obslist Ex 1 \t----"
 print me.obslist()
-#'ALMA ARECIBO ATCA BIMA CLRO DRAO DWL GB GBT GMRT IRAM
-# PDB IRAM_PDB JCMT MOPRA MOST NRAO12M NRAO_GBT PKS SAO
-# SMA VLA VLBA WSRT'
+
+#['ALMA' 'ARECIBO' 'ATCA' 'BIMA' 'CLRO' 'DRAO' 'DWL' 'GB' 'GBT' 'GMRT'
+ #'IRAM PDB' 'IRAM_PDB' 'JCMT' 'MOPRA' 'MOST' 'NRAO12M' 'NRAO_GBT' 'PKS'
+ #'SAO SMA' 'SMA' 'VLA' 'VLBA' 'WSRT' 'ATF' 'ATA' 'CARMA' 'ACA' 'OSF'
+ #'OVRO_MMA' 'EVLA' 'ASKAP' 'APEX' 'SMT' 'NRO' 'ASTE' 'LOFAR' 'MeerKAT'
+ #'KAT-7' 'EVN' 'LWA1' 'PAPER_SA' 'PAPER_GB' 'e-MERLIN' 'MERLIN2'
+ #'Effelsberg' 'MWA32T']
 
 </example>
 </method>

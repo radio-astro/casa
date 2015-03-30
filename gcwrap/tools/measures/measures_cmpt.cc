@@ -656,17 +656,14 @@ measures::observatory(const std::string& name)
 }
 
 // get list of observatories
-::casac::variant*
+std::vector<std::string>
 measures::obslist()
 {
-  ::casac::variant *rstat = 0;
+  std::vector<std::string> rstat ;
   try {
     const Vector<String> &lst = MeasTable::Observatories();
     if (lst.nelements() > 0) {
-      std::vector<string> lstobs=fromVectorString(lst);
-      std::vector<int> obs_shape;
-      lst.shape().asVector().tovector(obs_shape);
-       rstat = new ::casac::variant(lstobs, obs_shape);
+      rstat = fromVectorString(lst);
     }
   } catch (AipsError(x)) {
     *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
