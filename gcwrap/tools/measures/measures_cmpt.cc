@@ -656,28 +656,23 @@ measures::observatory(const std::string& name)
 }
 
 // get list of observatories
-std::string
+::casac::variant*
 measures::obslist()
 {
-  std::string emptyStr("");
+  ::casac::variant *rstat = 0;
   try {
-    String returnval;
     const Vector<String> &lst = MeasTable::Observatories();
-    returnval = String();
     if (lst.nelements() > 0) {
-      // Note in next one the const throw away, since join does not accept
-      // const String src[]
-      Bool deleteIt; 
-      String *storage = const_cast<String *>(lst.getStorage(deleteIt));
-      const String *cstorage = storage;
-      returnval = join(storage, lst.nelements(), String(" "));
-      lst.freeStorage(cstorage, deleteIt);
-    };
-    return returnval;
+      std::vector<string> lstobs=fromVectorString(lst);
+      std::vector<int> obs_shape;
+      lst.shape().asVector().tovector(obs_shape);
+       rstat = new ::casac::variant(lstobs, obs_shape);
+    }
   } catch (AipsError(x)) {
     *itsLog << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
-    return emptyStr;
+    return rstat;
   }
+  return rstat;
 }
 
 // spectral line list

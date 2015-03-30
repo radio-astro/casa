@@ -676,7 +676,8 @@ print me.observatory('ATCA')
    <method type="function" name="obslist">
    <shortdescription>get a list of known observatories</shortdescription>
    
-<returns type="string">
+<returns type="any">
+<any type="variant"/>
 <shortdescription>position measure</shortdescription>
 </returns>
 <description>
