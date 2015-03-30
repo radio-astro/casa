@@ -91,7 +91,9 @@ class AzElChart(object):
                      'clearplots'      : True,
                      'showgui'         : False}
 
-        casa.plotms(**task_args)
+        #casa.plotms(**task_args)
+        
+        task = casa_tasks.plotms(**task_args)
 
         '''
         casa_tasks.plotms(vis=self.ms.name,
@@ -195,7 +197,9 @@ class ElVsTimeChart(object):
                      'clearplots'      : True,
                      'showgui'         : False}
 
-        casa.plotms(**task_args)
+        #casa.plotms(**task_args)
+        
+        task = casa_tasks.plotms(**task_args)
 
         '''
         casa_tasks.plotms(vis=self.ms.name,
