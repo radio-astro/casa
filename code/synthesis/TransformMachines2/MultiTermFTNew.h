@@ -115,8 +115,8 @@ public:
   void put(vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
   	   FTMachine::Type type=FTMachine::OBSERVED);
   // Have a const version for compatibility with other FTMs.. Throw an exception if called.
-  void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
-    	   FTMachine::Type type=FTMachine::OBSERVED){throw(AipsError("called const put"));};
+  void put(const vi::VisBuffer2& /*vb*/, Int /*row=-1*/, Bool /*dopsf=False*/,
+    	   FTMachine::Type /*type=FTMachine::OBSERVED*/){throw(AipsError("called const put"));};
   // Calculate residual visibilities if possible.
   // The purpose is to allow rGridFT to make this multi-threaded
   virtual void ComputeResiduals(vi::VisBuffer2& vb, Bool useCorrected);

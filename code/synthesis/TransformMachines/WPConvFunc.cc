@@ -302,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   IPosition start(4, 0, 0, 0, 0);
   IPosition pbSlice(4, convSize, convSize, 1, 1);
   
-  Bool writeResults=False;
+  //Bool writeResults=False;
   Int warner=0;
 
 
@@ -339,7 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    Int cpConvSize=convSize;
    Int cpWConvSize=wConvSize;
    Double cpWscale=wScale;
-   Float max0=1.0;
+   //Float max0=1.0;
 #pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner, maxptr, cpWscale ) 
 
   for (Int iw=0; iw< cpWConvSize;iw++) {
