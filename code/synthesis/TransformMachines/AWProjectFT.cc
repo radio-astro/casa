@@ -1751,6 +1751,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VBStore vbs;
     //    setupVBStore(vbs,vb, vb.imagingWeight(),vb.modelVisCube(),uvw,flags, dphase, dopsf);
     Bool tmpDoPSF=False;
+
     setupVBStore(vbs,vb, vb.imagingWeight(),data,uvw,flags, dphase,tmpDoPSF,griddedData.shape().asVector());
 
       // visResampler_p->setParams(uvScale,uvOffset,dphase);
@@ -2330,7 +2331,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 		 << endl;
     // 	  }
 
-    makeThGridCoords(vbs,gridShape);
+    
+    // The following code is required only for GPU or multi-threaded
+    //gridder.  Currently does not work without the rest of the
+    //GPU/multi-threaded infrastructure (though, I (SB) thought this
+    //was designed to be benign for normal gridding).
+    //
+    //makeThGridCoords(vbs,gridShape);
 
     runTime1_p += timer_p.real();
     visResampler_p->initializeDataBuffers(vbs);
