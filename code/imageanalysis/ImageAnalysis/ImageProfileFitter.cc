@@ -29,7 +29,6 @@
 
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
@@ -352,7 +351,7 @@ void ImageProfileFitter::setSigma(const Array<Float>& sigma) {
 	setSigma(temp.get());
 }
 
-void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
+void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 	if (anyTrue(sigma->get() < Array<Float>(sigma->shape(), 0.0))) {
 		*_getLog() << "All sigma values must be non-negative" << LogIO::EXCEPTION;
 	}
@@ -364,9 +363,8 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
 		SHARED_PTR<ImageInterface<Float> > clone(sigma->cloneII());
 		_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(clone);
 		if (! _sigma) {
-			SHARED_PTR<ImageInterface<Float> > x = ImageAnalysis::makeExternalImage(
-				"", sigma->coordinates(), sigma->shape(),
-				*sigma, *_getLog(), False, True, True
+			SPIIF x = SubImageFactory<Float>::createImage(
+				*sigma, "", Record(), "", False, False ,True, False
 			);
 			if (x) {
 				_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(x);
@@ -586,9 +584,8 @@ void ImageProfileFitter::_fitallprofiles() {
 	if (
 		! _model.empty()
 		&& ! (
-			fitImage = ImageAnalysis::makeExternalImage(
-				_model, cSys, imageShape, *_subImage,
-				*_getLog(), True, False, True
+			fitImage = SubImageFactory<Float>::createImage(
+				*_subImage, _model, Record(), "", False, False ,True, False
 			)
 		)
 	) {
@@ -597,9 +594,8 @@ void ImageProfileFitter::_fitallprofiles() {
 	if (
 		! _residual.empty()
 		&& ! (
-			residImage =  ImageAnalysis::makeExternalImage(
-				_residual, cSys, imageShape, *_subImage,
-				*_getLog(), True, False, True
+			residImage = SubImageFactory<Float>::createImage(
+				*_subImage, _residual, Record(), "", False, False ,True, False
 			)
 		)
 	) {
