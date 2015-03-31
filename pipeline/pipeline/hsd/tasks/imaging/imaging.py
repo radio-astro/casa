@@ -15,6 +15,8 @@ from . import applyflag
 from . import weighting
 from . import scaling
 from . import worker
+from . import jyperk
+from .jyperk import JyPerKItems
 from .. import common
 from ..baseline import baseline
 
@@ -98,7 +100,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         #pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
         reffile = self.inputs.reffile
-        imagemode = self.inputs.mode
+        imagemode = self.inputs.mode.upper()
         logrecords = []
 
         LOG.debug('scansel_list=%s'%(scansel_list))
@@ -153,6 +155,7 @@ class SDImaging(common.SingleDishTaskTemplate):
             LOG.info('No SDBaselineResults available. Set edge as [0,0]')
             edge = [0, 0]
         
+        jyperk_item_list = []
         # loop over reduction group
         for (group_id, group_desc) in reduction_group.items():
             LOG.debug('Processing Reduction Group %s'%(group_id))
@@ -240,7 +243,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 namer.source(source_name)
                 namer.antenna_name(name)
                 namer.spectral_window(spwids[0])
-                namer.polarization(common.polstring(net_pols))
+                namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
                 imagename = namer.get_filename()
                 
                 # Step 4.
@@ -341,6 +344,10 @@ class SDImaging(common.SingleDishTaskTemplate):
                     outcome['file_index'] = indices
                     outcome['assoc_spws'] = spwids
                     outcome['assoc_pols'] = pols
+                    if imagemode == 'AMPCAL':
+                        # to register exported_ms to each scantable instance
+                        outcome['export_results'] = export_results
+
                     result = SDImagingResults(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
@@ -349,7 +356,19 @@ class SDImaging(common.SingleDishTaskTemplate):
                     result.stage_number = self.inputs.context.task_counter 
                                                 
                     results.append(result)
-
+                    
+#                     if imagemode == 'AMPCAL':
+#                         jyperk_item_list.append(JyPerKItems(image_item.imagename, image_item.sourcename, image_item.antenna, indices))
+#                     
+# 
+#             # derive Jy/K factor and store it in a file
+#             if imagemode == 'AMPCAL':
+#                 if len(jyperk_item_list) > 0:
+#                     jyperk_inputs = jyperk.SDJyPerK.Inputs(context, jyperk_item_list)
+#                     jyperk_task = jyperk.SDJyPerK(jyperk_inputs)
+#                     jyperk_result = self._executor.execute(jyperk_task, merge=True)
+#                 LOG.info("Skipping combined image for the amplitude calibrator.")
+#                 continue
 
             # Make combined image
             # reference scantable
@@ -364,12 +383,13 @@ class SDImaging(common.SingleDishTaskTemplate):
             namer.casa_image()
             namer.source(source_name)
             namer.spectral_window(combined_spws[0])
-            namer.polarization(common.polstring(net_pols))
+            namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
             imagename = namer.get_filename()
 
             # Step 4.
             # Imaging
             LOG.info('Step 4. Imaging')
+            LOG.todo('Ampcal should be imaged per session, per antenna, per spw')
             imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
                                                            outfile=imagename, mode=imagemode,
                                                            spwids=combined_spws,
@@ -448,6 +468,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 result.stage_number = self.inputs.context.task_counter 
                     
                 results.append(result)
+                
                     
         LOG.todo('logrecords for SDImagingResults must be handled properly')
         # only add logrecords to first result
