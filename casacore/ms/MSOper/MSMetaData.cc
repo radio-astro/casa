@@ -31,6 +31,7 @@
 #include <casacore/casa/OS/File.h>
 #include <casacore/measures/Measures/MeasTable.h>
 #include <casacore/ms/MSOper/MSKeys.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
 #include <casacore/ms/MeasurementSets/MSSpWindowColumns.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
@@ -913,6 +914,22 @@ uInt MSMetaData::nFields() const {
 	_nFields = nFields;
 	return nFields;
 }
+
+MDirection MSMetaData::phaseDirFromFieldIDAndTime(const uInt fieldID,  const MEpoch& ep) const {
+
+  _hasFieldID(fieldID);
+  
+  ROMSFieldColumns msfc(_ms->field());
+  if(!msfc.needInterTime(fieldID))
+    return msfc.phaseDirMeas(fieldID, 0.0);
+  MEpoch::Types msType = MEpoch::castType(msfc.timeMeas()(fieldID).getRef().getType());
+  Unit sec("s");
+  Double inSeconds= MEpoch::Convert(ep,  msType)().get(sec).getValue();
+  return msfc.phaseDirMeas(fieldID, inSeconds);
+  
+
+} 
+
 
 void MSMetaData::_getFieldsAndSpwMaps(
 	std::map<Int, std::set<uInt> >& fieldToSpwMap,

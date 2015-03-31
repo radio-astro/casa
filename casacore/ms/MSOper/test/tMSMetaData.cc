@@ -353,6 +353,17 @@ void testIt(MSMetaData& md) {
 			cout << "*** cache size " << md.getCache() << endl;
 
 		}
+		cout << "*** test phaseDirFromFieldIDAndTime()" << endl;
+		{
+
+		  MDirection phasCen=md.phaseDirFromFieldIDAndTime(2);
+		  
+		  AlwaysAssert(
+				near(phasCen.getAngle().getValue()[0], -2.72554329 , 5e-7),
+				AipsError
+			);
+
+		}
 		cout << "*** test getFieldIDsForSpw()" << endl;
 		for (uInt i=0; i<md.nSpw(True); ++i) {
 			std::set<Int> exp;
