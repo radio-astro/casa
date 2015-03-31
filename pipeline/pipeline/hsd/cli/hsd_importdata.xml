@@ -59,6 +59,11 @@
 	<value>True</value>
     </param>
 
+    <param type="bool" name="with_pointing_correction">
+	<description>Apply pointing correction to DIRECTION</description>
+	<value>False</value>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
     <description>Run the task (False) or display task command (True)</description>
     <value>False</value>
@@ -146,6 +151,10 @@ overwrite -- Overwrite existing MSs on output.
 
 bdfflags -- Apply BDF flags on line
    default: True
+   
+with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) 
+   to the value to be written in MS::Pointing::direction
+   default: False
 
 --- pipeline task execution modes
 

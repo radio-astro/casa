@@ -4,7 +4,7 @@ import pipeline.h.cli.utils as utils
 
 def hsd_importdata(vis=None, session=None, pipelinemode=None, asis=None,
     process_caldevice=None, overwrite=None, bdfflags=None, lazy=None,
-    dbservice=None, dryrun=None, acceptresults=None):
+    dbservice=None, with_pointing_correction=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
