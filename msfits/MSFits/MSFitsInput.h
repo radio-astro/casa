@@ -418,6 +418,7 @@ private:
 
   Matrix<Double> restFreq_p; // used for UVFITS
   Matrix<Double> sysVel_p;
+  Bool _msCreated;
 
 };
 
