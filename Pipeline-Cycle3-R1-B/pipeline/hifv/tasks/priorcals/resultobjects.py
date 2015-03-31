@@ -9,7 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class PriorcalsResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None, 
-        rq_result=None,  antpos_result=None):
+        rq_result=None,  antpos_result=None, antcorrect=None):
 
         super(PriorcalsResults, self).__init__()
         
@@ -24,6 +24,8 @@ class PriorcalsResults(basetask.Results):
         self.rq_result = rq_result
         #self.sw_result = sw_result
         self.antpos_result = antpos_result
+        self.antcorrect = antcorrect
+        #print self.antcorrect
         
     def merge_with_context(self, context):
         if self.gc_result:

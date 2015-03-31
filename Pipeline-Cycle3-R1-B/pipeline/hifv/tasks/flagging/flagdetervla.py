@@ -239,6 +239,24 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 
         self._init_properties(vars())
+        
+    @property
+    def intents(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('intents')
+
+        if self._intents is not None:
+            return self._intents
+
+        # return just the unwanted intents that are present in the MS
+        #VLA Specific intents that need to be flagged
+        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND', 'SYSTEM_CONFIGURATION', 'UNSPECIFIED#UNSPECIFIED'])
+        return ','.join(self.ms.intents.intersection(intents_to_flag))
+
+    @intents.setter
+    def intents(self, value):
+        self._intents = value
+        
     '''    
     @property
     def hm_tbuff(self):

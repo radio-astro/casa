@@ -87,7 +87,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_priorcals (pipelinemode=pipelinemode)
     
         # Compute the prioritized lists of reference antennas
-        hif_refant (pipelinemode=pipelinemode)
+        ##hif_refant (pipelinemode=pipelinemode)
     
         #Heuristic flagging
         ##hifv_hflag (pipelinemode=pipelinemode)
@@ -157,6 +157,9 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
     
         # Make clean images for the selected calibrators
         hif_cleanlist (pipelinemode=pipelinemode)
+        
+        # Export the data
+        hif_exportdata(pipelinemode=pipelinemode)
     
     except Exception, e:
 	if str(e) == IMPORT_ONLY:

@@ -89,18 +89,35 @@ using the CASA task <b>gencal</b>.</p>
 </div>
 
 <div class="row-fluid">
-	<h2>Antenna positions</h2>
-	Antenna position corrections written to:
-	
+        <h2>Antenna positions</h2>
 	%for single_result in result:
-	    <p><b>${single_result.antpos_result[0].inputs['caltable']}</b></p>
-        %endfor
-        
-        %for single_result in result:
-            % if single_result.antpos_result[0].inputs['offsets'] == []:
+            % if single_result.antcorrect == {}:
                 <b>No antenna position corrections to apply.</b>
             % else:
-                <b>${single_result.antpos_result[0].inputs['offsets']}</b>
+                Antenna position corrections written to:
+                <p><b>${single_result.antpos_result[0].final[0].gaintable}</b></p>
+                <table class="table table-bordered table-striped table-condensed"
+	                   summary="Summary of gencal opacities">
+	               <caption>Antenna Position Corrections</caption>
+                       <thead>
+	               <tr>
+	                    <th scope="col" rowspan="2">Antenna</th>
+	                    <th scope="col" rowspan="2">x</th>
+		            <th scope="col" rowspan="2">y</th>
+		            <th scope="col" rowspan="2">z</th>
+	               </tr>
+	               </thead>
+	               <tbody>
+	               % for key, value in sorted(single_result.antcorrect.iteritems()):
+		           <tr>
+		               <td>${key}</td>
+			       <td>${value[0]}</td>
+			       <td>${value[1]}</td>
+			       <td>${value[2]}</td>
+		           </tr>
+	               % endfor
+	              </tbody>
+                      </table>
             % endif
         %endfor
         
