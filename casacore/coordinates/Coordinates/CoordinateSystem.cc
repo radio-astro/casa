@@ -3461,6 +3461,12 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 // Axis name
 
    string = pc->worldAxisNames()(axisInCoordinate);
+   if (pc->type() == Coordinate::SPECTRAL) {
+      SpectralCoordinate* sc = dynamic_cast<SpectralCoordinate*>(pc);
+      if (sc->isTabular()) {
+	 string += " (tab)";
+      }
+   }
    if (findWidths) {
       widthName = max(widthName, string.length());
    } else {
