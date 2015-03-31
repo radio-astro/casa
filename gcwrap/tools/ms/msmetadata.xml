@@ -1081,7 +1081,33 @@ windows in the dataset and close the tool.
                 msmd.done()
             </example>
         </method>
-        
+	<method type="function" name="phasecenter">
+            <shortdescription>Get the phasecenter direction from a field ID and time if necessary</shortdescription>
+             <input>
+                <param type="int" direction="in" name="fieldid">
+                    <description>Zero-based field ID for which to get the phasecenter</description>
+                    <value>0</value>
+                </param>
+                <param type="record" direction="in" name="epoch">
+                    <description>optional time if field id has a polynomial in time phasecenter or an ephemerides table attached to the id</description>
+                    <value></value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get a direction measures for the phasecenter of the field id and time specified
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get phasecenter for field ID 1
+    mydir = msmd.phasecenter(1);
+    # if the phasecenter is a polynomial or has an ephemerides attached to 
+    # it a time is needed to get the phase direction
+    ep=me.epoch('utc', '2015/03/15/15:30:55')
+    mydir2=msmd.phasecenter(2, ep)
+    msmd.done()
+            </example>
+        </method>
         <method type="function" name="pointingdirection">
             <shortdescription>Get the pointing direction for antennas at the specified row number in the main MS table.</shortdescription>
             <input>

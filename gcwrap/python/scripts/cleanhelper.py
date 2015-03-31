@@ -18,7 +18,7 @@ me = casac.measures()
 rg = casac.regionmanager()
 ia = casac.image()
 im = casac.imager()
-
+msmd=casac.msmetadata()
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
         """
@@ -256,6 +256,9 @@ class cleanhelper:
                     fieldoo='0'
                 #phasecenter=int(ms.msseltoindex(self.vis,field=fieldoo)['field'][0])
                 phasecenter=int(ms.msseltoindex(self.vis[self.sortedvisindx[0]],field=fieldoo)['field'][0])
+                msmd.open(self.vis[self.sortedvisindx[0]])
+                phasecenter=msmd.phasecenter(phasecenter)
+                msmd.done()
             else:
                 tmppc=phasecenter
                 try:

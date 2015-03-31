@@ -977,6 +977,37 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
+  ::casac::record* msmetadata::phasecenter(const int fieldid, const ::casac::record& epoch){
+    ::casac::record *rval=0;
+    _FUNC(   
+	  Record *ep = toRecord(epoch);
+	  Record outRec;
+	  MeasureHolder mh;
+	  String err;
+	  
+	  if(ep->nfields() ==0){
+	    mh=MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid));  
+	  }
+	  else{
+	    MeasureHolder ephold;
+	    if(!ephold.fromRecord(err, *ep)){
+	      delete ep;
+	      *_log  << "Epoch cannot be converted \n" << err << LogIO::EXCEPTION <<LogIO::POST;
+	    }
+	    if(!ephold.isMEpoch())
+	       *_log  << "Epoch parameter is not an MEpoch  \n"  << LogIO::EXCEPTION <<LogIO::POST;
+	    mh=MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid, ephold.asMEpoch()));  
+	  }
+	  delete ep;
+	  if (!mh.toRecord(err, outRec)) 
+	    *_log << "Could not convert phasecenter \n" << err<< LogIO::EXCEPTION  << LogIO::POST;
+	  
+	  rval=fromRecord(outRec);
+		
+      )
+      return rval;
+  }
+
 record* msmetadata::pointingdirection(int rowid, bool const interpolate, int const initialrow) {
 	//_FUNC(
 		Int ant1 COMMA ant2;
