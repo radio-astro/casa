@@ -61,8 +61,6 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
                                             success=False,
                                             outcome=None)
 
-        result.task = self.__class__
-
         if self.inputs.context.subtask_counter is 0: 
             result.stage_number = self.inputs.context.task_counter - 1
         else:
@@ -192,9 +190,10 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             step = 1
             nchan = total_nchan - sum(edge)
         # ampcal
-        if imagemode.upper() == 'AMPCAL':
+        if imagemode == 'AMPCAL':
             step = nchan
             nchan = 1
+            stokes = 'I'
     
         # restfreq
         spw = reference_data.spectral_window[spwid]
