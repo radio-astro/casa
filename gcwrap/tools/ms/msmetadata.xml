@@ -1081,6 +1081,7 @@ windows in the dataset and close the tool.
                 msmd.done()
             </example>
         </method>
+        
 	<method type="function" name="phasecenter">
             <shortdescription>Get the phasecenter direction from a field ID and time if necessary</shortdescription>
              <input>
@@ -1089,7 +1090,7 @@ windows in the dataset and close the tool.
                     <value>0</value>
                 </param>
                 <param type="record" direction="in" name="epoch">
-                    <description>optional time if field id has a polynomial in time phasecenter or an ephemerides table attached to the id</description>
+                    <description>Optional time, expressed as a measures epoch dictionary, if field id has a polynomial in time phasecenter or an ephemerides table attached to the ID</description>
                     <value></value>
                 </param>
             </input>

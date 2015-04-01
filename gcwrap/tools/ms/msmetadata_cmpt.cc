@@ -977,44 +977,35 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
-  ::casac::record* msmetadata::phasecenter(const int fieldid, const ::casac::record& epoch){
-    ::casac::record *rval=0;
+::casac::record* msmetadata::phasecenter(const int fieldid, const ::casac::record& epoch){
+	::casac::record *rval=0;
     _FUNC(   
-	  Record *ep = toRecord(epoch);
-	  Record outRec;
-	  MeasureHolder mh;
-	  String err;
-	  
-	  if(ep->nfields() ==0){
-	    mh=MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid));  
-	  }
-	  else{
-	    MeasureHolder ephold;
-	    if(!ephold.fromRecord(err, *ep)){
-	      delete ep;
-	      *_log  << "Epoch cannot be converted \n" << err << LogIO::EXCEPTION <<LogIO::POST;
-	    }
-	    if(!ephold.isMEpoch())
-	       *_log  << "Epoch parameter is not an MEpoch  \n"  << LogIO::EXCEPTION <<LogIO::POST;
-	    mh=MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid, ephold.asMEpoch()));  
-	  }
-	  delete ep;
-	  if (!mh.toRecord(err, outRec)) 
-	    *_log << "Could not convert phasecenter \n" << err<< LogIO::EXCEPTION  << LogIO::POST;
-	  
-	  rval=fromRecord(outRec);
-		
-      )
-      return rval;
-  }
+    	PtrHolder<Record> ep(toRecord(epoch));
+	  	Record outRec;
+	  	MeasureHolder mh;
+	  	String err;
+	  	if (ep->nfields() == 0) {
+	  		mh = MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid));
+	  	}
+	  	else {
+	  		MeasureHolder ephold;
+	  		ThrowIf(! ephold.fromRecord(err, *ep), "Epoch cannot be converted \n" + err);
+	  		ThrowIf(! ephold.isMEpoch(), "Epoch parameter is not an MEpoch  \n");
+	  		mh = MeasureHolder (_msmd->phaseDirFromFieldIDAndTime(fieldid, ephold.asMEpoch()));
+	  	}
+	  	ThrowIf(! mh.toRecord(err, outRec), "Could not convert phasecenter \n" + err);
+	  	rval = fromRecord(outRec);
+    )
+    return rval;
+}
 
 record* msmetadata::pointingdirection(int rowid, bool const interpolate, int const initialrow) {
-	//_FUNC(
+	_FUNC(
 		Int ant1 COMMA ant2;
 		Double time;
 		
 		std::pair<casa::MDirection COMMA casa::MDirection> pDirs = _msmd->getPointingDirection(
-                        ant1, ant2, time, rowid, interpolate, initialrow
+			ant1, ant2, time, rowid, interpolate, initialrow
 		);
 		MeasureHolder m1(pDirs.first);
 		MeasureHolder m2(pDirs.second);
@@ -1030,7 +1021,7 @@ record* msmetadata::pointingdirection(int rowid, bool const interpolate, int con
 		ant2Rec.defineRecord("pointingdirection", m2rec);
 		ret.defineRecord("antenna2", ant2Rec);
 		return fromRecord(ret);
-	//);
+	);
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
@@ -1039,9 +1030,9 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const float caches
 
 bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
-	       _ms.reset(new MeasurementSet(msname));
-	       _init(_ms.get(), cachesize);
-	       return true;
+		_ms.reset(new MeasurementSet(msname));
+		_init(_ms.get(), cachesize);
+		return true;
 	)
 	return false;
 }
