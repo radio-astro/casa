@@ -916,20 +916,16 @@ uInt MSMetaData::nFields() const {
 }
 
 MDirection MSMetaData::phaseDirFromFieldIDAndTime(const uInt fieldID,  const MEpoch& ep) const {
-
-  _hasFieldID(fieldID);
-  
-  ROMSFieldColumns msfc(_ms->field());
-  if(!msfc.needInterTime(fieldID))
-    return msfc.phaseDirMeas(fieldID, 0.0);
-  MEpoch::Types msType = MEpoch::castType(msfc.timeMeas()(fieldID).getRef().getType());
-  Unit sec("s");
-  Double inSeconds= MEpoch::Convert(ep,  msType)().get(sec).getValue();
-  return msfc.phaseDirMeas(fieldID, inSeconds);
-  
-
+	_hasFieldID(fieldID);
+	ROMSFieldColumns msfc(_ms->field());
+	if(! msfc.needInterTime(fieldID)) {
+		return msfc.phaseDirMeas(fieldID, 0.0);
+	}
+	MEpoch::Types msType = MEpoch::castType(msfc.timeMeas()(fieldID).getRef().getType());
+	Unit sec("s");
+	Double inSeconds= MEpoch::Convert(ep, msType)().get(sec).getValue();
+	return msfc.phaseDirMeas(fieldID, inSeconds);
 } 
-
 
 void MSMetaData::_getFieldsAndSpwMaps(
 	std::map<Int, std::set<uInt> >& fieldToSpwMap,
@@ -941,8 +937,8 @@ void MSMetaData::_getFieldsAndSpwMaps(
 		spwToFieldMap = _spwToFieldIDsMap;
 		return;
 	}
-	CountedPtr<Vector<Int> >  allDDIDs = _getDataDescIDs();
-	CountedPtr<Vector<Int> >  allFieldIDs = _getFieldIDs();
+	CountedPtr<Vector<Int> > allDDIDs = _getDataDescIDs();
+	CountedPtr<Vector<Int> > allFieldIDs = _getFieldIDs();
 	Vector<Int>::const_iterator endDDID = allDDIDs->end();
 	Vector<Int>::const_iterator curField = allFieldIDs->begin();
 	fieldToSpwMap.clear();
