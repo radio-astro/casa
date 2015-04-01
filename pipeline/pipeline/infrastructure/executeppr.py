@@ -227,6 +227,11 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 		    "Terminating execution after running " + taskname,
 		    echo_to_screen=echo_to_screen)
 	        break
+        
+            if taskname == 'SDImportData' and importonly:
+                casatools.post_to_log("Terminating execution after running " + taskname,
+                                      echo_to_screen=echo_to_screen)
+                break
 
 	except Exception, e:
 	    #traceback.print_exc(file=sys.stdout)
