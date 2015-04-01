@@ -33,7 +33,7 @@ class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
 		 session=None, overwrite=None, save_flagonline=None,
-		 bdfflags=None, lazy=None, dbservice=None, with_pointing_correction=None):
+		 bdfflags=None, lazy=None, dbservice=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -44,7 +44,6 @@ class ImportDataInputs(basetask.StandardInputs):
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     lazy = basetask.property_with_default('lazy', False)
     dbservice = basetask.property_with_default('dbservice', True)
-    with_pointing_correction = basetask.property_with_default('with_pointing_correction', False)
 
     @property
     def session(self):
@@ -335,6 +334,7 @@ class ImportData(basetask.StandardTaskTemplate):
         if inputs.save_flagonline:
             self._make_template_flagfile(asdm)
 
+        with_pointing_correction = inputs.with_pointing_correction if hasattr(inputs, 'with_pointing_correction') else False
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
                                      savecmds=inputs.save_flagonline,
@@ -344,7 +344,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      overwrite=inputs.overwrite,
                                      bdfflags=inputs.bdfflags,
                                      lazy=inputs.lazy,
-                                     with_pointing_correction=inputs.with_pointing_correction)
+                                     with_pointing_correction=with_pointing_correction)
 
         self._executor.execute(task)
 
