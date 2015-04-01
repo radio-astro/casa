@@ -234,7 +234,13 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             minsnr      = inputs.minsnr)
 
         phaseup_task = gaincal.GTypeGaincal(phaseup_inputs)
-        return self._executor.execute(phaseup_task, merge=True)
+        #result = self._executor.execute(phaseup_task, merge=True)
+        result = self._executor.execute(phaseup_task, merge=False)
+	if not result.final:
+	    pass
+	else:
+	    result.accept(inputs.context)
+	return result
 
     # Compute a standard bandpass
     def _do_bandpass(self):
