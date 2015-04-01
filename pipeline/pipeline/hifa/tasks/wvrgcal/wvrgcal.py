@@ -421,7 +421,6 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         atmheuristics = atm_heuristic.AtmHeuristics(context=inputs.context,
           vis=inputs.vis) 
         if inputs.qa_spw == '':
-            #inputs.qa_spw = atmheuristics.spwid_rank_by_frequency()
             qa_spw_list = atmheuristics.spwid_rank_by_opacity()
         else:
             qa_spw_list = inputs.qa_spw.split(',')
@@ -430,25 +429,27 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %
               (os.path.basename(inputs.vis), qa_spw))
             inputs.qa_spw = qa_spw
-            # use a try block and use the first spw where the calibration
-            # is successful - added to handle case where tsysspwmap is
-            # missing for some spws
-            try:
-                # do a bandpass calibration
-                result.qa_wvr.bandpass_result = self._do_qa_bandpass(inputs)
-                
-                # do a phase calibration on the bandpass and phase
-                # calibrators with B preapplied
-                LOG.info('qa: calculating phase calibration with B applied')
-                nowvr_result = self._do_nowvr_gaincal(inputs)
-                result.qa_wvr.nowvr_result = nowvr_result
-                result.qa_wvr.qa_spw = qa_spw
-                LOG.info('qa: wvrgcal QA calculation was successful')
-                break
-            except:
-                LOG.warning('qa: wvrgcal QA calculation failed')
-        
-        
+
+            # Do a bandpass calibration
+            LOG.info('qa: calculating bandpass calibration')
+            bp_result = self._do_qa_bandpass(inputs)
+	    if not bp_result.final:
+	        continue
+
+	    # Do a gain calibration
+            LOG.info('qa: calculating phase calibration with bandpass applied')
+            nowvr_result = self._do_nowvr_gaincal(inputs)
+	    if not nowvr_result.final:
+	        continue
+
+            inputs.bandpass_result = bp_result
+            inputs.nowvr_result = nowvr_result
+            result.qa_wvr.bandpass_result = bp_result
+            result.qa_wvr.nowvr_result = nowvr_result
+            result.qa_wvr.qa_spw = qa_spw
+            LOG.info('qa: wvrgcal QA calculation was successful')
+            break
+
         # accept this result object, thus adding the WVR table to the 
         # callibrary
         LOG.debug('qa: accept WVR results into copy of context')
@@ -495,7 +496,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         else:
             LOG.info('Calculating new bandpass for QA analysis')
             result = self._do_new_qa_bandpass(inputs)
-            inputs.bandpass_result = result
+            #inputs.bandpass_result = result
             return result
     
     def _do_user_qa_bandpass(self, inputs):
@@ -532,8 +533,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         inputs = bandpass.ALMAPhcorBandpass.Inputs(inputs.context, **args)        
         task = bandpass.ALMAPhcorBandpass(inputs)
-        result = self._executor.execute(task, merge=True)
-        
+        #result = self._executor.execute(task, merge=True)
+        result = self._executor.execute(task, merge=False)
+	if not result.final:
+	    pass
+	else:
+	    result.accept(inputs.context)
         return result
     
     def _do_nowvr_gaincal(self, inputs):
@@ -553,7 +558,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             result = self._do_qa_gaincal(inputs, nowvr_caltable_namer)            
             # cache the no WVR result on the inputs to save us having to
             # recalculate it in future runs
-            inputs.nowvr_result = result
+            #inputs.nowvr_result = result
             return result
         
     def _do_wvr_gaincal(self, inputs):
