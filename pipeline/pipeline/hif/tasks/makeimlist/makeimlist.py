@@ -328,6 +328,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         # now construct the list of imaging command parameter lists that must
         # be run to obtain the required images
         result = MakeImListResult()
+        result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 if valid_data[spwspec][field_intent] and \

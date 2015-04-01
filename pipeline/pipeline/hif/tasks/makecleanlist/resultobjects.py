@@ -10,12 +10,24 @@ class MakeCleanListResult(basetask.Results):
     def __init__(self):
         super(MakeCleanListResult, self).__init__()
         self.targets = []
+        self._max_num_targets = 0
 
     def add_target(self, target):
         self.targets.append(target)
 
     def merge_with_context(self, context):
         context.clean_list_pending = copy.deepcopy(self.targets)
+
+    @property
+    def num_targets(self):
+        return len(self.targets)
+
+    @property
+    def max_num_targets(self):
+        return self._max_num_targets
+
+    def set_max_num_targets(self, max_num_targets):
+        self._max_num_targets = max_num_targets
 
     def __repr__(self):
         repr = 'MakeCleanList:'
