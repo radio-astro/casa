@@ -214,7 +214,6 @@ void MSCache::setUpVisIter(const String& msname,
 	vm_.reset();
 	vm_= MSCacheVolMeter(ms, averaging_, chansel, corrsel);
 	}
-
 	// Create configuration:
 	// Start with data selection; rename fields with expected keywords
 	Record configuration = selection.toRecord();
@@ -239,23 +238,21 @@ void MSCache::setUpVisIter(const String& msname,
 		configuration.defineRecord("callib", calibration.callibRec());
 	}	
 
-	// Apply time and channel averaging if not combined with other averaging
-	if ( !averaging_.baseline() && !averaging_.antenna() && !averaging_.spw() ) {
-		if (averaging_.time()){
-			configuration.define("timeaverage", True);
-			configuration.define("timebin", averaging_.timeStr());
-			String timespanStr = "state";
-			if (averaging_.field())
-				timespanStr += ",scan,field";
-			else if (averaging_.scan())
-				timespanStr += ",scan";
-			configuration.define("timespan", timespanStr);
-		}
-		if (averaging_.channel()) {
-			configuration.define("chanaverage", True);
-			int chanVal = static_cast<int>(averaging_.channelValue());
-			configuration.define("chanbin", chanVal);
-		}
+	// Apply time and channel averaging
+	if (averaging_.time()){
+		configuration.define("timeaverage", True);
+		configuration.define("timebin", averaging_.timeStr());
+		String timespanStr = "state";
+		if (averaging_.field())
+			timespanStr += ",scan,field";
+		else if (averaging_.scan())
+			timespanStr += ",scan";
+		configuration.define("timespan", timespanStr);
+	}
+	if (averaging_.channel()) {
+		configuration.define("chanaverage", True);
+		int chanVal = static_cast<int>(averaging_.channelValue());
+		configuration.define("chanbin", chanVal);
 	}
 
 	MSTransformIteratorFactory factory(configuration);
@@ -277,7 +274,7 @@ void MSCache::setUpVolMeter() {
 
 	// Set up the volume meter
 	vm_.reset();
-	vm_= MSCacheVolMeter(ms, averaging_, chansel, corrsel);
+	vm_ = MSCacheVolMeter(ms, averaging_, chansel, corrsel);
 }
 	
 void MSCache::countChunks(vi::VisibilityIterator2& vi,
@@ -1456,7 +1453,9 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 
 					// Put the flags back into the MS
 					vi_p->writeFlag(vbflag);
-					if (!setFlag) vi_p->writeFlagRow(vbflagrow);
+					// This is now done by MSTransformIterator
+					// when writeFlag is called
+					//if (!setFlag) vi_p->writeFlagRow(vbflagrow);
 
 					// Advance to the next vb
 					vi_p->next();
@@ -1475,6 +1474,8 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 			} // flaggable VB with averaging handled by plotms
 			else {
 				vi_p->writeFlag(flag(ichk));
+				// This is now done by MSTransformIterator
+				// when writeFlag is called
 				//if (!setFlag) vi_p->writeFlagRow(flagrow(ichk));
 
 				// Advance to the next vb
