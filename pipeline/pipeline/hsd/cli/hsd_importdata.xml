@@ -61,7 +61,7 @@
 
     <param type="bool" name="with_pointing_correction">
 	<description>Apply pointing correction to DIRECTION</description>
-	<value>False</value>
+	<value>True</value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -154,7 +154,7 @@ bdfflags -- Apply BDF flags on line
    
 with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) 
    to the value to be written in MS::Pointing::direction
-   default: False
+   default: True
 
 --- pipeline task execution modes
 
