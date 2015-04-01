@@ -1487,26 +1487,49 @@ class par(str):
                	default: 1.0
 		"""
 
-	@staticmethod
-	def mask():
-		""" In clean, name(s) of mask image(s) used for CLEANing.
-		    In the image analysis tasks tool methods and tasks, a
-		    mask can be specified two ways: 1. as a Lattice
-		    Expression, which may be mask filename. The full
-		    description of the syntax can be found at
+        @staticmethod
+        def mask():
+            """ 
+            In clean, name(s) of mask image(s) used for CLEANing.
+
+            In the image analysis tool methods and tasks, a
+            mask can be specified two ways: 1. as a Lattice
+            Expression, which may be mask filename. The full
+            description of the syntax can be found at
             http://aips2.nrao.edu/docs/notes/223/223.html,
             eg
-		        mask='mask(myimage.mask)'
-		        mask='mask(otherimage:othermask)'
-		        mask='myimage>0.5'
-		    or 2. an image containing numerical valued pixels,
-		    in which case pixels values >= 0.5 are masked True
-		    (good) and < 0.5 are masked False (bad). This
-		    functionality is primarily meant to support clean mask
-		    images, but will work for any image with numerical
-		    valued pixels. eg,
-	            mask='mycleanmask.im'
-		"""
+            
+                mask='mask(myimage.mask)'
+                mask='mask(otherimage:othermask)'
+                mask='myimage>0.5'
+            
+            or 2. as an image containing numerical valued pixels,
+            in which case pixels values >= 0.5 are masked True
+            (good) and < 0.5 are masked False (bad). This
+            functionality is primarily meant to support clean mask
+            images, but will work for any image with numerical
+            valued pixels. eg,
+           
+                mask='mycleanmask.im'
+            
+            In this case, the mask expression is rewritten as an LEL
+            expression under the hood to eg
+
+                mask = 'mycleanmask.im >= 0.5'
+
+            Because it is an LEL expression, care must be taken to properly
+            escape characters which LEL views as special, such as underscores.
+            For details, see the aforementioned LEL document. As an example,
+            specifying
+
+                mask = 'my_clean_mask.im' 
+
+            will cause the image analysis application to fail, because the
+            underscore characters are not properly escaped. The solution is to
+            escape them properly, eg
+
+                mask = "'my_clean_mask.im'"
+            """
 
 	@staticmethod
 	def maskcenter():
