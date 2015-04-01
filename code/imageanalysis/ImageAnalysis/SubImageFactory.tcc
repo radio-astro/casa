@@ -38,10 +38,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 
-//debug
-#include <tables/Tables/PlainTable.h>
-
-
 namespace casa {
 
 template<class T> SubImageFactory<T>::SubImageFactory() {}
@@ -53,9 +49,6 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
 	Bool extendMask, Bool preserveAxesOrder
 ) {
-    // The ImageRegion pointers must be null on entry
-	// either pointer may be null on exit
-	//CountedPtr<ImageRegion> outMaskMgr(0);
     if (! mask.empty()) {
     	String mymask = mask;
     	for (uInt i=0; i<2; i++) {
@@ -83,7 +76,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     	) {
     		ThrowIf(
     			! extendMask,
-    			"The input image shape and mask shape are different and it was specified "
+    			"The input image shape and mask shape are different, and it was specified "
     			"that the mask should not be extended, so the mask cannot be applied to the "
     			"(sub)image. Specifying that the mask should be extended may resolve the issue"
     		);
@@ -108,11 +101,9 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 			);
 	}
 	else {
-		/*std::auto_ptr<ImageRegion> */ outRegion = (
-			ImageRegion::fromRecord(
-				os, inImage.coordinates(),
-				inImage.shape(), region
-			)
+		outRegion = ImageRegion::fromRecord(
+			os, inImage.coordinates(),
+			inImage.shape(), region
 		);
 		if (! outMask) {
             subImage = SubImage<T>(
@@ -153,8 +144,6 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 		mask, os, writableIfPossible, axesSpecifier,
 		extendMask, preserveAxesOrder
 	);
-	//delete pRegion;
-	//delete pMask;
     return mySubim;
 }
 
@@ -168,7 +157,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	log << LogOrigin("SubImageFactory", __func__);
 	// Copy a portion of the image
 	// Verify output file
-	if (!overwrite && !outfile.empty()) {
+	if (! overwrite && ! outfile.empty()) {
 		NewFile validfile;
 		String errmsg;
 		ThrowIf(
@@ -221,5 +210,5 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
     return outImage;
 }
 
-} //# NAMESPACE CASA - END
+}
 
