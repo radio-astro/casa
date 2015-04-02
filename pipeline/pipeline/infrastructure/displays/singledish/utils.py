@@ -186,6 +186,9 @@ def utc_locator(start_time=None, end_time=None):
 class PlotObjectHandler(object):
     def __init__(self):
         self.storage = []
+        
+    def __del__(self):
+        self.clear()
     
     def plot(self, *args, **kwargs):
         object_list = pl.plot(*args, **kwargs)
