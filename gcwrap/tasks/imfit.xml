@@ -464,6 +464,8 @@ from the previous channel as the initial estimate for the next. It also illustra
 how one can specify a region in the associated continuum image as the region to use
 as the fit for the channel.
 
+
+\begin{verbatim}
 default imfit
 imagename = "co_cube.im"
 # specify region using region from continuum

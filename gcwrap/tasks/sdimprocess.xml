@@ -18,10 +18,10 @@ as a striped noise pattern along the scan direction in a raster
 scan data. 
 
 By default, the scanning noise is removed by using the 
-FFT-based 'Basket-Weaving' method (Emerson &amp; Grave 1988) that
+FFT-based 'Basket-Weaving' method (Emerson \&amp; Grave 1988) that
 requires multiple images that observed exactly the same area with
 different scanning direction. If only one image is available, the
-'Pressed-out' method (Sofue &amp; Reich 1979) can be used to remove
+'Pressed-out' method (Sofue \&amp; Reich 1979) can be used to remove
 the scanning effect.
   </description>
 
@@ -162,10 +162,10 @@ as a striped noise pattern along the scan direction in a raster
 scan data. 
 
 By default, the scanning noise is removed by using the FFT-based 
-'Basket-Weaving' method (Emerson &amp; Grave 1988) that requires 
+'Basket-Weaving' method (Emerson \&amp; Grave 1988) that requires 
 multiple images that observed exactly the same area with different 
 scanning direction. If only one image is available, the 'Pressed-out' 
-method (Sofue &amp; Reich 1979) can be used to remove the scanning 
+method (Sofue \&amp; Reich 1979) can be used to remove the scanning 
 effect.
 
 For 'Basket-Weaving', scanning directions must have at least two 
