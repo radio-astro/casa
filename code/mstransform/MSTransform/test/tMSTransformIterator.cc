@@ -25,6 +25,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <string>
 #include <iostream>
+#include <ctime>
 
 using namespace casa;
 using namespace std;
@@ -219,6 +220,10 @@ Record parseConfiguration(int argc, char **argv)
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("reindex", tmp);
 		}
+		else if (parameter == string("-test"))
+		{
+			configuration.define ("test", value);
+		}
 	}
 
 	if (autoMode)
@@ -396,8 +401,12 @@ const Cube<Complex> & getVisCubeToCompare(vi::VisBuffer2 *visBufferRef, MS::Pred
 
 Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, String tmpFileName,dataColMap &myDataColMap)
 {
+	// Set tolerance for comparisons
+	Float tolerance = 1E-6; // FLT_EPSILON is 1.19209290e-7F
+
 	// Declare tmp variables
 	Int chunk = 0,buffer = 0,row = 0;
+	size_t totalBuffers = 0;
 	IPosition pos;
 	Bool keepIterating = True;
 
@@ -420,7 +429,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	//visIterRef.setRowBlocking(ms.nrow());
 	vi::VisBuffer2 *visBufferRef = visIterRef.getVisBuffer();
 
-	// Prepare transforming buffer
+	// Get TVI, and associated buffer
 	MSTransformIteratorFactory factory(configuration);
 	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
@@ -443,6 +452,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 		while (visIter->more() and visIterRef.more() and keepIterating)
 		{
 			buffer += 1;
+			totalBuffers += 1;
+
 			cout << BLUE;
 			cout << " COMPARING CHUNK " << chunk << " BUFFER " << buffer << endl;
 
@@ -685,7 +696,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 
 			// Non re-indexable Vectors
-			row = compareVector(visBuffer->time(),visBufferRef->time(),DBL_EPSILON );
+			row = compareVector(visBuffer->time(),visBufferRef->time(),tolerance);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -700,24 +711,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>time match" << endl;
 			}
 
-			/*
-			if (True)
-			{
-				logger << "visBuffer->antenna1()=" << visBuffer->antenna1() << LogIO::POST;
-				logger << "visBufferRef->antenna1()=" << visBufferRef->antenna1() << LogIO::POST;
-				logger << "visBuffer->antenna2()=" << visBuffer->antenna2() << LogIO::POST;
-				logger << "visBufferRef->antenna2()=" << visBufferRef->antenna2() << LogIO::POST;
-
-				ostringstream oss;
-				oss.precision(30);
-				oss << " visBuffer->time()=" << visBuffer->time() << endl;
-				oss << " visBufferRef->time()=" << visBufferRef->time() << endl;
-				logger << oss.str() << LogIO::POST;
-			}
-			*/
-
-
-			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),DBL_EPSILON );
+			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),tolerance);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -733,7 +727,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->timeInterval(),visBufferRef->timeInterval(),DBL_EPSILON);
+			row = compareVector(visBuffer->timeInterval(),visBufferRef->timeInterval(),tolerance);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -749,7 +743,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			row = compareVector(visBuffer->exposure(),visBufferRef->exposure(),DBL_EPSILON);
+			row = compareVector(visBuffer->exposure(),visBufferRef->exposure(),tolerance);
 			if (row >= 0)
 			{
 				cout << RED;
@@ -780,73 +774,16 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>flagRow match" << endl;
 			}
 
-			// Virtual columns
 
+			// Derived cols: This is just a non-crash test, derived cols are not re-indexed
 			Double time0 = visBufferRef->time()(0);
-
-			row = compareVector(visBuffer->feedPa(time0),visBufferRef->feedPa(time0),1E-3);
-			if (row >= 0)
-			{
-				cout << RED;
-				cout << " feedPa does not match in row "<< row
-						<< " transformBuffer=" << visBuffer->feedPa(time0)(row)
-						<< " transformFile=" << visBufferRef->feedPa(time0)(row) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>feedPa match" << endl;
-			}
-
-			if (abs(visBuffer->parang0(time0)-visBufferRef->parang0(time0)) > 1E-3)
-			{
-				cout << RED;
-				cout << " parang0 does not match in row "<< 0
-						<< " transformBuffer=" << visBuffer->parang0(time0)
-						<< " transformFile=" << visBufferRef->parang0(time0) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>parang0 match" << endl;
-			}
-
-
-			row = compareVector(visBuffer->parang(time0),visBufferRef->parang(time0),1E-3);
-			if (row >= 0)
-			{
-				cout << RED;
-				cout << " parang does not match in row "<< row
-						<< " transformBuffer=" << visBuffer->parang(time0)(row)
-						<< " transformFile=" << visBufferRef->parang(time0)(row) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>parang match" << endl;
-			}
-
-			// TODO: This is just a non-crash test, there is not == operator for MDirection
+			visBuffer->feedPa(time0);
+			visBuffer->parang0(time0);
+			visBuffer->parang(time0);
 			visBuffer->azel0(time0);
 			visBuffer->azel(time0);
+			visBuffer->hourang(time0);
 			///////////////////////////////////////////////////////////////////////////////
-
-			if (abs(visBuffer->hourang(time0)-visBufferRef->hourang(time0)) > 1E-3)
-			{
-				cout << RED;
-				cout << " hourang does not match in row "<< 0
-						<< " transformBuffer=" << visBuffer->hourang(time0)
-						<< " transformFile=" << visBufferRef->hourang(time0) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>hourang match" << endl;
-			}
 
 			if (abs(visBuffer->getFrequency(0,0)-visBufferRef->getFrequency(0,0)) > 1E-3)
 			{
@@ -924,7 +861,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			// Matrix cols
 
 			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),FLT_EPSILON);
+			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),tolerance);
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -941,7 +878,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),FLT_EPSILON);
+			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),tolerance);
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -958,7 +895,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),FLT_EPSILON);
+			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),tolerance);
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -1001,7 +938,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::DATA,myDataColMap);
 				pos = compareCube(	visBuffer->visCube(),
 									visCubeRef,
-									FLT_EPSILON);
+									tolerance);
 
 				if (pos.size() == 3)
 				{
@@ -1027,7 +964,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::CORRECTED_DATA,myDataColMap);
 				pos = compareCube(	visBuffer->visCubeCorrected(),
 									visCubeRef,
-									FLT_EPSILON);
+									tolerance);
 
 				if (pos.size() == 3)
 				{
@@ -1052,7 +989,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::MODEL_DATA,myDataColMap);
 				pos = compareCube(	visBuffer->visCubeModel(),
 									visCubeRef,
-									FLT_MAX);
+									tolerance);
 
 				if (pos.size() == 3)
 				{
@@ -1071,7 +1008,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			pos.resize(0,False);
-			pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),FLT_EPSILON);
+			pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),tolerance);
 			if (pos.size() == 3)
 			{
 				cout << RED;
@@ -1088,7 +1025,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			pos.resize(0,False);
-			pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),FLT_EPSILON);
+			pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),tolerance);
 			if (pos.size() == 3)
 			{
 				cout << RED;
@@ -1179,17 +1116,117 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	return keepIterating;
 }
 
+Bool test_bufferStructure(Record configuration)
+{
+	// Initialize logger for printing data structures
+	LogIO logger;
+
+	// Declare tmp variables
+	Int chunk = 0,buffer = 0;
+	size_t totalBuffers = 0;
+	Bool keepIterating = True;
+	time_t startTime, endTime;
+
+	// Initialize factory and pre-calculate buffer structure
+	MSTransformIteratorFactory factory(configuration);
+	logger << "Start pre-calculation of buffer structure, this includes MSTransformManager initialization" << LogIO::POST;
+	startTime = std::time(NULL);
+	std::vector<IPosition> visBufferStructure = factory.getVisBufferStructure();
+	endTime = std::time(NULL);
+	logger << "End pre-calculate buffer structure, including MSTransformManager initialization: " << endTime-startTime << LogIO::POST;
+
+	// Prepare TVI, and associated buffer
+	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
+	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
+
+	// Start timer
+	logger << "Start TVI loop" << LogIO::POST;
+	startTime = std::time(NULL);
+
+	// Swap MS loading data cols
+	visIter->originChunks();
+	while (visIter->moreChunks() and keepIterating)
+	{
+		chunk += 1;
+		buffer = 0;
+
+		visIter->origin();
+
+		while (visIter->more() and keepIterating)
+		{
+			buffer += 1;
+			totalBuffers += 1;
+
+			cout << BLUE;
+			cout << " COMPARING CHUNK " << chunk << " BUFFER " << buffer << endl;
+
+			// Compare shapes
+			if (visBuffer->getShape() != visBufferStructure[totalBuffers-1])
+			{
+				cout << RED;
+				cout 	<< " pre-calculated buffer shape does not match for " << chunk << " buffer " << buffer
+						<< " transformBuffer=" << visBuffer->getShape()
+						<< " precalculated=" << visBufferStructure[totalBuffers-1] << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout << "=>pre-calculated shape match" << endl;
+			}
+
+			if (keepIterating) visIter->next();
+		}
+
+		if (keepIterating) visIter->nextChunk();
+	}
+	cout << RESET << endl;
+
+	// Stop timer
+	endTime = std::time(NULL);
+	logger << "Start TVI loop, total time: " << endTime-startTime << LogIO::POST;
+
+	delete visIter;
+	return keepIterating;
+}
+
 int main(int argc, char **argv)
 {
-	Record configuration = parseConfiguration(argc, argv);
+	// Declare working vars
+	String tmpFileName;
 	dataColMap myDataColMap;
 
-	String tmpFileName = produceTmpTransformedMSToCompare(configuration,myDataColMap);
-	Bool result = test_compareTransformedFileWithTransformingBuffer(configuration,tmpFileName,myDataColMap);
+	// Read config
+	Record configuration = parseConfiguration(argc, argv);
+
+	// Determine test to run
+	String test("compare");
+	int fieldPos = 0;
+	fieldPos = configuration.fieldNumber ("test");
+	if (fieldPos >= 0)
+	{
+		configuration.get (fieldPos, test);
+	}
+
+	Bool result;
+	if (test == "buffer")
+	{
+		result = test_bufferStructure(configuration);
+	}
+	else if (test == "compare")
+	{
+		dataColMap myDataColMap;
+		tmpFileName = produceTmpTransformedMSToCompare(configuration,myDataColMap);
+		result = test_compareTransformedFileWithTransformingBuffer(configuration,tmpFileName,myDataColMap);
+	}
 
 	if (result)
 	{
-		Table::deleteTable(tmpFileName,True);
+		if (test == "compare")
+		{
+			Table::deleteTable(tmpFileName,True);
+		}
+
 		exit(0);
 	}
 	else

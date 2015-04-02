@@ -73,6 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Forward declarations
 class MSTransformBufferImpl;
 class MSTransformIterator;
+class MSTransformIteratorFactory;
 
 // MS Transform Framework utilities
 namespace MSTransformations
@@ -317,6 +318,7 @@ class MSTransformManager
 
 	friend class MSTransformBufferImpl;
 	friend class MSTransformIterator;
+	friend class MSTransformIteratorFactory;
 
 public:
 
@@ -347,6 +349,7 @@ public:
 	// Needed by MSTransformBuffer
 	vi::VisBuffer2 * getVisBuffer() {return visibilityIterator_p->getVisBuffer();}
 	IPosition getShape();
+	IPosition getTransformedShape(vi::VisBuffer2 *inputVisBuffer);
 
 	// Need by tMSTransformIterator
 	dataColMap getDataColMap() { return dataColMap_p;}

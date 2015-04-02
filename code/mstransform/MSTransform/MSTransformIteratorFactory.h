@@ -145,6 +145,8 @@ public:
 	MSTransformIteratorFactory(Record &configuration, MrsEligibility &eligibleSubTables);
 	~MSTransformIteratorFactory();
 
+	std::vector<IPosition> getVisBufferStructure();
+
 protected:
 
 	void setConfiguration(Record &configuration);
@@ -153,6 +155,7 @@ protected:
 private:
 
 	Record configuration_p;
+	MSTransformManager *manager_p;
 	MrsEligibility eligibleSubTables_p;
 };
 

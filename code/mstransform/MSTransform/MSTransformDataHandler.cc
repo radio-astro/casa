@@ -125,7 +125,7 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	{
 		return my_colNameVect;
 	}
-	else if(col == "None")
+	else if(col == "NONE")
 	{
 		my_colNameStr = "";
 		my_colNameVect.resize(0);
@@ -822,11 +822,26 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 
 	msOut_p = *outpointer;
 
-	if (!fillSubTables(colNamesTok))
+	Bool ret = False;
+	try
+	{
+		ret = fillSubTables(colNamesTok);
+	}
+	catch (AipsError ex)
+	{
+		ret = False;
+		os 	<< LogIO::SEVERE
+			<< "Exception filling the sub-tables: " << ex.getMesg() << endl
+			<< "Stack Trace: " << ex.getStackTrace()
+			<< LogIO::POST;
+	}
+
+	if (!ret)
 	{
 		delete outpointer;
-		os << LogIO::WARN << msname << " left unfinished." << LogIO::POST;
 		ms_p = MeasurementSet();
+		msOut_p = MeasurementSet();
+		os << LogIO::SEVERE << msname << " left unfinished." << LogIO::POST;
 		return False;
 	}
 

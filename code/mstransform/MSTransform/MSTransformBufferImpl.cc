@@ -123,9 +123,9 @@ void MSTransformBufferImpl::resetState()
 	timeCentroidTransformed_p = False;
 	timeIntervalTransformed_p = False;
 	exposureTransformed_p = False;
-	feedPaOk_p = False;
-	parangOk_p = False;
-	azelOk_p = False;
+	feedPaTransformed_p = False;
+	parangTransformed_p = False;
+	azelTransformed_p = False;
 	frequenciesTransformed_p = False;
 	channelNumbersTransformed_p = False;
 	rowIdsTransformed_p = False;
@@ -1060,26 +1060,6 @@ const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 // -----------------------------------------------------------------------
 const Vector<Float> & MSTransformBufferImpl::feedPa (Double time) const
 {
-	/*
-	if (not feedPaOk_p)
-	{
-		getShape();
-		feedPa_p.resize(nRows_p,False);
-
-		feedPaTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->feedPa(time),
-																		feedPa_p,
-																		False);
-		feedPaOk_p = True;
-	}
-
-	if (not feedPaTransformed_p)
-	{
-		return manager_p->getVisBuffer()->feedPa(time);
-	}
-
-	return feedPa_p;
-	*/
-
 	return manager_p->getVisBuffer()->feedPa(time);
 }
 
@@ -1096,26 +1076,6 @@ Float MSTransformBufferImpl::parang0 (Double time) const
 // -----------------------------------------------------------------------
 const Vector<Float> & MSTransformBufferImpl::parang(Double time) const
 {
-	/*
-	if (not parangOk_p)
-	{
-		getShape();
-		parang_p.resize(nRows_p,False);
-
-		parangTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->parang(time),
-																		parang_p,
-																		False);
-		parangOk_p = True;
-	}
-
-	if (not parangTransformed_p)
-	{
-		return manager_p->getVisBuffer()->parang(time);
-	}
-
-	return parang_p;
-	*/
-
 	return manager_p->getVisBuffer()->parang(time);
 }
 
@@ -1132,23 +1092,7 @@ MDirection MSTransformBufferImpl::azel0 (Double time) const
 // -----------------------------------------------------------------------
 const Vector<MDirection> & MSTransformBufferImpl::azel(Double time) const
 {
-	if (not azelOk_p)
-	{
-		getShape();
-		azel_p.resize(nRows_p,False);
-
-		azelTransformed_p = manager_p->transformNotReindexableVector(	manager_p->getVisBuffer()->azel(time),
-																		azel_p,
-																		False);
-		azelOk_p = True;
-	}
-
-	if (not azelTransformed_p)
-	{
-		return manager_p->getVisBuffer()->azel(time);
-	}
-
-	return azel_p;
+	return manager_p->getVisBuffer()->azel(time);
 }
 
 // -----------------------------------------------------------------------

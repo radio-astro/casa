@@ -1082,22 +1082,35 @@ void MSTransformManager::open()
 
 
 	//jagonzal (CAS-5174)
-	Bool selectionOk = False;
-	if (not bufferMode_p)
+	Bool outputMSStructureCreated = False;
+	try
 	{
-		selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+		if (not bufferMode_p)
+		{
+			outputMSStructureCreated = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+		}
+		else
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << "Create output MS structure" << LogIO::POST;
+			outputMSStructureCreated = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p,Table::Scratch);
+		}
 	}
-	else
+	catch (AipsError ex)
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << "Create output MS structure" << LogIO::POST;
-		selectionOk = dataHandler_p->makeMSBasicStructure(outMsName_p,datacolumn_p,tileShape_p,timespan_p,Table::Scratch);
+		outputMSStructureCreated = False;
+		logger_p 	<< LogIO::SEVERE
+					<< "Exception creating output MS structure: " << ex.getMesg() << endl
+					<< "Stack Trace: " << ex.getStackTrace()
+					<< LogIO::POST;
+
+		throw AipsError(ex.getMesg());
 	}
 
-	if (!selectionOk)
+
+
+	if (!outputMSStructureCreated)
 	{
-		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-				<< "Combination of selection ranges produces a NullSelection" << LogIO::POST;
-		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
+		throw AipsError("Error creating output MS structure");
 	}
 
 	// jagonzal (CAS-5076): Reindex state column when there is scan selection
@@ -1436,10 +1449,18 @@ void MSTransformManager::setup()
 // -----------------------------------------------------------------------
 IPosition MSTransformManager::getShape()
 {
+	return getTransformedShape(visibilityIterator_p->getVisBuffer());
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+IPosition MSTransformManager::getTransformedShape(vi::VisBuffer2 *visBuffer)
+{
 	IPosition outputCubeShape(3);
 
 	// Correlations
-	outputCubeShape(0) = visibilityIterator_p->getVisBuffer()->nCorrelations();
+	outputCubeShape(0) = visBuffer->nCorrelations();
 
 	// Rows
 	outputCubeShape(2) = nRowsToAdd_p;
@@ -1455,17 +1476,17 @@ IPosition MSTransformManager::getShape()
 	}
 	else if (refFrameTransformation_p)
 	{
-		Int inputSpw = visibilityIterator_p->getVisBuffer()->spectralWindows()(0);
+		Int inputSpw = visBuffer->spectralWindows()(0);
 		outputCubeShape(1) = inputOutputSpwMap_p[inputSpw].second.NUM_CHAN;
 	}
 	else if (channelAverage_p)
 	{
-		Int inputSpw = visibilityIterator_p->getVisBuffer()->spectralWindows()(0);
+		Int inputSpw = visBuffer->spectralWindows()(0);
 		outputCubeShape(1) = numOfOutChanMap_p[inputSpw];
 	}
 	else
 	{
-		outputCubeShape(1) = visibilityIterator_p->getVisBuffer()->nChannels();
+		outputCubeShape(1) = visBuffer->nChannels();
 	}
 
 	return outputCubeShape;
