@@ -474,9 +474,27 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
                              pol=pol,
                              scan=scan,
                              outfile=outfile,overwrite=overwrite)
-        #self.assertEqual(result, None,
-        #                    msg="The task returned '"+str(result)+"' instead of None")
         
+        # sdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,msg="The task returned '"+str(result)+"' instead of None")
+        #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid) 
+        results = self._getStats(outfile, '', pol)
+        print self._getStats(outfile, '', pol)
+        theresult = None
+        for i in range(len(results)):
+            if (results[i]['pol'] == int(pol)):
+                theresult = results[i]
+        
+        reference = {'rms':0.16685959517745799,
+                      'min':-2.5928177833557129,
+                      'max':1.3953156471252441,
+                     #'max_abscissa': {'value': 8186.0, 'unit': 'channel'},
+                      'median':-0.00089824199676513672,
+                      'stddev': 0.16685959517745766,
+                     #'min_abscissa': {'value': 8187.0, 'unit': 'channel'}
+                    }
+
+        self._compareStats(theresult, reference)
 
         #***
         #*** check if baseline is correctlt fit and subtracted ***
