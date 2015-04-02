@@ -109,7 +109,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
         LOG.info("Long solint = " + gain_solint2)
         
         refantfield = context.evla['msinfo'][m.name].calibrator_field_select_string
-        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,geometry=True,flagging=True, intent='', spw='')
+        refantobj = findrefant.RefAntHeuristics(vis='calibrators.ms',field=refantfield,geometry=True,flagging=False, intent='', spw='')
         
         RefAntOutput=refantobj.calculate()
         
