@@ -658,10 +658,10 @@ system. At the time of writing the following observatories are recognised
 (but check e.g. the position GUI for currently known ones, or the
 me.obslist() tool function):
 {\em'ALMA' 'ARECIBO' 'ATCA' 'BIMA' 'CLRO' 'DRAO' 'DWL' 'GB' 'GBT' 'GMRT'
- 'IRAM PDB' 'IRAM\_PDB' 'JCMT' 'MOPRA' 'MOST' 'NRAO12M' 'NRAO\_GBT' 'PKS'
+ 'IRAM PDB' 'IRAM_PDB' 'JCMT' 'MOPRA' 'MOST' 'NRAO12M' 'NRAO_GBT' 'PKS'
  'SAO SMA' 'SMA' 'VLA' 'VLBA' 'WSRT' 'ATF' 'ATA' 'CARMA' 'ACA' 'OSF'
- 'OVRO\_MMA' 'EVLA' 'ASKAP' 'APEX' 'SMT' 'NRO' 'ASTE' 'LOFAR' 'MeerKAT'
- 'KAT-7' 'EVN' 'LWA1' 'PAPER\_SA' 'PAPER_GB' 'e-MERLIN' 'MERLIN2'
+ 'OVRO_MMA' 'EVLA' 'ASKAP' 'APEX' 'SMT' 'NRO' 'ASTE' 'LOFAR' 'MeerKAT'
+ 'KAT-7' 'EVN' 'LWA1' 'PAPER_SA' 'PAPER_GB' 'e-MERLIN' 'MERLIN2'
  'Effelsberg' 'MWA32T' }.
 </description>
 <example>
