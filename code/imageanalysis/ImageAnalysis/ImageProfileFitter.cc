@@ -70,22 +70,19 @@ ImageProfileFitter::ImageProfileFitter(
 	_sigma(), _abscissaDivisor(1.0) {
 	*_getLog() << LogOrigin(_class, __func__);
     if (! estimatesFilename.empty()) {
-    	if (spectralList.nelements() > 0) {
-    		*_getLog() << "Logic error: both a non-empty estimatesFilename "
-    			<< "and a non-zero element spectralList cannot be specified"
-    			<< LogIO::EXCEPTION;
-    	}
-
+    	ThrowIf(
+    		spectralList.nelements() > 0,
+    		"Logic error: A non-empty estimatesFilename and a non-zero "
+    		"element spectralList cannot simultaneously be specified"
+    	);
     	ProfileFitterEstimatesFileParser parser(estimatesFilename);
     	_nonPolyEstimates = parser.getEstimates();
     	_nGaussSinglets = _nonPolyEstimates.nelements();
-
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
     		<<_nGaussSinglets << " in estimates file " << estimatesFilename
     		<< LogIO::POST;
     }
     else if (spectralList.nelements() > 0) {
-
     	_nonPolyEstimates = spectralList;
     	_nGaussSinglets = 0;
     	_nGaussMultiplets = 0;
@@ -119,9 +116,9 @@ ImageProfileFitter::ImageProfileFitter(
 				break;
 			default:
 				ThrowCc(
-					"Logic error: Only gaussian singlets, "
-					"gaussian multiplets, and lorentzian singlets, or a single power "
-					"logarithmic polynomial,  or a single log transformed polynomial are "
+					"Logic error: Only Gaussian singlets, "
+					"Gaussian multiplets, and Lorentzian singlets, or a single power "
+					"logarithmic polynomial, or a single log transformed polynomial are "
 				    "permitted in the spectralList input parameter"
 				);
 				break;
@@ -132,9 +129,8 @@ ImageProfileFitter::ImageProfileFitter(
     		*_getLog() << LogIO::WARN
     			<< "Spectral list supplied and ngauss > 0, ngauss will be ignored "
     			<< "and " << _nGaussSinglets << " Gaussian singlets "
-    			<< " as specified in the spectra list will be fit" << LogIO::POST;
+    			<< "as specified in the spectra list will be fit" << LogIO::POST;
     	}
-
     	if (_nPLPCoeffs  > 0) {
     		*_getLog() << LogIO::NORMAL << "Will fit a single power logarithmic polynomial "
     			<< " from provided spectral element list" << LogIO::POST;
@@ -145,12 +141,12 @@ ImageProfileFitter::ImageProfileFitter(
     	}
     	else {
     		if (_nGaussSinglets > 0) {
-    			*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
+    			*_getLog() << LogIO::NORMAL << "Number of Gaussian singlets to fit found to be "
     				<< _nGaussSinglets << " from provided spectral element list"
     				<< LogIO::POST;
     		}
     		if (_nGaussMultiplets > 0) {
-    			*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
+    			*_getLog() << LogIO::NORMAL << "Number of Gaussian multiplets to fit found to be "
     				<< _nGaussMultiplets << " from provided spectral element list"
     				<< LogIO::POST;
     		}
@@ -241,9 +237,7 @@ Record ImageProfileFitter::fit() {
 				);
 				SPIIF collapsed = collapsedSigma.collapse();
 				SHARED_PTR<TempImage<Float> >ctmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(collapsed);
-				ThrowIf(
-					! ctmp, "Dynamic cast failed"
-				);
+				ThrowIf(! ctmp, "Dynamic cast failed");
 				_sigma = ctmp;
 			}
 		}
@@ -251,9 +245,7 @@ Record ImageProfileFitter::fit() {
 	    *_getLog() << logOrigin;
 	}
 	catch (const AipsError& x) {
-		ThrowCc(
-			"Exception during fit: " + x.getMesg()
-		);
+		ThrowCc("Exception during fit: " + x.getMesg());
 	}
 	ImageProfileFitterResults resultHandler(
 		_getLog(), _getImage()->coordinates(), &_fitters,
@@ -298,11 +290,7 @@ Record ImageProfileFitter::fit() {
 }
 
 void ImageProfileFitter::setPolyOrder(Int p) {
-	*_getLog() << LogOrigin(_class, __func__);
-	ThrowIf(
-		p < 0,
-		"A polynomial cannot have a negative order"
-	);
+	ThrowIf(p < 0,"A polynomial cannot have a negative order");
 	ThrowIf(
 		_nPLPCoeffs > 0,
 		"Cannot simultaneously fit a polynomial and "
@@ -316,22 +304,22 @@ void ImageProfileFitter::setPolyOrder(Int p) {
     _polyOrder = p;
 }
 
-void ImageProfileFitter::setGoodAmpRange(const Double min, const Double max) {
-	_goodAmpRange.resize(2);
-	_goodAmpRange[0] = min < max ? min : max;
-	_goodAmpRange[1] = min < max ? max : min;
+void ImageProfileFitter::setGoodAmpRange(const Double minv, const Double maxv) {
+	_goodAmpRange.set(
+		new std::pair<Double, Double>(min(minv, maxv), max(minv, maxv))
+	);
 }
 
-void ImageProfileFitter::setGoodCenterRange(const Double min, const Double max) {
-	_goodCenterRange.resize(2);
-	_goodCenterRange[0] = min < max ? min : max;
-	_goodCenterRange[1] = min < max ? max : min;
+void ImageProfileFitter::setGoodCenterRange(const Double minv, const Double maxv) {
+	_goodCenterRange.set(
+		new std::pair<Double, Double>(min(minv, maxv), max(minv, maxv))
+	);
 }
 
-void ImageProfileFitter::setGoodFWHMRange(const Double min, const Double max) {
-	_goodFWHMRange.resize(2);
-	_goodFWHMRange[0] = min < max ? min : max;
-	_goodFWHMRange[1] = min < max ? max : min;
+void ImageProfileFitter::setGoodFWHMRange(const Double minv, const Double maxv) {
+	_goodFWHMRange.set(
+		new std::pair<Double, Double>(min(minv, maxv), max(minv, maxv))
+	);
 }
 
 void ImageProfileFitter::setSigma(const Array<Float>& sigma) {
@@ -360,7 +348,7 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 		sigma->ndim() == _getImage()->ndim()
 		&& sigma->shape() == _getImage()->shape()
 	) {
-		SHARED_PTR<ImageInterface<Float> > clone(sigma->cloneII());
+		SPIIF clone(sigma->cloneII());
 		_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(clone);
 		if (! _sigma) {
 			SPIIF x = SubImageFactory<Float>::createImage(
@@ -368,9 +356,10 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 			);
 			if (x) {
 				_sigma = DYNAMIC_POINTER_CAST<TempImage<Float> >(x);
-				if (! _sigma) {
-					*_getLog() << "Unable to create temporary weights image" << LogIO::EXCEPTION;
-				}
+				ThrowIf(
+					! _sigma,
+					"Unable to create temporary weights image"
+				);
 			}
 		}
 		if (mymax != 1) {
@@ -384,18 +373,19 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 		if (sigma->ndim() == _getImage()->ndim()) {
 			IPosition expShape(_getImage()->ndim(), 1);
 			expShape[_fitAxis] = _getImage()->shape()[_fitAxis];
-			if (sigma->shape() != expShape) {
-				*_getLog() << "If the shape of the standard deviation image differs from the shape of "
-					<< "the input image, the shape of the standard deviation image must be " << expShape
-					<< LogIO::EXCEPTION;
-			}
+			ThrowIf(
+				sigma->shape() != expShape,
+				"If the shape of the standard deviation image differs "
+				"from the shape of the input image, the shape of the "
+				"standard deviation image must be " + expShape.toString()
+			);
 		}
 		else if (sigma->ndim() == 1) {
-			if (sigma->shape()[0] != _getImage()->shape()[_fitAxis]) {
-				*_getLog() << "A one dimensional standard deviation spectrum must have the same number "
-					<< "of pixels as the input image has along its axis to be fit"
-					<< LogIO::EXCEPTION;
-			}
+			ThrowIf(
+				sigma->shape()[0] != _getImage()->shape()[_fitAxis],
+				"A one dimensional standard deviation spectrum must have the same "
+				"number of pixels as the input image has along its axis to be fit"
+			);
 		}
 		IPosition dataToInsertShape(_getImage()->ndim(), 1);
 		dataToInsertShape[_fitAxis] = _getImage()->shape()[_fitAxis];
@@ -415,7 +405,7 @@ void ImageProfileFitter::setSigma(const ImageInterface<Float>* const &sigma) {
 		_sigma->put(sigmaData);
 	}
 	else {
-		*_getLog() << "Illegal shape of standard deviation image" << LogIO::EXCEPTION;
+		ThrowCc("Illegal shape of standard deviation image");
 	}
 	if (! _sigma->coordinates().near(_getImage()->coordinates())) {
 		_sigma->setCoordinateInfo(_getImage()->coordinates());
@@ -440,11 +430,11 @@ void ImageProfileFitter::setAbscissaDivisor(Double d) {
 
 void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	String fitAxisUnit = _getImage()->coordinates().worldAxisUnits()[_fitAxis];
-	if (! q.isConform(fitAxisUnit)) {
-		*_getLog() << LogOrigin(_class, __func__);
-		*_getLog() << "Abscissa divisor unit " << q.getUnit() << " is not consistent with fit axis unit."
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		! q.isConform(fitAxisUnit),
+		"Abscissa divisor unit " + q.getUnit()
+		+ " is not consistent with fit axis unit"
+	);
 	if (! _isSpectralIndex) {
 		*_getLog() << LogOrigin(_class, __func__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a spectral index function "
@@ -478,29 +468,26 @@ void ImageProfileFitter::_getOutputStruct(
 }
 
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
-	if (
+	ThrowIf(
 		_polyOrder < 0
 		&& (
 			_nGaussSinglets + _nGaussMultiplets
 			+ _nLorentzSinglets
-		) == 0
-		&& ! _isSpectralIndex
-	) {
-		*_getLog() << LogOrigin(_class, __func__)
-			<< "Number of non-polynomials is 0 and polynomial order is less than zero. "
-			<< "According to these inputs there is nothing to fit."
-			<< LogIO::EXCEPTION;
-	}
+		) == 0 && ! _isSpectralIndex,
+		"Number of non-polynomials is 0 and polynomial order is less than zero. "
+		"According to these inputs there is nothing to fit."
+	);
 }
 
 void ImageProfileFitter::_finishConstruction() {
     LogOrigin logOrigin(_class, __func__);
 
-    if (_fitAxis >= (Int)_getImage()->ndim()) {
-    	*_getLog() << "Specified fit axis " << _fitAxis
-    		<< " must be less than the number of image axes ("
-    		<< _getImage()->ndim() << ")" << LogIO::EXCEPTION;
-    }
+    ThrowIf(
+    	_fitAxis >= (Int)_getImage()->ndim(),
+    	"Specified fit axis " + String::toString(_fitAxis)
+    	+ " must be less than the number of image axes ("
+    	+ String::toString(_getImage()->ndim()) + ")"
+    )
     if (_fitAxis < 0) {
 		if (! _getImage()->coordinates().hasSpectralAxis()) {
 			_fitAxis = 0;
@@ -532,10 +519,9 @@ Double ImageProfileFitter::getWorldValue(
 	// in pixels here
 	pixel[_fitAxis] = pixelVal;
 	_subImage->coordinates().toWorld(world, pixel);
-
 	SpectralCoordinate spectCoord;
 	//Use a tabular index for conversion if one has been specified.
-	if ( tabularIndex >= 0 ){
+	if ( tabularIndex >= 0 ) {
 		const CoordinateSystem& cSys = _subImage->coordinates();
 		TabularCoordinate tabCoord = cSys.tabularCoordinate( tabularIndex );
 		Vector<Double> worlds = tabCoord.worldValues();
@@ -566,6 +552,7 @@ Double ImageProfileFitter::getWorldValue(
 
 void ImageProfileFitter::_fitallprofiles() {
 	*_getLog() << LogOrigin(_class, __func__);
+	/*
 	IPosition imageShape = _subImage->shape();
 	// Set default axis
 	CoordinateSystem cSys = _subImage->coordinates();
@@ -579,6 +566,7 @@ void ImageProfileFitter::_fitallprofiles() {
 			axis2 = _subImage->ndim() - 1;
 		}
 	}
+	*/
 	// Create output images with a mask
 	SHARED_PTR<ImageInterface<Float> > fitImage, residImage;
 	if (
@@ -612,8 +600,7 @@ void ImageProfileFitter::_fitallprofiles() {
 
 // moved from ImageUtilities
 void ImageProfileFitter::_fitProfiles(
-	const SHARED_PTR<ImageInterface<Float> > pFit,
-	const SHARED_PTR<ImageInterface<Float> > pResid,
+	const SPIIF pFit, const SPIIF pResid,
     const Bool showProgress
 ) {
 	IPosition inShape = _subImage->shape();
@@ -755,7 +742,7 @@ void ImageProfileFitter::_fitProfiles(
 	IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
+	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
 			pProgressMeter->update(Double(nProfiles));
 		}
@@ -805,9 +792,7 @@ void ImageProfileFitter::_fitProfiles(
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
-    SHARED_PTR<ImageInterface<Float> > pFit,
-    SHARED_PTR<ImageInterface<Float> > pResid,
-    Bool fitOK,
+    SPIIF pFit, SPIIF pResid, Bool fitOK,
     const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     const IPosition& curPos, Lattice<Bool>* const &pFitMask,
     Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
@@ -949,10 +934,10 @@ void ImageProfileFitter::_flagFitterIfNecessary(
 	if (! fitter.converged()) {
 		return;
 	}
-	Bool checkComps = _goodAmpRange.size() > 0 || _goodCenterRange.size() > 0
-		|| _goodFWHMRange.size() > 0;
+	Bool checkComps = _goodAmpRange || _goodCenterRange
+		|| _goodFWHMRange;
 	SpectralList solutions = fitter.getList(True);
-	for (uInt i=0; i<solutions.nelements(); i++) {
+	for (uInt i=0; i<solutions.nelements(); ++i) {
 		if (
 			anyTrue(isNaN(solutions[i]->get()))
 			|| anyTrue(isNaN(solutions[i]->getError()))
@@ -1000,30 +985,30 @@ void ImageProfileFitter::_flagFitterIfNecessary(
 Bool ImageProfileFitter::_isPCFSolutionOK(
 	const PCFSpectralElement *const &pcf
 ) const {
-	if (_goodAmpRange.size() == 2) {
+	if (_goodAmpRange) {
 		Double amp = pcf->getAmpl();
 		if (
-			amp < _goodAmpRange[0]
-			|| amp > _goodAmpRange[1]
+			amp < _goodAmpRange->first
+			|| amp > _goodAmpRange->second
 			|| fabs(pcf->getAmplErr()/amp) > 100
 		) {
 			return False;
 		}
 	}
-	if (_goodCenterRange.size() == 2) {
+	if (_goodCenterRange) {
 		Double center = pcf->getCenter();
 		if (
-			center < _goodCenterRange[0]
-			|| center > _goodCenterRange[1]
+			center < _goodCenterRange->first
+			|| center > _goodCenterRange->second
 		) {
 			return False;
 		}
 	}
-	if (_goodFWHMRange.size() == 2) {
+	if (_goodFWHMRange) {
 		Double fwhm = pcf->getFWHM();
         if (
-			fwhm < _goodFWHMRange[0]
-			|| fwhm > _goodFWHMRange[1]
+			fwhm < _goodFWHMRange->first
+			|| fwhm > _goodFWHMRange->second
 			|| fabs(pcf->getFWHMErr()/fwhm) > 100
 		) {
 			return False;
@@ -1036,4 +1021,4 @@ const Array<SHARED_PTR<ProfileFitResults> >& ImageProfileFitter::getFitters() co
 	return _fitters;
 }
 
-} //# NAMESPACE CASA - END
+}

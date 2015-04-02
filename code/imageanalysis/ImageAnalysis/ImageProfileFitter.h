@@ -89,7 +89,7 @@ public:
 	// or a non-empty <src>spectralList</src> can be specified.
 
 	ImageProfileFitter(
-			const SPCIIF image, const String& region,
+		const SPCIIF image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,
@@ -118,7 +118,7 @@ public:
 
     // set minimum number of good points required to attempt a fit
     inline void setMinGoodPoints(const uInt mgp) {
-    	ThrowIf(mgp == 0, "Number of good points has to be >0");
+    	ThrowIf(mgp == 0, "Number of good points has to be > 0");
     	_minGoodPoints = mgp;
     }
 
@@ -182,8 +182,11 @@ public:
     //frequency units.  If the tabular index >= 0, it uses the tabular index for conversion
     //with the specified MFrequency type, otherwise, it uses the spectral axis for
     //conversion.
-    Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
-        bool velocity, bool wavelength, Int tabularIndex = -1, MFrequency::Types type = MFrequency::DEFAULT ) const;
+    Double getWorldValue(
+    	Double pixelVal, const IPosition& imPos, const String& units,
+        Bool velocity, Bool wavelength, Int tabularIndex=-1,
+        MFrequency::Types type=MFrequency::DEFAULT
+    ) const;
 
     void setAbscissaDivisor(Double d);
 
@@ -219,7 +222,7 @@ private:
 	SHARED_PTR<SubImage<Float> > _subImage;
 	Record _results;
 	SpectralList _nonPolyEstimates;
-	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+	PtrHolder<std::pair<Double, Double> > _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
 
 	SHARED_PTR<TempImage<Float> > _sigma;
@@ -254,8 +257,7 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	SHARED_PTR<ImageInterface<Float> > pFit,
-    	SHARED_PTR<ImageInterface<Float> > pResid,
+    	SPIIF pFit, SPIIF pResid,
         const Bool showProgress=False
     );
 
@@ -264,8 +266,6 @@ private:
     void _flagFitterIfNecessary(ImageFit1D<Float>& fitter) const;
 
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
-
-    // Vector< Vector<Double> > _pixelPositions;
 
     void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
 
@@ -278,9 +278,7 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	SHARED_PTR<ImageInterface<Float> > pFit,
-    	SHARED_PTR<ImageInterface<Float> > pResid,
-        Bool fitOK,
+    	SPIIF pFit, SPIIF pResid, Bool fitOK,
     	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     	const IPosition& curPos, Lattice<Bool>* const &pFitMask,
         Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
