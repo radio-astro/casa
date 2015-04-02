@@ -1496,7 +1496,7 @@ class par(str):
             mask can be specified two ways: 1. as a Lattice
             Expression, which may be mask filename. The full
             description of the syntax can be found at
-            http://aips2.nrao.edu/docs/notes/223/223.html,
+            http://casa.nrao.edu/aips2_docs/notes/223/index.shtml,
             eg
             
                 mask='mask(myimage.mask)'
