@@ -465,12 +465,19 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         blfunc = 'cspline'
         overwrite = True
         npiece = 3
+        spw='3'
+        pol='1'
+        scan='0'
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             maskmode=maskmode, blfunc=blfunc,npiece=npiece,
-                             #spw=spw, pol=pol,
+                             maskmode=maskmode, blfunc=blfunc, npiece=npiece,
+                             spw=spw, 
+                             pol=pol,
+                             scan=scan,
                              outfile=outfile,overwrite=overwrite)
-        self.assertEqual(result, None,
-                         msg="The task returned '"+str(result)+"' instead of None")
+        #self.assertEqual(result, None,
+        #                    msg="The task returned '"+str(result)+"' instead of None")
+        
+
         #***
         #*** check if baseline is correctlt fit and subtracted ***
         #***
@@ -480,9 +487,49 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #r3:antenna1=0, data_disc_id=2
         #r4:antenna1=0, data_disc_id=3
         
+        ch=10
+        
+        pol0=0
+        pol1=1
+        
+        orig_pol0_value=[]
+        orig_pol1_value=[]
 
-        all_rows=['r1','r2','r3','r4']
-        ch=8192 #8192
+        # open the original MS
+        tb.open(infile)
+        for i in range(ch):
+            orig_pol0_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol0][i])
+            orig_pol1_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol1][i])
+        tb.close()
+
+        pol0_value=[]
+        pol1_value=[]
+
+
+        #open the MS after tsdbaseline
+        tb.open(outfile)
+        for i in range(ch):
+            pol0_value.append(tb.getcell('FLOAT_DATA', 0)[pol0][i])
+            pol1_value.append(tb.getcell('FLOAT_DATA', 0)[pol1][i])
+        tb.close()
+
+        
+        #when pol selection is 1, baseline subtraction is not performed for pol0
+        if(pol=='1'):
+            if((numpy.array(pol0_value) == numpy.array(orig_pol0_value)).all()):
+                print 'pol0: baseline subtraction is NOT performed. OK'
+            if((numpy.array(pol1_value) < numpy.array(orig_pol1_value)).all()):
+                print 'pol1: baseline subtraction is performed.OK'
+
+
+
+
+
+        all_rows=['r1']
+        #all_rows=['r1','r2','r3','r4']
+        
+        #ch=8192 #8192
+        ch=1280
         for row in all_rows:
             # after cspline
             tb.open(outfile)
@@ -539,6 +586,9 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
             print '1sigma after cspline (pol0)', sigma_pol0
             print '1sigma before cspline (pol1)', sigma_orig_pol1
             print '1sigma after cspline (pol1) ', sigma_pol1
+
+
+
 
     def test050( self ):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
