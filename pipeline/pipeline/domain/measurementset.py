@@ -287,10 +287,10 @@ class MeasurementSet(object):
         
         """Figure out integration time used"""
         
-        casatools.ms.open(vis)
-        scan_summary = casatools.ms.getscansummary()
-        ms_summary = casatools.ms.summary()
-        casatools.ms.close()
+        
+        with casatools.MSReader(vis) as ms:
+            scan_summary = ms.getscansummary()
+            ms_summary = ms.summary()
         startdate=float(ms_summary['BeginTime'])
     
         integ_scan_list = []
