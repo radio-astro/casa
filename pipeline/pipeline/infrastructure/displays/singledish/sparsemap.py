@@ -76,6 +76,102 @@ class SparseMapAxesManager(object):
         pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
 
 
+class SDSparseMapPlotter(object):
+    def __init__(self, nh, nv, step, brightnessunit):
+        self.step = step
+        ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
+        self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize)
+        
+    @property
+    def nh(self):
+        return self.axes.nh
+    
+    @property
+    def nv(self):
+        return self.axes.nv
+        
+    @property
+    def TickSize(self):
+        return self.axes.ticksize
+    
+    def setup_labels(self, refpix_list, refval_list, increment_list):
+        LabelRA = numpy.zeros((self.nh, 2), numpy.float32) + NoData
+        LabelDEC = numpy.zeros((self.nv, 2), numpy.float32) + NoData
+        refpix = refpix_list[0]
+        refval = refval_list[0]
+        increment = increment_list[0]
+        #LOG.debug('axis 0: refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
+        for x in xrange(self.nh):
+            x0 = (self.nh - x - 1) * self.step
+            x1 = (self.nh - x - 2) * self.step + 1
+            LabelRA[x][0] = refval + (x0 - refpix) * increment
+            LabelRA[x][1] = refval + (x1 - refpix) * increment
+        refpix = refpix_list[1]
+        refval = refval_list[1]
+        increment = increment_list[1]
+        #LOG.debug('axis 1: refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
+        for y in xrange(self.nv):
+            y0 = y * self.step
+            y1 = (y + 1) * self.step - 1
+            LabelDEC[y][0] = refval + (y0 - refpix) * increment
+            LabelDEC[y][1] = refval + (y1 - refpix) * increment
+        self.axes.setup_labels(LabelRA, LabelDEC)
+        
+    def plot(self, map_data, integrated_data, frequency, figfile):
+        plot_helper = PlotObjectHandler()
+        
+        spmin = integrated_data.min()
+        spmax = integrated_data.max()
+        dsp = spmax - spmin
+        spmin -= dsp * 0.1
+        spmax += dsp * 0.1
+        LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
+        
+        xmin = min(frequency[0], frequency[-1])
+        xmax = max(frequency[0], frequency[-1])
+
+        # Auto scaling
+        # to eliminate max/min value due to bad pixel or bad fitting,
+        #  1/10-th value from max and min are used instead
+        valid_index = numpy.where(map_data.min(axis=2) > NoDataThreshold)
+        valid_data = map_data[valid_index[0],valid_index[1],:]
+        ListMax = valid_data.max(axis=1)
+        ListMin = valid_data.min(axis=1)
+        LOG.debug('ListMax=%s'%(list(ListMax)))
+        LOG.debug('ListMin=%s'%(list(ListMin)))
+        if len(ListMax) == 0: 
+            return False
+        ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
+        ymin = numpy.sort(ListMin)[len(ListMin)/10]
+        ymax = ymax + (ymax - ymin) * 0.2
+        ymin = ymin - (ymax - ymin) * 0.1
+        del ListMax, ListMin
+
+        LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
+
+        pl.gcf().sca(self.axes.axes_integsp)
+        plot_helper.plot(frequency, integrated_data, color='b', linestyle='-', linewidth=0.4)
+        (_xmin,_xmax,_ymin,_ymax) = pl.axis()
+        pl.axis((_xmin,_xmax,spmin,spmax))
+
+        for x in xrange(self.nh):
+            for y in xrange(self.nv):
+                pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
+                if map_data[x][y].min() > NoDataThreshold:
+                    plot_helper.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
+                else:
+                    plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
+                                     size=(self.TickSize + 1))
+                pl.axis([xmin, xmax, ymin, ymax])
+
+        if ShowPlot: pl.draw()
+
+        pl.savefig(figfile, format='png', dpi=DPIDetail)
+        LOG.debug('figfile=\'%s\''%(figfile))
+        
+        plot_helper.clear()
+
+        return True
 
         
 class SDSparseMapDisplay(SDImageDisplay):
@@ -95,7 +191,7 @@ class SDSparseMapDisplay(SDImageDisplay):
     def __plot_sparse_map(self):
 
         # Plotting routine
-        Mark = '-b'
+        #Mark = '-b'
         #if ShowPlot: pl.ion()
         #else: pl.ioff()
         #pl.figure(self.MATPLOTLIB_FIGURE_ID)
@@ -112,45 +208,23 @@ class SDSparseMapDisplay(SDImageDisplay):
 
         chan0 = 0
         chan1 = self.nchan
-
-        xmin = min(self.frequency[chan0], self.frequency[chan1-1])
-        xmax = max(self.frequency[chan0], self.frequency[chan1-1])
-
-        TickSize = 10 - num_panel/2
-        Format = pl.FormatStrFormatter('%.2f')
+        
+        plotter = SDSparseMapPlotter(NH, NV, STEP, self.brightnessunit)
 
         masked_data = self.data * self.mask
 
         plot_list = []
 
-        LabelRA = numpy.zeros((NH, 2), numpy.float32) + NoData
-        LabelDEC = numpy.zeros((NV, 2), numpy.float32) + NoData
-        LabelRADEC = numpy.zeros((num_panel, 2, 2), numpy.float32) + NoData
-        (refpix, refval, increment) = self.image.direction_axis(0, unit='deg')
-        LOG.debug('refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
-        for x in xrange(NH):
-            x0 = (NH - x - 1) * STEP
-            x1 = (NH - x - 2) * STEP + 1
-            LabelRA[x][0] = refval + (x0 - refpix) * increment
-            LabelRA[x][1] = refval + (x1 - refpix) * increment
-        (refpix, refval, increment) = self.image.direction_axis(1, unit='deg')
-        LOG.debug('refpix,refval,increment=%s,%s,%s'%(refpix,refval,increment))
-        for y in xrange(NV):
-            y0 = y * STEP
-            y1 = (y + 1) * STEP - 1
-            LabelDEC[y][0] = refval + (y0 - refpix) * increment
-            LabelDEC[y][1] = refval + (y1 - refpix) * increment
-        #LOG.debug('LabelDEC=%s'%(LabelDEC))
-        #LOG.debug('LabelRA=%s'%(LabelRA))
-
-        axes_manager = SparseMapAxesManager(NH, NV, self.brightnessunit, TickSize)
-        axes_manager.setup_labels(LabelRA, LabelDEC)
-        axes_integsp = axes_manager.axes_integsp
-        axes_spmap = axes_manager.axes_spmap
+        refpix = [0,0]
+        refval = [0,0]
+        increment = [0,0]
+        refpix[0], refval[0], increment[0] = self.image.direction_axis(0, unit='deg')
+        refpix[1], refval[1], increment[1] = self.image.direction_axis(1, unit='deg')
+        plotter.setup_labels(refpix, refval, increment)
+        
         
         # loop over pol
         for pol in xrange(self.npol):
-            plot_helper = PlotObjectHandler()
             
             masked_data_p = masked_data.take([pol], axis=self.id_stokes).squeeze()
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
@@ -161,12 +235,6 @@ class SDSparseMapDisplay(SDImageDisplay):
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
-            spmin = TotalSP.min()
-            spmax = TotalSP.max()
-            dsp = spmax - spmin
-            spmin -= dsp * 0.1
-            spmax += dsp * 0.1
-            LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
 
             for x in xrange(NH):
                 x0 = x * STEP
@@ -178,65 +246,28 @@ class SDSparseMapDisplay(SDImageDisplay):
                     chunk = masked_data_p[x0:x1,y0:y1]
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
-
-            AutoScale = True
-            if AutoScale: 
-                # to eliminate max/min value due to bad pixel or bad fitting,
-                #  1/10-th value from max and min are used instead
-                valid_index = numpy.where(Plot.min(axis=2) > NoDataThreshold)
-                valid_data = Plot[valid_index[0],valid_index[1],:]
-                ListMax = valid_data.max(axis=1)
-                ListMin = valid_data.min(axis=1)
-                LOG.debug('ListMax=%s'%(list(ListMax)))
-                LOG.debug('ListMin=%s'%(list(ListMin)))
-                if len(ListMax) == 0: return plot_list
-                ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
-                ymin = numpy.sort(ListMin)[len(ListMin)/10]
-                ymax = ymax + (ymax - ymin) * 0.2
-                ymin = ymin - (ymax - ymin) * 0.1
-                del ListMax, ListMin
-            else:
-                ymin = scale_min
-                ymax = scale_max
-
-            LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
-
-            pl.gcf().sca(axes_integsp)
-            plot_helper.plot(self.frequency[chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4)
-            (_xmin,_xmax,_ymin,_ymax) = pl.axis()
-            pl.axis((_xmin,_xmax,spmin,spmax))
-
-            for x in xrange(NH):
-                for y in xrange(NV):
-                    pl.gcf().sca(axes_spmap[y+(NH-x-1)*NV])
-                    if Plot[x][y].min() > NoDataThreshold:
-                        plot_helper.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2)
-                    else:
-                        plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1))
-                    pl.axis([xmin, xmax, ymin, ymax])
-
-            if ShowPlot: pl.draw()
-
+ 
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
-            pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
-            plot_helper.clear()
+            status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
+                                  plotfile)
             
-            parameters = {}
-            parameters['intent'] = 'TARGET'
-            parameters['spw'] = self.inputs.spw
-            parameters['pol'] = polmap[pol]
-            parameters['ant'] = self.inputs.antenna
-            parameters['type'] = 'sd_sparse_map'
-            parameters['file'] = self.inputs.imagename
+            if status:
+                parameters = {}
+                parameters['intent'] = 'TARGET'
+                parameters['spw'] = self.inputs.spw
+                parameters['pol'] = polmap[pol]
+                parameters['ant'] = self.inputs.antenna
+                parameters['type'] = 'sd_sparse_map'
+                parameters['file'] = self.inputs.imagename
 
-            plot = logger.Plot(plotfile,
-                               x_axis='Frequency',
-                               y_axis='Intensity',
-                               field=self.inputs.source,
-                               parameters=parameters)
-            plot_list.append(plot)
+                plot = logger.Plot(plotfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=self.inputs.source,
+                                   parameters=parameters)
+                plot_list.append(plot)
             
 
         return plot_list
