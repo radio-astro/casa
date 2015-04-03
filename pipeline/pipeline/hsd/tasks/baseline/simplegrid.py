@@ -12,7 +12,7 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 NoData = common.NoData
-DO_TEST = True
+DO_TEST = False
 
 class SimpleGriddingInputs(common.SingleDishInputs):
     def __init__(self, context, antenna_list, spwid_list, index_list, nplane=None):
