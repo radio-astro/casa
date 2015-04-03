@@ -469,10 +469,9 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         pol='1'
         scan='0'
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             maskmode=maskmode, blfunc=blfunc, npiece=npiece,
-                             spw=spw, 
-                             pol=pol,
-                             scan=scan,
+                             maskmode=maskmode, blfunc=blfunc, 
+                             npiece=npiece,spw=spw, 
+                             pol=pol,scan=scan,
                              outfile=outfile,overwrite=overwrite)
         
         # sdbaseline returns None if it runs successfully
@@ -480,24 +479,23 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid) 
         results = self._getStats(outfile, '', pol)
         print self._getStats(outfile, '', pol)
+        
         theresult = None
         for i in range(len(results)):
             if (results[i]['pol'] == int(pol)):
                 theresult = results[i]
         
         reference = {'rms':0.16685959517745799,
-                      'min':-2.5928177833557129,
-                      'max':1.3953156471252441,
-                     #'max_abscissa': {'value': 8186.0, 'unit': 'channel'},
-                      'median':-0.00089824199676513672,
-                      'stddev': 0.16685959517745766,
-                     #'min_abscissa': {'value': 8187.0, 'unit': 'channel'}
+                     'min':-2.5928177833557129,
+                     'max':1.3953156471252441,
+                     'median':-0.00089824199676513672,
+                     'stddev': 0.16685959517745766,
                     }
 
         self._compareStats(theresult, reference)
 
         #***
-        #*** check if baseline is correctlt fit and subtracted ***
+        #*** check if baseline is subtracted ***
         #***
 
         #r1:antenna1=0, data_disc_id=0
@@ -505,107 +503,77 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #r3:antenna1=0, data_disc_id=2
         #r4:antenna1=0, data_disc_id=3
         
-        ch=10
+        num_ch=10
         
         pol0=0
-        pol1=1
-        
+        pol1=1        
         orig_pol0_value=[]
         orig_pol1_value=[]
 
+        sum_pol0=0.0
+        sum_pol1=0.0
+
+        sum_square_pol0 = 0.0
+        sum_square_pol1 = 0.0
+
         # open the original MS
         tb.open(infile)
-        for i in range(ch):
+        for i in range(num_ch):
             orig_pol0_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol0][i])
             orig_pol1_value.append(tb.getcell('FLOAT_DATA', int(spw))[pol1][i])
         tb.close()
 
+        variance_orig_pol0 = numpy.var(numpy.array(orig_pol0_value))
+        variance_orig_pol1 = numpy.var(numpy.array(orig_pol1_value))
+        
+
         pol0_value=[]
         pol1_value=[]
-
-
+        
         #open the MS after tsdbaseline
         tb.open(outfile)
-        for i in range(ch):
+        for i in range(num_ch):
             pol0_value.append(tb.getcell('FLOAT_DATA', 0)[pol0][i])
             pol1_value.append(tb.getcell('FLOAT_DATA', 0)[pol1][i])
         tb.close()
 
+      
+        variance_pol0 = numpy.var(numpy.array(pol0_value))        
+        variance_pol1 = numpy.var(numpy.array(pol1_value))        
+
+
+        #check if baseline of pol1 is subtracted and if pol0 is not.
+        #if(pol=='1'):
+        #    if((numpy.array(pol0_value) == numpy.array(orig_pol0_value)).all()):
+        #        print 'pol0: baseline subtraction is NOT performed. OK'
+        #    if((numpy.array(pol1_value) < numpy.array(orig_pol1_value)).all()):
+        #        print 'pol1: baseline subtraction is performed.OK'
+
         
-        #when pol selection is 1, baseline subtraction is not performed for pol0
-        if(pol=='1'):
-            if((numpy.array(pol0_value) == numpy.array(orig_pol0_value)).all()):
-                print 'pol0: baseline subtraction is NOT performed. OK'
-            if((numpy.array(pol1_value) < numpy.array(orig_pol1_value)).all()):
-                print 'pol1: baseline subtraction is performed.OK'
+        #cspline applied to only pol1 => pol0 should be the same before and after applying cspline
 
 
-
-
-
-        all_rows=['r1']
-        #all_rows=['r1','r2','r3','r4']
+        #assert pol1_value < prig_pol1_value
+        self.assertLess(pol1_value, orig_pol1_value)
         
-        #ch=8192 #8192
-        ch=1280
-        for row in all_rows:
-            # after cspline
-            tb.open(outfile)
-            sum_pol0=0.0
-            sum_pol1=0.0
-            _sum_pol0=0.0
-            _sum_pol1=0.0
+        #assert variance of pol1_value < variance of prig_pol1_value
+        self.assertLess(variance_pol1**0.5, variance_orig_pol1**0.5)
+
+        #assert pol0_value == orig_pol0_value
+        self.assertEqual(pol0_value, orig_pol0_value)
+        self.assertEqual(variance_pol0, variance_orig_pol0)
+
+
+        #print '1sigma before cspline (pol1)', variance_orig_pol1**0.5 
+        #print '1sigma after cspline (pol1)',  variance_pol1**0.5 
         
-            for i in range(ch):
-                sum_pol0  += tb.getvarcol('FLOAT_DATA')[row][0][i][0]
-                sum_pol1  += tb.getvarcol('FLOAT_DATA')[row][1][i][0]
-                _sum_pol0 += (tb.getvarcol('FLOAT_DATA')[row][0][i][0])**2
-                _sum_pol1 += (tb.getvarcol('FLOAT_DATA')[row][1][i][0])**2
-           
-            average_sum_pol0 = sum_pol0/float(ch)
-            average_sum_pol1 = sum_pol1/float(ch)
+        #print '1sigma before cspline (pol0)', variance_orig_pol0**0.5 
+        #print '1sigma after cspline (pol0)',  variance_pol0**0.5 
 
-            _average_sum_pol0 = _sum_pol0/float(ch)
-            _average_sum_pol1 = _sum_pol1/float(ch)
 
-            sigma_pol0= (_average_sum_pol0 - average_sum_pol0**2.0)**0.5
-            sigma_pol1= (_average_sum_pol1 - average_sum_pol1**2.0)**0.5
-            tb.close()
 
-            # before cspline
-            tb.open(infile)
-            sum_orig_pol0=0.0
-            sum_orig_pol1=0.0
-            _sum_orig_pol0=0.0 
-            _sum_orig_pol1=0.0 
         
-            for i in range(ch):
-                sum_orig_pol0  += tb.getvarcol('FLOAT_DATA')[row][0][i][0]
-                sum_orig_pol1  += tb.getvarcol('FLOAT_DATA')[row][1][i][0]
-                _sum_orig_pol0 += (tb.getvarcol('FLOAT_DATA')[row][0][i][0])**2.0
-                _sum_orig_pol1 += (tb.getvarcol('FLOAT_DATA')[row][1][i][0])**2.0
-                 
-            average_sum_orig_pol0 = sum_orig_pol0/float(ch)
-            average_sum_orig_pol1 = sum_orig_pol1/float(ch)
-
-            _average_sum_orig_pol0 = _sum_orig_pol0/float(ch)
-            _average_sum_orig_pol1 = _sum_orig_pol1/float(ch)
             
-            sigma_orig_pol0= (_average_sum_orig_pol0 - average_sum_orig_pol0**2.0)**0.5
-            sigma_orig_pol1= (_average_sum_orig_pol1 - average_sum_orig_pol1**2.0)**0.5
-            
-            tb.close()
-
-            print ''
-            print row, 'npiece: ', npiece
-            #print 'average before cspline (pol0)',average_sum_orig_pol0
-            #print '_average before cspline(pol0)', _average_sum_orig_pol0
-            print '1sigma before cspline (pol0)', sigma_orig_pol0
-            print '1sigma after cspline (pol0)', sigma_pol0
-            print '1sigma before cspline (pol1)', sigma_orig_pol1
-            print '1sigma after cspline (pol1) ', sigma_pol1
-
-
 
 
     def test050( self ):
