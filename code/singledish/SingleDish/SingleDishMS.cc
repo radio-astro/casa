@@ -707,7 +707,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
       }
 
-      // get a data/flag cube (npol*nchan*nrow) from VisBuffer
+      // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
 
@@ -725,6 +725,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   	  }
   	}
 
+	//prepare varables for writing baseline table
 	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
@@ -732,7 +733,6 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
 	  bltype_mtx[0][ipol] = (uInt)LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
 	  fpar_mtx[0][ipol] = (Int)order;
-	  //ffpar_mtx[0][ipol] = 0.0;
 	}
 	size_t num_masklist_max = 0;
 	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
@@ -765,6 +765,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	  lfavg_mtx[0][ipol] = 0;
 	  lfedge_mtx[0][ipol] = 0;
 	}
+
   	// loop over polarization
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
 	  apply_mtx[0][ipol] = True;
@@ -887,18 +888,18 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   	  // set back a spectrum to data cube
   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
   	} // end of polarization loop
-	// write to baseline table
-	Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
-	for (size_t ipol = 0; ipol > num_pol; ++ipol) {
-	  for (size_t imask = 0; imask > num_masklist_max; ++imask) {
-	    masklist_mtx[imask][ipol] = 0;
-	  }
-	  for (size_t imask = 0; imask > masklist_mtx_tmp[ipol].size(); ++imask) {
-	    masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
-	  }
-	}
 
 	if (write_baseline_table) {
+	  // write to baseline table
+	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+	  for (size_t ipol = 0; ipol > num_pol; ++ipol) {
+	    for (size_t imask = 0; imask > num_masklist_max; ++imask) {
+	      masklist_mtx[imask][ipol] = 0;
+	    }
+	    for (size_t imask = 0; imask > masklist_mtx_tmp[ipol].size(); ++imask) {
+	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
+	    }
+	  }
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
@@ -922,7 +923,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
-//Cubicspline
+//Cubic Spline
 void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 				     string const& out_ms_name,
 				     string const& out_bltable_name,
@@ -934,7 +935,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 				     int const num_fitting_max)
 {
   LogIO os(_ORIGIN);
-  os << "Fitting and subtracting cubicspline baseline npiece = " << npiece << LogIO::POST;
+  os << "Fitting and subtracting cubic spline baseline npiece = " << npiece << LogIO::POST;
   // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
   // no iteration is necessary for the processing.
@@ -948,7 +949,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 
   //checking npiece 
   if (npiece <= 0) {
-    throw(AipsError("npiece must be positive or zero."));
+    throw(AipsError("npiece must be positive."));
   }
 
   Block<Int> columns(1);
@@ -959,6 +960,9 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
+  BaselineTable *bt;
+  bool write_baseline_table = (out_bltable_name != "");
+  if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -966,23 +970,6 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   Vector<Vector<Bool> > in_mask;
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
-
-  // checking nchan
-  // ----> move to inside VI loop
-  /*
-  int min_nchan = static_cast<int>(nchan(0));
-  for (size_t i = 0; i < nchan.nelements(); ++i) {
-    int nch = static_cast<int>(nchan(i));
-    if (nch < min_nchan) min_nchan = nch;
-  }
-  if (min_nchan < 4*npiece) { // for poly and/or chebyshev
-    ostringstream oss;
-    oss << "Order (=" << order << " given) must be smaller than " 
-	<< "the minimum number of channels in the input data (" 
-	<< min_nchan << ").";
-    throw(AipsError(oss.str()));
-  }
-  */
 
   Vector<size_t> ctx_indices;
   ctx_indices.resize(nchan.nelements());
@@ -996,8 +983,15 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> scans = vb->scan();
+      Vector<Double> times = vb->time();
+      Vector<Int> beams = vb->feed1();
+
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      if ((int)num_chan < npiece * 4) {
+	throw(AipsError("subtract_baseline_cspline: nchan must be greater than 4*npiece."));
+      }
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol,num_chan,num_row);
@@ -1005,17 +999,15 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
       SakuraAlignedArray<bool> mask(num_chan);
 
-      bool new_nchan;
+      bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
       if (new_nchan) {
-	// ----> move nchan check to here
 	get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), 
 			     static_cast<uint16_t>(npiece), 
 			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
       }
-      // get a data cube (npol*nchan*nrow) from VisBuffer
+      // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
-      // get a flag cube (npol*nchan*nrow) from VisBuffer
       get_flag_cube(*vb, flag_chunk);
 
       if (!pol_set) {
@@ -1032,9 +1024,52 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   	  }
   	}
 
+	//prepare varables for writing baseline table
+	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
+	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
+	Array<Float> ffpar_mtx(IPosition(2, num_pol, npiece));
+  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  bltype_mtx[0][ipol] = (uInt)LIBSAKURA_SYMBOL(BaselineType_kCubicSpline);
+	  fpar_mtx[0][ipol] = (Int)npiece;
+	  for (size_t ipiece=0; ipiece < npiece; ++ipiece) {
+	    ffpar_mtx[ipiece][ipol] = 0.0;
+	  }
+	}
+	size_t num_masklist_max = 0;
+	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
+	size_t num_coeff = 4 * npiece;
+	SakuraAlignedArray<double> coeff(num_coeff);
+	SakuraAlignedArray<bool> final_mask(num_chan);
+	Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
+  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
+	    coeff_mtx[icoeff][ipol] = 0.0;
+	  }
+	}
+	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
+	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
+  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  rms_mtx[0][ipol] = 0.0;
+	  cthres_mtx[0][ipol] = clip_threshold_sigma;
+	  citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	  lfthres_mtx[0][ipol] = 0.0;
+	  lfavg_mtx[0][ipol] = 0;
+	  lfedge_mtx[0][ipol] = 0;
+	}
+
   	// loop over polarization
   	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  if (!pol(ipol)) continue;
+	  apply_mtx[0][ipol] = True;
+	  // skip spectrum not selected by pol
+	  if (!pol(ipol)) {
+	    apply_mtx[0][ipol] = False;
+	    continue;
+	  }
   	  // get a channel mask from data cube
   	  // (note that the variable 'mask' is flag in the next line 
 	  // actually, then it will be converted to real mask when 
@@ -1042,7 +1077,10 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	  // saving memory usage...)
   	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
 	  // skip spectrum if all channels flagged
-	  if (allchannels_flagged(num_chan, mask.data)) continue;
+	  if (allchannels_flagged(num_chan, mask.data)) {
+	    apply_mtx[0][ipol] = False;
+	    continue;
+	  }
 
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
@@ -1051,47 +1089,180 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+
   	  // actual execution of single spectrum
-  	  status = 
-  	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
-  						    static_cast<uint16_t>(npiece), 
-						    num_chan, 
-  						    spec.data, 
-  						    mask.data, 
-  						    clip_threshold_sigma, 
-  						    num_fitting_max,
-  						    true, 
-  						    mask.data, 
-  						    spec.data, 
-  						    &bl_status);
-  	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- NoMemory"));
-	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- NG"));
-	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-	      throw(AipsError("SubtractBaselineCubicSplineFloat() -- UnknownError"));
+	  if (write_baseline_table) {
+	    status = 
+	      LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
+								    num_chan,
+								    spec.data, 
+								    mask.data,
+								    clip_threshold_sigma,
+								    num_fitting_max, 
+								    npiece, 
+								    coeff.data,
+								    final_mask.data,
+								    &bl_status);
+	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	      string mesg = "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat() -- ";
+	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		throw(AipsError(mesg + "InvalidArgument"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+		throw(AipsError(mesg + "NoMemory"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+		throw(AipsError(mesg + "NG"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+		throw(AipsError(mesg + "UnknownError"));
+	      }
 	    }
-	    //throw(AipsError("SubtractBaselineCubicSplineFloat() failed."));
-  	  }
+	    for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
+	      coeff_mtx[icoeff][ipol] = coeff.data[icoeff];
+	    }
+	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
+	    status = 
+	      //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
+	      LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
+							       spec.data,
+							       mask.data,
+							       &stat);
+	    rms_mtx[0][ipol] = stat.stddev;
+
+	    // ***workaround***
+	    // get piece boundary positions
+	    // as sakura_GetBestFitBaselineCoefficientsCubicSplineFloat 
+	    // does not return boundary values now
+	    SakuraAlignedArray<double> boundary(npiece);
+	    GetBoundariesOfPiecewiseData(num_chan, mask.data, npiece, boundary.data);
+	    // ***end workaround***
+	    for (size_t ipiece = 0; ipiece < npiece; ++ipiece) {
+	      ffpar_mtx[ipiece][ipol] = boundary.data[ipiece];
+	    }
+
+	    if (do_subtract) {
+	      status = 
+		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
+										    num_chan,
+										    spec.data,
+										    npiece,
+										    coeff.data,
+										    boundary.data,
+										    spec.data);
+	      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		string mesg = "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat() -- ";
+		if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		  throw(AipsError(mesg + "InvalidArgument"));
+		} else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+		  throw(AipsError(mesg + "NoMemory"));
+		} else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+		  throw(AipsError(mesg + "UnknownError"));
+		}
+	      }
+	    }
+	    Vector<uInt> masklist;
+	    get_masklist_from_mask(num_chan, final_mask.data, masklist);
+	    if (masklist.size() > num_masklist_max) {
+	      num_masklist_max = masklist.size();
+	    }
+	    masklist_mtx_tmp[ipol].clear();
+	    for (size_t imask; imask < masklist.size(); ++imask) {
+	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
+	    }
+	  } else {
+	    status = 
+	      LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
+								 static_cast<uint16_t>(npiece), 
+								 num_chan, 
+								 spec.data, 
+								 mask.data, 
+								 clip_threshold_sigma, 
+								 num_fitting_max,
+								 true, 
+								 mask.data, 
+								 spec.data, 
+								 &bl_status);
+	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	      string mesg = "sakura_SubtractBaselineCubicSplineFloat() -- ";
+	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		throw(AipsError(mesg + "InvalidArgument"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+		throw(AipsError(mesg + "NoMemory"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+		throw(AipsError(mesg + "NG"));
+	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+		throw(AipsError(mesg + "UnknownError"));
+	      }
+	    }
+	  }
   	  // set back a spectrum to data cube
   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
   	} // end of polarization loop
+
+	if (write_baseline_table) {
+	  // write to baseline table
+	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+	  for (size_t ipol = 0; ipol > num_pol; ++ipol) {
+	    for (size_t imask = 0; imask > num_masklist_max; ++imask) {
+	      masklist_mtx[imask][ipol] = 0;
+	    }
+	    for (size_t imask = 0; imask > masklist_mtx_tmp[ipol].size(); ++imask) {
+	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
+	    }
+	  }
+	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
+			 0, times[irow], apply_mtx, bltype_mtx, 
+			 fpar_mtx, ffpar_mtx, masklist_mtx,
+			 coeff_mtx, rms_mtx, (uInt)num_chan, cthres_mtx,
+			 citer_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
       sdh_->fillCubeToOutputMs(vb, data_chunk);
     } // end of vi loop
   } // end of chunk loop
-  finalize_process();
 
-  // destroy baselint contexts
+  if (write_baseline_table) {
+    bt->save(out_bltable_name);
+    delete bt;
+  }
+  finalize_process();
   destroy_baseline_contexts(bl_contexts);
 
   //double tend = gettimeofday_sec();
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
+// --------------------------------------------------------------------
+// this function is temporarily copied from sakura code to get 
+// positions of cubic spline boundaries. (2015/4/6 WK)
+// --------------------------------------------------------------------
+void SingleDishMS::GetBoundariesOfPiecewiseData(size_t num_mask,
+						bool const *mask, 
+						size_t num_pieces, 
+						double *boundary) {
+	assert(num_pieces > 0);
 
+	size_t num_unmasked_data = 0;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (mask[i])
+			++num_unmasked_data;
+	}
+	size_t idx = 0;
+	size_t count_unmasked_data = 0;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (idx == num_pieces)
+			break;
+		if (mask[i]) {
+			if (count_unmasked_data
+					>= static_cast<double>(num_unmasked_data * idx)
+							/ static_cast<double>(num_pieces)) {
+				boundary[idx] = static_cast<double>(i);
+				++idx;
+			}
+			++count_unmasked_data;
+		}
+	}
+}
+// --------------------------------------------------------------------
 
 void SingleDishMS::scale(float const factor,
 			  string const& in_column_name,

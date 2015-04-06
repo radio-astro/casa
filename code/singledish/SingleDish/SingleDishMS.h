@@ -147,6 +147,16 @@ private:
   // Destroy a set of baseline contexts
   void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
 
+  // --------------------------------------------------------------------
+  // this function is temporarily copied from sakura code to get 
+  // positions of cubic spline boundaries. (2015/4/6 WK)
+  // --------------------------------------------------------------------
+  void GetBoundariesOfPiecewiseData(size_t num_mask,
+				    bool const *mask, 
+				    size_t num_pieces, 
+				    double *boundary);
+  // --------------------------------------------------------------------
+
   /////////////////////////////
   /// MS handling functions ///
   /////////////////////////////
