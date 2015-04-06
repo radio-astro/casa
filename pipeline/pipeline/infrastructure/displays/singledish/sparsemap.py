@@ -34,6 +34,7 @@ class SparseMapAxesManager(object):
     def axes_integsp(self):
         if self._axes_integsp is None:
             axes = pl.subplot((self.nv+3)/2+3, 1, 1)
+            axes.cla()
             axes.xaxis.set_major_formatter(self.numeric_formatter)
             pl.xlabel('Frequency(GHz)', size=(self.ticksize+1))
             pl.ylabel('Intensity(%s)'%(self.brightnessunit), size=(self.ticksize+1))
@@ -55,6 +56,7 @@ class SparseMapAxesManager(object):
         for x in xrange(self.nh):
             for y in xrange(self.nv):
                 axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
+                axes.cla()
                 axes.yaxis.set_major_locator(pl.NullLocator())
                 axes.xaxis.set_major_locator(pl.NullLocator())
 
@@ -79,7 +81,10 @@ class SparseMapAxesManager(object):
 class SDSparseMapPlotter(object):
     def __init__(self, nh, nv, step, brightnessunit):
         self.step = step
-        ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
+        if step > 1:
+            ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
+        elif step == 1:
+            ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize)
         
     @property
@@ -129,6 +134,7 @@ class SDSparseMapPlotter(object):
         
         xmin = min(frequency[0], frequency[-1])
         xmax = max(frequency[0], frequency[-1])
+        LOG.debug('xmin=%s, xmax=%s'%(xmin,xmax))
 
         # Auto scaling
         # to eliminate max/min value due to bad pixel or bad fitting,
@@ -152,7 +158,8 @@ class SDSparseMapPlotter(object):
         pl.gcf().sca(self.axes.axes_integsp)
         plot_helper.plot(frequency, integrated_data, color='b', linestyle='-', linewidth=0.4)
         (_xmin,_xmax,_ymin,_ymax) = pl.axis()
-        pl.axis((_xmin,_xmax,spmin,spmax))
+        #pl.axis((_xmin,_xmax,spmin,spmax))
+        pl.axis((xmin, xmax, spmin, spmax))
 
         for x in xrange(self.nh):
             for y in xrange(self.nv):
@@ -162,7 +169,7 @@ class SDSparseMapPlotter(object):
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
                                      size=(self.TickSize + 1))
-                pl.axis([xmin, xmax, ymin, ymax])
+                pl.axis((xmin, xmax, ymin, ymax))
 
         if ShowPlot: pl.draw()
 
