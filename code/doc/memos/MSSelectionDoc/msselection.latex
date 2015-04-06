@@ -1,17 +1,17 @@
 \documentclass[12pt, twoside]{article}
 %\documentstyle[12pt,amsmath]{article}
 %\usepackage{html}
-\usepackage{hyperref}
 \usepackage{epsf}
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx, color}  % The figure package
 \usepackage{palatino}
 \usepackage{natbib}     % Package used for bib. citation
-\usepackage{txfonts}
+%\usepackage{txfonts}
 %\usepackage{MnSymbol,wasysym}
 \usepackage{marvosym}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage[breaklinks]{hyperref}
 
 \colorlet{light-gray}{gray!20}
 
@@ -37,18 +37,19 @@
 
 
 \newcommand{\MSS} {{\tt MSSelection}}
-\newcommand{\MSSelection}    {\htmladdnormallinkfoot{{\tt MSSelection}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelection.html}}
+\newcommand{\MSSelection}    {\htmladdnormallinkfoot{{\tt MSSelection}}{{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelection.html}}}
 \newcommand{\MSSelectionError} {\htmladdnormallinkfoot{{\tt MSSelectionError}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionError.html}}
 \newcommand{\MSSelectionErrorHandler} {\htmladdnormallinkfoot{{\tt MSSelectionErrorHandler}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionErrorHandler.html}}
 \newcommand{\CalTables} {\htmladdnormallinkfoot{{\tt CalTables}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1CalTable.html}}
 \newcommand{\MSSelectableTable} {\htmladdnormallinkfoot{{\tt MSSelectableTable}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectableTable.html}}
-\newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}}
+\newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/$\sim$sbhatnag/misc/msselection.pdf}}
 
+%\def\myhyperref#1#2{\hyperref[{#1}]{{#2} {(section \ref{{#1}})}}}
 
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: April 25, 2014)}}
+\date{June 15, 2007\\{\small (Updated: April 6, 2015)}}
 \maketitle
 \normalsize
 \begin{center}
@@ -160,20 +161,21 @@ the end) and it applies to both the range boundaries. E.g.
 String matching can be done in three ways.  Any component of a comma
 separated list that cannot be parsed as number/number range/physical
 quantity is treated as a regular expression or a literal string.  If
-the string does not contain the characters '*', '{', '}' or '?', it is
-treated as a literal string and used for exact matching.  If any of
-the above mentioned characters are part of the string, it is used as a
-regular expression.  As a result, for most cases, the user does not
-need to supply any special delimiters for literal strings and/or
-regular expressions.  However if it is required that the string be
-matched exclusively as a regular expression, it can be supplied within
-a pair of '/' as delimiters.  A string enclosed within double quotes
-('"') is used exclusively for pattern matching (patterns are a
-simplified form of regular expressions - used in most UNIX commands
-for string matching). Patterns are internally converted to equivalent
-regular expressions before matching.  Read elsewhere (e.g. use command
-"info regex", or visit \htmladdnormallinkfoot{this link}{http://www.regular-expressions.info}) for
-details of regular expression and patterns.
+the string contains any of the '*', '\{', '\}' or '?' characters, it
+is treated as a pattern (a simplified form of regular expression).
+Otherwise it is treated as a literal string and used for exact
+matching.  As a result, for most cases, the user does not need to
+supply any special delimiters for literal strings and/or regular or
+pattern matching expressions.  However if it is required that the
+string be matched exclusively as a regular expression, it can be
+supplied within a pair of '/' as delimiters.  A string enclosed within
+double quotes ('"') is used exclusively for pattern matching (patterns
+are a simplified form of regular expressions - used in most UNIX
+commands for string matching). Patterns are internally converted to
+equivalent regular expressions before matching.  Read elsewhere
+(e.g. use command "info regex", or visit \htmladdnormallinkfoot{this
+  link}{http://www.regular-expressions.info}) for details of regular
+expression and patterns.
 
 Strings can include any character except the following:
 
@@ -188,8 +190,8 @@ above mentioned reserved characters, if one DOES choose to include the
 reserved characters are part of names etc., those names can only be
 matched against quoted strings (since regular expression and patterns
 are super-set of literal strings. I.e. literal string is a valid
-regular expression also).  This leaves the list '"', '*', '?', '{' and
-  '}' as the list of printable character that cannot be part of a name
+regular expression also).  This leaves the list '"', '*', '?', '\{' and
+  '\}' as the list of printable character that cannot be part of a name
 (i.e., a name containing this character can never be matched in a
 \MSS\ expression).  If a need is felt to include these as well,
 an escape mechanism can be included later (but I would prefer to
@@ -334,7 +336,7 @@ T0, T1 and dT in the following description are time specifications.
 \end{itemize}
 
 \section{Antenna/Baseline Selection}
-
+\label{Sec:BASELINE}
 This expression is used to perform baseline based selections.
 Baseline can be specified as a pair of antenna specifications.  Since
 antenna specification can itself be a list of antennas, the expression
@@ -375,9 +377,12 @@ explained in the following sections.
 
 \subsubsection{Antenna Specification}
 
-An ANT can be given as a single \hyperref{string}{string (see Section
-}{)}{Sec:STRINGS} (literal/pattern/regular expression), single integer
-ID, a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of integer
+An ANT can be given as a single \hyperref[Sec:STRINGS]{string (section~\ref{Sec:STRINGS})}
+% \hyperref{string}{string (see Section}{)}{Sec:STRINGS} 
+(literal/pattern/regular expression), single integer ID, a 
+\hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})}
+% \hyperref{range}{range (see Section }{)}{Sec:RANGE} 
+of integer
 IDs or a comma separated list of integers.  For VLA-specific reasons
 (see Section~\ref{VLACONVENTION}), {\bf only} for antenna
 specifications, integers are first converted to strings and matched
@@ -397,8 +402,10 @@ The precise logic applied to the antenna specification (ANT) is as
 follows:
 
 \begin{enumerate}
-\item If ANT is an integer index (or a list or \hyperref{range}{range
-    (see Section }{)}{Sec:RANGE}), it is first used as a name (e.g. the
+\item If ANT is an integer index (or a list or 
+  \hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})}
+%  \hyperref{range}{range (see Section }{)}{Sec:RANGE})
+  , it is first used as a name (e.g. the
   index 1 is converted to a string "1" etc.)  and matched against the
   {\tt NAME} column of {\tt ANTENNA} sub-table.  If no match is found,
   it is treated as an integer index and matched against the antenna
@@ -532,10 +539,14 @@ optional and {\tt $<$OP$>$} can be {\tt '\&', '\&\&'} or {\tt
 \subsubsection{Baseline Negation Operator}
 
 The negation operator {\tt '!'} can be used to exclude a baseline
-specification from the final selection. {\it Note that this is a
-  baseline negation operator and not an antenna negation operator}.
-The negation operator applies only to the baseline specification {\it
-  immediately} following it.  E.g.,
+specification from the final selection.  The negation operator applies
+to the single expression only.  Hence in a compound expression
+(collection of expressions separated by ``;''), if a baseline
+specification is negated in one expression and included in a following
+expression, it will {\it not} be excluded from the selection.  {\it
+  Note that this is a baseline negation operator and not an antenna
+  negation operator}.  The negation operator applies only to the
+baseline specification {\it immediately} following it.  E.g.,
 
 \begin{itemize}
 \item baseline={\tt !15} excludes all baselines with the antenna {\bf
@@ -552,6 +563,21 @@ The negation operator applies only to the baseline specification {\it
 Note that the negation operator {\it cannot} be applied to individual
 members of the antenna specification/antenna list.  E.g. the
 expression {\tt "1,2,!5,8"} is syntactically incorrect.
+
+\subsubsection{Baseline negation and Regular Expression negation}
+Since antenna names in a antenna/baseline selection can be a regular
+expression or a pattern, one can preceed a name, pattern or regex by
+``\^'' (the regular expression negation operator) to negate that
+name. Thus
+\begin{verbatim}
+      ^VLA:N*
+\end{verbatim}
+means all antennas except {\tt VLA:N*}.  Note that {\tt {}\^{}VLA:N*} and
+{\tt !VLA:N*} are very different. The first one forms all
+cross-correlation baselines of the antenna in the remaining arms with
+all antenna (also VLA:N antenna). Thus {\tt {}\^{}VLA:N*} is the same as
+{\tt VLA:[SE]*}. The second one has all baselines between the antenna
+in the remaining arms, but also autocorr between VLA:N antenna.
 
 \subsubsection{Examples}
 In the most common usage, an atomic ANT selects all baselines
@@ -652,7 +678,7 @@ against the field code.  If still no field is selected, an exception
 of type MSSelectionFieldParseError is thrown.
 
 Field specifications can also be give by their integer IDs.  IDs can
-be a single ID or a \hyperref{range}{range (see Section }{)}{Sec:RANGE}
+be a single ID or a \hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})} %\hyperref{range}{range (see Section }{)}{Sec:RANGE}
 of IDs (N0$\sim$N1).  Field ID selection can also be done using a
 boolean expression.  For a field specification of the form "$>$ID",
 all field IDs greater than ID are selected.  Similarly for "$<$ID" all
@@ -684,7 +710,7 @@ sensitive reference frequency.
 
 If only a single UVDIST is specified, all rows that exactly match the
 given UVDIST are selected.  When UVDIST is given as a
-\hyperref{range}{range (see Section }{)}{Sec:RANGE} in the format
+\hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})} in the format
 N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
 corresponding to the uv-distance between N0 and N1 (N0 and N1
 included) are selected.
@@ -764,7 +790,7 @@ Spectral windows (SPW) specification can be of the following types:
 \begin{enumerate}
 \item an integer ID 
 \item a name (as a literal 
-\hyperref{string}{string (see Section}{)}{Sec:STRINGS} for exact match
+\hyperref[Sec:STRINGS]{string (section~\ref{Sec:STRINGS})} for exact match
 or a regular expression/pattern)
 \item a frequency value (value with a unit).  
 \end{enumerate}
@@ -802,10 +828,10 @@ SPWSPEC can also be constructed using the reference frequency of the
 SPWs.  The reference frequency is defined as the average of the
 frequency corresponding to the first and the last channel for each
 SPW.  A single frequency specification is used for exact match with
-the reference frequency.  A \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} of frequencies are used to select all SPWs with the
-reference frequencies within the given range.  The allowed units are
-Hz, KHz, MHz, GHz or THz.  E.g.
+the reference frequency.  A \hyperref[Sec:RANGE]{range
+  (section~\ref{Sec:RANGE})} of frequencies are used to select all
+SPWs with the reference frequencies within the given range.  The
+allowed units are Hz, KHz, MHz, GHz or THz.  E.g.
 \begin{itemize}
 \item spwspec="$>$FREQ" will select all SPWs, the reference frequencies of
   which are greater than the given frequency converted to Hz.
@@ -837,18 +863,19 @@ to as CHANSPEC in the following description) is a START, STOP, STEP
 tuple corresponding to the first frequency channel, the last frequency
 channel and the step size to increment from the first to the last
 channel.  The START and STOP part of the tuple can be
-\hyperref{range}{range (see Section }{)}{Sec:RANGE} specification for
+\hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})} specification for
 the range [START, STOP] followed by an optional STEP size.
 
 START and STOP part of the tuple can be specified as a single integer
-or physical quantity or as a \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} of integers or physical quantities.  A single integer
-is treated as a channel index and the tuple corresponds to [ID,ID,1].
-A single physical quantity is matched with the exact frequency value
-of the channels and tuple of matched channel index is constructed as
-[ID,ID,1].  A \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
-integers given as N0$\sim$N1 is used to construct a tuple [N0,N1,1].
-Similarly for a range of physical quantities.
+or physical quantity or as a \hyperref[Sec:RANGE]{range
+  (section~\ref{Sec:RANGE})} of integers or physical quantities.  A
+single integer is treated as a channel index and the tuple corresponds
+to [ID,ID,1].  A single physical quantity is matched with the exact
+frequency value of the channels and tuple of matched channel index is
+constructed as [ID,ID,1].  A \hyperref[Sec:RANGE]{range
+  (section~\ref{Sec:RANGE})} of integers given as N0$\sim$N1 is used
+to construct a tuple [N0,N1,1].  Similarly for a range of physical
+quantities.
 
 If a START,STOP part of the tuple specification is followed by
 "\char94 STEP", the STEP is used as the third value of the tuple.
@@ -1042,13 +1069,13 @@ based on these intents.
 \subsection{Syntax}
 
 The scan-intent selection expression is a comma-separated list of
-specifications.  Each specification can be a \hyperref{string}{string (see Section
-}{)}{Sec:STRINGS} , an integer or an
-integer \hyperref{range}{range (see Section }{)}{Sec:RANGE}.  As in other such expressions, a range $[N0,N1]$ can be
-specified as {\tt N0$\sim$N1} (see Section~\ref{Sec:RANGE}).  \hyperref{String}{String (see Section
-}{)}{Sec:STRINGS}  can
-be regular expressions or patterns or quoted-strings for as-is
-matching (see Section~\ref{Sec:STRINGS}). 
+specifications.  Each specification can be a
+\hyperref[Sec:STRINGS]{string (section~\ref{Sec:STRINGS})} , an
+integer or an integer \hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})}.  As in other such expressions, a range $[N0,N1]$ can
+be specified as {\tt N0$\sim$N1} (see Section~\ref{Sec:RANGE}).
+\hyperref[Sec:STRINGS]{String (section~\ref{Sec:STRINGS})} can be regular
+expressions or patterns or quoted-strings for as-is matching (see
+Section~\ref{Sec:STRINGS}).
 
 A single scan can have multiple scan-intents represented by a
 comma-separated list of strings like {\tt
@@ -1142,7 +1169,7 @@ The syntax for the specification of both these is therefore identical.
 \subsection{Syntax}
 
 Scan and Sub-array selection specification is a single integer (INT)
-or a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
+or a \hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})} of
 integers(N0$\sim$N1).  Scans and sub-arrays can also be selected via
 boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
 "$<$=INT"\footnote{{\it Programmers note:} The getScanList()
@@ -1176,6 +1203,25 @@ specifications.  E.g.
 \item scan={\tt $>$5}       selects all scans greater than 5
 \item scan={\tt $<$5}       selects all scans less than 5
 \end{itemize}
+
+\section{Using \MSS\ expressions in TaQL}
+The \MSS\ module can be thought of as a compiler which compiles
+expressions written in MSSelection syntax into TaQL code.  The module
+therefore can also be supplied pure-TaQL expressions which are used
+as-is along with any of the \MSS\ expressions. Internally, the
+pure-TaQL expression will be treated as just another \MSS\ expression.
+
+While it is natual to be able to use TaQL expressions via the \MSS\
+module for selection on an MS, it is also possible to embed \MSS\
+expressions in TaQL expressions via the {\tt MSCal} user-defined
+functions (UDF).  E.g. in a TaQL expression like the following
+\begin{verbatim}
+ select from MS where mscal.baseline('sel1') || mscal.baseline('sel2') 
+\end{verbatim}
+{\tt sel1} and {\tt sel2} can be \MSS\ 
+\hyperref[Sec:BASELINE]{baseline (section~\ref{Sec:BASELINE})}.  Other types of
+selection are also similarly possible (e.g. selection on Time,
+Frequency, Scan, etc.) via TaQL.
 
 \newpage
 \appendix{}
@@ -1217,10 +1263,10 @@ Fig.~\ref{FIG:MSSERROR}.
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
   Subarray,Poln,State\}ParseError} exception.  All other forms of
-errors (e.g. illegal \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} specification N0$\sim$N1 where N0 $>$ N1) are reported
-by throwing an exception of type {\tt MSSelection\{Time, Spw, Field,
-  UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
+errors (e.g. illegal \hyperref[Sec:RANGE]{range
+  (section~\ref{Sec:RANGE})} specification N0$\sim$N1 where N0 $>$ N1)
+are reported by throwing an exception of type {\tt MSSelection\{Time,
+  Spw, Field, UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
 Hence, to catch all errors thrown from the \MSS\ sub-system,
 catch the {\tt MSSelectionError} object.  For more specific exception
