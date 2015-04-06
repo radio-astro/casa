@@ -62,6 +62,83 @@ except Exception, e:
 Spectral lines are detected by clustering analysis for each spectral window, 
 and line free channels are used for baseline fitting. </p>
 
+<h2>Spectral Data Before Baseline Subtraction</h2>
+% for field in sparsemap_subpage_before.keys():
+    <h4><a class="replace"
+           href="${os.path.join(dirname, sparsemap_subpage_before[field])}">${field}</a>
+    </h4>
+    % for plot in sparsemap_before[field]:
+        % if os.path.exists(plot.thumbnail):
+	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                   class="fancybox"
+	                   rel="thumbs">
+	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} before Baseline Subtraction"
+	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                </a>
+	
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${os.path.join(dirname, sparsemap_subpage_before[field])}"
+	                           class="replace"
+	                           data-spw="${plot.parameters['spw']}"
+	                           data-ant="${plot.parameters['ant']}">
+	                           Spectral Window ${plot.parameters['spw']}
+	                        </a>
+	                    </h4>
+	
+	                    <p>Profile map for spectral
+	                        window ${plot.parameters['spw']} before baseline subtraction.
+	                    </p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
+%endfor
+
+
+<h2>Spectral Data After Baseline Subtraction</h2>
+% for field in sparsemap_subpage_after.keys():
+    <h4><a class="replace"
+           href="${os.path.join(dirname, sparsemap_subpage_after[field])}">${field}</a>
+    </h4>
+    % for plot in sparsemap_after[field]:
+        % if os.path.exists(plot.thumbnail):
+	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                   class="fancybox"
+	                   rel="thumbs">
+	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                         title="Sparse Profile Map for Spectral Window ${plot.parameters['spw']} after Baseline Subtraction"
+	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                </a>
+	
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${os.path.join(dirname, sparsemap_subpage_after[field])}"
+	                           class="replace"
+	                           data-spw="${plot.parameters['spw']}"
+	                           data-ant="${plot.parameters['ant']}">
+	                           Spectral Window ${plot.parameters['spw']}
+	                        </a>
+	                    </h4>
+	
+	                    <p>Profile map for spectral
+	                        window ${plot.parameters['spw']} after baseline subtraction.
+	                    </p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
+%endfor
+
 <h2>Line Detection by Clustering Analysis</h2>
 
 % if len(detail) > 0 or len(cover_only) > 0:

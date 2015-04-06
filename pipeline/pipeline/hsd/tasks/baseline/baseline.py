@@ -9,6 +9,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.renderer.logger as logger
+from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 
 from .. import common
 from . import maskline
@@ -133,6 +135,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         # loop over reduction group
         #files = set()
         files_temp = {}
+        plot_list = []
         for (group_id,group_desc) in reduction_group.items():
             LOG.debug('Processing Reduction Group %s'%(group_id))
             LOG.debug('Group Summary:')
@@ -198,7 +201,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
-            plot_list = []
             for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
                 if len(pols) == 0:
                     LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
@@ -220,11 +222,13 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 # generate plot for weblog
                 # prefix for spectral plot before baseline subtraction
                 st = context.observing_run[ant]
-                prefix = 'spectral_plot_before_subtraction_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),ant,spwid)
-                plot_list.extend(self.plot_spectra(ant, spwid, pols, grid_table, 
+                # TODO: use proper source name when we can handle multiple source 
+                source_name = st.source[0].name.replace(' ', '_').replace('/','_')
+                prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
+                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
                                                    context.observing_run[ant].name, stage_dir, prefix))
                 prefix = prefix.replace('before', 'after')
-                plot_list.extend(self.plot_spectra(ant, spwid, pols, grid_table, outfile, stage_dir, prefix))
+                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, outfile, stage_dir, prefix))
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in antenna_list]
@@ -233,8 +237,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                               'spw': spwid_list, 'pols': pols_list,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,
-                              'clusters': cluster_info,
-                              'plots': plot_list})
+                              'clusters': cluster_info})
             LOG.debug('cluster_info=%s'%(cluster_info))
 
         # replace working scantable with temporal baselined scantable
@@ -245,7 +248,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
             shutil.move(temp_name, blname)
 
         outcome = {'baselined': baselined,
-                   'edge': edge}
+                   'edge': edge,
+                   'plots': plot_list}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
@@ -301,11 +305,30 @@ class SDBaseline(common.SingleDishTaskTemplate):
             shutil.rmtree(dummy)
         del remove_list
 
-    def plot_spectra(self, ant, spwid, pols, grid_table, infile, outdir, outprefix):
-        plot_list = []
+    def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix):
+        #plot_list = []
+        st = self.inputs.context.observing_run[ant]
         for pol in pols:
             outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
             status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile)
             if status and os.path.exists(outfile):
-                plot_list.append(outfile)
-        return plot_list
+                #plot_list.append(outfile)
+                if outprefix.find('spectral_plot_before_subtraction') == -1:
+                    plottype = 'sd_sparse_map_after_subtraction'
+                else:
+                    plottype = 'sd_sparse_map_before_subtraction'
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': plottype,
+                              'file': infile}
+                plot = logger.Plot(outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                #plot_list.append(plot)
+                yield plot
+        #return plot_list
