@@ -153,7 +153,8 @@ class MaskLine(common.SingleDishTaskTemplate):
 
         outcome = {'detected_lines': lines,
                    'channelmap_range': channelmap_range,
-                   'cluster_info': cluster_info}
+                   'cluster_info': cluster_info,
+                   'grid_table': grid_table}
         result = MaskLineResults(task=self.__class__,
                                   success=True,
                                   outcome=outcome)

@@ -14,6 +14,7 @@ from .. import common
 from . import maskline
 #from .fitting import FittingFactory
 from . import fitting
+from . import plotter
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -123,6 +124,12 @@ class SDBaseline(common.SingleDishTaskTemplate):
         # generate storage for baselined data
         self._generate_storage_for_baselined(context, reduction_group)
 
+        # mkdir stage_dir if it doesn't exist
+        stage_number = context.task_counter
+        stage_dir = os.path.join(context.report_dir,"stage%d" % stage_number)
+        if not os.path.exists(stage_dir):
+            os.makedirs(stage_dir)
+
         # loop over reduction group
         #files = set()
         files_temp = {}
@@ -185,11 +192,13 @@ class SDBaseline(common.SingleDishTaskTemplate):
             detected_lines = maskline_result.outcome['detected_lines']
             channelmap_range = maskline_result.outcome['channelmap_range']
             cluster_info = maskline_result.outcome['cluster_info']
+            grid_table = maskline_result.outcome['grid_table']
 
             # fit order determination and fitting
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
+            plot_list = []
             for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
                 if len(pols) == 0:
                     LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
@@ -207,6 +216,15 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 # store temporal scantable name
                 if not files_temp.has_key(ant):
                     files_temp[ant] = fitter_result.outcome.pop('outtable')
+                    
+                # generate plot for weblog
+                # prefix for spectral plot before baseline subtraction
+                st = context.observing_run[ant]
+                prefix = 'spectral_plot_before_subtraction_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),ant,spwid)
+                plot_list.extend(self.plot_spectra(ant, spwid, pols, grid_table, 
+                                                   context.observing_run[ant].name, stage_dir, prefix))
+                prefix = prefix.replace('before', 'after')
+                plot_list.extend(self.plot_spectra(ant, spwid, pols, grid_table, outfile, stage_dir, prefix))
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in antenna_list]
@@ -215,7 +233,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                               'spw': spwid_list, 'pols': pols_list,
                               'lines': detected_lines,
                               'channelmap_range': channelmap_range,
-                              'clusters': cluster_info})
+                              'clusters': cluster_info,
+                              'plots': plot_list})
             LOG.debug('cluster_info=%s'%(cluster_info))
 
         # replace working scantable with temporal baselined scantable
@@ -282,4 +301,11 @@ class SDBaseline(common.SingleDishTaskTemplate):
             shutil.rmtree(dummy)
         del remove_list
 
-
+    def plot_spectra(self, ant, spwid, pols, grid_table, infile, outdir, outprefix):
+        plot_list = []
+        for pol in pols:
+            outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
+            status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile)
+            if status and os.path.exists(outfile):
+                plot_list.append(outfile)
+        return plot_list

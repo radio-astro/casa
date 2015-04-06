@@ -53,7 +53,8 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         #           'flag_data': retval[1],
         #           'grid_table': retval[2]}
         outcome = {'spectral_data': retval[0],
-                   'grid_table': retval[1]}
+                   'meta_data': retval[1],
+                   'grid_table': grid_table}
         result = SimpleGriddingResults(task=self.__class__,
                                        success=True,
                                        outcome=outcome)
