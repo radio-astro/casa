@@ -64,6 +64,7 @@ class PlotAntsChart(object):
                            y_axis='Antenna Latitude',
                            parameters={'vis' : self.ms.basename})
 
+
 class AzElChart(object):
     def __init__(self, context, ms):
         self.context = context
@@ -95,6 +96,9 @@ class AzElChart(object):
         
         task = casa_tasks.plotms(**task_args)
 
+        task.execute()
+        
+
         '''
         casa_tasks.plotms(vis=self.ms.name,
                           xaxis='azimuth',
@@ -112,6 +116,8 @@ class AzElChart(object):
     def _get_figfile(self):
         session_part = self.ms.session
         ms_part = self.ms.basename
+
+        
         return os.path.join(self.context.report_dir, 
                             'session%s' % session_part, 
                             ms_part, 'azel.png')
@@ -200,6 +206,8 @@ class ElVsTimeChart(object):
         #casa.plotms(**task_args)
         
         task = casa_tasks.plotms(**task_args)
+        
+        task.execute()
 
         '''
         casa_tasks.plotms(vis=self.ms.name,
