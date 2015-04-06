@@ -8,7 +8,7 @@ reload(sparsemap)
 
 LOG = infrastructure.get_logger(__name__)
 
-def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile):
+def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, line_range):
     datatable = context.observing_run.datatable_instance
     num_rows = len(grid_table) # num_plane * num_ra * num_dec
     num_dec = grid_table[-1][3] + 1
@@ -21,6 +21,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile):
     rowlist = []
     for each_plane in each_grid:
         datarows = []
+        dataids = []
         for grid_table_rowid in each_plane:
             grid_table_row = grid_table[grid_table_rowid]
             thisspw = grid_table_row[0]
@@ -32,12 +33,13 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile):
                 if thisant == antid and thisspw == spwid and thispol == polid:
                     LOG.info('Adding data to datarows')
                     datarows.append(row)
+                    dataids.append(idx)
         raid = grid_table[each_plane[0]][2]
         decid = grid_table[each_plane[0]][3]
         ra = grid_table[each_plane[0]][4]
         dec = grid_table[each_plane[0]][5]
         rowlist.append({"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
-                        "ROWS": datarows})
+                        "ROWS": datarows, "IDS": dataids})
         LOG.trace('RA %s DEC %s: datarows=%s'%(raid, decid, datarows))
         
     plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='K')
@@ -57,17 +59,22 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile):
     
     integrated_data = numpy.zeros(nchan, dtype=float)
     map_data = numpy.zeros((num_ra, num_dec, nchan), dtype=float) + sparsemap.NoDataThreshold
+    lines_map = collections.defaultdict(dict)
     nrow = 0
     for d in rowlist:
         ix = d['RAID']
         iy = d['DECID']
         rows = d['ROWS']
+        ids = d['IDS']
         if len(rows) > 0:
-            median_row = rows[median_index(rows)]
-            LOG.debug('median row for (%s,%s) is %s (median %s)'%(ix,iy,median_row, numpy.median(rows)))
+            midx = median_index(rows)
+            median_row = rows[midx]
+            LOG.debug('median row for (%s,%s) is %s (median %s)'%(ix, iy, median_row, numpy.median(rows)))
             nrow += len(rows)
             with casatools.TableReader(infile) as tb:
                 map_data[ix,iy,:] = tb.getcell('SPECTRA', median_row)
+                masklist = context.observing_run.datatable_instance.getcell('MASKLIST', ids[midx])
+                lines_map[ix][iy] = None if len(masklist) == 0 else masklist
                 for row in rows:
                     integrated_data += tb.getcell('SPECTRA', row)
     integrated_data /= nrow
@@ -77,6 +84,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile):
     spw = context.observing_run[antid].spectral_window[spwid]
     frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
+    plotter.setup_lines(line_range, lines_map)
     plotter.plot(map_data, integrated_data, frequency, outfile)
     return integrated_data, map_data
 

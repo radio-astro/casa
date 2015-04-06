@@ -226,9 +226,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 source_name = st.source[0].name.replace(' ', '_').replace('/','_')
                 prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
                 plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
-                                                   context.observing_run[ant].name, stage_dir, prefix))
+                                                   context.observing_run[ant].name, stage_dir, prefix, channelmap_range))
                 prefix = prefix.replace('before', 'after')
-                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, outfile, stage_dir, prefix))
+                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, outfile, stage_dir, prefix, channelmap_range))
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in antenna_list]
@@ -305,12 +305,13 @@ class SDBaseline(common.SingleDishTaskTemplate):
             shutil.rmtree(dummy)
         del remove_list
 
-    def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix):
+    def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix, channelmap_range):
         #plot_list = []
         st = self.inputs.context.observing_run[ant]
+        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range]
         for pol in pols:
             outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
-            status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile)
+            status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile, line_range)
             if status and os.path.exists(outfile):
                 #plot_list.append(outfile)
                 if outprefix.find('spectral_plot_before_subtraction') == -1:

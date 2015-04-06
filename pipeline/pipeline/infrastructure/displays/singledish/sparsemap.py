@@ -86,6 +86,8 @@ class SDSparseMapPlotter(object):
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize)
+        self.lines_integrated = None
+        self.lines_map = None
         
     @property
     def nh(self):
@@ -121,6 +123,10 @@ class SDSparseMapPlotter(object):
             LabelDEC[y][0] = refval + (y0 - refpix) * increment
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
         self.axes.setup_labels(LabelRA, LabelDEC)
+        
+    def setup_lines(self, lines_integrated, lines_map=None):
+        self.lines_integrated = lines_integrated
+        self.lines_map = lines_map
         
     def plot(self, map_data, integrated_data, frequency, figfile):
         plot_helper = PlotObjectHandler()
@@ -160,12 +166,31 @@ class SDSparseMapPlotter(object):
         (_xmin,_xmax,_ymin,_ymax) = pl.axis()
         #pl.axis((_xmin,_xmax,spmin,spmax))
         pl.axis((xmin, xmax, spmin, spmax))
+        if self.lines_integrated is not None:
+            for chmin, chmax in self.lines_integrated:
+                fmin = ch_to_freq(chmin, frequency)
+                fmax = ch_to_freq(chmax, frequency)
+                LOG.debug('plotting line range for integrated spectrum: [%s, %s]'%(chmin,chmax))
+                plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
+                    
 
         for x in xrange(self.nh):
             for y in xrange(self.nv):
                 pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
                 if map_data[x][y].min() > NoDataThreshold:
                     plot_helper.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
+                    if self.lines_map is not None and self.lines_map[x][y] is not None:
+                        for chmin, chmax in self.lines_map[x][y]:
+                            fmin = ch_to_freq(chmin, frequency)
+                            fmax = ch_to_freq(chmax, frequency)
+                            LOG.debug('plotting line range for %s, %s: [%s, %s]'%(x,y,chmin,chmax))
+                            plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
+                    elif self.lines_integrated is not None:
+                        for chmin, chmax in self.lines_integrated:
+                            fmin = ch_to_freq(chmin, frequency)
+                            fmax = ch_to_freq(chmax, frequency)
+                            LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
+                            plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
                                      size=(self.TickSize + 1))
@@ -279,3 +304,14 @@ class SDSparseMapDisplay(SDImageDisplay):
 
         return plot_list
 
+def ch_to_freq(ch, frequency):
+    ich = int(ch)
+    offset_min = ch - float(ich)
+    if offset_min == 0 or ich == len(frequency) -1:
+        freq = frequency[ich]
+    else:
+        jch = ich + 1
+        df = frequency[jch] - frequency[ich]
+        freq = frequency[ich] + offset_min * df
+    return freq
+   
