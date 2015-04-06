@@ -331,5 +331,4 @@ class Priorcals(basetask.StandardTaskTemplate):
             antcorrect = dict(zip(antList, subList))
             
             
-        
         return result, antcorrect
