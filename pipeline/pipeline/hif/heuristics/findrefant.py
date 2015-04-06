@@ -34,6 +34,7 @@ from casac import casac
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import casa_tasks
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -918,6 +919,8 @@ class RefAntFlagging:
 
 	def _get_good( self ):
 
+
+                '''
 		# Create the local version of the flag tool and open the MS
 
 		#fgLoc = casac.flagger()
@@ -946,14 +949,39 @@ class RefAntFlagging:
 
 		del fgLoc
 
+                '''
+                #Update April 2015 to use the flagging task instead of the agent flagger
+                task_args = {'vis'          : self.vis,
+                             'mode'         : 'summary',
+                             'field'        : self.field,
+                             'spw'          : self.spw,
+                             'intent'       : self.intent,
+                             'display'      : '',
+                             'flagbackup'   : False,
+                             'savepars'     : False}
+                     
+                task = casa_tasks.flagdata(**task_args)
+            
+                d = task.execute()
+                
+
+
 		# Calculate the number of good data for each antenna and return
 		# them
 
-		antenna = d['report0']['antenna']
+                #Agent flagger way
+		#antenna = d['report0']['antenna']
+		
+		#Flagtask way
+		antenna = d['antenna']
+		
+		
 		good = dict()
 
 		for a in antenna.keys():
 			good[a] = antenna[a]['total'] - antenna[a]['flagged']
+			
+		#print "GOOD: ", good
 
 		return( good )
 

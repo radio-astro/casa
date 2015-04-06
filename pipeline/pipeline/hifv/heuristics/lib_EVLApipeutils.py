@@ -284,6 +284,8 @@ def getCalFlaggedSoln(calTable):
     return outDict
     
 
+
+#Not used
 def buildscans(msfile):
     """
    buildscans:  compile scan information for msfile

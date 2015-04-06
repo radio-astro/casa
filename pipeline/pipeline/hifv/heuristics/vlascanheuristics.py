@@ -175,7 +175,10 @@ def buildscans(msfile, scd):
     #tb = casac.tb = tbtool.create()
     
     ####ms = casatools.casac.ms()
-    ####tb = casatools.casac.table()
+    tb = casatools.casac.table()
+
+    print 'CACHE'
+    print tb.showcache()
 
     # Access the MS
     ####################################
@@ -442,6 +445,9 @@ def buildscans(msfile, scd):
     mysize = scandict.__sizeof__()
     ####print 'Size of scandict in memory is '+str(mysize)+' bytes'
     
+    print 'CACHE END'
+    print tb.showcache()
+    
     return scandict
 
 
@@ -546,6 +552,12 @@ class VLAScanHeuristics(object):
             # 2012.  So test on date:
         """
         
+        tb = casatools.casac.table()
+        
+        print 'CAL INTENT CACHE 1:'
+        print tb.showcache()
+        
+        
         with casatools.TableReader(self.vis+'/SPECTRAL_WINDOW') as table:
             channels = table.getcol('NUM_CHAN')
         
@@ -567,6 +579,9 @@ class VLAScanHeuristics(object):
         self.amp_state_IDs = []
         self.calibrator_state_IDs = []
         self.pointing_state_IDs = []
+        
+        print 'CAL INTENT CACHE 2:'
+        print tb.showcache()
 
         if startdate <= 55978.50:
             for state_ID in range(0,len(intents)):
@@ -605,6 +620,9 @@ class VLAScanHeuristics(object):
                     self.flux_state_select_string += (',%s')%self.flux_state_IDs[state_ID]
                 self.flux_state_select_string += ']'
                 
+                print 'CAL INTENT CACHE 3:'
+                print tb.showcache()
+                
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.flux_state_select_string)
 		    self.flux_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -613,6 +631,10 @@ class VLAScanHeuristics(object):
 		    self.flux_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.flux_field_select_string = ','.join(["%s" % ii for ii in self.flux_field_list])
 		    #logprint ("Flux density calibrator(s) are fields "+flux_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+		    
+		print 'CAL INTENT CACHE 4:'
+                print tb.showcache()
         
             if (len(self.bandpass_state_IDs) == 0):
                 #logprint ("No bandpass calibration scans defined, using flux density calibrator(s)")
@@ -625,6 +647,10 @@ class VLAScanHeuristics(object):
                 for state_ID in range(1,len(self.bandpass_state_IDs)):
                     self.bandpass_state_select_string += (',%s')%self.bandpass_state_IDs[state_ID]
                 self.bandpass_state_select_string += ']'
+                
+                
+                print 'CAL INTENT CACHE 5:'
+                print tb.showcache()
                 
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.bandpass_state_select_string)
@@ -640,6 +666,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: are to be used, not yet implemented; the pipeline will use", logfileout='logs/msinfo.log')
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.bandpass_field_select_string = str(self.bandpass_field_list[0])
+		    subtable.close()
+        
+                print 'CAL INTENT CACHE 6:'
+                print tb.showcache()
         
             if (len(self.delay_state_IDs) == 0):
                 #logprint ("No delay calibration scans defined, using bandpass calibrator")
@@ -667,6 +697,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: are to be used, not yet implemented; the pipeline will use", logfileout='logs/msinfo.log')
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.delay_field_select_string = str(self.delay_field_list[0])
+		    subtable.close()
+        
+                print 'CAL INTENT CACHE 7:'
+                print tb.showcache()
         
             if (len(self.polarization_state_IDs) == 0):
                 #logprint ("No polarization calibration scans defined, no polarization calibration possible", logfileout='logs/msinfo.log')
@@ -687,6 +721,10 @@ class VLAScanHeuristics(object):
 		    self.polarization_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.polarization_field_select_string = ','.join(["%s" % ii for ii in self.polarization_field_list])
 		    #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log'
+		    subtable.close()
+        
+                print 'CAL INTENT CACHE 8:'
+                print tb.showcache()
         
             if (len(self.phase_state_IDs) == 0):
                 #QA_msinfo='Fail'
@@ -698,6 +736,8 @@ class VLAScanHeuristics(object):
                     self.phase_state_select_string += (',%s')%self.phase_state_IDs[state_ID]
                 self.phase_state_select_string += ']'
                 
+                
+                
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.phase_state_select_string)
 		    self.phase_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -706,6 +746,11 @@ class VLAScanHeuristics(object):
 		    self.phase_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.phase_field_select_string = ','.join(["%s" % ii for ii in self.phase_field_list])
 		    #logprint ("Phase calibrator(s) are fields "+phase_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+        
+        
+                print 'CAL INTENT CACHE 9:'
+                print tb.showcache()
         
         # Find all calibrator scans and fields
         
@@ -721,6 +766,10 @@ class VLAScanHeuristics(object):
 		self.calibrator_scan_select_string = ','.join(["%s" % ii for ii in self.calibrator_scan_list])
 		self.calibrator_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		self.calibrator_field_select_string = ','.join(["%s" % ii for ii in self.calibrator_field_list])
+		subtable.close()
+        
+            print 'CAL INTENT CACHE 10:'
+            print tb.showcache()
         
             ####casatools.table.close()
             
@@ -764,6 +813,8 @@ class VLAScanHeuristics(object):
                     self.flux_state_select_string += (',%s')%self.flux_state_IDs[state_ID]
                 self.flux_state_select_string += ']'
                 
+                
+                
                 with casatools.TableReader(self.vis) as table:
 		    subtable = table.query(self.flux_state_select_string)
 		    self.flux_scan_list = list(numpy.unique(subtable.getcol('SCAN_NUMBER')))
@@ -772,6 +823,10 @@ class VLAScanHeuristics(object):
 		    self.flux_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.flux_field_select_string = ','.join(["%s" % ii for ii in self.flux_field_list])
 		    #logprint ("Flux density calibrator(s) are fields "+flux_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+ 
+                print 'CAL INTENT CACHE 11:'
+                print tb.showcache()
  
  
             if (len(self.bandpass_state_IDs) == 0):
@@ -800,6 +855,10 @@ class VLAScanHeuristics(object):
 			#logprint ("WARNING: are to be used, not yet implemented; the pipeline will use", logfileout='logs/msinfo.log')
 			#logprint ("WARNING: only the first field.", logfileout='logs/msinfo.log')
 			self.bandpass_field_select_string = str(self.bandpass_field_list[0])
+		    subtable.close()
+        
+                print 'CAL INTENT CACHE 12:'
+                print tb.showcache()
         
             if (len(self.delay_state_IDs) == 0):
                 #logprint ("No delay calibration scans defined, using bandpass calibrator", logfileout='logs/msinfo.log')
@@ -821,6 +880,10 @@ class VLAScanHeuristics(object):
 		    self.delay_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.delay_field_select_string = ','.join(["%s" % ii for ii in self.delay_field_list])
 		    #logprint ("Delay calibrator(s) are fields "+delay_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+            
+                print 'CAL INTENT CACHE 13:'
+                print tb.showcache()
             
             if (len(self.polarization_state_IDs) == 0):
                 #logprint ("No polarization calibration scans defined, no polarization calibration possible", logfileout='logs/msinfo.log')
@@ -841,6 +904,10 @@ class VLAScanHeuristics(object):
 		    self.polarization_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.polarization_field_select_string = ','.join(["%s" % ii for ii in self.polarization_field_list])
 		    #logprint ("Polarization calibrator(s) are fields "+polarization_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+            
+                print 'CAL INTENT CACHE 14:'
+                print tb.showcache()
             
             if (len(self.phase_state_IDs) == 0):
                 #QA_msinfo='Fail'
@@ -860,6 +927,10 @@ class VLAScanHeuristics(object):
 		    self.phase_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.phase_field_select_string = ','.join(["%s" % ii for ii in self.phase_field_list])
 		    #logprint ("Phase calibrator(s) are fields "+phase_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+            
+                print 'CAL INTENT CACHE 15:'
+                print tb.showcache()
             
             if (len(self.amp_state_IDs) == 0):
                 #logprint ("No amplitude calibration scans defined, will use phase calibrator", logfileout='logs/msinfo.log')
@@ -881,6 +952,10 @@ class VLAScanHeuristics(object):
 		    self.amp_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		    self.amp_field_select_string = ','.join(["%s" % ii for ii in self.amp_field_list])
 		    #logprint ("Amplitude calibrator(s) are fields "+amp_field_select_string, logfileout='logs/msinfo.log')
+		    subtable.close()
+            
+                print 'CAL INTENT CACHE 16:'
+                print tb.showcache()
             
             # Find all calibrator scans and fields
             
@@ -896,6 +971,10 @@ class VLAScanHeuristics(object):
 		self.calibrator_scan_select_string = ','.join(["%s" % ii for ii in self.calibrator_scan_list])
 		self.calibrator_field_list = list(numpy.unique(subtable.getcol('FIELD_ID')))
 		self.calibrator_field_select_string = ','.join(["%s" % ii for ii in self.calibrator_field_list])
+		subtable.close()
+            
+            print 'CAL INTENT CACHE 17:'
+            print tb.showcache()
             
             ####casatools.table.close()
             
