@@ -223,11 +223,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 # prefix for spectral plot before baseline subtraction
                 st = context.observing_run[ant]
                 # TODO: use proper source name when we can handle multiple source 
-                #source_name = ''
-                #for (source_id,source) in st.source.items():
-                #    if 'TARGET' in source.intents:
-                #        source_name = source.name.replace(' ', '_').replace('/','_')
-                source_name = st.source[0].name.replace(' ', '_').replace('/','_')
+                source_name = ''
+                for (source_id,source) in st.source.items():
+                    if 'TARGET' in source.intents:
+                        source_name = source.name.replace(' ', '_').replace('/','_')
                 prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
                 plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
                                                    context.observing_run[ant].name, stage_dir, prefix, channelmap_range))
