@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_bpflagchans(caltable=None,
+def hif_bpflagchans(vis=None,
   flag_hilo=None, fhl_limit=None, fhl_minsample=None,
   flag_tmf=None, tmf_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
