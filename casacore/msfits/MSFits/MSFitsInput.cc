@@ -2184,9 +2184,10 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
     	ROArrayColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
     	ROArrayColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
     	restfreq.getColumn(restFreq_p);
-    	// purposeful assignment of throwImmediately
-    	ThrowIf(
-    			throwImmediately = restFreq_p.ncolumn() != noif,
+        // purposeful assignment of throwImmediately
+        // because it appears that the sense of rows and columns are reversed here
+        ThrowIf(
+    			throwImmediately = restFreq_p.nrow() != noif,
     			"Inconsistent SU table, number of elements in rest frequency column is "
     			+ String::toString(restFreq_p.ncolumn()) + " but number of IFs is "
     			+ String::toString(noif)
