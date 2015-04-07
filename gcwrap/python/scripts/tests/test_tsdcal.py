@@ -105,7 +105,7 @@ class tsdcal_test(unittest.TestCase):
         tid = "01"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
-        initweights(vis=infile, dobt=True, dowtsp=True)        
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
@@ -154,7 +154,7 @@ class tsdcal_test(unittest.TestCase):
         tid = "02"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys2.cal')
-        initweights(vis=infile, dobt=True, dowtsp=True)        
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         spwmap_list=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
@@ -256,7 +256,7 @@ class tsdcal_test(unittest.TestCase):
         tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[1],3:[3],5:[5],7:[7]}
-        initweights(vis=infile, dobt=True, dowtsp=True)
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)
         #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')
     
        
@@ -296,7 +296,7 @@ class tsdcal_test(unittest.TestCase):
         tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[9],3:[11],5:[13],7:[15]}
-        initweights(vis=infile, dobt=True, dowtsp=True)
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)
         #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
              
@@ -337,7 +337,7 @@ class tsdcal_test(unittest.TestCase):
         tsdcal(infile=infile, calmode='tsys', outfile=tsysfile)
         #spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         spwmap={1:[9],3:[11],5:[13],7:[15]}
-        initweights(vis=infile, dobt=True, dowtsp=True)
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)
         #tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile, outfile='')       
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable=tsysfile)       
              
@@ -368,7 +368,7 @@ class tsdcal_test(unittest.TestCase):
         tid = "06"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys6.cal')
-        initweights(vis=infile, dobt=True, dowtsp=True)        
+        initweights(vis=infile, wtmode='nyq', dowtsp=True)        
         #spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
         #spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         
