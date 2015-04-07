@@ -318,16 +318,19 @@ class Priorcals(basetask.StandardTaskTemplate):
 
         antcorrect = {}
         
-        antpos_caltable = result[0].final[0].gaintable
-        
-        if os.path.exists(antpos_caltable):
-            #print "Printing ANTENNA positions corrections"
-            antparamlist = correct_ant_posns(inputs.vis[0], print_offsets=False)
+        try:
+            antpos_caltable = result[0].final[0].gaintable
+            if os.path.exists(antpos_caltable):
+                #print "Printing ANTENNA positions corrections"
+                antparamlist = correct_ant_posns(inputs.vis[0], print_offsets=False)
             
-            antList = antparamlist[1].split(',')
-            N=3
-            subList = [antparamlist[2][n:n+N] for n in range(0, len(antparamlist[2]), N)]
-            antcorrect = dict(zip(antList, subList))
+                antList = antparamlist[1].split(',')
+                N=3
+                subList = [antparamlist[2][n:n+N] for n in range(0, len(antparamlist[2]), N)]
+                antcorrect = dict(zip(antList, subList))
+        except:
+            LOG.info("No offsets found. No caltable created.")
+
             
             
         
