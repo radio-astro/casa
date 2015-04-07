@@ -8,6 +8,7 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
 qaadapter.registry.register_to_flagging_topic(resultobjects.AtmflagResults)
 
-weblog.add_renderer(Atmflag, basetemplates.T2_4MDetailsDefaultRenderer(uri='atmflag.mako',
-               description='Flag atmospheric lines'))
-
+weblog.add_renderer(Atmflag, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='atmflag.mako',
+                                                              description='Flag atmospheric lines'),
+                    group_by='session')

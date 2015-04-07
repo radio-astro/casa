@@ -12,17 +12,6 @@ The h_init task initialises the interferometry pipeline and optionally
 imports data.
 </description>
 <input>
-<!-- 
-    <param type="stringArray" name="vis">
-        <description>The list of input visibility data</description>
-	<value></value>
-    </param>
-
-    <param type="stringArray" name="sessions">
-        <description>The list of visibility data sessions</description>
-	<value></value>
-    </param>
- -->
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating  mode</description>
 	<value>automatic</value>
@@ -61,6 +50,11 @@ imports data.
 	<value>./</value>
     </param>
 
+    <param type="bool" name="weblog" subparam="true">
+	<description>Generate the web log</description>
+	<value>True</value>
+    </param>
+
     <param type="bool" name="overwrite" subparam="true">
         <description>Overwrite existing files on import</description>
 	<value>True</value>
@@ -84,6 +78,7 @@ imports data.
 		<default param="loglevel"><value type="string">info</value></default>
 		<default param="plotlevel"><value type="string">default</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
+		<default param="weblog"><value type="bool">True</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
@@ -92,6 +87,7 @@ imports data.
 		<default param="loglevel"><value type="string">info</value></default>
 		<default param="plotlevel"><value type="string">default</value></default>
 		<default param="output_dir"><value type="string">./</value></default>
+		<default param="weblog"><value type="bool">True</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
 	</when>
@@ -141,6 +137,8 @@ output_dir -- Working directory for pipeline processing. Some pipeline
        processing products such as HTML logs and images will be directed to
        subdirectories of this path. 
        default: './' (current directory)
+
+weblog -- Toggle web log generation. 
 
 overwrite -- Overwrite existing MSs on input.
 

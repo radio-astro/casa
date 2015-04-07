@@ -8,4 +8,4 @@ from . import renderer
 
 qaadapter.registry.register_to_calibration_topic(applycal.SDApplyCalResults)
 
-weblog.add_renderer(SDApplyCal, renderer.T2_4MDetailsSingleDishApplycalRenderer())
+weblog.add_renderer(SDApplyCal, renderer.T2_4MDetailsSingleDishApplycalRenderer(), group_by='ungrouped')

@@ -8,5 +8,7 @@ from . import resultobjects
 
 qaadapter.registry.register_to_calibration_topic(resultobjects.WvrgcalResult)
 
-weblog.add_renderer(Wvrgcal, basetemplates.T2_4MDetailsDefaultRenderer(uri='wvrgcal.mako',
-                                                                       description='Calculate WVR calibration'))
+weblog.add_renderer(Wvrgcal, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='wvrgcal.mako',
+                                                              description='Calculate WVR calibration'),
+                    group_by='session')

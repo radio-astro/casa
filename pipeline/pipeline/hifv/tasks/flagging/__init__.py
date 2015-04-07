@@ -22,10 +22,14 @@ from .targetflag import Targetflag
 
 weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer())
 
-weblog.add_renderer(FlagBadDeformatters, basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',
-                                                                      description='Flag bad deformatters', always_rerender=False))
+weblog.add_renderer(FlagBadDeformatters, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',
+                                                              description='Flag bad deformatters'),
+                    group_by='ungrouped')
                                                                       
-weblog.add_renderer(Checkflag, basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
-                                                                      description='Flag possible RFI on BP calibrator using rflag', always_rerender=False))                                                                      
+weblog.add_renderer(Checkflag, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
+                                                              description='Flag possible RFI on BP calibrator using rflag'),                                                                      
+                    group_by='ungrouped')
 
-weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer())
+weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer(), group_by='ungrouped')

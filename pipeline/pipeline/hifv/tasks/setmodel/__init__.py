@@ -14,4 +14,4 @@ pipelineqa.registry.add_handler(qa.VLASetjyQAHandler())
 pipelineqa.registry.add_handler(qa.VLASetjyListQAHandler())
 qaadapter.registry.register_to_calibration_topic(commonfluxresults.FluxCalibrationResults)
 
-weblog.add_renderer(VLASetjy, super_renderer.T2_4MDetailsSetjyRenderer(uri="vlasetjy.mako"))
+weblog.add_renderer(VLASetjy, super_renderer.T2_4MDetailsSetjyRenderer(uri="vlasetjy.mako"), group_by='ungrouped')

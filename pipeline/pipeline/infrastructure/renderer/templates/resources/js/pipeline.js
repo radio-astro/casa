@@ -1,3 +1,553 @@
+var pipeline = pipeline || {};
+
+pipeline.pages = pipeline.pages || function() {
+	var module = {};
+		
+	module.t2_1 = function() {
+		var innerModule = {};
+		
+		var f = function() {
+			// Load MS details into panel is 'ms=x' given in URL
+		 	var msName = $.url().param('sidebar').replace(/[^a-zA-Z0-9]/gi, '_');
+			var anchorId = msName;
+			var href = $("a#" + anchorId).prop("href");
+
+			var onSuccess = [function() {
+				console.log("Setting " + anchorId + " active");
+				pipeline.sidebar.setActive(anchorId);
+
+				// replace rather than push, as the current state was 
+				// incomplete. We've now made it whole by loading the stage. 
+				pipeline.history.replaceState();
+			}];
+			
+			if (typeof href != 'undefined') {
+				pipeline.detailsframe.load(href, onSuccess);
+			};
+		}
+
+		innerModule.ready = function() {
+			History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
+		        var state = History.getState(); // Note: We are using History.getState() instead of event.state
+				History.debug("statechange: " + JSON.stringify(state.data));		
+				pipeline.history.setComponentState(state.data["componentState"]);
+			});
+			
+		    $("ul.nav-sidebar li a").click(function (evt) {
+		        evt.preventDefault();
+
+				pipeline.history.replaceState();
+
+				// load the new page into the fake frame
+				var anchorId = $(this).prop("id");
+				var href = $(this).prop("href");
+
+				var onSuccess = [function() {			
+					pipeline.sidebar.setActive(anchorId);
+
+					// store the new state
+					pipeline.history.pushState();
+				}];
+
+				pipeline.detailsframe.load(href, onSuccess);		
+		    });
+
+		    f();
+		};
+
+		innerModule.initState = function() {
+			var anchor;
+			
+			// if the selected MS is in the history, load it, otherwise load the
+			// first 
+			if (!selected) {
+				// load content from the first link and set the active MS text.
+				anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
+			} else {
+				$('li.menu-item a.replace').each(function(k,v) {
+					if ($(this).text() === selected) {
+						anchor = $(this);
+					}
+				});
+			}
+
+			// fallback to first item in case the selector wasn't found
+			if (!anchor) {
+				anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
+			}
+
+			var onSuccess = [function() {
+				module.setSelected($(anchor).text());
+				pipeline.history.replaceState();
+			}];
+			
+			pipeline.detailsframe.load($(anchor).prop("href"), onSuccess);
+		}
+
+		
+		return innerModule;
+	}(); // end t2-1 
+
+	module.t2_4m = function() {
+		var innerModule = {};
+		
+		var f = function() {
+			// load the stage given in the URL
+			var sidebarParam = $.url().param('sidebar');
+			var sidebarAnchor = $("a#" + sidebarParam);
+			// .. or fall back to the first URL if nothing was given
+			if ((typeof sidebarParam === 'undefined') || (typeof sidebarAnchor === 'undefined')) {
+				sidebarAnchor = $('a#sidebar_stage1')
+			}
+
+			// load the new page into the fake frame. We do this using the
+			// javascript components rather than click() so that we don't push
+			// the initial empty history state onto the stack.
+			var href = $(sidebarAnchor).prop("href");
+			var anchorId = $(sidebarAnchor).prop("id");
+
+			var onSuccess = [function() {			
+				pipeline.sidebar.setActive(anchorId);
+
+				pipeline.msselector.setVisible(true);
+			    pipeline.msselector.initState();
+
+				// replace rather than push, as the current state was 
+				// incomplete. We've now made it whole by loading the stage. 
+				pipeline.history.replaceState();
+			}];
+			pipeline.fakeframe.load(href, onSuccess);		
+		}
+
+		innerModule.ready = function() {
+			History.Adapter.bind(window, 'statechange', function(event) { // Note: We are using statechange instead of popstate
+		        var state = History.getState(); // Note: We are using History.getState() instead of event.state
+				History.debug("statechange: " + JSON.stringify(state.data));		
+				pipeline.history.setComponentState(state.data["componentState"]);
+			});
+	
+		    $("ul.nav-sidebar li a").click(function (evt) {
+		        evt.preventDefault();
+	
+				pipeline.history.replaceState();
+	
+				// load the new page into the fake frame
+				var anchorId = $(this).prop("id");
+				var href = $(this).prop("href");
+	
+				var onSuccess = [function() {			
+					pipeline.sidebar.setActive(anchorId);
+	
+					pipeline.msselector.setVisible(true);
+				    pipeline.msselector.initState();
+	
+					// store the new state
+					pipeline.history.pushState();
+				}];
+	
+				pipeline.fakeframe.load(href, onSuccess);		
+		    });
+		    
+		    f();
+		};
+		
+		return innerModule;
+	}();	
+	
+	module.t2_4m_details_container = function() {
+		var innerModule = {};
+
+		innerModule.ready = function() {
+			// keep the dropdown menu open when selecting links
+			$(function() {
+			    $("ul.dropdown-menu").on("click", "[data-stopPropagation]", function(e) {
+			        e.stopPropagation();
+			    });
+			});
+	
+		    $("li.menu-item a.replace").click(function (evt) {
+		        evt.preventDefault();
+	
+				// take a snapshot of the current state so we can restore the page on
+				// return.
+				pipeline.history.replaceState();
+	
+				// load the new page into the fake frame
+				var selected = $(this).text();
+				pipeline.msselector.setSelected(selected);
+				var href = $(this).prop("href");
+	
+				// when switching between measurement sets, maintain the same position
+				// on the page.
+				var currentPosition = pipeline.detailsframe.getScrollTop();
+			    var onSuccess = [function() {
+			    	pipeline.detailsframe.setScrollTop(currentPosition);
+			    }];
+				pipeline.detailsframe.load(href, onSuccess);
+	
+				// store the new state
+				pipeline.history.pushState();
+		    });
+		};
+
+		return innerModule;
+	}();
+	
+	return module;
+}();
+
+pipeline.sidebar = pipeline.sidebar || (function() {
+    var module = {};
+	var activeAnchorId;
+    
+    module.getId = function() {
+    	return "task sidebar";
+    };
+
+	module.getState = function() {
+		if (!activeAnchorId) {
+			return {};
+		} else {
+			return {
+				activeAnchorId: activeAnchorId
+			};				
+		};
+	};
+
+	module.setState = function(state) {
+		var anchorId = state["activeAnchorId"];
+		if (anchorId === activeAnchorId)
+			return;
+		
+		module.setActive(anchorId);
+	};
+	
+    module.getTaskNumber = function() {
+		return $("a#" + activeAnchorId).data("stagenum");
+    };
+
+    module.getTaskName = function() {
+		return $("a#" + activeAnchorId).data("taskname");
+    };
+
+	module.setActive = function(anchorId) {
+		activeAnchorId = anchorId;
+		// remove highlight bar from any current active task..
+        $("ul.nav-sidebar li.active").removeClass("active");
+		// .. and add it to the task that was clicked.
+		$("a#" + activeAnchorId).parent().addClass("active");
+	}
+	
+	module.getQueryUrl = function() {
+		if (activeAnchorId) {
+			return "?sidebar=" + activeAnchorId;
+		} else {
+			return "";
+		}
+	}
+	
+	return module;
+})();
+
+
+pipeline.fakeframe = pipeline.fakeframe || (function() {
+    var module = {};
+	var loadedHref;
+	
+	module.getSelector = function() {
+    	return "div#fakeframe";
+	};
+	
+    module.getId = function() {
+    	return "Main panel";
+    };
+
+	module.getState = function() {
+		if (!loadedHref) {
+			return {};
+		} else {
+			return { href : loadedHref };				
+		};
+	};
+	
+	module.setState = function(state, callbacks) {
+		var href = state["href"];
+		// if the fakeframe is not used in this page, proceed straight to the
+		// callback execution.
+		if (href) {
+			module.load(href, callbacks);
+		} else {
+			for (var i=0; i<callbacks.length; i++) {
+				callbacks[i]();
+			}
+		}
+	};
+	
+	module.load = function(href, callbacks) {
+		var target = module.getSelector();
+		UTILS.loadContent($(target), href, callbacks);
+		loadedHref = href;				
+	}
+
+	return module;
+})();
+
+
+pipeline.msselector = pipeline.msselector || (function() {
+    var module = {};
+	var selected = "";
+	
+	module.isVisible = function() {
+		return $(module.getSelector()).hasClass("visible");
+	};
+	
+	module.setVisible = function(visible) {
+		if (visible && module.holdsMultipleAnchors()) {
+			$(module.getSelector()).show().addClass("visible");
+		} else {
+			$(module.getSelector()).hide().removeClass("visible");
+		}
+	};
+
+	/* Return true if the selector offers more than one choice */
+	module.holdsMultipleAnchors = function() {
+		var numAnchors = $(module.getSelector() + " a.replace").length;
+		return (numAnchors > 1);
+	};
+	
+    module.getSelector = function() {
+    	return "nav#ms_selector";
+    };
+
+    module.getId = function() {
+    	return "MS selector";
+    };
+
+	module.getState = function() {
+		return { 
+			isVisible : module.isVisible(),
+			selected : selected
+		};				
+	};
+
+	module.setState = function(state) {
+		module.setVisible(state["isVisible"]);
+		module.setSelected(state["selected"]);
+	};
+	
+	module.setSelected = function(text) {
+		// set the 'currently viewing MS123' text
+		selected = text;
+		var label = "Currently viewing " + selected;
+		$('#container-active').text(label);
+	}
+
+	module.initState = function() {
+		var anchor;
+		
+		// if the selected MS is in the history, load it, otherwise load the
+		// first 
+		if (!selected) {
+			// load content from the first link and set the active MS text.
+			anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
+		} else {
+			$('li.menu-item a.replace').each(function(k,v) {
+				if ($(this).text() === selected) {
+					anchor = $(this);
+				}
+			});
+		}
+
+		// fallback to first item in case the selector wasn't found
+		if (!anchor) {
+			anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
+		}
+
+		var onSuccess = [function() {
+			module.setSelected($(anchor).text());
+			pipeline.history.replaceState();
+		}];
+		
+		pipeline.detailsframe.load($(anchor).prop("href"), onSuccess);
+	}
+
+	return module;
+})();
+
+
+pipeline.detailsframe = pipeline.detailsframe || (function() {
+    var module = {};
+	var loadedHref;
+	var title;
+	var isPreFormatted;
+	
+    module.getSelector = function() {
+    	return "div#session_container";
+    };
+
+    module.getId = function() {
+    	return "Details frame";
+    };
+
+	module.getState = function() {
+		return { 
+			href : loadedHref,
+			preformatted : isPreFormatted,
+			title : title,
+			scrollTop : module.getScrollTop()
+		};				
+	};
+
+	module.addPreMarkup = function(pageTitle) {
+		var target = $(module.getSelector());
+        target.wrapInner("<code />");
+        target.wrapInner("<pre />");
+        target.prepend('<div class="page-header">' +
+            '<h1>' + pageTitle +
+            '<button class="btn btn-default pull-right" ' +
+            'onclick="javascript:window.history.back()">Back</button>' +
+            '</h1>' +
+            '</div>');
+        isPreFormatted = true;
+        title = pageTitle;
+	};
+	
+	module.setState = function(state) {
+		var onSuccess = [];
+		if (state["preformatted"] === true) {
+			onSuccess.push(function() {
+				module.addPreMarkup(state["title"]);				
+			});
+		}
+		if (state["scrollTop"]) {
+			onSuccess.push(function () {
+				module.setScrollTop(state["scrollTop"]);				
+			});
+		};
+		var href = state["href"];
+		module.load(href, onSuccess);
+	};
+	
+	module.load = function(href, onSuccess) {
+    	if (onSuccess) {
+    		if (!(onSuccess instanceof Array)) {
+    			onSuccess = [onSuccess]
+    		}
+    	} else {
+    		onSuccess = [];
+    	};
+
+    	var container = module.getSelector();
+		onSuccess.push(function() {
+			UTILS.redirectAnchorTarget(container);
+			UTILS.redirectPreAnchorTarget(container);
+		});
+		UTILS.loadContent(container, href, onSuccess);
+		
+		loadedHref = href;				
+		isPreFormatted = false;
+		title = "Untitled";		
+	}
+
+	module.getScrollTop = function() {
+		return $(window).scrollTop();
+	}
+
+	module.setScrollTop = function(scrollTop) {
+		$(window).scrollTop(scrollTop); 		
+	}
+
+	module.getQueryUrl = function() {
+		if (loadedHref) {
+	        var path = loadedHref.substring(loadedHref.lastIndexOf('/') + 1, loadedHref.length);
+			return "&subpage=" + path;
+		} else {
+			return "";
+		}
+	}
+
+	return module;
+})();
+
+
+pipeline.history = pipeline.history || (function() {
+//	window.addEventListener("beforeunload", function (event) {
+//	console.log("Replacing state in unload");
+//	module.replaceState();
+//});
+
+	History.options.debug = true;
+	
+	var module = {};
+	var manipulatingState = false;
+	
+	module.getComponentState = function() {
+		var d = {};
+		
+		// TODO go through registered components
+		d[pipeline.sidebar.getId()] = pipeline.sidebar.getState();
+		d[pipeline.fakeframe.getId()] = pipeline.fakeframe.getState();
+		d[pipeline.msselector.getId()] = pipeline.msselector.getState();
+		d[pipeline.detailsframe.getId()] = pipeline.detailsframe.getState();
+
+		return d
+    };
+
+    module.setComponentState = function(state) {
+    	// We need to distinguish between statechange events that come from the
+    	// browser and statechange events that originate from us. If we didn't,
+    	// updating the history to reflect the current component state would
+    	// trigger an event, which would trigger a setComponentState.
+    	if (manipulatingState) {
+    		History.debug("Bypassing setComponentState");
+    		return;
+    	}
+    		
+    	var callbacks = [function() {
+    		// these have to happen AFTER the page has been loaded!
+        	pipeline.msselector.setState(state[pipeline.msselector.getId()]);
+        	pipeline.detailsframe.setState(state[pipeline.detailsframe.getId()]);
+    	}];
+    	pipeline.sidebar.setState(state[pipeline.sidebar.getId()]);
+    	pipeline.fakeframe.setState(state[pipeline.fakeframe.getId()], callbacks);
+    };
+
+    module.pushState = function() {
+    	var newState = { componentState : module.getComponentState() };
+    	newUrl = getUrl(newState);
+    	var title = pipeline.sidebar.getTaskName();
+		History.debug("Pushing new state: " + JSON.stringify(newState));
+		try {
+			manipulatingState = true;
+	    	History.pushState(newState, title, newUrl);
+		} finally {
+			manipulatingState = false;
+		}
+    }
+
+    module.replaceState = function() {
+    	var oldState = { componentState : module.getComponentState() };
+    	newUrl = getUrl(oldState);
+    	var title = pipeline.sidebar.getTaskName();
+		History.debug("Updating current state: " + JSON.stringify(oldState));
+		try {
+			manipulatingState = true;
+			History.replaceState(oldState, title, newUrl);
+		} finally {
+			manipulatingState = false;
+		}
+    }
+    
+    var getUrl = function(state) {
+        var loc = window.location;
+        var path = loc.pathname.substring(loc.pathname.lastIndexOf('/') + 1, loc.pathname.length);
+        return path + pipeline.sidebar.getQueryUrl() + pipeline.detailsframe.getQueryUrl();
+    };
+    
+    return module; 
+})();
+
+
 UTILS = (function () {
     var module = {};
 
@@ -74,12 +624,85 @@ UTILS = (function () {
         });
     };
 
-    module.loadFakeframe = function (fakeframe, href, title, insertPre, callback) {
+    module.redirectAnchorTarget = function(target) {
+        $(target).find("a.replace").click(function (evt) {
+            evt.preventDefault();
+
+    		// take a snapshot of the current state so we can restore the page on
+    		// return.
+            pipeline.history.replaceState();
+            
+            var onSuccess = [function() {
+            	pipeline.msselector.setVisible(false)
+            	pipeline.history.pushState();
+            }];
+
+            var callbackFn = $(this).data("callback");
+            if (callbackFn) {
+            	onSuccess.push(callbackFn);
+            }
+
+            pipeline.detailsframe.load(this.href, onSuccess);
+        });
+    }
+    
+    module.redirectPreAnchorTarget = function(target) {
+        $(target).find("a.replace-pre").click(function (evt) {
+            evt.preventDefault();
+
+    		// take a snapshot of the current state so we can restore the page on
+    		// return.
+            pipeline.history.replaceState();
+
+            var title = $(this).data("title") || $.url(this.href).attr('file');
+
+            var onSuccess = [function() {
+            	pipeline.msselector.setVisible(false);
+            	pipeline.detailsframe.addPreMarkup(title);
+            	pipeline.history.pushState();
+            }];
+
+            pipeline.detailsframe.load(this.href, onSuccess);
+        });
+    }
+
+    module.loadContent = function(target, href, onSuccess) {
+		$(target).html("<div class=\"page-header\"><h1><span class=\"glyphicon glyphicon-refresh spinning\" style=\"vertical-align:top\"></span> Loading...</h1></div>");
+    	$(target).load(href, function (response, status, xhr) {
+    		if (status == "error") {
+                var msg = "Error loading " + href + ":\n";
+                $(target).html(msg + xhr.status + " " + xhr.statusText);
+            };
+
+            if (status == "success") {
+            	if (onSuccess) {
+	            	// keep compatibility with scalar callback function
+	            	if (onSuccess instanceof Array) {
+	            		for (var i = 0; i < onSuccess.length; i++) {
+	            		    onSuccess[i]();
+	            		}
+	            	} else {
+	            		onSuccess();
+	            	}
+            	};
+            }
+        });
+    };
+
+    module.loadFakeframe = function(target, href) {
+    	var onSuccess = [function() {
+    		UTILS.redirectAnchorTarget(target);
+    		UTILS.redirectPreAnchorTarget(target);
+    	}];
+    	UTILS.loadContent(target, href, onSuccess);
+    }
+    
+    module.loadFakeframe_orig = function (target, href, title, insertPre, callback) {
         insertPre = insertPre || false;
-        $(fakeframe).load(href, function (response, status, xhr) {
+        $(target).load(href, function (response, status, xhr) {
             if (status == "error") {
-                var msg = "Sorry but there was an error: ";
-                $(fakeframe).html(msg + xhr.status + " " + xhr.statusText);
+                var msg = "Sorry but there was an error loading " + href + ": ";
+                $(target).html(msg + xhr.status + " " + xhr.statusText);
             }
 
             if (status == "success") {
@@ -89,19 +712,19 @@ UTILS = (function () {
                     evt.preventDefault();
                     var callbackFn = $(this).data("callback");
                     var title = $(this).data("title") || $.url(this.href).attr('file');
-                    UTILS.loadFakeframe(fakeframe, this.href, title, false, callbackFn);
+                    UTILS.loadFakeframe(target, this.href, title, false, callbackFn);
                 });
 
                 $("a.replace-pre").click(function (evt) {
                     evt.preventDefault();
                     var callbackFn = $(this).data("callback");
                     var title = $(this).data("title") || $.url(this.href).attr('file');
-                    UTILS.loadFakeframe(fakeframe, this.href, title, true, callbackFn);
+                    UTILS.loadFakeframe(target, this.href, title, true, callbackFn);
                 });
 
                 if (insertPre) {
-                    $(fakeframe).wrapInner("<pre />");
-                    $(fakeframe).prepend('<div class="page-header">' +
+                    $(target).wrapInner("<pre />");
+                    $(target).prepend('<div class="page-header">' +
                         '<h3>' + title +
                         '<button class="btn btn-default pull-right" ' +
                         'onclick="javascript:location.reload()">Back</button>' +
@@ -121,28 +744,6 @@ UTILS = (function () {
                 }
             }
         });
-
-        UTILS.calculateAffix();
-    };
-
-    // The sidebar should scroll if the tasks stretch off-screen.
-    module.calculateAffix = function() {
-        if ($(window).height() < ($("#nav-wrapper").height() + 60)) {
-            // expand the div#content height so that the bottom of the well has
-            // a margin
-            $('#content').height(Math.max($("#content").height(), $("#nav-wrapper").height()+40));
-
-            $('#nav-wrapper').affix({
-                offset: {
-                    top: function () {
-                        return Math.abs($("#nav-wrapper").height() - $(window).height() + 100);
-                    }
-                }
-            });
-        } else {
-            $(window).off('.affix');
-            $("#nav-wrapper").removeData('affix').removeClass('affix affix-top affix-bottom');
-        };
     };
 
     module.getScoresForKey = function (scores_dict, key) {

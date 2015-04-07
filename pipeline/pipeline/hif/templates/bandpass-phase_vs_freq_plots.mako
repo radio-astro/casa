@@ -32,6 +32,6 @@ def get_score_text(plot):
 
 <%doc>
 <div class="page-header">
-	<h1>Bandpass phase for ${vis}<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>Bandpass phase for ${vis}<button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
 </%doc>

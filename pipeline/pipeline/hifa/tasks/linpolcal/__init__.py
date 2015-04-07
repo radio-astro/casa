@@ -8,6 +8,7 @@ from . import resultobjects
 
 qaadapter.registry.register_to_calibration_topic(resultobjects.LinpolcalResult)
 
-weblog.add_renderer(Linpolcal, basetemplates.T2_4MDetailsDefaultRenderer(
-      description='Calibrate linear polarization'))
-
+weblog.add_renderer(Linpolcal,
+                    basetemplates.T2_4MDetailsDefaultRenderer(
+                                                              description='Calibrate linear polarization'),
+                    group_by='session')

@@ -12,5 +12,5 @@ pipelineqa.registry.add_handler(qa.GcorFluxscaleQAHandler())
 pipelineqa.registry.add_handler(qa.GcorFluxscaleListQAHandler())
 qaadapter.registry.register_to_calibration_topic(commonfluxresults.FluxCalibrationResults)
 
-weblog.add_renderer(GcorFluxscale, renderer.T2_4MDetailsGFluxscaleRenderer())
+weblog.add_renderer(GcorFluxscale, renderer.T2_4MDetailsGFluxscaleRenderer(), group_by='session')
 

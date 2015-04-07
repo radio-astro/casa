@@ -7,5 +7,7 @@ from .hanning import Hanning
 from . import hanning
 
 
-weblog.add_renderer(Hanning, basetemplates.T2_4MDetailsDefaultRenderer(uri='hanning.mako',
-                                                                      description='VLA Hanning Smoothing', always_rerender=False))
+weblog.add_renderer(Hanning,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='hanning.mako',
+                                                              description='VLA Hanning Smoothing'),
+                    group_by='ungrouped')

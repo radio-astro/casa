@@ -14,5 +14,5 @@ qaadapter.registry.register_to_miscellaneous_topic(simplescale.SDSimpleScaleResu
 
 weblog.add_renderer(SDSimpleScale,
                     super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_simplescale.mako',
-                                                               description='Non-linearity correction', 
-                                                               always_rerender=False))
+                                                               description='Non-linearity correction'),
+                    group_by='ungrouped')

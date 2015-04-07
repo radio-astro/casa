@@ -26,7 +26,7 @@ class T2_4MDetailsDefaultRenderer(object):
     def get_display_context(self, context, result):
         mako_context = {'pcontext' : context,
                         'result'   : result,
-                        'stagelog' : self._get_stagelog(context, result),
+                        'casalog_url' : self._get_log_url(context, result),
                         'dirname'  : 'stage%s' % result.stage_number}
         self.update_mako_context(mako_context, context, result)
         return mako_context
@@ -40,9 +40,9 @@ class T2_4MDetailsDefaultRenderer(object):
         template = weblog.TEMPLATE_LOOKUP.get_template(uri)
         return template.render(**display_context)
 
-    def _get_stagelog(self, context, result):
+    def _get_log_url(self, context, result):
         """
-        Read in the CASA log extracts from the file in the stage directory.
+        Get the URL of the stage log relative to the report directory.
         """
         stagelog_path = os.path.join(context.report_dir,
                                      'stage%s' % result.stage_number,
@@ -50,9 +50,8 @@ class T2_4MDetailsDefaultRenderer(object):
 
         if not os.path.exists(stagelog_path):
             return None
-        
-        with open(stagelog_path, 'r') as f:
-            return ''.join([l.expandtabs() for l in f.readlines()])
+
+        return os.path.relpath(stagelog_path, context.report_dir)        
 
 
 class CommonRenderer(object):

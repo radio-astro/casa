@@ -13,9 +13,4 @@ pipelineqa.registry.add_handler(qa.RawflagchansQAHandler())
 pipelineqa.registry.add_handler(qa.RawflagchansListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.RawflagchansResults)
 
-weblog.add_renderer(Rawflagchans, renderer.T2_4MDetailsRawflagchansRenderer())
-
-
-
-
-
+weblog.add_renderer(Rawflagchans, renderer.T2_4MDetailsRawflagchansRenderer(), group_by='session')

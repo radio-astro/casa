@@ -10,18 +10,8 @@ import pipeline.infrastructure.renderer.rendererutils as rendererutils
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <script>
-$(document).ready(function(){
-	// sidebar may need to start/stop scrolling if window is resized
-	$(window).resize(UTILS.calculateAffix);
-
-	// Load stage details into panel is 'stage=x' given in URL 
- 	var stageNum = $.url().param('stage');
-	var stageDetailsUrl = $('a#link_stage' + stageNum).data('fakeframehref');
-    var fakeframe = $('div#fakeframe');
-	if (typeof stageDetailsUrl != 'undefined') {
-    	UTILS.loadFakeframe(fakeframe, stageDetailsUrl);
-		$('a#link_stage' + stageNum).parent().addClass("active");
-	};	
+$(document).ready(function() {
+	pipeline.pages.t2_4m.ready();
 });
 </script>
  
@@ -33,9 +23,10 @@ $(document).ready(function(){
 		<ul class="nav nav-sidebar">
 			% for result in results:
 			<li>
-				<a id="link_stage${result.stage_number}"
-				   data-fakeframehref="stage${result.stage_number}/t2-4m_details.html"
-				   href="t2-4m.html?stage=${result.stage_number}">
+				<a id="sidebar_stage${result.stage_number}"
+				   data-stagenum="${result.stage_number}"
+				   data-taskname="${hr.get_task_name(result)}"
+				   href="stage${result.stage_number}/t2-4m_details-container.html">
 					${hr.get_task_name(result)}
 					<span class="pull-right">
 						${rendererutils.get_symbol_badge(result)}						
@@ -48,6 +39,5 @@ $(document).ready(function(){
 
 	<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" 
 	     id="fakeframe">
-		<img src="${self.attr.rsc_path}resources/img/ajax-loader.gif">Please wait while loading content...
 	</div><!-- end div col-md-9 -->
 </div><!-- end row -->

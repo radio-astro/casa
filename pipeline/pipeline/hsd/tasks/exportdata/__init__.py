@@ -7,5 +7,5 @@ from .exportdata import SDExportData
 
 weblog.add_renderer(SDExportData, 
                     super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_exportdata.mako',
-                                                               description='Prepare pipeline data products for export', 
-                                                               always_rerender=False))
+                                                               description='Prepare pipeline data products for export'),
+                    group_by='ungrouped')                 

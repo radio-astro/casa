@@ -20,4 +20,4 @@ pipelineqa.registry.add_handler(qa.FlagDeterBaseQAHandler())
 pipelineqa.registry.add_handler(qa.FlagDeterBaseListQAHandler())
 qaadapter.registry.register_to_flagging_topic(flagdeterbase.FlagDeterBaseResults)
 
-weblog.add_renderer(AgentFlagger, renderer.T2_4MDetailsAgentFlaggerRenderer())
+weblog.add_renderer(AgentFlagger, renderer.T2_4MDetailsAgentFlaggerRenderer(), group_by='session')

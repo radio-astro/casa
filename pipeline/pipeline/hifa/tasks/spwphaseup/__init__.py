@@ -12,6 +12,8 @@ pipelineqa.registry.add_handler(qa.SpwPhaseupQAHandler())
 pipelineqa.registry.add_handler(qa.SpwPhaseupListQAHandler())
 qaadapter.registry.register_to_calibration_topic(spwphaseup.SpwPhaseupResults)
 
-weblog.add_renderer(SpwPhaseup, basetemplates.T2_4MDetailsDefaultRenderer(uri='spwphaseup.mako',
-      description='Map narrow to wide spectral windows'))
+weblog.add_renderer(SpwPhaseup,
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='spwphaseup.mako',
+                                                              description='Map narrow to wide spectral windows'),
+                    group_by='session')
 

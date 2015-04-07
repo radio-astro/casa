@@ -10,37 +10,21 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script>
 $(document).ready(function() {
-	// sidebar may need to start/stop scrolling if window is resized
-	$(window).resize(UTILS.calculateAffix);
-
-	// Load MS details into panel is 'ms=x' given in URL
- 	var msName = $.url().param('ms').replace(/[^a-zA-Z0-9]/gi, '_');
-	var msLink = 'a#link_ms' + msName;
-	var msDetailsUrl = $(msLink).data('fakeframehref');
-	var fakeframe = $('div#fakeframe');
-	if (typeof msDetailsUrl != 'undefined') {
-		UTILS.loadFakeframe(fakeframe, msDetailsUrl);
-		$(msLink).parent().addClass("active");
-	};
-	
-	$('#nav').affix({
-		offset: $('nav').position()
-	});	
+	pipeline.pages.t2_1.ready();
 });
 </script>
 
 <%block name="title">Session Data Details</%block>
 
 <div class="row">
-	<div class="col-sm-3 col-md-2 sidebar">
+	<div class="col-sm-3 col-md-2 sidebar hidden-print">
 		% for session in sessions:
-		<strong>Session '${session.name}'</strong>
+		<strong>Session: ${session.name}</strong>
 		<ul class="nav nav-sidebar">
 			% for ms in session.mses:
 			<li>
-				<a id="link_ms${re.sub('[^a-zA-Z0-9]', '_', ms.basename)}"
-				   href="t2-1.html?ms=${ms.basename}"
-				   data-fakeframehref="session${session.name}/${ms.basename}/t2-1_details.html">
+				<a id="sidebar_${re.sub('[^a-zA-Z0-9]', '_', ms.basename)}"
+				   href="session${session.name}/${ms.basename}/t2-1_details.html">
 					${ms.basename}
 				</a>
 			</li>
@@ -54,9 +38,7 @@ $(document).ready(function() {
 	first_ms_name = sessions[0].mses[0].basename
 	%>
 	<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" 
-	     id="fakeframe"
+	     id="session_container"
 	     data-src="session${first_session_name}/${first_ms_name}/t2-1_details.html">
-		<img src="${self.attr.rsc_path}resources/img/ajax-loader.gif">Please wait while loading content...
-	</div><!-- end div col-md-9 -->
-</div><!-- end row -->
-
+	</div>
+</div>

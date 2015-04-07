@@ -8,5 +8,5 @@ from .applycals import Applycals
 from . import finalcals
 from . import renderer
 
-weblog.add_renderer(Finalcals, renderer.T2_4MDetailsfinalcalsRenderer())
-weblog.add_renderer(Applycals, applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False, uri='applycals.mako'))      
+weblog.add_renderer(Finalcals, renderer.T2_4MDetailsfinalcalsRenderer(), group_by='ungrouped')
+weblog.add_renderer(Applycals, applycal_renderer.T2_4MDetailsApplycalRenderer(uri='applycals.mako'), group_by='ungrouped')      

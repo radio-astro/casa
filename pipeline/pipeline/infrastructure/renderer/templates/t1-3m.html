@@ -26,15 +26,15 @@ def get_lowest_scoring_results(topic):
 		
 	minresult = min(min_scoring_results, 
 				    key=lambda result:result.qa.representative.score)
-	anchor = '<a href="t2-4m.html?stage=%s">%s</a>' % (minresult.stage_number, 
-												       hr.get_task_description(minresult))
+	anchor = '<a href="t2-4m.html?sidebar=sidebar_stage%s">%s</a>' % (minresult.stage_number, 
+												                      hr.get_task_description(minresult))
 	return (anchor,
 			minresult.qa.representative)
 
-tablerow_css_classes = {'QA Error'   : 'error',
-						'QA Warning' : 'warning',
-						'Error'      : 'error',
-						'Warning'    : 'warning'}
+tablerow_css_classes = {'QA Error'   : 'danger alert-danger',
+						'QA Warning' : 'warning alert-warning',
+						'Error'      : 'danger alert-danger',
+						'Warning'    : 'warning alert-warning'}
 
 def get_tablerow_class(row):
 	return tablerow_css_classes.get(row.type, '')
@@ -127,8 +127,8 @@ def flagcolortable(flagpct):
 	<tbody>
 	% for row in tablerows:
 		<tr class="${get_tablerow_class(row)}">
-			<td><a href="t2-4m.html?stage=${row.stage}">${row.stage}</a></td>
-			<td><a href="t2-4m.html?stage=${row.stage}">${row.task}</a></td>
+			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}">${row.stage}</a></td>
+			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}">${row.task}</a></td>
 			<td>${row.type}</td>
 			<td>${row.message}</td>
 		</tr>

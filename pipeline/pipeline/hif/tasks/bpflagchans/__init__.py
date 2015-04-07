@@ -14,4 +14,7 @@ pipelineqa.registry.add_handler(qa.BandpassFlagChansListQAHandler())
 qaadapter.registry.register_to_flagging_topic(
   resultobjects.BandpassflagResults)
 
-weblog.add_renderer(Bandpassflagchans, renderer.T2_4MDetailsBandpassFlagRenderer())
+weblog.add_renderer(Bandpassflagchans, 
+                    renderer.T2_4MDetailsBandpassFlagRenderer(),
+                    group_by='session')
+                 

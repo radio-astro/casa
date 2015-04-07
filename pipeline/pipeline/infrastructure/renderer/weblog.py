@@ -77,7 +77,15 @@ def register_mako_templates(directory, prefix=''):
 #         LOG.trace('%s registered to URI %s', template_path, uri)
 
 TEMP_RENDERER_MAP = {}
-def add_renderer(task_cls, renderer):
+RENDER_BY_SESSION = set()
+RENDER_UNGROUPED = set()
+def add_renderer(task_cls, renderer, group_by=None):
     TEMP_RENDERER_MAP[task_cls] = renderer
-    
-
+    if group_by == 'session':
+        RENDER_BY_SESSION.add(task_cls.__name__)
+    elif group_by == 'ungrouped':
+        RENDER_UNGROUPED.add(task_cls.__name__)
+    else:
+        LOG.warning('%s did not register a renderer group type. Assuming it is'
+                    ' grouped by session', task_cls.__name__)
+        RENDER_BY_SESSION.add(task_cls.__name__)

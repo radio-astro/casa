@@ -13,9 +13,4 @@ pipelineqa.registry.add_handler(qa.FlagcorrectedQAHandler())
 pipelineqa.registry.add_handler(qa.FlagcorrectedListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.FlagcorrectedResults)
 
-weblog.add_renderer(Flagcorrected, renderer.T2_4MDetailsFlagcorrectedRenderer())
-
-
-
-
-
+weblog.add_renderer(Flagcorrected, renderer.T2_4MDetailsFlagcorrectedRenderer(), group_by='session')

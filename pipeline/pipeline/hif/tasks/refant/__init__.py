@@ -12,5 +12,7 @@ pipelineqa.registry.add_handler(qa.RefantQAHandler())
 pipelineqa.registry.add_handler(qa.RefantListQAHandler())
 qaadapter.registry.register_to_miscellaneous_topic(referenceantenna.RefAntResults)
 
-weblog.add_renderer(RefAnt, basetemplates.T2_4MDetailsDefaultRenderer(uri='refant.mako',
-                                                                      description='Select reference antennas'))
+weblog.add_renderer(RefAnt, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='refant.mako',
+                                                              description='Select reference antennas'),
+                    group_by='session')

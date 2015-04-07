@@ -30,6 +30,13 @@ class ObservingRun(object):
             for ms in self.measurement_sets:
                 if name in (ms.name, ms.basename):
                     return ms
+            
+            for ms in self.measurement_sets:
+                # single dish data are registered without the MS suffix
+                with_suffix = '%s.ms' % name
+                if with_suffix in (ms.name, ms.basename):
+                    return ms
+            
             raise KeyError, ('No measurement set found with '
                              'name {0}'.format(name))
 

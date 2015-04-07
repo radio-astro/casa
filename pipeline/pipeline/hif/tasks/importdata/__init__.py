@@ -12,4 +12,4 @@ pipelineqa.registry.add_handler(qa.ImportDataQAHandler())
 pipelineqa.registry.add_handler(qa.ImportDataListQAHandler())
 qaadapter.registry.register_to_dataset_topic(importdata.ImportDataResults)
 
-weblog.add_renderer(ImportData, renderer.T2_4MDetailsImportDataRenderer())
+weblog.add_renderer(ImportData, renderer.T2_4MDetailsImportDataRenderer(), group_by='session')

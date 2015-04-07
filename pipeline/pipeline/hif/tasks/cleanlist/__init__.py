@@ -13,4 +13,6 @@ pipelineqa.registry.add_handler(qa.CleanListQAHandler())
 pipelineqa.registry.add_handler(qa.CleanListListQAHandler())
 qaadapter.registry.register_to_imaging_topic(resultobjects.CleanListResult)
 
-weblog.add_renderer(CleanList, clean_renderer.T2_4MDetailsCleanRenderer(description='Calculate clean products'))
+weblog.add_renderer(CleanList,
+                    clean_renderer.T2_4MDetailsCleanRenderer(description='Calculate clean products'),
+                    group_by='ungrouped')

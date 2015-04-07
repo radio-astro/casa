@@ -67,7 +67,7 @@ def format_score(scores, result):
 	<tbody>
 		% for result in results:
 		<tr>
-			<td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
+			<td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?sidebar=sidebar_stage${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
 			<td><div class="progress" style="margin-bottom:0px;"><div class="progress-bar${get_bar_class(scores, result)}" role="progressbar" aria-valuenow="${scores[result.stage_number].score}" aria-valuemin="0" aria-valuemax="1" style="width:${get_bar_width(scores, result)}%;"><span class="sr-only">Score = ${scores[result.stage_number].score}</span></div></div></td>
 			<td><span class="badge${get_badge_class(scores, result)}">${format_score(scores, result)}</span></td>
 		</tr>

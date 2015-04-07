@@ -44,7 +44,7 @@ $(document).ready(function() {
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <div class="page-header">
-        <h2>Clean results for ${field} SpW ${spw} <button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h2>
+        <h2>Clean results for ${field} SpW ${spw} <button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h2>
 </div>
 
 <div class="row">

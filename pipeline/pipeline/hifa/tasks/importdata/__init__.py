@@ -9,4 +9,4 @@ from . import qa
 pipelineqa.registry.add_handler(qa.ALMAImportDataQAHandler())
 
 # use the standard ImportData renderer to render ALMAImportData results
-weblog.add_renderer(ALMAImportData, super_renderer.T2_4MDetailsImportDataRenderer())
+weblog.add_renderer(ALMAImportData, super_renderer.T2_4MDetailsImportDataRenderer(), group_by='session')

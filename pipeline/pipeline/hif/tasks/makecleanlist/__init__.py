@@ -14,4 +14,5 @@ qaadapter.registry.register_to_imaging_topic(resultobjects.MakeCleanListResult)
 
 weblog.add_renderer(MakeCleanList, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='makecleanlist.mako',
-                                                              description='Compile a list of cleaned images to be calculated'))
+                                                              description='Compile a list of cleaned images to be calculated'),
+                    group_by='ungrouped')

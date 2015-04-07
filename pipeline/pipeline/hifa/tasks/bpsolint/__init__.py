@@ -15,7 +15,7 @@ qaadapter.registry.register_to_dataset_topic(BpSolintResults)
 
 #weblog.add_renderer(BpSolint, basetemplates.T2_4MDetailsDefaultRenderer( \
 #      description='Compute best bandpass solution interval'))
-weblog.add_renderer(BpSolint, renderer.T2_4MDetailsBpSolintRenderer())
+weblog.add_renderer(BpSolint, renderer.T2_4MDetailsBpSolintRenderer(), group_by='session')
 
 
 

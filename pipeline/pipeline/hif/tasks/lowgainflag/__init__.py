@@ -12,4 +12,4 @@ pipelineqa.registry.add_handler(qa.LowgainflagQAHandler())
 pipelineqa.registry.add_handler(qa.LowgainflagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.LowgainflagResults)
 
-weblog.add_renderer(Lowgainflag, renderer.T2_4MDetailsLowgainFlagRenderer())
+weblog.add_renderer(Lowgainflag, renderer.T2_4MDetailsLowgainFlagRenderer(), group_by='session')

@@ -8,4 +8,4 @@ from . import renderer
 
 qaadapter.registry.register_to_calibration_topic(calsky.SDCalSkyResults)
 
-weblog.add_renderer(SDCalSky, renderer.T2_4MDetailsSingleDishCalSkyRenderer())
+weblog.add_renderer(SDCalSky, renderer.T2_4MDetailsSingleDishCalSkyRenderer(), group_by='ungrouped')

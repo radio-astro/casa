@@ -2,6 +2,8 @@ from __future__ import absolute_import, division
 import collections
 import contextlib
 import datetime
+import itertools
+
 import math
 import os
 import pydoc
@@ -204,7 +206,8 @@ class T1_1Renderer(RendererBase):
         #Observation Summary (formerly the T1-2 page)
         ms_summary_rows = []
         for ms in context.observing_run.measurement_sets:
-            href = os.path.join('t2-1.html?ms=%s' % ms.basename)
+            link = 'sidebar_%s' % re.sub('[^a-zA-Z0-9]', '_', ms.basename)
+            href = os.path.join('t2-1.html?sidebar=%s' % link)
 
             num_antennas = len(ms.antennas)
             # times should be passed as Python datetimes
@@ -459,9 +462,15 @@ class T1_4MRenderer(RendererBase):
         scores = {}
         for result in context.results:
             scores[result.stage_number] = result.qa.representative
+
+        # take first MS of first session
+#        s = sorted(context.observing_run.measurement_sets,
+#                   key=lambda ms: (ms.session, ms.basename)) 
+#        root = s[0].basename
                 
         return {'pcontext' : context,
                 'results'  : context.results,
+#                'root'     : root,
                 'scores'   : scores}
         
 
@@ -552,7 +561,6 @@ class T2_1DetailsRenderer(object):
 
         task = summary.ElVsTimeChart(context, ms)
         el_vs_time_plot = task.plot()
-
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -944,7 +952,58 @@ class T2_4MRenderer(RendererBase):
     @staticmethod
     def get_display_context(context):
         return {'pcontext' : context,
-                'results'  : context.results }
+                'results'  : context.results}
+        
+#     @classmethod
+#     def get_file(cls, context, root):
+#         path = cls.get_path(context, root)
+# 
+#         # to avoid any subsequent file not found errors, create the directory
+#         # if a hard copy is requested and the directory is missing
+#         session_dir = os.path.dirname(path)
+#         if not os.path.exists(session_dir):
+#             os.makedirs(session_dir)
+#         
+#         # create a file object that writes to a file
+#         file_obj = open(path, 'w')
+#         
+#         # return the file object wrapped in a context manager, so we can use
+#         # it with the autoclosing 'with fileobj as f:' construct
+#         return contextlib.closing(file_obj)
+# 
+#     @classmethod
+#     def get_path(cls, context, root):
+#         path = os.path.join(context.report_dir, root)
+#         return os.path.join(path, cls.output_file)
+# 
+#     @classmethod
+#     def render(cls, context):
+#         # dict that will map session ID to session results
+#         collated = collections.defaultdict(list)
+#         for result in context.results:
+#             # we only handle lists of results, so wrap single objects in a
+#             # list if necessary
+#             if not isinstance(result, collections.Iterable):
+#                 result = wrap_in_resultslist(result)
+#             
+#             # split the results in the list into streams, divided by session
+#             d = group_by_root(context, result)
+#             for root, session_results in d.items():
+#                 collated[root].extend(session_results)
+# 
+#         for root, session_results in collated.items():
+#             cls.render_root(context, root, session_results)
+# 
+#     @classmethod
+#     def render_root(cls, context, root, results):                
+#         template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
+# 
+#         mako_context = {'pcontext' : context,
+#                         'root'     : root,
+#                         'results'  : results}
+#         
+#         with cls.get_file(context, root) as fileobj:
+#             fileobj.write(template.render(**mako_context))
 
 
 class T2_4MDetailsDefaultRenderer(object):
@@ -956,7 +1015,7 @@ class T2_4MDetailsDefaultRenderer(object):
     def get_display_context(self, context, result):
         mako_context = {'pcontext' : context,
                         'result'   : result,
-                        'stagelog' : self._get_stagelog(context, result),
+                        'casalog_url' : self._get_log_url(context, result),
                         'taskhelp' : self._get_help(context, result),
                         'dirname'  : 'stage%s' % result.stage_number}
         self.update_mako_context(mako_context, context, result)
@@ -974,9 +1033,9 @@ class T2_4MDetailsDefaultRenderer(object):
         template = weblog.TEMPLATE_LOOKUP.get_template(uri)
         return template.render(**display_context)
 
-    def _get_stagelog(self, context, result):
+    def _get_log_url(self, context, result):
         """
-        Read in the CASA log extracts from the file in the stage directory.
+        Get the URL of the stage log relative to the report directory.
         """
         stagelog_path = os.path.join(context.report_dir,
                                      'stage%s' % result.stage_number,
@@ -984,9 +1043,8 @@ class T2_4MDetailsDefaultRenderer(object):
 
         if not os.path.exists(stagelog_path):
             return None
-        
-        with open(stagelog_path, 'r') as f:
-            return ''.join([l.expandtabs() for l in f.readlines()])
+
+        return os.path.relpath(stagelog_path, context.report_dir)        
 
     def _get_help(self, context, result):
         try:
@@ -1003,14 +1061,40 @@ class T2_4MDetailsDefaultRenderer(object):
 
 
 
-
-
-
-
-
-
 #----------------------------------------------------------------------
 
+class T2_4MDetailsContainerRenderer(RendererBase):
+    output_file = 't2-4m_details-container.html'
+    template = 't2-4m_details-container.mako'
+
+    @classmethod
+    def get_path(cls, context, result):
+        stage = 'stage%s' % result.stage_number
+        stage_dir = os.path.join(context.report_dir, stage)
+        return os.path.join(stage_dir, cls.output_file)
+
+    @classmethod
+    def get_file(cls, context, result):
+        path = cls.get_path(context, result)
+        file_obj = open(path, 'w')
+        return contextlib.closing(file_obj)
+
+    @classmethod
+    def render(cls, context, result, urls):
+        # give the implementing class a chance to bypass rendering. This is
+        # useful when the page has not changed, eg. MS description pages when
+        # no subsequent ImportData has been performed
+        path = cls.get_path(context, result)
+        if os.path.exists(path) and not cls.rerender(context):
+            return
+
+        mako_context = {'pcontext' : context,
+                        'container_urls': urls,
+                        'active_ms' : 'N/A'}
+
+        template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
+        with cls.get_file(context, result) as fileobj:
+            fileobj.write(template.render(**mako_context))
 
 
 class T2_4MDetailsRenderer(object):
@@ -1030,18 +1114,20 @@ class T2_4MDetailsRenderer(object):
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
     :param result: the task results object to render
     :type result: :class:`~pipeline.infrastructure.api.Result`
+    :param root: filename component to insert
+    :type root: string
     :rtype: a file object
     """
     @classmethod
-    def get_file(cls, context, result):
+    def get_file(cls, context, result, root):
         # construct the relative filename, eg. 'stageX/t2-4m_details.html'
-        path = cls.get_path(context, result)
+        path = cls.get_path(context, result, root)
 
         # to avoid any subsequent file not found errors, create the directory
         # if a hard copy is requested and the directory is missing
-        stage_dir = os.path.dirname(path)
-        if not os.path.exists(stage_dir):
-            os.makedirs(stage_dir)
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         
         # create a file object that writes to a file if a hard copy is 
         # requested, otherwise return a file object that flushes to stdout
@@ -1052,19 +1138,21 @@ class T2_4MDetailsRenderer(object):
         return contextlib.closing(file_obj)
 
     """
-    Get the path to which the template will be written.
+    Get the template output path.
     
     :param context: the pipeline Context
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
     :param result: the task results object to render
     :type result: :class:`~pipeline.infrastructure.api.Result`
+    :param root: the optional directory component to insert before the stage
+    :type root: string
     :rtype: string
     """
     @classmethod
-    def get_path(cls, context, result):
+    def get_path(cls, context, result, root=''):
         # HTML output will be written to the directory 'stageX' 
         stage = 'stage%s' % result.stage_number
-        stage_dir = os.path.join(context.report_dir, stage)
+        stage_dir = os.path.join(context.report_dir, root, stage)
 
         # construct the relative filename, eg. 'stageX/t2-4m_details.html'
         return os.path.join(stage_dir, cls.output_file)
@@ -1086,55 +1174,188 @@ class T2_4MDetailsRenderer(object):
         t2_4m_renderers = renderer_map[T2_4MDetailsRenderer]
 
         # for each result accepted and stored in the context..
-        for result in context.results:
+        for task_result in context.results:
             # we only handle lists of results, so wrap single objects in a
             # list if necessary
-            if not isinstance(result, collections.Iterable):
-                l = basetask.ResultsList()
-                l.append(result)
-                l.timestamps = result.timestamps
-                l.stage_number = result.stage_number
-                l.inputs = result.inputs
-                if hasattr(result, 'taskname'):
-                    l.taskname = result.taskname
-
-                # the newly-created ResultsList wrapper is missing a QA pool. However,
-                # as there is only ever one task added to the list we can safely assume
-                # that the pool for the wrapper should equal that of the child. 
-                if hasattr(result, 'qa'):
-                    l.qa = result.qa
-
-                result = l
-
-            task = result[0].task
+            if not isinstance(task_result, collections.Iterable):
+                task_result = wrap_in_resultslist(task_result)
             
             # find the renderer appropriate to the task..
+            task = task_result[0].task
             renderer = t2_4m_renderers.get(task, cls._default_renderer)
-            LOG.trace('Using %s to render %s result' % (
-                renderer.__class__.__name__, task.__name__))
+            LOG.trace('Using %s to render %s result',
+                      renderer.__class__.__name__, task.__name__)
 
-            # details pages do not need to be updated once written unless the
-            # renderer specifies that an update is required
-            path = cls.get_path(context, result)
-            force_rerender = getattr(renderer, 'always_rerender', False)
-            debug_cls = renderer.__class__ in DEBUG_CLASSES
-            force_rerender = force_rerender or debug_cls
-            if force_rerender:
-                LOG.trace('Forcing rerendering for %s' % renderer.__class__.__name__)
-            if os.path.exists(path) and not force_rerender:
-                continue
-            
-            # .. get the file object to which we'll render the result
-            with cls.get_file(context, result) as fileobj:
-                # .. and write the renderer's interpretation of this result to
-                # the file object  
-                try:
-                    fileobj.write(renderer.render(context, result))
-                except:
-                    LOG.warning('Template generation failed for '
-                                '%s.' % cls.__name__)
-                    LOG.debug(mako.exceptions.text_error_template().render())
-                    fileobj.write(mako.exceptions.html_error_template().render())
+            container_urls = {}
+
+            if task.__name__ in weblog.RENDER_UNGROUPED:
+                cls.render_result(renderer, context, task_result)
+
+                ms_weblog_path = cls.get_path(context, task_result, '')
+                relpath = os.path.relpath(ms_weblog_path, context.report_dir)
+                container_urls['combined session'] = {
+                        'all' : (relpath, task_result)
+                }
+
+                # create new container
+                container = T2_4MDetailsContainerRenderer
+                container.render(context, task_result, container_urls)
+
+            elif task.__name__ in weblog.RENDER_BY_SESSION:
+                session_grouped = group_into_sessions(context, task_result)
+                for session_id, session_results in session_grouped.items():
+                    container_urls[session_id] = {}
+                    ms_grouped = group_into_measurement_sets(context, session_results)
+        
+                    for ms_id, ms_result in ms_grouped.items():
+                        cls.render_result(renderer, context, ms_result, ms_id)
+    
+                        ms_weblog_path = cls.get_path(context, ms_result, ms_id)
+                        relpath = os.path.relpath(ms_weblog_path, context.report_dir)
+                        container_urls[session_id][ms_id] = (relpath, ms_result)
+    
+                # create new container
+                container = T2_4MDetailsContainerRenderer
+                container.render(context, task_result, container_urls)
+                
+            else:
+                LOG.warning('Don\'t know how to group %s renderer', task.__name__)
+
+    @classmethod
+    def render_result(cls, renderer, context, result, root=''):                
+        # details pages do not need to be updated once written unless the
+        # renderer specifies that an update is required
+        path = cls.get_path(context, result, root)
+        LOG.info('Path for %s is %s', result.__class__.__name__, path)
+        force_rerender = getattr(renderer, 'always_rerender', False)
+        debug_cls = renderer.__class__ in DEBUG_CLASSES
+        force_rerender = force_rerender or debug_cls
+
+        if force_rerender:
+            LOG.trace('Forcing rerendering for %s', renderer.__class__.__name__)
+
+        if os.path.exists(path) and not force_rerender:
+            return
+
+        # .. get the file object to which we'll render the result
+        with cls.get_file(context, result, root) as fileobj:
+            # .. and write the renderer's interpretation of this result to
+            # the file object  
+            try:
+                LOG.trace('Writing %s output to %s', renderer.__class__.__name__,
+                          path)
+                fileobj.write(renderer.render(context, result))
+            except:
+                LOG.warning('Template generation failed for %s', cls.__name__)
+                LOG.debug(mako.exceptions.text_error_template().render())
+                fileobj.write(mako.exceptions.html_error_template().render())
+
+
+def wrap_in_resultslist(task_result):
+    l = basetask.ResultsList()
+    l.append(task_result)
+    l.timestamps = task_result.timestamps
+    l.stage_number = task_result.stage_number
+    l.inputs = task_result.inputs
+    if hasattr(task_result, 'taskname'):
+        l.taskname = task_result.taskname
+
+    # the newly-created ResultsList wrapper is missing a QA pool. However,
+    # as there is only ever one task added to the list we can safely assume
+    # that the pool for the wrapper should equal that of the child. 
+    if hasattr(task_result, 'qa'):
+        l.qa = task_result.qa
+    
+    return l
+
+
+def group_into_sessions(context, task_results):
+    """
+    Return results grouped into lists by session. 
+    """
+    session_map = {ms.basename : ms.session 
+                   for ms in context.observing_run.measurement_sets}
+    
+    def get_session(r):
+        # return the session inputs argument if present, otherwise find
+        # which session the measurement set is in
+        if 'session' in r.inputs:
+            return r.inputs['session']
+
+        basename = os.path.basename(r.inputs['vis'])
+        return session_map.get(basename, 'Shared')
+    
+    d = {}
+    results_by_session = sorted(task_results, key=get_session)
+    for k, g in itertools.groupby(results_by_session, get_session):
+        l = basetask.ResultsList()
+        l.extend(g)
+        l.timestamps = task_results.timestamps
+        l.stage_number = task_results.stage_number
+        l.inputs = task_results.inputs
+        if hasattr(task_results, 'taskname'):
+            l.taskname = task_results.taskname
+        d[k] = l
+
+    return d
+
+
+def group_into_measurement_sets(context, task_results):
+    def get_vis(r):
+        vis = r.inputs['vis']
+        if type(r).__name__ == 'ImportDataResults':
+            vis = '%s.ms' % vis
+        return os.path.basename(vis)
+    
+    vises = [get_vis(r) for r in task_results]
+    mses = [context.observing_run.get_ms(vis) for vis in vises]
+    ms_names = [ms.basename for ms in mses]
+    times = [utils.get_epoch_as_datetime(ms.start_time) for ms in mses]
+
+    # sort MSes within session by execution time
+    decorated = zip(times, ms_names, task_results)
+    decorated.sort()
+    
+    d = collections.OrderedDict()
+    for (_, name, task) in decorated:
+        d[name] = wrap_in_resultslist(task)
+
+    return d
+    
+
+def sort_by_time(mses):
+    """
+    Return measurement sets sorted by time order.
+    """
+    return sorted(mses, 
+                  key=lambda ms: utils.get_epoch_as_datetime(ms.start_time))     
+
+
+def get_rootdir(r):
+    try:
+        vis = r.inputs['vis']
+        if type(r).__name__ == 'ImportDataResults':
+            vis = '%s.ms' % vis
+        return os.path.basename(vis)
+    except:
+        return 'shared'
+
+
+def group_by_root(context, task_results):
+    results_by_root = sorted(task_results, key=get_rootdir)
+
+    d = collections.defaultdict(list)
+    for k, g in itertools.groupby(results_by_root, get_rootdir):        
+        l = basetask.ResultsList()
+        l.extend(g)
+        l.timestamps = task_results.timestamps
+        l.stage_number = task_results.stage_number
+        l.inputs = task_results.inputs
+        if hasattr(task_results, 'taskname'):
+            l.taskname = task_results.taskname
+        d[k] = l
+
+    return d
 
 
 class WebLogGenerator(object):
@@ -1240,6 +1461,7 @@ class WebLogGenerator(object):
                 os.symlink(link_relsrc, link_dst)
         finally:
             context.results = proxies
+
 
 class LogCopier(object):
     """

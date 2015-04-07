@@ -13,4 +13,4 @@ pipelineqa.registry.add_handler(qa.TsysflagQAHandler())
 pipelineqa.registry.add_handler(qa.TsysflagListQAHandler())
 qaadapter.registry.register_to_flagging_topic(resultobjects.TsysflagspectraResults)
 
-weblog.add_renderer(Tsysflag, renderer.T2_4MDetailsTsysflagRenderer())
+weblog.add_renderer(Tsysflag, renderer.T2_4MDetailsTsysflagRenderer(), group_by='session')

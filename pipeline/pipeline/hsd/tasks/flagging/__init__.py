@@ -8,5 +8,7 @@ from .flagdeteralmasd import FlagDeterALMASingleDish
 #from .almaagentflagger import ALMAAgentFlagger
 
 # use the standard AgentFlagger renderer to render hifa flagging results
-weblog.add_renderer(FlagDeterALMASingleDish, super_renderer.T2_4MDetailsAgentFlaggerRenderer(description='ALMA SD deterministic flagging'))
+weblog.add_renderer(FlagDeterALMASingleDish, 
+                    super_renderer.T2_4MDetailsAgentFlaggerRenderer(description='ALMA SD deterministic flagging'),
+                    group_by='session')
 #weblog.add_renderer(ALMAAgentFlagger, super_renderer.T2_4MDetailsAgentFlaggerRenderer(description='ALMA deterministic flagging'))

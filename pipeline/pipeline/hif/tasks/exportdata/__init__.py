@@ -14,5 +14,7 @@ pipelineqa.registry.add_handler(qa.ExportDataQAHandler())
 pipelineqa.registry.add_handler(qa.ExportDataListQAHandler())
 qaadapter.registry.register_to_dataset_topic(exportdata.ExportDataResults)
 
-weblog.add_renderer(ExportData, basetemplates.T2_4MDetailsDefaultRenderer(uri='exportdata.mako',
-               description='Prepare pipeline data products for export'))
+weblog.add_renderer(ExportData, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='exportdata.mako',
+                                                              description='Prepare pipeline data products for export'),
+                    group_by='ungrouped')                    

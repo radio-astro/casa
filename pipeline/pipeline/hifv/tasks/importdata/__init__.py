@@ -5,4 +5,4 @@ from .importdata import VLAImportData
 from . import importdata
 from . import renderer
 
-weblog.add_renderer(VLAImportData, renderer.T2_4MDetailsVLAImportDataRenderer())
+weblog.add_renderer(VLAImportData, renderer.T2_4MDetailsVLAImportDataRenderer(), group_by='ungrouped')

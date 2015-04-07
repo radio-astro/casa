@@ -17,4 +17,7 @@ pipelineqa.registry.add_handler(qa.BandpassQAHandler())
 pipelineqa.registry.add_handler(qa.BandpassListQAHandler())
 qaadapter.registry.register_to_calibration_topic(common.BandpassResults)
 
-weblog.add_renderer(PhcorBandpass, renderer.T2_4MDetailsBandpassRenderer())
+weblog.add_renderer(PhcorBandpass, 
+                    renderer.T2_4MDetailsBandpassRenderer(),
+                    group_by='session')
+                 

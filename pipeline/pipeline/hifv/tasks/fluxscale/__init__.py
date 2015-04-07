@@ -9,6 +9,5 @@ from . import testgains
 from . import fluxboot
 from . import renderer
 
-weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer())
-
-weblog.add_renderer(Fluxboot, renderer.T2_4MDetailsfluxbootRenderer())
+weblog.add_renderer(Solint, renderer.T2_4MDetailsSolintRenderer(), group_by='ungrouped')
+weblog.add_renderer(Fluxboot, renderer.T2_4MDetailsfluxbootRenderer(), group_by='ungrouped')

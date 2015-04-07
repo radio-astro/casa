@@ -7,7 +7,7 @@ import os
 <script src="${self.attr.rsc_path}resources/plotgroup.js"></script>
 
 <div class="page-header">
-	<h1>${plot_group.title} plots <button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>${plot_group.title} plots <button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></h1>
 </div>
 
 <div class="row">

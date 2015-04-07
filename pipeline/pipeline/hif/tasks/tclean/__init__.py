@@ -13,4 +13,4 @@ pipelineqa.registry.add_handler(qa.TcleanListQAHandler())
 qaadapter.registry.register_to_imaging_topic(resultobjects.BoxResult)
 qaadapter.registry.register_to_imaging_topic(resultobjects.TcleanResult)
 
-weblog.add_renderer(Tclean, renderer.T2_4MDetailsTcleanRenderer())
+weblog.add_renderer(Tclean, renderer.T2_4MDetailsTcleanRenderer(), group_by='ungrouped')

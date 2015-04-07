@@ -13,4 +13,4 @@ pipelineqa.registry.add_handler(qa.SetjyQAHandler())
 pipelineqa.registry.add_handler(qa.SetjyListQAHandler())
 qaadapter.registry.register_to_calibration_topic(commonfluxresults.FluxCalibrationResults)
 
-weblog.add_renderer(Setjy, renderer.T2_4MDetailsSetjyRenderer())
+weblog.add_renderer(Setjy, renderer.T2_4MDetailsSetjyRenderer(), group_by='session')

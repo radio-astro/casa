@@ -14,4 +14,4 @@ pipelineqa.registry.add_handler(qa.TsyscalQAHandler())
 pipelineqa.registry.add_handler(qa.TsyscalListQAHandler())
 qaadapter.registry.register_to_calibration_topic(resultobjects.TsyscalResults)
 
-weblog.add_renderer(Tsyscal, renderer.T2_4MDetailsTsyscalRenderer())
+weblog.add_renderer(Tsyscal, renderer.T2_4MDetailsTsyscalRenderer(), group_by='session')

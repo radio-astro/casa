@@ -196,21 +196,6 @@ ${next.body()}
 	</%doc>
 	
 	<div class="panel panel-default">
-	    <div class="panel-heading" role="tab" id="headingTwo">
-	    	<h4 class="panel-title">
-				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-	        	CASA Logs
-		      	</a>    	
-	    	</h4>
-	    </div>
-	    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-			<div class="panel-body">
-				<pre class="smallpre">${stagelog}</pre>
-			</div>
-		</div>
-	</div>
-
-	<div class="panel panel-default">
 	    <div class="panel-heading" role="tab" id="headingThree">
 	    	<h4 class="panel-title">
 				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
@@ -231,25 +216,25 @@ ${next.body()}
 				    </thead>
 					<tbody>
 					% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
-					<tr class="error">
+					<tr class="danger alert-danger">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
 					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
-					<tr class="warning">
+					<tr class="warning alert-warning">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
 					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_WARNING, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL):
-					<tr class="info">
+					<tr class="info alert-info">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
 				  	% endfor
 					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL, 1.0):
-					<tr class="success">
+					<tr class="success alert-success">
 				    	<td>${'%0.2f' % qascore.score}</td>
 				    	<td>${qascore.longmsg}</td>
 				  	</tr>
@@ -307,3 +292,26 @@ ${next.body()}
 	</div>
 </div>
 
+<%def name="li_anchor_to_file(relpath)">
+	<%
+	abspath = os.path.join(pcontext.report_dir, relpath)	
+	file_exists = os.path.exists(abspath)
+	if file_exists:
+		total_bytes = os.path.getsize(abspath)
+		filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
+	%>
+	% if file_exists:
+		<li><a href="${relpath}" class="replace-pre" data-title="CASA log for stage ${result.stage_number}">View</a> or <a href="${relpath}" download="${relpath}">download</a> ${relpath} (${str(filesize)})</li>
+	% endif	
+</%def>
+
+%if casalog_url:
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title">CASA logs for stage ${result.stage_number}</h3>
+	</div>
+	<div class="panel-body">
+		<ul>${li_anchor_to_file(casalog_url)}</ul>	
+	</div>
+</div>
+% endif

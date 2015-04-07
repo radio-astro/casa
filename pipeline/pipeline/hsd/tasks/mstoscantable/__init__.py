@@ -5,5 +5,4 @@ import pipeline.infrastructure.renderer.weblog as weblog
 from .mstoscantable import SDMsToScantable as SDMsToScantable
 from . import renderer
 
-weblog.add_renderer(SDMsToScantable, 
-                    renderer.T2_4MDetailsSingleDishMSToScantableRenderer(always_rerender=True))
+weblog.add_renderer(SDMsToScantable, renderer.T2_4MDetailsSingleDishMSToScantableRenderer(), group_by='ungrouped')

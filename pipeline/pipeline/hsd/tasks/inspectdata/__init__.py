@@ -8,4 +8,4 @@ from . import renderer
 
 qaadapter.registry.register_to_dataset_topic(inspection.SDInspectDataResults)
 
-weblog.add_renderer(SDInspectData, renderer.T2_4MDetailsSingleDishInspectDataRenderer())
+weblog.add_renderer(SDInspectData, renderer.T2_4MDetailsSingleDishInspectDataRenderer(), group_by='ungrouped')

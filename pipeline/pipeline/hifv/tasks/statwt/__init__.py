@@ -6,5 +6,7 @@ from .statwt import Statwt
 from . import statwt
 
 
-weblog.add_renderer(Statwt, basetemplates.T2_4MDetailsDefaultRenderer(uri='statwt.mako',
-                                                                      description='Reweight visibilities', always_rerender=False))
+weblog.add_renderer(Statwt, 
+                    basetemplates.T2_4MDetailsDefaultRenderer(uri='statwt.mako',
+                                                              description='Reweight visibilities'),
+                    group_by='ungrouped')
