@@ -323,6 +323,9 @@ class testbase :
             # Also, ignore error messages such as missing directory permissions
             
             (find_errorcode, a)=commands.getstatusoutput(findstr)   # stdout and stderr
+            if find_errorcode > 0 and not a:
+                a = self.python_find(datafile, repository)
+                print "*** python found",a
             #if find_errorcode != 0:
             #    print >> sys.stderr, "%s failed: %s" % (findstr, a)
             retval=''
@@ -336,3 +339,14 @@ class testbase :
                 return retval
         raise Exception, 'Could not find datafile %s in the repository directories %s' \
               % (datafile, self.dataBaseDirectory)
+
+    def python_find(self, name, path):
+        # http://stackoverflow.com/questions/1724693/find-a-file-in-python
+        ret = ""
+        count = 0
+        for root, dirs, files in os.walk(path):
+            if name in files:
+                if count > 0:
+                    ret += "\n"
+                ret += os.path.join(root, name)
+        return ret
