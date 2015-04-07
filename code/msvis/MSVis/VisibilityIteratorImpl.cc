@@ -814,8 +814,9 @@ VisibilityIteratorReadImpl::setTileCache ()
 		uInt nax=hypercubeShape.size();  // how many axes
 
 		// Accumulate axis factors up to--but NOT including--row (last) axis
+		//  "ceil" catches partially filled tiles...
 		for (uInt iax=0;iax<nax-1;++iax)    
-		  cacheSizeInTiles*= (uInt) (hypercubeShape[iax]/ (Float)(tileShape[iax]));
+		  cacheSizeInTiles*= (uInt) ceil(hypercubeShape[iax]/ (Float)(tileShape[iax]));
 
 		// Double for ALMA data
 		//   (this satisfies cases where required rows require >1 non-contiguous tiles)
@@ -829,6 +830,7 @@ VisibilityIteratorReadImpl::setTileCache ()
                         }
                     }
                 }
+
 
 		/// If some bucketSize is 0...there is trouble in setting cache
                 /// but if slicer is used it gushes anyways if one does not set cache
