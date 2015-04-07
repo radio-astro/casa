@@ -16,6 +16,12 @@
 #
 #
 
+# enable local tools (tb)
+import taskinit
+
+import os
+from math import pi,floor,atan2,sin,cos,sqrt
+import pylab as pl
 import glob as glob
 from recipes.almahelpers import tsysspwmap
 
@@ -56,32 +62,35 @@ def bandpa(name):
 
 def qufromgain(caltable,badspw=[],paoffset=0.0):
 
-    tb.open(caltable+'/ANTENNA')
-    pos=tb.getcol('POSITION')
+    mytb=taskinit.tbtool()
+    myme=taskinit.metool()
+
+    mytb.open(caltable+'/ANTENNA')
+    pos=mytb.getcol('POSITION')
     meanpos=pl.mean(pos,1)
-    frame=tb.getcolkeyword('POSITION','MEASINFO')['Ref']
-    units=tb.getcolkeyword('POSITION','QuantumUnits')
-    mpos=me.position(frame,
+    frame=mytb.getcolkeyword('POSITION','MEASINFO')['Ref']
+    units=mytb.getcolkeyword('POSITION','QuantumUnits')
+    mpos=myme.position(frame,
                      str(meanpos[0])+units[0],
                      str(meanpos[1])+units[1],
                      str(meanpos[2])+units[2])
-    me.doframe(mpos)
+    myme.doframe(mpos)
 
     # _geodetic_ latitude
-    latr=me.measure(mpos,'WGS84')['m1']['value']
+    latr=myme.measure(mpos,'WGS84')['m1']['value']
 
     print 'Latitude = ',latr*180/pi
 
-    tb.open(caltable+'/FIELD')
-    nfld=tb.nrows()
-    dirs=tb.getcol('DELAY_DIR')[:,0,:]
-    tb.close()
+    mytb.open(caltable+'/FIELD')
+    nfld=mytb.nrows()
+    dirs=mytb.getcol('DELAY_DIR')[:,0,:]
+    mytb.close()
     print 'Found as many as '+str(nfld)+' fields.'
 
-    tb.open(caltable+'/SPECTRAL_WINDOW')
-    nspw=tb.nrows()
-    bandnames=[x.split('#')[0].split('_')[-1] for x in tb.getcol('NAME')]
-    tb.close()
+    mytb.open(caltable+'/SPECTRAL_WINDOW')
+    nspw=mytb.nrows()
+    bandnames=[x.split('#')[0].split('_')[-1] for x in mytb.getcol('NAME')]
+    mytb.close()
     print 'Found as many as '+str(nspw)+' spws.'
 
     R=pl.zeros((nspw,nfld))
@@ -93,10 +102,10 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
         mask[badspw,:]=False
 
     QU={}
-    tb.open(caltable)
+    mytb.open(caltable)
     for ifld in range(nfld):
         for ispw in range(nspw):
-            st=tb.query('FIELD_ID=='+str(ifld)+' && SPECTRAL_WINDOW_ID=='+str(ispw))
+            st=mytb.query('FIELD_ID=='+str(ifld)+' && SPECTRAL_WINDOW_ID=='+str(ispw))
             nrows=st.nrows()
             if nrows > 0:
 
@@ -124,8 +133,8 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
                 parang=pl.zeros(len(times))
                 
                 for itim in range(len(times)):
-                    tm=me.epoch('UTC',str(times[itim])+'s')
-                    last=me.measure(tm,'LAST')['m0']['value']
+                    tm=myme.epoch('UTC',str(times[itim])+'s')
+                    last=myme.measure(tm,'LAST')['m0']['value']
                     last-=floor(last)  # days
                     last*=24.0  # hours
                     ha=last-rah  # hours
@@ -175,12 +184,14 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
             Xm=0.5*atan2(Um,Qm)*180/pi
             print 'Spw mean: Fld=', ifld,'Q=',Qm,'U=',Um,'(rms=',Qe,Ue,')','P=',Pm,'X=',Xm
 
-    tb.close()
+    mytb.close()
 
     return QU
 
 
 def xyamb(xytab,qu,xyout=''):
+
+    mytb=taskinit.tbtool()
 
     if not isinstance(qu,tuple):
         raise Exception,'qu must be a tuple: (Q,U)'
@@ -193,14 +204,14 @@ def xyamb(xytab,qu,xyout=''):
     QUexp=complex(qu[0],qu[1])
     print 'Expected QU = ',qu   # , '  (',pl.angle(QUexp)*180/pi,')'
 
-    tb.open(xyout,nomodify=F)
+    mytb.open(xyout,nomodify=False)
 
-    QU=tb.getkeyword('QU')['QU']
+    QU=mytb.getkeyword('QU')['QU']
     P=pl.sqrt(QU[0,:]**2+QU[1,:]**2)
 
     nspw=P.shape[0]
     for ispw in range(nspw):
-        st=tb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
+        st=mytb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
         if (st.nrows()>0):
             q=QU[0,ispw]
             u=QU[1,ispw]
@@ -222,8 +233,8 @@ def xyamb(xytab,qu,xyout=''):
             st.close()
     QUr={}
     QUr['QU']=QU
-    tb.putkeyword('QU',QUr)
-    tb.close()
+    mytb.putkeyword('QU',QUr)
+    mytb.close()
     QUm=pl.mean(QU[:,P>0],1)
     QUe=pl.std(QU[:,P>0],1)
     Pm=pl.sqrt(QUm[0]**2+QUm[1]**2)
@@ -240,23 +251,25 @@ def xyamb(xytab,qu,xyout=''):
 
 def dxy(dtab,xytab,dout):
 
+    mytb=taskinit.tbtool()
+
     os.system('cp -r '+dtab+' '+dout)
 
     # How many spws
-    tb.open(dtab+'/SPECTRAL_WINDOW')
-    nspw=tb.nrows()
-    tb.close()
+    mytb.open(dtab+'/SPECTRAL_WINDOW')
+    nspw=mytb.nrows()
+    mytb.close()
 
 
     for ispw in range(nspw):
-        tb.open(xytab)
-        st=tb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
+        mytb.open(xytab)
+        st=mytb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
         x=st.getcol('CPARAM')
         st.close()
-        tb.close()
+        mytb.close()
 
-        tb.open(dout,nomodify=F)
-        st=tb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
+        mytb.open(dout,nomodify=False)
+        st=mytb.query('SPECTRAL_WINDOW_ID=='+str(ispw))
         d=st.getcol('CPARAM')
 
         # the following assumes all antennas and chans same in both tables.
@@ -267,41 +280,46 @@ def dxy(dtab,xytab,dout):
 
         st.putcol('CPARAM',d)
         st.close()
-        tb.close()
+        mytb.close()
 
 
 def Dgen(dtab,dout):
 
+    mytb=taskinit.tbtool()
+
     os.system('cp -r '+dtab+' '+dout)
 
-    tb.open(dout,nomodify=F)
+    mytb.open(dout,nomodify=False)
 
-    irec=tb.info()
+    irec=mytb.info()
     st=irec['subType']
     if st.count('Df')>0:
         irec['subType']='Dfgen Jones'
     elif st.count('D')>0:
         irec['subType']='Dgen Jones'
     else:
-        tb.close()
+        mytb.close()
         raise Exception, 'Not a D?'
 
-    tb.putinfo(irec)
-    tb.putkeyword('VisCal',irec['subType'])
-    tb.close()
+    mytb.putinfo(irec)
+    mytb.putkeyword('VisCal',irec['subType'])
+    mytb.close()
 
 
 def fixfeedpa(vis,defband='',forceband=''):
-    tb.open(vis+'/SPECTRAL_WINDOW')
-    spwnames=tb.getcol('NAME')
-    tb.close()
+
+    mytb=taskinit.tbtool()
+
+    mytb.open(vis+'/SPECTRAL_WINDOW')
+    spwnames=mytb.getcol('NAME')
+    mytb.close()
     if len(forceband)>0:
         print 'Forcing band = ',forceband
         spwnames[:]=forceband
         defband=forceband
-    tb.open(vis+'/FEED',nomodify=F)
-    spwids=tb.getcol('SPECTRAL_WINDOW_ID')
-    ra=tb.getcol('RECEPTOR_ANGLE')
+    mytb.open(vis+'/FEED',nomodify=False)
+    spwids=mytb.getcol('SPECTRAL_WINDOW_ID')
+    ra=mytb.getcol('RECEPTOR_ANGLE')
     ra[:,:]=0.0
     spwmask=(spwids>-1)
     ra[0,spwmask]=[bandpa(spwnames[ispw]) for ispw in spwids[spwmask]]
@@ -313,8 +331,8 @@ def fixfeedpa(vis,defband='',forceband=''):
         else:
             print 'NB: Setting spwid=-1 rows in FEED table to RECEPTOR_ANGLE=(0,pi/2)'
     ra[1,:]=ra[0,:]+(pi/2.)
-    tb.putcol('RECEPTOR_ANGLE',ra)
-    tb.close()
+    mytb.putcol('RECEPTOR_ANGLE',ra)
+    mytb.close()
 
 
 def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=False,wvrtie=[],cleanup=True):
@@ -369,7 +387,7 @@ def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=Fa
 
             applycal(vis=fillms,spw=spw,intent=intent,field=field,
                      gaintable=gaintable,gainfield=gainfield,
-                     spwmap=spwmap,interp=interp,calwt=F)
+                     spwmap=spwmap,interp=interp,calwt=False)
 
 
         if (len(spw)>0 or len(intent)>0):
@@ -412,16 +430,19 @@ def fillsplitconcat(asdms,outvis,spw='',intent='',field='',dotsys=False,dowvr=Fa
 
 
 def scanbystate(vis,undo=False):
-    tb.open(vis,nomodify=False)
-    scans=tb.getcol('SCAN_NUMBER')
-    states=tb.getcol('STATE_ID')
+
+    mytb=taskinit.tbtool()
+
+    mytb.open(vis,nomodify=False)
+    scans=mytb.getcol('SCAN_NUMBER')
+    states=mytb.getcol('STATE_ID')
     print 'Unique STATE_IDs = ',str(pl.unique(states))
     maxstate=states.max()
 
     if undo:
         d=10**int(floor(log10(scans.min())))
         if d<10:
-            tb.close()
+            mytb.close()
             raise Exception, 'Apparently, nothing to undo'
         scans-=states
         scans/=d
@@ -432,8 +453,8 @@ def scanbystate(vis,undo=False):
         scans+=states
         print 'New SCAN_NUMBER = SCAN_NUMBER * '+str(m)+' + STATE_ID'
 
-    tb.putcol('SCAN_NUMBER',scans)
-    tb.close()
+    mytb.putcol('SCAN_NUMBER',scans)
+    mytb.close()
     
     
 
