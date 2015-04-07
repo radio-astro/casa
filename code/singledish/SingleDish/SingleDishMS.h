@@ -146,16 +146,43 @@ private:
 			    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
   // Destroy a set of baseline contexts
   void destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
+  void check_sakura_status(string const &name, LIBSAKURA_SYMBOL(Status) const status);
+  template<typename T, typename U>
+    void set_matrix_for_bltable(size_t const num_pol,
+			        size_t const num_data_max, 
+			        std::vector<std::vector<T> > const &in_data, 
+			        Array<U> &out_data) {
+    for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+      for (size_t i = 0; i < num_data_max; ++i) {
+	out_data[i][ipol] = static_cast<U>(0);
+      }
+      size_t num_data = in_data[ipol].size();
+      for (size_t i = 0; i < num_data; ++i) {
+	out_data[i][ipol] = static_cast<U>(in_data[ipol][i]);
+      }
+    }
+  }
+  template<typename T, typename U>
+    void set_array_for_bltable(size_t const ipol,
+			       size_t const num_data,
+			       T const *in_data, 
+			       Array<U> &out_data) {
+    for (size_t i = 0; i < num_data; ++i) {
+      out_data[i][ipol] = static_cast<U>(in_data[i]);
+    }
+  }
 
-  // --------------------------------------------------------------------
-  // this function is temporarily copied from sakura code to get 
-  // positions of cubic spline boundaries. (2015/4/6 WK)
-  // --------------------------------------------------------------------
+  // *****---------------------------------------------------------------
+  // the following function has temporarily been copied from sakura to 
+  // get positions of cubic spline boundaries. it should be deleted once 
+  // sakura_GetBestFitBaselineCoefficientsCubicSplineFloat is updated so 
+  // that boundary information become available (2015/4/6 WK)
+  // *****---------------------------------------------------------------
   void GetBoundariesOfPiecewiseData(size_t num_mask,
 				    bool const *mask, 
 				    size_t num_pieces, 
 				    double *boundary);
-  // --------------------------------------------------------------------
+  // *****---------------------------------------------------------------
 
   /////////////////////////////
   /// MS handling functions ///

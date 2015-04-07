@@ -500,20 +500,7 @@ void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const bas
     status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type, 
 						     static_cast<uint16_t>(order), 
 						     num_chan, &context);
-						     //&bl_contexts[idx]);
-    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-      ostringstream oss;
-      oss << "sakura_CreateBaselineContext() failure -- ";
-      if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-	oss << "memory allocation failed.";
-      } else if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-	oss << "order (" << order << ") must be smaller than the minimum number of channels.";
-      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-	oss << "runtime error occured.";
-      }
-      throw(AipsError(oss.str()));
-    }
-
+    check_sakura_status("sakura_CreateBaselineContext", status);
     bl_contexts.push_back(context);
   }
 }
@@ -523,10 +510,27 @@ void SingleDishMS::destroy_baseline_contexts(std::vector<LIBSAKURA_SYMBOL(Baseli
   LIBSAKURA_SYMBOL(Status) status;
   for (size_t i = 0; i < bl_contexts.size(); ++i) {
     status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_contexts[i]);
-    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-      throw(AipsError("DestoyBaselineContext() failed."));
-    }
+    check_sakura_status("sakura_DestoyBaselineContext", status);
   }
+}
+
+void SingleDishMS::check_sakura_status(string const &name, 
+				       LIBSAKURA_SYMBOL(Status) const status)
+{
+  if (status == LIBSAKURA_SYMBOL(Status_kOK)) return;
+
+  ostringstream oss;
+  oss << name << "() failed -- ";
+  if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+    oss << "NG";
+  } else if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+    oss << "InvalidArgument";
+  } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+    oss << "NoMemory";
+  } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
+    oss << "UnknownError";
+  }
+  throw(AipsError(oss.str()));
 }
 
 void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
@@ -660,9 +664,10 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
-  BaselineTable *bt;
+  BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
-  if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
+  if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
+  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -716,9 +721,9 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	pol_set = true;
       }
       // loop over MS rows
-      for (size_t irow=0; irow < num_row; ++irow) {
+      for (size_t irow = 0; irow < num_row; ++irow) {
   	size_t idx = 0;
-  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	for (size_t ispw = 0; ispw < recspw.nelements(); ++ispw) {
   	  if (data_spw[irow] == recspw[ispw]) {
   	    idx = ispw;
   	    break;
@@ -730,23 +735,20 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	Array<Float> ffpar_mtx(IPosition(2, num_pol, 0));//1));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  bltype_mtx[0][ipol] = (uInt)LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
 	  fpar_mtx[0][ipol] = (Int)order;
 	}
 	size_t num_masklist_max = 0;
 	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
 	size_t num_coeff;
-	status = 
-	  LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(bl_contexts[ctx_indices[idx]], 
-						    order, &num_coeff);
-	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-	  throw(AipsError("sakura_GetNumberOfCoefficients() -- InvalidArgument"));
-	}
+	status = LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(bl_contexts[ctx_indices[idx]], 
+							   order,
+							   &num_coeff);
+	check_sakura_status("sakura_GetNumberOfCoefficients", status);
 	SakuraAlignedArray<double> coeff(num_coeff);
-	SakuraAlignedArray<bool> final_mask(num_chan);
 	Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
 	    coeff_mtx[icoeff][ipol] = 0.0;
 	  }
@@ -757,20 +759,13 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  rms_mtx[0][ipol] = 0.0;
-	  cthres_mtx[0][ipol] = clip_threshold_sigma;
-	  citer_mtx[0][ipol] = (uInt)num_fitting_max;
-	  lfthres_mtx[0][ipol] = 0.0;
-	  lfavg_mtx[0][ipol] = 0;
-	  lfedge_mtx[0][ipol] = 0;
-	}
 
   	// loop over polarization
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  apply_mtx[0][ipol] = True;
 	  // skip spectrum not selected by pol
 	  if (!pol(ipol)) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
@@ -788,7 +783,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
-  	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
   	  // get a spectrum from data cube
@@ -797,109 +792,91 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   	  // actual execution of single spectrum
 	  if (write_baseline_table) {
 	    status = 
-	      LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(bl_contexts[ctx_indices[idx]], 
-								    num_chan,
-								    spec.data, 
-								    mask.data,
-								    clip_threshold_sigma,
-								    num_fitting_max, 
-								    num_coeff, 
-								    coeff.data,
-								    final_mask.data,
-								    &bl_status);
-	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	      string mesg = "sakura_GetBestFitBaselineCoefficientsFloat() -- ";
-	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		throw(AipsError(mesg + "InvalidArgument"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		throw(AipsError(mesg + "NoMemory"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-		throw(AipsError(mesg + "NG"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		throw(AipsError(mesg + "UnknownError"));
-	      }
-	    }
+	    LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(bl_contexts[ctx_indices[idx]], 
+								  num_chan,
+								  spec.data, 
+							          mask.data,
+							          clip_threshold_sigma,
+							          num_fitting_max, 
+							          num_coeff, 
+							          coeff.data,
+							          mask.data,
+							          &bl_status);
+	    check_sakura_status("sakura_GetBestFitBaselineCoefficientsFloat", status);
+	    set_array_for_bltable<double, Float>(ipol, num_coeff, coeff.data, coeff_mtx);
+	    /*
 	    for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
 	      coeff_mtx[icoeff][ipol] = coeff.data[icoeff];
 	    }
-	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
-	    status = 
-	      //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
-	      LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
-							       spec.data,
-							       mask.data,
-							       &stat);
-	    rms_mtx[0][ipol] = stat.stddev;
-
-	    if (do_subtract) {
-	      status = 
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
-									 num_chan,
-									 spec.data,
-									 num_coeff,
-									 coeff.data,
-									 spec.data);
-	      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		string mesg = "sakura_SubtractBaselineUsingCoefficientsFloat() -- ";
-		if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		  throw(AipsError(mesg + "InvalidArgument"));
-		} else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		  throw(AipsError(mesg + "NoMemory"));
-		} else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		  throw(AipsError(mesg + "UnknownError"));
-		}
-	      }
-	    }
+	    */
 	    Vector<uInt> masklist;
-	    get_masklist_from_mask(num_chan, final_mask.data, masklist);
+	    get_masklist_from_mask(num_chan, mask.data, masklist);
 	    if (masklist.size() > num_masklist_max) {
 	      num_masklist_max = masklist.size();
 	    }
 	    masklist_mtx_tmp[ipol].clear();
-	    for (size_t imask; imask < masklist.size(); ++imask) {
+	    for (size_t imask = 0; imask < masklist.size(); ++imask) {
 	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
 	    }
-	  } else {
+
 	    status = 
-	      LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
-						      static_cast<uint16_t>(order), 
-						      num_chan, 
-						      spec.data, 
-						      mask.data, 
-						      clip_threshold_sigma, 
-						      num_fitting_max,
-						      true, 
-						      mask.data, 
-						      spec.data, 
-						      &bl_status);
-	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	      string mesg = "sakura_SubtractBaselineFloat() -- ";
-	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		throw(AipsError(mesg + "InvalidArgument"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		throw(AipsError(mesg + "NoMemory"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-		throw(AipsError(mesg + "NG"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		throw(AipsError(mesg + "UnknownError"));
-	      }
-	    }
+	    LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
+								     num_chan,
+								     spec.data,
+								     num_coeff,
+							             coeff.data,
+							             spec.data);
+	    check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat", status);
+	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
+	    status = 
+	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
+	    LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
+							     spec.data,
+							     mask.data,
+							     &stat);
+	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
+	    rms_mtx[0][ipol] = stat.stddev;
+
+	    cthres_mtx[0][ipol] = clip_threshold_sigma;
+	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    lfthres_mtx[0][ipol] = 0.0;
+	    lfavg_mtx[0][ipol] = 0;
+	    lfedge_mtx[0][ipol] = 0;
+
+	  } else {
+	    status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
+							     static_cast<uint16_t>(order), 
+							     num_chan, 
+							     spec.data, 
+							     mask.data, 
+							     clip_threshold_sigma, 
+							     num_fitting_max,
+							     true, 
+							     mask.data, 
+							     spec.data, 
+							     &bl_status);
+	    check_sakura_status("sakura_SubtractBaselineFloat", status);
 	  }
   	  // set back a spectrum to data cube
-  	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  if (do_set_spectrum_to_cube) {
+	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  }
   	} // end of polarization loop
 
 	if (write_baseline_table) {
 	  // write to baseline table
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
-	  for (size_t ipol = 0; ipol > num_pol; ++ipol) {
-	    for (size_t imask = 0; imask > num_masklist_max; ++imask) {
+	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
+	  /*
+	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
 	      masklist_mtx[imask][ipol] = 0;
 	    }
-	    for (size_t imask = 0; imask > masklist_mtx_tmp[ipol].size(); ++imask) {
+	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
 	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
 	    }
 	  }
+	  */
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
@@ -960,9 +937,10 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
-  BaselineTable *bt;
+  BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
-  if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
+  if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
+  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1015,9 +993,9 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	pol_set = true;
       }
       // loop over MS rows
-      for (size_t irow=0; irow < num_row; ++irow) {
+      for (size_t irow = 0; irow < num_row; ++irow) {
   	size_t idx = 0;
-  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	for (size_t ispw = 0; ispw < recspw.nelements(); ++ispw) {
   	  if (data_spw[irow] == recspw[ispw]) {
   	    idx = ispw;
   	    break;
@@ -1029,10 +1007,10 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	Array<Float> ffpar_mtx(IPosition(2, num_pol, npiece));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  bltype_mtx[0][ipol] = (uInt)LIBSAKURA_SYMBOL(BaselineType_kCubicSpline);
 	  fpar_mtx[0][ipol] = (Int)npiece;
-	  for (size_t ipiece=0; ipiece < npiece; ++ipiece) {
+	  for (int ipiece = 0; ipiece < npiece; ++ipiece) {
 	    ffpar_mtx[ipiece][ipol] = 0.0;
 	  }
 	}
@@ -1040,9 +1018,8 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
 	size_t num_coeff = 4 * npiece;
 	SakuraAlignedArray<double> coeff(num_coeff);
-	SakuraAlignedArray<bool> final_mask(num_chan);
 	Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
 	    coeff_mtx[icoeff][ipol] = 0.0;
 	  }
@@ -1053,20 +1030,13 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  rms_mtx[0][ipol] = 0.0;
-	  cthres_mtx[0][ipol] = clip_threshold_sigma;
-	  citer_mtx[0][ipol] = (uInt)num_fitting_max;
-	  lfthres_mtx[0][ipol] = 0.0;
-	  lfavg_mtx[0][ipol] = 0;
-	  lfedge_mtx[0][ipol] = 0;
-	}
 
   	// loop over polarization
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  apply_mtx[0][ipol] = True;
 	  // skip spectrum not selected by pol
 	  if (!pol(ipol)) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
@@ -1084,7 +1054,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
-  	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
   	  // get a spectrum from data cube
@@ -1093,40 +1063,32 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   	  // actual execution of single spectrum
 	  if (write_baseline_table) {
 	    status = 
-	      LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
-								    num_chan,
-								    spec.data, 
-								    mask.data,
-								    clip_threshold_sigma,
-								    num_fitting_max, 
-								    npiece, 
-								    coeff.data,
-								    final_mask.data,
-								    &bl_status);
-	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	      string mesg = "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat() -- ";
-	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		throw(AipsError(mesg + "InvalidArgument"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		throw(AipsError(mesg + "NoMemory"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-		throw(AipsError(mesg + "NG"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		throw(AipsError(mesg + "UnknownError"));
-	      }
-	    }
+	    LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
+									     num_chan,
+									     spec.data, 
+									     mask.data,
+								             clip_threshold_sigma,
+								             num_fitting_max, 
+								             npiece, 
+								             coeff.data,
+								             mask.data,
+								             &bl_status);
+	    check_sakura_status("sakura_GetBestFitBaselineCoefficientsCubicSplineFloat", status);
+	    set_array_for_bltable<double, Float>(ipol, num_coeff, coeff.data, coeff_mtx);
+	    /*
 	    for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
 	      coeff_mtx[icoeff][ipol] = coeff.data[icoeff];
 	    }
-	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
-	    status = 
-	      //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
-	      LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
-							       spec.data,
-							       mask.data,
-							       &stat);
-	    rms_mtx[0][ipol] = stat.stddev;
-
+	    */
+	    Vector<uInt> masklist;
+	    get_masklist_from_mask(num_chan, mask.data, masklist);
+	    if (masklist.size() > num_masklist_max) {
+	      num_masklist_max = masklist.size();
+	    }
+	    masklist_mtx_tmp[ipol].clear();
+	    for (size_t imask = 0; imask < masklist.size(); ++imask) {
+	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
+	    }
 	    // ***workaround***
 	    // get piece boundary positions
 	    // as sakura_GetBestFitBaselineCoefficientsCubicSplineFloat 
@@ -1134,80 +1096,73 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	    SakuraAlignedArray<double> boundary(npiece);
 	    GetBoundariesOfPiecewiseData(num_chan, mask.data, npiece, boundary.data);
 	    // ***end workaround***
-	    for (size_t ipiece = 0; ipiece < npiece; ++ipiece) {
+	    set_array_for_bltable<double, Float>(ipol, npiece, boundary.data, ffpar_mtx);
+	    /*
+	    for (int ipiece = 0; ipiece < npiece; ++ipiece) {
 	      ffpar_mtx[ipiece][ipol] = boundary.data[ipiece];
 	    }
+	    */
 
-	    if (do_subtract) {
-	      status = 
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
-										    num_chan,
-										    spec.data,
-										    npiece,
-										    coeff.data,
-										    boundary.data,
-										    spec.data);
-	      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		string mesg = "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat() -- ";
-		if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		  throw(AipsError(mesg + "InvalidArgument"));
-		} else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		  throw(AipsError(mesg + "NoMemory"));
-		} else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		  throw(AipsError(mesg + "UnknownError"));
-		}
-	      }
-	    }
-	    Vector<uInt> masklist;
-	    get_masklist_from_mask(num_chan, final_mask.data, masklist);
-	    if (masklist.size() > num_masklist_max) {
-	      num_masklist_max = masklist.size();
-	    }
-	    masklist_mtx_tmp[ipol].clear();
-	    for (size_t imask; imask < masklist.size(); ++imask) {
-	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
-	    }
+	    status = 
+	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(bl_contexts[ctx_indices[idx]],
+										num_chan,
+									        spec.data,
+									        npiece,
+									        coeff.data,
+									        boundary.data,
+								                spec.data);
+	    check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);
+	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
+	    status = 
+	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
+	    LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
+							     spec.data,
+							     mask.data,
+							     &stat);
+	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
+	    rms_mtx[0][ipol] = stat.stddev;
+
+	    cthres_mtx[0][ipol] = clip_threshold_sigma;
+	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    lfthres_mtx[0][ipol] = 0.0;
+	    lfavg_mtx[0][ipol] = 0;
+	    lfedge_mtx[0][ipol] = 0;
+
 	  } else {
 	    status = 
-	      LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
-								 static_cast<uint16_t>(npiece), 
-								 num_chan, 
-								 spec.data, 
-								 mask.data, 
-								 clip_threshold_sigma, 
-								 num_fitting_max,
-								 true, 
-								 mask.data, 
-								 spec.data, 
-								 &bl_status);
-	    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	      string mesg = "sakura_SubtractBaselineCubicSplineFloat() -- ";
-	      if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		throw(AipsError(mesg + "InvalidArgument"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-		throw(AipsError(mesg + "NoMemory"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-		throw(AipsError(mesg + "NG"));
-	      } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-		throw(AipsError(mesg + "UnknownError"));
-	      }
-	    }
+	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
+							       static_cast<uint16_t>(npiece), 
+							       num_chan, 
+							       spec.data, 
+							       mask.data, 
+							       clip_threshold_sigma, 
+							       num_fitting_max,
+							       true, 
+							       mask.data, 
+							       spec.data, 
+							       &bl_status);
+	    check_sakura_status("sakura_SubtractBaselineCubicSplineFloat", status);
 	  }
   	  // set back a spectrum to data cube
-  	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  if (do_set_spectrum_to_cube) {
+	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  }
   	} // end of polarization loop
 
 	if (write_baseline_table) {
 	  // write to baseline table
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
-	  for (size_t ipol = 0; ipol > num_pol; ++ipol) {
-	    for (size_t imask = 0; imask > num_masklist_max; ++imask) {
+	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
+	  /*
+	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
 	      masklist_mtx[imask][ipol] = 0;
 	    }
-	    for (size_t imask = 0; imask > masklist_mtx_tmp[ipol].size(); ++imask) {
+	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
 	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
 	    }
 	  }
+	  */
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
@@ -1347,7 +1302,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   std::vector<LIBSAKURA_SYMBOL(BaselineType)> 
     baseline_types = parser.get_function_types();
   map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
-  for (size_t i=0; i < baseline_types.size(); ++i) {
+  for (size_t i = 0; i < baseline_types.size(); ++i) {
     max_orders[baseline_types[i]] 
       = parser.get_max_order(baseline_types[i]);
   }
@@ -1367,6 +1322,10 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
+  BaselineTable *bt = 0;
+  bool write_baseline_table = (out_bltable_name != "");
+  if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
+  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
   // SPW and channelization reservoir
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1402,6 +1361,10 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     //cout << "New chunk" << endl;
     for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> scans = vb->scan();
+      Vector<Double> times = vb->time();
+      Vector<Int> beams = vb->feed1();
+
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
@@ -1426,9 +1389,8 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  ++iter;
 	}
       }
-      // get a data cube (npol*nchan*nrow) from VisBuffer
+      // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
-      // get a flag cube (npol*nchan*nrow) from VisBuffer
       get_flag_cube(*vb, flag_chunk);
 
       if (!pol_set) {
@@ -1436,20 +1398,40 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	pol_set = true;
       }
       // loop over MS rows
-      for (size_t irow=0; irow < num_row; ++irow) {
+      for (size_t irow = 0; irow < num_row; ++irow) {
 	//cout << "Processing original rowid=" << orig_rows[irow] << ", spwid=" << data_spw[irow] << endl;
   	size_t idx = 0;
-  	for (size_t ispw=0; ispw < recspw.nelements(); ++ispw) {
+  	for (size_t ispw = 0; ispw < recspw.nelements(); ++ispw) {
   	  if (data_spw[irow] == recspw[ispw]) {
   	    idx = ispw;
   	    break;
   	  }
   	}
+
+	//prepare varables for writing baseline table
+	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
+	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
+	size_t num_ffpar_max = 0;
+	std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
+	size_t num_masklist_max = 0;
+	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
+	size_t num_coeff_max = 0;
+	std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
+	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
+	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
+
   	// loop over polarization
-  	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  if (!pol(ipol))
-	  { //flag
-	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	  apply_mtx[0][ipol] = True;
+	  // skip spectrum not selected by pol
+	  if (!pol(ipol)) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol); //flag
+	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
   	  // get a channel mask from data cube
@@ -1459,11 +1441,14 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  // saving memory usage...)
   	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
 	  // skip spectrum if all channels flagged
-	  if (allchannels_flagged(num_chan, mask.data)) continue;
+	  if (allchannels_flagged(num_chan, mask.data)) {
+	    apply_mtx[0][ipol] = False;
+	    continue;
+	  }
 
   	  // convert flag to mask by taking logical NOT of flag
   	  // and then operate logical AND with in_mask
-  	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
 	  // get fitting parameter
@@ -1491,7 +1476,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    Matrix<Int> local_rec_chan = selrec.asArrayInt("channel");
 	    Vector<Bool> local_mask(num_chan,False);
 	    get_mask_from_rec(data_spw[irow], local_rec_chan, local_mask, false);
-	    for (size_t ichan=0; ichan < num_chan; ++ichan) {
+	    for (size_t ichan = 0; ichan < num_chan; ++ichan) {
 	      mask.data[ichan] = mask.data[ichan] && local_mask[ichan];
 	    }
 	  }
@@ -1505,6 +1490,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+
   	  // actual execution of single spectrum
 	  map< const LIBSAKURA_SYMBOL(BaselineType),
 	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
@@ -1513,13 +1499,178 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    throw(AipsError("Invalid baseline type detected!"));
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
 	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
-	  switch (fit_param.baseline_type) {
-	  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-	    //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+
+	  if (write_baseline_table) {
+	    bltype_mtx[0][ipol] = (uInt)fit_param.baseline_type;
+	    Int fpar_tmp;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      fpar_tmp = (Int)fit_param.order;
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      fpar_tmp = (Int)fit_param.npiece;
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
+	    }
+	    fpar_mtx[0][ipol] = fpar_tmp;
+
+	    size_t num_coeff;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      status = 
+	      LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, fit_param.order, &num_coeff);
+	      check_sakura_status("sakura_GetNumberOfCoefficients", status);
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      num_coeff = 4 * fit_param.npiece;
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
+	    }
+	    if (num_coeff > num_coeff_max) {
+	      num_coeff_max = num_coeff;
+	    }
+	    SakuraAlignedArray<double> coeff(num_coeff);
+	    string get_coeff_funcname;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      status = 
+	      LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, 
+								    num_chan,
+								    spec.data, 
+								    mask.data,
+								    fit_param.clip_threshold_sigma,
+							            fit_param.num_fitting_max, 
+							            num_coeff, 
+							            coeff.data,
+							            mask.data,
+							            &bl_status);
+	      get_coeff_funcname = "sakura_GetBestFitBaselineCoefficientsFloat";
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      status = 
+	      LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(context, 
+									       num_chan,
+									       spec.data, 
+									       mask.data,
+									       fit_param.clip_threshold_sigma,
+									       fit_param.num_fitting_max, 
+									       fit_param.npiece, 
+									       coeff.data,
+									       mask.data,
+									       &bl_status);
+	      get_coeff_funcname = "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat";
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
+	    }
+	    check_sakura_status(get_coeff_funcname, status);
+	    for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
+	      coeff_mtx_tmp[ipol].push_back(coeff.data[icoeff]);
+	    }
+	    Vector<uInt> masklist;
+	    get_masklist_from_mask(num_chan, mask.data, masklist);
+	    if (masklist.size() > num_masklist_max) {
+	      num_masklist_max = masklist.size();
+	    }
+	    masklist_mtx_tmp[ipol].clear();
+	    for (size_t imask = 0; imask < masklist.size(); ++imask) {
+	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
+	    }
+
+	    // ***workaround***
+	    // get piece boundary positions
+	    // as sakura_GetBestFitBaselineCoefficientsCubicSplineFloat 
+	    // does not return boundary values now
+	    size_t num_boundary = 0;
+	    if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	      num_boundary = fit_param.npiece;
+	    }
+	    SakuraAlignedArray<double> boundary(num_boundary);
+	    if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	      GetBoundariesOfPiecewiseData(num_chan, mask.data, fit_param.npiece, boundary.data);
+	    }
+	    // ***end workaround***
+
+	    string subtract_funcname;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      status = 
+	      LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
+								       num_chan,
+								       spec.data,
+								       num_coeff,
+								       coeff.data,
+								       spec.data);
+	      subtract_funcname = "sakura_SubtractBaselineUsingCoefficientsFloat";
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      status = 
+	      LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
+										  num_chan,
+										  spec.data,
+										  fit_param.npiece,
+										  coeff.data,
+									          boundary.data,
+									          spec.data);
+	      subtract_funcname = "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
+	    }
+	    check_sakura_status(subtract_funcname, status);
+
+	    size_t num_ffpar = 0;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      num_ffpar = fit_param.npiece;
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
+	    }
+	    if (num_ffpar > num_ffpar_max) {
+	      num_ffpar_max = num_ffpar;
+	    }
+	    ffpar_mtx_tmp[ipol].clear();
+	    if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	      for (size_t ipiece = 0; ipiece < fit_param.npiece; ++ipiece) {
+		ffpar_mtx_tmp[ipol].push_back(boundary.data[ipiece]);
+	      }
+	    }
+
+	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
 	    status = 
+	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
+	    LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
+						             spec.data,
+ 							     mask.data,
+ 							     &stat);
+	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
+	    rms_mtx[0][ipol] = stat.stddev;
+
+	    cthres_mtx[0][ipol] = fit_param.clip_threshold_sigma;
+	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max;
+	    lfthres_mtx[0][ipol] = 0.0;
+	    lfavg_mtx[0][ipol] = 0;
+	    lfedge_mtx[0][ipol] = 0;
+
+	  } else {
+	    string subtract_funcname;
+	    switch (fit_param.baseline_type) {
+	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	      //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+	      status = 
 	      LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, 
-						      fit_param.order, 
+		  				      fit_param.order, 
 						      num_chan, 
 						      spec.data, 
 						      mask.data, 
@@ -1529,10 +1680,11 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 						      mask.data, 
 						      spec.data, 
 						      &bl_status);
-	    break;
-	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-	    //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
-	    status = 
+	      subtract_funcname = "sakura_SubtractBaselineFloat";
+	      break;
+	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	      //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+	      status = 
 	      LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, 
 								 fit_param.npiece,
 								 num_chan,
@@ -1544,39 +1696,85 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 								 mask.data,
 								 spec.data,
 								 &bl_status);
-	    break;
-	  default:
-	    throw(AipsError("Unsupported baseline type."));
-	  }
-	  //cout << "statistics of baselined spetrum" << endl;
-	  float maxval=-1000.;
-	  float minval=1000.;
-	  for (size_t i=0; i<num_chan;++i){
-	    maxval = max(maxval, spec.data[i]);
-	    minval = min(minval, spec.data[i]);
-	  }
-	  //cout << "- max=" << maxval << ", min=" << minval << endl;
-  	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	    if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
-	      throw(AipsError("SubtractBaselineFloat() -- NoMemory"));
-	    } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
-	      throw(AipsError("SubtractBaselineFloat() -- NG"));
-	    } else if (status == LIBSAKURA_SYMBOL(Status_kUnknownError)) {
-	      throw(AipsError("SubtractBaselineFloat() -- UnknownError"));
+	      subtract_funcname = "sakura_SubtractBaselineCubicSplineFloat";
+	      break;
+	    default:
+	      throw(AipsError("Unsupported baseline type."));
 	    }
-	    //throw(AipsError("SubtractBaselineFloat() failed."));
-  	  }
+	    check_sakura_status(subtract_funcname, status);
+	    /*
+	    //cout << "statistics of baselined spetrum" << endl;
+	    float maxval = -1000.;
+	    float minval = 1000.;
+	    for (size_t i = 0; i < num_chan; ++i){
+	      maxval = max(maxval, spec.data[i]);
+	      minval = min(minval, spec.data[i]);
+	    }
+	    //cout << "- max=" << maxval << ", min=" << minval << endl;
+	    */
+	  }
   	  // set back a spectrum to data cube
-  	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  if (do_set_spectrum_to_cube) {
+	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	  }
   	} // end of polarization loop
+
+	if (write_baseline_table) {
+	  //write to baseline table
+	  Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
+	  set_matrix_for_bltable<double, Float>(num_pol, num_ffpar_max, ffpar_mtx_tmp, ffpar_mtx);
+	  /*
+	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    for (size_t ipiece = 0; ipiece < num_ffpar_max; ++ipiece) {
+	      ffpar_mtx[ipiece][ipol] = 0.0;
+            }
+	    for (size_t ipiece = 0; ipiece < ffpar_mtx_tmp[ipol].size(); ++ipiece) {
+	      ffpar_mtx[ipiece][ipol] = ffpar_mtx_tmp[ipol][ipiece];
+	    }
+          }
+	  */
+	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
+	  /*
+	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
+	      masklist_mtx[imask][ipol] = 0;
+	    }
+	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
+	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
+	    }
+	  }
+	  */
+	  Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff_max));
+	  set_matrix_for_bltable<double, Float>(num_pol, num_coeff_max, coeff_mtx_tmp, coeff_mtx);
+	  /*
+  	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
+	      coeff_mtx[icoeff][ipol] = 0.0;
+	    }
+	    for (size_t icoeff = 0; icoeff < coeff_mtx_tmp[ipol].size(); ++icoeff) {
+	      coeff_mtx[icoeff][ipol] = coeff_mtx_tmp[ipol][icoeff];
+	    }
+	  }
+	  */
+	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
+			 0, times[irow], apply_mtx, bltype_mtx, 
+			 fpar_mtx, ffpar_mtx, masklist_mtx,
+			 coeff_mtx, rms_mtx, (uInt)num_chan, cthres_mtx,
+			 citer_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+	}
       } // end of chunk row loop
       // write back data and flag cube to VisBuffer
       sdh_->fillCubeToOutputMs(vb, data_chunk, flag_chunk);
     } // end of vi loop
   } // end of chunk loop
-  finalize_process();
 
-  // destroy baselint contexts
+  if (write_baseline_table) {
+    bt->save(out_bltable_name);
+    delete bt;
+  }
+  finalize_process();
+  // destroy baseline contexts
   map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
   while (ctxiter != context_reservoir.end() ) {
     destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
