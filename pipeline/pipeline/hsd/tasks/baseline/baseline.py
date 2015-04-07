@@ -223,6 +223,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 # prefix for spectral plot before baseline subtraction
                 st = context.observing_run[ant]
                 # TODO: use proper source name when we can handle multiple source 
+                #source_name = ''
+                #for (source_id,source) in st.source.items():
+                #    if 'TARGET' in source.intents:
+                #        source_name = source.name.replace(' ', '_').replace('/','_')
                 source_name = st.source[0].name.replace(' ', '_').replace('/','_')
                 prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
                 plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
@@ -308,7 +312,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
     def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix, channelmap_range):
         #plot_list = []
         st = self.inputs.context.observing_run[ant]
-        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range]
+        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
+        if len(line_range) == 0:
+            line_range = None
         for pol in pols:
             outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
             status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile, line_range)
