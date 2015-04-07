@@ -6,13 +6,14 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hif_bpflagchans" category="pipeline">
-<shortdescription>Flag deviant channels in bandpass calibration</shortdescription>
+<shortdescription>Flag deviant channels in bandpass calibrated data</shortdescription>
 <description>
-Flag deviant channels in bandpass calibration.
+Flag deviant channels in bandpass calibrated data
 </description>
 <input>
-    <param type="stringArray" name="caltable" subparam="true">
-        <description>List of input caltables</description>
+
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
         <value></value>
     </param>
 
@@ -65,12 +66,12 @@ Flag deviant channels in bandpass calibration.
         <when param="pipelinemode">
             <equals type="string" value="automatic" />
             <equals type="string" value="interactive">
-                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="vis"><value type="stringArray"></value></default>
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
-                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="vis"><value type="stringArray"></value></default>
             </equals>
         </when>
 
@@ -106,7 +107,29 @@ Flag deviant channels in bandpass calibration.
 
 <example>
 
-hif_bpflagchans flags deviant channels in the bandpass calibration table. 
+hif_bpflagchans flags deviant channels in the bandpass corrected data. 
+
+The flagging views used derive from a bandpass calibration 
+of PHASE data with the current context calibrations preapplied;
+in a normal run these would be Tsys, wvrgcal and bandpass. The
+'view bandpass' results are folded into a 2d image for each 
+spectral window with axes 'Channel' and 'Antenna ID'.
+
+If the PHASE calibrator has a flat spectrum and the context 
+calibration is working properly then the view bandpass results 
+should be flat for each spectral window.
+
+Bad channels are flagged in the underlying datasets for all 
+intents, not just the one forming the basis of the flagging views.
+
+Two flagging methods are available:
+
+If parameter flag_hilo is set True then outliers from the median
+of each flagging view will be flagged.
+
+If parameter flag_tmf is set True then all channels for a particular
+antenna/spw will be flagged if more than a specified proportion
+of them are already flagged for another reason.
 
 Keyword arguments:
 
@@ -119,61 +142,33 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-flag_diffmad -- True to flag channels whose difference is greater than
-                diffmad_limit * the MAD of the channel to channel
-                differences across the spectrum.
+flag_hilo -- True to flag channel/antenna data further from the view
+             median than fhl_limit * MAD.
     default: True
 
-diffmad_limit -- If flag_diffmad is True then channel pairs will be
-                 flagged whose difference is greater than  
-                 diffmad_limit * the MAD of the difference spectrum.
-    default: 14
+fhl_limit -- If flag_hilo is True then flag channel/antenna data
+             further from the view median than fhl_limit * MAD.
+    default: 7
 
-diffmad_nchan_limit -- If flag_diffmad is True and the number of channels
-                       flagged by diffmad_limit exceeds diffmad_nchan_limit
-                       then flag all channels.
-    default: 10000
+fhl_minsample -- Do no flagging if the view median and MAD are derived
+                 from fewer than fhl_minsample view pixels.
+    default: 5
 
-flag_tmf -- True to flag all channels if the proportion of channels 
-            already flagged is greater than tmf_frac_limit or if the
-            number of channels already flagged is greater than tmf_nchan_limit. 
-    default: False
+flag_tmf -- True to flag all channels for an antenna if the proportion of
+            channels already flagged is greater than tmf_limit.
+    default: True
 
-tmf_frac_limit -- If flag_tmf is True then all channels will be flagged if
-                  proportionally more than tmf_frac_limit of them are
-                  already flagged.
-    default: 0.05
-
-tmf_nchan_limit -- If flag_tmf is True then all channels will be flagged if
-                   more than tmf_nchan_limit of them are already flagged.
-    default: 0.05
-
-flag_edges -- True to flag edges of spectra.
-    default: False
-
-edge_limit -- The first channels inward from each end of the spectrum where the
-              channel to channel difference falls below 'edge_limit' times the
-              median across the spectrum are designated as the 'edges'. These
-              channels and those outside them are flagged. If the 'edges' lie more
-              than 1/4 of the way across the spectrum then no flagging is done.
-    default: 3
-
-flag_sharps -- True to flag channels that cover sharp spectral features. Uses
-               the same algorithm as flag_sharps to flag the cores of the 
-               features but extends the flagging over the feature flanks until
-               the channel to channel difference falls below 2 * the median 
-               over the spectrum.
-    default: False
-
-sharps_limit -- Flag as sharp feature cores those channels bracketing a channel
-                to channel difference > sharps_limit.
-    default: 0.05
+tmf_limit -- If flag_tmf is True then all channels will be flagged 
+             for an antenna if more than tmf_limit of them are 
+             already flagged.
+    default: 0.3
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-caltable -- List of input bandpass calibration tables
-    default: [] - Use the table currently stored in the pipeline context. 
+vis -- List of input measurement sets.
+    default: [] - Use the measurement sets currently known to the pipeline
+    context. 
 
 -- Pipeline task execution modes
 
@@ -181,53 +176,28 @@ dryrun -- Run the commands (True) or generate the commands to be run but
    do not execute (False).
    default: True
 
-acceptresults -- This parameter has no effect. The Tsyscal file is already
-                 in the pipeline context and is flagged in situ.
+acceptresults -- This parameter has no effect. Any flags are applied to
+                 the measurement set data and the pipeline context is not
+                 modified.
 
 Output:
 
 results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
     the results object for the pipeline task is returned.
 
-Description
-
-Deviant channels in bandpass calibrations are detected by analysis of the
-bandpass calibration amplitudes.
-
-Flags are generated by running the following rules on each spectrum:
-
-If flag_diffmad is True then channels bracketing unusually large jumps
-in the spectrum are detected and flagged.
-
-If flag_tmf is True then all channels will be flagged if a substantial
-proportion of channels have already been flagged for other reasons.
- 
-If flag_edges is True then channels at the band edges are detected and flagged.
-
-If flag_sharps is True then channels covering sharp sepctral features are
-flagged and the flagging is extended in an attempt to cover the lower
-flanks of the features as well.
 
 Examples:
 
 1. Flag birdies in the bandpass calibration for each antenna/SpW.
-Flag the entire calibration spectrum if more than 0.05 of channels or
-more than 4 channels in total are flagged.
+Flag the entire calibration spectrum if more than 30 percent of channels
+are flagged.
 
    hif_bpflagchans()
        equivalent to:
-   hif_bpflagchans(flag_diffmad=True, diffmad_limit=7,
-     diffmad_nchan_limit=4)
-
-2. Flag birdies in the bandpass calibration for each antenna/SpW.
- 
-   hif_bpflagchans(flag_tmf=False)
-       equivalent to:
-   hif_bpflagchans(flag_diffmad=True, diffmad_limit=7,
-     diffmad_nchan_limit=10000)
+   hif_bpflagchans(flag_hilo=True, fhl_limit=7, flag_tmf=True,
+     tmf_limit=0.3)
 
 </example> 
 
 </task>
 </casaxml>
-
