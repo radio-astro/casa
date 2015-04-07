@@ -259,8 +259,7 @@ macro( casa_add_tools out_swig out_sources out_py )
     
     SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES CPLUSPLUS 1 )
 
-    IF ((${_base} STREQUAL msplot) OR (${_base} STREQUAL tableplot) OR (${_base} STREQUAL calplot)
-         OR (${_base} STREQUAL plotms))
+    IF ((${_base} STREQUAL msplot) OR (${_base} STREQUAL tableplot) OR (${_base} STREQUAL calplot))
         SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}")
     ELSE()
         SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR};-threads")
