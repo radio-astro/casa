@@ -803,10 +803,25 @@ VisibilityIteratorReadImpl::setTileCache ()
             else {
 
                 ROTiledStManAccessor tacc (theMs, columns[k], True);
-                tacc.clearCaches (); //One tile only for now ...seems to work faster
+		tacc.clearCaches (); //One tile only for now ...seems to work faster
 
-                Bool setCache = True;
 
+		// Cleverly sense full-row cache size (in tiles)
+		uInt cacheSizeInTiles(1);
+
+		IPosition hypercubeShape=tacc.hypercubeShape(startrow);
+		IPosition tileShape=tacc.tileShape(startrow);
+		uInt nax=hypercubeShape.size();  // how many axes
+
+		// Accumulate axis factors up to--but NOT including--row (last) axis
+		for (uInt iax=0;iax<nax-1;++iax)    
+		  cacheSizeInTiles*= (uInt) (hypercubeShape[iax]/ (Float)(tileShape[iax]));
+
+		// Double for ALMA data
+		//   (this satisfies cases where required rows require >1 non-contiguous tiles)
+		cacheSizeInTiles*=2;
+
+	        Bool setCache = True;
                 if (! useSlicer_p){        // always set cache if slicer in use
                     for (uInt jj = 0 ; jj <  tacc.nhypercubes (); ++jj) {
                         if (tacc.getBucketSize (jj) == 0) {
@@ -815,18 +830,27 @@ VisibilityIteratorReadImpl::setTileCache ()
                     }
                 }
 
-                /// If some bucketSize is 0...there is trouble in setting cache
+		/// If some bucketSize is 0...there is trouble in setting cache
                 /// but if slicer is used it gushes anyways if one does not set cache
-                /// need to fix the 0 bucket size in the filler anyways...then this is not needed
-
+		/// need to fix the 0 bucket size in the filler anyways...then this is not needed
                 if (setCache) {
+		  /*
+		  cout << columns[k] 
+		       << " bucketSize=" << tacc.bucketSize(startrow)
+		       << " hcShape=" << hypercubeShape
+		       << " tShape=" << tileShape
+		       << " cacheSizeInTiles = " << cacheSizeInTiles << "  (nhypercubes=" << tacc.nhypercubes() <<")"<< endl;
+		  */
                     if (tacc.nhypercubes () == 1) {
-                        tacc.setCacheSize (0, 1);
+                        tacc.setCacheSize (0, cacheSizeInTiles);
                     } else {
-                        tacc.setCacheSize (startrow, 1);
+                        tacc.setCacheSize (startrow, cacheSizeInTiles);
                     }
                 }
-            }
+
+
+
+	    }
         }
         catch (AipsError x) {
             //  cerr << "Data man type " << dataManType << "  " << dataManType.contains ("Tiled") << "  && " << (!String (cdesc.dataManagerGroup ()).empty ()) << endl;

@@ -2115,12 +2115,15 @@ VisibilityIteratorImpl2::setTileCache ()
 
                 const IPosition tileShape(tacc.tileShape(startrow));
                 const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+		uInt nax=hypercubeShape.size();  // how many axes
 
-                float nTiles0 = hypercubeShape [0] / (float) (tileShape [0]);
-                float nTiles1 = hypercubeShape [1] / (float) (tileShape [1]);
+		// Accumulate axis factors up to--but NOT including--the row (last) axis
+		uInt cacheSize(1);
+		for (uInt iax=0; iax<nax-1; ++iax)
+		  cacheSize*= (uInt) (hypercubeShape[iax]/(Float)(tileShape[iax]));
 
 #warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
-                uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1)) * 2;
+		cacheSize*=2;
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
 		tacc.setCacheSize (startrow, cacheSize);
