@@ -171,7 +171,7 @@ class SDSparseMapPlotter(object):
                 fmin = ch_to_freq(chmin, frequency)
                 fmax = ch_to_freq(chmax, frequency)
                 LOG.debug('plotting line range for integrated spectrum: [%s, %s]'%(chmin,chmax))
-                plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
+                plot_helper.axvspan(fmin, fmax, color='cyan')
                     
 
         for x in xrange(self.nh):
@@ -184,13 +184,13 @@ class SDSparseMapPlotter(object):
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s: [%s, %s]'%(x,y,chmin,chmax))
-                            plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
+                            plot_helper.axvspan(fmin, fmax, color='cyan')
                     elif self.lines_integrated is not None:
                         for chmin, chmax in self.lines_integrated:
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
-                            plot_helper.axvspan(fmin, fmax, color='cyan', facecolor='cyan')
+                            plot_helper.axvspan(fmin, fmax, color='cyan')
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
                                      size=(self.TickSize + 1))
