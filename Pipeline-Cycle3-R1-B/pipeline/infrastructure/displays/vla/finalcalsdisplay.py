@@ -273,7 +273,7 @@ class finalphaseGainPerAntennaChart(object):
 	        try:
 	        
 	            LOG.info("Plotting final phase gain solutions")
-	            casa.plotcal(caltable='finalBPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable='finalBPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
