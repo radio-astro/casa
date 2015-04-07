@@ -159,7 +159,6 @@ The second part is to flag entire antenna/quadrants if their
 fraction of suspect points exceeds fbq_antenna_frac_limit. 
 Failing that, entire baseline/quadrants may be flagged if their 
 fraction of suspect points exceeds fbq_baseline_frac_limit. 
-
 Suspect points are not flagged unless as part of a bad antenna or 
 baseline quadrant. 
 
