@@ -467,11 +467,10 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         npiece = 3
         spw='3'
         pol='1'
-        scan='0'
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
                              maskmode=maskmode, blfunc=blfunc, 
                              npiece=npiece,spw=spw, 
-                             pol=pol,scan=scan,
+                             pol=pol,
                              outfile=outfile,overwrite=overwrite)
         
         # sdbaseline returns None if it runs successfully
@@ -497,14 +496,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #***
         #*** check if baseline is subtracted ***
         #***
+       
+        tb.open(outfile)
+        num_ch=len(tb.getcell('FLOAT_DATA', 0)[0])
+        tb.close()
 
-        #r1:antenna1=0, data_disc_id=0
-        #r2:antenna1=0, data_disc_id=1
-        #r3:antenna1=0, data_disc_id=2
-        #r4:antenna1=0, data_disc_id=3
-        
-        num_ch=10
-        
         pol0=0
         pol1=1        
         orig_pol0_value=[]
