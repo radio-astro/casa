@@ -71,7 +71,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/SpectralPositioningWidget.qo.h
   QtPlotter/annotations/AnnotationEditor.qo.h
   QtPlotter/annotations/AnnotationEditorText.qo.h
-  QtViewer/AboutDialog.qo.h
+  QtViewer/AboutDialogViewer.qo.h
   QtViewer/AnimatorWidget.qo.h
   QtViewer/AnimatorHolder.qo.h
   QtViewer/CursorTrackingHolder.qo.h
@@ -151,7 +151,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtAutoGui/pushButtonItem.ui
   QtAutoGui/sliderEditorItem.ui
   QtAutoGui/sliderLabelItem.ui
-  QtViewer/AboutDialog.ui
+  QtViewer/AboutDialogViewer.ui
   QtViewer/AnimatorWidget.ui
   QtViewer/AnimatorHolder.ui
   QtViewer/CursorTrackingHolder.ui
@@ -514,7 +514,7 @@ casa_add_library( display
   QtPlotter/canvasMode/CanvasModeRangeSelection.cc
   QtPlotter/canvasMode/CanvasModeZoom.cc
   QtPlotter/canvasMode/CanvasModeFactory.cc
-  QtViewer/AboutDialog.cc
+  QtViewer/AboutDialogViewer.cc
   QtViewer/AnimatorWidget.cc
   QtViewer/AnimatorHolder.cc
   QtViewer/CursorTrackingHolder.cc
@@ -904,7 +904,7 @@ install ( FILES
           QtPlotter/WorldCanvasTranslator.h
           DESTINATION include/casacode/display/QtPlotter )
 install ( FILES
-		  QtViewer/AboutDialog.qo.h
+		  QtViewer/AboutDialogViewer.qo.h
           QtViewer/AnimatorHolder.qo.h
           QtViewer/AnimatorWidget.qo.h
           QtViewer/ColorHistogram.qo.h

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AboutDialogClass</class>
- <widget class="QDialog" name="AboutDialogClass">
+ <class>AboutDialogViewerClass</class>
+ <widget class="QDialog" name="AboutDialogViewerClass">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -121,7 +121,7 @@ p, li { white-space: pre-wrap; }
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="Feather.qrc"/>
+  <include location="QtViewer.qrc"/>
  </resources>
  <connections/>
 </ui>

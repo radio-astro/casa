@@ -23,14 +23,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include <display/QtViewer/AboutDialog.qo.h>
+#include <display/QtViewer/AboutDialogViewer.qo.h>
 #include <QDebug>
 #include <stdcasa/version.h>
 #include <sstream>
 
 namespace casa {
 
-AboutDialog::AboutDialog(QWidget *parent)
+AboutDialogViewer::AboutDialogViewer(QWidget *parent)
     : QDialog(parent)
 {
 	ui.setupUi(this);
@@ -39,7 +39,7 @@ AboutDialog::AboutDialog(QWidget *parent)
 	connect(ui.okButton, SIGNAL(clicked()), this, SLOT(close()));
 }
 
-QString AboutDialog::getDescription() const {
+QString AboutDialogViewer::getDescription() const {
 	std::stringstream ss;
 	ss<<"The Viewer is a tool for visualizing images and measurement sets in raster, contour, vector, or marker form.\n";
 	ss<<"Images can be blinked, and movies are available for spectral-line image cubes. A variety of image analysis tools\n";
@@ -56,7 +56,7 @@ QString AboutDialog::getDescription() const {
 	return aboutStr;
 }
 
-AboutDialog::~AboutDialog()
+AboutDialogViewer::~AboutDialogViewer()
 {
 
 }

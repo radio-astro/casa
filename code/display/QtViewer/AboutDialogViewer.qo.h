@@ -23,28 +23,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef ABOUTDIALOG_QO_H_VIEWER
-#define ABOUTDIALOG_QO_H_VIEWER
+#ifndef AboutDialogVIEWER_QO_H_VIEWER
+#define AboutDialogVIEWER_QO_H_VIEWER
 
 #include <QtGui/QDialog>
-#include <display/QtViewer/AboutDialog.ui.h>
+#include <display/QtViewer/AboutDialogViewer.ui.h>
 
 namespace casa {
 
 /**
  * Displays information to the user about the viewer.
  */
-class AboutDialog : public QDialog
+class AboutDialogViewer : public QDialog
 {
     Q_OBJECT
 
 public:
-    AboutDialog(QWidget *parent = 0);
-    ~AboutDialog();
+    AboutDialogViewer(QWidget *parent = 0);
+    ~AboutDialogViewer();
 
 private:
     QString getDescription() const;
-    Ui::AboutDialogClass ui;
+    Ui::AboutDialogViewerClass ui;
 };
 }
-#endif // ABOUTDIALOG_H
+#endif // AboutDialogViewer_H

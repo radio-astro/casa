@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ImageManagerDialog;
 	class QtDisplayPanelGui;
     class CursorTrackingHolder;
-    class AboutDialog;
+    class AboutDialogViewer;
 
 	template <class T> class ImageInterface;
 
@@ -648,7 +648,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Fit2DTool* fitTool;
 		SlicerMainWindow* sliceTool;
 		ImageManagerDialog* imageManagerDialog;
-		AboutDialog* aboutDialog;
+		AboutDialogViewer* aboutDialog;
 
 		// interactive clean...
 		void initCleanTool( );

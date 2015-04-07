@@ -62,7 +62,7 @@
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
 #include <display/Clean/CleanGui.qo.h>
-#include <display/QtViewer/AboutDialog.qo.h>
+#include <display/QtViewer/AboutDialogViewer.qo.h>
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <display/DisplayDatas/LatticeAsRaster.h>
@@ -3332,7 +3332,7 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 
 void QtDisplayPanelGui::showAboutDialog(){
 	if ( aboutDialog == NULL ){
-		aboutDialog = new AboutDialog( this );
+		aboutDialog = new AboutDialogViewer( this );
 	}
 	aboutDialog->showNormal();
 	aboutDialog->raise();
