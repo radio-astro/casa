@@ -19,11 +19,15 @@
 ##                                              approved general usage for
 ##                                              CASA 4.3)
 ##    Modified by J. E. Kooi   2015/01/29  v2.4 (Changed get_IGS_TEC to accept
-##                                              IONEX format data with any grid spacing
-##                                              in deg. and time resolution in min.)
+##                                              IONEX format data with ANY grid 
+##                                              spacing in deg. and time res in min)
+##    Modified by J. E. Kooi   2015/03/2   v2.5 (Changed ztec_value for doplot = 
+##                                              True to plot a red bar over the VTEC
+##                                              to show the observing session)
+##
 ##
 ##    Tested in CASA 4.3.0 and 4.2.1 on RHEL release 6.4 (Santiago)
-##    Tested in CASA 4.2.1 on Mac OS 10.7.5
+##    Tested in CASA 4.3.0, 4.2.2, and 4.2.1 on Mac OS 10.8.5
 ##
 ##
 ##
@@ -248,9 +252,11 @@ def create0(ms_name,tec_server='IGS',plot_vla_tec=False,im_name='',username='',u
 
     t_min = min(obs_times)
     t_max = max(obs_times)
-
+    
     ## Calculate the reference time for the TEC map to be generated.
-    ref_time = 86400.*np.floor(t_min[0]/86400)
+    ref_time  = 86400.*np.floor(t_min[0]/86400)
+    ref_start = t_min[0]-ref_time
+    ref_end   = t_max[0]-ref_time
 
     ## Gets the day string and the integer number of days of observation (only tested for two continuous days)
     begin_day = qa.time(str(t_min[0])+'s',form='ymd')[0][:10]
@@ -285,14 +291,15 @@ def create0(ms_name,tec_server='IGS',plot_vla_tec=False,im_name='',username='',u
                     for iter in range(int(num_maps)):
                         full_tec_array[:,:,:,iter] = tec_array[:,:,:,iter]
                 else:
-                    ## We remove map 0 for the current tec_array because it is a repeat of map 12 from the previous tec_array
+                    ## We remove map 0 for the current tec_array because it is a repeat of the last map from the previous tec_array
                     for iter in range(int(num_maps-1)):
                         full_tec_array[:,:,:,iter+num_maps*ymd_date_num] = tec_array[:,:,:,iter+1]
             ymd_date_num +=1
 
         if tec_type != '':
             ztec_value(-107.6184,34.0790,points_long,points_lat,ref_long,ref_lat,incr_long,\
-                        incr_lat,incr_time,int((num_maps-1)*call_num+1),full_tec_array,plot_vla_tec)
+                        incr_lat,incr_time,ref_start,ref_end,int((num_maps-1)*call_num+1),\
+                        full_tec_array,plot_vla_tec)
             if im_name == '':
                 prefix = ms_name
             else:
@@ -346,7 +353,8 @@ def create0(ms_name,tec_server='IGS',plot_vla_tec=False,im_name='',username='',u
                 make_CASA_table(mad_data_file)
 
             try:
-                CASA_image = convert_MAPGPS_TEC(ms_name,mad_data_file,ref_time,plot_vla_tec,im_name)
+                CASA_image = convert_MAPGPS_TEC(ms_name,mad_data_file,ref_time,ref_start,\
+                                                ref_end,plot_vla_tec,im_name)
             except:
                 print 'An error was encountered retrieving/interpreting the MAPGPS files.'
                 CASA_image = ''
@@ -720,7 +728,7 @@ def make_image(prefix,ref_long,ref_lat,ref_time,incr_long,incr_lat,incr_time,tec
 
 
 
-def ztec_value(my_long,my_lat,points_long,points_lat,ref_long,ref_lat,incr_long,incr_lat,incr_time,num_maps,tec_array,PLOT=False):
+def ztec_value(my_long,my_lat,points_long,points_lat,ref_long,ref_lat,incr_long,incr_lat,incr_time,ref_start,ref_end,num_maps,tec_array,PLOT=False):
     """
 ## =============================================================================
 ##
@@ -748,6 +756,8 @@ def ztec_value(my_long,my_lat,points_long,points_lat,ref_long,ref_lat,incr_long,
 ##    incr_time    type = float      Increment by which time increases
 ##                                       IGS data:       120 min
 ##                                       MAPGPS data:    5 min
+##    ref_start    type = float      Beginning of observations (in seconds)
+##    ref_end      type = float      End of observations (in seconds)
 ##    num_maps     type = integer    Number of maps (or time samples) of TEC
 ##    tec_array    type = array      3D array with axes consisting of 
 ##                                       [long.,lat.,time] giving TEC in TECU
@@ -795,11 +805,13 @@ def ztec_value(my_long,my_lat,points_long,points_lat,ref_long,ref_lat,incr_long,
         rc('ytick', labelsize=15)
         plottimes = [x*incr_time for x in range(num_maps)]
         plt.errorbar(plottimes,site_tec[0],site_tec[1])
+        plt.axvspan(ref_start/60.0, ref_end/60.0, facecolor='r', alpha=0.5)
         plt.xlabel(r'$\mathrm{Time}$ $\mathrm{(minutes)}$', fontsize=20)
         plt.ylabel(r'$\mathrm{TEC}$ $\mathrm{(TECU)}$', fontsize=20)
         plt.title(r'$\mathrm{TEC}$ $\mathrm{values}$ $\mathrm{for}$ $\mathrm{Long.}$ $\mathrm{=}$ '+\
                     '$\mathrm{'+str(my_long)+'}$ / $\mathrm{Lat.}$ $\mathrm{=}$ $\mathrm{'+str(my_lat)+'}$',\
                     fontsize=20)
+        plt.axis([min(plottimes),max(plottimes),0,1.1*max(site_tec[0])])
     if PLOT == False:
         return site_tec
 
@@ -834,7 +846,7 @@ def test_connection(reference):
 
 
 
-def convert_MAPGPS_TEC(ms_name,mad_data_file,ref_time,plot_vla_tec,im_name):
+def convert_MAPGPS_TEC(ms_name,mad_data_file,ref_time,ref_start,ref_end,plot_vla_tec,im_name):
     """
 ## =============================================================================
 ##
@@ -921,7 +933,7 @@ def convert_MAPGPS_TEC(ms_name,mad_data_file,ref_time,plot_vla_tec,im_name):
     tb.close()
 
     ztec_value(-107.6184,34.0790,points_long,points_lat,minlong,minlat,1,\
-                1,5,int(num_maps),tec_array,plot_vla_tec)
+                1,5,ref_start,ref_end,int(num_maps),tec_array,plot_vla_tec)
     ## ref_time + 150 accounts for the fact that the MAPGPS map starts at 00:02:30 UT, not 00:00:00 UT
     if im_name == '':
         prefix = ms_name
