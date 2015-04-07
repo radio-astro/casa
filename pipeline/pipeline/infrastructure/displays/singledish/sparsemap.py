@@ -94,6 +94,7 @@ class SDSparseMapPlotter(object):
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize)
         self.lines_integrated = None
         self.lines_map = None
+        self.reference_level = None
         
     @property
     def nh(self):
@@ -133,6 +134,9 @@ class SDSparseMapPlotter(object):
     def setup_lines(self, lines_integrated, lines_map=None):
         self.lines_integrated = lines_integrated
         self.lines_map = lines_map
+        
+    def setup_reference_level(self, level=0.0):
+        self.reference_level = level
         
     def plot(self, map_data, integrated_data, frequency, figfile):
         plot_helper = PlotObjectHandler()
@@ -197,6 +201,8 @@ class SDSparseMapPlotter(object):
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
+                    if self.reference_level is not None and ymin < self.reference_level and self.reference_level < ymax:
+                        plot_helper.axhline(self.reference_level, color='r', linewidth=0.4) 
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
                                      size=(self.TickSize + 1))

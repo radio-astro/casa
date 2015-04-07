@@ -85,6 +85,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
     frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
     LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
     plotter.setup_lines(line_range, lines_map)
+    plotter.setup_reference_level(0.0)
     plotter.plot(map_data, integrated_data, frequency, outfile)
     return integrated_data, map_data
 

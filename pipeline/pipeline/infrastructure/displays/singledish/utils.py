@@ -205,6 +205,11 @@ class PlotObjectHandler(object):
         self.storage.append(object_list)
         return object_list
     
+    def axhline(self, *args, **kwargs):
+        object_list = pl.axhline(*args, **kwargs)
+        self.storage.append(object_list)
+        return object_list
+    
     def clear(self):
         for obj in self.storage:
             obj.remove()
