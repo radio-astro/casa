@@ -13,9 +13,6 @@ def partition(vis,
            separationaxis,
            numsubms,
            flagbackup,      # only for MMS
-           disableparallel, # HIDDEN parameter to create an MMS in sequential
-           ddistart,        # HIDDEN parameter to be used when merging sub-tables
-           taql,            # HIDDEN parameter to be used for balanced partition schema
            datacolumn,
            field,
            spw, 
@@ -27,7 +24,11 @@ def partition(vis,
            array,
            uvrange,
            observation,
-           feed
+           feed,
+           disableparallel, # HIDDEN parameter to create an MMS in sequential
+           ddistart,        # HIDDEN parameter to be used when merging sub-tables
+           taql             # HIDDEN parameter to be used for balanced partition schema
+
            ):
     """Create a multi visibility set from an existing visibility set:
 
@@ -105,7 +106,7 @@ def partition(vis,
         
         # Get a cluster
         pdh.setupCluster(thistask='partition')
-        
+            
         # Execute the jobs using simple_cluster
         try:
             pdh.go()

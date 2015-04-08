@@ -93,7 +93,7 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform) 
                            
-    def createMMS(self, msfile, axis='auto',scans='',spws=''):
+    def createMMS(self, msfile, axis='auto',scans='',spws='', numms='auto'):
         '''Create MMSs for tests with input MMS'''
         prefix = msfile.rstrip('.ms')
         if not os.path.exists(msfile):
@@ -108,7 +108,7 @@ class test_base(unittest.TestCase):
             
         print "................. Creating test MMS .................."
         mstransform(vis=msfile, outputvis=self.testmms, datacolumn='data',
-                    createmms=True,separationaxis=axis, scan=scans, spw=spws)
+                    createmms=True,separationaxis=axis, scan=scans, spw=spws, numsubms=numms)
         
 
     def cleanup(self):
@@ -866,7 +866,7 @@ class test_mms_input(test_base):
         
     def test_combspws_timespan_error(self):
         '''mstransform: combinespws=True, timespan=scan axis=auto timebin=40s'''
-        self.createMMS(self.vis, axis='auto',spws='1,3')
+        self.createMMS(self.vis, axis='auto',spws='1,3', numms=4)
         self.outputms = "spanscan_comb.mms"
         # combinespws is not possible. It should create and MS
         mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',

@@ -351,7 +351,7 @@ class test_Combspw1(test_base):
         '''mstransform: Combine four spws into one'''
 
         self.outputms = "combspw11.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, combinespws=True, spw='0~3')
+        mstransform(self.vis, self.outputms, combinespws=True, spw='0~3')
         self.assertTrue(os.path.exists(self.outputms))
 
         ret = th.verifyMS(self.outputms, 1, 256, 0)

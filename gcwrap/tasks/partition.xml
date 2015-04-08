@@ -88,18 +88,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Create a backup of the FLAG column in the MMS.</description>
             <value>True</value>
         </param>
-        <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
-            <description>Create a multi-MS in parallel using simple_cluster.</description>
-            <value>False</value>
-        </param>        
-        <param type="int" name="ddistart" subparam="true" visibility="hidden">
-            <description>Do not change this parameter. For internal use only.</description>
-            <value>-1</value>
-        </param>
-    	<param type="string" name="taql" subparam="true" visibility="hidden">
-        	<description>Table query for nested selections</description>
-        	<value type="string"></value>
-    	</param>             
 
     <param type="string" name="datacolumn" ignorecase="True">
         <description>Which data column(s) to process.</description>
@@ -183,7 +171,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <any type="variant" limittypes="string stringArray int intArray"/>
         <value type="string"></value>
     </param> 
-    
+
+    <!-- HIDDEN sub-parameters -->            
+    <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
+        <description>Create a multi-MS in parallel using simple_cluster.</description>
+        <value>False</value>
+    </param>        
+    <param type="int" name="ddistart" subparam="true" visibility="hidden">
+        <description>Do not change this parameter. For internal use only.</description>
+        <value>-1</value>
+    </param>
+    <param type="string" name="taql" subparam="true" visibility="hidden">
+        <description>Table query for nested selections</description>
+        <value type="string"></value>
+    </param>             
+        
     <constraints>
       <when param="createmms">
         <equals type="bool" value="True">

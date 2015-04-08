@@ -63,11 +63,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Name of input Measurement set or Multi-MS.</description>
         <value type="string"></value>
     </param>
-
-    <param type="bool" name="monolithic_processing" subparam="true" visibility="hidden">
-        <description>Hidden parameter for internal use only. Do not change it!</description>
-        <value>False</value>
-    </param>
     
     <!-- OUTPUT parameters -->    
     <param type="string" name="outputvis">
@@ -92,19 +87,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <any type="variant" limittypes="string int"/>
          <value type="string">auto</value>
         </param>
-        <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
-            <description>Hidden parameter for internal use only. Do not change it!</description>
-            <value>False</value>
-        </param>        
-        <param type="int" name="ddistart" subparam="true" visibility="hidden">
-            <description>Hidden parameter for internal use only. Do not change it!</description>
-            <value>-1</value>
-        </param>
-        <param type="string" name="taql" subparam="true" visibility="hidden">
-            <description>Table query for nested selections</description>
-            <value type="string"></value>
-        </param>             
-        
+                
     <param type="intArray" name="tileshape">
         <description>List with 1 or 3 elements giving the tile shape of the disk data columns.</description>
         <value type="intArray">0</value>
@@ -342,7 +325,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Maximum separation of start-to-end baselines that can be included in an average. (meters)</description>
             <value type="double">0.0</value>
         </param>
-    
+
+        <!-- HIDDEN PARAMETERS, UNRELATED to TIME AVERAGING -->
+        <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
+            <description>Hidden parameter for internal use only. Do not change it!</description>
+            <value>False</value>
+        </param>        
+        <param type="int" name="ddistart" subparam="true" visibility="hidden">
+            <description>Hidden parameter for internal use only. Do not change it!</description>
+            <value>-1</value>
+        </param>
+        <param type="string" name="taql" subparam="true" visibility="hidden">
+            <description>Table query for nested selections</description>
+            <value type="string"></value>
+        </param>             
+        <param type="bool" name="monolithic_processing" subparam="true" visibility="hidden">
+            <description>Hidden parameter for internal use only. Do not change it!</description>
+            <value>False</value>
+        </param>
+                        
     <constraints>
           <when param="createmms">
             <equals type="bool" value="False"/>

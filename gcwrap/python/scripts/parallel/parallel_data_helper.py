@@ -462,7 +462,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         # It needs to use the updated list of parameters!!!
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)         
-            
+        
 #    @dump_args
     def setupParameters(self, **pars):
         """ Create a dictionary with non-empty parameters 
@@ -1363,7 +1363,8 @@ class ParallelDataHelper(ParallelTaskHelper):
         #  'path/outuputvis.data/SUBMSS/outputvis.0001.ms':False}
         outputList = {}
       
-        if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+#        if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+        if (self._cluster == None):
             # This is the list of output SubMSs
             outputList = self._sequential_return_list
             self._sequential_return_list = {}

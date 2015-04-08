@@ -14,14 +14,10 @@ import inspect
 
 def mstransform(
              vis, 
-             monolithic_processing,      # HIDDEN parameter for the MMS monolithic processing
              outputvis,           # output
              createmms,           # MMS --> partition
              separationaxis, 
              numsubms,
-             disableparallel,    # HIDDEN parameter to create MMS in sequential
-             ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
-             taql,               # HIDDEN internal parameter
              tileshape,          # tiling
              field,
              spw, 
@@ -56,7 +52,11 @@ def mstransform(
              timeaverage,        # time averaging --> split
              timebin,
              timespan,
-             maxuvwdistance
+             maxuvwdistance,
+             disableparallel,    # HIDDEN parameter to create MMS in sequential
+             ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
+             taql,               # HIDDEN internal parameter
+             monolithic_processing      # HIDDEN parameter for the MMS monolithic processing
              ):
 
     ''' This task can replace split, cvel, partition and hanningsmooth '''
