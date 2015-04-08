@@ -1265,6 +1265,10 @@ def wrap_in_resultslist(task_result):
     # that the pool for the wrapper should equal that of the child. 
     if hasattr(task_result, 'qa'):
         l.qa = task_result.qa
+
+    # the plot level toggles work off the CASA task name
+    if hasattr(task_result, 'pipeline_casa_task'):
+        l.pipeline_casa_task = task_result.pipeline_casa_task
     
     return l
 
