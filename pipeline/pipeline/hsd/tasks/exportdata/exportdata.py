@@ -32,6 +32,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
+import pipeline.hif.tasks.exportdata as hif_exportdata
+import pipeline.hif.tasks.exportdata.manifest as manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -148,7 +150,7 @@ class SDExportDataResults(basetask.Results):
             s += '%s performed.' % str(job)
         return s 
 
-class SDExportData(basetask.StandardTaskTemplate):
+class SDExportData(hif_exportdata.ExportData):
     """
     SDExportData is the base class for exporting data to the products
     subdirectory. It performs the following operations:
@@ -177,79 +179,102 @@ class SDExportData(basetask.StandardTaskTemplate):
         # Create a local alias for inputs, so we're not saying
         # 'self.inputs' everywhere
         inputs = self.inputs
-         
-        if os.path.exists(inputs.products_dir):
-            self.init_visdict()
-            
-            # Loop over the measurements sets in the working directory and 
-            # save the final flags using the flag manager. 
-            vislist = self._generate_vislist()
-            flag_version_name = 'Pipeline_Final'
-            for visfile in vislist:
-                self._save_final_flagversion (visfile, flag_version_name)
         
-            # Copy the final flag versions to the data products directory
-            # and tar them up.
-            flag_version_list = []
-            flagversionsdict= {}
-            for visfile in vislist:
-                flag_version_file = self._export_final_flagversion ( \
-                    inputs.context, visfile, flag_version_name, \
-                    inputs.products_dir)
-                flag_version_list.append(flag_version_file)
-                if self.visdict.has_key(os.path.basename(visfile)):
-                    key = self.visdict[os.path.basename(visfile)]
-                    if not flagversionsdict.has_key(key):
-                        flagversionsdict[key] = []
-                    flagversionsdict[key].append(os.path.basename(flag_version_file))
-                
-            
-            # create the calibration apply file(s) in the products directory. 
-            apply_file_list = []
-            applydict = {}
-            for visfile in vislist:
-                apply_file =  self._export_final_applylist (inputs.context, \
-                                                            visfile, inputs.products_dir)
-                if len(apply_file) > 0:
-                    apply_file_list.append (apply_file)
-                    applydict[os.path.basename(visfile)] = apply_file
-
-            # Create fits files from CASA images
-            imagelist, fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
-            # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
-            caltabledict = self._export_caltable_file_list(inputs.context, inputs.products_dir)
-            caltable_file_list = caltabledict.values()
-            
-            # Export a tar file of the web log
-            weblog = self._export_weblog (inputs.context, inputs.products_dir)
-            
-            # Locate and copy the pipeline processing request.
-            pprfile = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
-        
-            # Export the processing log independently of the web log
-            casa_commands_file = self._export_casa_commands_log(inputs.context,
-                    inputs.context.logs['casa_commands'], inputs.products_dir)
-    
-            # Export the processing script independently of the web log
-            casa_pipescript = self._export_casa_script (inputs.context,
-                                                        inputs.context.logs['pipeline_script'], inputs.products_dir)
-            #'casa_pipescript.py', inputs.products_dir)
-
-            # Export the restore script
-            #casa_restore_script = self._export_casa_restore_script (inputs.context,
-            #                                                        inputs.context.logs['pipeline_restore_script'],
-            #                                                        inputs.products_dir, vislist, session_list)
-
-            # Export a text format list of files whithin a products directory
-            self._export_list_txt(inputs.products_dir, fitsfiles=fitsfiles, weblog=weblog, pprfile=pprfile,
-                                  flagversions=flag_version_list, calapply=apply_file_list, caltables=caltable_file_list,
-                                  casa_commands=casa_commands_file)
-            #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
+        # Get the parent ous ousstatus name. This is the sanitized ous
+        # status uid
+        ps = inputs.context.project_structure
+        if ps is None:
+            oussid = 'unknown'
+        elif ps.ousstatus_entity_id == 'unknown':
+            oussid = 'unknown'
         else:
-            LOG.info('There is no product direoctory, please input !mkdir products')
+            oussid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+    
+        # Initialize the manifest document and the top level ous status.
+        pipemanifest = self._init_pipemanifest(oussid)
+        ouss = pipemanifest.set_ous(oussid)
+
+        self.init_visdict()
+        
+        # Loop over the measurements sets in the working directory and 
+        # save the final flags using the flag manager. 
+        vislist = self._generate_vislist()
+        flag_version_name = 'Pipeline_Final'
+        for visfile in vislist:
+            self._save_final_flagversion (visfile, flag_version_name)
+    
+        # Copy the final flag versions to the data products directory
+        # and tar them up.
+        flag_version_list = []
+        flagversionsdict= {}
+        for visfile in vislist:
+            flag_version_file = self._export_final_flagversion ( \
+                inputs.context, visfile, flag_version_name, \
+                inputs.products_dir)
+            flag_version_list.append(flag_version_file)
+            if self.visdict.has_key(os.path.basename(visfile)):
+                key = self.visdict[os.path.basename(visfile)]
+                if not flagversionsdict.has_key(key):
+                    flagversionsdict[key] = []
+                flagversionsdict[key].append(os.path.basename(flag_version_file))
+            
+        
+        # create the calibration apply file(s) in the products directory. 
+        apply_file_list = []
+        applydict = {}
+        for visfile in vislist:
+            apply_file =  self._export_final_applylist (inputs.context, \
+                                                        visfile, inputs.products_dir)
+            if len(apply_file) > 0:
+                apply_file_list.append (apply_file)
+                applydict[os.path.basename(visfile)] = apply_file
+
+        # Create fits files from CASA images
+        imagelist, targetimages_fitslist = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
+
+        # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
+        caltabledict = self._export_caltable_file_list(inputs.context, inputs.products_dir)
+        caltable_file_list = caltabledict.values()
+        
+        # Export a tar file of the web log
+        weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
+        
+        # Locate and copy the pipeline processing request.
+        ppr_file = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
+        
+        # Export the processing log independently of the web log
+        casa_commands_file = self._export_casa_commands_log(inputs.context,
+                inputs.context.logs['casa_commands'], inputs.products_dir)
+
+        # Export the processing script independently of the web log
+        casa_pipescript = self._export_casa_script (inputs.context,
+                                                    inputs.context.logs['pipeline_script'], inputs.products_dir)
+
+        # Export the restore script
+        #casa_restore_script = self._export_casa_restore_script (inputs.context,
+        #                                                        inputs.context.logs['pipeline_restore_script'],
+        #                                                        inputs.products_dir, vislist, session_list)
+
+        sessiondict = None
+        visdict = None
+        casa_restore_script = None
+        
+        # Export a XML format list of files within a products directory
+        self._fill_manifest(pipemanifest, ouss, ppr_file, sessiondict, visdict, weblog_file, casa_commands_file, 
+                            casa_pipescript, casa_restore_script, targetimages_fitslist)
+
+#         # Export a text format list of files whithin a products directory
+#         self._export_list_txt(inputs.products_dir, fitsfiles=targetimages_fitslist, weblog=weblog_file, pprfile=ppr_file,
+#                               flagversions=flag_version_list, calapply=apply_file_list, caltables=caltable_file_list,
+#                               casa_commands=casa_commands_file)
+        #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
+
+        # Export the pipeline manifest file
+        casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
+                                                        'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
          
-        return SDExportDataResults(jobs=[], pprequest=pprfile, weblog=weblog, 
-                                   targetimages=(imagelist, fitsfiles),
+        return SDExportDataResults(jobs=[], pprequest=ppr_file, weblog=weblog_file, 
+                                   targetimages=(imagelist, targetimages_fitslist),
                                    caltabledict=caltabledict,
                                    flagversionsdict=flagversionsdict,
                                    calapplydict=applydict,
@@ -262,16 +287,32 @@ class SDExportData(basetask.StandardTaskTemplate):
             if hasattr(scantable, 'exported_ms') and scantable.exported_ms is not None:
                 self.visdict[os.path.basename(scantable.exported_ms)] = original_vis
      
-    def analyse(self, results):
-        """
-        Analyse the results of the export data operation.
-        This method does not perform any analysis, so the results object is
-        returned exactly as-is, with no data massaging or results items
-        added.
-        :rtype: :class:~`SDExportDataResults`
-        """
-        return results
-     
+    def _fill_manifest(self, pipemanifest, ouss, ppr_file, sessiondict, visdict, weblog_file, 
+                       casa_commands_file, casa_pipescript, casa_restorescript, target_images):
+        # PPR
+        pipemanifest.add_pprfile (ouss, os.path.basename(ppr_file))
+        
+        # session dependent products
+        
+        # weblog
+        pipemanifest.add_weblog (ouss, os.path.basename(weblog_file))
+        
+        # casa_commands_log
+        pipemanifest.add_casa_cmdlog (ouss,
+                                      os.path.basename(casa_commands_file))
+        
+        # casa_pipescript
+        pipemanifest.add_pipescript (ouss, os.path.basename(casa_pipescript))
+        
+        # restore script (N/A)
+        #pipemanifest.add_restorescript (ouss,
+        #                                os.path.basename(casa_restore_script))
+        
+        # target images
+        pipemanifest.add_images (ouss,
+                                 map(os.path.basename, target_images),#[os.path.basename(image) for image in targetimages_fitslist],
+                                 'target')
+
     def _export_pprfile (self, context, products_dir, pprfile):
         """
         Export the pipeline processing request to the output products directory as is.
@@ -568,45 +609,45 @@ class SDExportData(basetask.StandardTaskTemplate):
         os.chdir(cwd)
         return product_tar_list[0]
                                           
-    def _export_list_txt(self, products_dir, fitsfiles=None, caltables=None, weblog=None, pprfile=None, 
-                         flagversions=None, calapply=None, casa_commands=None):
-        if not self._executor._dry_run:
-            def get_text(title, item):
-                title_text = lambda x: '{0}: \n--------\n'.format(x)
-                item_text = lambda x: '{0}\n'.format(os.path.basename(x))
-                next_content = lambda: '\n'
-                if item is not None:
-                    yield title_text(title)
-                    for i in item:
-                        yield item_text(i)
-                    yield next_content()
-                     
-            with open(os.path.join(products_dir, 'list_of_exported_files.txt'), 'w') as f:
-                def dowrite(lines):
-                    for line in lines:
-                        f.write(line)
-                        
-                # PPR
-                dowrite(get_text('PPR file', [pprfile]))
-                
-                # Weblog
-                dowrite(get_text('Weblog', [weblog]))
-                
-                # Images
-                dowrite(get_text('Target Images', fitsfiles))
-                    
-                # flagversions
-                dowrite(get_text('Flagversions', flagversions))
-                
-                # caltables
-                dowrite(get_text('Caltables', caltables))
-                    
-                # calapply list
-                dowrite(get_text('Calapply list', calapply))
-                    
-                # casa_commands.log
-                dowrite(get_text('Casa Commands Log', [casa_commands]))
-                                    
+#     def _export_list_txt(self, products_dir, fitsfiles=None, caltables=None, weblog=None, pprfile=None, 
+#                          flagversions=None, calapply=None, casa_commands=None):
+#         if not self._executor._dry_run:
+#             def get_text(title, item):
+#                 title_text = lambda x: '{0}: \n--------\n'.format(x)
+#                 item_text = lambda x: '{0}\n'.format(os.path.basename(x))
+#                 next_content = lambda: '\n'
+#                 if item is not None:
+#                     yield title_text(title)
+#                     for i in item:
+#                         yield item_text(i)
+#                     yield next_content()
+#                      
+#             with open(os.path.join(products_dir, 'list_of_exported_files.txt'), 'w') as f:
+#                 def dowrite(lines):
+#                     for line in lines:
+#                         f.write(line)
+#                         
+#                 # PPR
+#                 dowrite(get_text('PPR file', [pprfile]))
+#                 
+#                 # Weblog
+#                 dowrite(get_text('Weblog', [weblog]))
+#                 
+#                 # Images
+#                 dowrite(get_text('Target Images', fitsfiles))
+#                     
+#                 # flagversions
+#                 dowrite(get_text('Flagversions', flagversions))
+#                 
+#                 # caltables
+#                 dowrite(get_text('Caltables', caltables))
+#                     
+#                 # calapply list
+#                 dowrite(get_text('Calapply list', calapply))
+#                     
+#                 # casa_commands.log
+#                 dowrite(get_text('Casa Commands Log', [casa_commands]))
+#                                     
     def _save_final_flagversion(self, vis, flag_version_name):
         """
         Save the final flags to a final flag version.
