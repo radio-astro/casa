@@ -17,6 +17,6 @@ def h_init(pipelinemode=None, loglevel=None, plotlevel=None, output_dir=None,
                                  plotlevel=plotlevel)    
     cli.stack[cli.PIPELINE_NAME] = pipeline
 
-    basetask.DISABLE_WEBLOG = weblog
+    basetask.DISABLE_WEBLOG = not weblog
 
     return pipeline.context
