@@ -340,7 +340,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         inputs = self.inputs
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    lazy=inputs.lazy)
+	    lazy=inputs.lazy, dbservice=False)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
