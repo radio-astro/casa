@@ -20,7 +20,7 @@ from .checkflag import Checkflag
 from .targetflag import Targetflag
 #from .hflag import Heuristicflag
 
-weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer())
+weblog.add_renderer(FlagDeterVLA, renderer.T2_4MDetailsVLAAgentFlaggerRenderer(), group_by='ungrouped')
 
 weblog.add_renderer(FlagBadDeformatters, 
                     basetemplates.T2_4MDetailsDefaultRenderer(uri='flagbaddef.mako',
