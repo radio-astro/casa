@@ -37,6 +37,7 @@
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/TransformMachines/PolOuterProduct.h>
 //#include <synthesis/MeasurementComponents/CFCache.h>
 #include <synthesis/TransformMachines/Utils.h>
 
@@ -158,7 +159,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Float pbLimit=5e-4,
 		Bool usezero=False,
 		Bool conjBeams_p=True,
-		Bool doublePrecGrid=False);
+		Bool doublePrecGrid=False,
+		PolOuterProduct::MuellerType muellerType=PolOuterProduct::FULL);
     // </group>
     
     // Construct from a Record containing the AWProjectFT state
@@ -524,6 +526,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Timer timer_p;
     Double runTime1_p;
+
+    PolOuterProduct::MuellerType muellerType_p;
 
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };

@@ -76,11 +76,13 @@ namespace casa{
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
+			  const Int& muellerTerm=0,
 			  const Double freqVal=-1.0) = 0;
     virtual void applySky(ImageInterface<Complex>& outputImages,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
+			  const Int& muellerTerm=0,
 			  const Double freqVal=-1.0) = 0;
     //
     // Not sure if the following method is requried.  Leaving it in

@@ -162,7 +162,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Float pbLimit,
 			   Bool usezero,
 			   Bool conjBeams,
-			   Bool doublePrecGrid)
+			   Bool doublePrecGrid,
+			   PolOuterProduct::MuellerType muellerType)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice( ), lattice( ), 
@@ -207,6 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
     CFBuffer::initCFBStruct(cfbst_pub);
+    muellerType_p = muellerType;
   }
   //
   //---------------------------------------------------------------
@@ -343,6 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	rotateOTFPAIncr_p=other.rotateOTFPAIncr_p;
 	computePAIncr_p=other.computePAIncr_p;
 	runTime1_p = other.runTime1_p;
+	muellerType_p = other.muellerType_p;
       };
     return *this;
   };

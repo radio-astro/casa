@@ -76,7 +76,7 @@ namespace casa{
     //========================= Administrative Parts ==========================
     //------------------------------------------------------------------
     //
-    PolOuterProduct (MuellerType type=DIAGONAL) 
+    PolOuterProduct (MuellerType type=FULL) //set to diagonal which is what was originally defaulted to be. 
     {
       polMap_p.resize(4,4);polMap_p=-1;
       init(type);

@@ -171,14 +171,16 @@ namespace casa{
     // the UV plane
     //
     Int directionIndex=skyCoord.findCoordinate(Coordinate::DIRECTION);
+//    cout<<"Direction index is "<< directionIndex<<endl;
     AlwaysAssert(directionIndex>=0, AipsError);
     DirectionCoordinate dc=skyCoord.directionCoordinate(directionIndex);
     Vector<Double> sampling;
     sampling = dc.increment();
+//    cout<<"Image sampling set to : "<<sampling<<endl;
     sampling*=Double(convSampling);
     sampling*=Double(skyNx)/Double(convSize);
     dc.setIncrement(sampling);
-    
+//    cout<<"Resized sampling is : "<<sampling<<endl;
     
     Vector<Double> unitVec(2);
     unitVec=convSize/2;
@@ -266,6 +268,7 @@ namespace casa{
 			      const VisBuffer& vb, 
 			      const Bool doSquint,
 			      const Int& cfKey,
+			      const Int& muellerTerm,
 			      const Double freqVal)
   {
     (void)cfKey;
@@ -275,7 +278,8 @@ namespace casa{
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
 	Int bandID=getVisParams(vb,outImages.coordinates());
-	vlaPB.applyPB(outImages, vb, bandID, doSquint,freqVal);
+//	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
+	vlaPB.applyPB(outImages, vb, doSquint,bandID,muellerTerm,freqVal);
       }
   }
 
@@ -283,6 +287,7 @@ namespace casa{
 			      const VisBuffer& vb, 
 			      const Bool doSquint,
 			      const Int& cfKey,
+			      const Int& muellerTerm,
 			      const Double freqVal)
   {
     (void)cfKey;

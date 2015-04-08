@@ -94,6 +94,7 @@ namespace casa{
 		  const VisBuffer& vb, 
 		  const Bool doSquint=True,
 		  const Int& cfKey=0,
+		  const Int& muellerTerm=0,
 		  const Double /*freqVal*/ =-1) 
     {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;}
 
@@ -101,6 +102,7 @@ namespace casa{
 		  const VisBuffer& vb, 
 		  const Bool doSquint=True,
 		  const Int& cfKey=0,
+		  const Int& muellerTerm=0,
 		  const Double /*freqVal*/ = -1) 
     {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;};
 

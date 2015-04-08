@@ -1651,7 +1651,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// the single pol. image plane to the twoDPB image.
 		doSquint=True;
 		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
-		vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+		vlaPB.applyPB(singlePolImg, vb, doSquint,bandID_p);
 		PolnPlane(2)=whichPolPlane;   twoDPB.putSlice(singlePolImg.get(), PolnPlane);
 	      }
 	      {
@@ -1661,7 +1661,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		doSquint = False;
 		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
 		//vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
-		vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+		vlaPB.applyPB(singlePolImg, vb, doSquint, bandID_p);
 		PolnPlane(2)=whichPolPlane;   twoDPBSq.putSlice(singlePolImg.get(), PolnPlane);
 	      }
 

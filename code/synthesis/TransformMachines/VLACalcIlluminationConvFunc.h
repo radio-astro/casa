@@ -57,7 +57,9 @@ namespace casa{
     // void store(String &fileName);
     void loadFromImage(String &fileName);
     void getIdealConvFunc(Array<Complex>& buf);
-    void ftAperture(TempImage<Complex>& uvgrid, Bool makeMueller=True);
+    //void ftAperture(TempImage<Complex>& uvgrid);
+    void ftAperture(TempImage<Complex>& uvgrid, Bool makeMueller);
+    void ftAperture(TempImage<Complex>& uvgrid, Int makeMuerller=0);
     void ftAperture() {ftAperture(convFunc_p); pbRead_p=True;};
     void storePB(String& fileName);
 
@@ -69,7 +71,7 @@ namespace casa{
 			IPosition& skyShape, 
 			TempImage<Complex>& uvGrid, 
 			const VisBuffer& vb,
-			Bool doSquint=True,Int bandID=-1, Double freqVal=-1.0);
+			Bool doSquint=True,Int bandID=-1,Int muellerTerm=0 ,Double freqVal=-1.0);
     void regridAperture(CoordinateSystem& skyCS,
 			IPosition& skyShape,
 			TempImage<Complex>& uvGrid,
@@ -90,8 +92,8 @@ namespace casa{
 		 const Vector<Float>& paList, Int bandID, Bool doSquint=False);
     void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		 Bool doSquint=False, Double freqVal=-1.0);
-    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		 Bool doSquint=True, Double freqVal=-1.0);
+    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, 
+		 Bool doSquint=True,Int bandID=-1, Int muellerTerm=0, Double freqVal=-1.0);
     void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
 		   const Vector<Float>& paList, Int bandID, Bool doSquint=False);
     void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
@@ -99,8 +101,9 @@ namespace casa{
     void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
 		   Bool doSquint=True);
     void makeFullJones(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint, 
-		       Int bandID, Double freqVal=-1.0);
+	       Int bandID, Double freqVal=-1.0);
     void skyMuller(ImageInterface<Complex>& skyJones);
+    void skyMuller(ImageInterface<Complex>& skyJones, Int muellerTerm=0);
     void skyMuller(Array<Complex>& skyJones, const IPosition& shape, const Int& inStokes);
 
     Bool findSupport(Array<Complex>& /*func*/, Float& /*threshold*/,Int& /*origin*/, Int& /*R*/)

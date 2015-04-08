@@ -175,19 +175,20 @@ namespace casa{
 		Int conjFreqIndex;
 		conjFreq=SynthesisUtils::nearestValue(freqValues, conjFreq, conjFreqIndex);
 
+//		cout<<"Muller Array = "<<muellerElements(imx)(imy)<<"\n" ;
 		// USEFUL DEBUG MESSAGE
-		// cerr << "Freq. values: " 
-		//      << freqValues(inu) << " " 
-		//      << imRefFreq_p << " " 
-		//      << conjFreq << " " 
-		//      << endl;
+//		 cerr << "Freq. values: " 
+//		      << freqValues(inu) << " " 
+//		      << imRefFreq_p << " " 
+//		      << conjFreq << " " 
+//		      << endl;
 
 		CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l);
 		TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
 		Bool doSquint=True; Complex tt;
 		//		Bool doSquint=False; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
-		aTerm.applySky(ftATerm_l, vb, doSquint, 0);
+		aTerm.applySky(ftATerm_l, vb, doSquint, 0, muellerElements(imx)(imy));
 		// {
 		//   ostringstream name;
 		//   name << "ftATerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
@@ -195,16 +196,15 @@ namespace casa{
 		// }
 		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
 		
-		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,conjFreq);
+		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,muellerElements(imx)(imy),conjFreq);
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
 
-		{
-		  // ostringstream name;
-		  // name << "ftTermSq" << "_" << muellerElements(imx)(imy) <<".im";
-		  // storeImg(name,ftATermSq_l);
-		}
-
+		//{
+		//   ostringstream name;
+		//   name << "ftTermSq" << "_" << muellerElements(imx)(imy) <<".im";
+		//   storeImg(name,ftATermSq_l);
+		//}
 		// TempImage<Complex> ftATermSq_l(pbshp,cs_l);
 		// ftATermSq_l.set(Complex(1.0,0.0));
 		// aTerm.applySky(ftATermSq_l, vb, False, 0);
@@ -665,6 +665,8 @@ namespace casa{
     //
     convSampling=aTerm_p->getOversampling();
     convSize=aTerm_p->getConvSize();
+//    cout<<"Conv Sampling listed in aipsrc is : "<<convSampling<<endl;
+//    cout<<"Conv Size is : "<<convSize<<endl;
     //
     // Make a two dimensional image to calculate auto-correlation of
     // the ideal illumination pattern. We want this on a fine grid in
@@ -672,17 +674,17 @@ namespace casa{
     //
     Int index= coords.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = coords.spectralCoordinate(index);
-    imRefFreq_p = spCS.referenceValue()(0);
+    imRefFreq_p=spCS.referenceValue()(0);
 
     index=coords.findCoordinate(Coordinate::DIRECTION);
     AlwaysAssert(index>=0, AipsError);
     DirectionCoordinate dc=coords.directionCoordinate(index);
     Vector<Double> sampling;
     sampling = dc.increment();
-    
+//    cout<<"The image sampling is set to :"<<sampling<<endl; 
     sampling*=Double(convSampling);
     sampling*=Double(nx)/Double(convSize);
-    
+//    cout<<"The resampled increment is :"<<sampling<<endl;
     dc.setIncrement(sampling);
     
     Vector<Double> unitVec(2);
@@ -758,7 +760,7 @@ namespace casa{
     conjPolMap = pop->getConjPolMat();
     conjPolIndexMap = pop->getConjPol2CFMat();
 
-    //    cerr << "AWCF: " << polMap << endl << polIndexMap << endl << conjPolMap << endl << conjPolIndexMap << endl;
+    cerr << "AWCF: " << polMap << endl << polIndexMap << endl << conjPolMap << endl << conjPolIndexMap << endl;
     
     // for(uInt ip=0;ip<pp.nelements();ip++)
     // 	pp(ip)=translateStokesToCrossPol(skyStokes(ip));
@@ -849,6 +851,7 @@ namespace casa{
 	// Set up the Mueller matrix, the co-ordinate system, freq, and
 	// wvalues in the CFBuffer for the currenct CFStore object.
 	//
+	cerr<<"Mueller matrix of row length:"<<polMap.nelements()<<" at the start of the CFBuf Loop" <<endl;
 	for (Int iw=0;iw<wConvSize;iw++) 
 	  {
 	    for(uInt inu=0;inu<freqValues.nelements(); inu++)
@@ -1351,7 +1354,6 @@ namespace casa{
 	    log_l << "Rotating the base CFB from PA=" << cfb->getCFCellPtr(0,0,0)->pa_p.getValue("deg") 
 		  << " to " << actualPA*57.2957795131 
 		  << " " << cfb->getCFCellPtr(0,0,0)->shape_p
-		  << " SPW: " << vb.spectralWindow() << " Field: " << vb.fieldId()
 		  << LogIO::POST;
 
 	    IPosition shp(cfb->shape());
