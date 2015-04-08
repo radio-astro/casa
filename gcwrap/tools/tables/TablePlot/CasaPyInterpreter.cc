@@ -41,6 +41,7 @@
 #include <casa/System/ProgressMeter.h>
 
 #include <tools/tables/TablePlot/CasaPyInterpreter.h>
+#include <Python.h>
 #include <numpy/arrayobject.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -55,79 +56,90 @@ CasaPyInterpreter::CasaPyInterpreter(Bool usegui)
 {
    String fnname= "CasaPyInterpreter"; 
    log = SLog::slog();   
-   // Start connecting to the currently running python interpreter
-   interp = PyModule_GetDict(PyImport_AddModule("__main__"));
-   if(!PyDict_GetItemString(interp, "__builtins__"))
+   PyGILState_STATE gstate;
+   gstate = PyGILState_Ensure();
+   try
    {
-      PyObject *builtinMod = PyImport_ImportModule("__builtin__");
-      log->out("Loading builtins", fnname, clname, LogMessage::DEBUGGING);
-      if(!builtinMod || 
-         PyDict_SetItemString(interp, "__builtins__", builtinMod))
-      {
-         log->out("Fail: load builtins", fnname, clname, LogMessage::DEBUGGING);
-      }
-      PyObject *plotlib = PyImport_ImportModule("pylab");
-      if(PyDict_SetItemString(interp, "pl", plotlib))
-         log->out("Fail: load pl", fnname, clname, LogMessage::DEBUGGING);
-         Py_DECREF(builtinMod);
-         Py_DECREF(plotlib);
-      }
-    if(!PyDict_GetItemString(interp, "pl")){
-      PyObject *plotlib = PyImport_ImportModule("pylab");
-      if(PyDict_SetItemString(interp, "pl", plotlib))
-         log->out("Fail: load pl", fnname, clname, LogMessage::DEBUGGING);
-         Py_DECREF(plotlib);
-    }
-      // Connected to the currently running python interpreter
+       // Start connecting to the currently running python interpreter
+       interp = PyModule_GetDict(PyImport_AddModule("__main__"));
+       if(!PyDict_GetItemString(interp, "__builtins__"))
+       {
+           PyObject *builtinMod = PyImport_ImportModule("__builtin__");
+           log->out("Loading builtins", fnname, clname, LogMessage::DEBUGGING);
+           if(!builtinMod || 
+              PyDict_SetItemString(interp, "__builtins__", builtinMod))
+           {
+               log->out("Fail: load builtins", fnname, clname, LogMessage::DEBUGGING);
+           }
+           PyObject *plotlib = PyImport_ImportModule("pylab");
+           if(PyDict_SetItemString(interp, "pl", plotlib))
+               log->out("Fail: load pl", fnname, clname, LogMessage::DEBUGGING);
+           Py_DECREF(builtinMod);
+           Py_DECREF(plotlib);
+       }
+       if(!PyDict_GetItemString(interp, "pl")){
+           PyObject *plotlib = PyImport_ImportModule("pylab");
+           if(PyDict_SetItemString(interp, "pl", plotlib))
+               log->out("Fail: load pl", fnname, clname, LogMessage::DEBUGGING);
+           Py_DECREF(plotlib);
+       }
+       // Connected to the currently running python interpreter
 
-      // Initialize/import the Numeric::arrayobject module
-      import_array();
+       // Initialize/import the Numeric::arrayobject module
+       import_array();
 
 #if LOG0
-      pyrunString("print dir()\n" ); 
-      pyrunString("print 'Interpreter created from TPPlotter !'\n" );
+       pyrunString("print dir()\n" ); 
+       pyrunString("print 'Interpreter created from TPPlotter !'\n" );
 #endif
-        
-      if(usegui) 
-         pyrunString("pl.ion()\n" );
-      else 
-         pyrunString("pl.ioff()\n");
-        
-      // Initialize the C++ - Python binder defined in PlotterGlobals.cc
-      initPyBind();
-        
-      // Import the C++ - Python binder into the interpreter.
-      pyrunString("import PyBind\n" );
-        
-      // Import the backend fudge code into the interpreter.
-      // TablePlotTkAgg.py in code/xmlcasa/scripts  implements PlotFlag
+
+       if(usegui) 
+           pyrunString("pl.ion()\n" );
+       else 
+           pyrunString("pl.ioff()\n");
+
+       // Initialize the C++ - Python binder defined in PlotterGlobals.cc
+       initPyBind();
+
+       // Import the C++ - Python binder into the interpreter.
+       pyrunString("import PyBind\n" );
+
+       // Import the backend fudge code into the interpreter.
+       // TablePlotTkAgg.py in code/xmlcasa/scripts  implements PlotFlag
 #if LOG0 
-      log->out("importing backend", fnname, clname, 
-               LogMessage::DEBUGGING);
+       log->out("importing backend", fnname, clname, 
+                LogMessage::DEBUGGING);
 #endif 
-      pyrunString("from TablePlotTkAgg import PlotFlag\n" );
-        
-        // Initialize PlotFlag.
+       pyrunString("from TablePlotTkAgg import PlotFlag\n" );
+
+       // Initialize PlotFlag.
 #if LOG0 
-      log->out("start backend", fnname, clname, 
-               LogMessage::DEBUGGING);
+       log->out("start backend", fnname, clname, 
+                LogMessage::DEBUGGING);
 #endif 
-      pyrunString("pf = PlotFlag(PyBind);\n" );
-        
-      //os.DebugMessage( "get curr fig manager " );
-      //pyrunString("figman = pl.get_current_fig_manager();\n" );
-      //pyrunString("pf.setup_custom_features(figman);\n\n" );
-        
+       pyrunString("pf = PlotFlag(PyBind);\n" );
+
+       //os.DebugMessage( "get curr fig manager " );
+       //pyrunString("figman = pl.get_current_fig_manager();\n" );
+       //pyrunString("pf.setup_custom_features(figman);\n\n" );
+
 #if LOG0 
-      pyrunString("print dir()\n" );
+       pyrunString("print dir()\n" );
 #endif
-        
-        
-      // Import modules that will be used for time-formatting.
-      pyrunString("import time\n" );
-      pyrunString("import datetime\n" );
-      pyrunString("from matplotlib.ticker import MaxNLocator\n");
-      pyrunString("from pylab import figure, show\n");
+
+
+       // Import modules that will be used for time-formatting.
+       pyrunString("import time\n" );
+       pyrunString("import datetime\n" );
+       pyrunString("from matplotlib.ticker import MaxNLocator\n");
+       pyrunString("from pylab import figure, show\n");
+   }
+   catch (...)
+   {
+       PyGILState_Release(gstate);
+       throw;
+   }
+   PyGILState_Release(gstate);
 }
 
 /*********************************************************************************/
@@ -142,7 +154,10 @@ CasaPyInterpreter::~CasaPyInterpreter()
 /*********************************************************************************/
 void CasaPyInterpreter::pyrunString( String cmd )
 {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
     PyRun_String( cmd.c_str(), Py_file_input, interp, interp );
+    PyGILState_Release(gstate);
     CheckPlotError(cmd);
 }
 /*********************************************************************************/
@@ -159,12 +174,18 @@ void CasaPyInterpreter::setupCustomGuiFeatures()
 void CasaPyInterpreter::CheckPlotError( String cmd )
 {
    PyObject *exc=NULL;
+   PyGILState_STATE gstate;
+   gstate = PyGILState_Ensure();
    exc = PyErr_Occurred();
    if(exc!=NULL) 
    {
       PyErr_Print();
+      PyGILState_Release(gstate);
       CasaPyInterpreterError(String("From Python : SEVERE : \n")+ 
              cmd + String(" : "));
+   }
+   else {
+      PyGILState_Release(gstate);
    }
 }
 

@@ -259,11 +259,7 @@ macro( casa_add_tools out_swig out_sources out_py )
     
     SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES CPLUSPLUS 1 )
 
-    IF ((${_base} STREQUAL msplot) OR (${_base} STREQUAL tableplot) OR (${_base} STREQUAL calplot))
-        SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR}")
-    ELSE()
-        SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR};-threads")
-    ENDIF()
+    SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR};-threads")
     #SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
     SWIG_ADD_MODULE(${_base} python ${_swigi} ${_swigstatics})
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}

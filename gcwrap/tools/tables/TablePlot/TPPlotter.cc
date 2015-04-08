@@ -71,6 +71,7 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/Logging/LogIO.h>
 
+#include <Python.h>
 
 namespace casa {  //# NAMESPACE CASA - BEGIN
 
@@ -773,7 +774,10 @@ TPPlotter::thePlot( BasePlot &BP,
 /*********************************************************************************/
 
 static void initialize_numpy( ) {
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
       import_array();
+      PyGILState_Release(gstate);
 }
 
 Int TPPlotter::initPlot()
@@ -1347,12 +1351,15 @@ Int TPPlotter::allocPlotArrays(Int size)
       if(nelem_p < size) 
       /* can't resize back to full size :-( memory leak !! */
       {
+         PyGILState_STATE gstate;
+         gstate = PyGILState_Ensure();
          //log->out( "Need to make larger");
          px_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
          py_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
 	 //Py_INCREF(px_p);
 	 //Py_INCREF(py_p);
          nelem_p = size;
+         PyGILState_Release(gstate);
 
          //log->out(String("Mem alloc for pyarray : ")
          //     +String::toString(2*size*sizeof(double)/(1024.0*1024.0))
@@ -1393,6 +1400,8 @@ Int TPPlotter::resizePlotArrays(Int numpoints)
    {
       npy_intp dim[1]; dim[0] = numpoints;
       // These are needed for numpy arrays.
+      PyGILState_STATE gstate;
+      gstate = PyGILState_Ensure();
       plotx_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,PyArray_DOUBLE,
                 PyArray_DATA((PyArrayObject *)px_p)));
       ploty_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,PyArray_DOUBLE,
@@ -1408,6 +1417,7 @@ Int TPPlotter::resizePlotArrays(Int numpoints)
       
       //os.DebugMessage("PyArrayObj size (after) : " 
       //        +String::toString((((PyArrayObject *)px_p)->dimensions)[0]));
+      PyGILState_Release(gstate);
    }
    return 0;
 }

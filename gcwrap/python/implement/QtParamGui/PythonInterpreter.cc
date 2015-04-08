@@ -25,6 +25,7 @@
 //#
 //# $Id: $
 #include <casaqt/QtParamGui/PythonInterpreter.h>
+#include <Python.h>
 
 namespace casa {
 
@@ -45,7 +46,12 @@ PythonInterpreter::~PythonInterpreter() {
         // call taskmanager::finalize because otherwise a stray process sticks
         // around indefinitely
         PyRun_String("tm.finalize()", Py_file_input, m_shell, m_shell);
-    } else if(!m_standalone && m_shell != NULL) Py_DECREF(m_shell);
+    } else if(!m_standalone && m_shell != NULL) {
+        PyGILState_STATE gstate;
+        gstate = PyGILState_Ensure();
+        Py_DECREF(m_shell);
+        PyGILState_Release(gstate);
+    }
 }
 
 bool PythonInterpreter::init(bool showLogger) {
@@ -93,8 +99,12 @@ void PythonInterpreter::command(String command) {
         ss << "print \"--> " << command << "\"\n" << command;
         if(m_standalone)
             PyRun_String(ss.str().c_str(), Py_file_input, m_shell, m_shell);
-        else
+        else {
+            PyGILState_STATE gstate;
+            gstate = PyGILState_Ensure();
             PyObject_CallMethod(m_shell, "runlines", "s", ss.str().c_str());
+            PyGILState_Release(gstate);
+        }
     }
 }
 
