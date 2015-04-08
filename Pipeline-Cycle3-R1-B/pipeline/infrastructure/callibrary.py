@@ -12,6 +12,7 @@ import asap
 
 from . import logging
 from . import utils
+from . import casatools
 
 LOG = logging.get_logger(__name__)
 
