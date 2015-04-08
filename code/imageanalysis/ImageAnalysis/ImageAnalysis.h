@@ -57,9 +57,8 @@ template<class T> class ImageHistograms;
 // please consult with me, dmehring@nrao.edu. If you add new methods to ImageAnalysis, I will contact
 // you to remove them. Please save us both the annoyance of that.
 
-class ImageAnalysis
-{
-  public:
+class ImageAnalysis {
+public:
 
     ImageAnalysis();
 
@@ -117,15 +116,6 @@ class ImageAnalysis
     	const String& mask, Record& regions,
     	const String& name, const Bool asdefault = True
     );
-
-    /*
-    SPIIF continuumsub(const String& outline,
-                                         const String& outcont, Record& region,
-                                         const Vector<int>& channels, 
-                                         const String& pol = "", 
-                                         const Int fitorder = 0, 
-                                         const Bool overwrite = false);
-	*/
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
@@ -293,7 +283,7 @@ class ImageAnalysis
         const Bool dropstokes=False, const Bool stokeslast=False,
         const Bool wavelength=False, const Bool airWavelength=False,
         const String& origin="", Bool stretch=False,
-	const Bool history=True
+        const Bool history=True
     );
 
     Bool toASCII(
@@ -346,21 +336,6 @@ class ImageAnalysis
     SPCIIC getComplexImage() const;
     SPIIC getComplexImage();
 
-/*
-    // If file name empty make TempImage (allowTemp=T) or do nothing.
-    // Otherwise, make a PagedImage from file name and copy mask and
-    // misc from inimage.   Returns T if image made, F if not
-    static SPIIF makeExternalImage (
-    	const String& fileName,
-    	const CoordinateSystem& cSys,
-    	const IPosition& shape,
-    	const ImageInterface<Float>& inImage,
-    	LogIO& os, Bool overwrite=False,
-    	Bool allowTemp=False,
-    	Bool copyMask=True
-    );
-    */
-
     Bool isFloat() const { return _imageFloat ? true : false; }
 
  private:
@@ -394,15 +369,6 @@ class ImageAnalysis
     	ImageRegion* pNewRegionRegion,
     	ImageRegion* pNewMaskRegion
     );
-    
-// Make a new image with given CS
-    void _make_image(
-    	const String &image,
-    	const CoordinateSystem& cSys,
-    	const IPosition& shape,
-    	Bool log=True,
-    	Bool overwrite=False, const String& type="f"
-    );
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
@@ -424,30 +390,9 @@ class ImageAnalysis
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
 
-    /*
-    //return a vector of the spectral axis values in units requested
-    //e.g "vel", "fre" or "pix"..specVal has to be sized already
-
-    SPIIF _fitpolynomial(
-    	const String& residfile,
-    	const String& fitfile,
-    	const String& sigmafile,
-    	const Int axis, const Int order,
-    	Record& region, const String& mask,
-    	const bool overwrite = false
-    );
-	*/
     void _onlyFloat(const String& method) const;
 
     template<class T> static void _destruct(ImageInterface<T>& image);
-
-    template<class T> Bool _setrestoringbeam(
-    	SPIIT image,
-    	const Quantity& major, const Quantity& minor,
-    	const Quantity& pa, const Record& rec,
-    	const bool deleteIt, const bool log,
-        Int channel, Int polarization
-    );
 
     template<class T> Record _summary(
     	const ImageInterface<T>& image,

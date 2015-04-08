@@ -580,7 +580,6 @@ void ImageProfileFitter::_fitallprofiles() {
 	_fitProfiles(fitImage, showProgress);
 }
 
-// moved from ImageUtilities
 void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 	IPosition inShape = _subImage->shape();
 	if (pFit) {
@@ -648,16 +647,6 @@ void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 			iter = goodPlanes.begin();
 		}
 		myGoodPlanes = std::set<uInt>(goodPlanes.begin(), goodPlanes.end());
-		/*
-		ostringstream planeMask;
-		planeMask << "indexin(" << _fitAxis << ", " << goodPlanes << ")";
-		*_getLog() << LogIO::NORMAL << "Planes used in fit: "
-			<< _goodPlanes << LogIO::POST;
-		fitData = SubImageFactory<Float>::createImage(
-			*_subImage, "", Record(), planeMask.str(),
-			False, False, False, False
-		);
-		*/
 	}
 	Bool checkMinPts = fitData->isMasked();
 	Array<Bool> fitMask;
@@ -695,8 +684,6 @@ void ImageProfileFitter::_loopOverFits(
 	const std::set<uInt> goodPlanes
 ) {
 	*_getLog() << LogOrigin(_class, __func__);
-	Array<Float> failData(sliceShape, NAN);
-	Array<Bool> failMask(sliceShape, False);
 	Lattice<Bool>* pFitMask = pFit && pFit->hasPixelMask()
 		&& pFit->pixelMask().isWritable()
 		? &(pFit->pixelMask())
@@ -737,12 +724,10 @@ void ImageProfileFitter::_loopOverFits(
 			newEstimates.add(*polyEl);
 		}
 	}
-
 	uInt nOrigComps = newEstimates.nelements();
 	Array<Double> (*xfunc)(const Array<Double>&) = 0;
 	Array<Double> (*yfunc)(const Array<Double>&) = 0;
-	Bool abscissaSet = abscissaValues.size() > 0;
-
+	Bool abscissaSet = ! abscissaValues.empty();
 	if (_nLTPCoeffs > 0) {
 		if (! abscissaSet) {
 			xfunc = casa::log;
@@ -798,29 +783,31 @@ void ImageProfileFitter::_loopOverFits(
 		_fitters(curPos).reset(new ProfileFitResults(fitter));
 		if (pFit || _residImage) {
 			_updateModelAndResidual(
-				pFit, fitSuccess, fitter, sliceShape, curPos,
-				pFitMask, pResidMask, failData, failMask
+				pFit, fitSuccess, fitter, sliceShape,
+				curPos, pFitMask, pResidMask
 			);
 		}
-		//++nFit;
 	}
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
     SPIIF pFit, Bool fitOK, const ImageFit1D<Float>& fitter,
-    const IPosition& sliceShape,
-    const IPosition& curPos, Lattice<Bool>* const &pFitMask,
-    Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
-    const Array<Bool>& failMask
+    const IPosition& sliceShape, const IPosition& curPos,
+    Lattice<Bool>* const &pFitMask,
+    Lattice<Bool>* const &pResidMask
 ) const {
-	Array<Bool> resultMask = fitter.getDataMask().reform(sliceShape);
+	static const Array<Float> failData(sliceShape, NAN);
+	static const Array<Bool> failMask(sliceShape, False);
+	Array<Bool> resultMask = fitOK
+		? fitter.getDataMask().reform(sliceShape)
+		: failMask;
 	if (pFit) {
 		pFit->putSlice (
 			(fitOK ? fitter.getFit().reform(sliceShape) : failData),
 			curPos
 		);
 		if (pFitMask) {
-			pFitMask->putSlice( (fitOK ? resultMask : failMask), curPos);
+			pFitMask->putSlice(resultMask, curPos);
 		}
 	}
 	if (_residImage) {
@@ -829,7 +816,7 @@ void ImageProfileFitter::_updateModelAndResidual(
 			curPos
 		);
 		if (pResidMask) {
-			pResidMask->putSlice( (fitOK ? resultMask : failMask), curPos);
+			pResidMask->putSlice(resultMask, curPos);
 		}
 	}
 }

@@ -300,8 +300,7 @@ private:
     void _updateModelAndResidual(
     	SPIIF pFit, Bool fitOK,	const ImageFit1D<Float>& fitter,
     	const IPosition& sliceShape, const IPosition& curPos,
-    	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask,
-    	const Array<Float>& failData, const Array<Bool>& failMask
+    	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask
     ) const;
 
 
