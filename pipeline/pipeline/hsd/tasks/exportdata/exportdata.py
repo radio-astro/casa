@@ -26,6 +26,7 @@ import tarfile
 import fnmatch
 import shutil
 import string
+import collections
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
@@ -196,28 +197,36 @@ class SDExportData(hif_exportdata.ExportData):
 
         self.init_visdict()
         
+        # Get the session list and the visibility files associated with
+        # each session.
+        input_vislist = map(lambda x: x.basename, inputs.context.observing_run.measurement_sets)
+        input_vislist2 = map(lambda x: x.name, inputs.context.observing_run.measurement_sets)
+        session_list, session_names, session_vislists \
+            = self._get_sessions (inputs.context, [], input_vislist2)
+        LOG.info('session_list, session_names, session_vislists=%s\n\t%s\n\t%s'%(session_list,session_names,session_vislists))
+            
         # Loop over the measurements sets in the working directory and 
         # save the final flags using the flag manager. 
         vislist = self._generate_vislist()
         flag_version_name = 'Pipeline_Final'
+        visdict2 = collections.defaultdict(list)
         for visfile in vislist:
             self._save_final_flagversion (visfile, flag_version_name)
+            basevis = os.path.basename(visfile)
+            if self.visdict.has_key(basevis):
+                visdict2[self.visdict[basevis]].append(basevis)
+            else:
+                visdict2[basevis].append(basevis)
     
         # Copy the final flag versions to the data products directory
         # and tar them up.
         flag_version_list = []
-        flagversionsdict= {}
-        for visfile in vislist:
-            flag_version_file = self._export_final_flagversion ( \
-                inputs.context, visfile, flag_version_name, \
-                inputs.products_dir)
+        flagversionsdict= collections.defaultdict(list)
+        for basevis, myvislist in visdict2.items():
+            flag_version_file = self._export_final_flagversion2(inputs.context, basevis, myvislist, flag_version_name, inputs.products_dir)
             flag_version_list.append(flag_version_file)
-            if self.visdict.has_key(os.path.basename(visfile)):
-                key = self.visdict[os.path.basename(visfile)]
-                if not flagversionsdict.has_key(key):
-                    flagversionsdict[key] = []
-                flagversionsdict[key].append(os.path.basename(flag_version_file))
-            
+            flagversionsdict[basevis].append(os.path.basename(flag_version_file))
+        LOG.info('flagversiondict=%s'%(flagversionsdict))
         
         # create the calibration apply file(s) in the products directory. 
         apply_file_list = []
@@ -228,14 +237,33 @@ class SDExportData(hif_exportdata.ExportData):
             if len(apply_file) > 0:
                 apply_file_list.append (apply_file)
                 applydict[os.path.basename(visfile)] = apply_file
+        LOG.info('applydict=%s'%(applydict))
 
+        # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
+        caltabledict = {}
+        for session_name, session_vislist in zip(session_names, session_vislists):
+            caltabledict[session_name] = self._export_final_calfiles(inputs.context, 
+                                                                     oussid, 
+                                                                     session_name, 
+                                                                     session_vislist, 
+                                                                     inputs.products_dir)
+        LOG.info('caltabledict=%s'%(caltabledict))
+        caltable_file_list = caltabledict.values()
+        
+        # Create the ordered session dictionary
+        #    The keys are the session names
+        #    The values are a tuple containing the vislist and the caltables 
+        for session_name, session_vislist in zip(session_names, session_vislists):
+            session = pipemanifest.set_session(ouss, session_name)
+            pipemanifest.add_caltables(session, caltabledict[session_name])
+            for vis_name in session_vislist:
+                basename = os.path.basename(vis_name)
+                pipemanifest.add_asdm (session, vis_name, flagversionsdict[basename][0],
+                                       applydict[basename])                
+            
         # Create fits files from CASA images
         imagelist, targetimages_fitslist = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
 
-        # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
-        caltabledict = self._export_caltable_file_list(inputs.context, inputs.products_dir)
-        caltable_file_list = caltabledict.values()
-        
         # Export a tar file of the web log
         weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
         
@@ -282,6 +310,8 @@ class SDExportData(hif_exportdata.ExportData):
      
     def init_visdict(self):
         self.visdict = {}
+        for ms in self.inputs.context.observing_run.measurement_sets:
+            self.visdict[ms.basename] = ms.basename
         for scantable in self.inputs.context.observing_run:
             original_vis = scantable.ms.basename
             if hasattr(scantable, 'exported_ms') and scantable.exported_ms is not None:
@@ -531,45 +561,114 @@ class SDExportData(hif_exportdata.ExportData):
             
         return imagelist, fits_list
      
-    def _export_caltable_file_list (self, context, products_dir):
+    def _export_final_calfiles(self, context, oussid, session, vislist, products_dir):
         """
-        Save flag_bl / Antenna are to be tar file
+        Save the final calibration tables in a tarfile one file
+        per session.
         """
-        list_of_tarname={}
-        if not self._executor._dry_run:
-            for ms in context.observing_run.measurement_sets:
-                vis = ms.basename
-                prefix = vis.replace('.ms','')
-                tar_filename = '.'.join([vis, 'caltables.tar.gz'])
-                list_of_tarname[vis] = tar_filename
-                LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
-                tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
-                antenna_list = [a.name for a in ms.antennas]
-                spw_list = [spw.id for spw in ms.spectral_windows
-                            if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
-                LOG.info('spw_list=%s'%(spw_list))
 
-                for antenna in antenna_list:
-                    namer = filenamer.CalibrationTable()
-                    namer.asdm(prefix)
-                    namer.antenna_name(antenna)
-                    namer.tsys_cal()
-                    name = namer.get_filename()
-                    if os.path.exists(name):
-                        tar.add(name)
-                    namer.sky_cal()
-                    name = namer.get_filename()
-                    if os.path.exists(name):
-                        tar.add(name)
-                    namer.bl_cal()
-                    for spw in spw_list:
-                        namer.spectral_window(spw)
-                        name = namer.get_filename()
-                        if os.path.exists(name):
-                            tar.add(name)
-                tar.close()
-        return list_of_tarname
+        # Save the current working directory and move to the pipeline
+        # working directory. This is required for tarfile IO
+        cwd = os.getcwd()
+        os.chdir (context.output_dir)
     
+        ousid = oussid + '.'
+    
+        # Define the name of the output tarfile
+        tarfilename = ousid + session + '.caltables.tar.gz'
+        LOG.info('Saving final caltables for %s in %s' % (session, tarfilename))
+    
+        # Create the tar file
+        if not self._executor._dry_run:
+            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
+            caltable_master_list = []
+            for visfile in vislist:
+    
+                LOG.info('Collecting final caltables for %s in %s' % \
+                (os.path.basename(visfile), tarfilename))
+    
+                # Create the list of applied caltables for that vis
+                caltable_list = []
+                callib = callibrary.CalState()
+                callib[visfile] = context.callibrary.applied[visfile]
+                callib_merged = callib.merged()
+                for calto, calfrom in callib_merged.iteritems():
+                    for item in calfrom:
+                        LOG.info('Adding %s'%(item.gaintable))
+                        caltable_list.append(os.path.basename(item.gaintable))
+    
+                # Merge the per vis list into the session list
+                caltable_master_list = list(set(caltable_master_list + \
+                                                caltable_list))
+                
+                # baseline table
+                for st in context.observing_run:
+                    if st.ms.name == visfile:
+                        spw_list = [spw.id for spw in st.ms.spectral_windows
+                                    if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
+                        namer = filenamer.CalibrationTable()
+                        prefix = os.path.basename(visfile).replace('.ms','')
+                        antenna = st.antenna.name
+                        namer.asdm(prefix)
+                        namer.antenna_name(antenna)
+                        namer.bl_cal()
+                        for spw in spw_list:
+                            namer.spectral_window(spw)
+                            name = namer.get_filename()
+                            LOG.info('baseline table name: %s'%(name))
+                            if os.path.exists(name):
+                                caltable_master_list.append(name)
+            LOG.info('caltable_master_list=%s'%(caltable_master_list))
+    
+            # Tar the session list.
+            for table in caltable_master_list:
+                tar.add(table)
+            tar.close()
+    
+        # Restore the original current working directory
+        os.chdir(cwd)
+    
+        return tarfilename
+
+#     def _export_caltable_file_list (self, context, products_dir):
+#         """
+#         Save flag_bl / Antenna are to be tar file
+#         """
+#         list_of_tarname={}
+#         if not self._executor._dry_run:
+#             for ms in context.observing_run.measurement_sets:
+#                 vis = ms.basename
+#                 prefix = vis.replace('.ms','')
+#                 tar_filename = '.'.join([vis, 'caltables.tar.gz'])
+#                 list_of_tarname[vis] = tar_filename
+#                 LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
+#                 tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
+#                 antenna_list = [a.name for a in ms.antennas]
+#                 spw_list = [spw.id for spw in ms.spectral_windows
+#                             if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
+#                 LOG.info('spw_list=%s'%(spw_list))
+# 
+#                 for antenna in antenna_list:
+#                     namer = filenamer.CalibrationTable()
+#                     namer.asdm(prefix)
+#                     namer.antenna_name(antenna)
+#                     namer.tsys_cal()
+#                     name = namer.get_filename()
+#                     if os.path.exists(name):
+#                         tar.add(name)
+#                     namer.sky_cal()
+#                     name = namer.get_filename()
+#                     if os.path.exists(name):
+#                         tar.add(name)
+#                     namer.bl_cal()
+#                     for spw in spw_list:
+#                         namer.spectral_window(spw)
+#                         name = namer.get_filename()
+#                         if os.path.exists(name):
+#                             tar.add(name)
+#                 tar.close()
+#         return list_of_tarname
+#     
     def _export_weblog (self, context, products_dir):
         """
         Save the processing web log to a tarfile
@@ -672,7 +771,7 @@ class SDExportData(hif_exportdata.ExportData):
     
         # Define the name of the output tarfile
         visname = os.path.basename(vis)
-        tarfilename = visname + '.flagversions.tar.gz'
+        tarfilename = self.visdict[visname] + '.flagversions.tar.gz'
         LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
     
         # Define the directory to be saved
@@ -694,6 +793,55 @@ class SDExportData(hif_exportdata.ExportData):
             tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
             tar.add (flagsname)
             tar.addfile (ti, StringIO.StringIO(line))
+            tar.close()
+    
+        # Restore the original current working directory
+        os.chdir(cwd)
+    
+        return tarfilename
+    
+    def _export_final_flagversion2(self, context, basevis, vislist, flag_version_name,
+                                  products_dir):
+        """
+        Save the final flags version to a compressed tarfile in products.
+        """
+        # Save the current working directory and move to the pipeline
+        # working directory. This is required for tarfile IO
+        cwd = os.getcwd()
+        #os.chdir (os.path.dirname(vis))
+        os.chdir(context.output_dir)
+    
+        # Define the name of the output tarfile
+        basevisname = os.path.basename(basevis)
+        tarfilename = basevisname + '.flagversions.tar.gz'
+        LOG.info('Storing final flags for %s in %s' % (basevisname, tarfilename))
+    
+        export_dir_list = []
+        export_file_list = []
+        for visname in vislist:
+            # Define the directory to be saved
+            flagsname = os.path.join (visname + '.flagversions',
+                                      'flags.' + flag_version_name) 
+            LOG.info('Saving flag version %s' % (flag_version_name))
+            export_dir_list.append(flagsname)
+    
+            # Define the versions list file to be saved
+            flag_version_list = os.path.join (visname + '.flagversions',
+                                              'FLAG_VERSION_LIST')
+            ti = tarfile.TarInfo(flag_version_list)
+            #line = "Pipeline_Final : Final pipeline flags\n"
+            line = "%s : Final pipeline flags\n" % flag_version_name
+            ti.size = len (line)
+            LOG.info('Saving flag version list')
+            export_file_list.append((ti, line))
+    
+        # Create the tar file
+        if not self._executor._dry_run:
+            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
+            for flagsname in export_dir_list:
+                tar.add (flagsname)
+            for (ti, line) in export_file_list:
+                tar.addfile (ti, StringIO.StringIO(line))
             tar.close()
     
         # Restore the original current working directory
