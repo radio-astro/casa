@@ -2880,14 +2880,7 @@ ia.close()              # The Image tool is detached from the image again, using
      </param>
   
      <param type="string"  name="pol">
-     <description>Polarization to process.  String from
-     "I Q U V XX RR" etc.  Default is unset.</description>
-     <value>I</value>
-     <value>Q</value>
-     <value>U</value>
-     <value>V</value>
-     <value>XX</value>
-     <value>RR</value>
+     <description>THIS PARAMETER IS NO LONGER SUPPORTED. USE THE region PARAMETER TO CHOOSE WHICH POLARIZATIONS YOU WOULD LIKE TO PROCESS</description>
      <value></value>
      </param>
   
@@ -2913,22 +2906,15 @@ spectral axis.
 The user specifies region, the region of the input image over which
 continuum subtraction is desired (otherwise the whole image will be
 treated); channels, the subset of channels on the spectral axis to use
-in the continuum estimation, specified as a vector; pol, the desired
-single polarization to treat (otherwise all pols, if a polarization axis
-exists, will be treated); fitorder, the polynomial order to use in the
+in the continuum estimation, specified as a vector;
+fitorder, the polynomial order to use in the
 estimation.  Optionally, output line and continuum images may be written
 by specifying outline and outcont, respectively.  If outline is not
 specified, a virtual image tool is all that is produced.  If outcont is
 not specified, the output continuum image will be written in
-'continuumsub.im'. 
-
-<!-- In principle, the region may be specified interactively, e.g., using
-the viewer. At the moment, such regions are typically degenerate on
-the spectral axis, and so must be manually extended along the this
-axis, or continuumsub will complain about insufficient spectral
-channels in the region of interest.  Interface improvements in the
-management of regions currently under consideration will improve the
-mechanism for doing this. -->
+'continuumsub.im'. Note that the pol parameter is no longer supported; one
+should use the region parameter if polarization selection is desired, in
+conformance with other ia tool methods.
 
 </description>
 
@@ -2962,7 +2948,7 @@ of the original image).
 print "\t----\t continuumsub Ex 2 \t----"
 ia.fromarray(outfile='test.data',
              pixels=ia.makearray(0, [64, 64, 4, 128]), overwrite=true)
-im2csub=ia.continuumsub(channels=range(3,9)+range(54,61),pol='I',fitorder=2)
+im2csub=ia.continuumsub(channels=range(3,9)+range(54,61),fitorder=2)
 im2csub.done()
 ia.close()
 #
@@ -4361,6 +4347,10 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="string"  name="outsigma">
             <description>Name of output image used for standard deviations. Ignored if sigma is empty.</description>
+            <value/>
+        </param>
+        <param type="intArray"  name="planes">
+            <description>Planes along fit axis to use in the fit. Empty means use all planes. All values must be non-negative.</description>
             <value/>
         </param>
     </input>

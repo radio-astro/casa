@@ -5157,18 +5157,6 @@ def imagetest(which=None, size=[32,32,8]):
         try:
             myim2 = true
             note('Expect SEVERE error and Exception here')
-            #myim2 = myim.continuumsub(lineOut, contOut, pol='DOGGIES',
-            #                          overwrite=T)
-            myim2 = myim.continuumsub(lineOut, contOut, pol='??',
-                                      overwrite=T)
-        except Exception, e:
-            note('Caught expected Exception: '+str(e))
-            myim2 = false
-        if myim2:
-            stop('continuumsub 3 unexpectedly did not fail')
-        try:
-            myim2 = true
-            note('Expect SEVERE error and Exception here')
             myim2 = myim.continuumsub(lineOut, contOut, fitorder=-2,
                                       overwrite=T)
         except Exception, e:

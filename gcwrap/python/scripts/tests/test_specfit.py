@@ -170,6 +170,7 @@ class specfit_test(unittest.TestCase):
     def tearDown(self):
         os.remove(twogauss)
         os.remove(polyim)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def checkImage(self, gotImage, expectedName):
         expected = iatool()                                
@@ -658,7 +659,6 @@ class specfit_test(unittest.TestCase):
                 c[1, i, j] = 5 + 0.1*(0.5*i*i + 0.2*j)
                 c[2, i, j] = 0.1*(2*i - 0.2*j*j)
                 #c[3, i, j] = (0.001)*(0.1*i + 0.2*j)
-                print "coeffs ", c[:, i, j]
                 cubic = fn.polynomial(c[:, i, j])
                 amp[0, i, j] = 50 + 0.02*i - 0.03*j
                 center[0, i, j] = 90 + 0.01*i - 0.03*j
@@ -855,8 +855,6 @@ class specfit_test(unittest.TestCase):
                     exp = 16
                 else:
                     exp = 6
-                    #print "valid " + str(res["valid"])
-                    #print "*** fwhm " + str(res["gs"]["fwhm"])
                 self.assertTrue(res["valid"].sum() == exp)
             i = i+1
           
@@ -925,7 +923,6 @@ class specfit_test(unittest.TestCase):
                                 self.assertTrue((abs(res["gs"]["fwhmErr"][8,8,0,0,:] - expfwhmerrtrue[str(birdiesigma)]) < 1e-7).all())
                             else:
                                 self.assertTrue(abs(res["gs"]["fwhm"][0,0,0,0,0] - expfwhmfalse[str(birdiesigma)]) < 1e-7)
-                                print "*** got " + str(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]))
                                 self.assertTrue(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]) < 1e-5)
                             myia.open(outsigma)
                             if (birdiesigma == 0 or birdiesigma == 1):
@@ -952,6 +949,57 @@ class specfit_test(unittest.TestCase):
         myia.done()
         self.assertTrue((got == expec).all())
 
+    def test_planes(self):
+        """Test setting planes to use for fit"""
+        myia = iatool()
+        myia.fromshape("", [1, 1, 20])
+        myia.setbrightnessunit("Jy/pixel")
+        bb = myia.getchunk()
+        for i in range(20):
+            bb[:,:,i] = 0.2 - 0.3*i + 0.04*i*i
+        bb[:,:,5] = 1000
+        bb[:,:,10] = 1000
+        bb[:,:,15] = 1000
+        myia.putchunk(bb)
+        residual = "bad.im"
+        res = myia.fitprofile(ngauss=0, poly=2, residual=residual)
+        zz = range(20)
+        del zz[15]
+        del zz[10]
+        del zz[5]
+        mask = "indexin(2," + str(zz) +")"
+        tt = iatool()
+        tt.open(residual)
+        stats = tt.statistics(mask=mask)
+        tt.done()
+        self.assertTrue(stats['rms'][0] > 100)
+        residual = "good1.im"
+        res2 = myia.fitprofile(ngauss=0, poly=2, planes=zz, residual=residual)
+        tt.open(residual)
+        stats = tt.statistics(mask=mask)
+        tt.done()
+        self.assertTrue(stats['rms'][0] < 1e-6)
+        residual = "good2.im"
+        res3 = myia.fitprofile(
+            ngauss=0, poly=2, planes=zz, residual=residual,
+            region=rg.box([0,0,2], [0,0,18])
+        )
+        tt.open(residual)
+        mask = mask = "indexin(2,[0, 1, 2, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15])"
+        stats = tt.statistics(mask=mask)
+        tt.done()
+        self.assertTrue(stats['rms'][0] < 1e-6)
+        residual = "good3.im"
+        res4 = myia.fitprofile(
+            ngauss=0, poly=2, planes=zz, residual=residual,
+            region=rg.box([0,0,6], [0,0,18])
+        )
+        tt.open(residual)
+        mask = mask = "indexin(2,[0, 1, 2, 3, 5, 6, 7, 8, 10, 11])"
+        stats = tt.statistics(mask=mask)
+        tt.done()
+        self.assertTrue(stats['rms'][0] < 1e-6)
+        myia.done()
 
 def suite():
     return [specfit_test]

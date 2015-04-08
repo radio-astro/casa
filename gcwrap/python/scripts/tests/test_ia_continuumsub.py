@@ -87,7 +87,6 @@ class ia_continuumsub_test(unittest.TestCase):
         chunk = myia.getchunk()
         for i in range(20):
             for j in range(4):
-                print "i " + str(i) + " j " + str(j)
                 chunk[2, 2, i, j] = i
         myia.putchunk(chunk)
         myia.setrestoringbeam("3arcsec","2arcsec", "4deg", channel=10)
@@ -95,9 +94,9 @@ class ia_continuumsub_test(unittest.TestCase):
             for j in range(4):
                 major=qa.quantity(i+4*j+4,"arcsec")
                 myia.setrestoringbeam(major,"2arcsec","4deg",channel=i, polarization=j)
-        reg = rg.box(blc=[2, 2, 3, 0], trc=[2, 2, 17, 3])
+        reg = rg.box(blc=[2, 2, 3, 2], trc=[2, 2, 17, 2])
         outcont = "line.im"
-        resid = myia.continuumsub(outcont=outcont, fitorder=1, region=reg, pol="U")
+        resid = myia.continuumsub(outcont=outcont, fitorder=1, region=reg)
         for i in range(resid.shape()[2]):
             exp = qa.quantity(i+15, "arcsec")
             got = resid.restoringbeam(channel=i)["major"]

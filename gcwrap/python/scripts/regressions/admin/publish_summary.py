@@ -55,6 +55,8 @@ class runTest:
                  REDIRECT=True,
                  PY_PROFILE=True):
         """cleanup: set to False to keep data around.
+        WORKING_DIR: directory for intermediate files
+        RESULT_DIR: directory where final products go
         CPP_PROFILE: set to True to enable C++ profiling.  This requires that the command 'sudo opcontrol' must work.  You also need the 'dot' tool distributed as part of graphviz.  Run 'dot -Txxx' to verify that your dot installation supports PNG images.
         Note, a profile is created only for the casapy process. If you want to include profiles for async / child processes, refer to the documentation for opreport."""
         casalog.showconsole(onconsole=True)

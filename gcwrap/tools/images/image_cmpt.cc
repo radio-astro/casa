@@ -976,6 +976,59 @@ image* image::continuumsub(
 		if (detached()) {
 			return 0;
 		}
+		ThrowIf(in_fitorder < 0, "Polynomial order cannot be negative");
+		if (! pol.empty()) {
+			_log << LogIO::NORMAL << "The pol parameter is no longer "
+				<< "supported and will be removed in the near future. "
+				<< "Please set the region parameter appropriately "
+				<< "to select the polarization in which you are interested."
+				<< LogIO::POST;
+		}
+		SHARED_PTR<Record> leRegion = _getRegion(region, False);
+		vector<Int> planes = channels;
+		if (planes.size() == 1 && planes[0] == -1) {
+			planes.resize(0);
+		}
+		Int spectralAxis = _image->getImage()->coordinates().spectralAxisNumber();
+		ThrowIf(spectralAxis < 0, "This image has no spectral axis");
+		ImageProfileFitter fitter(
+		_image->getImage(), "", leRegion.get(),
+			"", "", "", "", spectralAxis,
+			0, "", SpectralList()
+		);
+		fitter.setDoMultiFit(True);
+		fitter.setPolyOrder(in_fitorder);
+		fitter.setModel(outcont);
+		fitter.setResidual(outline);
+		fitter.setStretch(False);
+		fitter.setLogResults(False);
+		if (! planes.empty()) {
+			std::set<int> myplanes(planes.begin(), planes.end());
+			ThrowIf(*myplanes.begin() < 0, "All planes must be nonnegative");
+			fitter.setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
+		}
+		fitter.createResidualImage(True);
+		fitter.fit();
+		return new image(fitter.getResidual());
+	}
+	catch (const AipsError& x) {
+		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+/*
+image* image::continuumsub(
+	const string& outline, const string& outcont,
+	const variant& region, const vector<int>& channels,
+	const string& pol, const int in_fitorder, const bool overwrite
+) {
+	try {
+		_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
 		SHARED_PTR<Record> leRegion = _getRegion(region, False);
 		Vector<Int> theChannels(channels);
 		if (theChannels.size() == 1 && theChannels[0] == -1) {
@@ -999,6 +1052,7 @@ image* image::continuumsub(
 		RETHROW(x);
 	}
 }
+*/
 
 record* image::convertflux(
 	const variant& qvalue, const variant& major,
@@ -1763,7 +1817,7 @@ record* image::fitprofile(const string& box, const variant& region,
     const vector<double>& goodamprange,
     const vector<double>& goodcenterrange,
     const vector<double>& goodfwhmrange, const variant& sigma,
-    const string& outsigma
+    const string& outsigma, const vector<int>& planes
 ) {
 	_log << LogOrigin(_class, __func__);
 	if (detached()) {
@@ -1882,6 +1936,11 @@ record* image::fitprofile(const string& box, const variant& region,
 		fitter.setMinGoodPoints(minpts > 0 ? minpts : 0);
 		fitter.setStretch(stretch);
 		fitter.setLogResults(logResults);
+		if (! planes.empty()) {
+			std::set<int> myplanes(planes.begin(), planes.end());
+			ThrowIf(*myplanes.begin() < 0, "All planes must be nonnegative");
+			fitter.setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
+		}
 		if (! logfile.empty()) {
 			fitter.setLogfile(logfile);
 			fitter.setLogfileAppend(append);
