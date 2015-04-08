@@ -45,7 +45,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
   <returns type="bool"/>
 </method>
 
-<method type="function" name="processor_origin">
+<method type="function" name="processorOrigin">
 	<shortdescription>Set the CASA processor origin</shortdescription>
 	<description>Sets the CASA processor origin which is shown at the end of each log origin</description>
 	<input>

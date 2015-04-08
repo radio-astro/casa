@@ -126,7 +126,7 @@ bool logsink::origin(const std::string &fromwhere)
 
 // jagonzal: Allow to set the processor origin (normally "casa"
 // but in the MPI case we use the hostname and rank involved)
-bool logsink::processor_origin(const std::string &fromwhere)
+bool logsink::processorOrigin(const std::string &fromwhere)
 {
 	bool rstat = true;
 

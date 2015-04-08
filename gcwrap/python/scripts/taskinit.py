@@ -111,7 +111,7 @@ casalog.setglobal(True)
 # Set processor origin (normally "casa" but in the MPI case we use the hostname and rank involved)
 from mpi4casa.MPIEnvironment import MPIEnvironment
 processor_origin = MPIEnvironment.processor_origin
-casalog.processor_origin(processor_origin)
+casalog.processorOrigin(processor_origin)
 
 # Set showconsole to false for MPIServers
 casalog.showconsole(MPIEnvironment.log_to_console)
