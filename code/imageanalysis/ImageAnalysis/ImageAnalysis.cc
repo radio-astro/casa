@@ -757,7 +757,7 @@ Bool ImageAnalysis::calcmask(
 		);
 	return res;
 }
-
+/*
 SPIIF ImageAnalysis::continuumsub(
 	const String& outline, const String& outcont,
 	Record& region, const Vector<Int>& channels, const String& pol,
@@ -870,6 +870,7 @@ SPIIF ImageAnalysis::continuumsub(
 	}
 	return rstat;
 }
+*/
 
 CoordinateSystem ImageAnalysis::coordsys(const Vector<Int>& pixelAxes) {
 	*_log << LogOrigin(className(), __func__);
@@ -1196,6 +1197,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
+/*
 SPIIF ImageAnalysis::_fitpolynomial(
 	const String& residFile, const String& fitFile,
 	const String& sigmaFile, const Int axis, const Int order,
@@ -1329,6 +1331,7 @@ SPIIF ImageAnalysis::_fitpolynomial(
 	// Return residual image
 	return pResid;
 }
+*/
 
 SPCIIC ImageAnalysis::getComplexImage() const {
 	ThrowIf(
@@ -3176,7 +3179,7 @@ void ImageAnalysis::_make_image(
         );
     }
 }
-
+/*
 SPIIF ImageAnalysis::makeExternalImage(
 	const String& fileName, const CoordinateSystem& cSys,
 	const IPosition& shape, const ImageInterface<Float>& inImage,
@@ -3222,6 +3225,7 @@ SPIIF ImageAnalysis::makeExternalImage(
 	}
 	return image;
 }
+*/
 
 CoordinateSystem* ImageAnalysis::makeCoordinateSystem(
 		const Record& coordinates, const IPosition& shape) const {

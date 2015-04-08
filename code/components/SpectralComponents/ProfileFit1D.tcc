@@ -179,7 +179,7 @@ void ProfileFit1D<T>::clearList ()
 
 
 template <class T> 
-Bool ProfileFit1D<T>::setRangeMask (const Vector<uInt>& start,
+Bool ProfileFit1D<T>::setXRangeMask (const Vector<uInt>& start,
                                     const Vector<uInt>& end,
                                     Bool insideIsGood)
 {
@@ -218,7 +218,7 @@ Bool ProfileFit1D<T>::setRangeMask (const Vector<uInt>& start,
 
 
 template <class T> 
-Bool ProfileFit1D<T>::setRangeMask (const Vector<T>& start,
+Bool ProfileFit1D<T>::setXRangeMask (const Vector<T>& start,
                                     const Vector<T>& end,
                                     Bool insideIsGood)
 {
@@ -270,7 +270,26 @@ Bool ProfileFit1D<T>::setRangeMask (const Vector<T>& start,
       }
    }
 //
-   return setRangeMask (startIndex, endIndex);
+   return setXRangeMask (startIndex, endIndex);
+}
+
+template <class T>
+Bool ProfileFit1D<T>::setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood) {
+	const uInt n = itsX.nelements();
+	ThrowIf(n == 0, "Logic Error: setData() must be called prior to setRangeMask()");
+	itsRangeMask.resize(n);
+	itsRangeMask = ! specifiedPixelsAreGood;
+	if (indices.empty()) {
+		return True;
+	}
+	std::set<uInt>::const_iterator iter = indices.begin();
+	std::set<uInt>::const_iterator end = indices.end();
+
+	while (iter != end && *iter < n) {
+		itsRangeMask[*iter] = specifiedPixelsAreGood;
+		++iter;
+	}
+	return True;
 }
 
 

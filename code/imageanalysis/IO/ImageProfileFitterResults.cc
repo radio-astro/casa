@@ -182,7 +182,6 @@ void ImageProfileFitterResults::_marshalFitResults(
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-	//Array<SHARED_PTR<ProfileFitResults> >::const_iterator fitter = _fitters->begin();
 	const CoordinateSystem& csysSub = _subImage->coordinates();
 	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
 		? &csysSub.directionCoordinate() : 0;
@@ -194,7 +193,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 	IPosition pixel;
 	Double increment = fabs(_fitAxisIncrement());
 	for (
-		inIter.reset();	! inIter.atEnd(); inIter++
+		inIter.reset();	! inIter.atEnd(); ++inIter
 	) {
         IPosition pixel = inIter.position();
         SHARED_PTR<const ProfileFitResults> fitter = (*_fitters)(pixel);
@@ -495,7 +494,7 @@ void ImageProfileFitterResults::_setResults() {
 	const String yUnit = _subImage->units().getName();
 	_results.define("yUnit", yUnit);
     _results.define( "type", typeArr);
-	for (uInt i=0; i<_nGaussMultiplets+_nOthers; i++) {
+	for (uInt i=0; i<_nGaussMultiplets+_nOthers; ++i) {
 		if (i == _gsPlane && _nGaussSinglets == 0) {
 			continue;
 		}
@@ -575,10 +574,10 @@ String ImageProfileFitterResults::_getTag(const uInt i) const {
 }
 
 void ImageProfileFitterResults::_insertPCF(
-	vector<vector<Array<Double> > >& pcfArrays, /*Bool& isSolutionSane,*/
+	vector<vector<Array<Double> > >& pcfArrays,
 	const IPosition& pixel, const PCFSpectralElement& pcf,
 	const uInt idx, const uInt col,
-	const Double increment/*, const uInt npix*/
+	const Double increment
 ) const {
     IPosition x = pixel;
     x.append(IPosition(1, col));
@@ -744,9 +743,9 @@ Double ImageProfileFitterResults::_fitAxisIncrement() const {
 	}
 }
 
-const Vector<Double> ImageProfileFitterResults::getPixelCenter( uint index ) const {
+const Vector<Double> ImageProfileFitterResults::getPixelCenter(uint index) const {
 	Vector<Double> pos;
-	if ( index < _pixelPositions.size()){
+	if ( index < _pixelPositions.size()) {
 		pos = _pixelPositions[index];
 	}
 	return pos;
@@ -1315,7 +1314,7 @@ void ImageProfileFitterResults::_makeSolutionImage(
 	// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
 	Array<Bool> nanInfMask = ! (isNaN(values) || isInf(values));
 	Vector<Float>::iterator jiter = dataCopy.begin();
-	for (iter=values.begin(); iter!=values.end(); iter++, jiter++) {
+	for (iter=values.begin(); iter!=values.end(); ++iter, ++jiter) {
 		*jiter = (Float)*iter;
 	}
 	image.put(dataCopy.reform(shape));

@@ -118,12 +118,14 @@ class ImageAnalysis
     	const String& name, const Bool asdefault = True
     );
 
+    /*
     SPIIF continuumsub(const String& outline,
                                          const String& outcont, Record& region,
                                          const Vector<int>& channels, 
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
+	*/
 
     CoordinateSystem coordsys(const Vector<int>& axes);
 
@@ -344,7 +346,7 @@ class ImageAnalysis
     SPCIIC getComplexImage() const;
     SPIIC getComplexImage();
 
-
+/*
     // If file name empty make TempImage (allowTemp=T) or do nothing.
     // Otherwise, make a PagedImage from file name and copy mask and
     // misc from inimage.   Returns T if image made, F if not
@@ -357,6 +359,7 @@ class ImageAnalysis
     	Bool allowTemp=False,
     	Bool copyMask=True
     );
+    */
 
     Bool isFloat() const { return _imageFloat ? true : false; }
 
@@ -421,6 +424,7 @@ class ImageAnalysis
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
 
+    /*
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
@@ -432,7 +436,7 @@ class ImageAnalysis
     	Record& region, const String& mask,
     	const bool overwrite = false
     );
-
+	*/
     void _onlyFloat(const String& method) const;
 
     template<class T> static void _destruct(ImageInterface<T>& image);

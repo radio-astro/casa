@@ -151,7 +151,8 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, Bool dropDegenerateAxes,
-	Bool overwrite, Bool list, Bool extendMask
+	Bool overwrite, Bool list, Bool extendMask,
+	Bool attachMask
 ) {
 	LogIO log;
 	log << LogOrigin("SubImageFactory", __func__);
@@ -172,7 +173,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 		if (image.hasPixelMask()) {
 			mymask = mymask && image.pixelMask().get();
 		}
-		if (! allTrue(mymask)) {
+		if (attachMask || ! allTrue(mymask)) {
 			newImage.attachMask(ArrayLattice<Bool>(mymask));
 		}
 	}

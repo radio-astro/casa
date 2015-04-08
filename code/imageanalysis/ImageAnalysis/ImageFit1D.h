@@ -242,6 +242,13 @@ public:
     Vector<T> getResidual (Int which=-1, Bool fit=True)  const;
     //</group>
 
+    Bool setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood) {
+    	return itsFitter.setXMask(indices, specifiedPixelsAreGood);
+    }
+
+    // get data mask
+    Vector<Bool> getDataMask () const {return itsFitter.getDataMask();};
+
     // Get Total Mask (data and range mask)
     Vector<Bool> getTotalMask () const {return itsFitter.getTotalMask();};
 

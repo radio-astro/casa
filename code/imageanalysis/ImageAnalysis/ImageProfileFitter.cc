@@ -46,7 +46,7 @@ namespace casa {
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
-		const SPCIIF image, const String& region,
+	const SPCIIF image, const String& region,
 	const Record *const &regionPtr,	const String& box,
 	const String& chans, const String& stokes,
 	const String& mask, const Int axis,
@@ -61,13 +61,13 @@ ImageProfileFitter::ImageProfileFitter(
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	_deleteImageOnDestruct(False), _logResults(True), _polyOrder(-1),
+	_deleteImageOnDestruct(False), _logResults(True),
+	_isSpectralIndex(False), _createResid(False), _polyOrder(-1),
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
 	_nLorentzSinglets(0), _nPLPCoeffs(0), _nLTPCoeffs(0),
-	_minGoodPoints(1), _results(Record()),
-	_nonPolyEstimates(), _goodAmpRange(),
-	_goodCenterRange(), _goodFWHMRange(),
-	_sigma(), _abscissaDivisor(1.0) {
+	_minGoodPoints(1), _results(Record()), _nonPolyEstimates(),
+	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
+	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
 	*_getLog() << LogOrigin(_class, __func__);
     if (! estimatesFilename.empty()) {
     	ThrowIf(
@@ -552,88 +552,48 @@ Double ImageProfileFitter::getWorldValue(
 
 void ImageProfileFitter::_fitallprofiles() {
 	*_getLog() << LogOrigin(_class, __func__);
-	/*
-	IPosition imageShape = _subImage->shape();
-	// Set default axis
-	CoordinateSystem cSys = _subImage->coordinates();
-	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
-	Int axis2 = _fitAxis;
-	if (axis2 < 0) {
-		if (pAxis != -1) {
-			axis2 = pAxis;
-		}
-		else {
-			axis2 = _subImage->ndim() - 1;
-		}
-	}
-	*/
 	// Create output images with a mask
-	SHARED_PTR<ImageInterface<Float> > fitImage, residImage;
+	SPIIF fitImage;
 	if (
 		! _model.empty()
 		&& ! (
 			fitImage = SubImageFactory<Float>::createImage(
-				*_subImage, _model, Record(), "", False, False ,True, False
+				*_subImage, _model, Record(), "",
+				False, False ,True, False, True
 			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create model image" << LogIO::POST;
 	}
 	if (
-		! _residual.empty()
+		(! _residual.empty() || _createResid)
 		&& ! (
-			residImage = SubImageFactory<Float>::createImage(
-				*_subImage, _residual, Record(), "", False, False ,True, False
+			_residImage = SubImageFactory<Float>::createImage(
+				*_subImage, _residual, Record(), "",
+				False, False ,True, False, True
 			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create residual image" << LogIO::POST;
 	}
-	// Do fits
-	// FIXME give users the option to show a progress bar
 	Bool showProgress = True;
-	_fitProfiles(
-		fitImage, residImage,
-		showProgress
-	);
+	_fitProfiles(fitImage, showProgress);
 }
 
 // moved from ImageUtilities
-void ImageProfileFitter::_fitProfiles(
-	const SPIIF pFit, const SPIIF pResid,
-    const Bool showProgress
-) {
+void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 	IPosition inShape = _subImage->shape();
-	if (pFit.get()) {
+	if (pFit) {
 		AlwaysAssert(inShape.isEqual(pFit->shape()), AipsError);
 	}
-	if (pResid.get()) {
-		AlwaysAssert(inShape.isEqual(pResid->shape()), AipsError);
+	if (_residImage) {
+		AlwaysAssert(inShape.isEqual(_residImage->shape()), AipsError);
 	}
-
-	// Check axis
-
 	const uInt nDim = _subImage->ndim();
-
-	// Progress Meter
-
-	std::auto_ptr<ProgressMeter> pProgressMeter(0);
-
-	Lattice<Bool>* pFitMask = 0;
-	if (pFit.get() && pFit->hasPixelMask() && pFit->pixelMask().isWritable()) {
-		pFitMask = &(pFit->pixelMask());
-	}
-	Lattice<Bool>* pResidMask = 0;
-	if (pResid.get() && pResid->hasPixelMask() && pResid->pixelMask().isWritable()) {
-		pResidMask = &(pResid->pixelMask());
-	}
 	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
-	Array<Float> failData(sliceShape, NAN);
-	Array<Bool> failMask(sliceShape, False);
 	Array<Float> resultData(sliceShape);
 	Array<Bool> resultMask(sliceShape);
-
     String doppler = "";
 	CoordinateSystem csys = _subImage->coordinates();
 	if (_isSpectralIndex) {
@@ -652,63 +612,113 @@ void ImageProfileFitter::_fitProfiles(
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
 		), errMsg
 	);
-	uInt nProfiles = 0;
-	uInt nFit = 0;
+	// uInt nFit = 0;
 	IPosition fitterShape = inShape;
 	fitterShape[_fitAxis] = 1;
 	_fitters.resize(fitterShape);
-
 	Int nPoints = fitterShape.product();
-
+	SHARED_PTR<ProgressMeter> pProgressMeter;
 	if (showProgress) {
 		ostringstream oss;
 		oss << "Fit profiles on axis " << _fitAxis+1;
 		pProgressMeter.reset(
-			new ProgressMeter(
-				0, nPoints, oss.str()
-			)
+			new ProgressMeter(0, nPoints, oss.str())
 		);
 	}
-	vector<IPosition> goodPos(0);
-	Bool checkMinPts = _subImage->isMasked();
+	SPIIF fitData = _subImage;
+	std::set<uInt> myGoodPlanes;
+	if (! _goodPlanes.empty()) {
+		IPosition origin(_subImage->ndim(), 0);
+		Vector<Double> world(_subImage->ndim(), 0);
+		csys.toWorld(world, origin);
+		const CoordinateSystem imcsys = _getImage()->coordinates();
+		Int imageOff = Int(imcsys.toPixel(world)[_fitAxis] + 0.5);
+		AlwaysAssert(imageOff >= 0, AipsError);
+		std::vector<Int> goodPlanes(_goodPlanes.begin(), _goodPlanes.end());
+		if (imageOff > 0) {
+			goodPlanes = std::vector<Int>(_goodPlanes.size());
+			std::transform(
+				_goodPlanes.begin(), _goodPlanes.end(), goodPlanes.begin(),
+				bind2nd(minus<Int>(), imageOff)
+			);
+		}
+		std::vector<Int>::iterator iter = goodPlanes.begin();
+		while (iter != goodPlanes.end() && *iter < 0) {
+			goodPlanes.erase(iter);
+			iter = goodPlanes.begin();
+		}
+		myGoodPlanes = std::set<uInt>(goodPlanes.begin(), goodPlanes.end());
+		/*
+		ostringstream planeMask;
+		planeMask << "indexin(" << _fitAxis << ", " << goodPlanes << ")";
+		*_getLog() << LogIO::NORMAL << "Planes used in fit: "
+			<< _goodPlanes << LogIO::POST;
+		fitData = SubImageFactory<Float>::createImage(
+			*_subImage, "", Record(), planeMask.str(),
+			False, False, False, False
+		);
+		*/
+	}
+	Bool checkMinPts = fitData->isMasked();
 	Array<Bool> fitMask;
 	if (checkMinPts) {
 		fitMask = (
-			partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis))
+			partialNTrue(fitData->getMask(False), IPosition(1, _fitAxis))
 			>= _minGoodPoints
 		);
 		IPosition oldShape = fitMask.shape();
 		IPosition newShape(fitMask.ndim() + 1);
 		uInt oldIndex = 0;
-		for (uInt i=0; i<newShape.size(); i++) {
+		for (uInt i=0; i<newShape.size(); ++i) {
 			if (i == (uInt)_fitAxis) {
 				newShape[i] = 1;
 			}
 			else {
 				newShape[i] = oldShape[oldIndex];
-				oldIndex++;
+				++oldIndex;
 			}
 		}
 		fitMask.assign(fitMask.reform(newShape));
 	}
+	_loopOverFits(
+		fitData, nPoints, showProgress, pProgressMeter, checkMinPts,
+		fitMask, abcissaType, fitterShape, pFit, sliceShape,
+		myGoodPlanes
+	);
+}
+
+void ImageProfileFitter::_loopOverFits(
+	SPIIF fitData, Int nPoints, Bool showProgress,
+	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
+	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
+	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,
+	const std::set<uInt> goodPlanes
+) {
+	*_getLog() << LogOrigin(_class, __func__);
+	Array<Float> failData(sliceShape, NAN);
+	Array<Bool> failMask(sliceShape, False);
+	Lattice<Bool>* pFitMask = pFit && pFit->hasPixelMask()
+		&& pFit->pixelMask().isWritable()
+		? &(pFit->pixelMask())
+		: 0;
+	Lattice<Bool>* pResidMask = _residImage && _residImage->hasPixelMask()
+		&& _residImage->pixelMask().isWritable()
+		? &(_residImage->pixelMask())
+		: 0;
+	vector<IPosition> goodPos(0);
 	SpectralList newEstimates = _nonPolyEstimates;
-
-	ImageFit1D<Float> fitter = (! _sigma)
-		? ImageFit1D<Float>(*_subImage, _fitAxis)
-		: ImageFit1D<Float>(*_subImage, *_sigma, _fitAxis);
-
-	Bool isSpectral = _fitAxis == csys.spectralAxisNumber();
+	ImageFit1D<Float> fitter = _sigma
+		? ImageFit1D<Float>(*fitData, *_sigma, _fitAxis)
+		: ImageFit1D<Float>(*fitData, _fitAxis);
+	Bool isSpectral = _fitAxis == _subImage->coordinates().spectralAxisNumber();
 
 	// calculate the abscissa values only once if they will not change
 	// with position
 	Double *divisorPtr = 0;
-
 	Vector<Double> abscissaValues(0);
 	Bool fitSuccess;
 	if (isSpectral) {
-		abscissaValues = fitter.makeAbscissa(
-			abcissaType, True, 0
-		);
+		abscissaValues = fitter.makeAbscissa(abcissaType, True, 0);
 		if (_isSpectralIndex) {
 			_setAbscissaDivisorIfNecessary(abscissaValues);
 			if (_abscissaDivisor != 1) {
@@ -720,7 +730,6 @@ void ImageProfileFitter::_fitProfiles(
 			}
 		}
 	}
-	Bool abscissaSet = abscissaValues.size() > 0;
 	PtrHolder<const PolynomialSpectralElement> polyEl;
 	if (_polyOrder >= 0) {
 		polyEl.set(new PolynomialSpectralElement(Vector<Double>(_polyOrder + 1, 0)));
@@ -728,23 +737,27 @@ void ImageProfileFitter::_fitProfiles(
 			newEstimates.add(*polyEl);
 		}
 	}
+
+	uInt nOrigComps = newEstimates.nelements();
 	Array<Double> (*xfunc)(const Array<Double>&) = 0;
 	Array<Double> (*yfunc)(const Array<Double>&) = 0;
+	Bool abscissaSet = abscissaValues.size() > 0;
+
 	if (_nLTPCoeffs > 0) {
 		if (! abscissaSet) {
 			xfunc = casa::log;
 		}
 		yfunc = casa::log;
 	}
-	uInt nOrigComps = newEstimates.nelements();
-	*_getLog() << LogOrigin(_class, __func__);
 	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
-	IPosition inTileShape = _subImage->niceCursorShape();
-	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
-	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
+	IPosition inTileShape = fitData->niceCursorShape();
+	TiledLineStepper stepper (fitData->shape(), inTileShape, _fitAxis);
+	RO_MaskedLatticeIterator<Float> inIter(*fitData, stepper);
+	uInt nProfiles = 0;
+	Bool hasXMask = ! goodPlanes.empty();
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
-			pProgressMeter->update(Double(nProfiles));
+			progressMeter->update(Double(nProfiles));
 		}
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts && ! fitMask(curPos)) {
@@ -764,6 +777,9 @@ void ImageProfileFitter::_fitProfiles(
 			fitter, newEstimates, polyEl, goodPos,
 			fitterShape, curPos, nOrigComps
 		);
+		if (hasXMask) {
+			fitter.setXMask(goodPlanes, True);
+		}
 		try {
 			fitSuccess = fitter.fit();
 			if (fitSuccess) {
@@ -780,53 +796,40 @@ void ImageProfileFitter::_fitProfiles(
 			fitSuccess = False;
 		}
 		_fitters(curPos).reset(new ProfileFitResults(fitter));
-		// Evaluate and fill
-		if (pFit || pResid) {
+		if (pFit || _residImage) {
 			_updateModelAndResidual(
-				pFit, pResid, fitSuccess, fitter, sliceShape, curPos,
+				pFit, fitSuccess, fitter, sliceShape, curPos,
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
-		nFit++;
+		//++nFit;
 	}
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
-    SPIIF pFit, SPIIF pResid, Bool fitOK,
-    const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
+    SPIIF pFit, Bool fitOK, const ImageFit1D<Float>& fitter,
+    const IPosition& sliceShape,
     const IPosition& curPos, Lattice<Bool>* const &pFitMask,
     Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
     const Array<Bool>& failMask
 ) const {
-	Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
-    if (fitOK) {
-        if (pFit.get()) {
-	    	Array<Float> resultData = fitter.getFit().reform(sliceShape);
-		    pFit->putSlice (resultData, curPos);
-		    if (pFitMask) {
-			    pFitMask->putSlice(resultMask, curPos);
-		    }
-	    }
-	    if (pResid.get()) {
-		    Array<Float> resultData = fitter.getResidual().reform(sliceShape);
-		    pResid->putSlice (resultData, curPos);
-		    if (pResidMask) {
-                pResidMask->putSlice(resultMask, curPos);
-            }
-        }
-    }
-	else {
-		if (pFit.get()) {
-			pFit->putSlice (failData, curPos);
-			if (pFitMask) {
-				pFitMask->putSlice(failMask, curPos);
-			}
+	Array<Bool> resultMask = fitter.getDataMask().reform(sliceShape);
+	if (pFit) {
+		pFit->putSlice (
+			(fitOK ? fitter.getFit().reform(sliceShape) : failData),
+			curPos
+		);
+		if (pFitMask) {
+			pFitMask->putSlice( (fitOK ? resultMask : failMask), curPos);
 		}
-		if (pResid.get()) {
-			pResid->putSlice (failData, curPos);
-			if (pResidMask) {
-				pResidMask->putSlice(failMask, curPos);
-			}
+	}
+	if (_residImage) {
+		_residImage->putSlice (
+			(fitOK ? fitter.getResidual().reform(sliceShape) : failData),
+			curPos
+		);
+		if (pResidMask) {
+			pResidMask->putSlice( (fitOK ? resultMask : failMask), curPos);
 		}
 	}
 }

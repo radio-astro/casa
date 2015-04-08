@@ -192,6 +192,18 @@ public:
 
     void setAbscissaDivisor(const Quantity& q);
 
+    // for backward compatibility with ia.continuumsub. If no residual
+    // image has been provided, a TempImage is created.
+    void createResidualImage(Bool b) { _createResid = b; }
+
+    SPIIF getResidual() const {
+    	return _residImage;
+    }
+
+    // set the planes along the fit axis that are considered good for performing
+    // the fits. An empty vector implies that all planes are considered "good".
+    void setGoodPlanes(const std::set<uInt>& planes) { _goodPlanes = planes; }
+
 protected:
 
     inline CasacRegionManager::StokesControl _getStokesControl() const {
@@ -211,7 +223,7 @@ private:
 		_integralName, _integralErrName, _plpName, _plpErrName,
 		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
-		_deleteImageOnDestruct, _logResults, _isSpectralIndex;
+		_deleteImageOnDestruct, _logResults, _isSpectralIndex, _createResid;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
@@ -224,9 +236,12 @@ private:
 	SpectralList _nonPolyEstimates;
 	PtrHolder<std::pair<Double, Double> > _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
-
 	SHARED_PTR<TempImage<Float> > _sigma;
 	Double _abscissaDivisor;
+	SPIIF _residImage;
+	// planes along _fitAxis to use in fits, empty => use all planes
+	// originally used to support continuum subtraction
+	std::set<uInt> _goodPlanes;
 
 	const static String _class;
 
@@ -256,16 +271,21 @@ private:
     // in pixel space here and requiring the caller to deal with converting
     // to something astronomer friendly if it so desires.
 
-    void _fitProfiles(
-    	SPIIF pFit, SPIIF pResid,
-        const Bool showProgress=False
-    );
+    void _fitProfiles(SPIIF pFit, const Bool showProgress);
 
     Bool _inVelocitySpace() const;
 
     void _flagFitterIfNecessary(ImageFit1D<Float>& fitter) const;
 
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
+
+    void _loopOverFits(
+    	SPIIF fitData, Int nPoints, Bool showProgress,
+    	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
+    	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
+    	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,
+    	const std::set<uInt> goodPlanes
+    );
 
     void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
 
@@ -278,12 +298,13 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	SPIIF pFit, SPIIF pResid, Bool fitOK,
-    	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
-    	const IPosition& curPos, Lattice<Bool>* const &pFitMask,
-        Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
-        const Array<Bool>& failMask
+    	SPIIF pFit, Bool fitOK,	const ImageFit1D<Float>& fitter,
+    	const IPosition& sliceShape, const IPosition& curPos,
+    	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask,
+    	const Array<Float>& failData, const Array<Bool>& failMask
     ) const;
+
+
 };
 }
 

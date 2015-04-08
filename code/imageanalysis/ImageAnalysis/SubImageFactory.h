@@ -105,11 +105,15 @@ public:
   // a reference) of the subimage selected in the given region.
   // A PagedImage is returned if outfile is not blank or a TempImage
   // is returned if it is.
+  // If <src>attachMask</src> is True, attach a pixel mask to the newly created image
+  // if it otherwise wouldn't have a pixel mask. All the values in this mask will be
+  // True.
   static SPIIT createImage(
 	  const ImageInterface<T>& image,
 	  const String& outfile, const Record& region,
 	  const String& mask, Bool dropDegenerateAxes,
-	  Bool overwrite, Bool list, Bool extendMask
+	  Bool overwrite, Bool list, Bool extendMask,
+	  Bool attachMask=False
   );
 
   private:

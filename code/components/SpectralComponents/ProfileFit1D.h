@@ -35,6 +35,8 @@
 #include <components/SpectralComponents/SpectralList.h>
 #include <components/SpectralComponents/SpectralFit.h>
 
+#include <set>
+
 namespace casa {
 
 class SpectralElement;
@@ -152,7 +154,7 @@ public:
     // Clear the SpectralList of elements to be fit for
     void clearList ();
 
-    // Set range mask.  You can specify a number of ranges
+    // Set abscissa range mask.  You can specify a number of ranges
     // via a vector of start indices (or X values) and a vector of end
     // indices (or X values).   When argument insideIsGood is True,
     // a mask will be created which
@@ -163,13 +165,18 @@ public:
     // mask is formed combining (via a logical AND) the 
     // data mask (setData) and this range mask.
     // Status is returned, if False, error message can be recovered with <src>errorMessage</src>
+    // In the single set version, the values in the set indicate the pixels to set the mask for,
+    // ie no ranges, just specific pixels are to be provided. In this case, specified values
+    // which are greater than or equal to the number of pixels are tacitly ignored.
     // <group>
-    Bool setRangeMask (const Vector<uInt>& startIndex, 
+    Bool setXRangeMask (const Vector<uInt>& startIndex,
                        const Vector<uInt>& endIndex,
                        Bool insideIsGood=True);
-    Bool setRangeMask (const Vector<T>& startIndex, 
+    Bool setXRangeMask (const Vector<T>& startIndex,
                        const Vector<T>& endIndex,
                        Bool insideIsGood=True);
+
+    Bool setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood);
     // </group>
 
     // Recover masks.  These are the data mask (setData) the range
