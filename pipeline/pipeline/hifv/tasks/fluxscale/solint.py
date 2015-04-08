@@ -181,6 +181,7 @@ class Solint(basetask.StandardTaskTemplate):
         task_args = {'vis'          : m.name,
                      'outputvis'    : calMs,
                      'datacolumn'   : 'corrected',
+                     'keepmms'      : True,
                      'field'        : '',
                      'spw'          : '',
                      'width'        : int(max(channels)),
@@ -195,7 +196,7 @@ class Solint(basetask.StandardTaskTemplate):
                      'observation'  : '',
                      'keepflags'    : False}
         
-        job = casa_tasks.split(**task_args)
+        job = casa_tasks.split2(**task_args)
             
         return self._executor.execute(job)
     

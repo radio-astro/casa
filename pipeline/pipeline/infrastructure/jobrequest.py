@@ -32,6 +32,7 @@ import plotweather_cli
 import polcal_cli
 import setjy_cli
 import split_cli
+import split2_cli
 import statwt_cli
 import tclean_cli
 import wvrgcal_cli
@@ -359,6 +360,9 @@ class CASATaskJobGenerator(object):
     
     def split(self, *v, **k):
         return self._get_job(split_cli.split_cli, *v, **k)
+    
+    def split2(self, *v, **k):
+        return self._get_job(split2_cli.split2_cli, *v, **k)
     
     def statwt(self, *v, **k):
         return self._get_job(statwt_cli.statwt_cli, *v, **k)
