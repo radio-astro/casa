@@ -448,13 +448,20 @@ template<class T> void Array<T>::unique()
 // <thrown>
 //   <item> ArrayConformanceError
 // </thrown>
-template<class T> Array<T> Array<T>::reform(const IPosition &len) const
+template<class T> Array<T> Array<T>::reform(const IPosition &len, Bool strict) const
 {
     DebugAssert(ok(), ArrayError);
     // Check if reform is possible and needed.
     // If not needed, simply return a copy.
     Array<T> tmp(*this);
-    baseReform (tmp, len);
+    if (! strict && len.product () > (Int64) (data_p->nelements())){
+        String message =
+            String::format ("Array<T>::reform() - insufficient storage for nonStrict reform: "
+                            "nElementInAllocation=%d, nElementsRequested=%d",
+                            data_p->nelements(), len.product());
+        throw ArrayConformanceError(message);
+    }
+    baseReform (tmp, len, strict);
     tmp.setEndIter();
     return tmp;
 }
