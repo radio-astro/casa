@@ -190,8 +190,9 @@ protected:
   // Check if the shape of a cube is correct. Adjust it if smaller.
   void checkCubeShape();
 
-  // Reform the array to a shape with the same nr of elements.
-  void baseReform (ArrayBase& tmp, const IPosition& shape) const;
+  // Reform the array to a shape with the same nr of elements.  If nonStrict then
+  // caller assumes responsibility for not overrunning storage (avoid or use with extreme care).
+  void baseReform (ArrayBase& tmp, const IPosition& shape, Bool strict=True) const;
 
   // Remove the degenerate axes from the Array object.
   // This is the implementation of the nonDegenerate functions.

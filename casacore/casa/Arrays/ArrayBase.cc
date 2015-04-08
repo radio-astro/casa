@@ -92,10 +92,10 @@ ArrayBase& ArrayBase::operator= (const ArrayBase& other)
 ArrayBase::~ArrayBase()
 {}
 
-void ArrayBase::baseReform (ArrayBase& tmp, const IPosition& len) const
+void ArrayBase::baseReform (ArrayBase& tmp, const IPosition& len, Bool strict) const
 {
   // Check if reform can be done.
-  if (len.product() != Int64(nelements())) {
+  if (strict && len.product() != Int64(nelements())) {
     throw(ArrayConformanceError("ArrayBase::reform() - "
 				"total elements differ"));
   }
@@ -114,6 +114,7 @@ void ArrayBase::baseReform (ArrayBase& tmp, const IPosition& len) const
     tmp.inc_p = 1;
     tmp.originalLength_p.resize (newNdim);
     tmp.originalLength_p = tmp.length_p;
+    tmp.nels_p = len.product();
     tmp.baseMakeSteps();
     return;
   }

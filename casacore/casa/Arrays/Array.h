@@ -168,6 +168,8 @@ template<class T> class Array : public ArrayBase
 {
 public:
 
+    typedef T ElementType;
+
     // Result has dimensionality of zero, and  nelements is zero.
     Array();
 
@@ -342,7 +344,10 @@ public:
     // Vector<Float> line(square.reform(lineShape));
     // // "square"'s storage may now be accessed through Vector "line"
     // </srcblock>
-    Array<T> reform(const IPosition &shape) const;
+    Array<T> reform(const IPosition &shape, Bool strict=True) const;
+        // Avoid use of strict=False or use with extreme care since the user
+        // assumes responsibility for managing storage size.  Use only when
+        // necessary to reuse an array's storage with the same dimensions.
     
     // These member functions remove degenerate (ie. length==1) axes from
     // Arrays.  Only axes greater than startingAxis are considered (normally
