@@ -723,24 +723,28 @@ less than the given uv-distance (converted to the appropriate units)
 are selected.
 
 To selected rows with uv-distance within an equal range on either side
-of a given value, UVDIST can be specified as a percentage of the given
-value in the format N\%.  All rows with uv-distance between +/-N
-percent of the given uv-distance in appropriate units are selected.
+of a given range, the N\% syntax can be used.  All rows with
+uv-distance between $\pm$N percent of the uv-range determined by the
+uv-distance expression in appropriate units are selected.
 
 The full uv-distance selection expression is a comma-separated list of
 any of the above mentioned uv-distance specifications.  E.g.
 
 \begin{itemize}
 \item uvdist={\tt 100Klambda} selects all baselines for which
-  $\sqrt{u^2+v^2}$ is equal to 100 K$\lambda$.
+  $\sqrt{u^2+v^2}$ is equal to 100~K$\lambda$.
 \item uvdist={\tt 100Km} selects all baselines for which
-  $\sqrt{u^2+v^2}$ is equal to 100 Km.
+  $\sqrt{u^2+v^2}$ is equal to 100~Km.
 \item uvdist={\tt 100$\sim$200Klambda} selects all baselines for which
-  $\sqrt{u^2+v^2}$ is in the range [100, 200] K$\lambda$.
+  $\sqrt{u^2+v^2}$ is in the range [100, 200]~K$\lambda$.
 \item uvdist={\tt $>$100Klambda} selects all baselines for which
-  $\sqrt{u^2 + v^2}$ is greater than 100 K$\lambda$.
+  $\sqrt{u^2 + v^2}$ is greater than 100~K$\lambda$.
 \item uvdist={\tt $<$100Klambda} selects all baselines for which
-  $\sqrt{u^2 + v^2}$ is less than 100 K$\lambda$.
+  $\sqrt{u^2 + v^2}$ is less than 100~K$\lambda$.
+\item uvdist={\tt $<$100Klambda:5\%} selects all baselines for which
+  $\sqrt{u^2 + v^2}$ is less than 100+5~K$\lambda$.
+\item uvdist={\tt 100$\sim$200Klambda:5\%} selects all baselines for which
+  $\sqrt{u^2 + v^2}$ is between 100-5 and 200+10~K$\lambda$.
 \end{itemize}
 
 \section{Frequency Selection}
