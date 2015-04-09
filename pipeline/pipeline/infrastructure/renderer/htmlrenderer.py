@@ -1307,8 +1307,8 @@ def group_into_sessions(context, task_results):
 def group_into_measurement_sets(context, task_results):
     def get_vis(r):
         vis = r.inputs['vis']
-        if type(r).__name__ == 'ImportDataResults':
-            vis = '%s.ms' % vis
+        if type(r).__name__ == 'ImportDataResults' or type(r).__name__ == 'SDImportDataResults':
+            vis = '%s.ms' % vis.rstrip('/')
         return os.path.basename(vis)
     
     vises = [get_vis(r) for r in task_results]
