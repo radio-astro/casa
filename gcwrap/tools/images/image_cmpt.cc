@@ -994,7 +994,7 @@ image* image::continuumsub(
 		ImageProfileFitter fitter(
 		_image->getImage(), "", leRegion.get(),
 			"", "", "", "", spectralAxis,
-			0, "", SpectralList()
+			0, "", SpectralList(), overwrite
 		);
 		fitter.setDoMultiFit(True);
 		fitter.setPolyOrder(in_fitorder);
@@ -1008,7 +1008,7 @@ image* image::continuumsub(
 			fitter.setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
 		}
 		fitter.createResidualImage(True);
-		fitter.fit();
+		fitter.fit(False);
 		return new image(fitter.getResidual());
 	}
 	catch (const AipsError& x) {
@@ -1335,7 +1335,7 @@ template <class T> image* image::_decimate(
 ) const {
 	ImageDecimator<T> decimator(
 		myimage, region.get(),
-			mask, outfile, overwrite
+		mask, outfile, overwrite
 	);
 	decimator.setFunction(f);
 	decimator.setAxis(axis);
