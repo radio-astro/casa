@@ -310,7 +310,97 @@ class MeasurementSet(object):
         int_time = maximum_integration_time
         
         return int_time
-       
+    
+    def get_vla_corrstring(self):
+        '''Get correlation string for VLA'''
+        
+        vis = self.name
+        
+        cordesclist = ['Undefined','I','Q','U','V',
+                       'RR','RL','LR','LL',
+                       'XX','XY','YX','YY',
+                       'RX','RY','LX','LY',
+                       'XR','XL','YR','YL',
+                       'PP','PQ','QP','QQ',
+                       'RCircular','LCircular',
+                       'Linear','Ptotal',
+                       'Plinear','PFtotal',
+                       'PFlinear','Pangle' ]
+        
+        #From Steve Myers buildscans function
+        with casatools.TableReader(vis + '/DATA_DESCRIPTION') as table:
+            #tb.open(msfile+"/DATA_DESCRIPTION")
+            ddspwarr=table.getcol("SPECTRAL_WINDOW_ID")
+            ddpolarr=table.getcol("POLARIZATION_ID")
+            #tb.close()
+        ddspwlist = ddspwarr.tolist()
+        ddpollist = ddpolarr.tolist()
+        ndd = len(ddspwlist)
+        
+        with casatools.TableReader(vis + '/SPECTRAL_WINDOW') as table:
+            #tb.open(msfile+"/SPECTRAL_WINDOW")
+            nchanarr=table.getcol("NUM_CHAN")
+            spwnamearr=table.getcol("NAME")
+            reffreqarr=table.getcol("REF_FREQUENCY")
+            #tb.close()
+        nspw = len(nchanarr)
+        spwlookup = {}
+        for isp in range(nspw):
+            spwlookup[isp] = {}
+            spwlookup[isp]['nchan'] = nchanarr[isp]
+            spwlookup[isp]['name'] = str( spwnamearr[isp] )
+            spwlookup[isp]['reffreq'] = reffreqarr[isp]
+        
+        
+        with casatools.TableReader(vis + '/POLARIZATION') as table:
+            #tb.open(msfile+"/POLARIZATION")
+            ncorarr=table.getcol("NUM_CORR")
+            npols = len(ncorarr)
+	    polindex = {}
+	    poldescr = {}
+	    for ip in range(npols):
+		cort=table.getcol("CORR_TYPE",startrow=ip,nrow=1)
+		(nct,nr) = cort.shape
+		cortypes = []
+		cordescs = []
+		for ict in range(nct):
+		    cct = cort[ict][0]
+		    cde = cordesclist[cct]
+		    cortypes.append(cct)
+		    cordescs.append(cde)
+		polindex[ip] = cortypes
+		poldescr[ip] = cordescs
+            
+            
+        ddindex = {}
+        ncorlist=ncorarr.tolist()
+        for idd in range(ndd):
+            ddindex[idd] = {}
+            isp = ddspwlist[idd]
+            ddindex[idd]['spw'] = isp
+            ddindex[idd]['spwname'] = spwlookup[isp]['name']
+            ddindex[idd]['nchan'] = spwlookup[isp]['nchan']
+            ddindex[idd]['reffreq'] = spwlookup[isp]['reffreq']
+            #
+            ipol = ddpollist[idd]
+            ddindex[idd]['ipol'] = ipol
+            ddindex[idd]['npol'] = ncorlist[ipol]
+            ddindex[idd]['corrtype'] = polindex[ipol]
+            ddindex[idd]['corrdesc'] = poldescr[ipol]
+        
+        
+        """
+        Prep string listing of correlations from dictionary created by method buildscans
+        For now, only use the parallel hands.  Cross hands will be implemented later.
+        """
+        corrstring_list = ddindex[0]['corrdesc']
+        removal_list = ['RL', 'LR', 'XY', 'YX']
+        corrstring_list = list(set(corrstring_list).difference(set(removal_list)))
+        corrstring = string.join(corrstring_list,',')
+        
+        return corrstring
+    
+    
     def vla_spws_for_field(self,field):
         '''VLA spws for field'''
     

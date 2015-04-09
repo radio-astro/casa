@@ -59,7 +59,8 @@ class Checkflag(basetask.StandardTaskTemplate):
         #Default values
         m = self.inputs.context.observing_run.measurement_sets[0]
         checkflagfields = self.inputs.context.evla['msinfo'][m.name].checkflagfields
-        corrstring = self.inputs.context.evla['msinfo'][m.name].corrstring
+        #corrstring = self.inputs.context.evla['msinfo'][m.name].corrstring
+        corrstring = m.get_vla_corrstring()
         testgainscans = self.inputs.context.evla['msinfo'][m.name].testgainscans
         
         method_args = {'field'       : checkflagfields,

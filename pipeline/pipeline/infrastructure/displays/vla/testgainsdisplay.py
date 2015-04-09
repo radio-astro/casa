@@ -102,7 +102,7 @@ class testgainsPerAntennaChart(object):
         
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string

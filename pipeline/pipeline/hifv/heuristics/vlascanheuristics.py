@@ -471,9 +471,80 @@ class VLAScanHeuristics(object):
         
         spw2band = {}
         
-        for spw in self.scandict['DataDescription']:
+        cordesclist = ['Undefined','I','Q','U','V',
+                       'RR','RL','LR','LL',
+                       'XX','XY','YX','YY',
+                       'RX','RY','LX','LY',
+                       'XR','XL','YR','YL',
+                       'PP','PQ','QP','QQ',
+                       'RCircular','LCircular',
+                       'Linear','Ptotal',
+                       'Plinear','PFtotal',
+                       'PFlinear','Pangle' ]
+        
+        with casatools.TableReader(self.vis + '/DATA_DESCRIPTION') as table:
+            #tb.open(msfile+"/DATA_DESCRIPTION")
+            ddspwarr=table.getcol("SPECTRAL_WINDOW_ID")
+            ddpolarr=table.getcol("POLARIZATION_ID")
+            #tb.close()
+        ddspwlist = ddspwarr.tolist()
+        ddpollist = ddpolarr.tolist()
+        ndd = len(ddspwlist)
+        
+        with casatools.TableReader(self.vis + '/SPECTRAL_WINDOW') as table:
+            #tb.open(msfile+"/SPECTRAL_WINDOW")
+            nchanarr=table.getcol("NUM_CHAN")
+            spwnamearr=table.getcol("NAME")
+            reffreqarr=table.getcol("REF_FREQUENCY")
+            #tb.close()
+        nspw = len(nchanarr)
+        spwlookup = {}
+        for isp in range(nspw):
+            spwlookup[isp] = {}
+            spwlookup[isp]['nchan'] = nchanarr[isp]
+            spwlookup[isp]['name'] = str( spwnamearr[isp] )
+            spwlookup[isp]['reffreq'] = reffreqarr[isp]
+        
+        with casatools.TableReader(self.vis + '/POLARIZATION') as table:
+            #tb.open(msfile+"/POLARIZATION")
+            ncorarr=table.getcol("NUM_CORR")
+            npols = len(ncorarr)
+	    polindex = {}
+	    poldescr = {}
+	    for ip in range(npols):
+		cort=table.getcol("CORR_TYPE",startrow=ip,nrow=1)
+		(nct,nr) = cort.shape
+		cortypes = []
+		cordescs = []
+		for ict in range(nct):
+		    cct = cort[ict][0]
+		    cde = cordesclist[cct]
+		    cortypes.append(cct)
+		    cordescs.append(cde)
+		polindex[ip] = cortypes
+		poldescr[ip] = cordescs
+            
+            
+        ddindex = {}
+        ncorlist=ncorarr.tolist()
+        for idd in range(ndd):
+            ddindex[idd] = {}
+            isp = ddspwlist[idd]
+            ddindex[idd]['spw'] = isp
+            ddindex[idd]['spwname'] = spwlookup[isp]['name']
+            ddindex[idd]['nchan'] = spwlookup[isp]['nchan']
+            ddindex[idd]['reffreq'] = spwlookup[isp]['reffreq']
+            #
+            ipol = ddpollist[idd]
+            ddindex[idd]['ipol'] = ipol
+            ddindex[idd]['npol'] = ncorlist[ipol]
+            ddindex[idd]['corrtype'] = polindex[ipol]
+            ddindex[idd]['corrdesc'] = poldescr[ipol]
+        
+        
+        for spw in ddindex:
 
-            strelems =  list(self.scandict['DataDescription'][spw]['spwname'])
+            strelems =  list(ddindex[spw]['spwname'])
             #print strelems
             bandname = strelems[5]
             if bandname in '4PLSCXUKAQ':
@@ -497,7 +568,7 @@ class VLAScanHeuristics(object):
             self.scan_summary = ms.getscansummary()
             self.ms_summary = ms.summary()
         
-        self.scandict = buildscans(self.vis, self.scan_summary)
+        ####self.scandict = buildscans(self.vis, self.scan_summary)
         #self.startdate=float(self.ms_summary['BeginTime'])
                
         #with casatools.TableReader(self.inputs.vis) as table:
@@ -527,10 +598,10 @@ class VLAScanHeuristics(object):
         Prep string listing of correlations from dictionary created by method buildscans
         For now, only use the parallel hands.  Cross hands will be implemented later.
         """
-        self.corrstring_list = self.scandict['DataDescription'][0]['corrdesc']
-        self.removal_list = ['RL', 'LR', 'XY', 'YX']
-        self.corrstring_list = list(set(self.corrstring_list).difference(set(self.removal_list)))
-        self.corrstring = string.join(self.corrstring_list,',')
+        ##self.corrstring_list = self.scandict['DataDescription'][0]['corrdesc']
+        ##self.removal_list = ['RL', 'LR', 'XY', 'YX']
+        ##self.corrstring_list = list(set(self.corrstring_list).difference(set(self.removal_list)))
+        ##self.corrstring = string.join(self.corrstring_list,',')
         
         #Create dictionary of band names from spw ids
         self.spw2band = self.convertspw2band()

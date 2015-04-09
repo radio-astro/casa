@@ -39,7 +39,8 @@ class semifinalBPdcalsSummaryChart(object):
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
+        corrstring = m.get_vla_corrstring()
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
@@ -115,7 +116,7 @@ class DelaysPerAntennaChart(object):
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
@@ -212,7 +213,7 @@ class semifinalphaseGainPerAntennaChart(object):
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
@@ -308,7 +309,7 @@ class semifinalbpSolAmpPerAntennaChart(object):
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
@@ -432,7 +433,7 @@ class semifinalbpSolPhasePerAntennaChart(object):
         numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string

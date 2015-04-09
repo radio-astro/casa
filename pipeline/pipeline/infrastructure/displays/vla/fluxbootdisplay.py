@@ -34,7 +34,8 @@ class fluxbootSummaryChart(object):
         context = self.context
         result = self.result
         m = context.observing_run.measurement_sets[0]
-        corrstring = context.evla['msinfo'][m.name].corrstring
+        #corrstring = context.evla['msinfo'][m.name].corrstring
+        corrstring = m.get_vla_corrstring()
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         ms_active = m.name
 
