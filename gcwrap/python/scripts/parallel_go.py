@@ -317,6 +317,7 @@ class cluster(object):
       efile=self.__ipythondir+'/security/casacontroller-mec-'+timestamp+'.furl'
       tfile=self.__ipythondir+'/security/casacontroller-tc-'+timestamp+'.furl'
       cmd = commands.getoutput("which ipcontroller")
+      cmd += ' -xy '
       cmd += ' --engine-furl-file=' + ffile
       cmd += ' --multiengine-furl-file=' + efile
       cmd += ' --task-furl-file=' + tfile

@@ -371,13 +371,21 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),"WARN","check_host_resources")
                 pass            
             
-            cmd_memory = self.shell(hostname) + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
+            # cmd_memory = self.shell(hostname) + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
+            # str_memory = commands.getoutput(cmd_memory)
+            # str_memory = string.replace(str_memory,"M free.","")
+            # str_memory = string.replace(str_memory," ","")
+
+            # jagonzal: Adapt command for MACOX 10.0 backwrads compatible with 10.9 and 10.8
+            cmd_memory = self.shell(hostname) + " 'vm_stat | grep free | cut -d : -f2' "
             str_memory = commands.getoutput(cmd_memory)
-            str_memory = string.replace(str_memory,"M free.","")
             str_memory = string.replace(str_memory," ","")
 
             try:
                 memory = float(str_memory)
+                # jagonzal: Adapt command for MACOX 10.0 backwrads compatible with 10.9 and 10.8
+                #           vm_stat returns number of free pages where each page spawns 4096 bytes
+                memory *= 4096./ (1024.*1024.)
             except:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),"WARN","check_host_resources")
                 pass
