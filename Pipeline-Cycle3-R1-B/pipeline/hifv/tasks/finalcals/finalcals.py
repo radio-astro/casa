@@ -609,7 +609,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                                  'spix'           : result[3],
                                  'reffreq'        : str(result[4])+'GHz',
                                  'standard'       : 'manual',
-                                 'usescratch'     : False}
+                                 'usescratch'     : True}
         
                     job = casa_tasks.setjy(**task_args)
             
