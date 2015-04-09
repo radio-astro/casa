@@ -795,7 +795,29 @@ VisibilityIteratorReadImpl::setTileCache ()
                     elms.setMemoryResidentSubtables (mrSubtables);
 
                     ROTiledStManAccessor tacc (elms, columns[k], True);
-                    tacc.setCacheSize (0, 1);
+
+		    // Cleverly sense full-row cache size (in tiles)
+		    uInt cacheSizeInTiles(1);
+
+		    // Is startrow correct for each subMS?
+		    //uInt rRow=startrow;
+		    uInt rRow=0;    // This preserves previous "single-hypercube" assumption
+		    		    
+		    IPosition hypercubeShape=tacc.hypercubeShape(rRow);
+		    IPosition tileShape=tacc.tileShape(rRow);
+		    uInt nax=hypercubeShape.size();  // how many axes
+		    
+		    // Accumulate axis factors up to--but NOT including--row (last) axis
+		    //  "ceil" catches partially filled tiles...
+		    for (uInt iax=0;iax<nax-1;++iax)    
+		      cacheSizeInTiles*= (uInt) ceil(hypercubeShape[iax]/ (Float)(tileShape[iax]));
+		    
+		    // Double for ALMA data
+		    //   (this satisfies cases where required rows require >1 non-contiguous tiles)
+		    cacheSizeInTiles*=2;
+
+		    // Now set it
+                    tacc.setCacheSize (rRow, cacheSizeInTiles);  
                     tileCacheIsSet_p[k] = True;
                     //cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
                 }
