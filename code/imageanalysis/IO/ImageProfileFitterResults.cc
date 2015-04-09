@@ -121,6 +121,41 @@ std::auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_crea
 	return pcfArrays;
 }
 
+void ImageProfileFitterResults::logSummary(
+    uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
+) {
+	*_log << LogOrigin(_class, __func__);
+	ostringstream oss;
+	oss << "Number of profiles       = " << _fitters->size();
+	String str = oss.str();
+	*_log << LogIO::NORMAL << str << LogIO::POST;
+	_writeLogfile(str + "\n", True, False);
+	oss.str("");
+	oss << "Number of fits attempted = " << nAttempted;
+	str = oss.str();
+	*_log << LogOrigin(_class, __func__);
+	*_log << LogIO::NORMAL << str << LogIO::POST;
+	_writeLogfile(str + "\n", False, False);
+	oss.str("");
+	oss << "Number succeeded         = " << nSucceeded;
+	str = oss.str();
+	*_log << LogOrigin(_class, __func__);
+	*_log << LogIO::NORMAL << str << LogIO::POST;
+	_writeLogfile(str + "\n", False, False);
+	oss.str("");
+	oss << "Number converged         = " << nConverged;
+	str = oss.str();
+	*_log << LogOrigin(_class, __func__);
+	*_log << LogIO::NORMAL << str << LogIO::POST;
+	_writeLogfile(str + "\n", False, False);
+	oss.str("");
+	oss << "Number valid             = " << nValid << endl;
+	str = oss.str();
+	*_log << LogOrigin(_class, __func__);
+	*_log << LogIO::NORMAL << str << LogIO::POST;
+	_writeLogfile(str + "\n", False, False);
+}
+
 Bool ImageProfileFitterResults::_setAxisTypes() {
 	const CoordinateSystem& csysSub = _subImage->coordinates();
 
@@ -176,8 +211,8 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Array<Bool>& convergedArr, Array<Bool>& validArr,
 	Array<String>& typeMat, Array<Int>& niterArr,
 	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
-	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays, Bool returnDirection,
-    Array<String>& directionInfo, Array<Bool>& mask
+	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
+	Bool returnDirection, Array<String>& directionInfo
 ) {
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
@@ -211,7 +246,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 		);
 		if (validArr(pixel)) {
 			_processSolutions(
-				mask, typeMat, niterArr, nCompArr, pixel, fitter, inIter,
+				typeMat, niterArr, nCompArr, pixel, fitter,
 				pcfArrays, plpArrays, ltpArrays, increment
 			);
 		}
@@ -219,15 +254,14 @@ void ImageProfileFitterResults::_marshalFitResults(
 }
 
 void ImageProfileFitterResults::_processSolutions(
-	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
+	Array<String>& typeMat, Array<Int>& niterArr,
 	Array<Int>& nCompArr, const IPosition& pixel,
 	SHARED_PTR<const ProfileFitResults> fitter,
-	const RO_MaskedLatticeIterator<Float>& inIter,
 	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
 	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
 	Double increment
 ) {
-	mask(pixel) = anyTrue(inIter.getMask());
+	// mask(pixel) = anyTrue(inIter.getMask());
 	niterArr(pixel) = (Int)fitter->getNumberIterations();
 	nCompArr(pixel) = (Int)fitter->getList().nelements();
 	SpectralList solutions = fitter->getList();
@@ -426,7 +460,6 @@ void ImageProfileFitterResults::_setResults() {
     IPosition typeShape(1, nComps);
     typeShape.prepend(fitterShape);
 	Array<String> typeArr(typeShape, "UNDEF");
-	Array<Bool> mask(fitterShape, False);
 	Array<Int> nCompArr(fitterShape, -1);
 	Bool returnDirection = _setAxisTypes();
 	Array<String> directionInfo(fitterShape);
@@ -435,52 +468,9 @@ void ImageProfileFitterResults::_setResults() {
 		convergedArr, validArr,
 		typeArr, niterArr,
 		nCompArr, pcfArrays, plpArrays, ltpArrays,
-        returnDirection, directionInfo, mask
-
+        returnDirection, directionInfo
 	);
-	{
-		*_log << LogOrigin(_class, __func__);
-		ostringstream oss;
-		oss << "Number of profiles       = " << _fitters->size();
-		String str = oss.str();
-		*_log << LogIO::NORMAL << str << LogIO::POST;
-		_writeLogfile(str + "\n", True, False);
-		oss.str("");
-		oss << "Number of fits attempted = " << ntrue(attemptedArr);
-		str = oss.str();
-		*_log << LogOrigin(_class, __func__);
-		*_log << LogIO::NORMAL << str << LogIO::POST;
-		_writeLogfile(str + "\n", False, False);
-		oss.str("");
-		oss << "Number succeeded         = " << ntrue(successArr);
-		str = oss.str();
-		*_log << LogOrigin(_class, __func__);
-		*_log << LogIO::NORMAL << str << LogIO::POST;
-		_writeLogfile(str + "\n", False, False);
-		oss.str("");
-		oss << "Number converged         = " << ntrue(convergedArr);
-		str = oss.str();
-		*_log << LogOrigin(_class, __func__);
-		*_log << LogIO::NORMAL << str << LogIO::POST;
-		_writeLogfile(str + "\n", False, False);
-		oss.str("");
-		oss << "Number valid             = " << ntrue(validArr) << endl;
-		str = oss.str();
-		*_log << LogOrigin(_class, __func__);
-		*_log << LogIO::NORMAL << str << LogIO::POST;
-		_writeLogfile(str + "\n", False, False);
-	}
-	Bool someConverged = anyTrue(convergedArr);
 	String key;
-	IPosition axes(1, _fitAxis);
-	ImageCollapser<Float> collapser(
-		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
-	);
-    SHARED_PTR<TempImage<Float> > tmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(
-    	collapser.collapse()
-    );
-    ThrowIf(! tmp, "Unable to perform dynamic cast");
-	SHARED_PTR<TempImage<Float> > myTemplate(tmp);
 	_results.define("attempted", attemptedArr);
 	_results.define(_SUCCEEDED, successArr);
 	_results.define(_CONVERGED, convergedArr);
@@ -530,39 +520,6 @@ void ImageProfileFitterResults::_setResults() {
 		rec.define("error", ltpArrays[SPXERR]);
 		_results.defineRecord("ltp", rec);
 	}
-	Bool writeSolutionImages = (
-		! _centerName.empty() || ! _centerErrName.empty()
-		|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
-		|| ! _ampName.empty() || ! _ampErrName.empty()
-		|| ! _integralName.empty() || ! _integralErrName.empty()
-		|| ! _plpName.empty() || ! _plpErrName.empty()
-		|| ! _ltpName.empty() || ! _ltpErrName.empty()
-	);
-	if (
-		! _multiFit && writeSolutionImages
-	) {
-		*_log << LogIO::WARN << "This was not a multi-pixel fit request so solution "
-			<< "images will not be written" << LogIO::POST;
-	}
-	if (
-		_multiFit && writeSolutionImages
-	) {
-		if (
-			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets + _nPLPCoeffs + _nLTPCoeffs == 0
-		) {
-			*_log << LogIO::WARN << "No functions for which solution images are supported were fit "
-				<< "so no solution images will be written" << LogIO::POST;
-		}
-		else {
-			if (someConverged) {
-				_writeImages(myTemplate->coordinates(), mask, yUnit);
-			}
-			else {
-				*_log << LogIO::WARN << "No solutions converged, solution images will not be written"
-					<< LogIO::POST;
-			}
-		}
-	}
 }
 
 String ImageProfileFitterResults::_getTag(const uInt i) const {
@@ -608,6 +565,61 @@ Array<Bool> ImageProfileFitterResults::_replicateMask(
 	return extended;
 }
 
+void ImageProfileFitterResults::writeImages(Bool someConverged) const {
+	Bool writeSolutionImages = (
+		! _centerName.empty() || ! _centerErrName.empty()
+		|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
+		|| ! _ampName.empty() || ! _ampErrName.empty()
+		|| ! _integralName.empty() || ! _integralErrName.empty()
+		|| ! _plpName.empty() || ! _plpErrName.empty()
+		|| ! _ltpName.empty() || ! _ltpErrName.empty()
+	);
+	if (
+		! _multiFit && writeSolutionImages
+	) {
+		*_log << LogIO::WARN << "This was not a multi-pixel fit request so solution "
+			<< "images will not be written" << LogIO::POST;
+	}
+	if (
+		_multiFit && writeSolutionImages
+	) {
+		if (
+			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets + _nPLPCoeffs + _nLTPCoeffs == 0
+		) {
+			*_log << LogIO::WARN << "No functions for which solution images are supported were fit "
+				<< "so no solution images will be written" << LogIO::POST;
+		}
+		else {
+			if (someConverged) {
+				IPosition axes(1, _fitAxis);
+				ImageCollapser<Float> collapser(
+					_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
+				);
+				SHARED_PTR<TempImage<Float> > tmp = DYNAMIC_POINTER_CAST<TempImage<Float> >(
+					collapser.collapse()
+				);
+				ThrowIf(! tmp, "Unable to perform dynamic cast");
+				SHARED_PTR<TempImage<Float> > myTemplate(tmp);
+				const String yUnit = _subImage->units().getName();
+				Array<Bool>	mask(_fitters->shape(), False);
+				IPosition inTileShape = _subImage->niceCursorShape();
+				TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
+				RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
+				for (
+					inIter.reset();	! inIter.atEnd(); ++inIter
+				) {
+					mask(inIter.position()) = anyTrue(inIter.getMask());
+				}
+				_writeImages(myTemplate->coordinates(), mask, yUnit);
+			}
+			else {
+				*_log << LogIO::WARN << "No solutions converged, solution images will not be written"
+					<< LogIO::POST;
+			}
+		}
+	}
+}
+
 void ImageProfileFitterResults::_writeImages(
 	const CoordinateSystem& xcsys,
 	const Array<Bool>& mask, const String& yUnit
@@ -633,7 +645,7 @@ void ImageProfileFitterResults::_writeImages(
 	mymap["ampErr"] = _ampErrName;
 	mymap["integral"] = _integralName;
 	mymap["integralErr"] = _integralErrName;
-	mymap["center"] = _centerName;
+	//mymap["center"] = _centerName;
 	unitmap["center"] = _xUnit;
 	unitmap["centerErr"] = _xUnit;
 	unitmap["fwhm"] = _xUnit;
@@ -1217,11 +1229,6 @@ String ImageProfileFitterResults::_polynomialToString(
     for (uInt j=0; j<n; j++) {
         Double sumsq = 0;
         for (uInt k=j; k<n; k++) {
-        	/*
-            Double multiplier = Combinatorics::choose(k, j)
-                * casa::pow(x0, Float(k-j))
-                * casa::pow(deltaX, Float(j));
-            */
             Double multiplier = Combinatorics::choose(k, k-j)
 				* casa::pow(x0, Float(k - j))
 				* casa::pow(1/deltaX, Float(k));
@@ -1300,7 +1307,6 @@ String ImageProfileFitterResults::_logTransPolyToString(
 	}
 	return summary.str();
 }
-
 
 void ImageProfileFitterResults::_makeSolutionImage(
 	const String& name, const CoordinateSystem& csys,

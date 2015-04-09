@@ -93,16 +93,16 @@ public:
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,
-		const SpectralList& spectralList
+		const SpectralList& spectralList, Bool overwrite=False
 	);
 
 	// destructor
 	~ImageProfileFitter();
 
-	// Do the fit.
-	Record fit();
+	// Do the fit. If doDetailedResults is False, an empty Record is returned.
+	Record fit(Bool doDetailedResults=True);
 
-	// get the fit results
+	// get the fit results. If fit was run with doDetailedResults=False, an empty Record is returned
 	Record getResults() const;
 
     inline String getClass() const { return _class; };
@@ -223,11 +223,12 @@ private:
 		_integralName, _integralErrName, _plpName, _plpErrName,
 		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
-		_deleteImageOnDestruct, _logResults, _isSpectralIndex, _createResid;
+		_deleteImageOnDestruct, _logResults, _isSpectralIndex,
+		_createResid, _overwrite;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs, _nLTPCoeffs;
-	uInt _minGoodPoints;
+		_nPLPCoeffs, _nLTPCoeffs, _minGoodPoints, _nAttempted,
+		_nSucceeded, _nConverged, _nValid;
 	Array<SHARED_PTR<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
@@ -280,7 +281,7 @@ private:
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
     void _loopOverFits(
-    	SPIIF fitData, Int nPoints, Bool showProgress,
+    	SPIIF fitData, /* Int nPoints, */ Bool showProgress,
     	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
     	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
     	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,

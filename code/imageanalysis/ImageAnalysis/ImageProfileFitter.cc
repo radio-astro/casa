@@ -51,7 +51,7 @@ ImageProfileFitter::ImageProfileFitter(
 	const String& chans, const String& stokes,
 	const String& mask, const Int axis,
 	const uInt ngauss, const String& estimatesFilename,
-	const SpectralList& spectralList
+	const SpectralList& spectralList, Bool overwrite
 ) : ImageTask<Float>(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
@@ -62,10 +62,11 @@ ImageProfileFitter::ImageProfileFitter(
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
 	_deleteImageOnDestruct(False), _logResults(True),
-	_isSpectralIndex(False), _createResid(False), _polyOrder(-1),
-	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
-	_nLorentzSinglets(0), _nPLPCoeffs(0), _nLTPCoeffs(0),
-	_minGoodPoints(1), _results(Record()), _nonPolyEstimates(),
+	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
+	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
+	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
+	_nLTPCoeffs(0), _minGoodPoints(1), _nAttempted(0), _nSucceeded(0),
+	_nConverged(0), _nValid(0), _results(Record()), _nonPolyEstimates(),
 	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
 	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
 	*_getLog() << LogOrigin(_class, __func__);
@@ -168,7 +169,7 @@ ImageProfileFitter::ImageProfileFitter(
 
 ImageProfileFitter::~ImageProfileFitter() {}
 
-Record ImageProfileFitter::fit() {
+Record ImageProfileFitter::fit(Bool doDetailedResults) {
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
@@ -254,6 +255,9 @@ Record ImageProfileFitter::fit() {
 		_nLorentzSinglets, _nPLPCoeffs, _nLTPCoeffs, _logResults,
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
+	resultHandler.logSummary(
+		_nAttempted, _nSucceeded, _nConverged, _nValid
+	);
 	if (_nPLPCoeffs > 0) {
 		resultHandler.setPLPName(_plpName);
 		resultHandler.setPLPErrName(_plpErrName);
@@ -264,7 +268,7 @@ Record ImageProfileFitter::fit() {
 		resultHandler.setLTPErrName(_ltpErrName);
 		resultHandler.setPLPDivisor(_abscissaDivisorForDisplay);
 	}
-	else {
+	else if (_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets > 0) {
 		resultHandler.setAmpName(_ampName);
 		resultHandler.setAmpErrName(_ampErrName);
 		resultHandler.setCenterName(_centerName);
@@ -275,10 +279,13 @@ Record ImageProfileFitter::fit() {
 		resultHandler.setIntegralErrName(_integralErrName);
 	}
 	resultHandler.setOutputSigmaImage(_sigmaName);
-	resultHandler.createResults();
-	_results = resultHandler.getResults();
-    if (originalSigma.get() && ! _sigmaName.empty()) {
-    	_removeExistingFileIfNecessary(_sigmaName, True);
+	if (doDetailedResults) {
+		resultHandler.createResults();
+		_results = resultHandler.getResults();
+	}
+	resultHandler.writeImages(_nConverged > 0);
+	if (originalSigma.get() && ! _sigmaName.empty()) {
+		_removeExistingFileIfNecessary(_sigmaName, True);
     	PagedImage<Float> outputSigma(
     		originalSigma->shape(), originalSigma->coordinates(),
     		_sigmaName
@@ -454,7 +461,7 @@ void ImageProfileFitter::_getOutputStruct(
     	modelImage.label = "model image";
     	modelImage.outputFile = &_model;
     	modelImage.required = True;
-    	modelImage.replaceable = False;
+    	modelImage.replaceable = _overwrite;
     	outputs.push_back(modelImage);
     }
     if (! _residual.empty()) {
@@ -462,7 +469,7 @@ void ImageProfileFitter::_getOutputStruct(
     	residImage.label = "residual image";
     	residImage.outputFile = &_residual;
     	residImage.required = True;
-    	residImage.replaceable = False;
+    	residImage.replaceable = _overwrite;
     	outputs.push_back(residImage);
     }
 }
@@ -559,7 +566,7 @@ void ImageProfileFitter::_fitallprofiles() {
 		&& ! (
 			fitImage = SubImageFactory<Float>::createImage(
 				*_subImage, _model, Record(), "",
-				False, False ,True, False, True
+				False, _overwrite ,True, False, True
 			)
 		)
 	) {
@@ -570,7 +577,7 @@ void ImageProfileFitter::_fitallprofiles() {
 		&& ! (
 			_residImage = SubImageFactory<Float>::createImage(
 				*_subImage, _residual, Record(), "",
-				False, False ,True, False, True
+				False, _overwrite ,True, False, True
 			)
 		)
 	) {
@@ -611,7 +618,6 @@ void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
 		), errMsg
 	);
-	// uInt nFit = 0;
 	IPosition fitterShape = inShape;
 	fitterShape[_fitAxis] = 1;
 	_fitters.resize(fitterShape);
@@ -670,14 +676,14 @@ void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 		fitMask.assign(fitMask.reform(newShape));
 	}
 	_loopOverFits(
-		fitData, nPoints, showProgress, pProgressMeter, checkMinPts,
+		fitData, /*nPoints, */ showProgress, pProgressMeter, checkMinPts,
 		fitMask, abcissaType, fitterShape, pFit, sliceShape,
 		myGoodPlanes
 	);
 }
 
 void ImageProfileFitter::_loopOverFits(
-	SPIIF fitData, Int nPoints, Bool showProgress,
+	SPIIF fitData, /* Int nPoints, */ Bool showProgress,
 	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
 	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
 	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,
@@ -703,7 +709,7 @@ void ImageProfileFitter::_loopOverFits(
 	// with position
 	Double *divisorPtr = 0;
 	Vector<Double> abscissaValues(0);
-	Bool fitSuccess;
+	Bool fitSuccess = False;
 	if (isSpectral) {
 		abscissaValues = fitter.makeAbscissa(abcissaType, True, 0);
 		if (_isSpectralIndex) {
@@ -734,20 +740,22 @@ void ImageProfileFitter::_loopOverFits(
 		}
 		yfunc = casa::log;
 	}
-	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
 	IPosition inTileShape = fitData->niceCursorShape();
 	TiledLineStepper stepper (fitData->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*fitData, stepper);
 	uInt nProfiles = 0;
 	Bool hasXMask = ! goodPlanes.empty();
+	Bool hasNonPolyEstimates = _nonPolyEstimates.nelements() > 0;
+	Bool updateOutput = pFit || _residImage;
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
-		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
+		if (showProgress && /*nProfiles % mark == 0 &&*/ nProfiles > 0) {
 			progressMeter->update(Double(nProfiles));
 		}
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts && ! fitMask(curPos)) {
 			continue;
 		}
+		++_nAttempted;
 		fitter.clearList();
 		if (abscissaSet) {
 			fitter.setAbscissa(abscissaValues);
@@ -768,20 +776,27 @@ void ImageProfileFitter::_loopOverFits(
 		try {
 			fitSuccess = fitter.fit();
 			if (fitSuccess) {
-				_flagFitterIfNecessary(fitter);
+				if (fitter.converged()) {
+					_flagFitterIfNecessary(fitter);
+					++_nConverged;
+				}
 				fitSuccess = fitter.isValid();
-				if (
-					fitSuccess && _nonPolyEstimates.nelements() > 0
-				) {
-					goodPos.push_back(curPos);
+				if (fitSuccess) {
+					++_nValid;
+					if (hasNonPolyEstimates) {
+						goodPos.push_back(curPos);
+					}
 				}
 			}
 		}
 		catch (const AipsError& x) {
 			fitSuccess = False;
 		}
+		if (fitter.succeeded()) {
+			++_nSucceeded;
+		}
 		_fitters(curPos).reset(new ProfileFitResults(fitter));
-		if (pFit || _residImage) {
+		if (updateOutput) {
 			_updateModelAndResidual(
 				pFit, fitSuccess, fitter, sliceShape,
 				curPos, pFitMask, pResidMask
@@ -921,9 +936,6 @@ void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
 void ImageProfileFitter::_flagFitterIfNecessary(
 	ImageFit1D<Float>& fitter
 ) const {
-	if (! fitter.converged()) {
-		return;
-	}
 	Bool checkComps = _goodAmpRange || _goodCenterRange
 		|| _goodFWHMRange;
 	SpectralList solutions = fitter.getList(True);

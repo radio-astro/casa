@@ -53,6 +53,9 @@ class ImageProfileFitterResults {
 	// </etymology>
 
 	// <synopsis>
+	// This class is the encapsulated IO portion of ImageProfileFitter. It is meant to be
+	// used only by that class. It is seperate from ImageProfileFitter for maintenence
+	// and compile convenience.
 	// </synopsis>
 
 	// <example>
@@ -137,6 +140,12 @@ public:
 
     void setPLPDivisor(const String& x) { _plpDivisor = x; }
 
+    void logSummary(
+    	uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
+    );
+
+    void writeImages(Bool someConverged) const;
+
 private:
 	enum gaussSols {
 	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
@@ -161,7 +170,7 @@ private:
 		_nPLPCoeffs, _nLTPCoeffs;
     const Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;
 	SpectralList _nonPolyEstimates;
- // subimage contains the region of the original image
+	// subimage contains the region of the original image
 	// on which the fit is performed.
 	const SHARED_PTR<const SubImage<Float> > _subImage;
 	Int _polyOrder, _fitAxis;
@@ -174,6 +183,10 @@ private:
    	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
    	const CoordinateSystem _csysIm;
    	String _plpDivisor;
+   	// mask for fitters
+   	// Array<Bool> _mask;
+
+   	// void _createMask();
 
     void _setResults();
 
@@ -216,12 +229,12 @@ private:
     ) const;
 
     void _marshalFitResults(
-        Array<Bool>& attemptedArr, Array<Bool>& successArr,
+    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
         Array<Bool>& convergedArr, Array<Bool>& validArr,
         Array<String>& typeMat, Array<Int>& niterArr,
         Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
         vector<Array<Double> >& plpArrayss, vector<Array<Double> >& ltpArrays, Bool returnDirection,
-        Array<String>& directionInfo, Array<Bool>& mask 
+        Array<String>& directionInfo /*, Array<Bool>& mask */
     ); 
 
     static void _makeSolutionImage(
@@ -266,10 +279,10 @@ private:
 	);
 
     void _processSolutions(
-    	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
+    	/* Array<Bool>& mask, */ Array<String>& typeMat, Array<Int>& niterArr,
     	Array<Int>& nCompArr, const IPosition& pixel,
     	SHARED_PTR<const ProfileFitResults> fitter,
-    	const RO_MaskedLatticeIterator<Float>& inIter,
+    	/* const RO_MaskedLatticeIterator<Float>& inIter, */
     	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
     	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
     	Double increment
