@@ -54,8 +54,6 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 
-#include <ctime>
-
 namespace casa {
 
 MSCache::MSCache(PlotMSApp* parent):
@@ -70,6 +68,12 @@ String MSCache::polname(Int ipol) {
 	return Stokes::name(Stokes::type(ipol));
 }
 
+void MSCache::destroyVisIter() {
+	if (vi_p)
+		delete vi_p;
+	vi_p = NULL;
+}
+
 
 //*********************************
 // protected method implementations
@@ -78,10 +82,89 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		vector<PMS::DataColumn>& loadData,
 		ThreadCommunication* thread) {
 
-	// Check if scratch and float cols present
+	// process selected columns			
+	checkColumns(loadAxes, loadData);
+	String dataColumn = getDataColumn(loadAxes, loadData);
+
+	// Apply selections to MS to create selection MS 
+	// and channel/correlation selections
+	Vector<Vector<Slice> > chansel;
+	Vector<Vector<Slice> > corrsel;
+	MeasurementSet selms;
+	{
+	  Table::TableOption tabopt(Table::Old);
+	  MeasurementSet ms(filename_, TableLock(TableLock::AutoLocking), tabopt);
+	  getNamesFromMS(ms);
+	  selection_.apply(ms, selms, chansel, corrsel);
+	  vm_.reset();
+	  vm_ = MSCacheVolMeter(ms, averaging_, chansel, corrsel);
+	}
+
+	Vector<Int> nIterPerAve;
+	visBufferShapes_.clear();
+
+	// Note: MSTransformVI/VB handles channel and time averaging
+	// It does not handle Antenna, Baseline, and SPW averaging yet
+	// so for now we'll do it the old way
+	if ( averaging_.baseline() ||
+	     averaging_.antenna() ||
+	     averaging_.spw() ) {
+		// make a "counting VI"
+		// plain VI2 is faster than TransformingTvi2;
+		// use plotms code to determine nChunks and memory requirements
+		vi::VisibilityIterator2* cvi = setUpVisIter(selms, chansel, corrsel);
+		countChunks(*cvi, nIterPerAve, thread);
+		delete cvi;
+		trapExcessVolume(pendingLoadAxes_);
+		try {
+			// Now set up TransformingVi2 for averaging/loading data
+			setUpVisIter(selection_, calibration_, dataColumn);
+			loadChunks(*vi_p, averaging_, nIterPerAve,
+			   loadAxes, loadData, thread);
+		} catch(AipsError& log) {
+			// catch load error, clear the existing cache, and rethrow
+			logLoad(log.getMesg());
+			clear();
+			destroyVisIter();  // close any open tables
+		        stringstream ss;
+			ss << "Error loading cache";
+			throw(AipsError(ss.str()));
+		}	
+	}
+	else { 
+		// also gets the VB shapes and estimates memory requirements:
+		setUpVisIter(selection_, calibration_, dataColumn, True);
+		try {
+			loadChunks(*vi_p, loadAxes, loadData, thread);
+		} catch(AipsError& log) {
+			// catch load error, clear the existing cache, and rethrow
+			logLoad(log.getMesg());
+			clear();
+			visBufferShapes_.clear();
+			destroyVisIter();  // close any open tables
+		        stringstream ss;
+			ss << "Error loading cache";
+			throw(AipsError(ss.str()));
+		}	
+	}
+	
+	// Remember # of VBs per Average
+	nVBPerAve_.resize();
+	if (nIterPerAve.nelements()>0)
+		nVBPerAve_ = nIterPerAve;
+	else {
+		nVBPerAve_.resize(nChunk_);
+		nVBPerAve_.set(1);
+	}
+	destroyVisIter();
+}
+
+void MSCache::checkColumns(vector<PMS::Axis>& loadAxes,
+	vector<PMS::DataColumn>& loadData)
+{ // Check if scratch and float cols present
 	Bool corcolOk(False), floatcolOk(False);
-	const ColumnDescSet cds=Table(filename_).tableDesc().columnDescSet();
-	corcolOk=cds.isDefined("CORRECTED_DATA");
+	const ColumnDescSet cds = Table(filename_).tableDesc().columnDescSet();
+	corcolOk = cds.isDefined("CORRECTED_DATA");
 	floatcolOk = cds.isDefined("FLOAT_DATA");
 	if (!corcolOk || !floatcolOk) {
 		for (uInt i=0;i<loadData.size();++i) {
@@ -116,30 +199,33 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 			}
 			default:
 				break;
-			}
-		}
-	}
-				
-	// Get various names
-	{
-		MeasurementSet ms(filename_);
-		ROMSColumns msCol(ms);
-		antnames_.resize();
-		stanames_.resize();
-		antstanames_.resize();
-		fldnames_.resize();
-		intentnames_.resize();
+			} // switch
+		} // for
+	} // if
+}
 
-		antnames_    = msCol.antenna().name().getColumn();
-		stanames_    = msCol.antenna().station().getColumn();
-		fldnames_    = msCol.field().name().getColumn();
-		intentnames_ = msCol.state().obsMode().getColumn();
+void MSCache::getNamesFromMS(MeasurementSet& ms)
+{
+	ROMSColumns msCol(ms);
+	antnames_.resize();
+	stanames_.resize();
+	antstanames_.resize();
+	fldnames_.resize();
+	intentnames_.resize();
 
-		antstanames_ = antnames_+String("@")+stanames_;
-		mapIntentNamesToIds();  // eliminate duplicate intent names
+	antnames_    = msCol.antenna().name().getColumn();
+	stanames_    = msCol.antenna().station().getColumn();
+	antstanames_ = antnames_+String("@")+stanames_;
 
-	}
+	fldnames_    = msCol.field().name().getColumn();
 
+	intentnames_ = msCol.state().obsMode().getColumn();
+	mapIntentNamesToIds();  // eliminate duplicate intent names
+}
+
+String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes, 
+	vector<PMS::DataColumn>& loadData)
+{
 	// Convert datacolumn to uppercase for MSTransformManager
 	String dataColumn = "DATA";
 	for (uInt i=0; i < loadAxes.size(); ++i) {
@@ -151,76 +237,20 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 			dataColumn.upcase();
 		}
 	}
-
-	// Set up visibility iterator
-	setUpVisIter(filename_, selection_, calibration_, dataColumn, True);
-
-	// Note: MSTransformVI/VB handles channel and time averaging
-	// It does not handle Antenna, Baseline, and SPW averaging yet
-	// so for now we'll do it the old way
-	Vector<Int> nIterPerAve;
-	if ( averaging_.baseline() ||
-	     averaging_.antenna() ||
-	     averaging_.spw() ) {
-		countChunks(*vi_p, nIterPerAve, thread);
-
-		trapExcessVolume(pendingLoadAxes_);
-
-		loadChunks(*vi_p, averaging_, nIterPerAve,
-			   loadAxes, loadData, thread);
-	}
-	else { 
-		countChunks(*vi_p, thread); 
-
-		trapExcessVolume(pendingLoadAxes_);
-
-		loadChunks(*vi_p, loadAxes, loadData, thread);
-	}
-
-	// Remember # of VBs per Average
-	nVBPerAve_.resize();
-	if (nIterPerAve.nelements()>0)
-		nVBPerAve_ = nIterPerAve;
-	else {
-		nVBPerAve_.resize(nChunk_);
-		nVBPerAve_.set(1);
-	}
-
-	if (vi_p)
-		delete vi_p;
-	vi_p = NULL;
+	return dataColumn;
 }
 
-void MSCache::setUpVisIter(const String& msname,
-		PlotMSSelection& selection,
+void MSCache::setUpVisIter(PlotMSSelection& selection,
 		PlotMSCalibration& calibration,
-		String dataColumn,
-		Bool readonly) {
+		String dataColumn, Bool estimateMemory) {
 
-	{
-	// Open the MS 
-	Table::TableOption tabopt(Table::Update);
-	if (readonly) tabopt=Table::Old;
-	MeasurementSet ms(msname, TableLock(TableLock::AutoLocking), tabopt), selms;
-
-	// Apply selections to MS to create selection MS 
-	// and channel/correlation selections
-	Vector<Vector<Slice> > chansel;
-	Vector<Vector<Slice> > corrsel;
-	// Don't need selms anymore but volume meter needs chansel & corrsel
-	selection.apply(ms, selms, chansel, corrsel);
-
-	// Set up the volume meter
-	vm_.reset();
-	vm_= MSCacheVolMeter(ms, averaging_, chansel, corrsel);
-	}
 	// Create configuration:
 	// Start with data selection; rename fields with expected keywords
 	Record configuration = selection.toRecord();
 	configuration.renameField("correlation", configuration.fieldNumber("corr"));
 
 	// Add needed fields
-	configuration.define("inputms", msname);
+	configuration.define("inputms", filename_);
 	configuration.define("datacolumn", dataColumn);
 	configuration.define("buffermode", True);
 	configuration.define("reindex", False);
@@ -256,60 +286,69 @@ void MSCache::setUpVisIter(const String& msname,
 	}
 
 	MSTransformIteratorFactory factory(configuration);
+	if (estimateMemory) {
+		visBufferShapes_ = factory.getVisBufferStructure();
+		Int chunks = visBufferShapes_.size();
+		if(chunks != nChunk_) {
+			increaseChunks(chunks);
+		}
+		trapExcessVolume(pendingLoadAxes_);
+	}
 	vi_p = new vi::VisibilityIterator2(factory);
-
 }
 
-void MSCache::setUpVolMeter() {
-	// Open the MS 
-	Table::TableOption tabopt(Table::Old);
-	MeasurementSet ms(filename_, TableLock(TableLock::AutoLocking), tabopt), selms;
+vi::VisibilityIterator2* MSCache::setUpVisIter(MeasurementSet& selectedMS,
+	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel) {
+	// Plain VI2 for chunk counting with averaging
+	Bool combscan(averaging_.scan());
+	Bool combfld(averaging_.field());
+	Bool combspw(averaging_.spw());
 
-	// Apply selections to MS to create selection MS 
-	// and channel/correlation selections
-	Vector<Vector<Slice> > chansel;
-	Vector<Vector<Slice> > corrsel;
-	// Don't need selms anymore but volume meter needs chansel & corrsel
-	selection_.apply(ms, selms, chansel, corrsel);
-
-	// Set up the volume meter
-	vm_.reset();
-	vm_ = MSCacheVolMeter(ms, averaging_, chansel, corrsel);
-}
-	
-void MSCache::countChunks(vi::VisibilityIterator2& vi,
-		ThreadCommunication* thread ) {
-	if (thread!=NULL) {
-		thread->setStatus("Establishing cache size.  Please wait...");
-		thread->setAllowedOperations(false,false,false);
+	// Set iterInterval
+	Double iterInterval(0.0);
+	if (averaging_.time()){
+		iterInterval = averaging_.timeValue();
 	}
-	// This is the old way, with no averaging over chunks.
-	vi.originChunks();
-	vi.origin();
-	vi::VisBuffer2* vb = vi.getVisBuffer();
+	if (combspw || combfld) iterInterval = DBL_MIN;  // force per-timestamp chunks
 
-	// Count number of chunks.
-	int chunk = 0;
-	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-		if (thread!=NULL) {
-			if (thread->wasCanceled()) {
-				dataLoaded_=false;
-				return;
-			}
-			else{
-				thread->setProgress(2);
-			}
-		}
+	// Create SortColumns
+	Int nsortcol(4 + Int(!combscan));  // include room for scan
+	Block<Int> columns(nsortcol);
+	Int i(0);
+	columns[i++]                = MS::ARRAY_ID;
+	if (!combscan) columns[i++] = MS::SCAN_NUMBER;  // force scan boundaries
+	if (!combfld) columns[i++]  = MS::FIELD_ID;      // force field boundaries
+	if (!combspw) columns[i++]  = MS::DATA_DESC_ID;  // force spw boundaries
+	columns[i++]                = MS::TIME;
+	if (combfld) columns[i++]   = MS::FIELD_ID;      // effectively ignore field boundaries
+	if (combspw) columns[i++]   = MS::DATA_DESC_ID;  // effectively ignore spw boundaries
+	vi::SortColumns sortcol(columns, False);
 
-		for (vi.origin(); vi.more(); vi.next()) {
-			vm_.add(vb);
-			++chunk;
+	vi::VisibilityIterator2* vi2 = new vi::VisibilityIterator2(selectedMS, sortcol, False, 0, iterInterval);
+	vi::FrequencySelectionUsingChannels fs;
+	setUpFrequencySelectionChannels(fs, chansel);
+	fs.addCorrelationSlices(corrsel);
+	// Add FrequencySelection to VI
+	vi2->setFrequencySelection(fs);
+	return vi2;
+}
+
+void MSCache::setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
+						Vector<Vector<Slice> > chansel) {
+	int nSpws = static_cast<int>(chansel.nelements());
+	int nChansels;
+	for (int spw=0; spw<nSpws; spw++) {
+		nChansels = static_cast<int>(chansel[spw].nelements());
+		// Add channel selections to FrequencySelection
+		for ( int sel=0; sel<nChansels; sel++) {
+			fs.add(spw, 
+			       chansel[spw][sel].start(), 
+			       chansel[spw][sel].length(),
+			       chansel[spw][sel].inc());
 		}
 	}
-	if(chunk != nChunk_) increaseChunks(chunk);
-
-	//cout << "Found " << nChunk_ << " " << chunk << " chunks." << endl;
 }
+
 
 void MSCache::countChunks(vi::VisibilityIterator2& vi,
 		Vector<Int>& nIterPerAve, 
@@ -440,7 +479,7 @@ void MSCache::countChunks(vi::VisibilityIterator2& vi,
 		ss << "nIterPerAve = " << nIterPerAve;
 		logInfo("count_chunks", ss.str());
 	}
-	//cout << "Found " << nChunk_ << " chunks." << endl;
+	// cout << "Found " << nChunk_ << " chunks." << endl;
 }
 
 void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
@@ -453,8 +492,10 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 			Vector<Bool> subMask = netAxesMask( currentX_[i], currentY_[i]);
 			mask = mask || subMask;
 		}
-
-		s = vm_.evalVolume(pendingLoadAxes, mask);
+		if (visBufferShapes_.size() > 0) {
+			s = vm_.evalVolume(visBufferShapes_, pendingLoadAxes); }
+		else {
+			s = vm_.evalVolume(pendingLoadAxes, mask); }
 		logLoad(s);
 
 	} catch(AipsError& log) {
@@ -462,15 +503,10 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 		logLoad(log.getMesg());
 		clear();
 
-		//Close any open tables.
-		if (vi_p)
-				delete vi_p;
-		vi_p=NULL;
-
 		stringstream ss;
 		ss << "Please try selecting less data or averaging and/or" << endl
-				<< " 'force reload' (to clear unneeded cache items) and/or" << endl
-				<< " letting other memory-intensive processes finish.";
+		   << " 'force reload' (to clear unneeded cache items) and/or" << endl
+		   << " letting other memory-intensive processes finish.";
 		throw(AipsError(ss.str()));
 	}
 }
@@ -486,17 +522,17 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		thread->setAllowedOperations(false,false,true);
 	logLoad("Loading chunks......");
 
+	// Initialize VI and get VB
+	vi.originChunks();
+	vi.origin();
+	vi::VisBuffer2* vb = vi.getVisBuffer();
+
+	nAnt_ = vb->nAntennas();  // needed to set up indexer
 	// set frame; VB2 does not handle N_Types, just passes it along
 	// and fails check in MFrequency so handle it here
 	freqFrame_ = transformations_.frame();
 	if (freqFrame_ == MFrequency::N_Types)
 		freqFrame_ = static_cast<MFrequency::Types>(vi.getReportingFrameOfReference());
-
-	// Initialize VI and get VB
-	vi.originChunks();
-	vi.origin();
-	vi::VisBuffer2* vb = vi.getVisBuffer();
-	nAnt_ = vb->nAntennas();  // needed to set up indexer
 
 	Int chunk = 0;
 	chshapes_.resize(4,nChunk_);
@@ -506,6 +542,12 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 		for(vi.origin(); vi.more(); vi.next()) {
+
+			if (chunk >= nChunk_) {  // nChunk_ was just an estimate
+				increaseChunks(chunk-nChunk_+1);  // updates nChunk_
+				chshapes_.resize(4, nChunk_, True);
+				goodChunk_.resize(nChunk_, True);
+			}
 
 			// If a thread is given, check if the user canceled.
 			if(thread != NULL && thread->wasCanceled()) {
@@ -552,19 +594,19 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		thread->setAllowedOperations(false,false,true);
 
 	logLoad("Loading chunks with averaging.....");
-	Bool verby(False);
+	Bool verby(false);
 	stringstream ss;
+
+	vi.originChunks();
+	vi.origin();
+	vi::VisBuffer2* vb = vi.getVisBuffer();
+	nAnt_ = vb->nAntennas();  // needed to set up indexer
 
 	// set frame; VB2 does not handle N_Types, just passes it along
 	// and fails check in MFrequency so handle it here
 	freqFrame_ = transformations_.frame();
 	if (freqFrame_ == MFrequency::N_Types)
 		freqFrame_ = static_cast<MFrequency::Types>(vi.getReportingFrameOfReference());
-
-	vi.originChunks();
-	vi.origin();
-	vi::VisBuffer2* vb = vi.getVisBuffer();
-	nAnt_ = vb->nAntennas();  // needed to set up indexer
 
 	Double time0 = 86400.0 * floor(vb->time()(0)/86400.0);
 	chshapes_.resize(4, nChunk_);
@@ -575,7 +617,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	Vector<Int> channels;
 	Vector<Double> frequencies;
 
-	for (Int chunk=0;chunk<nChunk_;++chunk) {
+	for (Int chunk=0; chunk<nChunk_; ++chunk) {
 		// If a thread is given, check if the user canceled.
 		if(thread != NULL && thread->wasCanceled()) {
 			dataLoaded_ = false;
@@ -587,6 +629,12 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 				chunk % THREAD_SEGMENT == 0))
 			thread->setStatus("Loading chunk " + String::toString(chunk) +
 					" / " + String::toString(nChunk_) + ".");
+
+		if (chunk >= nChunk_) {  // nChunk_ was just an estimate
+			increaseChunks(chunk-nChunk_+1);  // updates nChunk_
+			chshapes_.resize(4, nChunk_, True);
+			goodChunk_.resize(nChunk_, True);
+		}
 
 		// Save some data from vb (averaged vb not attached to VI so cannot get this later)
 		nAnts = vb->nAntennas();
@@ -606,13 +654,14 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		stringstream ss;
 		if (verby) ss << chunk << "----------------------------------\n";
 
-		for (Int iter=0; iter<nIterPerAve(chunk); ++iter) {
+		// iter through the pre-averaged (time or channel) chunks
+		//for (Int iter=0; iter<nIterPerAve.size(); ++iter) {
 			if (verby) {
-				ss << "ck=" << chunk << " vb=" << iter << " (" << nIterPerAve(chunk) << ");  "
+				ss << "ck=" << chunk << " (" << nIterPerAve(chunk) << ");  "
 						<< "sc=" << vb->scan()(0) << " "
 						<< "time=" << vb->time()(0)-time0 << " "
 						<< "fl=" << vb->fieldId()(0) << " "
-						<< "sp=" << vb->spectralWindows()(0) << " ";
+						<< "sp=" << vb->spectralWindows()(0) << " " << endl;
 			}
 
 			// Accumulate into the averager
@@ -620,19 +669,18 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
 			// Advance to next VB
 			vi.next();
-			if (verby) ss << " next VB ";
+			//if (verby) ss << iter << " next VB ";
 
 			if (!vi.more() && vi.moreChunks()) {
 				// go to first vb in next chunk
-				if (verby) ss << "  stepping VI";
+				if (verby) ss << "  next chunk";
 				vi.nextChunk();
 				vi.origin();
 			}
 
 			if (verby) ss << "\n";
-		}
+		//}
 		if (verby) logLoad(ss.str());
-
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
 		// The averaged VisBuffer
@@ -655,7 +703,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
   					*freq_[chunk] = frequencies / 1.0e9; // in GHz
 				else
 					loadAxis(&avb, chunk, loadAxes[i], loadData[i]);
-
 			}
 		}
 		else {
@@ -672,7 +719,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		}
 	}
 
-	//  cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
+	//cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
 }
 
 void MSCache::forceVBread(vi::VisBuffer2* vb,
@@ -947,9 +994,9 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 	case PMS::AMP: {
 		switch(data) {
 		case PMS::DATA: {
-			MeasurementSet ms( filename_);
-			//Please see CAS-5730.  For single dish data, absolute value of
+			//CAS-5730.  For single dish data, absolute value of
 			//points should not be plotted.
+			MeasurementSet ms( filename_);
 			if ( ms.isColumn( MS::FLOAT_DATA ) ){
 				*amp_[vbnum]=real(vb->visCube());
 			}
@@ -1319,7 +1366,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
-		setUpVisIter(filename_, selection_, calibration_, "DATA", False);
+		setUpVisIter(selection_, calibration_, "DATA");
 
 		vi_p->originChunks();
 		vi_p->origin();

@@ -68,7 +68,7 @@ MSCacheVolMeter::MSCacheVolMeter(const MeasurementSet& ms,
 	ROMSColumns msCol(ms);
 
 	// Initialize chunks and rows counters
-	nDDID_=msCol.dataDescription().nrow();
+	nDDID_ = msCol.dataDescription().nrow();
 	nPerDDID_.resize(nDDID_);
 	nPerDDID_.set(0);
 	nRowsPerDDID_.resize(nDDID_);
@@ -86,46 +86,45 @@ MSCacheVolMeter::MSCacheVolMeter(const MeasurementSet& ms,
 	Vector<Int> spwPerDDID;
 	msCol.dataDescription().spectralWindowId().getColumn(spwPerDDID);
 
-	Bool chave=(ave.channel() && ave.channelValue()>1.0);
+	// nAnt:
+	nAnt_ = msCol.antenna().nrow();
 
-	for (Int iddid=0;iddid<nDDID_;++iddid) {
+	Bool chave = (ave.channel() && ave.channelValue()>1.0);
+
+	for (Int iddid=0; iddid<nDDID_; ++iddid) {
 		// ncorr is simple (for now, maybe Stokes later?):
-		Int ipol=polPerDDID(iddid);
+		Int ipol = polPerDDID(iddid);
 		// Unselected corr counting
-		nCorrPerDDID_(iddid)=nCorrPerPol(ipol);
+		nCorrPerDDID_(iddid) = nCorrPerPol(ipol);
 
 		if (corrsel.nelements()>0 && corrsel(ipol).nelements()>0) {
 			Vector<Slice> s(corrsel(ipol));
-			Int ncorr0=0;
-			for (uInt j=0;j<s.nelements();++j) ncorr0+=s(j).length();
-			nCorrPerDDID_(iddid)=ncorr0;
+			Int ncorr0 = 0;
+			for (uInt j=0; j<s.nelements(); ++j) ncorr0 += s(j).length();
+			nCorrPerDDID_(iddid) = ncorr0;
 		}
 
-		Int ispw=spwPerDDID(iddid);
+		Int ispw = spwPerDDID(iddid);
 		// Unselected channel counting
-		Int nchan0=nChanPerSpw(spwPerDDID(iddid));
-		Int nchanA= ( chave ? Int(ceil(Double(nchan0)/ave.channelValue())) : nchan0 );
+		Int nchan0 = nChanPerSpw(spwPerDDID(iddid));
+		Int nchanA = ( chave ? Int(ceil(Double(nchan0)/ave.channelValue())) : nchan0 );
 
 		// Override channel counting if specific selection provided
 		if (chansel.nelements()>0 && chansel(ispw).nelements()>0) {
 			Vector<Slice> s(chansel(ispw));
 			Int minchan(INT_MAX),maxchan(-1);
-			nchan0=0;
-			for (uInt j=0;j<s.nelements();++j) {
-				nchan0+=s(j).length();  // unaveraged chan count
-				minchan=min(minchan,Int(s(j).start()));
-				maxchan=max(maxchan,Int(s(j).end()));
+			nchan0 = 0;
+			for (uInt j=0; j<s.nelements(); ++j) {
+				nchan0 += s(j).length();  // unaveraged chan count
+				minchan = min(minchan, Int(s(j).start()));
+				maxchan = max(maxchan, Int(s(j).end()));
 			}
 			// Average sees full range of channels
-			nchanA=Int(ceil(Double(maxchan-minchan+1)/ave.channelValue()));
+			nchanA = Int(ceil(Double(maxchan-minchan+1)/ave.channelValue()));
 		}
 		// record channel counting result
-		nChanPerDDID_(iddid)= (chave ? nchanA : nchan0);
+		nChanPerDDID_(iddid) = (chave ? nchanA : nchan0);
 	}
-
-	// nAnt:
-	nAnt_=msCol.antenna().nrow();
-
 }
 
 
@@ -178,38 +177,38 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::SPW:
 			case PMS::OBSERVATION:
 			case PMS::INTENT:
-				axisVol=sizeof(Int)*sum(nPerDDID_);
+				axisVol = sizeof(Int) * sum(nPerDDID_);
 				break;
 			case PMS::TIME:
 			case PMS::TIME_INTERVAL:
-				axisVol=sizeof(Double)*sum(nPerDDID_);
+				axisVol = sizeof(Double) * sum(nPerDDID_);
 				break;
 			case PMS::CHANNEL:
-				axisVol=sizeof(Int)*sum(nPerDDID_*nChanPerDDID_);
+				axisVol = sizeof(Int) * sum(nPerDDID_ * nChanPerDDID_);
 				break;
 			case PMS::FREQUENCY:
 			case PMS::VELOCITY:
-				axisVol=sizeof(Double)*sum(nPerDDID_*nChanPerDDID_);
+				axisVol = sizeof(Double) * sum(nPerDDID_ * nChanPerDDID_);
 				break;
 			case PMS::CORR:
-				axisVol=sizeof(Int)*sum(nPerDDID_*nCorrPerDDID_);
+				axisVol = sizeof(Int) * sum(nPerDDID_ * nCorrPerDDID_);
 				break;
 			case PMS::ANTENNA1:
 			case PMS::ANTENNA2:
 			case PMS::BASELINE:
-				axisVol=sizeof(Int)*sum(nRowsPerDDID_);
+				axisVol = sizeof(Int) * sum(nRowsPerDDID_);
 				break;
 			case PMS::UVDIST:
 			case PMS::U:
 			case PMS::V:
 			case PMS::W:
-				axisVol=sizeof(Double)*sum(nRowsPerDDID_);
+				axisVol = sizeof(Double) * sum(nRowsPerDDID_);
 				break;
 			case PMS::UVDIST_L:
 			case PMS::UWAVE:
 			case PMS::VWAVE:
 			case PMS::WWAVE:
-				axisVol=sizeof(Double)*sum(nRowsPerDDID_*nChanPerDDID_);
+				axisVol = sizeof(Double) * sum(nRowsPerDDID_ * nChanPerDDID_);
 				break;
 			case PMS::AMP:
 			case PMS::PHASE:
@@ -217,17 +216,17 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::IMAG:
 			case PMS::WTSP:
 			case PMS::SIGMASP:
-				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
+				axisVol = sizeof(Float) * sum(nRowsPerDDID_ * nChanPerDDID_ * nCorrPerDDID_);
 				break;
 			case PMS::FLAG:
-				axisVol=sizeof(Bool)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
+				axisVol = sizeof(Bool) * sum(nRowsPerDDID_ * nChanPerDDID_ * nCorrPerDDID_);
 				break;
 			case PMS::FLAG_ROW:
-				axisVol=sizeof(Bool)*sum(nRowsPerDDID_);
+				axisVol = sizeof(Bool) * sum(nRowsPerDDID_);
 				break;
 			case PMS::WT:
 			case PMS::SIGMA:
-				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nCorrPerDDID_);
+				axisVol = sizeof(Float) * sum(nRowsPerDDID_ * nCorrPerDDID_);
 				break;
 			case PMS::AZ0:
 			case PMS::EL0:
@@ -235,20 +234,20 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::RHO:
 			case PMS::HA0:
 			case PMS::PA0:
-				axisVol=sizeof(Double)*sum(nPerDDID_);
+				axisVol = sizeof(Double) * sum(nPerDDID_);
 				break;
 			case PMS::ANTENNA:
-				axisVol=sizeof(Int)*nAnt_*sum(nPerDDID_);
+				axisVol = sizeof(Int) * nAnt_ * sum(nPerDDID_);
 				break;
 			case PMS::AZIMUTH:
 			case PMS::ELEVATION:
-				axisVol=sizeof(Double)*nAnt_*sum(nPerDDID_);
+				axisVol = sizeof(Double) * nAnt_ * sum(nPerDDID_);
 				break;
 			case PMS::PARANG:
-				axisVol=sizeof(Float)*nAnt_*sum(nPerDDID_);
+				axisVol = sizeof(Float) * nAnt_ * sum(nPerDDID_);
 				break;
 			case PMS::ROW:
-				axisVol=sizeof(uInt)*sum(nRowsPerDDID_);
+				axisVol = sizeof(uInt) * sum(nRowsPerDDID_);
 				break;
 			case PMS::GAMP:
 			case PMS::GPHASE:
@@ -262,45 +261,45 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::WTxAMP:
 				break;
 			} // switch
-			totalVol+=axisVol;
-			//      cout << " " << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
+			totalVol += axisVol;
+			//cout << " " << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
 		}
 	} // for
 
 	// Add in the plotting mask
 	//  (TBD: only if does not reference the flags)
 	if (True) {  // ntrue(axesmask)<2) {
-		Vector<uInt64> nplmaskPerDDID(nDDID_,0);
-		nplmaskPerDDID(nPerDDID_>uInt64(0))=1;
-		if (axesmask(0)) nplmaskPerDDID*=nCorrPerDDID_;
-		if (axesmask(1)) nplmaskPerDDID*=nChanPerDDID_;
-		if (axesmask(2)) nplmaskPerDDID*=nRowsPerDDID_;
-		if (axesmask(3)) nplmaskPerDDID*=uInt64(nAnt_);
-		uInt64 plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
+		Vector<uInt64> nplmaskPerDDID(nDDID_, 0);
+		nplmaskPerDDID(nPerDDID_>uInt64(0)) = 1;
+		if (axesmask(0)) nplmaskPerDDID *= nCorrPerDDID_;
+		if (axesmask(1)) nplmaskPerDDID *= nChanPerDDID_;
+		if (axesmask(2)) nplmaskPerDDID *= nRowsPerDDID_;
+		if (axesmask(3)) nplmaskPerDDID *= uInt64(nAnt_);
+		uInt64 plmaskVol = sizeof(Bool) * sum(nplmaskPerDDID);
 		//    cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
-		totalVol+=plmaskVol;
+		totalVol += plmaskVol;
 	}
 
 	// Finally, count the total points for the plot:
 	Vector<uInt64> nPointsPerDDID(nDDID_,0);
-	nPointsPerDDID(nPerDDID_>uInt64(0))=1;
+	nPointsPerDDID(nPerDDID_>uInt64(0)) = 1;
 	if (axesmask(0)) nPointsPerDDID *= nCorrPerDDID_;
 	if (axesmask(1)) nPointsPerDDID *= nChanPerDDID_;
 	if (axesmask(2)) nPointsPerDDID *= nRowsPerDDID_;
 	if (axesmask(3)) nPointsPerDDID *= uInt64(nAnt_);
 
-	uInt64 totalPoints=sum(nPointsPerDDID);
+	uInt64 totalPoints = sum(nPointsPerDDID);
 
-	Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
-	Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
+	Double totalVolGB = Double(totalVol)/1.0e9;  // in GB
+	Double bytesPerPt = Double(totalVol)/Double(totalPoints);  // bytes/pt
 
 	// Detect if "free" memory should be considered
 	String arcpmsif("");
 	Bool ignoreFree=(Aipsrc::find(arcpmsif,"plotms.ignorefree") && arcpmsif=="T");
 
 	// Memory info from HostInfo
-	uInt hostMemTotalKB=uInt(HostInfo::memoryTotal(true));
-	uInt hostMemFreeKB=uInt(HostInfo::memoryFree());
+	uInt hostMemTotalKB = uInt(HostInfo::memoryTotal(true));
+	uInt hostMemFreeKB  = uInt(HostInfo::memoryFree());
 
 	/*
   cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
@@ -312,13 +311,13 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 	 */
 
 	// Memory available to plotms is the min of user's casarc and free
-	Double hostMemGB=Double(min(hostMemTotalKB,hostMemFreeKB))/1.0e6; // in GB
+	Double hostMemGB = Double(min(hostMemTotalKB,hostMemFreeKB))/1.0e6; // in GB
 	// Override usual calculation if ignoreFree
 	if (ignoreFree)
-		hostMemGB=Double(hostMemTotalKB)/1.0e6;
+		hostMemGB = Double(hostMemTotalKB)/1.0e6;
 
-	Double fracMem=100.0*totalVolGB/hostMemGB;  // fraction require in %
-
+	Double fracMem = 100.0 * totalVolGB/hostMemGB;  // fraction require in %
+ 
 	stringstream ss;
 
 	if (ignoreFree)
@@ -358,6 +357,202 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 
 	return ss.str();
 
+}
+// =======================================================================
+String MSCacheVolMeter::evalVolume(std::vector<IPosition> vbShapes,
+	map<PMS::Axis,Bool> axes) {
+
+	Int nChunks = vbShapes.size();
+	Vector<Int> nCorr(nChunks);
+	Vector<Int> nChan(nChunks);
+	Vector<Int> nRows(nChunks);
+	uInt64 nElements = 0;
+
+	for (uInt i=0; i < vbShapes.size(); i++)
+	{
+		nCorr(i) = vbShapes[i][0];
+		nChan(i) = vbShapes[i][1];
+		nRows(i) = vbShapes[i][2];
+		nElements += nCorr(i) * nChan(i) * nRows(i);
+	}
+	//cout << "nElements = " << nElements << endl;
+
+	uInt64 totalVol(0);
+	for (map<PMS::Axis,Bool>::iterator pAi=axes.begin();
+			pAi!=axes.end(); ++pAi) {
+		if (pAi->second) {
+			uInt64 axisVol(0);
+			switch(pAi->first) {
+			case PMS::SCAN:
+			case PMS::FIELD:
+			case PMS::SPW:
+			case PMS::OBSERVATION:
+			case PMS::INTENT:
+				axisVol = sizeof(Int) * nChunks;
+				break;
+			case PMS::TIME:
+			case PMS::TIME_INTERVAL:
+				axisVol = sizeof(Double) * nChunks;
+				break;
+			case PMS::CHANNEL:
+				axisVol = sizeof(Int) * sum(nChan);
+				break;
+			case PMS::FREQUENCY:
+			case PMS::VELOCITY:
+				axisVol = sizeof(Double) * sum(nChan);
+				break;
+			case PMS::CORR:
+				axisVol = sizeof(Int) * sum(nCorr);
+				break;
+			case PMS::ANTENNA1:
+			case PMS::ANTENNA2:
+			case PMS::BASELINE:
+				axisVol = sizeof(Int) * sum(nRows);
+				break;
+			case PMS::UVDIST:
+			case PMS::U:
+			case PMS::V:
+			case PMS::W:
+				axisVol = sizeof(Double) * sum(nRows);
+				break;
+			case PMS::UVDIST_L:
+			case PMS::UWAVE:
+			case PMS::VWAVE:
+			case PMS::WWAVE:
+				axisVol = sizeof(Double) * sum(nRows * nChan);
+				break;
+			case PMS::AMP:
+			case PMS::PHASE:
+			case PMS::REAL:
+			case PMS::IMAG:
+			case PMS::WTSP:
+			case PMS::SIGMASP:
+				axisVol = sizeof(Float) * nElements;
+				break;
+			case PMS::FLAG:
+				axisVol = sizeof(Bool) * nElements;
+				break;
+			case PMS::FLAG_ROW:
+				axisVol = sizeof(Bool) * sum(nRows);
+				break;
+			case PMS::WT:
+			case PMS::SIGMA:
+				axisVol = sizeof(Float) * sum(nRows * nCorr);
+				break;
+			case PMS::AZ0:
+			case PMS::EL0:
+			case PMS::RADIAL_VELOCITY:
+			case PMS::RHO:
+			case PMS::HA0:
+			case PMS::PA0:
+				axisVol = sizeof(Double) * nChunks;
+				break;
+			case PMS::ANTENNA:
+				axisVol = sizeof(Int)*nAnt_ * nChunks;
+				break;
+			case PMS::AZIMUTH:
+			case PMS::ELEVATION:
+				axisVol = sizeof(Double)*nAnt_ * nChunks;
+				break;
+			case PMS::PARANG:
+				axisVol = sizeof(Float)*nAnt_ * nChunks;
+				break;
+			case PMS::ROW:
+				axisVol = sizeof(uInt) * sum(nRows);
+				break;
+			case PMS::GAMP:
+			case PMS::GPHASE:
+			case PMS::GREAL:
+			case PMS::GIMAG:
+			case PMS::DELAY:
+			case PMS::SWP:
+			case PMS::TSYS:
+			case PMS::OPAC:
+			case PMS::NONE:
+			case PMS::WTxAMP:
+				break;
+			} // switch
+			totalVol += axisVol;
+			//cout << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
+		}
+	} // for
+
+	// Add in the plotting mask
+	//  (TBD: only if does not reference the flags)
+	if (True) {  // ntrue(axesmask)<2) {
+		uInt64 plmaskVol = sizeof(Bool) * nElements;
+		//cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
+		totalVol += plmaskVol;
+	}
+
+	uInt64 totalPoints = nElements;
+
+	Double totalVolGB = Double(totalVol) / 1.0e9;  // in GB
+	Double bytesPerPt = Double(totalVol) / Double(totalPoints);  // bytes/pt
+
+	// Detect if "free" memory should be considered
+	String arcpmsif("");
+	Bool ignoreFree=(Aipsrc::find(arcpmsif,"plotms.ignorefree") && arcpmsif=="T");
+
+	// Memory info from HostInfo
+	uInt hostMemTotalKB = uInt(HostInfo::memoryTotal(true));
+	uInt hostMemFreeKB = uInt(HostInfo::memoryFree());
+
+	/*
+  cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
+  cout << "HostInfo::memoryTotal(true)  = " << hostMemTotalKB << endl;
+  cout << "HostInfo::memoryFree()       = " << hostMemFreeKB << endl;
+  cout << boolalpha;
+  cout << "arcpmsif   = " << arcpmsif << endl;
+  cout << "ignoreFree = " << ignoreFree << endl;
+	*/
+
+	// Memory available to plotms is the min of user's casarc and free
+	Double hostMemGB = Double(min(hostMemTotalKB, hostMemFreeKB))/1.0e6; // in GB
+	// Override usual calculation if ignoreFree
+	if (ignoreFree)
+		hostMemGB = Double(hostMemTotalKB) / 1.0e6;
+
+	Double fracMem = 100.0 * totalVolGB / hostMemGB;  // fraction require in %
+
+	stringstream ss;
+
+	if (ignoreFree)
+		ss << "Use of 'plotms.ignorefree: T' in the .casarc file may cause" << endl
+		<< "your machine to swap for very large plots." << endl;
+
+	// Report number of points to be plotted.
+	ss << "Data selection will yield a total of " << totalPoints
+			<< " plottable points (flagged and unflagged).";
+
+	// Report require memory
+	ss << endl<< "The plotms cache will require an estimated "
+			<< totalVolGB << " GB of memory (" << bytesPerPt << " bytes/point)." << endl
+			<< "This is " << fracMem << "% of the memory avail. to CASA ("
+			<< ((ignoreFree||(hostMemTotalKB<hostMemFreeKB)) ? "total=" : "free=")
+			<< hostMemGB << " GB).";
+
+	// Trap too many points
+	Bool toomany(False);
+	if (totalPoints>UINT_MAX) {
+		ss << endl
+				<< "Too many points!  CASA plotms cannot plot more than " << UINT_MAX << " points.";
+		toomany=True;
+	}
+
+	// Trap insufficient memory
+	Bool toomuch(False);
+	if (totalVolGB>hostMemGB) {
+		ss << endl
+				<< "Insufficient memory!";
+		toomuch=True;
+	}
+
+	// Throw exception if toomuch or toomany
+	if (toomuch || toomany)
+		throw(AipsError(ss.str()));
+
+	return ss.str();
 }
 
 }  // namespace casa

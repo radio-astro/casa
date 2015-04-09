@@ -93,21 +93,21 @@ private:
   // Forbid copy for now
   MSCache(const MSCache&);
 
-  // THIS IS A TEST:
-  vi::VisibilityIterator2* setUpBasicVisIter(const String& msname, 
-	PlotMSSelection& selection);
-  void setUpVolMeter();
+  void checkColumns(vector<PMS::Axis>& loadAxes, vector<PMS::DataColumn>& loadData);
+  String getDataColumn(vector<PMS::Axis>& loadAxes, vector<PMS::DataColumn>& loadData);
 
-  // Set up the VisIter
-  void setUpVisIter(const String& msname,
-		    PlotMSSelection& selection,
+  // Set up
+  void getNamesFromMS(MeasurementSet& ms);
+  void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
 		    String dataColumn,
-		    Bool readonly=True);
+		    Bool estimateMemory=False);
+  vi::VisibilityIterator2* setUpVisIter(MeasurementSet& selectedMS,
+	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel);
+  void setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
+	Vector<Vector<Slice> > chansel);
+  void destroyVisIter();
 
-  // Count the chunks required in the cache
-  void countChunks(vi::VisibilityIterator2& vi,
-                   /*PlotMSCacheThread**/ThreadCommunication* thread);
   // Count the chunks with averaging
   void countChunks(vi::VisibilityIterator2& vi,
 		   Vector<Int>& nIterPerAve, 
@@ -115,6 +115,7 @@ private:
 
   // Trap attempt to use to much memory (too many points)
   void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
+  std::vector<IPosition> visBufferShapes_;
 
   // Loop over VisIter, filling the cache
   void loadChunks(vi::VisibilityIterator2& vi,
