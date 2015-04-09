@@ -722,8 +722,8 @@ When specified in the format "$<$UVDIST", all rows with uv-distance
 less than the given uv-distance (converted to the appropriate units)
 are selected.
 
-To selected rows with uv-distance within an equal range on either side
-of a given range, the N\% syntax can be used.  All rows with
+The :N\% syntax can be used to selected rows with uv-distance within an
+equal range on either side of a given range.  All rows with
 uv-distance between $\pm$N percent of the uv-range determined by the
 uv-distance expression in appropriate units are selected.
 
