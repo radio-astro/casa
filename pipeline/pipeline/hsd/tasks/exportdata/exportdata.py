@@ -33,7 +33,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
-import pipeline.hif.tasks.exportdata as hif_exportdata
+import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
 import pipeline.hif.tasks.exportdata.manifest as manifest
 
 # the logger for this module
@@ -126,25 +126,8 @@ class SDExportDataInputs(basetask.StandardInputs):
     @targetimages.setter
     def targetimages(self, value):
         self._targetimages = value
-      
-class SDExportDataResults(basetask.Results):
-    def __init__(self, jobs=[], pprequest='', targetimages=(),
-                 caltabledict={}, flagversionsdict={}, calapplydict={},
-                 weblog='', pipescript='', restorescript='', commandslog=''):
-        super(SDExportDataResults,self).__init__()
         
-        # Initialise the results object with the given list of JobRequests.
-        self.jobs = jobs
-        
-        self.pprequest = pprequest
-        self.weblog = weblog
-        self.commandslog = commandslog
-        self.pipescript = pipescript
-        self.targetimages = targetimages
-        self.caltabledict = caltabledict
-        self.flagversionsdict = flagversionsdict
-        self.calapplydict = calapplydict
-    
+class SDExportDataResults(hif_exportdata.ExportDataResults):
     def __repr__(self):
         s = 'SDExportData results:\n'
         for job in self.jobs:
@@ -221,11 +204,11 @@ class SDExportData(hif_exportdata.ExportData):
         # Copy the final flag versions to the data products directory
         # and tar them up.
         flag_version_list = []
-        flagversionsdict= collections.defaultdict(list)
+        flagversionsdict= {}
         for basevis, myvislist in visdict2.items():
-            flag_version_file = self._export_final_flagversion2(inputs.context, basevis, myvislist, flag_version_name, inputs.products_dir)
+            flag_version_file = self._export_final_flagversion(inputs.context, basevis, myvislist, flag_version_name, inputs.products_dir)
             flag_version_list.append(flag_version_file)
-            flagversionsdict[basevis].append(os.path.basename(flag_version_file))
+            flagversionsdict[basevis] = os.path.basename(flag_version_file)
         LOG.info('flagversiondict=%s'%(flagversionsdict))
         
         # create the calibration apply file(s) in the products directory. 
@@ -297,15 +280,27 @@ class SDExportData(hif_exportdata.ExportData):
 #                               casa_commands=casa_commands_file)
         #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
 
+        # Create the ordered session dictionary
+        #    The keys are the session names
+        #    The values are a tuple containing the vislist and the caltables 
+        sessiondict = collections.OrderedDict()
+        for i in xrange(len(session_names)):
+            sessiondict[session_names[i]] = \
+                ([os.path.basename(visfile) for visfile in session_vislists[i]], \
+                 os.path.basename(caltabledict[session_names[i]])) 
+                
+        visdict = collections.OrderedDict()
+        for (vis, flagversion) in flagversionsdict.items():
+            visdict[vis] = (flagversion, applydict[vis])
+                
         # Export the pipeline manifest file
         casa_pipe_manifest = self._export_pipe_manifest(inputs.context, oussid,
                                                         'pipeline_manifest.xml', inputs.products_dir, pipemanifest)
          
-        return SDExportDataResults(jobs=[], pprequest=ppr_file, weblog=weblog_file, 
+        return SDExportDataResults(pprequest=ppr_file, weblog=weblog_file, 
+                                   sessiondict=sessiondict, visdict=visdict,
                                    targetimages=(imagelist, targetimages_fitslist),
-                                   caltabledict=caltabledict,
-                                   flagversionsdict=flagversionsdict,
-                                   calapplydict=applydict,
+                                   restorescript='',
                                    pipescript=casa_pipescript, commandslog=casa_commands_file)
      
     def init_visdict(self):
@@ -630,45 +625,6 @@ class SDExportData(hif_exportdata.ExportData):
     
         return tarfilename
 
-#     def _export_caltable_file_list (self, context, products_dir):
-#         """
-#         Save flag_bl / Antenna are to be tar file
-#         """
-#         list_of_tarname={}
-#         if not self._executor._dry_run:
-#             for ms in context.observing_run.measurement_sets:
-#                 vis = ms.basename
-#                 prefix = vis.replace('.ms','')
-#                 tar_filename = '.'.join([vis, 'caltables.tar.gz'])
-#                 list_of_tarname[vis] = tar_filename
-#                 LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
-#                 tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
-#                 antenna_list = [a.name for a in ms.antennas]
-#                 spw_list = [spw.id for spw in ms.spectral_windows
-#                             if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
-#                 LOG.info('spw_list=%s'%(spw_list))
-# 
-#                 for antenna in antenna_list:
-#                     namer = filenamer.CalibrationTable()
-#                     namer.asdm(prefix)
-#                     namer.antenna_name(antenna)
-#                     namer.tsys_cal()
-#                     name = namer.get_filename()
-#                     if os.path.exists(name):
-#                         tar.add(name)
-#                     namer.sky_cal()
-#                     name = namer.get_filename()
-#                     if os.path.exists(name):
-#                         tar.add(name)
-#                     namer.bl_cal()
-#                     for spw in spw_list:
-#                         namer.spectral_window(spw)
-#                         name = namer.get_filename()
-#                         if os.path.exists(name):
-#                             tar.add(name)
-#                 tar.close()
-#         return list_of_tarname
-#     
     def _export_weblog (self, context, products_dir):
         """
         Save the processing web log to a tarfile
@@ -758,49 +714,7 @@ class SDExportData(hif_exportdata.ExportData):
                                            mode='save', versionname=flag_version_name)
             self._executor.execute (task)
 
-    def _export_final_flagversion(self, context, vis, flag_version_name,
-                                  products_dir):
-        """
-        Save the final flags version to a compressed tarfile in products.
-        """
-        # Save the current working directory and move to the pipeline
-        # working directory. This is required for tarfile IO
-        cwd = os.getcwd()
-        #os.chdir (os.path.dirname(vis))
-        os.chdir(context.output_dir)
-    
-        # Define the name of the output tarfile
-        visname = os.path.basename(vis)
-        tarfilename = self.visdict[visname] + '.flagversions.tar.gz'
-        LOG.info('Storing final flags for %s in %s' % (visname, tarfilename))
-    
-        # Define the directory to be saved
-        flagsname = os.path.join (visname + '.flagversions',
-                                  'flags.' + flag_version_name) 
-        LOG.info('Saving flag version %s' % (flag_version_name))
-    
-        # Define the versions list file to be saved
-        flag_version_list = os.path.join (visname + '.flagversions',
-                                          'FLAG_VERSION_LIST')
-        ti = tarfile.TarInfo(flag_version_list)
-        #line = "Pipeline_Final : Final pipeline flags\n"
-        line = "%s : Final pipeline flags\n" % flag_version_name
-        ti.size = len (line)
-        LOG.info('Saving flag version list')
-    
-        # Create the tar file
-        if not self._executor._dry_run:
-            tar = tarfile.open (os.path.join(products_dir, tarfilename), "w:gz")
-            tar.add (flagsname)
-            tar.addfile (ti, StringIO.StringIO(line))
-            tar.close()
-    
-        # Restore the original current working directory
-        os.chdir(cwd)
-    
-        return tarfilename
-    
-    def _export_final_flagversion2(self, context, basevis, vislist, flag_version_name,
+    def _export_final_flagversion(self, context, basevis, vislist, flag_version_name,
                                   products_dir):
         """
         Save the final flags version to a compressed tarfile in products.
