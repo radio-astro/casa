@@ -700,18 +700,19 @@ specifications.  E.g.
 \label{SPWEXPR}
 
 A uv-distance specification is given as a physical quantity (number
-with units in the format N[UNIT] where UNIT is optional).  This is
-referred to as UVDIST in the description below.  Units are optional
-with the default unit being meter.  Units can be specified as "m"/"M"
-(for Mega) or "k"/"K" (for Kilo) followed by "m"/"M" (for meter) or
-"lambda"/"LAMBDA" (for wavelength).  User supplied values are
-converted to internal Measurement Set units using the spectral window
-sensitive reference frequency.
+with units in the format {\tt NUMBER[UNIT][:NUMBER\%]} where syntax in
+square brackets is optional).  This is referred to as UVDIST in the
+description below.  Units are optional with the default unit being
+meter.  Units can be specified as "m"/"M" (for Mega) or "k"/"K" (for
+Kilo) followed by "m"/"M" (for meter) or "lambda"/"LAMBDA" (for
+wavelength).  User supplied values are converted to internal
+Measurement Set units using the spectral window sensitive reference
+frequency.
 
 If only a single UVDIST is specified, all rows that exactly match the
 given UVDIST are selected.  When UVDIST is given as a
 \hyperref[Sec:RANGE]{range (section~\ref{Sec:RANGE})} in the format
-N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
+{\tt N0$\sim$N1[UNIT]} (where N0 and N1 are valid numbers), all rows
 corresponding to the uv-distance between N0 and N1 (N0 and N1
 included) are selected.
 
@@ -722,7 +723,7 @@ When specified in the format "$<$UVDIST", all rows with uv-distance
 less than the given uv-distance (converted to the appropriate units)
 are selected.
 
-The :N\% syntax can be used to selected rows with uv-distance within an
+The {\tt :NUMBER\%} syntax can be used to selected rows with uv-distance within an
 equal range on either side of a given range.  All rows with
 uv-distance between $\pm$N percent of the uv-range determined by the
 uv-distance expression in appropriate units are selected.
