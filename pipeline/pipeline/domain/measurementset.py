@@ -311,8 +311,8 @@ class MeasurementSet(object):
         
         return int_time
     
-    def get_vla_corrstring(self):
-        '''Get correlation string for VLA'''
+    def get_vla_datadesc(self):
+        '''Generate VLA data description index'''
         
         vis = self.name
         
@@ -387,18 +387,49 @@ class MeasurementSet(object):
             ddindex[idd]['npol'] = ncorlist[ipol]
             ddindex[idd]['corrtype'] = polindex[ipol]
             ddindex[idd]['corrdesc'] = poldescr[ipol]
-        
+            
+        return ddindex
+    
+    
+    def get_vla_corrstring(self):
+        '''Get correlation string for VLA'''
         
         """
         Prep string listing of correlations from dictionary created by method buildscans
         For now, only use the parallel hands.  Cross hands will be implemented later.
         """
+        
+        ddindex = self.get_vla_datadesc()
+        
         corrstring_list = ddindex[0]['corrdesc']
         removal_list = ['RL', 'LR', 'XY', 'YX']
         corrstring_list = list(set(corrstring_list).difference(set(removal_list)))
         corrstring = string.join(corrstring_list,',')
         
         return corrstring
+        
+    def get_vla_spw2band(self):
+    
+        ddindex = self.get_vla_datadesc()
+        
+        spw2band = {}
+    
+        for spw in ddindex:
+
+            strelems =  list(ddindex[spw]['spwname'])
+            #print strelems
+            bandname = strelems[5]
+            if bandname in '4PLSCXUKAQ':
+                spw2band[spw] = strelems[5]
+            #Check for U / KU
+            if strelems[5] == 'K' and strelems[6] == 'U':
+                spw2band[spw] = 'U'
+            if strelems[5] == 'K' and strelems[6] == 'A':
+                spw2band[spw] = 'A'
+
+        return spw2band
+        
+        
     
     
     def vla_spws_for_field(self,field):

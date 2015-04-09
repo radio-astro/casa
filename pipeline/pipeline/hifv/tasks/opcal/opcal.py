@@ -117,7 +117,8 @@ class Opcal(basetask.StandardTaskTemplate):
         context = self.inputs.context
         
         m = context.observing_run.measurement_sets[0]
-        spw2band = context.evla['msinfo'][m.name].spw2band
+        #spw2band = context.evla['msinfo'][m.name].spw2band
+        spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
         with casatools.MSReader(inputs.vis) as ms:

@@ -82,7 +82,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
         field_spws = m.get_vla_field_spws()
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
         gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
-        spw2band = context.evla['msinfo'][m.name].spw2band
+        #spw2band = context.evla['msinfo'][m.name].spw2band
+        spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
@@ -201,7 +202,8 @@ class Fluxboot(basetask.StandardTaskTemplate):
         m = context.observing_run.measurement_sets[0]
         #field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
-        spw2band = context.evla['msinfo'][m.name].spw2band
+        #spw2band = context.evla['msinfo'][m.name].spw2band
+        spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!

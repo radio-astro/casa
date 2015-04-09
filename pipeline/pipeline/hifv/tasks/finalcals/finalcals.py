@@ -407,7 +407,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         m = context.observing_run.measurement_sets[0]
         #field_spws = context.evla['msinfo'][m.name].field_spws
         field_spws = m.get_vla_field_spws()
-        spw2band = context.evla['msinfo'][m.name].spw2band
+        #spw2band = context.evla['msinfo'][m.name].spw2band
+        spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
         
         standard_source_names, standard_source_fields = standard_sources(calMs)
@@ -487,7 +488,8 @@ class Finalcals(basetask.StandardTaskTemplate):
         sources = context.evla['msinfo'][m.name].fluxscale_sources
         flux_densities = context.evla['msinfo'][m.name].fluxscale_flux_densities
         spws = context.evla['msinfo'][m.name].fluxscale_spws
-        spw2band = context.evla['msinfo'][m.name].spw2band
+        #spw2band = context.evla['msinfo'][m.name].spw2band
+        spw2band = m.get_vla_spw2band()
         bands = spw2band.values()
 
         #Look in spectral window domain object as this information already exists!
@@ -617,7 +619,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                                  'spix'           : result[3],
                                  'reffreq'        : str(result[4])+'GHz',
                                  'standard'       : 'manual',
-                                 'usescratch'     : False}
+                                 'usescratch'     : True}
         
                     job = casa_tasks.setjy(**task_args)
             

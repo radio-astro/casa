@@ -604,7 +604,7 @@ class VLAScanHeuristics(object):
         ##self.corrstring = string.join(self.corrstring_list,',')
         
         #Create dictionary of band names from spw ids
-        self.spw2band = self.convertspw2band()
+        ##self.spw2band = self.convertspw2band()
         
         return True
         
