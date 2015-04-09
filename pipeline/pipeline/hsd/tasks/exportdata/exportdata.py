@@ -603,9 +603,9 @@ class SDExportData(hif_exportdata.ExportData):
                 
                 # baseline table
                 for st in context.observing_run:
-                    if st.ms.name == visfile:
-                        spw_list = [spw.id for spw in st.ms.spectral_windows
-                                    if spw.num_channels > 1 and (spw.intents & set(['TARGET', 'WVR'])) == set(['TARGET'])]
+                    if st.ms.basename == os.path.basename(visfile):
+                        spw_list = [spwid for (spwid,spw) in st.spectral_window.items()
+                                    if spw.num_channels > 1 and spw.type != 'WVR' and spw.is_target]
                         namer = filenamer.CalibrationTable()
                         prefix = os.path.basename(visfile).replace('.ms','')
                         antenna = st.antenna.name
@@ -615,10 +615,10 @@ class SDExportData(hif_exportdata.ExportData):
                         for spw in spw_list:
                             namer.spectral_window(spw)
                             name = namer.get_filename()
-                            LOG.info('baseline table name: %s'%(name))
+                            LOG.debug('baseline table name: %s'%(name))
                             if os.path.exists(name):
                                 caltable_master_list.append(name)
-            LOG.info('caltable_master_list=%s'%(caltable_master_list))
+            LOG.debug('caltable_master_list=%s'%(caltable_master_list))
     
             # Tar the session list.
             for table in caltable_master_list:
