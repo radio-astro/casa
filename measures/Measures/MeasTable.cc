@@ -4341,8 +4341,8 @@ Double MeasTable::dUTC(Double utc) {
 			   WHERE));
 	os << LogIO::SEVERE <<
 	  String("Leap second table TAI_UTC seems out-of-date. \n") +
-	  "Until table is updated (see system/CASA manager) times and coordinates\n" +
-	  "derived from UTC could be wrong by 1s or more." << LogIO::POST;
+	  "Until the table is updated (see the CASA documentation or your system admin),\n" +
+	  "times and coordinates derived from UTC could be wrong by 1s or more." << LogIO::POST;
       }
       LEAP = (Double (*)[4])(new Double[4*N]);
       for (Int i=0; i < N; i++) {
