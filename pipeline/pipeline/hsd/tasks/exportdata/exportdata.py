@@ -130,8 +130,6 @@ class SDExportDataInputs(basetask.StandardInputs):
 class SDExportDataResults(hif_exportdata.ExportDataResults):
     def __repr__(self):
         s = 'SDExportData results:\n'
-        for job in self.jobs:
-            s += '%s performed.' % str(job)
         return s 
 
 class SDExportData(hif_exportdata.ExportData):
