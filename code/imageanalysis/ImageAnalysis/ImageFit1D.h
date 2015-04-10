@@ -126,19 +126,16 @@ public:
        VELOCITY = 2,
        N_TYPES};
 
-    // Default Constructor. No image or axis set, so
-    // <src>fit()</src> cannot be called until other parameters are set,
-    // via eg <src>setImage</src>.
-    ImageFit1D();
 
     // Constructor.  Fitting weights are assumed all unity.
-    ImageFit1D(const ImageInterface<T>& image, uInt axis=0);
+    ImageFit1D(SHARED_PTR<const ImageInterface<T> > image, uInt axis=0);
 
     // Constructor with fitting weights image.  The data and weights images must
     // be the same shape.
-    ImageFit1D(const ImageInterface<T>& image, 
-               const ImageInterface<T>& weights,
-               uInt axis=0);
+    ImageFit1D(
+    	SHARED_PTR<const ImageInterface<T> > image,
+    	SHARED_PTR<const ImageInterface<T> > weights, uInt axis=0
+    );
 
     // Destructor
     ~ImageFit1D();
@@ -149,17 +146,13 @@ public:
     // Assignment operator. Uses reference semantics.
     ImageFit1D& operator=(const ImageFit1D& other);
 
-    // Set Image(s) and axis
-    // <group>
-    void setImage (const ImageInterface<T>& im, const ImageInterface<T>& weights, uInt axis);
-    void setImage (const ImageInterface<T>& im, uInt axis);
-    // </group>
 
     // Set the data to be fit.  All non-profile axes data are averaged.
     // For the profile axis, the full spectrum is taken.  The abscissa
     // world values are computed when you call these functions unless they
     // have been set previously by a call to setAbscissa() in which case
-    // the values that were passed to that method are used..  The domain of the
+    // the values that were passed to that method are used. Use the first
+    // form of setData() in this case. The domain of the
     // abscissa values is controlled by <src>AbcissaType</src> and
     // <src>doAbs</src> (absolute coordinates).  The CoordinateSystem in
     // the image is used to convert from pixels to world values.
@@ -173,16 +166,26 @@ public:
     // Thus if you want to apply a function to the abscissa values, the caller should
     // pass the result of that function into setAbscissaValues.
     // <group>
-    Bool setData (
-    	const IPosition& pos, const ImageFit1D<T>::AbcissaType type,
+    void setData (
+    	const IPosition& pos, /*const ImageFit1D<T>::AbcissaType type,
         const Bool doAbs=True, const Double* const &abscissaDivisor=0,
-        Array<Double> (*xfunc)(const Array<Double>&)=0,
+        Array<Double> (*xfunc)(const Array<Double>&)=0, */
         Array<FitterType> (*yfunc)(const Array<FitterType>&)=0
     );
+
+    void setData (
+    	const IPosition& pos, const ImageFit1D<T>::AbcissaType type,
+    	const Bool doAbs=True, const Double* const &abscissaDivisor=0,
+    	Array<Double> (*xfunc)(const Array<Double>&)=0,
+    	Array<FitterType> (*yfunc)(const Array<FitterType>&)=0
+    );
+
+    /*
     Bool setData (
     	const ImageRegion& region, const ImageFit1D<T>::AbcissaType type,
         Bool doAbs=True
     );
+    */
     // </group>
 
     // Set a SpectralList of SpectralElements to fit for.    These elements
@@ -193,14 +196,14 @@ public:
     // specific parameters are to be held fixed or allowed to vary in
     // the fitting process.
     // You can recover the list of elements with function getList.
-    void setElements (const SpectralList& list) {itsFitter.setElements(list);};
+    void setElements (const SpectralList& list) {_fitter.setElements(list);};
 
     // Add new SpectralElement(s) to the SpectralList (can be empty)
     // of SpectralElements to be fit for.  
     // You must have already called <src>setData</src> to call this function.
     //<group>
-    void addElement (const SpectralElement& el) {itsFitter.addElement(el);};
-    void addElements (const SpectralList& list) {itsFitter.addElements(list);};
+    void addElement (const SpectralElement& el) {_fitter.addElement(el);};
+    void addElements (const SpectralList& list) {_fitter.addElements(list);};
     // </group>
 
     // Set a SpectralList of Gaussian SpectralElements to fit for.  
@@ -209,10 +212,10 @@ public:
     // All of the parameters created by this function will be solved for
     // by default. You can recover the list of elements with function getList.
     // Status is returned, if False, error message can be recovered with <src>errorMessage</src>
-    Bool setGaussianElements (uInt nGauss);
+    void setGaussianElements (uInt nGauss);
 
     // Clear the SpectralList of elements to be fit for
-    void clearList () {itsFitter.clearList();};
+    void clearList () {_fitter.clearList();};
 
     // Do the fit and return convergence status.  Errors in the fitting
     // process will generate an AipsError exception and you should catch
@@ -220,16 +223,16 @@ public:
     Bool fit ();
 
     // Get Chi Squared of fit
-    Double getChiSquared () const {return itsFitter.getChiSquared();}
+    Double getChiSquared () const {return _fitter.getChiSquared();}
 
     // Get number of iterations for last fit
-    Double getNumberIterations () const {return itsFitter.getNumberIterations();}
+    Double getNumberIterations () const {return _fitter.getNumberIterations();}
 
     // Recover the list of elements.  You can get the elements
     // as initially estimated (fit=False), or after fitting 
     // (fit=True).  In the latter case, the SpectralElements
     // hold the parameters and errors of the fit.
-    const SpectralList& getList (Bool fit=True) const {return itsFitter.getList(fit);};
+    const SpectralList& getList (Bool fit=True) const {return _fitter.getList(fit);};
 
     // Recover vectors for the estimate, fit and residual.
     // If you don't specify which element, all elements are included
@@ -243,23 +246,20 @@ public:
     //</group>
 
     Bool setXMask(const std::set<uInt>& indices, Bool specifiedPixelsAreGood) {
-    	return itsFitter.setXMask(indices, specifiedPixelsAreGood);
+    	return _fitter.setXMask(indices, specifiedPixelsAreGood);
     }
 
     // get data mask
-    Vector<Bool> getDataMask () const {return itsFitter.getDataMask();};
+    Vector<Bool> getDataMask () const {return _fitter.getDataMask();};
 
     // Get Total Mask (data and range mask)
-    Vector<Bool> getTotalMask () const {return itsFitter.getTotalMask();};
+    Vector<Bool> getTotalMask () const {return _fitter.getTotalMask();};
 
     // did the fit succeed? should only be called after fit().
     Bool succeeded() const;
 
     // did the fit converge? should only be called after fit().
     Bool converged() const;
-
-    // Recover the error message
-    String errorMessage () const {return itsError;};
 
     // Helper function.  Sets up the CoordinateSystem to reflect the choice of
     // abcissa unit and the doppler (if the axis is spectral).
@@ -290,29 +290,37 @@ public:
 		   Bool doAbs, const Double* const &abscissaDivisor
    );
 private:
-   std::auto_ptr<ImageInterface<T> > itsImagePtr;
-   std::auto_ptr<ImageInterface<T> > itsWeightPtr;
-   uInt itsAxis;
+   SHARED_PTR<const ImageInterface<T> > _image, _weights;
+   uInt _axis;
 
 // In the future I will be able to template the fitter on T. For now
 // it must be Double.
 
-   ProfileFit1D<FitterType> itsFitter;
-   CoordinateSystem itsCS;
-   mutable String itsError;                // Error message
+   ProfileFit1D<FitterType> _fitter;
    Bool _converged, _success, _isValid;
-   Vector<Double> _x;
-// Functions
+   Vector<Double> _x, _unityWeights, _weightSlice;
+   IPosition _sliceShape;
    
+   // Disallow default constructor
+   ImageFit1D() {}
+
    void check() const;
    void checkType() const;
+   void _construct();
    void copy (const ImageFit1D<T>& other);
 
-   void setWeightsImage (const ImageInterface<T>& im);
+   //void setWeightsImage (const ImageInterface<T>& im);
 
    // reset the fitter, for example if we've done a fit and want to move
    // to the next position in the image
    void _resetFitter();
+
+
+   // Set Image(s) and axis
+   // <group>
+   // void setImage (const ImageInterface<T>& im, const ImageInterface<T>& weights, uInt pixelAxis);
+   // void setImage (const ImageInterface<T>& im, uInt pixelAxis);
+   // </group>
 
 };
 

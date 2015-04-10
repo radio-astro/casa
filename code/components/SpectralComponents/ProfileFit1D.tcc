@@ -296,6 +296,7 @@ Bool ProfileFit1D<T>::setXMask(const std::set<uInt>& indices, Bool specifiedPixe
 template <class T> 
 Bool ProfileFit1D<T>::fit ()
 {
+	/*
    if (itsX.nelements()==0) {
       itsError = "You must call function setData to set some data first";
       return False;
@@ -304,6 +305,7 @@ Bool ProfileFit1D<T>::fit ()
       itsError = "You must call function setElements to set some fit components first";
       return False;
    }
+	*/
 
 // Set list in fitter
    itsFitter.clear();

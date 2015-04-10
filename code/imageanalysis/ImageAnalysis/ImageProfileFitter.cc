@@ -740,8 +740,8 @@ void ImageProfileFitter::_loopOverFits(
 	vector<IPosition> goodPos(0);
 	SpectralList newEstimates = _nonPolyEstimates;
 	ImageFit1D<Float> fitter = _sigma
-		? ImageFit1D<Float>(*fitData, *_sigma, _fitAxis)
-		: ImageFit1D<Float>(*fitData, _fitAxis);
+		? ImageFit1D<Float>(fitData, _sigma, _fitAxis)
+		: ImageFit1D<Float>(fitData, _fitAxis);
 	Bool isSpectral = _fitAxis == _subImage->coordinates().spectralAxisNumber();
 
 	// calculate the abscissa values only once if they will not change
@@ -779,6 +779,10 @@ void ImageProfileFitter::_loopOverFits(
 		}
 		yfunc = casa::log;
 	}
+	if (abscissaSet) {
+		fitter.setAbscissa(abscissaValues);
+		//abscissaSet = False;
+	}
 	IPosition inTileShape = fitData->niceCursorShape();
 	TiledLineStepper stepper (fitData->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*fitData, stepper);
@@ -786,40 +790,65 @@ void ImageProfileFitter::_loopOverFits(
 	Bool hasXMask = ! goodPlanes.empty();
 	Bool hasNonPolyEstimates = _nonPolyEstimates.nelements() > 0;
 	Bool updateOutput = _modelImage || _residImage;
-	//PrecTimer timer0, timer1, timer2, timer3, timer4;
-	//timer0.start();
+	/*
+	PrecTimer timer0, timer1, timer2, timer3, timer4, timer5, timer6, timer7, timer8,
+		timer9, timer10, timer11;
+	timer0.start();
+	*/
 	Bool storeGoodPos = hasNonPolyEstimates && ! _fitters.empty();
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
 		//timer1.start();
 		if (showProgress && /*nProfiles % mark == 0 &&*/ nProfiles > 0) {
 			progressMeter->update(Double(nProfiles));
 		}
+		//timer1.stop();
+		//timer2.start();
+
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts && ! fitMask(curPos)) {
 			continue;
 		}
+		//timer2.stop();
+		//timer3.start();
 		++_nAttempted;
 		fitter.clearList();
+		//timer3.stop();
+		//timer4.start();
+		/*
 		if (abscissaSet) {
 			fitter.setAbscissa(abscissaValues);
 			abscissaSet = False;
 		}
-		ThrowIf (
-			! fitter.setData(
+		*/
+		//timer4.stop();
+		//timer5.start();
+		if (abscissaSet) {
+			fitter.setData(
+				curPos, /* abcissaType, True, divisorPtr, xfunc, */ yfunc
+			);
+		}
+		else {
+			fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
-			), "Unable to set data"
-		);
+			);
+		}
+		//timer5.stop();
+		//timer6.start();
 		_setFitterElements(
 			fitter, newEstimates, polyEl, goodPos,
 			fitterShape, curPos, nOrigComps
 		);
+		//timer6.stop();
+		//timer7.start();
 		if (hasXMask) {
 			fitter.setXMask(goodPlanes, True);
 		}
-		//timer1.stop();
-		//timer2.start();
+		//timer7.stop();
 		try {
+			//timer8.start();
 			fitSuccess = fitter.fit();
+			//timer8.stop();
+			//timer9.start();
 			if (fitSuccess) {
 				if (fitter.converged()) {
 					_flagFitterIfNecessary(fitter);
@@ -833,27 +862,27 @@ void ImageProfileFitter::_loopOverFits(
 					}
 				}
 			}
+			//timer9.stop();
 		}
 		catch (const AipsError& x) {
 			fitSuccess = False;
 		}
-		//timer2.stop();
-		//timer3.start();
+		//timer10.start();
 		if (fitter.succeeded()) {
 			++_nSucceeded;
 		}
 		if (_storeFits) {
 			_fitters(curPos).reset(new ProfileFitResults(fitter));
 		}
-		//timer3.stop();
-		//timer4.start();
+		//timer10.stop();
+		//timer11.start();
 		if (updateOutput) {
 			_updateModelAndResidual(
 				fitSuccess, fitter, sliceShape,
 				curPos, pFitMask, pResidMask
 			);
 		}
-		//timer4.stop();
+		//timer11.stop();
 	}
 	/*
 	timer0.stop();
@@ -862,8 +891,14 @@ void ImageProfileFitter::_loopOverFits(
 	cout << "time 2 " << timer2.getReal() << endl;
 	cout << "time 3 " << timer3.getReal() << endl;
 	cout << "time 4 " << timer4.getReal() << endl;
+	cout << "time 5 " << timer5.getReal() << endl;
+	cout << "time 6 " << timer6.getReal() << endl;
+	cout << "time 7 " << timer7.getReal() << endl;
+	cout << "time 8 " << timer8.getReal() << endl;
+	cout << "time 9 " << timer9.getReal() << endl;
+	cout << "time 10 " << timer10.getReal() << endl;
+	cout << "time 11 " << timer11.getReal() << endl;
 	*/
-
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
@@ -905,25 +940,24 @@ void ImageProfileFitter::_setFitterElements(
 	uInt nOrigComps
 ) const {
 	if (_nonPolyEstimates.nelements() == 0) {
-		ThrowIf(
-			! fitter.setGaussianElements (_nGaussSinglets),
-			"Unable to set gaussian elements"
-		);
-		uInt ng = fitter.getList(False).nelements();
-		if (ng != _nGaussSinglets) {
-			*this->_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN;
-			if (ng == 0) {
-				*this->_getLog() << "Unable to estimate "
-					<< "parameters for any Gaussian singlets. ";
+		if (_nGaussSinglets > 0) {
+			fitter.setGaussianElements (_nGaussSinglets);
+			uInt ng = fitter.getList(False).nelements();
+			if (ng != _nGaussSinglets) {
+				*this->_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN;
+				if (ng == 0) {
+					*this->_getLog() << "Unable to estimate "
+						<< "parameters for any Gaussian singlets. ";
+				}
+				else {
+					*this->_getLog() << "Only able to estimate parameters for " << ng
+						<< " Gaussian singlets. ";
+				}
+				*this->_getLog() << "If you really want "
+					<< _nGaussSinglets << " Gaussian singlets to be fit, "
+					<< "you should specify initial parameter estimates for all of them"
+					<< LogIO::POST;
 			}
-			else {
-				*this->_getLog() << "Only able to estimate parameters for " << ng
-					<< " Gaussian singlets. ";
-			}
-			*this->_getLog() << "If you really want "
-				<< _nGaussSinglets << " Gaussian singlets to be fit, "
-				<< "you should specify initial parameter estimates for all of them"
-				<< LogIO::POST;
 		}
 		if (polyEl.ptr()) {
 			fitter.addElement(*polyEl);

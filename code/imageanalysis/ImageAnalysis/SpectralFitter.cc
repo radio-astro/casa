@@ -31,7 +31,7 @@
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <imageanalysis/ImageAnalysis/ImageFit1D.h>
+//#include <imageanalysis/ImageAnalysis/ImageFit1D.h>
 #include <images/Images/ImageUtilities.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/FITSImage.h>
