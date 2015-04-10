@@ -137,7 +137,8 @@ namespace casa{
 				      const PolMapType& muellerElements,
 				      const PolMapType& muellerElementsIndex,
 				      const VisBuffer& vb, const Float& psScale,
-				      PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
+				      PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm,
+				      Bool isDryRun)
   {
     // Unused variable from the dark-ages era interface that should ultimately go.
     (void)psScale;
@@ -188,6 +189,7 @@ namespace casa{
 		Bool doSquint=True; Complex tt;
 		//		Bool doSquint=False; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
+		if (!isDryRun)
 		aTerm.applySky(ftATerm_l, vb, doSquint, 0, muellerElements(imx)(imy));
 		// {
 		//   ostringstream name;
@@ -195,7 +197,7 @@ namespace casa{
 		//   storeImg(name,ftATerm_l);
 		// }
 		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
-		
+		if (!isDryRun)
 		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,muellerElements(imx)(imy),conjFreq);
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
@@ -252,7 +254,7 @@ namespace casa{
 
 		    //Timer tim;
 		    //tim.mark();
-		    if (psTerm.isNoOp())
+		    if (psTerm.isNoOp() || isDryRun)
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
 		      {
@@ -273,7 +275,8 @@ namespace casa{
 		    // wt-functions.
 
 		    //tim.mark();
-		    wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
+		    if (!isDryRun)
+		      wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
 		    //tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
 
@@ -343,8 +346,11 @@ namespace casa{
 		    // TempImages back to the CFBuffer buffers
 		    //
 		    //tim.mark();
-    		    LatticeFFT::cfft2d(twoDPB_l);
-    		    LatticeFFT::cfft2d(twoDPBSq_l);
+		    if (!isDryRun)
+		      {
+			LatticeFFT::cfft2d(twoDPB_l);
+			LatticeFFT::cfft2d(twoDPBSq_l);
+		      }
 		    //tim.show("FFT*2:");
 		    // Array<Complex> t0;
 		    // twoDPBSq_l.get(t0); t0 = abs(t0);
@@ -375,12 +381,16 @@ namespace casa{
 		    // support sizes.
 		    //
 		    //tim.mark();
-		    if (iw==0) wtcpeak = max(cfWtBuf);
-		    cfWtBuf /= wtcpeak;
+		    if (!isDryRun)
+		      {
+			if (iw==0) wtcpeak = max(cfWtBuf);
+			cfWtBuf /= wtcpeak;
+		      }
 		    //tim.show("Norm");
 
 		    //tim.mark();
-		    resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+		    if (!isDryRun)
+		      resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
 		    //log_l << "CF WT Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 		    //tim.show("Resize:");
 
@@ -403,8 +413,11 @@ namespace casa{
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
 		    //		    if (iw==0) 
 		    //tim.mark();
-		      cpeak = max(cfBuf);
-		    cfBuf /= cpeak;
+		    if (!isDryRun)
+		      {
+			cpeak = max(cfBuf);
+			cfBuf /= cpeak;
+		      }
 		    //tim.show("Peaknorm:");
     		    // {
     		    //   ostringstream name;
@@ -414,7 +427,8 @@ namespace casa{
     		    //   // storeImg(name,twoDPBSq_l);
     		    // }
 
-		    resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
+		    if (!isDryRun)
+		      resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
 
 		    log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 
@@ -425,7 +439,8 @@ namespace casa{
 		    ftRef(1)=cfBuf.shape()(1)/2.0;
 
 		    //tim.mark();
-		    if (iw == 0)
+		    cfNorm=cfWtNorm=1.0;
+		    if ((iw == 0) && (!isDryRun))
 		      {
 			cfNorm=0; cfWtNorm=0;
 			cfNorm = cfArea(cfBufMat, xSupport, ySupport, sampling);
@@ -620,7 +635,8 @@ namespace casa{
 				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				    const Matrix<Double>& ,//vbFreqSelection,
 				    CFStore2& cfs2,
-				    CFStore2& cfwts2)
+				    CFStore2& cfwts2,
+				    Bool fillCF)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction[R&D]"));
     Int convSize, convSampling, polInUse;
@@ -753,7 +769,7 @@ namespace casa{
     //
     StokesCoordinate skyStokesCo=coords.stokesCoordinate(coords.findCoordinate(Coordinate::STOKES));
     Vector<Int> skyStokes=skyStokesCo.stokes();
-    Vector<PolOuterProduct::CrossPolCircular> pp(skyStokes.nelements());
+    //Vector<PolOuterProduct::CrossPolCircular> pp(skyStokes.nelements());
     PolMapType polMap, polIndexMap, conjPolMap, conjPolIndexMap;
     polMap = pop->getPolMat();
     polIndexMap = pop->getPol2CFMat();
@@ -901,18 +917,15 @@ namespace casa{
 	// Baseline) of the CFBuffer objects have been setup.  The CFs
 	// will now be filled using the supplied PS-, W- ad A-term objects.
 	//
-	{
-	  log_l << "Making CFs for baseline type " << ib << LogIO::POST;
-	  fillConvFuncBuffer(*cfb_p, *cfwtb_p, convSize, convSize, freqValues, wValues, wScale,
-			     polMap, polIndexMap, vb, psScale,
-			     *psTerm_p, *wTerm_p, *aTerm_p);
-
-	  // cfb_p->show(NULL,cerr);
-
-	  //cfb_p->makePersistent("test.cf");
-	  // cfwtb_p->makePersistent("test.wtcf");
-
-	}
+	if (fillCF) log_l << "Making CFs for baseline type " << ib << LogIO::POST;
+	else        log_l << "Made empty CFs for baseline type " << ib << LogIO::POST;
+	fillConvFuncBuffer(*cfb_p, *cfwtb_p, convSize, convSize, freqValues, wValues, wScale,
+			   polMap, polIndexMap, vb, psScale,
+			   *psTerm_p, *wTerm_p, *aTerm_p, !fillCF);
+	// cfb_p->show(NULL,cerr);
+	//cfb_p->makePersistent("test.cf");
+	// cfwtb_p->makePersistent("test.wtcf");
+	
       } // End of loop over baselines
     
     index=coords.findCoordinate(Coordinate::SPECTRAL);

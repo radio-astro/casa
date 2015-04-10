@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Float pa,
 			  const Float dpa,
 			  CFStore& cfs,
-			  CFStore& cfwts);
+			  CFStore& cfwts, Bool fillCF=True);
     int getVisParams(const VisBuffer& vb);
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Vector<Int>& polMap,

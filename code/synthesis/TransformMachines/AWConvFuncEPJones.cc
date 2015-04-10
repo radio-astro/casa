@@ -101,11 +101,11 @@ namespace casa{
 					   const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 					   const Matrix<Double>& spwFreqSel,
 					   CFStore2& cfs,
-					   CFStore2& cfwts)
+					   CFStore2& cfwts,
+					   Bool fillCF)
   {
     findPointingOffset(image,vb);
-    AWConvFunc::makeConvFunction(image,vb,wConvSize,pop,pa,dpa,uvScale,uvOffset,spwFreqSel,cfs,cfwts);
-    
+    AWConvFunc::makeConvFunction(image,vb,wConvSize,pop,pa,dpa,uvScale,uvOffset,spwFreqSel,cfs,cfwts,fillCF);
   }
   //
   //----------------------------------------------------------------------

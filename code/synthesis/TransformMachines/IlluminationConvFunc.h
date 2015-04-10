@@ -88,7 +88,7 @@ namespace casa{
 			  casa::Float, casa::Float,
 			  const Vector<Double>& /*uvScale*/, const Vector<Double>& /*uvOffset*/,
 			  const Matrix<Double>& /*freqSelection*/,
-			  casa::CFStore2&, casa::CFStore2&) {};
+			  casa::CFStore2&, casa::CFStore2&, Bool fillCF=True) {};
     void setPolMap(const casa::Vector<int>&polMap) {(void)polMap;};
     void setFeedStokes(const casa::Vector<int>&feedStokes) {(void)feedStokes;};
     void setParams(const casa::Vector<int>& polMap, const casa::Vector<int>& feedStokes)

@@ -1123,9 +1123,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// USEFUL DEBUG MESSAGE
 	//cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
+	Bool pleaseDoAlsoFillTheCF=True;
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
-					 *cfs2_p, *cfwts2_p);
+					 *cfs2_p, *cfwts2_p, pleaseDoAlsoFillTheCF);
 	//	log_l << "Converting WTCFs to wide-band versions" << LogIO::POST;
 	//	makeWBCFWt(*cfwts2_p, imRefFreq_p);
 

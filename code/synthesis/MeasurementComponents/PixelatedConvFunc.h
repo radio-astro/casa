@@ -59,7 +59,7 @@ namespace casa{
 				  const Float pa,
 				  const Float dpa,
 				  CFStore& cfs,
-				  CFStore& cfwts) {};
+				  CFStore& cfwts,Bool fillCF=True) {};
     virtual void setPolMap(const Vector<Int>& polMap) {(void)polMap;};
     virtual void setFeedStokes(const Vector<Int>& feedStokes){(void)feedStokes;};
     PixelatedConvFunc& operator=(const PixelatedConvFunc& other)

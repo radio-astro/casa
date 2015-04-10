@@ -258,7 +258,7 @@ namespace casa{
 				      Float dpa,
 				      //				      Vector<Int>& cfStokes,
 				      CFStore& cfs,
-				      CFStore& cfwts)
+				      CFStore& cfwts,Bool fillCF)
   {
     LogIO log_l(LogOrigin("EVLAConvFunc", "makeConvFunction"));
     Int convSize, convSampling, polInUse;

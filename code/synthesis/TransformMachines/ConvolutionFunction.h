@@ -110,7 +110,8 @@ namespace casa{
 				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
-				  CFStore2& cfwts) = 0;
+				  CFStore2& cfwts,
+				  Bool fillCF=True) = 0;
     // This method computes the average response function.  This is
     // typically image-plane equivalent of the convolution functions,
     // averaged over various axis.  The precise averaging will be

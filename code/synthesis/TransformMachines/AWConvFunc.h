@@ -73,16 +73,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
-				  CFStore2& cfwts);
+				  CFStore2& cfwts,
+				  Bool fillCF=True);
     virtual void fillConvFuncBuffer(CFBuffer& cfb, CFBuffer& cfWtb,
-			  const Int& nx, const Int& ny,
-			  const Vector<Double>& freqValues,
-			  const Vector<Double>& wValues,
-			  const Double& wScale,
-			  const PolMapType& muellerElements,
-			  const PolMapType& muellerElementsIndex,
-			  const VisBuffer& vb, const Float& psScale,
-			  PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
+				    const Int& nx, const Int& ny,
+				    const Vector<Double>& freqValues,
+				    const Vector<Double>& wValues,
+				    const Double& wScale,
+				    const PolMapType& muellerElements,
+				    const PolMapType& muellerElementsIndex,
+				    const VisBuffer& vb, const Float& psScale,
+				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm, 
+				    Bool isDryRun=False);
 
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,

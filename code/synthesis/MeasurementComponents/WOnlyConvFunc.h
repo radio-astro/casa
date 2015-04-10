@@ -63,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Float pa,
 			  const Float dpa,
 			  CFStore& cfs,
-			  CFStore& cfwts);
+			  CFStore& cfwts, Bool fillCF=True);
 
     virtual int getVisParams(const VisBuffer& vb) {return wTerm_p->getVisParams(vb);};
     virtual void setPolMap(const Vector<Int>& polMap) {wTerm_p->setPolMap(polMap);};

@@ -66,7 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
-				  CFStore2& cfwts);
+				  CFStore2& cfwts,
+				  Bool fillCF=True);
     virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,
 					      const VisBuffer& vb);
 
