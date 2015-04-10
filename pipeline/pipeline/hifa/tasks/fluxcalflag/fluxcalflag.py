@@ -281,7 +281,6 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
 		stats_before = {}; stats_after = {}
 		for summary in flagresults.keys():
-		    print 'dict key and name ', summary, flagresults[summary]['name']
 		    if flagresults[summary]['name'] == 'before':
 		        stats_before = flagresults[summary]
 		    elif flagresults[summary]['name'] == 'after':
