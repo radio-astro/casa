@@ -345,7 +345,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             scan = calibrator_scan_select_string,
             intent = '',
             flagbackup = False,
-            calwt = False)
+            calwt = False,
+            flagsum = False)
         
         applycal_task = applycal.Applycal(applycal_inputs)
         

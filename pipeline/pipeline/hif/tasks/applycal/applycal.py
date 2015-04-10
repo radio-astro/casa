@@ -26,7 +26,7 @@ class ApplycalInputs(basetask.StandardInputs,
                  field=None, spw=None, antenna=None, intent=None,
                  # preapply calibrations
                  opacity=None, parang=None, applymode=None, calwt=None,
-                 flagbackup=None, scan=None):
+                 flagbackup=None, scan=None, flagsum=None):
         self._init_properties(vars())
 
     @property
@@ -144,6 +144,20 @@ class ApplycalInputs(basetask.StandardInputs,
 	elif value == '':
             value = 'calflagstrict'
         self._applymode = value
+        
+    @property
+    def flagsum(self):
+        return self._flagsum
+
+    @flagsum.setter
+    def flagsum(self, value):
+        if value is None:
+            value = True
+        elif value:
+            value = True
+        else:
+            value = False
+        self._flagsum = value
 
 class ApplycalResults(basetask.Results):
     """
@@ -214,10 +228,11 @@ class Applycal(basetask.StandardTaskTemplate):
         # applied and how.
         merged = inputs.calstate.merged()
 
-        # run a flagdata job to find the flagged state before applycal 
-        flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
-        stats_before = self._executor.execute(flagdata_summary_job)
-        stats_before['name'] = 'before'
+        # run a flagdata job to find the flagged state before applycal
+        if inputs.flagsum:
+            flagdata_summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+            stats_before = self._executor.execute(flagdata_summary_job)
+            stats_before['name'] = 'before'
         
         jobs = []
         for calto, calfroms in merged.items():
@@ -229,6 +244,7 @@ class Applycal(basetask.StandardTaskTemplate):
 #            inputs.antenna = calto.antenna
 
             args = inputs.to_casa_args()
+            args.pop('flagsum', None)  #Flagsum is not a CASA applycal task argument
 
             # set the on-the-fly calibration state for the data selection.  
             calapp = callibrary.CalApplication(calto, calfroms)
@@ -249,45 +265,49 @@ class Applycal(basetask.StandardTaskTemplate):
             self._executor.execute(job)
 
         # run a final flagdata job to get the flagging statistics after
-        # application of the potentially flagged caltables 
-        stats_after = self._executor.execute(flagdata_summary_job)
-        stats_after['name'] = 'applycal'
+        # application of the potentially flagged caltables
+        if inputs.flagsum:
+            stats_after = self._executor.execute(flagdata_summary_job)
+            stats_after['name'] = 'applycal'
 
         applied = [callibrary.CalApplication(calto, calfroms) 
                    for calto, calfroms in merged.items()]
 
         result = ApplycalResults(applied)
-        result.summaries = [stats_before, stats_after]
+        
+        if inputs.flagsum:
+            result.summaries = [stats_before, stats_after]
 
         ################################################
         #Flagging stats by spw and antenna
 
-        ms = self.inputs.context.observing_run.get_ms(inputs.vis)
-        spws = ms.get_spectral_windows()
-        spwids = [spw.id for spw in spws]
-        
-        fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
-        flagsummary = {}
-        flagkwargs = []        
-        
-        for field in fields:
-            for spwid in spwids:
-                flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
-                flagkwargs.append(flagline)
-            
-            flagsummary[field.name.strip('"')] = {}
-            
-        flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
-        flagdicts = self._executor.execute(flaggingjob)
-        
-        for key in flagdicts.keys():
-            try:
-                fieldname = flagdicts[key]['field'].keys()[0]
-                flagsummary[fieldname][key] = flagdicts[key]
-            except:
-                LOG.debug("No flags to report for "+str(key))
-            
-        result.flagsummary = flagsummary
+        if inputs.flagsum:
+	    ms = self.inputs.context.observing_run.get_ms(inputs.vis)
+	    spws = ms.get_spectral_windows()
+	    spwids = [spw.id for spw in spws]
+	    
+	    fields = ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET')
+	    flagsummary = {}
+	    flagkwargs = []        
+	    
+	    for field in fields:
+		for spwid in spwids:
+		    flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
+		    flagkwargs.append(flagline)
+		
+		flagsummary[field.name.strip('"')] = {}
+		
+	    flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+	    flagdicts = self._executor.execute(flaggingjob)
+	    
+	    for key in flagdicts.keys():
+		try:
+		    fieldname = flagdicts[key]['field'].keys()[0]
+		    flagsummary[fieldname][key] = flagdicts[key]
+		except:
+		    LOG.debug("No flags to report for "+str(key))
+		
+	    result.flagsummary = flagsummary
 
         return result
 
