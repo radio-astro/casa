@@ -152,7 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       memCache2_p(), memCacheWt2_p(),memCache_p(), memCacheWt_p(), 
       cfCacheTable_p(), XSup(), YSup(), paList(), 
       paList_p(), key2IndexMap(),
-      Dir(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
+      Dir(""), WtImagePrefix(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
       avgPBReadyQualifier_p(""), OTODone_p(False)
     {};
     CFCache& operator=(const CFCache& other);
@@ -162,6 +162,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void setCacheDir(const char *dir) {Dir = dir;}
     String getCacheDir() {return Dir;};
+
+    void setWtImagePrefix(const char *prefix) {WtImagePrefix = prefix;}
+    String getWtImagePrefix() {return WtImagePrefix;};
     //
     // Method to initialize the internal memory cache.
     //
@@ -269,6 +272,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int loadAvgPB(CountedPtr<ImageInterface<Float> > & avgPB, String qualifier=String(""))
     {if (avgPB.null()) avgPB = new TempImage<Float>(); return loadAvgPB(*avgPB,qualifier);};
 
+    // loadAvgPB calls the method below if WtImgPrefix was set.
+    Int loadWtImage(ImageInterface<Float>& avgPB, String qualifier);
+
     Bool avgPBReady(const String& qualifier=String("")) 
     {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
 
@@ -284,7 +290,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Float> paList, Sampling;
     vector<Float> paList_p;
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
-    String Dir, cfPrefix, aux;
+    String Dir, WtImagePrefix, cfPrefix, aux;
     ParAngleChangeDetector paCD_p;
     //
     // Internal method to convert the direction co-ordinates of the

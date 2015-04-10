@@ -200,7 +200,7 @@ namespace casa{
       }
 
     fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA);
-      fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA);
+    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
 
@@ -311,7 +311,7 @@ namespace casa{
 			  cfCacheTable_l[paPos].wList.push_back(wVal);
 			  cfCacheTable_l[paPos].muellerList.push_back(mVal);
 			  cfCacheTable_l[paPos].cfNameList.push_back(fileNames[i]);
-			  cerr << paPos << " " << fileNames[i] << endl;
+			  //cerr << paPos << " " << fileNames[i] << endl;
 			}
 		    }
 		  pm.update(Double(fileNames.nelements()));
@@ -524,7 +524,7 @@ namespace casa{
     Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
-    cerr << "CFC: " << shape << endl;
+    //cerr << "CFC: " << shape << endl;
 
     Vector<Double>ref(4);
     ref(0)=ref(1)=ref(2)=ref(3)=0;
@@ -802,9 +802,38 @@ namespace casa{
   //-------------------------------------------------------------------------
   //Load the average PB from the disk cache.
   //
+  Int CFCache::loadWtImage(ImageInterface<Float>& avgPB, String qualifier)
+  {
+    LogIO log_l(LogOrigin("CFCache", "loadWtImage"));
+    ostringstream name;
+    name << WtImagePrefix << ".weight" << qualifier;
+    //    cout << name.str() << endl;
+    try
+      {
+	PagedImage<Float> tmp(name.str().c_str());
+	avgPB.resize(tmp.shape());
+	avgPB.put(tmp.get());
+      }
+    catch(AipsError& x) // Just rethrowing the exception for now.
+                        // Ultimately, this should be used to make
+			// the state of this object consistant.
+      {
+	return NOTCACHED;
+      }
+    log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
+    avgPBReady_p=True;
+    return DISKCACHE;
+
+  }  
+  //
+  //-------------------------------------------------------------------------
+  //Load the average PB from the disk cache.
+  //
   Int CFCache::loadAvgPB(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
+
+    if (WtImagePrefix != "") return loadWtImage(avgPB, qualifier);
 
     if (Dir.length() == 0) 
       throw(SynthesisFTMachineError("Cache dir. name null"));
@@ -825,6 +854,7 @@ namespace casa{
       {
 	return NOTCACHED;
       }
+    log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
     avgPBReady_p=True;
     return DISKCACHE;
   }
