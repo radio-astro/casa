@@ -319,15 +319,20 @@ class simple_cluster:
         cmd_os = self.shell(hostname) + " 'uname -s'"
         os = commands.getoutput(cmd_os)
         if (os == "Linux"):
-            cmd_ncores = self.shell(hostname) + " 'cat /proc/cpuinfo' "           
-            res_ncores = commands.getoutput(cmd_ncores)
-            str_ncores = res_ncores.count("processor")
-            
             try:
-                ncores = int(str_ncores)
+                # affinity aware processor count (~= len(sched_getaffinity))
+                cmd_ncores = self.shell(hostname) + " 'nproc' "
+                ncores = int(commands.getoutput(cmd_ncores))
             except:
-                casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),"WARN","check_host_resources")
-                pass
+                cmd_ncores = self.shell(hostname) + " 'cat /proc/cpuinfo' "
+                res_ncores = commands.getoutput(cmd_ncores)
+                str_ncores = res_ncores.count("processor")
+
+                try:
+                    ncores = int(str_ncores)
+                except:
+                    casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),"WARN","check_host_resources")
+                    pass
             
             memory=0.0
             for memtype in ['MemFree',
