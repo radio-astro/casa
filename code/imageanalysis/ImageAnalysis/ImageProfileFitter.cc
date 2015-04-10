@@ -41,6 +41,9 @@
 #include <imageanalysis/IO/ProfileFitterEstimatesFileParser.h>
 #include <imageanalysis/IO/ImageProfileFitterResults.h>
 
+// debug
+#include <casa/OS/PrecTimer.h>
+
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
@@ -63,9 +66,10 @@ ImageProfileFitter::ImageProfileFitter(
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
 	_deleteImageOnDestruct(False), _logResults(True),
 	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
+	_storeFits(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
 	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
-	_nLTPCoeffs(0), _minGoodPoints(1), _nAttempted(0), _nSucceeded(0),
+	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
 	_nConverged(0), _nValid(0), _results(Record()), _nonPolyEstimates(),
 	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
 	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
@@ -205,6 +209,13 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
     	}
     }
     *_getLog() << logOrigin;
+    _storeFits = doDetailedResults || ! _centerName.empty()
+    	|| ! _centerErrName.empty() || ! _fwhmName.empty()
+    	|| ! _fwhmErrName.empty() || ! _ampName.empty()
+    	|| ! _ampErrName.empty() || ! _integralName.empty()
+    	|| ! _integralErrName.empty()
+    	|| ! _plpName.empty() || ! _plpErrName.empty()
+    	|| ! _ltpName.empty() || ! _ltpErrName.empty();
 	try {
 		if (! _multiFit) {
 			ImageCollapser<Float> collapser(
@@ -256,7 +267,7 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
 	resultHandler.logSummary(
-		_nAttempted, _nSucceeded, _nConverged, _nValid
+		_nProfiles, _nAttempted, _nSucceeded, _nConverged, _nValid
 	);
 	if (_nPLPCoeffs > 0) {
 		resultHandler.setPLPName(_plpName);
@@ -278,12 +289,37 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 		resultHandler.setIntegralName(_integralName);
 		resultHandler.setIntegralErrName(_integralErrName);
 	}
-	resultHandler.setOutputSigmaImage(_sigmaName);
+	// resultHandler.setOutputSigmaImage(_sigmaName);
 	if (doDetailedResults) {
 		resultHandler.createResults();
 		_results = resultHandler.getResults();
 	}
 	resultHandler.writeImages(_nConverged > 0);
+	if (
+		! _model.empty()
+		&& ! (
+			_modelImage = SubImageFactory<Float>::createImage(
+				*_modelImage, _model, Record(), "",
+				False, _overwrite ,True, False, True
+			)
+		)
+	) {
+		*_getLog() << LogIO::WARN << "Failed to write model image "
+			<< _model << LogIO::POST;
+	}
+	if (
+		! _residual.empty()
+		&& ! (
+			_residImage = SubImageFactory<Float>::createImage(
+				*_residImage, _residual, Record(), "",
+				False, _overwrite ,True, False, True
+			)
+		)
+	) {
+		*_getLog() << LogIO::WARN << "Failed to write residual image "
+			<< _residual << LogIO::POST;
+	}
+
 	if (originalSigma.get() && ! _sigmaName.empty()) {
 		_removeExistingFileIfNecessary(_sigmaName, True);
     	PagedImage<Float> outputSigma(
@@ -559,14 +595,15 @@ Double ImageProfileFitter::getWorldValue(
 
 void ImageProfileFitter::_fitallprofiles() {
 	*_getLog() << LogOrigin(_class, __func__);
-	// Create output images with a mask
-	SPIIF fitImage;
+	// Create output images with a mask. Make them TempImages to start
+	// in attempt to improve IO performance, and write them out if necessary
+	// at the end
 	if (
 		! _model.empty()
 		&& ! (
-			fitImage = SubImageFactory<Float>::createImage(
-				*_subImage, _model, Record(), "",
-				False, _overwrite ,True, False, True
+			_modelImage = SubImageFactory<Float>::createImage(
+				*_subImage, "", Record(), "",
+				False, _overwrite ,False, False, True
 			)
 		)
 	) {
@@ -576,21 +613,21 @@ void ImageProfileFitter::_fitallprofiles() {
 		(! _residual.empty() || _createResid)
 		&& ! (
 			_residImage = SubImageFactory<Float>::createImage(
-				*_subImage, _residual, Record(), "",
-				False, _overwrite ,True, False, True
+				*_subImage, "", Record(), "",
+				False, _overwrite ,False, False, True
 			)
 		)
 	) {
 		*_getLog() << LogIO::WARN << "Failed to create residual image" << LogIO::POST;
 	}
 	Bool showProgress = True;
-	_fitProfiles(fitImage, showProgress);
+	_fitProfiles(showProgress);
 }
 
-void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
+void ImageProfileFitter::_fitProfiles(Bool showProgress) {
 	IPosition inShape = _subImage->shape();
-	if (pFit) {
-		AlwaysAssert(inShape.isEqual(pFit->shape()), AipsError);
+	if (_modelImage) {
+		AlwaysAssert(inShape.isEqual(_modelImage->shape()), AipsError);
 	}
 	if (_residImage) {
 		AlwaysAssert(inShape.isEqual(_residImage->shape()), AipsError);
@@ -620,14 +657,16 @@ void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 	);
 	IPosition fitterShape = inShape;
 	fitterShape[_fitAxis] = 1;
-	_fitters.resize(fitterShape);
-	Int nPoints = fitterShape.product();
+	if (_storeFits) {
+		_fitters.resize(fitterShape);
+	}
+	_nProfiles = fitterShape.product();
 	SHARED_PTR<ProgressMeter> pProgressMeter;
 	if (showProgress) {
 		ostringstream oss;
 		oss << "Fit profiles on axis " << _fitAxis+1;
 		pProgressMeter.reset(
-			new ProgressMeter(0, nPoints, oss.str())
+			new ProgressMeter(0, _nProfiles, oss.str())
 		);
 	}
 	SPIIF fitData = _subImage;
@@ -676,23 +715,23 @@ void ImageProfileFitter::_fitProfiles(SPIIF pFit, Bool showProgress) {
 		fitMask.assign(fitMask.reform(newShape));
 	}
 	_loopOverFits(
-		fitData, /*nPoints, */ showProgress, pProgressMeter, checkMinPts,
-		fitMask, abcissaType, fitterShape, pFit, sliceShape,
+		fitData, showProgress, pProgressMeter, checkMinPts,
+		fitMask, abcissaType, fitterShape, sliceShape,
 		myGoodPlanes
 	);
 }
 
 void ImageProfileFitter::_loopOverFits(
-	SPIIF fitData, /* Int nPoints, */ Bool showProgress,
+	SPIIF fitData, Bool showProgress,
 	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
 	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
-	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,
+	const IPosition& fitterShape, const IPosition& sliceShape,
 	const std::set<uInt> goodPlanes
 ) {
 	*_getLog() << LogOrigin(_class, __func__);
-	Lattice<Bool>* pFitMask = pFit && pFit->hasPixelMask()
-		&& pFit->pixelMask().isWritable()
-		? &(pFit->pixelMask())
+	Lattice<Bool>* pFitMask = _modelImage && _modelImage->hasPixelMask()
+		&& _modelImage->pixelMask().isWritable()
+		? &(_modelImage->pixelMask())
 		: 0;
 	Lattice<Bool>* pResidMask = _residImage && _residImage->hasPixelMask()
 		&& _residImage->pixelMask().isWritable()
@@ -746,8 +785,12 @@ void ImageProfileFitter::_loopOverFits(
 	uInt nProfiles = 0;
 	Bool hasXMask = ! goodPlanes.empty();
 	Bool hasNonPolyEstimates = _nonPolyEstimates.nelements() > 0;
-	Bool updateOutput = pFit || _residImage;
+	Bool updateOutput = _modelImage || _residImage;
+	//PrecTimer timer0, timer1, timer2, timer3, timer4;
+	//timer0.start();
+	Bool storeGoodPos = hasNonPolyEstimates && ! _fitters.empty();
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
+		//timer1.start();
 		if (showProgress && /*nProfiles % mark == 0 &&*/ nProfiles > 0) {
 			progressMeter->update(Double(nProfiles));
 		}
@@ -773,6 +816,8 @@ void ImageProfileFitter::_loopOverFits(
 		if (hasXMask) {
 			fitter.setXMask(goodPlanes, True);
 		}
+		//timer1.stop();
+		//timer2.start();
 		try {
 			fitSuccess = fitter.fit();
 			if (fitSuccess) {
@@ -783,7 +828,7 @@ void ImageProfileFitter::_loopOverFits(
 				fitSuccess = fitter.isValid();
 				if (fitSuccess) {
 					++_nValid;
-					if (hasNonPolyEstimates) {
+					if (storeGoodPos) {
 						goodPos.push_back(curPos);
 					}
 				}
@@ -792,21 +837,37 @@ void ImageProfileFitter::_loopOverFits(
 		catch (const AipsError& x) {
 			fitSuccess = False;
 		}
+		//timer2.stop();
+		//timer3.start();
 		if (fitter.succeeded()) {
 			++_nSucceeded;
 		}
-		_fitters(curPos).reset(new ProfileFitResults(fitter));
+		if (_storeFits) {
+			_fitters(curPos).reset(new ProfileFitResults(fitter));
+		}
+		//timer3.stop();
+		//timer4.start();
 		if (updateOutput) {
 			_updateModelAndResidual(
-				pFit, fitSuccess, fitter, sliceShape,
+				fitSuccess, fitter, sliceShape,
 				curPos, pFitMask, pResidMask
 			);
 		}
+		//timer4.stop();
 	}
+	/*
+	timer0.stop();
+	cout << "time to execute fit loop " << timer0.getReal() << endl;
+	cout << "time 1 " << timer1.getReal() << endl;
+	cout << "time 2 " << timer2.getReal() << endl;
+	cout << "time 3 " << timer3.getReal() << endl;
+	cout << "time 4 " << timer4.getReal() << endl;
+	*/
+
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
-    SPIIF pFit, Bool fitOK, const ImageFit1D<Float>& fitter,
+    Bool fitOK, const ImageFit1D<Float>& fitter,
     const IPosition& sliceShape, const IPosition& curPos,
     Lattice<Bool>* const &pFitMask,
     Lattice<Bool>* const &pResidMask
@@ -816,8 +877,8 @@ void ImageProfileFitter::_updateModelAndResidual(
 	Array<Bool> resultMask = fitOK
 		? fitter.getDataMask().reform(sliceShape)
 		: failMask;
-	if (pFit) {
-		pFit->putSlice (
+	if (_modelImage) {
+		_modelImage->putSlice (
 			(fitOK ? fitter.getFit().reform(sliceShape) : failData),
 			curPos
 		);

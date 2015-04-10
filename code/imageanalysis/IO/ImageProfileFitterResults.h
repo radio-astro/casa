@@ -120,7 +120,7 @@ public:
     inline void setLTPErrName(const String& s) { _ltpErrName = s; }
 
 
-    inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
+    //inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
 
 
@@ -141,7 +141,8 @@ public:
     void setPLPDivisor(const String& x) { _plpDivisor = x; }
 
     void logSummary(
-    	uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
+    	uInt nProfiles, uInt nAttempted, uInt nSucceeded,
+    	uInt nConverged, uInt nValid
     );
 
     void writeImages(Bool someConverged) const;
@@ -165,7 +166,7 @@ private:
    	String _xUnit, _centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName,
-		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
+		_ltpName, _ltpErrName, /*_sigmaName, */ _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
 		_nPLPCoeffs, _nLTPCoeffs;
     const Array<SHARED_PTR<ProfileFitResults> >* const  _fitters;

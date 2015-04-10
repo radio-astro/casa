@@ -224,10 +224,10 @@ private:
 		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults, _isSpectralIndex,
-		_createResid, _overwrite;
+		_createResid, _overwrite, _storeFits;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs, _nLTPCoeffs, _minGoodPoints, _nAttempted,
+		_nPLPCoeffs, _nLTPCoeffs, _minGoodPoints, _nProfiles, _nAttempted,
 		_nSucceeded, _nConverged, _nValid;
 	Array<SHARED_PTR<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
@@ -239,7 +239,7 @@ private:
 	Matrix<String> _worldCoords;
 	SHARED_PTR<TempImage<Float> > _sigma;
 	Double _abscissaDivisor;
-	SPIIF _residImage;
+	SPIIF _modelImage, _residImage;
 	// planes along _fitAxis to use in fits, empty => use all planes
 	// originally used to support continuum subtraction
 	std::set<uInt> _goodPlanes;
@@ -272,7 +272,7 @@ private:
     // in pixel space here and requiring the caller to deal with converting
     // to something astronomer friendly if it so desires.
 
-    void _fitProfiles(SPIIF pFit, const Bool showProgress);
+    void _fitProfiles(const Bool showProgress);
 
     Bool _inVelocitySpace() const;
 
@@ -284,7 +284,7 @@ private:
     	SPIIF fitData, /* Int nPoints, */ Bool showProgress,
     	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
     	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
-    	const IPosition& fitterShape, SPIIF pFit, const IPosition& sliceShape,
+    	const IPosition& fitterShape, const IPosition& sliceShape,
     	const std::set<uInt> goodPlanes
     );
 
@@ -299,7 +299,7 @@ private:
     ) const;
 
     void _updateModelAndResidual(
-    	SPIIF pFit, Bool fitOK,	const ImageFit1D<Float>& fitter,
+    	Bool fitOK,	const ImageFit1D<Float>& fitter,
     	const IPosition& sliceShape, const IPosition& curPos,
     	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask
     ) const;

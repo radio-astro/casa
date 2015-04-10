@@ -87,7 +87,6 @@ std::auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_crea
 	Double fNAN = casa::doubleNaN();
 
 	Array<Double> blank;
-	//uInt nFitters = _fitters->size();
     IPosition fShape = _fitters->shape();
 	for (uInt i=0; i<_nGaussMultiplets + _nOthers; i++) {
 		if (i == _gsPlane) {
@@ -122,11 +121,11 @@ std::auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_crea
 }
 
 void ImageProfileFitterResults::logSummary(
-    uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
+    uInt nProfiles, uInt nAttempted, uInt nSucceeded, uInt nConverged, uInt nValid
 ) {
 	*_log << LogOrigin(_class, __func__);
 	ostringstream oss;
-	oss << "Number of profiles       = " << _fitters->size();
+	oss << "Number of profiles       = " << nProfiles;
 	String str = oss.str();
 	*_log << LogIO::NORMAL << str << LogIO::POST;
 	_writeLogfile(str + "\n", True, False);
