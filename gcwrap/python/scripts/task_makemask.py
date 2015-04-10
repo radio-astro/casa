@@ -62,6 +62,7 @@ from recipes.pixelmask2cleanmask import pixelmask2cleanmask
 (csys,) = gentools(['cs']) 
 
 debug = False 
+#debug = True 
 
 def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
     """
@@ -219,9 +220,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                    raise Exception, "output is not specified. If you want to overwrite inpimage, please set overwrite=True"
 
 	   if inpimage==output:
-               if overwrite:
-	           tmp_outmaskimage=tmp_maskimage
-               else:
+               #if overwrite:
+	       #    tmp_outmaskimage=tmp_maskimage
+               #else:
+               if not overwrite:
                    raise Exception, "output=inpimage. If you want to overwrite inpimage, please set overwrite=True"
 
            outparentim=output
@@ -317,7 +319,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                 #print "inpimage=",inpimage," is exist?=",os.path.isdir(inpimage)
                 #print " inshp for inpimage=",inshp
 
-                # prepare working input image (tmp_maskiamge)
+                # prepare working input mask image (tmp_maskimage)
+                if debug: print "prepare working input image (tmp_maskimage)..."
 		if inpmask!='': # inpmask is either image mask or T/F mask now
 		  # need to extract the mask and put in tmp_maskimage
                   # Note: changed usemasked=F, so that True (unmasked) part to be used. CAS- 
@@ -327,7 +330,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		        pixelmask2cleanmask(imagename=parentimage, maskname=bmask, maskimage=tmp_maskimage, usemasked=False)    
 		        #ia.open(tmp_maskimage)
                     else:
-                        #print "parentimage=",parentimage, " exist?=",os.path.isdir(parentimage)
+                        if debug: 
+                            print "parentimage=",parentimage, " exist?=",os.path.isdir(parentimage)
+                            print "tmp_maskimage=",tmp_maskimage, " exist?=",os.path.isdir(tmp_maskimage)
 		        # copy of inpimage in tmp_maskimage
 		        ia.fromimage(outfile=tmp_maskimage, infile=parentimage)
 		else:
@@ -340,8 +345,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     ia.close() 
                     needtoregrid=False
                 else:
-                    shutil.copytree(outparentim,tmp_outmaskimage)
-                     
+                    # if inpimage == output, tmp_outmaskimage is already created... 
+                    if not os.path.isdir(tmp_outmaskimage):
+                       shutil.copytree(outparentim,tmp_outmaskimage)
+                if debug: print "done setting up the out image=", tmp_outmaskimage     
 		# if inpfreq/outfreq are channel indices (int) then
 		# regrid in x y coords only and extract specified channel mask
 		# to specified output channels. (no regriding in spectral axis)
@@ -445,6 +452,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                             #do not regrid, use input image
                             shutil.copytree(tmp_maskimage,tmp_regridim)
                         else:
+                            if debug: print "regrid the mask,tmp_maskimage=",tmp_maskimage," tmp_regridim=",tmp_regridim
+                            #shutil.copytree(tmp_maskimage,'before_regrid_tmp_maskimage')
                             regridmask(tmp_maskimage,inpimage,tmp_regridim,chanrange=inpfreqlist,method=regridmethod)
                             #regridmask(tmp_maskimage,inpimage,tmp_regridim,chanrange=inpfreqlist)
                             # find edge masks (nonzero planes)
@@ -500,8 +509,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         outfreqchans=range(int(round(p1)),int(round(p2))+1)
                         #print "inpfreqchans=",inpfreqchans
                         #print "outfreqchans=",outfreqchans
-                        
                         expandchanmask(tmp_regridim,inpfreqchans,tmp_outmaskimage,outfreqchans)
+                        #shutil.copytree(tmp_regridim,'my_tmp_regrid') 
+                        #shutil.copytree(tmp_outmaskimage,'my_tmp_outmaskimage') 
 
 #		        usechanims={}  # list of input mask to be use for each outpfreq
 #		        for i in outfreqchans:
@@ -561,7 +571,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		else:
 		    ow = False
                     if  inpimage==output:
-		        casalog.post("Updating "+output+"with new mask","INFO")
+		        casalog.post("Updating "+output+" with new mask","INFO")
+                        ow=True
 		    else:
                         if os.path.isdir(outparentim):
 		            casalog.post(outparentim+" exists, overwriting","INFO")
@@ -582,6 +593,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    shutil.rmtree(tmp_maskimage)
 		if os.path.exists(tmp_regridim):
 		    shutil.rmtree(tmp_regridim)
+                if os.path.exists(tmp_outmaskimage):
+                    shutil.rmtree(tmp_outmaskimage)
 
     # === now called copy mode: copy/merge mode ===
         # copy is a just special case of merge mode
