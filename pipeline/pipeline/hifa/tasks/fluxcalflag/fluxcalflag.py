@@ -267,20 +267,29 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	        LOG.info('    %s' % cmd)
 	    if inputs.applyflags:
 	        LOG.info('Applying flags')
-            # TODO don't check for dry run! The executor handles dry run
-            # and should be invoked regardless of whether dry_run is True
-            # or False
-	        if not self._executor._dry_run:
-		    task = casa_tasks.flagdata(vis=inputs.vis, mode='list',
-		        action='apply', inpfile=flagcmds, savepars=False,
-			flagbackup=False)
-		    
-            summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
-            stats_before = self._executor.execute(summary_job)
-            self._executor.execute(task)
-            summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
-            stats_after = self._executor.execute(summary_job)
-            summaries = [stats_before, stats_after]
+
+		# Add the summary commands to the flagging commands
+		allflagcmds = ['mode=summary name=before']
+		allflagcmds.extend(flagcmds)
+		allflagcmds.append('mode=summary name=after')
+
+		# Flag the data
+		task = casa_tasks.flagdata(vis=inputs.vis, mode='list',
+		    action='apply', inpfile=allflagcmds, savepars=False,
+		    flagbackup=False)
+                flagresults = self._executor.execute(task)
+
+		stats_before = {}; stats_after = {}
+		for summary in flagresults.keys():
+		    print 'dict key and name ', summary, flagresults[summary]['name']
+		    if flagresults[summary]['name'] == 'before':
+		        stats_before = flagresults[summary]
+		    elif flagresults[summary]['name'] == 'after':
+		        stats_after = flagresults[summary]
+		if not stats_before or not stats_after:
+                    summaries = []
+		else:
+                    summaries = [stats_before, stats_after]
 
         result = FluxcalFlagResults(inputs.vis,
 	    fluxcal_linelist=fluxcal_lines, fluxcal_flagcmds=flagcmds,
