@@ -465,6 +465,7 @@ class VLAScanHeuristics(object):
     #def analyse(self, results):
     #	    return results
     
+    '''
     def convertspw2band(self):
         """match spw number to EVLA band identifier
         """
@@ -556,7 +557,7 @@ class VLAScanHeuristics(object):
                 spw2band[spw] = 'A'
 
         return spw2band
-        
+    '''    
     
     
     
