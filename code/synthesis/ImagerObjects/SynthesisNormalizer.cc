@@ -134,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupParSync
 
 
-  void SynthesisNormalizer::gatherImages(Bool dopsf) //, Bool doresidual)
+  void SynthesisNormalizer::gatherImages(Bool dopsf, Bool doresidual, Bool dodensity)
   {
 
     //    cout << " partimagenames :" << itsPartImageNames << endl;
@@ -146,7 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LogIO os( LogOrigin("SynthesisNormalizer", "gatherImages",WHERE) );
 
 	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
-	Bool doresidual = !dopsf;
+	//Bool doresidual = !dopsf;
         Bool doweight = dopsf ; //|| ( doresidual && ! itsImages->hasSensitivity() );
         //	Bool doweight = dopsf || ( doresidual && itsImages->getUseWeightImage(*(itsPartImages[0]->residual())) );
 	
@@ -160,7 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
-	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight );
+	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight, /*griddedwt*/dodensity );
 	    itsPartImages[part]->releaseLocks();
 	  }
 
@@ -187,6 +187,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
 	    itsPartImages[part]->setModelImage( itsImages->getName() );
+	    itsPartImages[part]->releaseLocks();
+	  }
+	itsImages->releaseLocks();
+      }
+  }// end of gatherImages
+
+  void SynthesisNormalizer::scatterWeightDensity()
+  {
+
+    LogIO os( LogOrigin("SynthesisNormalizer", "scatterWeightDensity",WHERE) );
+
+    setupImagesOnDisk(); // To open up and initialize itsPartImages.
+
+    //    os << "In ScatterModel : " << itsPartImages.nelements() << " for " << itsPartImageNames << LogIO::POST;
+
+    if( itsPartImages.nelements() > 0 )
+      {
+	os << "Send the gridded weight from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
+	
+	for( uInt part=0;part<itsPartImages.nelements();part++)
+	  {
+	    itsPartImages[part]->setWeightDensity( itsImages );
 	    itsPartImages[part]->releaseLocks();
 	  }
 	itsImages->releaseLocks();
@@ -417,7 +439,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		imopen = itsPartImageNames[0]+".psf"+((itsMapperType=="multiterm")?".tt0":"");
 		Directory imdir2( imopen );
 		if( ! imdir2.exists() )
-		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]+err));
+		  {
+		    imopen = itsPartImageNames[0]+".gridwt";
+		    Directory imdir3( imopen );
+		    if( ! imdir3.exists() )
+		      throw(AipsError("Cannot find partial image psf or residual or gridwt for  " + itsPartImageNames[0]+err));
+		  }
+
 	      }
 
 	    PagedImage<Float> temppart( imopen );

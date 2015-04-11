@@ -63,6 +63,30 @@ This is used to construct {\tt synthesisnormalizer} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="gatherweightdensity">
+   <shortdescription>Gather Gridded Weight images</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="scatterweightdensity">
+   <shortdescription>Scatter summed Gridded Weight images</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="gatherpsfweight">
    <shortdescription>Gather PSFs if needed</shortdescription>
 

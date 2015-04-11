@@ -446,6 +446,38 @@ synthesisimstore* synthesisimager::getimstore(const int id)
 }
 
 
+  bool synthesisimager::getweightdensity()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->getWeightDensity();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+  bool synthesisimager::setweightdensity()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->setWeightDensity();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
+
 bool
 synthesisimager::done()
 {

@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SIImageStore 
 {
  public:
-  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
+  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,GRIDWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
   // Default constructor
 
   SIImageStore();
@@ -104,13 +104,16 @@ class SIImageStore
   virtual CountedPtr<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
   virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
 
+  virtual CountedPtr<ImageInterface<Float> > gridwt(uInt term=0);
+
   virtual void setModelImage( String modelname );
+  virtual void setWeightDensity( CountedPtr<SIImageStore> imagetoset );
   virtual Bool doesImageExist(String imagename);
   void setImageInfo(const Record miscinfo);
 
   virtual void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
   virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
-		  Bool addpsf, Bool addresidual, Bool addweight );
+			  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity );
 
   ///// Normalizers
   virtual void dividePSFByWeight();
@@ -216,7 +219,7 @@ protected:
 
   Bool itsUseWeight;
   Record itsMiscInfo;
-  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask; // mutliterm shares this...
+  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt; // mutliterm shares this...
   Double itsPBScaleFactor;
 
   Int itsNFacets, itsFacetId;
@@ -237,7 +240,7 @@ private:
   CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
-  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt;
+  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt;
 
 
 };

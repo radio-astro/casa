@@ -105,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeight=NULL;
     itsImage=NULL;
     itsMask=NULL;
+    itsGridWt=NULL;
 
     itsSumWt=NULL;
     itsUseWeight=False;
@@ -143,6 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeight=NULL;
     itsImage=NULL;
     itsMask=NULL;
+    itsGridWt=NULL;
 
     itsSumWt=NULL;
     itsUseWeight=useweightimage;
@@ -183,6 +185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsWeight=NULL;   
     itsImage=NULL;
     itsMask=NULL;
+    itsGridWt=NULL;
     itsMiscInfo=Record();
 
     itsSumWt=NULL;
@@ -197,13 +200,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // The PSF or Residual images must exist. ( TODO : and weight )
     if( doesImageExist(itsImageName+String(".residual")) || 
-	doesImageExist(itsImageName+String(".psf"))  )
+	doesImageExist(itsImageName+String(".psf")) ||
+	doesImageExist(itsImageName+String(".gridwt"))  )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
 	if( doesImageExist(itsImageName+String(".psf")) )
 	  imptr = new PagedImage<Float> (itsImageName+String(".psf"));
-	else
+	else if ( doesImageExist(itsImageName+String(".residual")) )
 	  imptr = new PagedImage<Float> (itsImageName+String(".residual"));
+	else 
+	  imptr = new PagedImage<Float> (itsImageName+String(".gridwt"));
 	  
 	itsImageShape = imptr->shape();
 	itsCoordSys = imptr->coordinates();
@@ -213,6 +219,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError( "PSF or Residual Image (or sumwt) do not exist. Please create one of them." ) );
       }
     
+    if( doesImageExist(itsImageName+String(".residual")) || 
+	doesImageExist(itsImageName+String(".psf")) )
+      {
     if( doesImageExist(itsImageName+String(".sumwt"))  )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
@@ -230,6 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
+      }// if psf or residual exist...
 
     if( ignorefacets==True ) itsNFacets= 1;
 
@@ -685,6 +695,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( ! itsWeight.null() ) releaseImage( itsWeight );
     if( ! itsMask.null() ) releaseImage( itsMask );
     if( ! itsSumWt.null() ) releaseImage( itsSumWt );
+    if( ! itsGridWt.null() ) releaseImage( itsGridWt );
 
     return True; // do something more intelligent here.
   }
@@ -910,6 +921,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     accessImage( itsMask, itsParentMask, imageExts(MASK) );
     return itsMask;
   }
+  CountedPtr<ImageInterface<Float> > SIImageStore::gridwt(uInt /*nterm*/)
+  {
+    accessImage( itsGridWt, itsParentGridWt, imageExts(GRIDWT) );
+    /// change the coordinate system here, to uv.
+    return itsGridWt;
+  }
 
   CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
     if(!itsForwardGrid.null()) // && (itsForwardGrid->shape() == itsImageShape))
@@ -1004,7 +1021,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SIImageStore::addImages( CountedPtr<SIImageStore> imagestoadd,
-				Bool addpsf, Bool addresidual, Bool addweight)
+				Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity)
   {
 
     if(addpsf)
@@ -1041,8 +1058,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	setUseWeightImage( *sumwt(),  getUseWeightImage(*(imagestoadd->sumwt()) ) );
 
       }
+    if(adddensity)
+      {
+	LatticeExpr<Float> adderDensity( *(gridwt()) + *(imagestoadd->gridwt()) ); 
+	gridwt()->copyData(adderDensity);
+      }
+
+
     ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
+
+void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
+  {
+    LogIO os( LogOrigin("SIImageStore","setWeightDensity",WHERE) );
+
+    gridwt()->copyData( LatticeExpr<Float> ( *(imagetoset->gridwt()) ) );
+
+  }
+
+
+
 
   /*
   void SIImageStore::addSumWts(ImageInterface<Float>& target, ImageInterface<Float>& toadd)
@@ -1385,10 +1420,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  }
     else
       {
-	itsPSFBeams.summarize( os, False, itsCoordSys );
+	// TODO : Enable this, when this function doesn't complain about 0 rest freq.
+	//                                 or when rest freq is never zero !
+	try{
+		itsPSFBeams.summarize( os, False, itsCoordSys );
+	}
+	catch(AipsError &x)
+	  {
+	    os << LogIO::WARN << "Error while printing (compact) restoring beam summary : " <<  x.getMesg() << LogIO::POST;
+	    os << "Printing long summary" << LogIO::POST;
+	    
+	    AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
+	    Int npol = itsImageShape[2];
+	    Int nchan = itsImageShape[3];
+	    for( Int chanid=0; chanid<nchan;chanid++) {
+	      Int polid=0;
+	      //	  for( Int polid=0; polid<npol; polid++ ) {
+	      GaussianBeam beam = itsPSFBeams.getBeam( chanid, polid );
+	      os << "Beam [C" << chanid << "]: " << beam.getMajor(Unit("arcsec")) << " arcsec, " << beam.getMinor(Unit("arcsec"))<< " arcsec, " << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
+	      //}//for polid
+	    }//for chanid
+	  }// catch
       }
   }
-
+  
   /////////////////////////////// Restore all planes.
 
   void SIImageStore::restore(GaussianBeam& rbeam, String& usebeam, uInt term)
@@ -1982,6 +2037,7 @@ Bool SIImageStore::isModelEmpty()
     imageExts(WEIGHT)=".weight";
     imageExts(IMAGE)=".image";
     imageExts(SUMWT)=".sumwt";
+    imageExts(GRIDWT)=".gridwt";
     imageExts(FORWARDGRID)=".forward";
     imageExts(BACKWARDGRID)=".backward";
 
@@ -2079,6 +2135,7 @@ void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage )
     if (itsWeight.null())   ImageExists(WEIGHT)=False;
     if (itsImage.null())    ImageExists(IMAGE)=False;
     if (itsSumWt.null())    ImageExists(SUMWT)=False;
+    if (itsGridWt.null())    ImageExists(GRIDWT)=False;
 
     if (itsForwardGrid.null())    ImageExists(FORWARDGRID)=False;
     if (itsBackwardGrid.null())    ImageExists(BACKWARDGRID)=False;

@@ -156,6 +156,9 @@ class SynthesisImager
 	      const Quantity& filterbmin=Quantity(0.0,"deg"),
 	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
 
+  Bool getWeightDensity();
+  Bool setWeightDensity();
+
   //the following get rid of the mappers in this object
   void resetMappers();
 

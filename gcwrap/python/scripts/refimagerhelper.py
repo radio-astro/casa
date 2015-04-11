@@ -80,10 +80,6 @@ class PySynthesisImager:
         for fld in range(0,self.NF):
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
 
-        ## Set weighting parameters, and all pars common to all fields.
-        self.SItool.setweighting( **(self.weightpars) )
-
-
 #############################################
 
     def initializeDeconvolvers(self):
@@ -252,6 +248,17 @@ class PySynthesisImager:
 
         self.predictModelCore()
 ##        self.SItool.predictmodel();
+
+#############################################
+## Overloaded for parallel runs
+    def setWeighting(self):
+        ## Set weighting parameters, and all pars common to all fields.
+        self.SItool.setweighting( **(self.weightpars) )
+        
+ #       print "get set density from python"
+#        self.SItool.getweightdensity()
+#        self.SItool.setweightdensity()
+
         
 #############################################
 ## Overloaded for parallel runs
@@ -392,17 +399,6 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
 
-        joblist=[];
-        for node in self.listOfNodes:
-            ## Set weighting pars
-            joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
-        self.PH.checkJobs( joblist )
-
-
-#                joblist.append( self.PH.runcmd("toolsi.selectdata( **"+str(self.allselpars[str(node)][mss])+")", node) )
-#                joblist.append( self.PH.runcmd("toolsi.defineimage( " + str( nimpars[str(fld)] ) + ")", node ) )
-##                joblist.append( self.PH.runcmd("toolsi.defineimage( **" + str( nimpars[str(fld)] ) + ")", node ) )
-
 #############################################
 
     def initializeNormalizers(self):
@@ -426,6 +422,38 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 
 #############################################
+    def setWeighting(self):
+
+        ## Set weight parameters and accumulate weight density (natural)
+        joblist=[];
+        for node in self.listOfNodes:
+            ## Set weighting pars
+            joblist.append( self.PH.runcmd("toolsi.setweighting( **" + str(self.weightpars) + ")", node ) )
+        self.PH.checkJobs( joblist )
+
+        ## If only one field, do the get/gather/set of the weight density.
+        if 0:  ## self.NF == 1 :   ## Remove check after gridded wts appear for all fields correctly.
+
+            joblist=[];
+            for node in self.listOfNodes:
+                joblist.append( self.PH.runcmd("toolsi.getweightdensity()", node ) )
+            self.PH.checkJobs( joblist )
+
+           ## gather weightdensity and sum and scatter
+            print "******************************************************"
+            print " gather and scatter now "
+            print "******************************************************"
+            for immod in range(0,self.NF):
+                self.PStools[immod].gatherweightdensity()
+                self.PStools[immod].scatterweightdensity()
+
+           ## Set weight density for each nodel
+            joblist=[];
+            for node in self.listOfNodes:
+                joblist.append( self.PH.runcmd("toolsi.setweightdensity()", node ) )
+            self.PH.checkJobs( joblist )
+
+
 
     def deleteImagers(self):
          self.PH.runcmd("toolsi.done()")

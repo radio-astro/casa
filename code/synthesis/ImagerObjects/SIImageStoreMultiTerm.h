@@ -105,13 +105,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   virtual CountedPtr<ImageInterface<Float> > alpha();
   virtual CountedPtr<ImageInterface<Float> > beta();
 
+  //  virtual CountedPtr<ImageInterface<Float> > gridwt(uInt term=0);
+
   void setModelImage( String modelname );
 
   Bool doesImageExist(String imagename);
 
   void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
-		  Bool addpsf, Bool addresidual, Bool addweight );
+		  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity);
 
   void dividePSFByWeight();
 

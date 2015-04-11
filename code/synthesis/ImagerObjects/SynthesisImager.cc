@@ -380,7 +380,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","unlockMSs",WHERE) );
     for(uInt i=0;i<mss4vi_p.nelements();i++)
       { 
-	os << "Unlocking : " << mss4vi_p[i].tableName() << LogIO::POST;
+	os << LogIO::NORMAL2 << "Unlocking : " << mss4vi_p[i].tableName() << LogIO::POST;
 	mss4vi_p[i].unlock(); 
       }
   }
@@ -744,7 +744,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
 			       const Quantity& noise, const Double robust,
@@ -882,7 +882,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ///////////////////////////////
 	 
 	 
-	 return True;
+	 ///	 return True;
 	 
        }
        catch(AipsError &x)
@@ -890,9 +890,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   throw( AipsError("Error in Weighting : "+x.getMesg()) );
 	 }
        
-       
        return True;
   }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //// Get/Set Weight Grid.... write to disk and read
+
+  /// todo : do for full mapper list, and taylor terms.
+  Bool SynthesisImager::getWeightDensity( )
+  {
+    LogIO os(LogOrigin("SynthesisImager", "getWeightDensity()", WHERE));
+    try
+      {
+	Block<Matrix<Float> > densitymatrices;
+	imwgt_p.getWeightDensity( densitymatrices );
+	if ( densitymatrices.nelements()>0 )
+	  {
+	    for (uInt fid=0;fid<densitymatrices.nelements();fid++)
+	      {
+		cout << "Density shape (get) for f " << fid << ": " << densitymatrices[fid].shape() << endl;
+		itsMappers.imageStore(fid)->gridwt(0)->put(densitymatrices[fid]);
+	      }
+	  }
+	itsMappers.releaseImageLocks();
+
+      }
+    catch (AipsError &x)
+      {
+	throw(AipsError("In getWeightDensity : "+x.getMesg()));
+      }
+    return True;
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// todo : do for full mapper list, and taylor terms.
+  
+  Bool SynthesisImager::setWeightDensity( )
+  {
+    LogIO os(LogOrigin("SynthesisImager", "setWeightDensity()", WHERE));
+    try
+      {
+	Block<Matrix<Float> > densitymatrices(itsMappers.nMappers());
+	for (uInt fid=0;fid<densitymatrices.nelements();fid++)
+	  {
+	    Array<Float> arr;
+	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,True);
+	    densitymatrices[fid].reference( arr );
+	    cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
+	  }
+	imwgt_p.setWeightDensity( densitymatrices );
+	rvi_p->useImagingWeight(imwgt_p);
+	itsMappers.releaseImageLocks();
+
+      }
+    catch (AipsError &x)
+      {
+	throw(AipsError("In setWeightDensity : "+x.getMesg()));
+      }
+    return True;
+  }
+  
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

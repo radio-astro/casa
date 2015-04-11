@@ -110,7 +110,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        mode='mfs',\
                                        imagename='mytest0', nchan=1,\
                                        imsize=[110,110],\
-                                       cell=['8.0arcsec','8.0arcsec'],stokes='IV',\
+                                       cell=['8.0arcsec','8.0arcsec'],stokes='I',\
                                        phasecenter=0,
                                        ftmachine='gridft', startmodel='', weighting='briggs',\
                                        deconvolver='clarkstokes',
@@ -470,6 +470,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[512,512],\
                                        cell=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       stokes='V',\
                                        ftmachine='awprojectft', 
                                        startmodel='', weighting='natural',\
                                        aterm=True, psterm=False, mterm=True,\
@@ -699,7 +700,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      if parallelmajor==True or parallelminor==True or parallelcube==True:
         clusterdef = 'cfgfile.txt'
         defstr = ''
-        defstr = defstr + 'vega, 2,'+os.getcwd() #+'/aatest'
+        defstr = defstr + 'riya, 2,'+os.getcwd() #+'/aatest'
 #        defstr = defstr + '\n'
 #        defstr = defstr + 'tara, 2,'+os.getcwd() # +'/aatest'
         # remove file first

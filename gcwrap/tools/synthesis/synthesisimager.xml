@@ -526,6 +526,29 @@ Define the image coordinate systems and shapes.
 
 <returns type="synthesisimstore"/>
 </method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="getweightdensity">
+   <shortdescription>Save natural gridded wt to disk.</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="setweightdensity">
+   <shortdescription>Read in natural gridded wt from disk.</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
 <!-- ===================================== -->
 
    <method type="function" name="done">

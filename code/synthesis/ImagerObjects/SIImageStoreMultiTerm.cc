@@ -76,6 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages.resize(0);
     itsSumWts.resize(0);
     itsMask=NULL;
+    itsGridWt=NULL;
 
     itsForwardGrids.resize(0);
     itsBackwardGrids.resize(0);
@@ -124,6 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWts.resize(2 * itsNTerms - 1);
 
     itsMask=NULL;
+    itsGridWt=NULL;
 
     itsForwardGrids.resize(itsNTerms);
     itsBackwardGrids.resize(2 * itsNTerms - 1);
@@ -168,6 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages.resize(itsNTerms);
     itsSumWts.resize(2 * itsNTerms - 1);
     itsMask=NULL;
+    itsGridWt=NULL;
 
     itsMiscInfo=Record();
 
@@ -196,14 +199,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    // The PSF or Residual images must exist. 
-    if( exists )
+    // The PSF or Residual images must exist. ( or the gridwt image)
+    //  All this is just for the shape and coordinate system.
+    if( exists || doesImageExist(itsImageName+String(".gridwt")) )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
 	if( doesImageExist(itsImageName+String(".psf.tt0")) )
 	  imptr = new PagedImage<Float> (itsImageName+String(".psf.tt0"));
-	else
+	else if( doesImageExist(itsImageName+String(".residual.tt0")) )
 	  imptr = new PagedImage<Float> (itsImageName+String(".residual.tt0"));
+	else
+	  imptr = new PagedImage<Float> (itsImageName+String(".gridwt"));
 	  
 	itsImageShape = imptr->shape();
 	itsCoordSys = imptr->coordinates();
@@ -213,6 +219,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError( "Multi-term PSF or Residual Images do not exist. Please create one of them." ) );
       }
 
+    if( doesImageExist(itsImageName+String(".residual.tt0")) || 
+	doesImageExist(itsImageName+String(".psf.tt0")) )
+      {
     if( sumwtexists )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
@@ -229,6 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "Multi-term SumWt does not exist. Please create PSFs or Residuals." ) );
       }
+      }// if psf0 or res0 exist
 
     if( ignorefacets==True ) itsNFacets=1;
 
@@ -457,6 +467,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( !itsMask.null() ) releaseImage( itsMask );
     if( !itsAlpha.null() ) releaseImage( itsAlpha );
     if( !itsBeta.null() ) releaseImage( itsBeta );
+    if( !itsGridWt.null() ) releaseImage( itsGridWt );
     
     return True; // do something more intelligent here.
   }
@@ -598,7 +609,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImages[term];
   }
 
-  CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
+    CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
     if(!itsForwardGrids[term].null())// && (itsForwardGrids[term]->shape() == itsImageShape))
       return itsForwardGrids[term];
     Vector<Int> whichStokes(0);
@@ -682,7 +693,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SIImageStoreMultiTerm::addImages( CountedPtr<SIImageStore> imagestoadd,
-				Bool addpsf, Bool addresidual, Bool addweight)
+					 Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity)
   {
 
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
@@ -719,6 +730,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    //	    addSumWts( *residual(tix), *(imagestoadd->residual(tix)) );
 
+	  }
+
+	if( tix==0 && adddensity )
+	  {
+	    LatticeExpr<Float> adderDensity( *(gridwt()) + *(imagestoadd->gridwt()) ); 
+	    gridwt()->copyData(adderDensity);
 	  }
 
       }

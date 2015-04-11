@@ -285,6 +285,7 @@ def tclean(
         t0=time.time();
         imager.initializeImagers()
         imager.initializeNormalizers()
+        imager.setWeighting()
         t1=time.time();
         casalog.post("***Time for initializing imager and normalizers: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 

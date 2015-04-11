@@ -80,13 +80,35 @@ synthesisimstore* synthesisnormalizer::getimstore()
   return rstat;
 }
 
+bool synthesisnormalizer::gatherweightdensity()
+{
+  Bool rstat(False);
+  try {
+    itsNormalizer->gatherImages( /*dopsf*/False, /*doresidual*/False, /*density*/ True );
+    rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+bool synthesisnormalizer::scatterweightdensity()
+{
+  Bool rstat(False);
+  try {
+    itsNormalizer->scatterWeightDensity( ); 
+    rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
 
 
 bool synthesisnormalizer::gatherpsfweight()
 {
   Bool rstat(False);
   try {
-    itsNormalizer->gatherImages( /*dopsf*/True ); //, /*doresidual*/False );
+    itsNormalizer->gatherImages( /*dopsf*/True, /*doresidual*/False, /*density*/ False );
     rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);
@@ -98,7 +120,7 @@ bool synthesisnormalizer::gatherresidual()
 {
   Bool rstat(False);
   try {
-    itsNormalizer->gatherImages( /*dopsf*/False) ; //, /*doresidual*/True );
+    itsNormalizer->gatherImages( /*dopsf*/False, /*doresidual*/True, /*density*/ False );
     rstat=True;
   } catch  (AipsError x) {
     RETHROW(x);

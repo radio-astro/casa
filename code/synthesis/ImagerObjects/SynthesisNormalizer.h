@@ -65,10 +65,15 @@ class SynthesisNormalizer
   void setupNormalizer(Record normpars);
 
   // Gather all part images to the 'full' one
-  void gatherImages(Bool dopsf=True); //, Bool doresidual=True);
+  void gatherImages(Bool dopsf, Bool doresidual, Bool dodensity);
 
   // Copy out model to all pieces. Currently a No-Op.
   void scatterModel();
+
+  // Gather all part gridded weights and add them up.
+  void gatherWeightDensity();
+  // Scatter summed gridded weights to all parts
+  void scatterWeightDensity();
 
   CountedPtr<SIImageStore> getImageStore();
   void setImageStore( SIImageStore* imstore );
