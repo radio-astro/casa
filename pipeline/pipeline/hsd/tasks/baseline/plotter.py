@@ -77,6 +77,8 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
                 lines_map[ix][iy] = None if len(masklist) == 0 else masklist
                 for row in rows:
                     integrated_data += tb.getcell('SPECTRA', row)
+        else:
+            LOG.debug('no data is available for (%s,%s)'%(ix,iy))
     integrated_data /= nrow
     LOG.trace('integrated_data=%s'%(integrated_data))
     LOG.trace('map_data.shape=%s'%(list(map_data.shape)))
