@@ -202,7 +202,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             return self._intents
 
         # return just the unwanted intents that are present in the MS
-        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND'])
+        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION'])
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
     @intents.setter
@@ -424,11 +424,21 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         # These must be separated due to the way agent flagging works
         if inputs.intents != '':
+            #for intent in inputs.intents.split(','):
+            #    if '*' not in intent:
+            #        intent = '*%s*' % intent
+            #    flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
+            #flag_cmds.append('mode=summary name=intents')
             for intent in inputs.intents.split(','):
-                if '*' not in intent:
-                    intent = '*%s*' % intent
-                flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
-            flag_cmds.append('mode=summary name=intents')
+                #if '*' not in intent:
+                    #intent = '*%s*' % intent
+                intentlist = list(inputs.ms.get_original_intent(intent))
+                for intent_item in intentlist:
+                    flag_cmds.append('mode=manual intent=%s reason=intents' % intent_item)
+            flag_cmds.append('mode=summary name=intents') 
+            
+            
+            
 
         # Flag spectral window edge channels?
         if inputs.edgespw: 

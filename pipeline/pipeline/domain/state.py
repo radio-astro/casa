@@ -224,7 +224,7 @@ class StateVLA(State):
         'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
         'CALIBRATE_PHASE#UNSPECIFIED'        : 'PHASE',
         'CALIBRATE_AMPLI#UNSPECIFIED'        : 'PHASE',  #Was amplitude
-        'UNSPECIFIED#UNSPECIFIED'            : 'UNSPECIFIED#UNSPECIFIED',
+        'UNSPECIFIED#UNSPECIFIED'            : 'UNKNOWN',
         'SYSTEM_CONFIGURATION'               : 'SYSTEM_CONFIGURATION'
     }
     
