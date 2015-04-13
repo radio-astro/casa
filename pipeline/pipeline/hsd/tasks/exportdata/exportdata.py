@@ -239,7 +239,7 @@ class SDExportData(hif_exportdata.ExportData):
             pipemanifest.add_caltables(session, caltabledict[session_name])
             for vis_name in session_vislist:
                 basename = os.path.basename(vis_name)
-                pipemanifest.add_asdm (session, vis_name, flagversionsdict[basename][0],
+                pipemanifest.add_asdm (session, vis_name, flagversionsdict[basename],
                                        applydict[basename])                
             
         # Create fits files from CASA images
