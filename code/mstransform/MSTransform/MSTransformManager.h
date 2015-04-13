@@ -509,7 +509,11 @@ protected:
 	{
 		Bool transformed = True;
 
-		if ((inputOutputIndexMap.size()) or (nspws_p >1))
+		if (inputOutputIndexMap.size() == 0)
+		{
+			transformed = transformNotReindexableVector(inputVector,outputVector,constant);
+		}
+		else
 		{
 			if (constant)
 			{
@@ -523,10 +527,6 @@ protected:
 			{
 				reindexVector(inputVector,outputVector,inputOutputIndexMap);
 			}
-		}
-		else
-		{
-			transformed = transformNotReindexableVector(inputVector,outputVector,constant);
 		}
 
 		return transformed;
