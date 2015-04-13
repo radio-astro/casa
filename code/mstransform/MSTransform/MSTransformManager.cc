@@ -511,7 +511,7 @@ void MSTransformManager::parseDataSelParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, taqlSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+		logger_p << LogIO::NORMAL2 << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "TaQL selection is " << taqlSelection_p << LogIO::POST;
 	}
 
