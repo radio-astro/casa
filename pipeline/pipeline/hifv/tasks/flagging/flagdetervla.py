@@ -252,7 +252,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
         # return just the unwanted intents that are present in the MS
         #VLA Specific intents that need to be flagged
-        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND', 'SYSTEM_CONFIGURATION', 'UNSPECIFIED#UNSPECIFIED'])
+        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND', 'UNKNOWN', 'SYSTEM_CONFIGURATION', 'UNSPECIFIED#UNSPECIFIED'])
         return ','.join(self.ms.intents.intersection(intents_to_flag))
 
     @intents.setter
