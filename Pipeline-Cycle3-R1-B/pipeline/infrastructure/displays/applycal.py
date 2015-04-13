@@ -523,7 +523,7 @@ class AmpVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -531,6 +531,7 @@ class AmpVsUVSummaryChart(SpwSummaryChart):
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(AmpVsUVSummaryChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
@@ -561,7 +562,7 @@ class PhaseVsUVSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs UV distance plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -569,6 +570,7 @@ class PhaseVsUVSummaryChart(SpwSummaryChart):
                      'coloraxis'   : 'corr',
                      'plotrange'   : [0, 0, -90, 90],
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(PhaseVsUVSummaryChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='phase', intent=intent, 
@@ -579,7 +581,7 @@ class AmpVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -587,6 +589,7 @@ class AmpVsTimeSummaryChart(SpwSummaryChart):
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'field',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(AmpVsTimeSummaryChart, self).__init__(
                 context, result, xaxis='time', yaxis='amp', intent=intent,
@@ -597,7 +600,7 @@ class PhaseVsTimeSummaryChart(SpwSummaryChart):
     """
     Create an amplitude vs time plot for each spw, overplotting by antenna.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -605,6 +608,7 @@ class PhaseVsTimeSummaryChart(SpwSummaryChart):
                      'coloraxis'   : 'field',
                      'plotrange'   : [0, 0, -90, 90],
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(PhaseVsTimeSummaryChart, self).__init__(
                 context, result, xaxis='time', yaxis='phase', intent=intent,
@@ -731,7 +735,7 @@ class AmpVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -739,6 +743,7 @@ class AmpVsUVDetailChart(SpwAntDetailChart):
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(AmpVsUVDetailChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
@@ -749,7 +754,7 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
     """
     Create an amplitude vs UV distance plot for each spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -757,6 +762,7 @@ class PhaseVsUVDetailChart(SpwAntDetailChart):
                      'coloraxis'   : 'corr',
                      'plotrange'   : [0, 0, -180, 180],
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(PhaseVsUVDetailChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='phase', intent=intent, 
@@ -768,7 +774,7 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an amplitude vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -776,6 +782,7 @@ class AmpVsTimeDetailChart(FieldSpwAntDetailChart):
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(AmpVsTimeDetailChart, self).__init__(
                 context, result, xaxis='time', yaxis='amp', intent=intent, 
@@ -787,7 +794,7 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
     Create an phase vs time plot for each field, spw and antenna, 
     overplotting by correlation.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected'):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -795,6 +802,7 @@ class PhaseVsTimeDetailChart(FieldSpwAntDetailChart):
                      'plotrange'   : [0, 0, -180, 180],
                      'coloraxis'   : 'corr',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(PhaseVsTimeDetailChart, self).__init__(
                 context, result, xaxis='time', yaxis='phase', intent=intent, 

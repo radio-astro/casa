@@ -57,7 +57,7 @@ class AmpVsUVSummaryChart(BasebandSummaryChart):
     """
     Create an amplitude vs UV distance plot for each baseband.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='model'):
+    def __init__(self, context, result, intent='', ydatacolumn='model', **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,
@@ -65,6 +65,7 @@ class AmpVsUVSummaryChart(BasebandSummaryChart):
                      'plotrange'   : [0, 0, 0, 0],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(AmpVsUVSummaryChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='amp', intent=intent, 
