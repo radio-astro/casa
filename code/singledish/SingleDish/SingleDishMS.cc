@@ -885,7 +885,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
-      sdh_->fillCubeToOutputMs(vb, data_chunk);
+      sdh_->fillCubeToOutputMs(vb, data_chunk, &flag_chunk);
     } // end of vi loop
   } // end of chunk loop
 
@@ -1171,7 +1171,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
-      sdh_->fillCubeToOutputMs(vb, data_chunk);
+      sdh_->fillCubeToOutputMs(vb, data_chunk, &flag_chunk);
     } // end of vi loop
   } // end of chunk loop
 
@@ -1765,7 +1765,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	}
       } // end of chunk row loop
       // write back data and flag cube to VisBuffer
-      sdh_->fillCubeToOutputMs(vb, data_chunk, flag_chunk);
+      sdh_->fillCubeToOutputMs(vb, data_chunk, &flag_chunk);
     } // end of vi loop
   } // end of chunk loop
 

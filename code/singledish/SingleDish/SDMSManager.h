@@ -38,13 +38,13 @@ public:
 
   void fillCubeToOutputMs(vi::VisBuffer2 *vb,
 			  Cube<Float> const &data_cube,
-			  Cube<Bool> const &flag_cube);
+			  Cube<Bool> const *flag_cube);
 
 protected:
 
   void fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,
 			  Cube<Float> const &data_cube,
-			  Cube<Bool> const &flag_cube);
+			  Cube<Bool> const *flag_cube);
 
   void setIterationApproach();
 
