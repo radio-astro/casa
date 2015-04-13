@@ -5726,6 +5726,12 @@ template <class T> void MSTransformManager::setTileShape(	RefRows &rowRef,
 	return;
 }
 
+// explicit instatiation for the use from SDMSManager
+template void MSTransformManager::setTileShape<Float>(RefRows &, ArrayColumn<Float> &);
+template void MSTransformManager::setTileShape<Bool>(RefRows &, ArrayColumn<Bool> &);
+template void MSTransformManager::setTileShape<Complex>(RefRows &, ArrayColumn<Complex> &);
+
+
 
 // ----------------------------------------------------------------------------------------
 //
