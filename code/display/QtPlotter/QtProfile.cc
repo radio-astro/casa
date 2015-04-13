@@ -1623,7 +1623,6 @@ namespace casa {
 		}
 
 		ok = setErrorPlotting( wxv, wyv);
-
 		Int ordersOfM = scaleAxis();
 		adjustPlotUnits( );
 
@@ -2742,7 +2741,6 @@ namespace casa {
 		} else { // no correction
 			yUnitPrefix = "";
 		}
-
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
 		return ordersOfM;
 	}
@@ -2752,6 +2750,7 @@ namespace casa {
 		if ( unitStr.length() == 0 ){
 			return;
 		}
+
 		QString displayUnit = unitStr;
 		//Right now optical units are not being supported as far as changing
 		//them on the y-axis.
@@ -2777,7 +2776,7 @@ namespace casa {
 			yAxisCombo->setCurrentIndex( 0 );
 		}
 		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
-		//pixelCanvas->setDisplayYUnits( yAxisCombo->currentText() );
+		pixelCanvas->setDisplayYUnits( yAxisCombo->currentText() );
 		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 	}
 

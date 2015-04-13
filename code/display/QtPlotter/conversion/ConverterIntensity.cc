@@ -286,33 +286,35 @@ namespace casa {
 	double ConverterIntensity::convertNonKelvinUnits( double value,
 	        const QString& oldUnits, const QString& newUnits, double beamArea ) {
 		double convertedValue = value;
-		if ( oldUnits == JY_BEAM ) {
-			if ( newUnits != JY_BEAM ) {
-				convertedValue = beamToArcseconds( value, beamArea );
-				if ( newUnits == JY_SR ) {
-					convertedValue = arcsecondsToSr( convertedValue );
+		if ( oldUnits != newUnits ){
+			if ( oldUnits == JY_BEAM ) {
+				if ( newUnits != JY_BEAM ) {
+					convertedValue = beamToArcseconds( value, beamArea );
+					if ( newUnits == JY_SR ) {
+						convertedValue = arcsecondsToSr( convertedValue );
+					}
 				}
-			}
-		} else if ( oldUnits == JY_SR ) {
-			if ( newUnits != JY_SR ) {
-				convertedValue = srToArcseconds( value );
-				if ( newUnits == JY_BEAM ) {
-					convertedValue = arcsecondsToBeam( convertedValue, beamArea );
+			} else if ( oldUnits == JY_SR ) {
+				if ( newUnits != JY_SR ) {
+					convertedValue = srToArcseconds( value );
+					if ( newUnits == JY_BEAM ) {
+						convertedValue = arcsecondsToBeam( convertedValue, beamArea );
+					}
 				}
-			}
-		} else if ( oldUnits == JY_ARCSEC ) {
-			if ( newUnits != JY_ARCSEC ) {
-				if ( newUnits == JY_SR ) {
-					convertedValue = arcsecondsToSr( value );
-				} else if ( newUnits == JY_BEAM ) {
-					convertedValue = arcsecondsToBeam( value, beamArea );
-				} else {
-					qDebug()<<"Unsupported units: "<<newUnits;
-				}
+			} else if ( oldUnits == JY_ARCSEC ) {
+				if ( newUnits != JY_ARCSEC ) {
+					if ( newUnits == JY_SR ) {
+						convertedValue = arcsecondsToSr( value );
+					} else if ( newUnits == JY_BEAM ) {
+						convertedValue = arcsecondsToBeam( value, beamArea );
+					} else {
+						qDebug()<<"Unsupported units: "<<newUnits;
+					}
 
+				}
+			} else {
+				qDebug() << "Unrecognized units:"<<oldUnits;
 			}
-		} else {
-			qDebug() << "Unrecognized units: "<<oldUnits;
 		}
 		return convertedValue;
 	}
