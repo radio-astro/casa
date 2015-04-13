@@ -90,11 +90,13 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				if (mainColumn_p == MS::DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+                                        setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
 					outputFlagCol = NULL;
 				}
+                                setTileShape(rowRef,outputMsCols_p->data());
 				Cube<Complex> cdata_cube(data_cube.shape());
 				convertArray(cdata_cube,data_cube);
 				transformCubeOfData(vb,rowRef,cdata_cube,outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
@@ -106,6 +108,7 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				if (mainColumn_p == MS::CORRECTED_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+                                        setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
@@ -116,10 +119,12 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				convertArray(cdata_cube,data_cube);
 				if (iter->second == MS::DATA)
 				{
+				  setTileShape(rowRef,outputMsCols_p->data());
 					transformCubeOfData(vb,rowRef,cdata_cube,outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
+				  setTileShape(rowRef,outputMsCols_p->correctedData());
 					transformCubeOfData(vb,rowRef,cdata_cube,outputMsCols_p->correctedData(), outputFlagCol,applicableSpectrum);
 				}
 
@@ -130,6 +135,7 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				if (mainColumn_p == MS::MODEL_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+                                        setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
@@ -138,10 +144,12 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 
 				if (iter->second == MS::DATA)
 				{
+				  setTileShape(rowRef,outputMsCols_p->data());
 					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
+				  setTileShape(rowRef,outputMsCols_p->modelData());
 					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->modelData(), outputFlagCol,applicableSpectrum);
 				}
 				break;
@@ -151,12 +159,14 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 				if (mainColumn_p == MS::FLOAT_DATA)
 				{
 					outputFlagCol = &(outputMsCols_p->flag());
+                                        setTileShape(rowRef,outputMsCols_p->flag());
 				}
 				else
 				{
 					outputFlagCol = NULL;
 				}
 
+                                setTileShape(rowRef,outputMsCols_p->floatData());
 				transformCubeOfData(vb,rowRef,data_cube,outputMsCols_p->floatData(), outputFlagCol,applicableSpectrum);
 
 				break;
@@ -173,8 +183,9 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 			}
 		}
 		//KS: THIS PART ASSUMES INROW==OUTROW
-		if (outputFlagCol != NULL && &flag_cube != NULL)
+		if (outputFlagCol != NULL && (&flag_cube != NULL))
 		  {
+		    setTileShape(rowRef,outputMsCols_p->flag());
 		    writeCube(flag_cube,*outputFlagCol,rowRef);
 		  }
 	}
