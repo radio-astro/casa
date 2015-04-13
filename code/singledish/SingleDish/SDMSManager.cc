@@ -186,7 +186,7 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 		if (outputFlagCol != NULL && (&flag_cube != NULL))
 		  {
 		    setTileShape(rowRef,outputMsCols_p->flag());
-		    writeCube(flag_cube,*outputFlagCol,rowRef);
+		    //writeCube(flag_cube,*outputFlagCol,rowRef);
 		  }
 	}
 
