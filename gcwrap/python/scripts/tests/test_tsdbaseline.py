@@ -423,7 +423,7 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         datacolumn = 'float_data'
         maskmode = 'list'
         blfunc = 'poly'
-        spw = '2'
+        spw = '3'
         pol = '1'
         overwrite = True
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
@@ -442,13 +442,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
             if (results[i]['pol'] == int(pol)):
                 theresult = results[i]
 
-        reference = {'rms': 3.4925737380981445,
-                     'min': -226.3941650390625,
-                     'max': 129.78572082519531,
-                     #'max_abscissa': {'value': 8186.0, 'unit': 'channel'},
-                     'median': -0.025681495666503906,
-                     'stddev': 3.4927871227264404,
-                     #'min_abscissa': {'value': 8187.0, 'unit': 'channel'}
+        reference = {'rms': 0.16677055621054496,
+                     'min': -2.5817961692810059,
+                     'max': 1.3842859268188477,
+                     'median': -0.00086212158203125,
+                     'stddev': 0.16677055621054496,
                      }
 
         self._compareStats(theresult, reference)
@@ -483,11 +481,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         for i in range(len(results)):
             if (results[i]['pol'] == int(pol)):
                 theresult = results[i]
-        
-        reference = {'rms':0.16685959517745799,
-                     'min':-2.5928177833557129,
-                     'max':1.3953156471252441,
-                     'median':-0.00089824199676513672,
+
+        reference = {'rms': 0.16685959517745799,
+                     'min': -2.5928177833557129,
+                     'max': 1.3953156471252441,
+                     'median': -0.00089824199676513672,
                      'stddev': 0.16685959517745766,
                     }
 
