@@ -845,7 +845,11 @@ endif()
 # the location of python...
 #
 if( APPLE )
-    if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 )
+    ##
+    ## casa_packages is not always set, in these cases this unsets python_prefix
+    ## even though it was corectly found without "if ( ... AND casa_packages )"
+    ##
+    if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 AND casa_packages )
        set( python_prefix ${casa_packages} )
     endif()
 endif()
