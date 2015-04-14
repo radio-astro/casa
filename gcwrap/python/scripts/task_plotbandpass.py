@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.64 2015/03/13 19:16:50 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.66 2015/04/14 03:07:13 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.64 2015/03/13 19:16:50 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.66 2015/04/14 03:07:13 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -5290,7 +5290,10 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
 #    print "CalcAtm, field = ", field
 #    print "interval = ", interval
 #    print "refFreqInTable = ", refFreqInTable
-    telescopeName = mymsmd.observatorynames()[0]
+    if (type(mymsmd) == str):
+        telescopeName = 'unknown'
+    else:
+        telescopeName = mymsmd.observatorynames()[0]
     if (telescopeName.find('ALMA') >= 0):
         defaultPWV = 1.0   # a reasonable value for ALMA in case it cannot be found
     elif (telescopeName.find('VLA') >= 0):
@@ -5340,40 +5343,43 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
     P = 563.0
     H = 20.0
     T = 273.0
-
-    if (verbose):
-        print "Looking for scans for field integer = %d" % (field)
-    scans = mymsmd.scansforfield(field)
-    if (verbose):
-        print "For field %s, Got scans = " % str(field),scans
-    scantimes = mymsmd.timesforscans(scans) # is often longer than the scans array
-    roundedScanTimes = np.unique(np.round(scantimes,0))
-    scans, roundedScanTimes = getScansForTimes(mymsmd,roundedScanTimes) # be sure that each scantime has a scan associated, round to nearest second to save time (esp. for single dish data)
-    if (verbose): print "scantimes = %s" % (str(scantimes))
-    if (verbose): print "scans = %s" % (str(scans))
-    mindiff = 1e20
-    for i in range(len(roundedScanTimes)):
-        stime = roundedScanTimes[i]
-        meantime = np.mean(stime)
-        tdiff = np.abs(meantime-timestamp)
-#        if (verbose): print "tdiff = %s" % (str(tdiff))
-        if (tdiff < mindiff):
-            bestscan = scans[i]
-            if (verbose): print "bestscan = %s" % (str(bestscan))
-            mindiff = tdiff
-    if (verbose):
-          print "For timestamp=%.1f, got closest scan = %d, %.0f sec away" %(timestamp, bestscan,mindiff)
-    if (verbose): print "Calling getWeather()"
-    [conditions,myTimes] = getWeather(vis,bestscan,antenna,verbose,mymsmd)
-    if (verbose): print "Done getWeather()"
-    P = conditions['pressure']
-    H = conditions['humidity']
-    T = conditions['temperature']+273.15
-    if (P <= 0.0):
-        P = 563
-    if (H <= 0.0):
-        H = 20
-    if (('elevation' in conditions.keys()) == False):
+    if (type(mymsmd) != str):
+        if (verbose):
+            print "Looking for scans for field integer = %d" % (field)
+        scans = mymsmd.scansforfield(field)
+        if (verbose):
+            print "For field %s, Got scans = " % str(field),scans
+        scantimes = mymsmd.timesforscans(scans) # is often longer than the scans array
+        roundedScanTimes = np.unique(np.round(scantimes,0))
+        scans, roundedScanTimes = getScansForTimes(mymsmd,roundedScanTimes) # be sure that each scantime has a scan associated, round to nearest second to save time (esp. for single dish data)
+        if (verbose): print "scantimes = %s" % (str(scantimes))
+        if (verbose): print "scans = %s" % (str(scans))
+        mindiff = 1e20
+        for i in range(len(roundedScanTimes)):
+            stime = roundedScanTimes[i]
+            meantime = np.mean(stime)
+            tdiff = np.abs(meantime-timestamp)
+    #        if (verbose): print "tdiff = %s" % (str(tdiff))
+            if (tdiff < mindiff):
+                bestscan = scans[i]
+                if (verbose): print "bestscan = %s" % (str(bestscan))
+                mindiff = tdiff
+        if (verbose):
+              print "For timestamp=%.1f, got closest scan = %d, %.0f sec away" %(timestamp, bestscan,mindiff)
+        if (verbose): print "Calling getWeather()"
+        [conditions,myTimes] = getWeather(vis,bestscan,antenna,verbose,mymsmd)
+        if (verbose): print "Done getWeather()"
+        P = conditions['pressure']
+        H = conditions['humidity']
+        T = conditions['temperature']+273.15
+        if (P <= 0.0):
+            P = 563
+        if (H <= 0.0):
+            H = 20
+    else:
+        conditions = {}
+    if (type(mymsmd) != str):
+      if ('elevation' not in conditions.keys()):
         # Someone cleared the POINTING table, so calculate elevation from Ra/Dec/MJD
 #        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
         myfieldId =  mymsmd.fieldsforscan(bestscan)[0]
@@ -5392,7 +5398,9 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
         conditions['azimuth'] = myazel[0] * 180/math.pi
         if (verbose):
             print "Computed elevation = %.1f deg" % (conditions['elevation'])
-        
+    else:
+        conditions['elevation'] = 90
+        bestscan = -1
     if (verbose):
           print "CalcAtm: found elevation=%f (airmass=%.3f) for scan: %s" % (conditions['elevation'],1/np.sin(conditions['elevation']*np.pi/180.), str(bestscan))
           print "P,H,T = %f,%f,%f" % (P,H,T)
@@ -5640,6 +5648,9 @@ def recalcYlimitsFreq(chanrange, ylimits, amp, sideband,plotrange,xchannels,
     elif  (chanrangePercent != None):
       startFraction = (100-chanrangePercent)*0.5*0.01
       stopFraction = 1-(100-chanrangePercent)*0.5*0.01
+      if (xchannels == []):
+          # prevent crash if many channels are flagged: 2015-04-13
+          return(ylimits)
       cr0 = int(np.round(np.max(xchannels)*startFraction))
       cr1 = int(np.round(np.max(xchannels)*stopFraction))
       plottedChannels = np.intersect1d(xchannels, range(cr0, cr1+1))
