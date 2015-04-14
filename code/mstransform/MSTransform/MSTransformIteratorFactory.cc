@@ -21,7 +21,7 @@
 //# $Id: $
 #include <ctime>
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
-
+#include <casa/Utilities/CountedPtr.h>
 namespace casa
 {
 
@@ -72,7 +72,7 @@ std::vector<IPosition> MSTransformIteratorFactory::getVisBufferStructure()
 	LogIO logger;
 
 	// Initialize manager to unpack parameters
-	manager_p = std::tr1::shared_ptr<MSTransformManager>(new MSTransformManager(configuration_p));
+	manager_p = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
 
 	// Open manager to create selected inputMS
 	manager_p->open();
@@ -184,14 +184,14 @@ void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 *) const
 {
 	// Create MSTransformManager
-	std::tr1::shared_ptr<MSTransformManager> manager;
+	SHARED_PTR<MSTransformManager> manager;
 	if (manager_p)
 	{
 		manager = manager_p;
 	}
 	else
 	{
-		manager = std::tr1::shared_ptr<MSTransformManager>(new MSTransformManager(configuration_p));
+		manager = SHARED_PTR<MSTransformManager>(new MSTransformManager(configuration_p));
 		manager->open();
 		manager->setup();
 	}

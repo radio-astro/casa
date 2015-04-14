@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <mstransform/MSTransform/MSTransformIterator.h>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa
 {
@@ -30,7 +31,7 @@ namespace casa
 // -----------------------------------------------------------------------
 MSTransformIterator::MSTransformIterator(	vi::VisibilityIterator2 * vi,
 											vi::ViImplementation2 * inputVii,
-											std::tr1::shared_ptr<MSTransformManager> manager):
+											SHARED_PTR<MSTransformManager> manager):
 											TransformingVi2 (vi, inputVii)
 {
 

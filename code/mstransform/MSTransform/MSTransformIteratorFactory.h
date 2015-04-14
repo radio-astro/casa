@@ -31,6 +31,7 @@
 
 // Implementation returned by the factory method
 #include <mstransform/MSTransform/MSTransformIterator.h>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -156,7 +157,7 @@ private:
 
 	Record configuration_p;
 	String tmpMSFileName_p;
-	std::tr1::shared_ptr<MSTransformManager> manager_p;
+	SHARED_PTR<MSTransformManager> manager_p;
 	MrsEligibility eligibleSubTables_p;
 };
 

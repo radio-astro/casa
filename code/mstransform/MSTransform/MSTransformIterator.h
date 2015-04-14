@@ -31,7 +31,7 @@
 
 // VisBuffer class only accessible from this class
 #include <mstransform/MSTransform/MSTransformBufferImpl.h>
-
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -42,7 +42,7 @@ public:
 
 	MSTransformIterator(	vi::VisibilityIterator2 * vi,
 							vi::ViImplementation2 * inputVii,
-							std::tr1::shared_ptr<MSTransformManager>);
+							SHARED_PTR<MSTransformManager>);
 	~MSTransformIterator();
 
     const MeasurementSet & ms () const {return *transformedMS_p;};
@@ -65,7 +65,7 @@ protected:
 
 private:
     String tmpMSFileName_p;
-    std::tr1::shared_ptr<MSTransformManager> manager_p;
+    SHARED_PTR<MSTransformManager> manager_p;
 	MSTransformBufferImpl *buffer_p;
 	MeasurementSet *transformedMS_p;
 };
