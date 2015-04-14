@@ -1373,9 +1373,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
       verifyShapes(avgPB_p->shape(), image->shape());
       Array<Float> avgBuf; avgPB_p->get(avgBuf);
-      if (max(avgBuf) < 1e-04)
-	log_l << "Normalization by PB requested but either PB not "
-	      <<"found in the cache or is ill-formed."
+      // If the total-power sensitivity pattern peak is too low, warn
+      // the user.  This usually is indicative of a rat somewhere in
+      // the pipes upstream...
+      if ((sensitivityPatternQualifier_p==0) && (max(avgBuf) < 1e-04))
+	log_l << "Normalization by PB requested but either PB was not"
+	      <<" found in the cache or is ill-formed. Peak = "
+	      << max(avgBuf)// << " " << sensitivityPatternQualifier_p
 	      << LogIO::WARN << LogIO::POST;
 	  
 

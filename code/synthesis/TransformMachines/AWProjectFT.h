@@ -385,7 +385,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setMiscInfo(const Int qualifier)
     {
       sensitivityPatternQualifier_p=qualifier;
-      sensitivityPatternQualifierStr_p = "_tt"+String::toString(sensitivityPatternQualifier_p);
+      sensitivityPatternQualifierStr_p = ".tt"+String::toString(sensitivityPatternQualifier_p);
     }
     virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
     void makeWBCFWt(CFStore2& cfs,const Double imRefFreq);

@@ -208,7 +208,8 @@ protected:
 		       const Bool freqFrameValid = True,
 		       const Int cache=1000000000,
 		       const Int tile=16,
-		       const String stokes="I");
+		       const String stokes="I",
+		       const String imageNamePrefix="");
 
   void createMosFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>&  theIFT, const Float  padding, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String Stokes="I");
 
@@ -261,7 +262,8 @@ protected:
 			  const Float computePAStep,
 			  const Float rotatePAStep, 
 			  const Int cache,          
-			  const Int tile);
+			  const Int tile,
+			  const String imageNamePrefix="");
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
   void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);

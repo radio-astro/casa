@@ -251,7 +251,7 @@ namespace casa{
     ap.aperture->resize(apertureShape);
     ap.aperture->set(0.0);
     //BeamCalc::Instance()->calculateAperture(&ap,inStokes);
-    cerr << ap.aperture->shape() << " " << inStokes << endl;
+    //cerr << ap.aperture->shape() << " " << inStokes << endl;
     BeamCalc::Instance()->calculateAperture(&ap,inStokes);// The call in the absence of instokes allows the computation of all
 						 // the four jones parameters at one time.
 }
@@ -776,7 +776,7 @@ namespace casa{
          //storeImg(tt.string(),skyJones);
        //}	
 
-    cout<<"Regular skyjones \n";
+    //cout<<"Regular skyjones \n";
   }
   
 //  void VLACalcIlluminationConvFunc::skyMuller(ImageInterface<Complex>& skyJones)
@@ -798,13 +798,13 @@ namespace casa{
     IPosition shape=skyJones.shape();
     if(muellerTerm == -1)
     {
-	cout<<"####Temp - bypassing the full mueller convolution function generation \n";    
+      //cout<<"####Temp - bypassing the full mueller convolution function generation \n";    
 	skyMuller(buf,shape,inStokes);
 	skyJones.put(buf);
     }
     else
     {
-  	cout<<"####Temp - Proceeding with IQUV convolution function generation\n";
+      //cout<<"####Temp - Proceeding with IQUV convolution function generation\n";
     Array<Complex> M0,M1,M2,M3;
     //Vector<Int> shape(buf.shape().asVector());
 //    IPosition shape=skyJones.shape();

@@ -479,6 +479,7 @@ namespace casa{
 	YSup = other.YSup;
 	Dir = other.Dir;
 	cfPrefix = other.cfPrefix;
+	WtImagePrefix = other.WtImagePrefix;
 	aux = other.aux;
 	paCD_p = other.paCD_p;
 	memCache_p = other.memCache_p;
@@ -747,6 +748,9 @@ namespace casa{
   //
   void CFCache::flush()
   {
+    // If WtImagePrefix is set, no need to save avgPB in the CFCache
+    if (WtImagePrefix != "") return;
+
     LogIO log_l(LogOrigin("CFCache", "flush"));
 
     if (Dir.length() == 0) return;
@@ -780,6 +784,9 @@ namespace casa{
   //
   void CFCache::flush(ImageInterface<Float>& avgPB, String qualifier)
   {
+    // If WtImagePrefix is set, no need to save avgPB in the CFCache
+    if (WtImagePrefix != "") return;
+
     LogIO log_l(LogOrigin("CFCache", "flush"));
 
     if (Dir.length() == 0) return;
@@ -805,14 +812,23 @@ namespace casa{
   Int CFCache::loadWtImage(ImageInterface<Float>& avgPB, String qualifier)
   {
     LogIO log_l(LogOrigin("CFCache", "loadWtImage"));
-    ostringstream name;
+    ostringstream name, sumWtName;
     name << WtImagePrefix << ".weight" << qualifier;
-    //    cout << name.str() << endl;
+    if (qualifier != "")
+      sumWtName << WtImagePrefix << ".sumwt.tt0";// << qualifier;
+    else
+      sumWtName << WtImagePrefix << ".sumwt";
+      
     try
       {
+	PagedImage<Float> sumWtTmp(sumWtName.str().c_str());
+	Float sumwt=max(sumWtTmp.get());
+	//cerr << "sumwt = " << sumwt << endl;
 	PagedImage<Float> tmp(name.str().c_str());
 	avgPB.resize(tmp.shape());
-	avgPB.put(tmp.get());
+	avgPB.put(tmp.get()*sumwt);
+	//cerr << "peak = " << max(tmp.get()*sumwt) << endl;
+
       }
     catch(AipsError& x) // Just rethrowing the exception for now.
                         // Ultimately, this should be used to make
@@ -833,7 +849,10 @@ namespace casa{
   {
     LogIO log_l(LogOrigin("CFCache", "loadAvgPB"));
 
-    if (WtImagePrefix != "") return loadWtImage(avgPB, qualifier);
+    if (WtImagePrefix != "") 
+      {
+	return loadWtImage(avgPB, qualifier);
+      }
 
     if (Dir.length() == 0) 
       throw(SynthesisFTMachineError("Cache dir. name null"));

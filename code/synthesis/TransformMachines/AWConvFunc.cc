@@ -776,7 +776,7 @@ namespace casa{
     conjPolMap = pop->getConjPolMat();
     conjPolIndexMap = pop->getConjPol2CFMat();
 
-    cerr << "AWCF: " << polMap << endl << polIndexMap << endl << conjPolMap << endl << conjPolIndexMap << endl;
+    //cerr << "AWCF: " << polMap << endl << polIndexMap << endl << conjPolMap << endl << conjPolIndexMap << endl;
     
     // for(uInt ip=0;ip<pp.nelements();ip++)
     // 	pp(ip)=translateStokesToCrossPol(skyStokes(ip));
@@ -867,7 +867,7 @@ namespace casa{
 	// Set up the Mueller matrix, the co-ordinate system, freq, and
 	// wvalues in the CFBuffer for the currenct CFStore object.
 	//
-	cerr<<"Mueller matrix of row length:"<<polMap.nelements()<<" at the start of the CFBuf Loop" <<endl;
+	//cerr<<"Mueller matrix of row length:"<<polMap.nelements()<<" at the start of the CFBuf Loop" <<endl;
 	for (Int iw=0;iw<wConvSize;iw++) 
 	  {
 	    for(uInt inu=0;inu<freqValues.nelements(); inu++)

@@ -532,7 +532,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
 			gridpars.doPBCorr,gridpars.conjBeams,
 			gridpars.computePAStep,gridpars.rotatePAStep,
-			gridpars.interpolation, impars.freqFrameValid, 1000000000,  16, impars.stokes);
+			gridpars.interpolation, impars.freqFrameValid, 1000000000,  16, impars.stokes,
+			impars.imageName);
 
       }
     catch(AipsError &x)
@@ -1232,7 +1233,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const Bool freqFrameValid, //=True
 					const Int cache,             //=1000000000,
 					const Int tile,               //=16
-					const String stokes //=I
+					const String stokes, //=I
+					const String imageNamePrefix
 					)
 
   {
@@ -1263,7 +1265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 padding, useAutocorr, useDoublePrec, gridFunction,
 			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, 
 			 doPointing, doPBCorr, conjBeams, computePAStep,
-			 rotatePAStep, cache,tile);
+			 rotatePAStep, cache,tile,imageNamePrefix);
     }
     else if ( ftname == "mosaic" || ftname== "mosft" || ftname == "mosaicft" || ftname== "MosaicFT"){
 
@@ -1349,7 +1351,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const Float computePAStep,   //=360.0
 					   const Float rotatePAStep,    //=5.0
 					   const Int cache,             //=1000000000,
-					   const Int tile               //=16
+					   const Int tile,               //=16
+					   const String imageNamePrefix
 					)
 
   {
@@ -1404,6 +1407,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     CountedPtr<CFCache> cfCacheObj = new CFCache();
     cfCacheObj->setCacheDir(cfCache.data());
+    //    cerr << "Setting wtImagePrefix to " << imageNamePrefix.c_str() << endl;
+    cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
     cfCacheObj->initCache2();
 
     //
