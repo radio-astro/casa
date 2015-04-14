@@ -155,7 +155,8 @@ protected:
 private:
 
 	Record configuration_p;
-	MSTransformManager *manager_p;
+	String tmpMSFileName_p;
+	std::tr1::shared_ptr<MSTransformManager> manager_p;
 	MrsEligibility eligibleSubTables_p;
 };
 

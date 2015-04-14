@@ -30,7 +30,7 @@ namespace casa
 // -----------------------------------------------------------------------
 MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration)
 {
-	manager_p = NULL;
+	tmpMSFileName_p = String("");
 	setConfiguration(configuration);
 	eligibleSubTables_p = MrsEligibility::defaultEligible();
 	return;
@@ -41,7 +41,6 @@ MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration)
 // -----------------------------------------------------------------------
 MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration, MrsEligibility &eligibleSubTables)
 {
-	manager_p = NULL;
 	setConfiguration(configuration);
 	eligibleSubTables_p = eligibleSubTables;
 	return;
@@ -52,6 +51,15 @@ MSTransformIteratorFactory::MSTransformIteratorFactory(Record &configuration, Mr
 // -----------------------------------------------------------------------
 MSTransformIteratorFactory::~MSTransformIteratorFactory()
 {
+	if (manager_p)
+	{
+		// ~MSTransformManager => ~VisibilityIterator2 => ~VisibilityIteratorImpl2
+		// ~MSTransformManager => MSTransformManager.close()
+		manager_p.reset();
+
+		Table::relinquishAutoLocks(True);
+	}
+
 	return;
 }
 
@@ -64,13 +72,16 @@ std::vector<IPosition> MSTransformIteratorFactory::getVisBufferStructure()
 	LogIO logger;
 
 	// Initialize manager to unpack parameters
-	manager_p = new MSTransformManager(configuration_p);
+	manager_p = std::tr1::shared_ptr<MSTransformManager>(new MSTransformManager(configuration_p));
 
 	// Open manager to create selected inputMS
 	manager_p->open();
 
 	// Need to call setup in order to determine the output channel structure
 	manager_p->setup();
+
+	// Get MS filename as we may need to remove the tmp file from the Factory class
+	tmpMSFileName_p = manager_p->getOutputMsName();
 
 	// Generate tmp iterator
 	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2(	*(manager_p->selectedInputMs_p),
@@ -173,14 +184,14 @@ void MSTransformIteratorFactory::setConfiguration(Record &configuration)
 vi::ViImplementation2 * MSTransformIteratorFactory::createVi(vi::VisibilityIterator2 *) const
 {
 	// Create MSTransformManager
-	MSTransformManager *manager;
-	if (manager_p != NULL)
+	std::tr1::shared_ptr<MSTransformManager> manager;
+	if (manager_p)
 	{
 		manager = manager_p;
 	}
 	else
 	{
-		manager =  new MSTransformManager(configuration_p);
+		manager = std::tr1::shared_ptr<MSTransformManager>(new MSTransformManager(configuration_p));
 		manager->open();
 		manager->setup();
 	}

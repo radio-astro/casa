@@ -30,17 +30,24 @@ namespace casa
 // -----------------------------------------------------------------------
 MSTransformIterator::MSTransformIterator(	vi::VisibilityIterator2 * vi,
 											vi::ViImplementation2 * inputVii,
-											MSTransformManager *manager):		TransformingVi2 (vi, inputVii)
+											std::tr1::shared_ptr<MSTransformManager> manager):
+											TransformingVi2 (vi, inputVii)
 {
 
-	// TODO (jagonzal): Do we need a copy of the manager here?
+	// The ownership of an object can only be shared with another shared_ptr
+	// by copy constructing or copy assigning its value to another shared_ptr.
+	// Constructing a new shared_ptr using the raw underlying pointer owned by
+	// another shared_ptr leads to undefined behavior
 	manager_p = manager;
 
 	// Get reference to output (transformed) MS in order to access the SubTables
 	transformedMS_p = manager_p->getOutputMs();
 
+	// Get MS filename as we have to remove the tmp file from the Factory class
+	tmpMSFileName_p = manager_p->getOutputMsName();
+
 	// Create VisBuffer implementation only accessible from this iterator
-	buffer_p = new MSTransformBufferImpl(manager_p);
+	buffer_p = new MSTransformBufferImpl(manager_p.get());
 
 	return;
 }
@@ -55,16 +62,13 @@ MSTransformIterator::~MSTransformIterator()
 		delete buffer_p;
 	}
 
-	if (manager_p != NULL)
+	if (manager_p)
 	{
-		String outputMSName = manager_p->getOutputMsName();
-		manager_p->close();
-
 		// ~MSTransformManager => ~VisibilityIterator2 => ~VisibilityIteratorImpl2
-		delete manager_p;
+		// ~MSTransformManager => MSTransformManager.close()
+		manager_p.reset();
 
 		Table::relinquishAutoLocks(True);
-		Table::deleteTable(outputMSName,True);
 	}
 
 	// Now the parent class destructor (~TransformingVi2) is called, which deletes the inner

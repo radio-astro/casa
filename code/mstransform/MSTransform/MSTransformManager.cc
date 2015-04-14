@@ -76,10 +76,20 @@ MSTransformManager::MSTransformManager(Record configuration)
 // -----------------------------------------------------------------------
 MSTransformManager::~MSTransformManager()
 {
+	// Close the output MS in case the application layer does not do it
+	close();
+
 	if (channelSelector_p) delete channelSelector_p;
 	if (visibilityIterator_p) delete visibilityIterator_p;
 	if (dataHandler_p) delete dataHandler_p;
 	if (phaseCenterPar_p) delete phaseCenterPar_p;
+
+	// Delete the output Ms if we are in buffer mode
+	// This has to be done after deleting the outputMS data handler
+	if (userBufferMode_p)
+	{
+		Table::deleteTable(outMsName_p,True);
+	}
 
 	return;
 }
@@ -304,14 +314,14 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	exists = configuration.fieldNumber ("buffermode");
 	if (exists >= 0)
 	{
-		configuration.get (exists, bufferMode_p);
+		configuration.get (exists, userBufferMode_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 				<< "Buffer mode is on " << LogIO::POST;
 
-		userBufferMode_p = bufferMode_p;
+		bufferMode_p = userBufferMode_p;
 	}
 
-	if (bufferMode_p)
+	if (userBufferMode_p)
 	{
 		// Data column matters for the time averaging options because they are not applied on demand
 		exists = configuration.fieldNumber ("datacolumn");
@@ -1157,8 +1167,11 @@ void MSTransformManager::close()
 	{
 		// Flush and unlock MS
 		outputMs_p->flush();
-		outputMs_p->relinquishAutoLocks(True);
 		outputMs_p->unlock();
+		Table::relinquishAutoLocks(True);
+
+		// Unset the output MS
+		outputMs_p = NULL;
 	}
 
 	return;

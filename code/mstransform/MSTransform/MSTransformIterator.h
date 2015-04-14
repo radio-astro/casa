@@ -40,7 +40,9 @@ class MSTransformIterator : public vi::TransformingVi2
 
 public:
 
-	MSTransformIterator(vi::VisibilityIterator2 * vi, vi::ViImplementation2 * inputVii,MSTransformManager *manager);
+	MSTransformIterator(	vi::VisibilityIterator2 * vi,
+							vi::ViImplementation2 * inputVii,
+							std::tr1::shared_ptr<MSTransformManager>);
 	~MSTransformIterator();
 
     const MeasurementSet & ms () const {return *transformedMS_p;};
@@ -62,7 +64,8 @@ protected:
     void propagateChanAvgFlags (const Cube<Bool> &avgFlagCube, Cube<Bool> &expandedFlagCube);
 
 private:
-	MSTransformManager *manager_p;
+    String tmpMSFileName_p;
+    std::tr1::shared_ptr<MSTransformManager> manager_p;
 	MSTransformBufferImpl *buffer_p;
 	MeasurementSet *transformedMS_p;
 };

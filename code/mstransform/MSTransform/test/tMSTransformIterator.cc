@@ -430,8 +430,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	vi::VisBuffer2 *visBufferRef = visIterRef.getVisBuffer();
 
 	// Get TVI, and associated buffer
-	MSTransformIteratorFactory factory(configuration);
-	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
+	MSTransformIteratorFactory *factory = new MSTransformIteratorFactory(configuration);
+	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (*factory);
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
 	// Access Transformed SPW sub-tables
@@ -1099,9 +1099,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			// Not needed according to the flag cube - flag row convention agreement
 			visIter->writeFlag(flagCube);
 
-			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
-
-
 			visIter->next();
 			visIterRef.next();
 		}
@@ -1112,6 +1109,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 	cout << RESET << endl;
 
+	delete factory;
 	delete visIter;
 	return keepIterating;
 }
@@ -1128,15 +1126,15 @@ Bool test_bufferStructure(Record configuration)
 	time_t startTime, endTime;
 
 	// Initialize factory and pre-calculate buffer structure
-	MSTransformIteratorFactory factory(configuration);
+	MSTransformIteratorFactory *factory = new MSTransformIteratorFactory(configuration);
 	logger << "Start pre-calculation of buffer structure, this includes MSTransformManager initialization" << LogIO::POST;
 	startTime = std::time(NULL);
-	std::vector<IPosition> visBufferStructure = factory.getVisBufferStructure();
+	std::vector<IPosition> visBufferStructure = factory->getVisBufferStructure();
 	endTime = std::time(NULL);
 	logger << "End pre-calculate buffer structure, including MSTransformManager initialization: " << endTime-startTime << LogIO::POST;
 
 	// Prepare TVI, and associated buffer
-	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (factory);
+	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (*factory);
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
 	// Start timer
@@ -1186,6 +1184,7 @@ Bool test_bufferStructure(Record configuration)
 	endTime = std::time(NULL);
 	logger << "Start TVI loop, total time: " << endTime-startTime << LogIO::POST;
 
+	delete factory;
 	delete visIter;
 	return keepIterating;
 }
