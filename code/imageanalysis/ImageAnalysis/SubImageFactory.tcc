@@ -165,7 +165,6 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 			! validfile.valueOK(outfile, errmsg), errmsg
 		);
 	}
-	/*
 	TempImage<T> newImage(
 		TiledShape(image.shape()), image.coordinates()
 	);
@@ -180,17 +179,9 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	}
 	ImageUtilities::copyMiscellaneous(newImage, image);
 	newImage.put(image.get());
-	*/
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	/*
 	SubImage<T> x = SubImageFactory<T>::createSubImage(
 		newImage, region, mask, list ? &log : 0,
-		True, axesSpecifier, extendMask
-	);
-	*/
-	SPIIT myclone(image.cloneII());
-	SubImage<T> x = SubImageFactory<T>::createSubImage(
-		*myclone, region, mask, list ? &log : 0,
 		True, axesSpecifier, extendMask
 	);
 	SPIIT outImage;
@@ -210,7 +201,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 				<< "' of shape " << outImage->shape() << LogIO::POST;
 		}
 	}
-	if (x.isMasked() || x.hasPixelMask() || attachMask) {
+	if (x.isMasked() || x.hasPixelMask()) {
 		String maskName("");
 		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
 	}
