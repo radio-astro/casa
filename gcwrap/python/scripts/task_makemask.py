@@ -79,6 +79,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 	tmp_outmaskimage='__tmp_outmakemaskimage'
         tmp_regridim='__tmp_regridim'
 
+        #intial cleanup nothing left from previous runs
+        tmplist = [tmp_maskimage,tmp_outmaskimage,tmp_regridim]
+        cleanuptempfiles(tmplist)
+   
         # do parameter check first
         # check names of inpimage, inpmask check for existance
         # inpimage == output (exact match) then check overwrite
@@ -563,7 +567,14 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                       ia.set(1) 
                       # if output image exist its image pixel values will not be normalized the region
                       # outside input mask will be masked.
-                   
+                    #check 
+                    curinmasks = ia.maskhandler('get') 
+                    if outbmask in curinmasks:
+                       if  not overwrite:
+		           raise Exception, "Internal mask,"+outbmask+" exists. Please set overwrite=True."
+                       else:
+                           ia.maskhandler('delete',outbmask)
+                    
                     ia.maskhandler('copy',[tmp_outmaskimage+':'+outbmask, outbmask])
                     ia.maskhandler('set',outbmask)
                     ia.done()
@@ -1143,3 +1154,14 @@ def makeEmptyimage(template,outimage):
     incsys=ia.coordsys()
     ia.fromshape(outimage,shape=inshp,csys=incsys.torecord())
     ia.done()
+
+def cleanuptempfiles(tempfilelist):
+    """
+    clean up tempfilelist
+    """
+    for fn in tempfilelist:
+        if os.path.isdir(fn):
+            shutil.rmtree(fn)
+        elif os.path.isfile(fn):
+           os.remove(fn)
+ 
