@@ -844,7 +844,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //timer.mark();
 		  //Construct imwgt_p with old vi for now if old vi is in use as constructing with vi2 is slower 
 
-		    imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust,
+
+		  imwgt_p=VisImagingWeight(*rvi_p, wtype=="Uniform" ? "none" : rmode, noise, robust,
                                  actualNPixels, actualNPixels, actualCellSize,
                                  actualCellSize, 0, 0, multiField);
 
@@ -938,6 +939,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    densitymatrices[fid].reference( arr );
 	    cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
 	  }
+
+
 	imwgt_p.setWeightDensity( densitymatrices );
 	rvi_p->useImagingWeight(imwgt_p);
 	itsMappers.releaseImageLocks();
