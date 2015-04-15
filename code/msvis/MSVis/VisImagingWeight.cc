@@ -196,6 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               d2_p[fid] = 0.0;
           }
       }
+
   }
 
   VisImagingWeight::VisImagingWeight(vi::VisibilityIterator2& visIter,
@@ -451,11 +452,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                          const Matrix<Float>& weight, const Int msId, const Int fieldId) const{
 
 
-      // cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p.shape() << endl;
-      // cout << "f2 " << f2_p << " d2 " << d2_p << " uscale " << uscale_p << " vscal " << vscale_p << endl;
-      // cout << "min max gwt " << min(gwt_p) << "    " << max(gwt_p) << endl; 
+      //cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p[0].shape() << endl;
+      //cout << "f2 " << f2_p << " d2 " << d2_p << " uscale " << uscale_p << " vscal " << vscale_p << endl; 
       String mapid=String::toString(msId)+String("_")+String::toString(fieldId);
-      
+      //cout << "min max gwt " << min(gwt_p[0]) << "    " << max(gwt_p[0]) << " mapid " << mapid <<endl; 
       if(!multiFieldMap_p.isDefined(mapid))
 	throw(AipsError("Imaging weight calculation is requested for a data that was not selected"));
       
@@ -582,6 +582,8 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 	    sinpa_p=other.sinpa_p;
 	    rbmaj_p=other.rbmaj_p;
 	    rbmin_p=other.rbmin_p;
+	    robust_p=other.robust_p;
+	    rmode_p=other.rmode_p;
 	    multiFieldMap_p=other.multiFieldMap_p;
         }
         return *this;
@@ -600,7 +602,7 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
     density.resize(gwt_p.nelements(), True, False);
     for (uInt k=0; k < gwt_p.nelements(); ++k){
       density[k].resize();
-      density[k]=gwt_p[k];
+      density[k].assign(gwt_p[k]);
     }
     return True;
   }
@@ -611,6 +613,13 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 	gwt_p[k].resize();
 	gwt_p[k]=density[k];
       }
+      //break any old reference
+      f2_p.resize();
+      d2_p.resize();
+      f2_p.resize(gwt_p.nelements());
+      d2_p.resize(gwt_p.nelements());
+      f2_p.set(1.0);
+      d2_p.set(0.0);
        //Float f2, d2;
       for(uInt fid=0; fid < gwt_p.nelements(); ++fid){
 	if (rmode_p=="norm") {
@@ -624,17 +633,19 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 	  f2_p[fid] = square(5.0*pow(10.0,Double(-robust_p))) / (sumlocwt / sumwt_fid);
 	  d2_p[fid] = 1.0;
 	}
-	  else if (rmode_p=="abs") {
-	    f2_p[fid] = square(robust_p);
-	    d2_p[fid] = 2.0 * square(noise_p.get("Jy").getValue());
-	    
-	  }
-	  else {
-            f2_p[fid] = 1.0;
-            d2_p[fid] = 0.0;
-	  }
+	else if (rmode_p=="abs") {
+	  f2_p[fid] = square(robust_p);
+	  d2_p[fid] = 2.0 * square(noise_p.get("Jy").getValue());
+	  
+	}
+	else {
+	  f2_p[fid] = 1.0;
+	  d2_p[fid] = 0.0;
+	}
       }
+      
     }
+    
     
   }
   void VisImagingWeight::cube2Matrix(const Cube<Bool>& fcube, Matrix<Bool>& fMat)
