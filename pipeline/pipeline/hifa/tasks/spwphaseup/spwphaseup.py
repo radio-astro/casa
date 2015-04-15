@@ -119,7 +119,7 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
           'spw'         : inputs.spw,
           'solint'      : 'inf',
           'gaintype'    : 'G',
-          'calmode'     : 'p',
+          'calmode'     : 'ap',
           'minsnr'      : inputs.minsnr,
           'combine'     : inputs.combine,
           'refant'      : inputs.refant,
