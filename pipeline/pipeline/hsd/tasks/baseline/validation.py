@@ -1321,6 +1321,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 # for Channel map velocity range determination 2014/1/12 arbitrary factor 0.8
                 #channelmap_range[Nc][1] = (MaskMax - MaskMin - 10) * 0.8
                 channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
+                if channelmap_range[Nc][1] < 0.0:
+                    LOG.trace('replacing channelmap_range[Nc][1] with lines[Nc][1]')
+                    channelmap_range[Nc][1] = lines[Nc][1]
                 LOG.info('Nc, MaskMax, Min: %d, %f, %f' % (Nc, MaskMax, MaskMin))
                 LOG.info('channelmap_range[Nc]: %s' % channelmap_range[Nc])
                 LOG.info('lines[Nc]: %s' % lines[Nc])

@@ -210,11 +210,15 @@ class DetectLine(common.SingleDishTaskTemplate):
                                              tweak=True,
                                              edge=(EdgeL,EdgeR))
 
+                    #MaxLineWidth = max(rules.LineFinderRule['MaxFWHM'], int((nchan - Nedge)/3.0))
+                    MaxLineWidth = int((nchan - Nedge)/3.0)
+                    MinLineWidth = rules.LineFinderRule['MinFWHM']
                     for i in range(len(protected)):
                         if protected[i][0] != -1:
                             Chan0 = protected[i][0]*BINN+offset
                             Chan1 = protected[i][1]*BINN-1+offset
-                            if(EdgeMin < Chan0) and (Chan1 < EdgeMax):
+                            ChanW = Chan1 - Chan0
+                            if(EdgeMin < Chan0) and (Chan1 < EdgeMax) and (MinLineWidth <= ChanW) and (ChanW <= MaxLineWidth):
                                 Protected.append([Chan0, Chan1, BINN])
                         else:
                             Protected.append([-1,-1, BINN])
