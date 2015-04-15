@@ -74,8 +74,8 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
 	# Compute the phaseup table and set calwt to False
 	phaseupresult = self._do_phaseup()
-	self._mod_last_calwt (phaseupresult.pool[0], False)
-	self._mod_last_calwt (phaseupresult.final[0], False)
+	#self._mod_last_calwt (phaseupresult.pool[0], False)
+	#self._mod_last_calwt (phaseupresult.final[0], False)
 
         # Create the results object.
 	result = SpwPhaseupResults(vis=inputs.vis,
