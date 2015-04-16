@@ -19,7 +19,7 @@
 #include <vector>
 #include <map>
 
-#include "msfwds.hpp"
+#include <ms/MeasurementSets/MeasurementSet.h>
 
 namespace LibAIR2 {
 

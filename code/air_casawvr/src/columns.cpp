@@ -130,8 +130,8 @@ namespace LibAIR2 {
 				    std::vector<double> & res) const
   {
 
-    const double nair = ( s.getP() / STP::P_STP) * 
-      (STP::T_STP / s.getT() ) * STP::N_STP;
+    const double nair = ( s.getP() / STP2::P_STP) * 
+      (STP2::T_STP / s.getT() ) * STP2::N_STP;
 
 
     const double r = cp->C0 * pow( cp->T0 / s.getT() , cp->m) * getN() * nair;

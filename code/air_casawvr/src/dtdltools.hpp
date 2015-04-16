@@ -18,10 +18,9 @@
 #include <list>
 #include <vector>
 
-namespace Minim {
-  class WPPoint;
-  class ModelDesc;
-}
+#include <almawvr/minim.hxx>
+#include <almawvr/minimmodel.hxx>
+
 
 namespace LibAIR2 {
 

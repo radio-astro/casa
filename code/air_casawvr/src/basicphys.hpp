@@ -41,7 +41,7 @@ namespace LibAIR2 {
 
   /**  Constants for standard dry air equation of state
    */
-  namespace STP {
+  namespace STP2 {
     /** Loschmidt constant [cm^-3] (IUPAP 1987) */
     const double N_STP = 2.686763e19;
 

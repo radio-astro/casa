@@ -17,7 +17,7 @@
 #include <boost/bimap.hpp>
 
 #include "../src/apps/antennautils.hpp"
-#include "msfwds.hpp"
+#include <ms/MeasurementSets/MeasurementSet.h>
 
 namespace LibAIR2 {
 

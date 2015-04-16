@@ -20,7 +20,7 @@
 #include <set>
 #include <string>
 
-#include "msfwds.hpp"
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include "../src/apps/antennautils.hpp"
 
 namespace LibAIR2 {

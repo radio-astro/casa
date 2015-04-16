@@ -13,7 +13,7 @@
 #ifndef _LIBAIR_CASAWVR_MSWEATHER_HPP__
 #define _LIBAIR_CASAWVR_MSWEATHER_HPP__
 
-#include "msfwds.hpp"
+#include <ms/MeasurementSets/MeasurementSet.h>
 
 namespace LibAIR2 {
 
