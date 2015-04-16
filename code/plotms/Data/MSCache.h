@@ -68,9 +68,6 @@ public:
   // Identify myself
   PlotMSCacheBase::Type cacheType() const { return PlotMSCacheBase::MS; };
 
-  // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
-  
   // ...not yet MS-specific... (or ever?)
   // Set up indexing for the plot
   //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
@@ -93,10 +90,9 @@ private:
   // Forbid copy for now
   MSCache(const MSCache&);
 
+  // Set up
   void checkColumns(vector<PMS::Axis>& loadAxes, vector<PMS::DataColumn>& loadData);
   String getDataColumn(vector<PMS::Axis>& loadAxes, vector<PMS::DataColumn>& loadData);
-
-  // Set up
   void getNamesFromMS(MeasurementSet& ms);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
@@ -106,11 +102,14 @@ private:
 	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel);
   void setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
 	Vector<Vector<Slice> > chansel);
-  void destroyVisIter();
+
+  // clean up
+  void deleteVi();
+  void deleteVm();
+  void loadError(String mesg);
 
   // Count the chunks with averaging
-  void countChunks(vi::VisibilityIterator2& vi,
-		   Vector<Int>& nIterPerAve, 
+  void countChunks(vi::VisibilityIterator2& vi, Vector<Int>& nIterPerAve, 
                    /*PlotMSCacheThread**/ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)
@@ -160,9 +159,6 @@ private:
   // Use map to assign intent ids
   Vector<Int> assignIntentIds(Vector<Int>& stateIds);
 
-  // A container for channel averaging bounds
-  Vector<Matrix<Int> > chanAveBounds_p;
-
   // Provisional flagging helpers
   Vector<Int> nVBPerAve_;
 
@@ -170,7 +166,7 @@ private:
   vi::VisibilityIterator2* vi_p;
 
   // Volume meter for volume calculation
-  MSCacheVolMeter vm_;
+  MSCacheVolMeter* vm_;
 
   // Set frame from VI if not specified by user (for VI2::getFrequencies)
   MFrequency::Types freqFrame_;
