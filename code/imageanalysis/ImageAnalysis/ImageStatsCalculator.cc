@@ -351,18 +351,32 @@ Record ImageStatsCalculator::statistics(
 	LogOrigin myOrigin(_class, __func__);
 	*_getLog() << myOrigin;
 	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
-	//ImageRegion* pMaskRegion = 0;
 	String mtmp = _getMask();
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
 	}
 	SPIIF clone(_getImage()->cloneII());
-	_subImage = SubImageFactory<Float>::createSubImage(
+    _subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *clone, *_getRegion(), mtmp,
 		(_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
 		_getStretch()
 	);
-	*_getLog() << myOrigin;
+    *_getLog() << myOrigin;
+    {
+        // CAS-7472, create new image, rather than sub image, until root cause of
+        // Kileen's Array pointer problem can be addressed
+        if (
+            _algConf.algorithm == StatisticsData::CLASSICAL
+            && _prefClassStatsAlg != STATS_FRAMEWORK
+        ) {
+            SPIIF newImage = SubImageFactory<Float>::createImage(
+                _subImage, "", Record(), "", False, False, False, False
+            );
+            _subImage = SubImageFactory<Float>::createSubImage(
+		        *newImage, Record(), "", False, False, AxesSpecifier(), False
+            );
+	    }
+    }
 
 	// Find BLC of _subImage in pixels and world coords, and output the
 	// information to the logger.
