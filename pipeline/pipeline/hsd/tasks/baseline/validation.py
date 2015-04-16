@@ -201,7 +201,15 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     Questionable = rules.ClusterRule['ThresholdQuestionable']
     #2010/6/9 Delete global parameter Min/MaxFWHM
     MinFWHM = rules.LineFinderRule['MinFWHM']
-    MaxFWHM = rules.LineFinderRule['MaxFWHM']
+    #MaxFWHM = rules.LineFinderRule['MaxFWHM']
+    
+    @property
+    def MaxFWHM(self):
+        context = self.inputs.context
+        num_edge = sum(self.inputs.edge)
+        datatable_row = self.inputs.index_list[0]
+        nchan = context.observing_run.datatable_instance.getcell('NCHAN', datatable_row)
+        return int(max(0, nchan - num_edge) / 3)
 
     @common.datatable_setter
     def prepare(self):
