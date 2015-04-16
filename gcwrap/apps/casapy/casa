@@ -13,25 +13,34 @@ if [ $OSTYPE = "Darwin" ]; then
     installed_from_rpm="F"   
     OSVERS=$(uname -r | awk -F. '{print $1}')
     if [ -d /opt/casa/01 ]; then
-	casa3party=/opt/casa/01
+        casa3party=/opt/casa/01
     else
-	if [ $OSVERS -eq "10" ]; then
-	    casa3party="/opt/casa/darwin10-64b"
-	fi
-	if [ $OSVERS -eq "11" ]; then
+        if [ $OSVERS -eq "10" ]; then
+            casa3party="/opt/casa/darwin10-64b"
+        fi
+        if [ $OSVERS -eq "11" ]; then
             casa3party="/opt/casa/darwin11"
-	fi
-	if [ $OSVERS -eq "12" ]; then
-	    casa3party="/opt/casa/darwin12"
-	fi
+        fi
+        if [ $OSVERS -eq "12" ]; then
+            casa3party="/opt/casa/darwin12"
+        fi
+    fi
+	if [ -z "${casa3party}" ]; then
+		if [ -d "/opt/local/Library/Frameworks/Python.framework/Versions/2.7" ]; then
+			casa3party="/opt/local"
+		else
+			echo "could not find location of python..."
+			exit 1
+		fi
     fi
     p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.7
+                        
 else 
     isapple="F"
     casa3party="/usr/lib/casapy"
     CPU=$(uname -p)
     if [ "${CPU}" = "x86_64" ]; then
-	casa3party="@casa_packages@"
+        casa3party="@casa_packages@"
     fi
     p_root=${casa3party}
     if [[ "$CASAPATH" =~ /usr/lib* ]]; then
@@ -147,8 +156,8 @@ for ci in \
     ${HOME}/.casainit
 do
     if  [ -r $ci ]; then
-	$verbose && echo "sourcing $ci"
-	. $ci
+        $verbose && echo "sourcing $ci"
+        . $ci
     fi
 done
 
@@ -156,13 +165,13 @@ done
 if [ "$_dorsync" = "T" ]; then
     casapy_ddir=${a_root}/data
     if (( ${#casapy_ddir} > 0 )); then
-	mkdir -p "$casapy_ddir"
-	cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
-	echo "==================================="
-	echo "Updating data repository...."
-	rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
-	echo "... data repository update complete"
-	echo "==================================="
+        mkdir -p "$casapy_ddir"
+        cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
+        echo "==================================="
+        echo "Updating data repository...."
+        rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
+        echo "... data repository update complete"
+        echo "==================================="
     fi
     cd -
 fi
@@ -180,11 +189,11 @@ if [ ${isapple} = "T" ]; then
     launchctl load ${casa3party}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
     
     if (( ${#casapy_wdir} > 0 )); then
-	mkdir -p "$casapy_wdir"
-	cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
-	echo "==="
+        mkdir -p "$casapy_wdir"
+        cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
+        echo "==="
     else
-	cd $startDir
+        cd $startDir
     fi
     casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts        2>/dev/null)
     casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 2>/dev/null)
