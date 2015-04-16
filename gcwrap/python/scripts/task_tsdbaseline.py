@@ -31,6 +31,19 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
                                     baseline=str(antenna), time=timerange, 
                                     scan=scan)#, polarization=pol)
+        #check for SOTED_TABLE (for blfunc='variable')
+        tb.open(infile, nomodify=False)
+        try:
+            sorttab_keywd = 'SORTED_TABLE'
+            is_sorttab = sorttab_keywd in tb.keywordnames()
+            #Remove SORTED_TABLE for variable
+            if is_sorttab and blfunc=='variable':
+                sorttab_name = tb.getkeyword(sorttab_keywd)
+                tb.removekeyword(sorttab_keywd)
+        except Exception, e: raise Exception, e
+        finally:
+            tb.close()
+        
         sdms.open(infile)
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                            antenna=str(antenna), timerange=timerange, 
@@ -63,6 +76,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                             spw=spw,
                                             pol=pol,
                                             blparam=blparam)
+            # Restore SORTED_TABLE in input table
+            if is_sorttab and (sorttab_name!=''): 
+                tb.open(infile, nomodify=False)
+                try: tb.putkeyword(sorttab_keywd, sorttab_name)
+                except Exception, e: raise Exception, e
+                finally: tb.close()
         else:
             raise ValueError, "Unsupported blfunc = %s" % blfunc
 
