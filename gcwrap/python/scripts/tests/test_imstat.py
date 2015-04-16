@@ -7,6 +7,7 @@ from taskinit import *
 import unittest
 import math
 import numpy
+import numbers
 
 #run using
 # `which casapy` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem test_imstat
@@ -28,6 +29,41 @@ class imstat_test(unittest.TestCase):
     fourdim = '4dim.im'
     kimage = "ktest.im"
     res = None
+
+    def _compare(self, resold, resnew, helpstr):
+        mytype = type(resold)
+        self.assertTrue(mytype == type(resnew), helpstr + ": types differ")
+        if mytype == dict:
+            for k in resold.keys():
+                self._compare(resold[k], resnew[k], helpstr)
+        elif mytype == numpy.ndarray:
+            oldarray = resold.ravel()
+            newarray = resnew.ravel()
+            self.assertTrue(
+                len(oldarray) == len(newarray),
+                helpstr + ": array lengths not equal"
+            )
+            for i in range(len(oldarray)):
+                self._compare(oldarray[i], newarray[i], helpstr)
+        elif mytype == str:
+            self.assertTrue(
+                resold == resnew,
+                helpstr + ": string inequality, old = " + resold + ", new = " + resnew
+            )
+        elif isinstance(resold, numbers.Integral) or mytype == numpy.int32:
+            self.assertTrue(
+                resold == resnew,
+                helpstr + ": integral inequality, old = " + str(resold) + ", new = " + str(resnew)
+            )
+        elif isinstance(resold, numbers.Real):
+            self.assertTrue(
+                resold == resnew
+                or abs(resnew/resold - 1) < 1e-6,
+                helpstr + "float inequality: old = " + str(resold)
+                + ", new = " + str(resnew)
+            )
+        else:
+            self.assertTrue(False, "Unhandled type " + str(mytype))
 
     def setUp(self):
         self.res = None
@@ -590,9 +626,37 @@ class imstat_test(unittest.TestCase):
                             emax = data[99]
                     self.assertTrue(stats['npts'][0] == enpts)
                     self.assertTrue(abs(stats['max'][0] - emax) < 1e-6)
-                    
+    
+    def test_CAS7472(self):
+        """Verify stats of sub regions of temp images produce correct results when using originial (Kileen pointer) method"""
+           
+
+        myia = iatool()
+        myia.fromshape("", [100,100])
+        myia.addnoise()
+        bb = myia.getchunk()
+        bb[50,50] = 200
+        bb[51,51] = -200
+        myia.putchunk(bb)
+        reg = rg.box([25,25],[75,75])
+        resnew = myia.statistics(region=reg, clmethod="framework")
+        resold = myia.statistics(region=reg, clmethod="tiled")
+        myia.done()
+        self.assertTrue(resnew['max'][0] == 200)
+        self.assertTrue(resnew['min'][0] == -200)
+        self.assertTrue(resold['max'][0] == 200)
+        self.assertTrue(resold['min'][0] == -200)
+        self._compare(resold, resnew, "first")
+    
+        myia.fromshape("", [100,100, 100])
+        myia.addnoise()
+        reg = rg.box([25,25,25],[75,75,25])
+        for axes in [[], [0], [1], [2], [0,1], [0,2], [1,2], [0,1,2]]:
+            resnew = myia.statistics(axes=axes, region=reg, clmethod="framework")
+            resold = myia.statistics(axes=axes, region=reg, clmethod="tiled")
+            self._compare(resold, resnew, "axes=" + str(axes))
+        myia.done()
+ 
+        
 def suite():
     return [imstat_test]
-    
-
-
