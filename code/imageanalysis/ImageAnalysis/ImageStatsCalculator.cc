@@ -368,6 +368,7 @@ Record ImageStatsCalculator::statistics(
         if (
             _algConf.algorithm == StatisticsData::CLASSICAL
             && _prefClassStatsAlg != STATS_FRAMEWORK
+            && ! _subImage.shape().isEqual(_getImage()->shape())
         ) {
             SPIIF newImage = SubImageFactory<Float>::createImage(
                 _subImage, "", Record(), "", False, False, False, False
