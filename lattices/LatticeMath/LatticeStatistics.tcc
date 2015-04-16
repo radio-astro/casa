@@ -285,7 +285,9 @@ Bool LatticeStatistics<T>::setAxes (const Vector<Int>& axes)
 //
       for (uInt i=0; i<cursorAxes_p.nelements(); i++) {
          if (cursorAxes_p(i) < 0 || cursorAxes_p(i) > Int(pInLattice_p->ndim()-1)) {
-            error_p = "Invalid cursor axes";
+            ostringstream oss;
+            oss << "Invalid cursor axes: " << axes;
+             error_p = oss.str();
             return False;
          }
       }
