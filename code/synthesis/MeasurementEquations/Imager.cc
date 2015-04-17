@@ -5683,7 +5683,8 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
         inpapars=papars;
       }
 
-      if (fluxUsed[1] != 0.0 && fluxUsed[2] != 0.0) {
+      // Either Q or U non-zero, so use them
+      if (fluxUsed[1] != 0.0 || fluxUsed[2] != 0.0) {
         // if Q U flux densities are given use that as 0th coefficient
         Double pi0 = sqrt(fluxUsed[1] * fluxUsed[1] + fluxUsed[2] * fluxUsed[2]) / fluxUsed[0];
         Double pa0 = 0.5 * atan2(fluxUsed[2],fluxUsed[1]);
@@ -6196,8 +6197,8 @@ Bool Imager::sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& 
       Double ipi = pipoly((f-f0)/f0);
       Double ipa = papoly((f-f0)/f0);
       Double iiflux = iflux[cfidx];
-      Double qfluxval = ipi * iiflux/sqrt(1.0 + tan(2.0*ipa) * tan(2.0*ipa));
-      Double ufluxval = sqrt(ipi * ipi * iiflux * iiflux - qfluxval * qfluxval);
+      Double qfluxval = ipi * iiflux * cos(2.0*ipa);
+      Double ufluxval = ipi * iiflux * sin(2.0*ipa);
       //debug
       //if (cfidx<10) cerr<<"sjy_calcquflux:: poli="<<ipi<<" pola="<<ipa<<" qflux="<<qfluxval<<" uflux="<<ufluxval<<endl;
       if (rotMeas!=0.0 ) {
