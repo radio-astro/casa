@@ -141,15 +141,68 @@ class tsdbaseline_unittest_base:
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/tsdbaseline/'
     taskname = "tsdbaseline"
+    verboselog = False
 
     #complist = ['max','min','rms','median','stddev']
 
     ### helper functions for tests ###
-    def _checkfile( self, name ):
+    def _checkfile( self, name, fail=True ):
+        """
+        Check if the file exists.
+        name : the path and file name to test
+        fail : if True, Error if the file does not exists.
+               if False, return if the file exists
+        """
         isthere=os.path.exists(name)
-        self.assertTrue(isthere,
-                         msg='Could not find, %s'%(name))
+        if fail:
+            self.assertTrue(isthere,
+                            msg='Could not find, %s'%(name))
+        else: return isthere
 
+    def _remove(self, names):
+        """
+        Remove a list of files and directories from disk
+        """
+        for name in names:
+            if os.path.exists(name):
+                if os.path.isdir(name):
+                    shutil.rmtree(name)
+                else:
+                    os.remove(name)
+
+    def _copy(self, names, from_dir=None, dest_dir=None):
+        """
+        Copy a list of files and directories from a directory (form_dir) to
+        another (dest_dir) in the same name.
+        
+        names : a list of files and directories to copy
+        from_dir : a path to directory from which search and copy files
+                   and directories (the default is the current path)
+        to_dir   : a path to directory to which copy files and directories
+                   (the default is the current path)
+        NOTE: it is not allowed to specify 
+        """
+        # Check for paths
+        if from_dir==None and dest_dir==None:
+            raise ValueError, "Can not copy files to exactly the same path."
+        form_path = os.path.abspath("." if from_dir==None else from_dir.rstrip("/"))
+        to_path = os.path.abspath("." if dest_dir==None else dest_dir.rstrip("/"))
+        if from_path == to_path:
+            raise ValueError, "Can not copy files to exactly the same path."
+        # Copy a list of files and directories
+        for name in names:
+            from_name = from_path + "/" + name
+            to_name = to_path + "/" + name
+            if os.path.exists(from_name):
+                if os.isdir(form_name):
+                    shutil.copytree(form_name, to_name)
+                else:
+                    shutil.copyfile(form_name, to_name)
+                if self.verboselog:
+                    casalog.post("Copying '%s' FROM %s TO %s" % (name, from_path, to_path))
+            else:
+                casalog.post("Could not find '%s'...skipping copy" % from_name, 'WARN')
+    
     """
     def _getStats( self, filename, spw=None ):
         if not spw:
@@ -159,12 +212,20 @@ class tsdbaseline_unittest_base:
         retstat = sdstat(filename, spw=str(spw))
         return retstat
     """
+
     def _getUniqList(self, val):
+        """Accepts a python list and returns a list of unique values"""
         if not isinstance(val, list):
             raise Exception('_getUniqList: input value must be a list.')
         return list(set(val))
 
     def _getListSelection(self, val):
+        """
+        Converts input to a list of unique integers
+        Input: Either comma separated string of IDs, an integer, or a list of values.
+        Output: a list of unique integers in input arguments for string and integer input.
+                In case the input is a list of values, output will be a list of unique values.
+        """
         if isinstance(val, str):
             val_split = val.split(',')
             val_sel = []
@@ -179,14 +240,33 @@ class tsdbaseline_unittest_base:
         return self._getUniqList(val_sel)
     
     def _getListSelectedRowID(self, data_list, sel_list):
+        """
+        Returns IDs of data_list that contains values equal to one in
+        sel_list.
+        The function is used to get row IDs that corresponds to a
+        selected IDs. In that use case, data_list is typically a list
+        of values in a column of an MS (e.g., SCAN_NUMBER) and sel_list is
+        a list of selected (scan) IDs.
+
+        data_list : a list to test and get IDs from
+        sel_list  : a list of values to look for existance in data_list
+        """
         res = []
         for i in range(len(data_list)):
             if data_list[i] in sel_list:
-                idx = sel_list.index(data_list[i])
+                #idx = sel_list.index(data_list[i])
                 res.append(i)
         return self._getUniqList(res)
     
     def _getEffective(self, spec, mask):
+        """
+        Returns an array made by selected elements in spec array.
+        Only the elements in the ID range in mask are returned.
+
+        spec : a data array
+        mask : a mask list in the form
+               [[start_idx0, end_idx0], [start_idx1, end_idx1], ...]
+        """
         res = []
         for i in range(len(mask)):
             for j in range(mask[i][0], mask[i][1]):
@@ -194,11 +274,27 @@ class tsdbaseline_unittest_base:
         return numpy.array(res)
 
     def _getStats(self, filename=None, spw=None, pol=None, colname=None, mask=None):
+        """
+        Returns a list of statistics dictionary of selected rows in an MS.
+
+        filename : the name of MS
+        spw      : spw ID selection (default: all spws in MS)
+        pol      : pol ID selection (default: all pols in MS)
+        colname  : the name of data column (default: 'FLOAT_DATA')
+        mask     : a mask list in the form
+                   [[start_idx0, end_idx0], [start_idx1, end_idx1], ...]
+        
+        The order of output list is in the ascending order of selected row IDs.
+        The dictionary in output list has keys:
+        'row' (row ID in MS), 'pol' (pol ID), 'rms', 'min', 'max', 'median',
+        and 'stddev'
+        """
+        # Get selected row and pol IDs in MS. Also get spectrumn in the MS
         if not spw: spw = ''
-        select_spw = (spw != '') and (spw != '*')
+        select_spw = (spw not in ['', '*'])
         if select_spw: spw_sel = self._getListSelection(spw)
         if not pol: pol = ''
-        select_pol = (pol != '') and (pol != '*')
+        select_pol = (pol not in ['', '*'])
         if select_pol: pol_sel = self._getListSelection(pol)
         if not colname: colname='FLOAT_DATA'
         self._checkfile(filename)
@@ -208,7 +304,9 @@ class tsdbaseline_unittest_base:
         with tbmanager(filename+'/DATA_DESCRIPTION') as tb:
             spwid = tb.getcol('SPECTRAL_WINDOW_ID').tolist()
         if not select_spw: spw_sel = spwid
+        # get the selected DD IDs from selected SPW IDs.
         dd_sel = self._getListSelectedRowID(spwid, spw_sel)
+        # get the selected row IDs form selected DD IDs
         row_sel = self._getListSelectedRowID(ddid, dd_sel)
         if not select_spw: row_sel = range(len(ddid))
         if not select_pol: pol_sel = range(len(data))
@@ -243,7 +341,18 @@ class tsdbaseline_unittest_base:
         return res
 
 
-    def _compareStats( self, currstat, refstat, reltol=1.0e-2, complist=None ):
+    def _compareStats( self, currstat, refstat, rtol=1.0e-2, atol=1.0e-5, complist=None ):
+        """
+        Compare statistics results (dictionaries) and test if the values are within
+        an allowed tolerance.
+
+        currstat : the statistic values to test (either an MS name or
+                   a dictionary)
+        refstat  : the reference statistics values (a dictionary)
+        rtol   : tolerance of relative difference
+        atol   : tolerance of absolute difference
+        complist : statistics to compare (default: keys in refstat)
+        """
         # test if the statistics of baselined spectra are equal to
         # the reference values
         printstat = False #True
@@ -290,35 +399,36 @@ class tsdbaseline_unittest_base:
                 print "Comparing '%s': %s (current run), %s (reference)" %\
                       (key,str(currval),str(refval))
             self.assertTrue(len(currval)==len(refval),"Number of elemnets in '%s' differs." % key)
-            for i in range(len(currval)):
-                if isinstance(refval[i],str):
-                    self.assertTrue(currval[i]==refval[i],\
-                                    msg="%s[%d] differs: %s (expected: %s) " % \
-                                    (key, i, str(currval[i]), str(refval[i])))
-                else:
-                    self.assertTrue(self._isInAllowedRange(currval[i],refval[i],reltol),\
-                                    msg="%s[%d] differs: %s (expected: %s) " % \
-                                    (key, i, str(currval[i]), str(refval[i])))
+            if isinstance(refval[0],str):
+                for i in range(len(currval)):
+                    if isinstance(refval[i],str):
+                        self.assertTrue(currval[i]==refval[i],\
+                                        msg="%s[%d] differs: %s (expected: %s) " % \
+                                        (key, i, str(currval[i]), str(refval[i])))
+            else:
+                # numpy.allclose handles almost zero case more properly.
+                self.assertTrue(numpy.allclose(currval, refval, rtol=rtol, atol=atol),
+                                msg="%s differs: %s" % (key, str(currval)))
             del currval, refval
 
             
-    def _isInAllowedRange( self, testval, refval, reltol=1.e-2 ):
-        """
-        Check if a test value is within permissive relative difference from refval.
-        Returns a boolean.
-        testval & refval : two numerical values to compare
-        reltol           : allowed relative difference to consider the two
-                           values to be equal. (default 0.01)
-        """
-        denom = refval
-        if refval == 0:
-            if testval == 0:
-                return True
-            else:
-                denom = testval
-        rdiff = (testval-refval)/denom
-        del denom,testval,refval
-        return (abs(rdiff) <= reltol)
+#     def _isInAllowedRange( self, testval, refval, reltol=1.e-2 ):
+#         """
+#         Check if a test value is within permissive relative difference from refval.
+#         Returns a boolean.
+#         testval & refval : two numerical values to compare
+#         reltol           : allowed relative difference to consider the two
+#                            values to be equal. (default 0.01)
+#         """
+#         denom = refval
+#         if refval == 0:
+#             if testval == 0:
+#                 return True
+#             else:
+#                 denom = testval
+#         rdiff = (testval-refval)/denom
+#         del denom,testval,refval
+#         return (abs(rdiff) <= reltol)
 
     def _to_list( self, input ):
         """
@@ -744,8 +854,67 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
             self._compareStats(currstat,reference[ifno])
 
 
+class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
+    """
+    Tests for blfunc='variable'
+
+    List of tests necessary
+    00: test baseline subtraction with variable baseline functions and orders
+    01: test skipping rows by comment, i.e., lines start with '#' (rows should be flagged)
+    02: test skipping rows by non-existent lines in blparam file (rows should be flagged)
+    03: test mask selection
+    04: test data selection
+    05: test dosubtract = False
+    """
+    outfile='variable_bl.ms'
+    
+    def setUp( self ):
+        if hasattr(self, 'infile'):
+            self.__refetch_files(self.infile)
+
+        default(tsdbaseline)
+
+    def tearDown( self ):
+        self._remove([self.infile, self.outfile])
+
+    def _refetch_files(self, files, from_dir=None):
+        if type(files)==str: files = [files]
+        self._remove(files)
+        self._copy(files, from_dir)
+
+    def _run_test(self, reference, tolerance=1.e-5, **task_param):
+        tsdbaseline(blfunc='variable',outfile=self.outfile,**task_param)
+
+    def testVariable00(self):
+        """Test blfunc='variable' with variable baseline functions and orders"""
+        self.infile='bltest_analytic.ms'
+#         paramfile='blanalyticms_blparam.txt'
+#         self._refetch_files([self.infiles, paramfile])
+#         column='float_data'
+#         self.run_test(infile=infile,blparam=paramfile,datacolumn=column)
+
+    def testVariable01(self):
+        """Test blfunc='variable' with skipping rows by comment ('#') (rows should be flagged)"""
+        self.infile='bltest_analytic.ms'
+
+    def testVariable02(self):
+        """Test blfunc='variable' with non-existent lines in blparam file (rows should be flagged)"""
+        self.infile='bltest_analytic.ms'
+
+    def testVariable03(self):
+        """Test blfunc='variable' with mask selection"""
+        self.infile='bltest_analytic.ms'
+
+    def testVariable04(self):
+        """Test blfunc='variable' with data selection"""
+        self.infile='bltest_analytic.ms'
+
+    def testVariable05(self):
+        """Test blfunc='variable' with dosubtract=False"""
+        self.infile='bltest_analytic.ms'
+
 def suite():
     return [tsdbaseline_basicTest, 
-            tsdbaseline_maskTest
-            #tsdbaseline_multi_IF_test
-            ]
+            tsdbaseline_maskTest,
+            #tsdbaseline_multi_IF_test,
+            tsdbaseline_variableTest]
