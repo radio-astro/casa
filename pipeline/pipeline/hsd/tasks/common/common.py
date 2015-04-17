@@ -210,7 +210,7 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         if hasattr(context.observing_run, 'datatable_instance') \
             and context.observing_run.datatable_instance is not None:
             self._datatable_instance = context.observing_run.datatable_instance
-            LOG.debug('Empty reference to datatable (address 0x%x)'%(id(self._datatable_instance)))
+            LOG.trace('Empty reference to datatable (address 0x%x)'%(id(self._datatable_instance)))
             context.observing_run.datatable_instance = None
             context.observing_run.datatable_name = None
     
@@ -220,7 +220,7 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             and self._datatable_instance is not None:
             datatable = self._datatable_instance
             if context.observing_run.datatable_instance is None:
-                LOG.debug('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
+                LOG.trace('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
                 context.observing_run.datatable_name = os.path.relpath(datatable.name, context.output_dir)
 
@@ -230,7 +230,7 @@ def datatable_setter(func):
     def wrapper(*args, **kwargs):
         task = args[0]
         context = task.inputs.context
-        LOG.debug('%s.%s'%(task.__class__.__name__,func.__name__))
+        LOG.trace('%s.%s'%(task.__class__.__name__,func.__name__))
         task._reconnect_datatable(context)
         return func(*args, **kwargs)
     return wrapper
