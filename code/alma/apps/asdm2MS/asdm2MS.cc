@@ -1924,7 +1924,19 @@ void fillField(ASDM* ds_p, bool considerEphemeris) {
 	error(errstream.str());
       }
       
+      /*
+       * The field name should not contain any "&" because this character has a specific meaning in the MS SELECTION syntax
+       * Any occurrence of character "&" in a field name is replaced by a character "#" and a warning is emitted in the log
+       * about this replacement.
+       */
       string fieldName = r->getFieldName();
+      if (find_first(fieldName, "&")) {
+	replace_all(fieldName, "&", "#");
+	infostream.str("");
+	infostream << "ATTENTION !!! In row #" << i << " of the Field table, the character '&' has been replaced by the character '#' in the field name." << endl;
+	info(infostream.str());
+      }
+
       string code = r->getCode();
       DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
       if(r->isDirectionCodeExists()){
