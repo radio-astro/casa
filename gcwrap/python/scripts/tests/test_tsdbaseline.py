@@ -885,6 +885,7 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
     03: test mask selection
     04: test data selection
     05: test clipping
+    06: duplicated fitting parameter in blparam file (the last one is adopted)
     NOT IMPLEMENTED YET
     * test dosubtract = False
     * line finder
