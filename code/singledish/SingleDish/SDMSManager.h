@@ -24,7 +24,8 @@ public:
 
   // Set user defined Sort columns
   void setSortColumns(Block<Int> sortColumns,
-		      bool addDefaultSortCols=false);
+		      bool addDefaultSortCols=false,
+		      Double timebin=0.0);
 
   Record getSelRec(string const &spw);
   MeasurementSet getMS();

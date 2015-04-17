@@ -186,6 +186,7 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   // - mode, nchan, start, width, veltype,
   // - timeaverage, timebin, timespan, maxuvwdistance
 
+
   // Generate SDMSManager
   sdh_ = new SDMSManager();
 
@@ -199,8 +200,16 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   os << LogIO::DEBUG1 << str << LogIO::POST;
   // Open the MS and select data
   sdh_->open();
+  // set large timebin
+  Double timeBin;
+  int exists = configure_param.fieldNumber("timebin");
+  if (exists<0){
+    timeBin = 1.0e8;
+  } else {
+    configure_param.get(exists, timeBin);
+  }
   // set sort column
-  sdh_->setSortColumns(sortColumns, addDefaultSortCols);
+  sdh_->setSortColumns(sortColumns, addDefaultSortCols, timeBin);
   // Set up the Data Handler
   sdh_->setup();
   return true;

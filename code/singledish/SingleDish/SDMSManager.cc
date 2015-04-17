@@ -218,7 +218,8 @@ void SDMSManager::fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,Cube<Flo
 // Method to determine sort columns order
 // -----------------------------------------------------------------------
 void SDMSManager::setSortColumns(Block<Int> sortColumns,
-				 bool addDefaultSortCols)
+				 bool addDefaultSortCols,
+				 Double timebin)
 {
   size_t const num_in = sortColumns.nelements();
   LogIO os(_ORIGIN);
@@ -258,6 +259,8 @@ void SDMSManager::setSortColumns(Block<Int> sortColumns,
       userSortCols_ = Block<Int>();
   }
   os << "Defined user sort columns with " << userSortCols_.nelements() << " elements" << LogIO::POST;
+  timeBin_p = timebin;
+  os << "Time bin is " << timeBin_p << " sec" << LogIO::POST;
   // regenerate iterator if necessary
   if (visibilityIterator_p != NULL) {
     os << "Regenerating iterator" << LogIO::POST;
