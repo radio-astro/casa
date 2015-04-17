@@ -468,7 +468,7 @@ vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 vector<double> msmetadata::chanwidths(int spw, const string& unit) {
 	_FUNC (
 		_checkSpwId(spw, True);
-		return _msmd->getChanWidths()[spw].getValue(Unit(unit)).tovector();
+		return _msmd->getChanWidths()[spw].getValue(Unit(unit), True).tovector();
 	)
 	return vector<double>();
 }

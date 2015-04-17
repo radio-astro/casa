@@ -1104,5 +1104,11 @@ class msmd_test(unittest.TestCase):
                 expec = 1868
             self.assertTrue(ntimes == expec)
         
+    def test_CAS7463(self):
+        md = self.md
+        self.assertTrue((md.chanwidths(0) == [1.5e9, 2.5e9, 2e9, 1.5e9]).all())
+        self.assertTrue((md.chanwidths(0, "GHz") == [1.5, 2.5, 2, 1.5]).all())
+        self.assertRaises(Exception, md.chanwidths, 0, "km/s")
+        
 def suite():
     return [msmd_test]
