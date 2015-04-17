@@ -374,7 +374,7 @@ Record ImageStatsCalculator::statistics(
                 _subImage, "", Record(), "", False, False, False, False
             );
             _subImage = SubImageFactory<Float>::createSubImage(
-		        *newImage, Record(), "", False, False, AxesSpecifier(), False
+		        *newImage, Record(), "", NULL, False
             );
 	    }
     }
