@@ -172,7 +172,7 @@ class tsdbaseline_unittest_base:
 
     def _copy(self, names, from_dir=None, dest_dir=None):
         """
-        Copy a list of files and directories from a directory (form_dir) to
+        Copy a list of files and directories from a directory (from_dir) to
         another (dest_dir) in the same name.
         
         names : a list of files and directories to copy
@@ -185,7 +185,7 @@ class tsdbaseline_unittest_base:
         # Check for paths
         if from_dir==None and dest_dir==None:
             raise ValueError, "Can not copy files to exactly the same path."
-        form_path = os.path.abspath("." if from_dir==None else from_dir.rstrip("/"))
+        from_path = os.path.abspath("." if from_dir==None else from_dir.rstrip("/"))
         to_path = os.path.abspath("." if dest_dir==None else dest_dir.rstrip("/"))
         if from_path == to_path:
             raise ValueError, "Can not copy files to exactly the same path."
@@ -194,10 +194,10 @@ class tsdbaseline_unittest_base:
             from_name = from_path + "/" + name
             to_name = to_path + "/" + name
             if os.path.exists(from_name):
-                if os.isdir(form_name):
-                    shutil.copytree(form_name, to_name)
+                if os.path.isdir(from_name):
+                    shutil.copytree(from_name, to_name)
                 else:
-                    shutil.copyfile(form_name, to_name)
+                    shutil.copyfile(from_name, to_name)
                 if self.verboselog:
                     casalog.post("Copying '%s' FROM %s TO %s" % (name, from_path, to_path))
             else:
@@ -264,7 +264,7 @@ class tsdbaseline_unittest_base:
         Only the elements in the ID range in mask are returned.
 
         spec : a data array
-        mask : a mask list in the form
+        mask : a mask list of the channel ranges to use. The format is
                [[start_idx0, end_idx0], [start_idx1, end_idx1], ...]
         """
         res = []
@@ -281,7 +281,7 @@ class tsdbaseline_unittest_base:
         spw      : spw ID selection (default: all spws in MS)
         pol      : pol ID selection (default: all pols in MS)
         colname  : the name of data column (default: 'FLOAT_DATA')
-        mask     : a mask list in the form
+        mask     : a mask list of the channel ranges to use. The format is
                    [[start_idx0, end_idx0], [start_idx1, end_idx1], ...]
         
         The order of output list is in the ascending order of selected row IDs.
@@ -306,7 +306,7 @@ class tsdbaseline_unittest_base:
         if not select_spw: spw_sel = spwid
         # get the selected DD IDs from selected SPW IDs.
         dd_sel = self._getListSelectedRowID(spwid, spw_sel)
-        # get the selected row IDs form selected DD IDs
+        # get the selected row IDs from selected DD IDs
         row_sel = self._getListSelectedRowID(ddid, dd_sel)
         if not select_spw: row_sel = range(len(ddid))
         if not select_pol: pol_sel = range(len(data))
@@ -314,32 +314,52 @@ class tsdbaseline_unittest_base:
         res = []
         for irow in row_sel:
             for ipol in pol_sel:
-                res_elem = {}
+                spec = data[ipol,:,irow]
+                res_elem = self._calc_stats_of_array(spec, mask=mask)
                 res_elem['row'] = irow
                 res_elem['pol'] = ipol
-
-                spec = data[ipol,:,irow]
-                if mask is not None: spec = self._getEffective(spec, mask)
-                res_elem['rms'] = numpy.sqrt(numpy.var(spec))
-                res_elem['min'] = numpy.min(spec)
-                res_elem['max'] = numpy.max(spec)
-                spec_mea = numpy.mean(spec)
-                res_elem['median'] = numpy.median(spec)
-
-                val_mean = 0.0
-                val_meansq = 0.0
-                nchan = len(spec)
-                for ichan in range(nchan):
-                    val_mean = val_mean + spec[ichan]
-                    val_meansq = val_meansq + spec[ichan] * spec[ichan]
-                val_mean = val_mean / nchan
-                val_meansq = val_meansq / nchan
-                res_elem['stddev'] = numpy.sqrt(val_meansq - val_mean * val_mean)
-
+                
                 res.append(res_elem)
 
         return res
 
+    def _calc_stats_of_array(self, data, mask=None):
+        """
+        """
+        if mask is not None:
+            spec = self._getEffective(data, mask)
+        else:
+            spec = numpy.array(data)
+        res_elem = {}
+        res_elem['rms'] = numpy.sqrt(numpy.var(spec))
+        res_elem['min'] = numpy.min(spec)
+        res_elem['max'] = numpy.max(spec)
+        spec_mea = numpy.mean(spec)
+        res_elem['median'] = numpy.median(spec)
+        res_elem['stddev'] = numpy.std(spec)
+        return res_elem
+        
+
+    def _convert_statslist_to_dict(self, stat_list):
+        """
+        Returns a disctionary of statistics of selected rows in an MS.
+
+        stat_list: a list of stats dictionary (e.g., return value of _getStats)
+
+        The output dictionary is in form:
+        {'max': [max0, max1, max2, ...], 'min': [min0, min1,...], ...}
+        The order of elements are in ascending order of row and pol IDs pair, i.e.,
+        (row0, pol0), (row0, pol1), (row1, pol0), ....
+        """
+        #if len(stat_list)==0: raise Exception, "No row selected in MS"
+        keys=stat_list[0].keys()
+        stat_dict={}
+        for key in keys:
+            stat_dict[key] = []
+        for stat in stat_list:
+            for key in keys:
+                stat_dict[key].append(stat[key])
+        return stat_dict
 
     def _compareStats( self, currstat, refstat, rtol=1.0e-2, atol=1.0e-5, complist=None ):
         """
@@ -864,9 +884,17 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
     02: test skipping rows by non-existent lines in blparam file (rows should be flagged)
     03: test mask selection
     04: test data selection
-    05: test dosubtract = False
+    05: test clipping
+    NOT IMPLEMENTED YET
+    * test dosubtract = False
+    * line finder
+    * edge flagging
     """
     outfile='variable_bl.ms'
+    column='float_data'
+    nspec = 4
+    refstat0 = {'max': [0.0]*nspec, 'min': [0.0]*nspec,
+                'rms': [0.0]*nspec, 'stddev': [0.0]*nspec}
     
     def setUp( self ):
         if hasattr(self, 'infile'):
@@ -882,36 +910,115 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
         self._remove(files)
         self._copy(files, from_dir)
 
-    def _run_test(self, reference, tolerance=1.e-5, **task_param):
-        tsdbaseline(blfunc='variable',outfile=self.outfile,**task_param)
+    def __select_stats(self, stats, idx_list):
+        """
+        Returns a dictionary with selected elements of statistics
+        stats    : a dictionary of statistics
+        idx_list : a list of indices to select in stats
+        """
+        ret_dict = {}
+        for key in stats.keys():
+            ret_dict[key] = [stats[key][idx] for idx in idx_list]
+        return ret_dict
+
+    def _run_test(self, infile, reference, mask=None, rtol=1.e-5, atol=1.e-6, flag_spec=(), **task_param):
+        """
+        Run tsdbaseline with mode='variable' and test output MS.
+
+        infile    : input ms name
+        reference : reference statistic values in form {'key': [value0, value1, ...], ...}
+        mask      : list of masklist to calculate statistics of output MS (None=use all)
+        rtol, atol: relative and absolute tolerance of comparison.
+        flag_spec : a list of rowid and polid pair whose spectrum should be flagged in output MS
+        **task_param : additional parameters to invoke task. blfunc and outfile are predefined.
+        """
+        self.infile = infile
+        tsdbaseline(infile=self.infile,blfunc='variable',outfile=self.outfile,**task_param)
+        colname = (task_param['datacolumn'] if task_param.has_key('datacolumn') else 'data').upper()
+
+        # calculate statistics of valid spectrum. Test flagged spectrum.
+        ivalid_spec = 0
+        ispec = 0
+        stats_list = []
+        valid_idx = []
+        with tbmanager(self.outfile) as tb:
+            for rowid in range(tb.nrows()):
+                data = tb.getcell(colname, rowid)
+                flag = tb.getcell('FLAG', rowid)
+                npol = len(data)
+                for polid in range(npol):
+                    if (rowid, polid) in flag_spec:
+                        # for flagged rows
+                        self.assertTrue(flag[polid].all(),
+                                        "row=%d, pol=%d should be flagged" % (rowid, polid))
+                    else:
+                        spec = data[polid,:]
+                        masklist = mask[ivalid_spec] if mask is not None else None
+                        stats_list.append(self._calc_stats_of_array(spec, masklist))
+                        ivalid_spec += 1
+                        valid_idx.append(ispec)
+                    ispec += 1
+        # shrink reference list if # of processed spectra is smaller than reference (selection)
+        if len(stats_list) < len(reference[reference.keys()[0]]):
+            self.assertEqual(len(valid_idx), len(stats_list),
+                             "Internal error: len(valid_idx)!=len(stats_list)")
+            reference = self.__select_stats(reference, valid_idx)
+
+        currstat = self._convert_statslist_to_dict(stats_list)
+        #print("cruustat=%s" % str(currstat))
+        self._compareStats( currstat, reference, rtol=1.0e-6, atol=1.0e-6 )
 
     def testVariable00(self):
         """Test blfunc='variable' with variable baseline functions and orders"""
-        self.infile='bltest_analytic.ms'
-#         paramfile='blanalyticms_blparam.txt'
-#         self._refetch_files([self.infiles, paramfile])
-#         column='float_data'
-#         self.run_test(infile=infile,blparam=paramfile,datacolumn=column)
+        infile='analytic_variable.ms'
+        paramfile='analytic_variable_blparam.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        self._run_test(infile,self.refstat0,blparam=paramfile,datacolumn=self.column)
 
     def testVariable01(self):
         """Test blfunc='variable' with skipping rows by comment ('#') (rows should be flagged)"""
-        self.infile='bltest_analytic.ms'
+        infile='analytic_variable.ms'
+        paramfile='analytic_variable_blparam_comment.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        self._run_test(infile,self.refstat0,flag_spec=[(0,0)],blparam=paramfile,datacolumn=self.column)
 
     def testVariable02(self):
         """Test blfunc='variable' with non-existent lines in blparam file (rows should be flagged)"""
-        self.infile='bltest_analytic.ms'
+        infile='analytic_variable.ms'
+        paramfile='analytic_variable_blparam_2lines.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        self._run_test(infile,self.refstat0,flag_spec=[(0,0),(1,1)],blparam=paramfile,datacolumn=self.column)
 
     def testVariable03(self):
         """Test blfunc='variable' with mask selection"""
-        self.infile='bltest_analytic.ms'
+        infile='analytic_order3_withoffset.ms'
+        paramfile='analytic_variable_blparam_mask.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        mask = [[[0,4000],[6000,8000]], [[0,5000],[6000,8000]], [[0,3000],[5000,8000]], None]
+        self._run_test(infile,self.refstat0,mask=mask,blparam=paramfile,datacolumn=self.column)
 
     def testVariable04(self):
-        """Test blfunc='variable' with data selection"""
-        self.infile='bltest_analytic.ms'
+        """Test blfunc='variable' with data selection (spw='1')"""
+        infile='analytic_variable.ms'
+        paramfile='analytic_variable_blparam_spw1.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        self._run_test(infile,self.refstat0,spw='1',blparam=paramfile,datacolumn=self.column)
 
     def testVariable05(self):
-        """Test blfunc='variable' with dosubtract=False"""
-        self.infile='bltest_analytic.ms'
+        """Test blfunc='variable' with clipping"""
+        infile='analytic_order3_withoffset.ms'
+        paramfile='analytic_variable_blparam_clip.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        mask = [[[0,4000],[6000,8000]], [[0,5000],[6000,8000]], [[0,3000],[5000,8000]], None]
+        self._run_test(infile,self.refstat0,atol=1.e-5,
+                       mask=mask,blparam=paramfile,datacolumn=self.column)
+
+    def testVariable06(self):
+        """Test blfunc='variable' with duplicated fitting parameters (the last one is adopted)"""
+        infile='analytic_variable.ms'
+        paramfile='analytic_variable_blparam_duplicate.txt'
+        self._refetch_files([infile, paramfile], self.datapath)
+        self._run_test(infile,self.refstat0,blparam=paramfile,datacolumn=self.column)
 
 def suite():
     return [tsdbaseline_basicTest, 
