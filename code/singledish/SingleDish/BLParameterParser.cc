@@ -158,7 +158,7 @@ void BLParameterParser::ConvertLineToParam(string const &linestr,
   if (svec[BLParameters_kNumIteration].size() == 0)
     throw(AipsError("Number of maximum clip iteration is mandatory"));
   paramset.num_fitting_max
-    = ConvertString<uint16_t>(svec[BLParameters_kNumIteration]);
+    = ConvertString<uint16_t>(svec[BLParameters_kNumIteration]) + 1;
   if (svec[BLParameters_kClipThreshold].size()>0)
     paramset.clip_threshold_sigma
       = ConvertString<float>(svec[BLParameters_kClipThreshold]);
