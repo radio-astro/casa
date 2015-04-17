@@ -28,6 +28,7 @@
 
 #include <casacore/images/Images/ImageStatistics.h>
 #include <casacore/images/Images/FITSImage.h>
+#include <casacore/lattices/Lattices/LatticeUtilities.h>
 #include <casacore/casa/namespace.h>
 
 void writeTestString(const String& test) {
@@ -246,6 +247,32 @@ int main() {
 				AipsError
 			);
 			AlwaysAssert(near(*flux.begin(), expected), AipsError);
+    	}
+    	{
+    		// check equivalence of old vs new implementation of LatticeStatistics
+    		// in SubImages made from TempImage
+    		PagedImage<Float> im("decon_test.im");
+    		TempImage<Float> tmp(im.shape(), im.coordinates());
+    		LCBox box(IPosition(2,10,10), IPosition(2,14,14), im.shape());
+    		PtrHolder<ImageRegion> region(
+    			ImageRegion::fromRecord(
+    				NULL, im.coordinates(),
+    				im.shape(), box.toRecord("")
+    			)
+    		);
+
+    		LogIO os;
+    		LatticeUtilities::copyDataAndMask(os, tmp, im, False);
+    		SubImage<Float> s1(tmp, *region, False, AxesSpecifier(), True);
+    		LatticeStatistics<Float> statsOld(s1, os);
+    		statsOld.configureClassical(0, 0, 1, 1);
+    		Array<Double> maxOld;
+    		statsOld.getStatistic(maxOld, LatticeStatsBase::MAX);
+    		LatticeStatistics<Float> statsNew(s1, os);
+    		statsNew.configureClassical(1, 1, 0, 0);
+    		Array<Double> maxNew;
+    		statsNew.getStatistic(maxNew, LatticeStatsBase::MAX);
+    		AlwaysAssert(allTrue(maxOld == maxNew), AipsError);
     	}
         cout << "ok" << endl;
     }
