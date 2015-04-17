@@ -362,23 +362,6 @@ Record ImageStatsCalculator::statistics(
 		_getStretch()
 	);
     *_getLog() << myOrigin;
-    {
-        // CAS-7472, create new image, rather than sub image, until root cause of
-        // Kileen's Array pointer problem can be addressed
-        if (
-            _algConf.algorithm == StatisticsData::CLASSICAL
-            && _prefClassStatsAlg != STATS_FRAMEWORK
-            && ! _subImage.shape().isEqual(_getImage()->shape())
-        ) {
-            SPIIF newImage = SubImageFactory<Float>::createImage(
-                _subImage, "", Record(), "", False, False, False, False
-            );
-            _subImage = SubImageFactory<Float>::createSubImage(
-		        *newImage, Record(), "", NULL, False
-            );
-	    }
-    }
-
 	// Find BLC of _subImage in pixels and world coords, and output the
 	// information to the logger.
 	// NOTE: ImageStatitics can't do this because it only gets the _subImage
