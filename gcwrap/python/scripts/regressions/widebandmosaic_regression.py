@@ -171,8 +171,8 @@ else:
    # Test 2
    #correct_mtmfs_intensity = 0.679821
    #correct_mtmfs_alpha = 0.036
-   #correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
-##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB_tt1
+   #correct_mtmfs_avgPB.tt0 = 0.695073  # avgPB.tt0
+##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB.tt1
 
    # 24 Oct 2013 (UR). -- This is with an oversampling of 50.
    ## Switched to using PBSQ. Search for 'PBSQWeight' in the code. (0.69*0.69 = 0.476)
@@ -183,7 +183,7 @@ else:
    # Test 2
    #correct_mtmfs_intensity = 0.68578
    #correct_mtmfs_alpha = 0.002019
-   #correct_mtmfs_avgPB_tt0 = 0.48338  # avgPB_tt0
+   #correct_mtmfs_avgPB.tt0 = 0.48338  # avgPB.tt0
 
    # 25 Oct 2013 (UR). -- This is with DEFAULT oversampling (20)
    # These are pixel values at the center of the source, pixel 256, 315
@@ -193,7 +193,7 @@ else:
    # Test 2
    #correct_mtmfs_intensity = 0.6818
    #correct_mtmfs_alpha = 0.0188
-   #correct_mtmfs_avgPB_tt0 = 0.4836
+   #correct_mtmfs_avgPB.tt0 = 0.4836
 
    # 28 Oct 2013 (UR). After fixing more PBSQ and sqrt errors.
    # These are pixel values at the center of the source, pixel 256, 315
@@ -312,20 +312,20 @@ else:
    print >>logfile, '\n'
 
    # Test 2 : PB 0
-   if(os.path.exists(imname2+'.cfcache.dir/avgPB_tt0')):
-      ia.open(imname2+'.cfcache.dir/avgPB_tt0');
+   if(os.path.exists(imname2+'.cfcache.dir/avgPB.tt0')):
+      ia.open(imname2+'.cfcache.dir/avgPB.tt0');
       midpix = ia.pixelvalue([npix/2,npix/2])
       midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_mtmfs_avgPB_tt0 = abs( midpix['value']['value'] - correct_mtmfs_avgPB_tt0 )/ abs(correct_mtmfs_avgPB_tt0);
       if(diff_mtmfs_avgPB_tt0<0.02): 
-         print >>logfile,'* Passed Test 2 : peak mtmfs_avgPB_tt0 test ';
+         print >>logfile,'* Passed Test 2 : peak mtmfs_avgPB.tt0 test ';
       else: 
-         print >>logfile,'* FAILED Test 2 : peak mtmfs_avgPB_tt0 test at the 2-percent level '
+         print >>logfile,'* FAILED Test 2 : peak mtmfs_avgPB.tt0 test at the 2-percent level '
 	 regstate = False;
-      print >>logfile,'-- Test 2 : peak mtmfs_avgPB_tt0 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_avgPB_tt0) + ')';
+      print >>logfile,'-- Test 2 : peak mtmfs_avgPB.tt0 : ' + str(midpix['value']['value']) + ' (' + str(correct_mtmfs_avgPB_tt0) + ')';
    else:
-      print >>logfile,'-- FAILED Test 2 : No mtmfs_avgPB_tt0 map generated';
+      print >>logfile,'-- FAILED Test 2 : No mtmfs_avgPB.tt0 map generated';
       regstate = False;
 
    print >>logfile, '\n'
