@@ -294,6 +294,7 @@ class MeasurementSet(object):
             for ii in range(0,numFields):
                 subtable = table.query('FIELD_ID==%s'%ii)
                 field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
+                subtable.close()
         
         ## field_scans is now a list of lists containing the scans for each field.
         ## so, to access all the scans for the fields, you'd:
