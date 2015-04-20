@@ -5546,7 +5546,13 @@ int main(int argc, char *argv[]) {
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
 	   ++iter) {
-	int antenna_id = iter->second->addAntenna(r->getName(),
+	/*
+	** "&" are not recommanded in antenna names in order to avoid bumps with MS Selection syntax.
+	*/ 
+	string aName = r->getName();
+	if (find_first(aName, "&")) replace_all(aName, "&", "#");
+	
+	int antenna_id = iter->second->addAntenna(aName,
 						  r->getStationUsingStationId()->getName(),
 						  xPosition,
 						  yPosition,
