@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import types
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -12,7 +13,7 @@ LOG = infrastructure.get_logger(__name__)
 class MakeImListInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
-      imagename=None, intent=None, field=None, spw=None, 
+      imagename=None, intent=None, field=None, spw=None, linesfile=None,
       uvrange=None, specmode=None, outframe=None,
       imsize=None, cell=None, calmaxpix=None, phasecenter=None,
       nchan=None, start=None, width=None):
@@ -61,6 +62,16 @@ class MakeImListInputs(basetask.StandardInputs):
     @spw.setter
     def spw(self, value):
         self._spw = value
+
+    @property
+    def linesfile(self):
+        return self._linesfile
+
+    @linesfile.setter
+    def linesfile(self, value=None):
+        if value in (None, ''):
+            value = os.path.join(self.context.output_dir, 'lines.dat')
+        self._linesfile = value
 
     @property
     def uvrange(self):
@@ -209,7 +220,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
         self.heuristics = makeimlist.MakeImListHeuristics(
-          context=inputs.context, vislist=inputs.vis, spw=spw)
+          context=inputs.context, vislist=inputs.vis, spw=spw, linesfile=inputs.linesfile)
 
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(
@@ -331,6 +342,11 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
+                if (specmode == 'mfs'):
+                    spwsel = self.heuristics.cont_ranges[spwspec]
+                else:
+                    spwsel = ''
+
                 if valid_data[spwspec][field_intent] and \
                   imsizes.has_key((field_intent[0],spwspec)):
                     LOG.debug (
@@ -342,6 +358,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     target = {'field':field_intent[0],
                               'intent':field_intent[1],
                               'spw': spwspec,
+                              'spwsel': spwsel,
                               'cell':cells[spwspec],
                               'imsize':imsizes[(field_intent[0],spwspec)],
                               'phasecenter':phasecenters[field_intent[0]],

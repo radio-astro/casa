@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanInputs(cleanbase.CleanBaseInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-       intent=None, field=None, spw=None, uvrange=None, specmode=None,
+       intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
        gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
@@ -32,7 +32,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-           field=field, spw=spw, uvrange=uvrange, specmode=specmode, gridmode=gridmode,
+           field=field, spw=spw, spwsel=spwsel, uvrange=uvrange, specmode=specmode, gridmode=gridmode,
            deconvolver=deconvolver, outframe=outframe, imsize=imsize, cell=cell,
            phasecenter=phasecenter, nchan=nchan, start=start, width=width,
            weighting=weighting, robust=robust, noise=noise, npixels=npixels,
@@ -125,7 +125,7 @@ class Tclean(cleanbase.CleanBase):
 
     def prepare(self):
         inputs = self.inputs
-       
+
         LOG.info('')
         LOG.info("Cleaning for intent '%s', field %s, spw %s" %
             (inputs.intent, inputs.field, inputs.spw))
@@ -354,6 +354,7 @@ class Tclean(cleanbase.CleanBase):
 	    intent=inputs.intent,
 	    field=inputs.field,
 	    spw=inputs.spw,
+	    spwsel=inputs.spwsel,
 	    uvrange=inputs.uvrange,
 	    specmode=inputs.specmode,
 	    gridmode=inputs.gridmode,

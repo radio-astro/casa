@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-        intent=None, field=None, spw=None, uvrange=None, specmode=None,
+        intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
         gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
@@ -73,6 +73,16 @@ class CleanBaseInputs(basetask.StandardInputs):
     @spw.setter
     def spw(self, value):
         self._spw = value
+
+    @property
+    def spwsel(self):
+        if self._spwsel is None:
+            return ''
+        return self._spwsel
+
+    @spwsel.setter
+    def spwsel(self, value):
+        self._spwsel = value
 
     @property
     def uvrange(self):
@@ -321,7 +331,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Instantiate the clean list heuristics class
         clheuristics = makeimlist.MakeImListHeuristics(
-            context=inputs.context, vislist=inputs.vis, spw=inputs.spw)
+            context=inputs.context, vislist=inputs.vis, spw=inputs.spw, linesfile='')
 
         # Generate the image name if one is not supplied.
         if inputs.imagename == '':
@@ -491,7 +501,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Call CASA tclean.
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=inputs.spw,
+            spw='%s%s%s' % (inputs.spw, ':'*(1 if len(inputs.spwsel) > 0 else 0), inputs.spwsel),
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
             pblimit=0.2, niter=inputs.niter,

@@ -36,6 +36,11 @@ Create a a list of images to be cleaned.
     <value></value>
   </param>
 
+  <param type="string" name="linesfile" subparam="true">
+    <description>Name of file with line regions to exclude for continuum images.</description>
+    <value></value>
+  </param>
+
   <param type="string" name="uvrange" subparam="true">
       <description>Set of data selection uv ranges, \'\' for all.</description>
       <any type="variant" limittypes="string stringArray"/>
@@ -131,6 +136,7 @@ Create a a list of images to be cleaned.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="linesfile"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
         <default param="start"><value type="string"></value></default>
@@ -144,6 +150,7 @@ Create a a list of images to be cleaned.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="linesfile"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
         <default param="start"><value type="string"></value></default>
@@ -245,6 +252,10 @@ spw -- Select spectral window/channels to image.
     default: '' Individual images will be computed for all science spectral
     windows.
     example: '9'
+
+linesfile -- Name of file with line regions to exclude for continuum images.
+    default: 'lines.dat'
+    example: 'mylines.dat'
 
 uvrange -- Select a set of uv ranges ro image.
     default: '' All uv data is included
