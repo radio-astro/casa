@@ -312,12 +312,9 @@ Bool ProfileFit1D<T>::fit ()
    itsFitter.addFitElement (itsList);
 // Do the fit with the total mask
 
-   Bool converged(False);
-   if (itsWeight.nelements()==0) {
-      converged = itsFitter.fit (itsY, itsX, makeTotalMask());
-   } else {
-      converged = itsFitter.fit (itsWeight, itsY, itsX, makeTotalMask());
-   }
+   Bool converged = itsWeight.empty()
+			? itsFitter.fit (itsY, itsX, makeTotalMask())
+			: itsFitter.fit (itsWeight, itsY, itsX, makeTotalMask());
    return converged;
 }
 
