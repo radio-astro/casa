@@ -151,8 +151,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
 	const String& mask, Bool dropDegenerateAxes,
-	Bool overwrite, Bool list, Bool extendMask,
-	Bool attachMask
+	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
 ) {
 	LogIO log;
 	log << LogOrigin("SubImageFactory", __func__);
@@ -165,6 +164,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 			! validfile.valueOK(outfile, errmsg), errmsg
 		);
 	}
+	/*
 	TempImage<T> newImage(
 		TiledShape(image.shape()), image.coordinates()
 	);
@@ -179,9 +179,11 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	}
 	ImageUtilities::copyMiscellaneous(newImage, image);
 	newImage.put(image.get());
+	*/
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
+	SPIIT myclone(image.cloneII());
 	SubImage<T> x = SubImageFactory<T>::createSubImage(
-		newImage, region, mask, list ? &log : 0,
+		*myclone, region, mask, list ? &log : 0,
 		True, axesSpecifier, extendMask
 	);
 	SPIIT outImage;
@@ -201,15 +203,28 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 				<< "' of shape " << outImage->shape() << LogIO::POST;
 		}
 	}
-	if (x.isMasked() || x.hasPixelMask()) {
+	/*
+	if (x.isMasked() || x.hasPixelMask() || attachMask) {
 		String maskName("");
 		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
 	}
+	*/
 	ImageUtilities::copyMiscellaneous(*outImage, x);
+	if (
+		attachMask
+		|| (x.isMasked() && ! allTrue(x.getMask()))
+		|| (x.hasPixelMask() && ! allTrue(x.pixelMask().get()))
+	) {
+		// if we don't already have a mask, but the user has specified that one needs to
+		// be present, attach it. This needs to be done prior to the copyDataAndMask() call
+		// because in that implementation, the image to which the mask is to be copied must
+		// have already have a mask; that call does not create one if it does not exist.
+		String maskName = "";
+		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
+	}
 	LatticeUtilities::copyDataAndMask(log, *outImage, x);
     outImage->flush();
     return outImage;
 }
 
 }
-
