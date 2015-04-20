@@ -634,6 +634,7 @@ Bool VisChunkAverager::makeHashMap(ROVisibilityIterator& vi)
                                    vb.feed1()[rn], vb.feed2()[rn],
                                    vb.processorId()[rn]);
 
+	/* jagonzal: These insertions cause a seg. fault in MAC 10.00 using llvm and C++11
         if(sphash_to_inprows_p.count(sphash) < 1){
           sphash_to_inprows_p.insert(poshint,
                             std::pair<uInt, std::vector<Int> >(sphash,
@@ -643,7 +644,14 @@ Bool VisChunkAverager::makeHashMap(ROVisibilityIterator& vi)
           // Fill the new vector of input rows with "the skip value".
           sphash_to_inprows_p[sphash].assign(nChunklets, -1);
         }
+	*/
+
+	if(sphash_to_inprows_p.count(sphash) < 1){
+	  sphash_to_inprows_p[sphash]=std::vector<Int>(nChunklets,-1);
+	}
+
         sphash_to_inprows_p[sphash][chunkletNum] = rn;
+
       }
     }
     ++chunkletNum;
