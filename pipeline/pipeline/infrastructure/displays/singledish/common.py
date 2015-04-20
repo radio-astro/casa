@@ -295,19 +295,37 @@ class SDImageDisplay(object):
 
     @property
     def num_valid_spectrum(self):
-        return self.__reshape2d(self.inputs.result.outcome['validsp'])
+        return self.__reshape2d(self.inputs.result.outcome['validsp'], int)
 
     @property
     def rms(self):
-        return self.__reshape2d(self.inputs.result.outcome['rms'])
+        return self.__reshape2d(self.inputs.result.outcome['rms'], float)
 
     @property
     def edge(self):
         return self.inputs.result.outcome['edge']
 
-    def __reshape2d(self, array2d):
-        array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
-        return numpy.flipud(array3d)
+    def __reshape2d(self, array2d, dtype=None):
+        array3d = numpy.zeros((self.npol,self.ny,self.nx),dtype=dtype)
+        if len(array2d) == self.npol:
+            each_len = numpy.array(map(len, array2d))
+            if numpy.all(each_len == 0):
+                # no valid data in the pixel
+                array3d = numpy.zeros((self.npol, self.ny, self.nx), dtype=dtype)
+            elif numpy.all(each_len == self.ny * self.nx):
+                # all polarizations has valid data in each pixel
+                array3d = numpy.array(array2d).reshape((self.npol,self.ny,self.nx))
+            elif numpy.any(each_len == self.ny * self.nx):
+                # probably one of the polarization components has no valid data
+                invalid_pols = numpy.where(each_len == 0)[0]
+                _array2d = []
+                for i in xrange(self.npol):
+                    if i in invalid_pols:
+                        _array2d.append(numpy.zeros((self.ny * self.nx), dtype=dtype))
+                    else:
+                        _array2d.append(array2d[i])
+                array3d = numpy.array(_array2d).reshape((self.npol,self.ny,self.nx))
+        return numpy.flipud(array3d.transpose())
 
 
 

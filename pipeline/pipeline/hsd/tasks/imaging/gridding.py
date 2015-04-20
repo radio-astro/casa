@@ -147,6 +147,10 @@ class GriddingBase(common.SingleDishTaskTemplate):
         tsys = table.getcol('TSYS').take(index_list)
         exposure = table.getcol('EXPOSURE').take(index_list)
         net_flag = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
+        
+        if len(rows) == 0:
+            # no valid data, return empty table
+            return []
 
         ### test code
         if DO_TEST:

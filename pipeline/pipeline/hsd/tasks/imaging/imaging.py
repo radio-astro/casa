@@ -337,8 +337,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                     outcome = {}
                     outcome['image'] = image_item
                     outcome['imagemode'] = imagemode
-                    outcome['validsp'] = numpy.array(validsps)
-                    outcome['rms'] = numpy.array(rmss)
+                    outcome['validsp'] = validsps
+                    outcome['rms'] = rmss
                     outcome['edge'] = edge
                     outcome['reduction_group_id'] = group_id
                     outcome['file_index'] = indices
@@ -450,8 +450,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                 outcome = {}
                 outcome['image'] = image_item
                 outcome['imagemode'] = imagemode
-                outcome['validsp'] = numpy.array(validsps)
-                outcome['rms'] = numpy.array(rmss)
+                outcome['validsp'] = validsps
+                outcome['rms'] = rmss
                 outcome['edge'] = edge
                 outcome['reduction_group_id'] = group_id
                 outcome['file_index'] = combined_indices
