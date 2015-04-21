@@ -55,6 +55,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                    dosubtract=dosubtract,
                                    spw=spw,
                                    pol=pol,
+                                   blfunc=blfunc,
                                    order=order, 
                                    clip_threshold_sigma=clipthresh, 
                                    num_fitting_max=clipniter+1)

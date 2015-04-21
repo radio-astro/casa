@@ -122,6 +122,7 @@ singledishms::subtract_baseline(string const& datacolumn,
 				bool const dosubtract,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
+				string const& blfunc,
 				int const order,
 				float const clip_threshold_sigma,
 				int const num_fitting_max)
@@ -132,7 +133,7 @@ singledishms::subtract_baseline(string const& datacolumn,
     assert_valid_ms();
     itsSd->subtract_baseline(datacolumn, outfile, bltable, dosubtract,
 			     toCasaString(spw), toCasaString(pol),
-			     order, clip_threshold_sigma, 
+			     blfunc, order, clip_threshold_sigma, 
 			     num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {
