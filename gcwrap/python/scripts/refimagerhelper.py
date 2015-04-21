@@ -256,8 +256,8 @@ class PySynthesisImager:
         self.SItool.setweighting( **(self.weightpars) )
         
  #       print "get set density from python"
-#        self.SItool.getweightdensity()
-#        self.SItool.setweightdensity()
+ #       self.SItool.getweightdensity()
+ #       self.SItool.setweightdensity()
 
         
 #############################################
@@ -432,8 +432,10 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs( joblist )
 
         ## If only one field, do the get/gather/set of the weight density.
-        if 0:  ## self.NF == 1 :   ## Remove check after gridded wts appear for all fields correctly.
+        if self.NF == 1 :   ## Remove after gridded wts appear for all fields correctly (i.e. new FTM).
 
+          if self.weightpars['type'] != 'natural' :  ## For natural, this array isn't created at all.
+                                                                       ## Remove when we switch to new FTM
             joblist=[];
             for node in self.listOfNodes:
                 joblist.append( self.PH.runcmd("toolsi.getweightdensity()", node ) )

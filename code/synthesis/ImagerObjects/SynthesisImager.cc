@@ -910,7 +910,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    for (uInt fid=0;fid<densitymatrices.nelements();fid++)
 	      {
-		cout << "Density shape (get) for f " << fid << ": " << densitymatrices[fid].shape() << endl;
+		//cout << "Density shape (get) for f " << fid << ": " << densitymatrices[fid].shape() << endl;
 		itsMappers.imageStore(fid)->gridwt(0)->put(densitymatrices[fid]);
 	      }
 	  }
@@ -937,7 +937,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Array<Float> arr;
 	    itsMappers.imageStore(fid)->gridwt(0)->get(arr,True);
 	    densitymatrices[fid].reference( arr );
-	    cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
+	    //cout << "Density shape (set) for f " << fid << " : " << arr.shape() << " : " << densitymatrices[fid].shape() << endl;
 	  }
 
 
