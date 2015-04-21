@@ -77,8 +77,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		ThreadCommunication* thread) {
 
 	// process selected columns			
-	checkColumns(loadAxes, loadData);
-	String dataColumn = getDataColumn(loadAxes, loadData);
+	String dataColumn = checkDataColumn(loadAxes, loadData);
 
 	// Apply selections to MS to create selection MS 
 	// and channel/correlation selections
@@ -157,11 +156,14 @@ void MSCache::deleteVm() {
 	vm_ = NULL;
 }
 
-void MSCache::checkColumns(vector<PMS::Axis>& loadAxes,
+String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
 	vector<PMS::DataColumn>& loadData)
-{ // Check if scratch and float cols present
-	Bool corcolOk(False), floatcolOk(False);
+{	// Check data column choice and determine which column to pass to VisIter
+ 
+	// Check if data, scratch and float cols present
+	Bool corcolOk(false), floatcolOk(false), datacolOk(false);
 	const ColumnDescSet cds = Table(filename_).tableDesc().columnDescSet();
+	datacolOk = cds.isDefined("DATA");
 	corcolOk = cds.isDefined("CORRECTED_DATA");
 	floatcolOk = cds.isDefined("FLOAT_DATA");
 	if (!corcolOk || !floatcolOk) {
@@ -170,24 +172,28 @@ void MSCache::checkColumns(vector<PMS::Axis>& loadAxes,
 			case PMS::CORRECTED:
 			case PMS::CORRECTED_DIVIDE_MODEL:
 			case PMS::CORRMODEL: {
+			    // user asked for corrected data but no corrected column
 			    if (!corcolOk && !calibration_.useCallib()) {
 				//Exception was removed - see CAS-5214
 				loadData[i] = PMS::DATA;
-				logWarn( "loadIt", 
+				logWarn( "load_cache", 
 					 "CORRECTED_DATA column not present and calibration library not set or enabled; will use DATA instead.");
 				//throw(AipsError("CORRECTED_DATA not present, please use DATA"));
 			    }
-				break;
+			    break;
 			}
 			case PMS::FLOAT_DATA: {
-			    if (!floatcolOk) 
+			    if (!floatcolOk) {
+				// user asked for float data but no float column 
 				throw(AipsError("FLOAT_DATA not present, please use DATA"));
+			    }
 			    for (uInt j=0; j<loadAxes.size(); ++j) {
 				switch (loadAxes[i]) {
 				case PMS::PHASE:
 				case PMS::REAL:
-				case PMS::IMAG: 
-					throw(AipsError("Chosen axis not valid for FLOAT_DATA, please use AMP or change Data Column"));
+				case PMS::IMAG:
+				    // user asked for float data for nonvalid axes
+				    throw(AipsError("Chosen axis not valid for FLOAT_DATA, please use AMP or change Data Column"));
 				    break;
 				default:
 				    break;
@@ -200,6 +206,31 @@ void MSCache::checkColumns(vector<PMS::Axis>& loadAxes,
 			} // switch
 		} // for
 	} // if
+	String dataColumn = getDataColumn(loadAxes, loadData);
+	// CAS-7482, single-dish data may not have DATA column
+	// so change default to float data
+	if ((dataColumn == "DATA") && !datacolOk && floatcolOk) {
+		dataColumn = "FLOAT_DATA";
+		logWarn( "load_cache", "DATA column not present; will use FLOAT_DATA instead.");
+	}
+	return dataColumn;
+}
+
+String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes, 
+	vector<PMS::DataColumn>& loadData)
+{
+	// Convert datacolumn to uppercase for MSTransformManager
+	String dataColumn = "DATA";  // default
+	for (uInt i=0; i < loadAxes.size(); ++i) {
+		if ((loadAxes[i] == PMS::AMP) ||
+                    (loadAxes[i] == PMS::PHASE) ||
+		    (loadAxes[i] == PMS::IMAG) ||
+		    (loadAxes[i] == PMS::WTxAMP)) {
+			dataColumn = PMS::dataColumn(loadData[i]);
+			dataColumn.upcase();
+		}
+	}
+	return dataColumn;
 }
 
 void MSCache::getNamesFromMS(MeasurementSet& ms)
@@ -219,23 +250,6 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
 
 	intentnames_ = msCol.state().obsMode().getColumn();
 	mapIntentNamesToIds();  // eliminate duplicate intent names
-}
-
-String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes, 
-	vector<PMS::DataColumn>& loadData)
-{
-	// Convert datacolumn to uppercase for MSTransformManager
-	String dataColumn = "DATA";
-	for (uInt i=0; i < loadAxes.size(); ++i) {
-		if ((loadAxes[i] == PMS::AMP) ||
-                    (loadAxes[i] == PMS::PHASE) ||
-		    (loadAxes[i] == PMS::IMAG) ||
-		    (loadAxes[i] == PMS::WTxAMP)) {
-			dataColumn = PMS::dataColumn(loadData[i]);
-			dataColumn.upcase();
-		}
-	}
-	return dataColumn;
 }
 
 void MSCache::setUpVisIter(PlotMSSelection& selection,
@@ -573,7 +587,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			chshapes_(2,chunk) = vb->nRows();
 			chshapes_(3,chunk) = vb->nAntennas();
 			goodChunk_(chunk)  = True;
-
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
 				loadAxis(vb, chunk, loadAxes[i], loadData[i]);
 			}
