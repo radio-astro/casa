@@ -247,15 +247,28 @@ def _collect_logrecords(logger):
         logrecords.extend(handler.buffer[:])
     return logrecords
 
-def selection_to_list(sel):
+def selection_to_list(sel, maxid=99):
     def _selection_to_list(sel):
         elements = sel.split(',')
-        for elem in elements:
+        for _elem in elements:
+            elem = _elem.strip()
             if elem.isdigit():
                 yield int(elem)
             elif re.match('^[0-9]+~[0-9]+$', elem):
                 s = [int(e) for e in elem.split('~')]
                 for i in xrange(s[0], s[1]+1):
+                    yield i
+            elif re.match('^<[0-9]+$', elem):
+                for i in xrange(int(elem[1:])):
+                    yield i
+            elif re.match('^<=[0-9]+$', elem):
+                for i in xrange(int(elem[2:])+1):
+                    yield i
+            elif re.match('^>[0-9]+$', elem):
+                for i in xrange(int(elem[1:])+1,maxid):
+                    yield i
+            elif re.match('^>=[0-9]+$', elem):
+                for i in xrange(int(elem[2:]),maxid):
                     yield i
     l = set(_selection_to_list(sel))
     return list(l)
