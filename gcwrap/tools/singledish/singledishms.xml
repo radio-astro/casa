@@ -176,6 +176,11 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
+    <param type="string" name="blfunc">
+      <description>baseline function</description>
+      <value>poly</value>
+    </param>
+
     <param type="int" name="order">
       <description>polynomial order</description>
       <value>5</value>
