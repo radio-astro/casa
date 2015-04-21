@@ -6,6 +6,9 @@ import pipeline.infrastructure.displays.singledish as displays
 
 from ..common import renderer as sdsharedrenderer
 
+from . import imaging
+from . import scaling
+
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -19,15 +22,18 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
         plots = []
         #for image_item in result.outcome:
         for r in results:
-            image_item = r.outcome['image']
-            antenna_list = r.outcome['file_index']
-            imagemode = r.outcome['imagemode']
-            spwid = image_item.spwlist
-            spw_type = context.observing_run[antenna_list[0]].spectral_window[spwid[0]].type if imagemode.upper()!='AMPCAL' else 'TP'
-            task_cls = displays.SDImageDisplayFactory(spw_type)
-            inputs = task_cls.Inputs(context,result=r)
-            task = task_cls(inputs)
-            plots.append(task.plot())
+            if isinstance(r, imaging.SDImagingResults):
+                image_item = r.outcome['image']
+                antenna_list = r.outcome['file_index']
+                imagemode = r.outcome['imagemode']
+                spwid = image_item.spwlist
+                spw_type = context.observing_run[antenna_list[0]].spectral_window[spwid[0]].type if imagemode.upper()!='AMPCAL' else 'TP'
+                task_cls = displays.SDImageDisplayFactory(spw_type)
+                inputs = task_cls.Inputs(context,result=r)
+                task = task_cls(inputs)
+                plots.append(task.plot())
+            elif isinstance(r, scaling.IntensityScalingResults):
+                ctx.update(r.outcome)
             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
                                    'plot_title': 'Sparse Profile Map'},

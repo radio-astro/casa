@@ -53,9 +53,11 @@ class IntensityScaling(common.SingleDishTaskTemplate):
             self._apply_scaling_factors(factors)
         self._change_unit()
 
+        outcome = {'factors': factors,
+                   'reffile': reffile}
         result = IntensityScalingResults(task=self.__class__,
                                  success=True,
-                                 outcome=None)
+                                 outcome=outcome)
         result.task = self.__class__
 
         if self.inputs.context.subtask_counter is 0: 

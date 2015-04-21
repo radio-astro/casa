@@ -139,6 +139,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         scaling_task = scaling.IntensityScaling(scaling_inputs)
         scaling_results = self._executor.execute(scaling_task, merge=True)
         logrecords.extend(scaling_results.logrecords)
+        results.append(scaling_results)
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
