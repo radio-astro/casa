@@ -54,6 +54,7 @@ public:
 			 bool const& do_subtract,
 			 string const& in_spw, 
 			 string const& in_ppp, 
+			 string const& blfunc,
 			 int const order, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);

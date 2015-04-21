@@ -643,6 +643,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 				     bool const& do_subtract,
 				     string const& in_spw,
 				     string const& in_ppp,
+				     string const& blfunc,
 				     int const order, 
 				     float const clip_threshold_sigma, 
 				     int const num_fitting_max)
@@ -692,6 +693,12 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   }
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
+  LIBSAKURA_SYMBOL(BaselineType) bltype;
+  if (blfunc == "poly") {
+    bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+  } else if (blfunc == "chebyshev") {
+    bltype = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
+  }
   Vector<bool> pol;
   bool pol_set = false;
 
@@ -716,7 +723,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
       if (new_nchan) {
-	get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
+	get_baseline_context(bltype,//LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
 			     static_cast<uint16_t>(order), 
 			     num_chan, nchan, nchan_set, ctx_indices, bl_contexts);
       }
@@ -745,7 +752,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	Array<Float> ffpar_mtx(IPosition(2, num_pol, 0));//1));
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	  bltype_mtx[0][ipol] = (uInt)LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+	  bltype_mtx[0][ipol] = (uInt)bltype;//LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
 	  fpar_mtx[0][ipol] = (Int)order;
 	}
 	size_t num_masklist_max = 0;
@@ -755,7 +762,6 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 							   order,
 							   &num_coeff);
 	check_sakura_status("sakura_GetNumberOfCoefficients", status);
-	SakuraAlignedArray<double> coeff(num_coeff);
 	Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	  for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
@@ -800,6 +806,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 
   	  // actual execution of single spectrum
 	  if (write_baseline_table) {
+	    SakuraAlignedArray<double> coeff(num_coeff);
 	    status = 
 	    LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(bl_contexts[ctx_indices[idx]], 
 								  num_chan,
@@ -836,6 +843,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 							             coeff.data,
 							             spec.data);
 	    check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat", status);
+	    /* commenting out as ComputeStatisticsFloat() result is wrong (2015/4/21 WK)
 	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
 	    status = 
 	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
@@ -845,6 +853,67 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 							     &stat);
 	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
 	    rms_mtx[0][ipol] = stat.stddev;
+
+	    std::cout << "***  stat: cnt = " << stat.count << std::endl;
+	    std::cout << "***  stat: sum = " << stat.sum << std::endl;
+	    std::cout << "***  stat: min = " << stat.min << " (at " << stat.index_of_min << ") " << std::endl;
+	    std::cout << "***  stat: max = " << stat.max << " (at " << stat.index_of_max << ") " << std::endl;
+	    std::cout << "***  stat: mea = " << stat.mean << std::endl;
+	    std::cout << "***  stat: std = " << stat.stddev << std::endl;
+	    std::cout << "***  stat: rms = " << stat.rms << std::endl;
+	    */
+	    // -------------------------------------------------------------
+	    // the following section is temporarily used for calculating 
+	    // sigma of residual spectrum. (2015/4/21 WK)
+	    // *** temporary section start ***
+	    size_t stat_count = 0;
+	    //double stat_sum = 0.0;
+	    double stat_mean = 0.0;
+	    double stat_meansq = 0.0;
+	    //bool stat_minmax_init = false;
+	    //double stat_max;
+	    //double stat_min;
+	    //size_t stat_maxidx = 0;
+	    //size_t stat_minidx = 0;
+	    for (size_t i = 0; i < num_chan; ++i) {
+	      if (!mask.data[i]) continue;
+
+	      stat_count++;
+	      /*
+	      if (!stat_minmax_init) {
+		stat_minmax_init = true;
+		stat_max = spec.data[i];
+		stat_min = spec.data[i];
+	      } else {
+		if (stat_max < spec.data[i]) {
+		  stat_max = spec.data[i];
+		  stat_maxidx = i;
+		}
+		if (stat_min > spec.data[i]) {
+		  stat_min = spec.data[i];
+		  stat_minidx = i;
+		}
+	      }
+	      stat_sum += spec.data[i];
+	      */
+	      stat_mean += spec.data[i];
+	      stat_meansq += spec.data[i]*spec.data[i];
+	    }
+	    stat_mean /= (double)stat_count;
+	    stat_meansq /= (double)stat_count;
+	    rms_mtx[0][ipol] = sqrt(stat_meansq - stat_mean * stat_mean);
+	    /*
+	    std::cout << "*** cstat: cnt = " << stat_count << std::endl;
+	    std::cout << "*** cstat: sum = " << stat_sum << std::endl;
+	    std::cout << "*** cstat: min = " << stat_min << " (at " << stat_minidx << ") " << std::endl;
+	    std::cout << "*** cstat: max = " << stat_max << " (at " << stat_maxidx << ") " << std::endl;
+	    std::cout << "*** cstat: mea = " << stat_mean << std::endl;
+	    std::cout << "*** cstat: std = " << sqrt(stat_meansq - stat_mean * stat_mean) << std::endl;
+	    std::cout << "*** cstat: rms = " << sqrt(stat_meansq) << std::endl;
+	    std::cout << "-------------------------------" << std::endl;
+	    */
+	    // *** temporary section end ***
+	    // -------------------------------------------------------------
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
@@ -1121,6 +1190,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 									        boundary.data,
 								                spec.data);
 	    check_sakura_status("sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat", status);
+	    /* commenting out as ComputeStatisticsFloat() result is wrong (2015/4/21 WK)
 	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
 	    status = 
 	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
@@ -1130,6 +1200,25 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 							     &stat);
 	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
 	    rms_mtx[0][ipol] = stat.stddev;
+	    */
+	    // -------------------------------------------------------------
+	    // the following section is temporarily used for calculating 
+	    // sigma of residual spectrum. (2015/4/21 WK)
+	    // *** temporary section start ***
+	    size_t stat_count = 0;
+	    double stat_mean = 0.0;
+	    double stat_meansq = 0.0;
+	    for (size_t i = 0; i < num_chan; ++i) {
+	      if (!mask.data[i]) continue;
+	      stat_count++;
+	      stat_mean += spec.data[i];
+	      stat_meansq += spec.data[i]*spec.data[i];
+	    }
+	    stat_mean /= (double)stat_count;
+	    stat_meansq /= (double)stat_count;
+	    rms_mtx[0][ipol] = sqrt(stat_meansq - stat_mean * stat_mean);
+	    // *** temporary section end ***
+	    // -------------------------------------------------------------
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
@@ -1210,7 +1299,8 @@ void SingleDishMS::GetBoundariesOfPiecewiseData(size_t num_mask,
 		if (mask[i])
 			++num_unmasked_data;
 	}
-	size_t idx = 0;
+	boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
+	size_t idx = 1;
 	size_t count_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (idx == num_pieces)
@@ -1655,6 +1745,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	      }
 	    }
 
+	    /* commenting out as ComputeStatisticsFloat() result is wrong (2015/4/21 WK)
 	    LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
 	    status = 
 	    //LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_chan,
@@ -1664,6 +1755,25 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
  							     &stat);
 	    check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
 	    rms_mtx[0][ipol] = stat.stddev;
+	    */
+	    // -------------------------------------------------------------
+	    // the following section is temporarily used for calculating 
+	    // sigma of residual spectrum. (2015/4/21 WK)
+	    // *** temporary section start ***
+	    size_t stat_count = 0;
+	    double stat_mean = 0.0;
+	    double stat_meansq = 0.0;
+	    for (size_t i = 0; i < num_chan; ++i) {
+	      if (!mask.data[i]) continue;
+	      stat_count++;
+	      stat_mean += spec.data[i];
+	      stat_meansq += spec.data[i]*spec.data[i];
+	    }
+	    stat_mean /= (double)stat_count;
+	    stat_meansq /= (double)stat_count;
+	    rms_mtx[0][ipol] = sqrt(stat_meansq - stat_mean * stat_mean);
+	    // *** temporary section end ***
+	    // -------------------------------------------------------------
 
 	    cthres_mtx[0][ipol] = fit_param.clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max;
