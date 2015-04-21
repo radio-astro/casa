@@ -38,6 +38,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
         reffile = self.inputs.reffile
         
         if reffile is None or not os.path.exists(reffile):
+            factors = None
             LOG.warn('No scaling factors available. Use 1.0 for all antennas.')
         else:
             # do scaling
