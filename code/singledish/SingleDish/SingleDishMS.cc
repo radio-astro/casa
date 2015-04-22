@@ -441,7 +441,7 @@ void SingleDishMS::get_masklist_from_mask(size_t const num_chan,
     }
   }
 
-  masklist.resize(masklist.size());
+  masklist.resize(mlist.size());
   for (size_t i = 0; i < masklist.size(); ++i) {
     masklist[i] = (uInt)mlist[i];
   }
