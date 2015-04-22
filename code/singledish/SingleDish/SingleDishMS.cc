@@ -677,7 +677,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
   if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
-  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -869,7 +869,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	    check_sakura_status("sakura_SubtractBaselineFloat", status);
 	  }
   	  // set back a spectrum to data cube
-	  if (do_set_spectrum_to_cube) {
+	  if (do_subtract) {
 	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
 	  }
   	} // end of polarization loop
@@ -951,7 +951,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
   if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
-  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1145,7 +1145,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	    check_sakura_status("sakura_SubtractBaselineCubicSplineFloat", status);
 	  }
   	  // set back a spectrum to data cube
-	  if (do_set_spectrum_to_cube) {
+	  if (do_subtract) {
 	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
 	  }
   	} // end of polarization loop
@@ -1327,7 +1327,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
   if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
-  bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
   // SPW and channelization reservoir
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1716,7 +1716,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    */
 	  }
   	  // set back a spectrum to data cube
-	  if (do_set_spectrum_to_cube) {
+	  if (do_subtract) {
 	    set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
 	  }
   	} // end of polarization loop
