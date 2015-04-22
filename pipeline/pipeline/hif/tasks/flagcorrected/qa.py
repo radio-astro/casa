@@ -22,7 +22,9 @@ class FlagcorrectedQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
-        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename, result.summaries)]
+        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename,
+                                                             result.summaries,
+                                                             ms.basename)]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis

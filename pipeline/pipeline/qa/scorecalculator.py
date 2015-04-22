@@ -25,10 +25,10 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_missing_bandpass_snrs',                     # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
-	   'score_file_exists',
-	   'score_flags_exist',
-	   'score_applycmds_exist',
-	   'score_caltables_exist',
+           'score_file_exists',
+           'score_flags_exist',
+           'score_applycmds_exist',
+           'score_caltables_exist',
            'score_setjy_measurements',
            'score_missing_intents',
            'score_ephemeris_coordinates',
@@ -122,7 +122,8 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac,
                '' % (percent, ms.basename, utils.commafy(agents, False)))
     shortmsg = '%0.2f%% data flagged' % percent
     
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
+                       vis=ms.basename)
     
 #- exported scoring functions ------------------------------------------------
 
@@ -467,11 +468,11 @@ def score_total_data_flagged(filename, summaries):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
-
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=os.path.basename(filename))
 
 @log_qa
-def score_fraction_newly_flagged(filename, summaries):
+def score_fraction_newly_flagged(filename, summaries, vis):
     """
     Calculate a score for the flagging task based on the fraction of
     data newly flagged.
@@ -494,11 +495,12 @@ def score_fraction_newly_flagged(filename, summaries):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=os.path.basename(vis))
+
 @log_qa
-
-
-def linear_score_fraction_newly_flagged(filename, summaries):
+def linear_score_fraction_newly_flagged(filename, summaries, vis):
     """
     Calculate a score for the flagging task based on the fraction of
     data newly flagged.
@@ -516,8 +518,8 @@ def linear_score_fraction_newly_flagged(filename, summaries):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
-
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=os.path.basename(vis))
 
 @log_qa
 def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
@@ -528,7 +530,8 @@ def score_contiguous_session(mses, tolerance=datetime.timedelta(hours=1)):
     if len(mses) < 2:
         return pqa.QAScore(1.0,
                            longmsg='%s forms one continuous observing session.' % mses[0].basename,
-                           shortmsg='Unbroken observing session')
+                           shortmsg='Unbroken observing session',
+                           vis=mses[0].basename)
 
     # reorder MSes by start time
     by_start = sorted(mses, 
@@ -574,7 +577,8 @@ def score_wvrgcal(ms_name, wvr_score):
 
     longmsg = 'RMS improvement was %0.2f for %s' % (wvr_score, ms_name)
     shortmsg = '%0.2fx improvement' % wvr_score
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
+                       vis=os.path.basename(ms_name))
 
 @log_qa
 def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
@@ -594,11 +598,11 @@ def score_sdtotal_data_flagged(name, ant, spw, pol, frac_flagged):
     percent = 100.0 * frac_flagged
     longmsg = '%0.2f%% of data in %s (Ant=%s, SPW=%d, Pol=%d) was flagged' % (percent, name, ant, spw, pol)
     shortmsg = '%0.2f%% data flagged' % percent
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg, 
+                       vis=os.path.basename(name))
 
 @log_qa
 def score_tsysspwmap (ms, unmappedspws):
-
     '''
     Score is equal to the fraction of unmapped windows
     '''
@@ -616,11 +620,11 @@ def score_tsysspwmap (ms, unmappedspws):
         longmsg = 'Tsys spw map is incomplete for %s science window%s ' % (ms.basename, utils.commafy(unmappedspws, False, 's'))
         shortmsg = 'Tsys spw map is incomplete'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
-
     '''
     Score is equal to the ratio of the number of actual flux
     measurements to expected number of flux measurements
@@ -667,7 +671,8 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         longmsg = 'Too many flux calibrator measurements for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Too many flux measurements'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
@@ -722,7 +727,8 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
@@ -763,7 +769,8 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
             longmsg = 'There are %d mapped narrow science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped narrow science spws'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_missing_phaseup_snrs(ms, spwids, phsolints):
@@ -794,7 +801,8 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
             (missing_spws, ms.basename)
         shortmsg = 'Missing phaseup SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
@@ -826,7 +834,8 @@ def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
             (poor_spws, ms.basename)
         shortmsg = 'Poorly determined phaseup solutions'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_missing_bandpass_snrs(ms, spwids, bpsolints):
@@ -857,7 +866,8 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
             (missing_spws, ms.basename)
         shortmsg = 'Missing bandpass SNR estimates'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
@@ -892,7 +902,8 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
             (poor_spws, ms.basename)
         shortmsg = 'Poorly determined bandpass solutions'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_derived_fluxes_snr(ms, measurements):
@@ -934,14 +945,15 @@ def score_derived_fluxes_snr(ms, measurements):
         longmsg = 'Low SNR derived fluxes for %s ' % ms.basename
         shortmsg = 'Low SNR derived fluxes'
 
-    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=ms.basename)
 
 @log_qa
 def score_file_exists(filedir, filename, filetype):
     '''
     Score the existence of a file
         1.0 if it exist
-	0.0 if it does not
+        0.0 if it does not
     '''
 
     if filename is None:
@@ -967,8 +979,8 @@ def score_flags_exist(filedir, visdict):
     '''
     Score the existence of a file
         1.0 if the all exist
-	n / nexpected if some of them exist
-	0.0 if none exist
+        n / nexpected if some of them exist
+        0.0 if none exist
     '''
 
     nexpected = len(visdict)
@@ -976,9 +988,9 @@ def score_flags_exist(filedir, visdict):
     for visname in visdict:
         file = os.path.join(filedir, os.path.basename(visdict[visname][0])) 
         if os.path.exists(file):
-	    nfiles = nfiles + 1
-	else:
-	    missing.append(ps.path.basename(visdict[visname][0]))
+            nfiles = nfiles + 1
+        else:
+            missing.append(os.path.basename(visdict[visname][0]))
 
     if nfiles <= 0:
         score = 0.0
@@ -1000,8 +1012,8 @@ def score_applycmds_exist(filedir, visdict):
     '''
     Score the existence of the files
         1.0 if the all exist
-	n / nexpected if some of them exist
-	0.0 if none exist
+        n / nexpected if some of them exist
+        0.0 if none exist
     '''
 
     nexpected = len(visdict)
@@ -1009,9 +1021,9 @@ def score_applycmds_exist(filedir, visdict):
     for visname in visdict:
         file = os.path.join(filedir, os.path.basename(visdict[visname][1])) 
         if os.path.exists(file):
-	    nfiles = nfiles + 1
-	else:
-	    missing.append(os.path.basename(visdict[visname][1]))
+            nfiles = nfiles + 1
+        else:
+            missing.append(os.path.basename(visdict[visname][1]))
 
     if nfiles <= 0:
         score = 0.0
@@ -1033,17 +1045,17 @@ def score_caltables_exist(filedir, sessiondict):
     '''
     Score the existence of the files
         1.0 if the all exist
-	n / nexpected if some of them exist
-	0.0 if none exist
+        n / nexpected if some of them exist
+        0.0 if none exist
     '''
     nexpected = len(sessiondict)
     nfiles = 0; missing=[]
     for sessionname in sessiondict:
         file = os.path.join(filedir, os.path.basename(sessiondict[sessionname][1])) 
         if os.path.exists(file):
-	    nfiles = nfiles + 1
-	else:
-	    missing.append(os.path.basename(sessiondict[sessionname][1]))
+            nfiles = nfiles + 1
+        else:
+            missing.append(os.path.basename(sessiondict[sessionname][1]))
 
     if nfiles <= 0:
         score = 0.0

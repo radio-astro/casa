@@ -8,13 +8,21 @@ LOG = logging.get_logger(__name__)
 
 
 class QAScore(object):
-    def __init__(self, score, longmsg='', shortmsg=''):
+    def __init__(self, score, longmsg='', shortmsg='', vis=None):
         self.score = score
         self.longmsg = longmsg
         self.shortmsg = shortmsg
+        
+        # set target to be a dict, as we expect some targets to be sessions,
+        # some to be MSes, some to be whole runs, etc.
+        self.target = {}
+        # ... but for now we just handle MSes
+        if vis is not None:
+            self.target['vis'] = vis
 
     def __repr__(self):
-        return 'QAScore(%s, "%s", "%s")' % (self.score, self.longmsg, self.shortmsg)
+        return 'QAScore(%s, "%s", "%s", %s)' % (self.score, self.longmsg, 
+                                                self.shortmsg, self.target)
 
 
 class QAScorePool(object):

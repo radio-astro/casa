@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import os
-import shutil
 
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
@@ -30,7 +29,8 @@ class TimegaincalQAPool(pqa.QAScorePool):
         (total_score, table_name, ant_id, spw_id) = self._get_total(phase_field_ids, self.score_types[score_type][0])
         longmsg = 'Total score for %s is %0.2f (%s %s spw %s)' % (self.score_types[score_type][1], total_score, ms.basename, ant_id, spw_id)
         shortmsg = self.short_msg[score_type]
-        return pqa.QAScore(total_score, longmsg=longmsg, shortmsg=shortmsg)
+        return pqa.QAScore(total_score, longmsg=longmsg, shortmsg=shortmsg, 
+                           vis=ms.basename)
 
     def _get_total(self, phase_field_ids, score_key):
 

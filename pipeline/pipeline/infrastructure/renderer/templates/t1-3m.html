@@ -127,8 +127,8 @@ def flagcolortable(flagpct):
 	<tbody>
 	% for row in tablerows:
 		<tr class="${get_tablerow_class(row)}">
-			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}">${row.stage}</a></td>
-			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}">${row.task}</a></td>
+			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}${row.target}">${row.stage}</a></td>
+			<td><a href="t2-4m.html?sidebar=sidebar_stage${row.stage}${row.target}">${row.task}</a></td>
 			<td>${row.type}</td>
 			<td>${row.message}</td>
 		</tr>

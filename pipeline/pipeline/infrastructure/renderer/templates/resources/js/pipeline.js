@@ -106,12 +106,18 @@ pipeline.pages = pipeline.pages || function() {
 			var href = $(sidebarAnchor).prop("href");
 			var anchorId = $(sidebarAnchor).prop("id");
 
+			// extract the session target page to load, if supplied
+			var msTargetParam = $.url().param('ms');
+			
 			var onSuccess = [function() {			
 				pipeline.sidebar.setActive(anchorId);
 
 				pipeline.msselector.setVisible(true);
-			    pipeline.msselector.initState();
-
+				// Don't need to check the value of msTargetParam as
+				// setSelected will load the first detail page if the anchor
+				// cannot be found.				
+				pipeline.msselector.setSelected(msTargetParam);
+				
 				// replace rather than push, as the current state was 
 				// incomplete. We've now made it whole by loading the stage. 
 				pipeline.history.replaceState();
@@ -135,11 +141,13 @@ pipeline.pages = pipeline.pages || function() {
 				var anchorId = $(this).prop("id");
 				var href = $(this).prop("href");
 	
+				var msselectorSelected = pipeline.msselector.getSelected();
+				
 				var onSuccess = [function() {			
 					pipeline.sidebar.setActive(anchorId);
 	
 					pipeline.msselector.setVisible(true);
-				    pipeline.msselector.initState();
+					pipeline.msselector.setSelected(msselectorSelected);
 	
 					// store the new state
 					pipeline.history.pushState();
@@ -300,21 +308,21 @@ pipeline.msselector = pipeline.msselector || (function() {
 	module.isVisible = function() {
 		return $(module.getSelector()).hasClass("visible");
 	};
-	
+
+	/* Return true if the selector offers more than one choice */
+	holdsMultipleAnchors = function() {
+		var numAnchors = $(module.getSelector() + " a.replace").length;
+		return (numAnchors > 1);
+	};
+
 	module.setVisible = function(visible) {
-		if (visible && module.holdsMultipleAnchors()) {
+		if (visible && holdsMultipleAnchors()) {
 			$(module.getSelector()).show().addClass("visible");
 		} else {
 			$(module.getSelector()).hide().removeClass("visible");
 		}
 	};
 
-	/* Return true if the selector offers more than one choice */
-	module.holdsMultipleAnchors = function() {
-		var numAnchors = $(module.getSelector() + " a.replace").length;
-		return (numAnchors > 1);
-	};
-	
     module.getSelector = function() {
     	return "nav#ms_selector";
     };
@@ -332,45 +340,59 @@ pipeline.msselector = pipeline.msselector || (function() {
 
 	module.setState = function(state) {
 		module.setVisible(state["isVisible"]);
-		module.setSelected(state["selected"]);
+		// restoring the state of the details frame will load the necessary
+		// page, so all the MS selector has to do is update the active
+		// selection text
+		setSelectedLabel(state["selected"]);
 	};
 	
-	module.setSelected = function(text) {
+	setSelectedLabel = function(text) {
 		// set the 'currently viewing MS123' text
 		selected = text;
 		var label = "Currently viewing " + selected;
-		$('#container-active').text(label);
-	}
+		$("#container-active").text(label);
+	};
 
-	module.initState = function() {
-		var anchor;
-		
-		// if the selected MS is in the history, load it, otherwise load the
-		// first 
-		if (!selected) {
-			// load content from the first link and set the active MS text.
-			anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
-		} else {
-			$('li.menu-item a.replace').each(function(k,v) {
-				if ($(this).text() === selected) {
-					anchor = $(this);
-				}
-			});
-		}
+	getTargetAnchor = function(targetText) {
+		var targetAnchor;
+
+		$("li.menu-item a.replace").each(function(k,v) {
+			if ($(this).text() === targetText) {
+				targetAnchor = $(this);
+			}
+		});
 
 		// fallback to first item in case the selector wasn't found
-		if (!anchor) {
-			anchor = $(module.getSelector()).find('li.menu-item a.replace:first');
+		if (!targetAnchor) {
+			targetAnchor = $(module.getSelector()).find("li.menu-item a.replace:first");
 		}
+		
+		return targetAnchor;
+	};
 
+	module.getSelected = function() {
+		return selected;
+	};
+
+	module.setSelected = function(targetText) {
+		var targetAnchor = getTargetAnchor(targetText);
+		
 		var onSuccess = [function() {
-			module.setSelected($(anchor).text());
+			setSelectedLabel($(targetAnchor).text());
 			pipeline.history.replaceState();
 		}];
 		
-		pipeline.detailsframe.load($(anchor).prop("href"), onSuccess);
-	}
+		pipeline.detailsframe.load($(targetAnchor).prop("href"), onSuccess);		
+	};	
 
+	module.getQueryUrl = function() {
+		if (selected) {
+			return "&ms=" + selected;
+		} else {
+			return "";
+		}
+	}
+	
 	return module;
 })();
 
@@ -476,7 +498,7 @@ pipeline.history = pipeline.history || (function() {
 //	module.replaceState();
 //});
 
-	History.options.debug = true;
+	History.options.debug = false;
 	
 	var module = {};
 	var manipulatingState = false;
@@ -541,7 +563,7 @@ pipeline.history = pipeline.history || (function() {
     var getUrl = function(state) {
         var loc = window.location;
         var path = loc.pathname.substring(loc.pathname.lastIndexOf('/') + 1, loc.pathname.length);
-        return path + pipeline.sidebar.getQueryUrl() + pipeline.detailsframe.getQueryUrl();
+        return path + pipeline.sidebar.getQueryUrl() + pipeline.msselector.getQueryUrl() + pipeline.detailsframe.getQueryUrl();
     };
     
     return module; 

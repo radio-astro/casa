@@ -353,7 +353,7 @@ class T1_3MRenderer(RendererBase):
     output_file = 't1-3.html'
     template = 't1-3m.html'
     
-    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message')
+    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message target')
     
     @classmethod
     def get_display_context(cls, context):
@@ -371,23 +371,23 @@ class T1_3MRenderer(RendererBase):
         
             qa_errors = cls._filter_qascores(results_list, -0.1, 0.1)
             tablerows.extend(cls._qascores_to_tablerows(qa_errors,
-                                                            results_list,
-                                                            'QA Error'))
+                                                        results_list,
+                                                        'QA Error'))
         
             qa_warnings = cls._filter_qascores(results_list, 0.1, 0.5)
             tablerows.extend(cls._qascores_to_tablerows(qa_warnings,
-                                                            results_list,
-                                                            'QA Warning'))
+                                                        results_list,
+                                                        'QA Warning'))
 
             error_msgs = utils.get_logrecords(results_list, logging.ERROR)
             tablerows.extend(cls._logrecords_to_tablerows(error_msgs,
-                                                              results_list,
-                                                              'Error'))
+                                                          results_list,
+                                                          'Error'))
 
             warning_msgs = utils.get_logrecords(results_list, logging.WARNING)
             tablerows.extend(cls._logrecords_to_tablerows(warning_msgs,
-                                                              results_list,
-                                                              'Warning'))
+                                                          results_list,
+                                                          'Warning'))
             
             if 'applycal' in get_task_description(result):
                 try:
@@ -416,7 +416,8 @@ class T1_3MRenderer(RendererBase):
                         
                 except:
                     LOG.debug('No flag summary table available yet from applycal')
-                 
+
+        print tablerows
 
         return {'pcontext' : context,
                 'registry' : registry,
@@ -433,21 +434,38 @@ class T1_3MRenderer(RendererBase):
         return [s for s in with_score if s.score > lo and s.score <= hi]
 
     @classmethod
-    def _create_tablerow(cls, results, message, msgtype):
+    def _create_tablerow(cls, results, message, msgtype, target=''):
         return cls.MsgTableRow(stage=results.stage_number,
                                task=get_task_name(results, False),
                                type=msgtype,
-                               message=message)
+                               message=message,
+                               target=target)
 
     @classmethod
     def _qascores_to_tablerows(cls, qascores, results, msgtype='ERROR'):
-        return [cls._create_tablerow(results, qascore.longmsg, msgtype)
+        def get_target(qascore):
+            vis = qascore.target.get('vis', None)
+            return '&ms=%s' % vis if vis else ''
+        
+        return [cls._create_tablerow(results, qascore.longmsg, msgtype, 
+                                     get_target(qascore))
                 for qascore in qascores]
 
     @classmethod
     def _logrecords_to_tablerows(cls, records, results, msgtype='ERROR'):
-        return [cls._create_tablerow(results, record.msg, msgtype)
+        def get_target(logrecord):
+            try:
+                vis = logrecord.target['vis']
+                return '&ms=%s' % vis if vis else ''
+            except AttributeError:
+                return ''
+            except KeyError:
+                return ''
+
+        return [cls._create_tablerow(results, record.msg, msgtype,
+                                     get_target(record))
                 for record in records]
+
 
 class T1_4MRenderer(RendererBase):
     """
@@ -793,7 +811,7 @@ class T2_3_XMBaseRenderer(RendererBase):
     # the template file for this renderer
     template = 'overrideme'
 
-    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message')
+    MsgTableRow = collections.namedtuple('MsgTableRow', 'stage task type message target')
 
     @classmethod
     def get_display_context(cls, context):
@@ -841,20 +859,36 @@ class T2_3_XMBaseRenderer(RendererBase):
         return [s for s in with_score if s.score > lo and s.score <= hi]
 
     @classmethod
-    def _create_tablerow(cls, results, message, msgtype):
+    def _create_tablerow(cls, results, message, msgtype, target=''):
         return cls.MsgTableRow(stage=results.stage_number,
                                task=get_task_name(results, False),
                                type=msgtype,
-                               message=message)
+                               message=message,
+                               target=target)
 
     @classmethod
     def _qascores_to_tablerows(cls, qascores, results, msgtype='ERROR'):
-        return [cls._create_tablerow(results, qascore.longmsg, msgtype)
+        def get_target(qascore):
+            vis = qascore.target.get('vis', None)
+            return '&ms=%s' % vis if vis else ''
+        
+        return [cls._create_tablerow(results, qascore.longmsg, msgtype, 
+                                     get_target(qascore))
                 for qascore in qascores]
 
     @classmethod
     def _logrecords_to_tablerows(cls, records, results, msgtype='ERROR'):
-        return [cls._create_tablerow(results, record.msg, msgtype)
+        def get_target(logrecord):
+            try:
+                vis = logrecord.target['vis']
+                return '&ms=%s' % vis if vis else ''
+            except AttributeError:
+                return ''
+            except KeyError:
+                return ''
+
+        return [cls._create_tablerow(results, record.msg, msgtype,
+                                     get_target(record))
                 for record in records]
 
 
@@ -1226,7 +1260,7 @@ class T2_4MDetailsRenderer(object):
         # details pages do not need to be updated once written unless the
         # renderer specifies that an update is required
         path = cls.get_path(context, result, root)
-        LOG.info('Path for %s is %s', result.__class__.__name__, path)
+        LOG.trace('Path for %s is %s', result.__class__.__name__, path)
         force_rerender = getattr(renderer, 'always_rerender', False)
         debug_cls = renderer.__class__ in DEBUG_CLASSES
         force_rerender = force_rerender or debug_cls

@@ -41,7 +41,8 @@ class BandpassQAPool(pqa.QAScorePool):
                                                             ms.basename,
                                                             identifier)
         shortmsg = self.short_msg[score_type]
-        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg)
+        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg,
+                           vis=ms.basename)
 
     def _get_min(self, score_type):
         rawscores = self.rawdata['QASCORES'][score_type]

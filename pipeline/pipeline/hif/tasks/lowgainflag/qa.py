@@ -19,7 +19,9 @@ class LowgainflagQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
-        scores = [qacalc.score_fraction_newly_flagged(ms.basename, result.summaries)]
+        scores = [qacalc.score_fraction_newly_flagged(ms.basename,
+                                                      result.summaries,
+                                                      ms.basename)]
         result.qa.pool[:] = scores
 
 

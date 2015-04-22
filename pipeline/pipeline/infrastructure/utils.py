@@ -544,6 +544,15 @@ def get_logrecords(result, loglevel):
     else:
         records = [l for l in result.logrecords if l.levelno is loglevel]
 
+    # append the message target to the LogRecord so we can link to the
+    # matching page in the web log
+    try: 
+        target = os.path.basename(result.inputs['vis'])
+        for r in records:
+            r.target = {'vis':target}
+    except:
+        pass
+
     dset = set()
     # relies on the fact that dset.add() always returns None.
     return [r for r in records if

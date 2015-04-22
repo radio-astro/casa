@@ -24,7 +24,9 @@ class BandpassFlagChansQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
-        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename, result.summaries)]
+        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename, 
+                                                             result.summaries,
+                                                             ms.basename)]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
@@ -78,7 +80,8 @@ class BandpassQAPool(pqa.QAScorePool):
                                                             ms.basename,
                                                             identifier)
         shortmsg = self.short_msg[score_type]
-        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg)
+        return pqa.QAScore(min_score, longmsg=longmsg, shortmsg=shortmsg,
+                           vis=ms.basename)
 
     def _get_min(self, score_type):
         rawscores = self.rawdata['QASCORES'][score_type]

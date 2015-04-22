@@ -15,16 +15,15 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
     generating_task = spwphaseup.SpwPhaseup
 
     def handle(self, context, result):
-
         vis= result.inputs['vis']
-	ms = context.observing_run.get_ms(vis)
+        ms = context.observing_run.get_ms(vis)
 
-	# Check for the frequency of narrow to wide mapping vs one to 
-	# one mapping
-        score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'], \
-	    result.inputs['intent'], result.phaseup_spwmap)
+        # Check for the frequency of narrow to wide mapping vs one to 
+        # one mapping
+        score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'],
+                        result.inputs['intent'], result.phaseup_spwmap)
         scores = [score1]
-	    
+            
         result.qa.pool.extend(scores)
     
     def _phaseup_mapping_fraction(self, ms, field, intent, phaseup_spwmap):
@@ -32,6 +31,7 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
         Check whether or not there has been spw phaseup mapping . 
         '''
         return qacalc.score_phaseup_mapping_fraction(ms, field, intent, phaseup_spwmap)
+
 
 class SpwPhaseupListQAHandler(pqa.QAResultHandler):
     """
@@ -49,8 +49,7 @@ class SpwPhaseupListQAHandler(pqa.QAResultHandler):
 
         mses = [r.inputs['vis'] for r in result]
         longmsg = 'No mapped narrow spws in %s' % utils.commafy(mses,
-                                                                    quotes=False,
-                                                                    conjunction='or')
+                                                                quotes=False,
+                                                                conjunction='or')
         result.qa.all_unity_longmsg = longmsg
-
 

@@ -17,16 +17,15 @@ class TsyscalQAHandler(pqa.QAResultHandler):
     generating_task = tsyscal.Tsyscal
     
     def handle(self, context, result):
+        vis= result.inputs['vis']
+        ms = context.observing_run.get_ms(vis)
 
-	vis= result.inputs['vis']
-	ms = context.observing_run.get_ms(vis)
-
-	# Check for  existence of unmapped spws and assign a
-	# score based on the number of unmapped windows relative
-	# to mapped ones.
-	scores = [qacalc.score_tsysspwmap(ms, result.unmappedspws)]
-	result.qa.pool[:] = scores
-	result.qa.all_unity_longmsg = 'No unmapped science windows in %s' % ms.basename 
+        # Check for  existence of unmapped spws and assign a
+        # score based on the number of unmapped windows relative
+        # to mapped ones.
+        scores = [qacalc.score_tsysspwmap(ms, result.unmappedspws)]
+        result.qa.pool[:] = scores
+        result.qa.all_unity_longmsg = 'No unmapped science windows in %s' % ms.basename 
 
 
 class TsyscalListQAHandler(pqa.QAResultHandler):
