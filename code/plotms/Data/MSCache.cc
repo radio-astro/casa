@@ -87,7 +87,14 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	Table::TableOption tabopt(Table::Old);
 	MeasurementSet* inputMS = new MeasurementSet(filename_, TableLock(TableLock::AutoLocking), tabopt);
 	getNamesFromMS(*inputMS);
-	selection_.apply(*inputMS, *selMS, chansel, corrsel);
+	// improper selection can cause exception
+	try {
+		selection_.apply(*inputMS, *selMS, chansel, corrsel);
+	} catch(AipsError& log) {
+		delete inputMS;
+		delete selMS;
+		loadError(log.getMesg());
+	}
 	vm_ = new MSCacheVolMeter(*inputMS, averaging_, chansel, corrsel);
 	delete inputMS;
 
@@ -299,8 +306,9 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("chanbin", chanVal);
 	}
 
-	MSTransformIteratorFactory* factory = new MSTransformIteratorFactory(configuration);
+	MSTransformIteratorFactory* factory = NULL;
 	try {
+		factory = new MSTransformIteratorFactory(configuration);
 		if (estimateMemory) {
 			visBufferShapes_ = factory->getVisBufferStructure();
 			Int chunks = visBufferShapes_.size();
@@ -309,10 +317,12 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		}
 		vi_p = new vi::VisibilityIterator2(*factory);
 	} catch(AipsError& log) {
-		delete factory;
+		try {
+			if (factory) delete factory;
+		} catch(AipsError ae) {}
 		throw(AipsError(log.getMesg()));
-	} 
-	delete factory;
+	}
+	if (factory) delete factory;
 }
 
 vi::VisibilityIterator2* MSCache::setUpVisIter(MeasurementSet& selectedMS,
@@ -656,7 +666,9 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			goodChunk_.resize(nChunk_, True);
 		}
 
-		// Save some data from vb (averaged vb not attached to VI so cannot get this later)
+		// Save some data from vb 
+		// (averaged vb not attached to VI so cannot get this later)
+		// (and no VB2 set method to do it in averager)
 		nAnts = vb->nAntennas();
 		nChans = vb->nChannels();
 		channels.resize(nChans);
