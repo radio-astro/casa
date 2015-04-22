@@ -63,7 +63,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="string" name="comptype">
-		<description>component model type</description>
+		<description>component model type: P(oint), G(aussian), or D(isk)</description>
 		<value>P</value>
 		<allowed kind="enum">
                    <value>P</value>
@@ -73,7 +73,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
 	<param type="doubleArray" name="sourcepar">
-		<description>Starting guess for component parameters</description>
+		<description>Starting guess for component parameters (3 values for type P, 5 for G and D)</description>
 		<value>
 		   <value>1.0</value>
 		   <value>0.0</value>
@@ -165,10 +165,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		default: [1,0,0];  (for comptype='P')
 		IF comptype = 'P' then
 		  sourcepar = [flux,xoff,yoff] where
-		    flux = Jy, xoff = arcsec-east, yoff = arcsec-north.
+		    flux = Jy, xoff = offset east (arcsec), yoff = offset north (arcsec).
 		IF comptype = 'G' or 'D', then
 		  sourcepar = [flux,xoff,yoff,majax,axrat,pos] where
-		    majax = arcsec, axrat &lt; 1, pos=angle in deg
+		    majax = FWHM along the major axis (arcsec), axrat &lt; 1 is
+                    the ratio of minor to major axis, pos=angle in deg
 	varypar -- Control which parameters to let vary in the fit
 		default: [] (all vary);
 		example: vary=[F,T,T]
