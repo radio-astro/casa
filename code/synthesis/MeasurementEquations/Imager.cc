@@ -5824,13 +5824,17 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   //Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
   //Int nchan=freqArray.shape()[0]   ;
   Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
-
   // UNCOMMENTED for debug
   //Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
   //Filling it with the LSRK values
   Vector<Double> freqArray(nchan);
-  for (Int k =0;k < nchan; ++k){
-    freqArray[k]=freqMin+k*freqWidth;
+  if (nchan==1) {
+    freqArray[0] = freqMin + 0.5*freqWidth;
+  }
+  else {
+    for (Int k =0;k < nchan; ++k){
+      freqArray[k]=freqMin+k*freqWidth;
+    }
   }
   //Vector<Double> freqInc = spwcols.chanWidth()(rawspwid);
   Double medianFreq = median(freqArray);
@@ -5947,7 +5951,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
       imshape(freqAxis) = 1;
     }
   } 
-
   csys.replaceCoordinate(spcsys, icoord);
   tmodimage = new TempImage<Float>(imshape, csys);
   IPosition blcin(modimage.shape().nelements(), 0);
@@ -6031,7 +6034,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
            << freqArray(0)<<", "
            << freqArray(midchan)<<", "
            << freqArray(nchan-1)
-           <<")Hz for visibility prediction (a few representative values are shown)."
+           <<")Hz (LSRK) for visibility prediction (a few representative values are shown)."
            << LogIO::POST;
         writeHistory(os);
         for(uInt k = 0; k < fluxUsedPerChan.ncolumn(); ++k){
@@ -6055,8 +6058,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
          << "Scaling spw(s) " << String::toString(rawspwids) << "'s model image to I = "
          << fluxUsed[0] // Loglevel INFO
          << " Jy @ "
-         << mfreqs[0][0].getValue()
-         << "Hz for visibility prediction."
+         //<< mfreqs[0][0].getValue()
+         << freqArray(0) 
+         << "Hz (LSRK) for visibility prediction."
          << LogIO::POST;
       writeHistory(os);
     }
