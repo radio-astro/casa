@@ -772,15 +772,6 @@ casa_find( CASACODE
 	   NO_LINK )
 
 
-# ALMAWVR
-if( USE_ALMAWVR )
-  casa_find( ALMAWVR
-             VERSION 0.23.2
-             PREFIX_HINTS ${ALMWVR_ROOT_DIR}
-             LIBS almawvr
-           )
-endif()
-
 # Python
 
 # First determine which python version to search for,
