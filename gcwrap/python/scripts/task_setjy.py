@@ -28,6 +28,8 @@ class SetjyHelper():
             try:
                 myms.open(self.__msfile)
                 submslist = myms.getreferencedtables()
+                parentms = myms.name()
+                myms.close()
             except:
                 if (os.path.exists(self.__msfile+'/SUBMSS')):
                     casalog.post("MS may be corrupted. Try to initialize sub-MSs anyway...","DEBUG")
@@ -37,9 +39,10 @@ class SetjyHelper():
                     rstatus = False
 
             mycb = cbtool()
-            for subms in submslist:
-                mycb.open(subms, addcorr=False, addmodel=True)
-                mycb.close()            
+            if parentms!= submslist[0]:
+                for subms in submslist:
+                    mycb.open(subms, addcorr=False, addmodel=True)
+                    mycb.close()            
         except:
             rstatus = False
                 
