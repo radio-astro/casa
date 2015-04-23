@@ -12,7 +12,7 @@
 
 #include "../model_make.hpp"
 #include "../dtdltools.hpp"
-#include "almawvr/nestedinitial.hxx"
+#include "bnmin1/src/nestedinitial.hxx"
 
 
 namespace LibAIR2 {

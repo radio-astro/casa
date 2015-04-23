@@ -14,8 +14,8 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include "almawvr/nestedsampler.hxx"
-#include "almawvr/priors.hxx"
+#include "bnmin1/src/nestedsampler.hxx"
+#include "bnmin1/src/priors.hxx"
 
 #include "almaabs.hpp"
 #include "../model_iface.hpp"

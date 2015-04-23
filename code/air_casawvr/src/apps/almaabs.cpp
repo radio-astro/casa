@@ -22,13 +22,13 @@
 #include "../dtdltools.hpp"
 
 #include "../model_make.hpp"
-#include "almawvr/nestedsampler.hxx"
-#include "almawvr/nestedinitial.hxx"
+#include "bnmin1/src/nestedsampler.hxx"
+#include "bnmin1/src/nestedinitial.hxx"
 
 
 #ifdef ELLIPSESAMPLE
-#include "almawvr/prior_sampler.hxx"
-#include "almawvr/mcmonitor.hxx"
+#include "bnmin1/src/prior_sampler.hxx"
+#include "bnmin1/src/mcmonitor.hxx"
 #endif
 
 namespace LibAIR2 {

@@ -1,0 +1,215 @@
+======================
+BNMin1 Release Notes  
+======================
+
+Version 1.11
+============
+
+New features:
+
+* Function to marginalise the nested sampler posterior to two
+  dimension, allowing easy visualisation of joint probabilities of two
+  parameters (marginHist2D)
+
+Improvements:
+
+Bug fixes:
+ 
+
+Version 1.10
+============
+
+New features:
+
+* Higher-level Python wrappings of the Nested Sampling routines in
+  pybind/bin/bnmin1nested.py
+
+* Baeysian line-fitting (apps/bayesline.hxx)
+
+Building:
+
+* Can disable compiling and use of the PDA algorithms -- useful for
+  systems without a functioning F77 (obviously, some algorithms rely
+  on this so they will not work!). Use the --disable-pda swithc to
+  configure
+
+* Can disable configuration and building of the tests. Useful for
+  problematic boost installations since the test programs use compiled
+  boost libraries
+
+Version 1.9
+===========
+
+Improvements:
+
+* Improvement to accuracy of the nested sampler
+
+Build improvements:
+
+* Can disable the building of the python binding by calling configure
+  as:
+
+  ./configure --disable-pybind
+
+  This removes the dependency on SWIG
+
+Version 1.8
+===========
+
+Improvements:
+
+* Run-time-configurable strategy for picking the starting point for
+  nested sampling (src/nestedinitial.hxx)
+
+* Functions to calculate histogrammed probability distributions (1-d
+  and n-d) from nested sampling distributions (src/mcpoint.hxx)
+
+Bug-fixes:
+
+* Another bug-fix for handling of fixed (i.e., non-minimised)
+  parameters when using nested sampling
+
+Build:
+
+* New check version of SWIG to work around old installations. Requires
+  version 1.3.31 at least
+
+
+Version 1.7
+===========
+
+Bug-fixes:
+
+* Correct building of the test programs from tar-balls
+
+Improvements:
+
+* Better prior sampling in the prototype nested sampling routines
+
+New features:
+
+* Start a new "apps" subdirectory with illustrative & useful examples
+  of problems to solve. 
+
+
+Version 1.6
+===========
+
+New features:
+
+  * Prototype Nested Sampling implementation. See "nestedsampler.hxx"
+
+  * Computation of best-fitting lines to data with errors in booth of
+    the coordinates. See "twoerrline.hxx"
+
+Bug-fixes:
+
+  * RobustLineObsMod constructor now takes parameters as
+    const-references
+
+Version 1.5
+===========
+
+Enhancements:
+
+  * fSaveChain is now more flexible and can add keywords to the FITS
+    file and take both raw chains and chains as numpy arrays
+
+Building:
+
+  * Boost configure script is now better and finding the correct
+    libraries
+
+
+Version 1.4
+===========
+
+New features:
+
+  * Class for Broyden-Fletcher-Goldfarb-Shanno minimisation, binding
+    to the GSL implementation
+
+Enhancements:
+
+  * Class for specifying log-flat priors (Minim::LogFlatPriors)
+
+  * New parameter utility functions in bnmin1utils.py
+
+Bug-fixes:
+
+  * Likelihood calculation from square of residuals now correctly
+    takes into account a factor of two arising from standard gaussian
+    noise likelihood calculation
+
+  * ParamCtr constructor signature rationalised to not copy the name
+    parameter. Unlikely to cause problems, but noted here for
+    completeness.
+
+  * PrettyPrint did not conform to new BOOST version... disabled for
+    the time being
+
+Building:
+
+  * Support for the new gfortran compilers
+
+  * (Late update to notes) Requires GSL 1.9 because of the BFGSv2
+    algorithm
+
+Distribution:
+
+  * To be sent to ESO & published on web-site
+
+Version 1.3
+===========
+
+   BUG FIXES:
+   
+   * fSaveChain correctly names the table columns
+
+   NEW FEATURES:
+   
+   * Metropolis sampling can displace each parameter in turn (see
+     option Minim::MetropolisMCMC::Sequence)
+     
+   * Experimental flat priors for MCMC (see
+     Minim::IndependentFlatPriors)
+   
+   ENHANCEMENT:
+   
+
+   DISTRIBUTION:
+
+   * Posted on the web
+
+Version 1.2
+===========
+
+   BUG FIXES:
+
+   NEW FEATURES:
+   
+   * C++ unit tests (see test directory)
+   
+   * Metropolis sampling (see metropolis.hxx)
+
+   ENHANCEMENT:
+   
+   * Can report version of the library through Minim::version() call
+   
+   * Prodcues a pkg-config file
+
+   DISTRIBUTION:
+   
+   * Sent to ESO as part of ALMA WVR FP6 work
+
+Version 1.1
+===========
+
+Version 1.0
+===========
+
+   DISTRIBUTION:
+   
+   * Publicly circulated to various projects (oof: NRAO, MPIfR)
+
+

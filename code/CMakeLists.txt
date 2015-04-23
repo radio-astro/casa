@@ -831,33 +831,17 @@ endif()
 
 # ALMAWVR
 if( USE_ALMAWVR )
-  message(STATUS "Looking for centrally installed build of ALMAWVR.")
-  casa_find( ALMAWVR
-             VERSION 1.2.0
-             PREFIX_HINTS ${ALMWVR_ROOT_DIR}
-             LIBS almawvr
-           )
-elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libalmawvr.so AND
-        EXISTS ${CMAKE_INSTALL_PREFIX}/include/almawvr/arraydata.hpp )
-   message(STATUS "Found local build of ALMAWVR. Will try to use it ...")
-   casa_find( GSLCBLAS	  
-              LIBS gslcblas )
-   casa_find( GSL 
-              LIBS gsl
-	      DEPENDS GSLCBLAS
-            )
-   casa_find( ALMAWVR
-	      VERSION 1
-	      INCLUDES_SUFFIXES almawvr
-              PREFIX_HINTS ${CMAKE_INSTALL_PREFIX}
-              LIBS almawvr
-	      DEPENDS GSL GSLCBLAS
-              IGNORE /usr/include/almawvr
-            )
-    if( ALMAWVR_FOUND )
-      set( USE_ALMAWVR True )
-    endif()
+  message(STATUS "Directive USE_ALMAWVR is deprecated and no longer needed.")
+     message(STATUS "Will use CASA-internal version of BNMIN1 ...")
 endif()
+
+casa_find( GSLCBLAS	  
+              LIBS gslcblas )
+
+casa_find( GSL 
+	      LIBS gsl
+   	      DEPENDS GSLCBLAS
+            )
 
 # Java
 casa_find( Java
@@ -1139,11 +1123,8 @@ casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost components)
 casa_add_module( casa_sakura CASACORE LIBSAKURA)
 casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
-if( USE_ALMAWVR )
-  casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
-else()
-  message( WARNING "Will not build wvrgcal." )
-endif()
+casa_add_module( bnmin1 Boost GSL GSLCBLAS )
+casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

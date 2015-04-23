@@ -10,7 +10,7 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
-#include <almawvr/minim.hxx>
+#include <bnmin1/src/minim.hxx>
 
 #include "models_basic.hpp"
 #include "radiometermeasure.hpp"

@@ -18,8 +18,8 @@
 #include <list>
 #include <vector>
 
-#include <almawvr/minim.hxx>
-#include <almawvr/minimmodel.hxx>
+#include <bnmin1/src/minim.hxx>
+#include <bnmin1/src/minimmodel.hxx>
 
 
 namespace LibAIR2 {

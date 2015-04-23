@@ -1,0 +1,7 @@
+The bnmin1 code was imported from the BNMin1 package 
+which was created by Bojan Nikolic <bojan@bnikolic.co.uk>
+
+BNMin1 is a simple minimisation / inference library
+
+It was incorporated into CASA by D. Schiebel and D. Petry
+in April 2015.

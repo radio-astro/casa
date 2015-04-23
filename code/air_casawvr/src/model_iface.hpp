@@ -15,7 +15,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/array.hpp>
 
-#include "almawvr/minimmodel.hxx"
+#include "bnmin1/src/minimmodel.hxx"
 
 #include "model_enums.hpp"
 

@@ -11,7 +11,7 @@
 #ifndef _LIBAIR_MEASURE_IFACE_HPP__
 #define _LIBAIR_MEASURE_IFACE_HPP__
 
-#include "almawvr/minimmodel.hxx"
+#include "bnmin1/src/minimmodel.hxx"
 
 namespace LibAIR2 {
 

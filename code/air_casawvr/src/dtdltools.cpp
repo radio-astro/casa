@@ -15,7 +15,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lambda/lambda.hpp>
 
-#include "almawvr/nestedsampler.hxx"
+#include "bnmin1/src/nestedsampler.hxx"
 
 #include "dtdltools.hpp"
 #include "model_make.hpp"

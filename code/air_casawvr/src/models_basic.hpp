@@ -22,7 +22,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp> 
 
-#include "almawvr/minimmodel.hxx"
+#include "bnmin1/src/minimmodel.hxx"
 #include "singlelayerwater.hpp"
 
 #include "model_iface.hpp"
