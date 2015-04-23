@@ -102,6 +102,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
         vis = st.ms.basename
         ms_name = st.exported_ms
         ms_abspath = os.path.join(os.path.dirname(st.name), ms_name)
+        antenna = st.antenna.name
         stokes_enum = numpy.array(['Undefined',
                          'I',
                          'Q',
@@ -167,12 +168,12 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                             compatible_factor_found = True
                             break
                     if compatible_factor_found == False:
-                        LOG.info('Scaling factor for (%s, %s, %s) is missing. Use 1.0'%(vis,spwid,corr))
+                        LOG.info('Scaling factor for (%s, %s, %s, %s) is missing. Use 1.0'%(vis,antenna,spwid,corr))
                         factor.append(1.0)
                 else:
-                    LOG.info('Scaling factor for (%s, %s, %s) is missing. Use 1.0'%(vis,spwid,corr))
+                    LOG.info('Scaling factor for (%s, %s, %s, %s) is missing. Use 1.0'%(vis,antenna,spwid,corr))
                     factor.append(1.0)
-            LOG.info('Applying %s to (%s,%s)'%(factor, ms_name, spwid))
+            LOG.info('Applying %s to (%s, %s,%s)'%(factor, ms_name, antenna, spwid))
             tsel = tb.query('DATA_DESC_ID==%s'%(data_desc_id))
             chunk_size = 1000
             nrows = tsel.nrows()
