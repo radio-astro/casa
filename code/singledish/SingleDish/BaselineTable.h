@@ -52,6 +52,7 @@ public:
                uInt nchan, 
 	       Array<Float> cthres,
                Array<uInt> citer, 
+	       Array<Bool> uself,
 	       Array<Float> lfthres, 
 	       Array<uInt> lfavg, 
 	       Array<uInt> lfedge);
@@ -68,6 +69,7 @@ public:
 		  uInt nchan, 
 		  Array<Float> cthres,
 		  Array<uInt> citer, 
+		  Array<Bool> uself,
 		  Array<Float> lfthres, 
 		  Array<uInt> lfavg, 
 		  Array<uInt> lfedge);
@@ -96,6 +98,7 @@ public:
   uInt getNChan(int irow);
   Matrix<Float> getClipThreshold() {return cthresCol_.getColumn();}
   Matrix<uInt> getClipIteration() {return citerCol_.getColumn();}
+  Matrix<Bool> getUseLineFinder() {return uselfCol_.getColumn();}
   Matrix<Float> getLineFinderThreshold() {return lfthresCol_.getColumn();}
   Matrix<uInt> getLineFinderChanAvg() {return lfavgCol_.getColumn();}
   Matrix<uInt> getLineFinderEdge() {return lfedgeCol_.getColumn();}
@@ -123,6 +126,7 @@ private:
   ScalarColumn<uInt> nchanCol_;
   ArrayColumn<Float> cthresCol_;
   ArrayColumn<uInt> citerCol_;
+  ArrayColumn<Bool> uselfCol_;
   ArrayColumn<Float> lfthresCol_;
   ArrayColumn<uInt> lfavgCol_;
   ArrayColumn<uInt> lfedgeCol_;

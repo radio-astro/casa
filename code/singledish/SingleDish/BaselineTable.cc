@@ -86,6 +86,7 @@ void BaselineTable::setup()
   table_.addColumn(ScalarColumnDesc<uInt>("NCHAN"));
   table_.addColumn(ArrayColumnDesc<Float>("CLIP_THRESHOLD"));
   table_.addColumn(ArrayColumnDesc<uInt>("CLIP_ITERATION"));
+  table_.addColumn(ArrayColumnDesc<Bool>("USE_LF"));
   table_.addColumn(ArrayColumnDesc<Float>("LF_THRESHOLD"));
   table_.addColumn(ArrayColumnDesc<uInt>("LF_AVERAGE"));
   table_.addColumn(ArrayColumnDesc<uInt>("LF_EDGE"));
@@ -107,6 +108,7 @@ void BaselineTable::attachOptionalColumns()
   nchanCol_.attach(table_, "NCHAN");
   cthresCol_.attach(table_, "CLIP_THRESHOLD");
   citerCol_.attach(table_, "CLIP_ITERATION");
+  uselfCol_.attach(table_, "USE_LF");
   lfthresCol_.attach(table_, "LF_THRESHOLD");
   lfavgCol_.attach(table_, "LF_AVERAGE");
   lfedgeCol_.attach(table_, "LF_EDGE");
@@ -149,6 +151,7 @@ void BaselineTable::setdata(uInt irow, uInt scanno,
 		            uInt nchan, 
 		            Array<Float> cthres,
 		            Array<uInt> citer, 
+			    Array<Bool> uself, 
 		            Array<Float> lfthres, 
 		            Array<uInt> lfavg, 
 		            Array<uInt> lfedge)
@@ -170,6 +173,7 @@ void BaselineTable::setdata(uInt irow, uInt scanno,
   nchanCol_.put(irow, nchan);
   cthresCol_.put(irow, cthres);
   citerCol_.put(irow, citer);
+  uselfCol_.put(irow, uself);
   lfthresCol_.put(irow, lfthres);
   lfavgCol_.put(irow, lfavg);
   lfedgeCol_.put(irow, lfedge);
@@ -188,6 +192,7 @@ void BaselineTable::appenddata(uInt scanno,
 			       uInt nchan, 
 			       Array<Float> cthres,
 			       Array<uInt> citer, 
+			       Array<Bool> uself, 
 			       Array<Float> lfthres, 
 			       Array<uInt> lfavg, 
 			       Array<uInt> lfedge)
@@ -196,7 +201,7 @@ void BaselineTable::appenddata(uInt scanno,
   table_.addRow(1, True);
   setdata(irow, scanno, beamno, ifno, freqid, time, 
 	  apply, ftype, fpar, ffpar, mask, res, rms, 
-	  nchan, cthres, citer, lfthres, lfavg, lfedge);
+	  nchan, cthres, citer, uself, lfthres, lfavg, lfedge);
 }
 
 void BaselineTable::appendbasedata(int scanno, 

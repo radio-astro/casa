@@ -771,9 +771,10 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
 	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
 	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
 
   	// loop over polarization
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
@@ -850,9 +851,12 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    uself_mtx[0][ipol] = False;
 	    lfthres_mtx[0][ipol] = 0.0;
 	    lfavg_mtx[0][ipol] = 0;
-	    lfedge_mtx[0][ipol] = 0;
+	    for (size_t iedge = 0; iedge < 2; ++iedge) {
+	      lfedge_mtx[iedge][ipol] = 0;
+	    }
 
 	  } else {
 	    status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
@@ -891,8 +895,9 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
-			 coeff_mtx, rms_mtx, (uInt)num_chan, cthres_mtx,
-			 citer_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+			 coeff_mtx, rms_mtx, (uInt)num_chan, 
+			 cthres_mtx, citer_mtx, 
+			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
@@ -1038,9 +1043,10 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
 	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
 	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
 
   	// loop over polarization
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
@@ -1125,9 +1131,12 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    uself_mtx[0][ipol] = False;
 	    lfthres_mtx[0][ipol] = 0.0;
 	    lfavg_mtx[0][ipol] = 0;
-	    lfedge_mtx[0][ipol] = 0;
+	    for (size_t iedge = 0; iedge < 2; ++iedge) {
+	      lfedge_mtx[iedge][ipol] = 0;
+	    }
 
 	  } else {
 	    status = 
@@ -1167,8 +1176,9 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
-			 coeff_mtx, rms_mtx, (uInt)num_chan, cthres_mtx,
-			 citer_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+			 coeff_mtx, rms_mtx, (uInt)num_chan, 
+			 cthres_mtx, citer_mtx, 
+			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
@@ -1423,9 +1433,10 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
 	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
 	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
 
   	// loop over polarization
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
@@ -1461,6 +1472,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
 	       << ", Pol " << ipol
 	       << ": Fit not requested. Skipping." << LogIO::POST;
+	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
 	  if (true) {
@@ -1488,6 +1500,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
 	       << ", Pol " << ipol
 	       << ": No valid channel to fit. Skipping" << LogIO::POST;
+	    apply_mtx[0][ipol] = False;
 	    continue;
 	  }
   	  // get a spectrum from data cube
@@ -1660,9 +1673,12 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 
 	    cthres_mtx[0][ipol] = fit_param.clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max;
-	    lfthres_mtx[0][ipol] = 0.0;
-	    lfavg_mtx[0][ipol] = 0;
-	    lfedge_mtx[0][ipol] = 0;
+	    uself_mtx[0][ipol] = (Bool)fit_param.line_finder.use_line_finder;
+	    lfthres_mtx[0][ipol] = fit_param.line_finder.threshold;
+	    lfavg_mtx[0][ipol] = fit_param.line_finder.chan_avg_limit;
+	    for (size_t iedge = 0; iedge < 2; ++iedge) {
+	      lfedge_mtx[iedge][ipol] = fit_param.line_finder.edge[iedge];
+	    }
 
 	  } else {
 	    string subtract_funcname;
@@ -1725,45 +1741,16 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	  //write to baseline table
 	  Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
 	  set_matrix_for_bltable<double, Float>(num_pol, num_ffpar_max, ffpar_mtx_tmp, ffpar_mtx);
-	  /*
-	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	    for (size_t ipiece = 0; ipiece < num_ffpar_max; ++ipiece) {
-	      ffpar_mtx[ipiece][ipol] = 0.0;
-            }
-	    for (size_t ipiece = 0; ipiece < ffpar_mtx_tmp[ipol].size(); ++ipiece) {
-	      ffpar_mtx[ipiece][ipol] = ffpar_mtx_tmp[ipol][ipiece];
-	    }
-          }
-	  */
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
-	  /*
-	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
-	      masklist_mtx[imask][ipol] = 0;
-	    }
-	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
-	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
-	    }
-	  }
-	  */
 	  Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff_max));
 	  set_matrix_for_bltable<double, Float>(num_pol, num_coeff_max, coeff_mtx_tmp, coeff_mtx);
-	  /*
-  	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	    for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
-	      coeff_mtx[icoeff][ipol] = 0.0;
-	    }
-	    for (size_t icoeff = 0; icoeff < coeff_mtx_tmp[ipol].size(); ++icoeff) {
-	      coeff_mtx[icoeff][ipol] = coeff_mtx_tmp[ipol][icoeff];
-	    }
-	  }
-	  */
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
-			 coeff_mtx, rms_mtx, (uInt)num_chan, cthres_mtx,
-			 citer_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+			 coeff_mtx, rms_mtx, (uInt)num_chan, 
+			 cthres_mtx, citer_mtx, 
+			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
 	}
       } // end of chunk row loop
       // write back data and flag cube to VisBuffer
