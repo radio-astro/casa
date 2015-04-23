@@ -22,116 +22,116 @@ except:
 
 
 ### Utilities for reading blparam file
-class FileReader( object ):
-    def __init__( self, filename ):
+class FileReader(object):
+    def __init__(self, filename):
         self.__filename = filename
         self.__data = None
         self.__nline = None
 
-    def read( self ):
+    def read(self):
         if self.__data is None:
             f = open(self.__filename, 'r')
             self.__data = f.readlines()
             f.close()
-            self.__nline = len( self.__data )
+            self.__nline = len(self.__data)
         return
 
-    def nline( self ):
+    def nline(self):
         self.read()
         return self.__nline
 
-    def index( self, txt, start ):
-        return self.__data[start:].index( txt ) + 1 + start
+    def index(self, txt, start):
+        return self.__data[start:].index(txt) + 1 + start
 
-    def getline( self, idx ):
+    def getline(self, idx):
         return self.__data[idx]
 
-class BlparamFileParser( FileReader ):
-    def __init__( self, blfile ):
-        FileReader.__init__( self, blfile )
+class BlparamFileParser(FileReader):
+    def __init__(self, blfile):
+        FileReader.__init__(self, blfile)
         self.__nrow = None
         self.__coeff = None
         self.__rms = None
         self.__ctxt = 'Baseline parameters\n'
         self.__rtxt = 'Results of baseline fit\n'
 
-    def nrow( self ):
+    def nrow(self):
         self.read()
         if self.__nrow is None:
             return self._nrow()
         else:
             return self.__nrow
 
-    def coeff( self ):
+    def coeff(self):
         self.read()
         if self.__coeff is None:
             self.parseCoeff()
         return self.__coeff
 
-    def rms( self ):
+    def rms(self):
         self.read()
         if self.__rms is None:
             self.parseRms()
         return self.__rms
 
-    def _nrow( self ):
+    def _nrow(self):
         self.__nrow = 0
         for i in xrange(self.nline()):
-            if self.getline( i ) == self.__ctxt:
+            if self.getline(i) == self.__ctxt:
                 self.__nrow += 1
         return self.__nrow
 
-    def parse( self ):
+    def parse(self):
         self.read()
         self.parseCoeff()
         self.parseRms()
         return
         
-    def parseCoeff( self ):
+    def parseCoeff(self):
         self.__coeff = []
         nrow = self.nrow()
         idx = 0
-        while ( len(self.__coeff) < nrow ):
+        while (len(self.__coeff) < nrow):
             try:
-                idx = self.index( self.__ctxt, idx )
+                idx = self.index(self.__ctxt, idx)
                 coeffs = []
-                while( self.getline( idx ) != self.__rtxt ):
-                    coeff = self.__parseCoeff( idx )
+                while(self.getline(idx) != self.__rtxt):
+                    coeff = self.__parseCoeff(idx)
                     coeffs += coeff
                     idx += 1
-                self.__coeff.append( coeffs )
+                self.__coeff.append(coeffs)
             except:
                 break
         return
 
-    def parseRms( self ):
+    def parseRms(self):
         self.__rms = []
         nrow = self.nrow()
         idx = 0
-        while ( len(self.__rms) < nrow ):
+        while (len(self.__rms) < nrow):
             try:
-                idx = self.index( self.__rtxt, idx )
-                self.__rms.append( self.__parseRms( idx ) )
+                idx = self.index(self.__rtxt, idx)
+                self.__rms.append(self.__parseRms(idx))
             except:
                 break   
         return
 
-    def __parseCoeff( self, idx ):
-        return parseCoeff( self.getline( idx ) )
+    def __parseCoeff(self, idx):
+        return parseCoeff(self.getline(idx))
 
-    def __parseRms( self, idx ):
-        return parseRms( self.getline( idx ) )
+    def __parseRms(self, idx):
+        return parseRms(self.getline(idx))
 
-def parseCoeff( txt ):
-    clist = txt.rstrip( '\n' ).split(',')
+def parseCoeff(txt):
+    clist = txt.rstrip('\n').split(',')
     ret = []
     for c in clist:
-        ret.append( float( c.split('=')[1] ) )
+        ret.append(float(c.split('=')[1]))
     return ret
     
-def parseRms( txt ):
-    t = txt.lstrip().rstrip( '\n' )[6:]
-    return float( t )
+def parseRms(txt):
+    t = txt.lstrip().rstrip('\n')[6:]
+    return float(t)
 
 class tsdbaseline_unittest_base:
     """
@@ -146,7 +146,7 @@ class tsdbaseline_unittest_base:
     #complist = ['max','min','rms','median','stddev']
 
     ### helper functions for tests ###
-    def _checkfile( self, name, fail=True ):
+    def _checkfile(self, name, fail=True):
         """
         Check if the file exists.
         name : the path and file name to test
@@ -204,7 +204,7 @@ class tsdbaseline_unittest_base:
                 casalog.post("Could not find '%s'...skipping copy" % from_name, 'WARN')
     
     """
-    def _getStats( self, filename, spw=None ):
+    def _getStats(self, filename, spw=None):
         if not spw:
             spw=''
         self._checkfile(filename)
@@ -361,7 +361,7 @@ class tsdbaseline_unittest_base:
                 stat_dict[key].append(stat[key])
         return stat_dict
 
-    def _compareStats( self, currstat, refstat, rtol=1.0e-2, atol=1.0e-5, complist=None ):
+    def _compareStats(self, currstat, refstat, rtol=1.0e-2, atol=1.0e-5, complist=None):
         """
         Compare statistics results (dictionaries) and test if the values are within
         an allowed tolerance.
@@ -432,7 +432,7 @@ class tsdbaseline_unittest_base:
             del currval, refval
 
             
-#     def _isInAllowedRange( self, testval, refval, reltol=1.e-2 ):
+#     def _isInAllowedRange(self, testval, refval, reltol=1.e-2):
 #         """
 #         Check if a test value is within permissive relative difference from refval.
 #         Returns a boolean.
@@ -450,7 +450,7 @@ class tsdbaseline_unittest_base:
 #         del denom,testval,refval
 #         return (abs(rdiff) <= reltol)
 
-    def _to_list( self, input ):
+    def _to_list(self, input):
         """
         Convert input to a list
         If input is None, this method simply returns None.
@@ -465,18 +465,18 @@ class tsdbaseline_unittest_base:
             return [input]
 
 
-    def _compareBLparam( self, out, reference ):
+    def _compareBLparam(self, out, reference):
         # test if baseline parameters are equal to the reference values
         # currently comparing every lines in the files
         # TO DO: compare only "Fitter range" and "Baseline parameters"
         self._checkfile(out)
         self._checkfile(reference)
         
-        blparse_out = BlparamFileParser( out )
+        blparse_out = BlparamFileParser(out)
         blparse_out.parse()
         coeffs_out = blparse_out.coeff()
         rms_out = blparse_out.rms()
-        blparse_ref = BlparamFileParser( reference )
+        blparse_ref = BlparamFileParser(reference)
         blparse_ref.parse()
         coeffs_ref = blparse_ref.coeff()
         rms_ref = blparse_ref.rms()
@@ -490,13 +490,13 @@ class tsdbaseline_unittest_base:
             print '   Calculated coeffs = %s'%(coeffs_out[irow])
             r0 = rms_ref[irow]
             r1 = rms_out[irow]
-            rdiff = ( r1 - r0 ) / r0
+            rdiff = (r1 - r0) / r0
             self.assertTrue((abs(rdiff)<allowdiff),
                             msg='row %s: rms is different'%(irow))
             c0 = coeffs_ref[irow]
             c1 = coeffs_out[irow]
             for ic in xrange(len(c1)):
-                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                rdiff = (c1[ic] - c0[ic]) / c0[ic]
                 self.assertTrue((abs(rdiff)<allowdiff),
                                 msg='row %s: coefficient for order %s is different'%(irow,ic))
         print ''
@@ -505,15 +505,16 @@ class tsdbaseline_unittest_base:
 #                         %(out,reference))
 
 
-class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
     Basic unit tests for task tsdbaseline. No interactive testing.
 
-    The list of tests:
-    test000 --- test polynominal baselining with no mask (maskmode = 'list')
-    test001 --- test cubic spline baselining with no mask (maskmode = 'list')
-    test050 --- test existing file as outfile with overwrite=False (raises an exception)
-    test051 --- test no data after selection (raises an exception)
+    List of tests:
+    test000 --- default values for all parameters
+    test001 --- polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test002 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test050 --- existing file as outfile with overwrite=False (raises an exception)
+    test051 --- no data after selection (raises an exception)
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -533,21 +534,49 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
     blrefroot = tsdbaseline_unittest_base.datapath+'refblparam'
     tid = None
 
-    def setUp( self ):
+    def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(tsdbaseline)
 
-    def tearDown( self ):
+    def tearDown(self):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
         #os.system('rm -rf '+self.outroot+'*')
 
-    def test000( self ):
-        """Basic Test 000: simple successful case: blfunc = 'poly', maskmode = 'list' and masklist=[] (no mask)"""
+    def test000(self):
+        """Basic Test 000: default values for all parameters"""
         tid = '000'
+        infile = self.infile
+        outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             outfile=outfile)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # uncomment the next line once blparam file can be output
+        #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
+        row = 3
+        pol = 1
+        results = self._getStats(outfile, '')
+        theresult = None
+        for i in range(len(results)):
+            if ((results[i]['row'] == int(row)) and (results[i]['pol'] == int(pol))):
+                theresult = results[i]
+        reference = {'rms': 0.16677055621054496,
+                     'min': -2.5817961692810059,
+                     'max': 1.3842859268188477,
+                     'median': -0.00086212158203125,
+                     'stddev': 0.16677055621054496,
+                     }
+        self._compareStats(theresult, reference)
+
+    def test001(self):
+        """Basic Test 001: simple successful case: blfunc = 'poly', maskmode = 'list' and masklist=[] (no mask)"""
+        tid = '001'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
@@ -581,11 +610,11 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
 
         self._compareStats(theresult, reference)
 
-    def test001( self ):
-        """Basic Test 001: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
+    def test002(self):
+        """Basic Test 002: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
         print ""
 
-        tid = '001'
+        tid = '002'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'  
@@ -694,13 +723,7 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #print '1sigma before cspline (pol0)', variance_orig_pol0**0.5 
         #print '1sigma after cspline (pol0)',  variance_pol0**0.5 
 
-
-
-        
-            
-
-
-    def test050( self ):
+    def test050(self):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
         infile = self.infile
         outfile = 'Dummy_Empty.ms'
@@ -714,7 +737,7 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
         finally:
             shutil.rmtree(outfile)
 
-    def test051( self ):
+    def test051(self):
         """Basic Test 051: failure case: no data after selection"""
         tid = '051'
         infile = self.infile
@@ -728,12 +751,13 @@ class tsdbaseline_basicTest( tsdbaseline_unittest_base, unittest.TestCase ):
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
-class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class tsdbaseline_maskTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
     Tests for various mask selections. No interactive testing.
 
-    The list of tests:
-    test101 --- test masklist
+    List of tests:
+    test100 --- with masked ranges at the edges of spectrum. blfunc is cspline.
+    test101 --- with masked ranges not touching spectrum edge
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -770,19 +794,48 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
                    'rms': 0.13134850561618805,
                    'stddev': 0.1313575953245163}
      
-    def setUp( self ):
+    def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
 
-    def tearDown( self ):
+    def tearDown(self):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
 
-    def test101( self ):
-        """Mask Test 101: test if user-given mask is correctly applied"""
+    def test100(self):
+        """Mask Test 100: with masked ranges at the edges of spectrum. blfunc must be cspline."""
+        self.tid='100'
+        infile = self.infile
+        outfile = self.outroot+self.tid+'.ms'
+        datacolumn='float_data'
+        mode = 'list'
+        spw = '2:%s'%(';'.join(map(self._get_range_in_string,self.search)))
+        pol = '0'
+        blfunc = 'cspline'
+        npiece = 4
+
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,maskmode=mode,
+                             spw=spw,pol=pol,blfunc=blfunc,npiece=npiece,
+                             outfile=outfile)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # Compare IF2
+        testval = self._getStats(filename=outfile, spw='', pol=pol, mask=self.search)
+        ref100 = {'rms': 0.18957555661537034,
+                  'min': -0.48668813705444336,
+                  'max': 1.9516196250915527,
+                  'median': -0.013428688049316406,
+                  'stddev': 0.18957555661537034,
+                  'row': 0,
+                  'pol': 0}
+        self._compareStats(testval[0], ref100)
+
+    def test101(self):
+        """Mask Test 101: with masked ranges not touching spectrum edge"""
         self.tid='101'
         infile = self.infile
         outfile = self.outroot+self.tid+'.ms'
@@ -804,21 +857,21 @@ class tsdbaseline_maskTest( tsdbaseline_unittest_base, unittest.TestCase ):
         #self._compareBLparam(self.outroot+self.tid+'.asap_blparam.txt',\
         #                     self.blrefroot+self.tid)
 
-    def _get_range_in_string( self, valrange ):
+    def _get_range_in_string(self, valrange):
         if isinstance(valrange, list) or isinstance(valrange, tuple):
             return str(valrange[0])+'~'+str(valrange[1])
         else:
             return False
 
 
-class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
+class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base, unittest.TestCase):
     """
     Unit tests for task tsdbaseline. No interactive testing.
 
     This test intends to check whether tsdbaseline task works fine
     for data that has multiple IFs whose nchan differ each other. 
 
-    The list of tests:
+    List of tests:
     test200 --- test multi IF data input
     """
     # Input and output names
@@ -827,18 +880,18 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
     outroot = tsdbaseline_unittest_base.taskname+'_multi'
     refblparamfile = 'refblparam_multiIF'
 
-    def setUp( self ):
+    def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
 
-    def tearDown( self ):
+    def tearDown(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
 
-    def test200( self ):
+    def test200(self):
         """test200: Test the task works with multi IF data"""
         infile = self.infile
         mode = "list"
@@ -874,7 +927,178 @@ class tsdbaseline_multi_IF_test( tsdbaseline_unittest_base, unittest.TestCase ):
             self._compareStats(currstat,reference[ifno])
 
 
-class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
+class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
+    """
+    Tests for baseline table
+
+    List of tests
+    test300 --- blmode='fit', bloutput='', dosubtract=False (no baselining, no bltable output)
+    test301 --- blmode='fit', bloutput!='', dosubtract=True, blfunc='poly'/'chebyshev'/'cspline'
+                (poly/chebyshev/cspline fit in MS, bltable is written)
+    test302 --- blmode='fit', bloutput!='', dosubtract=True, blfunc='variable'
+                (variable fit in MS, bltable is written)
+
+    Note: input data is generated from a single dish regression data,
+    'OrionS_rawACSmod', as follows:
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+                calmode='ps',tau=0.09,outfile='temp.asap')
+      default(sdcal)
+      sdcal(infile='temp.asap',timeaverage=True,
+                tweight='tintsys',outfile='temp2.asap')
+      sdsave(infile='temp2.asap',outformat='MS2',
+                outfile='OrionS_rawACSmod_calave.ms')
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_calave.ms'
+    outroot = tsdbaseline_unittest_base.taskname+'_bltabletest'
+    tid = None
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdbaseline)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system('rm -rf '+self.outroot+'*')
+
+    def _checkBltable(self, outms, bltable, blfunc, order, mask):
+        if blfunc == 'poly': 
+            ftype = 0
+        elif blfunc == 'chebyshev': 
+            ftype = 1
+        elif blfunc == 'cspline': 
+            ftype = 2
+        elif blfunc == 'sinusoid':
+            ftype = 3
+        
+        tb.open(bltable)
+        for irow in range(tb.nrows()):
+            for ipol in range(len(tb.getcell('RMS', irow))):
+                self.assertEqual(tb.getcell('FUNC_TYPE', irow)[ipol], ftype)
+                self.assertEqual(tb.getcell('FUNC_PARAM', irow)[ipol], order)
+                ref = self._getStats(filename=outms, spw=str(irow), pol=str(ipol), mask=mask[irow])
+                #tolerance value in the next line is temporarily set a bit large 
+                #since rms in bltable is smaller than expected because it is
+                #calculated based on masklist currently stored in bltable, which 
+                #is after an extra clipping.
+                #this bug is already fixed in trunk of Sakura, so once libsakura
+                #is updated we can set smaller tolerance value. (2015/4/22 WK)
+                self._checkValue(ref[0]['rms'], tb.getcell('RMS', irow)[ipol][0], 2.0e-2)
+        tb.close()
+
+    def _checkValue(self, ref, out, tol=1.0e-02):
+        if ref != 0.0:
+            rel = abs((out - ref)/ref)
+        else:
+            rel = abs((out - ref)/out)
+        #print 'rel=' + str(rel)
+        if rel > tol:
+            raise Exception, 'result and reference differs!'
+        
+    def test300(self):
+        """Mask Test 300: no baselining, no bltable output"""
+        self.tid='300'
+        infile = self.infile
+        outfile = self.outroot+self.tid+'.ms'
+        datacolumn='float_data'
+        blmode='fit'
+        bloutput=''
+        dosubtract=False
+
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                             blmode=blmode,bloutput=bloutput,dosubtract=dosubtract,
+                             outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+        spec_in = []
+        tb.open(infile)
+        for i in range(tb.nrows()):
+            spec_in.append(tb.getcell('FLOAT_DATA', i))
+        tb.close()
+        spec_out = []
+        tb.open(outfile)
+        for i in range(tb.nrows()):
+            spec_out.append(tb.getcell('FLOAT_DATA', i))
+        tb.close()
+        for irow in range(len(spec_in)):
+            for ipol in range(len(spec_in[0])):
+                for ichan in range(len(spec_in[0][0])):
+                    self.assertEqual(spec_in[irow][ipol][ichan], spec_out[irow][ipol][ichan],
+                                     msg="output spectrum modified at row="+str(irow)+
+                                     ",pol="+str(ipol)+",chan="+str(ichan))
+
+    def test301(self):
+        """Mask Test 301: poly/chebyshev/cspline baselining, output bltable"""
+        self.tid='301'
+        infile = self.infile
+        datacolumn='float_data'
+        spw='0:1000~3500;5000~7500,1:500~7500,2:500~2500;3500~7500'
+        mask=[ [[1000,3500],[5000,7500]],
+               [[500,7500]],
+               [[500,2500],[3500,7500]]
+               ]
+        blmode='fit'
+        blformat='table'
+        dosubtract=True
+        blfunc=['poly','chebyshev','cspline']
+        order=5
+        npiece=4
+        rms_s0p0_ms = [0.150905484071, 0.150905484071, 0.149185846787]
+
+        for i in range(len(blfunc)):
+            print 'testing blfunc='+blfunc[i]+'...'
+            outfile = self.outroot+self.tid+blfunc[i]+'.ms'
+            bloutput= self.outroot+self.tid+blfunc[i]+'.bltable'
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                                 blmode=blmode,blformat=blformat,bloutput=bloutput,
+                                 spw=spw,blfunc=blfunc[i],order=order,npiece=npiece,
+                                 dosubtract=dosubtract,outfile=outfile)
+            self.assertEqual(result,None,
+                             msg="The task returned '"+str(result)+"' instead of None")
+            msresult = self._getStats(filename=outfile, spw='0', pol='0', mask=mask[0])
+            self._checkValue(rms_s0p0_ms[i], msresult[0]['stddev'], 1.0e-6)
+
+            fparam = npiece if blfunc[i] == 'cspline' else order
+            self._checkBltable(outfile, bloutput, blfunc[i], fparam, mask)
+            print 'OK'
+
+    """
+    def test302(self):
+        #Mask Test 302: per-spectrum baselining, output bltable
+        self.tid='302'
+        infile = self.infile
+        datacolumn='float_data'
+        outfile = self.outroot+self.tid+'.ms'
+        bloutput= self.outroot+self.tid+'.bltable'
+        mask=[ [[1000,3500],[5000,7500]],
+               [[500,7500]],
+               [[500,2500],[3500,7500]]
+               ]
+        blmode='fit'
+        blformat='table'
+        dosubtract=True
+        blfunc='variable'
+        blparam=self.outroot+'.blparam'
+        rms_s0p0_ms = [0.150905484071, 0.150905484071, 0.149185846787]
+
+        result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                             blmode=blmode,blformat=blformat,bloutput=bloutput,
+                             blfunc=blfunc,
+                             dosubtract=dosubtract,outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        msresult = self._getStats(filename=outfile, spw='0', pol='0', mask=mask[0])
+        #self._checkValue(rms_s0p0_ms[i], msresult[0]['stddev'], 1.0e-6)
+
+        #self._checkBltable(outfile, bloutput, blfunc[i], fparam, mask)
+    """
+
+class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
     Tests for blfunc='variable'
 
@@ -897,13 +1121,13 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
     refstat0 = {'max': [0.0]*nspec, 'min': [0.0]*nspec,
                 'rms': [0.0]*nspec, 'stddev': [0.0]*nspec}
     
-    def setUp( self ):
+    def setUp(self):
         if hasattr(self, 'infile'):
             self.__refetch_files(self.infile)
 
         default(tsdbaseline)
 
-    def tearDown( self ):
+    def tearDown(self):
         self._remove([self.infile, self.outfile])
 
     def _refetch_files(self, files, from_dir=None):
@@ -967,7 +1191,7 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
 
         currstat = self._convert_statslist_to_dict(stats_list)
         #print("cruustat=%s" % str(currstat))
-        self._compareStats( currstat, reference, rtol=1.0e-6, atol=1.0e-6 )
+        self._compareStats(currstat, reference, rtol=1.0e-6, atol=1.0e-6)
 
     def testVariable00(self):
         """Test blfunc='variable' with variable baseline functions and orders"""
@@ -1024,5 +1248,7 @@ class tsdbaseline_variableTest( tsdbaseline_unittest_base, unittest.TestCase ):
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
-            #tsdbaseline_multi_IF_test,
-            tsdbaseline_variableTest]
+            ##tsdbaseline_multi_IF_test,
+            tsdbaseline_bltableTest,
+            tsdbaseline_variableTest
+            ]
