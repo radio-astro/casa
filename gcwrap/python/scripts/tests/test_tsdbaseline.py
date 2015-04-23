@@ -937,6 +937,10 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                 (poly/chebyshev/cspline fit in MS, bltable is written)
     test302 --- blmode='fit', bloutput!='', dosubtract=True, blfunc='variable'
                 (variable fit in MS, bltable is written)
+                testing 3 cases:
+                    (1) blparam contains values for all spectra
+                    (2) no values for a spectrum (row=2,pol=1), which is to be skipped
+                    (3) values commented out for a spectrum (row=2,pol=1), which is to be skipped
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -953,6 +957,26 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     infile = 'OrionS_rawACSmod_calave.ms'
     outroot = tsdbaseline_unittest_base.taskname+'_bltabletest'
     tid = None
+    ftype = {'poly': 0, 'chebyshev': 1, 'cspline': 2, 'sinusoid': 3}
+
+    blparam_order = ['row', 'pol', 'mask', 'nclip', 'cthre',
+                     'uself', 'lthre', 'ledge', 'redge', 'chavg',
+                     'btype', 'order', 'npiec', 'nwave']
+    blparam_dic = {}
+    blparam_dic['row']   = [0, 0, 1, 1, 2, 2, 3, 3]
+    blparam_dic['pol']   = [0, 1, 0, 1, 0, 1, 0, 1]
+    blparam_dic['mask']  = ['0~4000;6000~8000']*3 + ['']*5
+    blparam_dic['nclip'] = [0]*8
+    blparam_dic['cthre'] = ['3.']*8
+    blparam_dic['uself'] = ['false']*4 + ['true'] + ['false']*3
+    blparam_dic['lthre'] = ['0.']*4 + ['3.', '', '', '0.']
+    blparam_dic['ledge'] = [0]*4 + [10, 50, '', 0]
+    blparam_dic['redge'] = [0]*4 + [10, 50, '', 0]
+    blparam_dic['chavg'] = [0]*4 + [4, '', '', 0]
+    blparam_dic['btype'] = ['poly'] + ['chebyshev']*2 + ['poly', 'chebyshev', 'poly'] + ['cspline']*2
+    blparam_dic['order'] = [0, 0, 1, 1, 2, 2, '', '']
+    blparam_dic['npiec'] = [0]*6 + [1]*2
+    blparam_dic['nwave'] = [[]]*3 + ['']*2 + [[]]*3
 
     def setUp(self):
         if os.path.exists(self.infile):
@@ -965,20 +989,58 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
 
+    def _checkBltableVar(self, outms, bltable, blparam, option):
+        npol = 2
+        results = [[4.28688335], [3.92898083],
+                   [4.32321167, 0.01343461], [3.83523464e+00, -9.37040113e-06],
+                   [4.29850674, 0.00465105, -0.00938174], [4.19220352e+00, -1.22489364e-04, 1.47625645e-08],
+                   [4.18074942e+00, 4.44418511e-05, -6.81303991e-09, 3.36383428e-13],
+                   [3.93746042e+00, 5.36526677e-05, -1.11215614e-08, 7.00922610e-13]
+                   ]
+        rms = [0.160806953907, 0.172459229827, 0.145005837083, 0.167485550046,
+               0.141711354256, 0.874852001667, 0.134670868516, 0.149306803942]
+        tb.open(bltable)
+        for i in range(npol*tb.nrows()):
+            irow = i / npol
+            ipol = i % npol
+            is_skipped = (option != '') and (irow == 2) and (ipol == 1)
+
+            self.assertEqual(not is_skipped, tb.getcell('APPLY', irow)[ipol][0]);
+            self.assertEqual(self.ftype[blparam['btype'][i]], tb.getcell('FUNC_TYPE', irow)[ipol][0]);
+            fparam_key = 'order' if (blparam['btype'][i] != 'cspline') else 'npiec'
+            fparam = blparam[fparam_key][i]
+            if not is_skipped:
+                self.assertEqual(fparam, tb.getcell('FUNC_PARAM', irow)[ipol][0])
+            if (blparam['btype'][i] == 'cspline'):
+                for j in range(blparam['npiec'][i]):
+                    self.assertEqual(0.0, tb.getcell('FUNC_FPARAM', irow)[ipol][j])
+            else:
+                self.assertEqual(0, len(tb.getcell('FUNC_FPARAM', irow)[ipol]))
+            for j in range(len(results[i])):
+                result = 0.0 if is_skipped else results[i][j]
+                self._checkValue(result, tb.getcell('RESULT', irow)[ipol][j], 1.0e-6)
+            if not is_skipped:
+                self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-6)
+                self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
+                uself = (blparam['uself'][i] == 'true')
+                self.assertEqual(uself, tb.getcell('USE_LF', irow)[ipol][0])
+                lthre = 5.0 if (blparam['lthre'][i] == '') else float(blparam['lthre'][i])
+                #self._checkValue(lthre, tb.getcell('LF_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                chavg = 0 if (blparam['chavg'][i] == '') else int(blparam['chavg'][i])
+                self.assertEqual(chavg, tb.getcell('LF_AVERAGE', irow)[ipol][0])
+                ledge = 0 if (blparam['ledge'][i] == '') else int(blparam['ledge'][i])
+                #self.assertEqual(ledge, tb.getcell('LF_EDGE', irow)[ipol][0])
+                redge = 0 if (blparam['redge'][i] == '') else int(blparam['redge'][i])
+                #self.assertEqual(redge, tb.getcell('LF_EDGE', irow)[ipol][1])
+
+        tb.close()
+    
     def _checkBltable(self, outms, bltable, blfunc, order, mask):
-        if blfunc == 'poly': 
-            ftype = 0
-        elif blfunc == 'chebyshev': 
-            ftype = 1
-        elif blfunc == 'cspline': 
-            ftype = 2
-        elif blfunc == 'sinusoid':
-            ftype = 3
-        
         tb.open(bltable)
         for irow in range(tb.nrows()):
             for ipol in range(len(tb.getcell('RMS', irow))):
-                self.assertEqual(tb.getcell('FUNC_TYPE', irow)[ipol], ftype)
+                self.assertEqual(tb.getcell('FUNC_TYPE', irow)[ipol], self.ftype[blfunc])
                 self.assertEqual(tb.getcell('FUNC_PARAM', irow)[ipol], order)
                 ref = self._getStats(filename=outms, spw=str(irow), pol=str(ipol), mask=mask[irow])
                 #tolerance value in the next line is temporarily set a bit large 
@@ -999,6 +1061,33 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
         if rel > tol:
             raise Exception, 'result and reference differs!'
         
+    def _createBlparamFile(self, file, param_order, val, option=''):
+        nspec = 8
+        f = open(file, 'w')
+        assert(len(param_order) == len(val.keys()))
+        for key in val.keys():
+            assert(len(val[key]) == nspec)
+        for i in range(nspec):
+            do_write = True
+            s = ''
+            for key in param_order:
+                v = val[key][i]
+                if key == 'nwave':
+                    if v != '':
+                        s += ','
+                        s += str(v)
+                else:
+                    s += str(v)
+                    if key != 'npiec': s += ','
+            s += '\n'
+            if (option == 'r2p1less') and (val['row'][i] == 2) and (val['pol'][i] == 1):
+                do_write = False
+            if (option == 'r2p1cout') and (val['row'][i] == 2) and (val['pol'][i] == 1):
+                s = '#' + s
+            if do_write:
+                f.write(s)
+        f.close()
+
     def test300(self):
         """Mask Test 300: no baselining, no bltable output"""
         self.tid='300'
@@ -1067,36 +1156,29 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
             self._checkBltable(outfile, bloutput, blfunc[i], fparam, mask)
             print 'OK'
 
-    """
     def test302(self):
-        #Mask Test 302: per-spectrum baselining, output bltable
+        """Mask Test 302: per-spectrum baselining, output bltable"""
         self.tid='302'
         infile = self.infile
         datacolumn='float_data'
-        outfile = self.outroot+self.tid+'.ms'
-        bloutput= self.outroot+self.tid+'.bltable'
-        mask=[ [[1000,3500],[5000,7500]],
-               [[500,7500]],
-               [[500,2500],[3500,7500]]
-               ]
         blmode='fit'
         blformat='table'
-        dosubtract=True
         blfunc='variable'
-        blparam=self.outroot+'.blparam'
-        rms_s0p0_ms = [0.150905484071, 0.150905484071, 0.149185846787]
+        dosubtract=True
 
-        result = tsdbaseline(infile=infile,datacolumn=datacolumn,
-                             blmode=blmode,blformat=blformat,bloutput=bloutput,
-                             blfunc=blfunc,
-                             dosubtract=dosubtract,outfile=outfile)
-        self.assertEqual(result,None,
-                         msg="The task returned '"+str(result)+"' instead of None")
-        msresult = self._getStats(filename=outfile, spw='0', pol='0', mask=mask[0])
-        #self._checkValue(rms_s0p0_ms[i], msresult[0]['stddev'], 1.0e-6)
+        for option in ['', 'r2p1less', 'r2p1cout']:
+            bloutput= self.outroot+self.tid+option+'.bltable'
+            outfile = self.outroot+self.tid+option+'.ms'
+            blparam = self.outroot+self.tid+option+'.blparam'
+            self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, option)
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                                 blmode=blmode,blformat=blformat,bloutput=bloutput,
+                                 blfunc=blfunc,blparam=blparam,
+                                 dosubtract=dosubtract,outfile=outfile)
+            self.assertEqual(result,None,
+                             msg="The task returned '"+str(result)+"' instead of None")
+            self._checkBltableVar(outfile, bloutput, self.blparam_dic, option)
 
-        #self._checkBltable(outfile, bloutput, blfunc[i], fparam, mask)
-    """
 
 class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
@@ -1248,7 +1330,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
-            ##tsdbaseline_multi_IF_test,
+            #tsdbaseline_multi_IF_test,
             tsdbaseline_bltableTest,
             tsdbaseline_variableTest
             ]
