@@ -643,9 +643,8 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	goodChunk_.resize(nChunk_);
 	goodChunk_.set(False);
 	double progress;
-	Int nAnts, nChans;
-	Vector<Int> channels;
-	Vector<Double> frequencies;
+	Int nAnts;
+	vi::VisBuffer2* vbToUse = NULL;
 
 	for (Int chunk=0; chunk<nChunk_; ++chunk) {
 		// If a thread is given, check if the user canceled.
@@ -670,11 +669,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		// (averaged vb not attached to VI so cannot get this later)
 		// (and no VB2 set method to do it in averager)
 		nAnts = vb->nAntennas();
-		nChans = vb->nChannels();
-		channels.resize(nChans);
-		frequencies.resize(nChans);
-		channels = vb->getChannelNumbers(0);
-		frequencies = vb->getFrequencies(0, freqFrame_);
 
 		// Arrange to accumulate many VBs into one
 		PlotMSVBAverager pmsvba(nAnts);
@@ -685,39 +679,37 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		// Sort out which data to read
 		discernData(loadAxes,loadData,pmsvba);
 		stringstream ss;
-		if (verby) ss << chunk << "----------------------------------\n";
+		if (verby) {
+			ss << chunk << "----------------------------------\n"
+			   << "ck=" << chunk << " (" << nIterPerAve(chunk) << ");  "
+			   << "sc=" << vb->scan()(0) << " "
+			   << "time=" << vb->time()(0)-time0 << " "
+			   << "fl=" << vb->fieldId()(0) << " "
+			   << "sp=" << vb->spectralWindows()(0) << " " << endl;
+		}
 
-		// iter through the pre-averaged (time or channel) chunks
-		//for (Int iter=0; iter<nIterPerAve.size(); ++iter) {
-			if (verby) {
-				ss << "ck=" << chunk << " (" << nIterPerAve(chunk) << ");  "
-						<< "sc=" << vb->scan()(0) << " "
-						<< "time=" << vb->time()(0)-time0 << " "
-						<< "fl=" << vb->fieldId()(0) << " "
-						<< "sp=" << vb->spectralWindows()(0) << " " << endl;
-			}
+		// Accumulate into the averager
+		pmsvba.accumulate(*vb);
 
-			// Accumulate into the averager
-			pmsvba.accumulate(*vb);
+		// Advance to next VB
+		vi.next();
+		if (verby) ss << " next VB ";
 
-			// Advance to next VB
-			vi.next();
-			if (verby) ss << " next VB ";
+		if (!vi.more() && vi.moreChunks()) {
+			// go to first vb in next chunk
+			if (verby) ss << "  next chunk";
+			vi.nextChunk();
+			vi.origin();
+		}
 
-			if (!vi.more() && vi.moreChunks()) {
-				// go to first vb in next chunk
-				if (verby) ss << "  next chunk";
-				vi.nextChunk();
-				vi.origin();
-			}
-
-			if (verby) ss << "\n";
-		//}
+		if (verby) ss << "\n";
 		if (verby) logLoad(ss.str());
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
 		// The averaged VisBuffer
 		vi::VisBuffer2& avb(pmsvba.aveVisBuff());
+
+		
 
 		// Only if the average yielded some data
 		if (avb.nRows() > 0) {
@@ -728,20 +720,18 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			chshapes_(3,chunk) = nAnts;
 			goodChunk_(chunk)  = True;
 
-
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
-				if (loadAxes[i] == PMS::CHANNEL)
-					*chan_[chunk] = channels;
-				else if (loadAxes[i] == PMS::FREQUENCY) 
-  					*freq_[chunk] = frequencies / 1.0e9; // in GHz
+				if (useAveragedVisBuffer(loadAxes[i]))
+					vbToUse = &avb;
 				else
-					loadAxis(&avb, chunk, loadAxes[i], loadData[i]);
+					vbToUse = vb;
+				loadAxis(vbToUse, chunk, loadAxes[i], loadData[i]);
 			}
 		}
 		else {
 			// no points in this chunk
-			goodChunk_(chunk)=False;
-			chshapes_.column(chunk)=0;
+			goodChunk_(chunk) = False;
+			chshapes_.column(chunk) = 0;
 		}
 
 		// If a thread is given, update it.
@@ -753,6 +743,38 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	}
 
 	//cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
+}
+
+
+
+bool MSCache::useAveragedVisBuffer(PMS::Axis axis) {
+	// Some axes should be obtained from the VB2 provided by the VI2
+	// rather than the averaged VB2, which is not attached
+	bool useAvg(True);
+	switch(axis) {
+	case PMS::CHANNEL:
+	case PMS::FREQUENCY:
+	case PMS::VELOCITY:
+	case PMS::UVDIST_L:
+	case PMS::UWAVE:
+	case PMS::VWAVE:
+	case PMS::WWAVE:
+	case PMS::AZ0:
+	case PMS::EL0:
+	case PMS::HA0:
+	case PMS::PA0:
+	case PMS::ANTENNA:
+	case PMS::AZIMUTH:
+	case PMS::ELEVATION:
+	case PMS::PARANG:
+	case PMS::ROW: {
+		useAvg = False;
+		break;
+	}
+	default:
+		break;
+	}
+	return useAvg;
 }
 
 void MSCache::forceVBread(vi::VisBuffer2* vb,
@@ -925,6 +947,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 	case PMS::VELOCITY: {
+		/*
 		// Convert freq in the vb to velocity
 		VisBufferUtil vbu = VisBufferUtil();
 		vbu.toVelocity(*vel_[vbnum],
@@ -933,6 +956,8 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 				MVFrequency(transformations_.restFreqHz()),
 				transformations_.veldef());
 		(*vel_[vbnum]) /= 1.0e3;  // in km/s
+		*/
+		*vel_[vbnum] = calcVelocity(vb); 
 		break;
 	}
 
@@ -1281,7 +1306,6 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		}
 	}
 
-
 	case PMS::SIGMA:
 		*sigma_[vbnum] = vb->sigma();
 		break;
@@ -1598,6 +1622,19 @@ Vector<Int> MSCache::assignIntentIds(Vector<Int>& stateIds) {
 	}
 
 	return intents;
+}
+
+Vector<Double> MSCache::calcVelocity(vi::VisBuffer2* vb) {
+	// Convert freq in the vb to velocity
+	Vector<Double> outVel;
+	VisBufferUtil vbu = VisBufferUtil();
+	vbu.toVelocity(outVel,
+			*vb,
+			freqFrame_,
+			MVFrequency(transformations_.restFreqHz()),
+			transformations_.veldef());
+	outVel /= 1.0e3;  // in km/s
+	return outVel;
 }
 
 }

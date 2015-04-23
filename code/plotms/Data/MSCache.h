@@ -173,6 +173,12 @@ private:
   // Set frame from VI if not specified by user (for VI2::getFrequencies)
   MFrequency::Types freqFrame_;
 
+  Vector<Double> calcVelocity(vi::VisBuffer2* vb); 
+
+  // For averaging done by PlotMSVBAverager;
+  // Some axes need to come from VB2 attached to VI2
+  bool useAveragedVisBuffer(PMS::Axis axis);
+
   bool ephemerisAvailable;
 };
 typedef CountedPtr<MSCache> MSCachePtr;

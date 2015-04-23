@@ -410,6 +410,8 @@ protected:
 
 private:
   void _updateAntennaMask( Int a, Vector<Bool>& antMask, const Vector<Int> selectedAntennas );
+  bool axisIsValid(PMS::Axis axis, const PlotMSAveraging& averaging);
+
 };
 typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;
 

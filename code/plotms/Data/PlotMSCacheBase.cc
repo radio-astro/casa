@@ -301,8 +301,15 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		if (averaging_.anyAveraging()) {
 			int axesCount = axes.size();
 			for ( int j = 0; j < axesCount; j++ ){
-			        if (axes[j] == (PMS::WT) || axes[j] == (PMS::WTxAMP) || axes[j] ==(PMS::WTSP) ) {
-					throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
+			        if ((axes[j] == (PMS::WT)) || 
+				    (axes[j] == (PMS::WTxAMP)) || 
+				    (axes[j] == (PMS::WTSP)) ||
+				    (axes[j] == (PMS::SIGMA)) ||
+				    (axes[j] == (PMS::SIGMASP)) ) {
+					throw(AipsError("Weight and Sigma axes do not yet support averaging."));
+				}
+				if (!axisIsValid(axes[j], averaging_)) {
+					throw(AipsError(PMS::axis(axes[j]) + " axis is not valid for selected averaging."));
 				}
 			}
 		}
@@ -491,6 +498,43 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	QString timeMesg("refTime = ");
 	timeMesg.append(MVTime(refTime_p/C::day).string(MVTime::YMD,7).c_str());
 	logLoad("Finished loading.");
+}
+
+bool PlotMSCacheBase::axisIsValid(PMS::Axis axis, const PlotMSAveraging& averaging) {
+	// Check if axis is valid for the type of averaging requested
+	bool bslnValid(True), spwValid(True);
+	if (averaging.baseline()) {
+		switch(axis) {
+		case PMS::UVDIST_L:
+		case PMS::UWAVE:
+		case PMS::VWAVE:
+		case PMS::WWAVE:
+		case PMS::ANTENNA:
+		case PMS::AZIMUTH:
+		case PMS::ELEVATION:
+		case PMS::PARANG: {
+			bslnValid = False;
+			break;
+		}
+		default:
+			break;
+		}
+	}
+	if (averaging.spw()) {
+		switch(axis) {
+		case PMS::VELOCITY:
+		case PMS::UVDIST_L:
+		case PMS::UWAVE:
+		case PMS::VWAVE:
+		case PMS::WWAVE: {
+			spwValid = False;
+			break;
+		}
+		default:
+			break;
+		}
+	}
+	return bslnValid && spwValid;
 }
 
 void PlotMSCacheBase::clear() {
