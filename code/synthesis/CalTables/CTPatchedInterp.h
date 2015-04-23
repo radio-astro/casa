@@ -228,6 +228,9 @@ private:
   Array<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_,nMSObs_]
   Array<Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_,mMSObs_]
 
+  Vector<Int> lastFld_,lastObs_;
+
+
 };
 
 

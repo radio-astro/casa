@@ -79,7 +79,9 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   result_(),
   resFlag_(),
   tI_(),
-  tIdel_()
+  tIdel_(),
+  lastFld_(ct.spectralWindow().nrow(),-1),
+  lastObs_(ct.spectralWindow().nrow(),-1)
 {
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(<no MS>)" << endl;
 
@@ -247,7 +249,9 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   result_(),
   resFlag_(),
   tI_(),
-  tIdel_()
+  tIdel_(),
+  lastFld_(ms.spectralWindow().nrow(),-1),
+  lastObs_(ms.spectralWindow().nrow(),-1)
 {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(CT,MS)" << endl;
@@ -414,7 +418,9 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   result_(),
   resFlag_(),
   tI_(),
-  tIdel_()
+  tIdel_(),
+  lastFld_(mscol.spectralWindow().nrow(),-1),
+  lastObs_(mscol.spectralWindow().nrow(),-1)
 {
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(mscol)" << endl;
 
@@ -560,6 +566,16 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
   result_(msspw,msfld,thisobs(msobs)).reference(timeResult_(msspw,msfld,thisobs(msobs)));
   resFlag_(msspw,msfld,thisobs(msobs)).reference(timeResFlag_(msspw,msfld,thisobs(msobs)));
 
+  // Detect if obs or fld changed, and cal is obs- or fld-dep
+  Bool diffobsfld(False);
+  diffobsfld|=(byField_ && msfld!=lastFld_(msspw));   // field-dep, and field changed
+  diffobsfld|=(byObs_ && msobs!=lastObs_(msspw));     // obs-dep, and obs changed
+  newcal|=diffobsfld;  // update newcal for return
+
+  // Remember for next pass
+  lastFld_(msspw)=msfld;
+  lastObs_(msspw)=msobs;
+
   return newcal;
 }
 
@@ -616,6 +632,16 @@ Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, 
   // Whole result referred to freq result:
   result_(msspw,msfld,thisobs(msobs)).reference(freqResult_(msspw,msfld,thisobs(msobs)));
   resFlag_(msspw,msfld,thisobs(msobs)).reference(freqResFlag_(msspw,msfld,thisobs(msobs)));
+
+  // Detect if obs or fld changed, and cal is obs- or fld-dep
+  Bool diffobsfld(False);
+  diffobsfld|=(byField_ && msfld!=lastFld_(msspw));   // field-dep, and field changed
+  diffobsfld|=(byObs_ && msobs!=lastObs_(msspw));     // obs-dep, and obs changed
+  newcal|=diffobsfld;  //  update newcal for return
+
+  // Remember for next pass
+  lastFld_(msspw)=msfld;
+  lastObs_(msspw)=msobs;
 
   return newcal;
 }
