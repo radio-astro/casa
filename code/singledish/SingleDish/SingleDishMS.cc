@@ -850,7 +850,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 	    rms_mtx[0][ipol] = stat.stddev;
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
-	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    citer_mtx[0][ipol] = (uInt)num_fitting_max - 1;
 	    uself_mtx[0][ipol] = False;
 	    lfthres_mtx[0][ipol] = 0.0;
 	    lfavg_mtx[0][ipol] = 0;
@@ -1130,7 +1130,7 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
 	    rms_mtx[0][ipol] = stat.stddev;
 
 	    cthres_mtx[0][ipol] = clip_threshold_sigma;
-	    citer_mtx[0][ipol] = (uInt)num_fitting_max;
+	    citer_mtx[0][ipol] = (uInt)num_fitting_max - 1;
 	    uself_mtx[0][ipol] = False;
 	    lfthres_mtx[0][ipol] = 0.0;
 	    lfavg_mtx[0][ipol] = 0;
@@ -1672,7 +1672,7 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
 	    rms_mtx[0][ipol] = stat.stddev;
 
 	    cthres_mtx[0][ipol] = fit_param.clip_threshold_sigma;
-	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max;
+	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max - 1;
 	    uself_mtx[0][ipol] = (Bool)fit_param.line_finder.use_line_finder;
 	    lfthres_mtx[0][ipol] = fit_param.line_finder.threshold;
 	    lfavg_mtx[0][ipol] = fit_param.line_finder.chan_avg_limit;
