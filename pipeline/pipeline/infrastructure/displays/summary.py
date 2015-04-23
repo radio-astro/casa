@@ -87,7 +87,7 @@ class AzElChart(object):
                      'coloraxis'       : 'field',
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
-                     'antenna'         : '0',
+                     'antenna'         : '0&&',
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
@@ -198,7 +198,7 @@ class ElVsTimeChart(object):
                      'coloraxis'       : 'field',
                      'avgchannel'      : '9000',
                      'avgtime'         : '10s',
-                     'antenna'         : '0',
+                     'antenna'         : '0&&',
                      'plotfile'        : self.figfile,
                      'clearplots'      : True,
                      'showgui'         : False}
