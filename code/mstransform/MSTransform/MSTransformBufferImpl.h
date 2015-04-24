@@ -112,6 +112,7 @@ private:
 
 	MSTransformManager *manager_p;
 	ArrayColumn<Double> spwFrequencies_p;
+	map<uInt,uInt> inputOutputSPWIndexMap_p;
 	uInt rowIdOffset_p;
 
 	mutable Vector<Int> observationId_p;

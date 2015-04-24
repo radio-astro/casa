@@ -33,6 +33,12 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 	manager_p = manager;
 	rowIdOffset_p = 0;
 
+	// First store SPW related info (CAS-7460)
+	MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
+	MSSpWindowColumns spwCols(spwTable);
+	spwFrequencies_p.reference(spwCols.chanFreq());
+	inputOutputSPWIndexMap_p = manager_p->inputOutputSPWIndexMap_p;
+
 	if (not manager_p->reindex_p)
 	{
 		manager_p->inputOutputObservationIndexMap_p.clear();
@@ -44,16 +50,6 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 		manager_p->inputOutputDDIndexMap_p.clear();
 		manager_p->inputOutputAntennaIndexMap_p.clear();
 		manager_p->outputInputSPWIndexMap_p.clear();
-
-		MSSpectralWindow spwTable = manager_p->selectedInputMs_p->spectralWindow();
-		MSSpWindowColumns spwCols(spwTable);
-		spwFrequencies_p.reference(spwCols.chanFreq());
-	}
-	else
-	{
-		MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
-		MSSpWindowColumns spwCols(spwTable);
-		spwFrequencies_p.reference(spwCols.chanFreq());
 	}
 
 	return;
@@ -1126,9 +1122,10 @@ Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex,
 		return manager_p->getVisBuffer()->getFrequency (rowInBuffer,frequencyIndex,frame);
 	}
 
-	spectralWindows();
-	Vector<Double> frequencies = spwFrequencies_p(spectralWindows_p(rowInBuffer));
-	return frequencies(frequencyIndex);
+	getFrequencies(rowInBuffer,frame);
+
+
+	return frequencies_p(frequencyIndex);
 }
 
 // -----------------------------------------------------------------------
@@ -1152,11 +1149,16 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 			getShape();
 			spectralWindows();
 			frequencies_p.resize(nChannels_p,False);
-			Vector<Double> frequencies = spwFrequencies_p(spectralWindows_p(rowInBuffer));
 
-			for (uInt chanIdx = 0; chanIdx<nChannels_p;chanIdx++)
+			if ( (manager_p->reindex_p) or inputOutputSPWIndexMap_p.size() == 0)
 			{
-				frequencies_p(chanIdx) = frequencies(chanIdx);
+				frequencies_p = spwFrequencies_p(spectralWindows_p(rowInBuffer));
+			}
+			else
+			{
+				uInt inputSPWIndex = spectralWindows_p(rowInBuffer);
+				uInt outputSPWIndex = inputOutputSPWIndexMap_p.find(inputSPWIndex)->second;
+				frequencies_p = spwFrequencies_p(outputSPWIndex);
 			}
 
 			frequenciesTransformed_p = True;
