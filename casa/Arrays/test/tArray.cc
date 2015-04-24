@@ -207,6 +207,88 @@ void oldArrayTest()
 	  AlwaysAssertExit (a2.size() == 0);
 	}
 
+	{   // Check that basic reforming works for reformOrResize
+
+	    IPosition originalShape (2, 2, 4);
+	    Array<Int> a1 (originalShape);
+	    Int * originalData = a1.data();
+
+	    AlwaysAssertExit ((Int64) a1.capacity() == originalShape.product());
+
+	    IPosition newShape = IPosition (2, 4, 2);
+	    a1.reformOrResize (newShape, False);
+
+	    AlwaysAssertExit (a1.shape() == newShape);
+	    AlwaysAssertExit ((Int64) a1.capacity() == originalShape.product());
+	    AlwaysAssertExit (originalData == a1.data()); // same storage
+
+	}
+
+	{   // Check that reformOrResize works when resizing required
+
+	    IPosition originalShape (2, 2, 4);
+	    Array<Int> a1 (originalShape);
+	    for (int r=0; r < 2; r++){
+	        for (int c=0; c < 4; c++){
+	            a1 (IPosition (2, r, c)) = r*10 + c;
+	        }
+	    }
+
+	    IPosition newShape = IPosition (2, 2, 5);
+
+	    try {
+	        a1.reformOrResize (newShape, False);
+	        AlwaysAssertExit (False); // shouldn't get here
+	    } catch (ArrayConformanceError & e){
+	    }
+
+	    a1.reformOrResize (newShape, True, True); // no padding
+
+	    AlwaysAssertExit (a1.shape() == newShape);
+	    AlwaysAssertExit ((Int64) a1.capacity() == newShape.product());
+
+	    for (int r=0; r < 2; r++){
+	        for (int c=0; c < 4; c++){
+	            AlwaysAssertExit (a1 (IPosition (2, r, c)) == r*10 + c);
+	        }
+	    }
+
+	}
+
+	{   // Check that reformOrResize padding works as expected
+
+	    IPosition originalShape (2, 2, 4);
+	    Array<Int> a1 (originalShape);
+
+	    IPosition newShape = IPosition (2, 2, 6);
+
+	    a1.reformOrResize (newShape, True, True, 50);
+	    Int * resizedData = a1.data();
+
+	    AlwaysAssertExit (a1.shape() == newShape);
+	    AlwaysAssertExit ((Int64) a1.capacity() == newShape.product () * 3 / 2);
+
+	    for (int r=0; r < 2; r++){
+	        for (int c=0; c < 6; c++){
+	            a1 (IPosition (2, r, c)) = r*10 + c;
+	        }
+	    }
+
+	    IPosition secondShape (2, 2, 7);
+	    Int * previousData = a1.data();
+	    a1.reformOrResize (newShape, False);
+
+	    AlwaysAssertExit (a1.data() == previousData); // likely no reallocation
+
+	    // Check that previous data is still as expected
+
+	    for (int r=0; r < 2; r++){
+	        for (int c=0; c < 6; c++){
+	            AlwaysAssertExit (a1 (IPosition (2, r, c)) == r*10 + c);
+	        }
+	    }
+	}
+
 	cout << "OK\n";
     }
     
