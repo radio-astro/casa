@@ -4136,7 +4136,12 @@ void MSTransformManager::checkDataColumnsAvailable()
 	}
 	// MODEL_DATA does not exist but there is a model available in the SOURCE sub-table
 	// MODEL_DATA should not be made real if the user does not specify it implicitly
-	else if (inputMs_p->source().isColumn(MSSource::SOURCE_MODEL) and (makeVirtualModelColReal_p or bufferMode_p))
+	else if (inputMs_p->source().isColumn(MSSource::SOURCE_MODEL) and makeVirtualModelColReal_p)
+	{
+		modelDataColumnAvailable_p = True;
+	}
+	// CAS-7390: Provide default MODEL_DATA in buffer mode
+	else if (bufferMode_p)
 	{
 		modelDataColumnAvailable_p = True;
 	}
