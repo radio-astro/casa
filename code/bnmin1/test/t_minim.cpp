@@ -343,8 +343,8 @@ void BFGS2Minim_QuadRes()
 void t_RobustLineObsMod()
 {
   
-  std::vector<double> xvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(8)(9)(10);  
-  std::vector<double> yvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(80)(9)(10);  
+  std::vector<double> xvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(8)(9)(10).convert_to_container<std::vector<double> >();  
+  std::vector<double> yvals = boost::assign::list_of(1)(2)(3)(4)(5)(6)(7)(80)(9)(10).convert_to_container<std::vector<double> >();  
 
   Minim::RobustLineObsMod rom(xvals, yvals);
   rom.a=0;
@@ -400,8 +400,8 @@ void t_LineTwoErrML()
     obs[i]=i;
   }
   */
-  std::vector<double> x=boost::assign::list_of(1)(2);
-  std::vector<double> obs=boost::assign::list_of(1)(2);
+  std::vector<double> x=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
+  std::vector<double> obs=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
 
   Minim::LineTwoErrML lml(x, obs,
 			  1.0, 1.0);
@@ -418,8 +418,8 @@ void t_LineTwoErrML()
 
 void t_LineTwoErr_LavMarq()
 {
-  std::vector<double> x=boost::assign::list_of(1)(2);
-  std::vector<double> obs=boost::assign::list_of(1)(2);
+  std::vector<double> x=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
+  std::vector<double> obs=boost::assign::list_of(1)(2).convert_to_container<std::vector<double> >();
 
   Minim::LineTwoErr_LavMarq lml(x, obs,
 				1.0, 1.0);
@@ -459,19 +459,19 @@ void t_NestedSampling()
   std::list<Minim::MCPoint> startset;
   Minim::MCPoint p; 
 
-  p.p=boost::assign::list_of(0)(0)(0);
+  p.p=boost::assign::list_of(0)(0)(0).convert_to_container<std::vector<double> >();
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(2)(0)(0);
+  p.p=boost::assign::list_of(2)(0)(0).convert_to_container<std::vector<double> >();
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(0)(1)(5);
+  p.p=boost::assign::list_of(0)(1)(5).convert_to_container<std::vector<double> >();
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(3)(1)(10);
+  p.p=boost::assign::list_of(3)(1)(10).convert_to_container<std::vector<double> >();
   startset.push_back(p);
 
-  p.p=boost::assign::list_of(-3)(2)(10);
+  p.p=boost::assign::list_of(-3)(2)(10).convert_to_container<std::vector<double> >();
   startset.push_back(p);
   
   NestedS s(obs,
@@ -487,7 +487,7 @@ void MetroPropose_raccept()
 {
   
   std::vector<double> sigmas(0);
-  //  sigmas= boost::assign::list_of(1)(1)(1)(1);
+  //  sigmas= boost::assign::list_of(1)(1)(1)(1).convert_to_container<std::vector<double> >();
   Minim::MetroPropose mp(sigmas, 1);
 
   for (size_t i =0 ; i < 100 ; ++i)
@@ -615,10 +615,10 @@ void llPoint_Wrks()
 
 
   Minim::MCPoint p1; 
-  p1.p=boost::assign::list_of(0.5)(0.5)(0.5);
+  p1.p=boost::assign::list_of(0.5)(0.5)(0.5).convert_to_container<std::vector<double> >();
 
   Minim::MCPoint p2; 
-  p2.p=boost::assign::list_of(0.5)(0.5)(0.5);
+  p2.p=boost::assign::list_of(0.5)(0.5)(0.5).convert_to_container<std::vector<double> >();
 
   std::list<Minim::MCPoint> lp;
   lp.push_back(p1); 
@@ -703,7 +703,7 @@ void metropolis_accept()
 
 
 
-main()
+int main()
 {
   using namespace Minim;
   Model m;
@@ -761,6 +761,8 @@ main()
   metropolis_accept();
 
   std::cout << "Passed." << std::endl;
+
+  return 0;
 
 }
 
