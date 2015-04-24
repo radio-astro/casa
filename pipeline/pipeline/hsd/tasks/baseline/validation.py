@@ -319,10 +319,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # Region2:[Width, Center]
         Region2 = numpy.array(dummy)
         ### 2015/04/22 save Region to file for test
-        fp = open('ClstRegion.%d.txt' % (int(time.time()/60)-23630000), 'w')
-        for i in range(len(Region)):
-            fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
-        fp.close()
+        #fp = open('ClstRegion.%d.txt' % (int(time.time()/60)-23630000), 'w')
+        #for i in range(len(Region)):
+        #    fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
+        #fp.close()
         ### 2011/05/13 Calculate median line width
         #MedianWidth = numpy.median(numpy.array(Width))
         ###MedianWidth = numpy.median(Region2[:,0])
