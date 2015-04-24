@@ -1123,7 +1123,7 @@ casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost components)
 casa_add_module( casa_sakura CASACORE LIBSAKURA)
 casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
-casa_add_module( bnmin1 Boost GSL GSLCBLAS )
+casa_add_module( bnmin1 Boost GSL GSLCBLAS CASACORE )
 casa_add_module( air_casawvr CASACORE bnmin1 Boost synthesis WCSLIB CFITSIO LAPACK )
 
 #

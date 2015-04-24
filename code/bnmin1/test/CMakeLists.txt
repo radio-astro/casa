@@ -20,35 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_library ( bnmin1
-    src/bnmin_main.cxx
-    src/gradientminim.cxx
-    src/gradientmodel.cxx
-    src/linemodel.cxx
-    src/lmmin.cxx
-    src/lmminutils.cxx
-    src/markovchain.cxx
-    src/mcmonitor.cxx
-    src/mcpoint.cxx
-    src/metropolis.cxx
-    src/metro_propose.cxx
-    src/minim.cxx
-    src/minimio.cxx
-    src/minimmodel.cxx
-    src/monitor.cxx
-    src/nestederr.cxx
-    src/nestedinitial.cxx
-    src/nestedsampler.cxx
-    src/paramalgo.cxx
-    src/prior_sampler.cxx
-    src/priors.cxx
-    src/robustline.cxx
-    src/twoerrline.cxx
-    src/twoerrline_ml.cxx
-    src/apps/bayesline.cxx
-    src/apps/gaussmodel.cxx
-    src/tests/nestedgauss.cpp
-)
-
-add_subdirectory( test )
+casa_add_executable ( bnmin1 t_minim
+  t_minim.cpp
+) 
 
