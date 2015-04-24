@@ -701,12 +701,36 @@ void metropolis_accept()
 
 }
 
+void normal() {
+  unsigned seed = 42;
+  boost::mt19937 rng(seed);
+  boost::normal_distribution<double> distro(0., 1.);
+  boost::variate_generator<boost::mt19937, boost::normal_distribution<double> > norm(rng, distro);
+  std::cout << "normal" << std::endl;
+  std::cout << distro.mean() << " " << distro.sigma() << std::endl;
+  for (int i=0; i<10; ++i) {
+    std::cout << norm() << std::endl;
+  }
+}
 
+void uniform() {
+  unsigned seed = 42;
+  boost::mt19937 rng(seed);
+  boost::uniform_real<double> distro(0., 1.);
+  std::cout << "uniform" << std::endl;
+  for (int i=0; i<10; ++i) {
+    std::cout << distro(rng) << std::endl;
+  }
+}
 
 int main()
 {
   using namespace Minim;
   Model m;
+
+  // test random generation itself
+  normal();
+  uniform();
 
   //std::cout << "QuadT1" << std::endl;
   //QuadT1();
