@@ -765,7 +765,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 													String& colname,
 													const Vector<Int>& tileShape,
 													const String& combine,
-													Table::TableOption)
+													Table::TableOption option)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
@@ -822,10 +822,29 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 
 	msOut_p = *outpointer;
 
-	Bool ret = False;
+	Bool ret = True;
 	try
 	{
-		ret = fillSubTables(colNamesTok);
+		if (option == Table::Scratch)
+		{
+			// Set up pointing (has to be done in the copied MS)
+			SetupNewTable pointingSetup(msOut_p.pointingTableName(),MSPointing::requiredTableDesc(), Table::New);
+			msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),Table(pointingSetup));
+			msOut_p.initRefs();
+
+			// Add aditional columns to SPECTRAL_WINDOW sub-table
+			addOptionalColumns(mssel_p.spectralWindow(), msOut_p.spectralWindow(), true);
+
+			// Initialize output MS Columns
+			msc_p = new MSColumns(msOut_p);
+
+			// Write transformed SPECTRAL_WINDOW, DATA_DESCRIPTION_ID and POLARIZATION
+			ret &= fillDDTables();
+		}
+		else
+		{
+			ret = fillSubTables(colNamesTok);
+		}
 	}
 	catch (AipsError ex)
 	{
@@ -1141,6 +1160,24 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 	// Make the MS table
 	TableDesc td = MS::requiredTableDesc();
 	Vector<String> tiledDataNames;
+
+	if (option == Table::Scratch)
+	{
+		SetupNewTable newtab(MSFileName, td, option);
+		TableLock lock(TableLock::AutoLocking);
+		MeasurementSet *ms = new MeasurementSet(newtab, lock);
+
+		// Set up default sub-tables for the MS
+		SetupNewTable dataDescSetup(ms->dataDescriptionTableName(),MSDataDescription::requiredTableDesc(), option);
+		ms->rwKeywordSet().defineTable(MS::keywordName(MS::DATA_DESCRIPTION),Table(dataDescSetup));
+		SetupNewTable polarizationSetup(ms->polarizationTableName(),MSPolarization::requiredTableDesc(), option);
+		ms->rwKeywordSet().defineTable(MS::keywordName(MS::POLARIZATION),Table(polarizationSetup));
+		SetupNewTable spectralWindowSetup(ms->spectralWindowTableName(),MSSpectralWindow::requiredTableDesc(), option);
+		ms->rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),Table(spectralWindowSetup));
+		ms->initRefs();
+
+		return ms;
+	}
 
 	// Even though we know the data is going to be the same shape throughout I'll
 	// still create a column that has a variable shape as this will permit MS's
