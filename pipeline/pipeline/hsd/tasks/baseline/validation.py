@@ -318,12 +318,17 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     #Width.append(float(line[1] - line[0]) / self.CLUSTER_WHITEN)
         # Region2:[Width, Center]
         Region2 = numpy.array(dummy)
+        ### 2015/04/22 save Region to file for test
+        fp = open('ClstRegion.%d.txt' % (int(time.time()/60)-23630000), 'w')
+        for i in range(len(Region)):
+            fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
+        fp.close()
         ### 2011/05/13 Calculate median line width
         #MedianWidth = numpy.median(numpy.array(Width))
         ###MedianWidth = numpy.median(Region2[:,0])
         #LOG.debug('dummy = %s' % dummy)
         #LOG.debug('Width = %s' % Width)
-        del dummy#, Width
+        del dummy #, Width
         #LOG.debug('Maxlines = %s' % Maxlines)
         LOG.debug('Npos = %s' % Npos)
         ###LOG.debug('MedianWidth = %s' % MedianWidth)
@@ -1234,19 +1239,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                         Fit0 = 0.5 * (Chan0 + Chan1)
                                         Fit1 = (Chan1 - Chan0) + 1.0
                                         LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
-                                        if (Fit1 >= self.MinFWHM) and (Fit1 <= self.MaxFWHM):
-                                            # Allowance = Fit1 / 2.0 * 1.3
-                                            # To keep broad line region, make allowance larger
-                                            ### 2011/05/16 allowance + 0.5 ->  2.5 for sharp line
-                                            ### 2011/05/16 factor 1.5 -> 2.0 for broad line
-                                            #Allowance = min(Fit1 / 2.0 * 2.0, MaxFWHM / 2.0)
-                                            ### 2011/11/22 Allowance is too narrow for new line finding algorithm
-                                            Allowance = min(Fit1 + 5.0, self.MaxFWHM / 2.0)
-                                            ### 2011/10/21 left side mask exceeded nchan
-                                            Protect = [min(max(int(Fit0 - Allowance), 0), nchan - 1), min(int(Fit0 + Allowance), nchan - 1)]
-                                            #Allowance = Fit1 / 2.0 * 1.5
-                                            #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
-                                            LOG.trace('0 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                        # 2015/04/23 remove MaxFWHM check
+                                        if (Fit1 >= self.MinFWHM): # and (Fit1 <= self.MaxFWHM):
+                                            Allowance, Protect = self.calc_allowance(Fit0, Fit1, nchan)
                                             # for Channel map velocity range determination 2014/1/12
                                             MaskCen = (Protect[0] + Protect[1]) / 2.0
                                             if MaskMin > MaskCen: MaskMin = MaskCen
@@ -1292,20 +1287,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     Fit0 = 0.5 * (Chan0 + Chan1)
                                     Fit1 = (Chan1 - Chan0)
                                     LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
-                                    if (Fit1 >= self.MinFWHM) and (Fit1 <= self.MaxFWHM):
-                                        #Allowance = Fit1 / 2.0 * 1.3
-                                        # To keep broad line region, make allowance larger
-                                        ### 2011/05/16 allowance + 0.5 ->  2.5 for sharp line
-                                        ### 2011/05/16 factor 1.5 -> 2.0 for broad line
-                                        #Allowance = min(Fit1 / 2.0 * 2.0, MaxFWHM / 2.0)
-                                        ### 2011/11/22 Allowance is too narrow for new line finding algorithm
-                                        Allowance = min(Fit1 + 5.0, self.MaxFWHM / 2.0)
-                                        ### 2011/10/21 left side mask exceeded nchan
-                                        Protect = [min(max(int(Fit0 - Allowance), 0), nchan - 1), min(int(Fit0 + Allowance), nchan - 1)]
-                                        #Allowance = Fit1 / 2.0 * 1.5
-                                        #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
-
-                                        LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                    # 2015/04/23 remove MaxFWHM check
+                                    if (Fit1 >= self.MinFWHM): # and (Fit1 <= self.MaxFWHM):
+                                        Allowance, Protect = self.calc_allowance(Fit0, Fit1, nchan)
                                         # for Channel map velocity range determination 2014/1/12
                                         # Valid case only: ignore blur case
                                         #if MaskMin > Protect[0]: MaskMin = Protect[0]
@@ -1328,7 +1312,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     channelmap_range[Nc][2] = False
                 # for Channel map velocity range determination 2014/1/12 arbitrary factor 0.8
                 #channelmap_range[Nc][1] = (MaskMax - MaskMin - 10) * 0.8
-                channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
+                #channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
+                # MaskMax-MaskMin is an maximum offset of line center
+                channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1]
                 LOG.info('Nc, MaskMax, Min: %d, %f, %f' % (Nc, MaskMax, MaskMin))
                 LOG.info('channelmap_range[Nc]: %s' % channelmap_range[Nc])
                 LOG.info('lines[Nc]: %s' % lines[Nc])
@@ -1346,6 +1332,23 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         
         return (RealSignal, lines, channelmap_range)
 
+    def calc_allowance(self, Center, Width, nchan):
+        #Allowance = Fit1 / 2.0 * 1.3
+        # To keep broad line region, make allowance larger
+        ### 2011/05/16 allowance + 0.5 ->  2.5 for sharp line
+        ### 2011/05/16 factor 1.5 -> 2.0 for broad line
+        #Allowance = min(Fit1 / 2.0 * 2.0, MaxFWHM / 2.0)
+        ### 2011/11/22 Allowance is too narrow for new line finding algorithm
+        #Allowance = min(Fit1 + 5.0, self.MaxFWHM / 2.0)
+        ### 2015/04/23 Allowance=MaxFWHM at x=MaxFWHM, Allowance=2xMinFWHM+10 at x=MinFWHM
+        Allowance = ((self.MaxFWHM-Width)*(2.0*self.MinFWHM+10.0) + (Width-self.MinFWHM)*self.MaxFWHM) / (self.MaxFWHM-self.MinFWHM) / 2.0
+        ### 2011/10/21 left side mask exceeded nchan
+        Protect = [min(max(int(Center - Allowance), 0), nchan - 1), min(int(Center + Allowance), nchan - 1)]
+        #Allowance = Fit1 / 2.0 * 1.5
+        #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nchan - 1)]
+        LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
+        return (Allowance, Protect)
+        
     def __merge_lines(self, lines, nchan):
         nlines = len(lines)
         if nlines < 1:

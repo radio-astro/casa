@@ -128,7 +128,9 @@ class DetectLine(common.SingleDishTaskTemplate):
         #    rules.LineFinderRule['MaxFWHM'] = MaxFWHM
         #else:
         #    MaxFWHM = int(rules.LineFinderRule['MaxFWHM'])
-        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
+        #MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
+        #2015/04/23 MaxFWHM < nchan/3.0
+        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
         #rules.LineFinderRule['MaxFWHM'] = MaxFWHM
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
         Threshold = rules.LineFinderRule['Threshold']        
@@ -154,6 +156,8 @@ class DetectLine(common.SingleDishTaskTemplate):
             Thre = [Threshold * self.ThresholdFactor for i in xrange(3)]
             if broadline: (Start, Binning) = (0, 5)
             else: (Start, Binning) = (1, 3)
+            #2015/04/23 ignore Start, Binning: broadline detection tweak is not done in _detect()
+            Start, Binning = 2, 3
 
         # try 2010/10/27
         #BoxSize = [min(2.0*MaxFWHM/(nchan - Nedge), 0.5, (nchan - Nedge)/float(nchan)*0.9), min(max(MaxFWHM/(nchan - Nedge)/4.0, 0.1), (nchan - Nedge)/float(nchan)/2.0)]
@@ -200,9 +204,11 @@ class DetectLine(common.SingleDishTaskTemplate):
                     protected = self._detect(spectrum = SP,
                                              mask = MSK,
                                              start=Start,
-                                             end=len(Thre),
+                                             #end=len(Thre),
+                                             end=Start+1,
                                              binning=Binning,
-                                             threshold=Thre,
+                                             #threshold=Thre,
+                                             threshold=Thre[0]+math.sqrt(BINN)-1.0,
                                              box_size=BoxSize,
                                              #min_nchan=MinFWHM,
                                              min_nchan=MinNchan,
@@ -281,7 +287,9 @@ class DetectLine(common.SingleDishTaskTemplate):
         nchan = len(spectrum)
         (EdgeL, EdgeR) = edge
         Nedge = EdgeR + EdgeL
-        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
+        #MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
+        #2015/04/23 0.5 -> 1/3.0
+        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
 
         # Try to detect broader component and narrow component separately
@@ -292,11 +300,13 @@ class DetectLine(common.SingleDishTaskTemplate):
             Bin = binning ** (2-y)
             if Bin != 1 and nchan/Bin < 50: continue
             LOG.trace('line detection parameters: ')
-            LOG.trace('threshold (S/N per channel)=%.1f,' % threshold[y] \
+            #LOG.trace('threshold (S/N per channel)=%.1f,' % threshold[y] \
+            LOG.trace('threshold (S/N per channel)=%.1f,' % threshold \
                            + 'min_nchan for detection=%d, running mean box size (in fraction of spectrum)=%s, ' % (min_nchan, box_size[y]) \
                            + 'upper limit for averaging=%s channels, edges to be dropped=[%s, %s]' % (avg_limit[y], EdgeL, EdgeR) )
             line_ranges = self.line_finder(spectrum=spectrum,
-                                           threshold=threshold[y], 
+                                           #threshold=threshold[y], 
+                                           threshold=threshold, 
                                            box_size=box_size[y], 
                                            min_nchan=min_nchan, 
                                            avg_limit=avg_limit[y], 

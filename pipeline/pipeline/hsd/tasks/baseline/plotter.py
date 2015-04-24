@@ -31,7 +31,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
                 thispol = datatable.tb1.getcell('POL', idx)
                 LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, thisant, thisspw, thispol))
                 if thisant == antid and thisspw == spwid and thispol == polid:
-                    LOG.info('Adding data to datarows')
+                    LOG.debug('Adding data to datarows')
                     datarows.append(row)
                     dataids.append(idx)
         raid = grid_table[each_plane[0]][2]
