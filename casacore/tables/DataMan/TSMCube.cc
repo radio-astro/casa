@@ -106,9 +106,7 @@ TSMCube::TSMCube (TiledStMan* stman, TSMFile* file,
                   const Record& values,
                   Int64 fileOffset,
                   Bool useDerived)
-: cachedTile_p (0),
-  cachedTileLength_p (0),
-  stmanPtr_p     (stman),
+: stmanPtr_p     (stman),
   useDerived_p   (useDerived),
   values_p       (values),
   extensible_p   (False),
@@ -140,9 +138,7 @@ TSMCube::TSMCube (TiledStMan* stman, TSMFile* file,
 
 TSMCube::TSMCube (TiledStMan* stman, AipsIO& ios,
                   Bool useDerived)
-: cachedTile_p (0),
-  cachedTileLength_p (0),
-  stmanPtr_p     (stman),
+: stmanPtr_p     (stman),
   useDerived_p   (useDerived),
   filePtr_p      (0),
   cache_p        (0),
@@ -160,7 +156,6 @@ TSMCube::TSMCube (TiledStMan* stman, AipsIO& ios,
 TSMCube::~TSMCube()
 {
     delete cache_p;
-    delete cachedTile_p;
 }
 
 
@@ -692,15 +687,7 @@ char* TSMCube::readCallBack (void* owner, const char* external)
 }
 char* TSMCube::readTile (const char* external)
 {
-    char* local = 0;
-
-    if (cachedTile_p != 0 && cachedTileLength_p == localTileLength_p){
-        local = cachedTile_p;
-        cachedTile_p = 0;
-    } else {
-        local = new char[localTileLength_p];
-    }
-
+    char* local = new char[localTileLength_p];
     stmanPtr_p->readTile (local, localOffset_p, external, externalOffset_p,
 			  tileSize_p);
     return local;
@@ -714,15 +701,9 @@ void TSMCube::writeTile (char* external, const char* local)
     stmanPtr_p->writeTile (external, externalOffset_p, local, localOffset_p,
 			   tileSize_p);
 }
-void TSMCube::deleteCallBack (void* owner, char* buffer)
+void TSMCube::deleteCallBack (void*, char* buffer)
 {
-    TSMCube * tsmCube = ((TSMCube*)owner);
-    if (tsmCube->cachedTile_p == 0){
-        tsmCube->cachedTile_p = buffer;
-        tsmCube->cachedTileLength_p = tsmCube->localTileLength_p;
-    } else {
-        delete [] buffer;
-    }
+    delete [] buffer;
 }
 char* TSMCube::initCallBack (void* owner)
 {

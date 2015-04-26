@@ -344,36 +344,11 @@ public:
     // Vector<Float> line(square.reform(lineShape));
     // // "square"'s storage may now be accessed through Vector "line"
     // </srcblock>
-    Array<T> reform(const IPosition &shape) const;
-
-    // Having an array that can be reused without requiring reallocation can
-    // be useful for large arrays.  The method reformOrResize permits this
-    // usage.
-    //
-    // The reformOrResize method first attempts to reform the matrix so that
-    // it reuses the existing storage for an array with a new shape.  If the
-    // existing storage will not hold the new shape, then the method will
-    // resize the array when resizeIfNeeded is true; if a resize is needed and
-    // resizeIfNeeded is false, then an ArrayConformanceError is thrown.  The
-    // copyDataIfNeeded parameter is passed to resize if resizing is performed.
-    // resizePercentage is the percent of additional storage to be addeed when
-    // a resize is performed; this allows the allocations to be amortized when
-    // the caller expects to be callin this method again in the future.  The
-    // parameter is used to define an allocation shape which differs from the
-    // newShape by increasing the last dimension by resizePercentage percent
-    // (i.e., lastDim = *lastDim * (100 + resizePercentage)) / 100).  If
-    // resizePercentage <= 0 then resizing uses newShape as is.
-    //
-    // To truncate the array so that it no longer holds additional storage,
-    // use the resize method.
-
-    void reformOrResize (const IPosition & newShape,
-                         Bool resizeIfNeeded,
-                         Bool copyDataIfNeeded = True,
-                         uInt resizePercentage = 0);
-
-    size_t capacity () const; // returns the number of elements allocated.
-
+    Array<T> reform(const IPosition &shape, Bool strict=True) const;
+        // Avoid use of strict=False or use with extreme care since the user
+        // assumes responsibility for managing storage size.  Use only when
+        // necessary to reuse an array's storage with the same dimensions.
+    
     // These member functions remove degenerate (ie. length==1) axes from
     // Arrays.  Only axes greater than startingAxis are considered (normally
     // one wants to remove trailing axes). The first two of these functions
