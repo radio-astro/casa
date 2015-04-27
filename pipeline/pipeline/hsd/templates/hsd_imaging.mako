@@ -1,6 +1,7 @@
 <%!
 rsc_path = "../"
 import os
+import collections
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -96,10 +97,65 @@ plots_list = [{'title': 'Channel Map',
               {'title': 'Integrated Intensity Map',
                'subpage': integratedmap_subpage,
                'plot': integratedmap_plots}]
+st_per_ms = collections.defaultdict(list)
+for st in pcontext.observing_run:
+    st_per_ms[st.ms.basename].append(st)
+rowspans_ms = collections.defaultdict(lambda: 0)
+rowspans_ant = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
+rowspans_spw = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(lambda: 0)))
+for ms in pcontext.observing_run.measurement_sets:
+    vis = ms.basename
+    for st in st_per_ms[vis]:
+        ant = st.antenna.name
+        for (spwid,spw) in st.spectral_window.items():
+            if spw.is_target and spw.nchan > 1 and spw.nchan != 4:
+                num_factors = len(jyperk[vis][ant][spwid])
+                rowspans_ms[vis] += num_factors
+                rowspans_ant[vis][ant] += num_factors
+                rowspans_spw[vis][ant][spwid] += num_factors
 %>
 
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
+
+<h3>Jy/K Conversion Factor</h3>
+The following table lists the Jy/K factor applied to the spectral data. 
+<table border width="100%">
+<tr><th>MS</th><th>Antenna</th><th>Spw</th><th>Pol</th><th>Factor</th></tr>
+% for ms in pcontext.observing_run.measurement_sets:
+    <% vis_first_row = 1 %>
+    <% vis = ms.basename %>
+    % for st in st_per_ms[ms.basename]:
+        <% ant_first_row = 1 %>
+        <% ant = st.antenna.name %>
+        % for (spwid,spw) in st.spectral_window.items():
+            % if spw.is_target and spw.nchan > 1 and spw.nchan != 4:
+                <% jyperk_corr = jyperk[ms.basename][ant][spwid] %>
+                <% spw_first_row = 1 %>
+                <% corr_list = st.polarization[spw.pol_association[0]].corr_string %>
+                % for corr in corr_list:
+                    <% factor = jyperk_corr[corr] %>
+                    % if vis_first_row == 1:
+                        <tr><td rowspan="${rowspans_ms[vis]}">${vis}</td><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <% vis_first_row = 0 %>
+                        <% ant_first_row = 0 %>
+                        <% spw_first_row = 0 %>
+                    % elif ant_first_row == 1:
+                        <tr><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <% ant_first_row = 0 %>
+                        <% spw_first_row = 0 %>
+                    % elif spw_first_row == 1:
+                        <tr><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <% spw_first_row = 0 %>
+                    % else:
+                        <tr><td>${corr}</td><td>${factor}</td></tr>
+                    % endif
+                % endfor
+            % endif
+        % endfor
+    % endfor
+% endfor
+</table>
 
 <h3>Profile Map</h3>
 % for field in sparsemap_subpage.keys():

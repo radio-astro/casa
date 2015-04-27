@@ -139,7 +139,6 @@ class SDImaging(common.SingleDishTaskTemplate):
         scaling_task = scaling.IntensityScaling(scaling_inputs)
         scaling_results = self._executor.execute(scaling_task, merge=True)
         logrecords.extend(scaling_results.logrecords)
-        ###results.append(scaling_results)
 
         # search results and retrieve edge parameter from the most
         # recent SDBaselineResults if it exists
@@ -470,7 +469,9 @@ class SDImaging(common.SingleDishTaskTemplate):
                     
                 results.append(result)
                 
-                    
+        # add IntensityScalingRsults to display Jy/K factors to task summary page
+        results.append(scaling_results)
+                   
         LOG.todo('logrecords for SDImagingResults must be handled properly')
         # only add logrecords to first result
         if len(results) > 0:

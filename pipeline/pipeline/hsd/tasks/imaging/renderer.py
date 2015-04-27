@@ -1,4 +1,5 @@
 import os
+import collections
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
@@ -21,6 +22,10 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
     def update_mako_context(self, ctx, context, results):            
         plots = []
         #for image_item in result.outcome:
+        jyperk = collections.defaultdict(lambda: collections.defaultdict(
+                                         lambda: collections.defaultdict(
+                                         lambda: collections.defaultdict(lambda: 'N/A (1.0)'))))
+        reffile = None
         for r in results:
             if isinstance(r, imaging.SDImagingResults):
                 image_item = r.outcome['image']
@@ -33,7 +38,31 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 task = task_cls(inputs)
                 plots.append(task.plot())
             elif isinstance(r, scaling.IntensityScalingResults):
-                ctx.update(r.outcome)
+                LOG.trace('This result should be a IntensityScalingResults object to store jyperk information')
+                for st in context.observing_run:
+                    ms = st.ms
+                    vis = ms.basename
+                    ant = st.antenna.name
+                    fs = r.outcome['factors'][vis][ant]
+                    for (spwid,spw) in st.spectral_window.items():
+                        corrs = st.polarization[spw.pol_association[0]].corr_string
+                        if fs.has_key(spwid) and spw.is_target and spw.nchan > 1 and spw.nchan != 4:
+                            fp = fs[spwid]
+                            LOG.info('fp=%s'%(fp))
+                            LOG.info('corrs=%s'%(corrs))
+                            for corr in corrs:
+                                if corr in fp.keys():
+                                    ckey = corr
+                                elif 'I' in fp.keys() and corr in ['XX', 'YY', 'RR', 'LL']:
+                                    ckey = 'I'
+                                else:
+                                    ckey = None
+                                LOG.info('corr=%s ckey=%s'%(corr,ckey))
+                                if ckey is not None:
+                                    jyperk[vis][ant][spwid][corr] = fp[ckey]
+                reffile = r.outcome['reffile']
+        ctx.update({'jyperk': jyperk,
+                    'reffile': reffile})
             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
                                    'plot_title': 'Sparse Profile Map'},
