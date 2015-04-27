@@ -292,7 +292,7 @@ Usage examples :
 
      makemask(mode='copy', inpimage='image1.im', inpmask='myregion.crtf', output='image1.im:mask0')
 
-     The crtf region is copied as a T/F mask (mask0) inside the image, image1.im. Outside the region 
+     The region is copied as a T/F mask (mask0) inside the image, image1.im. The region outside myregion.crtf
      will be masked.
           
     
