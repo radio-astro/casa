@@ -138,6 +138,7 @@ void test2(){
 
 	//Testing params
 	int nGauss = 1;
+	//Dave, Please Note:  If you change 0,40 to 17,27 the fit will no longer converge.
 	int channelMin = 17;
 	int channelMax = 27;
 
@@ -148,9 +149,9 @@ void test2(){
 
 	//Add an estimate for the Gauss fit
 	SpectralList spectralList;
-	double peakVal = 1.29289;
-	double centerValPix = 45.3567;
-	double fwhmValPix = 12.2477;
+	double peakVal = 1.47455;
+	double centerValPix = 21.9734;
+	double fwhmValPix = 3.87114;
 	GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 	spectralList.add( *estimate );
 
