@@ -540,7 +540,10 @@ def get_logrecords(result, loglevel):
     :return:
     """
     if isinstance(result, list):
-        records = flatten([get_logrecords(r, loglevel) for r in result])
+        # note that flatten returns a generator, which empties after
+        # traversal. we convert to a list to allow multiple traversals
+        g = flatten([get_logrecords(r, loglevel) for r in result])
+        records = list(g)
     else:
         records = [l for l in result.logrecords if l.levelno is loglevel]
 

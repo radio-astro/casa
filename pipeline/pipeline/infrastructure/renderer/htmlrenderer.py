@@ -1296,14 +1296,13 @@ def wrap_in_resultslist(task_result):
 
     # the newly-created ResultsList wrapper is missing a QA pool. However,
     # as there is only ever one task added to the list we can safely assume
-    # that the pool for the wrapper should equal that of the child. 
-    if hasattr(task_result, 'qa'):
-        l.qa = task_result.qa
+    # that the pool for the wrapper should equal that of the child. The same
+    # holds for logrecords. The task name is required as the plot level 
+    # toggles work off the CASA task name.
+    for attr in ['qa', 'pipeline_casa_task', 'logrecords']:
+        if hasattr(task_result, 'qa'):
+            setattr(l, attr, getattr(task_result, attr))
 
-    # the plot level toggles work off the CASA task name
-    if hasattr(task_result, 'pipeline_casa_task'):
-        l.pipeline_casa_task = task_result.pipeline_casa_task
-    
     return l
 
 
