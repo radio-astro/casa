@@ -63,7 +63,7 @@ def _read_stream(stream):
     else:
         LOG.error('Jy/K factor file is invalid format')
     for line in reader:
-        if len(line) == 0:
+        if len(line) == 0 or len(line[0]) == 0 or line[0][0] == '#':
             continue
         elif len(line) == 5:
             yield line

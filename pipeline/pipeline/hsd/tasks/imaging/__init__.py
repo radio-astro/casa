@@ -8,4 +8,4 @@ from . import renderer
 
 qaadapter.registry.register_to_imaging_topic(imaging.SDImagingResults)
 
-weblog.add_renderer(SDImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(), group_by='ungrouped')
+weblog.add_renderer(SDImaging, renderer.T2_4MDetailsSingleDishImagingRenderer(always_rerender=True), group_by='ungrouped')

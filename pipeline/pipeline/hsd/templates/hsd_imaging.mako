@@ -109,7 +109,7 @@ for ms in pcontext.observing_run.measurement_sets:
         ant = st.antenna.name
         for (spwid,spw) in st.spectral_window.items():
             if spw.is_target and spw.nchan > 1 and spw.nchan != 4:
-                num_factors = len(jyperk[vis][ant][spwid])
+                num_factors = len(st.polarization[spw.pol_association[0]].corr_string)
                 rowspans_ms[vis] += num_factors
                 rowspans_ant[vis][ant] += num_factors
                 rowspans_spw[vis][ant][spwid] += num_factors
@@ -136,16 +136,16 @@ The following table lists the Jy/K factor applied to the spectral data.
                 % for corr in corr_list:
                     <% factor = jyperk_corr[corr] %>
                     % if vis_first_row == 1:
-                        <tr><td rowspan="${rowspans_ms[vis]}">${vis}</td><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <tr><td rowspan="${rowspans_ms[vis]}">${vis}</td><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${rowspans_spw[vis][ant][spwid]}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
                         <% vis_first_row = 0 %>
                         <% ant_first_row = 0 %>
                         <% spw_first_row = 0 %>
                     % elif ant_first_row == 1:
-                        <tr><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <tr><td rowspan="${rowspans_ant[vis][ant]}">${ant}</td><td rowspan="${rowspans_spw[vis][ant][spwid]}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
                         <% ant_first_row = 0 %>
                         <% spw_first_row = 0 %>
                     % elif spw_first_row == 1:
-                        <tr><td rowspan="${len(jyperk_corr)}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
+                        <tr><td rowspan="${rowspans_spw[vis][ant][spwid]}">${spwid}</td><td>${corr}</td><td>${factor}</td></tr>
                         <% spw_first_row = 0 %>
                     % else:
                         <tr><td>${corr}</td><td>${factor}</td></tr>

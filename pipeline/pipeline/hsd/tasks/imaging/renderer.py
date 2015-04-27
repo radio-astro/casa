@@ -37,7 +37,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                 inputs = task_cls.Inputs(context,result=r)
                 task = task_cls(inputs)
                 plots.append(task.plot())
-            elif isinstance(r, scaling.IntensityScalingResults):
+            elif isinstance(r, scaling.IntensityScalingResults) and r.outcome['factors'] is not None:
                 LOG.trace('This result should be a IntensityScalingResults object to store jyperk information')
                 for st in context.observing_run:
                     ms = st.ms
