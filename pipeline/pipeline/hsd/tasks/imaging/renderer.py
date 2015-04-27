@@ -1,5 +1,6 @@
 import os
 import collections
+import shutil
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.logging as logging
@@ -61,6 +62,10 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                 if ckey is not None:
                                     jyperk[vis][ant][spwid][corr] = fp[ckey]
                 reffile = r.outcome['reffile']
+        if reffile is not None and os.path.exists(reffile):
+            stage_dir = os.path.join(context.report_dir, 'stage%s'%(results.stage_number))
+            LOG.debug('copying %s to %s'%(reffile, stage_dir))
+            shutil.copy2(reffile, stage_dir)
         ctx.update({'jyperk': jyperk,
                     'reffile': reffile})
             

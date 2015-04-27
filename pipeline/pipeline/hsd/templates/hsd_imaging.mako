@@ -88,6 +88,7 @@ $(document).ready(function() {
 </script>
 
 <%
+stage_dir = os.path.join(pcontext.report_dir, 'stage%s'%(result.stage_number))
 plots_list = [{'title': 'Channel Map',
                'subpage': channelmap_subpage,
                'plot': channelmap_plots},
@@ -120,6 +121,11 @@ It generates an image combined spectral data from whole antenna as well as image
 
 <h3>Jy/K Conversion Factor</h3>
 The following table lists the Jy/K factor applied to the spectral data. 
+% if os.path.exists(os.path.join(stage_dir, os.path.basename(reffile))):
+Input file is <a class="replace-pre" href="${os.path.join(stage_dir, os.path.basename(reffile))}">${os.path.basename(reffile)}</a>.
+% else:
+No Jy/K factors file specified. 
+% endif
 <table border width="100%">
 <tr><th>MS</th><th>Antenna</th><th>Spw</th><th>Pol</th><th>Factor</th></tr>
 % for ms in pcontext.observing_run.measurement_sets:

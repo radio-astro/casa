@@ -35,7 +35,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
     
     @common.datatable_setter
     def prepare(self):
-        reffile = self.inputs.reffile
+        reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(self.inputs.reffile)))
         
         if reffile is None or not os.path.exists(reffile):
             factors = None
