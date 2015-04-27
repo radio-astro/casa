@@ -381,14 +381,14 @@ class VLASetjy(basetask.StandardTaskTemplate):
         # Multiple spectral windows spawn multiple setjy jobs. Set a unique
         # marker in the CASA log so that we can identify log entries from this
         # particular task
-        start_marker = self._add_marker_to_casa_log()
+        ####start_marker = self._add_marker_to_casa_log()
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
         
         
         
-        
+        setjy_dicts = []
         
         standard_source_names, standard_source_fields = standard_sources(self.inputs.vis)
         context = self.inputs.context
@@ -463,7 +463,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                 # merge identical jobs into one job with a multi-spw argument
                 jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
                 for job, _ in jobs_and_components:
-                    self._executor.execute(job)
+                    setjy_dicts.append(self._executor.execute(job))
         
         '''
         for field in utils.safe_split(inputs.field):
@@ -501,13 +501,34 @@ class VLASetjy(basetask.StandardTaskTemplate):
         # higher-level tasks may run multiple Setjy tasks before running
         # analyse, so we also tag the end of our jobs so we can identify the
         # values from this task
-        end_marker = self._add_marker_to_casa_log()
+        ####end_marker = self._add_marker_to_casa_log()
 
         # We read the log in reverse order, so the end timestamp should
         # trigger processing and the start timestamps should terminate it.
-        end_pattern = re.compile('.*%s.*' % start_marker)
-        start_pattern = re.compile('.*%s.*' % end_marker)
+        ####end_pattern = re.compile('.*%s.*' % start_marker)
+        ####start_pattern = re.compile('.*%s.*' % end_marker)
 
+        spw_seen = set()
+        for setjy_dict in setjy_dicts:
+            setjy_dict.pop('format')
+            for field_id in setjy_dict.keys():
+                setjy_dict[field_id].pop('fieldName')
+                spwkeys = setjy_dict[field_id].keys()
+                field = self.inputs.ms.get_fields(field_id)[0]
+                                
+                for spw_id in spwkeys:
+                    I = setjy_dict[field_id][spw_id]['fluxd'][0]
+                    Q = setjy_dict[field_id][spw_id]['fluxd'][1]
+                    U = setjy_dict[field_id][spw_id]['fluxd'][2]
+                    V = setjy_dict[field_id][spw_id]['fluxd'][3]
+                    flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+                    
+                    if spw_id not in spw_seen:
+                        result.measurements[field.identifier].append(flux)
+                        spw_seen.add(spw_id)
+
+
+        '''
         with commonfluxresults.File(casatools.log.logfile()) as casa_log:
             # CASA has a bug whereby setting spw='0,1' logs results for spw #0
             # twice, thus giving us two measurements. We get round this by
@@ -550,6 +571,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
             else:
                 LOG.error('Could not find start of vlasetjy task in CASA log. '
                           'Too many sources, or operating in dry-run mode?')
+        '''
+
 
         return result
 
