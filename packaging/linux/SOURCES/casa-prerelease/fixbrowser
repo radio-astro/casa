@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+use File::Find;
+
+##
+## rename qcasabrowser
+##
+sub rename_qcasabrowser {
+    if ( ! -d $_ && $_ eq "qcasabrowser" ) {
+        if ( -e "casabrowser" ) {
+            system( "rm -rf casabrowser" );
+        }
+        print "-\t$File::Find::dir/casabrowser\n";
+	rename( "qcasabrowser", "casabrowser" );
+    }
+}
+find( { wanted => \&rename_qcasabrowser }, "." );

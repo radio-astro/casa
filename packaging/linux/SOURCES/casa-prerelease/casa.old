@@ -1,0 +1,257 @@
+#!/usr/bin/perl
+
+BEGIN {
+    ### move any directories specified with environment variables, e.g. PERL5LIB to the end
+    #@INC = @lib::ORIG_INC;
+    @INC = reverse(@INC);
+};
+
+use Cwd;
+use File::Path;
+use List::Util qw(max);
+use File::Basename;
+
+$binary=basename($0);
+@install_points = ( "/usr/lib64/casa", "/usr/lib64/casapy/release" );
+
+$revision='';
+$get_revision=0;
+$only='';
+$list=0;
+
+$verbose = 0;
+
+@args=( );
+
+foreach ( @ARGV ) {
+    if ( $get_revision ) {
+        $get_revision=0;
+	if ( m|^(\d+\.\d+\.\d+)$| ) {
+	    $revision = $1;
+	} else {
+	    $only = 'release';
+	}
+        next;
+    }
+    m/^(?:r(?:el)?|release)=(\d+\.\d+\.\d+)$/ && ( $revision = $1, next );
+    m/^--?(?:r|release)(\d+\.\d+\.\d+)$/ && ( $revision = $1, next );
+    m/^--?(?:r|release)$/ && ( $get_revision=1, next );
+    m|^-{0,2}test$| && ( $only = 'test', next );
+    m|^-{0,2}stable$| && ( $only = 'stable', next );
+    m|^-{0,2}prerelease$| && ( $only = 'prerelease', next );
+    m|^-{0,2}release$| && ( $only = 'release', next );
+    m|^-v$| && ( $verbose = 1, next );
+    m|^--?ls$| && ( $list = 1, next );
+    push( @args, $_ );
+}
+
+###
+### If a user uses --release to specify that they only want to run a release
+### the loop state above will be left waiting to see if a release number is
+### included. This catches that and interpretes it a --release indicating that
+### only release versions should be run...
+###
+$only = 'release' if $get_revision;
+
+%installed_versions = ( );
+foreach $install_point ( @install_points ) {
+    if ( -d $install_point ) {
+	my $current_dir=getcwd( );
+	chdir($install_point);
+	opendir( my $dh, $install_point ) or die "could not open casa installation directory $install_point";
+	foreach ( readdir $dh ) {
+#	    if ( m|^(\d+\.\d+\.\d+)$| && -d $1 && -e "$1/.revstate" ) {
+	    if ( m|^(\d+\.\d+\.\d+R?)$| && -d $1 ) {
+		$installed_versions{numeric($1)} = "$install_point/$1";
+	    }
+	}
+	closedir($dh);
+	chdir($current_dir);
+    }
+}
+
+$path='';
+if ( $revision ) {
+    die "coud not find casa revision $revision" unless defined $installed_versions{numeric($revision)};
+    $path = $installed_versions{numeric($revision)};
+    ( my $t, $found ) = discover_install_path( \%installed_versions, $only ) if $list;
+} else {
+    ( $path, $found ) = discover_install_path( \%installed_versions, $only );
+}
+
+if ( $list ) {
+    print "available versions:\n";
+    foreach my $type ( 'release', 'stable', 'test', 'prerelease' ) {
+	if ( defined $$found{$type} ) {
+	    my $vs = $$found{$type};
+	    printf( "%10s: %s\n", $type, join(' ', map { ascii($_) } reverse sort keys %$vs) );
+	}
+    }
+    printf( "%10s: %s\n", "would run", $path );
+    exit 0;
+}
+
+die "internal error" unless -d $path;
+die "installation error" unless -e "$path/bin/$binary";
+
+setup_environment($path);
+print "starting: $path/bin/$binary\n" if $verbose;
+exec { "$path/bin/$binary" } ("$path/bin/$binary",@args);
+
+sub setup_environment {
+    my $path = shift(@_);
+    my $third = '01';
+
+    my $old = $ENV{'LD_LIBRARY_PATH'};
+    $ENV{'LD_LIBRARY_PATH'} = "$path/lib:/usr/lib64/casa/$third/lib:/usr/lib64:/lib64:/usr/lib:/lib" . ($old ? ":$old" : '');
+    $ENV{'CASAPATH'} = "$path linux";
+    $old = $ENV{'PATH'};
+    $ENV{'PATH'}="$path/bin:/usr/lib64/casa/$third/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/lib64/pgplot" . ($old ? ":$old" : '');
+    $ENV{'PGPLOT_FONT'} = "$path/pgplot/grfont.dat";
+    $ENV{'PGPLOT_RGB'} = "$path/pgplot/rgb.txt";
+
+    ###
+    ### With rhel6, dbus auto-launches when a process tries to connect.
+    ### If the casaviewer tries to connect to dbus from an ssh session,
+    ### then a dbus session is started and the user cannot exit until
+    ### the dbus-daemon exits... which happens when the user hits ^C.
+    ###
+    ### This solution might have to be rethought if we someday have long
+    ### running, decoupled clean runs etc. (in that case well probably
+    ### need a state file or perhaps just use the auto-launched version).
+    ###
+    $ENV{'DBUS_SESSION_BUS_ADDRESS'} = 'unset';
+
+    my $mplconfig = "$ENV{HOME}/.casa/matplotlib";
+    $ENV{'MPLCONFIGDIR'} = $mplconfig;
+    unless ( -d $mplconfig ) {
+	mkpath($mplconfig) or die "could not create matplotlib config directory: $mplconfig";
+    }
+
+    $ENV{'CASA_INSTALLATION_TYPE'} = "rpm-installation";
+}
+
+sub rpm_type {
+    my $file = shift(@_);
+    my $default = shift(@_);
+    my $result = { };
+    open( my $rpm_info, "/bin/rpm -q --queryformat '%{NAME}\n' --whatprovides $file 2>&1 |" );
+    foreach ( <$rpm_info> ) {
+	if ( m|^casa| ) {
+	    if ( m|test| ) {
+		$$result{'test'} = 1;
+	    } elsif ( m|stable| ) {
+		$$result{'stable'} = 1;
+	    } elsif ( m|prerelease| ) {
+		$$result{'prerelease'} = 1;
+	    } else {
+		$$result{'release'} = 1;
+	    }
+	}
+    }
+    close( $rpm_info );
+    if ( $default && scalar(keys %$result) == 0 ) { return { $default => 1 } }
+    return $result;
+}
+
+sub discover_install_path {
+    my $vers = shift( @_ );
+    my $only = shift( @_ );
+    my $test = { };
+    my $stable = { };
+    my $release = { };
+    my $prerelease = { };
+
+    foreach $key ( keys %$vers ) {
+	my $type = { };
+	my $info_file = "$$vers{$key}/.revstate";
+	if ( ! -f $info_file ) {
+	    ### fall back to the file available in the casapy-*-bin RPMs (RHEL5 only)
+	    $info_file = "$$vers{$key}/.aipsrc";
+	    if ( -f $info_file ) {
+		$type = rpm_type($info_file)
+	    }
+	} else {
+	    open( my $fh, "< $info_file" );
+	    foreach ( <$fh> ) {
+		if ( m|^install="([^"]+)"| && $1 eq "rpm" ) {
+		    $type = rpm_type($info_file,'test');
+		}
+	    }
+	    close( $fh );
+	}
+	if ( defined $$type{'test'} ) { $$test{$key} = $$vers{$key} }
+	if ( defined $$type{'stable'} ) { $$stable{$key} = $$vers{$key} }
+	if ( defined $$type{'release'} ) { $$release{$key} = $$vers{$key} }
+	if ( defined $$type{'prerelease'} ) { $$prerelease{$key} = $$vers{$key} }
+    }
+
+    my $path = '';
+    if ( $only ) {
+	if ( $only eq 'test' ) {
+	    ### solitary test/-test/--test supplied so we restrict ourselves to only test versions...
+	    die "a test version was requested, but none is available" if scalar( keys %$test ) == 0;
+	    $path = $$vers{numeric(max(keys %$test))};
+	} elsif ( $only eq 'stable' ) {
+	    ### solitary stable/-stable/--stable supplied so we restrict ourselves to only stable versions...
+	    die "a stable version was requested, but none is available" if scalar( keys %$stable ) == 0;
+	    $path = $$vers{numeric(max(keys %$stable))};
+	} elsif ( $only eq 'release' ) {
+	    ### solitary release/-release/--release supplied so we restrict ourselves to only release versions...
+	    die "a release version was requested, but none is available" if scalar( keys %$release ) == 0;
+	    $path = $$vers{numeric(max(keys %$release))};
+	} elsif ( $only eq 'prerelease' ) {
+	    ### solitary prerelease/-prerelease/--prerelease supplied so we restrict ourselves to only prerelease versions...
+	    die "a release version was requested, but none is available" if scalar( keys %$prerelease ) == 0;
+	    $path = $$vers{numeric(max(keys %$prerelease))};
+	} else {
+	    die "internal error, unknown 'only' option";
+	}
+    } else {
+	###
+	### if no specific version number was supplied and no type restrictions
+	### (e.g. -stable) were supplied, then we prefer release, followed by
+	### stable, and the default is test.
+	###
+	if ( scalar( keys %$release ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$release))};
+	} elsif ( scalar( keys %$stable ) > 0 || scalar( keys %$prerelease ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$stable, keys %$prerelease ))};
+	} elsif ( scalar( keys %$test ) > 0 ) {
+	    $path = $$vers{numeric(max(keys %$test))};
+	} else {
+	    die "could find no suitable casa install trees";
+	}
+    }
+    return ( $path , { 'release' => $release, 'stable' => $stable, 'test' => $test, 'prerelease' => $prerelease } );
+}
+
+%ascii_version = { };
+
+sub ascii {
+    my $arg = shift(@_);
+    my $stable = $arg % 1000;
+    $arg /= 1000;
+    my $minor = $arg % 1000;
+    $arg /= 1000;
+    my $major = $arg % 1000;
+    return "$major.$minor.$stable";
+}
+
+sub numeric {
+    my $arg = shift(@_);
+    ### releases have an 'R' at the end of the version number to distingush
+    ### them from the development version, i.e. there could be:
+    ###        o  /usr/lib64/casa/4.3.0     (test/stable develoment series)
+    ### and    o  /usr/lib64/casa/4.3.0R    (prerelease/release release series)
+    $arg =~ s|R$||;
+    my $val = $arg;
+    my @val = reverse split(/\./,$val);
+    my $accum = 0;
+    for ( my $count=0; scalar(@val) > 0; ++$count ) {
+	my $element = shift(@val);
+	$accum += $element * 1000 ** $count;
+    }
+    $ascii_version{$accum} = $arg;
+    return $accum;
+}

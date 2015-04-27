@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+###
+### uses cgi-bin/casa-version
+###
+$limit='';
+$version='';
+$svn='';
+
+foreach ( @ARGV ) {
+    m|^--ver(?:sion)?|i && ( $limit = 'version', next );
+    m|^--rev(?:ision)?|i && ( $limit = 'revision', next );
+}
+
+open( $info, "curl --silent https://svn.cv.nrao.edu/cgi-bin/casa-version |" );
+$value = <$info>;
+close( $info );
+die "received bad version information: $value" unless $value =~ m|^(\d+\.\d+\.\d+)\s+(\d+)$|;
+$version = $1;
+$svn = $2;
+
+unless ( $limit ) {
+    print "$version $svn\n";
+} elsif ( $limit eq 'version' ) {
+    print "$version\n";
+} elsif ( $limit eq 'revision' ) {
+    print "$svn\n";
+} else {
+    die "internal error...";
+}
+exit(0);

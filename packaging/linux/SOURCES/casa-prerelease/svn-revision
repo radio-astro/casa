@@ -1,0 +1,135 @@
+#!/usr/bin/perl
+use List::Util qw(max);
+use File::Basename;
+
+$name=basename($0);
+$branch='';
+$url='';
+$verbose='';
+
+foreach ( @ARGV ) {
+    m|^branch=(.+)| && ( $branch = $1, next );
+	m|^url=(.+)| && ( $url = $1, next );
+	m|^-v$| && ( $verbose = 'yes', next );
+    m|^-help$| && ( usage( ), exit );
+	usage("unrecognized argument: $_");
+}
+
+
+unless ( $branch || $url ) { usage("no branch or url specified") }
+
+if ( $name eq 'svn-version' ) {
+    $revision = fetch_version_from_url($url ? $url : fetch_url_from_branch($branch));
+} else {
+	if ( $url ) {
+		$revision = fetch_revision_from_url($url);
+	} else {
+		$revision = fetch_revision_from_branch($branch);
+	}
+}
+
+unless ( $revision ) { die "could not find revision number for branch $branch" }
+print "$revision\n";
+exit 0;
+
+
+sub usage {
+    my $error = shift(@_);
+    print "usage:\n\t$name [-help] [-v] [branch=<BRANCH-LABEL>] [url=<SUBVERSION-URL>]\n";
+    print "\t\t-v\t\tverbose\n";
+    print "\t\t-help\t\tdisplay this message and exit\n";
+    die $error if $error;
+}
+
+
+sub fetch_url_from_branch {
+	my $branch = shift(@_);
+	my $result='';
+	my $current = '';
+	my %branches = ( );
+	open( my $branches, "echo t | svn info --depth immediates https://svn.cv.nrao.edu/svn/casa/branches 2> /dev/null |" );
+	foreach ( <$branches> ) {
+		if ( m|Path:\s+$branch-(\S+)| ||
+		     m|Path:\s+$branch$| && $branch =~ m|((?:[0-9]+_)+[0-9]+)| ) {
+			my $suffix = $1;
+			next unless $suffix =~ m|_|;
+			if ( $verbose ) { print STDERR "found $branch-$suffix\n" }
+			my @ver = split('_',$suffix);
+			my $place = 1;
+			$current = 0;
+			foreach $val ( reverse @ver ) {
+				$current += $val * $place;
+				$place *= 10;
+			}
+			if ( $verbose ) { print STDERR "\tcalculated numeric value of $current\n" }
+		} elsif ( m|URL: (\S+)| && $current ) {
+			if ( $verbose ) { print STDERR "\tfound URL $1 for $current\n" }
+			$branches{$current} = $1;
+			$current = 0;
+		}
+	}
+	close($branches);
+
+	my $version = max(keys %branches);
+	my $url = $branches{$version};
+	unless( $url ) { die "could not find URL" }
+	unless( $url =~ m|^https://| ) { die "$url does not look like a subversion URL" }
+	return $url;
+}
+
+
+sub fetch_version_from_url {
+	my $url = shift(@_);
+
+	open( my $version, "echo t | svn cat $url/code/VERSION 2> /dev/null |" );
+	$_ = <$version>;
+	close($version);
+	m|^(\d+\.\d+)| or die "could not find version number";
+	return $1;
+}
+
+sub fetch_revision_from_branch {
+	my $branch = shift(@_);
+	my $result='';
+	my $current = '';
+	my %branches = ( );
+	open( my $branches, "echo t | svn info --depth immediates https://svn.cv.nrao.edu/svn/casa/branches 2> /dev/null |" );
+	foreach ( <$branches> ) {
+		if ( m|Path:\s+$branch-(\S+)| ||
+		     m|Path:\s+$branch$| && $branch =~ m|((?:[0-9]+_)+[0-9]+)| ) {
+			my $suffix = $1;
+			next unless $suffix =~ m|_|;
+			if ( $verbose ) { print STDERR "found $branch-$suffix\n" }
+			my @ver = split('_',$suffix);
+			my $place = 1;
+			$current = 0;
+			foreach $val ( reverse @ver ) {
+				$current += $val * $place;
+				$place *= 10;
+			}
+			if ( $verbose ) { print STDERR "\tcalculated numeric value of $current\n" }
+		} elsif ( m|^Last Changed Rev: (\d+).*| && $current ) {
+			if ( $verbose ) { print STDERR "\tfound revision $1 for $current\n" }
+			$branches{$current} = $1;
+			$current = 0;
+		}
+	}
+	close($branches);
+	
+	my $version = max(keys %branches);
+	return $branches{$version};
+}
+
+sub fetch_revision_from_url {
+	my $url = shift(@_);
+	my $result='';
+	open( my $info, "echo t | svn info $url 2> /dev/null |" );
+	foreach ( <$info> ) {
+		if ( m|^Last Changed Rev: (\d+).*| ) {
+			$result = $1;
+		}
+	}
+	close($info);
+	unless ( $result ) { die "could not find revision for $url" }
+	return $result;
+}

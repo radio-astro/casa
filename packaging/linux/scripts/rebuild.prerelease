@@ -1,0 +1,375 @@
+#!/usr/bin/perl
+
+#./install.rpms --rpmdir /var/rpmbuild/RPMS/i386 --destroot /usr/src/rpmbuild/apache/content/casa/repo/el4/i386 --old-cache /usr/src/rpmbuild/apache/content/casa.old/el4/i386 --trim-cache casa-test:casa-test-shared:casa-test-symlink:casa-test-bin 20.0.3759 016
+
+use File::Basename;
+use File::Find;
+use File::Path;
+use File::Copy;
+use Cwd;
+
+$get_revision = "/usr/src/rpmbuild/packaging/scripts/svn-revision";
+$install_rpms = "/opt/users/rpmbuild/casa/prerelease/scripts/install.rpms";
+$email_list = "drs\@nrao.edu";
+#$distro_email_list = "ahale\@nrao.edu mrawling\@nrao.edu jkern\@nrao.edu drs\@nrao.edu";
+$distro_email_list = $email_list;
+
+
+BEGIN {
+    ###
+    ### check to see if there is already a build running... if so, abort...
+    ###
+    my $HOME = $ENV{'HOME'};
+    my $reference_pid = $$;
+
+    if ( -d "$HOME/casa/state" ) {
+	if ( -e "$HOME/casa/state/rebuild-prerelease.pid" ) {
+	    open( PID, "< $HOME/casa/state/rebuild-prerelease.pid" );
+	    my $pid = <PID>;
+	    close(PID);
+	    $pid =~ s|\s||g;
+	    ###
+	    ### rebuild.prerelease forks a child which generates the output while the
+	    ### parent just waits and send an email if there are errors...
+	    ### ... getppid( ) does not work here because there are shell
+	    ### invocations between the root and the children, but getpgrp( )
+	    ### does work because the shell sets up forked children as the
+	    ### process group leader...
+	    ###
+	    if ( $pid eq $$ || $pid eq getpgrp( ) ) {
+		$reference_pid = $pid;
+	    } else {
+		open( PS, "ps -A |" );
+		while ( <PS> ) {
+		    if ( m|^\s*$pid| ) {
+			die "build already running: $_";
+		    }
+		}
+		close(PS);
+		unlink("$HOME/casa/state/rebuild-prerelease.pid");
+	    }
+	}
+	open(PID, "> $HOME/casa/state/rebuild-prerelease.pid");
+	print PID "$reference_pid\n";
+	close(PID);
+    }
+}
+
+END {
+    ###
+    ### if we make it this far, clean up our pid file...
+    ###
+    my $HOME = $ENV{'HOME'};
+    if ( -e "$HOME/casa/state/rebuild-prerelease.pid" ) {
+	unlink("$HOME/casa/state/rebuild-prerelease.pid");
+    }
+}
+
+$HOME = $ENV{'HOME'};
+$rhver = "";
+$svnroot = "";
+$casa_svn_root = "";
+
+$staging_area = "/usr/src/rpmbuild/apache/spool/prerelease-binaries";
+$state_root = "$HOME/casa";
+$state_dir = "$state_root/state";
+$revisionfile = "$state_dir/casa.prerelease";
+
+$testrpm = "-prerelease";
+$version_string = '';
+$url_version_string = '';
+$version='';
+$testfile = "";
+
+$self = "/opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease";
+@selfflags = ( );
+$spec_file = '';
+$backup_root = "/var/backup";
+
+foreach ( @ARGV ) {
+    if ( m|^rel=([0-9.]+)$| ) {
+	push(@selfflags,$_);
+	$version=$1;
+	($version_string = $version) =~ s|\.|_|g;
+	($url_version_string = $version) =~ s|(\d+)\.(\d+).*|$1_$2|;
+    }
+}
+
+die "must specify release version, e.g. rel=4.3" unless $version_string && $url_version_string;
+sub url { return "https://svn.cv.nrao.edu/svn/casa/branches/release-$url_version_string" }
+$casa_svn_root = url( );
+
+open( $check_url, "svn info $casa_svn_root 2>&1 |" );
+$ok = 1;
+foreach ( <$check_url> ) {
+    m|Not a valid URL| && ( $ok = 0 );
+    m|problem occurred| && ( $ok = 0 );
+}
+close( $check_url );
+
+unless( $ok ) { die "invalid subversion url: $casa_svn_root"; }
+
+##
+## set $arch
+##
+$arch_line = `uname -m`;
+if ( $arch_line =~ m/x86_64/ ) {
+    $arch = "x86_64";
+} else {
+    $arch = "i386";
+}
+
+if ( ! $rhver ) {
+
+    if ( -f "/etc/SuSE-release" ) {
+
+        $rhver = "suse";
+
+    } elsif ( -f "/etc/redhat-release" ) {
+
+        open( IN, "</etc/redhat-release" );
+        $rhver = <IN>;
+        close( IN );
+        if ( $rhver =~ m/^Fedora Core release 6/ ) {
+            $rhver = "fc6";
+        } elsif ( $rhver =~ m/^Fedora release 7/ ) {
+            $rhver = "fc7";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 4/ ) {
+            $rhver = "el4";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 4.*/ ) {
+            $rhver = "el4";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5_r$version_string.spec";
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5_r$version_string.spec";
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_r$version_string.spec";
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_r$version_string.spec";
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+            die "unknown enterprise version: $rhver";
+        } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+            die "we no longer support: $rhver";
+        } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+            die "we don't yet support mandrake";
+        } else {
+            die "cannot understand version string: $rhver";
+        }
+
+    } else {
+
+        die "we're not in linux land";
+
+    }
+}
+
+die "no spec file: $spec_file" unless $spec_file && -f $spec_file;
+
+##
+## change to the directory where the script is
+$path = dirname($0);
+chdir $path if $path;
+
+die "prerelease staging directory does not exist: $staging_area/$rhver/repo" unless -d "$staging_area/$rhver/repo";
+
+open( $rev, "$get_revision branch=release-$url_version_string 2> /dev/null |" );
+$revision_string = <$rev>;
+close( $rev );
+die "bad version string: $revision_string" unless $revision_string =~ m|^(\d+)$|;
+$revision = $1;
+
+$testrpm = "-prerelease";
+$testdistro = "--tag prerelease";
+
+$etc_dir = "/usr/src/rpmbuild/build/etc/$rhver";
+die "etc directory does not exist" unless -d $etc_dir;
+$logfile = "$HOME/casa/log/casa-prerelease.$version.$revision";
+
+##
+## if we have email addresses to send the output to, collect it and send
+## if necessary...
+##
+unless ( defined $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
+    $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} = '1';
+    $lines = 0;
+    my $selfflags = join(' ',@selfflags);
+    open( CHILD, "$self $selfflags 2>&1 | tee $logfile.errors |" );
+    while ( <CHILD> ) { ++$lines; }
+    close( CHILD );
+    if ( $lines > 0 ) {
+        $uname=`/bin/uname -n`;
+	$uname =~ s/\n$//;
+	if ( -e $logfile ) {
+	    exec "/bin/mail -s '[$uname] casa rpm app build' $email_list < $logfile";
+	} elsif ( -e "$logfile.errors" ) {
+	    exec "/bin/mail -s '[$uname] casa rpm app build' $email_list < $logfile.errors";
+	} else {
+	    exec "echo 'died from unknown errors...' | /bin/mail -s '[$uname] casa rpm app build' $email_list";
+	}
+	exit(0);
+    } else {
+	exit(0);
+    }
+}
+
+
+if ( ! -d "$HOME/casa" ) {
+    mkdir("$HOME/casa", 0755);
+}
+if ( ! -d "$state_dir" ) {
+    mkdir("$state_dir", 0755);
+}
+if ( ! -d "$HOME/casa/log" ) {
+    mkdir("$HOME/casa/log", 0755);
+}
+
+$release = 0;
+if ( -f $revisionfile ) {
+    open( IN, "<$revisionfile" );
+    chomp( $last_revision=<IN> );
+    close(IN);
+
+    if ( $last_revision =~ m|(\d+)\s+(\d+)| ) {
+	exit(0) unless ( $revision > $1 );
+	$release = $2;
+    } else { die "format error for revision state: $last_revision" }
+}
+$release = $release + 1;
+
+die "no spec file found" unless -f $spec_file;
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+
+open ( LOG, "> $logfile" );
+printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+print LOG "\nsubversion url: $casa_svn_root\n";
+print LOG "spec file: $spec_file\n";
+print LOG "---------------------------------------------------------------------------\n";
+print LOG     "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" . "\n";
+print LOG "open( UPDATE, \"rpmbuild -D 'rel $release' -ba $spec_file 2>&1 | tee -a $logfile |\" );" . "\n";
+open( UPDATE, "rpmbuild -D 'rel $release' --define '_topdir /opt/users/rpmbuild/casa/prerelease' -ba $spec_file 2>&1 | tee -a $logfile |" );
+
+@wrote = ();
+@export = ();
+$rpmver = "";
+$rpmrev = "";
+while( <UPDATE> ) {
+    ###
+    ### here $version is <major>.<minor> rather than <major>.<minor>.<patch> because it
+    ### refers to the branch in the subversion repository...
+    ###
+    ($rpmrev = $3, $rpmver = $2, push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-($version(?:\.\d+)?)-(\d+)(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-shared-$version(?:\.\d+)?-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    (push(@wrote,$1), push(@export,$1)) if m@^Wrote: (\S+?/casa-prerelease-bin-$version(?:\.\d+)?-\d+(?:\.\w+)?\.$arch\.rpm)@;
+    push(@wrote,$1) if m@^Wrote: (\S+?/casa-prerelease-devel-$version(?:\.\d+)?-\d+(?:\.\w+)?\.$arch\.rpm)@;
+}
+close(UPDATE);
+
+open ( LOG, ">> $logfile" );
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "rpms created: " . join(' ', @wrote) . "\n";
+print LOG "---------------------------------------------------------------------------\n";
+
+if ( scalar(@wrote) == 4 && $rpmver && $rpmrev ) {
+    print LOG "...build succeeded...\n";
+
+} else {
+    print LOG "...build failed...\n";
+    die "build failed";
+}
+
+##
+## sign each of the rpms
+##
+%rpms = ( );
+foreach $rpm ( @wrote ) {
+    print LOG "> /opt/users/rpmbuild/casa/prerelease/scripts/rpmsign $rpm\n";
+    system(     "/opt/users/rpmbuild/casa/prerelease/scripts/rpmsign $rpm" );
+    open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $rpm 2> /dev/null |" );
+    my $name = <$v>;
+    close($v);
+    $rpms{$name} = $rpm;
+}
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "staging area: $staging_area/$rhver/repo\n";
+$cwd = getcwd( );
+$rm_old_rpms = sub {  if ( -f && m|\.rpm| ) {
+                          open( my $v, "/bin/rpm -qp --qf \"%{NAME}\" $_ 2> /dev/null |" );
+			  my $name = <$v>;
+			  close($v);
+			  if ( exists $rpms{$name} ) { unlink($_) }
+			  print LOG "\t$_\n";
+		      } };
+
+print LOG "removing old RPMs........................................\n";
+find( { wanted => $rm_old_rpms }, "$staging_area/$rhver/repo" );
+print LOG "installing new RPMs......................................\n";
+foreach $rpm ( keys %rpms ) {
+    print LOG "\t$rpms{$rpm}\n";
+    copy( $rpms{$rpm}, "$staging_area/$rhver/repo" );
+}
+
+
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "> /opt/users/rpmbuild/casa/prerelease/scripts/userdistro --release $release --tag prerelease --override-repo $staging_area/$rhver/repo --dir $staging_area/$rhver\n";
+print LOG "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---\n";
+$do_email = '';
+$last_line = '';
+open( $distro, "/opt/users/rpmbuild/casa/prerelease/scripts/userdistro --release $release --tag prerelease --override-repo $staging_area/$rhver/repo --dir $staging_area/$rhver 2>&1 |");
+foreach ( <$distro> ) {
+    m|ran to completion\.$| && ( chomp($do_email = $last_line) );
+    $last_line = $_;
+    print LOG $_;
+}
+close( $distro );
+
+print LOG "[1] $do_email\n";
+if ( $do_email ) {
+    my $output = '';
+    my $cwd = getcwd( );
+    if ( chdir(dirname($do_email)) ) {
+	my $tarfile = basename( $do_email );
+	if ( -f $tarfile ) {
+	    system("md5sum $tarfile > $tarfile.md5");
+	    $output = $tarfile;
+	}
+	chdir($cwd);
+    }
+    my $msg = "$etc_dir/prerelease_message.txt";
+    print LOG "[2] $msg\n";
+    if ( -f $msg && $distro_email_list ) {
+	print LOG "[3] $distro_email_list\n";
+	print LOG "---------------------------------------------------------------------------\n";
+	print LOG "sending mail to $distro_email_list\n";
+	print LOG "--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---\n";
+	close( LOG );
+	system( "mailx -s '[casa:$rhver] test available $output' $distro_email_list < $msg >> $logfile 2>&1" );
+    } else {
+	print LOG "[3] no go\n";
+	close( LOG );
+    }
+} else {
+    print LOG "[2] no go\n";
+    close( LOG );
+}
+
+
+open ( LOG, ">> $logfile" );
+print LOG "---------------------------------------------------------------------------\n";
+print LOG "storing revision ($revision) & release ($release) in $revisionfile\n";
+open( OUT, ">$revisionfile" );
+print OUT "$revision $release\n";
+close( OUT );
+
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);
+print LOG "---------------------------------------------------------------------------\n";
+printf LOG "%4d-%02d-%02d %02d:%02d:%02d\n",$year+1900,$mon+1,$mday,$hour,$min,$sec;
+close(LOG);
+
+exit 0;
+
