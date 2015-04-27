@@ -288,6 +288,15 @@ Usage examples :
      will be masked.
 
 (7) (copy mode):
+     Apply a region defined in a CRTF file to mask part of an image
+
+     makemask(mode='copy', inpimage='image1.im', inpmask='myregion.crtf', output='image1.im:mask0')
+
+     The region is copied as a T/F mask (mask0) inside the image, image1.im. The region outside myregion.crtf
+     will be masked.
+          
+    
+(8) (copy mode):
 <!--     Make a one/zero mask from a list of region files, using the input coordinate-sys,
      and saving in a new output file.  Remember, if outimage has a different 
      coordinate system from inpimage, the mask will be regridded to it. --> 
@@ -310,7 +319,7 @@ Usage examples :
               inpmask=['image1.im', image1.im:mask0','image2.mask:mask1', 'circle[[15pix , 15pix] ,8pix ]'],
               output='newmask.im);
 
-(8) (expand mode):
+(9) (expand mode):
      Expand a (one/zero) mask from continuum imaging to use as an input mask image for
      spectral line imaging. Use an existing spectral line clean image as a template by
      specified in inpimage. 
@@ -319,7 +328,7 @@ Usage examples :
      makemask(mode='expand', inpimage='spec.clean.image', inpmask='cont.clean.mask' 
               outfreqs=[4,5,6,7], output='spec.clean.mask')
 
-(9) (expand mode):
+(10) (expand mode):
      Expand a Boolean mask from one range of channels to another range 
      in the same image.
 
@@ -327,7 +336,7 @@ Usage examples :
               output='oldmask.im:mask0', overwrite=True)
 
 
-(10) (expand mode):
+(11) (expand mode):
      Expand a Boolean mask from a range of channels in the input image to another range
      of channels in a different image with a different spectral-coordinate system.
      Save the mask as ones/zeros so that it can be used as an input mask in the clean task. 
@@ -345,12 +354,12 @@ Usage examples :
               inpfreqs=4.0km/s~0.5km/s', outfreqs='6.5km/s~-2.4km/s', output='bigmask.im', overwrite=True)
        
 
-(11) (delete mode)
+(12) (delete mode)
       Delete an internal mask from an image.
 
       makemask(mode='delete', inpmask='newmask.im:mask0')
 
-(12) (setdefaultmask mode)
+(13) (setdefaultmask mode)
       Set an internal mask as a default internal mask.
      
       makemask(mode='setdefaultmask', inpmask='newmask.im:mask1')
