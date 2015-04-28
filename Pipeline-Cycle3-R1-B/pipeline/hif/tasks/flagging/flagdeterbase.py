@@ -216,14 +216,16 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
         if self.hm_tbuff == 'halfint':
             if any([a.diameter == 7.0 for a in self.ms.antennas]):
-                return 0.0
+                #return 0.0
+                return -0.048
 
             median_ints = [self.ms.get_median_science_integration_time(intent=intent)
                            for intent in ('AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK')
                            if intent in self.ms.intents]
             if not median_ints:
-                return 0.0
-            return 0.5 * max(median_ints)
+                #return 0.0
+                return -0.048
+            return 0.5 * max(median_ints) - 0.048
 
         elif self.hm_tbuff == '1.5int':
             if hasattr(self.context, 'evla'):
