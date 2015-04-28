@@ -1,0 +1,109 @@
+#!/usr/bin/perl
+use File::Basename;
+use File::Find;
+use File::Path;
+use Cwd 'abs_path';
+
+$listdeps = "ldd";
+$dryrun = 0;
+
+for ( $i=0; $i < scalar(@ARGV); ++$i ) {
+    if ( $ARGV[$i] eq "-dryrun" ) {
+	$dryrun = 1;
+	splice(@ARGV,$i,1);
+    }
+}
+
+if ( scalar(@ARGV) < 3 ) {
+    die "must supply (1) wrapper file, (2) distro root directory, and (3) subdirectory beneath root containing binaries to be wrapped...";
+}
+
+if ( scalar(@ARGV) > 3 ) {
+    die "three parameters should be supplied, (1) wrapper, (2) distro root, and (3) subdirectory containing binaries to be wrapped...";
+}
+
+$wrapper = $ARGV[0];
+$root = abs_path($ARGV[1]);
+$bindir = $ARGV[2];
+
+if ( ! -f $wrapper ) {
+    die "first parameter should be a file to use to wrap binaries...";
+}
+if ( ! -d $root ) {
+    die "second parameter should be the root directory of the distro...";
+}
+if ( ! -d "$root/$bindir" ) {
+    die "second parameter should be the subdirectory within the distro containing binaries to be wrapped...";
+}
+
+###
+### does this appear to be a binary executable...
+###
+sub binary {
+    my $file = shift;
+    my $result = 0;
+    open( TYPE, "file $file |" );
+    while ( <TYPE> ) {
+	m|ELF 64-bit LSB executable| && ($result = 1);
+	m|Mach-O 64-bit executable x86_64| && ($result = 1);
+    }
+    close(TYPE);
+    return $result;
+}
+
+###
+### does this appear to be a casa binary...
+###
+sub references_casa {
+    my $file = shift;
+    my $result = 0;
+    open ( LIBS, "$listdeps $file |" );
+    while ( <LIBS> ) {
+	m|^\s+libcasa| && ($result = 1);
+    }
+    close(LIBS);
+    return $result;
+}
+
+###
+### read wrapper into a string...
+###
+{   local $/;
+    open(WRAPPER,"< $wrapper");
+    $wrapper_text = <WRAPPER>;
+    close(WRAPPER);
+}
+
+$last_directory = "";
+sub find_binaries {
+    my $file = $_;
+    my $directory = $File::Find::dir;
+    if ( -f $file && binary($file) && references_casa($file) ) {
+	my $localdir = $directory;
+	$localdir =~ s|^$root/?||;
+	my @localdir = split('/',$localdir);
+	for ( $i=0; $i < scalar(@localdir); ++$i ) { $localdir[$i] = ".."; }
+	my $relative_installpath = join('/',@localdir);
+	if ( ! -d $relative_installpath ) {
+	    die "relative path is not a directory...\n\t$directory => $relative_installpath\n";
+	}
+	if ( $dryrun ) {
+	    if ( $directory ne $last_directory ) {
+		$last_directory = $directory;
+		print "in $last_directory:\n";
+	    }
+	    print "\trename($file,$file.wrapped)\t# expand wrapper as $file\n";
+	} else {
+	    rename($file,"$file.wrapped");
+	    local $wrapper = $wrapper_text;
+	    $wrapper =~ s|\$RELATIVE_INSTALLPATH|$relative_installpath|g;
+	    open(WRAPPER, "> $file");
+	    print WRAPPER $wrapper;
+	    close(WRAPPER);
+	    chmod 0755, $file;
+	}
+    }
+}
+
+
+find( { wanted => \&find_binaries }, "$root/$bindir" );
