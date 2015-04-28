@@ -944,7 +944,8 @@ class simutil:
         ds  =[ 0.75   ,0.75  ,0.75 ,0.364 ,0.364,0.35] # subreflector size for ACA?
         eps =[ 25.    ,25.   ,20.  ,300   ,300  ,15. ] # antenna surface accuracy
         
-        cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86] # correlator eff
+        cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86, 0.88] # correlator eff
+        # SMA is from Wright http://astro.berkeley.edu/~wright/obsrms.py
         # ALMA includes quantization eff of 0.96    
         # VLA includes additional waveguide loss from correlator loss of 0.809
         # EVLA is probably optimistic
@@ -1038,7 +1039,6 @@ class simutil:
                         f0=[10,900]
                         t0=[200,200]
                         flim=[0,5000]
-
 
         obsfreq=freq_ghz.get("value")        
         # z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
