@@ -808,11 +808,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         corrfac=minpb
                     pixels='iif('+ pbcov_image+'>'+str(corrfac)+','+ result+'/'+fluxscale_image+', 0)'
 
-                    ia.calc(pixels=pixels)
+                    ia.calc(pixels=pixels,verbose=False)
                     ia.close()
                     ia.open(newimage+'.residual')
                     pixels='iif('+ fluxscale_image+'>'+str(corrfac)+','+ residim+'/'+fluxscale_image+', 0)'
-                    ia.calc(pixels=pixels)
+                    ia.calc(pixels=pixels,verbose=False)
                     ia.close()
             elif sclt == 'NONE':
                 ia.open(newimage+'.image')
@@ -821,7 +821,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 ia.close()
                 ia.open(newimage+'.residual')
                 pixels=residim+'*'+fluxscale_image
-                ia.calc(pixels=pixels)
+                ia.calc(pixels=pixels,verbose=False)
                 ia.close()
 
             os.chdir(presdir)
