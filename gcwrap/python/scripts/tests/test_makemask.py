@@ -54,8 +54,12 @@ class test_copy(makemaskTestBase):
     inimage4='ngc5921.cube1.image' # actual cube image
 
     outimage1='ngc5921.cube1.copy.mask'
-    outimage2='ngc5921.cube1.copyinmage.mask'
-    outimage3='ngc5921.cube2.copyinmage.mask'
+    outimage2='ngc5921.cube1.copyinimage.mask'
+    outimage3='ngc5921.cube2.copyinimage.mask'
+    outimage4='ngc5921.cube2.copy.mask'
+   
+    refimage4=datapath+'reference/ngc5921.copytest4.ref.mask'
+    refimage6=datapath+'reference/ngc5921.copytest6.ref.mask'
 
     def setUp(self):
         #for img in [self.inimage,self.outimage1,self.outimage2, self.outimage3]:
@@ -67,7 +71,7 @@ class test_copy(makemaskTestBase):
 
     def tearDown(self):
         if not debug:
-            for img in [self.inimage,self.inimage2,self.outimage1,self.outimage2,self.outimage3]:
+            for img in [self.inimage,self.inimage2,self.outimage1,self.outimage2,self.outimage3, self.outimage4]:
                 #pass
                 if os.path.isdir(img):
                     shutil.rmtree(img)
@@ -86,7 +90,7 @@ class test_copy(makemaskTestBase):
         self.assertTrue(self.compareimpix(self.inimage,self.outimage1))           
          
     def test2_copyimagemask(self):
-        """ (copy mode) testcopy2: copying an image mask (1/0 mask) to an existing image as a 1/0 mask"""
+        """ (copy mode) testcopy2: copying an image mask (1/0 mask) to an existing image as a T/F mask"""
         shutil.copytree(self.inimage,self.outimage1)
         # or one can write to the image defined in inpimage if output=self.inimage+":masknew"
         # overwrite=True is necessary if the internal mask, masknew exist already...
@@ -95,12 +99,19 @@ class test_copy(makemaskTestBase):
         except Exception, e:
             print "\nError running makemask"
             raise e
-        
+       
         self.assertTrue(os.path.exists(self.outimage1))           
         self.assertTrue(self.compareimpix(self.inimage,self.outimage1))           
+        ia.open(self.outimage1)
+        masknames=ia.maskhandler('get')
+        if masknames.count('masknew')==1:
+            pixelmask2cleanmask(self.outimage1,'masknew','_tmp_im',False)
+            self.assertTrue(self.compareimpix(self.inimage,'_tmp_im'))
+            shutil.rmtree('_tmp_im')
+            ia.done()
 
     def test3_copyimagemask(self):
-        """ (copy mode) testcopy3: copying an image mask (1/0 mask) to a new internal (T/F) mask"""
+        """ (copy mode) testcopy3: copying an image mask (1/0 mask) to a new image with internal (T/F) mask"""
         # input mask is a 1/0 mask and 0s are interpreted as masked region in masknew...
         try:
             makemask(mode='copy',inpimage=self.inimage,inpmask=self.inimage,output=self.outimage2+":masknew")
@@ -123,18 +134,21 @@ class test_copy(makemaskTestBase):
     def test4_copyimagemask(self):
         """ (copy mode) testcopy4: copying an image mask (1/0 amsk) to a new image with different coordinates(regrid)""" 
         try:
-            makemask(mode='copy',inpimage=self.inimage2,inpmask=self.inimage, output=self.outimage3)
+            makemask(mode='copy',inpimage=self.inimage2,inpmask=self.inimage, output=self.outimage4)
         except Exception, e:
             print "\nError running makemask"
             raise e
 
-        self.assertTrue(os.path.exists(self.outimage3))
+        self.assertTrue(os.path.exists(self.outimage4))
+        self.assertTrue(self.compareimpix(self.outimage4,self.refimage4)) 
 
     def test5_copyimagemask(self):
-        """ (copy mode) testcopy5: copying a region txt to a new image which is copies of inpimage and store the mask as an in-image(T/F) mask"""
+        """ (copy mode) testcopy5: copying a region txt to a new image with a copy of inpimage and store the mask as an in-image(T/F) mask"""
         # expected behavior: create an new image with name defined in self.outimage3, the input region will be
         # translated as a good/valid region and so unmasked and contains values of inpimage of the corresponding region.
-        # All outside the ellipse will be masked as defined in newmask.
+        # All outside the ellipse will be masked as defined in newmask. The pixel values of inpimage is also copied over
+        # output image. In this case, inpimage is an 1/0 mask image so the resulting ouput image contains 0's and masked pixels.
+
         try:
             makemask(mode='copy',inpimage=self.inimage2,
                      inpmask='ellipse [[13:30:15.79110, +030.13.51.8986], [340.4877arcsec, 299.4327arcsec], 0.00000000deg]', 
@@ -156,19 +170,22 @@ class test_copy(makemaskTestBase):
 
     def test6_copyimagemask(self):
         """ (copy mode) testcopy6: copying an internal mask to a new image mask with different coordinates(regrid)""" 
-        # use cube1's coord. and shape and cube2's intrenal mask
+        # use cube2's coord. and shape and cube1's intrenal mask
         #shutil.copytree(self.inimage2,self.outimage1)
         try:
-            makemask(mode='copy',inpimage=self.inimage2,inpmask=self.inimage3+":maskoo", output=self.outimage1)
+            makemask(mode='copy',inpimage=self.inimage2,inpmask=self.inimage3+":maskoo", output=self.outimage4)
         except Exception, e:
             print "\nError running makemask"
             raise e
 
-        self.assertTrue(os.path.exists(self.outimage1))
+        self.assertTrue(os.path.exists(self.outimage4))
+        self.assertTrue(self.compareimpix(self.outimage4,self.refimage6))
+        
 
 
     def test7_copyimagemask(self):
-        """ (copy mode) testcopy7: copying an internal mask to a new internal mask in a new image """ 
+        """ (copy mode) testcopy7: copying an internal mask of one image to a new internal mask in a new image """ 
+        # Note: The pixel values of inpimage is copied to the new image
         #shutil.copytree(self.inimage,self.outimage1)
         try:
             makemask(mode='copy',inpimage=self.inimage4,inpmask=self.inimage3+":maskoo", output=self.outimage1+":newmask")
@@ -178,12 +195,12 @@ class test_copy(makemaskTestBase):
 
         self.assertTrue(os.path.exists(self.outimage1))
         if os.path.exists(self.outimage1):
+            self.assertTrue(self.compareimpix(self.inimage4,self.outimage1)) 
             ia.open(self.outimage1)
             masknames=ia.maskhandler('get')
             ia.close()
             if masknames.count('newmask')==1:
                 self.assertTrue(self.compareimpix(self.inimage3,self.outimage1,True)) 
-                #shutil.rmtree('_tmp_im')
 
 
 
@@ -214,7 +231,7 @@ class test_merge(makemaskTestBase):
 
     def tearDown(self):
         if not debug:
-            for img in [self.inimage,self.inimage2,self.inimage3,self.outimage1,self.outimage2, self.infile1]:
+            for img in [self.inimage,self.inimage2,self.inimage3,self.outimage1,self.outimage2, self.infile1, '_tmp_im']:
                 #pass
                 if os.path.isdir(img):
                     shutil.rmtree(img)
@@ -226,7 +243,7 @@ class test_merge(makemaskTestBase):
     def test1_mergemasks(self):
         """ (copy mode) mergetest1: merging image mask (1/0 mask) and T/F mask and  overwrite to an existing image(1/0) mask"""
 
-        #Only overwrapped regions is valid
+        #Only overwrapped regions is valid (whenever T/F mask involved)
         try:
             shutil.copytree(self.inimage,self.outimage1)
         #    makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage,self.inimage2+':maskoo'], output=self.outimage1, overwrite=True)
@@ -241,6 +258,7 @@ class test_merge(makemaskTestBase):
 
     def test2_mergemasks(self):
         """ (copy mode) mergetest2 :merging two image mask (1/0 mask) with different chan width and a  T/F mask to create(overwrite) an image(1/0) mask"""
+        # 1/0 masks - added ('OR')  and apply ('AND') with the T/F mask
         try:
             #shutil.copytree(self.inimage,self.outimage1)
             #makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage, self.inimage3, self.inimage2+':maskoo'], output=self.outimage1)
@@ -333,7 +351,7 @@ class test_expand(makemaskTestBase):
     def tearDown(self):
         if not debug:
             for img in [self.inimage,self.inimage2,self.inimage3,self.inimage4,
-                        self.outimage,self.outimage2,self.outimage3]:
+                        self.outimage,self.outimage2,self.outimage3, '_tmp_im']:
                 if os.path.isdir(img):
                     shutil.rmtree(img)
                     #pass
