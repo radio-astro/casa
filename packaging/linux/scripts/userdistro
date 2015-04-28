@@ -1146,7 +1146,22 @@ export OPAL_PREFIX=$ROOT
 # default to 1 thread to avoid accidental oversubscription
 # can be overriden by environment
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
-exec -a casa $ROOT/bin/mpirun -x OMP_NUM_THREADS --prefix $ROOT "$@"
+
+# try to figure out if we need to launch a xterm for interactivity
+INTERACTIVE="yes"
+for arg in "$@"
+do
+    if [ "$arg" = "--pipeline" ] || [ "$arg" = "-c" ]; then
+        INTERACTIVE="no"
+    fi
+done
+
+XTERM=""
+if [ -n "$DISPLAY" ] && [ "$INTERACTIVE" = "yes" ] && command -v xterm >/dev/null 2>&1; then
+    XTERM="-xterm 0"
+fi
+
+exec -a casa $ROOT/bin/mpirun $XTERM -x OMP_NUM_THREADS -x CASAPATH --prefix $ROOT "$@"
 __CASA_MPI_EOF__
     return $result;
 }
