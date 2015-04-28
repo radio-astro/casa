@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_makecleanlist(vis=None, imagename=None, intent=None, field=None,
-              spw=None, uvrange=None, mode=None, outframe=None,
+              spw=None, linesfile=None, uvrange=None, mode=None, outframe=None,
               imsize=None, cell=None, calmaxpix=None, phasecenter=None,
               nchan=None, start=None, width=None, pipelinemode=None,
               dryrun=None, acceptresults=None):

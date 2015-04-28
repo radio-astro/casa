@@ -36,6 +36,11 @@ Compute a clean map.
     <value></value>
   </param>
 
+  <param type="string" name="spwsel" subparam="true">
+    <description>Set of spw frequency selections \'\' for all</description>
+    <value></value>
+  </param>
+
   <param type="any" name="uvrange" subparam="true">
     <description>Set of uv ranges, \'\' for all</description>
     <any type="variant" limittypes="string stringArray"/>
@@ -223,6 +228,7 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="imagermode"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
@@ -241,6 +247,7 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="imagermode"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
@@ -386,6 +393,10 @@ field -- Fields id(s) or name(s) to image or mosaic. Must be set.
 spw -- Spectral window/channels to image. \'\' for all science data.
     default: ''
     example: '9', '9,11'
+
+spwsel -- Spectral window frequency selection. \'\' for all science data.
+    default: ''
+    example: '89.1~89.5GHz'
 
 mode -- Frequency imaging mode, 'mfs', 'frequency'. \'\' defaults to
     'frequency' if intent parameter includes 'TARGET' otherwise 'mfs'.

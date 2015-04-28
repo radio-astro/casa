@@ -158,7 +158,7 @@ class MakeImages(basetask.StandardTaskTemplate):
 	    # set the imager mode here (temporarily ...)
             clheuristics = makeimlist.MakeImListHeuristics(
                 context=inputs.context, vislist=full_image_target['vis'], \
-                spw=full_image_target['spw'], linesfile='')
+                spw=full_image_target['spw'])
             full_image_target['gridmode'] = clheuristics.gridmode ( \
 	        full_image_target['intent'], full_image_target['field'])
             full_image_target['deconvolver'] = clheuristics.deconvolver ( \

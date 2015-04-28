@@ -406,7 +406,7 @@ spw -- Spectral window/channels to image. \'\' for all science data.
     default: ''
     example: '9', '9,11'
 
-spw -- Spectral window frequency selection. \'\' for all science data.
+spwsel -- Spectral window frequency selection. \'\' for all science data.
     default: ''
     example: '89.1~89.5GHz'
 
@@ -528,13 +528,13 @@ Make an 'mfs' image of calibrator 3c279 using data in spectral window 1.
 The cell size is set to 0.2 arcsec in RA and Dec. Other clean parameters
 are derived from heuristics:
 
-hif_tclean(field='3c279', cell='0.2arcsec', spw='1', mode='mfs')
+hif_tclean(field='3c279', cell='0.2arcsec', spw='1', specmode='mfs')
 
 Make a cube of calibrator 3c279 using data in spectral window 1. The
 cube planes will be evenly spaced in frequency in the LSRK frame. Other
 clean parameters are derived from heuristics.
  
-hif_tclean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
+hif_tclean(field='3c279', cell='0.2arcsec', spw='1', specmode='cube',
  outframe='LSRK')
 
 </example>

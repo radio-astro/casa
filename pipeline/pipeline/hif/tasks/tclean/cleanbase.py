@@ -331,7 +331,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Instantiate the clean list heuristics class
         clheuristics = makeimlist.MakeImListHeuristics(
-            context=inputs.context, vislist=inputs.vis, spw=inputs.spw, linesfile='')
+            context=inputs.context, vislist=inputs.vis, spw=inputs.spw)
 
         # Generate the image name if one is not supplied.
         if inputs.imagename == '':

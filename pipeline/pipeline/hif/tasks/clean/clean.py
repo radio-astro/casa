@@ -19,7 +19,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanInputs(cleanbase.CleanBaseInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-       intent=None, field=None, spw=None, uvrange=None, mode=None,
+       intent=None, field=None, spw=None, spwsel=None, uvrange=None, mode=None,
        imagermode=None, outframe=None, imsize=None, cell=None,
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
@@ -29,7 +29,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-           field=field, spw=spw, uvrange=uvrange, mode=mode,
+           field=field, spw=spw, spwsel=spwsel, uvrange=uvrange, mode=mode,
            imagermode=imagermode, outframe=outframe, imsize=imsize, cell=cell,
            phasecenter=phasecenter, nchan=nchan, start=start, width=width,
            weighting=weighting, robust=robust, noise=noise, npixels=npixels,
@@ -122,7 +122,7 @@ class Clean(cleanbase.CleanBase):
 
     def prepare(self):
         inputs = self.inputs
-       
+
         LOG.info('')
         LOG.info("Cleaning for intent '%s', field %s, spw %s" %
             (inputs.intent, inputs.field, inputs.spw))
@@ -312,6 +312,7 @@ class Clean(cleanbase.CleanBase):
 	    intent=inputs.intent,
 	    field=inputs.field,
 	    spw=inputs.spw,
+            spwsel=inputs.spwsel,
 	    uvrange=inputs.uvrange,
 	    mode=inputs.mode,
 	    imagermode=inputs.imagermode,

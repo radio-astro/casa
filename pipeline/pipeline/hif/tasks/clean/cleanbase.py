@@ -22,7 +22,7 @@ LOG = infrastructure.get_logger(__name__)
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
-        intent=None, field=None, spw=None, uvrange=None, mode=None,
+        intent=None, field=None, spw=None, spwsel=None, uvrange=None, mode=None,
         imagermode=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
@@ -73,6 +73,16 @@ class CleanBaseInputs(basetask.StandardInputs):
     @spw.setter
     def spw(self, value):
         self._spw = value
+
+    @property
+    def spwsel(self):
+        if self._spwsel is None:
+            return ''
+        return self._spwsel
+
+    @spwsel.setter
+    def spwsel(self, value):
+        self._spwsel = value
 
     @property
     def uvrange(self):
@@ -454,7 +464,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
 	# Call CASA clean.
         job = casa_tasks.clean(vis=inputs.vis, imagename='%s.%s.iter%s' %
-	    (inputs.imagename, inputs.stokes, iter), spw=inputs.spw,
+	    (inputs.imagename, inputs.stokes, iter),
+            spw='%s%s%s' % (inputs.spw, ':'*(1 if len(inputs.spwsel) > 0 else 0), inputs.spwsel),
 	    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
 	    inputs.intent), scan=scanidlist,
 	    mode=inputs.mode, niter=inputs.niter,

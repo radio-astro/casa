@@ -17,7 +17,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class MakeImListHeuristics(object):
 
-    def __init__(self, context, vislist, spw, linesfile):
+    def __init__(self, context, vislist, spw, linesfile=None):
         self.context = context
         if type(vislist) is types.ListType:
             self.vislist = vislist
