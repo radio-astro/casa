@@ -53,8 +53,8 @@ def _read_stream(stream):
     reader = csv.reader(stream)
     # Check if first line is header or not
     line = reader.next()
-    if line[0].strip().upper() == 'MS':
-        # must be a header
+    if line[0].strip().upper() == 'MS' or line[0].strip()[0] == '#':
+        # must be a header or commented line
         pass
     elif len(line) == 5:
         # may be a data record
@@ -83,11 +83,11 @@ class JyPerKDataParser(object):
         if content.find('=') != -1:
             # this must be a meta data
             return tuple(content.split('='))
-        elif content.find(',') != -1:
+        elif content.find(',') != -1 and not content[0].isdigit():
             # this must be a data header
             return content.split(',')
         else:
-            # invalid or empty line, ignored
+            # empty line or commented data, ignored
             return None
 
     @classmethod
