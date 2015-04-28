@@ -2984,14 +2984,14 @@ class TestMergeManualTimerange(unittest.TestCase):
         self.cmds = [
             {'mode': 'summary1'},
             {'mode': 'manual',
-             'timerange': '0~1'},
+             'timerange': '00:00~00:01'},
             {'mode': 'manual',
-             'timerange': '2~3'},
+             'timerange': '00:02~00:03'},
             {'mode': 'summary2'},
             {'mode': 'manual',
-             'timerange': '4~5'},
+             'timerange': '00:04~00:05'},
             {'mode': 'manual',
-             'timerange': '6~7'},
+             'timerange': '00:06~00:07'},
             {'mode': 'summary3'}
             ]
     def test_empty(self):
@@ -3002,29 +3002,29 @@ class TestMergeManualTimerange(unittest.TestCase):
         self.assertEqual(len(res), 5)
         self.assertEqual(res[0]['mode'], 'summary1')
         self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
         self.assertEqual(res[2]['mode'], 'summary2')
         self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5,6~7')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05,00:06~00:07')
         self.assertEqual(res[4]['mode'], 'summary3')
 
         res = fh._merge_timerange(self.cmds[1:])
         self.assertEqual(len(res), 4)
         self.assertEqual(res[0]['mode'], 'manual')
-        self.assertEqual(res[0]['timerange'], '0~1,2~3')
+        self.assertEqual(res[0]['timerange'], '00:00~00:01,00:02~00:03')
         self.assertEqual(res[1]['mode'], 'summary2')
         self.assertEqual(res[2]['mode'], 'manual')
-        self.assertEqual(res[2]['timerange'], '4~5,6~7')
+        self.assertEqual(res[2]['timerange'], '00:04~00:05,00:06~00:07')
         self.assertEqual(res[3]['mode'], 'summary3')
 
         res = fh._merge_timerange(self.cmds[:-2])
         self.assertEqual(len(res), 4)
         self.assertEqual(res[0]['mode'], 'summary1')
         self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
         self.assertEqual(res[2]['mode'], 'summary2')
         self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05')
 
     def test_nohash_nomerge(self):
         self.cmds[3]['nohash'] = dict()
@@ -3032,10 +3032,10 @@ class TestMergeManualTimerange(unittest.TestCase):
         self.assertEqual(len(res), 5)
         self.assertEqual(res[0]['mode'], 'summary1')
         self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
         self.assertEqual(res[2]['mode'], 'summary2')
         self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5,6~7')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05,00:06~00:07')
         self.assertEqual(res[4]['mode'], 'summary3')
 
     def test_nohash_merge(self):
@@ -3044,12 +3044,44 @@ class TestMergeManualTimerange(unittest.TestCase):
         self.assertEqual(len(res), 6)
         self.assertEqual(res[0]['mode'], 'summary1')
         self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1')
-        self.assertEqual(res[2]['timerange'], '2~3')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01')
+        self.assertEqual(res[2]['timerange'], '00:02~00:03')
         self.assertEqual(res[3]['mode'], 'summary2')
         self.assertEqual(res[4]['mode'], 'manual')
-        self.assertEqual(res[4]['timerange'], '4~5,6~7')
+        self.assertEqual(res[4]['timerange'], '00:04~00:05,00:06~00:07')
         self.assertEqual(res[5]['mode'], 'summary3')
+
+    def test_invalid_range(self):
+        cmds = [
+            {'mode': 'summary1'},
+            {'mode': 'manual',
+             'timerange': '00:00~00:01'},
+            {'mode': 'manual',
+             'timerange': '00:02~00:03'},
+            {'mode': 'manual',
+             'timerange': '00:03~00:02'},
+            {'mode': 'manual',
+             'timerange': '00:04~00:05'},
+            {'mode': 'summary2'},
+            {'mode': 'manual',
+             'timerange': '00:04~00:05'},
+            {'mode': 'manual',
+             'timerange': '00:06~00:07'},
+            {'mode': 'summary3'}
+            ]
+        res = fh._merge_timerange(cmds)
+        self.assertEqual(len(res), 7)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[2]['mode'], 'manual')
+        self.assertEqual(res[2]['timerange'], '00:03~00:02')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05')
+        self.assertEqual(res[4]['mode'], 'summary2')
+        self.assertEqual(res[5]['mode'], 'manual')
+        self.assertEqual(res[5]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[6]['mode'], 'summary3')
 
 
 def suite():

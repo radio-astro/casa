@@ -899,6 +899,14 @@ def _merge_timerange(commands):
             # create compound key of all command keys and their values (e.g. antenna:1)
             compound = tuple((x, cmd[x]) for x in compound_key)
 
+            # skip invalid timeranges so they don't remove the whole agent group
+            if '~' in cmd['timerange']:
+                t0,t1 = cmd['timerange'].split('~', 1)
+                startTime = qa.totime(t0)['value']
+                endTime = qa.totime(t1)['value']
+                if endTime <= startTime:
+                    raise ValueError
+
             # merge timerange duplicate compound keys
             try:
                 merged[compound]['timerange'] += ',' + cmd['timerange']
