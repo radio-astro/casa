@@ -158,7 +158,7 @@ void ImageRegrid<T>::regrid(
 			const DirectionCoordinate dcout = outImage.coordinates().directionCoordinate();
 			inc = dcout.increment();
 			units = dcout.worldAxisUnits();
-			Quantity outpix = min(Quantity(inc[0], units[0]), Quantity(inc[1], units[1]));
+			Quantity outpix = min(Quantity(abs(inc[0]), units[0]), Quantity(abs(inc[1]), units[1]));
 			if (
 				(
 					method == Interpolate2D::NEAREST && inbeam/inpix < Quantity(5, "")
@@ -175,8 +175,11 @@ void ImageRegrid<T>::regrid(
 			) {
 				LogIO log;
 				log << LogOrigin("ImageRegrid", __func__) << LogIO::WARN
-					<< "You are regridding an image whose beam is not well sampled by the "
-					<< "pixel size.  Total flux can be lost when regridding such "
+					<< "You are regridding an image whose beam minor axis " 
+				        << inbeam
+				        << " is not well sampled by the "
+				    << "pixel size (input=" << inpix << ", output=" << outpix << "). "
+				        << "Total flux can be lost when regridding such "
 					<< "images, especially when the new pixel size is larger than "
 					<< "the old pixel size. It is recommended to check the total "
 					<< "flux of your input and output image, and if necessary "
