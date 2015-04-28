@@ -2849,7 +2849,7 @@ class simutil:
         if nchan>1:
             cleanstr=cleanstr+",mode='"+chanmode+"',nchan="+str(nchan)
             cleanlast.write('mode                = "'+chanmode+'"\n')
-            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
+            cleanlast.write('nchan               = '+str(nchan)+'\n')
         else:
             cleanlast.write('mode                = "mfs"\n')
             cleanlast.write('nchan               = -1\n')
@@ -3048,9 +3048,10 @@ class simutil:
         ia.open(modelflat)
         modelflatcs=ia.coordsys()
         modelflatshape=ia.shape()
+        ia.setrestoringbeam(beam=beam)
         tmpxx=ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                   csys=outflatcs.torecord(),shape=outflatshape, asvelocity=False)
-        # im.regrid assumes a surface brightness, or more accurately doesnt
+        # ia.regrid assumes a surface brightness, or more accurately doesnt
         # pay attention to units at all, so we now have to scale 
         # by the pixel size to have the right values in jy/pixel, 
 

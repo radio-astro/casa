@@ -142,7 +142,6 @@ def simanalyze(
             default_requested=[]
             for i in range(n_default): default_requested.append(False)
 
-
             # parse ms parameter and check for existance;
             # initial ms list
             if vis=="default" or len(vis)==0:
@@ -236,7 +235,7 @@ def simanalyze(
                 concatms=project+"/"+project+".concat.ms"
                 from concat import concat
                 weights = get_concatweights(mstoimage)
-                msg(" concat('"+mstoimage+"',concatvis='"+concatms+"',visweightscale="+str(weights)+")",origin='simanalyze')
+                msg(" concat("+str(mstoimage)+",concatvis='"+concatms+"',visweightscale="+str(weights)+")",origin='simanalyze')
                 if not dryrun:
                     concat(mstoimage,concatvis=concatms,visweightscale=weights)
                     mstoimage=[concatms]
@@ -665,7 +664,6 @@ def simanalyze(
                 bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
                 bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
                 msg("synthesized beam area in output pixels = %f" % bmarea,origin='simanalyze')
-
 
 
 
