@@ -297,8 +297,9 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 			throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
 					PMS::axis(currentX_[i])+" and "+PMS::axis(currentY_[i])));
 		}
-		// Can't plot averaged weights yet
-		if (averaging_.anyAveraging()) {
+		// Can't plot averaged weights yet with plotms-averaging code
+		if ( averaging_.baseline() || averaging_.antenna() || averaging_.spw() )
+		{
 			int axesCount = axes.size();
 			for ( int j = 0; j < axesCount; j++ ){
 			        if ((axes[j] == (PMS::WT)) || 
@@ -306,7 +307,7 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 				    (axes[j] == (PMS::WTSP)) ||
 				    (axes[j] == (PMS::SIGMA)) ||
 				    (axes[j] == (PMS::SIGMASP)) ) {
-					throw(AipsError("Weight and Sigma axes do not yet support averaging."));
+					throw(AipsError("Selected averaging does not yet support Weight and Sigma axes."));
 				}
 				if (!axisIsValid(axes[j], averaging_)) {
 					throw(AipsError(PMS::axis(axes[j]) + " axis is not valid for selected averaging."));
