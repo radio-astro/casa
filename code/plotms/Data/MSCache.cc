@@ -234,7 +234,14 @@ String MSCache::getDataColumn(vector<PMS::Axis>& loadAxes,
 		    (loadAxes[i] == PMS::IMAG) ||
 		    (loadAxes[i] == PMS::WTxAMP)) {
 			dataColumn = PMS::dataColumn(loadData[i]);
+			if ((dataColumn=="corrected-model") || 
+			    (dataColumn=="data-model") ||
+			    (dataColumn=="data/model") || 
+			    (dataColumn=="corrected/model")) {
+				dataColumn="ALL";
+			} else {	
 			dataColumn.upcase();
+			}
 		}
 	}
 	return dataColumn;
