@@ -823,28 +823,30 @@
                     See the syntax for writing flag commands at the end of this help.                  
 
                tbuff -- A time buffer or list of time buffers to pad the timerange parameters
-                        in flag commands. The list of tbuff must be the same size of the
-                        number of input files given in 'inpfile'. If the list of tbuff is smaller than
-                        the list of input files, it will apply the available tbuff to the corresponding
-                        input files. Each tbuff value should be a Float number given in seconds.
+                        in flag commands. When a list of 2 time buffers is given, it will
+                        subtract the first value from the lower time and the second value will be
+                        added to the upper time in the range. The 2 time buffer values can be different,
+                        allowing to have an irregular time buffer padding to time ranges.
+                        If the list contains only one time buffer, it will use it to subtract
+                        from t0 and add to t1. If more than one list of input files is given,
+                        tbuff will apply to all of the flag commands that have timerange parameters in the files.
+                        Each tbuff value should be a Float number given in seconds.
                   default: 0.0 (it will not apply any time padding)
                             
-                  example: tbuff=[1.01, 0.5]
+                  example: tbuff=[0.5, 0.8]
                            inpfile=['online.txt','userflags.txt']
 
                         The timeranges in the online.txt file are first converted to seconds.
-                        Then, tbuff is subtracted from t0 and tbuff is added to t1,
+                        Then, 0.5 is subtracted from t0 and 0.8 is added to t1,
                         where t0 and t1 are the two intervals given in timerange. Similarly,
-                        tbuff=0.5 will be applied to any timerange in userflags.txt. 
+                        tbuff will be applied to any timerange in userflags.txt. 
 	
-                       IMPORTANT: This task assumes that timerange = t0 ~ t1, therefore it will
-                                 not work if only t0 or t1 is given. The full syntax of timerange
-                                 will be accepted when MS selection is modified to take the integration
-                                 time into account when selecting a timerange data point.
+                       IMPORTANT: This parameter assumes that timerange = t0 ~ t1, therefore it will
+                                 not work if only t0 or t1 is given.
 
                        NOTE: The most common use-case for tbuff is to apply the online flags
                             that are created by importasdm when savecmds=True. The value of
-                            time buffer should be tbuff=0.5*max(integration time).
+                            a regular time buffer should be tbuff=0.5*max(integration time).
                       
 
         manual -- Flag according to the data selection specified.

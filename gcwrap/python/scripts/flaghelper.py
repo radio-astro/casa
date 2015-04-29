@@ -309,12 +309,12 @@ def readAndParse(inputlist, tbuff=None):
         doPadding = True
 
     # Make the list of tbuff a deque        
-    dtbuff = deque()
-    
-    if isinstance(tbuff, float):
-        dtbuff.append(tbuff)
-    elif isinstance(tbuff, list):
-        dtbuff = deque(i for i in tbuff)
+#     dtbuff = deque()
+#     
+#     if isinstance(tbuff, float):
+#         dtbuff.append(tbuff)
+#     elif isinstance(tbuff, list):
+#         dtbuff = deque(i for i in tbuff)
             
     # List of dictionaries to return    
     listofdict = []
@@ -340,10 +340,10 @@ def readAndParse(inputlist, tbuff=None):
                 
             # Apply time buffer to file
             if doPadding:
-                mytbuff = dtbuff.popleft()
-                applyTimeBufferList(parsedlist, mytbuff)
-                if dtbuff.__len__() == 0:
-                    doPadding = False
+#                mytbuff = dtbuff.popleft()
+                applyTimeBufferList(parsedlist, tbuff)
+#                if dtbuff.__len__() == 0:
+#                    doPadding = False
                     
             listofdict = listofdict + parsedlist
             
@@ -365,8 +365,8 @@ def readAndParse(inputlist, tbuff=None):
                    
         # Apply time buffer to list
         if doPadding:
-            mytbuff = dtbuff.popleft()
-            applyTimeBufferList(parsedlist, mytbuff)
+#            mytbuff = dtbuff.popleft()
+            applyTimeBufferList(parsedlist, tbuff)
             
         listofdict = listofdict + parsedlist
                             
@@ -531,7 +531,7 @@ def applyTimeBuffer(cmddict, tbuff):
     return
 
 
-def applyTimeBufferList(alist, tbuff):
+def applyTimeBufferList(alist, tbuff=None):
     ''' Apply in-place a time buffer to ALL timerange parameters of a
         list of dictionaries with several flag commands. It will do the following:
         
@@ -539,13 +539,15 @@ def applyTimeBufferList(alist, tbuff):
               Ex: [{'antenna':'DV01', 'timerange':'2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'},
                    {'antenna':'DV02', 'timerange':'2013/10/15/10:25:30.110~2013/10/15/10:25:32.230'},
                    ...]
-        tbuff --> float value of time buffer to apply to all timerange parameters
+        tbuff --> float value or list of 2 values of time buffer to apply to all timerange parameters.
+                    When tbuff is a list of 2 values, the first value is applied to the lower time,
+                    the second to the upper time.
         
         * it assumes that timerange has syntax t0~t1
         * split timerange in '~' to get t0 and t1
         * convert value to time in days using qa.totime
         * convert days to seconds
-        * subtract tbuff from t0 and add tbuff to t1
+        * subtract tbuff0 from t0 and add tbuff1 to t1
         * convert back to time string with the form 'ymd' using qa.time
         * write new values back to dictionary
         
@@ -555,6 +557,18 @@ def applyTimeBufferList(alist, tbuff):
 #         return
         
     casalog.post('Apply time buffer padding to list of dictionaries', 'DEBUG1')
+
+    # When tbuff is float, the range is regular, otherwise it's irregular
+    if isinstance(tbuff, list) and len(tbuff) == 2:
+        tbuff0 = tbuff[0]
+        tbuff1 = tbuff[1]
+    elif isinstance(tbuff, list) and len(tbuff) == 1:
+        tbuff0 = tbuff1 = tbuff[0]        
+    elif isinstance(tbuff, float):
+        tbuff0 = tbuff1 = tbuff
+    else:
+         casalog.post('Time buffer (tbuff) is not of type float or list', 'WARN')
+         return
     
     for cmddict in alist:
         if cmddict.has_key('timerange'):
@@ -563,12 +577,12 @@ def applyTimeBufferList(alist, tbuff):
                 t0,t1 = timerange.split('~',1)
                 # start time
                 startTime = qa.totime(t0)['value']
-                startTimeSec = (startTime * 24 * 3600) - tbuff
+                startTimeSec = (startTime * 24 * 3600) - tbuff0
                 startTimeSec = qa.quantity(startTimeSec, 's')
                 paddedT0 = qa.time(startTimeSec,form='ymd',prec=9)[0]
                 # end time
                 endTime = qa.totime(t1)['value']
-                endTimeSec = (endTime * 24 * 3600) + tbuff
+                endTimeSec = (endTime * 24 * 3600) + tbuff1
                 endTimeSec = qa.quantity(endTimeSec, 's')
                 paddedT1 = qa.time(endTimeSec,form='ymd',prec=9)[0]
                 
@@ -898,6 +912,14 @@ def _merge_timerange(commands):
             compound_key = sorted(x for x in cmd.keys() if x not in ('timerange', 'agentname'))
             # create compound key of all command keys and their values (e.g. antenna:1)
             compound = tuple((x, cmd[x]) for x in compound_key)
+
+            # skip invalid timeranges so they don't remove the whole agent group
+            if '~' in cmd['timerange']:
+                t0,t1 = cmd['timerange'].split('~', 1)
+                startTime = qa.totime(t0)['value']
+                endTime = qa.totime(t1)['value']
+                if endTime <= startTime:
+                    raise ValueError
 
             # merge timerange duplicate compound keys
             try:

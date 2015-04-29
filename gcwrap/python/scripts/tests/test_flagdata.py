@@ -2939,20 +2939,124 @@ class test_tbuff(test_base):
         self.assertEqual(flags1['antenna']['DV04']['flagged'],29) # DV04&&*
         self.assertEqual(flags1['antenna']['DV10']['flagged'],1) # DV04&DV10
 
-        # Unflag and apply tbuff=[0.504]. It should increase only the DV10 flags from user flags
+        # Unflag and apply tbuff=[0.504]. It should increase the DV04 and DV10 flags
         flagdata(self.vis, flagbackup=False,mode='unflag')
         flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.user,self.online], tbuff=[0.504])
         flags2 = flagdata(self.vis, mode='summary', basecnt=True)
-        self.assertEqual(flags2['antenna']['DV04']['flagged'],29) 
-        self.assertEqual(flags2['antenna']['DV10']['flagged'],29) 
+        self.assertEqual(flags2['antenna']['DV04']['flagged'],58) 
+        self.assertEqual(flags2['antenna']['DV10']['flagged'],30) 
          
-        # Unflag and apply tbuff=[0.504,0.504]. It should increase the DV04 and DV10 flags
+        # Unflag and apply tbuff=[0.504,0.504]. The same as above
         flagdata(self.vis, flagbackup=False,mode='unflag')
         flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.online,self.user], tbuff=[0.504,0.504])
         flags3 = flagdata(self.vis, mode='summary', basecnt=True)
         self.assertEqual(flags3['antenna']['DV04']['flagged'],58) 
         self.assertEqual(flags3['antenna']['DV10']['flagged'],30) 
         
+
+class TestMergeManualTimerange(unittest.TestCase):
+    def setUp(self):
+        self.cmds = [
+            {'mode': 'summary1'},
+            {'mode': 'manual',
+             'timerange': '00:00~00:01'},
+            {'mode': 'manual',
+             'timerange': '00:02~00:03'},
+            {'mode': 'summary2'},
+            {'mode': 'manual',
+             'timerange': '00:04~00:05'},
+            {'mode': 'manual',
+             'timerange': '00:06~00:07'},
+            {'mode': 'summary3'}
+            ]
+    def test_empty(self):
+        self.assertEqual(fh._merge_timerange([]), [])
+
+    def test_merge(self):
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[4]['mode'], 'summary3')
+
+        res = fh._merge_timerange(self.cmds[1:])
+        self.assertEqual(len(res), 4)
+        self.assertEqual(res[0]['mode'], 'manual')
+        self.assertEqual(res[0]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[1]['mode'], 'summary2')
+        self.assertEqual(res[2]['mode'], 'manual')
+        self.assertEqual(res[2]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[3]['mode'], 'summary3')
+
+        res = fh._merge_timerange(self.cmds[:-2])
+        self.assertEqual(len(res), 4)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05')
+
+    def test_nohash_nomerge(self):
+        self.cmds[3]['nohash'] = dict()
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[4]['mode'], 'summary3')
+
+    def test_nohash_merge(self):
+        self.cmds[2]['nohash'] = dict()
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 6)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01')
+        self.assertEqual(res[2]['timerange'], '00:02~00:03')
+        self.assertEqual(res[3]['mode'], 'summary2')
+        self.assertEqual(res[4]['mode'], 'manual')
+        self.assertEqual(res[4]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[5]['mode'], 'summary3')
+
+    def test_invalid_range(self):
+        cmds = [
+            {'mode': 'summary1'},
+            {'mode': 'manual',
+             'timerange': '00:00~00:01'},
+            {'mode': 'manual',
+             'timerange': '00:02~00:03'},
+            {'mode': 'manual',
+             'timerange': '00:03~00:02'},
+            {'mode': 'manual',
+             'timerange': '00:04~00:05'},
+            {'mode': 'summary2'},
+            {'mode': 'manual',
+             'timerange': '00:04~00:05'},
+            {'mode': 'manual',
+             'timerange': '00:06~00:07'},
+            {'mode': 'summary3'}
+            ]
+        res = fh._merge_timerange(cmds)
+        self.assertEqual(len(res), 7)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '00:00~00:01,00:02~00:03')
+        self.assertEqual(res[2]['mode'], 'manual')
+        self.assertEqual(res[2]['timerange'], '00:03~00:02')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '00:04~00:05')
+        self.assertEqual(res[4]['mode'], 'summary2')
+        self.assertEqual(res[5]['mode'], 'manual')
+        self.assertEqual(res[5]['timerange'], '00:04~00:05,00:06~00:07')
+        self.assertEqual(res[6]['mode'], 'summary3')
 
 # Cleanup class 
 class cleanup(test_base):
@@ -2979,82 +3083,8 @@ class cleanup(test_base):
         pass
 
 
-class TestMergeManualTimerange(unittest.TestCase):
-    def setUp(self):
-        self.cmds = [
-            {'mode': 'summary1'},
-            {'mode': 'manual',
-             'timerange': '0~1'},
-            {'mode': 'manual',
-             'timerange': '2~3'},
-            {'mode': 'summary2'},
-            {'mode': 'manual',
-             'timerange': '4~5'},
-            {'mode': 'manual',
-             'timerange': '6~7'},
-            {'mode': 'summary3'}
-            ]
-    def test_empty(self):
-        self.assertEqual(fh._merge_timerange([]), [])
-
-    def test_merge(self):
-        res = fh._merge_timerange(self.cmds)
-        self.assertEqual(len(res), 5)
-        self.assertEqual(res[0]['mode'], 'summary1')
-        self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
-        self.assertEqual(res[2]['mode'], 'summary2')
-        self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5,6~7')
-        self.assertEqual(res[4]['mode'], 'summary3')
-
-        res = fh._merge_timerange(self.cmds[1:])
-        self.assertEqual(len(res), 4)
-        self.assertEqual(res[0]['mode'], 'manual')
-        self.assertEqual(res[0]['timerange'], '0~1,2~3')
-        self.assertEqual(res[1]['mode'], 'summary2')
-        self.assertEqual(res[2]['mode'], 'manual')
-        self.assertEqual(res[2]['timerange'], '4~5,6~7')
-        self.assertEqual(res[3]['mode'], 'summary3')
-
-        res = fh._merge_timerange(self.cmds[:-2])
-        self.assertEqual(len(res), 4)
-        self.assertEqual(res[0]['mode'], 'summary1')
-        self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
-        self.assertEqual(res[2]['mode'], 'summary2')
-        self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5')
-
-    def test_nohash_nomerge(self):
-        self.cmds[3]['nohash'] = dict()
-        res = fh._merge_timerange(self.cmds)
-        self.assertEqual(len(res), 5)
-        self.assertEqual(res[0]['mode'], 'summary1')
-        self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1,2~3')
-        self.assertEqual(res[2]['mode'], 'summary2')
-        self.assertEqual(res[3]['mode'], 'manual')
-        self.assertEqual(res[3]['timerange'], '4~5,6~7')
-        self.assertEqual(res[4]['mode'], 'summary3')
-
-    def test_nohash_merge(self):
-        self.cmds[2]['nohash'] = dict()
-        res = fh._merge_timerange(self.cmds)
-        self.assertEqual(len(res), 6)
-        self.assertEqual(res[0]['mode'], 'summary1')
-        self.assertEqual(res[1]['mode'], 'manual')
-        self.assertEqual(res[1]['timerange'], '0~1')
-        self.assertEqual(res[2]['timerange'], '2~3')
-        self.assertEqual(res[3]['mode'], 'summary2')
-        self.assertEqual(res[4]['mode'], 'manual')
-        self.assertEqual(res[4]['timerange'], '4~5,6~7')
-        self.assertEqual(res[5]['mode'], 'summary3')
-
-
 def suite():
-    return [TestMergeManualTimerange,
-            test_rflag,
+    return [test_rflag,
             test_tfcrop,
             test_shadow,
             test_flagmanager,
@@ -3075,4 +3105,5 @@ def suite():
             test_weight_spectrum,
             test_float_column,
             test_tbuff,
+            TestMergeManualTimerange,
             cleanup]
