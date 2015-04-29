@@ -4143,6 +4143,7 @@ void MSTransformManager::checkDataColumnsAvailable()
 	// CAS-7390: Provide default MODEL_DATA in buffer mode
 	else if (bufferMode_p)
 	{
+		makeVirtualModelColReal_p = True;
 		modelDataColumnAvailable_p = True;
 	}
 	// There is no model available in the SOURCE sub-table
