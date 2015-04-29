@@ -2939,45 +2939,20 @@ class test_tbuff(test_base):
         self.assertEqual(flags1['antenna']['DV04']['flagged'],29) # DV04&&*
         self.assertEqual(flags1['antenna']['DV10']['flagged'],1) # DV04&DV10
 
-        # Unflag and apply tbuff=[0.504]. It should increase only the DV10 flags from user flags
+        # Unflag and apply tbuff=[0.504]. It should increase the DV04 and DV10 flags
         flagdata(self.vis, flagbackup=False,mode='unflag')
         flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.user,self.online], tbuff=[0.504])
         flags2 = flagdata(self.vis, mode='summary', basecnt=True)
-        self.assertEqual(flags2['antenna']['DV04']['flagged'],29) 
-        self.assertEqual(flags2['antenna']['DV10']['flagged'],29) 
+        self.assertEqual(flags2['antenna']['DV04']['flagged'],58) 
+        self.assertEqual(flags2['antenna']['DV10']['flagged'],30) 
          
-        # Unflag and apply tbuff=[0.504,0.504]. It should increase the DV04 and DV10 flags
+        # Unflag and apply tbuff=[0.504,0.504]. The same as above
         flagdata(self.vis, flagbackup=False,mode='unflag')
         flagdata(self.vis, flagbackup=False,mode='list',inpfile=[self.online,self.user], tbuff=[0.504,0.504])
         flags3 = flagdata(self.vis, mode='summary', basecnt=True)
         self.assertEqual(flags3['antenna']['DV04']['flagged'],58) 
         self.assertEqual(flags3['antenna']['DV10']['flagged'],30) 
         
-
-# Cleanup class 
-class cleanup(test_base):
-    
-    def tearDown(self):
-        os.system('rm -rf ngc5921.*ms* testwma*ms*')
-        os.system('rm -rf flagdatatest.*ms*')
-        os.system('rm -rf missing-baseline.*ms*')
-        os.system('rm -rf multiobs.*ms*')
-        os.system('rm -rf uid___A002_X30a93d_X43e_small.*ms*')
-        os.system('rm -rf Four_ants_3C286.*ms*')
-        os.system('rm -rf shadowtest_part.*ms*')
-        os.system('rm -rf testmwa.*ms*')
-        os.system('rm -rf cal.fewscans.bpass*')
-        os.system('rm -rf X7ef.tsys* ap314.gcal*')
-        os.system('rm -rf list*txt*')
-        os.system('rm -rf fourrows*')
-        os.system('rm -rf SDFloatColumn*')
-        os.system('rm -rf *weight*ms*')
-        os.system('rm -rf uid___A002_X72c4aa_X8f5_scan21_spw18*')
-
-    def test_runTest(self):
-        '''flagdata: Cleanup'''
-        pass
-
 
 class TestMergeManualTimerange(unittest.TestCase):
     def setUp(self):
@@ -3083,10 +3058,33 @@ class TestMergeManualTimerange(unittest.TestCase):
         self.assertEqual(res[5]['timerange'], '00:04~00:05,00:06~00:07')
         self.assertEqual(res[6]['mode'], 'summary3')
 
+# Cleanup class 
+class cleanup(test_base):
+    
+    def tearDown(self):
+        os.system('rm -rf ngc5921.*ms* testwma*ms*')
+        os.system('rm -rf flagdatatest.*ms*')
+        os.system('rm -rf missing-baseline.*ms*')
+        os.system('rm -rf multiobs.*ms*')
+        os.system('rm -rf uid___A002_X30a93d_X43e_small.*ms*')
+        os.system('rm -rf Four_ants_3C286.*ms*')
+        os.system('rm -rf shadowtest_part.*ms*')
+        os.system('rm -rf testmwa.*ms*')
+        os.system('rm -rf cal.fewscans.bpass*')
+        os.system('rm -rf X7ef.tsys* ap314.gcal*')
+        os.system('rm -rf list*txt*')
+        os.system('rm -rf fourrows*')
+        os.system('rm -rf SDFloatColumn*')
+        os.system('rm -rf *weight*ms*')
+        os.system('rm -rf uid___A002_X72c4aa_X8f5_scan21_spw18*')
+
+    def test_runTest(self):
+        '''flagdata: Cleanup'''
+        pass
+
 
 def suite():
-    return [TestMergeManualTimerange,
-            test_rflag,
+    return [test_rflag,
             test_tfcrop,
             test_shadow,
             test_flagmanager,
@@ -3107,4 +3105,5 @@ def suite():
             test_weight_spectrum,
             test_float_column,
             test_tbuff,
+            TestMergeManualTimerange,
             cleanup]

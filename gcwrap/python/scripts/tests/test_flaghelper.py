@@ -191,8 +191,7 @@ class test_flaghelper(test_base):
         endTimeSec = float(endTime * 24 * 3600)
 
         self.assertAlmostEqual(orig_time_start, startTimeSec, places=3)
-        self.assertAlmostEqual(orig_time_end, endTimeSec, places=3)
- 
+        self.assertAlmostEqual(orig_time_end, endTimeSec, places=3) 
         
     def test_readAndParseTbuff(self):
         '''flaghelper: compare the read and parse and apply tbuff'''
@@ -254,6 +253,69 @@ class test_flaghelper(test_base):
         
         self.assertAlmostEqual(xmlt0, startTimeSec['value'], places=3)
         self.assertAlmostEqual(xmlt1, endTimeSec['value'], places=3)
+
+    def test_readAndParseIrregularTbuff(self):
+        '''flaghelper: compare the read and parse and apply of irregular tbuff'''
+        print ''
+        
+        # MJD in seconds of timeranges are these
+        # <startTime>4891227930515540000 <endTime>4891227932453838000
+        # <startTime>4891228473545856000 <endTime>4891228473731891000
+        # <startTime>4891226924455911000 <endTime>4891226927502314000
+        # <startTime>4891228838164987000 <endTime>4891228838418996000
+        # <startTime>4891228609440808000 <endTime>4891228612489617000
+
+        online = ["antenna='DV03&&*' timerange='2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'",
+                  "antenna='DA44&&*' timerange='2013/11/15/10:34:33.546~2013/11/15/10:34:33.732'",
+                  "antenna='DA46&&*' timerange='2013/11/15/10:08:44.456~2013/11/15/10:08:47.502'",
+                  "antenna='DV09&&*' timerange='2013/11/15/10:18:11.798~2013/11/15/10:18:13.837'",
+                  "antenna='DV05&&*' timerange='2013/11/15/10:40:38.165~2013/11/15/10:40:38.419'"]
+
+        myinput = "antenna='DV03&&*' timerange='2013/11/15/10:25:30.516~2013/11/15/10:25:32.454'\n"\
+                  "antenna='DA44&&*' timerange='2013/11/15/10:34:33.546~2013/11/15/10:34:33.732'\n"\
+                  "antenna='DA46&&*' timerange='2013/11/15/10:08:44.456~2013/11/15/10:08:47.502'\n"\
+                  "antenna='DV09&&*' timerange='2013/11/15/10:18:11.798~2013/11/15/10:18:13.837'\n"\
+                  "antenna='DV05&&*' timerange='2013/11/15/10:40:38.165~2013/11/15/10:40:38.419'"
+        
+        filename1 = 'flaghelperonline2.txt'
+        create_input(myinput, filename1)
+        
+        # timeranges from online before padding, for comparison later
+        timeranges=[]
+        for cmd in online:
+            a,b = cmd.split(' ')
+            b = b.lstrip('timerange=')
+            timeranges.append(b.strip("'"))
+                    
+        # Apply 2 values of tbuff to timeranges
+        timebuffer = [0.4, 0.7]
+        dlist1 = fh.readAndParse([filename1], tbuff=timebuffer)
+        self.assertEqual(len(dlist1), 5)
+        
+        # check the padded time ranges before and after the application
+        n = 0
+        for cmd in dlist1:
+            padt = cmd['timerange']
+            
+#        padt = dlist1[0]['timerange']
+        
+            # Revert the tbuff application manually
+            t0,t1 = padt.split('~',1)
+            startTime = qa.totime(t0)['value']
+            startTimeSec = float((startTime * 24 * 3600) + timebuffer[0])
+            startTimeSec = qa.quantity(startTimeSec, 's')
+            paddedT0 = qa.time(startTimeSec,form='ymd',prec=9)[0]
+            # end time
+            endTime = qa.totime(t1)['value']
+            endTimeSec = float((endTime * 24 * 3600) - timebuffer[1])
+            endTimeSec = qa.quantity(endTimeSec, 's')
+            paddedT1 = qa.time(endTimeSec,form='ymd',prec=9)[0]
+            
+            newtimerange =  paddedT0+'~'+paddedT1
+            
+            # Compare with the original
+            self.assertEqual(timeranges[n], newtimerange)
+            n += 1
 
     def test_parseDictionary(self):
         '''flaghelper: read a file and parse to a dictionary'''
