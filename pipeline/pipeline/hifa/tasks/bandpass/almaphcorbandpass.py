@@ -237,7 +237,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         #result = self._executor.execute(phaseup_task, merge=True)
         result = self._executor.execute(phaseup_task, merge=False)
 	if not result.final:
-	    pass
+            LOG.warning('No bandpass phaseup solution for %s' % inputs.ms.basename)
 	else:
 	    result.accept(inputs.context)
 	return result
