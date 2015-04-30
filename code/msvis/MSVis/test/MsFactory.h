@@ -3,7 +3,7 @@
 
 #include <casa/string.h>
 #include <ms/MeasurementSets.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 
 #include <utility>
 
@@ -309,7 +309,6 @@ public:
 
     //// void addColumn (MSMainEnums::PredefinedColumns columnId);
     void addWeightSpectrum (Bool addIt);
-    void addCorrectedWeightSpectrum (Bool addIt);
 
     void addCubeColumn (MSMainEnums::PredefinedColumns columnId,
                         const String & dataStorageMangerName);
@@ -487,7 +486,6 @@ private:
 
     };
 
-    Bool addCorrectedWeightSpectrum_p;
     Bool addWeightSpectrum_p;
     Columns columns_p;
     ColumnIds columnIds_p;

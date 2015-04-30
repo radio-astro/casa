@@ -240,6 +240,80 @@ public:
         return rep;
     }
 
+    SlicerSet
+    getSlicerSet () const
+    {
+
+        // The goal is to create a 2D array of Slicers.  Two types of Slicers are
+        // required: one to slice into the data as read and another to put it into
+        // the target array.  Both are computed and returned here.  We are
+        // effectively computing a cross-product between the correlation and channel
+        // slices.
+
+        CoreRep slicing = getSlicerInCoreRep(); // might be able to replace this?
+
+        Vector<Slice> correlationSlices = slicing (0);
+        Vector<Slice> channelSlices = slicing (1);
+
+        IPosition start (2), length(2), increment (2);
+
+        uInt nCorrelationSlices = slicing (0).size();
+        uInt nChannelSlices = channelSlices.size();
+        uInt nSlices = nCorrelationSlices * nChannelSlices;
+
+        Vector<Slicer *> dataSlices (nSlices, 0);
+        Vector<Slicer *> destinationSlices (nSlices, 0);
+        IPosition shape (2, 0);
+
+        uInt outputSlice = 0;
+        const uInt Channel = 1;
+        const uInt Correlation = 0;
+
+        uInt correlationDestination = 0;
+
+        for (uInt correlationSlice = 0; correlationSlice < nCorrelationSlices; correlationSlice ++){
+
+            const Slice & aSlice = correlationSlices (correlationSlice);
+
+            start (Correlation) = aSlice.start();
+            length (Correlation) = aSlice.length();
+            increment (Correlation) = aSlice.inc();
+
+            uInt channelDestination = 0;
+
+            for (uInt channelSlice = 0; channelSlice < nChannelSlices; channelSlice ++){
+
+                const Slice & bSlice = channelSlices (channelSlice);
+
+                start (Channel) = bSlice.start();
+                length (Channel) = bSlice.length();
+                increment (Channel) = bSlice.inc();
+
+                dataSlices [outputSlice] = new Slicer (start, length, increment);
+
+                // The destination slicer will always have increment one and the same length
+                // as the data slicer.  However, it's starting location depends on how many
+                // slices (both axes) it is away from the origin.
+
+                start (Channel) = channelDestination;
+                channelDestination += length (Channel);
+                increment (Channel) = 1;
+                start (Correlation) = correlationDestination;
+                increment (Correlation) = 1;
+                destinationSlices [outputSlice] = new Slicer (start, length, increment);
+
+                outputSlice ++;
+                shape (Channel) = max (shape(Channel), channelDestination);
+
+            }
+
+            correlationDestination += length (Correlation);
+            shape (Correlation) = correlationDestination;
+        }
+
+        return SlicerSet (shape, dataSlices, destinationSlices);
+    }
+
     const ChannelSubslicer &
     getSubslicer (Int i) const
     {
@@ -741,12 +815,16 @@ void
 VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
-    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
+    Vector<Slicer *> dataSlicers, destinationSlicers;
+    SlicerSet slicerSet = channelSelector_p->getSlicer().getSlicerSet();
+
     column.getColumnCells (rowBounds_p.subchunkRows_p,
-                           slicer.getSlicerInCoreRep(),
+                           slicerSet,
                            array,
                            True);
 }
+
+
 
 template <typename T>
 void
@@ -760,10 +838,36 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 
         const ChannelSlicer & slicer = channelSelector_p->getSlicer();
         const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
-        Vector<Slice> correlationSlices = subslicer.getSlices ();
-        Vector<Vector <Slice> > wrappedSlicer (1, correlationSlices);
 
-        column.getColumnCells (rowBounds_p.subchunkRows_p, wrappedSlicer, array, True);
+        Vector<Slice> correlationSlices = subslicer.getSlices ();
+
+#warning "Redo this is a cleaner way"
+
+        Vector<Slicer *> dataSlicers (correlationSlices.size(), 0);
+        Vector<Slicer *> destinationSlicers (correlationSlices.size(), 0);
+
+        IPosition start (1, 0), length (1, 0), increment (1, 0);
+        uInt sliceStart = 0;
+
+        for (uInt i = 0; i < correlationSlices.size(); i++){
+
+            start (0) = correlationSlices (i).start ();
+            length (0) = correlationSlices (i).length();
+            increment (0) = correlationSlices (i).inc ();
+            dataSlicers (i) = new Slicer (start, length, increment);
+
+            start (0) = sliceStart;
+            increment (0) = 1;
+            destinationSlicers (i) = new Slicer (start, length, increment);
+
+            sliceStart += length (0);
+        }
+
+        IPosition shape (1, sliceStart);
+
+        SlicerSet slicerSet (shape, dataSlicers, destinationSlicers);
+
+        column.getColumnCells (rowBounds_p.subchunkRows_p, slicerSet, array, True);
     }
     else{
 
@@ -2233,7 +2337,8 @@ VisibilityIteratorImpl2::getRowIds (Vector<uInt> & rowIds) const
 {
     // Resize the rowIds vector and fill it with the row numbers contained
     // in the current subchunk.  These row numbers are relative to the reference
-    // table used by MSIter to define a chunk.
+    // table used by MSIter to define a chunk; thus rowId 0 is the first row
+    // in the chunk.
 
     rowIds.resize (rowBounds_p.subchunkNRows_p);
     rowIds = rowBounds_p.subchunkRows_p.convert ();
@@ -2338,22 +2443,23 @@ VisibilityIteratorImpl2::flagCategoryExists() const
 void
 VisibilityIteratorImpl2::flagCategory (Array<Bool> & flagCategories) const
 {
-    if (columns_p.flagCategory_p.isNull () ||
-        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
-
-        flagCategories.resize ();    // Zap it.
-    }
-    else {
-
-        // Since flag category is shaped [nC, nF, nCategories] it requires a
-        // slightly different slicer and cannot use the usual getColumns method.
-
-        const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
-
-        columns_p.flagCategory_p.getSliceForRows (rowBounds_p.subchunkRows_p,
-                                                  channelSlicer.getSlicerInCoreRep(),
-                                                  flagCategories);
-    }
+#warning "Implement this using the new methods once mainstream implementation is stable"
+//    if (columns_p.flagCategory_p.isNull () ||
+//        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
+//
+//        flagCategories.resize ();    // Zap it.
+//    }
+//    else {
+//
+//        // Since flag category is shaped [nC, nF, nCategories] it requires a
+//        // slightly different slicer and cannot use the usual getColumns method.
+//
+//        const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
+//
+//        columns_p.flagCategory_p.getSliceForRows (rowBounds_p.subchunkRows_p,
+//                                                  channelSlicer.getSlicerInCoreRep(),
+//                                                  flagCategories);
+//    }
 }
 
 void

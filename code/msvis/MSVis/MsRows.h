@@ -146,7 +146,7 @@ public:
 
     virtual ~MsRow () {}
 
-    void changeRow (Int row) { row_p = row;}
+    virtual void changeRow (Int row) { row_p = row;}
 
     virtual Int antenna1 () const = 0;
     virtual Int antenna2 () const = 0;
@@ -193,31 +193,31 @@ public:
     virtual void setUvw (const Vector<Double> &) = 0;
 
     virtual const Complex & corrected (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Complex> corrected () const = 0;
+    virtual const Matrix<Complex> & corrected () const = 0;
     virtual void setCorrected (Int correlation, Int channel, const Complex & value) = 0;
     virtual void setCorrected (const Matrix<Complex> & value) = 0;
 
     virtual const Complex & model (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Complex> model () const = 0;
+    virtual const Matrix<Complex> & model () const = 0;
     virtual void setModel(Int correlation, Int channel, const Complex & value) = 0;
     virtual void setModel (const Matrix<Complex> & value) = 0;
 
     virtual const Complex & observed (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Complex> observed () const = 0;
+    virtual const Matrix<Complex> & observed () const = 0;
     virtual void setObserved (Int correlation, Int channel, const Complex & value) = 0;
     virtual void setObserved (const Matrix<Complex> & value) = 0;
 
     virtual Float sigma (Int correlation) const = 0;
-    virtual const Vector<Float> sigma () const = 0;
+    virtual const Vector<Float> & sigma () const = 0;
     virtual Float weight (Int correlation) const = 0;
-    virtual const Vector<Float> weight () const = 0;
+    virtual const Vector<Float> & weight () const = 0;
     virtual Float weightSpectrum (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Float> weightSpectrum () const = 0;
+    virtual const Matrix<Float> & weightSpectrum () const = 0;
     virtual Float sigmaSpectrum (Int correlation, Int channel) const = 0;
-    virtual const Matrix<Float> sigmaSpectrum () const = 0;
+    virtual const Matrix<Float> & sigmaSpectrum () const = 0;
 
     virtual Bool isRowFlagged () const = 0;
-    virtual const Matrix<Bool> flags () const = 0;
+    virtual const Matrix<Bool> & flags () const = 0;
     virtual void setFlags (const Matrix<Bool> &) = 0;
     virtual Bool isFlagged (Int correlation, Int channel) const = 0;
 
@@ -231,6 +231,8 @@ protected:
     vi::VisBuffer2 * vb () const;
 
 private:
+
+    MsRow (const MsRow & other); // no copying
 
     const Bool isWritable_p;
     Int row_p;

@@ -48,32 +48,6 @@
 #define Assert AssertCc
 #define Throw ThrowCc
 
-// The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
-// NDEBUG is not defined (release build) then a throw is used to report the error.
-
-//#ifdef NDEBUG
-//#define Assert(c) {assert (c)}
-//#else
-//#define Assert(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
-//#endif
-//
-//#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
-//
-//#if defined (NDEBUG)
-//#    define Throw(m) \
-//    { AipsError anAipsError ((m), __FILE__, __LINE__);\
-//      toStdError (anAipsError.what());\
-//      throw anAipsError; }
-//#else
-//#    define Throw(m) throw AipsError ((m), __FILE__, __LINE__)
-//#endif
-
-//#define ThrowIf(c,m) {if (c) {casa::utilj::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
-//
-//#define ThrowIfError(c,m) {if (c) {casa::utilj::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
-//
-//#define Rethrow(e,m) {throw casa::utilj::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
-
 namespace casa {
 
 class String;
@@ -547,6 +521,48 @@ private:
     Double elapsedMax_p;
     Double elapsedSsq_p;
     Int n_p;
+};
+
+class RUsage {
+
+public:
+
+    RUsage ();
+
+    void accumulate (const RUsage & recent, const RUsage & origin);
+    void capture ();
+    void captureAndAccumulate (const RUsage & origin);
+
+    RUsage operator+ (const RUsage & other) const;
+    RUsage operator- (const RUsage & other) const;
+
+    double utime () const { return rusage_p.ru_utime.tv_sec + rusage_p.ru_utime.tv_usec * 1e-6;}
+    double stime () const { return rusage_p.ru_stime.tv_sec + rusage_p.ru_stime.tv_usec * 1e-6;}
+
+    long   maxrss () const { return rusage_p.ru_maxrss;}        /* maximum resident set size */
+    long   ixrss () const { return rusage_p.ru_ixrss;}         /* integral shared memory size */
+    long   idrss () const { return rusage_p.ru_idrss;}         /* integral unshared data size */
+    long   isrss () const { return rusage_p.ru_isrss;}         /* integral unshared stack size */
+    long   minflt () const { return rusage_p.ru_minflt;}        /* page reclaims */
+    long   majflt () const { return rusage_p.ru_majflt;}        /* page faults */
+    long   nswap () const { return rusage_p.ru_nswap;}         /* swaps */
+    long   inblock () const { return rusage_p.ru_inblock;}       /* block input operations */
+    long   oublock () const { return rusage_p.ru_oublock;}       /* block output operations */
+    long   msgsnd () const { return rusage_p.ru_msgsnd;}        /* messages sent */
+    long   msgrcv () const { return rusage_p.ru_msgrcv;}        /* messages received */
+    long   nsignals () const { return rusage_p.ru_nsignals;}      /* signals received */
+    long   nvcsw () const { return rusage_p.ru_nvcsw;}         /* voluntary context switches */
+    long   nivcsw () const { return rusage_p.ru_nivcsw;}        /* involuntary context switches */
+
+    String toString () const;
+
+private:
+
+    static RUsage add (const RUsage & a, int sign, const RUsage & b);
+    static struct timeval addTimes (const struct timeval & first, int sign, const struct timeval & second);
+
+    struct rusage rusage_p;
+
 };
 
 // Global Functions

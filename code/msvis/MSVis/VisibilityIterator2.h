@@ -473,6 +473,9 @@ public:
   static VisibilityIterator2 * copyingViFactory (const MeasurementSet & srcMs,
                                                  MeasurementSet & dstMs);
 
+  template <typename KlugeIn, typename KlugeOut>
+  static KlugeOut KlugeForTesting (KlugeIn);
+
   //
   // END Experimental Section
   //
