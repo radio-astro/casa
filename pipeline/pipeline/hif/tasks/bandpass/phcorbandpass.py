@@ -52,11 +52,6 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
             phaseup_result = self._do_phaseup()
 
         # Now perform the bandpass
-	#if inputs.maxchannels <= 0:
-            #result = self._do_bandpass()
-	#else:
-            ##result = self._do_fixed_bandpass()
-            #result = self._do_smoothed_bandpass()
         result = self._do_bandpass()
         
         # Attach the preparatory result to the final result so we have a
@@ -83,100 +78,17 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 
         phaseup_task = gaincal.GTypeGaincal(phaseup_inputs)
         
-        return self._executor.execute(phaseup_task, merge=True)
+        #return self._executor.execute(phaseup_task, merge=True)
+        result = self._executor.execute(phaseup_task, merge=False)
+	if not result.final:
+	    LOG.warning('No bandpass phaseup solution computed for %s' % (inputs.ms.basename))
+	else:
+	    result.accept(inputs.context)
+	return result
 
     def _do_bandpass(self):
         bandpass_task = bandpassmode.BandpassMode(self.inputs)
         return self._executor.execute(bandpass_task)
-
-#    def _do_fixed_bandpass(self):
-#	orig_solint = self.inputs.solint
-#        try:
-#	    # Determine the minimum resolution required to get at
-#	    # least 240 channels for all spws
-#	    spwlist = self.inputs.ms.get_spectral_windows(self.inputs.spw)
-#	    chanreslist = []
-#	    for spw in spwlist:
-#		# TDM or FDM
-#                dd = self.inputs.ms.get_data_description(spw=spw)
-#                if dd is None:
-#                    LOG.debug('Missing data description for spw %s ' % spw.id)
-#                    continue
-#                ncorr = len(dd.corr_axis)
-#                if ncorr not in set([1,2,4]):
-#                    LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
-#                    continue
-#		bandwidth = spw.bandwidth.to_units( \
-#		    otherUnits=measures.FrequencyUnits.MEGAHERTZ)
-#                if (ncorr * spw.num_channels > 256):
-#		    chanres = bandwidth / self.inputs.maxchannels
-#		else:
-#		    chanres = bandwidth / spw.num_channels
-#		chanreslist.append(chanres)
-#	    min_chanres = min(chanreslist)
-#
-#	    self.inputs.solint=orig_solint + ',' + str(min_chanres) + 'MHz'
-#            bandpass_task = bandpassmode.BandpassMode(self.inputs)
-#            return self._executor.execute(bandpass_task)
-#
-#        finally:
-#	    self.inputs.solint = orig_solint
-
-#    def _do_smoothed_bandpass(self):
-#
-#	# Store original values of some parameters.
-#        orig_spw = self.inputs.spw
-#	orig_solint = self.inputs.solint
-#	orig_append = self.inputs.append
-#
-#        try:
-#	    # initialize the caltable and list of spws
-#	    self.inputs.caltable = self.inputs.caltable
-#	    spwlist = self.inputs.ms.get_spectral_windows(orig_spw)
-#
-#	    # Loop through the spw appending the results of each spw
-#	    # to the results of the previous one.
-#	    for spw in spwlist:
-#
-#		# TDM or FDM
-#                dd = self.inputs.ms.get_data_description(spw=spw)
-#                if dd is None:
-#                    LOG.debug('Missing data description for spw %s ' % spw.id)
-#                    continue
-#                ncorr = len(dd.corr_axis)
-#                if ncorr not in set([1,2,4]):
-#                    LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
-#                    continue
-#
-#		# Smooth if FDM and if it makes sense
-#                if (ncorr * spw.num_channels > 256):
-#		    if (spw.num_channels / self.inputs.maxchannels) < 1:
-#		        self.inputs.solint = orig_solint
-#		    else:
-#		        bandwidth = spw.bandwidth.to_units( \
-#		            otherUnits=measures.FrequencyUnits.MEGAHERTZ)
-#		        self.inputs.solint=orig_solint + ',' + \
-#		            str(bandwidth / self.inputs.maxchannels) + 'MHz'
-#                else:
-#		    self.inputs.solint=orig_solint
-#
-#		# Compute and append bandpass solution
-#		self.inputs.spw=spw.id
-#                bandpass_task = bandpassmode.BandpassMode(self.inputs)
-#                result = self._executor.execute(bandpass_task)
-#		if os.path.exists(self.inputs.caltable):
-#		    self.inputs.append=True
-#		    self.inputs.caltable=result.final[-1].gaintable
-#
-#	    # Reset the calto spw list
-#	    result.pool[0].calto.spw = orig_spw
-#	    result.final[0].calto.spw = orig_spw
-#	    return result
-#
-#        finally:
-#            self.inputs.spw = orig_spw
-#            self.inputs.solint = orig_solint
-#            self.inputs.append = orig_append
 
     def _get_phaseup_spw(self):
         '''
