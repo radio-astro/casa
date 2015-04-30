@@ -8,6 +8,7 @@ import string
 import time
 from taskinit import casalog,tb, tbtool
 import numpy as np
+import math
 
 '''
 A set of common helper functions for unit tests:
@@ -18,6 +19,21 @@ A set of common helper functions for unit tests:
    verify_ms - Function to verify spw and channels information in an MS   
    create_input - Save the string in a text file with the given name           
 '''
+
+def phasediffabsdeg(c1, c2):
+    try:
+        a = c1.imag
+        a = c2.imag
+    except:
+        print "Phase difference of real numbers is always zero."
+        return 0.
+
+    a = math.atan2(c1.imag, c1.real)
+    b = math.atan2(c2.imag, c2.real)
+    diff = abs(a-b)
+    if diff>np.pi:
+        diff = 2*np.py - diff
+    return diff/np.pi*180. # (degrees)
 
 def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percentage", startrow = 0, nrow = -1, rowincr = 1):
 
@@ -31,6 +47,8 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
        excludecols - list of column names which are to be ignored
 
        tolerance - permitted fractional difference (default 0.001 = 0.1 percent)
+
+       mode - comparison is made as "percentage", "absolute", "phaseabsdeg" (for complex numbers = difference of the phases in degrees)  
     """
 
     rval = True
@@ -135,15 +153,22 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percen
                                 elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
                                     for k in range(0,len(a[i][j])):
                                         if differs: break
-                                        if ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]))) or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)):
+                                        if ( ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]))) \
+                                                 or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)) \
+                                                 or ((mode=="phaseabsdeg") and (phasediffabsdeg(a[i][j][k],b[i][j][k])>tolerance)) \
+                                                 ):
                                             print "Column " + c + " differs"
                                             print "(Row,Channel,Corr)=(" + str(k) + "," + str(j) + "," + str(i) + ")"
                                             print "Reference file value: " + str(a[i][j][k])
                                             print "Input file value: " + str(b[i][j][k])
                                             if (mode=="percentage"):
                                                 print "Tolerance in % should be " + str(100*abs(a[i][j][k]-b[i][j][k])/abs(a[i][j][k]))
-                                            else:
+                                            elif (mode=="absolute"):
                                                 print "Absolute tolerance should be " + str(abs(a[i][j][k]-b[i][j][k]))                     
+                                            elif (mode=="phaseabsdeg"):
+                                                print "Phase tolerance in degrees should be " + str(phasediffabsdeg(a[i][j][k],b[i][j][k]))
+                                            else:
+                                                print "Unknown comparison mode: ",mode
                                             differs = True
                                             rval = False
                                             break                                          
