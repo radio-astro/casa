@@ -896,7 +896,7 @@ casa_find( Java
   PROGRAMS java
   PROG_VERSION "-version")
 
-set( SAXON ${Java_java_EXECUTABLE} -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
+set( SAXON ${Java_java_EXECUTABLE} -Xmx256M -jar ${CMAKE_SOURCE_DIR}/install/saxon8.jar )
 
 if ( ${dbusxx} STREQUAL dbus-c++ )
   # C++ DBus
