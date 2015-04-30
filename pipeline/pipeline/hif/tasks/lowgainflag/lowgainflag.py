@@ -184,7 +184,12 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
           #refant=inputs.refant, maxchannels=0,
           refant=inputs.refant, solint='inf,7.8125MHz')
         bpcal_task = bandpass.PhcorBandpass(bpcal_inputs)
-        bpcal = self._executor.execute(bpcal_task, merge=True)
+        #bpcal = self._executor.execute(bpcal_task, merge=True)
+        bpcal = self._executor.execute(bpcal_task, merge=False)
+	if not bpcal.final:
+	    LOG.warning('No bandpass solution computed for %s ' % (inputs.ms.basename))
+	else:
+	   bpcal.accept(inputs.context)
 
         # Calculate gain phases
         gpcal_inputs = gaincal.GTypeGaincal.Inputs(
@@ -193,7 +198,12 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
           refant=inputs.refant,
           calmode='p', minsnr=2.0, solint='int', gaintype='G')
         gpcal_task = gaincal.GTypeGaincal(gpcal_inputs)
-        gpcal = self._executor.execute(gpcal_task, merge=True)
+        #gpcal = self._executor.execute(gpcal_task, merge=True)
+        gpcal = self._executor.execute(gpcal_task, merge=False)
+	if not gpcal.final:
+	    LOG.warning('No phase time solution computed for %s ' % (inputs.ms.basename))
+	else:
+	   gpcal.accept(inputs.context)
 
         # Calculate gain amplitudes
         gacal_inputs = gaincal.GTypeGaincal.Inputs(
@@ -202,17 +212,20 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
           refant=inputs.refant,
           calmode='a', minsnr=2.0, solint='inf', gaintype='T')
         gacal_task = gaincal.GTypeGaincal(gacal_inputs)
-        gacal = self._executor.execute(gacal_task, merge=True)
-
-        # Get the gacal table name
-        gatable = gacal.final
-        if len(gatable) != 1:
-            raise Exception, 'not exactly one gain table produced'
-        gatable = gatable[0].gaintable
-
-        LOG.info ('Computing flagging metrics for caltable %s ' % (
-          os.path.basename(gatable)))
-        self.calculate_view(gatable)
+        #gacal = self._executor.execute(gacal_task, merge=True)
+        gacal = self._executor.execute(gacal_task, merge=False)
+	if not gacal.final:
+            gatable = list(gacal.error)
+            gatable = gatable[0].gaintable
+	    LOG.warning('No amplitude time solution computed for %s ' % (inputs.ms.basename))
+	    self.result.table = gatable
+	else:
+	    gacal.accept(inputs.context)
+            gatable = gacal.final
+            gatable = gatable[0].gaintable
+            LOG.info ('Computing flagging metrics for caltable %s ' % (
+                os.path.basename(gatable)))
+            self.calculate_view(gatable)
 
         return self.result
 

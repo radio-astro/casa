@@ -28,6 +28,8 @@ class T2_4MDetailsLowgainFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         plots = {}
         for result in results:
+	    if not result.view:
+	        continue
             renderer = TimeVsAntenna1PlotRenderer(pipeline_context, result)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
