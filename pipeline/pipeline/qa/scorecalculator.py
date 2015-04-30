@@ -25,6 +25,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_missing_bandpass_snrs',                     # ALMA specific
            'score_poor_phaseup_solutions',                    # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
+           'score_flagging_view_exists',                      # ALMA specific
            'score_file_exists',
            'score_flags_exist',
            'score_applycmds_exist',
@@ -443,6 +444,25 @@ def score_applycal_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
+
+@log_qa
+def score_flagging_view_exists(filename, view):
+    """
+    Assign a score of zero if the flagging view cannot be computed
+    """
+
+    if not view:
+        score = 0.0
+        longmsg = 'No flagging views for %s' % (filename)
+        shortmsg = 'No flagging views'
+    else:
+        score = 1.0
+        longmsg = 'Flagging views exist for %s' % (filename)
+        shortmsg = 'Flagging views exist'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg,
+                       vis=filename)
+
 
 @log_qa
 def score_total_data_flagged(filename, summaries):
