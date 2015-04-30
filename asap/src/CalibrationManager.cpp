@@ -310,7 +310,7 @@ Bool CalibrationManager::isAlmaAntenna()
 {
   assert_<AipsError>(!target_.null(), "You have to set target scantable first.");
   // will match DV01-25, DA41-65, PM01-04, CM01-12
-  Regex reant("^(DV(0[1-9]|1[0-9]|2[0-5])|DA(4[1-9]|5[0-9]|6[0-5])|PM0[1-4]|CM(0[1-9]|1[1,2]))$");
+  Regex reant("^(DV(0[1-9]|1[0-9]|2[0-5])|DA(4[1-9]|5[0-9]|6[0-5])|PM0[1-4]|CM(0[1-9]|1[0-2]))$");
   const String antname = target_->getAntennaName();
   return (reant.match(antname.c_str(), antname.size()) != String::npos);
 }
