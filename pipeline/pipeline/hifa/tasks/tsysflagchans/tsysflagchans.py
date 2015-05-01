@@ -340,7 +340,8 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        #corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
 
         times = set()
 
@@ -423,7 +424,8 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        #corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
 
         times = set()
 
@@ -517,7 +519,8 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        #corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
 
         times = set()
 
@@ -632,7 +635,8 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
         antenna_name, antenna_ids = commonhelpermethods.get_antenna_names(ms)
 
         # get names of correlation products
-        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        #corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
 
         times = set()
 
