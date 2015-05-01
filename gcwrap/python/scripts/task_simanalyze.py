@@ -982,8 +982,9 @@ def simanalyze(
 
 
         # cleanup - delete newmodel, newmodel.flat etc
-        if os.path.exists(imagename+".image.flat"):
-            shutil.rmtree(imagename+".image.flat")
+# flat kept by user request CAS-5509
+#        if os.path.exists(imagename+".image.flat"):
+#            shutil.rmtree(imagename+".image.flat")
         if os.path.exists(imagename+".residual.flat"):
             shutil.rmtree(imagename+".residual.flat")
         # .flux.pbcoverage is nessesary for feather.

@@ -642,6 +642,10 @@ def simobserve(
 
         xmax = qa.convert(model_size[0],'deg')['value']*0.5
         ymax = qa.convert(model_size[1],'deg')['value']*0.5
+        # add PB halfwidth (relmargin=0.5) 
+        # for mosaics of small model images
+        xmax=xmax+pb*relmargin/3600
+        ymax=ymax+pb*relmargin/3600
         overlap = False
         # wrapang in median_direction should make offsets always small, not >360
         for i in xrange(offsets.shape[1]):
