@@ -24,3 +24,12 @@ def get_corr_products(ms, spwid):
 
     return corr_type
 
+def get_corr_axis (ms, spwid):
+    """Get names of polarizations
+    """
+    # get names of the polarizations
+    datadescs = [dd for dd in ms.data_descriptions if dd.spw.id==spwid]
+    #return datadescs[0].corr_axis
+    return datadescs[0].polarizations
+
+
