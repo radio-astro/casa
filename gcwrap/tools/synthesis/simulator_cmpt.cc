@@ -792,7 +792,6 @@ simulator::setapply(const std::string& table,
 		    const double t, 		    
 		    const ::casac::variant& field,
 		    const std::string& interp,
-		    const std::string& select,
 		    const bool calwt,
 		    const std::vector<int>& spwmap,
 		    const double opacity)
