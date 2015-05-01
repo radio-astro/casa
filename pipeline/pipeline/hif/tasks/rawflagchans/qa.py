@@ -22,9 +22,11 @@ class RawflagchansQAHandler(pqa.QAResultHandler):
         vis = result.inputs['vis']
         ms = context.observing_run.get_ms(vis)
     
-        scores = [qacalc.linear_score_fraction_newly_flagged(ms.basename,
+        score1 = qacalc.linear_score_fraction_newly_flagged(ms.basename,
                                                              result.summaries,
-                                                             ms.basename)]
+                                                             ms.basename)
+        score2 = qacalc.score_flagging_view_exists(ms.basename, result.view)
+	scores = [score1, score2]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis

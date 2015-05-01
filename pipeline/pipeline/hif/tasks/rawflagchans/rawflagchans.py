@@ -55,8 +55,10 @@ class RawflagchansInputs(basetask.StandardInputs):
         
         # if the spw was set, look to see which intents were observed in that
         # spectral window and return the intent based on our order of
-        # preference: BANDPASS, PHASE, AMPLITUDE
-        preferred_intents = ('BANDPASS', 'PHASE', 'AMPLITUDE')
+        ## preference: BANDPASS, PHASE, AMPLITUDE
+        # preference: BANDPASS
+        #preferred_intents = ('BANDPASS', 'PHASE', 'AMPLITUDE')
+        preferred_intents = ('BANDPASS')
         if self.spw:
             for spw in self.ms.get_spectral_windows(self.spw):
                 for intent in preferred_intents:
@@ -84,7 +86,7 @@ class RawflagchansInputs(basetask.StandardInputs):
                 return intent
                 
         # current fallback - return an empty intent
-        return ''
+        return 'BANDPASS'
 
     @intent.setter
     def intent(self, value):
@@ -230,8 +232,12 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         result = self._executor.execute(flaggertask)
         summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='after')
         stats_after = self._executor.execute(summary_job)
-
         result.summaries = [stats_before, stats_after]
+
+	# This is a patch to deal with the case when no view is computed
+	if not result.view:
+	    result.table = inputs.ms.name 
+
         return result
 
     def analyse(self, result):
@@ -311,18 +317,6 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                   in this list.
         """
 
-#        # the current view will be very similar to the last, if available.
-#        # For now approximate as being identical which will save having to
-#        # recalculate
-#        prev_descriptions = self.result.descriptions()
-#        if prev_descriptions:
-#            for description in prev_descriptions:
-#                prev_result = self.result.last(description)
-#                self.result.addview(description, prev_result)
-
-#            # EARLY RETURN
-#            return
-
         ants = np.array(self.antenna_ids)
 
         # now construct the views
@@ -352,9 +346,12 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
 
             LOG.info('calculating flagging view for spw %s' % spwid)
             casatools.ms.open(self.inputs.vis)
-            casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
-#            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
-#              'antenna2'], ifraxis=True, average=True)
+	    try:
+                casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
+	    except:
+                LOG.warning('Unable to compute flagging view for spw %s' % spwid)
+		casatools.ms.close()
+	        continue
             casatools.ms.iterinit(maxrows=500)
             casatools.ms.iterorigin()
             iterating = True
@@ -478,11 +475,17 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             ndata = np.zeros([len(corrs), nchans, 
               (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.int)
 
-            LOG.info('calculating flagging view for spw %s' % spwid)
+            LOG.info('Calculating flagging view for spw %s' % spwid)
+	    # Modify to tuse the with construct at some point
+	    # Note bandpass is set explicity here not intent
             casatools.ms.open(self.inputs.vis)
-            casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
-#            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
-#              'antenna2'], ifraxis=True, average=True)
+	    try:
+                casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
+	    except:
+                LOG.warning('Unable to compute flagging view for spw %s' % spwid)
+		casatools.ms.close()
+	        continue
+
             casatools.ms.iterinit(maxrows=500)
             casatools.ms.iterorigin()
             iterating = True
@@ -532,16 +535,6 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                 corr = corrlist[0]
 
                 self.refine_view(data[icorr], flag[icorr])
-
-#                for baseline in range(np.shape(data)[2]):
-#                    valid = data[icorr,:,baseline][flag[icorr,:,baseline]==False]
-#                    if len(valid):
-#                        data[icorr,:,baseline] -= np.median(valid)
-
-#                for chan in range(nchans):
-#                    valid = data[icorr,chan,:][flag[icorr,chan,:]==False]
-#                    if len(valid):
-#                        data[icorr,chan,:] -= np.median(valid)
 
                 viewresult = commonresultobjects.ImageResult(
                   filename=self.inputs.vis, data=data[icorr],
