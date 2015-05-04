@@ -1086,18 +1086,6 @@ VisibilityIteratorImpl2::getBeamOffsets () const
 }
 
 Vector<Double>
-VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference) const
-{
-
-    // Get the channel information object (basically contains info from the
-    // spectral window subtable).
-
-
-    return getFrequencies (time, frameOfReference, this->spectralWindow(), this->msId());
-
-}
-
-Vector<Double>
 VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
                                          Int spectralWindowId, Int msId) const
 {
@@ -1107,7 +1095,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
     // Get the channel numbers selected for this time (the spectral window and MS index are
     // assumed to be the same as those currently pointed to by the MSIter).
 
-    Vector<Int> channels = getChannels (time, frameOfReference);
+    Vector<Int> channels = getChannels (time, frameOfReference, spectralWindowId, msId);
 
     Vector<Double> frequencies (channels.nelements());
     MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
@@ -1152,11 +1140,13 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 }
 
 Vector<Int>
-VisibilityIteratorImpl2::getChannels (Double /*time*/, Int /*frameOfReference*/) const
+VisibilityIteratorImpl2::getChannels (Double time, Int /*frameOfReference*/,
+                                      Int spectralWindowId, Int msId) const
 {
-    assert (channelSelector_p != 0);
+    const ChannelSelector * channelSelector = determineChannelSelection (time, spectralWindowId, -1,
+                                                                         msId);
 
-    return channelSelector_p->getChannels ();
+    return channelSelector->getChannels ();
 }
 
 Vector<Int>
@@ -1649,7 +1639,8 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
         // End the subchunk when a row using different channels is encountered.
 
         Double previousRowTime = rowBounds_p.times_p (rowBounds_p.subchunkBegin_p);
-        channelSelector_p = determineChannelSelection (previousRowTime);
+        channelSelector_p = determineChannelSelection (previousRowTime, spectralWindow(),
+                                                       polarizationId (), msId());
 
         for (Int i = rowBounds_p.subchunkBegin_p + 1;
              i <= rowBounds_p.subchunkEnd_p;
@@ -1715,7 +1706,10 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
 }
 
 const ChannelSelector *
-VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWindowId) const
+VisibilityIteratorImpl2::determineChannelSelection (Double time,
+                                                    Int spectralWindowId,
+                                                    Int polarizationId,
+                                                    Int msId) const
 {
 // --> The channels selected will need to be identical for all members of the
 //     subchunk; otherwise the underlying fetch method won't work since it
@@ -1723,15 +1717,20 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWin
 
     assert (frequencySelections_p != 0);
 
-    if (spectralWindowId < 0){
-        spectralWindowId = spectralWindow ();
+    if (spectralWindowId == -1){
+        spectralWindowId = this->spectralWindow();
     }
-    const FrequencySelection & selection = frequencySelections_p->get (msId ());
+
+    if (msId < 0){
+        msId = this->msId();
+    }
+
+    const FrequencySelection & selection = frequencySelections_p->get (msId);
     Int frameOfReference = selection.getFrameOfReference ();
 
     // See if the appropriate channel selector is in the cache.
 
-    const ChannelSelector * cachedSelector =  channelSelectorCache_p->find (time, msId (), frameOfReference,
+    const ChannelSelector * cachedSelector =  channelSelectorCache_p->find (time, msId, frameOfReference,
                                                                             spectralWindowId);
 
     if (cachedSelector != 0){
@@ -1747,13 +1746,17 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWin
 
     ChannelSelector * newSelector;
 
+    if (polarizationId < 0){
+        polarizationId = getPolarizationId (spectralWindowId, msId);
+    }
+
     if (selection.getFrameOfReference() == FrequencySelection::ByChannel){
-        newSelector = makeChannelSelectorC (selection, time, msId (),
-                                            spectralWindowId, polarizationId());
+        newSelector = makeChannelSelectorC (selection, time, msId,
+                                            spectralWindowId, polarizationId);
     }
     else{
-        newSelector = makeChannelSelectorF (selection, time, msId (),
-                                            spectralWindowId, polarizationId());
+        newSelector = makeChannelSelectorF (selection, time, msId,
+                                            spectralWindowId, polarizationId);
     }
 
     // Cache it for possible future use.  The cache may hold multiple equivalent
@@ -1762,10 +1765,32 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWin
     // a time, this shouldn't be a problem (the special case of selection by
     // channel number is already handled).
 
-    channelSelectorCache_p->add (newSelector, time, msId (), frameOfReference,
+    channelSelectorCache_p->add (newSelector, time, msId, frameOfReference,
                                  spectralWindowId);
 
     return newSelector;
+}
+
+Int
+VisibilityIteratorImpl2::getPolarizationId (Int spectralWindowId, Int msId) const
+{
+    ThrowIf (msId != this->msId(),
+             String::format ("Requested MS number is %d but current is %d", msId, this->msId()));
+
+    const ROScalarColumn<Int> & spwIds = subtableColumns_p->dataDescription().spectralWindowId();
+
+    // This will break if the same spectral window is referenced by two different data_descrption IDs.
+    // Ideally, this whole thing should be reworked to used DDIDs with spectral window ID only used
+    // internally.
+
+    for (uInt i = 0; i < spwIds.nrow(); i ++){
+        if (spwIds (i) == spectralWindowId){
+            return subtableColumns_p->dataDescription().polarizationId()(i);
+        }
+    }
+
+    ThrowIf (True, String::format ("Could not find entry for spectral window id"
+            "%d in data_description in MS #%d", spectralWindowId, msId));
 }
 
 vi::ChannelSelector *
@@ -2441,9 +2466,9 @@ VisibilityIteratorImpl2::flagCategoryExists() const
 }
 
 void
-VisibilityIteratorImpl2::flagCategory (Array<Bool> & flagCategories) const
+VisibilityIteratorImpl2::flagCategory (Array<Bool> & /*flagCategories*/) const
 {
-#warning "Implement this using the new methods once mainstream implementation is stable"
+    ThrowIf (True, "The flag_category column is not supported.");
 //    if (columns_p.flagCategory_p.isNull () ||
 //        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
 //
@@ -3176,7 +3201,8 @@ VisibilityIteratorImpl2::getChannelInformationUsingFrequency (Bool now) const
 
             // Create a channel selector for this window at the buffer's time.
 
-            const ChannelSelector * selector = determineChannelSelection(t (0), * window);
+            const ChannelSelector * selector = determineChannelSelection(t (0), * window,
+                                                                         polarizationId(), msId());
             const ChannelSlicer channelSlicer = selector->getSlicer();
 
             for (Int i = 0; i < (int) channelSlicer.nelements(); i++){

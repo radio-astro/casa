@@ -697,9 +697,7 @@ VisBufferImpl2::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) co
         frame = getVi()->getReportingFrameOfReference();
     }
 
-    Double t = time() (rowInBuffer);
-
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p (frequencyIndex);
 }
@@ -711,9 +709,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
         frame = getVi()->getReportingFrameOfReference();
     }
 
-    Double t = time() (rowInBuffer);
-
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p;
 }
@@ -721,9 +717,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
 Int
 VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 {
-    Double t = time() (rowInBuffer);
-
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p (frequencyIndex);
 }
@@ -731,9 +725,7 @@ VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 const Vector<Int> &
 VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 {
-    Double t = time() (rowInBuffer);
-
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p;
 }

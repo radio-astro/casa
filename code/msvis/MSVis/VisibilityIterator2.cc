@@ -546,17 +546,19 @@ VisibilityIterator2::hourangCalculate (Double time, MSDerivedValues & msd, const
 //}
 
 Vector<Double>
-VisibilityIterator2::getFrequencies (Double time, Int frameOfReference) const
+VisibilityIterator2::getFrequencies (Double time, Int frameOfReference, Int spectralWindowId,
+                                     Int msId) const
 {
     CheckImplementationPointerR ();
-    return impl_p->getFrequencies (time, frameOfReference);
+    return impl_p->getFrequencies (time, frameOfReference, spectralWindowId, msId);
 }
 
 Vector<Int>
-VisibilityIterator2::getChannels (Double time, Int frameOfReference) const
+VisibilityIterator2::getChannels (Double time, Int frameOfReference, Int spectralWindowId,
+                                     Int msId) const
 {
     CheckImplementationPointerR ();
-    return impl_p->getChannels (time, frameOfReference);
+    return impl_p->getChannels (time, frameOfReference, spectralWindowId, msId);
 }
 
 Vector<Int>

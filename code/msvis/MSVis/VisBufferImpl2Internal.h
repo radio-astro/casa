@@ -772,11 +772,19 @@ public:
     class FrequencyCache {
     public:
 
-        typedef Vector<T> (VisibilityIterator2::* Updater) (Double, Int) const;
+        typedef Vector<T> (VisibilityIterator2::* Updater) (Double, Int, Int, Int) const;
 
-        FrequencyCache (Updater updater) : updater_p (updater) {}
+        FrequencyCache (Updater updater)
+        : frame_p (-1),
+          msId_p (-1),
+          spectralWindowId_p (-1),
+          time_p (-1),
+          updater_p (updater)
+        {}
 
         Int frame_p;
+        Int msId_p;
+        Int spectralWindowId_p;
         Double time_p;
         Updater updater_p;
         Vector<T> values_p;
@@ -784,21 +792,30 @@ public:
         void
         flush ()
         {
-            time_p = -1;
+            time_p = -1; // will be enough to cause a reload
         }
 
         void
-        updateCacheIfNeeded (const VisibilityIterator2 * rovi, Double time,
-                             Int frame = VisBuffer2::FrameNotSpecified)
+        updateCacheIfNeeded (const VisibilityIterator2 * rovi,
+                             Int rowInBuffer,
+                             Int frame,
+                             const VisBufferImpl2 * vb)
         {
-            if (time == time_p && frame == frame_p){
+            Int msId = vb->msId();
+            Int spectralWindowId = vb->spectralWindows()(rowInBuffer);
+            Double time = vb->time()(rowInBuffer);
+
+            if (time == time_p && frame == frame_p && msId == msId_p &&
+                spectralWindowId == spectralWindowId_p){
                 return;
             }
 
             time_p = time;
             frame_p = frame;
+            msId_p = msId;
+            spectralWindowId_p = spectralWindowId;
 
-            values_p.assign ((rovi ->* updater_p) (time_p, frame_p));
+            values_p.assign ((rovi ->* updater_p) (time_p, frame_p, spectralWindowId_p, msId_p));
         }
     };
 
@@ -817,6 +834,7 @@ public:
       isNewSpectralWindow_p (False),
       isRekeyable_p (False),
       isWritable_p (False),
+      msId_p (-1),
       pointingTableLastRow_p (-1),
       validShapes_p (N_ShapePatterns),
       vi_p (0),
@@ -840,10 +858,10 @@ public:
     Bool isNewSpectralWindow_p;
     Bool isRekeyable_p;
     Bool isWritable_p;
-    mutable Int pointingTableLastRow_p;
     Int msId_p;
     String msName_p;
     Bool newMs_p;
+    mutable Int pointingTableLastRow_p;
     Subchunk subchunk_p;
     Vector<IPosition> validShapes_p;
     VisibilityIterator2 * vi_p; // [use]

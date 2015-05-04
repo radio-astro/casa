@@ -323,6 +323,23 @@ protected:
     }
 };
 
+class FrequencyChecker : public RowChecker{
+
+    void
+    checkRow (VisBuffer2 * vb, const VisibilityIterator2 * vi, Int rowId,
+              Int row, Int subchunkIndex)
+    {
+        double actual = vb->getFrequency (row, 0);
+        double expected = (vb->spectralWindows()(row) + 1) * 1E9;
+
+        if (abs (actual - expected) > 1E7){
+	    throwError (String::format ("%f", actual), String::format ("%f", expected),
+			vb, rowId, row, subchunkIndex, "FrequencyChecker");
+        }
+    }
+
+};
+
 class UvwCheckerDefault : public RowChecker {
 
 public:
@@ -1465,6 +1482,7 @@ protected:
                                                     & VisBuffer2::visCubeModel,
                                                     endBoundaryConditions, 3));
 
+	addRowChecker (new FrequencyChecker ());
         addRowChecker (generateSimpleRowChecker ("scan", & VisBuffer2::scan, 10));
         addRowChecker (generateSimpleRowChecker ("observationId", & VisBuffer2::observationId, 11));
         addRowChecker (generateSimpleRowChecker ("arrayId", & VisBuffer2::arrayId, 12));
