@@ -268,9 +268,9 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	  for (Int j=0; j<ny; j++) yout[i][j]=yin[0][j];
 	}
 	else {
-	  Domain diff=(xin[where]-x_req);
-	  //static_cast required to get .5 coerced for SGI compiler:
-	  if (diff < static_cast<Domain>(.5)*(xin[where]-xin[where-1])) { 
+	  Domain diff=abs(xin[where]-x_req);
+	  Domain halfspan=static_cast<Domain>(.5)*abs(xin[where]-xin[where-1]);
+	  if (diff < halfspan) { 
             // closer to next
 	    for (Int j=0; j<ny; j++) yout[i][j]=yin[where][j];
 	  }
@@ -432,9 +432,9 @@ void InterpolateArray1D<Domain,Range>::interpolatePtr(PtrBlock<Range*>& yout,
 	  } 
 	}
 	else {
-	  Domain diff=(xin[where] - x_req);
-	  //static_cast required to get .5 coerced for SGI compiler:
-	  if (diff < static_cast<Domain>(.5)*(xin[where]-xin[where-1])) { 
+	  Domain diff=abs(xin[where] - x_req);
+	  Domain halfspan=static_cast<Domain>(.5)*abs(xin[where]-xin[where-1]);
+	  if (diff < halfspan) { 
             // closer to next
 	    for (Int j=0; j<ny; j++) {
 	      yout[i][j]=yin[where][j];
