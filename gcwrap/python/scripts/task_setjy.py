@@ -342,9 +342,12 @@ def setjy_core(vis=None, field=None, spw=None,
                         instandard=standard
                         # From the task, fluxdensity=-1 always for standard!="manual" (but possible to 
                         # for im.setjy to run with both the stanadard and fluxdensity specified.
-                        if userFluxDensity:
+                        # Until CAS-6463 is fixed, need to catch and override inconsistent parameters. 
+                        if userFluxDensity and instandard!='manual':
                             influxdensity=-1
-                            raise Exception, "Use standard=\"manual\" to set the specified fluxdensity."
+                            #raise Exception, "Use standard=\"manual\" to set the specified fluxdensity."
+                            casalog.post("*** fluxdensity > 0 but standard != 'manual' (possibly interaction with globals), override to set fluxdensity=-1.", 'WARN')
+                             
 
                     if spix==[]: # handle the default 
                         spix=0.0
