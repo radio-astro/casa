@@ -87,7 +87,7 @@
         <param type="any" name="tbuff" subparam="true">
             <description>List of time buffers (sec) to pad timerange in flag commands</description>
             <any type="variant" limittypes="double doubleArray" />
-            <value type="double">0.0</value>
+            <value type="double">[0.0,0.0]</value>
         </param>
 
 	<param type="string" name="pipelinemode">
@@ -169,7 +169,7 @@
 	        <equals type="string" value="halfint">
 	        </equals>
 	        <equals type="string" value="manual">
-		    <default param="tbuff"><value type="double">0.0</value></default>
+		    <default param="tbuff"><value type="double">[0.0,0.0]</value></default>
 	        </equals>
 	    </when>
 
@@ -250,12 +250,13 @@ filetemplate -- The name of an text file that contains the flagging template
 hm_tbuff -- The heuristic for computing the default time interval padding parameter.
     The options are 'halfint' and 'manual'. In 'halfint' mode tbuff is set to
     half the maximum of the median integration time of the science and calibrator target
-    observations.
+    observations. The value of 0.048 seconds is subtracted from the lower time limit
+    to accomodate the behavior of the ALMA Control system.
     default: 'halfint'
 
 tbuff -- The time in seconds used to pad flagging command time intervals if
-    hm_tbuff='manual'.
-    default: 0.0
+    hm_tbuff='manual'. The default in manual mode is no flagging
+    default: [0.0,0.0]
 
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
