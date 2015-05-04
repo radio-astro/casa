@@ -305,10 +305,9 @@ if( APPLE )
 
     if( NOT INTEL_CXX_COMPILER STREQUAL "true" )
         if( _cxx_version STREQUAL "4.4" )
-	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -mfpmath=sse" )
         else()
-#	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
-	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+	        set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -mfpmath=sse" )
         endif()
     endif()
 
