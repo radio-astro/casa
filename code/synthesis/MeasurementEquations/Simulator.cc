@@ -988,7 +988,7 @@ Bool Simulator::setvp(const Bool dovp,
 			 const Quantity &skyPosThreshold,
 			 const Float &pbLimit)
 {
-  LogIO os(LogOrigin("Simulatore", "setvp()"));
+  LogIO os(LogOrigin("Simulator", "setvp()"));
   
   os << "Setting voltage pattern parameters" << LogIO::POST;
   
@@ -2013,7 +2013,7 @@ Bool Simulator::observe(const String&   sourcename,
 			const double& state_cal=0.,
 			const double& state_load=0.,
 			const unsigned int state_sub_scan=1,
-			const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			const String& state_obs_mode="OBSERVE_TARGET#ON_SOURCE",
 			const String& observername="CASA simulator",
 			const String& projectname="CASA simulation")
 {
@@ -2067,7 +2067,7 @@ Bool Simulator::observemany(const Vector<String>&   sourcenames,
 			    const double& state_cal=0.,
 			    const double& state_load=0.,
 			    const unsigned int state_sub_scan=0,
-			    const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+			    const String& state_obs_mode="OBSERVE_TARGET#ON_SOURCE",
 			    const String& observername="CASA simulator",
 			    const String& projectname="CASA simulation")
 {
@@ -2140,6 +2140,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
       os << LogIO::SEVERE << "Failed to create SkyEquation" << LogIO::POST;
       return False;
     }
+
     if (incremental) {
       se_p->predict(False,MS::MODEL_DATA);  
     } else {
