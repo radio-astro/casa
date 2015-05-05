@@ -250,6 +250,10 @@ class PySynthesisImager:
 ##        self.SItool.predictmodel();
 
 #############################################
+    def dryGridding(self):
+        self.SItool.drygridding();
+
+#############################################
 ## Overloaded for parallel runs
     def setWeighting(self):
         ## Set weighting parameters, and all pars common to all fields.

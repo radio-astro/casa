@@ -494,6 +494,18 @@ Define the image coordinate systems and shapes.
 <!-- ===================================== -->
 
 
+   <method type="function" name="drygridding">
+   <shortdescription>Run a dry gridding run.</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
    <method type="function" name="executemajorcycle">
    <shortdescription>Run a major cycle</shortdescription>
 

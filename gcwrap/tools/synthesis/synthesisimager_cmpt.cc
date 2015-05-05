@@ -397,6 +397,22 @@ bool synthesisimager::setweighting(const std::string& type,
     return rstat;
   }
 
+  bool synthesisimager::drygridding()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->dryGridding();
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
   bool synthesisimager::predictmodel()
   {
     Bool rstat(False);
