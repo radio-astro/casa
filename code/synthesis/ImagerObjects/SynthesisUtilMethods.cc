@@ -1718,6 +1718,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             stepf=chanFreq[1]-chanFreq[0];
           }
         Double restf=qrestfreq.getValue("Hz");
+        if ( mode=="mfs" ) restf = restFreq[0].getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 
         if(mode=="cubedata") 
@@ -1751,8 +1752,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     //cout << "Rest Freq : " << restFreq << endl;
 
-    for(uInt k=1 ; k < restFreq.nelements(); ++k)
-      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+    //for(uInt k=1 ; k < restFreq.nelements(); ++k)
+      //mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+     
+    uInt nrestfreq = restFreq.nelements();
+    if ( nrestfreq > 1 ) {
+      Vector<Double> restfreqval( nrestfreq - 1 );
+      for ( uInt k=1 ; k < nrestfreq; ++k ) {
+        restfreqval[k-1] = restFreq[k].getValue("Hz");
+      }    
+      mySpectral.setRestFrequencies(restfreqval, 0, True);
+    }
 
     if ( freqFrameValid ) {
       mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
@@ -2232,7 +2242,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         chanFreq[0] = refFreq.getValue("Hz"); 
         refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
       }
+
       if( nchan==-1 ) nchan=1;
+      if( qrestfreq.getValue("Hz")==0.0 )  {
+         restFreq.resize(1);
+         restFreq[0] = Quantity(freqmean,"Hz");
+      }
     }
     else {
        // unrecognized mode, error
