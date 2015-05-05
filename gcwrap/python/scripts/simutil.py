@@ -944,7 +944,8 @@ class simutil:
         ds  =[ 0.75   ,0.75  ,0.75 ,0.364 ,0.364,0.35] # subreflector size for ACA?
         eps =[ 25.    ,25.   ,20.  ,300   ,300  ,15. ] # antenna surface accuracy
         
-        cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86] # correlator eff
+        cq  =[ 0.845, 0.845,  0.88,  0.79, 0.86, 0.88] # correlator eff
+        # SMA is from Wright http://astro.berkeley.edu/~wright/obsrms.py
         # ALMA includes quantization eff of 0.96    
         # VLA includes additional waveguide loss from correlator loss of 0.809
         # EVLA is probably optimistic
@@ -1038,7 +1039,6 @@ class simutil:
                         f0=[10,900]
                         t0=[200,200]
                         flim=[0,5000]
-
 
         obsfreq=freq_ghz.get("value")        
         # z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
@@ -2849,7 +2849,7 @@ class simutil:
         if nchan>1:
             cleanstr=cleanstr+",mode='"+chanmode+"',nchan="+str(nchan)
             cleanlast.write('mode                = "'+chanmode+'"\n')
-            cleanlast.write('nchan               = "'+str(nchan)+'"\n')
+            cleanlast.write('nchan               = '+str(nchan)+'\n')
         else:
             cleanlast.write('mode                = "mfs"\n')
             cleanlast.write('nchan               = -1\n')
@@ -3048,9 +3048,10 @@ class simutil:
         ia.open(modelflat)
         modelflatcs=ia.coordsys()
         modelflatshape=ia.shape()
+        ia.setrestoringbeam(beam=beam)
         tmpxx=ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
                   csys=outflatcs.torecord(),shape=outflatshape, asvelocity=False)
-        # im.regrid assumes a surface brightness, or more accurately doesnt
+        # ia.regrid assumes a surface brightness, or more accurately doesnt
         # pay attention to units at all, so we now have to scale 
         # by the pixel size to have the right values in jy/pixel, 
 

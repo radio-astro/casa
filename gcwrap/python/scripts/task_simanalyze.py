@@ -142,7 +142,6 @@ def simanalyze(
             default_requested=[]
             for i in range(n_default): default_requested.append(False)
 
-
             # parse ms parameter and check for existance;
             # initial ms list
             if vis=="default" or len(vis)==0:
@@ -236,7 +235,7 @@ def simanalyze(
                 concatms=project+"/"+project+".concat.ms"
                 from concat import concat
                 weights = get_concatweights(mstoimage)
-                msg(" concat('"+mstoimage+"',concatvis='"+concatms+"',visweightscale="+str(weights)+")",origin='simanalyze')
+                msg(" concat("+str(mstoimage)+",concatvis='"+concatms+"',visweightscale="+str(weights)+")",origin='simanalyze')
                 if not dryrun:
                     concat(mstoimage,concatvis=concatms,visweightscale=weights)
                     mstoimage=[concatms]
@@ -674,7 +673,6 @@ def simanalyze(
 
 
 
-
         if image:
             # show model, convolved model, clean image, and residual
             if grfile:
@@ -984,8 +982,9 @@ def simanalyze(
 
 
         # cleanup - delete newmodel, newmodel.flat etc
-        if os.path.exists(imagename+".image.flat"):
-            shutil.rmtree(imagename+".image.flat")
+# flat kept by user request CAS-5509
+#        if os.path.exists(imagename+".image.flat"):
+#            shutil.rmtree(imagename+".image.flat")
         if os.path.exists(imagename+".residual.flat"):
             shutil.rmtree(imagename+".residual.flat")
         # .flux.pbcoverage is nessesary for feather.

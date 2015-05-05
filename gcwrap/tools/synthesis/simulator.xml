@@ -471,7 +471,7 @@
     </param>
     
     <param type="string" name="state_obs_mode">
-      <value>OBSERVE\_TARGET.ON\_SOURCE</value>
+      <value>OBSERVE\_TARGET#ON\_SOURCE</value>
     </param>
 
     <param type="string" name="observer">
@@ -1254,11 +1254,6 @@ calibrater.setapply.
      <value>aipslin</value>
      <value>nearest</value>
      <value>linear</value>
-     </param>
-
-     <param type="string" direction="in" name="select">
-     <description>TAQL selection string.  Default is no selection.</description>
-     <value></value>
      </param>
 
      <param type="bool" direction="in" name="calwt">
