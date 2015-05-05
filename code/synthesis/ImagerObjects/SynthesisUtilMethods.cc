@@ -1682,6 +1682,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Vector<Double> restfreqvec;
         msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
         qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+        if ( qrestfreq.getValue("Hz")==0 and mode!="mfs" ) 
+          throw(AipsError("No valid rest frequency is defined in the data, please specify the restfreq parameter") );
+       
       }
     Double refPix;
     Vector<Double> chanFreq;
