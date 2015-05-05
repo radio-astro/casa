@@ -28,6 +28,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     More information and examples are availible at 
      http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
     Please contact CASA experts with any questions.
+
+</description>
+<example>
     -------------------------------
     project -- the root filename for all output files.
     -------------------------------
@@ -203,7 +206,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	    
     project.[cfg].simobserve.last = saved input parameters for simobserve task
 
-  </description>
+  </example>
   
   <input>
     
