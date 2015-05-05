@@ -178,6 +178,17 @@ namespace casa{
   //
   // By default (i.e., when called without any agruments), load all
   // the CFs found in the CF disk cache.
+  void CFCache::initCacheFromList2(const String& path, 
+				   const Vector<String>& cfFileNames, 
+				   const Vector<String>& cfWtFileNames, 
+				   Float selectedPA, Float dPA)
+  {
+    fillCFListFromDisk(cfFileNames, path, memCache2_p, True, selectedPA, dPA);
+    fillCFListFromDisk(cfWtFileNames, path, memCacheWt2_p, False, selectedPA, dPA);
+    memCache2_p[0].primeTheCFB();
+    memCacheWt2_p[0].primeTheCFB();
+  }
+
   void CFCache::initCache2(Float selectedPA, Float dPA)
   {
     LogOrigin logOrigin("CFCache", "initCache2");
@@ -218,10 +229,11 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore,
-				Bool showInfo, Float selectPAVal, Float dPA)
+  void CFCache::fillCFListFromDisk(const Vector<String>& fileNames, 
+				   const String& CFCDir, CFStoreCacheType2& memStore,
+				   Bool showInfo, Float selectPAVal, Float dPA)
   {
-    LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
+    LogOrigin logOrigin("CFCache", "fillCFListFromDisk");
     LogIO log_l(logOrigin);
     Bool selectPA = (fabs(selectPAVal) <= 360.0);
     try
@@ -229,16 +241,16 @@ namespace casa{
 	if (memStore.nelements() == 0) memStore.resize(1,True);
 
 	CFCacheTableType cfCacheTable_l;
-	Regex regex(Regex::fromPattern(pattern));
-	Vector<String> fileNames(dirObj.find(regex));
+	// Regex regex(Regex::fromPattern(pattern));
+	// Vector<String> fileNames(dirObj.find(regex));
 
 	if (fileNames.nelements() > 0)
 	  {
-	    String CFCDir=dirObj.path().absoluteName();
-	    if (showInfo)
-	      log_l << "No. of " << pattern << " found in " 
-		    << dirObj.path().originalName() << ": " 
-		    << fileNames.nelements() << LogIO::POST;
+	    // String CFCDir=dirObj.path().absoluteName();
+	    // if (showInfo)
+	    //   log_l << "No. of " << pattern << " found in " 
+	    // 	    << dirObj.path().originalName() << ": " 
+	    // 	    << fileNames.nelements() << LogIO::POST;
 
 	    //
 	    // Gather the list of PA values
@@ -398,7 +410,7 @@ namespace casa{
 		    // treatment for mndx, please don't ask.  Not just
 		    // yet (SB)).
 		    cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
-				   fVal, wVal, mVal);
+				   fVal, wVal, mVal,fileNames[nf]);
 
 
 		    // if (nf==0)
@@ -424,6 +436,32 @@ namespace casa{
 	      }
 
 	  }
+      }
+    catch(AipsError& x)
+      {
+	throw(SynthesisFTMachineError(String("Error while initializing CF disk cache: ")
+				      +x.getMesg()));
+      }
+  }
+  //
+  //-----------------------------------------------------------------------
+  //
+  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore,
+				Bool showInfo, Float selectPAVal, Float dPA)
+  {
+    LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
+    LogIO log_l(logOrigin);
+    try
+      {
+	Regex regex(Regex::fromPattern(pattern));
+	Vector<String> fileNames(dirObj.find(regex));
+	String CFCDir=dirObj.path().absoluteName();
+	if (showInfo)
+	  log_l << "No. of " << pattern << " found in " 
+		<< dirObj.path().originalName() << ": " 
+		<< fileNames.nelements() << LogIO::POST;
+	
+	fillCFListFromDisk(fileNames, CFCDir, memStore, showInfo, selectPAVal, dPA);
       }
     catch(AipsError& x)
       {
@@ -814,21 +852,32 @@ namespace casa{
     LogIO log_l(LogOrigin("CFCache", "loadWtImage"));
     ostringstream name, sumWtName;
     name << WtImagePrefix << ".weight" << qualifier;
-    if (qualifier != "")
-      sumWtName << WtImagePrefix << ".sumwt.tt0";// << qualifier;
-    else
-      sumWtName << WtImagePrefix << ".sumwt";
+    if (qualifier != "") sumWtName << WtImagePrefix << ".sumwt.tt0";// << qualifier;
+    else                 sumWtName << WtImagePrefix << ".sumwt";
       
     try
       {
-	PagedImage<Float> sumWtTmp(sumWtName.str().c_str());
-	Float sumwt=max(sumWtTmp.get());
-	//cerr << "sumwt = " << sumwt << endl;
+	// First try to load .weight image.  If this fails, AipsError
+	// will be caught and a NOTCACHED returned.
 	PagedImage<Float> tmp(name.str().c_str());
+
+	// Now try to load .sumwt.  If .sumwt is not found, this is a
+	// fatal error (inconsistancy on the disk).  So this time
+	// throw a SEVER exception.
+	Float sumwt=1.0;
+	try
+	  {
+	    PagedImage<Float> sumWtTmp(sumWtName.str().c_str());
+	    sumwt=max(sumWtTmp.get());
+	  }
+	catch (AipsError& x)
+	  {
+	    log_l << "Sum-of-weights not found " << x.getMesg() << LogIO::SEVERE;
+	  }
+
 	avgPB.resize(tmp.shape());
 	avgPB.put(tmp.get()*sumwt);
 	//cerr << "peak = " << max(tmp.get()*sumwt) << endl;
-
       }
     catch(AipsError& x) // Just rethrowing the exception for now.
                         // Ultimately, this should be used to make

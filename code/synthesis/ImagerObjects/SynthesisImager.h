@@ -174,6 +174,7 @@ class SynthesisImager
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
+  void dryGridding();
  
 
 protected:

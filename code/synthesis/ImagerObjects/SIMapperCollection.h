@@ -70,7 +70,8 @@ class SIMapperCollection
 
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
   void initializeGrid(VisBuffer& vb, Bool dopsf=False);
-  void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED);
+  void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED,
+	    const Int whichFTM=-1);
   void finalizeGrid(VisBuffer& vb, Bool dopsf=False);
   void initializeDegrid(VisBuffer& vb);
   void degrid(VisBuffer& vb, Bool saveVirtualMod=False);
@@ -85,6 +86,8 @@ class SIMapperCollection
   void checkOverlappingModels(String action); // action='blank' or 'restore'
 
   Bool anyNonZeroModels();
+
+  const CountedPtr<FTMachine> getFTM(Int which) {return itsMappers[which]->getFTM();};
 
 protected:
 

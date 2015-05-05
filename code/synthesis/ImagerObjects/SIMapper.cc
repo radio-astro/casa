@@ -113,18 +113,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      }
 
   /////////////////OLD vi/vb version
-  void SIMapper::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
+  void SIMapper::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
+		      const Int whichFTM)
    {
      LogIO os( LogOrigin("SIMapper","grid",WHERE) );
      //Componentlist FTM has no gridding to do
+     (void)whichFTM;
+
      if(ift_p.null())
        return;
      
      ift_p->put(vb, -1, dopsf, col);
      
    }
-
-  
 
   //////////////OLD VI/VB version
   void SIMapper::finalizeGrid(VisBuffer& vb, Bool dopsf)

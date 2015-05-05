@@ -521,7 +521,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int sensitivityPatternQualifier_p;
     String sensitivityPatternQualifierStr_p;
     CFStore rotatedConvFunc_p;
-    CountedPtr<CFStore2> cfs2_p, cfwts2_p;
+    //CountedPtr<CFStore2> cfs2_p, cfwts2_p;
     Vector<Int> ConjCFMap_p, CFMap_p;
 
     Timer timer_p;

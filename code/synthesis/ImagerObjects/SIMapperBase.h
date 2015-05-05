@@ -65,7 +65,7 @@ class SIMapperBase
 
   //////////////// NEW VI/VB versions
   virtual void initializeGrid(const vi::VisBuffer2& , const Bool dopsf=False)=0;
-  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type )=0;
+  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type, const Int whichFTM=-1 )=0;
   virtual void finalizeGrid(const vi::VisBuffer2& , const Bool )=0;
   virtual void initializeDegrid(const vi::VisBuffer2& , const Int row=-1 )=0;
   virtual void degrid(vi::VisBuffer2& )=0;

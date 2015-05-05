@@ -118,7 +118,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateOTFPAIncr_p(0.1),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), runTime1_p(0.0)
+      rotatedConvFunc_p(),//cfs2_p(), cfwts2_p(), 
+      runTime1_p(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -201,9 +202,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
-    cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],False);//new CFStore2;
-    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
-
+    if (!cfCache_p.null())
+      {
+	cfs2_p = CountedPtr<CFStore2>(&(cfCache_p->memCache2_p)[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+      }
     pop_p->init();
     useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
@@ -214,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   AWProjectFT::AWProjectFT(const RecordInterface& stateRec)
-    : FTMachine(),Second("s"),Radian("rad"),Day("d"),visResampler_p(), cfs2_p(), cfwts2_p()
+    : FTMachine(),Second("s"),Radian("rad"),Day("d"),visResampler_p()//, cfs2_p(), cfwts2_p()
   {
     LogIO log_l(LogOrigin("AWProjectFT", "AWProjectFT[R&D]"));
     //
@@ -230,8 +233,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     visResampler_p->init(useDoubleGrid_p);
     convSize=CONVSIZE;
     canComputeResiduals_p=DORES;
-    cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
-    cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+    if (!cfCache_p.null())
+      {
+	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+      }
     pop_p->init();
   }
   //
@@ -1123,7 +1129,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// USEFUL DEBUG MESSAGE
 	//cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
-	Bool pleaseDoAlsoFillTheCF=True;
+
+	isDryRun = False;
+	//cerr << "Is Dry Run = " << dryRun() << endl;
+	Bool pleaseDoAlsoFillTheCF=!dryRun();
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
 					 *cfs2_p, *cfwts2_p, pleaseDoAlsoFillTheCF);
@@ -1244,6 +1253,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	initMaps(vb);
 	findConvFunction(*(compImageVec[0]), vb); // Pure virtual -- call local version
 
+	if (isDryRun) return;
+
 	// Get the sensitivity Image
 	Matrix<Float> tempWts;
 	tempWts.resize();
@@ -1299,6 +1310,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //visResampler_p->setMaps(chanMap, polMap);
     
     findConvFunction(*image, vb);
+    if (isDryRun) return;
     //UUU    if (!cfCache_p->avgPBReady() && doPBCorrection)
     //UUU  log_l << "Sensitivity pattern not found." << LogIO::EXCEPTION;
     //UUU//    if (!cfCache_p->avgPBReady(sensitivityPatternQualifierStr_p) && doPBCorrection)
@@ -1580,6 +1592,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makingPSF=dopsf;
     
     findConvFunction(*image, vb);
+    if (isDryRun) return;
+
     Nant_p     = vb.msColumns().antenna().nrow();
 
     const Matrix<Float> *imagingweight;

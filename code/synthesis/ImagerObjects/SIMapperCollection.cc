@@ -177,7 +177,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
-  void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
+  void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col,
+				Int whichFTM)
   {
     if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
 	{
@@ -196,11 +197,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	}// if non zero model
 
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-	  {
-		  (itsMappers[k])->grid(vb, dopsf, col);
-
-	  }
+    if (whichFTM < 0)
+      for (uInt k=0; k < itsMappers.nelements(); ++k)
+	{
+	  (itsMappers[k])->grid(vb, dopsf, col);
+	  
+	}
+    else 
+      {
+	if (whichFTM > (Int)itsMappers.nelements())
+	  throw ( AipsError("Internal Error : SIMapperCollection::grid(): whichFTM out of range") );
+	else itsMappers[whichFTM]->grid(vb, dopsf, col);
+      }
   }
   ///////////////////////////////
   ////////////////////////////////

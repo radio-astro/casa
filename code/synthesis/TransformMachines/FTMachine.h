@@ -361,7 +361,12 @@ public:
   void setnumthreads(Int n);
   Int getnumthreads();
 
+  void setCFCache(CountedPtr<CFCache>& cfc);
   String getCacheDir() { return cfCache_p->getCacheDir(); };
+
+  virtual void setDryRun(Bool val) {isDryRun=val;cerr << "FTM: " << isDryRun << endl;};
+  virtual Bool dryRun() {return isDryRun;}
+  Bool isDryRun;
 
 protected:
 
@@ -477,9 +482,9 @@ protected:
   Matrix<Double> spwFreqSel_p, expandedSpwFreqSel_p,expandedSpwConjFreqSel_p;
   Vector<Int> cfStokes_p;
   Int polInUse_p;
-  CountedPtr<CFCache> cfCache_p;
   CFStore cfs_p, cfwts_p;
-  CFStore2 cfs2_p, cfwts2_p;
+  CountedPtr<CFCache> cfCache_p;
+  CountedPtr<CFStore2> cfs2_p, cfwts2_p;
 
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
   CountedPtr<PolOuterProduct> pop_p;
@@ -508,7 +513,7 @@ protected:
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
   void convUVW(Double& dphase, Vector<Double>& thisrow);
-  
+
 };
 
 } //# NAMESPACE CASA - END

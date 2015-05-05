@@ -80,6 +80,8 @@ namespace casa{
   void CFCell::makePersistent(const char *dir)
   {
     String name(dir);
+    if (fileName_p == "") fileName_p = name;
+    
     //    storeArrayAsImage(name, coordSys_p, *storage_p);
     PagedImage<Complex> thisCF(storage_p->shape(),coordSys_p, name);
     //    cerr << "Ref pixel = " << coordSys_p.referencePixel() << endl;
@@ -92,6 +94,7 @@ namespace casa{
     miscinfo.define("ParallacticAngle",pa_p.getValue("deg"));
     miscinfo.define("MuellerElement", muellerElement_p);
     miscinfo.define("WValue", wValue_p);
+    miscinfo.define("Name", fileName_p);
     thisCF.setMiscInfo(miscinfo);
   }
 

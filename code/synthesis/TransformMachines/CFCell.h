@@ -141,6 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int muellerElement_p;
     Quantity pa_p;
     Vector<Int> cfShape_p;
+    String fileName_p;
   };
 } //# NAMESPACE CASA - END
 #endif

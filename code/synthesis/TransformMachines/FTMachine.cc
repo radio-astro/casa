@@ -69,6 +69,7 @@
 #include <scimath/Mathematics/NNGridder.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <measures/Measures/UVWMachine.h>
+#include <synthesis/TransformMachines/CFStore2.h>
 
 #include <casa/System/ProgressMeter.h>
 
@@ -85,14 +86,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqFrameValid_p(False), 
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
-			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), 
-                           numthreads_p(-1), pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
+			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
+			   canComputeResiduals_p(False), numthreads_p(-1), pbLimit_p(0.05),sj_p(0), 
+			   cmplxImage_p( ), isDryRun(False)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
+    //    cerr << "Called FTMachine()" << endl;
   }
   
   FTMachine::FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cf):
@@ -103,15 +106,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqFrameValid_p(False), 
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
-    cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
+    cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(), cfs2_p(), cfwts2_p(),
     convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1), 
-    pbLimit_p(0.05),sj_p(0), cmplxImage_p( )
+    pbLimit_p(0.05),sj_p(0), cmplxImage_p( ), isDryRun(False)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
     pop_p = new PolOuterProduct;
+    //cerr << "Called FTMachine(CPT<CFCi>),...)" << endl;
   }
   
   LogIO& FTMachine::logIO() {return logIO_p;};
@@ -181,6 +185,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       polInUse_p = other.polInUse_p;
       cfs_p = other.cfs_p;
       cfwts_p = other.cfwts_p;
+      cfs2_p = other.cfs2_p;
+      cfwts2_p = other.cfwts2_p;
       canComputeResiduals_p = other.canComputeResiduals_p;
 
       pop_p = other.pop_p;
@@ -193,6 +199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pbLimit_p=other.pbLimit_p;
       sj_p.resize();
       sj_p=other.sj_p;
+      isDryRun=other.isDryRun;
     };
     return *this;
   };
@@ -2079,6 +2086,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
+  void FTMachine::setCFCache(CountedPtr<CFCache>& cfc) 
+  {
+    cfCache_p = cfc;
+    if (!cfCache_p.null())
+      {
+	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+      }
+  }
   /*
   /// Move to individual FTMs............ make it pure virtual.
   Bool FTMachine::useWeightImage()

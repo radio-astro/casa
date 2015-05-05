@@ -170,6 +170,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void initCache();
     void initCache2(Float selectedPA=400.0, Float dPA=-1.0);
+    void initCacheFromList2(const String& path, 
+			    const Vector<String>& cfFileNames, 
+			    const Vector<String>& cfWtFileNames, 
+			    Float selectedPA, Float dPA);
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     inline Bool OTODone() {return OTODone_p;}
     //
@@ -312,6 +316,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
     void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False, Float selectPAVal=400.0, Float dPA=-1.0);
+    void fillCFListFromDisk(const Vector<String>& fileNames, const String& CFCDir,
+			    CFStoreCacheType2& memStore,
+			    Bool showInfo, Float selectPAVal, Float dPA);
 
     Bool avgPBReady_p;
     String avgPBReadyQualifier_p;

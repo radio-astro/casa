@@ -64,7 +64,7 @@ template<class T> class ImageInterface;
 
   /////////////////////// OLD VI/VB versions
   virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
-  virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
+  virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col, const Int whichFTM=-1);
   virtual void finalizeGrid(VisBuffer& vb, Bool dopsf);
   virtual void initializeDegrid(VisBuffer& vb, Int row=-1);
   virtual void degrid(VisBuffer& vb);
@@ -78,6 +78,8 @@ template<class T> class ImageInterface;
   virtual String getImageName(){return itsImages->getName();};
   virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
   virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
+
+  const CountedPtr<FTMachine> getFTM() {return ift_p;};
 
 protected:
 

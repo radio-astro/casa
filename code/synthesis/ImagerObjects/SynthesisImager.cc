@@ -1408,11 +1408,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Construct and initialize the CF cache object.
     //
-    CountedPtr<CFCache> cfCacheObj = new CFCache();
-    cfCacheObj->setCacheDir(cfCache.data());
-    //    cerr << "Setting wtImagePrefix to " << imageNamePrefix.c_str() << endl;
-    cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
-    cfCacheObj->initCache2();
+
+
+    // CountedPtr<CFCache> cfCacheObj = new CFCache();
+    // cfCacheObj->setCacheDir(cfCache.data());
+    // //    cerr << "Setting wtImagePrefix to " << imageNamePrefix.c_str() << endl;
+    // cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
+    // cfCacheObj->initCache2();
+
+      CountedPtr<CFCache> cfCacheObj;
+      
 
     //
     // Finally construct the FTMachine with the CFCache, ConvFunc and
@@ -1425,6 +1430,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      /*True */doPointing, doPBCorr, 
 			      tile, computePAStep, pbLimit_l, True,conjBeams,
 			      useDoublePrec);
+
+    cfCacheObj = new CFCache();
+    cfCacheObj->setCacheDir(cfCache.data());
+    //    cerr << "Setting wtImagePrefix to " << imageNamePrefix.c_str() << endl;
+    cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
+    cfCacheObj->initCache2();
+
+    theFT->setCFCache(cfCacheObj);
+    
 
     Quantity rotateOTF(rotatePAStep,"deg");
     static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
@@ -1611,6 +1625,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::dryGridding()
+  {
+    LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
+    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
+    Int cohDone=0, whichFTM=0;
+    {
+      VisBufferAutoPtr vb(rvi_p);
+      rvi_p->originChunks();
+      rvi_p->origin();
+
+      ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+		       "dryGridding", "","","",True);
+
+      itsMappers.initializeGrid(*vb);
+      AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
+      tt.setDryRun(True);
+
+      //(itsMappers.getFTM(whichFTM))->setDryRun(True);
+
+      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	{
+	  
+	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	    {
+	      itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
+	      pm.update(Double(cohDone));
+	    }
+	}
+      //itsMappers.finalizegrid(*vb);
+    }
+
+    //itsMappers.checkOverlappingModels("restore");
+    unlockMSs();
+
+    (itsMappers.getFTM(whichFTM))->setDryRun(False);
+  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(){

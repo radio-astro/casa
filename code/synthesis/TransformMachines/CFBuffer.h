@@ -299,7 +299,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  CoordinateSystem& cs, Float& sampling,
 				  Int& xSupport, Int& ySupport,
 				  const Double& freqValue, const Double& wValue, 
-				  const Int& muellerElement);
+				  const Int& muellerElement,
+				  const String& fileName=String());
     void setPointingOffset(const Vector<Double>& offset) 
     {pointingOffset_p.assign(offset);};
     Vector<Double> getPointingOffset() {return pointingOffset_p;};
@@ -309,7 +310,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setParams(Int& nx, Int& ny, CoordinateSystem& cs, Float& sampling, 
 		   Int& xSupport, Int& ySupport, 
 		   const Double& freqVal, const Double& wValue, 
-		   const Int& muellerElement);
+		   const Int& muellerElement,
+		   const String& fileName);
     void setPA(Float& pa);
     RigidVector<Int,3> getIndex(const Double& freqVal, const Double& wValue, 
 				const Int& muellerElement);

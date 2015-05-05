@@ -155,7 +155,8 @@ namespace casa{
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
 					  const Double& freqValue, const Double& wValue, 
-					  const Int& muellerElement)
+					  const Int& muellerElement,
+					  const String& fileName)
   {
     RigidVector<Int,3> ndx=getIndex(freqValue, wValue, muellerElement);
     ndx(0)=inu; ndx(1)=iw;//ndx(2) = muellerElements_p(ipx)(ipy);
@@ -163,6 +164,8 @@ namespace casa{
     cfCells_p(ndx(0),ndx(1),ndx(2))->xSupport_p = xSupport;
     cfCells_p(ndx(0),ndx(1),ndx(2))->ySupport_p = ySupport;
     cfCells_p(ndx(0),ndx(1),ndx(2))->muellerElement_p = muellerElement;
+    if (fileName != "")
+      cfCells_p(ndx(0),ndx(1),ndx(2))->fileName_p = fileName;
 
     Int index=cs.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = cs.spectralCoordinate(index);
@@ -196,7 +199,8 @@ namespace casa{
 
   void CFBuffer::setParams(Int& /*nx*/, Int& /*ny*/, CoordinateSystem& /*cs*/, Float& /*sampling*/, 
 			   Int& /*xSupport*/, Int& /*ySupport*/, const Double& /*freqValue*/, 
-			   const Double& /*wValue*/, const Int& /*muellerElement*/)
+			   const Double& /*wValue*/, const Int& /*muellerElement*/,
+			   const String& /*fileName*/)
   {
     /*
     RigidVector<Int,3> ndx=setParams(cs, sampling, xSupport, ySupport,
