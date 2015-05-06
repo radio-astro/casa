@@ -1676,15 +1676,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           }
       }
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
-    if( qrestfreq.getValue("Hz")==0 ) 
+    String cubemode;
+    if ( qrestfreq.getValue("Hz")==0 ) 
       {
         MSDopplerUtil msdoppler(msobj);
         Vector<Double> restfreqvec;
-        msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
-        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
-        if ( qrestfreq.getValue("Hz")==0 and mode!="mfs" ) 
-          throw(AipsError("No valid rest frequency is defined in the data, please specify the restfreq parameter") );
-       
+        msdoppler.dopplerInfo(restfreqvec, spwids(0), fld);
+        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec(0),"Hz"): Quantity(0.0, "Hz");
+        if ( qrestfreq.getValue("Hz")==0 and mode!="mfs" )
+          {
+          cubemode = findSpecMode(mode);
+          if ( cubemode=="channel" || cubemode=="frequency" )
+            {
+              Double provisional_restfreq = msc.spectralWindow().refFrequency()(spwids(0));
+              qrestfreq = Quantity(provisional_restfreq, "Hz");
+              os << LogIO::WARN << "No rest frequency info, using ref frequency(spw0):"
+                 << provisional_restfreq <<" Hz. Velocity labelling may not be correct." 
+                 << LogIO::POST;
+            } 
+          else { // must be vel mode
+            throw(AipsError("No valid rest frequency is defined in the data, please specify the restfreq parameter") );
+            } 
+        }
       }
     Double refPix;
     Vector<Double> chanFreq;
