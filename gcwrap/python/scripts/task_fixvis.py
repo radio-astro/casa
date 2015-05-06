@@ -476,7 +476,8 @@ def parse_phasecenter(phasecenter, isvarref, ref, refstr, theolddir):
             return False
         qnewdec = qa.add(qdec,qdecoffset)
         qnewra = qra
-        if qa.canonical(qraoffset)['unit'] == 'rad':
+        ishms = (qa.canonical(qraoffset)['unit'] == 'rad') and (('h' in dirstr[0] and 'm' in dirstr[0] and 's' in dirstr[0]) or (dirstr[0].count(':')==2))
+        if (qa.canonical(qraoffset)['unit'] == 'rad') and not ishms:
             casalog.post(
             "RA offset is an angle (not a time). Will divide by cos(DEC) to compute time offset.")
             if(qa.cos(qnewdec)['value'] == 0.):
@@ -486,14 +487,16 @@ def parse_phasecenter(phasecenter, isvarref, ref, refstr, theolddir):
                 qraoffset = qa.div(qraoffset, qa.cos(qnewdec))
                 qnewra = qa.add(qnewra, qraoffset)
         else:
-            if not (qa.canonical(qraoffset)['unit'] == 's'):
-                casalog.post(
-             "Invalid phasecenter parameter. RA offset must be an angle or a time.",
+            if not ((qa.canonical(qraoffset)['unit'] == 's') or ishms):
+                casalog.post("Invalid phasecenter parameter. RA offset must be an angle or a time.",
                              'SEVERE')
                 return False
+            # RA offset was given as a time; apply as is
             qraoffset = qa.convert(qraoffset, 'deg')
             qnewra = qa.add(qnewra, qraoffset)
+
         dirstr = [refstr, qa.time(qnewra,12)[0], qa.angle(qnewdec,12)[0]]
+
     elif not len(dirstr) == 3:
         casalog.post('Incorrectly formatted parameter \'phasecenter\': '
                      + phasecenter, 'SEVERE')
