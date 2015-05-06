@@ -2,7 +2,7 @@
 
 #date= '2010/02/02'
 from numpy import *
-import casac
+from casac import *
 
 qa = casac.quanta()
 me = casac.measures()
@@ -40,6 +40,7 @@ def getazel(obs,srcname,srcCoord,date,tref):
         tshft=0.0
     t0=t['value']
     t0 -= tshft
+    print "TO = ",t0
     # coaser time (maybe better if called from plotting script for many sources
     #tl = arange(1.,1455.,15) # go over a bit longer than a day
     tl = arange(1.,1455.,1) # go over a bit longer than a day
@@ -78,7 +79,7 @@ def getazel(obs,srcname,srcCoord,date,tref):
           else:
             timref='utc' 
           tmeridian=(riseset['rise'][timref]['m0']['value']+riseset['set'][timref]['m0']['value'])/2.
-          print "%s :Meridian passage: %s" % (srcname, qa.time(str(tmeridian)+'d')+' ('+timref+')') 
+          print "%s :Meridian passage: %s" % (srcname, qa.time(str(tmeridian)+'d')[0]+' ('+timref+')') 
           #print "Rise:",riseset['rise'] 
           #print "Set:",riseset['set'] 
         azar[i]=az

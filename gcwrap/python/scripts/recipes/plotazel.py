@@ -38,6 +38,7 @@ def plotsrcazel(planet='', srcfile='', date='', obs='ALMA', plotsun=False, plott
         plotsrcazel(planet='Uranus', srcfile='calandtarget.txt')    #plot Uranus and sources defined
                                                                     # in calandtarget.txt
 
+    version 2015.05.06  TT -Minor fixes to be able run on current casa 
     version 2012.04.20  TT
     '''
 
@@ -48,7 +49,7 @@ def plotsrcazel(planet='', srcfile='', date='', obs='ALMA', plotsun=False, plott
     if date=='':
       inpd=raw_input('date? YYYY/MM/DD or hit return to use today\'s date:')
       if inpd == "":
-	date=qa.time('today', form=['ymd','no_time'])
+	date=qa.time('today', form=['ymd','no_time'])[0]
       else:    
 	date=inpd
     else:
@@ -120,7 +121,8 @@ def plotsrcazel(planet='', srcfile='', date='', obs='ALMA', plotsun=False, plott
     srclist['dec']=[]
 
     if readfromfile:
-	f = open('calibrators.list','r')
+	#f = open('calibrators.list','r')
+	f = open(srcfile,'r')
 	while f:
 	    ln = f.readline()
 	    if len(ln) ==0:
@@ -226,7 +228,7 @@ def plotsrcazel(planet='', srcfile='', date='', obs='ALMA', plotsun=False, plott
         #print "tx[0]=", tx[0], " tx[-1]=",tx[-1]
 	#timlab = qa.time(qa.quantity(tofflab,'d'), form=['ymd', 'no_time'])
 	#timlab += ' %s' % obs 
-	timlab = qa.time(qa.quantity(int(min(tx)),'d'), form=['ymd', 'no_time'])
+	timlab = qa.time(qa.quantity(int(min(tx)),'d'), form=['ymd', 'no_time'])[0]
 	timlab += ' %s' % obs 
        
 	defaultcolors=['b','g','r','c','m','y','k']
