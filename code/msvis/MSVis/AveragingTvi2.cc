@@ -2419,12 +2419,13 @@ AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
     {
         int nSamples = 0;
         float sum = 0;
-        bool accumulatorFlag = False;
+        bool accumulatorFlag = True;
 
         for (uInt channel=0; channel< nChannels; channel++)
         {
+	  Bool inputFlag = flags(correlation,channel);
             // True/True or False/False
-            if (accumulatorFlag == flags(correlation,channel))
+	  if (accumulatorFlag == inputFlag)
             {
                 nSamples ++;
                 sum += data (correlation, channel);
@@ -2433,7 +2434,7 @@ AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
                 ////result(correlation) += data (correlation,channel);
             }
             // True/False: Reset accumulation when accumulator switches from flagged to unflagged
-            else if ( (accumulatorFlag == True) and (flags(correlation,channel) == False) )
+            else if ( accumulatorFlag and ! inputFlag )
             {
                 accumulatorFlag = False;
                 nSamples = 1;
