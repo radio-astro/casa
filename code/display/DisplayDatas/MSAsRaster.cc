@@ -236,14 +236,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		indgen(fieldIds_);
 		String chanerr = "MSAsRaster: channel conformance error in MS";
 		nSpwIds_ = msCols_->dataDescription().nrow();
-		//cout << "nSpwIds_=" << nSpwIds_ << endl;
 		if(nSpwIds_<=0) throw AipsError(chanerr);
 		spwIds_.resize(nSpwIds_);
 		indgen(spwIds_);
 
 		nChan_ = msCols_->spectralWindow().numChan().getColumn();
-		if ( Int(nChan_.nelements()) < nSpwIds_ )
-			throw AipsError(chanerr);
+		//Taken out because of CAS-7522
+		/*if ( Int(nChan_.nelements()) < nSpwIds_ )
+			throw AipsError(chanerr);*/
 		if ( Int(nChan_.nelements()) > nSpwIds_ )
 			nChan_.resize(nSpwIds_, True);
 
