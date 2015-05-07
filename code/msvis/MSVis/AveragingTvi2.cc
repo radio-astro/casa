@@ -441,18 +441,18 @@ protected:
             // For improved performance this class is designed to sweep the cube data elements in this row
             // in the order (correlation0, channel0), (correlation1, channel1), etc.
 
-            correctedIn_p ++;
-            correctedOut_p ++;
-            modelIn_p ++;
-            modelOut_p ++;
-            observedIn_p ++;
-            observedOut_p ++;
-            flagCubeIn_p ++;
-            flagCubeOut_p ++;
-            sigmaSpectrumIn_p ++;
-            sigmaSpectrumOut_p ++;
-            weightSpectrumIn_p ++;
-            weightSpectrumOut_p ++;
+            correctedIn_p && correctedIn_p ++;
+            correctedOut_p && correctedOut_p ++;
+            modelIn_p && modelIn_p ++;
+            modelOut_p && modelOut_p ++;
+            observedIn_p && observedIn_p ++;
+            observedOut_p && observedOut_p ++;
+            flagCubeIn_p && flagCubeIn_p ++;
+            flagCubeOut_p && flagCubeOut_p ++;
+            sigmaSpectrumIn_p && sigmaSpectrumIn_p ++;
+            sigmaSpectrumOut_p && sigmaSpectrumOut_p ++;
+            weightSpectrumIn_p && weightSpectrumIn_p ++;
+            weightSpectrumOut_p && weightSpectrumOut_p ++;
         }
 
         inline const Complex *
@@ -514,7 +514,7 @@ protected:
         inline const Float *
         sigmaSpectrumIn ()
         {
-            assert (sigmaSpectrumIn_p != 0);
+ /////////////            assert (sigmaSpectrumIn_p != 0);
             return sigmaSpectrumIn_p;
         }
 
@@ -1052,6 +1052,7 @@ VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameter
 		weightObserved = AveragingTvi2::sigmaToWeight(* accumulationParameters.sigmaSpectrumIn ());
 
 		// Accumulate weighted average contribution (normalization will come at the end)
+
 		accumulateElementForCube (	accumulationParameters.observedIn (),
 									weightObserved, zeroAccumulation,
 									accumulationParameters.observedOut ());
@@ -1144,6 +1145,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             Bool accumulatorFlagged = averagedFlags (correlation, channel);
 
             if (! accumulatorFlagged && inputFlagged){
+                accumulationParameters.incrementCubePointers();
                 continue;// good accumulation, bad data so toss it.
             }
 
@@ -1168,6 +1170,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 
             accumulateElementForCubes (accumulationParameters,
                                        zeroAccumulation); // zeroes out accumulation
+
             accumulationParameters.incrementCubePointers();
 
             // Update correlation Flag
@@ -2181,7 +2184,6 @@ AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
   inputViiAdvanced_p (False),
   vbAvg_p (new VbAvg (averagingParameters))
 {
-
     validateInputVi (inputVi);
 
     // Position input Vi to the first subchunk
