@@ -40,7 +40,7 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
             raise Exception, 'Infile data set not found - please verify the name'
 
         if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps', 'otfraster', 'apply']): 
-            raise Exception, 'Calmode must be either \'ps\' or \'tsys\' or \'apply\''
+            raise Exception, 'Calmode must be either \'ps\' or \'otfraster\' or \'tsys\' or \'apply\''
 
         if (not overwrite) and (os.path.exists(outfile)):
             raise RuntimeError, 'Output file \'%s\' exists.'%(outfile)
