@@ -2742,9 +2742,11 @@ Bool ImageAnalysis::tofits(
 	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
 		*_imageFloat, pRegion, mask, _log.get(), axesSpecifier, stretch
 	);
-	if (
+    // FIXME remove when the casacore interface has been updated to const
+    SPIIF myclone(subImage->cloneII());
+    if (
 		! ImageFITSConverter::ImageToFITS(
-			error, *subImage, fitsfile,
+			error, *myclone, fitsfile,
 			HostInfo::memoryFree() / 1024,
 			velocity, optical,
 			bitpix, minpix, maxpix, overwrite,
