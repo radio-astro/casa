@@ -35,15 +35,16 @@ class IntensityScaling(common.SingleDishTaskTemplate):
     
     @common.datatable_setter
     def prepare(self):
-        reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(self.inputs.reffile)))
-        
-        if reffile is None or not os.path.exists(reffile):
+        if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
             factors = None
+            reffile = self.inputs.reffile
             LOG.warn('No scaling factors available. Use 1.0 for all antennas.')
         else:
             # do scaling
             # read scaling factor list
             #factors_list = read_scaling_factor(reffile)
+            reffile = os.path.abspath(os.path.expandvars(os.path.expanduser(self.inputs.reffile)))
+ 
             factors_list = jyperkreader.read(self.inputs.context, reffile)
             LOG.debug('factors_list=%s'%(factors_list))
             
