@@ -99,20 +99,18 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 			boxShape[dirAxes[0]] = imShape[dirAxes[0]];
 			boxShape[dirAxes[1]] = imShape[dirAxes[1]];
 			LCBox x(IPosition(imShape.size(), 0), boxShape - 1, imShape);
-			std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-			SubImage<Float> sub = SubImageFactory<Float>::createSubImage(
-				*clone, x.toRecord(""), "",
-				_getLog().get(), True, AxesSpecifier(False)
+			//std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
+			SHARED_PTR<const SubImage<Float> > sub = SubImageFactory<Float>::createSubImageRO(
+				*_getImage(), x.toRecord(""), "", _getLog().get(), AxesSpecifier(False)
 			);
-			_pbImage.reset(new TempImage<Float>(sub.shape(), sub.coordinates()));
+			_pbImage.reset(new TempImage<Float>(sub->shape(), sub->coordinates()));
 		}
 		else {
-			*_getLog() << "Image " << _getImage()->name()
-				<< " does not have direction coordinate" << LogIO::EXCEPTION;
+			ThrowCc("Image " + _getImage()->name() + " does not have direction coordinate");
 		}
 	}
 	else {
-		*_getLog() << "Primary beam array is of wrong shape (" << pbArray.shape() << ")" << LogIO::EXCEPTION;
+		ThrowCc("Primary beam array is of wrong shape (" + pbArray.shape().toString() + ")");
 	}
 	_pbImage->put(pbArray);
 	_construct();
@@ -206,7 +204,6 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-    SubImage<Float> pbSubImage;
     std::auto_ptr<ImageInterface<Float> > tmpStore(0);
     ImageInterface<Float> *pbTemplate = _pbImage.get();
 	if (! _getImage()->shape().isEqual(_pbImage->shape())) {
@@ -216,7 +213,7 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 		);
 		tmpStore.reset(pbTemplate);
 	}
-    SubImage<Float> subImage;
+    SHARED_PTR<const SubImage<Float> > subImage;
 	if (_useCutoff) {
 		LatticeExpr<Bool> mask = (_mode == DIVIDE)
 			? *pbTemplate >= _cutoff
@@ -224,9 +221,9 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 		if (pbTemplate->hasPixelMask()) {
 			mask = mask && pbTemplate->pixelMask();
 		}
-		subImage = SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask)));
-		subImage = SubImageFactory<Float>::createSubImage(
-		    subImage, *_getRegion(), _getMask(), _getLog().get(), False,
+		subImage.reset(new SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask))));
+		subImage = SubImageFactory<Float>::createSubImageRO(
+		    *subImage, *_getRegion(), _getMask(), _getLog().get(),
 		    AxesSpecifier(), _getStretch()
 		);
 	}
@@ -240,21 +237,21 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 				)
 			)
 			: _getImage()->cloneII());
-		subImage = SubImageFactory<Float>::createSubImage(
+		subImage = SubImageFactory<Float>::createSubImageRO(
 		    *tmp, *_getRegion(), _getMask(), _getLog().get(),
-		    False, AxesSpecifier(), _getStretch()
-		);
+		    AxesSpecifier(), _getStretch()
+        );
 	}
-	pbSubImage = SubImageFactory<Float>::createSubImage(
+	SHARED_PTR<const SubImage<Float> > pbSubImage = SubImageFactory<Float>::createSubImageRO(
     	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(),
-    	False, AxesSpecifier(), _getStretch()
+        AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
 
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
-		? subImage/pbSubImage
-		: subImage*pbSubImage;
-	SPIIF outImage = _prepareOutputImage(subImage);
+		? *subImage/(*pbSubImage)
+		: *subImage*(*pbSubImage);
+	SPIIF outImage = _prepareOutputImage(*subImage);
 	outImage->copyData(expr);
     if (! wantReturn) {
     	outImage.reset();

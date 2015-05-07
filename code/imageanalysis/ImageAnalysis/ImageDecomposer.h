@@ -133,7 +133,7 @@ public:
    ImageDecomposer();
 
 // Construct from image
-   ImageDecomposer(ImageInterface<T>& image);
+   ImageDecomposer(const ImageInterface<T>& image);
 
 // Copy constructor.
    ImageDecomposer(const ImageDecomposer<T>& other);

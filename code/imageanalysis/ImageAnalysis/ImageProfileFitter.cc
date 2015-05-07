@@ -181,31 +181,28 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
     *_getLog() << logOrigin;
     std::auto_ptr<ImageInterface<Float> > originalSigma(0);
     {
+        /*
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
     	);
-    	_subImage.reset(
-    		new SubImage<Float>(
-    			SubImageFactory<Float>::createSubImage(
-    				*clone, *_getRegion(), _getMask(), 0,
-    				False, AxesSpecifier(), _getStretch()
-    			)
-    		)
+        */
+    	_subImage = SubImageFactory<Float>::createSubImageRO(
+    	    *_getImage(), *_getRegion(), _getMask(), 0,
+    		AxesSpecifier(), _getStretch()
     	);
     	if (_sigma.get()) {
     		if (! _sigmaName.empty()) {
     			originalSigma.reset(_sigma->cloneII());
     		}
-    		SubImage<Float> sigmaSubImage = SubImageFactory<Float>::createSubImage(
-    			*_sigma, *_getRegion(),
-    			_getMask(), 0, False, AxesSpecifier(), _getStretch()
+    		SHARED_PTR<const SubImage<Float> > sigmaSubImage = SubImageFactory<Float>::createSubImageRO(
+    			*_sigma, *_getRegion(), _getMask(), 0, AxesSpecifier(), _getStretch()
 			);
     		_sigma.reset(
     			new TempImage<Float>(
-    				sigmaSubImage.shape(), sigmaSubImage.coordinates()
+    				sigmaSubImage->shape(), sigmaSubImage->coordinates()
     			)
     		);
-    		_sigma->put(sigmaSubImage.get());
+    		_sigma->put(sigmaSubImage->get());
     	}
     }
     *_getLog() << logOrigin;
@@ -224,13 +221,9 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 			);
 			SPIIF x = collapser.collapse();
 			// _subImage needs to be a SubImage<Float> object
-			_subImage.reset(
-				new SubImage<Float>(
-					SubImageFactory<Float>::createSubImage(
-						*x, Record(), "", _getLog().get(),
-						False, AxesSpecifier(), False
-					)
-				)
+			_subImage = SubImageFactory<Float>::createSubImageRO(
+			    *x, Record(), "", _getLog().get(),
+				AxesSpecifier(), False
 			);
 			if (_sigma.get()) {
 				Array<Bool> sigmaMask = _sigma->get() != Array<Float>(_sigma->shape(), 0.0);
@@ -669,7 +662,7 @@ void ImageProfileFitter::_fitProfiles(Bool showProgress) {
 			new ProgressMeter(0, _nProfiles, oss.str())
 		);
 	}
-	SPIIF fitData = _subImage;
+	SPCIIF fitData = _subImage;
 	std::set<uInt> myGoodPlanes;
 	if (! _goodPlanes.empty()) {
 		IPosition origin(_subImage->ndim(), 0);
@@ -722,7 +715,7 @@ void ImageProfileFitter::_fitProfiles(Bool showProgress) {
 }
 
 void ImageProfileFitter::_loopOverFits(
-	SPIIF fitData, Bool showProgress,
+	SPCIIF fitData, Bool showProgress,
 	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
 	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
 	const IPosition& fitterShape, const IPosition& sliceShape,

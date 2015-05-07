@@ -75,7 +75,7 @@ Record ImageStatsCalculator::calculate() {
 			}
 		}
 		ImageCollapser<Float> collapsed(
-			SPCIIF(_subImage.cloneII()),
+			_subImage,
 			_axes.nelements() == 0
 				? IPosition::makeAxisPath(_getImage()->ndim()).asVector()
 				: _axes,
@@ -355,10 +355,10 @@ Record ImageStatsCalculator::statistics(
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
 	}
-	SPIIF clone(_getImage()->cloneII());
-    _subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *clone, *_getRegion(), mtmp,
-		(_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
+	//SPIIF clone(_getImage()->cloneII());
+    _subImage = SubImageFactory<Float>::createSubImageRO(
+		pRegionRegion, pMaskRegion, *_getImage(), *_getRegion(), mtmp,
+		(_verbose ? _getLog().get() : 0), AxesSpecifier(),
 		_getStretch()
 	);
     *_getLog() << myOrigin;
@@ -366,8 +366,8 @@ Record ImageStatsCalculator::statistics(
 	// information to the logger.
 	// NOTE: ImageStatitics can't do this because it only gets the _subImage
 	//       not a region and the full image.
-	IPosition shape = _subImage.shape();
-	IPosition blc(_subImage.ndim(), 0);
+	IPosition shape = _subImage->shape();
+	IPosition blc(_subImage->ndim(), 0);
 	IPosition trc(shape - 1);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
@@ -401,8 +401,8 @@ Record ImageStatsCalculator::statistics(
     if (_statistics.get() == NULL) {
         _statistics.reset(
 		    _verbose
-			? new ImageStatistics<Float> (_subImage, *_getLog(), True, _disk)
-			: new ImageStatistics<Float> (_subImage, True, _disk)
+			? new ImageStatistics<Float> (*_subImage, *_getLog(), True, _disk)
+			: new ImageStatistics<Float> (*_subImage, True, _disk)
 		);
 	}
 	else {
@@ -413,7 +413,7 @@ Record ImageStatsCalculator::statistics(
 				_oldStatsRegion.get(), _oldStatsMask.get()
 			)
 		) {
-			_statistics->setNewImage(_subImage);
+			_statistics->setNewImage(*_subImage);
 		}
 	}
     // prevent the table of stats we no longer use from being logged

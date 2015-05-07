@@ -90,7 +90,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
-ImageMoments<T>::ImageMoments (ImageInterface<T>& image, 
+ImageMoments<T>::ImageMoments (const ImageInterface<T>& image, 
                                LogIO &os,
                                Bool overWriteOutput,
                                Bool showProgressU)
@@ -174,7 +174,7 @@ ImageMoments<T> &ImageMoments<T>::operator=(const ImageMoments<T> &other)
 
 
 template <class T> 
-Bool ImageMoments<T>::setNewImage(ImageInterface<T>& image)
+Bool ImageMoments<T>::setNewImage(const ImageInterface<T>& image)
 
 //
 // Assign pointer to image

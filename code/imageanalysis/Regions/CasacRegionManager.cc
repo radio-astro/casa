@@ -916,18 +916,14 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	const CoordinateSystem& csys = getcoordsys();
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
-	SHARED_PTR<const SubImage<Float> >subimage(
-		new SubImage<Float>(
-			SubImageFactory<Float>::createSubImage(
-				x, *regionRec, "", _getLog(), False,
-				AxesSpecifier(), False, True
-			)
-		)
+	SPCIIF subimage = SubImageFactory<Float>::createSubImageRO(
+		x, *regionRec, "", _getLog(), AxesSpecifier(), False, True
 	);
-	ImageMetaData md(
-		DYNAMIC_POINTER_CAST<const ImageInterface<Float> >(subimage)
-	);
-	uInt nChan = md.nChannels();
+    uInt nChan = 0;
+    {
+	    ImageMetaData md(subimage);
+	    nChan = md.nChannels();
+    }
 	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();
 	Double subworld;
 	subsp.toWorld(subworld, 0);

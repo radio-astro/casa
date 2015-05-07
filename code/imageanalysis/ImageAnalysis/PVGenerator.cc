@@ -366,13 +366,9 @@ SPIIF PVGenerator::generate() const {
 	SHARED_PTR<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
-		rotated.reset(
-			new SubImage<Float>(
-				SubImageFactory<Float>::createSubImage(
-					*imageToRotate, lcbox, "", 0, False,
-					AxesSpecifier(), False, True
-				)
-			)
+		rotated = SubImageFactory<Float>::createSubImageRW(
+	        *imageToRotate, lcbox, "", 0,
+			AxesSpecifier(), True
 		);
 	}
 	else {
@@ -500,18 +496,17 @@ SPIIF PVGenerator::generate() const {
 		}
 	}
 	// now remove the degenerate linear axis
-	SubImage<Float> cDropped = SubImageFactory<Float>::createSubImage(
-		*collapsed, Record(), "", 0, False, AxesSpecifier(keep, axisPath),
-		False, True
+	SHARED_PTR<const SubImage<Float> > cDropped = SubImageFactory<Float>::createSubImageRO(
+		*collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath),	False, True
 	);
 	std::auto_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
 		// because the mask doesn't lose its degenerate axis when subimaging.
-		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped.shape());
-		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
+		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped->shape());
+		newMask.reset(new ArrayLattice<Bool>(cDropped->shape()));
 		newMask->put(newArray);
 	}
-	return _prepareOutputImage(cDropped, 0, newMask.get());
+	return _prepareOutputImage(*cDropped, 0, newMask.get());
 }
 
 void PVGenerator::setOffsetUnit(const String& s) {

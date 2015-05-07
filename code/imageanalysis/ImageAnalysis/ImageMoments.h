@@ -28,8 +28,6 @@
 #ifndef IMAGES_IMAGEMOMENTS_H
 #define IMAGES_IMAGEMOMENTS_H
 
-
-//# Includes
 #include <casa/aips.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Quanta/QMath.h>
@@ -260,7 +258,7 @@ public:
 // You specify whether output images are  automatically overwritten if pre-existing,
 // or whether an intercative choice dialog widget appears (overWriteOutput=F)
 // You may also determine whether a progress meter is displayed or not.
-   ImageMoments (ImageInterface<T>& image, 
+   ImageMoments (const ImageInterface<T>& image, 
                  LogIO &os,
                  Bool overWriteOutput=False,
                  Bool showProgress=True);
@@ -329,7 +327,7 @@ public:
 
 // Set a new image.  A return value of <src>False</src> indicates the 
 // image had an invalid type (this class only accepts Float or Double images).
-   Bool setNewImage (ImageInterface<T>& image);
+   Bool setNewImage (const ImageInterface<T>& image);
 
 // Get CoordinateSystem
    CoordinateSystem coordinates() {return _image->coordinates();};

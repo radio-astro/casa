@@ -29,45 +29,45 @@ template<class T> void ImageFFTer<T>::fft() const {
 	_checkExists(_amp);
 	_checkExists(_phase);
 	_checkExists(_complex);
-	std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
-	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
-		*clone, *this->_getRegion(), this->_getMask(), this->_getLog().get(),
-		False, AxesSpecifier(), this->_getStretch()
+	//std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
+	SHARED_PTR<const SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
+		*this->_getImage(), *this->_getRegion(), this->_getMask(), this->_getLog().get(),
+		AxesSpecifier(), this->_getStretch()
 	);
 	ImageFFT fft;
 	if (_axes.size() == 0) {
 		*this->_getLog() << LogIO::NORMAL << "FFT the direction coordinate" << LogIO::POST;
-		fft.fftsky(subImage);
+		fft.fftsky(*subImage);
 	}
 	else {
 		// Set vector of bools specifying axes
-		Vector<Bool> which(subImage.ndim(), False);
+		Vector<Bool> which(subImage->ndim(), False);
 		foreach_(uInt i, _axes) {
 			which(_axes(i)) = True;
 		}
 		*this->_getLog() << LogIO::NORMAL << "FFT zero-based axes " << _axes << LogIO::POST;
-		fft.fft(subImage, which);
+		fft.fft(*subImage, which);
 	}
 
 	String maskName("");
 	if (! _real.empty()) {
-		PagedImage<Float> x = _createFloatImage(_real, subImage);
+		PagedImage<Float> x = _createFloatImage(_real, *subImage);
 		fft.getReal(x);
 	}
 	if (! _imag.empty()) {
-		PagedImage<Float> x = _createFloatImage(_imag, subImage);
+		PagedImage<Float> x = _createFloatImage(_imag, *subImage);
 		fft.getImaginary(x);
 	}
 	if (! _amp.empty()) {
-		PagedImage<Float> x = _createFloatImage(_amp, subImage);
+		PagedImage<Float> x = _createFloatImage(_amp, *subImage);
 		fft.getAmplitude(x);
 	}
 	if (! _phase.empty()) {
-		PagedImage<Float> x = _createFloatImage(_phase, subImage);
+		PagedImage<Float> x = _createFloatImage(_phase, *subImage);
 		fft.getPhase(x);
 	}
 	if (! _complex.empty()) {
-		PagedImage<Complex> x = _createComplexImage(_complex, subImage);
+		PagedImage<Complex> x = _createComplexImage(_complex, *subImage);
 		fft.getComplex(x);
 	}
 }

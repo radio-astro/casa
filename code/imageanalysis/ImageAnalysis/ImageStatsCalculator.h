@@ -151,7 +151,7 @@ private:
     Vector<Float> _includepix, _excludepix;
     Bool _list, _disk, _robust, _verbose;
     LatticeStatistics<Float>::AlgConf _algConf;
-    SubImage<Float> _subImage;
+    SHARED_PTR<const SubImage<Float> > _subImage;
     PreferredClassicalAlgorithm _prefClassStatsAlg;
 
     static const String _class;

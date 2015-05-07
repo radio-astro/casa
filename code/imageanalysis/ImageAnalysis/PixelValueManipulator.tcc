@@ -68,16 +68,14 @@ template<class T> void PixelValueManipulator<T>::setAxes(
 		: axes;
 }
 
-template<class T> Record PixelValueManipulator<T>::get () const {
-    SPIIT myclone(this->_getImage()->cloneII());
-	SPCIIT subImage(
-		SubImageFactory<T>::createSubImage(
-			*myclone, *this->_getRegion(), this->_getMask(),
-			(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
-			False, AxesSpecifier(), this->_getStretch()
-		).cloneII()
+template<class T> Record PixelValueManipulator<T>::get() const {
+    //SPIIT myclone(this->_getImage()->cloneII());
+	SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
+		*this->_getImage(), *this->_getRegion(), this->_getMask(),
+		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
+		AxesSpecifier(), this->_getStretch()
 	);
-	myclone.reset();
+	//myclone.reset();
     if (! _axes.empty()) {
 		ImageCollapser<T> collapser(
 			subImage, _axes, False, ImageCollapserData::MEAN,

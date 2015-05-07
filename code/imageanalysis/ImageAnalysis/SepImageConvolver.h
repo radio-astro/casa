@@ -95,7 +95,7 @@ public:
 
 
 	// Constructor
-	SepImageConvolver (ImageInterface<T>& image, LogIO &os, Bool showProgress);
+	SepImageConvolver (const ImageInterface<T>& image, LogIO &os, Bool showProgress);
 
 	// Copy constructor.  Uses reference semantics.
 	SepImageConvolver(const SepImageConvolver<T> &other);

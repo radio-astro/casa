@@ -232,7 +232,7 @@ private:
 	Array<SHARED_PTR<ProfileFitResults> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
-	SHARED_PTR<SubImage<Float> > _subImage;
+	SHARED_PTR<const SubImage<Float> > _subImage;
 	Record _results;
 	SpectralList _nonPolyEstimates;
 	PtrHolder<std::pair<Double, Double> > _goodAmpRange, _goodCenterRange, _goodFWHMRange;
@@ -281,7 +281,7 @@ private:
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
     void _loopOverFits(
-    	SPIIF fitData, /* Int nPoints, */ Bool showProgress,
+    	SPCIIF fitData, Bool showProgress,
     	SHARED_PTR<ProgressMeter> progressMeter, Bool checkMinPts,
     	const Array<Bool>& fitMask, ImageFit1D<Float>::AbcissaType abcissaType,
     	const IPosition& fitterShape, const IPosition& sliceShape,

@@ -70,7 +70,7 @@ ImageDecomposer<T>::ImageDecomposer()
 {}
 
 template <class T>
-ImageDecomposer<T>::ImageDecomposer(ImageInterface<T>& image)
+ImageDecomposer<T>::ImageDecomposer(const ImageInterface<T>& image)
  : itsImagePtr(image.cloneII()),
    itsMapPtr(0),
    itsShape(itsImagePtr->shape()),

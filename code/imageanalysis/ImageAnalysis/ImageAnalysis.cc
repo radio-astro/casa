@@ -290,19 +290,19 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 
 	// Make SubImage
 	String mask;
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
+	SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
 		*_imageFloat, *pRegion,
-		mask, _log.get(), True
+		mask, _log.get()
 	);
 
 	// Zero subimage if requested
 	if (zeroIt)
-		subImage.set(0.0);
+		subImage->set(0.0);
 
 	// Do it
 	Random::Types typeNoise = Random::asType(type);
 	LatticeAddNoise lan(typeNoise, pars);
-	lan.add(subImage);
+	lan.add(*subImage);
 	//
 	deleteHist();
 	rstat = true;
@@ -494,14 +494,13 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		if (dropdeg) {
 			axesSpecifier = AxesSpecifier(False);
 		}
-		SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-			*inImage, // *(ImageRegion::tweakedRegionRecord(&region)),
-			region,
-			Mask, _log.get(), True, axesSpecifier
+		SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
+			*inImage, region,
+			Mask, _log.get(), axesSpecifier
 		);
 
 		if (outfile.empty()) {
-			_imageFloat.reset(new SubImage<Float> (subImage));
+			_imageFloat = subImage;
 			rstat = True;
 		}
 		else {
@@ -513,9 +512,9 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 				}
 			}
 			*_log << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << subImage.shape() << LogIO::POST;
-			_imageFloat.reset(new PagedImage<Float> (subImage.shape(),
-					subImage.coordinates(), outfile));
+					<< "' of shape " << subImage->shape() << LogIO::POST;
+			_imageFloat.reset(new PagedImage<Float> (subImage->shape(),
+					subImage->coordinates(), outfile));
 			if (_imageFloat.get() == 0) {
 				*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 			}
@@ -523,16 +522,16 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 
 			// Make output mask if required
 
-			if (subImage.isMasked()) {
+			if (subImage->isMasked()) {
 				String maskName("");
 				ImageMaskAttacher::makeMask(*_imageFloat, maskName, False, True, *_log, True);
 			}
 
-			LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, subImage);
+			LatticeUtilities::copyDataAndMask(*_log, *_imageFloat, *subImage);
 			rstat = True;
 		}
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 	}
@@ -573,24 +572,22 @@ ImageAnalysis::convolve(
 		);
 	}
 
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		region,
-		mask, _log.get(), False, AxesSpecifier(), stretch
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, region, mask, _log.get(), AxesSpecifier(), stretch
 	);
 
 	// Create output image
-	IPosition outShape = subImage.shape();
+	IPosition outShape = subImage->shape();
 	std::auto_ptr<ImageInterface<Float> > imOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
-		imOut.reset(new TempImage<Float> (outShape, subImage.coordinates()));
+		imOut.reset(new TempImage<Float> (outShape, subImage->coordinates()));
 	}
 	else {
 		*_log << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.reset(new PagedImage<Float> (outShape, subImage.coordinates(),
+		imOut.reset(new PagedImage<Float> (outShape, subImage->coordinates(),
 				outFile));
 	}
 	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
@@ -612,7 +609,7 @@ ImageAnalysis::convolve(
 			"Kernel array dimensions are invalid"
 		);
 		aic.convolve(
-			*_log, *imOut, subImage, kernelArray, scaleType,
+			*_log, *imOut, *subImage, kernelArray, scaleType,
 			scale, copyMisc
 		);
 	}
@@ -624,7 +621,7 @@ ImageAnalysis::convolve(
 		);
 		PagedImage<Float> kernelImage(kernelFileName);
 		aic.convolve(
-			*_log, *imOut, subImage, kernelImage, scaleType,
+			*_log, *imOut, *subImage, kernelImage, scaleType,
 			scale, copyMisc, warnOnly
 		);
 	}
@@ -918,13 +915,11 @@ Matrix<Float> ImageAnalysis::decompose(
 	Float threshold(Threshold);
 
 	AxesSpecifier axesSpec(False);
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region, mask,
-		_log.get(), False, axesSpec, stretch
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, Region, mask,	_log.get(), axesSpec, stretch
 	);
 	// Make finder
-	ImageDecomposer<Float> decomposer(subImage);
+	ImageDecomposer<Float> decomposer(*subImage);
 	decomposer.setDeblend(!simple);
 	decomposer.setDeblendOptions(threshold, nContour, minRange, nAxis);
 	decomposer.setFit(fit);
@@ -1063,14 +1058,11 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	*_log << LogOrigin("ImageAnalysis", "findsources");
 
 	AxesSpecifier axesSpec(False);
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask, _log.get(), False, axesSpec
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, Region, mask, _log.get(), axesSpec
 	);
-
 	// Make finder
-	ImageSourceFinder<Float> sf(subImage);
+	ImageSourceFinder<Float> sf(*subImage);
 
 	// Find them
 	ComponentList list = sf.findSources(*_log, nMax, cutoff, absFind, point,
@@ -1224,12 +1216,9 @@ Record ImageAnalysis::histograms(
 	_onlyFloat(__func__);
 	*_log << LogOrigin(className(), __func__);
 	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
-	//ImageRegion* pMaskRegion = 0;
-
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *_imageFloat,
-		regionRec,
-		sMask, _log.get(), False, AxesSpecifier(), extendMask
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		pRegionRegion, pMaskRegion, *_imageFloat, regionRec,
+        sMask, _log.get(), AxesSpecifier(), extendMask
 	);
 
 	// Make new object only if we need to.
@@ -1242,7 +1231,7 @@ Record ImageAnalysis::histograms(
 		deleteHist();
 		_histograms.reset(
 			new ImageHistograms<Float> (
-				subImage, *_log, True, disk
+				*subImage, *_log, True, disk
 			)
 		);
 	}
@@ -1251,7 +1240,7 @@ Record ImageAnalysis::histograms(
 			// We are here if this is the first time or the image has changed
 			_histograms.reset(
 				new ImageHistograms<Float> (
-					subImage, *_log, True, disk
+					*subImage, *_log, True, disk
 				)
 			);
 		}
@@ -1264,7 +1253,7 @@ Record ImageAnalysis::histograms(
 			if (
 				_haveRegionsChanged(pRegionRegion.get(), pMaskRegion.get())
 			) {
-				_histograms->setNewImage(subImage);
+				_histograms->setNewImage(*subImage);
 			}
 		}
 	}
@@ -1440,19 +1429,15 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	}
 
 	String mask;
-	SubImage<Float> subRealImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask, _log.get(), False
+	SHARED_PTR<const SubImage<Float> > subRealImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, Region, mask, _log.get()
 	);
-	SubImage<Float> subImagImage = SubImageFactory<Float>::createSubImage(
-		imagImage,
-		Region,
-		mask, 0, False
+	SHARED_PTR<const SubImage<Float> > subImagImage = SubImageFactory<Float>::createSubImageRO(
+		imagImage, Region, mask, 0
 	);
 
 	// LEL node
-	LatticeExprNode node(formComplex(subRealImage, subImagImage));
+	LatticeExprNode node(formComplex(*subRealImage, *subImagImage));
 	LatticeExpr<Complex> expr(node);
 	//
 	PagedImage<Complex> outImage(realShape, cSysReal, outFile);
@@ -1603,10 +1588,9 @@ Bool ImageAnalysis::modify(
 				<< LogIO::EXCEPTION;
 	}
 
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask,  (list ? _log.get() : 0), True, AxesSpecifier(), extendMask
+	SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
+		*_imageFloat, Region, mask,  (list ? _log.get() : 0),
+        AxesSpecifier(), extendMask
 	);
 
 	// Allow for subtraction/addition
@@ -1619,7 +1603,7 @@ Bool ImageAnalysis::modify(
 	}
 
 	// Do it
-	ComponentImager::project(subImage, cl);
+	ComponentImager::project(*subImage, cl);
 
 	// Ensure that we reconstruct the histograms objects
 	// now that the data have changed
@@ -1641,24 +1625,20 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	//ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *_imageFloat,
-		Region,
-		mask, _log.get(), False, axesSpec
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		pRegionRegion, pMaskRegion, *_imageFloat, Region, mask, _log.get(), axesSpec
 	);
 	Vector<Float> blc;
 	if (pRegionRegion) {
 		blc = pRegionRegion->asLCSlicer().blc();
 	} else {
-		blc.resize(subImage.ndim());
+		blc.resize(subImage->ndim());
 		blc = 0.0;
 	}
-	//delete pRegionRegion;
-	//delete pMaskRegion;
     pRegionRegion = NULL;
     pMaskRegion = NULL;
 	// Find it
-	ImageSourceFinder<Float> sf(subImage);
+	ImageSourceFinder<Float> sf(*subImage);
 	Double cutoff = 0.1;
 	sky = sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint, width);
 	//absPixel += 1.0;
@@ -1667,7 +1647,7 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	if (list) {
 		*_log << LogIO::NORMAL << "Brightness     = " << sky.flux().value()
 				<< " " << sky.flux().unit().getName() << LogIO::POST;
-		CoordinateSystem cSys = subImage.coordinates();
+		CoordinateSystem cSys = subImage->coordinates();
 		*_log << "World Axis Units: " << cSys.worldAxisUnits() << LogIO::POST;
 		Vector<Double> wPix;
 		if (!cSys.toWorld(wPix, absPixel)) {
@@ -1727,7 +1707,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
-        SPIIF  x;
+        SPCIIF x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
@@ -1738,19 +1718,15 @@ ImageInterface<Float> * ImageAnalysis::moments(
             	*_imageFloat, tmpImageName, r, "", False,
             	False, True, False
             );
-            x.reset(
-            	SubImageFactory<Float>::createSubImage(
-            		*x, Region, mask, _log.get(),
-            		False, AxesSpecifier(), stretchMask
-            	).cloneII()
+            x = SubImageFactory<Float>::createSubImageRO(
+            	*x, Region, mask, _log.get(),
+            	AxesSpecifier(), stretchMask
             );
 		}
 		else {
-			x.reset(
-				SubImageFactory<Float>::createSubImage(
-					*_imageFloat, Region,
-					mask, _log.get(), False, AxesSpecifier(), stretchMask
-				).cloneII()
+			x = SubImageFactory<Float>::createSubImageRO(
+			    *_imageFloat, Region, mask, _log.get(),
+                AxesSpecifier(), stretchMask
 			);
 		}
 		// Create ImageMoments object
@@ -2248,14 +2224,12 @@ SPIIF ImageAnalysis::rotate(
 	// Convert region from Glish record to ImageRegion. Convert mask
 	// to ImageRegion and make SubImage.
 	AxesSpecifier axesSpecifier;
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		Region,
-		mask, _log.get(), False, axesSpecifier, extendMask
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, Region, mask, _log.get(), axesSpecifier, extendMask
 	);
 
 	// Get image coordinate system
-	CoordinateSystem cSysFrom = subImage.coordinates();
+	CoordinateSystem cSysFrom = subImage->coordinates();
 	CoordinateSystem cSysTo = cSysFrom;
 
 	// We automatically find a DirectionCoordinate or LInearCoordinate
@@ -2341,10 +2315,9 @@ SPIIF ImageAnalysis::rotate(
 				<< "' of shape " << outShape << LogIO::POST;
 		imOut.reset(new PagedImage<Float> (outShape, cSys, outFile));
 	}
-	//ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 
 	imOut->set(0.0);
-	ImageUtilities::copyMiscellaneous(*imOut, subImage);
+	ImageUtilities::copyMiscellaneous(*imOut, *subImage);
 	String maskName("");
 	ImageMaskAttacher::makeMask(*imOut, maskName, True, True, *_log, True);
 	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
@@ -2353,7 +2326,7 @@ SPIIF ImageAnalysis::rotate(
 	ir.showDebugInfo(dbg);
 	Bool forceRegrid = False;
 	ir.regrid(
-		*imOut, method, axes2, subImage, replicate,
+		*imOut, method, axes2, *subImage, replicate,
 		decimate, True, forceRegrid
 	);
 	return imOut;
@@ -2472,13 +2445,12 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 		"You must give the same number of axes, kernels and widths"
 	);
 
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat, pRegion, mask, _log.get(),
-		False, AxesSpecifier(), extendMask
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, pRegion, mask, _log.get(), AxesSpecifier(), extendMask
 	);
 
 	// Create convolver
-	SepImageConvolver<Float> sic(subImage, *_log, True);
+	SepImageConvolver<Float> sic(*subImage, *_log, True);
 
 	// Handle inputs.
 	Bool useImageShapeExactly = False;
@@ -2496,9 +2468,9 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 	PtrHolder<ImageInterface<Float> > imOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< subImage.shape() << LogIO::POST;
-		imOut.set(new TempImage<Float> (subImage.shape(),
-				subImage.coordinates()));
+				<< subImage->shape() << LogIO::POST;
+		imOut.set(new TempImage<Float> (subImage->shape(),
+				subImage->coordinates()));
 	}
 	else {
 		if (!overwrite) {
@@ -2509,11 +2481,10 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 			}
 		}
 		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << subImage.shape() << LogIO::POST;
+				<< "' of shape " << subImage->shape() << LogIO::POST;
 		imOut.set(
 			new PagedImage<Float> (
-				subImage.shape(),
-				subImage.coordinates(), outFile
+				subImage->shape(), subImage->coordinates(), outFile
 			)
 		);
 	}
@@ -2662,17 +2633,15 @@ Bool ImageAnalysis::twopointcorrelation(
 	}
 
 	AxesSpecifier axesSpecifier;
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		theRegion,
-		mask, _log.get(), False, axesSpecifier, stretch
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, theRegion, mask, _log.get(), axesSpecifier, stretch
 	);
 
 	// Deal with axes and shape
 	Vector<Int> axes2(axes1);
-	CoordinateSystem cSysIn = subImage.coordinates();
+	CoordinateSystem cSysIn = subImage->coordinates();
 	IPosition axes = ImageTwoPtCorr<Float>::setUpAxes(IPosition(axes2), cSysIn);
-	IPosition shapeOut = ImageTwoPtCorr<Float>::setUpShape(subImage.shape(),
+	IPosition shapeOut = ImageTwoPtCorr<Float>::setUpShape(subImage->shape(),
 			axes);
 
 	// Create the output image and mask
@@ -2696,7 +2665,7 @@ Bool ImageAnalysis::twopointcorrelation(
 	Bool showProgress = True;
 	LatticeTwoPtCorr<Float>::Method m = LatticeTwoPtCorr<Float>::fromString(
 			method);
-	twoPt.autoCorrelation(*pImOut, subImage, axes, m, showProgress);
+	twoPt.autoCorrelation(*pImOut, *subImage, axes, m, showProgress);
 
 	return True;
 }
@@ -2770,14 +2739,12 @@ Bool ImageAnalysis::tofits(
 	else if (!keepAxes.empty()) { // specify which axes to keep
 		axesSpecifier = AxesSpecifier(keepAxes);
 	}
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*_imageFloat,
-		pRegion,
-		mask, _log.get(), False, axesSpecifier, stretch
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*_imageFloat, pRegion, mask, _log.get(), axesSpecifier, stretch
 	);
 	if (
 		! ImageFITSConverter::ImageToFITS(
-			error, subImage, fitsfile,
+			error, *subImage, fitsfile,
 			HostInfo::memoryFree() / 1024,
 			velocity, optical,
 			bitpix, minpix, maxpix, overwrite,
@@ -2983,14 +2950,13 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		AxesSpecifier axesSpecifier;
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
-		SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-			*inImage, region,
-			Mask, _log.get(), True, axesSpecifier
+		SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
+			*inImage, region, Mask, _log.get(), axesSpecifier
 		);
 
 		// Create output image
 		if (outfile.empty()) {
-			outImage = new SubImage<Float> (subImage);
+			outImage = new SubImage<Float> (*subImage);
 		}
 		else {
 			if (!overwrite) {
@@ -3002,22 +2968,22 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 			}
 			//
 			*_log << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << subImage.shape() << LogIO::POST;
-			outImage = new PagedImage<Float> (subImage.shape(),
-					subImage.coordinates(), outfile);
+					<< "' of shape " << subImage->shape() << LogIO::POST;
+			outImage = new PagedImage<Float> (subImage->shape(),
+					subImage->coordinates(), outfile);
 			if (outImage == 0) {
 				*_log << "Failed to create PagedImage" << LogIO::EXCEPTION;
 			}
 			ImageUtilities::copyMiscellaneous(*outImage, *inImage);
 
 			// Make output mask if required
-			if (subImage.isMasked()) {
+			if (subImage->isMasked()) {
 				String maskName("");
 				ImageMaskAttacher::makeMask(*outImage, maskName, False, True, *_log, True);
 			}
 
 			// Copy data and mask
-			LatticeUtilities::copyDataAndMask(*_log, *outImage, subImage);
+			LatticeUtilities::copyDataAndMask(*_log, *outImage, *subImage);
 		}
 
 	return outImage;

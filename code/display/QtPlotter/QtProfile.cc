@@ -1396,8 +1396,8 @@ namespace casa {
 		LCBox leregion(blc, trc, imShape);
 		Record	stokesRegion = Record(leregion.toRecord(""));
 		String empty("");
-		SubImage<Float> result = SubImageFactory<Float>::createSubImage(*img, stokesRegion, empty, NULL, False);
-		SHARED_PTR<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
+		SHARED_PTR<const SubImage<Float> > result = SubImageFactory<Float>::createSubImageRO(*img, stokesRegion, empty, NULL);
+		SHARED_PTR<ImageInterface<Float> > subImage( new SubImage<Float>(*result) );
 		ok = _generateProfile(resultXValues, resultYValues, subImage, regionX, regionY,
 									shape, combineType, unit, coordinateType,
 									restFreq, frame);

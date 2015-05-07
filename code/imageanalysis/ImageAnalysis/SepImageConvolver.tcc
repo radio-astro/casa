@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> 
 SepImageConvolver<T>::SepImageConvolver(
-	ImageInterface<T>& image, LogIO &os, Bool showProgress
+	const ImageInterface<T>& image, LogIO &os, Bool showProgress
 )
 : itsImagePtr(image.cloneII()),
   itsOs(os),

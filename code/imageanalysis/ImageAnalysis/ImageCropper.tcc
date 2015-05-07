@@ -84,13 +84,13 @@ SHARED_PTR<ImageInterface<T> > ImageCropper<T>::crop(
 ) const {
 	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	std::auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
-	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
-		*myClone, *this->_getRegion(), this->_getMask(),
-		this->_getLog().get(), False, AxesSpecifier(), this->_getStretch(), True
+	//std::auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
+	SHARED_PTR<const SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
+		*this->_getImage(), *this->_getRegion(), this->_getMask(),
+		this->_getLog().get(), AxesSpecifier(), this->_getStretch(), True
 	);
 	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	Array<Bool> mask = subImage.getMask();
+	Array<Bool> mask = subImage->getMask();
 	if (! anyTrue(mask)) {
 		*this->_getLog() << "(Sub)image is completely masked." << LogIO::EXCEPTION;
 	}
@@ -132,11 +132,11 @@ SHARED_PTR<ImageInterface<T> > ImageCropper<T>::crop(
 		AlwaysAssert(minFound && maxFound, AipsError);
 	}
 	LCBox lcbox(blc, trc, shape);
-	SubImage<T> cropped = SubImageFactory<T>::createSubImage(
-		subImage, lcbox.toRecord(""), "",
-		this->_getLog().get(), False, AxesSpecifier(), False, True
+	SHARED_PTR<const SubImage<T> > cropped = SubImageFactory<T>::createSubImageRO(
+		*subImage, lcbox.toRecord(""), "",
+		this->_getLog().get(), AxesSpecifier(), False, True
 	);
-	SHARED_PTR<ImageInterface<T> > outImage( this->_prepareOutputImage(cropped));
+	SHARED_PTR<ImageInterface<T> > outImage( this->_prepareOutputImage(*cropped));
 	if (! wantReturn) {
 		outImage.reset();
 	}

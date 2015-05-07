@@ -42,63 +42,28 @@ namespace casa {
 
 template<class T> SubImageFactory<T>::SubImageFactory() {}
 
-template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
+template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
 	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
-	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
+	const AxesSpecifier& axesSpecifier,
 	Bool extendMask, Bool preserveAxesOrder
 ) {
-    if (! mask.empty()) {
-    	String mymask = mask;
-    	for (uInt i=0; i<2; i++) {
-    		try {
-    			outMask = ImageRegion::fromLatticeExpression(mymask);
-    			break;
-    		}
-    		catch (const AipsError& x) {
-    			if (i == 0) {
-    				// not an LEL expression, perhaps it's a clean mask image name
-    				mymask += ">=0.5";
-    				continue;
-    			}
-    			ThrowCc("Input mask specification is incorrect: " + x.getMesg());
-    		}
-    	}
-    }
-    if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
-    	const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
-    		outMask->asWCRegionPtr()
-    	)->getImageExpr();
-    	if (
-    		myExpression
-    		&& ! myExpression->shape().isEqual(inImage.shape())
-    	) {
-    		ThrowIf(
-    			! extendMask,
-    			"The input image shape and mask shape are different, and it was specified "
-    			"that the mask should not be extended, so the mask cannot be applied to the "
-    			"(sub)image. Specifying that the mask should be extended may resolve the issue"
-    		);
-    		try {
-    			ExtendImage<Bool> exIm(*myExpression, inImage.shape(), inImage.coordinates());
-    			outMask = new ImageRegion(LCMask(exIm));
-    		}
-    		catch (const AipsError& x) {
-    			ThrowCc("Unable to extend mask: " + x.getMesg());
-    		}
-    	}
-    }
-	SubImage<T> subImage;
+	if (! mask.empty()) {
+		_getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
+	}
+	SHARED_PTR<SubImage<T> > subImage;
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
-        subImage = (! outMask)
-			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
-			: SubImage<T>(
+        subImage.reset(
+        	! outMask
+			? new SubImage<T>(inImage, True, axesSpecifier, preserveAxesOrder)
+			: new SubImage<T>(
 				inImage, *outMask,
-				writableIfPossible, axesSpecifier, preserveAxesOrder
-			);
+				True, axesSpecifier, preserveAxesOrder
+			)
+		);
 	}
 	else {
 		outRegion = ImageRegion::fromRecord(
@@ -106,45 +71,120 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 			inImage.shape(), region
 		);
 		if (! outMask) {
-            subImage = SubImage<T>(
-				inImage, *outRegion,
-				writableIfPossible, axesSpecifier,
-				preserveAxesOrder
-			);
+            subImage.reset(
+            	new SubImage<T>(
+            		inImage, *outRegion,
+            		True, axesSpecifier,
+            		preserveAxesOrder
+            	)
+            );
 		}
 		else {
             // on the first pass, we need to keep all axes, the second
             // SubImage construction after this one will properly account
             // for the axes specifier
             SubImage<T> subImage0(
-				inImage, *outMask, writableIfPossible,
-				AxesSpecifier(),
-				preserveAxesOrder
+				inImage, *outMask, True,
+				AxesSpecifier(), preserveAxesOrder
 			);
-			subImage = SubImage<T>(
-				subImage0, *outRegion,
-				writableIfPossible, axesSpecifier,
-				preserveAxesOrder
+			subImage.reset(
+				new SubImage<T>(
+					subImage0, *outRegion,
+					True, axesSpecifier,
+					preserveAxesOrder
+				)
 			);
 		}
 	}
 	return subImage;
 }
 
-template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
+template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
-	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
+	const AxesSpecifier& axesSpecifier,
 	Bool extendMask, Bool preserveAxesOrder
 ) {
 	CountedPtr<ImageRegion> pRegion;
 	CountedPtr<ImageRegion> pMask;
-	SubImage<T> mySubim = createSubImage(
+	return createSubImageRW(
 		pRegion, pMask, inImage, region,
-		mask, os, writableIfPossible, axesSpecifier,
+		mask, os, axesSpecifier,
 		extendMask, preserveAxesOrder
 	);
-    return mySubim;
+}
+
+template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
+	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+	const ImageInterface<T>& inImage, const Record& region,
+	const String& mask, LogIO *const &os,
+	const AxesSpecifier& axesSpecifier,
+	Bool extendMask, Bool preserveAxesOrder
+) {
+	if (! mask.empty()) {
+		_getMask(outMask, mask, extendMask, inImage.shape(), inImage.coordinates());
+	}
+	SHARED_PTR<SubImage<T> > subImage;
+	// We can get away with no region processing if the region record
+	// is empty and the user is not dropping degenerate axes
+	if (region.nfields() == 0 && axesSpecifier.keep()) {
+        subImage.reset(
+        	! outMask
+			? new SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
+			: new SubImage<T>(
+				inImage, *outMask,
+				axesSpecifier, preserveAxesOrder
+			)
+		);
+	}
+	else {
+		outRegion = ImageRegion::fromRecord(
+			os, inImage.coordinates(),
+			inImage.shape(), region
+		);
+		if (! outMask) {
+            subImage.reset(
+            	new SubImage<T>(
+            		inImage, *outRegion,
+            		axesSpecifier,
+            		preserveAxesOrder
+            	)
+            );
+		}
+		else {
+            // on the first pass, we need to keep all axes, the second
+            // SubImage construction after this one will properly account
+            // for the axes specifier
+            SubImage<T> subImage0(
+				inImage, *outMask,
+				AxesSpecifier(),
+				preserveAxesOrder
+			);
+			subImage.reset(
+				new SubImage<T>(
+					subImage0, *outRegion,
+					axesSpecifier,
+					preserveAxesOrder
+				)
+			);
+		}
+	}
+	return subImage;
+}
+
+template<class T> SHARED_PTR<const SubImage<T> > SubImageFactory<T>::createSubImageRO(
+	const ImageInterface<T>& inImage, const Record& region,
+	const String& mask, LogIO *const &os,
+	const AxesSpecifier& axesSpecifier,
+	Bool extendMask, Bool preserveAxesOrder
+) {
+	CountedPtr<ImageRegion> pRegion;
+	CountedPtr<ImageRegion> pMask;
+	return createSubImageRO(
+		pRegion, pMask, inImage, region,
+		mask, os, axesSpecifier,
+		extendMask, preserveAxesOrder
+	);
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
@@ -164,38 +204,22 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 			! validfile.valueOK(outfile, errmsg), errmsg
 		);
 	}
-	/*
-	TempImage<T> newImage(
-		TiledShape(image.shape()), image.coordinates()
-	);
-	{
-		Array<Bool> mymask = image.getMask();
-		if (image.hasPixelMask()) {
-			mymask = mymask && image.pixelMask().get();
-		}
-		if (attachMask || ! allTrue(mymask)) {
-			newImage.attachMask(ArrayLattice<Bool>(mymask));
-		}
-	}
-	ImageUtilities::copyMiscellaneous(newImage, image);
-	newImage.put(image.get());
-	*/
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	SPIIT myclone(image.cloneII());
-	SubImage<T> x = SubImageFactory<T>::createSubImage(
-		*myclone, region, mask, list ? &log : 0,
-		True, axesSpecifier, extendMask
+	// SPIIT myclone(image.cloneII());
+	SHARED_PTR<const SubImage<T> > x = createSubImageRO(
+		image, region, mask, list ? &log : 0,
+		axesSpecifier, extendMask
 	);
 	SPIIT outImage;
 	if (outfile.empty()) {
 		outImage.reset(
-			new TempImage<T>(x.shape(), x.coordinates())
+			new TempImage<T>(x->shape(), x->coordinates())
 		);
 	}
 	else {
 		outImage.reset(
 			new PagedImage<T>(
-				x.shape(), x.coordinates(), outfile
+				x->shape(), x->coordinates(), outfile
 			)
 		);
 		if (list) {
@@ -203,17 +227,11 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 				<< "' of shape " << outImage->shape() << LogIO::POST;
 		}
 	}
-	/*
-	if (x.isMasked() || x.hasPixelMask() || attachMask) {
-		String maskName("");
-		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
-	}
-	*/
-	ImageUtilities::copyMiscellaneous(*outImage, x);
+	ImageUtilities::copyMiscellaneous(*outImage, *x);
 	if (
 		attachMask
-		|| (x.isMasked() && ! allTrue(x.getMask()))
-		|| (x.hasPixelMask() && ! allTrue(x.pixelMask().get()))
+		|| (x->isMasked() && ! allTrue(x->getMask()))
+		|| (x->hasPixelMask() && ! allTrue(x->pixelMask().get()))
 	) {
 		// if we don't already have a mask, but the user has specified that one needs to
 		// be present, attach it. This needs to be done prior to the copyDataAndMask() call
@@ -222,9 +240,54 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 		String maskName = "";
 		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
 	}
-	LatticeUtilities::copyDataAndMask(log, *outImage, x);
+	LatticeUtilities::copyDataAndMask(log, *outImage, *x);
     outImage->flush();
     return outImage;
+}
+
+template<class T> void SubImageFactory<T>::_getMask(
+	CountedPtr<ImageRegion>& outMask, const String& mask,
+	Bool extendMask, const IPosition& imageShape,
+	const CoordinateSystem& csys
+) {
+	String mymask = mask;
+	for (uInt i=0; i<2; i++) {
+		try {
+			outMask = ImageRegion::fromLatticeExpression(mymask);
+			break;
+		}
+		catch (const AipsError& x) {
+			if (i == 0) {
+				// not an LEL expression, perhaps it's a clean mask image name
+				mymask += ">=0.5";
+				continue;
+			}
+			ThrowCc("Input mask specification is incorrect: " + x.getMesg());
+		}
+	}
+    if (outMask && outMask->asWCRegion().type() == "WCLELMask") {
+    	const ImageExpr<Bool> *myExpression = dynamic_cast<const WCLELMask*>(
+    		outMask->asWCRegionPtr()
+    	)->getImageExpr();
+    	if (
+    		myExpression
+    		&& ! myExpression->shape().isEqual(imageShape)
+    	) {
+    		ThrowIf(
+    			! extendMask,
+    			"The input image shape and mask shape are different, and it was specified "
+    			"that the mask should not be extended, so the mask cannot be applied to the "
+    			"(sub)image. Specifying that the mask should be extended may resolve the issue"
+    		);
+    		try {
+    			ExtendImage<Bool> exIm(*myExpression, imageShape, csys);
+    			outMask = new ImageRegion(LCMask(exIm));
+    		}
+    		catch (const AipsError& x) {
+    			ThrowCc("Unable to extend mask: " + x.getMesg());
+    		}
+    	}
+    }
 }
 
 }

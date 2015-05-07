@@ -62,38 +62,38 @@ void ImagePadder::setPaddingPixels(
 
 SPIIF ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		*myClone, *_getRegion(), _getMask(),
-		_getLog().get(), False, AxesSpecifier(), _getStretch()
+	//std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
+	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+		*this->_getImage(), *_getRegion(), _getMask(),
+        _getLog().get(), AxesSpecifier(), _getStretch()
 	);
-	Vector<Int> dirAxes = subImage.coordinates().directionAxesNumbers();
-	IPosition outShape = subImage.shape();
+	Vector<Int> dirAxes = subImage->coordinates().directionAxesNumbers();
+	IPosition outShape = subImage->shape();
 	outShape[dirAxes[0]] += 2*_nPixels;
 	outShape[dirAxes[1]] += 2*_nPixels;
-	CoordinateSystem newCoords = subImage.coordinates();
+	CoordinateSystem newCoords = subImage->coordinates();
 	Vector<Double> refpix = newCoords.referencePixel();
 	refpix[dirAxes[0]] += _nPixels;
 	refpix[dirAxes[1]] += _nPixels;
 	newCoords.setReferencePixel(refpix);
 	Array<Bool> maskArr(outShape, _good);
 	ArrayLattice<Bool> mask(maskArr, True);
-	IPosition blc(subImage.ndim(), 0);
+	IPosition blc(subImage->ndim(), 0);
 	blc[dirAxes[0]] = _nPixels;
 	blc[dirAxes[1]] = _nPixels;
-	if (subImage.hasPixelMask()) {
-		mask.putSlice(subImage.pixelMask().get(False), blc);
+	if (subImage->hasPixelMask()) {
+		mask.putSlice(subImage->pixelMask().get(False), blc);
 	}
 	else if (! _good) {
-		mask.putSlice(Array<Bool>(subImage.shape(), True), blc);
+		mask.putSlice(Array<Bool>(subImage->shape(), True), blc);
 	}
 	Array<Float> valArray(outShape, _value);
 	ArrayLattice<Float> values(valArray);
-	values.putSlice(subImage.get(), blc);
+	values.putSlice(subImage->get(), blc);
 	const Array<Float>& vals = values.get();
 	SPIIF outImage(
         _prepareOutputImage(
-		    subImage, &vals, &mask, &outShape, &newCoords
+		    *subImage, &vals, &mask, &outShape, &newCoords
 	    )
     );
 	if (! wantReturn) {

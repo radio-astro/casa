@@ -84,20 +84,39 @@ public:
   // dropping degenerate axes or if coordinate order and axes order are the same in the input
   // image's coordinate system, the output axex order will always be preserved.
 
-  static SubImage<T> createSubImage(
+  static SHARED_PTR<SubImage<T> > createSubImageRW(
 	  CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
       ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os, Bool writableIfPossible,
-      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
+      const String& mask, LogIO *const &os,
+      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
   // variant on previous method where caller doesn't have to worry
   // about creating pointers it does not need returned.
-  static SubImage<T> createSubImage(
+  static SHARED_PTR<SubImage<T> > createSubImageRW(
       ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os, Bool writableIfPossible,
-      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
+      const String& mask, LogIO *const &os,
+      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+      Bool extendMask=False, Bool preserveAxesOrder=False
+  );
+
+  // The const ImageInterface versions where the resulting SubImage is not
+  // writable.
+  static SHARED_PTR<const SubImage<T> > createSubImageRO(
+	  CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+      const ImageInterface<T>& inImage, const Record& region,
+      const String& mask, LogIO *const &os,
+      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+      Bool extendMask=False, Bool preserveAxesOrder=False
+  );
+
+  // variant on previous method where caller doesn't have to worry
+  // about creating pointers it does not need returned.
+  static SHARED_PTR<const SubImage<T> > createSubImageRO(
+      const ImageInterface<T>& inImage, const Record& region,
+      const String& mask, LogIO *const &os,
+      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
@@ -118,6 +137,12 @@ public:
 
   private:
     SubImageFactory<T> (); 
+
+    static void _getMask(
+    	CountedPtr<ImageRegion>& outMask, const String& mask,
+    	Bool extendMask, const IPosition& imageShape,
+    	const CoordinateSystem& csys
+    );
 };
 
 

@@ -58,26 +58,26 @@ void ImageMaskedPixelReplacer<T>::replace(
 	);
 
 	// Modify in place by writing to the image passed to the constructor.
-	SubImage<T> subImage = SubImageFactory<T>::createSubImage(
+	SHARED_PTR<SubImage<T> > subImage = SubImageFactory<T>::createSubImageRW(
 		*_image, *this->_getRegion(), this->_getMask(),
-		(verbose ? this->_getLog().get() : 0), True,
+		(verbose ? this->_getLog().get() : 0),
 		AxesSpecifier(), this->_getStretch(), True
 	);
 	ThrowIf(
-		! subImage.isWritable(),
+		! subImage->isWritable(),
 		"This image is not writable.  It is probably "
 		"a reference or expression virtual image"
 	);
 	ThrowIf(
-		! subImage.isMasked() && ! subImage.hasPixelMask(),
+		! subImage->isMasked() && ! subImage->hasPixelMask(),
 		"Selected region of image has no mask"
 	);
-	Array<Bool> mymask(subImage.shape(), True);
-	if (subImage.isMasked()) {
-		mymask = mymask && subImage.getMask();
+	Array<Bool> mymask(subImage->shape(), True);
+	if (subImage->isMasked()) {
+		mymask = mymask && subImage->getMask();
 	}
-	if (subImage.hasPixelMask()) {
-		mymask && subImage.pixelMask().get();
+	if (subImage->hasPixelMask()) {
+		mymask && subImage->pixelMask().get();
 	}
 	ThrowIf(
 		allTrue(mymask),
@@ -92,13 +92,13 @@ void ImageMaskedPixelReplacer<T>::replace(
 	_makeRegionBlock(tempRegs, Record());
 	// Create the LEL expression we need.  It's like  replace(lattice, pixels)
 	// where pixels is an expression itself.
-	LatticeExprNode node2 = casa::replace(subImage, node);
+	LatticeExprNode node2 = casa::replace(*subImage, node);
 	// Do it
-	subImage.copyData(LatticeExpr<T> (node2));
+	subImage->copyData(LatticeExpr<T> (node2));
 
 	// Update the mask if desired
 	if (updateMask) {
-		Lattice<Bool>& mask = subImage.pixelMask();
+		Lattice<Bool>& mask = subImage->pixelMask();
 		LatticeExprNode node(iif(!mask, True, mask));
 		LatticeExpr<Bool> expr(node);
 		mask.copyData(expr);
