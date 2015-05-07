@@ -1311,7 +1311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             rec.get(String("refer"), mveltype);
             Record dopRecord = rec.subRecord("m0");
             String dopstr = recordQMToString(dopRecord);
-            cerr<<"dopstr="<<dopstr<<endl;
+            //cerr<<"dopstr="<<dopstr<<endl;
             MRadialVelocity::Types mvType;
             //use input frame
             qmframe = frame!=""? frame: "LSRK";
@@ -1566,7 +1566,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
-
     MDirection phaseCenterToUse = phaseCenter;
 
     if( phaseCenterFieldId != -1 )
@@ -1734,7 +1733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             stepf=chanFreq[1]-chanFreq[0];
           }
         Double restf=qrestfreq.getValue("Hz");
-        if ( mode=="mfs" ) restf = restFreq[0].getValue("Hz");
+        if ( mode=="mfs" and restf == 0.0 ) restf = restFreq[0].getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 
         if(mode=="cubedata") 
