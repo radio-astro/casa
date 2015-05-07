@@ -38,7 +38,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     More information is available at 
      http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
     Please contact the CASA helpdesk with any questions.
-
+</description>
+<example>  
     -------------------------------
     Parameters:
 
@@ -176,7 +177,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Please see the documents of simobserve and simanalyze for
     the list of outputs produced.
 
-  </description>
+  </example>
   
   <input>
     
