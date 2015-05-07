@@ -169,7 +169,8 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
  
 	// Check if data, scratch and float cols present
 	Bool corcolOk(false), floatcolOk(false), datacolOk(false);
-	const ColumnDescSet cds = Table(filename_).tableDesc().columnDescSet();
+	Table thisTable(filename_);
+	const ColumnDescSet cds = thisTable.tableDesc().columnDescSet();
 	datacolOk = cds.isDefined("DATA");
 	corcolOk = cds.isDefined("CORRECTED_DATA");
 	floatcolOk = cds.isDefined("FLOAT_DATA");
@@ -213,6 +214,21 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
 			} // switch
 		} // for
 	} // if
+
+	// Check WtSp column while we're at it... (CAS-7517)
+	for (uInt i=0; i < loadAxes.size(); ++i) {
+		if ((loadAxes[i] == PMS::WTSP) && 
+                    (cds.isDefined("WEIGHT_SPECTRUM"))) {
+			ArrayColumn<Float> weightSpectrum;
+			weightSpectrum.attach(thisTable,
+			                      MS::columnName(MS::WEIGHT_SPECTRUM));
+         		if (!weightSpectrum.hasContent()) {
+				logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
+			}
+			break;
+		}
+	}
+
 	String dataColumn = getDataColumn(loadAxes, loadData);
 	// CAS-7482, single-dish data may not have DATA column
 	// so change default to float data
