@@ -33,7 +33,7 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
             myms.fromfits(vis, fitsfile, antnamescheme=antnamescheme)
             myms.close()
         except Exception, instance: 
-            casalog.post("Failed to import %s to %s: %s" % (fitsfile, vis, str(instance)))
+            casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
             raise
         # Write the args to HISTORY.
         try:

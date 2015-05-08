@@ -376,10 +376,10 @@ ms::fromfits(const std::string& msfile, const std::string &fitsfile,
 
 
     open(msfile, nomodify, lock);
-  } catch (AipsError x) {
-       //*itsLog << LogOrigin("ms", "fromfits") 
-       //        << LogIO::SEVERE << "Exception Reported: " 
-       //        << x.getMesg() << LogIO::POST;
+  }
+  catch (const AipsError& x) {
+       *itsLog << LogOrigin("ms", "fromfits")
+    		   << LogIO::SEVERE << x.getMesg() << LogIO::POST;
        RETHROW(x);
   }
   Table::relinquishAutoLocks(True);
