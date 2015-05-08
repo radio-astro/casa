@@ -403,6 +403,7 @@ class Setjy(basetask.StandardTaskTemplate):
         ####end_pattern = re.compile('.*%s.*' % start_marker)
         ####start_pattern = re.compile('.*%s.*' % end_marker)
         
+        
         spw_seen = set()
         for setjy_dict in setjy_dicts:
             setjy_dict.pop('format')
@@ -410,17 +411,18 @@ class Setjy(basetask.StandardTaskTemplate):
                 setjy_dict[field_id].pop('fieldName')
                 spwkeys = setjy_dict[field_id].keys()
                 field = self.inputs.ms.get_fields(field_id)[0]
-                                
-                for spw_id in spwkeys:
-                    I = setjy_dict[field_id][spw_id]['fluxd'][0]
-                    Q = setjy_dict[field_id][spw_id]['fluxd'][1]
-                    U = setjy_dict[field_id][spw_id]['fluxd'][2]
-                    V = setjy_dict[field_id][spw_id]['fluxd'][3]
-                    flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
+
+                if field.name not in result.measurements.keys():
+                    for spw_id in spwkeys:
+                        I = setjy_dict[field_id][spw_id]['fluxd'][0]
+                        Q = setjy_dict[field_id][spw_id]['fluxd'][1]
+                        U = setjy_dict[field_id][spw_id]['fluxd'][2]
+                        V = setjy_dict[field_id][spw_id]['fluxd'][3]
+                        flux = domain.FluxMeasurement(spw_id=spw_id, I=I, Q=Q, U=U, V=V)
                     
-                    if spw_id not in spw_seen:
-                        result.measurements[field.identifier].append(flux)
-                        spw_seen.add(spw_id)
+                        if spw_id not in spw_seen:
+                            result.measurements[field.identifier].append(flux)
+                            spw_seen.add(spw_id)
         '''
         with commonfluxresults.File(casatools.log.logfile()) as casa_log:
             # CASA has a bug whereby setting spw='0,1' logs results for spw #0
