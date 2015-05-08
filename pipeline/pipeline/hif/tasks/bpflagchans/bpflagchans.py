@@ -251,7 +251,7 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
 
         # get names of corr products - not quite what we want but better names
         # for pol than nothing
-        corr_type = commonhelpermethods.get_corr_products(ms, spwid)
+        corr_type = commonhelpermethods.get_corr_axis(ms, spwid)
         npols = len(corr_type)
         pols = np.arange(npols)
 
