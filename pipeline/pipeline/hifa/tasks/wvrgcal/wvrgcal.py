@@ -155,8 +155,8 @@ class WvrgcalInputs(basetask.StandardInputs):
         if value is None:
             value = ''
         self._qa_intent = value
-    @property
 
+    @property
     def qa_spw(self):
         return self._qa_spw
 
@@ -433,11 +433,11 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             # Do a bandpass calibration
             LOG.info('qa: calculating bandpass calibration')
             bp_result = self._do_qa_bandpass(inputs)
-	    if not bp_result.final:
-	        continue
-
 	    # Do a gain calibration
-            LOG.info('qa: calculating phase calibration with bandpass applied')
+	    if not bp_result.final:
+                LOG.warning('qa: calculating phase calibration without bandpass applied')
+	    else:
+                LOG.info('qa: calculating phase calibration with bandpass applied')
             nowvr_result = self._do_nowvr_gaincal(inputs)
 	    if not nowvr_result.final:
 	        continue
@@ -456,8 +456,11 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         result.accept(inputs.context)
         
         # do a phase calibration on the bandpass and phase calibrators, now 
-        # with B *and* WVR preapplied.
-        LOG.info('qa: calculating phase calibration with B and WVR applied')
+        # with bandpas *and* wvr preapplied.
+	if not bp_result.final:
+            LOG.warning('qa: calculating phase calibration with wvr applied')
+	else:
+            LOG.info('qa: calculating phase calibration with bandpass and wvr applied')
         wvr_result = self._do_wvr_gaincal(inputs)            
         
         nowvr_caltable = nowvr_result.inputs['caltable']

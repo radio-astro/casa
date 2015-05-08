@@ -81,18 +81,25 @@ def calculate_phase_rms(context, gaintable, qa_intent):
             for intent in intent_list:                
                 # identify scans corresponding to this intent
                 intent_scans = [scan.id for scan in ms.scans if intent in scan.intents]
+		if len(intent_scans) <= 0:
+		    continue
                 
                 sb = table.query('SCAN_NUMBER in %s' % str(intent_scans))
-                
                 spectral_window_id = sb.getcol('SPECTRAL_WINDOW_ID')
                 spwids = list(set(spectral_window_id))
                 spwids.sort()
                 antenna1 = sb.getcol('ANTENNA1')
                 antennas = set(antenna1)
                 timecol = sb.getcol('TIME')
+
+		# Are there any times.
                 times = list(set(timecol))
+		if len(times) <= 0:
+		    sb.done()
+		    continue
                 times.sort()
                 times = np.array(times)
+
                 # look for continuously sampled chunks of data. Sometimes
                 # there are small gaps of 10-15 sec within lengths of data
                 # that we want to regard as continuous, so make the minimum
