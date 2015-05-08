@@ -374,15 +374,17 @@ ADDITIONAL EXAMPLES
         print &quot;  I    | &quot;,s2['min'][0],&quot;  |  ",s2['max'][0],&quot;  |  ",,&quot;  |  ",s2['mean'][0]
 
 # evaluate statistics for each spectral plane in an ra x dec x frequency image
-ia.fromshape("", [20,30,40])
+myim = "noisy.im"
+ia.fromshape(myim, [20,30,40])
 # give pixels non-zero values
 ia.addnoise()
+ia.done()
 # These are the display axes, the calculation of statistics occurs
 # for each (hyper)plane along axes not listed in the axes parameter,
 # in this case axis 2 (the frequency axis)
 # display the rms for each frequency plane (your mileage will vary with
 # the values).
-stats = ia.statistics(axes=[0,1])
+stats = imstat(imagename=myim, axes=[0,1])
  stats["rms"]
   Out[10]: 
 array([ 0.99576014,  1.03813124,  0.97749186,  0.97587883,  1.04189885,
