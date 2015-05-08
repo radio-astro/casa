@@ -5,6 +5,7 @@ import csv
 import numpy
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casatools
 from .. import common
 from . import jyperkreader
@@ -18,6 +19,8 @@ class IntensityScalingInputs(common.SingleDishInputs):
     def __init__(self, context, infiles=None, reffile=None):
         self._init_properties(vars())
         self._to_list(['infiles'])
+        
+    reffile = basetask.property_with_default('reffile', 'jyperk.csv')
         
 class IntensityScalingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
