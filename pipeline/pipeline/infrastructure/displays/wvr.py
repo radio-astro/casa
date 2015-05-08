@@ -26,9 +26,12 @@ class WVRScoreFinder(object):
         
         spw_viewlist = [viewlist for viewlist in self._delegate.view.values() 
                         if viewlist[0].spw==spw_id]
-        assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
-                                        '%s. Expected %s but got '
-                                        '%s' % (spw_id, 1, len(spw_viewlist)))
+        #assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
+                                        #'%s. Expected %s but got '
+                                        #'%s' % (spw_id, 1, len(spw_viewlist)))
+	if len(spw_viewlist) <= 0:
+	    return 0.0
+
         LOG.todo('Is the QA score the first or last viewlist?')
         spw_imageresult = spw_viewlist[0][-1]
         
@@ -164,7 +167,8 @@ class WVRPhaseVsBaselineChart(object):
                 # we expect the number and identity of the caltable 
                 # correlations for this scan to match those in the MS, so we
                 # can enumerate over the correlations in the MS scan.  
-                for corr_id, _ in enumerate(dd.corr_axis):
+                #for corr_id, _ in enumerate(dd.corr_axis):
+                for corr_id, _ in enumerate(dd.polarizations):
                     for antenna in self.ms.antennas:
                         # we don't want the phase RMS for the reference antenna as it
                         # doesn't make any sense, plus it often 'spikes' the scale with
@@ -261,7 +265,9 @@ class WVRPhaseVsBaselineChart(object):
         # get the polarisations for the calibration scans, assuming that
         # all scans with this calibration intent were observed with the
         # same polarisation setup
-        corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+        #corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+                     #if dd.spw.id == spw.id]
+        corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
                      if dd.spw.id == spw.id]
         # discard WVR and other strange data descriptions 
         corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])

@@ -156,7 +156,9 @@ class PhaseOffsetPlot(object):
         # all scans with this calibration intent were observed with the
         # same polarisation setup
         scan = scans[0]
-        corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+        #corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+                     #if dd.spw.id == spw.id]
+        corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
                      if dd.spw.id == spw.id]
         # discard WVR and other strange data descriptions 
         corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])
