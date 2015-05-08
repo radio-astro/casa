@@ -4,7 +4,6 @@ import collections
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
-reload(sparsemap)
 
 LOG = infrastructure.get_logger(__name__)
 
