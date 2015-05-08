@@ -206,7 +206,10 @@ class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
                 context, result, plots, title, outfile)
          
     def update_json_dict(self, d, plot):
-        d['ratio'] = 1.0 / plot.qa_score
+	if plot.qa_score <= 0.0:
+            d['ratio'] = 0.0
+	else:
+            d['ratio'] = 1.0 / plot.qa_score
         plot.score = d['ratio']
 
 
