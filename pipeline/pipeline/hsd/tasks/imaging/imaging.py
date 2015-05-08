@@ -212,10 +212,10 @@ class SDImaging(common.SingleDishTaskTemplate):
                 indices = map(lambda x: x[0], _members)
                 spwids = map(lambda x: x[1], _members)
                 pols = map(lambda x: x[2], _members)
-                net_pols = set()
-                for p in map(set, pols):
-                    net_pols = net_pols | p
-                net_pols = list(net_pols)
+#                 net_pols = set()
+#                 for p in map(set, pols):
+#                     net_pols = net_pols | p
+#                 net_pols = list(net_pols)
                 
                 # reference data is first scantable 
                 st = context.observing_run[indices[0]]
@@ -243,7 +243,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                 namer.source(source_name)
                 namer.antenna_name(name)
                 namer.spectral_window(spwids[0])
-                namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
+#                 namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
+                namer.polarization('I')
                 imagename = namer.get_filename()
                 
                 # Step 4.
@@ -293,6 +294,9 @@ class SDImaging(common.SingleDishTaskTemplate):
                     # Additional Step.
                     # Make grid_table and put rms and valid spectral number array 
                     # to the outcome
+                    validsps = []
+                    rmss = []
+#                     if imagemode != 'AMPCAL':
                     LOG.info('Additional Step. Make grid_table')
                     with casatools.ImageReader(imager_result.outcome) as ia:
                         cs = ia.coordsys()
@@ -300,8 +304,6 @@ class SDImaging(common.SingleDishTaskTemplate):
                                      if cs.axiscoordinatetypes()[i] == 'Direction']
                         nx = ia.shape()[dircoords[0]]
                         ny = ia.shape()[dircoords[1]]
-                    validsps = []
-                    rmss = []
                     observing_pattern = st.pattern[spwids[0]].values()[0]
                     grid_task_class = gridding.gridding_factory(observing_pattern)
                     grid_tables = []
@@ -313,7 +315,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                             else:
                                 grid_input_dict[p][0].append(ant)
                                 grid_input_dict[p][1].append(spw)
-    
+
                     for (pol,ant_spw) in grid_input_dict.items():
                         _indices = ant_spw[0]
                         _spwids = ant_spw[1]
@@ -328,7 +330,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     for i in xrange(len(grid_input_dict)):
                         validsps.append([r[6] for r in grid_tables[i]])
                         rmss.append([r[8] for r in grid_tables[i]])
-                    
+
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
@@ -361,29 +363,30 @@ class SDImaging(common.SingleDishTaskTemplate):
 #                         jyperk_item_list.append(JyPerKItems(image_item.imagename, image_item.sourcename, image_item.antenna, indices))
 #                     
 # 
-#             # derive Jy/K factor and store it in a file
-#             if imagemode == 'AMPCAL':
+            # derive Jy/K factor and store it in a file
+            if imagemode == 'AMPCAL':
 #                 if len(jyperk_item_list) > 0:
 #                     jyperk_inputs = jyperk.SDJyPerK.Inputs(context, jyperk_item_list)
 #                     jyperk_task = jyperk.SDJyPerK(jyperk_inputs)
 #                     jyperk_result = self._executor.execute(jyperk_task, merge=True)
-#                 LOG.info("Skipping combined image for the amplitude calibrator.")
-#                 continue
+                LOG.info("Skipping combined image for the amplitude calibrator.")
+                continue
 
             # Make combined image
             # reference scantable
             st = context.observing_run[context.observing_run.st_names.index(combined_infiles[0])]
             
             # image name
-            net_pols = set()
-            for p in map(set, combined_pols):
-                net_pols = net_pols | p
-            net_pols = list(net_pols)
+#             net_pols = set()
+#             for p in map(set, combined_pols):
+#                 net_pols = net_pols | p
+#             net_pols = list(net_pols)
             namer = filenamer.Image()
             namer.casa_image()
             namer.source(source_name)
             namer.spectral_window(combined_spws[0])
-            namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
+#             namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
+            namer.polarization('I')
             imagename = namer.get_filename()
 
             # Step 4.

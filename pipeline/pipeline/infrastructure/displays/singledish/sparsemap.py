@@ -10,7 +10,7 @@ import pylab as pl
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import DDMMSSs, HHMMSSss
-from .utils import sd_polmap as polmap
+#from .utils import sd_polmap as polmap
 from .utils import PlotObjectHandler
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 
@@ -222,9 +222,9 @@ class SDSparseMapDisplay(SDImageDisplay):
     #MATPLOTLIB_FIGURE_ID = 8910
     MaxPanel = 8
     
-    @property
-    def num_valid_spectrum(self):
-        return self.inputs.num_valid_spectrum
+#     @property
+#     def num_valid_spectrum(self):
+#         return self.inputs.num_valid_spectrum
 
     def plot(self):
 
@@ -301,7 +301,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                 parameters = {}
                 parameters['intent'] = 'TARGET'
                 parameters['spw'] = self.inputs.spw
-                parameters['pol'] = polmap[pol]
+                parameters['pol'] = self.image.coordsys.stokes()[pol]#polmap[pol]
                 parameters['ant'] = self.inputs.antenna
                 parameters['type'] = 'sd_sparse_map'
                 parameters['file'] = self.inputs.imagename

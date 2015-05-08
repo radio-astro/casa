@@ -45,6 +45,26 @@ class SDRmsMapDisplay(SDImageDisplay):
 
         return plot_list
 
+    def __get_rms(self):
+        # reshape rms to a 3d array in shape, (nx_im, ny_im, npol_data)
+        return self.__reshape_grid_table_values(self.inputs.result.outcome['rms'], float)
+
+    def __get_num_valid(self):
+        # reshape validsp to a 3d array in shape, (nx_im, ny_im, npol_data)
+        return self.__reshape_grid_table_values(self.inputs.result.outcome['validsp'], int)
+
+    def __reshape_grid_table_values(self, array2d, dtype=None):
+        # reshape 2d array in shape, (npol, nx*ny), to (nx, ny, npol)
+        npol_data = len(array2d)
+        # retruned value will be transposed
+        array3d = numpy.zeros((npol_data, self.ny, self.nx),dtype=dtype)
+        for pol in xrange(npol_data):
+            if len(array2d[pol]) == self.nx*self.ny:
+                array3d[pol,:,:] = numpy.array(array2d[pol]).reshape((self.ny,self.nx))
+        return numpy.flipud(array3d.transpose())
+        
+
+    
     def __plot_channel_map(self):
         #if ShowPlot: pl.ion()
         #else: pl.ioff()
@@ -79,9 +99,11 @@ class SDRmsMapDisplay(SDImageDisplay):
         rms_colorbar = None
         beam_circle = None
 
-        rms = self.rms
-        nvalid = self.num_valid_spectrum
-        for pol in xrange(self.npol):
+        rms = self.__get_rms()
+        nvalid = self.__get_num_valid()
+        npol_data = rms.shape[2]
+#         for pol in xrange(self.npol):
+        for pol in xrange(npol_data):
             rms_map = rms[:,:,pol] * (nvalid[:,:,pol] > 0)
             rms_map = numpy.flipud(rms_map.transpose())
             #LOG.debug('rms_map=%s'%(rms_map))

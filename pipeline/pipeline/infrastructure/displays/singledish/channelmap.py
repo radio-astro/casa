@@ -10,8 +10,9 @@ from matplotlib.ticker import MultipleLocator
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.casatools as casatools
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
-from .utils import sd_polmap as polmap
+#from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 from . import tpimage
 
@@ -159,6 +160,48 @@ class SDChannelMapDisplay(SDImageDisplay):
                                 line_list.append(ll)
         return line_list
 
+    def __get_integrated_spectra(self):
+        imagename = self.inputs.imagename
+        weightname = self.inputs.imagename + '.weight'
+        new_id_stokes = 0 if self.id_stokes < self.id_spectral else 1
+        # un-weighted image
+        unweight_ia = casatools.image.imagecalc(outfile='', pixels='%s * %s' % (imagename, weightname))
+        # average image spectra over map area taking mask into account
+        try:
+            collapsed_ia = unweight_ia.collapse(outfile='', function='mean', axes=self.image.id_direction)
+        finally:
+            unweight_ia.close()
+        try:
+            data_integ = collapsed_ia.getchunk(dropdeg=True)
+            #mask_integ = collapsed_ia.getchunk(dropdeg=True, getmask=True)
+        finally:
+            collapsed_ia.close()
+        # set mask to weight image
+        with casatools.ImageReader(imagename) as ia:
+            maskname = ia.maskhandler('get')[0]
+        with casatools.ImageReader(weightname) as ia:
+            ia.maskhandler('delete', [maskname])
+            ia.maskhandler('copy', ['%s:%s' % (imagename, maskname), maskname])
+            ia.maskhandler('set', maskname)
+            # average weight over map area taking the mask into account
+            collapsed_ia = ia.collapse(outfile='', function='mean', axes=self.image.id_direction)
+        try:
+            weight_integ = collapsed_ia.getchunk(dropdeg=True)
+        finally:
+            collapsed_ia.close()
+        # devive averaged image by averaged weight
+        data_weight_integ = data_integ / weight_integ
+        sp_ave = numpy.zeros((self.npol, self.nchan),dtype=numpy.float32)
+        if self.npol == 1:
+            if len(data_weight_integ) == self.nchan:
+                sp_ave[0,:] = data_weight_integ
+        else:
+            for pol in xrange(self.npol):
+                curr_sp= data_weight_integ.take([pol], axis=new_id_stokes).squeeze()
+                if len(curr_sp) == self.nchan:
+                    sp_ave[pol,:] = curr_sp
+        return sp_ave
+
     def __plot_channel_map(self):
         colormap = 'color'
         scale_max = False
@@ -183,7 +226,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         #Total = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
         # ValidSp: SQRT of Number of combined spectra for the weight
         #ValidSp = numpy.ones(nrow, dtype=numpy.float32)
-        ValidSp = self.num_valid_spectrum.reshape((nrow,self.npol))
+#         ValidSp = self.num_valid_spectrum.reshape((nrow,self.npol))
         #ValidSp = numpy.zeros(nrow, dtype=numpy.float32)
         #for row in range(nrow): ValidSp[row] = math.sqrt(Table[row][6])
 
@@ -223,6 +266,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         axes_chmap = axes_manager.axes_chmap
         chmap_colorbar = [None for v in xrange(self.NvPanel)]
         
+        Sp_integ = self.__get_integrated_spectra()
         # loop over detected lines
         ValidCluster = 0
         for line_window in line_list:
@@ -285,8 +329,8 @@ class SDChannelMapDisplay(SDImageDisplay):
                 
                 data = self.data.take([pol], axis=self.id_stokes).squeeze()
                 masked_data = data * self.mask.take([pol], axis=self.id_stokes).squeeze()
-                flattened_data = masked_data.reshape((nrow,self.nchan))
-                valid = ValidSp[:,pol]
+#                 flattened_data = masked_data.reshape((nrow,self.nchan))
+#                 valid = ValidSp[:,pol]
                 
                 # Integrated Spectrum
                 t0 = time.time()
@@ -330,8 +374,9 @@ class SDChannelMapDisplay(SDImageDisplay):
                 t1 = time.time()
 
                 # Plot Integrated Spectrum #1
-                Sp = numpy.sum(numpy.transpose((valid * numpy.transpose(flattened_data))),axis=0)/numpy.sum(valid,axis=0)
+#                 Sp = numpy.sum(numpy.transpose((valid * numpy.transpose(flattened_data))),axis=0)/numpy.sum(valid,axis=0)
                 #Sp = numpy.sum(flattened_data * valid.reshape((nrow,1)), axis=0)/valid.sum()
+                Sp = Sp_integ[pol,:]
                 (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
                 spmin = Sp.min()
                 spmax = Sp.max()
@@ -420,7 +465,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                 parameters = {}
                 parameters['intent'] = 'TARGET'
                 parameters['spw'] = self.spw
-                parameters['pol'] = polmap[pol]
+                parameters['pol'] = self.image.coordsys.stokes()[pol]#polmap[pol]
                 parameters['ant'] = self.antenna
                 parameters['type'] = 'channel_map'
                 parameters['file'] = self.inputs.imagename

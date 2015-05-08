@@ -174,10 +174,11 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         # stokes
         # stokes = 'I'
         #stokes = 'XXYY'
-        a = set()
-        for p in map(set, pols_list):
-            a = a | p
-        stokes = common.polstring(list(a))
+#         a = set()
+#         for p in map(set, pols_list):
+#             a = a | p
+#         stokes = common.polstring(list(a))
+        stokes = 'I'
     
         # start, nchan, step
         total_nchan = reference_data.spectral_window[spwid].nchan
@@ -193,7 +194,6 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         if imagemode == 'AMPCAL':
             step = nchan
             nchan = 1
-            stokes = 'I'
     
         # restfreq
         spw = reference_data.spectral_window[spwid]
