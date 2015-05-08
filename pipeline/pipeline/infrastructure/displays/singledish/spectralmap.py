@@ -242,8 +242,8 @@ class SDSpectralMapDisplay(SDImageDisplay):
             # to eliminate max/min value due to bad pixel or bad fitting,
             #  1/10-th value from max and min are used instead
 #             valid_index = numpy.where(self.num_valid_spectrum[:,:,pol] > 0)
-            mask_p = self.mask.take([pol], axis=self.id_stokes).squeeze()
-            valid_index = numpy.any(mask_p, axis=2).nonzero()
+            mask2d = numpy.any(self.mask.take([pol], axis=self.id_stokes).squeeze(), axis=2)
+            valid_index = mask2d.nonzero()
             valid_data = data[valid_index[0],valid_index[1],chan0:chan1]
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
@@ -277,7 +277,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
                         world_y = yrv + (_y - yrp) * yic
                         title = '(IF, POL, X, Y) = (%s, %s, %s, %s)\n%s %s' % (self.spw, pol, _x, _y, HHMMSSss(world_x, 0), DDMMSSs(world_y, 0))
 #                         if self.num_valid_spectrum[_x][_y][pol] > 0:
-                        if mask_p[_x][_y]:
+                        if mask2d[_x][_y]:
                             plot_objects.extend(
                                 pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
                                 )
