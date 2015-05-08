@@ -217,7 +217,9 @@ class PhaseVsBaselineChart(common.PlotBase):
         # same polarisation setup
         corr_axes = set()
         for scan in scans:
-            scan_corrs = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+            #scan_corrs = [tuple(dd.corr_axis) for dd in scan.data_descriptions
+                              #if dd.spw.id == spw.id]
+            scan_corrs = [tuple(dd.polarizations) for dd in scan.data_descriptions
                               if dd.spw.id == spw.id]
             # discard WVR and other strange data descriptions 
             scan_corrs = set([x for x in scan_corrs 
