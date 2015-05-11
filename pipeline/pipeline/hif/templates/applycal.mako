@@ -274,12 +274,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband ${plot.parameters['baseband']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
@@ -314,12 +316,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband ${plot.parameters['baseband']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
@@ -352,12 +356,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}
+		Spectral Window ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
@@ -384,12 +390,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}
+		Spectral Window ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 </%self:plot_group>
@@ -412,12 +420,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Spectral window: ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}
+		Spectral Window ${plot.parameters['spw']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 </%self:plot_group>
@@ -455,12 +465,15 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband ${plot.parameters['baseband']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
@@ -506,12 +519,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband ${plot.parameters['baseband']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
@@ -553,12 +568,14 @@ def space_comma(s):
 
 	<%def name="fancybox_caption(plot)">
 		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
 		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband ${plot.parameters['baseband']}<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
