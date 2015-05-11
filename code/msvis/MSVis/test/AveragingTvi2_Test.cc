@@ -1,11 +1,12 @@
 #include <casa/BasicSL.h>
 #include <casa/string.h>
 #include <casa/Logging.h>
+#include <tables/Tables.h>
 #include <ms/MeasurementSets.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/test/MsFactory.h>
-#include <synthesis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/test/MsFactory.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
 
 #include <boost/tuple/tuple.hpp>
 #include <map>
@@ -873,6 +874,7 @@ public:
 protected:
 
     pair<MeasurementSet *,Int> createMs (const String &);
+
     template <typename T>
     void doTest (const Environment & environment, const Arguments & arguments);
 
@@ -1284,9 +1286,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ObservedUseNoWeights |
-                                                          AveragingOptions::ModelUseNoWeights |
-                                                          AveragingOptions::CorrectedUseNoWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagAvg |
+                                                          AveragingOptions::CorrectedFlagAvg));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -1499,9 +1501,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ObservedUseNoWeights |
-                                                          AveragingOptions::ModelUseNoWeights |
-                                                          AveragingOptions::CorrectedUseNoWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagAvg |
+                                                          AveragingOptions::CorrectedFlagAvg));
 
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
@@ -1536,12 +1538,11 @@ public:
         printf ("+++ Starting RowFlaggingTests ...\n");
 
         String msName (getParameter ("msName", "AveragingTvi2.ms"));
-        Int nRows;
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
         const Double interval = 1.0;
-        boost::tie (msTmp, nRows) = createMs (msName, interval);
+        boost::tie (msTmp, nRows_p) = createMs (msName, interval);
         ms.reset (msTmp);
 
         doTest (ms.get(), interval, 10, 1); // interval, chunkInterval, factor
@@ -1609,8 +1610,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagWeightAvgFromWEIGHT |
+                                                          AveragingOptions::CorrectedWeightAvgFromWEIGHT));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
 
         checkMs (& vi);
@@ -1620,6 +1622,7 @@ protected:
 
 private:
 
+    Int nRows_p;
 
 };
 
@@ -1673,6 +1676,8 @@ protected:
         auto_ptr<GenerateRamp> rampGenerator (new GenerateRamp());
         msFactory->setDataGenerator(MSMainEnums::DATA, rampGenerator.get());
 
+        msFactory->setDataGenerator(MSMainEnums::SIGMA, new GenerateConstant<Float> (1.0));
+
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
                                     new GenerateConstant<Float> (1.0));
 
@@ -1718,10 +1723,7 @@ protected:
                                         chunkInterval,
                                         SortColumns (),
                                         AveragingOptions (AveragingOptions::AverageObserved |
-                                                          AveragingOptions::AverageModel |
-                                                          AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedFlagAvg));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
 
         checkMs (& vi);
@@ -1753,11 +1755,10 @@ public:
         printf ("+++ Starting WeightingTests ...\n");
 
         String msName (getParameter ("msName", "AveragingTvi2.ms"));
-        Int nRows;
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
-        boost::tie (msTmp, nRows) = createMs (msName);
+        boost::tie (msTmp, nRows_p) = createMs (msName);
         ms.reset (msTmp);
 
         doSimpleTest (ms.get(), 1, 10, 1); // interval, chunkInterval, factor
@@ -1791,13 +1792,13 @@ protected:
         msFactory->addSpectralWindows(1); // only on spw for now
 
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
-                                    new GenerateConstant<Float> (0.1));
+                                    new GenerateConstant<Float> (1.0));
 
         msFactory->setDataGenerator(MSMainEnums::SIGMA,
                                     new GenerateConstant<Float> (1.0));
 
         msFactory->setDataGenerator(MSMainEnums::WEIGHT,
-                                    new GenerateConstant<Float> (1.0));
+                                    new GenerateConstant<Float> (0.1));
 
         auto_ptr<GenerateRamp> rampGenerator (new GenerateRamp());
         msFactory->setDataGenerator(MSMainEnums::DATA, rampGenerator.get());
@@ -1827,7 +1828,7 @@ protected:
 
         addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Observed", & VisBuffer2::visCube,
                                                     lastRow, nRowsInPartialAverage));
-        addCubeChecker (new WeightChecker (averagingFactor * 0.1));
+        addCubeChecker (new WeightChecker (averagingFactor * 1.0));
 
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight",
                                                lastRow, nRowsInPartialAverage, 1.0));
@@ -1843,8 +1844,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagWeightAvgFromWEIGHT |
+                                                          AveragingOptions::CorrectedWeightAvgFromWEIGHT));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (weightScaling);
 
@@ -1866,8 +1868,8 @@ class WeightSelectionTests : public TestSuite {
 public:
 
     WeightSelectionTests (const Environment & environment,
-                 const Arguments & arguments,
-                 Tester & tester)
+                          const Arguments & arguments,
+                          Tester & tester)
 
     : TestSuite (environment, arguments, tester),
       interval_p (1)
@@ -1888,7 +1890,7 @@ public:
             printf ("... +++ Starting test using normal weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 2.0f, 1000.0f);
+            boost::tie (msTmp, nRows_p) = createMs (msName, 2.0f);
             ms.reset (msTmp);
 
             doWeightedTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1905,7 +1907,7 @@ public:
             printf ("... +++ Starting test using corrected weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f, 2.0f);
+            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f);
             ms.reset (msTmp);
 
             doCorrectedWeightingTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1925,7 +1927,7 @@ public:
 protected:
 
     pair<MeasurementSet *,Int>
-    createMs (const String & msName, float weightSpectrum, float correctedWeightSpectrum)
+    createMs (const String & msName, float weightSpectrum)
     {
         system (String::format ("rm -r %s", msName.c_str()).c_str());
 
@@ -1943,7 +1945,6 @@ protected:
         }
 
         msFactory->addWeightSpectrum (true);
-        msFactory->addCorrectedWeightSpectrum(true);
 
         // For many of the columns, simply put in a distinct constant to see if
         // the correct data is being processed as well as averaged properly.
@@ -1985,8 +1986,6 @@ protected:
 
         msFactory->setDataGenerator(MSMainEnums::WEIGHT_SPECTRUM,
                                     new GenerateConstant<Float> (weightSpectrum));
-        msFactory->setDataGenerator(MSMainEnums::CORRECTED_WEIGHT_SPECTRUM,
-                                    new GenerateConstant<Float> (correctedWeightSpectrum));
 
         // Set all of the data to be unflagged.
 
@@ -2027,8 +2026,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseCorrectedWeights |
-                                                          AveragingOptions::CorrectedUseCorrectedWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagWeightAvgFromWEIGHT |
+                                                          AveragingOptions::CorrectedWeightAvgFromWEIGHT));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -2064,8 +2064,9 @@ protected:
                                         AveragingOptions (AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ModelUseWeights |
-                                                          AveragingOptions::CorrectedUseWeights));
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagWeightAvgFromWEIGHT |
+                                                          AveragingOptions::CorrectedWeightAvgFromWEIGHT));
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
 
@@ -2378,9 +2379,9 @@ protected:
                                                           AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ObservedUseNoWeights |
-                                                          AveragingOptions::ModelUseNoWeights |
-                                                          AveragingOptions::CorrectedUseNoWeights),
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagAvg |
+                                                          AveragingOptions::CorrectedFlagAvg),
                                         maxUvwDistance);
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());
@@ -2413,9 +2414,9 @@ protected:
                                                           AveragingOptions::AverageObserved |
                                                           AveragingOptions::AverageModel |
                                                           AveragingOptions::AverageCorrected |
-                                                          AveragingOptions::ObservedUseNoWeights |
-                                                          AveragingOptions::ModelUseNoWeights |
-                                                          AveragingOptions::CorrectedUseNoWeights),
+                                                          AveragingOptions::ObservedFlagAvg |
+                                                          AveragingOptions::ModelFlagAvg |
+                                                          AveragingOptions::CorrectedFlagAvg),
                                         maxUvwDistance);
         VisibilityIterator2 vi (AveragingVi2Factory (parameters, ms));
         vi.setWeightScaling (WeightScaling::generateUnityWeightScaling());

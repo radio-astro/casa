@@ -248,6 +248,81 @@ BaselineIndex::getSpwIndex (Int spw)
     return spwIndex;
 }
 
+template <typename T>
+class PrefilledMatrix {
+
+public:
+
+    PrefilledMatrix () : matrix_p (0, 0, 0), nChannels_p (0), nCorrelations_p (0) {}
+
+    const Matrix<T> &
+    getMatrix (Int nCorrelations, Int nChannels, const T & value)
+    {
+        if (nCorrelations != nCorrelations_p || nChannels != nChannels_p ||
+            value != value_p){
+
+            nCorrelations_p = nCorrelations;
+            nChannels_p = nChannels;
+            value_p = value;
+
+            matrix_p.assign (Matrix<T> (nCorrelations_p, nChannels_p, value_p));
+        }
+
+        return matrix_p;
+    }
+
+private:
+
+    Matrix<T> matrix_p;
+    Int nChannels_p;
+    Int nCorrelations_p;
+    T value_p;
+
+};
+
+template <typename T>
+class CachedPlaneAvg : public ms::CachedArrayBase {
+
+public:
+
+typedef const Cube<T> & (casa::vi::avg::VbAvg::* Accessor) () const;
+
+CachedPlaneAvg (Accessor accessor) : accessor_p (accessor) {}
+
+Matrix<T> &
+getCachedPlane (casa::vi::avg::VbAvg * vb, Int row)
+{
+    if (! isCached()){
+
+        //cache_p.reference ((vb ->* accessor_p)().xyPlane (row)); // replace with something more efficient
+        referenceMatrix (cache_p, (vb ->* accessor_p)(), row);
+        setCached ();
+    }
+
+    return cache_p;
+}
+
+private:
+
+    static void
+    referenceMatrix (Matrix<T> & cache, const Cube<T> & src, Int row)
+    {
+        IPosition shape = src.shape ();
+        shape.resize (2);
+
+        // This is a bit sleazy but it seems to be helpful to performance.
+        // Assumes contiguously stored cube.
+
+        T * storage = const_cast <T *> (& src (IPosition (3, 0, 0, row)));
+
+        cache.takeStorage (shape, storage, casa::SHARE);
+    }
+
+    Accessor accessor_p;
+    Matrix<T> cache_p;
+};
+
+
 class VbAvg;
 
 class MsRowAvg : public ms::Vbi2MsRow {
@@ -264,9 +339,9 @@ public:
 
     Bool baselinePresent () const;
     Vector<Bool> correlationFlagsMutable ();
-    Matrix<Int> counts ();
+    const Matrix<Int> & counts () const;
     Int countsBaseline () const;
-    Matrix<Bool> flagsMutable () { return Vbi2MsRow::flagsMutable();}
+    Matrix<Bool> & flagsMutable () { return Vbi2MsRow::flagsMutable();}
     Double intervalLast () const;
     Double timeFirst () const;
     Double timeLast () const;
@@ -285,6 +360,9 @@ public:
 
 private:
 
+    void configureCountsCache ();
+
+    mutable CachedPlaneAvg<Int> countsCache_p;
     Vector<Double> normalizationFactor_p;
     VbAvg * vbAvg_p; // [use]
 };
@@ -298,17 +376,18 @@ public:
     VbAvg (const AveragingParameters & averagingParameters);
 
     void accumulate (const VisBuffer2 * vb, const Subchunk & subchunk);
+    const Cube<Int> & counts () const;
     Bool empty () const;
     void finalizeBufferFilling ();
     void finalizeAverages ();
     MsRowAvg * getRow (Int row) const;
     MsRowAvg * getRowMutable (Int row);
     Bool isComplete () const;
+    Bool isUsingUvwDistance () const;
     void markEmpty ();
     int nSpectralWindowsInBuffer () const;
     void setBufferToFill (VisBufferImpl2 *);
     void startChunk (ViImplementation2 *);
-    Bool isUsingUvwDistance () const;
 
 protected:
 
@@ -338,60 +417,189 @@ protected:
 
     public:
 
-        AccumulationParameters (MsRow * rowInput, MsRowAvg * rowAveraged,
-                                Doing doing)
-        : correctedIn (doing.correctedData_p ? rowInput->corrected()
-                                            : Matrix<Complex> ()),
-          correctedOut (doing.correctedData_p ? rowAveraged->corrected()
-                                             : Matrix<Complex> ()),
-          modelIn (doing.modelData_p ? rowInput->model()
-                                    : Matrix<Complex> ()),
-          modelOut (doing.modelData_p ? rowAveraged->model()
-                                     : Matrix<Complex> ()),
-          observedIn (doing.observedData_p ? rowInput->observed()
-                                          : Matrix<Complex> ()),
-          observedOut (doing.observedData_p ? rowAveraged->observed() : Matrix<Complex> ()),
-          weightIn (rowInput->weight()),
-          weightOut (rowAveraged->weight()),
-          sigmaIn (rowInput->sigma()),
-          sigmaOut (rowAveraged->sigma()),
-          flagCubeIn (rowInput->flags()),
-          flagCubeOut (rowAveraged->flags()),
-          sigmaSpectrumIn (doing.sigmaSpectrumIn_p ? rowInput->sigmaSpectrum() : Matrix<Float> ()),
-          sigmaSpectrumOut (doing.sigmaSpectrumOut_p ? rowAveraged->sigmaSpectrum() : Matrix<Float> ()),
-          weightSpectrumIn (doing.weightSpectrumIn_p ? rowInput->weightSpectrum() : Matrix<Float> ()),
-          weightSpectrumOut (doing.weightSpectrumOut_p ? rowAveraged->weightSpectrum() : Matrix<Float> ())
+        AccumulationParameters (MsRow * rowInput, MsRowAvg * rowAveraged, const Doing & doing)
+        : correctedIn_p (doing.correctedData_p ? rowInput->corrected().data() : 0),
+          correctedOut_p (doing.correctedData_p ? rowAveraged->correctedMutable ().data(): 0),
+          flagCubeIn_p (rowInput->flags().data()),
+          flagCubeOut_p (rowAveraged->flagsMutable().data()),
+          modelIn_p (doing.modelData_p ? rowInput->model().data(): 0),
+          modelOut_p (doing.modelData_p ? rowAveraged->modelMutable().data() : 0),
+          observedIn_p (doing.observedData_p ? rowInput->observed().data() : 0),
+          observedOut_p (doing.observedData_p ? rowAveraged->observedMutable().data() : 0),
+          sigmaIn_p (& rowInput->sigma()),
+          sigmaOut_p (& rowAveraged->sigmaMutable()),
+          sigmaSpectrumIn_p (doing.sigmaSpectrumIn_p ? rowInput->sigmaSpectrum().data() : 0),
+          sigmaSpectrumOut_p (doing.sigmaSpectrumOut_p ? rowAveraged->sigmaSpectrumMutable().data() : 0),
+          weightIn_p (& rowInput->weight()),
+          weightOut_p (& rowAveraged->weightMutable()),
+          weightSpectrumIn_p (doing.weightSpectrumIn_p ? rowInput->weightSpectrum().data() : 0),
+          weightSpectrumOut_p (doing.weightSpectrumOut_p ? rowAveraged->weightSpectrumMutable().data() : 0)
         {}
 
-        const Matrix<Complex> correctedIn;
-        Matrix<Complex>       correctedOut;
-        const Matrix<Complex> modelIn;
-        Matrix<Complex>       modelOut;
-        const Matrix<Complex> observedIn;
-        Matrix<Complex>       observedOut;
-        const Vector<Float>   weightIn;
-        Vector<Float>         weightOut;
-        const Vector<Float>   sigmaIn;
-        Vector<Float>         sigmaOut;
-        const Matrix<Bool>    flagCubeIn;
-        Matrix<Bool>          flagCubeOut;
-        const Matrix<Float>   sigmaSpectrumIn;
-        Matrix<Float>         sigmaSpectrumOut;
-        const Matrix<Float>   weightSpectrumIn;
-        Matrix<Float>         weightSpectrumOut;
+        void incrementCubePointers()
+        {
+            // For improved performance this class is designed to sweep the cube data elements in this row
+            // in the order (correlation0, channel0), (correlation1, channel1), etc.
+
+            correctedIn_p && correctedIn_p ++;
+            correctedOut_p && correctedOut_p ++;
+            modelIn_p && modelIn_p ++;
+            modelOut_p && modelOut_p ++;
+            observedIn_p && observedIn_p ++;
+            observedOut_p && observedOut_p ++;
+            flagCubeIn_p && flagCubeIn_p ++;
+            flagCubeOut_p && flagCubeOut_p ++;
+            sigmaSpectrumIn_p && sigmaSpectrumIn_p ++;
+            sigmaSpectrumOut_p && sigmaSpectrumOut_p ++;
+            weightSpectrumIn_p && weightSpectrumIn_p ++;
+            weightSpectrumOut_p && weightSpectrumOut_p ++;
+        }
+
+        inline const Complex *
+        correctedIn ()
+        {
+            assert (correctedIn_p != 0);
+            return correctedIn_p;
+        }
+
+        inline Complex *
+        correctedOut ()
+        {
+            assert (correctedOut_p != 0);
+            return correctedOut_p;
+        }
+
+        inline const Complex *
+        modelIn ()
+        {
+            assert (modelIn_p != 0);
+            return modelIn_p;
+        }
+
+        inline Complex *
+        modelOut ()
+        {
+            assert (modelOut_p != 0);
+            return modelOut_p;
+        }
+
+        inline const Complex *
+        observedIn ()
+        {
+            assert (observedIn_p != 0);
+            return observedIn_p;
+        }
+
+        inline Complex *
+        observedOut ()
+        {
+            assert (observedOut_p != 0);
+            return observedOut_p;
+        }
+
+        inline const Bool *
+        flagCubeIn ()
+        {
+            assert (flagCubeIn_p != 0);
+            return flagCubeIn_p;
+        }
+
+        inline Bool *
+        flagCubeOut ()
+        {
+            assert (flagCubeOut_p != 0);
+            return flagCubeOut_p;
+        }
+
+        inline const Float *
+        sigmaSpectrumIn ()
+        {
+ /////////////            assert (sigmaSpectrumIn_p != 0);
+            return sigmaSpectrumIn_p;
+        }
+
+        inline Float *
+        sigmaSpectrumOut ()
+        {
+            assert (sigmaSpectrumOut_p != 0);
+            return sigmaSpectrumOut_p;
+        }
+
+        inline const Float *
+        weightSpectrumIn ()
+        {
+            assert (weightSpectrumIn_p != 0);
+            return weightSpectrumIn_p;
+        }
+
+        inline Float *
+        weightSpectrumOut ()
+        {
+            assert (weightSpectrumOut_p != 0);
+            return weightSpectrumOut_p;
+        }
+
+        inline const Vector<Float> &
+        weightIn ()
+        {
+            assert (weightIn_p != 0);
+            return *weightIn_p;
+        }
+
+        inline Vector<Float> &
+        weightOut ()
+        {
+            assert (weightOut_p != 0);
+            return *weightOut_p;
+        }
+
+        inline const Vector<Float> &
+        sigmaIn ()
+        {
+            assert (sigmaIn_p != 0);
+            return *sigmaIn_p;
+        }
+
+        inline Vector<Float> &
+        sigmaOut ()
+        {
+            assert (sigmaOut_p != 0);
+            return *sigmaOut_p;
+        }
+
+
+
+    private:
+
+        const Complex * correctedIn_p;
+        Complex * correctedOut_p;
+        const Bool * flagCubeIn_p;
+        Bool * flagCubeOut_p;
+        const Complex * modelIn_p;
+        Complex * modelOut_p;
+        const Complex * observedIn_p;
+        Complex * observedOut_p;
+        const Vector<Float> * sigmaIn_p;
+        Vector<Float> * sigmaOut_p;
+        const Float * sigmaSpectrumIn_p;
+        Float * sigmaSpectrumOut_p;
+        const Vector<Float> * weightIn_p;
+        Vector<Float> * weightOut_p;
+        const Float * weightSpectrumIn_p;
+        Float * weightSpectrumOut_p;
+
+
     };
 
     pair<Bool, Vector<Double> > accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged);
-    void accumulateElementForCubes (AccumulationParameters * accumulationParameters,
-                                    Bool zeroAccumulation,
-                                    Int correlation,
-                                    Int channel);
+    void accumulateElementForCubes (AccumulationParameters & accumulationParameters,
+                                    Bool zeroAccumulation);
     template<typename T>
     void
-    accumulateElementForCube (const T & unweightedValue,
+    accumulateElementForCube (const T * unweightedValue,
                               Float weight,
                               Bool zeroAccumulation,
-                              T & accumulator);
+                              T * accumulator);
 
     template <typename T>
     T accumulateRowDatum (const T & averagedValue, const T & inputValue,
@@ -436,17 +644,18 @@ protected:
 
     template <typename T>
     static T
-    distance (const Vector<T> & p1, const Vector<T> & p2)
+    distanceSquared (const Vector<T> & p1, const Vector<T> & p2)
     {
-        assert (p1.size() ==3 && p2.size() == 3);
+        assert (p1.size() == 3 && p2.size() == 3);
 
-        T distance = 0;
+        T distanceSquared = 0;
 
         for (Int i = 0; i < 3; i++){
-            distance += pow (p1[i] - p2[i], 2);
+            T delta = p1[i] - p2[i];
+            distanceSquared += delta * delta;
         }
 
-        return sqrt (distance);
+        return distanceSquared;
     }
 
 private:
@@ -465,7 +674,7 @@ private:
     Bool empty_p; // true when buffer hasn't seen any data
     Vector<Double> intervalLast_p;
     Double maxTimeDistance_p;
-    Double maxUvwDistance_p;
+    Double maxUvwDistanceSquared_p;
     Bool needIterationInfo_p;
     VisBufferComponents2 optionalComponentsToCopy_p;
     Int rowIdGenerator_p;
@@ -473,8 +682,11 @@ private:
     Double startTime_p; // time of the first sample in average
     Vector<Double> timeFirst_p;
     Vector<Double> timeLast_p;
+    mutable PrefilledMatrix<Bool> trueBool_p;
     Matrix<Double> uvwFirst_p;
     Bool usingUvwDistance_p;
+    mutable PrefilledMatrix<Int> zeroInt_p;
+    mutable PrefilledMatrix<Float> zeroFloat_p;
 
     LogIO logger_p;
 };
@@ -529,17 +741,24 @@ private:
 
 MsRowAvg::MsRowAvg (Int row, const VbAvg * vb)
 : Vbi2MsRow (row, vb),
+  countsCache_p (& VbAvg::counts),
   normalizationFactor_p(0.0),
   vbAvg_p (const_cast<VbAvg *> (vb))
-{}
+{
+    configureCountsCache();
+}
+
 
 // Constructor for read/write access
 
 MsRowAvg::MsRowAvg (Int row, VbAvg * vb)
 : Vbi2MsRow (row, vb),
+  countsCache_p (& VbAvg::counts),
   normalizationFactor_p(0.0),
   vbAvg_p (vb)
-{}
+{
+    configureCountsCache();
+}
 
 Bool
 MsRowAvg::baselinePresent () const
@@ -547,11 +766,16 @@ MsRowAvg::baselinePresent () const
     return vbAvg_p->baselinePresent_p (row ());
 }
 
-
-Matrix<Int>
-MsRowAvg::counts ()
+void
+MsRowAvg::configureCountsCache ()
 {
-    return vbAvg_p->counts_p.xyPlane (row ());
+    addToCachedArrays (countsCache_p);
+}
+
+const Matrix<Int> &
+MsRowAvg::counts () const
+{
+    return countsCache_p.getCachedPlane (dynamic_cast<VbAvg *> (getVbi()), row());
 }
 
 Vector<Bool>
@@ -608,7 +832,8 @@ MsRowAvg::uvwFirst ()
 void
 MsRowAvg::setCounts (const Matrix<Int> & value)
 {
-    vbAvg_p->counts_p.xyPlane  (row()) = value;
+    Matrix<Int> & theCounts = countsCache_p.getCachedPlane (dynamic_cast<VbAvg *> (getVbi()), row());
+    theCounts = value;
 }
 
 void
@@ -645,18 +870,21 @@ void MsRowAvg::accumulateNormalizationFactor(Double normalizationFactor)
 	vbAvg_p->normalizationFactor_p (row ()) += normalizationFactor;
 }
 
-
 VbAvg::VbAvg (const AveragingParameters & averagingParameters)
 : VisBufferImpl2 (VbRekeyable),
   averagingInterval_p (averagingParameters.getAveragingInterval ()),
   averagingOptions_p (averagingParameters.getOptions()),
+  bufferToFill_p (0),
   complete_p (False),
   doing_p (), // all false until determined later on
   empty_p (True),
   maxTimeDistance_p (averagingParameters.getAveragingInterval() * (0.999)),
         // Shrink it just a bit for roundoff
-  maxUvwDistance_p (averagingParameters.getMaxUvwDistance()),
+  maxUvwDistanceSquared_p (pow(averagingParameters.getMaxUvwDistance(),2)),
+  needIterationInfo_p (True),
   rowIdGenerator_p (0),
+  sampleInterval_p (0),
+  startTime_p (0),
   usingUvwDistance_p (averagingParameters.getOptions().contains (AveragingOptions::BaselineDependentAveraging))
 {}
 
@@ -689,6 +917,7 @@ VbAvg::accumulate (const VisBuffer2 * vb, const Subchunk & subchunk)
 
     delete rowAveraged;
     delete rowInput;
+
 }
 
 void
@@ -708,18 +937,18 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     // and the difference is the adjusted weight for this row.
 
     Vector<Double> adjustedWeights;
-    Bool rowFlagged;
+    Bool rowFlagged = False;
+
     boost::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
     Double adjustedWeight = 0;
     for (Int c = 0; c < nCorrelations(); c++){
-        // adjustedWeight += rowAveraged->correlationFlagsMutable() (c) ? 0 : adjustedWeights (c);
-    	adjustedWeight += adjustedWeights (c);
+
+        adjustedWeight += adjustedWeights (c);
     }
 
     // Accumulate the non matrix-valued data
     accumulateRowData (rowInput, rowAveraged, adjustedWeight, rowFlagged);
-
 }
 
 //void
@@ -772,44 +1001,130 @@ VbAvg::finalizeBufferFilling ()
     bufferToFill_p = 0; // decouple
 }
 
-VbAvg::AccumulationParameters *
-VbAvg::getAccumulationParameters (MsRow * rowInput, MsRowAvg * rowAveraged)
-{
-    AccumulationParameters * accumulationParameters =
-            new AccumulationParameters (rowInput, rowAveraged, doing_p);
-
-    return accumulationParameters;
-}
-
 template<typename T>
-void
-VbAvg::accumulateElementForCube (const T & unweightedValue,
+inline void
+VbAvg::accumulateElementForCube (const T * unweightedValue,
                                  Float weight,
                                  Bool zeroAccumulation,
-                                 T & accumulator)
+                                 T * accumulator)
 {
     // Update the sum for this model visibility cube element.
 
-    T accumulation = zeroAccumulation ? 0
-                                      : accumulator;
-
-    accumulator = accumulation + unweightedValue * weight;
+    if (zeroAccumulation){
+        * accumulator = (* unweightedValue) * weight;
+    }
+    else{
+        * accumulator += (* unweightedValue) * weight;
+    }
 }
+
+inline void
+VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameters,
+                                  Bool zeroAccumulation)
+{
+
+	// NOTE: THe channelized flag check comes from the calling ontext (continue statement)
+	float weightCorrected = 1.0f;
+	float weightObserved = 1.0f;
+	const float One = 1.0f;
+
+	if (doing_p.correctedData_p)
+	{
+		// The weight corresponding to CORRECTED_DATA is that stored in WEIGHT
+		weightCorrected = * accumulationParameters.weightSpectrumIn ();
+
+
+		// Accumulate weighted average contribution (normalization will come at the end)
+		accumulateElementForCube (	accumulationParameters.correctedIn (),
+									weightCorrected, zeroAccumulation,
+									accumulationParameters.correctedOut ());
+
+		// The weight resulting from weighted average is the sum of the weights
+		accumulateElementForCube (	& weightCorrected,
+									One, zeroAccumulation,
+									accumulationParameters.weightSpectrumOut ());
+	}
+
+	if (doing_p.observedData_p)
+	{
+		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
+		// This has to
+		weightObserved = AveragingTvi2::sigmaToWeight(* accumulationParameters.sigmaSpectrumIn ());
+
+		// Accumulate weighted average contribution (normalization will come at the end)
+
+		accumulateElementForCube (	accumulationParameters.observedIn (),
+									weightObserved, zeroAccumulation,
+									accumulationParameters.observedOut ());
+
+		if (not doing_p.correctedData_p)
+		{
+			// The weight resulting from weighted average is the sum of the weights
+			accumulateElementForCube (	& weightObserved,
+										One, zeroAccumulation,
+										accumulationParameters.weightSpectrumOut ());
+		}
+		else
+		{
+			// We store the accumulated weight in sigmaSpectrumOut pending of
+			// - normalization
+			// - SIGMA = 1/sqrt(WEIGHT) in-place transformation
+			accumulateElementForCube (	& weightObserved,
+										One, zeroAccumulation,
+										accumulationParameters.sigmaSpectrumOut ());
+		}
+	}
+
+	// For model data is less clear what to do, what in order to convert to
+	// split we use WEIGHT if averaging CORRECTED_DATA and SIGMA if avg. DATA.
+	// Finally we use WEIGHT by default when averaging MODEL_DATA only
+	if (doing_p.modelData_p)
+	{
+		if (doing_p.correctedData_p)
+		{
+			accumulateElementForCube (	accumulationParameters.modelIn (),
+										weightCorrected, zeroAccumulation,
+										accumulationParameters.modelOut ());
+		}
+		else if (doing_p.observedData_p)
+		{
+			accumulateElementForCube (	accumulationParameters.modelIn (),
+										weightObserved, zeroAccumulation,
+										accumulationParameters.modelOut ());
+		}
+		else
+		{
+			accumulateElementForCube (	accumulationParameters.modelIn (),
+										One, zeroAccumulation,
+										accumulationParameters.modelOut ());
+
+			// When doing MODEL_DATA only the accumulated weight spectrum should just represent counts
+			accumulateElementForCube (	& One,
+										1.0f, zeroAccumulation,
+										accumulationParameters.weightSpectrumOut ());
+		}
+	}
+
+	return;
+}
+
 
 pair<Bool, Vector<Double> >
 VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 {
     // Accumulate the sums needed for averaging of cube data (e.g., visibility).
 
-    const Matrix<Bool> inputFlags = rowInput->flags ();
-    Matrix<Bool> averagedFlags = rowAveraged->flagsMutable ();
-    Matrix<Int> counts = rowAveraged->counts ();
-    Vector<Bool> correlationFlagged = rowAveraged->correlationFlagsMutable ();
+    const Matrix<Bool> & inputFlags = rowInput->flags ();
+    Matrix<Bool> & averagedFlags = rowAveraged->flagsMutable ();
+    Matrix<Int>  counts = rowAveraged->counts ();
+    Vector<Bool>  correlationFlagged = rowAveraged->correlationFlagsMutable ();
 
-    AccumulationParameters * accumulationParameters = getAccumulationParameters (rowInput, rowAveraged);
+    AccumulationParameters accumulationParameters (rowInput, rowAveraged, doing_p);
+        // is a member variable to reduce memory allocations (jhj)
 
-    const Int nChannels = inputFlags.shape()(1);
-    const Int nCorrelations = inputFlags.shape()(0);
+    IPosition shape = inputFlags.shape();
+    const Int nChannels = shape (1);
+    const Int nCorrelations = shape (0);
 
     Bool rowFlagged = True;  // True if all correlations and all channels flagged
 
@@ -823,36 +1138,46 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
             // accumulation with that datum.
 
             Bool inputFlagged = inputFlags (correlation, channel);
-            rowFlagged = rowFlagged && inputFlagged;
+            if (rowFlagged && ! inputFlagged){
+                rowFlagged = False;
+            }
+            //rowFlagged = rowFlagged && inputFlagged;
             Bool accumulatorFlagged = averagedFlags (correlation, channel);
 
             if (! accumulatorFlagged && inputFlagged){
+                accumulationParameters.incrementCubePointers();
                 continue;// good accumulation, bad data so toss it.
             }
 
             // If changing from flagged to unflagged for this cube element, reset the
             // accumulation count to 1; otherwise increment the count.
 
-            Bool flagChange = accumulatorFlagged != inputFlagged || // real flag change
-                              counts (correlation, channel) == 0;   // first time
+            Bool flagChange = (accumulatorFlagged && ! inputFlagged);
+            Bool zeroAccumulation = flagChange || counts (correlation, channel) == 0;
 
             if (flagChange){
+                averagedFlags (correlation, channel) = False;
+            }
+
+            if (zeroAccumulation){
                 counts (correlation, channel) = 1;
             }
             else{
                 counts (correlation, channel) += 1;
             }
 
-            averagedFlags (correlation, channel) = accumulatorFlagged && inputFlagged;
-
             // Accumulate the sum for each cube element
+
             accumulateElementForCubes (accumulationParameters,
-                                       flagChange, // zeroes out accumulation
-                                       correlation,
-                                       channel);
+                                       zeroAccumulation); // zeroes out accumulation
+
+            accumulationParameters.incrementCubePointers();
 
             // Update correlation Flag
-            correlationFlagged (correlation) = correlationFlagged (correlation) && inputFlagged;
+
+            if (correlationFlagged (correlation) && ! inputFlagged){
+                correlationFlagged (correlation) = False;
+            }
         }
     }
 
@@ -861,111 +1186,22 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     {
         for (Int correlation = 0; correlation < nCorrelations; correlation ++)
         {
-        	adjustedWeight(correlation) = accumulationParameters->weightIn(correlation);
+        	adjustedWeight(correlation) = accumulationParameters.weightIn ()(correlation);
         }
     }
     else if (doing_p.observedData_p)
     {
+        const Vector<Float> & sigma = accumulationParameters.sigmaIn ();
+
         for (Int correlation = 0; correlation < nCorrelations; correlation ++)
         {
-        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaIn(correlation));
+        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(sigma (correlation));
         }
     }
-
-    delete accumulationParameters;
 
     return std::make_pair (rowFlagged, adjustedWeight);
 }
 
-void
-VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameters,
-                                  Bool zeroAccumulation,
-                                  Int correlation,
-                                  Int channel)
-{
-
-	// NOTE: THe channelized flag check comes from the calling ontext (continue statement)
-	float weightCorrected, weightObserved = 1.0f;
-
-	if (doing_p.correctedData_p)
-	{
-		// The weight corresponding to CORRECTED_DATA is that stored in WEIGHT
-		weightCorrected = accumulationParameters->weightSpectrumIn (correlation,channel);
-
-
-		// Accumulate weighted average contribution (normalization will come at the end)
-		accumulateElementForCube (	accumulationParameters->correctedIn (correlation, channel),
-									weightCorrected, zeroAccumulation,
-									accumulationParameters->correctedOut (correlation, channel));
-
-		// The weight resulting from weighted average is the sum of the weights
-		accumulateElementForCube (	weightCorrected,
-									1.0f, zeroAccumulation,
-									accumulationParameters->weightSpectrumOut (correlation, channel));
-
-	}
-
-	if (doing_p.observedData_p)
-	{
-		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
-		// This has to
-		weightObserved = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
-
-		// Accumulate weighted average contribution (normalization will come at the end)
-		accumulateElementForCube (	accumulationParameters->observedIn (correlation, channel),
-									weightObserved, zeroAccumulation,
-									accumulationParameters->observedOut(correlation, channel));
-
-		if (not doing_p.correctedData_p)
-		{
-			// The weight resulting from weighted average is the sum of the weights
-			accumulateElementForCube (	weightObserved,
-										1.0f, zeroAccumulation,
-										accumulationParameters->weightSpectrumOut (correlation, channel));
-		}
-		else
-		{
-			// We store the accumulated weight in sigmaSpectrumOut pending of
-			// - normalization
-			// - SIGMA = 1/sqrt(WEIGHT) in-place transformation
-			accumulateElementForCube (	weightObserved,
-										1.0f, zeroAccumulation,
-										accumulationParameters->sigmaSpectrumOut (correlation, channel));
-		}
-	}
-
-	// For model data is less clear what to do, what in order to convert to
-	// split we use WEIGHT if averaging CORRECTED_DATA and SIGMA if avg. DATA.
-	// Finally we use WEIGHT by default when averaging MODEL_DATA only
-	if (doing_p.modelData_p)
-	{
-		if (doing_p.correctedData_p)
-		{
-			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
-										weightCorrected, zeroAccumulation,
-										accumulationParameters->modelOut(correlation, channel));
-		}
-		else if (doing_p.observedData_p)
-		{
-			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
-										weightObserved, zeroAccumulation,
-										accumulationParameters->modelOut(correlation, channel));
-		}
-		else
-		{
-			accumulateElementForCube (	accumulationParameters->modelIn (correlation, channel),
-										1.0f, zeroAccumulation,
-										accumulationParameters->modelOut(correlation, channel));
-
-			// When doing MODEL_DATA only the accumulated weight spectrum should just represent counts
-			accumulateElementForCube (	1.0f,
-										1.0f, zeroAccumulation,
-										accumulationParameters->weightSpectrumOut (correlation, channel));
-		}
-	}
-
-	return;
-}
 
 template <typename T>
 T
@@ -1074,6 +1310,13 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
 //
 //    return adjustedWeight;
 //}
+
+const Cube<Int> &
+VbAvg::counts () const
+{
+    return counts_p;
+}
+
 
 void
 VbAvg::copyIdValues (MsRow * rowInput, MsRowAvg * rowAveraged)
@@ -1318,8 +1561,8 @@ VbAvg::finalizeBaselineIfNeeded (MsRow * rowInput, MsRowAvg * rowAveraged, const
     Bool needed = usingUvwDistance_p;
 
     if (needed) {
-        Double deltaUvw = distance (rowInput->uvw(), rowAveraged->uvwFirst ());
-        needed = deltaUvw > maxUvwDistance_p;
+        Double deltaUvw = distanceSquared (rowInput->uvw(), rowAveraged->uvwFirst ());
+        needed = deltaUvw > maxUvwDistanceSquared_p;
     }
 
     needed = needed || (rowInput->time() - rowAveraged->timeFirst()) > maxTimeDistance_p;
@@ -1364,16 +1607,16 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
     Int nCorrelations = shape (0);
     Int nChannels = shape (1);
 
-    rowAveraged->setCounts (Matrix<Int> (nCorrelations, nChannels, 0));
+    rowAveraged->setCounts (zeroInt_p.getMatrix (nCorrelations, nChannels, 0));
     rowAveraged->setWeight (Vector<Float> (nCorrelations, 0));
     rowAveraged->setTimeCentroid (0.0);
 
     if (doing_p.weightSpectrumOut_p){
-    	rowAveraged->setWeightSpectrum (Matrix<Float> (nCorrelations, nChannels, 0));
+    	rowAveraged->setWeightSpectrum (zeroFloat_p.getMatrix (nCorrelations, nChannels, 0));
     }
 
     if (doing_p.sigmaSpectrumOut_p){
-        rowAveraged->setSigmaSpectrum (Matrix<Float> (nCorrelations, nChannels, 0));
+        rowAveraged->setSigmaSpectrum (zeroFloat_p.getMatrix (nCorrelations, nChannels, 0));
     }
 
 //    VisBufferComponents2 exclusions =
@@ -1385,7 +1628,7 @@ VbAvg::initializeBaseline (MsRow * rowInput, MsRowAvg * rowAveraged,
     // Flag everything to start with
 
     rowAveraged->setRowFlag (True); // only for use during row-value accumulation
-    rowAveraged->setFlags(Matrix<Bool> (nCorrelations, nChannels, True));
+    rowAveraged->setFlags(trueBool_p.getMatrix (nCorrelations, nChannels, True));
     rowAveraged->correlationFlagsMutable() = Vector<Bool> (nCorrelations, True);
 
     rowAveraged->setBaselinePresent(True);
@@ -1399,6 +1642,13 @@ VbAvg::isComplete () const
 {
     return complete_p;
 }
+
+Bool
+VbAvg::isUsingUvwDistance () const
+{
+    return usingUvwDistance_p;
+}
+
 
 //void
 //VbAvg::markEmpty ()
@@ -1446,7 +1696,8 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
     // into cache from the input VII at its current position.
 
     dstVb->setRekeyable(True);
-    dstVb->setShape(srcVb->nCorrelations(), srcVb->nChannels(), nBaselines());
+    dstVb->setShape(srcVb->nCorrelations(), srcVb->nChannels(), nBaselines(), False);
+        // Do not clear the cache since we're resuing the storage
 
     dstVb->phaseCenter();
     dstVb->nAntennas();
@@ -1576,11 +1827,23 @@ VbAvg::setupVbAvg (const VisBuffer2 * vb)
     // Configure the index
 
     Int nAntennas = vb->nAntennas();
+
+    // This is a kluge to allow multiple spectral windows (of the same shape)
+    // to be combined into a single VB.  This really shouldn't be allowed!!!
+
+    set<uInt> spwInVb;
+
+    for (int i = 0; i < vb->nRows(); i++){
+        spwInVb.insert (vb->dataDescriptionIds()(i));
+    }
+
+    uInt nSpwInVb = spwInVb.size();
+
     Int nSpw = vb->getVi()->nSpectralWindows();
 
     baselineIndex_p.configure (nAntennas, nSpw, vb);
 
-    Int nBaselines = ((nAntennas * (nAntennas + 1)) / 2) * nSpw;
+    Int nBaselines = ((nAntennas * (nAntennas + 1)) / 2)* nSpwInVb;
 
     setShape (vb->nCorrelations(), vb->nChannels(), nBaselines);
 
@@ -1708,13 +1971,6 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
     bufferToFill_p->appendRow (rowAveraged, nBaselines (), optionalComponentsToCopy_p);
 
     rowAveraged->setBaselinePresent(False);
-}
-
-
-Bool
-VbAvg::isUsingUvwDistance () const
-{
-    return usingUvwDistance_p;
 }
 
 
@@ -1889,7 +2145,7 @@ VbAvg::isUsingUvwDistance () const
 ////
 ////    Assert (vba != 0 && ! vba->empty ());
 ////
-////    // Copy the completed average into the provided VisBuffer, but
+////    // Copy< the completed average into the provided VisBuffer, but
 ////    // first reshape the VB if it's shape is different.
 ////
 ////    vba->transferAverage (vb);
@@ -1928,7 +2184,6 @@ AveragingTvi2::AveragingTvi2 (VisibilityIterator2 * vi,
   inputViiAdvanced_p (False),
   vbAvg_p (new VbAvg (averagingParameters))
 {
-
     validateInputVi (inputVi);
 
     // Position input Vi to the first subchunk
@@ -2076,9 +2331,9 @@ AveragingTvi2::produceSubchunk ()
         vbAvg_p->accumulate (vb, subchunk_p);
         Int nWindows = vbAvg_p->nSpectralWindowsInBuffer ();
 
-        if (! vbAvg_p->isUsingUvwDistance() && vbToFill->appendSize() > 0)
-        {
-            // Doing straight average and some data has been produced so output it to the user
+        if (! vbAvg_p->isUsingUvwDistance() && vbToFill->appendSize() > 0){
+            // Doing straight average and some data has been produced so
+            // output it to the user
             break;
         }
         else if (vbToFill->appendSize() < nBaselines * nWindows){
@@ -2098,7 +2353,6 @@ AveragingTvi2::produceSubchunk ()
 
     more_p = getVii()->more() || // more to read
              vbToFill->nRows() > 0; // some to process
-
 }
 
 Bool
@@ -2144,64 +2398,70 @@ Float AveragingTvi2::weightToSigma (Float weight)
     return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
 }
 
-Float AveragingTvi2::sigmaToWeight (Float sigma)
+Vector<Float>
+AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
 {
-    return sigma > FLT_MIN ? 1.0 / std::pow (sigma,2) : 0.0; // bad sample
-}
+    IPosition shape = data.shape();
+    uInt nCorrelations = shape (0);
+    uInt nChannels = shape (1);
 
-Vector<Float> AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
-{
-	IPosition shape = data.shape();
-	Vector<Float> result(shape(0),0);
-	Vector<uInt> samples(shape(0),0);
+    Vector<Float> result (nCorrelations, 0);
+    ////Vector<uInt> samples (nCorrelations, 0);
 
-	// Initialize accumulator flag
-	Vector<Bool> accumulatorFlag(shape(0),False);
-	for (uInt corr=0;corr<shape(0);corr++)
-	{
-		accumulatorFlag(corr) = flags(corr,0);
-	}
+    // Initialize accumulator flag
+    //////////Vector<Bool> accumulatorFlag (nCorrelations, False);
 
-	// Business logic
-    for (uInt corr=0;corr<shape(0);corr++)
+//    for (uInt correlation = 0; correlation < nCorrelations; correlation++)
+//    {
+//        accumulatorFlag(correlation) = flags(correlation,0);
+//    }
+
+    // Business logic
+    for (uInt correlation = 0; correlation < nCorrelations; correlation++)
     {
-    	for (uInt chan=0;chan<shape(1);chan++)
-    	{
-    		// True/True or False/False
-    		if (accumulatorFlag(corr) == flags(corr,chan))
-    		{
-        		samples(corr) += 1;
-        		result(corr) += data(corr,chan);
-    		}
-    		// True/False: Reset accumulation when accumulator switches from flagged to unflag
-    		else if ( (accumulatorFlag(corr) == True) and (flags(corr,chan) == False) )
-    		{
-    			accumulatorFlag(corr) = False;
-        		samples(corr) = 1;
-        		result(corr) = data(corr,chan);
-    		}
+        int nSamples = 0;
+        float sum = 0;
+        bool accumulatorFlag = True;
 
-    	}
-    }
+        for (uInt channel=0; channel< nChannels; channel++)
+        {
+	  Bool inputFlag = flags(correlation,channel);
+            // True/True or False/False
+	  if (accumulatorFlag == inputFlag)
+            {
+                nSamples ++;
+                sum += data (correlation, channel);
 
-    // Normalize
-    for (uInt corr=0;corr<shape(0);corr++)
-    {
-    	if (samples(corr) > 0)
-    	{
-    		result(corr) /= samples(corr);
-    	}
+                ////samples(correlation) += 1;
+                ////result(correlation) += data (correlation,channel);
+            }
+            // True/False: Reset accumulation when accumulator switches from flagged to unflagged
+            else if ( accumulatorFlag and ! inputFlag )
+            {
+                accumulatorFlag = False;
+                nSamples = 1;
+                sum = data (correlation, channel);
+            }
+            // else ignore case where accumulator is valid and data is not
+
+        }
+
+        result (correlation) = sum / (nSamples != 0 ? nSamples : 1);
     }
 
     return result;
 }
 
-Matrix<Float> AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> &flags)
+Matrix<Float>
+AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> &flags)
 {
 	IPosition shape = data.shape();
-	Matrix<Float> result(shape(0),shape(2),0);
+	uInt nRows = shape(2);
+	uInt nCorrelations = shape (0);
 
-	for (uInt row=0;row<shape(2);row++)
+	Matrix<Float> result(nCorrelations, nRows, 0);
+
+	for (uInt row=0; row < nRows; row++)
 	{
 		result.column(row) = AveragingTvi2::average (data.xyPlane(row), flags.xyPlane(row));
 	}

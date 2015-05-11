@@ -613,7 +613,10 @@ protected:
     const ChannelSelector *
     createDefaultChannelSelector (Double time, Int msId, Int spectralWindowId);
 
-    virtual const vi::ChannelSelector * determineChannelSelection (Double time, Int spectralWindowId = -1) const;
+    virtual const vi::ChannelSelector * determineChannelSelection (Double time,
+                                                                   Int spectralWindowId = -1,
+                                                                   Int polarizationId = -1,
+                                                                   Int msId = -1) const;
 
     Slice findChannelsInRange (Double lowerFrequency, Double upperFrequency,
                                const vi::SpectralWindowChannels & spectralWindowChannels) const;
@@ -638,12 +641,14 @@ protected:
     template <typename T>
     void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
 
-    Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
     Vector<Double> getFrequencies (Double time, Int frameOfReference,
                                    Int spectralWindowId, Int msId) const; // helper method
 
-    Vector<Int> getChannels (Double time, Int frameOfReference) const;
+    Vector<Int> getChannels (Double time, Int frameOfReference,
+                             Int spectralWindowId, Int msId) const;
     Vector<Int> getCorrelations () const;
+
+    Int getPolarizationId (Int spectralWindowId, Int msId) const;
 
     Int getReportingFrameOfReference () const;
 
