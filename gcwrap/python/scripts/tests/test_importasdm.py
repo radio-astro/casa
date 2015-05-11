@@ -189,6 +189,14 @@ class test_base(unittest.TestCase):
         os.system('ln -sf '+datapath+myasdmname)
         default(importasdm)
 
+    def setUp_eph(self):
+        res = None
+        myasdmname = 'uid___A002_X997a62_X8c-short' # 12m example ASDM with ephemerides
+
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/asdm-import/input/'
+        os.system('ln -sf '+datapath+myasdmname)
+        default(importasdm)
+
 
 ###########################
 # beginning of actual test 
@@ -912,13 +920,14 @@ class asdm_import7(test_base):
 
     def setUp(self):
         self.setUp_12mex()
+        self.setUp_eph()
         
     def tearDown(self):
-        myasdmname = 'uid___A002_X71e4ae_X317_short'
-        os.system('rm '+myasdmname) # a link
-        shutil.rmtree(myasdmname+".ms",ignore_errors=True)
-        shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
-        shutil.rmtree("reference.ms",ignore_errors=True)
+        for myasdmname in ['uid___A002_X71e4ae_X317_short', 'uid___A002_X997a62_X8c-short']:
+            os.system('rm -f '+myasdmname) # a link
+            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+            shutil.rmtree("reference.ms",ignore_errors=True)
                
     def test7_lazy1(self):
         '''Asdm-import: Test good 12 m ASDM with mixed pol/channelisation input with default filler in lazy mode'''
@@ -1168,6 +1177,57 @@ class asdm_import7(test_base):
                         print "ERROR for table ", subtname
             
                 
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+    def test7_lazy3(self):
+        '''Asdm-import: Test good 12 m ASDM with Ephemeris table in lazy mode'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X997a62_X8c-short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, convert_ephem2geo=True, 
+                              process_pointing=False, flagbackup=False) 
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["FIELD/table.dat",
+                            "FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                            "FIELD/EPHEM1_Titania_57034.934999999998.tab"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All relevant tables present. Try opening as MS ..."
+        try:
+            ms.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            ms.close()
+            print myname, ": OK."
+
+        for name in ["FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                     "FIELD/EPHEM1_Titania_57034.934999999998.tab"]:
+            tb.open(themsname+"/"+name)
+            kw = tb.getkeywords()
+            geodist = kw['GeoDist'] # (km above reference ellipsoid)
+            geolat = kw['GeoLat'] # (deg)
+            geolong = kw['GeoLong'] # (deg)
+            print myname, ": Testing if ephemeris ", name, " was converted to GEO ..."
+            if not (geodist==geolat==geolong==0.):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Ephemeris was not converted to GEO for '+themsname+'\n'
+            else:
+                print myname, ": OK."
+            tb.close()
+
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
 

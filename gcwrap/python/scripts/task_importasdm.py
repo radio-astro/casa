@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 from taskinit import *
 import flaghelper as fh
@@ -35,7 +34,8 @@ def importasdm(
     useversion=None,
     bdfflags=None,
     with_pointing_correction=None,
-    remove_ref_undef=None
+    remove_ref_undef=None,
+    convert_ephem2geo=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -154,6 +154,8 @@ def importasdm(
                    default: false
 
       remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
+
+      convert_ephem2geo -- if True, convert any attached ephemerides to the GEO reference frame
            
         """
 
@@ -249,16 +251,15 @@ def importasdm(
                     out = 'ASDM_' + tab.upper()
                     outTabNames.append(out)
                     outTables.append(vis + '/' + out)
-                #tbtool = casac.table()
-                tb = casac.table()
-                tb.open(vis, nomodify=False)
+                
+                tblocal.open(vis, nomodify=False)
                 wtb = casac.table()
                 for i in xrange(len(outTables)):
                     wtb.fromASDM(outTables[i], targetTables[i])
-                    tb.putkeyword(outTabNames[i], 'Table: %s'
+                    tblocal.putkeyword(outTabNames[i], 'Table: %s'
                                   % outTables[i])
-                    tb.flush()
-                tb.close()
+                    tblocal.flush()
+                tblocal.close()
             return
                 # -----------------------------------
                 # end of importasdm_sd implementation
@@ -548,7 +549,11 @@ def importasdm(
                 
         else:
             casalog.post('There is no Flag.xml in ASDM', 'WARN')
-        
+
+            
+        if convert_ephem2geo:
+            import recipes.ephemerides.convertephem as ce
+            ce.convert2geo(vis, '*') # convert any attached ephemerides to GEO
         
         
     except Exception, instance:

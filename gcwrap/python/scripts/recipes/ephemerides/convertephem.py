@@ -42,17 +42,28 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
     dec = tbt.getcol('DEC')
     radvel = tbt.getcol('RadVel')
     mjd = tbt.getcol('MJD')
-    geodist = tbt.getkeyword('GeoDist') # (km above reference ellipsoid)
-    geolat = tbt.getkeyword('GeoLat') # (deg)
-    geolong = tbt.getkeyword('GeoLong') # (deg)
-    obsloc = tbt.getkeyword('obsloc')
-    try:
-        posref = tbt.getkeyword('posrefsys')
-    except Exception, instance:
-        casalog.post('Ephemeris does not have the posrefsys keyword. Assuming ICRF/J2000.0', 'WARN')
-        posref = 'ICRF/J2000.0'
-        
+    kw = tbt.getkeywords()
     tbt.close()
+
+    geodist = kw['GeoDist'] # (km above reference ellipsoid)
+    geolat = kw['GeoLat'] # (deg)
+    geolong = kw['GeoLong'] # (deg)
+
+    if kw.has_key('obsloc'):
+        obsloc = kw['obsloc']
+    else:
+        casalog.post('Ephemeris does not have the obsloc keyword.', 'INFO')
+        if (geodist==geolat==geolong==0.):
+            casalog.post('   Assuming obsloc == GEOCENTRIC since lat, long, and dist are zero.', 'INFO')
+            obsloc='GEOCENTRIC'
+        else:
+            obsloc='unknown'
+
+    if kw.has_key('posrefsys'):
+        posref = kw['posrefsys']
+    else:
+        casalog.post('Ephemeris does not have the posrefsys keyword. Assuming ICRF/J2000.0', 'INFO')
+        posref = 'ICRF/J2000.0'
 
     if posref!='ICRF/J2000.0':
         casalog.post('Unsupported position reference system: '+posref+', need ICRF/J2000.0', 'WARN')
@@ -131,7 +142,7 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
     
 
     if overwrite and outtablename==tablename:
-        os.system('rm -rf original-'+tablename)
+        os.system('rm -rf '+safetycopyname)
 
     return True
 
@@ -173,7 +184,7 @@ def convert2geo(vis='', field=''):
         tbt.close()
         
         if len(theephstoconvert)==0:
-            casalog.post('No ephemerides attached. Nothing to do.', 'WARN')
+            casalog.post('No ephemerides attached.', 'INFO')
             return True
         else:
             for theeph in theephstoconvert:
