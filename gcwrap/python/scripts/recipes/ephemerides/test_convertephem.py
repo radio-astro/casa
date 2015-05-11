@@ -112,7 +112,7 @@ def test_convertephem():
     reftab = 'fewdays-geo.txt.tab'
 
     if not os.path.exists(inputtab):
-        rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/fixplanets'+inputtab+' .')
+        rval = os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/fixplanets/'+inputtab+' .')
         if rval!=0:
             raise Exception, "Error copying input data"
     if not os.path.exists(reftab):
