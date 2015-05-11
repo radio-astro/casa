@@ -673,6 +673,7 @@ namespace casa {
 		if ( errorMsg.length() == 0 ) {
 			const Record& results = specFitThread->getResults();
 
+
 			//Decide if we got any valid fits
 			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitterResults::_SUCCEEDED );
 			Array<Bool> valid = results.asArrayBool( ImageProfileFitterResults::_VALID );
@@ -740,7 +741,8 @@ namespace casa {
 				if ( !fitCancelled ) {
 
 					//Initialize SpecFit curves for the fit.
-					bool success = processFitResults( xValues, xValuesPix );
+					const String fitYUnit = results.asString( "yUnit");
+					bool success = processFitResults( xValues, xValuesPix, fitYUnit );
 					if ( !success ) {
 						QString msg( "Fit returned invalid value(s).");
 						Util::showUserMessage( msg, this );
@@ -873,7 +875,7 @@ namespace casa {
 	}
 
 	bool SpecFitSettingsWidgetRadio::processFitResults(
-	    Vector<float>& xValues, Vector<float>& xValuesPix) {
+	    Vector<float>& xValues, Vector<float>& xValuesPix, const String& fitYUnit) {
 
 		//Iterate through all the fits and post the results
 		Array<SHARED_PTR<ProfileFitResults> > image1DFitters = fitter-> getFitters();
@@ -907,7 +909,7 @@ namespace casa {
 
 				bool successfulFit = false;
 				if ( fitType == SpectralElement::GAUSSIAN ) {
-					successfulFit = processFitResultGaussian( solutions[j], j, curves );
+					successfulFit = processFitResultGaussian( solutions[j], j, curves, fitYUnit );
 				} else if (fitType == SpectralElement::POLYNOMIAL ) {
 					successfulFit = processFitResultPolynomial( solutions[j], curves );
 				}
@@ -989,7 +991,7 @@ namespace casa {
 
 
 	bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement* solution,
-	        int index, QList<SpecFit*>& curves) {
+	        int index, QList<SpecFit*>& curves, const String& fitYUnit) {
 
 		//Get the center, peak, and fwhm from the estimate.  Make sure they are
 		//valid values.
@@ -1047,25 +1049,21 @@ namespace casa {
 			return false;
 		}
 
-		//The peak value will be in whatever units the
-		//fit image is using.  We need to convert it to the image units that the canvas
+		//The peak value may not be in the same units the image canvas is using.
+		//We need to convert it to the image units that the canvas
 		//knows about (which may not be the same thing if we are fitting a different
-		//image than the canvas is using for the main display.
-		/*const Unit imageUnit = img->units();
-		String imageUnits = imageUnit.getName();
-		QString imageUnitsStr( imageUnits.c_str());
+		//image than the canvas is using for the main display).
 		QString canvasUnits = pixelCanvas->getDisplayYUnits();
-		if ( imageUnitsStr != canvasUnits ) {
+		QString fitYUnitQ( fitYUnit.c_str());
+		if ( fitYUnitQ != canvasUnits ) {
 			QString fitCurveName = ui.curveComboBox->currentText();
 			CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
 			Bool validSpec;
 			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
 			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal,
-					imageUnitsStr, canvasUnits, xAxisUnit, coord );
-			qDebug() << "convertedPeakVal="<<convertedPeakVal<<" imageUnits="<<imageUnitsStr<<" canvasUnits="<<canvasUnits;
+					fitYUnitQ, canvasUnits, xAxisUnit, coord );
 			peakVal = convertedPeakVal;
-		}*/
-
+		}
 		SpecFit* gaussFit = new SpecFitGaussian( peakVal, centerVal, fwhmVal, index );
 		curves.append( gaussFit );
 		return true;

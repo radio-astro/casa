@@ -98,10 +98,10 @@ namespace casa {
 					 * Decides if the units represent velocity, wavelength, or frequency.
 					 */
 		void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
-		bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
+		bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix, const String& yUnit);
 		void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 		bool processFitResultGaussian( const SpectralElement* solution,
-		                               int index, QList<SpecFit*>& curves);
+		                               int index, QList<SpecFit*>& curves, const String& yUnit);
 		bool processFitResultPolynomial( const SpectralElement* solution,
 		                                 QList<SpecFit*>& curves);
 		bool isInRange( double xValue ) const;
