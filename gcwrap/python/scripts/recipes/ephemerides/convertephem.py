@@ -4,7 +4,7 @@ import glob
 # Conversion of TOPO ephemerides to GEO
 #
 # Example:
-#       import ephemeris.convertephem as ce
+#       import recipes.ephemerides.convertephem as ce
 #       ce.convert2geo('titan.ms', 'Titan')
 #
 #   will find the ephemeris attached to field "Titan" in the MS "titan.ms"
@@ -59,7 +59,7 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         return False
 
     if obsloc=='GEOCENTRIC':
-        casalog.post('Obsloc is already GEOCENTRIC. Nothing to be done.', 'WARN')
+        casalog.post('Obsloc is already GEOCENTRIC. Nothing to be done.', 'INFO')
         return True
 
     mepos = {'m0': {'value': geolong, 'unit': 'deg'},
