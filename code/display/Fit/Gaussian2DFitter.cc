@@ -102,11 +102,7 @@ namespace casa {
 	void Gaussian2DFitter::run() {
 		successfulFit = true;
 		String channelStr = String::toString(channelNumber);
-
-		ImageFitter fitter(
-			image, "", NULL, pixelBox, channelStr, "", "",
-			residualImageFile, "", estimateFile
-		);
+		ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", estimateFile);
 		String logFile = getLogFilePath().toStdString();
 		fitter.setLogfile( logFile );
 		if (includePixs) {
@@ -115,6 +111,10 @@ namespace casa {
 		if (excludePixs) {
 			fitter.setExcludePixelRange(*excludePixs);
 		}
+		if ( residualImageFile.length() > 0 ){
+			fitter.setResidual( residualImageFile );
+		}
+
 		// do the fit
 		try {
             std::pair<ComponentList, ComponentList> componentLists = fitter.fit();
@@ -128,7 +128,6 @@ namespace casa {
 		} catch( AipsError& error ) {
 			successfulFit = false;
 			QString specificProblem( error.what() );
-			qDebug() << "Unsuccessful fit: "<<specificProblem;
 			errorMsg = "Fit did not converge";
 		}
 	}

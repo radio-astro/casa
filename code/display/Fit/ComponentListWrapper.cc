@@ -233,6 +233,7 @@ namespace casa {
 
 				SkyComponent skyComponent = skyList.component( index );
 				//String summaryStr = skyComponent.summarize( &coordSystem );
+				//qDebug() << "summaryStr="<<summaryStr.c_str();
 
 				//Get the major & minor axis and the position angle.
 				const QString POINT_WIDTH( "1");
@@ -278,36 +279,36 @@ namespace casa {
 							estimateInRange = false;
 						}
 					}
-
 					if ( estimateInRange ) {
 						// get the integrated flux value
 						Quantity integratedFlux = getFlux( index);
 						Unit imUnit=image->units();
 						ImageInfo imageInformation = image->imageInfo();
 						const ComponentShape* compShape = skyList.getShape( index );
+						QString peakFlux = QString::number( integratedFlux.getValue() );
 						Vector<Double> shapeParams =compShape->parameters();
 						int parameterCount =compShape->nParameters();
 						if ( parameterCount >= 2 ) {
 							// get the peak flux from the integrated flux
 							Quantity peakFluxQuantity=SkyCompRep::integralToPeakFlux(directionCoordinate,
-							                          ComponentType::GAUSSIAN, integratedFlux,
-							                          imUnit, Quantity(shapeParams(0),RAD), Quantity(shapeParams(1),RAD),
-							                          imageInformation.restoringBeam());
+													  ComponentType::GAUSSIAN, integratedFlux,
+													  imUnit, Quantity(shapeParams(0),RAD), Quantity(shapeParams(1),RAD),
+													  imageInformation.restoringBeam());
 							double peakFluxValue = peakFluxQuantity.getValue();
-							QString peakFlux = QString::number( peakFluxValue );
-
-							//Write a line
-							const QString COMMA_STR( ", ");
-							stream << peakFlux << COMMA_STR;
-							stream << xCenter << COMMA_STR;
-							stream << yCenter << COMMA_STR;
-							stream << majorAxis << COMMA_STR;
-							stream << minorAxis << COMMA_STR;
-							stream << posAngle;
-
-							stream << "\n";
-							writeCount++;
+							peakFlux = QString::number( peakFluxValue );
 						}
+
+						//Write a line
+						const QString COMMA_STR( ", ");
+						stream << peakFlux << COMMA_STR;
+						stream << xCenter << COMMA_STR;
+						stream << yCenter << COMMA_STR;
+						stream << majorAxis << COMMA_STR;
+						stream << minorAxis << COMMA_STR;
+						stream << posAngle;
+
+						stream << "\n";
+						writeCount++;
 					}
 
 				} else {
@@ -317,6 +318,7 @@ namespace casa {
 			if ( !screenEstimates ) {
 				if ( writeCount < lineCount ) {
 					successfulWrite = false;
+					errorMsg = errorMsg + "\n There was an error writing the sources";
 				}
 			} else {
 				//If we are screening estimates, as long as we have written one,
