@@ -478,8 +478,7 @@ public:
 
             const Slice & slice = correlationAxis.getSlice (i);
 
-            uInt n = 0;
-            for (uInt j = 0;
+            for (uInt j = slice.start(), n = 0;
                  n < slice.length();
                  j += slice.inc()){
 
