@@ -558,7 +558,7 @@ namespace casa {
 	String FindSourcesDialog::getScreenedEstimatesFile( const String& estimatesFileName,
 	        bool* errorWritingFile ) {
 		QString screenedEstimatesFileName(estimatesFileName.c_str());
-		if ( screenedEstimatesFileName.length() > 0 ) {
+		if ( screenedEstimatesFileName.length() > 0 && skyList.getSize() > 0 ) {
 			if ( !regions.isEmpty() ) {
 				RegionBox* screenBox = regions[currentRegionId ];
 				if ( screenBox != NULL ) {
