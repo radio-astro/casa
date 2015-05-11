@@ -255,6 +255,10 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
         # return all agents so we get ticks and crosses against each one
         agents = ['before', 'applycal']
+        
+        
+        m = context.observing_run.measurement_sets[0]
+        corrstring = m.get_vla_corrstring()
 
         ctx.update({'flags'    : flag_totals,
                     'calapps'  : calapps,
@@ -265,12 +269,12 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         amp_vs_time_summary_plots = self.create_plots(context, 
                                                       result, 
                                                       applycal.AmpVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation='LL,RR')
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
         phase_vs_time_summary_plots = self.create_plots(context, 
                                                       result, 
                                                       applycal.PhaseVsTimeSummaryChart, 
-                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation='LL,RR')
+                                                      ['PHASE', 'BANDPASS', 'AMPLITUDE', 'TARGET'], correlation=corrstring)
 
 #         amp_vs_freq_phase_summary_plots = self.create_plots(context, 
 #                                                             result, 
@@ -302,7 +306,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.AmpVsFrequencySummaryChart, 
-                                      intents, correlation='LL,RR')
+                                      intents, correlation=corrstring)
             self.sort_plots_by_baseband(plots)
 
             key = utils.commafy(intents, quotes=False)
@@ -314,7 +318,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.PhaseVsFrequencySummaryChart, 
-                                      intents, correlation='LL,RR')
+                                      intents, correlation=corrstring)
             self.sort_plots_by_baseband(plots)
 
             key = utils.commafy(intents, quotes=False)
@@ -324,18 +328,18 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         amp_vs_uv_summary_plots = self.create_plots(context, 
                                                     result, 
                                                     applycal.AmpVsUVSummaryChart, 
-                                                    ['AMPLITUDE'], correlation='LL,RR')
+                                                    ['AMPLITUDE'], correlation=corrstring)
 
         phase_vs_uv_summary_plots = self.create_plots(context, 
                                                       result, 
                                                       applycal.PhaseVsUVSummaryChart, 
-                                                      ['AMPLITUDE'], correlation='LL,RR')
+                                                      ['AMPLITUDE'], correlation=corrstring)
 
         # CAS-5970: add science target plots to the applycal page
         (science_amp_vs_freq_summary_plots, 
          science_phase_vs_freq_summary_plots,
          science_amp_vs_uv_summary_plots,
-         uv_max) = self.create_science_plots(context, result, correlation='LL,RR') 
+         uv_max) = self.create_science_plots(context, result, correlation=corrstring) 
 
         if pipeline.infrastructure.generate_detail_plots(result):
             # detail plots. Don't need the return dictionary, but make sure a
@@ -344,37 +348,37 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                               result, 
                               applycal.AmpVsFrequencyDetailChart, 
                               ['BANDPASS', 'PHASE'], 
-                              ApplycalAmpVsFreqPlotRenderer, correlation='LL,RR')
+                              ApplycalAmpVsFreqPlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsFrequencyDetailChart, 
                               ['BANDPASS', 'PHASE'],
-                              ApplycalPhaseVsFreqPlotRenderer, correlation='LL,RR')
+                              ApplycalPhaseVsFreqPlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsUVDetailChart, 
                               ['AMPLITUDE'],
-                              ApplycalAmpVsUVPlotRenderer, correlation='LL,RR')
+                              ApplycalAmpVsUVPlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsUVDetailChart, 
                               ['AMPLITUDE'],
-                              ApplycalPhaseVsUVPlotRenderer,correlation='LL,RR')
+                              ApplycalPhaseVsUVPlotRenderer,correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsTimeDetailChart, 
                               ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
-                              ApplycalAmpVsTimePlotRenderer, correlation='LL,RR')
+                              ApplycalAmpVsTimePlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsTimeDetailChart, 
                               ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
-                              ApplycalPhaseVsTimePlotRenderer, correlation='LL,RR')
+                              ApplycalPhaseVsTimePlotRenderer, correlation=corrstring)
 
         ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
                     'phase_vs_freq_plots' : phase_vs_freq_summary_plots,
