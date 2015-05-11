@@ -169,7 +169,8 @@ class PhaseVsBaselineChart(common.PlotBase):
                 # we expect the number and identity of the caltable 
                 # correlations for this scan to match those in the MS, so we
                 # can enumerate over the correlations in the MS scan.  
-                for corr_id, _ in enumerate(dd.corr_axis):
+                #for corr_id, _ in enumerate(dd.corr_axis):
+                for corr_id, _ in enumerate(dd.polarizations):
                     for antenna in self.ms.antennas:
                         selection = data_before.filter(antenna=[antenna.id], spw=[spw.id])
                         try:
