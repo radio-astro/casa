@@ -304,9 +304,9 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 
             # Reset the calto spw list
             result.pool[0].calto.spw = orig_spw
-            result.final[0].calto.spw = orig_spw
-            
-            result.final[0].origin = calapp_origins
+	    if result.final:
+                result.final[0].calto.spw = orig_spw
+                result.final[0].origin = calapp_origins
             
             return result
 
@@ -398,9 +398,9 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     
             # Reset the calto spw list
             result.pool[0].calto.spw = orig_spw
-            result.final[0].calto.spw = orig_spw
-
-            result.final[0].origin = calapp_origins
+	    if result.final:
+                result.final[0].calto.spw = orig_spw
+                result.final[0].origin = calapp_origins
 
             return result
 
