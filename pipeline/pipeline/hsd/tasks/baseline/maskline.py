@@ -14,7 +14,7 @@ LOG = infrastructure.get_logger(__name__)
 NoData = common.NoData
 
 class MaskLineInputs(common.SingleDishInputs):
-    def __init__(self, context, antenna_list, spwid_list, iteration, index_list, 
+    def __init__(self, context, iteration, antenna_list, spwid_list, pols_list, 
                  window=None, edge=None, broadline=None):
         self._init_properties(vars())
         
@@ -65,11 +65,32 @@ class MaskLine(common.SingleDishTaskTemplate):
         iteration = self.inputs.iteration
         spwid_list = self.inputs.spwid_list
         file_index = self.inputs.antenna_list
-        index_list = self.inputs.index_list
+        reference_data = context.observing_run[file_index[0]]
+        datatable = context.observing_run.datatable_instance
+        pols_list = self.inputs.pols_list
+        srctype = reference_data.calibration_strategy['srctype']
+        index_list = list(common.get_index_list(datatable, file_index, spwid_list, pols_list, srctype))
+        index_list.sort()
+
+        LOG.debug('index_list=%s'%(index_list))
+        if len(index_list) == 0:
+            # No valid data 
+            outcome = {'detected_lines': [],
+                       'cluster_info': {},
+                       'grid_table': None}
+            result = MaskLineResults(task=self.__class__,
+                                     success=True,
+                                     outcome=outcome)
+            result.task = self.__class__
+                
+            if self.inputs.context.subtask_counter is 0: 
+                result.stage_number = self.inputs.context.task_counter - 1
+            else:
+                result.stage_number = self.inputs.context.task_counter 
+            return result
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
-        reference_data = context.observing_run[file_index[0]]
         beam_size = casatools.quanta.convert(reference_data.beam_size[spwid_list[0]], 'deg')['value']
         observing_pattern = reference_data.pattern[spwid_list[0]][0]
         
@@ -101,7 +122,8 @@ class MaskLine(common.SingleDishTaskTemplate):
         if len(grid_table) == 0:
             LOG.warn('Line detection/validation will not be done since grid table is empty. Maybe all the data are flagged out in the previous step.')
             outcome = {'detected_lines': [],
-                       'cluster_info': {}}
+                       'cluster_info': {},
+                       'grid_table': None}
             result = MaskLineResults(task=self.__class__,
                                      success=True,
                                      outcome=outcome)

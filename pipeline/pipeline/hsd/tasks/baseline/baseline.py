@@ -156,9 +156,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.info('Skip channel averaged spw %s.'%(first_member.spw))
                 continue
 
-                
-            srctype = st.calibration_strategy['srctype']
-
             LOG.debug('spw=\'%s\''%(args['spw']))
             LOG.debug('antenna_list=%s'%(file_index))
             member_list = list(common.get_valid_members(group_desc, file_index, args['spw']))
@@ -179,23 +176,18 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug('Members to be processed:')
             for i in xrange(len(member_list)):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
-
-            index_list = list(common.get_index_list(datatable, antenna_list, spwid_list, pols_tmp, srctype))
-            index_list.sort()
-
-            LOG.debug('index_list=%s'%(index_list))
-            if len(index_list) == 0:
-                LOG.info('Skip reduction group %s'%(group_id))
-                continue
             
-            maskline_inputs = maskline.MaskLine.Inputs(context, antenna_list, spwid_list, iteration, 
-                                                       index_list, window, edge, broadline)
+            maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
+                                                       pols_tmp, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
+            grid_table = maskline_result.outcome['grid_table']
+            if grid_table is None:
+                LOG.info('Skip reduction group %s'%(group_id))
+                continue
             detected_lines = maskline_result.outcome['detected_lines']
             channelmap_range = maskline_result.outcome['channelmap_range']
             cluster_info = maskline_result.outcome['cluster_info']
-            grid_table = maskline_result.outcome['grid_table']
 
             # fit order determination and fitting
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
