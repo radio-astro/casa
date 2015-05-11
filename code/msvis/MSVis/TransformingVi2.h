@@ -429,11 +429,9 @@ public:
     virtual Int getReportingFrameOfReference () const;
     virtual void setReportingFrameOfReference (Int frame);
 
-    virtual Vector<Int> getChannels (Double time, Int frameOfReference,
-                                     Int spectralWindowId, Int msId) const;
+    virtual Vector<Int> getChannels (Double time, Int frameOfReference) const;
     virtual Vector<Int> getCorrelations () const;
-    virtual Vector<Double> getFrequencies (Double time, Int frameOfReference,
-                                           Int spectralWindowId, Int msId) const;
+    virtual Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
     virtual void dataDescriptionIds(Vector<Int> &) const;
 
     //reference to actual ms in interator

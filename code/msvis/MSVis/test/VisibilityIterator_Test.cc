@@ -643,14 +643,14 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
     // Test flag cube shapes
 
-//    IPosition expectedShape2 (IPosition (4, nCorrelations, nChannels, nFlagCategories_p, nRows));
-//    TestErrorIf (! vb->flagCategory().shape ().isEqual (expectedShape2),
-//                 String::format("Bad flag category shape; expected %s, got %s; "
-//                                "spw=%d, msRow=%d",
-//                                vb->flagCategory().shape().toString().c_str(),
-//                                expectedShape2.toString().c_str(),
-//                                spectralWindow,
-//                                rowIds (0)))
+    IPosition expectedShape2 (IPosition (4, nCorrelations, nChannels, nFlagCategories_p, nRows));
+    TestErrorIf (! vb->flagCategory().shape ().isEqual (expectedShape2),
+                 String::format("Bad flag category shape; expected %s, got %s; "
+                                "spw=%d, msRow=%d",
+                                vb->flagCategory().shape().toString().c_str(),
+                                expectedShape2.toString().c_str(),
+                                spectralWindow,
+                                rowIds (0)))
 
     checkRowScalars (vb);
 
@@ -693,8 +693,8 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
                 // Check the flag categories
 
-//                checkFlagCategory (rowIds (row), spectralWindow, row, channel, correlation,
-//                                   channelOffset, channelIncrement, vb);
+                checkFlagCategory (rowIds (row), spectralWindow, row, channel, correlation,
+                                   channelOffset, channelIncrement, vb);
             }
         }
     }
@@ -893,7 +893,7 @@ BasicChannelSelection::getUnderlyingCorrelation (Int spectralWindow, Int correla
 
     for (Int sliceIndex = 0; sliceIndex <= (int) vs.nelements(); sliceIndex ++){
 
-        for (uInt j = vs(sliceIndex).start(), i = 0;
+        for (Int j = vs(sliceIndex).start(), i = 0;
              i < vs(sliceIndex).length ();
              j += vs(sliceIndex).inc(), i++){
 
@@ -1043,9 +1043,9 @@ BasicMutation::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
         cubeB = arrayTransformResult (cubeB, LogicalNot());
         vb->setFlagCube (cubeB);
 
-//        Array<Bool> flagCategory = vb->flagCategory();
-//        flagCategory = arrayTransformResult (flagCategory, LogicalNot());
-//        vb->setFlagCategory (flagCategory);
+        Array<Bool> flagCategory = vb->flagCategory();
+        flagCategory = arrayTransformResult (flagCategory, LogicalNot());
+        vb->setFlagCategory (flagCategory);
 
         Matrix<Float> v;
 
@@ -1528,6 +1528,7 @@ Weighting::createMs ()
     msf_p->addSpectralWindow("spw", 5, 0, 100, "LL RR RL LR");
 
     msf_p->addWeightSpectrum(False);
+    msf_p->addCorrectedWeightSpectrum(True);
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
     nRowsToProcess_p = p.second;
@@ -1556,7 +1557,7 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
     Int nCorrelations = wsShape (0);
     Int nChannels = wsShape (1);
     Int nRows = wsShape (2);
-    //const Vector<uInt> & rowIds = vb->rowIds();
+    const Vector<uInt> & rowIds = vb->rowIds();
 
     for (Int row = 0; row < nRows; row ++){
         for (Int correlation = 0; correlation < nCorrelations; correlation ++){

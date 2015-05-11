@@ -135,8 +135,7 @@ public:
     virtual ~VisBufferImpl2();
 
     void appendRow (ms::Vbi2MsRow * rowSrc, Int initialCapacity,
-                    const VisBufferComponents2 & optionalComponentsToCopy,
-                    bool doCopy = True);
+                    const VisBufferComponents2 & optionalComponentsToCopy);
     void appendRowsComplete ();
     Int appendSize () const;
 
@@ -523,7 +522,6 @@ private:
     virtual void fillSigmaSpectrum (Cube<Float>& value) const;
 
     VisBufferCache * cache_p;
-    casa::ms::Vbi2MsRow * msRow_p;
     VisBufferState * state_p;
 };
 

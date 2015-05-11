@@ -108,7 +108,7 @@ TransformingVi2::configureNewSubchunk (){
     // object.  The main addition is the need to provide the name of the MS output and
     // the MS index which is always zero since we only support a single output MS.
 
-    Vector<Int> channels = getChannels (0, 0, spectralWindow (), msId()); // args are ignored
+    Vector<Int> channels = getChannels (0, 0); // args are ignored
     Int nChannels = channels.nelements();
 
     Vector<Int> corrs = getCorrelations ();
@@ -255,11 +255,9 @@ TransformingVi2::getBeamOffsets ()  const
 }
 
 Vector<Int>
-TransformingVi2::getChannels (Double time, Int frameOfReference,
-                              Int spectralWindowId, Int msId)  const
+TransformingVi2::getChannels (Double time, Int frameOfReference)  const
 {
-    return getVii()->getChannels (time, frameOfReference,
-                                  spectralWindowId, msId);
+    return getVii()->getChannels (time, frameOfReference);
 }
 
 Vector<Int>
@@ -275,11 +273,9 @@ TransformingVi2::getEpoch ()  const
 }
 
 Vector<Double>
-TransformingVi2::getFrequencies (Double time, Int frameOfReference,
-                                 Int spectralWindowId, Int msId)  const
+TransformingVi2::getFrequencies (Double time, Int frameOfReference)  const
 {
-    return getVii()->getFrequencies (time, frameOfReference,
-                                     spectralWindowId, msId);
+    return getVii()->getFrequencies (time, frameOfReference);
 }
 
 const VisImagingWeight &
@@ -299,6 +295,7 @@ TransformingVi2::getNMs () const
 {
     return getVii()->getNMs ();
 }
+
 
 MFrequency::Types
 TransformingVi2::getObservatoryFrequencyType ()  const

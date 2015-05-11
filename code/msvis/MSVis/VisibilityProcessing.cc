@@ -543,7 +543,7 @@ VisibilityProcessor::setContainer (const VpContainer * container)
 String
 toString (VisibilityProcessor::ProcessingType p)
 {
-    static const char * names [] = {"Subchunk", "EndOfChunk", "EndOfData"};
+    static char * names [] = {"Subchunk", "EndOfChunk", "EndOfData"};
 
     return names [p];
 }

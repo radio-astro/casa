@@ -69,12 +69,7 @@ public:
     void writeFlagRow (const Vector<Bool> & rowflags);
 
     static Float weightToSigma (Float weight);
-    static inline Float sigmaToWeight (Float sigma)
-    {
-        return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0; // bad sample
-    }
-
-
+    static Float sigmaToWeight (Float sigma);
     static Vector<Float> average (const Matrix<Float> &data, const Matrix<Bool> &flags);
     static Matrix<Float> average (const Cube<Float> &data, const Cube<Bool> &flags);
 

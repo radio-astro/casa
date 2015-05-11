@@ -24,64 +24,14 @@ namespace ms {
 
 Vbi2MsRow::Vbi2MsRow (Int row, const VisBufferImpl2 * vb)
 : MsRow (row, vb),
-  correctedCache_p (& VisBufferImpl2::visCubeCorrected),
-  flagCache_p (& VisBufferImpl2::flagCube),
-  modelCache_p(& VisBufferImpl2::visCubeModel),
-  observedCache_p(&VisBufferImpl2::visCube),
-  sigmaCache_p (&VisBufferImpl2::sigma),
-  sigmaSpectrumCache_p(& VisBufferImpl2::sigmaSpectrum),
-  weightCache_p (&VisBufferImpl2::weight),
-  weightSpectrumCache_p(& VisBufferImpl2::weightSpectrum),
   vbi2_p (const_cast<VisBufferImpl2 *> (vb))
-{
-    configureArrayCaches ();
-}
+{}
 
 
 Vbi2MsRow::Vbi2MsRow (Int row, VisBufferImpl2 * vb)
 : MsRow (row, vb),
-  correctedCache_p (& VisBufferImpl2::visCubeCorrected),
-  flagCache_p (& VisBufferImpl2::flagCube),
-  modelCache_p(& VisBufferImpl2::visCubeModel),
-  observedCache_p(&VisBufferImpl2::visCube),
-  sigmaCache_p (&VisBufferImpl2::sigma),
-  sigmaSpectrumCache_p(& VisBufferImpl2::sigmaSpectrum),
-  weightCache_p (&VisBufferImpl2::weight),
-  weightSpectrumCache_p(& VisBufferImpl2::weightSpectrum),
   vbi2_p (vb)
-{
-    configureArrayCaches ();
-}
-
-void
-Vbi2MsRow::configureArrayCaches ()
-{
-    arrayCaches_p.push_back (& correctedCache_p);
-    arrayCaches_p.push_back (& flagCache_p);
-    arrayCaches_p.push_back (& modelCache_p);
-    arrayCaches_p.push_back (& observedCache_p);
-    arrayCaches_p.push_back (& sigmaCache_p);
-    arrayCaches_p.push_back (& sigmaSpectrumCache_p);
-    arrayCaches_p.push_back (& weightCache_p);
-    arrayCaches_p.push_back (& weightSpectrumCache_p);
-}
-
-void
-Vbi2MsRow::clearArrayCaches ()
-{
-    for (std::vector<CachedArrayBase *>::iterator i = arrayCaches_p.begin();
-         i != arrayCaches_p.end();
-         i ++){
-        (* i)->clearCache();
-    }
-}
-
-void
-Vbi2MsRow::changeRow (Int row)
-{
-    MsRow::changeRow (row);
-    clearArrayCaches ();
-}
+{}
 
 ////////////////////////////////////////////////////////////
 //
@@ -192,29 +142,22 @@ Vbi2MsRow::fieldId () const
     return vbi2_p->fieldId () (row ());
 }
 
-VisBufferImpl2 *
-Vbi2MsRow::getVbi () const
-{
-    return vbi2_p;
-}
-
-
 Bool
 Vbi2MsRow::isRowFlagged () const
 {
     return vbi2_p->flagRow () (row ());
 }
 
-const Matrix<Bool> &
+const Matrix<Bool>
 Vbi2MsRow::flags () const
 {
-    return flagCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->flagCube ().xyPlane (row ());
 }
 
-Matrix<Bool> &
+Matrix<Bool>
 Vbi2MsRow::flagsMutable ()
 {
-    return flagCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->flagCube ().xyPlane (row ());
 }
 
 Bool
@@ -393,12 +336,11 @@ Vbi2MsRow::setFlags (Bool isFlagged, Int correlation, Int channel)
 }
 
 void
-Vbi2MsRow::setFlags (const Matrix<Bool> & value)
+Vbi2MsRow::setFlags (const Matrix<Bool> & flags)
 {
     AssertWritable ();
 
-    Matrix<Bool> & flags = flagCache_p.getCachedPlane (vbi2_p, row());
-    flags = value;
+    vbi2_p->cache_p->flagCube_p.getRef(False).xyPlane (row()) = flags;
 }
 
 void
@@ -509,7 +451,7 @@ Vbi2MsRow::weightSpectrum (Int correlation, Int channel) const
 Float
 Vbi2MsRow::sigmaSpectrum (Int correlation, Int channel) const
 {
-    return vbi2_p->sigmaSpectrum () (correlation, channel, row ());
+    return vbi2_p->sigmaSpectrum() (correlation, channel, row ());
 }
 
 
@@ -538,151 +480,106 @@ Vbi2MsRow::setUvw (const Vector<Double> & value)
     vbi2_p->cache_p->uvw_p.getRef(False).column (row()) = value;
 }
 
-const Matrix<Complex> &
+const Matrix<Complex>
 Vbi2MsRow::corrected () const
 {
-    return correctedCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCubeCorrected().xyPlane (row());
 }
 
-Matrix<Complex> &
+Matrix<Complex>
 Vbi2MsRow::correctedMutable ()
 {
-    return correctedCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCubeCorrected().xyPlane (row());
 }
 
 void
 Vbi2MsRow::setCorrected (const Matrix<Complex> & value)
 {
-    AssertWritable();
-
-    Matrix<Complex> & corrected = correctedCache_p.getCachedPlane (vbi2_p, row());
-    corrected = value;
+    vbi2_p->cache_p->correctedVisCube_p.getRef(False).xyPlane (row()) = value;
 }
 
-const Matrix<Complex> &
+const Matrix<Complex>
 Vbi2MsRow::model () const
 {
-    return modelCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCubeModel ().xyPlane (row());
 }
 
-Matrix<Complex> &
+Matrix<Complex>
 Vbi2MsRow::modelMutable ()
 {
-    return modelCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCubeModel ().xyPlane (row());
 }
 
 void
 Vbi2MsRow::setModel (const Matrix<Complex> & value)
 {
-    AssertWritable();
-
-    Matrix<Complex> & model = modelCache_p.getCachedPlane (vbi2_p, row());
-    model = value;
+    vbi2_p->cache_p->modelVisCube_p.getRef(False).xyPlane (row()) = value;
 }
 
-const Matrix<Complex> &
+const Matrix<Complex>
 Vbi2MsRow::observed () const
 {
-    return observedCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCube ().xyPlane (row());
 }
 
-Matrix<Complex> &
+Matrix<Complex>
 Vbi2MsRow::observedMutable ()
 {
-    return observedCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->visCube ().xyPlane (row());
 }
 
 void
 Vbi2MsRow::setObserved (const Matrix<Complex> & value)
 {
-    AssertWritable();
-
-    Matrix<Complex> & observed = observedCache_p.getCachedPlane (vbi2_p, row());
-    observed = value;
+    vbi2_p->cache_p->visCube_p.getRef(False).xyPlane (row()) = value;
 }
 
-const Vector<Float> &
+const Vector<Float>
 Vbi2MsRow::sigma () const
 {
-    return sigmaCache_p.getCachedColumn (vbi2_p, row());
-}
-
-Vector<Float> &
-Vbi2MsRow::sigmaMutable () const
-{
-    return sigmaCache_p.getCachedColumn (vbi2_p, row());
+    return vbi2_p->sigma ().column (row());
 }
 
 void
 Vbi2MsRow::setSigma (const Vector<Float> & value)
 {
-    AssertWritable();
-
-    Vector<Float> & sigma = sigmaCache_p.getCachedColumn (vbi2_p, row());
-    sigma = value;
+    vbi2_p->cache_p->sigma_p.getRef(False).column (row()) = value;
 }
 
-const Vector<Float> &
+const Vector<Float>
 Vbi2MsRow::weight () const
 {
-    return weightCache_p.getCachedColumn (vbi2_p, row());
-}
-
-Vector<Float> &
-Vbi2MsRow::weightMutable () const
-{
-    return weightCache_p.getCachedColumn (vbi2_p, row());
+    return vbi2_p->weight ().column (row());
 }
 
 void
 Vbi2MsRow::setWeight (const Vector<Float> & value)
 {
-    AssertWritable();
-
-    Vector<Float> & weight = weightCache_p.getCachedColumn (vbi2_p, row());
-    weight = value;
+    vbi2_p->cache_p->weight_p.getRef(False).column (row()) = value;
 }
 
 void
 Vbi2MsRow::setWeightSpectrum (const Matrix<Float> & value)
 {
-    AssertWritable();
-
-    Matrix<Float> & weightSpectrum = weightSpectrumCache_p.getCachedPlane (vbi2_p, row());
-    weightSpectrum = value;
+    vbi2_p->cache_p->weightSpectrum_p.getRef(False).xyPlane (row()) = value;
 }
 
-const Matrix<Float> &
+const Matrix<Float>
 Vbi2MsRow::weightSpectrum () const
 {
-    return weightSpectrumCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->weightSpectrum ().xyPlane (row());
 }
 
-Matrix<Float> &
-Vbi2MsRow::weightSpectrumMutable () const
-{
-    return weightSpectrumCache_p.getCachedPlane (vbi2_p, row());
-}
-
-const Matrix<Float> &
+const Matrix<Float>
 Vbi2MsRow::sigmaSpectrum () const
 {
-    return sigmaSpectrumCache_p.getCachedPlane (vbi2_p, row());
-}
-
-Matrix<Float> &
-Vbi2MsRow::sigmaSpectrumMutable () const
-{
-    return sigmaSpectrumCache_p.getCachedPlane (vbi2_p, row());
+    return vbi2_p->sigmaSpectrum ().xyPlane (row());
 }
 
 void
 Vbi2MsRow::setSigmaSpectrum (const Matrix<Float> & value)
 {
-    AssertWritable();
-
-    Matrix<Float> & sigmaSpectrum = sigmaSpectrumCache_p.getCachedPlane (vbi2_p, row());
-    sigmaSpectrum = value;
+    vbi2_p->cache_p->sigmaSpectrum_p.getRef(False).xyPlane (row()) = value;
 }
 
 ////////////////////////////////////////////////////////////

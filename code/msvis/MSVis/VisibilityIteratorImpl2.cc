@@ -240,80 +240,6 @@ public:
         return rep;
     }
 
-    SlicerSet
-    getSlicerSet () const
-    {
-
-        // The goal is to create a 2D array of Slicers.  Two types of Slicers are
-        // required: one to slice into the data as read and another to put it into
-        // the target array.  Both are computed and returned here.  We are
-        // effectively computing a cross-product between the correlation and channel
-        // slices.
-
-        CoreRep slicing = getSlicerInCoreRep(); // might be able to replace this?
-
-        Vector<Slice> correlationSlices = slicing (0);
-        Vector<Slice> channelSlices = slicing (1);
-
-        IPosition start (2), length(2), increment (2);
-
-        uInt nCorrelationSlices = slicing (0).size();
-        uInt nChannelSlices = channelSlices.size();
-        uInt nSlices = nCorrelationSlices * nChannelSlices;
-
-        Vector<Slicer *> dataSlices (nSlices, 0);
-        Vector<Slicer *> destinationSlices (nSlices, 0);
-        IPosition shape (2, 0);
-
-        uInt outputSlice = 0;
-        const uInt Channel = 1;
-        const uInt Correlation = 0;
-
-        uInt correlationDestination = 0;
-
-        for (uInt correlationSlice = 0; correlationSlice < nCorrelationSlices; correlationSlice ++){
-
-            const Slice & aSlice = correlationSlices (correlationSlice);
-
-            start (Correlation) = aSlice.start();
-            length (Correlation) = aSlice.length();
-            increment (Correlation) = aSlice.inc();
-
-            uInt channelDestination = 0;
-
-            for (uInt channelSlice = 0; channelSlice < nChannelSlices; channelSlice ++){
-
-                const Slice & bSlice = channelSlices (channelSlice);
-
-                start (Channel) = bSlice.start();
-                length (Channel) = bSlice.length();
-                increment (Channel) = bSlice.inc();
-
-                dataSlices [outputSlice] = new Slicer (start, length, increment);
-
-                // The destination slicer will always have increment one and the same length
-                // as the data slicer.  However, it's starting location depends on how many
-                // slices (both axes) it is away from the origin.
-
-                start (Channel) = channelDestination;
-                channelDestination += length (Channel);
-                increment (Channel) = 1;
-                start (Correlation) = correlationDestination;
-                increment (Correlation) = 1;
-                destinationSlices [outputSlice] = new Slicer (start, length, increment);
-
-                outputSlice ++;
-                shape (Channel) = max (shape(Channel), channelDestination);
-
-            }
-
-            correlationDestination += length (Correlation);
-            shape (Correlation) = correlationDestination;
-        }
-
-        return SlicerSet (shape, dataSlices, destinationSlices);
-    }
-
     const ChannelSubslicer &
     getSubslicer (Int i) const
     {
@@ -478,7 +404,8 @@ public:
 
             const Slice & slice = correlationAxis.getSlice (i);
 
-            for (uInt j = slice.start(), n = 0;
+            uInt n = 0;
+            for (uInt j = 0;
                  n < slice.length();
                  j += slice.inc()){
 
@@ -814,16 +741,12 @@ void
 VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
-    Vector<Slicer *> dataSlicers, destinationSlicers;
-    SlicerSet slicerSet = channelSelector_p->getSlicer().getSlicerSet();
-
+    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
     column.getColumnCells (rowBounds_p.subchunkRows_p,
-                           slicerSet,
+                           slicer.getSlicerInCoreRep(),
                            array,
                            True);
 }
-
-
 
 template <typename T>
 void
@@ -837,36 +760,10 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 
         const ChannelSlicer & slicer = channelSelector_p->getSlicer();
         const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
-
         Vector<Slice> correlationSlices = subslicer.getSlices ();
+        Vector<Vector <Slice> > wrappedSlicer (1, correlationSlices);
 
-#warning "Redo this is a cleaner way"
-
-        Vector<Slicer *> dataSlicers (correlationSlices.size(), 0);
-        Vector<Slicer *> destinationSlicers (correlationSlices.size(), 0);
-
-        IPosition start (1, 0), length (1, 0), increment (1, 0);
-        uInt sliceStart = 0;
-
-        for (uInt i = 0; i < correlationSlices.size(); i++){
-
-            start (0) = correlationSlices (i).start ();
-            length (0) = correlationSlices (i).length();
-            increment (0) = correlationSlices (i).inc ();
-            dataSlicers (i) = new Slicer (start, length, increment);
-
-            start (0) = sliceStart;
-            increment (0) = 1;
-            destinationSlicers (i) = new Slicer (start, length, increment);
-
-            sliceStart += length (0);
-        }
-
-        IPosition shape (1, sliceStart);
-
-        SlicerSet slicerSet (shape, dataSlicers, destinationSlicers);
-
-        column.getColumnCells (rowBounds_p.subchunkRows_p, slicerSet, array, True);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, wrappedSlicer, array, True);
     }
     else{
 
@@ -1085,6 +982,18 @@ VisibilityIteratorImpl2::getBeamOffsets () const
 }
 
 Vector<Double>
+VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference) const
+{
+
+    // Get the channel information object (basically contains info from the
+    // spectral window subtable).
+
+
+    return getFrequencies (time, frameOfReference, this->spectralWindow(), this->msId());
+
+}
+
+Vector<Double>
 VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
                                          Int spectralWindowId, Int msId) const
 {
@@ -1094,7 +1003,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
     // Get the channel numbers selected for this time (the spectral window and MS index are
     // assumed to be the same as those currently pointed to by the MSIter).
 
-    Vector<Int> channels = getChannels (time, frameOfReference, spectralWindowId, msId);
+    Vector<Int> channels = getChannels (time, frameOfReference);
 
     Vector<Double> frequencies (channels.nelements());
     MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
@@ -1139,13 +1048,11 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 }
 
 Vector<Int>
-VisibilityIteratorImpl2::getChannels (Double time, Int /*frameOfReference*/,
-                                      Int spectralWindowId, Int msId) const
+VisibilityIteratorImpl2::getChannels (Double /*time*/, Int /*frameOfReference*/) const
 {
-    const ChannelSelector * channelSelector = determineChannelSelection (time, spectralWindowId, -1,
-                                                                         msId);
+    assert (channelSelector_p != 0);
 
-    return channelSelector->getChannels ();
+    return channelSelector_p->getChannels ();
 }
 
 Vector<Int>
@@ -1638,8 +1545,7 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
         // End the subchunk when a row using different channels is encountered.
 
         Double previousRowTime = rowBounds_p.times_p (rowBounds_p.subchunkBegin_p);
-        channelSelector_p = determineChannelSelection (previousRowTime, spectralWindow(),
-                                                       polarizationId (), msId());
+        channelSelector_p = determineChannelSelection (previousRowTime);
 
         for (Int i = rowBounds_p.subchunkBegin_p + 1;
              i <= rowBounds_p.subchunkEnd_p;
@@ -1705,10 +1611,7 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
 }
 
 const ChannelSelector *
-VisibilityIteratorImpl2::determineChannelSelection (Double time,
-                                                    Int spectralWindowId,
-                                                    Int polarizationId,
-                                                    Int msId) const
+VisibilityIteratorImpl2::determineChannelSelection (Double time, Int spectralWindowId) const
 {
 // --> The channels selected will need to be identical for all members of the
 //     subchunk; otherwise the underlying fetch method won't work since it
@@ -1716,20 +1619,15 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time,
 
     assert (frequencySelections_p != 0);
 
-    if (spectralWindowId == -1){
-        spectralWindowId = this->spectralWindow();
+    if (spectralWindowId < 0){
+        spectralWindowId = spectralWindow ();
     }
-
-    if (msId < 0){
-        msId = this->msId();
-    }
-
-    const FrequencySelection & selection = frequencySelections_p->get (msId);
+    const FrequencySelection & selection = frequencySelections_p->get (msId ());
     Int frameOfReference = selection.getFrameOfReference ();
 
     // See if the appropriate channel selector is in the cache.
 
-    const ChannelSelector * cachedSelector =  channelSelectorCache_p->find (time, msId, frameOfReference,
+    const ChannelSelector * cachedSelector =  channelSelectorCache_p->find (time, msId (), frameOfReference,
                                                                             spectralWindowId);
 
     if (cachedSelector != 0){
@@ -1745,17 +1643,13 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time,
 
     ChannelSelector * newSelector;
 
-    if (polarizationId < 0){
-        polarizationId = getPolarizationId (spectralWindowId, msId);
-    }
-
     if (selection.getFrameOfReference() == FrequencySelection::ByChannel){
-        newSelector = makeChannelSelectorC (selection, time, msId,
-                                            spectralWindowId, polarizationId);
+        newSelector = makeChannelSelectorC (selection, time, msId (),
+                                            spectralWindowId, polarizationId());
     }
     else{
-        newSelector = makeChannelSelectorF (selection, time, msId,
-                                            spectralWindowId, polarizationId);
+        newSelector = makeChannelSelectorF (selection, time, msId (),
+                                            spectralWindowId, polarizationId());
     }
 
     // Cache it for possible future use.  The cache may hold multiple equivalent
@@ -1764,32 +1658,10 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time,
     // a time, this shouldn't be a problem (the special case of selection by
     // channel number is already handled).
 
-    channelSelectorCache_p->add (newSelector, time, msId, frameOfReference,
+    channelSelectorCache_p->add (newSelector, time, msId (), frameOfReference,
                                  spectralWindowId);
 
     return newSelector;
-}
-
-Int
-VisibilityIteratorImpl2::getPolarizationId (Int spectralWindowId, Int msId) const
-{
-    ThrowIf (msId != this->msId(),
-             String::format ("Requested MS number is %d but current is %d", msId, this->msId()));
-
-    const ROScalarColumn<Int> & spwIds = subtableColumns_p->dataDescription().spectralWindowId();
-
-    // This will break if the same spectral window is referenced by two different data_descrption IDs.
-    // Ideally, this whole thing should be reworked to used DDIDs with spectral window ID only used
-    // internally.
-
-    for (uInt i = 0; i < spwIds.nrow(); i ++){
-        if (spwIds (i) == spectralWindowId){
-            return subtableColumns_p->dataDescription().polarizationId()(i);
-        }
-    }
-
-    ThrowIf (True, String::format ("Could not find entry for spectral window id"
-            "%d in data_description in MS #%d", spectralWindowId, msId));
 }
 
 vi::ChannelSelector *
@@ -2361,8 +2233,7 @@ VisibilityIteratorImpl2::getRowIds (Vector<uInt> & rowIds) const
 {
     // Resize the rowIds vector and fill it with the row numbers contained
     // in the current subchunk.  These row numbers are relative to the reference
-    // table used by MSIter to define a chunk; thus rowId 0 is the first row
-    // in the chunk.
+    // table used by MSIter to define a chunk.
 
     rowIds.resize (rowBounds_p.subchunkNRows_p);
     rowIds = rowBounds_p.subchunkRows_p.convert ();
@@ -2465,25 +2336,24 @@ VisibilityIteratorImpl2::flagCategoryExists() const
 }
 
 void
-VisibilityIteratorImpl2::flagCategory (Array<Bool> & /*flagCategories*/) const
+VisibilityIteratorImpl2::flagCategory (Array<Bool> & flagCategories) const
 {
-    ThrowIf (True, "The flag_category column is not supported.");
-//    if (columns_p.flagCategory_p.isNull () ||
-//        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
-//
-//        flagCategories.resize ();    // Zap it.
-//    }
-//    else {
-//
-//        // Since flag category is shaped [nC, nF, nCategories] it requires a
-//        // slightly different slicer and cannot use the usual getColumns method.
-//
-//        const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
-//
-//        columns_p.flagCategory_p.getSliceForRows (rowBounds_p.subchunkRows_p,
-//                                                  channelSlicer.getSlicerInCoreRep(),
-//                                                  flagCategories);
-//    }
+    if (columns_p.flagCategory_p.isNull () ||
+        ! columns_p.flagCategory_p.isDefined (0)) { // It often is.
+
+        flagCategories.resize ();    // Zap it.
+    }
+    else {
+
+        // Since flag category is shaped [nC, nF, nCategories] it requires a
+        // slightly different slicer and cannot use the usual getColumns method.
+
+        const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
+
+        columns_p.flagCategory_p.getSliceForRows (rowBounds_p.subchunkRows_p,
+                                                  channelSlicer.getSlicerInCoreRep(),
+                                                  flagCategories);
+    }
 }
 
 void
@@ -3200,8 +3070,7 @@ VisibilityIteratorImpl2::getChannelInformationUsingFrequency (Bool now) const
 
             // Create a channel selector for this window at the buffer's time.
 
-            const ChannelSelector * selector = determineChannelSelection(t (0), * window,
-                                                                         polarizationId(), msId());
+            const ChannelSelector * selector = determineChannelSelection(t (0), * window);
             const ChannelSlicer channelSlicer = selector->getSlicer();
 
             for (Int i = 0; i < (int) channelSlicer.nelements(); i++){

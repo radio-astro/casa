@@ -20,8 +20,6 @@
 #include <math.h>
 #include <fstream>
 #include <unistd.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 
 using std::max;
 using std::min;
@@ -582,129 +580,7 @@ IoStatistics::report (float scale, const String & scaleTag) const
 
 }
 
-RUsage::RUsage ()
-{
-    rusage_p.ru_utime.tv_usec = 0;
-    rusage_p.ru_utime.tv_sec = 0;
-    rusage_p.ru_stime.tv_usec = 0;
-    rusage_p.ru_stime.tv_sec = 0;
 
-    rusage_p.ru_maxrss = 0;
-    rusage_p.ru_ixrss = 0;
-    rusage_p.ru_idrss = 0;
-    rusage_p.ru_isrss = 0;
-    rusage_p.ru_minflt = 0;
-    rusage_p.ru_majflt = 0;
-    rusage_p.ru_nswap = 0;
-    rusage_p.ru_inblock = 0;
-    rusage_p.ru_oublock = 0;
-    rusage_p.ru_msgsnd = 0;
-    rusage_p.ru_msgrcv = 0;
-    rusage_p.ru_nsignals = 0;
-    rusage_p.ru_nvcsw = 0;
-    rusage_p.ru_nivcsw = 0;
-}
-
-void
-RUsage::capture ()
-{
-    getrusage (RUSAGE_SELF, & rusage_p);
-}
-
-void
-RUsage::captureAndAccumulate (const RUsage & origin){
-
-    RUsage current;
-
-    accumulate (current, origin);
-}
-
-void
-RUsage::accumulate (const RUsage & recent, const RUsage & origin){
-
-    *this = *this + (recent - origin);
-}
-
-RUsage
-RUsage::operator+ (const RUsage & other) const
-{
-    return add (* this, 1, other);
-}
-
-RUsage
-RUsage::operator- (const RUsage & other) const
-{
-    return add (* this, -1, other);
-}
-
-
-RUsage
-RUsage::add (const RUsage & first, int sign, const RUsage & second)
-{
-    RUsage result;
-
-    result.rusage_p.ru_utime = addTimes (first.rusage_p.ru_utime, sign, second.rusage_p.ru_utime);
-    result.rusage_p.ru_stime = addTimes (first.rusage_p.ru_stime, sign, second.rusage_p.ru_stime);
-
-    result.rusage_p.ru_maxrss = max (first.rusage_p.ru_maxrss, second.rusage_p.ru_maxrss);        /* maximum resident set size */
-    result.rusage_p.ru_ixrss = first.rusage_p.ru_ixrss + sign * second.rusage_p.ru_ixrss;         /* integral shared memory size */
-    result.rusage_p.ru_idrss = first.rusage_p.ru_idrss + sign * second.rusage_p.ru_idrss;         /* integral unshared data size */
-    result.rusage_p.ru_isrss = first.rusage_p.ru_isrss + sign * second.rusage_p.ru_isrss;         /* integral unshared stack size */
-    result.rusage_p.ru_minflt = first.rusage_p.ru_minflt + sign * second.rusage_p.ru_minflt;        /* page reclaims */
-    result.rusage_p.ru_majflt = first.rusage_p.ru_majflt + sign * second.rusage_p.ru_majflt;        /* page faults */
-    result.rusage_p.ru_nswap = first.rusage_p.ru_nswap + sign * second.rusage_p.ru_nswap;         /* swaps */
-    result.rusage_p.ru_inblock = first.rusage_p.ru_inblock + sign * second.rusage_p.ru_inblock;       /* block input operations */
-    result.rusage_p.ru_oublock = first.rusage_p.ru_oublock + sign * second.rusage_p.ru_oublock;       /* block output operations */
-    result.rusage_p.ru_msgsnd = first.rusage_p.ru_msgsnd + sign * second.rusage_p.ru_msgsnd;        /* messages sent */
-    result.rusage_p.ru_msgrcv = first.rusage_p.ru_msgrcv + sign * second.rusage_p.ru_msgrcv;        /* messages received */
-    result.rusage_p.ru_nsignals = first.rusage_p.ru_nsignals + sign * second.rusage_p.ru_nsignals;      /* signals received */
-    result.rusage_p.ru_nvcsw = first.rusage_p.ru_nvcsw + sign * second.rusage_p.ru_nvcsw;         /* voluntary context switches */
-    result.rusage_p.ru_nivcsw = first.rusage_p.ru_nivcsw + sign * second.rusage_p.ru_nivcsw;        /* involuntary context switches */
-
-    return result;
-}
-
-struct timeval
-RUsage::addTimes (const struct timeval & first, int sign, const struct timeval & second)
-{
-    struct timeval result;
-    result.tv_usec = first.tv_usec +
-            sign * second.tv_usec;
-    if (result.tv_usec >= 1000000){
-        result.tv_sec = result.tv_usec / 1000000;
-        result.tv_usec = result.tv_usec % 1000000;
-    } else {
-        result.tv_sec = 0;
-    }
-
-    result.tv_sec += first.tv_sec +
-            sign * second.tv_sec;
-
-    return result;
-}
-
-String
-RUsage::toString () const
-{
-    return String::format ("utime=%f s, stime=%f s, maxrss=%d, ixrss=%d, idrss=%d, isrss=%d, minflt=%d, majflt=%d, "
-                           "nswap=%d, inblock=%d, oublock=%d, msgsnd=%d, msgrcv=%d, nsignals=%d, nvcsw=%d, nivcsw=%d",
-                            utime(),
-                            stime(),
-                            maxrss (),
-                            ixrss (),
-                            idrss (),
-                            isrss (),
-                            minflt (),
-                            majflt (),
-                            nswap (),
-                            inblock (),
-                            oublock (),
-                            msgsnd (),
-                            msgrcv (),
-                            nsignals (),
-                            nvcsw (),
-                            nivcsw ());
-}
 
 } // end namespace utilj
 

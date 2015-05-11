@@ -895,37 +895,37 @@ VisibilityIteratorReadImpl::usesTiledDataManager (const String & columnName,
     // has no valid data.
 
     noData = noData ||
-             (columnName == MS::columnName (MS::WEIGHT_SPECTRUM) && ! existsWeightSpectrum ());
+                columnName == MS::columnName (MS::WEIGHT_SPECTRUM) && ! existsWeightSpectrum ();
 
     // Check to see if the column exist and have valid data
 
     noData = noData ||
-             (columnName == MS::columnName (MS::DATA) &&
-              (columns_p.vis_p.isNull () || ! columns_p.vis_p.isDefined (0)));
+                 columnName == MS::columnName (MS::DATA) &&
+                 (columns_p.vis_p.isNull () || ! columns_p.vis_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::MODEL_DATA) &&
-              (columns_p.modelVis_p.isNull () || ! columns_p.modelVis_p.isDefined (0)));
+                columnName == MS::columnName (MS::MODEL_DATA) &&
+                (columns_p.modelVis_p.isNull () || ! columns_p.modelVis_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::CORRECTED_DATA) &&
-              (columns_p.corrVis_p.isNull () || ! columns_p.corrVis_p.isDefined (0)));
+                columnName == MS::columnName (MS::CORRECTED_DATA) &&
+                (columns_p.corrVis_p.isNull () || ! columns_p.corrVis_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::FLAG) &&
-              (columns_p.flag_p.isNull () || ! columns_p.flag_p.isDefined (0)));
+                columnName == MS::columnName (MS::FLAG) &&
+                (columns_p.flag_p.isNull () || ! columns_p.flag_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::WEIGHT) &&
-              (columns_p.weight_p.isNull () || ! columns_p.weight_p.isDefined (0)));
+                columnName == MS::columnName (MS::WEIGHT) &&
+                (columns_p.weight_p.isNull () || ! columns_p.weight_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::SIGMA) &&
-              (columns_p.sigma_p.isNull () || ! columns_p.sigma_p.isDefined (0)));
+                columnName == MS::columnName (MS::SIGMA) &&
+                (columns_p.sigma_p.isNull () || ! columns_p.sigma_p.isDefined (0));
 
     noData = noData ||
-             (columnName == MS::columnName (MS::UVW) &&
-              (columns_p.uvw_p.isNull () || ! columns_p.uvw_p.isDefined (0)));
+                columnName == MS::columnName (MS::UVW) &&
+                (columns_p.uvw_p.isNull () || ! columns_p.uvw_p.isDefined (0));
 
     Bool usesTiles = False;
 
