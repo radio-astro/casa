@@ -263,6 +263,9 @@ class FittingBase(common.SingleDishTaskTemplate):
 #         f.write("blinfo = %s" % str(blinfo))
 #         f.close()
         # subtract baseline
+        storage_save = sd.rcParams['scantable.storage']
+        sd.rcParams['scantable.storage'] = 'disk'
+
         LOG.info('Baseline Fit: background subtraction...')
         LOG.info('Processing %d spectra...'%(len(row_list_total)))
         LOG.info('rows = %s' % str(row_list_total))
@@ -273,6 +276,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
         st_out.set_selection()
         st_out.save(filename_out, format='ASAP', overwrite=True)
+        
+        sd.rcParams['scantable.storage'] = storage_save
         
         outcome = {'bltable': bltable_name,
                    'index_list': index_list_total,
