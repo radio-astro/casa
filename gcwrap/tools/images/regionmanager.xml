@@ -1547,7 +1547,16 @@ This function reads a region region text descriptions and
 converts it to a python region dictionary.
 
     </description>
+<example>
+ia.open('test.image')
+csys=ia.coordsys()
+rg.setcoordinates(csys.torecord())
+a=rg.fromtext("ellipse [[04h31m38.44139, 18d13m57.0861], [1.0arcsec, 1.0arcsec], 0.00000000deg]", shape=[1500, 1500,    1, 1])
+ia.done()
+ 
+In this example, we create a circular region of 1 arcsec radius centered on J2000 04h31m38.44139  18d13m57.0861
 
+</example>
 </method>
 
 
@@ -1844,7 +1853,6 @@ x x0
 </example>
 
 <example>
-
 2 CASA image files on disk 'hcn1' 'hcn2'
 
 - names = rg.namesintable('hcn1')
@@ -1870,11 +1878,11 @@ wbox=rg.wbox(['10pix', '10pix', '0pix', '0pix'], ['20pix', '20pix', '0pix', '0pi
 ###mask1
 rg.fromrecordtotable('myfancy.image', 'mask1', wbox, asmask=True)
 ###now let us set that as default mask
-ia.open('myfancy.restored')
+ia.open('myfancy.image')
 ia.maskhandler('set', 'mask1')
 ia.done()
 ###and now let us view that image
-viewer('try01.0.restored')
+viewer('myfancy.image')
 </example>
 
 </method>
