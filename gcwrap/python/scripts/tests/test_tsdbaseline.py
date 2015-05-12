@@ -512,7 +512,8 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
     List of tests:
     test000 --- default values for all parameters
     test001 --- polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
-    test002 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test002 --- Chebyshev polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test003 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
     test050 --- existing file as outfile with overwrite=False (raises an exception)
     test051 --- no data after selection (raises an exception)
 
@@ -611,10 +612,46 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
         self._compareStats(theresult, reference)
 
     def test002(self):
-        """Basic Test 002: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
+        """Basic Test 002: simple successful case: blfunc = 'chebyshev', maskmode = 'list' and masklist=[] (no mask)"""
+        tid = '002'
+        infile = self.infile
+        outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+        maskmode = 'list'
+        blfunc = 'chebyshev'
+        spw = '3'
+        pol = '1'
+        overwrite = True
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             maskmode=maskmode, blfunc=blfunc, 
+                             spw=spw, pol=pol, outfile=outfile,
+                             overwrite=overwrite)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        # uncomment the next line once blparam file can be output
+        #self._compareBLparam(outfile+"_blparam.txt",self.blrefroot+tid)
+        results = self._getStats(outfile, '', pol)
+        print self._getStats(outfile, '', pol)
+        theresult = None
+        for i in range(len(results)):
+            if (results[i]['pol'] == int(pol)):
+                theresult = results[i]
+
+        reference = {'rms': 0.16677055621054496,
+                     'min': -2.5817961692810059,
+                     'max': 1.3842859268188477,
+                     'median': -0.00086212158203125,
+                     'stddev': 0.16677055621054496,
+                     }
+
+        self._compareStats(theresult, reference)
+
+    def test003(self):
+        """Basic Test 003: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
         print ""
 
-        tid = '002'
+        tid = '003'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'  
