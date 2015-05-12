@@ -1518,17 +1518,17 @@ class par(str):
                 mask = 'mycleanmask.im >= 0.5'
 
             Because it is an LEL expression, care must be taken to properly
-            escape characters which LEL views as special, such as underscores.
+            escape characters which LEL views as special.
             For details, see the aforementioned LEL document. As an example,
             specifying
 
-                mask = 'my_clean_mask.im' 
+                mask = '3clean_mask.im' 
 
             will cause the image analysis application to fail, because the
-            underscore characters are not properly escaped. The solution is to
-            escape them properly, eg
+            image name begins with a number. The solution is to
+            escape the name properly, eg
 
-                mask = "'my_clean_mask.im'"
+                mask = "'3clean_mask.im'"
             """
 
 	@staticmethod
