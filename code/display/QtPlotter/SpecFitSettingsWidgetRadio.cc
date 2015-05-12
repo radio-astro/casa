@@ -61,10 +61,12 @@ namespace casa {
 	public:
 		SpecFitThread( ImageProfileFitter* profileFitter );
 		void run();
+		void setChannelWarning( const QString& warn );
 		void setStartValue( float val );
 		void setEndValue( float val );
 		float getStartValue() const;
 		float getEndValue() const;
+		QString getChannelWarning() const;
 		String getErrorMessage() const;
 		const Record& getResults() const;
 	private:
@@ -72,6 +74,7 @@ namespace casa {
 		Record results;
 		float startValue;
 		float endValue;
+		QString channelWarning;
 		String errorMsg;
 	};
 
@@ -83,8 +86,16 @@ namespace casa {
 		return errorMsg;
 	}
 
+	QString SpecFitThread::getChannelWarning() const {
+		return channelWarning;
+	}
+
 	SpecFitThread::SpecFitThread( ImageProfileFitter* profileFitter ):
 		fitter( profileFitter ), errorMsg("") {
+	}
+
+	void SpecFitThread::setChannelWarning( const QString& warn ){
+		channelWarning = warn;
 	}
 
 	void SpecFitThread::setStartValue( float val ) {
@@ -534,6 +545,13 @@ namespace casa {
 		findChannelRange( startVal, endVal, z_xval, startChannelIndex, endChannelIndex );
 		if ( startChannelIndex >= 0 && endChannelIndex >= 0 ) {
 
+			//CAS-7533 Post a warning if channel range is too small.
+			int channelRange = qAbs( endChannelIndex - startChannelIndex );
+			QString chanWarning("");
+			if ( channelRange <= 3 ){
+				chanWarning = "Fit may not be valid due to narrow channel range.";
+			}
+
 			//Get the channels
 			const String channelStr = String::toString( startChannelIndex )+ "~"+String::toString( endChannelIndex);
 
@@ -598,6 +616,7 @@ namespace casa {
 			specFitThread = new SpecFitThread( fitter );
 			connect( specFitThread, SIGNAL(finished()), this, SLOT(fitDone()));
 			specFitThread->setStartValue( startVal );
+			specFitThread->setChannelWarning( chanWarning );
 			specFitThread->setEndValue( endVal );
 			specFitThread->start();
 			fitCancelled = false;
@@ -674,6 +693,7 @@ namespace casa {
 			const Record& results = specFitThread->getResults();
 
 
+
 			//Decide if we got any valid fits
 			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitterResults::_SUCCEEDED );
 			Array<Bool> valid = results.asArrayBool( ImageProfileFitterResults::_VALID );
@@ -686,6 +706,10 @@ namespace casa {
 					String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
 					msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
 					msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");
+					QString chanWarning = specFitThread->getChannelWarning();
+					if ( chanWarning.length() > 0 ){
+						msg.append( chanWarning.toStdString().c_str() );
+					}
 					postStatus( msg );
 				}
 
