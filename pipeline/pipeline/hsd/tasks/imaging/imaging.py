@@ -190,15 +190,19 @@ class SDImaging(common.SingleDishTaskTemplate):
 
             #continue
 
-            # image is created per antenna
-            antenna_group = {}
+            # image is created per antenna (science) or per asdm and antenna (ampcal)
+            image_group = {}
             for (ant, spwid, pols) in zip(antenna_list, spwid_list, pols_list):
                 antenna = context.observing_run[ant].antenna.name
-                if antenna in antenna_group.keys():
-                    antenna_group[antenna].append([ant, spwid, pols])
+                asdm_name = common.asdm_name(context.observing_run[ant]) if imagemode=='AMPCAL' else 'COMBINED'
+                identifier = antenna
+                # create image per asdm and antenna for ampcal
+                if imagemode=='AMPCAL': identifier += ('.'+asdm_name)
+                if identifier in image_group.keys():
+                    image_group[identifier].append([ant, spwid, pols])
                 else:
-                    antenna_group[antenna] = [[ant, spwid, pols]]
-            LOG.info('antenna_group=%s' % (antenna_group))
+                    image_group[identifier] = [[ant, spwid, pols]]
+            LOG.info('image_group=%s' % (image_group))
 
             # loop over antennas
             combined_indices = []
@@ -208,7 +212,7 @@ class SDImaging(common.SingleDishTaskTemplate):
             combined_scans = []
             combined_pols = []
             srctype = None
-            for (name, _members) in antenna_group.items():
+            for (name, _members) in image_group.items():
                 indices = map(lambda x: x[0], _members)
                 spwids = map(lambda x: x[1], _members)
                 pols = map(lambda x: x[2], _members)
@@ -219,6 +223,11 @@ class SDImaging(common.SingleDishTaskTemplate):
                 
                 # reference data is first scantable 
                 st = context.observing_run[indices[0]]
+                # for ampcal
+                asdm = None
+                if imagemode=='AMPCAL':
+                    name = st.antenna.name
+                    asdm = common.asdm_name(st)
 
                 # SRCTYPE for ON-SOURCE
                 srctype = st.calibration_strategy['srctype']
@@ -242,6 +251,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 namer.casa_image()
                 namer.source(source_name)
                 namer.antenna_name(name)
+                namer.asdm(asdm)
                 namer.spectral_window(spwids[0])
 #                 namer.polarization('I' if imagemode=='AMPCAL' else common.polstring(net_pols))
                 namer.polarization('I')

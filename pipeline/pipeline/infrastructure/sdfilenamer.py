@@ -142,6 +142,11 @@ class Image(SDNamingTemplate):
     def __init__(self):
         super(Image, self).__init__()
     
+    def asdm(self, uid):
+        '''Set the ASDM UID for this template, eg. uid://X03/XA83C/X02'''
+        self._associations.asdm(uid)
+        return self
+
     def source(self, source_name):
         self._associations.source(source_name)
         return self
