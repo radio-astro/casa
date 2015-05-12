@@ -109,7 +109,7 @@ def tclean(
     #####################################################
     #### Sanity checks and controls
     #####################################################
-    
+    casalog.post("This new task is under active development and is not ready for general use in casapy 4.4. Please understand that no support will be provided and bug reports will not be responded to at this stage. Your patience is appreciated. ","WARN","task_tclean")
     ### Move these checks elsewhere ? 
 
     if specmode=='mfs' and ntaylorterms==1 and deconvolver == "mtmfs":
@@ -118,6 +118,10 @@ def tclean(
 
     if specmode!='mfs' and deconvolver=="mtmfs":
         casalog.post( "The MSMFS algorithm (deconvolver='mtmfs') applies only to specmode='mfs'.", "WARN", "task_tclean" )
+        return
+
+    if specmode!='mfs' and parallel==True:
+        casalog.post( "Cube parallelization is not available in casapy 4.4.", "WARN", "task_tclean" )
         return
 
     #####################################################

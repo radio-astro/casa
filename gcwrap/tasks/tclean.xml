@@ -8,9 +8,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tclean" category="imaging" visibility="experimental">
 
-  <shortdescription>Construct and deconvolve images</shortdescription>
+  <shortdescription>Interferometric image Reconstruction</shortdescription>
 
-  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+  <description>
+
+      This new task is a refactored version of the clean task, 
+      with changes in the organization of input parameters,
+      iteration controls, usability of some algorithms and modes,  
+      log messages, and parallelization options.
+      
+      This task is under active development and is NOT READY 
+      for general use in casapy 4.4.
+
+      However if you are curious, please feel free to explore it
+      but please understand that some modes are incomplete,
+      user support will not be provided, and bug reports will not 
+      be responded to at this stage. 
+
+      Your patience is appreciated. 
+
+</description>
 
   <input>
 
@@ -651,11 +668,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-      (Refactored) Imaging task.  Documentation to come.... 
+      This new task is under active development and is not ready 
+      for general use in casapy 4.4. 
 
-      Missing parameters and functions : post-deconvolution pbcor.
+      However if you are curious, please feel free to explore it
+      but please understand that some modes are incomplete,
+      user support will not be provided, and bug reports will not 
+      be responded to at this stage. 
 
-  </example>
+      Your patience is appreciated. 
+
+ </example>
 
 </task>
 
