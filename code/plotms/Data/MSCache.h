@@ -93,8 +93,7 @@ private:
   // Set up
   String checkDataColumn(vector<PMS::Axis>& loadAxes, 
 			 vector<PMS::DataColumn>& loadData);
-  String getDataColumn(vector<PMS::Axis>& loadAxes, 
-		       vector<PMS::DataColumn>& loadData);
+  String getDataColumn(PMS::DataColumn dataCol);
   void getNamesFromMS(MeasurementSet& ms);
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
