@@ -145,7 +145,9 @@ namespace casa {
 		Vector<Float> z_yval = getYValues();
 		Vector<Float> z_eval = getZValues();
 		if (!fitter->fit(z_xval, z_yval, z_eval, startVal, endVal, doFitGauss, doFitPoly, polyN, msg)) {
-			msg = String("Data could not be fitted!");
+			msg = String("Data for image ");
+			msg.append(getFileName().toStdString().c_str());
+			msg.append(" could not be fitted!");
 			postStatus(msg, true);
 		} else {
 			String xaxisUnit = getXAxisUnit();
