@@ -4128,6 +4128,12 @@ void MSTransformManager::checkDataColumnsAvailable()
 		makeVirtualCorrectedColReal_p = False;
 	}
 
+	// FLOAT_DATA
+	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+	{
+		floatDataColumnAvailable_p = True;
+	}
+
 
 	// MODEL_DATA already exists in the input MS
 	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
@@ -4141,8 +4147,9 @@ void MSTransformManager::checkDataColumnsAvailable()
 		modelDataColumnAvailable_p = True;
 	}
 	// CAS-7390: Provide default MODEL_DATA in buffer mode
-	else if (bufferMode_p)
+	else if (bufferMode_p and not floatDataColumnAvailable_p) // MODEL is not defined for SD data
 	{
+		makeVirtualModelColReal_p = True;
 		modelDataColumnAvailable_p = True;
 	}
 	// There is no model available in the SOURCE sub-table
@@ -4171,13 +4178,6 @@ void MSTransformManager::checkDataColumnsAvailable()
 
 		// Unset makeVirtualModelColReal_p as virtual MODEL col. is not available
 		makeVirtualModelColReal_p = False;
-	}
-
-
-	// FLOAT_DATA
-	if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
-	{
-		floatDataColumnAvailable_p = True;
 	}
 
 
@@ -6728,7 +6728,14 @@ void MSTransformManager::setOutputbuffer(Cube<Float> *& dataBufferPointer,Cube<B
 		case MSTransformations::visCubeFloat:
 		{
 			dataBufferPointer=visCubeFloat_p;
-			flagBufferPointer = NULL;
+			if (userBufferMode_p)
+			{
+				flagBufferPointer = flagCube_p;
+			}
+			else
+			{
+				flagBufferPointer = NULL;
+			};
 			break;
 		}
 		case MSTransformations::weightSpectrum:
