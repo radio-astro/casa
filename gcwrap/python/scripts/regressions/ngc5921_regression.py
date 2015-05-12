@@ -385,6 +385,7 @@ if benchmarking:
 
 # the callibrary into which we will deposit calibration results
 c=callibrary()
+callibfile='ngc5921_regression/ngc5921_callib.txt'
 
 
 #
@@ -442,6 +443,7 @@ bandpass()
 
 # add this to the callibrary
 c.add(caltable=btable,tinterp='nearest',calwt=T)
+c.write(callibfile)
 
 # bandpass calibration completion time
 if benchmarking:
@@ -490,7 +492,7 @@ refant = '15'
 
 # Turn on cal library apply
 docallib=T
-callib=c.cld
+callib=callibfile
 
 gaincal()
 
@@ -511,6 +513,7 @@ gaincal()
 # add this gain result to the callibrary
 c.add(caltable=gtable,field='0',fldmap=[0],tinterp='nearest',calwt=T)
 c.add(caltable=gtable,field='1,2',fldmap='1',tinterp='linear',calwt=T)
+c.write(callibfile)
 
 
 # gaincal calibration completion time
@@ -603,6 +606,7 @@ fluxscale()
 # Add this to the cal library
 
 c.add(caltable=ftable,fldmap='nearest',tinterp='nearest',calwt=T)
+c.write(callibfile)
 
 # Record fluxscale completion time
 if benchmarking:
@@ -631,7 +635,7 @@ field = ''
 
 # Turn on the cal library
 docallib=T
-callib=c.cld
+callib=callibfile
 
 applycal()
 

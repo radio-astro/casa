@@ -79,14 +79,10 @@ def applycal(vis=None,
 		# Arrange applies....
 
 		if docallib:
-			# by cal library
-			if isinstance(callib,dict):
-				mycb.setcallib(callib)
-			elif isinstance(callib,str):
-				# parse from file
-				mycallib=callibrary()
-				mycallib.read(callib)
-				mycb.setcallib(mycallib.cld)
+			# by cal library from file
+			mycallib=callibrary()
+			mycallib.read(callib)
+			mycb.setcallib(mycallib.cld)
 
 		else:
 
