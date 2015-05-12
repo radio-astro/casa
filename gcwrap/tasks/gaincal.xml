@@ -172,7 +172,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	        <value>False</value>
 	</param>
 
-	<param type="variant" name="callib" subparam="true" >
+	<param type="string" name="callib" subparam="true" >
 	        <description>Cal Library filename</description>
                 <value type="string"></value>
 	</param>

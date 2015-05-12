@@ -90,7 +90,7 @@ another visibility file.
 	        <value>False</value>
 	</param>
 
-	<param type="variant" name="callib" subparam="true" >
+	<param type="string" name="callib" subparam="true" >
 	        <description>Cal Library filename</description>
                 <value type="string"></value>
 	</param>
@@ -189,8 +189,8 @@ another visibility file.
        can also be selected for each table in gainfield.
 
        As of CASA v4.2, docallib=True provides specification of an
-       ensemble of calibration tables and directives via the cal
-       library.
+       ensemble of calibration tables and directives via a cal
+       library file.
 
        See task accum for instructions on forming calibration
        incrementally.  See task split for copying out any portion of the data
