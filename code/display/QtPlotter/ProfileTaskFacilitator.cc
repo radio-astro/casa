@@ -208,6 +208,11 @@ namespace casa {
 			while (specValues(endIndex)>endVal) {
 				endIndex--;
 			}
+			if ( endIndex < startIndex ){
+				Int tmp = endIndex;
+				endIndex = startIndex;
+				startIndex = tmp;
+			}
 		}
 		//Descending case
 		else {

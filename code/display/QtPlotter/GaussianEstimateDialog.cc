@@ -152,6 +152,10 @@ namespace casa {
 
 	void GaussianEstimateDialog::setSpecFitUnits( const QString& specUnits ) {
 		this->specUnitStr = specUnits;
+		int unitIndex = ui.axisUnitsComboBox->findText( specUnits );
+		if ( unitIndex >= 0 ){
+			ui.axisUnitsComboBox->setCurrentIndex( unitIndex );
+		}
 	}
 
 

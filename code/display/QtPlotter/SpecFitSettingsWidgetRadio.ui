@@ -536,7 +536,7 @@ Gaussian estimates.</string>
          <property name="toolTip">
           <string>To specify an initial Gaussian Estimate:
 1.  Select the appropriate row in this table.
-2.  Either edit the row directly or shift-click 
+2.  Either edit the row directly or click 
      with the right mouse button on the graph.
      A context menu will appear allowing you
      to designate the clicked point as either
