@@ -112,6 +112,22 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
         mytb.open(vis + '/SPECTRAL_WINDOW')
         allspw = '0~' + str(mytb.nrows() - 1)
         mytb.close()
+
+        # Verify fitspw and spw as plausible
+        fitspwerr=subtract_spws(locfitspw,allspw)
+        if fitspwerr:
+            badfitspw=''
+            for ispw in range(len(fitspwerr)):
+                badfitspw+=str(fitspwerr.pop())
+            raise Exception, "fitspw contains non-existent spws: "+badfitspw
+
+        spwerr=subtract_spws(spw,allspw)
+        if spwerr:
+            badspw=''
+            for ispw in range(len(spwerr)):
+                badspw+=str(spwerr.pop())
+            raise Exception, "spw contains non-existent spws: "+badspw
+
         if 'spw' not in combine:
             #spwmfitspw = subtract_spws(spw, fitspw)
             spwmfitspw = subtract_spws(spw, locfitspw)
