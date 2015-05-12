@@ -114,6 +114,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         inputs = self.inputs
         ms = inputs.ms
         result = commonfluxresults.FluxCalibrationResults(inputs.vis)
+        
+        #Line added to prevent weblog error 
+        result.resantenna = ''
 
         # check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':

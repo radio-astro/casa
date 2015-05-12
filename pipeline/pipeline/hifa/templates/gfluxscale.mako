@@ -90,6 +90,9 @@ $(document).ready(function() {
 
 <h2>Results</h2>
 
+
+
+
 <h4>Antennas Used for Flux Scaling</h4>
 
 <p>The following antennas were used for flux scaling, entries for unresolved flux calibrators are blank</p>
@@ -106,11 +109,13 @@ $(document).ready(function() {
 % for single_result in result:
 		<tr>
 			<td>${os.path.basename(single_result.vis)}</td>
-			<td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
+                	<td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
 		</tr>
 % endfor
 	</tbody>
 </table>
+
+
 
 <h4>Computed Flux Densities</h4>
 
