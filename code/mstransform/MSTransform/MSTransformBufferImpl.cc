@@ -973,7 +973,7 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 		RefRows dummyRefRows(0,0);
 		ArrayColumn<Float> dummyDataCol;
 
-		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::MODEL_DATA);
+		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::FLOAT_DATA);
 
 		manager_p->dataBuffer_p = MSTransformations::visCubeFloat;
 		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
@@ -982,6 +982,7 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 										dummyDataCol,
 										NULL,
 										applicableSpectrum);
+
 		flagCubeOk_p = True;
 		visCubeFloatOk_p = True;
 	}
