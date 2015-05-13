@@ -24,11 +24,15 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
         try:
             wvr_score = result.qa_wvr.overall_score
             if wvr_score is not None:
-                scores = [qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)]
+                result.qa.pool[:] = [qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)]
             else:
-                scores = [pqa.QAScore(0.0, longmsg='No WVR scores available',
-                         shortmsg='No wvr', vis=ms_name)]
-            result.qa.pool[:] = scores 
+                # If wvr_score was not available, check if this is caused 
+                # by lack of 12m data in MS. If lack of wvr_score was not 
+                # due to lack of WVR data, then set QA score to 0.
+                ms = context.observing_run.get_ms(result.inputs['vis'])
+                if not all([a for a in ms.antennas if a.diameter != 12.0]):
+                    result.qa.pool[:] = [pqa.QAScore(0.0, longmsg='No WVR scores available',
+                                         shortmsg='No wvr', vis=ms_name)]
         except AttributeError:
             pass
     
