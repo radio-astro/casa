@@ -43,7 +43,7 @@ namespace casa {
 		plotWidget = new BinPlotWidget( false, true, false, this );
 		plotWidget->setPlotMode( 1 );
 		plotWidget->setDisplayAxisTitles( true );
-		plotWidget->hideMaximumRange();
+		//plotWidget->hideMaximumRange();
 		layout->addWidget( plotWidget );
 		ui.plotWidgetHolder->setLayout( layout );
 		spectralIndex = -1;
@@ -56,6 +56,10 @@ namespace casa {
 	bool PixelRangeDialog::setImageRegion( ImageRegion* imageRegion, int id ){
 		bool imageSet = plotWidget->setImageRegion( imageRegion, id );
 		return imageSet;
+	}
+
+	void PixelRangeDialog::setTitle( const QString& title ){
+		ui.binPlotDialogTitle->setText( title );
 	}
 
 	void PixelRangeDialog::deleteImageRegion( int id ){
