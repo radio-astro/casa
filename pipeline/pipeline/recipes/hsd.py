@@ -104,8 +104,8 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
             # Flag data based on baseline quality
             hsd_blflag (pipelinemode=pipelinemode)
             
-            # Imaging
-            hsd_imaging (pipelinemode=pipelinemode)
+        # Imaging
+        hsd_imaging (pipelinemode=pipelinemode)
 
         # Export the data
         hsd_exportdata (pipelinemode=pipelinemode)
