@@ -27,10 +27,15 @@
 #include <assert.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
+#include <casa/Arrays/Array.h>
+#include <casa/Arrays/MaskedArray.h>
+#include <casa/Arrays/ArrayLogical.h>
+
 #include <images/Images/SubImage.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <images/Regions/ImageRegion.h>
 #include <guitools/Histogram/HeightSource.h>
+
 
 namespace casa {
 
@@ -127,6 +132,7 @@ ImageHistograms<Float>* Histogram::filterByChannels( const SHARED_PTR<const Imag
 			if ( spectralIndex == -1 ){
 				spectralIndex = cSys.spectralCoordinateNumber();
 			}
+
 			IPosition imShape = image->shape();
 			int shapeCount = imShape.nelements();
 			IPosition startPos( shapeCount, 0);
@@ -140,10 +146,9 @@ ImageHistograms<Float>* Histogram::filterByChannels( const SHARED_PTR<const Imag
 			SubImage<Float> subImage(*image, channelSlicer );
 			imageHistogram = new ImageHistograms<Float>( subImage );
 		}
-
 	}
 	else {
-		imageHistogram = new ImageHistograms<Float>(*image );
+		imageHistogram = new ImageHistograms<Float>( *image );
 	}
 	return imageHistogram;
 }
@@ -156,7 +161,7 @@ void Histogram::setRegion( ImageRegion* region ){
 	this->region = region;
 }
 
-bool Histogram::reset(){
+bool Histogram::reset(FootPrintWidget::PlotMode mode ){
 	bool success = true;
 	if ( image.get() != NULL ){
 		if ( histogramMaker != NULL ){
@@ -164,15 +169,21 @@ bool Histogram::reset(){
 			histogramMaker = NULL;
 		}
 		try {
-			if ( region == NULL ){
+			if ( mode == FootPrintWidget::IMAGE_MODE ){
 				//Make the histogram based on the image
 				histogramMaker = filterByChannels( image );
 			}
-			else {
+			else if ( region != NULL ){
 				//Make the histogram based on the region
 				SHARED_PTR<SubImage<Float> > subImage(new SubImage<Float>( *image, *region ));
 				if ( subImage.get() != NULL ){
-					histogramMaker = filterByChannels( subImage );
+					Array<Bool> mask = subImage->getMask();
+					if ( ! anyTrue( mask ) ){
+						success = false;
+					}
+					else {
+						histogramMaker = filterByChannels( subImage );
+					}
 				}
 				else {
 					success = false;
