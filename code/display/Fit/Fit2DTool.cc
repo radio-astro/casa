@@ -193,6 +193,12 @@ namespace casa {
 
 	void Fit2DTool::showPixelRangeDialog() {
 		pixelRangeDialog.setImage( image );
+		if ( ui.excludeRadioButton->isChecked() ){
+			pixelRangeDialog.setTitle( "Excluded Intensity Range");
+		}
+		else if ( ui.includeRadioButton->isChecked() ){
+			pixelRangeDialog.setTitle( "Included Intensity Range");
+		}
 		pixelRangeDialog.show();
 	}
 

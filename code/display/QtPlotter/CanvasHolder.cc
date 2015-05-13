@@ -197,7 +197,7 @@ namespace casa {
 	}
 
 	CanvasHolder::~CanvasHolder() {
-		delete legend;
-		legend = NULL;
+		//delete legend;
+		//legend = NULL;
 	}
 }

@@ -52,6 +52,7 @@ namespace casa {
 		void setImageMode( bool imageMode );
 		void setChannelValue( int channel );
 		bool setImageRegion( ImageRegion* imageRegion, int id );
+		void setTitle( const QString& title );
 		void deleteImageRegion( int id );
 		void imageRegionSelected( int id );
 		pair<double,double> getInterval() const;
