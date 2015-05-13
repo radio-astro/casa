@@ -601,40 +601,42 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 		for(vi.origin(); vi.more(); vi.next()) {
 
-			if (chunk >= nChunk_) {  // nChunk_ was just an estimate
-				increaseChunks(chunk-nChunk_+1);  // updates nChunk_
-				chshapes_.resize(4, nChunk_, True);
-				goodChunk_.resize(nChunk_, True);
-			}
+            if (vb->nRows() > 0) { // make sure average yielded some data
+                if (chunk >= nChunk_) {  // nChunk_ was just an estimate
+                    increaseChunks(chunk-nChunk_+1);  // updates nChunk_
+                    chshapes_.resize(4, nChunk_, True);
+                    goodChunk_.resize(nChunk_, True);
+                }
 
-			// If a thread is given, check if the user canceled.
-			if(thread != NULL && thread->wasCanceled()) {
-				dataLoaded_ = false;
-				return;
-			}
-			// If a thread is given, update its chunk number
-			if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-					chunk % THREAD_SEGMENT == 0))
-				thread->setStatus("Loading chunk " + String::toString(chunk) +
-						" / " + String::toString(nChunk_) + ".");
+                // If a thread is given, check if the user canceled.
+                if(thread != NULL && thread->wasCanceled()) {
+                    dataLoaded_ = false;
+                    return;
+                }
+                // If a thread is given, update its chunk number
+                if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+                        chunk % THREAD_SEGMENT == 0))
+                    thread->setStatus("Loading chunk " + String::toString(chunk) +
+                            " / " + String::toString(nChunk_) + ".");
 
-			// Cache the data shapes
-			chshapes_(0,chunk) = vb->nCorrelations();
-			chshapes_(1,chunk) = vb->nChannels();
-			chshapes_(2,chunk) = vb->nRows();
-			chshapes_(3,chunk) = vb->nAntennas();
-			goodChunk_(chunk)  = True;
-			for(unsigned int i = 0; i < loadAxes.size(); i++) {
-				loadAxis(vb, chunk, loadAxes[i], loadData[i]);
-			}
-			chunk++;
+                // Cache the data shapes
+                chshapes_(0,chunk) = vb->nCorrelations();
+                chshapes_(1,chunk) = vb->nChannels();
+                chshapes_(2,chunk) = vb->nRows();
+                chshapes_(3,chunk) = vb->nAntennas();
+                goodChunk_(chunk)  = True;
+                for(unsigned int i = 0; i < loadAxes.size(); i++) {
+                    loadAxis(vb, chunk, loadAxes[i], loadData[i]);
+                }
+                chunk++;
 
-			// If a thread is given, update its progress bar
-			if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-					chunk % THREAD_SEGMENT == 0)) {
-				progress = ((double)chunk+1) / nChunk_;
-				thread->setProgress((unsigned int)((progress * 100) + 0.5));
-			}
+                // If a thread is given, update its progress bar
+                if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+                        chunk % THREAD_SEGMENT == 0)) {
+                    progress = ((double)chunk+1) / nChunk_;
+                    thread->setProgress((unsigned int)((progress * 100) + 0.5));
+                }
+            }
 		}
 	}
 }
