@@ -1164,7 +1164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		regionTrc = itsRegionTrc;
 	}
 
-	const Int Profile2dDD::profileAxis() {
+	Int Profile2dDD::profileAxis() {
 		if (itsDD) {
 			return itsDD->displayAxes()[2];
 		} else {

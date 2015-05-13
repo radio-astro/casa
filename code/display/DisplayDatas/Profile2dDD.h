@@ -230,22 +230,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// <group>
 		// Return Profile Color
-		virtual const String profileColor() const {
+		virtual String profileColor() const {
 			return itsParamColor->value();
 		}
 		// Return Profile Line Width
-		virtual const Float profileLineWidth() const {
+		virtual Float profileLineWidth() const {
 			return itsParamLineWidth->value();
 		}
 		// Return Profile LineStyle
-		virtual const Display::LineStyle profileLineStyle() {
+		virtual Display::LineStyle profileLineStyle() {
 			return static_cast<Display::LineStyle>(itsParamLineStyle->keyValue());
 		}
 
 		// Return True if the last requested profile was for a
 		// region. Return False if the last requested profile was for a
 		// single point
-		virtual const Bool isRegionProfile() const {
+		virtual Bool isRegionProfile() const {
 			return itsIsRegionProfile;
 		}
 
@@ -255,53 +255,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                              Vector<Double> &regionTrc);
 
 		// Return Minimum Y value
-		virtual const Double profileYMin() const {
+		virtual Double profileYMin() const {
 			return itsCurrentBlc(1);
 		}
 		// Return Maximum Y value
-		virtual const Double profileYMax() const {
+		virtual Double profileYMax() const {
 			return itsCurrentTrc(1);
 		}
 		// Return Minimum X value
-		virtual const Double profileXMin() const {
+		virtual Double profileXMin() const {
 			return itsCurrentBlc(0);
 		}
 		// Return Maximum X value
-		virtual const Double profileXMax() const {
+		virtual Double profileXMax() const {
 			return itsCurrentTrc(0);
 		}
 		// Return the autoscale status (On or Off)
-		virtual const Bool profileAutoscale() const {
+		virtual Bool profileAutoscale() const {
 			return itsParamAutoscale->value();
 		}
 		// Return the rest frequency display status (to draw or not to draw)
-		virtual const Bool showRestFrequency()  const {
+		virtual Bool showRestFrequency()  const {
 			return itsParamShowRestFrequency->value();
 		}
 		// Return rest frequency.
-		virtual const Double restFrequency()  const {
+		virtual Double restFrequency()  const {
 			return itsRestFrequency;
 		}
 
 		// Return the statistics used for region calculations.
-		virtual const LatticeStatsBase::StatisticsTypes  regionStatType()  const {
+		virtual LatticeStatsBase::StatisticsTypes  regionStatType()  const {
 			return static_cast<LatticeStatsBase::StatisticsTypes>
 			       (itsParamRegionStatType->keyValue());
 		}
 
 		// Return the x value added to the pixel at a pixel position to
 		// create a region
-		virtual const Int regionXRadius()  const {
+		virtual Int regionXRadius()  const {
 			return itsParamRegionXRadius->value();
 		}
 
 		// Return the y value added to the pixel at a pixel position to
 		// create a region
-		virtual const Int regionYRadius()  const {
+		virtual Int regionYRadius()  const {
 			return itsParamRegionYRadius->value();
 		}
 		// Return the profile axis number (from the original image)
-		virtual const Int profileAxis();
+		virtual  Int profileAxis();
 
 		// </group>
 

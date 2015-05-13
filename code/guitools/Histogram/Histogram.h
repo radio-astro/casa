@@ -30,6 +30,7 @@
 #include <casa/vector.h>
 #include <QTextStream>
 #include <casa/Utilities/CountedPtr.h>
+#include <guitools/Histogram/FootPrintWidget.qo.h>
 
 namespace casa {
 
@@ -53,7 +54,7 @@ public:
 	bool compute();
 
 	//Completely reset the histogram if the image, region, or channels change
-	bool reset();
+	bool reset(FootPrintWidget::PlotMode mode );
 
 	void setRegion(ImageRegion* region);
 	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals,

@@ -332,7 +332,8 @@ namespace casa {
 
 			double blc_x, blc_y, trc_x, trc_y;
 			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-			if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y || within_vertex_handle( x, y ) ) {
+			if ( ((x >= blc_x) && (x <= trc_x) && (y >= blc_y) && (y <= trc_y)) ||
+					within_vertex_handle( x, y ) ) {
 				weaklySelect( mouse_in_region == false );
 				mouse_in_region = true;
 				result |= region::MouseSelected;

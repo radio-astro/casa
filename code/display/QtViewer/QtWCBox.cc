@@ -734,7 +734,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//of couse, can change to use freq
 		Double a;
 		Double b;
-		if (wSp >= 0 & wSp < (int) nAxes) {
+		if ( (wSp >= 0) & (wSp < (int) nAxes)) {
 			if (spCoord.toWorld(a, chanStart) &&
 			        spCoord.toWorld(b, chanEnd)) {
 				itsBlc(wSp).setUnit("s-1");
@@ -760,7 +760,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const uInt nAxes = itsPixelAxes.nelements();
 
-		if (wSp >= 0 & wSp < (int) nAxes) {
+		if ( (wSp >= 0) & (wSp < (int) nAxes)) {
 			//cout << "blc=" << itsBlc(wSp).getValue()
 			//     << " " << itsBlc(wSp).getUnit() << endl;
 			//cout << "trc=" << itsTrc(wSp).getValue()

@@ -2159,11 +2159,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
     }
 
-    static QStringList add_to_qstringlist( const QStringList &l, const QString &v ) {
+    /*static QStringList add_to_qstringlist( const QStringList &l, const QString &v ) {
         QStringList result(l);
         result << v;
         return result;
-    }
+    }*/
 
     static std::string to_string( const std::pair<QString,int>& data) {
         std::ostringstream str;
@@ -2470,7 +2470,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         viewer::dvo::param *param = static_cast<viewer::dvo::param*>(vo_flex_params_entry->itemWidget(item));
         QString current = param->title( );
         // find state for current param...
-        for ( int i=0; i < voparameters.size( ); ++i ) {
+        for ( int i=0; i < (int)(voparameters.size( )); ++i ) {
             if ( current == get<1>(voparameters[i]) ) {
                 int choices = vo_flex_params->count( );
                 // remove current flex param...

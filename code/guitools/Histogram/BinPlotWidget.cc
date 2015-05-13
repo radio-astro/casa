@@ -363,7 +363,7 @@ void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allCha
 
 	int selectedId = getSelectedId();
 	if ( histogramMap.contains( selectedId )){
-		histogramMap[selectedId]->reset();
+		histogramMap[selectedId]->reset( plotMode );
 		reset();
 	}
 }
@@ -456,6 +456,7 @@ void BinPlotWidget::setPlotMode( int mode ){
 	else {
 		qWarning() << "Unrecognized plot mode";
 	}
+	reset();
 }
 
 void BinPlotWidget::initializeDisplayActions(){
@@ -1171,7 +1172,7 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 	if ( image && region != NULL ){
 		Histogram* histogram = findHistogramFor( id );
 		histogram->setRegion( region );
-		success = histogram->reset();
+		success = histogram->reset(plotMode);
 		if ( plotMode != FootPrintWidget::IMAGE_MODE && success ){
 			selectedId = id;
 			resetRegion();
@@ -1256,14 +1257,15 @@ bool BinPlotWidget::resetImage(bool waitOnReset){
 			histogram->setImage( image );
 
 			if ( !waitOnReset){
-				success = histogram->reset( );
+				success = histogram->reset( plotMode );
 				if ( success ){
 					makeHistogram( IMAGE_ID, curveColor );
 					//resetColorCurve();
 				}
 				else {
 					QString msg( "Could not make a histogram from the image.");
-					QMessageBox::warning( this, "Error Making Histogram", msg);
+					qDebug() << msg;
+					//QMessageBox::warning( this, "Error Making Histogram", msg);
 				}
 			}
 		}
