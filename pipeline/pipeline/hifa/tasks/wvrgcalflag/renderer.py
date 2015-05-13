@@ -93,38 +93,39 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 flag_plots[vis] = sorted(plots, 
                                          key=lambda p: int(p.parameters['spw']))
 
-            # generate the phase offset summary plots
-            phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result)
-            phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
-
-            # generate the per-antenna phase offset plots
-            phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)            
-            phase_offset_plots = phase_offset_plotter.plot() 
-            # write the html for each MS to disk
-            renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
-                                                          phase_offset_plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
-
-            baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
-            baseline_plots = baseline_plotter.plot()
-            # write the html for each MS to disk
-            renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
-                                                                    baseline_plots)
-
-            # get the first scan for the QA intent(s)
-            qa_intent = set(result.inputs['qa_intent'].split(','))
-            qa_scan = sorted([scan.id for scan in ms.scans 
-                               if not qa_intent.isdisjoint(scan.intents)])[0]                               
-            # scan parameter on plot is comma-separated string 
-            qa_scan = str(qa_scan)            
-            LOG.trace('Using scan %s for phase vs baseline summary '
-                      'plots' % qa_scan)
-            baseline_summary_plots[vis] = [p for p in baseline_plots
-                                           if qa_scan in set(p.parameters['scan'].split(','))]
-            
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
+            if result.nowvr_result:
+                # generate the phase offset summary plots
+                phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result)
+                phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
+                
+                # generate the per-antenna phase offset plots
+                phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)            
+                phase_offset_plots = phase_offset_plotter.plot() 
+                # write the html for each MS to disk
+                renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
+                                                              phase_offset_plots)
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
+                
+                baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
+                baseline_plots = baseline_plotter.plot()
+                # write the html for each MS to disk
+                renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
+                                                                        baseline_plots)
+                
+                # get the first scan for the QA intent(s)
+                qa_intent = set(result.inputs['qa_intent'].split(','))
+                qa_scan = sorted([scan.id for scan in ms.scans 
+                                   if not qa_intent.isdisjoint(scan.intents)])[0]                               
+                # scan parameter on plot is comma-separated string 
+                qa_scan = str(qa_scan)            
+                LOG.trace('Using scan %s for phase vs baseline summary '
+                          'plots' % qa_scan)
+                baseline_summary_plots[vis] = [p for p in baseline_plots
+                                               if qa_scan in set(p.parameters['scan'].split(','))]
+                
+                with renderer.get_file() as fileobj:
+                    fileobj.write(renderer.render())        
 
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)

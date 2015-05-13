@@ -25,7 +25,10 @@ class WvrgcalflagQAHandler(pqa.QAResultHandler):
             wvr_score = result.qa_wvr.overall_score
             if wvr_score is not None:
                 scores = [qacalc.score_wvrgcal(ms_name, result.qa_wvr.overall_score)]
-                result.qa.pool[:] = scores
+            else:
+                scores = [pqa.QAScore(0.0, longmsg='No WVR scores available',
+                         shortmsg='No wvr', vis=ms_name)]
+            result.qa.pool[:] = scores 
         except AttributeError:
             pass
     

@@ -369,10 +369,17 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         for job in jobs:
             job_result = self._executor.execute(job)
             
-            # update results.wvrflag if necessary
-            job_name = np.array(job_result['Name'])
-            job_flag = np.array(job_result['Flag'])
-            job_wvrflag = set(job_name[job_flag])
+            if job_result['success']:
+                # extract flags found by CASA job
+                job_name = np.array(job_result['Name'])
+                job_flag = np.array(job_result['Flag'])
+                job_wvrflag = set(job_name[job_flag])
+            else:
+                LOG.warn('CASA wvrgcal job terminated unexpectedly with ' \
+                         ' exit code %s; no flags generated.' % (
+                         job_result['rval']))
+                job_wvrflag = set([])
+            
             input_wvrflag = set(wvrflag)
             generated_wvrflag = job_wvrflag.difference(input_wvrflag)
             if generated_wvrflag:
@@ -433,14 +440,14 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             # Do a bandpass calibration
             LOG.info('qa: calculating bandpass calibration')
             bp_result = self._do_qa_bandpass(inputs)
-	    # Do a gain calibration
-	    if not bp_result.final:
+            # Do a gain calibration
+            if not bp_result.final:
                 LOG.warning('qa: calculating phase calibration without bandpass applied')
-	    else:
+            else:
                 LOG.info('qa: calculating phase calibration with bandpass applied')
             nowvr_result = self._do_nowvr_gaincal(inputs)
-	    if not nowvr_result.final:
-	        continue
+            if not nowvr_result.final:
+                continue
 
             inputs.bandpass_result = bp_result
             inputs.nowvr_result = nowvr_result
@@ -457,9 +464,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         
         # do a phase calibration on the bandpass and phase calibrators, now 
         # with bandpas *and* wvr preapplied.
-	if not bp_result.final:
+        if not bp_result.final:
             LOG.warning('qa: calculating phase calibration with wvr applied')
-	else:
+        else:
             LOG.info('qa: calculating phase calibration with bandpass and wvr applied')
         wvr_result = self._do_wvr_gaincal(inputs)            
         
@@ -538,10 +545,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         task = bandpass.ALMAPhcorBandpass(inputs)
         #result = self._executor.execute(task, merge=True)
         result = self._executor.execute(task, merge=False)
-	if not result.final:
-	    pass
-	else:
-	    result.accept(inputs.context)
+        if not result.final:
+            pass
+        else:
+            result.accept(inputs.context)
         return result
     
     def _do_nowvr_gaincal(self, inputs):
