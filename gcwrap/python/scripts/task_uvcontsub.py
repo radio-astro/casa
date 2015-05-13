@@ -114,19 +114,20 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
         mytb.close()
 
         # Verify fitspw and spw as plausible
-        fitspwerr=subtract_spws(locfitspw,allspw)
-        if fitspwerr:
-            badfitspw=''
-            for ispw in range(len(fitspwerr)):
-                badfitspw+=str(fitspwerr.pop())
-            raise Exception, "fitspw contains non-existent spws: "+badfitspw
-
-        spwerr=subtract_spws(spw,allspw)
-        if spwerr:
-            badspw=''
-            for ispw in range(len(spwerr)):
-                badspw+=str(spwerr.pop())
-            raise Exception, "spw contains non-existent spws: "+badspw
+        if len(locfitspw)>0:
+            fitspwerr=subtract_spws(locfitspw,allspw)
+            if fitspwerr:
+                badfitspw=''
+                for ispw in range(len(fitspwerr)):
+                    badfitspw+=str(fitspwerr.pop())
+                raise Exception, "fitspw contains non-existent spw(s): "+badfitspw
+        if len(spw)>0:
+            spwerr=subtract_spws(spw,allspw)
+            if spwerr:
+                badspw=''
+                for ispw in range(len(spwerr)):
+                    badspw+=str(spwerr.pop())
+                raise Exception, "spw contains non-existent spw(s): "+badspw
 
         if 'spw' not in combine:
             #spwmfitspw = subtract_spws(spw, fitspw)
