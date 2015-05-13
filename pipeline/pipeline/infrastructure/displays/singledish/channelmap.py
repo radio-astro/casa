@@ -173,7 +173,7 @@ class SDChannelMapDisplay(SDImageDisplay):
             unweight_ia.close()
         try:
             data_integ = collapsed_ia.getchunk(dropdeg=True)
-            #mask_integ = collapsed_ia.getchunk(dropdeg=True, getmask=True)
+            mask_integ = collapsed_ia.getchunk(dropdeg=True, getmask=True)
         finally:
             collapsed_ia.close()
         # set mask to weight image
@@ -190,8 +190,8 @@ class SDChannelMapDisplay(SDImageDisplay):
         finally:
             collapsed_ia.close()
         # devive averaged image by averaged weight
-        data_weight_integ = data_integ / weight_integ
-        sp_ave = numpy.zeros((self.npol, self.nchan),dtype=numpy.float32)
+        data_weight_integ = numpy.ma.masked_array((data_integ / weight_integ), [ not val for val in mask_integ ], fill_value=0.0)
+        sp_ave = numpy.ma.masked_array(numpy.zeros((self.npol, self.nchan),dtype=numpy.float32))
         if self.npol == 1:
             if len(data_weight_integ) == self.nchan:
                 sp_ave[0,:] = data_weight_integ
@@ -382,7 +382,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                 spmax = Sp.max()
                 dsp = spmax - spmin
                 spmin -= dsp * 0.1
-                spmax += dsp * 0.1
+                spmax += dsp * 0.1                
 
                 pl.gcf().sca(axes_integsp1)
                 plotted_objects.extend(pl.plot(self.frequency, Sp, '-b', markersize=2, markeredgecolor='b', markerfacecolor='b'))
@@ -394,7 +394,13 @@ class SDChannelMapDisplay(SDImageDisplay):
                 # Plot Integrated Spectrum #2
                 pl.gcf().sca(axes_integsp2)
                 plotted_objects.extend(pl.plot(self.velocity[chan0:chan1] - VelC, Sp[chan0:chan1], '-b', markersize=2, markeredgecolor='b', markerfacecolor='b'))
-                pl.axis([V0, V1, spmin, spmax])
+                # adjust Y-axis range to the current line
+                spmin_zoom = Sp[chan0:chan1].min()
+                spmax_zoom = Sp[chan0:chan1].max()
+                dsp = spmax_zoom - spmin_zoom
+                spmin_zoom -= dsp * 0.1
+                spmax_zoom += dsp * 0.1
+                pl.axis([V0, V1, spmin_zoom, spmax_zoom])
 
                 t3 = time.time()
                 
