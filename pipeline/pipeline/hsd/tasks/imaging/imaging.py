@@ -357,6 +357,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     outcome['assoc_spws'] = spwids
                     outcome['assoc_pols'] = pols
                     if imagemode == 'AMPCAL':
+                        if len(infiles)==1 and (asdm not in ['', None]): outcome['vis'] = asdm
                         # to register exported_ms to each scantable instance
                         outcome['export_results'] = export_results
 

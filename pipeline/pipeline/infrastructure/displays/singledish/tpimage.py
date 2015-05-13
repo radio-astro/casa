@@ -148,6 +148,8 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             #parameters['type'] = 'sd_channel-averaged'
             parameters['type'] = 'sd_integrated_map'
             parameters['file'] = self.inputs.imagename
+            if self.inputs.vis is not None:
+                parameters['vis'] = self.inputs.vis
 
             plot = logger.Plot(plotfile,
                                x_axis='R.A.',

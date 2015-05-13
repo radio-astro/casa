@@ -125,6 +125,13 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
             return spwlist
 
     @property
+    def vis(self):
+        if self.result.outcome.has_key('vis'):
+            return self.result.outcome['vis']
+        else:
+            return None
+
+    @property
     def antenna(self):
         return self.result.outcome['image'].antenna
 
@@ -246,6 +253,7 @@ class SDImageDisplay(object):
         self.imagename = self.inputs.imagename
         self.spw = self.inputs.spw
         self.antenna = self.inputs.antenna
+        self.vis = self.inputs.vis
 
     def init(self):
         self.image = SpectralImage(self.imagename)
