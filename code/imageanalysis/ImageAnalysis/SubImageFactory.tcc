@@ -193,6 +193,18 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	const String& mask, Bool dropDegenerateAxes,
 	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
 ) {
+	return createImage(
+		image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
+		overwrite, list, extendMask, attachMask
+	);
+}
+
+template<class T> SPIIT SubImageFactory<T>::createImage(
+	const ImageInterface<T>& image,
+	const String& outfile, const Record& region,
+	const String& mask, const AxesSpecifier& axesSpec,
+	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
+) {
 	LogIO log;
 	log << LogOrigin("SubImageFactory", __func__);
 	// Copy a portion of the image
@@ -204,11 +216,9 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 			! validfile.valueOK(outfile, errmsg), errmsg
 		);
 	}
-	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	// SPIIT myclone(image.cloneII());
 	SHARED_PTR<const SubImage<T> > x = createSubImageRO(
 		image, region, mask, list ? &log : 0,
-		axesSpecifier, extendMask
+		axesSpec, extendMask
 	);
 	SPIIT outImage;
 	if (outfile.empty()) {

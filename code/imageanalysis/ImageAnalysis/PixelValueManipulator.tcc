@@ -69,13 +69,11 @@ template<class T> void PixelValueManipulator<T>::setAxes(
 }
 
 template<class T> Record PixelValueManipulator<T>::get() const {
-    //SPIIT myclone(this->_getImage()->cloneII());
 	SPCIIT subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
 		(this->_getVerbosity() > ImageTask<T>::QUIET ? this->_getLog().get() : 0),
 		AxesSpecifier(), this->_getStretch()
 	);
-	//myclone.reset();
     if (! _axes.empty()) {
 		ImageCollapser<T> collapser(
 			subImage, _axes, False, ImageCollapserData::MEAN,
@@ -160,7 +158,8 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 ) const {
 	// drop degenerate axes
 	SPIIT tmp = SubImageFactory<T>::createImage(
-		*collapsed, "", Record(), "", True, False, False, False
+		*collapsed, "", Record(), "", AxesSpecifier(IPosition(1, axis)),
+		False, False, False
 	);
 	const CoordinateSystem csys = tmp->coordinates();
 	Quantity t(0, unit);

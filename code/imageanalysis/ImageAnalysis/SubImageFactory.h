@@ -120,6 +120,7 @@ public:
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
+  // <group>
   // return a true copy (ie underlying data is a copy of the original, not
   // a reference) of the subimage selected in the given region.
   // A PagedImage is returned if outfile is not blank or a TempImage
@@ -134,6 +135,15 @@ public:
 	  Bool overwrite, Bool list, Bool extendMask,
 	  Bool attachMask=False
   );
+
+  static SPIIT createImage(
+  	  const ImageInterface<T>& image,
+  	  const String& outfile, const Record& region,
+  	  const String& mask, const AxesSpecifier& axesSpec,
+  	  Bool overwrite, Bool list, Bool extendMask,
+  	  Bool attachMask=False
+  );
+  // </group>
 
   private:
     SubImageFactory<T> (); 
