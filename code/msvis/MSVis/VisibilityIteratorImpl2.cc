@@ -240,8 +240,8 @@ public:
         return rep;
     }
 
-    SlicerSet
-    getSlicerSet () const
+    ColumnSlicer
+    getColumnSlicer () const
     {
 
         // The goal is to create a 2D array of Slicers.  Two types of Slicers are
@@ -311,7 +311,7 @@ public:
             shape (Correlation) = correlationDestination;
         }
 
-        return SlicerSet (shape, dataSlices, destinationSlices);
+        return ColumnSlicer (shape, dataSlices, destinationSlices);
     }
 
     const ChannelSubslicer &
@@ -815,10 +815,10 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
     Vector<Slicer *> dataSlicers, destinationSlicers;
-    SlicerSet slicerSet = channelSelector_p->getSlicer().getSlicerSet();
+    ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer ();
 
     column.getColumnCells (rowBounds_p.subchunkRows_p,
-                           slicerSet,
+                           columnSlicer,
                            array,
                            True);
 }
@@ -864,9 +864,9 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 
         IPosition shape (1, sliceStart);
 
-        SlicerSet slicerSet (shape, dataSlicers, destinationSlicers);
+        ColumnSlicer columnSlicer (shape, dataSlicers, destinationSlicers);
 
-        column.getColumnCells (rowBounds_p.subchunkRows_p, slicerSet, array, True);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, columnSlicer, array, True);
     }
     else{
 
@@ -2196,8 +2196,8 @@ VisibilityIteratorImpl2::setTileCache ()
             ///will not work if each subms of a virtual ms has multi hypecube being
             ///accessed.
             if (theMs.tableInfo ().subType () == "CONCATENATED" &&
-                msIterAtOrigin_p &&
-                ! tileCacheIsSet_p[k]) {
+                    msIterAtOrigin_p &&
+                    ! tileCacheIsSet_p[k]) {
 #warning "*** VII2::setTileCache needs to reexamine the handling of concatenated tables."
                 Block<String> refTables = theMs.getPartNames (True);
 
@@ -2208,7 +2208,7 @@ VisibilityIteratorImpl2::setTileCache ()
                     // Skip existing but empty WEIGHT_SPECTRUM or SIGMA_SPECTRUM column
 
                     if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM) ||
-                        columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
+                            columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
                         TableColumn tc (elms, columns [k]);
                         if (! tc.hasContent()){
                             continue;
@@ -2217,21 +2217,21 @@ VisibilityIteratorImpl2::setTileCache ()
 
                     ROTiledStManAccessor tacc (elms, columns[k], True);
 
-		    const IPosition tileShape(tacc.tileShape(startrow));
-		    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-		    uInt nax=hypercubeShape.size();  // how many axes
+                    const IPosition tileShape(tacc.tileShape(startrow));
+                    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+                    uInt nax=hypercubeShape.size();  // how many axes
 
-		    // Accumulate axis factors up to--but NOT including--the row (last) axis
-		    //  "ceil" catches partially filled tiles...
-		    uInt cacheSize(1);
-		    for (uInt iax=0; iax<nax-1; ++iax)
-		      cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
-		    
+                    // Accumulate axis factors up to--but NOT including--the row (last) axis
+                    //  "ceil" catches partially filled tiles...
+                    uInt cacheSize(1);
+                    for (uInt iax=0; iax<nax-1; ++iax)
+                        cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+
 #warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
-		    cacheSize*=2;
+                    cacheSize*=2;
 
-		    tacc.clearCaches (); //One tile only for now ...seems to work faster
-		    tacc.setCacheSize (startrow, cacheSize);
+                    tacc.clearCaches (); //One tile only for now ...seems to work faster
+                    tacc.setCacheSize (startrow, cacheSize);
 
                     tileCacheIsSet_p[k] = True;
                 }
@@ -2248,19 +2248,19 @@ VisibilityIteratorImpl2::setTileCache ()
 
                 const IPosition tileShape(tacc.tileShape(startrow));
                 const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-		uInt nax=hypercubeShape.size();  // how many axes
+                uInt nax=hypercubeShape.size();  // how many axes
 
-		// Accumulate axis factors up to--but NOT including--the row (last) axis
-		//  "ceil" catches partially filled tiles...
-		uInt cacheSize(1);
-		for (uInt iax=0; iax<nax-1; ++iax)
-		  cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+                // Accumulate axis factors up to--but NOT including--the row (last) axis
+                //  "ceil" catches partially filled tiles...
+                uInt cacheSize(1);
+                for (uInt iax=0; iax<nax-1; ++iax)
+                    cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
 
 #warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
-		cacheSize*=2;
+                cacheSize*=2;
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
-		tacc.setCacheSize (startrow, cacheSize);
+                tacc.setCacheSize (startrow, cacheSize);
 
             }
         }
