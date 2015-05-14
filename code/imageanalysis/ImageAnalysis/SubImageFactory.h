@@ -116,6 +116,14 @@ public:
 	  Bool attachMask=False
   );
 
+  static SPIIT createImage(
+	  const ImageInterface<T>& image,
+	  const String& outfile, const Record& region,
+	  const String& mask, const AxesSpecifier& axesSpec,
+	  Bool overwrite, Bool list, Bool extendMask,
+	  Bool attachMask=False
+  );
+
   private:
     SubImageFactory<T> (); 
 };

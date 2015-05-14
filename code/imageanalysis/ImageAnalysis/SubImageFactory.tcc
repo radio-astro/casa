@@ -148,9 +148,21 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 }
 
 template<class T> SPIIT SubImageFactory<T>::createImage(
+    const ImageInterface<T>& image,
+    const String& outfile, const Record& region,
+    const String& mask, Bool dropDegenerateAxes,
+    Bool overwrite, Bool list, Bool extendMask, Bool attachMask
+) {
+    return createImage(
+        image, outfile, region, mask, AxesSpecifier(! dropDegenerateAxes),
+        overwrite, list, extendMask, attachMask
+    );
+}
+
+template<class T> SPIIT SubImageFactory<T>::createImage(
 	const ImageInterface<T>& image,
 	const String& outfile, const Record& region,
-	const String& mask, Bool dropDegenerateAxes,
+	const String& mask, const AxesSpecifier& axesSpec,
 	Bool overwrite, Bool list, Bool extendMask, Bool attachMask
 ) {
 	LogIO log;
@@ -180,11 +192,11 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	ImageUtilities::copyMiscellaneous(newImage, image);
 	newImage.put(image.get());
 	*/
-	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
+	//AxesSpecifier axesSpecifier(! dropDegenerateAxes);
 	SPIIT myclone(image.cloneII());
 	SubImage<T> x = SubImageFactory<T>::createSubImage(
 		*myclone, region, mask, list ? &log : 0,
-		True, axesSpecifier, extendMask
+		True, axesSpec, extendMask
 	);
 	SPIIT outImage;
 	if (outfile.empty()) {

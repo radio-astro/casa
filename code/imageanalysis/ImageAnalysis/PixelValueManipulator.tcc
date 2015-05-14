@@ -161,8 +161,9 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 	uInt axis
 ) const {
 	// drop degenerate axes
+    AxesSpecifier axesSpec(IPosition(1, axis));
 	SPIIT tmp = SubImageFactory<T>::createImage(
-		*collapsed, "", Record(), "", True, False, False, False
+		*collapsed, "", Record(), "", axesSpec, False, False, False
 	);
 	const CoordinateSystem csys = tmp->coordinates();
 	Quantity t(0, unit);
