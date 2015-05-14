@@ -36,7 +36,7 @@ def plotms(vis=None,
            plotfile=None, expformat=None, exprange=None,
            highres=None, overwrite=None, 
            showgui=None, clearplots=None,
-	   callib=None
+           callib=None
 ):
 
 # we'll add these later
@@ -354,32 +354,33 @@ def plotms(vis=None,
             restfreq=''
             veldef='RADIO'
             shift=[0.0,0.0]
-		
+
         pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],
                                     False, plotindex)
 
-	# Set calibration
-	if not callib:
-		useCallib = False
-		callibFile = ''
-		callibRec = {}
-	elif isinstance(callib, dict):
-		useCallib = True
-		callibFile = ''
-		callibRec = callib
-	elif isinstance(callib, str):
-		callibFile = callib.strip()
-		if len(callibFile) > 0:
-			callibFile = os.path.abspath(callib)
-			try:
-       				mycallib = callibrary()
-				mycallib.read(callibFile)
-				callibRec = mycallib.cld
-				useCallib = True
-			except:
-				casalog.post("Cannot validate callib file")
-				raise RuntimeError("Cannot validate callib file")
-	pm.setPlotMSCalibration(useCallib, callibFile, callibRec, False, plotindex) 
+        # Set calibration
+        if not callib:
+            useCallib = False
+            callibFile = ''
+            callibRec = {}
+        elif isinstance(callib, dict):
+            useCallib = True
+            callibFile = ''
+            callibRec = callib
+        elif isinstance(callib, str):
+            callibFile = callib.strip()
+            if len(callibFile) > 0:
+                callibFile = os.path.abspath(callib)
+                try:
+                    mycallib = callibrary()
+                    mycallib.read(callibFile)
+                    callibRec = mycallib.cld
+                    useCallib = True
+                except Exception, e:
+                    print e
+                    casalog.post("Cannot validate callib file")
+                    raise RuntimeError("Cannot validate callib file")
+        pm.setPlotMSCalibration(useCallib, callibFile, callibRec, False, plotindex) 
 
         # Set flag extension
         # for now, some options here are not available:
