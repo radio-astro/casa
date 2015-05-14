@@ -135,7 +135,7 @@ class MaskLine(common.SingleDishTaskTemplate):
                 result.stage_number = self.inputs.context.task_counter 
             return result
         
-        LOG.trace('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
+        LOG.trace('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(numpy.array(spectra).shape)))
         LOG.trace('grid_table=%s'%(grid_table))
         LOG.debug('PROFILE simplegrid: elapsed time is %s sec'%(t1-t0))
 
