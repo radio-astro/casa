@@ -284,6 +284,18 @@ class getchunk_test(unittest.TestCase):
                 region=rg.box([0, 0, 0, 0], [9, 9, 0, 4])
             )
         )
+        
+    def test_CAS7553(self):
+        """verify CAS7553, error no longer occurs when getprofile axis is degenerate"""
+        myia = iatool()
+        myia.fromshape("", [20, 20, 1, 1])
+        myia.addnoise()
+        bb = myia.getchunk()
+        res = myia.getprofile(2)
+        myia.done()
+        exp = numpy.mean(bb)
+        got = res['values'][0]
+        self.assertTrue(abs((got - exp)/exp) < 1e-5)
 
 def suite():
     return [getchunk_test]
