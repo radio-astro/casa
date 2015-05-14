@@ -2971,7 +2971,9 @@ namespace casa {
 								getRegionShape(), QtProfile::MEAN,
 								cTypeUnit, coordinateType, 0, "", spcRefFrame);
 			if ( *ok ){
+			  if ( xval.size() >= 2 ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
+                          }
 			}
 		}
 		return unitPerChannel;
