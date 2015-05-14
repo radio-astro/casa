@@ -260,7 +260,7 @@ void ArrayColumn<T>::getSlice (uInt rownr,
 template<class T>
 void
 ArrayColumn<T>::getColumnCells (const RefRows & rows,
-                                const SlicerSet & slicerSet,
+                                const ColumnSlicer & columnSlicer,
                                 Array<T>& destination,
                                 Bool resize) const
 {
@@ -269,10 +269,10 @@ ArrayColumn<T>::getColumnCells (const RefRows & rows,
    // that axis as contained in arraySlices [i].  nR is the number of rows
    // in the RefRows object rows.  Resize the destination array to match.
 
-   const Vector<Slicer *> dataSlicers = slicerSet.getDataSlicers();
-   const Vector<Slicer *> destinationSlicers = slicerSet.getDestinationSlicers();
+   const Vector<Slicer *> dataSlicers = columnSlicer.getDataSlicers();
+   const Vector<Slicer *> destinationSlicers = columnSlicer.getDestinationSlicers();
 
-   IPosition destinationShape (slicerSet.shape());
+   IPosition destinationShape (columnSlicer.shape());
    destinationShape.append (IPosition (1, rows.nrows()));
 
    static const String tag ("ArrayColumn::getColumnCells (rows, slicers, ...)");
