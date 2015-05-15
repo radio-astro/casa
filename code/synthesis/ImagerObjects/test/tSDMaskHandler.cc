@@ -119,9 +119,8 @@ void testRegionToMaskImage()
   String maskname("mymaskfromregions");
   IPosition shape(4, 100, 100, 1, 10);
   CoordinateSystem csys=CoordinateUtil::defaultCoords4D();
-  //TempImage<Float> templateImage(TiledShape(shape),csys);
-  PagedImage<Float> templateImage(TiledShape(shape),csys, String("mytempim2"));
-  SDMaskHandler::cloneImShape(templateImage, maskname);
+  PagedImage<Float> maskImage(TiledShape(shape),csys, maskname);
+  //SDMaskHandler::cloneImShape(templateImage, maskname);
   // region record
   Vector<Quantum<Double> > qblc(4);
   Vector<Quantum<Double> > qtrc(4);
@@ -174,7 +173,8 @@ void testRegionToMaskImage()
   circles(1,0) = 12;
   circles(1,1) = 70;
   circles(1,2) = 65;
-  SDMaskHandler::regionToImageMask(maskname, regionRec, blctrcs, circles);
+  //SDMaskHandler::regionToImageMask(maskname, regionRec, blctrcs, circles);
+  SDMaskHandler::regionToImageMask(maskImage, regionRec, blctrcs, circles);
   delete regionRec;
 }
 
