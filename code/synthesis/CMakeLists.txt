@@ -313,6 +313,7 @@ casa_add_library( synthesis
 # ImagerObjects2/SIMapper.cc
 # ImagerObjects2/SIMapperImageMosaic.cc
  ImagerObjects/InteractiveMasking.cc
+ Utilities/PointingDirectionCalculator.cc
   )
 
 install (FILES
@@ -652,6 +653,7 @@ install (FILES
 	Utilities/AppRC.h
 	Utilities/FixVis.h
 	Utilities/ThreadCoordinator.h
+	Utilities/PointingDirectionCalculator.h
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
