@@ -87,6 +87,23 @@ public:
 	// <src>spectralList</src> spectral list containing initial estimates of single gaussians. Do
 	// not put a polynomial in here; set that with setPolyOrder(). Only one of a non-empty <src>estimatesFilename</src>
 	// or a non-empty <src>spectralList</src> can be specified.
+	//
+	// The following rules apply for various combinations of <src>ngauss</src>, <src>estimatesFilename</src>,
+	// and <src>spectralList</src>:
+	// * An exception is thrown if <src>estimatesFilename</src> is not the empty String and if <src>spectralList</src>
+	//   contains at least one component; ie you can only provide initial estimates using one of these parameters.
+	// * If you specify either <src>estimatesFilename</src> or <src>spectralList</src>, then <src>ngauss</src>
+	//   will be ignored; the number of gaussian singlets to be fit will be determined from the estimates you
+	//   supplied.
+	// * If you specify neither <src>estimatesFilename</src> nor <src>spectralList</src> and <src>ngauss</src>
+	//   is greater than 0, then the code will attempt to make initial estimates for and fit that number of Gaussian
+	//   singlets, although in some cases, a fewer number of Gaussians may be fit if the code decides your data
+	//   is best fit by fewer Gaussian singlets.
+	// * If you specify neither <src>estimatesFilename</src> nor <src>spectralList</src> and <src>ngauss</src> is
+	//   zero, then this indicates that you wish to fit only a polynomial to the data, and you should specify
+	//   the order of that polynomial after construction by calling setPolyOrder(). If you do not call this
+	//   method, when you attempt to perform a fit in this case, an exception will be thrown since you have
+	//   not specified any components to fit.
 
 	ImageProfileFitter(
 		const SPCIIF image, const String& region,
