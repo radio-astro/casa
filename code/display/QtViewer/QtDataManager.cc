@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		std::string canonical_path( const std::string & );
 
         namespace dvo {
-            void param::mousePressEvent ( QMouseEvent * event ) {
+            void param::mousePressEvent ( QMouseEvent * /*event*/ ) {
                  list->setCurrentItem(item);
                  edit->setFocus( );
             }
@@ -1351,7 +1351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void QtDataManager::changeTabContext( int index ) {
+	void QtDataManager::changeTabContext( int /*index*/ ) {
 		buildDirTree();
 		updateDisplayDatas(0,false);
 	}
@@ -2149,7 +2149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
     }
 
-    void QtDataManager::vo_query_begin( int count, const QString &service, const QtStringMap &values ) {
+    void QtDataManager::vo_query_begin( int /*count*/, const QString & /*service*/, const QtStringMap &values ) {
 		vo_action_with_timeout_reset( );
         if ( values["QUERY_STATUS"] == "OK" ) {
 			QString url_base = values["URL base"];
@@ -2165,20 +2165,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return result;
     }*/
 
-    static std::string to_string( const std::pair<QString,int>& data) {
+    /*static std::string to_string( const std::pair<QString,int>& data) {
         std::ostringstream str;
         str << data.first.toStdString( ) << ", " << data.second;
         return str.str();
-    }
+    }*/
 
-    void QtDataManager::vo_query_description( int count, const QString &service, const QtStringMap &values ) {
+    void QtDataManager::vo_query_description( int /*count*/, const QString & service, const QtStringMap & values ) {
 		qDebug( ) << "------------------------------------------- description -------------------------------------------";
 		qDebug( ) << service;
 		qDebug( ) << "---------------------------------------------------------------------------------------------------";
 		qDebug( ) << values;
 		vo_action_with_timeout_reset( );
         int initial_columns = vo_labels.size( );
-        vector<QString>::size_type cur_row = vo_urls.size( );
+        //vector<QString>::size_type cur_row = vo_urls.size( );
         bool found_url = false;
         for ( QtStringMap::const_iterator it=values.begin( ); it != values.end( ); ++it ) {
             if ( it.key( ) == "access_url" || it.key( ) == "accref" )
@@ -2192,8 +2192,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 vo_labels_tip.push_back(desc.last( ));
             }
         }
-        if ( found_url && vo_labels.size( ) != initial_columns ) {
-			int size = std::min(vo_labels.size( ),vo_labels_tip.size( ));
+        int voLabelCount = vo_labels.size();
+        if ( found_url && voLabelCount != initial_columns ) {
+			int size = std::min(vo_labels.size(),vo_labels_tip.size( ));
             vo_table->setColumnCount(size+1);
 			for ( int i = 0; i < size; ++i ) {
 				QTableWidgetItem *item = new QTableWidgetItem( vo_labels[i] );
@@ -2203,14 +2204,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
     }
 
-    void QtDataManager::vo_query_complete( int id, const QString &service, const QtStringMap &values ) {
+    void QtDataManager::vo_query_complete( int id, const QString &/*service*/, const QtStringMap & /*values*/ ) {
 		// std::copy( dvo_working_set.begin(), dvo_working_set.end(), std::ostream_iterator<int>( std::cout, "\n" ));
 		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
 		if ( iter != dvo_working_set.end( ) ) dvo_working_set.erase(iter);
 		vo_action_with_timeout_complete( );
     }
 
-    void QtDataManager::vo_error( int id, const QString &service, const QString &err ) {
+    void QtDataManager::vo_error( int id, const QString &/*service*/, const QString &err ) {
 		error( err );
 		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
 		if ( iter != dvo_working_set.end( ) ) dvo_working_set.erase(iter);
@@ -2228,7 +2229,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			qDebug( ) << values;
 		}
 		const int truncate_length = 500;
-		if ( iter->count >= truncate_length ) {
+		if ( ((int)iter->count) >= truncate_length ) {
 			warning( QString("Truncating query results after %1 entries...").arg(truncate_length) );
 			dvo.cancel(id);
 			dvo_working_set.erase(iter);
@@ -2271,7 +2272,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
-	void QtDataManager::vo_fetch_complete( int id, QString path ) {
+	void QtDataManager::vo_fetch_complete( int id, QString /*path*/ ) {
 		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
 		if ( iter == dvo_working_set.end( ) ) return;
 		dvo_working_set.erase(iter);
@@ -2287,7 +2288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		vo_action_with_timeout_complete( );
 	}
 
-	void QtDataManager::vo_fetch_progress( int id, QString path, double total_size, double total_done, double ultotal, double uldone ) {
+	void QtDataManager::vo_fetch_progress( int /*id*/, QString /*path*/, double total_size, double total_done, double /*ultotal*/, double /*uldone*/ ) {
 		// if ( dvo_working_set.find(id) == dvo_working_set.end( ) ) return;
 		status( QString("%1% (of %2MB) complete").arg(total_done/total_size * 100.0,0,'f',0).arg(total_size/(1024.0*1024.0),0,'f',1) );
 		vo_action_with_timeout_reset( );
@@ -2332,7 +2333,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         } else dec_size = dec_size_str.toDouble( );
 
         // flexible parameters...
-        for ( int i=0; i < voparameters.size( ); ++i ) {
+        for ( int i=0; i < ((int)voparameters.size( )); ++i ) {
             if ( get<0>(voparameters[i]) ) {
                 viewer::dvo::param *param = get<4>(voparameters[i]);
                 if ( param && param->edit->text( ).size( ) <= 0 ) {
@@ -2424,7 +2425,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         if ( ! item ) return;
         QString current = item->text( );
         // find state for current param...
-        for ( int i=0; i < voparameters.size( ); ++i ) {
+        for ( int i=0; i < ((int)voparameters.size( )); ++i ) {
             if ( current == get<1>(voparameters[i]) ) {
                 int entries = vo_flex_params_entry->count( );
                 // remove current param from the "available to activate" list...
