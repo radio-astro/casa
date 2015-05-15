@@ -162,10 +162,169 @@ ImageProfileFitter::ImageProfileFitter(
     		}
     	}
     }
-    _isSpectralIndex = _nPLPCoeffs + _nLTPCoeffs > 0;
     if (_nonPolyEstimates.nelements() > 0 && ngauss > 0) {
     	*_getLog() << LogIO::WARN << "Estimates specified so ignoring input value of ngauss"
     		<<LogIO::POST;
+    }
+    _construct();
+    _finishConstruction();
+}
+
+ImageProfileFitter::ImageProfileFitter(
+	const SPCIIF image, const String& region,
+	const Record *const &regionPtr,	const String& box,
+	const String& chans, const String& stokes,
+	const String& mask, const Int axis,
+	const uInt ngauss, Bool overwrite
+) : ImageTask<Float>(
+		image, region, regionPtr, box, chans, stokes,
+		mask, "", False
+	),
+	_residual(), _model(), _xUnit(), _centerName(),
+	_centerErrName(), _fwhmName(), _fwhmErrName(),
+	_ampName(), _ampErrName(), _integralName(),
+	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
+	_abscissaDivisorForDisplay("1"), _multiFit(False),
+	_deleteImageOnDestruct(False), _logResults(True),
+	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
+	_storeFits(True),
+	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
+	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
+	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
+	_nConverged(0), _nValid(0), _results(Record()), _nonPolyEstimates(),
+	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
+	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
+	*_getLog() << LogOrigin(_class, __func__);
+    _construct();
+    _finishConstruction();
+}
+
+ImageProfileFitter::ImageProfileFitter(
+	const SPCIIF image, const String& region,
+	const Record *const &regionPtr,	const String& box,
+	const String& chans, const String& stokes,
+	const String& mask, const Int axis,
+	const String& estimatesFilename, Bool overwrite
+) : ImageTask<Float>(
+		image, region, regionPtr, box, chans, stokes,
+		mask, "", False
+	),
+	_residual(), _model(), _xUnit(), _centerName(),
+	_centerErrName(), _fwhmName(), _fwhmErrName(),
+	_ampName(), _ampErrName(), _integralName(),
+	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
+	_abscissaDivisorForDisplay("1"), _multiFit(False),
+	_deleteImageOnDestruct(False), _logResults(True),
+	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
+	_storeFits(True),
+	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
+	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
+	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
+	_nConverged(0), _nValid(0), _results(Record()), _nonPolyEstimates(),
+	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
+	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
+	*_getLog() << LogOrigin(_class, __func__);
+	ThrowIf(estimatesFilename.empty(), "Estimates filename cannot be empty");
+    ProfileFitterEstimatesFileParser parser(estimatesFilename);
+    _nonPolyEstimates = parser.getEstimates();
+    _nGaussSinglets = _nonPolyEstimates.nelements();
+    *_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
+    	<<_nGaussSinglets << " in estimates file " << estimatesFilename
+    	<< LogIO::POST;
+    _construct();
+    _finishConstruction();
+}
+
+ImageProfileFitter::ImageProfileFitter(
+	const SPCIIF image, const String& region,
+	const Record *const &regionPtr,	const String& box,
+	const String& chans, const String& stokes,
+	const String& mask, const Int axis,
+	const SpectralList& spectralList, Bool overwrite
+) : ImageTask<Float>(
+		image, region, regionPtr, box, chans, stokes,
+		mask, "", False
+	),
+	_residual(), _model(), _xUnit(), _centerName(),
+	_centerErrName(), _fwhmName(), _fwhmErrName(),
+	_ampName(), _ampErrName(), _integralName(),
+	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
+	_abscissaDivisorForDisplay("1"), _multiFit(False),
+	_deleteImageOnDestruct(False), _logResults(True),
+	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
+	_storeFits(True),
+	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
+	_nGaussMultiplets(0), _nLorentzSinglets(0), _nPLPCoeffs(0),
+	_nLTPCoeffs(0), _minGoodPoints(1), _nProfiles(0), _nAttempted(0), _nSucceeded(0),
+	_nConverged(0), _nValid(0), _results(Record()), _nonPolyEstimates(),
+	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
+	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
+	*_getLog() << LogOrigin(_class, __func__);
+	_nonPolyEstimates = spectralList;
+	_nGaussSinglets = 0;
+	_nGaussMultiplets = 0;
+	for (uInt i=0; i<_nonPolyEstimates.nelements(); i++) {
+		SpectralElement::Types myType = _nonPolyEstimates[i]->getType();
+		switch(myType) {
+		case SpectralElement::GAUSSIAN:
+			_nGaussSinglets++;
+			break;
+		case SpectralElement::GMULTIPLET:
+			_nGaussMultiplets++;
+			break;
+		case SpectralElement::LORENTZIAN:
+			_nLorentzSinglets++;
+			break;
+		case SpectralElement::POWERLOGPOLY:
+			ThrowIf(
+				_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
+				"Only a single power logarithmic polynomial may be fit "
+				"and it cannot be fit simultaneously with other functions"
+			);
+			_nPLPCoeffs = _nonPolyEstimates[i]->get().size();
+			break;
+		case SpectralElement::LOGTRANSPOLY:
+			ThrowIf(
+				_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
+				"Only a single transformed logarithmic polynomial may "
+				"be fit and it cannot be fit simultaneously with other functions"
+			);
+			_nLTPCoeffs = _nonPolyEstimates[i]->get().size();
+			break;
+		default:
+			ThrowCc(
+				"Logic error: Only Gaussian singlets, "
+				"Gaussian multiplets, and Lorentzian singlets, or a single power "
+				"logarithmic polynomial, or a single log transformed polynomial are "
+				"permitted in the spectralList input parameter"
+			);
+			break;
+		}
+    	if (_nPLPCoeffs  > 0) {
+    		*_getLog() << LogIO::NORMAL << "Will fit a single power logarithmic polynomial "
+    			<< " from provided spectral element list" << LogIO::POST;
+    	}
+    	else if (_nLTPCoeffs  > 0) {
+    		*_getLog() << LogIO::NORMAL << "Will fit a single logarithmic transformed polynomial "
+    			<< " from provided spectral element list" << LogIO::POST;
+    	}
+    	else {
+    		if (_nGaussSinglets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of Gaussian singlets to fit found to be "
+    				<< _nGaussSinglets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    		if (_nGaussMultiplets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of Gaussian multiplets to fit found to be "
+    				<< _nGaussMultiplets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    		if (_nLorentzSinglets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
+    				<< _nLorentzSinglets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    	}
     }
     _construct();
     _finishConstruction();
@@ -517,7 +676,7 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 
 void ImageProfileFitter::_finishConstruction() {
     LogOrigin logOrigin(_class, __func__);
-
+    _isSpectralIndex = _nPLPCoeffs + _nLTPCoeffs > 0;
     ThrowIf(
     	_fitAxis >= (Int)_getImage()->ndim(),
     	"Specified fit axis " + String::toString(_fitAxis)

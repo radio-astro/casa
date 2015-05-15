@@ -88,8 +88,9 @@ public:
 	// not put a polynomial in here; set that with setPolyOrder(). Only one of a non-empty <src>estimatesFilename</src>
 	// or a non-empty <src>spectralList</src> can be specified.
 	//
+	// THE FIRST CONSTRUCTOR IS DEPRECATED, SO PLEASE USE ONE OF THE OTHERS.
 	// The following rules apply for various combinations of <src>ngauss</src>, <src>estimatesFilename</src>,
-	// and <src>spectralList</src>:
+	// and <src>spectralList</src> in the first constructor:
 	// * An exception is thrown if <src>estimatesFilename</src> is not the empty String and if <src>spectralList</src>
 	//   contains at least one component; ie you can only provide initial estimates using one of these parameters.
 	// * If you specify either <src>estimatesFilename</src> or <src>spectralList</src>, then <src>ngauss</src>
@@ -104,13 +105,42 @@ public:
 	//   the order of that polynomial after construction by calling setPolyOrder(). If you do not call this
 	//   method, when you attempt to perform a fit in this case, an exception will be thrown since you have
 	//   not specified any components to fit.
-
 	ImageProfileFitter(
 		const SPCIIF image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,
 		const SpectralList& spectralList, Bool overwrite=False
+	);
+
+	// Fit only Gaussian singlets and an optional polynomial. In this case, the
+	// code guestimates initial estimates for the specified number of Gaussian
+	// singlets.
+	ImageProfileFitter(
+		const SPCIIF image, const String& region,
+		const Record *const &regionPtr, const String& box,
+		const String& chans, const String& stokes, const String& mask,
+		const Int axis, const uInt ngauss, Bool overwrite=False
+	);
+
+	// Fit only Gaussian singlets and an optional polynomial. In this case, the number
+	// of Gaussian singlets is deduced from the specified estimates file.
+	ImageProfileFitter(
+		const SPCIIF image, const String& region,
+		const Record *const &regionPtr, const String& box,
+		const String& chans, const String& stokes, const String& mask,
+		const Int axis, const String& estimatesFilename,
+		Bool overwrite=False
+	);
+
+	// Fit any permitted combination of spectral components and an optional polynomial.
+	// All components to be fit (except a possible polynomial) must be represented
+	// with initial estimates in <src>spectralList</src>.
+	ImageProfileFitter(
+		const SPCIIF image, const String& region,
+		const Record *const &regionPtr, const String& box,
+		const String& chans, const String& stokes, const String& mask,
+		const Int axis, const SpectralList& spectralList, Bool overwrite=False
 	);
 
 	// destructor
