@@ -598,6 +598,7 @@ if( NOT SKIP_PGPLOT )
 else()
   casa_find( WCSLIB
     VERSION 4.3
+    PREFIX_HINTS ${WCSLIB_ROOT_DIR}
     INCLUDES wcslib/wcsconfig.h
     LIBS wcs
     # WCSLIB does "#define WCSLIB_VERSION 4.3.4" without quotes,
