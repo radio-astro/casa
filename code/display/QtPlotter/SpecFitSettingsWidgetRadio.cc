@@ -541,7 +541,7 @@ namespace casa {
 			const uInt ngauss, const SpectralList& spectralList ){
 		bool fitterConstructed = true;
 		try {
-			if ( ngauss == 0 /*|| spectralList.nelements()==0*/ ){
+			if ( ngauss == 0 || spectralList.nelements()==0 ){
 				fitter = new ImageProfileFitter( image, region, regionPtr, box,
 						chans, stokes, mask, axis, ngauss );
 			}
