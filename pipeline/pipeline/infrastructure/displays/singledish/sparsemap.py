@@ -20,7 +20,7 @@ NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
 
 class SparseMapAxesManager(object):
-    def __init__(self, nh, nv, brightnessunit, ticksize):
+    def __init__(self, nh, nv, brightnessunit, ticksize, clearpanel=True):
         self.nh = nh
         self.nv = nv
         self.ticksize = ticksize
@@ -29,6 +29,14 @@ class SparseMapAxesManager(object):
         
         self._axes_integsp = None
         self._axes_spmap = None
+        
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if clearpanel:
+            pl.clf()
+            
+    @property
+    def MATPLOTLIB_FIGURE_ID(self):
+        return 8910
         
     @property
     def axes_integsp(self):
@@ -85,13 +93,13 @@ class SparseMapAxesManager(object):
 
 
 class SDSparseMapPlotter(object):
-    def __init__(self, nh, nv, step, brightnessunit):
+    def __init__(self, nh, nv, step, brightnessunit, clearpanel=True):
         self.step = step
         if step > 1:
             ticksize = 10 - int(max(nh, nv) * step / (step - 1)) / 2
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
-        self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize)
+        self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel)
         self.lines_integrated = None
         self.lines_map = None
         self.reference_level = None
@@ -241,8 +249,6 @@ class SDSparseMapDisplay(SDImageDisplay):
         #pl.figure(self.MATPLOTLIB_FIGURE_ID)
         #if ShowPlot: pl.ioff()
 
-        pl.clf()
-        
         num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
         STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
         NH = (self.x_max - self.x_min) / STEP + 1
