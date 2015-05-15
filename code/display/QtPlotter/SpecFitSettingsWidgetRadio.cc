@@ -466,8 +466,11 @@ namespace casa {
 					if ( fixedItem != NULL ) {
 						fixedStr = fixedItem->getFixedStr();
 					}
+
 					if ( isValidEstimate( peakStr, centerStr, fwhmStr, fixedStr, i+1 ) ) {
-						if ( !peakStr.isEmpty() && !centerStr.isEmpty() && !fwhmStr.isEmpty()) {
+						if ( !peakStr.isEmpty() && !centerStr.isEmpty() && !fwhmStr.isEmpty()
+								&& !peakStr.trimmed().length() == 0 && !centerStr.trimmed().length() == 0
+								&& !fwhmStr.trimmed().length() == 0 ) {
 							double peakVal = peakStr.toDouble();
 							double centerVal = centerStr.toDouble();
 							double fwhmVal = fwhmStr.toDouble();
@@ -496,6 +499,13 @@ namespace casa {
 							GaussianSpectralElement* estimate = new GaussianSpectralElement( peakVal, centerValPix, fwhmValPix);
 							estimate->fixByString( fixedStr.toStdString());
 							spectralList.add( *estimate );
+						}
+						else {
+							if (  ui.multiFitCheckBox->isChecked() ){
+								QString msg("Please specify estimates for the fit parameters.");
+								Util::showUserMessage( msg, this);
+								validEstimates = false;
+							}
 						}
 
 					} else {
@@ -550,6 +560,11 @@ namespace casa {
 			QString chanWarning("");
 			if ( channelRange <= 3 ){
 				chanWarning = "Fit may not be valid due to narrow channel range.";
+			}
+			if ( startChannelIndex > endChannelIndex ){
+				int tmp = startChannelIndex;
+				startChannelIndex = endChannelIndex;
+				endChannelIndex = tmp;
 			}
 
 			//Get the channels
@@ -865,7 +880,6 @@ namespace casa {
 					Double beamAngle;
 					taskMonitor->getBeamInfo( fitCurveName, beamAngle, beamArea );
 					for ( int i = 0; i < curves.size(); i++ ) {
-
 						if ( !ui.multiFitCheckBox->isChecked() ||
 						        curves[i]->isSpecFitFor( pixelX,pixelY,minX,minY)) {
 							curves[i]->evaluate( xValues );
