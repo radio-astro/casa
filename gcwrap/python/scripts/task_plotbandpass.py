@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.66 2015/04/14 03:07:13 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.67 2015/05/15 18:25:14 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.66 2015/04/14 03:07:13 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.67 2015/05/15 18:25:14 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1416,8 +1416,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     for myspw in spwsToPlot:
         if (myspw not in uniqueSpwsInCalTable):
             print "WARNING: spw %d is not in the solution. Removing it from the list to plot." % (myspw)
+            print "Available spws = ", uniqueSpwsInCalTable
             keepSpwsToPlot.remove(myspw)
-            if (casadef.casa_version >= '4.1.0'):
+            if (casadef.casa_version >= '4.1.0' and mymsmd != ''):  
 # #              nonwvrspws = list(set(range(mymsmd.nspw())).difference(set(mymsmd.wvrspws())))
                 if (myspw not in range(mymsmd.nspw())):
                     print "FATAL: spw %d is not even in the ms.  There might be a bug in your script." % (myspw)
@@ -1449,9 +1450,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             basebandDict = {}
             telescopeName = getTelescopeNameFromCaltable(caltable)
             print "This %s caltable (%s) is too old to have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (telescopeName,caltable)
-        if (basebandDict == {} and overlay.find('spw') >= 0):
-            print "As such, overlay='spw' is not supported, but overlay='baseband' should work."
-            return
+        if (basebandDict == {}):
+            if (overlay.find('spw') >= 0):
+                print "As such, since the ms cannot be found, overlay='spw' is not supported, but overlay='baseband' should work."
+                return
+            elif (showfdm):
+                print "As such, since the ms cannot be found, showfdm=True is not supported."
+                return
+            elif (showBasebandNumber):
+                print "As such, since the ms cannot be found, showBasebandNumber=True is not supported."
+                return
     elif (msFound==False):
         allBasebands = [1,2,3,4]
     else:
