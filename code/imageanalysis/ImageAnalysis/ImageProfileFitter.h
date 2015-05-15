@@ -115,7 +115,9 @@ public:
 
 	// Fit only Gaussian singlets and an optional polynomial. In this case, the
 	// code guestimates initial estimates for the specified number of Gaussian
-	// singlets.
+	// singlets. If you only wish to fit a polynomial, you must use this
+	// constructor and you must set <src>ngauss</src> to zero. After construction,
+	// you must call setPolyOrder().
 	ImageProfileFitter(
 		const SPCIIF image, const String& region,
 		const Record *const &regionPtr, const String& box,

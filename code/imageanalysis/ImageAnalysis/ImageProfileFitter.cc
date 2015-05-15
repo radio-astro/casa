@@ -260,6 +260,10 @@ ImageProfileFitter::ImageProfileFitter(
 	_goodAmpRange(), _goodCenterRange(), _goodFWHMRange(),
 	_sigma(), _abscissaDivisor(1.0), _residImage(), _goodPlanes() {
 	*_getLog() << LogOrigin(_class, __func__);
+	ThrowIf(
+		spectralList.nelements() == 0,
+		"spectralList cannot be empty"
+	);
 	_nonPolyEstimates = spectralList;
 	_nGaussSinglets = 0;
 	_nGaussMultiplets = 0;
