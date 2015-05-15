@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import time
+import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
