@@ -97,7 +97,8 @@ int main(int argc, char **argv)
     //impars.startModel=startmodel;
     impars.velStart=Quantity(1320.0, "km/s");
     impars.velStep=Quantity(0.3, "km/s");
-    impars.veltype="OPTICAL";
+    //impars.veltype="OPTICAL";
+    impars.veltype="RADIO";
 
     MeasurementSet elms(msname, Table::Old);
     Block<Int> sort;
@@ -119,8 +120,17 @@ int main(int argc, char **argv)
     // Fixing the coordinateSystem for OPTICAL (see cas-6658)
     cs.replaceCoordinate(newSpec, 2);
 
-
-
+    Record cs2Record;
+    Record cs2Record2;
+    cs.save(cs2Record,"coordsys");
+    cerr<<"cs.findCoord spec="<<cs.findCoordinate(Coordinate::SPECTRAL)<<endl;
+    //cerr<<"cs2Rec.nfields()="<<cs2Record.nfields()<<" cs2Rec="<<cs2Record<<endl;
+    impars.csysRecord=cs2Record;
+    cerr<<"Set impars.csysRecord="<<impars.csysRecord<<endl;
+    CoordinateSystem cs2=impars.buildCoordinateSystem(&vi);
+    cerr<<"cs2.findCoord spec="<<cs2.findCoordinate(Coordinate::SPECTRAL)<<endl;
+    cs2.save(cs2Record2,"coordsys2");
+    
 
 
 
@@ -132,9 +142,19 @@ int main(int argc, char **argv)
     Vector<Int> oNchan;
     
     Record rec=SynthesisUtilMethods::cubeDataImagePartition(parsrec, cs, 10, impars.nchan, oCs, oNchan);
-    cerr << rec << endl;
-
-
+    cerr << "rec.nfields()="<<rec.nfields()<< endl;
+    //cerr<<" rec ========="<<rec<<endl;
+    cerr<<" ********************************\n"<<endl;
+    for (uInt i = 0; i < rec.nfields(); i++ ) {
+         Record newcsrec;
+         Record newcsrec2;
+         oCs[i].save(newcsrec,"coordsys");
+         CoordinateSystem newcs = impars.buildCoordinateSystem(&vi);
+         newcs.save(newcsrec2,"coordsys");
+         cerr<<" rec no = "<<i<<" new cs ="<<newcsrec2<<endl; 
+    } 
+    //cerr<<" *****************"<<endl;
+    //cerr<< "cs2Record2="<<cs2Record2 <<endl;
     //	  cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, start, end, MFrequency::LSRK) << endl;
     
 	  

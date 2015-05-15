@@ -1272,7 +1272,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
 	      }
             } 
-	
+
+        // optional - coordsys, imshape
+        // if exist use them. May need a consistency check with the rest of impars?
+        if( inrec.isDefined("csys") )
+          { 
+            //cerr<<"HAS CSYS KEY"<<endl;
+            if( inrec.dataType("csys")==TpRecord )
+              {
+                //cerr<<"CSYS is record...."<<endl;
+                csysRecord = inrec.subRecord("csys");
+              }
+            if( inrec.isDefined("imshape") ) 
+              {
+                if ( inrec.dataType("imshape") == TpArrayInt )
+                  {
+                    err += readVal( inrec, String("imshape"), imshape ); 
+                  }
+              }
+           }
+                
 	//String freqframestr( MFrequency::showType(freqFrame) );
 	//err += readVal( inrec, String("outframe"), freqframestr);
 	//if( ! MFrequency::getType(freqFrame, freqframestr) )
@@ -1417,6 +1436,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sysvel="";
     sysvelframe="";
     nTaylorTerms=1;
+    ///csysRecord=Record();
+    //
 
     
   }
@@ -1514,6 +1535,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("overwrite",overwrite );
     impar.define("startmodel", startModel );
 
+    if( csysRecord.nfields() != 0 )
+      {
+        //cerr<<" GOT CSYS INFO...."<<endl;
+        impar.defineRecord("csys", csys);
+        impar.define("imshape", imshape);
+      } 
+
     return impar;
   }
 
@@ -1566,6 +1594,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
+    CoordinateSystem csys;
+    
+    if( csysRecord.nfields()!=0 ) 
+      {
+        //use cysRecord
+        Record subRec1;
+        //cerr<<"USE THE EXISTING CSYS +++++++++++++++++"<<endl;
+        CoordinateSystem *csysptr = CoordinateSystem::restore(csysRecord,"coordsys");
+        //cerr<<" spectral axis="<<csysptr->findCoordinate(Coordinate::SPECTRAL)<<endl;
+        //csys = *csysptr; 
+        //CoordinateSystem csys(*csysptr); 
+        csys = *csysptr;
+
+      }
+    else { 
     MDirection phaseCenterToUse = phaseCenter;
 
     if( phaseCenterFieldId != -1 )
@@ -1794,12 +1837,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //////////////////  Build Full coordinate system. 
 
-    CoordinateSystem csys;
+    //CoordinateSystem csys;
     csys.addCoordinate(myRaDec);
     csys.addCoordinate(myStokes);
     csys.addCoordinate(mySpectral);
     csys.setObsInfo(myobsinfo);
 
+    //store back csys to impars record
+    //cerr<<"save csys to csysRecord..."<<endl;
+    csys.save(csysRecord,"coordsys");
+    //cerr<<"new csysRecord ="<<csysRecord<<endl;
+    // imshape
+    imshape.resize(4);
+    imshape[0] = imsize[0];
+    imshape[1] = imsize[0];
+    imshape[2] = whichStokes.nelements();
+    imshape[3] = chanFreq.nelements(); 
+    //toRecord();
     //////////////// Set Observatory info, if MS is provided.
     // (remove this section after verified...)
     /***
@@ -1831,7 +1885,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       }// if MS is provided.
       ***/
-
+    } // end of else when coordsys record is not defined...
     return csys;
   }
 
@@ -2347,7 +2401,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return IPosition( 4, imsize[0], imsize[1], nStokes, nchan );
   }
 
+  Record SynthesisParamsImage::getcsys() const
+  {
+      return csysRecord;
+  }
 
+  Record SynthesisParamsImage::updateParams(const Record& impar)
+  {
+      Record newimpar( impar );
+      if ( impar.isDefined("csys") ) 
+       { 
+           Vector<Int> newimsize(2);
+           newimsize[0] = imshape[0];
+           newimsize[1] = imshape[1];
+           newimpar.define("imsize", newimsize);
+           if ( newimpar.isDefined("direction0") )
+             {
+               Record dirRec = newimpar.subRecord("direction0");
+               Vector<Double> cdelta = dirRec.asArrayDouble("cdelt");
+               Vector<String> cells(2);
+               cells[0] = String::toString(-1*cdelta[0]) + "rad";
+               cells[1] = String::toString(-1*cdelta[1]) + "rad";
+               newimpar.define("cell", cells );
+             } 
+           if ( newimpar.isDefined("stokes1") )
+             {
+               Record stokesRec = newimpar.subRecord("stokes1");
+               Vector<String> stokesvecs = stokesRec.asArrayString("stokes"); 
+               String stokesStr;
+               for (uInt j = 0; j < stokesvecs.nelements(); j++)
+                 {
+                     stokesStr+=stokesvecs[j];
+                 }
+             }
+           if ( newimpar.isDefined("nchan") ) 
+             {
+               newimpar.define("nchan",imshape[2]);
+             }
+           if ( newimpar.isDefined("spectral2") ) 
+             {
+               Record specRec = newimpar.subRecord("spectral2");
+               if ( specRec.isDefined("restfreqs") ) 
+                 {
+                   Vector<Double> restfs = specRec.asArrayDouble("restfreqs");
+                   Vector<String> restfstrs(restfs.nelements());
+                   for(uInt restf=0; restf<restfs.nelements(); restf++){restfstrs[restf] = String::toString(restfs[restf]) + "Hz";}
+                   newimpar.define("restfreq",restfstrs);
+                 }
+               //reffreq?
+               //outframe
+               //sysvel
+               //sysvelframe
+             }      
+        }
+      return newimpar;
+  }
 
  /////////////////////// Grid/FTMachine Parameters
 
@@ -2423,6 +2531,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
 
+
     if( (ftmachine != "gridft") && (ftmachine != "wprojectft") && 
 	(ftmachine != "mosaicft") && (ftmachine != "awprojectft") && 
 	(ftmachine != "mawprojectft") && (ftmachine != "protoft"))
@@ -2454,7 +2563,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParamsGrid::setDefaults()
   {
     // FTMachine parameters
-    ftmachine="GridFT";
+    //ftmachine="GridFT";
+    ftmachine="gridft";
     padding=1.2;
     useAutoCorr=False;
     useDoublePrec=True; 

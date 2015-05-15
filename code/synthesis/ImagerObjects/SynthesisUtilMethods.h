@@ -213,6 +213,10 @@ public:
   
   String findSpecMode(const String& mode) const;
   String MDopToVelString(Record &rec);
+  Record getcsys() const;
+  // check consistency of image parameters when csys record exists and update 
+  // accordingly based on csys record 
+  Record updateParams(const Record &impar);
 
   // Sky coordinates
   String imageName, stokes, startModel;
@@ -237,6 +241,10 @@ public:
   String tststr;
   // for holding quantity or measure records
   Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
+  // optional coordsys record
+  Record csysRecord, csys;
+  Vector<Int> imshape;
+
   //freqframe coversion?
   Bool freqFrameValid;
 
