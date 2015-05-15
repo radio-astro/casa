@@ -81,37 +81,10 @@ public:
 	// <src>mask</src> - Mask (as LEL) to use as a way to specify which pixels to use </src>
 	// <src>axis</src> - axis along which to do the fits. If <0, use spectral axis, and if no spectral
 	// axis, use zeroth axis.
-	// <src>ngauss</src> number of single gaussians to fit. Not used if <src>estimatesFile</src> or
-	// <src>spectralList</src> is specified.
+	// <src>ngauss</src> number of single gaussians to fit.
 	// <src>estimatesFilename</src> file containing initial estimates for single gaussians.
 	// <src>spectralList</src> spectral list containing initial estimates of single gaussians. Do
-	// not put a polynomial in here; set that with setPolyOrder(). Only one of a non-empty <src>estimatesFilename</src>
-	// or a non-empty <src>spectralList</src> can be specified.
-	//
-	// THE FIRST CONSTRUCTOR IS DEPRECATED, SO PLEASE USE ONE OF THE OTHERS.
-	// The following rules apply for various combinations of <src>ngauss</src>, <src>estimatesFilename</src>,
-	// and <src>spectralList</src> in the first constructor:
-	// * An exception is thrown if <src>estimatesFilename</src> is not the empty String and if <src>spectralList</src>
-	//   contains at least one component; ie you can only provide initial estimates using one of these parameters.
-	// * If you specify either <src>estimatesFilename</src> or <src>spectralList</src>, then <src>ngauss</src>
-	//   will be ignored; the number of gaussian singlets to be fit will be determined from the estimates you
-	//   supplied.
-	// * If you specify neither <src>estimatesFilename</src> nor <src>spectralList</src> and <src>ngauss</src>
-	//   is greater than 0, then the code will attempt to make initial estimates for and fit that number of Gaussian
-	//   singlets, although in some cases, a fewer number of Gaussians may be fit if the code decides your data
-	//   is best fit by fewer Gaussian singlets.
-	// * If you specify neither <src>estimatesFilename</src> nor <src>spectralList</src> and <src>ngauss</src> is
-	//   zero, then this indicates that you wish to fit only a polynomial to the data, and you should specify
-	//   the order of that polynomial after construction by calling setPolyOrder(). If you do not call this
-	//   method, when you attempt to perform a fit in this case, an exception will be thrown since you have
-	//   not specified any components to fit.
-	ImageProfileFitter(
-		const SPCIIF image, const String& region,
-		const Record *const &regionPtr, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const uInt ngauss, const String& estimatesFilename,
-		const SpectralList& spectralList, Bool overwrite=False
-	);
+	// not put a polynomial in here; set that with setPolyOrder().
 
 	// Fit only Gaussian singlets and an optional polynomial. In this case, the
 	// code guestimates initial estimates for the specified number of Gaussian
