@@ -994,7 +994,7 @@ image* image::continuumsub(
 		ImageProfileFitter fitter(
 		_image->getImage(), "", leRegion.get(),
 			"", "", "", "", spectralAxis,
-			0, "", SpectralList(), overwrite
+			0, overwrite
 		);
 		fitter.setDoMultiFit(True);
 		fitter.setPolyOrder(in_fitorder);
