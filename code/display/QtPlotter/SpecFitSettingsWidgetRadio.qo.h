@@ -75,6 +75,11 @@ namespace casa {
 		void gaussianEstimatesChanged();
 
 	private:
+
+		bool _constructFitter( SHARED_PTR<const ImageInterface<float> >& image,
+					const String& region, const Record* const &regionPtr, const String& box,
+					const String& chans, const String& stokes, const String& mask, const Int axis,
+					const uInt ngauss, const SpectralList& spectralList );
 		/**
 		 * Places the passed in Gaussian estimate val into the indicated row and
 		 * column of the initial Gaussian estimate table.

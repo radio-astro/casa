@@ -535,6 +535,31 @@ namespace casa {
 		return pixelValue;
 	}
 
+	bool SpecFitSettingsWidgetRadio::_constructFitter( SHARED_PTR<const ImageInterface<float> >& image,
+			const String& region, const Record* const &regionPtr, const String& box,
+			const String& chans, const String& stokes, const String& mask, const Int axis,
+			const uInt ngauss, const SpectralList& spectralList ){
+		bool fitterConstructed = true;
+		try {
+			if ( ngauss == 0 /*|| spectralList.nelements()==0*/ ){
+				fitter = new ImageProfileFitter( image, region, regionPtr, box,
+						chans, stokes, mask, axis, ngauss );
+			}
+			else {
+				fitter = new ImageProfileFitter( image, region, regionPtr, box, chans, stokes, mask,
+						axis, spectralList);
+			}
+
+		}
+		catch( AipsError& error ){
+			qDebug() << "Error constructing image fitter:" << error.getMesg().c_str();
+			QString msg("Please check that appropriate fit parameters have been set.");
+			Util::showUserMessage( msg, this);
+			fitterConstructed = false;
+		}
+		return fitterConstructed;
+	}
+
 	void SpecFitSettingsWidgetRadio::doFit( float startVal, float endVal, uint nGauss, bool fitPoly, int polyN ) {
 		reset();
 		QString fitCurveName = ui.curveComboBox->currentText();
@@ -575,11 +600,12 @@ namespace casa {
 			DisplayCoordinateSystem cSys = image -> coordinates();
 			Int spectralAxisNumber = cSys.spectralAxisNumber();
 			String regionShape = getRegionShape();
+			bool fitterConstructed = false;
 			if ( regionShape == "rectangle" || regionShape == "point" ){
 				//Initialize the fitter
-				fitter = new ImageProfileFitter( image, "", 0, pixelBox,
-			                                 channelStr, "", "", spectralAxisNumber, static_cast<uInt>(nGauss), "",
-			                                 spectralList);
+				fitterConstructed = _constructFitter( image, "", 0, pixelBox,
+			                                 channelStr, "", "", spectralAxisNumber,
+			                                 static_cast<uInt>(nGauss), spectralList);
 			}
 			//CAS-5689 For elliptical regions we cannot pass in a pixel box
 			//but must use a region record instead.
@@ -600,12 +626,16 @@ namespace casa {
 				}
 
 				//Initialize the fitter
-				fitter = new ImageProfileFitter( image, "", &regionRecord, "",
-											 "", "", "", spectralAxisNumber, static_cast<uInt>(nGauss), "",
-											 spectralList);
+				fitterConstructed = _constructFitter( image, "", &regionRecord, "",
+						"", "", "", spectralAxisNumber, static_cast<uInt>(nGauss), spectralList);
 			}
 			else {
 				qDebug() << "Unrecognized region shape could not be fit: "<< regionShape.c_str();
+				return;
+			}
+
+			if ( !fitterConstructed ){
+				qDebug() << "Could not make image profile fitter!";
 				return;
 			}
 
