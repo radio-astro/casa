@@ -762,7 +762,7 @@ protected:
 
   // Create the FTMachines when necessary or when the control parameters
   // have changed. 
-  Bool createFTMachine();
+  virtual Bool createFTMachine();
 
   void openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock);
 

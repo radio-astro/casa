@@ -597,6 +597,7 @@ install (FILES
 	TransformMachines/WTerm.h
 	TransformMachines/FTMachine.h
 	TransformMachines/GridFT.h
+	TransformMachines/SetJyGridFT.h
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
@@ -652,6 +653,7 @@ install (FILES
 install (FILES
 	Utilities/AppRC.h
 	Utilities/FixVis.h
+	Utilities/SigHandler.h 
 	Utilities/ThreadCoordinator.h
 	Utilities/PointingDirectionCalculator.h
 	DESTINATION include/casacode/synthesis/Utilities
