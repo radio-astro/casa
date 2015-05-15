@@ -1293,9 +1293,10 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	//By default if there are no images,
 	//we make it the master coordinate image, provided
 	//we don't already have a master coordinate image.
+	int imageCount = displayDataHolder->getCount();
 	QtDisplayData* controllingData = displayDataHolder->getDDControlling();
 	if ( controllingData == NULL && autoRegister ){
-		int imageCount = displayDataHolder->getCount();
+
 		if (imageCount == 0 ){
 			masterCoordinate = true;
 		}
@@ -1303,11 +1304,18 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	displayDataHolder->addDD( qdd, insertPosition, autoRegister,
 			masterCoordinate, masterSaturation,	 masterHue );
 
+
 	updateDDMenus_( true );
 	emit ddCreated(qdd, autoRegister, insertPosition, masterCoordinate);
 	updateFrameInformation();
 	if ( regionDock_ ) {
 		regionDock_->updateRegionStats( );
+	}
+
+	//When starting the 2DFitter before an image is loaded, the image is not getting
+	//updated in the fitter (CAS-7530).
+	if ( imageCount == 0 ){
+		resetListenerImage();
 	}
 
 	connect( qdd, SIGNAL(showColorHistogram(QtDisplayData*)), this, SLOT(showColorHistogram(QtDisplayData*)));
