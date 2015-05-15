@@ -26,14 +26,54 @@ class callibrary(object):
         return definst
 
 
-#    def addold(self,gaintable,gainfield,
-#               interp,spwmap,calwt):
-#
-#        # TBD: handle gainfield='nearest'
-#
-#        self.add(caltable=gaintable,ctfield=gainfield,
-#                 interp=interp,spwmap=spwmap,calwt=calwt)
+    def clear(self):
+        self.__init__()
 
+    def len(self):
+        return len(self.cld)
+
+    def addold(self,field='',spw='',intent='',
+               gaintable='',gainfield='',interp='',spwmap=[],calwt=False):
+
+        if len(gaintable)<1:
+            raise Exception, 'Please specify at least a gaintable.'
+
+        # insist all cal params are lists
+        #  NB: data selection params are _not_ lists
+        if (not isinstance(gaintable,list)):
+            gaintable=[gaintable]
+
+        if (not isinstance(gainfield,list)):
+            gainfield=[gainfield]
+        if (not isinstance(interp,list)):
+            interp=[interp]
+        if (not isinstance(calwt,list)):
+            calwt=[calwt]
+        if isinstance(spwmap,list) and len(spwmap)>0:
+            if (not isinstance(spwmap[0],list)):
+                spwmap=[spwmap]  # nest it
+        else:
+            spwmap=[]
+
+
+        for itab in range(len(gaintable)):
+            tint='linear'
+            fint=''
+            sinterp=interp[itab].split(',') if itab<len(interp) else []
+            if len(sinterp)>0 and len(sinterp[0])>0:
+                tint=sinterp[0]
+                fint=sinterp[1] if (len(sinterp)>1) else ''
+            self.add(caltable=gaintable[itab],
+                     field=field,
+                     spw=spw,
+                     intent=intent,
+                     tinterp=tint,
+                     finterp=fint,
+                     calwt=calwt[itab] if itab<len(calwt) else calwt[len(calwt)-1],
+                     fldmap=gainfield[itab] if itab<len(gainfield) else '',
+                     spwmap=spwmap[itab] if itab<len(spwmap) else []
+                     )
+            
 
     # 
     def add(self,caltable,
@@ -101,8 +141,9 @@ class callibrary(object):
             
     def parsetorec(self,caltable,
                    field='',intent='',spw='',obs='',
-                   tinterp='',finterp='',reach='',calwt=True,
+                   tinterp='linear',finterp='',reach='',calwt=True,
                    obsmap=[],fldmap=[],spwmap=[],antmap=[]):
+
         d0=self.cldefinstance()
         d0["field"]=field
         d0["intent"]=intent
@@ -162,13 +203,17 @@ class callibrary(object):
                     print ' antmap='+str(self.cld[ct][ims]['antmap'])
 
 
-    def write(self,filename):
+    def write(self,filename,append=False):
         if len(filename)<1:
             raise Exception, 'Please specify a filename'
         if len(self.cld)<1:
             raise Exception, 'There is no cal library to write'
+
+        fw="w"
+        if append:
+            fw="a"
         
-        f=open(filename,"w")
+        f=open(filename,fw)
         keys0=self.cld.keys()
         keys0.sort()
         for ct in keys0:
@@ -210,21 +255,81 @@ class callibrary(object):
 
                     print >>f, ''
 
-    def read(self,filename):
-        for line in open(filename):
-            line=line.strip()  # remove leading/trailing whitespace
-            line=' '.join(line.split())  # reduce whitespace
-            line=line.replace(' ',',')
-            line=line.replace(',,',',')
-            exec('self.parsetorec('+line+')')
+        f.close()
+
+    def read(self,callibr):
+
+        lines=[]
+        if isinstance(callibr,list):
+            # a python list of lines has been specified
+            lines=callibr
+        else:
+            # assume a filename has been specified
+            lines=open(callibr)
+
+        for line in lines:
+            line2=line.strip()  # remove leading/trailing whitespace
+
+            # Attempt to parse if it has content
+            if len(line2)>0:
+                if line2[0]=='#':
+                    # Ignore lines that are comments (or turned off with #)
+                    print 'Found comment (not parsed): ',line2
+                else:
+                    # A nominally parsable line, apparently
+
+                    # reduce whitespace to only singles
+                    line2=' '.join(line2.split())  
+
+                    # absorb remaining spaces adjacent to =
+                    line2=line2.replace(' =','=')
+                    line2=line2.replace('= ','=')
+
+                    # sub , for spaces to delimit keys in the parsed command
+                    line2=line2.replace(' ',',')
+                    line2=line2.replace(',,',',') # ~corrects likely comma replacement within quotes
+
+                    # add parsetorec() command syntax
+                    parsecmd='self.parsetorec('+line2+')'
+                    
+                    # cope with bool recognition for calwt
+                    parsecmd=parsecmd.replace('calwt=T,','calwt=True,') 
+                    parsecmd=parsecmd.replace('calwt=T)','calwt=True)')
+                    parsecmd=parsecmd.replace('calwt=F,','calwt=False,')
+                    parsecmd=parsecmd.replace('calwt=F)','calwt=False)')
+                    
+                    # execute, and trap/report any errors that occur
+                    try:
+                        exec(parsecmd)
+                    except Exception as errline:
+                        self.clear()
+                        print 'Error: ',errline
+                        print 'Problem parsing cal library line (check for typos): "'+line+'"'
+                        raise Exception, 'Problem parsing cal library line (check for typos): '+line
 
     def compare(self,other):
         return self.cld==other.cld
 
 
+def applycaltocallib(filename,append=False,field='',spw='',intent='',
+                     gaintable='',gainfield='',interp='',spwmap=[],calwt=True):
+    
+    if len(filename)<1:
+        raise Exception, 'Please specify a filename'
+
+    if len(gaintable)<1:
+        raise Exception, 'No caltable specified in gaintable'
+
+    c=callibrary()
+    c.addold(field=field,spw=spw,intent=intent,gaintable=gaintable,
+             gainfield=gainfield,interp=interp,spwmap=spwmap,calwt=calwt)
+    c.write(filename,append)
+    c.clear()
+
+
 def testcallib0():
 
-    c=calibrary()
+    c=callibrary()
     c.add(caltable="G0",field="0",tinterp="nearest")
     c.add(caltable="G0",field="1,2",tinterp="linear")
     c.add(caltable="B0",tinterp="nearest",finterp="linear")
@@ -234,7 +339,7 @@ def testcallib0():
 
 def testcallib1():
 
-    c1=calibrary()
+    c1=callibrary()
     c1.add(caltable=['B','phase','flux'],field='0~1,3~4',
           tinterp=['nearest','linear'],ctfield=['0',''])
     c1.add(caltable=['B','phase','flux'],field='2',
@@ -243,7 +348,7 @@ def testcallib1():
     print 'c1: -----------------------------------------------'
     c1.list()
 
-    c2=calibrary()
+    c2=callibrary()
     c2.add(gaintable=['B','flux'],field='0~4',
           tinterp=['nearest'],ctfield=['0'])
     c2.add(gaintable='phase',field='0~1,3~4',
@@ -259,7 +364,7 @@ def testcallib1():
 
 def testcallib2():
 
-    c1=calibrary()
+    c1=callibrary()
     c1.add(caltable=['B','flux'],field='0~4',
           tinterp=['nearest'],ctfield=['0'])
     c1.add(caltable='phase',field='0~1,3~4',
@@ -268,7 +373,7 @@ def testcallib2():
           tinterp='linear',ctfield='3,4')
     c1.write('testcallib2.txt')
 
-    c2=calibrary()
+    c2=callibrary()
     c2.read('testcallib2.txt')
 
     print 'Cal libraries match?', c2.cld==c1.cld
