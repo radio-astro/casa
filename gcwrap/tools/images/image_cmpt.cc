@@ -1914,55 +1914,72 @@ record* image::fitprofile(const string& box, const variant& region,
 			"the either (or neither in which "
 			"case you must specify ngauss and/or poly)"
 		);
-		ImageProfileFitter fitter(
-			_image->getImage(), regionName, regionPtr.get(),
-			box, chans, stokes, mask, axis,
-			ngauss, estimates, spectralList
-		);
-		fitter.setDoMultiFit(multifit);
-		if (poly >= 0) {
-			fitter.setPolyOrder(poly);
+		SHARED_PTR<ImageProfileFitter> fitter;
+		if (spectralList.nelements() > 0) {
+			fitter.reset(new ImageProfileFitter(
+				_image->getImage(), regionName, regionPtr.get(),
+				box, chans, stokes, mask, axis,
+				spectralList
+			));
 		}
-		fitter.setModel(model);
-		fitter.setResidual(residual);
-		fitter.setAmpName(amp);
-		fitter.setAmpErrName(amperr);
-		fitter.setCenterName(center);
-		fitter.setCenterErrName(centererr);
-		fitter.setFWHMName(fwhm);
-		fitter.setFWHMErrName(fwhmerr);
-		fitter.setIntegralName(integral);
-		fitter.setIntegralErrName(integralerr);
-		fitter.setMinGoodPoints(minpts > 0 ? minpts : 0);
-		fitter.setStretch(stretch);
-		fitter.setLogResults(logResults);
+		else if (! estimates.empty()) {
+			fitter.reset(new ImageProfileFitter(
+				_image->getImage(), regionName, regionPtr.get(),
+				box, chans, stokes, mask, axis,
+				estimates
+			));
+		}
+		else {
+			fitter.reset(new ImageProfileFitter(
+				_image->getImage(), regionName, regionPtr.get(),
+				box, chans, stokes, mask, axis,
+				ngauss
+			));
+		}
+		fitter->setDoMultiFit(multifit);
+		if (poly >= 0) {
+			fitter->setPolyOrder(poly);
+		}
+		fitter->setModel(model);
+		fitter->setResidual(residual);
+		fitter->setAmpName(amp);
+		fitter->setAmpErrName(amperr);
+		fitter->setCenterName(center);
+		fitter->setCenterErrName(centererr);
+		fitter->setFWHMName(fwhm);
+		fitter->setFWHMErrName(fwhmerr);
+		fitter->setIntegralName(integral);
+		fitter->setIntegralErrName(integralerr);
+		fitter->setMinGoodPoints(minpts > 0 ? minpts : 0);
+		fitter->setStretch(stretch);
+		fitter->setLogResults(logResults);
 		if (! planes.empty()) {
 			std::set<int> myplanes(planes.begin(), planes.end());
 			ThrowIf(*myplanes.begin() < 0, "All planes must be nonnegative");
-			fitter.setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
+			fitter->setGoodPlanes(std::set<uInt>(myplanes.begin(), myplanes.end()));
 		}
 		if (! logfile.empty()) {
-			fitter.setLogfile(logfile);
-			fitter.setLogfileAppend(append);
+			fitter->setLogfile(logfile);
+			fitter->setLogfileAppend(append);
 		}
 		if (mygoodamps.size() == 2) {
-			fitter.setGoodAmpRange(mygoodamps[0], mygoodamps[1]);
+			fitter->setGoodAmpRange(mygoodamps[0], mygoodamps[1]);
 		}
 		if (mygoodcenters.size() == 2) {
-			fitter.setGoodCenterRange(mygoodcenters[0], mygoodcenters[1]);
+			fitter->setGoodCenterRange(mygoodcenters[0], mygoodcenters[1]);
 		}
 		if (mygoodfwhms.size() == 2) {
-			fitter.setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
+			fitter->setGoodFWHMRange(mygoodfwhms[0], mygoodfwhms[1]);
 		}
 		if (sigmaImage.get()) {
-			fitter.setSigma(sigmaImage.get());
+			fitter->setSigma(sigmaImage.get());
 		}
 		else if (sigmaArray.get()) {
-			fitter.setSigma(*sigmaArray);
+			fitter->setSigma(*sigmaArray);
 		}
 		if (! outsigma.empty()) {
 			if (sigmaImage.get() || sigmaArray.get()) {
-				fitter.setOutputSigmaImage(outsigma);
+				fitter->setOutputSigmaImage(outsigma);
 			}
 			else {
 				_log << LogIO::WARN
@@ -1974,29 +1991,29 @@ record* image::fitprofile(const string& box, const variant& region,
 		if (plpest.size() > 0 || ltpest.size() > 0) {
 			variant::TYPE t = div.type();
 			if (div.type() == variant::BOOLVEC) {
-				fitter.setAbscissaDivisor(0);
+				fitter->setAbscissaDivisor(0);
 			}
 			else if (t == variant::INT || t == variant::DOUBLE) {
-				fitter.setAbscissaDivisor(div.toDouble());
+				fitter->setAbscissaDivisor(div.toDouble());
 			}
 			else if (t == variant::STRING || t == variant::RECORD) {
-				fitter.setAbscissaDivisor(casaQuantity(div));
+				fitter->setAbscissaDivisor(casaQuantity(div));
 			}
 			else {
 				throw AipsError("Unsupported type " + div.typeString() + " for div");
 			}
 			if (! myspxtype.empty()) {
 				if (myspxtype == "plp") {
-					fitter.setPLPName(spxsol);
-					fitter.setPLPErrName(spxerr);
+					fitter->setPLPName(spxsol);
+					fitter->setPLPErrName(spxerr);
 				}
 				else if (myspxtype == "ltp") {
-					fitter.setLTPName(spxsol);
-					fitter.setLTPErrName(spxerr);
+					fitter->setLTPName(spxsol);
+					fitter->setLTPErrName(spxerr);
 				}
 			}
 		}
-		return fromRecord(fitter.fit());
+		return fromRecord(fitter->fit());
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
