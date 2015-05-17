@@ -553,7 +553,8 @@ def importasdm(
             
         if convert_ephem2geo:
             import recipes.ephemerides.convertephem as ce
-            ce.convert2geo(vis, '*') # convert any attached ephemerides to GEO
+            for myviso in vistoproc:
+                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
         
         
     except Exception, instance:

@@ -133,11 +133,11 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         tbt.putkeyword('obsloc', 'GEOCENTRIC')
         tbt.close()
     except Exception, instance:
-        casalog.post('Conversion in situ was not possible. Restoring original ephemeris ...', 'INFO')
+        casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
         if overwrite and outtablename==tablename:
+            casalog.post('Conversion in situ was not possible. Restoring original ephemeris ...', 'INFO')
             os.system('rm -rf '+tablename)
             os.system('mv '+safetycopyname+' '+tablename)
-        casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
         return False
     
 
@@ -154,8 +154,6 @@ def convert2geo(vis='', field=''):
     Only RA, Dec, and RadVel are converted.
     If there is attached ephemeris or if the ephemeris is already in GEO, nothing is done.
     """
-
-    casalog.origin('convertephem')
 
     mst = mstool()
     tbt = tbtool()
@@ -185,7 +183,6 @@ def convert2geo(vis='', field=''):
         
         if len(theephstoconvert)==0:
             casalog.post('No ephemerides attached.', 'INFO')
-            return True
         else:
             for theeph in theephstoconvert:
                 if converttopoephem2geo(theeph, theeph, overwrite=True):
