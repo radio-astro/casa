@@ -938,7 +938,19 @@ class imval_test(unittest.TestCase):
         )
         self.assertTrue(ret['data'].shape == (9, 9, 4, 10))
         
-        
+    def test_pv(self):
+        """Test fix so imval works with pv images, CAS-7573"""
+        myia = iatool()
+        imagename = "mypv.im"
+        myia.fromshape("", [20,20,20])
+        myia.addnoise()
+        pv = myia.pv(outfile=imagename, start=[3,3], end=[17,17])
+        myia.done()
+        expec = pv.getchunk()
+        pv.done()
+        res = imval(imagename)
+        got = res['data']
+        self.assertTrue((got == expec).all())
     
 def suite():
     return [imval_test]

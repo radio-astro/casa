@@ -5,139 +5,133 @@ import numpy
 
 # The function that handles the imval task.
 def imval(imagename, region, box, chans, stokes):
-    # Blank return value.
-    retValue = { 'blc':[], 'trc':[], 'unit': '', 'data': [], 'mask': []}
-    casalog.origin('imval')
-
-    try:
-        axes=getimaxes(imagename)
-    except:
-        raise Exception, "Unable to determine the axes of image: "+imagename
-    
-
-    # Get rid of any white space in the parameters
-    region = region.replace(' ', '' )
-    box    = box.replace( ' ', '' )
-    chans  = chans.replace( ' ', '' )
-    stokes = stokes.replace( ' ','' )
-
-    # Default for the chans and stokes parameter is all when the
-    # aren't given.  The easy way is to set them to -1, and let
-    # the imageregion.py code handle it.
-    if ( len(chans) < 1 ):
-        chans='-1'
-            
-    if ( len(stokes) < 1 ):
-        stokes='-1'
-            
-        
-    # If the user hasn't specified any region information then
-    # find the very last data point -- what ia.getpixelvalue        
-    # defaults too.
     myia = iatool()
-    if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 ):
+    mycsys = cstool()
+    try:
+        # Blank return value.
+        retValue = { 'blc':[], 'trc':[], 'unit': '', 'data': [], 'mask': []}
+        casalog.origin('imval')
+    
         try:
-            myia.open(imagename)
-
-            # Get the default  pixelvalue() at the referencepixel pos.
-            csys=myia.coordsys()
-            ref_values = csys.referencepixel()['numeric']
-            point=[]
-            for val in ref_values.tolist():
-                point.append( int(round(val) ) )
-            casalog.post( 'Getting data value at point '+str(point), 'NORMAL' )
-            results = myia.pixelvalue(point)
-
-            retValue = _imval_process_pixel( results, point )
-            retValue['axes']=axes
-            casalog.post( 'imval task complete for point'+str(point), 'NORMAL1' )
-            return retValue
-        except Exception, instance:
-            raise Exception, instance
-        finally:
-            myia.done()
-
-    # If the box parameter only has two value then we copy
-    # them.  
-    if ( box.count(',') == 1 ):
-        box = box + ','+ box
-
-    # If we are finding the value at a single point this
-    # is a special case and we use ia.getpixelvalue()
-
-    singlePt = _imval_get_single( box, chans, stokes, axes )
-    #print "Single point is: ", singlePt, "   ", len(singlePt)
-    if ( len( singlePt ) == 4 and singlePt.count( -1 ) < 1 ):
-        try:
-            casalog.post( 'Getting data value at point '+str(singlePt), 'NORMAL' )
-            myia.open( imagename )
-            results = myia.pixelvalue( singlePt )
-            retValue = _imval_process_pixel( results, singlePt )
-            retValue['axes']=axes
-            casalog.post( 'imval task complete for point '+str(singlePt), 'NORMAL1' )
-            return retValue
-        except Exception, instance:
-            raise Exception, instance
-        finally:
-            myia.done()
-        
-        
-    # If we've made it here then we are finding the stats
-    # of a region, which could be a set of single points.
-    axes=getimaxes(imagename)
-    statAxes=[]
-    if ( len(box)>0 ):
-        statAxes.append(axes[0][0])
-        statAxes.append(axes[1][0])
-    if ( len(chans)>0 ):
-        statAxes.append(axes[2][0])
-
-    # If we get to this point and find that nothing was
-    # given for the box parameter we use the reference
-    # pixel values.
-    myia.open(imagename)
-    mycsys = myia.coordsys()  
-
-    if ( len(box) == 0 and len(region) == 0):
-        try:
-            # Open the image for processing!            
-            ref_values = mycsys.referencepixel()['numeric']
-            values = ref_values.tolist()
-            box = str(int(round(values[axes[0][0]])))+','\
-                  + str(int(round(values[axes[1][0]])))+',' \
-                  + str(int(round(values[axes[0][0]])))+','\
-                   +str(int(round(values[axes[1][0]])))
+            axes=getimaxes(imagename)
         except:
-            myia.done()
-            raise Exception, "Unable to find the size of the input image."
-          
-    # Because the help file says -1 is valid, apparently that's supported functionality, good grief
+            raise Exception, "Unable to determine the axes of image: "+imagename
+        
     
-    if box.startswith("-1"):
-        box = ""
-    if chans.startswith("-1"):
-        chans = ""
-    if stokes.startswith("-1"):
-        stokes = ""
-    reg = rg.frombcs(
-        mycsys.torecord(), myia.shape(), box, chans,
-        stokes, "a", region
-    )
+        # Get rid of any white space in the parameters
+        region = region.replace(' ', '' )
+        box    = box.replace( ' ', '' )
+        chans  = chans.replace( ' ', '' )
+        stokes = stokes.replace( ' ','' )
     
+        # Default for the chans and stokes parameter is all when the
+        # aren't given.  The easy way is to set them to -1, and let
+        # the imageregion.py code handle it.
+        if ( len(chans) < 1 ):
+            chans='-1'
+                
+        if ( len(stokes) < 1 ):
+            stokes='-1'
+                
+            
+        # If the user hasn't specified any region information then
+        # find the very last data point -- what ia.getpixelvalue        
+        # defaults too.
+        
+        if ( len(box)<1 and len(chans)<1 and len(stokes)<1 and len(region)<1 ):
+            try:
+                myia.open(imagename)
+    
+                # Get the default  pixelvalue() at the referencepixel pos.
+                csys=myia.coordsys()
+                ref_values = csys.referencepixel()['numeric']
+                point=[]
+                for val in ref_values.tolist():
+                    point.append( int(round(val) ) )
+                casalog.post( 'Getting data value at point '+str(point), 'NORMAL' )
+                results = myia.pixelvalue(point)
+    
+                retValue = _imval_process_pixel( results, point )
+                retValue['axes']=axes
+                casalog.post( 'imval task complete for point'+str(point), 'NORMAL1' )
+                return retValue
+            except Exception, instance:
+                raise Exception, instance
+            finally:
+                myia.done()
+    
+        # If the box parameter only has two value then we copy
+        # them.  
+        if ( box.count(',') == 1 ):
+            box = box + ','+ box
+    
+        # If we are finding the value at a single point this
+        # is a special case and we use ia.getpixelvalue()
+    
+        singlePt = _imval_get_single( box, chans, stokes, axes )
+        if ( len( singlePt ) == 4 and singlePt.count( -1 ) < 1 ):
+            try:
+                casalog.post( 'Getting data value at point '+str(singlePt), 'NORMAL' )
+                myia.open( imagename )
+                results = myia.pixelvalue( singlePt )
+                retValue = _imval_process_pixel( results, singlePt )
+                retValue['axes']=axes
+                casalog.post( 'imval task complete for point '+str(singlePt), 'NORMAL1' )
+                return retValue
+            except Exception, instance:
+                raise Exception, instance
+            finally:
+                myia.done()
+            
+            
+        # If we've made it here then we are finding the stats
+        # of a region, which could be a set of single points.
+        axes=getimaxes(imagename)
+        statAxes=[]
+        if ( len(box)>0 ):
+            statAxes.append(axes[0][0])
+            statAxes.append(axes[1][0])
+        if ( len(chans)>0 ):
+            statAxes.append(axes[2][0])
+    
+        # If we get to this point and find that nothing was
+        # given for the box parameter we use the reference
+        # pixel values.
+        myia.open(imagename)
+        mycsys = myia.coordsys()  
 
-    # Now that we know which axes we are using, and have the region
-    # selected, lets get that stats!  NOTE: if you have axes size
-    # greater then 0 then the maxpos and minpos will not be displayed
-    if ( reg.has_key( 'regions' ) ):
-        casalog.post( "Complex region found, only processing the first"\
-                      " SIMPLE region found", "WARN" )
-        reg=reg['regions']['*1']
-    myia.done()
-    retValue = _imval_getregion( imagename, reg )
-    retValue['axes']=axes
-
-    casalog.post( 'imval task complete for region bound by blc='+str(retValue['blc'])+' and trc='+str(retValue['trc']), 'NORMAL1' )
-    return retValue
+        # Because the help file says -1 is valid, apparently that's supported functionality, good grief
+        
+        if box.startswith("-1"):
+            box = ""
+        if chans.startswith("-1"):
+            chans = ""
+        if stokes.startswith("-1"):
+            stokes = ""
+        reg = rg.frombcs(
+            mycsys.torecord(), myia.shape(), box, chans,
+            stokes, "a", region
+        )
+        
+    
+        # Now that we know which axes we are using, and have the region
+        # selected, lets get that stats!  NOTE: if you have axes size
+        # greater then 0 then the maxpos and minpos will not be displayed
+        if ( reg.has_key( 'regions' ) ):
+            casalog.post( "Complex region found, only processing the first"\
+                          " SIMPLE region found", "WARN" )
+            reg=reg['regions']['*1']
+        retValue = _imval_getregion( imagename, reg )
+        retValue['axes']=axes
+    
+        casalog.post( 'imval task complete for region bound by blc='+str(retValue['blc'])+' and trc='+str(retValue['trc']), 'NORMAL1' )
+        return retValue
+    except Exception, instance:
+        casalog.post( '*** Error ***'+str(instance), 'SEVERE' )
+        raise
+    finally:
+        myia.done()    
+        mycsys.done() 
                 
 #
 # Take the results from the ia.pixelvalue() function and
@@ -224,7 +218,6 @@ def _imval_getregion( imagename, region):
     try:
         # Open the image for processing!
         myia.open(imagename)
-
         # Find the array of data and mask values.
         data_results=myia.getregion( region=region, dropdeg=True, getmask=False )
         mask_results=myia.getregion( region=region, dropdeg=True, getmask=True )
@@ -237,8 +230,8 @@ def _imval_getregion( imagename, region):
             casalog.post( "ia.boundingbox() has returned unexpected results, blc value absent.", "SEVERE" )
             myia.done()
             return retvalue
-        if ( not bbox.has_key( 'blc' ) ):
-            casalog.post( "ia.boundingbox() has returned unexpected results, blc value absent.", "SEVERE" )
+        if ( not bbox.has_key( 'trc' ) ):
+            casalog.post( "ia.boundingbox() has returned unexpected results, trc value absent.", "SEVERE" )
             myia.done()
             return retvalue
         
@@ -248,9 +241,7 @@ def _imval_getregion( imagename, region):
         mycoords = mycsys.toworldmany(myarrays)
         outcoords = _imval_redo(data_results.shape, mycoords['numeric'])
         
-        # Find what units the data values are stored in.
         avalue = myia.pixelvalue( bbox['blc'].tolist() )
-        #print "A VALUE IS: ", avalue
         if ( not avalue.has_key('value') or not avalue['value'].has_key('unit') ):
             casalog.post( "ia.pixelvalue() has returned unexpected results, data value absent or ill-formed.", "SEVERE" )
             myia.done()
