@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.67 2015/05/15 18:25:14 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.68 2015/05/18 20:25:00 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.67 2015/05/15 18:25:14 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.68 2015/05/18 20:25:00 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2715,6 +2715,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
            spwctrFirstToPlot = spwctr
        while (spwctr < len(spwsToPlot)):
                 if (debug): print "at top of spwctr loop, spwctr=%d" % (spwctr)
+                allTimesFlaggedOnThisSpw = True # used only by overlay='time'
                 if (groupByBaseband == False):
                     baseband = 0
                     if (casadef.casa_version >= '4.1.0'):
@@ -3157,7 +3158,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           
                               # draw labels
                               # try adding the following 'if' statement on Jun 18, 2013; it works.
-                              if (drewAtmosphere==False or overlayAntennas==False):
+#                              if (drewAtmosphere==False or overlayAntennas==False):
+                              # Add the 'and not' case to prevent extra atm/fdms shown if one spw's solutions are all flagged
+                              if (drewAtmosphere==False or (not overlayAntennas and not allTimesFlaggedOnThisSpw)):
                                   if (debug): print "drawOverlayTimeLegends loc 1"
                                   drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
                                                          caltable,titlesize,fieldIndicesToPlot,
@@ -3244,6 +3247,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               continue
                           elif (debug):
                               print "=========== Not continuing because doneOverlayTime=%s" % (str(doneOverlayTime))
+                  else:
+                      allTimesFlaggedOnThisSpw = False
+                      if (debug):
+                          print "Not all the data are flagged.  doneOverlayTime=%s" % (str(doneOverlayTime))
                       
                   if (firstTimeMatch == -1):
                       firstTimeMatch = mytime
