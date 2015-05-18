@@ -461,7 +461,23 @@ synthesisimstore* synthesisimager::getimstore(const int id)
   return rstat;
 }
 
-
+casac::record* synthesisimager::getcsys()
+{
+   casac::record* rstat(0);
+   try 
+     {
+       if ( itsImager ) 
+         {
+            rstat = fromRecord( itsImager->getcsys() );
+         }
+     }
+   catch (AipsError x) 
+     {
+       RETHROW(x);
+     }
+   return rstat;
+}
+       
   bool synthesisimager::getweightdensity()
   {
     Bool rstat(False);

@@ -506,6 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMaxCoordSys=csys;
 	  }
 
+        itsCsysRec = impars.getcsys();
 	/*
 	os << "Define image  [" << impars.imageName << "] : nchan : " << impars.nchan 
 	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
@@ -564,7 +565,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     return True;
   }
- 
+
   Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, 
 				    const String& ftmachine)
   {

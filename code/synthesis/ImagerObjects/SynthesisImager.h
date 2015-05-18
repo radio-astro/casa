@@ -132,6 +132,8 @@ class SynthesisImager
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
 			   const String& ftmachine);
 
+  Record getcsys() {return itsCsysRec;};
+
   //Function to tune the data selection to intersect with image definition chosen
   //This is to optimize the data selection so that unnecessary data is not parsed despite the user
   // deciding to select so.
@@ -299,6 +301,7 @@ protected:
 
   CoordinateSystem itsMaxCoordSys;
   IPosition itsMaxShape;
+  Record itsCsysRec;
 
 
   /////////////// All input parameters
