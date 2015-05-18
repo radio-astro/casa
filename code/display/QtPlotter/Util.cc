@@ -376,15 +376,19 @@ namespace casa {
 
 				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
 				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
-				radius[0] = Quantity(xdistance, radUnits );
-				radius[1] = Quantity(ydistance, radUnits );
+				const float ERR = 0.000001;
+				if ( xdistance >= ERR && ydistance >= ERR ){
 
-				Vector<Int> pixax(2);
-				Vector<Int> dirPixelAxis = cSys.pixelAxes(directionIndex);
-				pixax(0) = dirPixelAxis[0];
-				pixax(1) = dirPixelAxis[1];
-				WCEllipsoid ellipsoid( center, radius, IPosition(dirPixelAxis), cSys);
-				imageRegion = new ImageRegion( ellipsoid );
+					radius[0] = Quantity(xdistance, radUnits );
+					radius[1] = Quantity(ydistance, radUnits );
+
+					Vector<Int> pixax(2);
+					Vector<Int> dirPixelAxis = cSys.pixelAxes(directionIndex);
+					pixax(0) = dirPixelAxis[0];
+					pixax(1) = dirPixelAxis[1];
+					WCEllipsoid ellipsoid( center, radius, IPosition(dirPixelAxis), cSys);
+					imageRegion = new ImageRegion( ellipsoid );
+				}
 			}
 		}
 		else {
