@@ -74,7 +74,14 @@ public:
   virtual void setShapeColumn (const IPosition& shape);
   // Prepare the column. By default it does nothing.
   virtual void prepareCol();
+
 protected:
+
+  template <typename T>
+  void getSlice (uInt rowNumber,
+                  const Slicer & slicer,
+                  casa::Array<T> * destination);
+
   AsdmStMan* itsParent;
 };
 
@@ -88,6 +95,8 @@ public:
   virtual ~AsdmDataColumn();
   virtual IPosition shape (uInt rownr);
   virtual void getArrayComplexV (uInt rowNr, Array<Complex>* dataPtr);
+  virtual void getSliceComplexV (uInt rowNumber, const Slicer & slicer,
+                                 Array<casa::Complex> * destination);
 };
 
 // <summary>FLAG column in the ASDM Storage Manager.</summary>
@@ -101,6 +110,8 @@ public:
   virtual casa::IPosition shape (casa::uInt rownr);
   virtual void getArrayBoolV (casa::uInt rowNr,
                               casa::Array<casa::Bool>* dataPtr);
+  virtual void getSliceBoolV (uInt rowNumber, const Slicer & slicer,
+                              Array<casa::Bool> * destination);
 };
 
 // <summary>WEIGHT column in the ASDM Storage Manager.</summary>
@@ -114,6 +125,8 @@ public:
   virtual casa::IPosition shape (casa::uInt rownr);
   virtual void getArrayfloatV (casa::uInt rowNr,
                                casa::Array<casa::Float>* dataPtr);
+  virtual void getSlicefloatV (uInt rowNumber, const Slicer & slicer,
+                               Array<casa::Float> * destination);
 };
 
 // <summary>SIGMA column in the ASDM Storage Manager.</summary>
@@ -127,6 +140,8 @@ public:
   virtual casa::IPosition shape (casa::uInt rownr);
   virtual void getArrayfloatV (casa::uInt rowNr,
                                casa::Array<casa::Float>* dataPtr);
+  virtual void getSlicefloatV (uInt rowNumber, const Slicer & slicer,
+                               Array<casa::Float> * destination);
 };
 
 

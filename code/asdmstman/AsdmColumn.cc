@@ -30,6 +30,7 @@
 #include <asdmstman/AsdmColumn.h>
 #include <casa/Arrays/Array.h>
 
+using namespace casa;
 
 namespace casa {
 
@@ -37,7 +38,7 @@ namespace casa {
   {}
   Bool AsdmColumn::isWritable() const
   {
-    // We return True even though the column is not writable. If an actual write is done, 
+    // We return True even though the column is not writable. If an actual write is done,
     // an exception will be thrown. This ensures that the AsdmStMan will work with MSMainColumns.
     // The alternative solutions would cause too much code duplication.
     return True;
@@ -62,6 +63,29 @@ namespace casa {
     dataPtr->putStorage (data, deleteIt);
   }
 
+  void AsdmDataColumn::getSliceComplexV (uInt rowNumber, const Slicer & slicer,
+                                         Array<casa::Complex> * destination)
+  {
+     // Create an array to hold the entire table cell.
+
+    Array<Complex> entireCell (shape (rowNumber));
+
+    // Load the entire cell into an array
+
+    Bool deleteIt;
+    Complex * entireCellData = entireCell.getStorage(deleteIt); // get pointer to storage
+
+    itsParent->getData (rowNumber, entireCellData); // fill storage with data
+
+    entireCell.putStorage (entireCellData, deleteIt); // "return" storage
+
+    // Transfer the data specified by the slicer into the destination array.
+
+    destination->assign (entireCell (slicer));
+  }
+
+
+
 
   AsdmFlagColumn::~AsdmFlagColumn()
   {}
@@ -74,6 +98,13 @@ namespace casa {
     *dataPtr = False;
   }
 
+  void AsdmFlagColumn::getSliceBoolV (uInt rowNumber, const Slicer & /* slicer */,
+                                       Array<casa::Bool> * destination)
+  {
+    * destination = False;
+  }
+
+
   AsdmWeightColumn::~AsdmWeightColumn()
   {}
   IPosition AsdmWeightColumn::shape (uInt rownr)
@@ -84,6 +115,12 @@ namespace casa {
   {
     *dataPtr = float(1);
   }
+  void AsdmWeightColumn::getSlicefloatV (uInt rowNumber, const Slicer & /* slicer */,
+                                         Array<casa::Float> * destination)
+  {
+    * destination = 1.0f;
+  }
+
 
   AsdmSigmaColumn::~AsdmSigmaColumn()
   {}
@@ -95,5 +132,12 @@ namespace casa {
   {
     *dataPtr = float(1);
   }
+
+  void AsdmSigmaColumn::getSlicefloatV (uInt rowNumber, const Slicer & /* slicer */,
+                                        Array<casa::Float> * destination)
+  {
+    * destination = 1.0f;
+  }
+
 
 } //# end namespace
