@@ -155,7 +155,7 @@ void PointingDirectionCalculator::init() {
 
 void PointingDirectionCalculator::selectData(String const &antenna,
         String const &spw, String const &field, String const &time,
-        String const &scan, String const &feed, String const &intent,
+        String const &scan, String const &/*feed*/, String const &intent,
         String const &observation, String const &uvrange,
         String const &msselect) {
     // table selection
@@ -269,6 +269,17 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
         // matrix shape: number of rows is 2 and number of columns is nrow
         outShape = IPosition(2, 2, nrow);
     }
+
+    // moving source support
+    // if direction column is "SOURCE_OFFSET" or "POINTING_OFFSET"
+    // no direction manipulation is needed
+    CountedPtr<MDirection::Convert> toAzel;
+    if (!movingSource_.null() && !directionColumnName_.contains("OFFSET")) {
+        // make conversion engine for moving source support
+        MDirection::Ref refAzel(MDirection::AZEL, referenceFrame_);
+        toAzel = new MDirection::Convert(*movingSource_, refAzel);
+    }
+
     for (uInt i = 0; i < numAntennaBoundary_ - 1; ++i) {
         uInt start = antennaBoundary_[i];
         uInt end = antennaBoundary_[i + 1];
@@ -300,7 +311,7 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
             debuglog << "start index " << j << debugpost;
             Double currentTime =
                     timeColumn_.convert(j, MEpoch::UTC).get("s").getValue();
-            Double currentInterval = intervalColumn_(j);
+            //Double currentInterval = intervalColumn_(j);
             resetTime(j);
             // TODO: activate currentTimeStamp_ caching if necessary
 //            if (currentTime != currentTimeStamp_) {
@@ -323,7 +334,7 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
             } else if (index <= 0) {
                 debuglog << "take 0th row" << debugpost;
                 direction = accessor_(*pointingColumns_, 0);
-            } else if (index >= nrowPointing - 1) {
+            } else if (index >= (Int)(nrowPointing - 1)) {
                 debuglog << "take final row" << debugpost;
                 direction = accessor_(*pointingColumns_, nrowPointing - 1);
 //            } else if (currentInterval > pointingIntervalColumn(index)) {
@@ -401,8 +412,14 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
                 debuglog << "index for lon: " << offset + j * increment
                         << debugpost;
             }
-            if (!movingSource_.null()) {
-                // TODO: moving source handling
+            if (!toAzel.null()) {
+                // moving source handling
+                // If moving source is specified, output direction list is always
+                // offset from reference position of moving source
+                MDirection srcAzel = (*toAzel)();
+                MDirection srcDirection = (*directionConvert_)(srcAzel);
+                Vector<Double> srcDirectionVal = srcDirection.getAngle("rad").getValue();
+                outVal -= srcDirectionVal;
             }
             outDirectionFlattened[j * increment] = outVal[0];
             outDirectionFlattened[offset + j * increment] = outVal[1];
@@ -414,6 +431,7 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
 }
 
 Vector<Double> PointingDirectionCalculator::getDirection(uInt i) {
+    // TODO: implement getDirection(uInt i)
     Int currentAntennaIndex = antennaColumn_(i);
     Double currentTime =
             timeColumn_.convert(i, MEpoch::UTC).get("s").getValue();
@@ -424,6 +442,7 @@ Vector<Double> PointingDirectionCalculator::getDirection(uInt i) {
     if (currentTime != lastTimeStamp_) {
         resetTime(currentTime);
     }
+    return Vector<Double>();
 }
 
 Vector<uInt> PointingDirectionCalculator::getRowId() {
@@ -489,7 +508,7 @@ void PointingDirectionCalculator::initPointingTable(Int const antennaId) {
 void PointingDirectionCalculator::resetAntennaPosition(Int antennaId) {
     MSAntenna antennaTable = selectedMS_->antenna();
     uInt nrow = antennaTable.nrow();
-    if (antennaId < 0 || nrow <= antennaId) {
+    if (antennaId < 0 || (Int)nrow <= antennaId) {
         // TODO: exception
     }
     ScalarMeasColumn < MPosition
