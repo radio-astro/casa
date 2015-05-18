@@ -775,14 +775,20 @@ class BandDescriber(object):
                   _make_range(602, 720) : 'ALMA Band 9',
                   _make_range(787, 950) : 'ALMA Band 10'}
 
-    evla_bands = {_make_range(1, 2) : '20cm (L)',
-                  _make_range(2, 4) : '13cm (S)',
+    #From original EVLA pipeline script
+    #FLOW = [ 0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9 ]
+    #FHIGH = [ 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9 ]
+    #BBAND = [ '4', 'P', 'L', 'S', 'C', 'X', 'U', 'K', 'A', 'Q' ]
+
+    evla_bands = {_make_range(0.7, 2.0) : '20cm (L)',
+                  _make_range(2.0, 4.0) : '13cm (S)',
                   _make_range(4, 8) : '6cm (C)',
                   _make_range(8, 12) : '3cm (X)',
                   _make_range(12, 18) : '2cm (Ku)',
                   _make_range(18, 26.5) : '1.3cm (K)',
                   _make_range(26.5, 40) : '1cm (Ka)',
-                  _make_range(40, 50) : '0.7cm (Q)'}
+                  _make_range(40, 56.0) : '0.7cm (Q)'}
+
     
     unknown = { measures.FrequencyRange() : 'Unknown'}
 
