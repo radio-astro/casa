@@ -269,7 +269,8 @@ namespace casa {
 		if (!file.open(QFile::WriteOnly))
 			return ;
 
-		char* t = "png";
+		QString base( "png");
+		char* t = (char*)(base.toLocal8Bit().constData());
 		QString ext = fn.section('.', -1);
 		if (ext == "xpm" || ext == "jpg" || ext == "png" ||
 		        ext == "xbm" || ext == "ppm" || ext == "jpeg")
@@ -313,12 +314,16 @@ namespace casa {
 		if (!file.open(QFile::WriteOnly | QIODevice::Text))
 			return ;
 
-		char* t = "plt";
+		//char* t = "plot";
 		QString ext = fn.section('.', -1);
-		if (ext == "txt" || ext == "plt")
+		/*if (ext == "txt" || ext == "plt")
 			t = (char*)ext.toLocal8Bit().constData();
 		else
 			fn.append(".plt");
+			*/
+		if ( ext != "txt" && ext != "plt"){
+			fn.append( ".plot");
+		}
 
 		QTextStream ts(&file);
 

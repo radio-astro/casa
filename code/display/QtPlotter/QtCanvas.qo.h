@@ -244,6 +244,12 @@ namespace casa {
 		int getCurZoom();
 		int getZoomStackSize();
 
+		/**
+		 * Returns true if the range of the top axis is nonzero; otherwise false.
+		 * @return true if the range of the top axis is nonzero; otherwise false.
+		 */
+		bool isTopAxisRange() const;
+
 		//Force a repaint
 		void refreshPixmap();
 
@@ -409,6 +415,7 @@ namespace casa {
 		int getLastAxis();
 		void stripCurveTitleNumbers( QString& curveName ) const;
 		int duplicateCurve( QString& targetLabel );
+
 		void setYLabel(const QString &text, int fontSize = 10, const QString &font = FONT_NAME);
 
 		//Annotation methods

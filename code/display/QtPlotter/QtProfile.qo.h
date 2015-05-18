@@ -326,7 +326,7 @@ namespace casa {
 		void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
 		                         const QString& label, double beamAngle, double beamArea,
 		                         SpectralCoordinate coord);
-		void adjustTopAxisSettings();
+		bool adjustTopAxisSettings();
 		void initializeXAxisUnits();
 		void setXAxisUnits();
 		void initSmoothing();
@@ -362,6 +362,9 @@ namespace casa {
 		void assignProfileType( const String& shape, int regionPointCount );
 		void addOverplotToCanvas( SHARED_PTR<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
 					Vector<Float>& yVals, const QString& ky );
+		bool isProfileChanged( const String& c, const Vector<Double> & px, const Vector<Double>& py,
+					const Vector<Double>& wx, const Vector<Double>& wy,
+					const ProfileType pType );
 
 		bool _generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
 					SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,

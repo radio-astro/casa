@@ -77,9 +77,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static Record getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
 					const Vector<Double>& x, const Vector<Double>& y);
 
-		static std::pair<Vector<Float>,Vector<Float> > getProfile(SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,
-				const Vector<Double>& x, const Vector<Double>& y, String shape,
-				int tabularAxis, ImageCollapserData::AggregateType, String& unit,
+		static std::pair<Vector<Float>,Vector<Float> > getProfile(SHARED_PTR<const casa::ImageInterface<Float> >& imagePtr,
+				const Vector<Double>& x, const Vector<Double>& y, const String& shape,
+				int tabularAxis, ImageCollapserData::AggregateType, String unit,
 				const String& coordinateType,
 				const Quantity *const restFreq=0, const String& frame="");
 		/**
@@ -125,6 +125,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 */
 		static ImageRegion* getPolygon(const DisplayCoordinateSystem& cSys,
 					const Vector<Double>& x, const Vector<Double>& y);
+
+		/**
+		 * Tests whether the contents of the two arrays are the same.
+		 * Returns true if the arrays have the same size and contents; false otherwise.
+		 */
+		static bool arrayEquals( const Vector<Double>& a, const Vector<Double>& b );
 	private:
 		Util();
 		virtual ~Util();

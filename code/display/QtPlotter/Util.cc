@@ -457,9 +457,9 @@ namespace casa {
 		return regionRecord;
 	}
 
-	std::pair<Vector<Float>,Vector<Float> > Util::getProfile(SHARED_PTR<const casa::ImageInterface<Float> > imagePtr,
-					const Vector<Double>& x, const Vector<Double>& y, String shape,
-					int tabularAxis, ImageCollapserData::AggregateType function, String& unit,
+	std::pair<Vector<Float>,Vector<Float> > Util::getProfile(SHARED_PTR<const casa::ImageInterface<Float> >& imagePtr,
+					const Vector<Double>& x, const Vector<Double>& y, const String& shape,
+					int tabularAxis, ImageCollapserData::AggregateType function, String unit,
 					const String& coordinateType, const Quantity *const restFreq, const String& frame){
 
 		DisplayCoordinateSystem cSys = imagePtr->coordinates();
@@ -470,6 +470,7 @@ namespace casa {
 		else if ( tabularAxis >= 0 ){
 			spectralAxis = (uInt)(tabularAxis);
 		}
+
 		Record regionRecord = getRegionRecord( shape, cSys, x, y);
 		QString pixelSpectralType(coordinateType.c_str());
 		if ( pixelSpectralType == QtProfile::FREQUENCY ){
@@ -494,6 +495,7 @@ namespace casa {
 				result.get( VALUE_KEY, jyValues );
 
 			}
+
 			const String COORD_KEY( "coords" );
 			if ( result.isDefined( COORD_KEY ) ){
 				Vector<Double> coords;
@@ -504,6 +506,7 @@ namespace casa {
 					xValues[i] = static_cast<Float>( coords[i]);
 				}
 			}
+
 			const String UNIT_KEY( "xUnit" );
 			if ( result.isDefined( UNIT_KEY ) ){
 				unit = result.asString( UNIT_KEY );
@@ -514,5 +517,23 @@ namespace casa {
 		}
 		std::pair<Vector<Float>,Vector<Float> > resultVectors( xValues, jyValues );
 		return resultVectors;
+	}
+
+	bool Util::arrayEquals( const Vector<Double>& a, const Vector<Double>& b ){
+		bool equalArrays = false;
+		if ( a.nelements() == b.nelements() ){
+			int elementCount = a.size();
+			bool equalElements = true;
+			for ( int i = 0; i < elementCount; i++ ){
+				if ( a[i] != b[i] ){
+					equalElements = false;
+					break;
+				}
+			}
+			if ( equalElements ){
+				equalArrays = true;
+			}
+		}
+		return equalArrays;
 	}
 }

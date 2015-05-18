@@ -453,6 +453,14 @@ namespace casa {
 		}
 	}
 
+	bool QtCanvas::isTopAxisRange() const {
+		bool topRange = true;
+		if ( ( topAxisRange.second - topAxisRange.first ) < 0.000000001 ){
+			topRange = false;
+		}
+		return topRange;
+	}
+
 	void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescending ) {
 		double min = 1000000000000000000000000.;
 		double max = -min;
