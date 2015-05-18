@@ -47,7 +47,9 @@ public:
 
 private:
 	float getFitCount() const;
+	std::pair<double,double> _getMinMax() const;
 	float solutionLambda;
+	float actualLambda;
 	float solutionHeight;
 	bool lambdaSpecified;
 	double lambda;
