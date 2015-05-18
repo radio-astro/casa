@@ -540,8 +540,17 @@ ImageRegion CasacRegionManager::_fromBCS(
 	Vector<Double> trc(imShape.nelements(), 0);
 	const CoordinateSystem csys = getcoordsys();
 	Vector<Int> directionAxisNumbers = csys.directionAxesNumbers();
-	Vector<Int> linearAxisNumbers = csys.linearAxesNumbers();
-
+	vector<Int> linearAxisNumbers = csys.linearAxesNumbers().tovector();
+	// Stupidly, sometimes the values returned by linearAxesNumbers can be less than 0
+	// This needs to be fixed in the implementation of that method
+	vector<Int>::iterator iter = linearAxisNumbers.begin();
+	vector<Int>::iterator end = linearAxisNumbers.end();
+	while(iter != end) {
+		if (*iter < 0) {
+			iter = linearAxisNumbers.erase(iter);
+		}
+		++iter;
+	}
 	Int spectralAxisNumber = csys.spectralAxisNumber();
 	Int polarizationAxisNumber = csys.polarizationAxisNumber();
 
@@ -599,10 +608,10 @@ ImageRegion CasacRegionManager::_fromBCS(
 	if (csys.hasSpectralAxis()) {
 		nRegions *= chanEndPts.size()/2;
 	}
-	Vector<Double> extXCorners(2*nRegions);
-	Vector<Double> extYCorners(2*nRegions);
-	Vector<Double> extPolEndPts(2*nRegions);
-	Vector<Double> extChanEndPts(2*nRegions);
+	Vector<Double> extXCorners(2*nRegions, 0);
+	Vector<Double> extYCorners(2*nRegions, 0);
+	Vector<Double> extPolEndPts(2*nRegions, 0);
+	Vector<Double> extChanEndPts(2*nRegions, 0);
 
 	uInt count = 0;
 
