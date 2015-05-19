@@ -54,30 +54,30 @@ public:
     enum MatrixShape {
         COLUMN_MAJOR, ROW_MAJOR
     };
-    PointingDirectionCalculator(casa::MeasurementSet const &ms);
+    PointingDirectionCalculator(MeasurementSet const &ms);
 
     ~PointingDirectionCalculator() {
     }
 
-    void selectData(casa::String const &antenna = "", casa::String const &spw =
-            "", casa::String const &field = "", casa::String const &time = "",
-            casa::String const &scan = "", casa::String const &feed = "",
-            casa::String const &intent = "", casa::String const &observation =
-                    "", casa::String const &uvrange = "",
-            casa::String const &msselect = "");
-    void setDirectionColumn(casa::String const &columnName = "DIRECTION");
-    void setFrame(casa::String const frameType);
+    void selectData(String const &antenna = "", String const &spw =
+            "", String const &field = "", String const &time = "",
+            String const &scan = "", String const &feed = "",
+            String const &intent = "", String const &observation =
+                    "", String const &uvrange = "",
+            String const &msselect = "");
+    void setDirectionColumn(String const &columnName = "DIRECTION");
+    void setFrame(String const frameType);
     void setDirectionListMatrixShape(
             PointingDirectionCalculator::MatrixShape const shape);
-    void setMovingSource(casa::String const sourceName);
-    void setMovingSource(casa::MDirection const &sourceDirection);
+    void setMovingSource(String const sourceName);
+    void setMovingSource(MDirection const &sourceDirection);
 
     uInt getNrowForSelectedMS() {
         return selectedMS_->nrow();
     }
-    casa::Matrix<Double> getDirection();
-    casa::Vector<Double> getDirection(uInt irow);
-    casa::Vector<uInt> getRowId();
+    Matrix<Double> getDirection();
+    Vector<Double> getDirection(uInt irow);
+    Vector<uInt> getRowId();
     uInt getRowId(uInt i);
 
 private:
@@ -87,31 +87,31 @@ private:
     void resetTime(Double const timestamp);
     void inspectAntenna();
     void configureMovingSourceCorrection();
-    casa::Vector<Double> doGetDirection(uInt irow);
+    Vector<Double> doGetDirection(uInt irow);
 
     // table access stuff
-    CountedPtr<casa::MeasurementSet> originalMS_;
-    CountedPtr<casa::MeasurementSet> selectedMS_;
-    CountedPtr<casa::MSPointing> pointingTable_;
-    CountedPtr<casa::ROMSPointingColumns> pointingColumns_;
-    casa::ROScalarMeasColumn<casa::MEpoch> timeColumn_;
-    casa::ROScalarColumn<Double> intervalColumn_;
-    casa::ROScalarColumn<Int> antennaColumn_;
-    casa::String directionColumnName_;
-    casa::MDirection (*accessor_)(casa::ROMSPointingColumns &pointingColumns,
+    CountedPtr<MeasurementSet> originalMS_;
+    CountedPtr<MeasurementSet> selectedMS_;
+    CountedPtr<MSPointing> pointingTable_;
+    CountedPtr<ROMSPointingColumns> pointingColumns_;
+    ROScalarMeasColumn<MEpoch> timeColumn_;
+    ROScalarColumn<Double> intervalColumn_;
+    ROScalarColumn<Int> antennaColumn_;
+    String directionColumnName_;
+    MDirection (*accessor_)(ROMSPointingColumns &pointingColumns,
             uInt rownr);
 
     // conversion stuff
-    casa::MPosition antennaPosition_;
-    casa::MEpoch referenceEpoch_;
-    casa::MeasFrame referenceFrame_;
-    CountedPtr<casa::MDirection::Convert> directionConvert_;
-    casa::MDirection::Types directionType_;
-    CountedPtr<casa::MDirection> movingSource_;
-    CountedPtr<casa::MDirection::Convert> movingSourceConvert_;
+    MPosition antennaPosition_;
+    MEpoch referenceEpoch_;
+    MeasFrame referenceFrame_;
+    CountedPtr<MDirection::Convert> directionConvert_;
+    MDirection::Types directionType_;
+    CountedPtr<MDirection> movingSource_;
+    CountedPtr<MDirection::Convert> movingSourceConvert_;
     void (*movingSourceCorrection_)(
-            CountedPtr<casa::MDirection::Convert> &convertToAzel,
-            CountedPtr<casa::MDirection::Convert> &convertToCelestial,
+            CountedPtr<MDirection::Convert> &convertToAzel,
+            CountedPtr<MDirection::Convert> &convertToCelestial,
             Vector<Double> &direction);
 
     // other
