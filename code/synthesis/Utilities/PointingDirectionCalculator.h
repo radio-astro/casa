@@ -83,7 +83,7 @@ public:
 private:
     void init();
     void initPointingTable(Int const antennaId);
-    void resetAntennaPosition(Int antennaId);
+    void resetAntennaPosition(Int const antennaId);
     void resetTime(Double const timestamp);
     void inspectAntenna();
     void configureMovingSourceCorrection();

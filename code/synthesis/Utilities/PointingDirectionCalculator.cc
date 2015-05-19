@@ -26,18 +26,21 @@
 //#
 //# $Id$
 #include <cassert>
+#include <sstream>
 #include <iostream>
 #include <iomanip>
 
 #include <synthesis/Utilities/PointingDirectionCalculator.h>
 
 #include <casa/aipstype.h>
+#include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Containers/Block.h>
 #include <casa/Utilities/BinarySearch.h>
+#include <casa/Logging/LogIO.h>
 #include <tables/TaQL/ExprNode.h>
 #include <ms/MSSel/MSSelection.h>
 #include <measures/Measures/MPosition.h>
@@ -169,7 +172,7 @@ void PointingDirectionCalculator::init() {
 
 void PointingDirectionCalculator::selectData(String const &antenna,
         String const &spw, String const &field, String const &time,
-        String const &scan, String const &/*feed*/, String const &intent,
+        String const &scan, String const &feed, String const &intent,
         String const &observation, String const &uvrange,
         String const &msselect) {
     // table selection
@@ -200,8 +203,40 @@ void PointingDirectionCalculator::selectData(String const &antenna,
     }
     debuglog << "selectedMS_->nrow() = " << selectedMS_->nrow() << debugpost;
     if (selectedMS_->nrow() == 0) {
-        // TODO: throw exception
-        return;
+        stringstream ss;
+        ss << "Selected MS is empty for given selection: " << endl;
+        if (!antenna.empty()) {
+            ss << "\tantenna \"" << antenna << "\"" << endl;
+        }
+        if (!spw.empty()) {
+            ss << "\tspw \"" << spw << "\"" << endl;
+        }
+        if (!field.empty()) {
+            ss << "\tfield \"" << field << "\"" << endl;
+        }
+        if (!time.empty()) {
+            ss << "\ttime \"" << time << "\"" << endl;
+        }
+        if (!scan.empty()) {
+            ss << "\tscan \"" << scan << "\"" << endl;
+        }
+        if (!feed.empty()) {
+            ss << "\tfeed \"" << feed << "\"" << endl;
+        }
+        if (!intent.empty()) {
+            ss << "\tintent \"" << intent << "\"" << endl;
+        }
+        if (!observation.empty()) {
+            ss << "\tobservation \"" << observation << "\"" << endl;
+        }
+        if (!uvrange.empty()) {
+            ss << "\tuvrange \"" << uvrange << "\"" << endl;
+        }
+        if (!msselect.empty()) {
+            ss << "\tmsselect \"" << msselect << "\"" << endl;
+        }
+
+        throw AipsError(ss.str());
     }
 
     init();
@@ -218,12 +253,16 @@ void PointingDirectionCalculator::configureMovingSourceCorrection() {
 }
 
 void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
-    directionColumnName_ = columnName;
-    directionColumnName_.upcase();
-
-    if (originalMS_->pointing().tableDesc().isColumn(directionColumnName_)) {
-        // TODO: throw exception
+    String columnNameUpcase = columnName;
+    columnNameUpcase.upcase();
+    if (!(originalMS_->pointing().tableDesc().isColumn(columnNameUpcase))) {
+        stringstream ss;
+        ss << "Column \"" << columnNameUpcase
+                << "\" doesn't exist in POINTING table.";
+        throw AipsError(ss.str());
     }
+
+    directionColumnName_ = columnNameUpcase;
 
     if (directionColumnName_ == "DIRECTION") {
         accessor_ = directionAccessor;
@@ -236,7 +275,9 @@ void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
     } else if (directionColumnName_ == "ENCODER") {
         accessor_ = encoderAccessor;
     } else {
-        // TODO: throw exception
+        stringstream ss;
+        ss << "Column \"" << columnNameUpcase << "\" is not supported.";
+        throw AipsError(ss.str());
     }
 
     configureMovingSourceCorrection();
@@ -245,7 +286,11 @@ void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
 void PointingDirectionCalculator::setFrame(String const frameType) {
     Bool status = MDirection::getType(directionType_, frameType);
     if (!status) {
-        // TODO: warning
+        LogIO os(LogOrigin("PointingDirectionCalculator", "setFrame", WHERE));
+        os << LogIO::WARN << "Conversion of frame string \"" << frameType
+                << "\" into direction type enum failed. Use J2000."
+                << LogIO::POST;
+        directionType_ = MDirection::J2000;
     }
 
     // create conversion engine
@@ -343,7 +388,8 @@ Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
     uInt const nrowPointing = pointingTimeUTC_.nelements();
     // pointingTableIndexCache_ is not so effective in terms of performance
     // simple binary search may be enough,
-    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, nrowPointing, 0);
+    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime,
+            nrowPointing, 0);
     debuglog << "binarySearch result " << index << debugpost;
 //    uInt n = nrowPointing - pointingTableIndexCache_;
 //    Int lower = pointingTableIndexCache_;
@@ -446,8 +492,10 @@ Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
 
 Vector<Double> PointingDirectionCalculator::getDirection(uInt i) {
     if (i >= selectedMS_->nrow()) {
-        // TODO: throw exception
-        return Vector<Double>();
+        stringstream ss;
+        ss << "Out of range row index: " << i << " (nrow for selected MS "
+                << getNrowForSelectedMS() << ")" << endl;
+        throw AipsError(ss.str());
     }
     debuglog << "start row " << i << debugpost;
     Int currentAntennaIndex = antennaColumn_(i);
@@ -513,8 +561,12 @@ void PointingDirectionCalculator::initPointingTable(Int const antennaId) {
                 << debugpost;
         // try ANTENNA_ID == -1
         selected = original(original.col("ANTENNA_ID") == -1);
+        assert(selected.nrow() > 0);
         if (selected.nrow() == 0) {
-            // TODO: exception
+            stringstream ss;
+            ss << "Internal Error: POINTING table has no entry for antenna "
+                    << antennaId << "." << endl;
+            throw AipsError(ss.str());
         }
     }
     debuglog << "selected pointing rows " << selected.nrow() << debugpost;
@@ -544,11 +596,14 @@ void PointingDirectionCalculator::initPointingTable(Int const antennaId) {
     debuglog << "done initPointingTable" << debugpost;
 }
 
-void PointingDirectionCalculator::resetAntennaPosition(Int antennaId) {
+void PointingDirectionCalculator::resetAntennaPosition(Int const antennaId) {
     MSAntenna antennaTable = selectedMS_->antenna();
     uInt nrow = antennaTable.nrow();
     if (antennaId < 0 || (Int) nrow <= antennaId) {
-        // TODO: exception
+        stringstream ss;
+        ss << "Internal Error: Invalid ANTENNA_ID is specified (" << antennaId
+                << ")." << endl;
+        throw AipsError(ss.str());
     } else if (antennaId != lastAntennaIndex_ || lastAntennaIndex_ == -1) {
         ScalarMeasColumn < MPosition
                 > antennaPositionColumn(antennaTable, "POSITION");
