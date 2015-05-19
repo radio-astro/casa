@@ -1407,7 +1407,7 @@ if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casa
 
 # initialize/finalize Sakura library
 if hasattr(casac,'sakura'):
-    casalog.post('Managing Sakura lifecycle')
+    casalog.post('Managing Sakura lifecycle', priority='DEBUG')
     casac.sakura().initialize_sakura()
     import atexit
     atexit.register(lambda: __import__('casac').casac.sakura().cleanup_sakura())

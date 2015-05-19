@@ -42,11 +42,11 @@ sakura::~sakura()
 }
 
 bool
-sakura::initialize_sakura(const string &loglevel) {
+sakura::initialize_sakura(const string &/*loglevel*/) {
   try {
 	  logger_ << _ORIGIN;
 	  if(sakuraUtils_.IsSakuraInitialized()){
-		  logger_ << "sakura is already initialized. No need to initialize." << LogIO::POST;
+		  logger_ << LogIO::DEBUGGING << "sakura is already initialized. No need to initialize." << LogIO::POST;
 		  return true;
 	  }
 	  // string loglevel_for_init("");
@@ -67,7 +67,7 @@ sakura::initialize_sakura(const string &loglevel) {
 	  // }
 	  // if(sakuraUtils_.InitializeSakura(loglevel_for_init)){
 	  if(sakuraUtils_.InitializeSakura()){
-		  logger_ << "initialize_sakura is called. sakura was initialized successfully. " << LogIO::POST;
+		  logger_ << LogIO::DEBUGGING << "initialize_sakura is called. sakura was initialized successfully. " << LogIO::POST;
 		  return true;
 	  }
   } catch (AipsError x) {
@@ -84,9 +84,9 @@ sakura::cleanup_sakura() {
 	  logger_ << _ORIGIN;
 	  if(sakuraUtils_.IsSakuraInitialized()){
 		  sakuraUtils_.CleanUpSakura();
-    	  logger_ << "cleanup_sakura is called "<< LogIO::POST;
+    	  logger_ << LogIO::DEBUGGING << "cleanup_sakura is called "<< LogIO::POST;
 	  }else{
-		  logger_ << "No need to cleanup. sakura is not initialized yet."<< LogIO::POST;
+		  logger_ << LogIO::DEBUGGING << "No need to cleanup. sakura is not initialized yet."<< LogIO::POST;
 	  }
   } catch (AipsError x) {
     logger_ << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
