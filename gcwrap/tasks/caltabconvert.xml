@@ -7,7 +7,7 @@
 
 <task type="function" name="caltabconvert" category="utility">
 
-  <shortdescription>Convert old-style caltables into new-style caltables.\n</shortdescription>
+  <shortdescription>Convert old-style caltables into new-style caltables.</shortdescription>
 
   <description>
     This task converts old-style (up to CASA 3.3.0) caltables into new-style 
