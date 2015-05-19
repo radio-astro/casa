@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.68 2015/05/18 20:25:00 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.69 2015/05/19 13:42:04 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.68 2015/05/18 20:25:00 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.69 2015/05/19 13:42:04 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -5037,8 +5037,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     pb.draw()
     if (len(plotfiles) == 1 and figfileSequential):
         # rename the single file to remove ".000"
-        print "renaming %s to %s" % (plotfiles[0],plotfiles[0].split('.000.png')[0]+'.png')
-        os.system('mv %s %s' % (plotfiles[0],plotfiles[0].split('.000.png')[0]+'.png'))
+        newplotfiles = [plotfiles[0].split('.000.png')[0]+'.png']
+        print "renaming %s to %s" % (plotfiles[0],newplotfiles[0])
+        os.system('mv %s %s' % (plotfiles[0],newplotfiles[0]))
+        plotfiles = newplotfiles
     if (len(plotfiles) > 0 and buildpdf):
       pdfname = figfile+'.pdf'
       filelist = ''
@@ -5052,7 +5054,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             buildpdf = False
             break
         filelist += plotfiles[i].split('.png')[0] + '.pdf '
-      if (buildpdf):
+      if (buildpdf and (len(plotfiles)>1 or not figfileSequential)):
           # The following 2 lines reduce the total number of characters on the command line, which
           # was apparently a problem at JAO for Liza.
           filelist = ' '.join(pruneFilelist(filelist.split()))
