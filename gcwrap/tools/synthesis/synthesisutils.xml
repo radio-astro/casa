@@ -147,6 +147,39 @@ siu.cubedatapartition(selprs=pars, npart=20, fstart="1.412787GHz", fend="1.41328
 
 <!-- ===================================== -->
 <!-- ===================================== -->
+   <method type="function" name="cubedataimagepartition">
+      <shortdescription>Partition data/image cube parameters for CUBE deconvolution</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="selpars">
+     <description>All selection parameters for one or more MSs</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="record" name="incsys">
+     <description>input coordinate system</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="int" name="npart">
+     <description>Number of partitions</description>
+     <value>1</value>
+     </param>
+
+     <param type="int" name="nchannel">
+     <description>Number of channels</description>
+     <value>1</value>
+     </param>
+
+ </input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+<!-- ===================================== -->
 
    <method type="function" name="checkselectionparams">
    <shortdescription>Check and Fix Selection Parameters for one MS</shortdescription>

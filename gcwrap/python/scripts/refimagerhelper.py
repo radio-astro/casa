@@ -770,6 +770,16 @@ class PyParallelImagerHelper():
         print 'ImSplit : ', allimpars
         return allimpars
 
+#############################################
+    def partitionCubeSelection(self, oneselpars={}, oneimpars={}):
+        incsys = oneimpars['csys']
+        nchan = oneimpars['0']['nchan']
+        synu = casac.synthesisutils()
+        allpars = synu.cubedataimagepartition(oneselpars, incsys, self.NN, nchan)
+        synu.done()
+
+        #print "Cube Data/Im partitioned selection :", allpars
+        return allpars
 
 #############################################
     def setupCluster(self):

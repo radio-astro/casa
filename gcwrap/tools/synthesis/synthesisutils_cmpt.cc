@@ -97,6 +97,30 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
+  casac::record* synthesisutils::cubedataimagepartition(const casac::record& selpars, const casac::record& incsysrec,
+                                                      const int npart, const int nchannel)
+{
+   casac::record* rstat(0);
+
+   try
+     {
+        casa::Record recselpars = *toRecord( selpars );
+        casa::Record recincsys = *toRecord( incsysrec );
+        if (recincsys.nfields() != 0 ) {
+          CoordinateSystem *incsys;
+          incsys = CoordinateSystem::restore(recincsys,"coordsys");
+          Vector<CoordinateSystem> ocsysvec;
+          Vector<Int> outnchanvec;
+          rstat = fromRecord( itsUtils->cubeDataImagePartition( recselpars, *incsys, npart, nchannel, ocsysvec, outnchanvec) );
+        }
+     }
+   catch (AipsError x)
+     {
+       RETHROW(x);
+     }
+
+   return rstat;
+}
 
   casac::record* synthesisutils::checkselectionparams(const casac::record& selpars)
 {
