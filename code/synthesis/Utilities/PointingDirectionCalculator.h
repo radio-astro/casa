@@ -72,8 +72,11 @@ public:
     void setMovingSource(casa::String const sourceName);
     void setMovingSource(casa::MDirection const &sourceDirection);
 
+    uInt getNrowForSelectedMS() {
+        return selectedMS_->nrow();
+    }
     casa::Matrix<Double> getDirection();
-    casa::Vector<Double> getDirection(uInt i);
+    casa::Vector<Double> getDirection(uInt irow);
     casa::Vector<uInt> getRowId();
     uInt getRowId(uInt i);
 
@@ -81,8 +84,10 @@ private:
     void init();
     void initPointingTable(Int const antennaId);
     void resetAntennaPosition(Int antennaId);
-    void resetTime(uInt rownr);
+    void resetTime(Double const timestamp);
     void inspectAntenna();
+    void configureMovingSourceCorrection();
+    casa::Vector<Double> doGetDirection(uInt irow);
 
     // table access stuff
     CountedPtr<casa::MeasurementSet> originalMS_;
@@ -93,7 +98,8 @@ private:
     casa::ROScalarColumn<Double> intervalColumn_;
     casa::ROScalarColumn<Int> antennaColumn_;
     casa::String directionColumnName_;
-    casa::MDirection (*accessor_)(casa::ROMSPointingColumns &pointingColumns, uInt rownr);
+    casa::MDirection (*accessor_)(casa::ROMSPointingColumns &pointingColumns,
+            uInt rownr);
 
     // conversion stuff
     casa::MPosition antennaPosition_;
@@ -102,10 +108,16 @@ private:
     CountedPtr<casa::MDirection::Convert> directionConvert_;
     casa::MDirection::Types directionType_;
     CountedPtr<casa::MDirection> movingSource_;
+    CountedPtr<casa::MDirection::Convert> movingSourceConvert_;
+    void (*movingSourceCorrection_)(
+            CountedPtr<casa::MDirection::Convert> &convertToAzel,
+            CountedPtr<casa::MDirection::Convert> &convertToCelestial,
+            Vector<Double> &direction);
 
     // other
     Vector<uInt> antennaBoundary_;
     uInt numAntennaBoundary_;
+    Vector<Double> pointingTimeUTC_;
     Double lastTimeStamp_;
     Int lastAntennaIndex_;
     uInt pointingTableIndexCache_;

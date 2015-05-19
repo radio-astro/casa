@@ -25,6 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 
@@ -100,17 +101,42 @@ ARRAY_DIRECTION(pointingOffset)
 ARRAY_DIRECTION(sourceOffset)
 SCALAR_DIRECTION(encoder)
 
+// working function for moving source correction
+// convertToAzel must be configured with moving source direction and
+// proper reference frame. Also, convertToCelestial must refer proper
+// reference frame.
+inline void performMovingSourceCorrection(
+        CountedPtr<MDirection::Convert> &convertToAzel,
+        CountedPtr<MDirection::Convert> &convertToCelestial,
+        Vector<Double> &direction) {
+    // moving source handling
+    // If moving source is specified, output direction list is always
+    // offset from reference position of moving source
+    MDirection srcAzel = (*convertToAzel)();
+    MDirection srcDirection = (*convertToCelestial)(srcAzel);
+    Vector<Double> srcDirectionVal = srcDirection.getAngle("rad").getValue();
+    direction -= srcDirectionVal;
+}
+
+inline void skipMovingSourceCorrection(
+        CountedPtr<MDirection::Convert> &/*convertToAzel*/,
+        CountedPtr<MDirection::Convert> &/*convertToCelestial*/,
+        Vector<Double> &/*direction*/) {
+    // do nothing
+}
 } // anonymous namespace
 
 namespace casa {
 PointingDirectionCalculator::PointingDirectionCalculator(
         MeasurementSet const &ms) :
-        originalMS_(new MeasurementSet(ms)), selectedMS_(), pointingTable_(), pointingColumns_(), timeColumn_(), intervalColumn_(), antennaColumn_(), directionColumnName_(
-                "DIRECTION"), accessor_(NULL), antennaPosition_(), referenceEpoch_(), referenceFrame_(
+        originalMS_(new MeasurementSet(ms)), selectedMS_(), pointingTable_(), pointingColumns_(), timeColumn_(), intervalColumn_(), antennaColumn_(), directionColumnName_(), accessor_(
+        NULL), antennaPosition_(), referenceEpoch_(), referenceFrame_(
                 referenceEpoch_, antennaPosition_), directionConvert_(
-        NULL), directionType_(MDirection::J2000), movingSource_(NULL), antennaBoundary_(), numAntennaBoundary_(
-                0), lastTimeStamp_(-1.0), lastAntennaIndex_(-1), pointingTableIndexCache_(
-                0), shape_(PointingDirectionCalculator::COLUMN_MAJOR) {
+        NULL), directionType_(MDirection::J2000), movingSource_(NULL), movingSourceConvert_(
+        NULL), movingSourceCorrection_(NULL), antennaBoundary_(), numAntennaBoundary_(
+                0), pointingTimeUTC_(), lastTimeStamp_(-1.0), lastAntennaIndex_(
+                -1), pointingTableIndexCache_(0), shape_(
+                PointingDirectionCalculator::COLUMN_MAJOR) {
     accessor_ = directionAccessor;
 
     Block<String> sortColumns(2);
@@ -119,7 +145,14 @@ PointingDirectionCalculator::PointingDirectionCalculator(
     selectedMS_ = new MeasurementSet(originalMS_->sort(sortColumns));
 
     init();
+
+    // set default output direction reference frame
+    setFrame("J2000");
+
+    // set default direction column name
+    setDirectionColumn("DIRECTION");
 }
+
 void PointingDirectionCalculator::init() {
     // attach column
     timeColumn_.attach(*selectedMS_, "TIME");
@@ -142,15 +175,8 @@ void PointingDirectionCalculator::init() {
     ROScalarColumn<Double> tcol(*selectedMS_, "TIME");
     Double t0 = tcol(0);
     Double t1 = t.get("s").getValue();
-    debuglog << "t0 via scalar column " << t0 << debugpost;
-    debuglog << "refstring: " << t.getRefString() << debugpost;
-    debuglog << "timeColumn_(0) = " << t1 << " "
-            << ((t0 == t1) ? "exactly same as " : " different from ")
-            << "the value from scalar column" << debugpost;
 
-    lastTimeStamp_ = timeColumn_.convert(0, MeasRef<MEpoch>(MEpoch::UTC)).get(
-            "s").getValue();
-    initPointingTable(antennaColumn_(0));
+    resetAntennaPosition(antennaColumn_(0));
 }
 
 void PointingDirectionCalculator::selectData(String const &antenna,
@@ -176,7 +202,6 @@ void PointingDirectionCalculator::selectData(String const &antenna,
     Block<String> sortColumns(2);
     sortColumns[0] = "ANTENNA1";
     sortColumns[1] = "TIME";
-    //MeasurementSet tmp;
     if (exprNode.isNull()) {
         debuglog << "NULL selection" << debugpost;
         selectedMS_ = new MeasurementSet(originalMS_->sort(sortColumns));
@@ -194,6 +219,15 @@ void PointingDirectionCalculator::selectData(String const &antenna,
     init();
 
     debuglog << "done selectdata" << debugpost;
+}
+
+void PointingDirectionCalculator::configureMovingSourceCorrection() {
+    if (!movingSource_.null() || directionColumnName_.contains("OFFSET")) {
+        movingSourceCorrection_ = performMovingSourceCorrection;
+    } else {
+        movingSourceCorrection_ = skipMovingSourceCorrection;
+    }
+    assert(movingSourceCorrection_ != NULL);
 }
 
 void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
@@ -217,6 +251,8 @@ void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
     } else {
         // TODO: throw exception
     }
+
+    configureMovingSourceCorrection();
 }
 
 void PointingDirectionCalculator::setFrame(String const frameType) {
@@ -224,6 +260,19 @@ void PointingDirectionCalculator::setFrame(String const frameType) {
     if (!status) {
         // TODO: warning
     }
+
+    // create conversion engine
+    MDirection nominalInputMeasure = accessor_(*pointingColumns_, 0);
+    MDirection::Ref outReference(directionType_, referenceFrame_);
+    directionConvert_ = new MDirection::Convert(nominalInputMeasure,
+            outReference);
+    const MEpoch *e = dynamic_cast<const MEpoch *>(referenceFrame_.epoch());
+    const MPosition *p =
+            dynamic_cast<const MPosition *>(referenceFrame_.position());
+    debuglog << "Conversion Setup: Epoch "
+            << e->get("s").getValue() << " " << e->getRefString() << " Position "
+            << p->get("m").getValue() << " " << p->getRefString()
+            << debugpost;
 }
 
 void PointingDirectionCalculator::setDirectionListMatrixShape(
@@ -232,27 +281,25 @@ void PointingDirectionCalculator::setDirectionListMatrixShape(
 }
 
 void PointingDirectionCalculator::setMovingSource(String const sourceName) {
-    movingSource_ = new MDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg"));
-    movingSource_->setRefString(sourceName);
-
+    MDirection sourceDirection(Quantity(0.0, "deg"), Quantity(90.0, "deg"));
+    sourceDirection.setRefString(sourceName);
+    setMovingSource(sourceDirection);
 }
 
 void PointingDirectionCalculator::setMovingSource(
         MDirection const &sourceDirection) {
     movingSource_ = dynamic_cast<MDirection *>(sourceDirection.clone());
+
+    // create conversion engine for moving source
+    MDirection::Ref refAzel(MDirection::AZEL, referenceFrame_);
+    movingSourceConvert_ = new MDirection::Convert(*movingSource_, refAzel);
+
+    configureMovingSourceCorrection();
 }
 
 Matrix<Double> PointingDirectionCalculator::getDirection() {
-    if (originalMS_.null() || selectedMS_.null()) {
-        // TODO: warning
-        return Matrix<Double>();
-    }
-    if (directionConvert_.null()) {
-        MDirection nominalInputMeasure = accessor_(*pointingColumns_, 0);
-        MDirection::Ref outReference(directionType_, referenceFrame_);
-        directionConvert_ = new MDirection::Convert(nominalInputMeasure,
-                outReference);
-    }
+    assert(!selectedMS_.null());
+
     uInt const nrow = selectedMS_->nrow();
     debuglog << "selectedMS_->nrow() = " << nrow << debugpost;
     Vector<Double> outDirectionFlattened(2 * nrow);
@@ -270,73 +317,62 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
         outShape = IPosition(2, 2, nrow);
     }
 
-    // moving source support
-    // if direction column is "SOURCE_OFFSET" or "POINTING_OFFSET"
-    // no direction manipulation is needed
-    CountedPtr<MDirection::Convert> toAzel;
-    if (!movingSource_.null() && !directionColumnName_.contains("OFFSET")) {
-        // make conversion engine for moving source support
-        MDirection::Ref refAzel(MDirection::AZEL, referenceFrame_);
-        toAzel = new MDirection::Convert(*movingSource_, refAzel);
-    }
-
     for (uInt i = 0; i < numAntennaBoundary_ - 1; ++i) {
         uInt start = antennaBoundary_[i];
         uInt end = antennaBoundary_[i + 1];
         uInt currentAntenna = antennaColumn_(start);
+        resetAntennaPosition(currentAntenna);
         debuglog << "antenna " << currentAntenna << " start " << start
                 << " end " << end << debugpost;
-        initPointingTable(currentAntenna);
-        uInt const nrowPointing = pointingTable_->nrow();
+        uInt const nrowPointing = pointingTimeUTC_.nelements();
         debuglog << "nrowPointing = " << nrowPointing << debugpost;
-        Vector<Double> pointingTimeUTC(nrowPointing);
-        ROScalarMeasColumn<MEpoch> pointingTimeColumn =
-                pointingColumns_->timeMeas();
-        ROScalarColumn<Double> pointingIntervalColumn =
-                pointingColumns_->interval();
-        for (uInt i = 0; i < nrowPointing; ++i) {
-            MEpoch e = pointingTimeColumn(i);
-            if (e.getRefString() == MEpoch::showType(MEpoch::UTC)) {
-                pointingTimeUTC[i] = e.get("s").getValue();
-            } else {
-                pointingTimeUTC[i] =
-                        MEpoch::Convert(e, MEpoch::UTC)().get("s").getValue();
-            }
-        }
-        debuglog << "pointingTimeUTC = " << min(pointingTimeUTC) << "~"
-        << max(pointingTimeUTC) << debugpost;
-        resetAntennaPosition(currentAntenna);
+        debuglog << "pointingTimeUTC = " << min(pointingTimeUTC_) << "~"
+        << max(pointingTimeUTC_) << debugpost;
         pointingTableIndexCache_ = 0;
         for (uInt j = start; j < end; ++j) {
             debuglog << "start index " << j << debugpost;
-            Double currentTime =
-                    timeColumn_.convert(j, MEpoch::UTC).get("s").getValue();
-            //Double currentInterval = intervalColumn_(j);
-            resetTime(j);
-            // TODO: activate currentTimeStamp_ caching if necessary
-//            if (currentTime != currentTimeStamp_) {
-//                resetTime(j);
-//            }
-            // search and interpolate if necessary
-            Bool exactMatch;
-            uInt n = nrowPointing - pointingTableIndexCache_;
-            Int lower = pointingTableIndexCache_;
-            // TODO: activate pointingTableIndexCache_ if necessary
-            Int index = binarySearch(exactMatch, pointingTimeUTC, currentTime,
-                    n, lower);
-            debuglog << "Time " << setprecision(16) << currentTime << " idx="
-                    << index << debugpost;
-            debuglog << "binarySearch result " << index << debugpost;
-            MDirection direction;
-            if (exactMatch) {
-                debuglog << "exact match" << debugpost;
-                direction = accessor_(*pointingColumns_, index);
-            } else if (index <= 0) {
-                debuglog << "take 0th row" << debugpost;
-                direction = accessor_(*pointingColumns_, 0);
-            } else if (index >= (Int)(nrowPointing - 1)) {
-                debuglog << "take final row" << debugpost;
-                direction = accessor_(*pointingColumns_, nrowPointing - 1);
+            Vector<Double> direction = doGetDirection(j);
+            debuglog << "index for lat: " << (j * increment)
+                    << " (cf. outDirectionFlattened.nelements()="
+                    << outDirectionFlattened.nelements() << ")" << debugpost;
+            debuglog << "index for lon: " << (offset + j * increment)
+                    << debugpost;
+            outDirectionFlattened[j * increment] = direction[0];
+            outDirectionFlattened[offset + j * increment] = direction[1];
+        }
+        debuglog << "done antenna " << currentAntenna << debugpost;
+    }
+    debuglog << "done getDirection" << debugpost;
+    return Matrix < Double > (outShape, outDirectionFlattened.data());
+}
+
+Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
+    debuglog << "doGetDirection(" << irow << ")" << debugpost;
+    Double currentTime =
+            timeColumn_.convert(irow, MEpoch::UTC).get("s").getValue();
+    resetTime(currentTime);
+
+    // search and interpolate if necessary
+    Bool exactMatch;
+    uInt const nrowPointing = pointingTimeUTC_.nelements();
+    uInt n = nrowPointing - pointingTableIndexCache_;
+    Int lower = pointingTableIndexCache_;
+    // TODO: activate pointingTableIndexCache_ if necessary
+    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, n,
+            lower);
+    debuglog << "Time " << setprecision(16) << currentTime << " idx=" << index
+            << debugpost;
+    debuglog << "binarySearch result " << index << debugpost;
+    MDirection direction;
+    if (exactMatch) {
+        debuglog << "exact match" << debugpost;
+        direction = accessor_(*pointingColumns_, index);
+    } else if (index <= 0) {
+        debuglog << "take 0th row" << debugpost;
+        direction = accessor_(*pointingColumns_, 0);
+    } else if (index >= (Int) (nrowPointing - 1)) {
+        debuglog << "take final row" << debugpost;
+        direction = accessor_(*pointingColumns_, nrowPointing - 1);
 //            } else if (currentInterval > pointingIntervalColumn(index)) {
 //                // Sampling rate of pointing < data dump rate
 //                // nearest interpolation
@@ -349,100 +385,76 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
 //                } else {
 //                    direction = accessor_(*pointingColumns_, index);
 //                }
-            } else {
-                debuglog << "linear interpolation " << debugpost;
-                // Sampling rate of pointing > data dump rate (fast scan)
-                // linear interpolation
-                Double dt = pointingTimeUTC[index] - pointingTimeUTC[index - 1];
-                debuglog << "Interpolate between "
-                        << setprecision(16) << index - 1
-                        << " (" << pointingTimeUTC[index - 1] << ") and "
-                        << index << " (" << pointingTimeUTC[index] << ")"
-                        << debugpost;
-                MDirection dir1 = accessor_(*pointingColumns_, index - 1);
-                MDirection dir2 = accessor_(*pointingColumns_, index);
-                String dirRef1 = dir1.getRefString();
-                String dirRef2 = dir2.getRefString();
-                MDirection::Types refType1, refType2;
-                MDirection::getType(refType1, dirRef1);
-                MDirection::getType(refType2, dirRef2);
-                debuglog << "dirRef1 = " << dirRef1 << " ("
-                        << MDirection::showType(refType1) << ")" << debugpost;
-                if (dirRef1 != dirRef2) {
-                    MeasFrame referenceFrameLocal(pointingTimeColumn(index),
-                            *(referenceFrame_.position()));
-                    dir2 = MDirection::Convert(dir2,
-                            MDirection::Ref(refType1, referenceFrameLocal))();
-                }
-                Vector<Double> dirVal1 = dir1.getAngle("rad").getValue();
-                Vector<Double> dirVal2 = dir2.getAngle("rad").getValue();
-                Vector<Double> scanRate = dirVal2 - dirVal1;
-                Vector<Double> interpolated = dirVal1
-                        + scanRate * (currentTime - pointingTimeUTC[index - 1])
-                                / dt;
-                direction = MDirection(
-                        Quantum<Vector<Double> >(interpolated, "rad"),
-                        refType1);
-            }
-            debuglog << "direction = "
-                    << direction.getAngle("rad").getValue() << " (unit rad reference frame " << direction.getRefString()
-                    << ")" << debugpost;
-            Vector<Double> outVal(2);
-            if (direction.getRefString()
-                    == MDirection::showType(directionType_)) {
-                outVal = direction.getAngle("rad").getValue();
-            } else {
-                MDirection converted = (*directionConvert_)(direction);
-                outVal = converted.getAngle("rad").getValue();
-                const MEpoch *e =
-                        dynamic_cast<const MEpoch *>(referenceFrame_.epoch());
-                const MPosition *p =
-                        dynamic_cast<const MPosition *>(referenceFrame_.position());
-                debuglog << "Conversion Setup: Epoch "
-                        << e->get("s").getValue() << " " << e->getRefString() << " Position "
-                        << p->get("m").getValue() << " " << p->getRefString()
-                        << debugpost;
-                debuglog << "converted = " << outVal
-                        << "(unit rad reference frame "
-                        << converted.getRefString() << ")" << debugpost;
-                debuglog << "index for lat: "
-                        << j
-                                * increment << " (cf. outDirectionFlattened.nelements()="
-                                << outDirectionFlattened.nelements() << ")" << debugpost;
-                debuglog << "index for lon: " << offset + j * increment
-                        << debugpost;
-            }
-            if (!toAzel.null()) {
-                // moving source handling
-                // If moving source is specified, output direction list is always
-                // offset from reference position of moving source
-                MDirection srcAzel = (*toAzel)();
-                MDirection srcDirection = (*directionConvert_)(srcAzel);
-                Vector<Double> srcDirectionVal = srcDirection.getAngle("rad").getValue();
-                outVal -= srcDirectionVal;
-            }
-            outDirectionFlattened[j * increment] = outVal[0];
-            outDirectionFlattened[offset + j * increment] = outVal[1];
+    } else {
+        debuglog << "linear interpolation " << debugpost;
+        // Sampling rate of pointing > data dump rate (fast scan)
+        // linear interpolation
+        Double t0 = pointingTimeUTC_[index - 1];
+        Double t1 = pointingTimeUTC_[index];
+        Double dt = t1 - t0;
+        debuglog << "Interpolate between " << setprecision(16) << index - 1
+                << " (" << t0 << ") and " << index << " (" << t1 << ")"
+                << debugpost;
+        MDirection dir1 = accessor_(*pointingColumns_, index - 1);
+        MDirection dir2 = accessor_(*pointingColumns_, index);
+        String dirRef1 = dir1.getRefString();
+        String dirRef2 = dir2.getRefString();
+        MDirection::Types refType1, refType2;
+        MDirection::getType(refType1, dirRef1);
+        MDirection::getType(refType2, dirRef2);
+        debuglog << "dirRef1 = " << dirRef1 << " ("
+                << MDirection::showType(refType1) << ")" << debugpost;
+        if (dirRef1 != dirRef2) {
+            MeasFrame referenceFrameLocal((pointingColumns_->timeMeas())(index),
+                    *(referenceFrame_.position()));
+            dir2 = MDirection::Convert(dir2,
+                    MDirection::Ref(refType1, referenceFrameLocal))();
         }
-        debuglog << "done antenna " << currentAntenna << debugpost;
+        Vector<Double> dirVal1 = dir1.getAngle("rad").getValue();
+        Vector<Double> dirVal2 = dir2.getAngle("rad").getValue();
+        Vector<Double> scanRate = dirVal2 - dirVal1;
+        Vector<Double> interpolated = dirVal1
+                + scanRate * (currentTime - t0) / dt;
+        direction = MDirection(Quantum<Vector<Double> >(interpolated, "rad"),
+                refType1);
     }
-    debuglog << "done getDirection" << debugpost;
-    return Matrix < Double > (outShape, outDirectionFlattened.data());
+    debuglog << "direction = "
+            << direction.getAngle("rad").getValue() << " (unit rad reference frame "
+            << direction.getRefString()
+            << ")" << debugpost;
+    Vector<Double> outVal(2);
+    if (direction.getRefString() == MDirection::showType(directionType_)) {
+        outVal = direction.getAngle("rad").getValue();
+    } else {
+        MDirection converted = (*directionConvert_)(direction);
+        outVal = converted.getAngle("rad").getValue();
+        debuglog << "converted = " << outVal << "(unit rad reference frame "
+                << converted.getRefString() << ")" << debugpost;
+    }
+    movingSourceCorrection_(movingSourceConvert_, directionConvert_, outVal);
+    return outVal;
 }
 
 Vector<Double> PointingDirectionCalculator::getDirection(uInt i) {
-    // TODO: implement getDirection(uInt i)
+    if (i >= selectedMS_->nrow()) {
+        // TODO: throw exception
+        return Vector<Double>();
+    }
+    debuglog << "start row " << i << debugpost;
     Int currentAntennaIndex = antennaColumn_(i);
+    debuglog << "currentAntennaIndex = " << currentAntennaIndex
+            << " lastAntennaIndex_ = " << lastAntennaIndex_ << debugpost;
     Double currentTime =
             timeColumn_.convert(i, MEpoch::UTC).get("s").getValue();
-    if (lastAntennaIndex_ != currentAntennaIndex) {
-        initPointingTable(currentAntennaIndex);
-        resetAntennaPosition(currentAntennaIndex);
-    }
+    resetAntennaPosition(currentAntennaIndex);
+    debuglog << "currentTime = " << currentTime << " lastTimeStamp_ = "
+            << lastTimeStamp_ << debugpost;
     if (currentTime != lastTimeStamp_) {
-        resetTime(currentTime);
+        resetTime(i);
     }
-    return Vector<Double>();
+    debuglog << "doGetDirection" << debugpost;
+    Vector<Double> direction = doGetDirection(i);
+    return direction;
 }
 
 Vector<uInt> PointingDirectionCalculator::getRowId() {
@@ -461,7 +473,6 @@ void PointingDirectionCalculator::inspectAntenna() {
     antennaBoundary_[count] = 0;
     ++count;
     Vector<Int> antennaList = antennaColumn_.getColumn();
-    //debuglog << "antennaList = " << antennaList << debugpost;
     uInt nrow = antennaList.nelements();
     Int lastAnt = antennaList[0];
     for (uInt i = 0; i < nrow; ++i) {
@@ -502,29 +513,55 @@ void PointingDirectionCalculator::initPointingTable(Int const antennaId) {
 
     // attach columns
     pointingColumns_ = new ROMSPointingColumns(*pointingTable_);
+
+    // initialize pointingTimeUTC_
+    uInt const nrowPointing = pointingTable_->nrow();
+    pointingTimeUTC_.resize(nrowPointing);
+    ROScalarMeasColumn<MEpoch> pointingTimeColumn =
+            pointingColumns_->timeMeas();
+    for (uInt i = 0; i < nrowPointing; ++i) {
+        MEpoch e = pointingTimeColumn(i);
+        if (e.getRefString() == MEpoch::showType(MEpoch::UTC)) {
+            pointingTimeUTC_[i] = e.get("s").getValue();
+        } else {
+            pointingTimeUTC_[i] =
+                    MEpoch::Convert(e, MEpoch::UTC)().get("s").getValue();
+        }
+    }
+
     debuglog << "done initPointingTable" << debugpost;
 }
 
 void PointingDirectionCalculator::resetAntennaPosition(Int antennaId) {
     MSAntenna antennaTable = selectedMS_->antenna();
     uInt nrow = antennaTable.nrow();
-    if (antennaId < 0 || (Int)nrow <= antennaId) {
+    if (antennaId < 0 || (Int) nrow <= antennaId) {
         // TODO: exception
     }
-    ScalarMeasColumn < MPosition
-            > antennaPositionColumn(antennaTable, "POSITION");
-    antennaPosition_ = antennaPositionColumn(antennaId);
-    debuglog << "antenna position: " << antennaPosition_.getRefString() << " "
-    << setprecision(16) << antennaPosition_.get("m").getValue() << debugpost;
-    referenceFrame_.resetPosition(antennaPosition_);
+    else if (antennaId != lastAntennaIndex_ || lastAntennaIndex_ == -1) {
+        ScalarMeasColumn < MPosition
+                > antennaPositionColumn(antennaTable, "POSITION");
+        antennaPosition_ = antennaPositionColumn(antennaId);
+        debuglog << "antenna position: "
+                << antennaPosition_.getRefString() << " "
+                << setprecision(16) << antennaPosition_.get("m").getValue() << debugpost;
+        referenceFrame_.resetPosition(antennaPosition_);
+
+        initPointingTable(antennaId);
+
+        lastAntennaIndex_ = antennaId;
+    }
 }
 
-void PointingDirectionCalculator::resetTime(uInt rownr) {
-    if (rownr >= selectedMS_->nrow()) {
-        // TODO: exception
+void PointingDirectionCalculator::resetTime(Double const timestamp) {
+    debuglog << "resetTime(Double " << timestamp << ")" << debugpost;
+    debuglog << "lastTimeStamp_ = " << lastTimeStamp_ << " timestamp = " << timestamp << debugpost;
+    if (timestamp != lastTimeStamp_ || lastTimeStamp_ < 0.0) {
+        referenceEpoch_ = MEpoch(Quantity(timestamp, "s"), MEpoch::UTC);
+        referenceFrame_.resetEpoch(referenceEpoch_);
+
+        lastTimeStamp_ = timestamp;
     }
-    referenceEpoch_ = timeColumn_(rownr);
-    referenceFrame_.resetEpoch(referenceEpoch_);
 }
 
 }  //# NAMESPACE CASA - END
