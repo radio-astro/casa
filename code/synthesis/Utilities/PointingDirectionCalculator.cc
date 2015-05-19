@@ -164,18 +164,6 @@ void PointingDirectionCalculator::init() {
     inspectAntenna();
     debuglog << "done" << debugpost;
 
-    //lastAntennaIndex_ = antennaColumn_(0);
-    debuglog << "access check for column " << debugpost;
-    if (selectedMS_->tableDesc().isColumn("TIME")) {
-        debuglog << "TIME column exists" << debugpost;
-    } else {
-        debuglog << "TIME column doesn't exist" << debugpost;
-    }
-    MEpoch t = timeColumn_(0);
-    ROScalarColumn<Double> tcol(*selectedMS_, "TIME");
-    Double t0 = tcol(0);
-    Double t1 = t.get("s").getValue();
-
     resetAntennaPosition(antennaColumn_(0));
 }
 
@@ -227,7 +215,6 @@ void PointingDirectionCalculator::configureMovingSourceCorrection() {
     } else {
         movingSourceCorrection_ = skipMovingSourceCorrection;
     }
-    assert(movingSourceCorrection_ != NULL);
 }
 
 void PointingDirectionCalculator::setDirectionColumn(String const &columnName) {
@@ -328,7 +315,6 @@ Matrix<Double> PointingDirectionCalculator::getDirection() {
         debuglog << "nrowPointing = " << nrowPointing << debugpost;
         debuglog << "pointingTimeUTC = " << min(pointingTimeUTC_) << "~"
         << max(pointingTimeUTC_) << debugpost;
-        pointingTableIndexCache_ = 0;
         for (uInt j = start; j < end; ++j) {
             debuglog << "start index " << j << debugpost;
             Vector<Double> direction = doGetDirection(j);
@@ -355,15 +341,34 @@ Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
     // search and interpolate if necessary
     Bool exactMatch;
     uInt const nrowPointing = pointingTimeUTC_.nelements();
-    uInt n = nrowPointing - pointingTableIndexCache_;
-    Int lower = pointingTableIndexCache_;
-    // TODO: activate pointingTableIndexCache_ if necessary
-    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, n,
-            lower);
+    // pointingTableIndexCache_ is not so effective in terms of performance
+    // simple binary search may be enough,
+    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, nrowPointing, 0);
+    debuglog << "binarySearch result " << index << debugpost;
+//    uInt n = nrowPointing - pointingTableIndexCache_;
+//    Int lower = pointingTableIndexCache_;
+//    debuglog << "do binarySearch n=" << n << " lower=" << lower
+//            << " nrowPointing=" << nrowPointing << " cache="
+//            << pointingTableIndexCache_ << debugpost;
+//    Int index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, n,
+//            lower);
+//    debuglog << "binarySearch result " << index << debugpost;
+//    if (!exactMatch && lower > 0 && index == lower) {
+//        // maybe out of range
+//        n = nrowPointing - n;
+//        lower = 0;
+//        debuglog << "do second binarySearch n=" << n << " lower=" << lower
+//                << " nrowPointing=" << nrowPointing << " cache="
+//                << pointingTableIndexCache_ << debugpost;
+//        index = binarySearch(exactMatch, pointingTimeUTC_, currentTime, n,
+//                lower);
+//        debuglog << "second binarySearch result " << index << debugpost;
+//    }
+//    pointingTableIndexCache_ = (uInt) max((Int) 0, (Int) (index - 1));
     debuglog << "Time " << setprecision(16) << currentTime << " idx=" << index
             << debugpost;
-    debuglog << "binarySearch result " << index << debugpost;
     MDirection direction;
+    assert(accessor_ != NULL);
     if (exactMatch) {
         debuglog << "exact match" << debugpost;
         direction = accessor_(*pointingColumns_, index);
@@ -431,7 +436,11 @@ Vector<Double> PointingDirectionCalculator::doGetDirection(uInt irow) {
         debuglog << "converted = " << outVal << "(unit rad reference frame "
                 << converted.getRefString() << ")" << debugpost;
     }
+
+    // moving source correction
+    assert(movingSourceCorrection_ != NULL);
     movingSourceCorrection_(movingSourceConvert_, directionConvert_, outVal);
+
     return outVal;
 }
 
@@ -529,6 +538,9 @@ void PointingDirectionCalculator::initPointingTable(Int const antennaId) {
         }
     }
 
+    // reset index cache for pointing table
+    pointingTableIndexCache_ = 0;
+
     debuglog << "done initPointingTable" << debugpost;
 }
 
@@ -537,8 +549,7 @@ void PointingDirectionCalculator::resetAntennaPosition(Int antennaId) {
     uInt nrow = antennaTable.nrow();
     if (antennaId < 0 || (Int) nrow <= antennaId) {
         // TODO: exception
-    }
-    else if (antennaId != lastAntennaIndex_ || lastAntennaIndex_ == -1) {
+    } else if (antennaId != lastAntennaIndex_ || lastAntennaIndex_ == -1) {
         ScalarMeasColumn < MPosition
                 > antennaPositionColumn(antennaTable, "POSITION");
         antennaPosition_ = antennaPositionColumn(antennaId);
@@ -555,7 +566,8 @@ void PointingDirectionCalculator::resetAntennaPosition(Int antennaId) {
 
 void PointingDirectionCalculator::resetTime(Double const timestamp) {
     debuglog << "resetTime(Double " << timestamp << ")" << debugpost;
-    debuglog << "lastTimeStamp_ = " << lastTimeStamp_ << " timestamp = " << timestamp << debugpost;
+    debuglog << "lastTimeStamp_ = " << lastTimeStamp_ << " timestamp = "
+            << timestamp << debugpost;
     if (timestamp != lastTimeStamp_ || lastTimeStamp_ < 0.0) {
         referenceEpoch_ = MEpoch(Quantity(timestamp, "s"), MEpoch::UTC);
         referenceFrame_.resetEpoch(referenceEpoch_);
