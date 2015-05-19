@@ -117,6 +117,7 @@ class PySynthesisImager:
     def getSummary(self,fignum=1):
         summ = self.IBtool.getiterationsummary()
         self.plotReport( summ, fignum )
+        return summ
 
 #############################################
     def deleteImagers(self):
@@ -319,8 +320,8 @@ class PySynthesisImager:
         minarr = summ['summaryminor']
 
         pl.plot( minarr[0,:] , minarr[1,:] , 'r.-' , label='peak residual' , linewidth=1.5, markersize=8.0)
-        #pl.plot( minarr[0,:] , minarr[2,:] , 'b.-' , label='model flux' )
-        pl.plot( minarr[0,:] , minarr[3,:] , 'g,' , label='cycle threshold' )
+        pl.plot( minarr[0,:] , minarr[2,:] , 'b.-' , label='model flux' )
+        pl.plot( minarr[0,:] , minarr[3,:] , 'g--' , label='cycle threshold' )
         bcols = ['b','g','r','y','c']
         minv=1
         niterdone = len(minarr[4,:])
@@ -335,9 +336,9 @@ class PySynthesisImager:
                 minv = ind+1
       
         if len(summ['summarymajor'].shape)==1 and summ['summarymajor'].shape[0]>0 :       
-            pl.vlines(summ['summarymajor']+0.5,0,1, label='major cycles', linewidth=3.0)
+            pl.vlines(summ['summarymajor']+0.5,0,1, label='major cycles', linewidth=2.0)
 
-        pl.hlines( summ['threshold'], 0, niterdone , linestyle='dashed' ,label='threshold')
+        pl.hlines( summ['threshold'], 0, summ['iterdone'] , linestyle='dashed' ,label='threshold')
     
         pl.xlabel( 'Iteration Count' )
         pl.ylabel( 'Peak Residual' )
@@ -1472,11 +1473,11 @@ class ImagerParameters():
             else:
                 newimagenamelist[immod] = dirnames[immod][2:] + prefixes[immod] + '_' + str(maxid+1) 
 
-        print 'Input : ',  inpnamelist
-        print 'Dirs : ', dirnames
-        print 'Pre : ', prefixes
-        print 'Max id : ', maxid
-        print 'Using : ',  newimagenamelist
+#        print 'Input : ',  inpnamelist
+#        print 'Dirs : ', dirnames
+#        print 'Pre : ', prefixes
+#        print 'Max id : ', maxid
+#        print 'Using : ',  newimagenamelist
         return newimagenamelist
 
 

@@ -129,18 +129,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    startpeakresidual = peakresidual;
 	    startmodelflux = modelflux;
+	    
+	    stopCode = checkStop( loopcontrols,  peakresidual );
 
-	    if( validMask )
+	    if( validMask && stopCode==0 )
 	      {
 		
-		//	    initializeDeconvolver( peakresidual, modelflux );
 		initializeDeconvolver();
 		
 		while ( stopCode==0 )
 		  {
 		    
 		    takeOneStep( loopcontrols.getLoopGain(), 
-				 loopcontrols.getCycleNiter(), 
+				 loopcontrols.getCycleNiter(), //1,
 				 loopcontrols.getCycleThreshold(),
 				 peakresidual, 
 				 modelflux,
@@ -158,6 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  }// end of minor cycle iterations for this subimage.
 		
 		finalizeDeconvolver();
+
 	      }// if validmask
 	    
 	    // same as checking on itscycleniter.....

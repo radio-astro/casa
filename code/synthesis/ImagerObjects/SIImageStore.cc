@@ -1431,7 +1431,7 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 	    os << "Printing long summary" << LogIO::POST;
 	    
 	    AlwaysAssert( itsImageShape.nelements() == 4, AipsError );
-	    Int npol = itsImageShape[2];
+	    //Int npol = itsImageShape[2];
 	    Int nchan = itsImageShape[3];
 	    for( Int chanid=0; chanid<nchan;chanid++) {
 	      Int polid=0;

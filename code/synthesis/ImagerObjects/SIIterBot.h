@@ -117,6 +117,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			void changeLoopGain(Float loopgain );
 			void changeCycleFactor( Float cyclefactor);
 
+	                void changeMinPsfFraction(Float minpsffraction);
+	                void changeMaxPsfFraction(Float maxpsffraction);
+
 			void changeInteractiveMode(const bool& interactiveEnabled);
 			void changePauseFlag(const bool& pauseEnabled);
 			void changeStopFlag(const bool& stopEnabled);

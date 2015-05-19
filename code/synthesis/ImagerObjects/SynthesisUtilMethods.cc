@@ -2723,8 +2723,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	  }// if isdefined(restoringbeam)
 
-	
-	err += readVal( inrec, String("interactive"), interactive );
+        if( inrec.isDefined("interactive") ) 
+	  {    
+	    if( inrec.dataType("interactive")==TpBool )     
+	      {err += readVal( inrec, String("interactive"), interactive );}
+	    else if ( inrec.dataType("interactive")==TpInt )
+	      {Int inter=0; err += readVal( inrec, String("interactive"), inter); interactive=(Bool)inter;}
+	  }
+
+	//err += readVal( inrec, String("interactive"), interactive );
 	
 	err += verify();
 	

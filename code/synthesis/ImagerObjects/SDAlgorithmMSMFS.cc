@@ -208,6 +208,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
     //////  Put some image misc info in here, to say if it has been done or not. 
 
+    Vector<TempImage<Float> > tempResOrig(itsNTerms);
+
+    // Set residual images into mtcleaner
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	Array<Float> tempArr;
@@ -215,19 +218,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Matrix<Float> tempMat;
 	tempMat.reference( tempArr );
 	itsMTCleaner.setresidual( tix, tempMat );
+
+	// Also save them temporarily (copies)
+	tempResOrig[tix] = TempImage<Float>(imagestore->getShape(), imagestore->residual(tix)->coordinates()); 
+	tempResOrig[tix].copyData( LatticeExpr<Float>(* ( imagestore->residual(tix) ) ) );
       }
 
+    // Modify the original in place
     itsMTCleaner.computeprincipalsolution();
 
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
 	Matrix<Float> tempRes;
 	itsMTCleaner.getresidual(tix,tempRes);
-	(itsImages->residual(tix))->put( tempRes );
+	(imagestore->residual(tix))->put( tempRes );
       }
     
-
+    // Calculate restored image and alpha using modified residuals
     SDAlgorithmBase::restore( imagestore );
+
+    // Put back original unmodified residuals.o
+    for(uInt tix=0; tix<itsNTerms; tix++)
+      {
+	(imagestore->residual(tix))->copyData( LatticeExpr<Float>( tempResOrig(tix) ) );
+      }
 
   }
 

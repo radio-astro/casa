@@ -368,7 +368,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="niter">
       <description>Maximum number of iterations</description>
-      <value type="int">500</value>
+      <value type="int">0</value>
     </param>
 
     <param type="double" name="gain" subparam="true">
@@ -401,9 +401,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="double">0.8</value>
     </param>
 
-    <param type="bool" name="interactive" subparam="true">
+<!--    <param type="bool" name="interactive" subparam="true">
 	    <description>True to be able to modify masks and parameters at runtime</description>
 	    <value type="bool">False</value>
+    </param> -->
+    <param type="any" name="interactive" subparam="true">
+      <description>True to be able to modify masks and parameters at runtime</description>
+      <any type="variant" limittypes="bool int"/>
+      <value type="bool">False</value>
     </param>
 
     <param type="string" name="mask" subparam="true">

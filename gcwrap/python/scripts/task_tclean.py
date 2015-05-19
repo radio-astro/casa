@@ -342,7 +342,8 @@ def tclean(
                 casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Get summary from iterbot
-                retrec=imager.getSummary();
+                if type(interactive) != bool:
+                    retrec=imager.getSummary();
 
         ## Close tools.
         imager.deleteTools()
@@ -350,7 +351,12 @@ def tclean(
     except Exception as e:
         #print 'Exception : ' + str(e)
         casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
-        imager.deleteTools()
+        imager.deleteTools() 
+
+        larg = list(e.args)
+        larg[0] = 'Exception from task_tclean : ' + larg[0]
+        e.args = tuple(larg)
+        raise
 
     return retrec
 

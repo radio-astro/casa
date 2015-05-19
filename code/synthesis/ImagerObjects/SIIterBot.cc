@@ -528,6 +528,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsStopFlag = stopEnabled;
 	}
 
+	void SIIterBot_state::changeMinPsfFraction( Float minpsffraction ) {
+		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		itsMinPsfFraction = minpsffraction;
+	}
+
+	void SIIterBot_state::changeMaxPsfFraction( Float maxpsffraction ) {
+		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		itsMaxPsfFraction = maxpsffraction;
+	}
+
 	void SIIterBot_state::setControlsFromRecord( Record &recordIn ) {
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
@@ -560,6 +570,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (recordIn.isDefined("interactive"))
 			changeInteractiveMode(recordIn.asBool(RecordFieldId("interactive")));
+
+		if (recordIn.isDefined("minpsffraction"))
+			changeMinPsfFraction(recordIn.asFloat( RecordFieldId("minpsffraction")));
+
+		if (recordIn.isDefined("maxpsffraction"))
+			changeMaxPsfFraction(recordIn.asFloat( RecordFieldId("maxpsffraction")));
 
 		//		printOut("After Setting : ", False);
 
