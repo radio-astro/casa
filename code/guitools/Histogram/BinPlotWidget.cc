@@ -564,7 +564,9 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 //-------------------------------------------------------------------------------
 //                          Marking Ranges on the Histogram
 //-------------------------------------------------------------------------------
-
+void BinPlotWidget::setLineMode( bool lineMode ){
+	rectMarker->setLineMode( lineMode );
+}
 void BinPlotWidget::initializeRangeControls( bool enable ){
 	//Put the range controls in
 	if ( enable ){

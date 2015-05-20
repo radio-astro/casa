@@ -105,6 +105,7 @@ public:
     void setColorMap( QwtLinearColorMap* colorMap );
     void setColorScaleMax( int max );
     void setMultiColored( bool multipleColors );
+    void setLineMode( bool lineMode );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setHistogramColor( QColor color );

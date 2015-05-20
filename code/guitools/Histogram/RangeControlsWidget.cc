@@ -66,6 +66,8 @@ void RangeControlsWidget::hideMaximum(){
 	ui.maxLayout->setParent( NULL );
 	ui.maxLineEdit->setParent( NULL );
 	ui.maxLabel->setParent( NULL );
+	ui.dragLabel->setText("Specify the cut-off by dragging the left mouse button");
+	ui.groupBox->setTitle( "Data Cut-Off");
 }
 
 void RangeControlsWidget::setRange( double min, double max, bool signalChange ){

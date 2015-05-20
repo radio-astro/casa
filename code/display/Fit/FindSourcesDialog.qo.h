@@ -54,6 +54,7 @@ namespace casa {
 		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
 		void setImage( SHARED_PTR<const ImageInterface<Float> > image );
 		void setChannel( int channel );
+
 		void clearImage();
 
 		QString getRegionString() const;

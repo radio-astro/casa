@@ -289,7 +289,7 @@ p, li { white-space: pre-wrap; }
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="dragLabel">
           <property name="font">
            <font>
             <pointsize>8</pointsize>
