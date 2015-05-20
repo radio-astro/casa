@@ -85,26 +85,26 @@ void SingleDishMS::setSelection(Record const &selection, bool const verbose)
   if (!selection_.empty()) // selection is set before
     os << "Discard old selection and setting new one." << LogIO::POST;
   if (selection.empty()) // empty selection is passed
-    os << "Resetting selection." << LogIO::POST;
+    os << "Resetting selection." << LogIO::POST;  
 
   selection_ = selection;
   // Verbose output
   bool any_selection(false);
-  if (verbose && !selection.empty()) {
+  if (verbose && !selection_.empty()) {
     String timeExpr(""), antennaExpr(""), fieldExpr(""),
       spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
       scanExpr(""), arrayExpr(""), obsExpr(""), intentExpr("");
-    timeExpr = get_field_as_casa_string(selection,"timerange");
-    antennaExpr = get_field_as_casa_string(selection,"baseline");
-    fieldExpr = get_field_as_casa_string(selection,"field");
-    spwExpr = get_field_as_casa_string(selection,"spw");
-    uvDistExpr = get_field_as_casa_string(selection,"uvdist");
-    taQLExpr = get_field_as_casa_string(selection,"taql");
-    polnExpr = get_field_as_casa_string(selection,"correlation");
-    scanExpr = get_field_as_casa_string(selection,"scan");
-    arrayExpr = get_field_as_casa_string(selection,"array");
-    intentExpr = get_field_as_casa_string(selection,"intent");
-    obsExpr = get_field_as_casa_string(selection,"observation");
+    timeExpr = get_field_as_casa_string(selection_,"timerange");
+    antennaExpr = get_field_as_casa_string(selection_,"baseline");
+    fieldExpr = get_field_as_casa_string(selection_,"field");
+    spwExpr = get_field_as_casa_string(selection_,"spw");
+    uvDistExpr = get_field_as_casa_string(selection_,"uvdist");
+    taQLExpr = get_field_as_casa_string(selection_,"taql");
+    polnExpr = get_field_as_casa_string(selection_,"correlation");
+    scanExpr = get_field_as_casa_string(selection_,"scan");
+    arrayExpr = get_field_as_casa_string(selection_,"array");
+    intentExpr = get_field_as_casa_string(selection_,"intent");
+    obsExpr = get_field_as_casa_string(selection_,"observation");
     // selection Summary
     os << "[Selection Summary]" << LogIO::POST;
     if (obsExpr != "")
@@ -131,6 +131,41 @@ void SingleDishMS::setSelection(Record const &selection, bool const verbose)
       {any_selection = true; os << "- TaQL: " << taQLExpr << LogIO::POST;}
     if (!any_selection)
       os << "No valid selection parameter is set." << LogIO::WARN;
+  }
+}
+
+void SingleDishMS::setAverage(Record const &average, bool const verbose)
+{
+  LogIO os(_ORIGIN);
+  if (!average_.empty()) // average is set before
+    os << "Discard old average and setting new one." << LogIO::POST;
+  if (average.empty()) // empty average is passed
+    os << "Resetting average." << LogIO::POST;  
+
+  average_ = average;
+
+  if (verbose && !average_.empty()) {
+    LogIO os(_ORIGIN);
+    Int ifield;
+    ifield = average_.fieldNumber(String("timeaverage"));
+    os << "[Averaging Settings]" << LogIO::POST;
+    if (ifield<0 || !average_.asBool(ifield)) {
+      os << "No averaging will be done" << LogIO::POST;
+      return;
+    }
+
+    String timebinExpr(""), timespanExpr(""), tweightExpr("");
+    timebinExpr = get_field_as_casa_string(average_,"timebin");
+    timespanExpr = get_field_as_casa_string(average_,"timespan");
+    tweightExpr = get_field_as_casa_string(average_,"tweight");
+    if (timebinExpr != "")
+      {os << "- Time bin: " << timebinExpr << LogIO::POST;}
+    if (timespanExpr != "")
+      {os << "- Time span: " << timespanExpr << LogIO::POST;}
+    if (tweightExpr != "")
+      {os << "- Averaging weight: " << tweightExpr << LogIO::POST;}
+
+    os << LogIO::WARN << "NOTE: Averaging is not yet implemented" << LogIO::POST;
   }
 }
 
@@ -178,6 +213,8 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   String in_name(in_column_name);
   in_name.upcase();
   configure_param.define("datacolumn", in_name);
+  // merge averaging parameters
+  configure_param.merge(average_);
   // The other available keys
   // - buffermode, realmodelcol, usewtspectrum, tileshape,
   // - chanaverage, chanbin, useweights, 

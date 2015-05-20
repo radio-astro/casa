@@ -40,11 +40,14 @@ public:
    */ 
   void setSelection(Record const& selection, bool const verbose=true);
 
+   /*
+   * Set time averaging parameters.
+   */ 
+  void setAverage(Record const& average, bool const verbose=true);
+
   // Multiply a scale factor to selected spectra
   void scale(float const factor, string const& in_column_name,
 	     string const& out_ms_name);
-
-  // Set channel mask to process
 
   // Invoke baseline subtraction
   // (polynomial, write results in new MS)
@@ -96,8 +99,6 @@ private:
   // retrieve a field by name from Record as casa::String.
   String get_field_as_casa_string(Record const &in_data,
 				  string const &field_name);
-  // unset MS selection
-  void reset_selection();
 
   bool prepare_for_process(string const &in_column_name,
 			   string const&out_ms_name);
@@ -247,6 +248,8 @@ private:
   MSMainEnums::PredefinedColumns in_column_;//, out_column_;
   // Record of selection
   Record selection_;
+  // Record of average
+  Record average_;
   // SDMSManager
   SDMSManager *sdh_;
 
