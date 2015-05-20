@@ -25,6 +25,8 @@
 //#
 //# $Id$
 
+
+
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtViewerBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
@@ -60,7 +62,7 @@
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
 #include <display/DisplayErrors.h>
-#include <msvis/MSVis/UtilJ.h>
+
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
 
