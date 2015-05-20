@@ -101,16 +101,24 @@ def imval(imagename, region, box, chans, stokes):
         mycsys = myia.coordsys()  
 
         if ( len(box) == 0 and len(region) == 0): 
-            try:
-                # Open the image for processing!            
-                ref_values = mycsys.referencepixel()['numeric']
-                values = ref_values.tolist()
-                box = str(int(round(values[axes[0][0]])))+','\
-                    + str(int(round(values[axes[1][0]])))+',' \
-                    + str(int(round(values[axes[0][0]])))+','\
-                    +str(int(round(values[axes[1][0]])))
-            except:
-                raise Exception, "Unable to find the size of the input image."
+            ctypes = mycsys.axiscoordinatetypes()
+            ndir = 0
+            nlin = 0
+            for ctype in ctypes:
+                if ctype == 'Direction':
+                    ndir += 1
+                elif ctype == 'Linear':
+                    nlin += 1
+            if ndir == 2 or nlin == 2:
+                try:
+                    ref_values = mycsys.referencepixel()['numeric']
+                    values = ref_values.tolist()
+                    box = str(int(round(values[axes[0][0]])))+','\
+                        + str(int(round(values[axes[1][0]])))+',' \
+                        + str(int(round(values[axes[0][0]])))+','\
+                        +str(int(round(values[axes[1][0]])))
+                except:
+                    raise Exception, "Unable to find the size of the input image."
             
         # Because the help file says -1 is valid, apparently that's supported functionality, good grief
         
