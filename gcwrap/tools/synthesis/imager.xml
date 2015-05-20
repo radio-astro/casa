@@ -4517,6 +4517,36 @@ Applies Briggs (robust) weighting.
 </comments>
 </method>
 
+<method type="function" name="mapextent">
+   <shortdescription>Compute map extent from given set of MSs</shortdescription>
+<description>
+TODO: description must be filled
+</description>
+<input>
+     <param type="string" name="ref">
+     <description>direction reference</description>
+     <value>J2000</value>
+     </param>
+
+     <param type="string" name="movingsource">
+     <description>moving source name</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="pointingcolumntouse">
+     <description>POINTING table column to be used for computation</description>
+     <value>DIRECTION</value>
+     </param>
+</input>
+<returns type="record"/>
+<example>
+
+TODO: example must be filled.
+</example>
+<comments>
+</comments>
+</method>
+
 </tool>
 
 </casaxml>
