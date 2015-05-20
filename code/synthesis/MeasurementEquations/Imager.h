@@ -628,6 +628,22 @@ class Imager
   Bool setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type);
   String dQuantitytoString(const Quantity& dq);
 
+  // Automatic evaluation of map extent for given visibility.
+  //
+  //
+  // @param[in] referenceFrame reference direction frame
+  // @param[in] movingSource name of moving source
+  // @param[in] pointingColumn pointing column to use
+  // @param[out] center center of the map
+  // @param[out] blc bottom left corner of the map
+  // @param[out] trc top right corner of the map
+  // @param[out] extent map extent
+  //
+  // @return
+  virtual Bool mapExtent(const String &referenceFrame, const String &movingSource,
+          const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+          Vector<Double> &trc, Vector<Double> &extent);
+
 protected:
 
   CountedPtr<MeasurementSet> ms_p;

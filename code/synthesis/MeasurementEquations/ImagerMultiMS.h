@@ -103,6 +103,11 @@ namespace casa {
       //open sub tables
       virtual Bool openSubTables();
       
+      // @copydoc Imager::mapExtent()
+      virtual Bool mapExtent(const String &referenceFrame, const String &movingSource,
+              const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+              Vector<Double> &trc, Vector<Double> &extent);
+
     protected:
       
       Block<Vector<Int> > blockNChan_p;

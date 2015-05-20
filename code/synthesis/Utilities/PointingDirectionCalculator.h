@@ -72,9 +72,9 @@ public:
     void setMovingSource(String const sourceName);
     void setMovingSource(MDirection const &sourceDirection);
 
-    uInt getNrowForSelectedMS() {
-        return selectedMS_->nrow();
-    }
+    uInt getNrowForSelectedMS() {return selectedMS_->nrow();}
+    MDirection::Types const &getDirectionType() {return directionType_;}
+    MDirection const &getMovingSourceDirection() {return *movingSource_;}
     Matrix<Double> getDirection();
     Vector<Double> getDirection(uInt irow);
     Vector<uInt> getRowId();

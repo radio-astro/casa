@@ -93,6 +93,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
+#include <measures/Measures/MeasFrame.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -198,6 +199,8 @@
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
 #include <synthesis/TransformMachines/NoOpATerm.h>
+
+#include <synthesis/Utilities/PointingDirectionCalculator.h>
 
 using namespace std;
 
@@ -4628,6 +4631,138 @@ String Imager::dQuantitytoString(const Quantity& dq) {
   ss << dq;
   return ss.str();
 } 
+
+#define INITIALIZE_DIRECTION_VECTOR(name) \
+    do { \
+    	if (name.nelements() < 2) { \
+    		name.resize(2); \
+    		name = 0.0; \
+    	} \
+    } while (False)
+
+Bool Imager::mapExtent(const String &referenceFrame, const String &movingSource,
+        const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+        Vector<Double> &trc, Vector<Double> &extent) {
+    INITIALIZE_DIRECTION_VECTOR(center);
+    INITIALIZE_DIRECTION_VECTOR(blc);
+    INITIALIZE_DIRECTION_VECTOR(trc);
+    INITIALIZE_DIRECTION_VECTOR(extent);
+
+    try {
+        //cout << "mssel_p->nrow() = " << mssel_p->nrow() << endl;
+        PointingDirectionCalculator calc(*mssel_p);
+        //cout << "calc instantiated" << endl;
+
+        calc.setDirectionColumn(pointingColumn);
+        //cout << "set pointing direction column to " << pointingColumn << endl;
+        calc.setFrame(referenceFrame);
+        //cout << "set reference frame to " << referenceFrame << endl;
+        MDirection::Types refType = MDirection::J2000; // any non planet value
+        Bool status = False;
+        //cout << "movingSource = " << movingSource << endl;
+        //cout << "getType" << endl;
+        status = MDirection::getType(refType, movingSource);
+        //cout << "refType string = " << MDirection::showType(refType) << endl;
+        //cout << "status = " << status << endl;
+        Bool doMovingSourceCorrection = (status == True &&
+                MDirection::N_Types < refType &&
+                refType < MDirection::N_Planets);
+        Bool isOffsetColumn = (pointingColumn.contains("OFFSET")
+                || pointingColumn.contains("Offset")
+                || pointingColumn.contains("offset"));
+        if (doMovingSourceCorrection) {
+            //cout << "need moving source correction" << endl;
+            calc.setMovingSource(movingSource);
+            //cout << "set moving source name " << movingSource << endl;
+        }
+        //cout << "set direction matrix shape to COLUMN_MAJOR" << endl;
+        calc.setDirectionListMatrixShape(PointingDirectionCalculator::COLUMN_MAJOR);
+
+        //cout << "start getDirection" << endl;
+        Matrix<Double> directionList = calc.getDirection();
+        //cout << "end getDirection shape " << directionList.shape() << endl;
+        Vector<Double> longitude = directionList.column(0);
+        Vector<Double> latitude = directionList.column(1);
+        //cout << "longitude.nelements() = " << longitude.nelements() << endl;
+        //cout << "latitude.nelements() = " << latitude.nelements() << endl;
+
+        // Diagnose if longitude values are divided by periodic boundary surface
+        // (+-pi or 0, 2pi)
+        // In this case, mean of longitude should be around 0 (+-pi) or pi (0,2pi)
+        // and stddev of longitude array be around pi.
+        //cout << "diagnose longitude distribution" << endl;
+        Double longitudeMean = mean(longitude);
+        Double longitudeStddev = stddev(longitude);
+        //cout << "mean " << longitudeMean << " stddev " << longitudeStddev << endl;
+        if (longitudeStddev > 2.0 / 3.0 * C::pi) {
+            // likely to be the case
+            //cout << "likely to be the case" << endl;
+            if (abs(longitudeMean) < 0.5 * C::pi) {
+                // periodic boundary surface would be +-pi
+                //cout << "periodic boundary surface would be +-pi" << endl;
+                for (size_t i = 0; i < longitude.nelements(); ++i) {
+                    if (longitude[i] < 0.0) {
+                        longitude[i] += C::_2pi;
+                    }
+                }
+            }
+            else if (abs(longitudeMean - C::pi) < 0.5 * C::pi ) {
+                // periodic boundary surface would be 0,2pi
+                //cout << "periodic boundary surface would be 0,2pi" << endl;
+                for (size_t i = 0; i < longitude.nelements(); ++i) {
+                    if (longitude[i] < C::pi) {
+                        longitude[i] += C::_2pi;
+                    }
+                }
+            }
+        }
+
+        blc[0] = min(longitude);
+        trc[0] = max(longitude);
+        blc[1] = min(latitude);
+        trc[1] = max(latitude);
+        extent = trc - blc;
+        //cout << "result: blc " << blc << " trc " << trc << endl;
+        //cout << "result: extent " << extent << endl;
+
+        // center
+        if (isOffsetColumn) {
+            center = 0.0;
+        }
+        else if (doMovingSourceCorrection) {
+            // shift center to moving source position at the time
+            // that will be used for imaging
+            VisBuffer vb(*rvi_p);
+            MEpoch referenceEpoch = vb.msColumns().timeMeas()(vb.rowIds()[0]);
+            MPosition referencePosition = vb.msColumns().antenna().positionMeas()(vb.antenna1()[0]);
+            MDirection::Types const &outDirectionType = calc.getDirectionType();
+            MDirection const &movingSourceDir = calc.getMovingSourceDirection();
+            MeasFrame referenceMeasFrame(referenceEpoch, referencePosition);
+            MDirection::Ref azelRef(MDirection::AZEL, referenceMeasFrame);
+            MDirection azelDir = MDirection::Convert(movingSourceDir, azelRef)();
+            MDirection::Ref outRef(outDirectionType, referenceMeasFrame);
+            MDirection sourceDirection = MDirection::Convert(azelDir, outRef)();
+            center = sourceDirection.getAngle("rad").getValue();
+        }
+        else {
+            center = (blc + trc) / 2.0;
+        }
+        //cout << "result: center " << center << endl;
+    }
+    catch (AipsError &e) {
+        LogIO os(LogOrigin("Imager", "mapExtent", WHERE));
+        os << LogIO::SEVERE << "Failed due to the rror \"" << e.getMesg() << "\"" << LogIO::POST;
+        return False;
+    }
+    catch (...) {
+        LogIO os(LogOrigin("Imager", "mapExtent", WHERE));
+        os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
+        throw;
+        return False;
+    }
+
+    return True;
+}
 
 } //# NAMESPACE CASA - END
 

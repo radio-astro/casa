@@ -825,4 +825,87 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
       return True;
   }
 
+#define INITIALIZE_DIRECTION_VECTOR(name) \
+    do { \
+        if (name.nelements() < 2) { \
+            name.resize(2); \
+            name = 0.0; \
+        } \
+    } while (False)
+ Bool ImagerMultiMS::mapExtent(const String &referenceFrame, const String &movingSource,
+          const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+          Vector<Double> &trc, Vector<Double> &extent) {
+      // save original address
+      MeasurementSet *msselSave = &(*mssel_p);
+
+      // initialize if necessary
+      INITIALIZE_DIRECTION_VECTOR(center);
+      INITIALIZE_DIRECTION_VECTOR(blc);
+      INITIALIZE_DIRECTION_VECTOR(trc);
+      INITIALIZE_DIRECTION_VECTOR(extent);
+
+      try {
+          Bool isValueSet = False;
+          for (size_t i = 0; i < blockMSSel_p.nelements(); ++i) {
+              mssel_p = &blockMSSel_p[i];
+              Vector<Double> wcenter(2);
+              Vector<Double> wblc(2);
+              Vector<Double> wtrc(2);
+              Vector<Double> wextent(2);
+              Bool status = Imager::mapExtent(referenceFrame, movingSource, pointingColumn,
+                      wcenter, wblc, wtrc, wextent);
+              if (status) {
+                  if (!isValueSet) {
+                      center = wcenter;
+                      blc = wblc;
+                      trc = wtrc;
+                      extent = wextent;
+                      isValueSet = True;
+                  }
+                  else {
+                      blc[0] = min(blc[0], wblc[0]);
+                      blc[1] = min(blc[1], wblc[1]);
+                      trc[0] = max(trc[0], wtrc[0]);
+                      trc[1] = max(trc[1], wtrc[1]);
+                  }
+              }
+          }
+
+          // extent is re-evaluated using true trc and blc
+          extent = trc - blc;
+
+          // center needs to be updated according to specified column name
+          // and moving source name
+          MDirection::Types refType;
+          Bool status = MDirection::getType(refType, movingSource);
+          Bool doMovingSourceCorrection = (status == True &&
+                  MDirection::N_Types < refType &&
+                  refType < MDirection::N_Planets);
+          Bool isOffsetColumn = (pointingColumn.contains("OFFSET")
+                  || pointingColumn.contains("Offset")
+                  || pointingColumn.contains("offset"));
+          if (isOffsetColumn) {
+              // center is always (0,0)
+              center = 0.0;
+          }
+          else if (!doMovingSourceCorrection) {
+              // initial center value should be kept
+              // if doMovingSourceCorrection is True.
+              // otherwise, center should be re-evaluated
+              // using true trc and blc
+              center = (blc + trc) / 2.0;
+          }
+
+          // restore mssel_p
+          mssel_p = msselSave;
+      }
+      catch (...) {
+          // restore mssel_p
+          mssel_p = msselSave;
+          LogIO os(LogOrigin("ImagerMultiMS", "mapExtent", WHERE));
+          os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
+          return False;
+      }
+      return True;
+  }
 } //# NAMESPACE CASA - END
