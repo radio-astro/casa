@@ -66,7 +66,7 @@
 #include <display/DisplayErrors.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <display/DisplayDatas/LatticeAsRaster.h>
-
+#include <msvis/MSVis/UtilJ.h>
 #include <display/QtViewer/InActiveDock.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -2392,6 +2392,7 @@ void QtDisplayPanelGui::resetImageProfile(){
 }
 
 void QtDisplayPanelGui::showImageProfile() {
+  casa::utilj::ThreadTimes t1;
 	initializeProfile();
 
 	QList<OverplotInterface> overlays;
@@ -2471,6 +2472,9 @@ void QtDisplayPanelGui::showImageProfile() {
 		int frameIndex = qdp_->frame();
 		profile_->frameChanged( frameIndex );
 	}
+	casa::utilj::ThreadTimes t2;
+	casa::utilj::DeltaThreadTimes dt = t2 - t1;
+	qDebug() << "Elapsed time elapsed="<<dt.elapsed()<<" cpu="<<dt.cpu();
 }
 
 

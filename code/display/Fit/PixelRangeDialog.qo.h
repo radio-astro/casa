@@ -50,6 +50,7 @@ namespace casa {
 		void setImage( const SHARED_PTR<const ImageInterface<Float> > img );
 		void setInterval( double minValue, double maxValue );
 		void setImageMode( bool imageMode );
+		void setLineMode( bool lineMode );
 		void setChannelValue( int channel );
 		bool setImageRegion( ImageRegion* imageRegion, int id );
 		void setTitle( const QString& title );

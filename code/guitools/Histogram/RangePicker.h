@@ -47,15 +47,18 @@ public:
 	int getLowerBound() const;
 	int getUpperBound() const;
 	void setBoundaryValues( int minX, int maxX );
+	void setLineMode( bool lineMode );
 	void reset();
 	virtual ~RangePicker();
 private:
+	void _drawBoundary( QPainter* painter, int rectHeight ) const;
 	RangePicker( const RangePicker& );
 	RangePicker& operator=( const RangePicker& );
 	HeightSource* heightSource;
 	int lowerBound;
 	int upperBound;
 	bool rangeSet;
+	bool lineMode;
 
 };
 

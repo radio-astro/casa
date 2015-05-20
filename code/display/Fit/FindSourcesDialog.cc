@@ -53,6 +53,8 @@ namespace casa {
 		ui.setupUi(this);
 		currentRegionId = DEFAULT_KEY;
 		overlayColorName = "white";
+		pixelRangeDialog.setLineMode( true );
+		pixelRangeDialog.setTitle( "Intensity Minimum");
 
 		imageMode = true;
 		ui.imageRadioButton->setVisible( displayModeFunctionality );

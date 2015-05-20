@@ -32,6 +32,7 @@
 namespace casa {
 
 RangePicker::RangePicker(){
+	lineMode = false;
 	reset();
 }
 
@@ -66,6 +67,10 @@ void RangePicker::setBoundaryValues( int minX, int maxX ){
 	upperBound = maxX;
 }
 
+void RangePicker::setLineMode( bool lineMode ){
+	this->lineMode = lineMode;
+}
+
 void RangePicker::boundaryLineMoved( const QPoint& pos ){
 	int xValue = pos.x();
 	if ( !rangeSet ){
@@ -76,10 +81,16 @@ void RangePicker::boundaryLineMoved( const QPoint& pos ){
 	else {
 		int lowDistance = qAbs( xValue - lowerBound );
 		int highDistance = qAbs( xValue - upperBound );
-		if ( lowDistance <= highDistance ){
-			lowerBound = xValue;
+		if ( !lineMode ){
+			if ( lowDistance <= highDistance ){
+				lowerBound = xValue;
+			}
+			else {
+				upperBound = xValue;
+			}
 		}
 		else {
+			lowerBound = xValue;
 			upperBound = xValue;
 		}
 	}
@@ -87,28 +98,43 @@ void RangePicker::boundaryLineMoved( const QPoint& pos ){
 
 void RangePicker::draw (QPainter* painter, const QwtScaleMap & /*xMap*/,
 		const QwtScaleMap& /*yMap*/, const QRect &) const {
-	if ( lowerBound != upperBound ){
+
+	int rectHeight = heightSource->getCanvasHeight();
+	if ( lowerBound != upperBound && !lineMode ){
 
 		//Draw the rectangle
 		QColor shadeColor( 200,200,200 );
 		shadeColor.setAlpha( 100 );
 		int startX = lowerBound;
-		if ( upperBound < lowerBound ){
-			startX = upperBound;
-		}
-		int rectHeight = heightSource->getCanvasHeight();
+			if ( upperBound < lowerBound ){
+				startX = upperBound;
+			}
 		int rectWidth = qAbs( lowerBound - upperBound );
 		QRect rect( startX, 0, rectWidth, rectHeight );
 		painter->fillRect( rect , shadeColor );
 
-		//Mark the vertical boundary lines of the rectangle
-		QPen oldPen = painter->pen();
-		QPen boundaryPen( Qt::black );
-		painter->setPen( boundaryPen );
+		_drawBoundary( painter, rectHeight );
+	}
+	else {
+
+		_drawBoundary( painter, rectHeight );
+	}
+}
+
+void RangePicker::_drawBoundary( QPainter* painter, int rectHeight ) const {
+	//Mark the vertical boundary lines of the rectangle
+	QPen oldPen = painter->pen();
+	QPen boundaryPen( Qt::black );
+	painter->setPen( boundaryPen );
+
+	if ( !lineMode ){
 		painter->drawLine( lowerBound, 0, lowerBound, rectHeight );
 		painter->drawLine( upperBound, 0, upperBound, rectHeight );
-		painter->setPen( oldPen );
 	}
+	else {
+		painter->drawLine( lowerBound, 0, lowerBound, rectHeight );
+	}
+	painter->setPen( oldPen );
 }
 
 RangePicker::~RangePicker(){

@@ -284,7 +284,7 @@
      <item>
       <widget class="QGroupBox" name="cutoffGroupBox">
        <property name="title">
-        <string>Cut-Off Intensity</string>
+        <string>Minimum Intensity</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>

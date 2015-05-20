@@ -60,7 +60,7 @@
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
 #include <display/DisplayErrors.h>
-
+#include <msvis/MSVis/UtilJ.h>
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
 
