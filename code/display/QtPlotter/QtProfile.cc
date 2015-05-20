@@ -2775,9 +2775,10 @@ namespace casa {
 		if ( unitsAcceptable ) {
 			yAxisCombo->setCurrentIndex( 0 );
 		}
-		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
-		pixelCanvas->setDisplayYUnits( yAxisCombo->currentText() );
-		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
+		QString imageUnit(yUnitPrefix + yUnit);
+		specFitSettingsWidget->setImageYUnits( imageUnit );
+		pixelCanvas->setDisplayYUnits( /*yAxisCombo->currentText()*/imageUnit );
+		pixelCanvas->setImageYUnits( imageUnit );
 	}
 
 	void QtProfile::setYUnitConversionVisibility( bool visible ) {
