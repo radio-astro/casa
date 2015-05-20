@@ -1087,7 +1087,6 @@ namespace casa {
 		}
 		// scale for better display
 		Int ordersOfM = scaleAxis();
-
 		adjustPlotUnits();
 		setPixelCanvasYUnits( yUnitPrefix, yUnit);
 
@@ -1506,6 +1505,7 @@ namespace casa {
 		Bool validSpectrum = true;
 		SpectralCoordinate coord = getSpectralAxis( image, validSpectrum );
 		if ( validSpectrum ){
+
 			pixelCanvas -> plotPolyLine(z_xval, z_yval, z_eval, beamAngle, beamArea, coord, fileName);
 			specFitSettingsWidget->setCurveName( fileName );
 			//See if we need to recompute the top axis.
@@ -2591,7 +2591,6 @@ namespace casa {
 								0, restValue, spcRefFrame);
 			break;
 		case QtProfile::PFLUX:
-
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 					shape, QtProfile::FLUX, xaxisUnit, coordinateType,
 					0, restValue, spcRefFrame);
@@ -2760,7 +2759,6 @@ namespace casa {
 
 		// store the scaling factor
 		ordersOfM_=ordersOfM;
-
 		if(ordersOfM!=0) {
 			// correct unit string
 			if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ) {
@@ -2837,9 +2835,13 @@ namespace casa {
 		if ( unitsAcceptable ) {
 			yAxisCombo->setCurrentIndex( 0 );
 		}
-		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
-		pixelCanvas->setDisplayYUnits( yAxisCombo->currentText() );
-		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
+		QString imageUnit(yUnitPrefix + yUnit );
+
+		specFitSettingsWidget->setImageYUnits( imageUnit );
+		//Changed lines below because of CAS-7207
+		pixelCanvas->setImageYUnits( /*yAxisCombo->currentText()*/imageUnit );
+		pixelCanvas->setDisplayYUnits( imageUnit );
+
 	}
 
 	void QtProfile::setYUnitConversionVisibility( bool visible ) {
