@@ -38,7 +38,7 @@ public:
    * @param [in] selection A Record consists of selection key and values
    * @param [in] verbose If true, print summary of selection logger
    */ 
-  void set_selection(Record const& selection, bool const verbose=true);
+  void setSelection(Record const& selection, bool const verbose=true);
 
   // Multiply a scale factor to selected spectra
   void scale(float const factor, string const& in_column_name,
@@ -48,36 +48,36 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in new MS)
-  void subtract_baseline(string const& in_column_name,
-			 string const& out_ms_name,
-			 string const& out_bltable_name,
-			 bool const& do_subtract,
-			 string const& in_spw, 
-			 string const& in_ppp, 
-			 string const& blfunc,
-			 int const order, 
-			 float const clip_threshold_sigma=3.0, 
-			 int const num_fitting_max=1);
+  void subtractBaseline(string const& in_column_name,
+			string const& out_ms_name,
+			string const& out_bltable_name,
+			bool const& do_subtract,
+			string const& in_spw, 
+			string const& in_ppp, 
+			string const& blfunc,
+			int const order, 
+			float const clip_threshold_sigma=3.0, 
+			int const num_fitting_max=1);
 
   //Cubicspline  
-  void subtract_baseline_cspline(string const& in_column_name,
-			 string const& out_ms_name,
-			 string const& out_bltable_name,
-			 bool const& do_subtract,
-			 string const& in_spw, 
-			 string const& in_ppp, 
-			 int const npiece, 
-			 float const clip_threshold_sigma=3.0, 
-			 int const num_fitting_max=1);
+  void subtractBaselineCspline(string const& in_column_name,
+			       string const& out_ms_name,
+			       string const& out_bltable_name,
+			       bool const& do_subtract,
+			       string const& in_spw, 
+			       string const& in_ppp, 
+			       int const npiece, 
+			       float const clip_threshold_sigma=3.0, 
+			       int const num_fitting_max=1);
 
   // variable fitting parameters stored in a text file
-  void subtract_baseline_variable(string const& in_column_name,
-				  string const& out_ms_name,
-				  string const& out_bltable_name,
-				  bool const& do_subtract,
-				  string const& in_spw, 
-				  string const& in_ppp, 
-				  string const& param_file);
+  void subtractBaselineVariable(string const& in_column_name,
+				string const& out_ms_name,
+				string const& out_bltable_name,
+				bool const& do_subtract,
+				string const& in_spw, 
+				string const& in_ppp, 
+				string const& param_file);
 
 private:
   /////////////////////////

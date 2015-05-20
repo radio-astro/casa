@@ -131,7 +131,7 @@ singledishms::subtract_baseline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline(datacolumn, outfile, bltable, dosubtract,
+    itsSd->subtractBaseline(datacolumn, outfile, bltable, dosubtract,
 			     toCasaString(spw), toCasaString(pol),
 			     blfunc, order, clip_threshold_sigma, 
 			     num_fitting_max);
@@ -160,7 +160,7 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_cspline(datacolumn, outfile, bltable, 
+    itsSd->subtractBaselineCspline(datacolumn, outfile, bltable, 
 				     dosubtract, toCasaString(spw), 
 				     toCasaString(pol), npiece, 
 				     clip_threshold_sigma, num_fitting_max);
@@ -187,7 +187,7 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_variable(datacolumn, outfile, bltable, 
+    itsSd->subtractBaselineVariable(datacolumn, outfile, bltable, 
 				      dosubtract, toCasaString(spw),
 				      toCasaString(pol), blparam);
     rstat = true;
@@ -263,7 +263,7 @@ singledishms::set_selection(::casac::variant const& spw,
     if (selection_string != "")
       selection.define("taql", selection_string);
 
-    itsSd->set_selection(selection);
+    itsSd->setSelection(selection);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

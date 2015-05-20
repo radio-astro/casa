@@ -79,7 +79,7 @@ bool SingleDishMS::close()
 ////////////////////////////////////////////////////////////////////////
 ///// Common utility functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS::set_selection(Record const &selection, bool const verbose)
+void SingleDishMS::setSelection(Record const &selection, bool const verbose)
 {
   LogIO os(_ORIGIN);
   if (!selection_.empty()) // selection is set before
@@ -637,7 +637,7 @@ size_t SingleDishMS::NValidMask(size_t const num_mask, bool const* mask)
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS::subtract_baseline(string const& in_column_name,
+void SingleDishMS::subtractBaseline(string const& in_column_name,
 				     string const& out_ms_name,
 				     string const& out_bltable_name,
 				     bool const& do_subtract,
@@ -917,7 +917,7 @@ void SingleDishMS::subtract_baseline(string const& in_column_name,
 }
 
 //Cubic Spline
-void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
+void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 				     string const& out_ms_name,
 				     string const& out_bltable_name,
 				     bool const& do_subtract,
@@ -1197,108 +1197,8 @@ void SingleDishMS::subtract_baseline_cspline(string const& in_column_name,
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
-// --------------------------------------------------------------------
-// this function is temporarily copied from sakura code to get 
-// positions of cubic spline boundaries. (2015/4/6 WK)
-// --------------------------------------------------------------------
-void SingleDishMS::GetBoundariesOfPiecewiseData(size_t num_mask,
-						bool const *mask, 
-						size_t num_pieces, 
-						double *boundary) {
-	assert(num_pieces > 0);
-
-	size_t num_unmasked_data = 0;
-	for (size_t i = 0; i < num_mask; ++i) {
-		if (mask[i])
-			++num_unmasked_data;
-	}
-	boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
-	size_t idx = 1;
-	size_t count_unmasked_data = 0;
-	for (size_t i = 0; i < num_mask; ++i) {
-		if (idx == num_pieces)
-			break;
-		if (mask[i]) {
-			if (count_unmasked_data
-					>= static_cast<double>(num_unmasked_data * idx)
-							/ static_cast<double>(num_pieces)) {
-				boundary[idx] = static_cast<double>(i);
-				++idx;
-			}
-			++count_unmasked_data;
-		}
-	}
-}
-// --------------------------------------------------------------------
-
-void SingleDishMS::scale(float const factor,
-			  string const& in_column_name,
-			  string const& out_ms_name)
-{
-  LogIO os(_ORIGIN);
-  os << "Multiplying scaling factor = " << factor << LogIO::POST;
-  // in_ms = out_ms
-  // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
-  // no iteration is necessary for the processing.
-  // procedure
-  // 1. iterate over MS
-  // 2. pick single spectrum from in_column
-  // 3. multiply a scaling factor to each spectrum
-  // 4. put single spectrum (or a block of spectra) to out_column
-  prepare_for_process(in_column_name, out_ms_name);
-  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
-  vi::VisBuffer2 *vb = vi->getVisBuffer();
-
-  // //DEBUG
-  // Block<Int> scol = vi->getSortColumns().getColumnIds();
-  // cout << "sort columns of iterator = ";
-  // for (size_t i = 0; i < scol.nelements(); ++i)
-  //   cout << scol[i] << ", ";
-  // cout << endl;
-  // cout << "default added = " << (vi->getSortColumns().shouldAddDefaultColumns()? 'T' : 'F') << endl;
-
-  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
-    for (vi->origin(); vi->more(); vi->next()) {
-      size_t const num_chan = static_cast<size_t>(vb->nChannels());
-      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
-      size_t const num_row = static_cast<size_t>(vb->nRows());
-      Cube<Float> data_chunk(num_pol,num_chan,num_row);
-      Matrix<Float> data_row(num_pol,num_chan);
-      SakuraAlignedArray<float> spectrum(num_chan);
-      // get a data cube (npol*nchan*nrow) from VisBuffer
-      get_data_cube_float(*vb, data_chunk);
-      // loop over MS rows
-      for (size_t irow=0; irow < num_row; ++irow) {
-	// loop over polarization
-	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  // get a spectrum from data cube
-	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum);
-
-	  // actual execution of single spectrum
-	  do_scale(factor, num_chan, spectrum.data);
-
-	  // set back a spectrum to data cube
-	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
-	} // end of polarization loop
-      } // end of chunk row loop
-      // write back data cube to Output MS
-      sdh_->fillCubeToOutputMs(vb, data_chunk);
-    } // end of vi loop
-  } // end of chunk loop
-  finalize_process();
-}
-
-
-void SingleDishMS::do_scale(float const factor,
-			    size_t const num_data, float *data)
-{
-  for (size_t i=0; i < num_data; ++i) 
-    data[i] *= factor;
-}
-
-
 // Baseline subtraction by per spectrum fitting parameters
-void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
+void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 					      string const& out_ms_name,
 					      string const& out_bltable_name,
 					      bool const& do_subtract,
@@ -1769,6 +1669,105 @@ void SingleDishMS::subtract_baseline_variable(string const& in_column_name,
     destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
     ++ctxiter;
   }
+}
+
+// --------------------------------------------------------------------
+// this function is temporarily copied from sakura code to get 
+// positions of cubic spline boundaries. (2015/4/6 WK)
+// --------------------------------------------------------------------
+void SingleDishMS::GetBoundariesOfPiecewiseData(size_t num_mask,
+						bool const *mask, 
+						size_t num_pieces, 
+						double *boundary) {
+	assert(num_pieces > 0);
+
+	size_t num_unmasked_data = 0;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (mask[i])
+			++num_unmasked_data;
+	}
+	boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
+	size_t idx = 1;
+	size_t count_unmasked_data = 0;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (idx == num_pieces)
+			break;
+		if (mask[i]) {
+			if (count_unmasked_data
+					>= static_cast<double>(num_unmasked_data * idx)
+							/ static_cast<double>(num_pieces)) {
+				boundary[idx] = static_cast<double>(i);
+				++idx;
+			}
+			++count_unmasked_data;
+		}
+	}
+}
+// --------------------------------------------------------------------
+
+void SingleDishMS::scale(float const factor,
+			  string const& in_column_name,
+			  string const& out_ms_name)
+{
+  LogIO os(_ORIGIN);
+  os << "Multiplying scaling factor = " << factor << LogIO::POST;
+  // in_ms = out_ms
+  // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
+  // no iteration is necessary for the processing.
+  // procedure
+  // 1. iterate over MS
+  // 2. pick single spectrum from in_column
+  // 3. multiply a scaling factor to each spectrum
+  // 4. put single spectrum (or a block of spectra) to out_column
+  prepare_for_process(in_column_name, out_ms_name);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+  // //DEBUG
+  // Block<Int> scol = vi->getSortColumns().getColumnIds();
+  // cout << "sort columns of iterator = ";
+  // for (size_t i = 0; i < scol.nelements(); ++i)
+  //   cout << scol[i] << ", ";
+  // cout << endl;
+  // cout << "default added = " << (vi->getSortColumns().shouldAddDefaultColumns()? 'T' : 'F') << endl;
+
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    for (vi->origin(); vi->more(); vi->next()) {
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      Matrix<Float> data_row(num_pol,num_chan);
+      SakuraAlignedArray<float> spectrum(num_chan);
+      // get a data cube (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      // loop over MS rows
+      for (size_t irow=0; irow < num_row; ++irow) {
+	// loop over polarization
+	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  // get a spectrum from data cube
+	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum);
+
+	  // actual execution of single spectrum
+	  do_scale(factor, num_chan, spectrum.data);
+
+	  // set back a spectrum to data cube
+	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
+	} // end of polarization loop
+      } // end of chunk row loop
+      // write back data cube to Output MS
+      sdh_->fillCubeToOutputMs(vb, data_chunk);
+    } // end of vi loop
+  } // end of chunk loop
+  finalize_process();
+}
+
+
+void SingleDishMS::do_scale(float const factor,
+			    size_t const num_data, float *data)
+{
+  for (size_t i=0; i < num_data; ++i) 
+    data[i] *= factor;
 }
 
 }  // End of casa namespace.
