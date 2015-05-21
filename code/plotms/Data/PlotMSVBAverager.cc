@@ -372,7 +372,7 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 //    nChan_p          Int                  No. of channels in the avg. buffer
 //    avrow_p          Int                  Start row of current accumulation
 //    avBuf_p          vi::CalVisBuffer2    Averaging buffer
-//
+//  
 
   if (prtlev()>2) cout << " PMSVBA::accumulate() " << endl;
 
@@ -426,7 +426,8 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 	//   (output is unflagged, input is flagged)
 	Bool acc(False);
 
-	if (!vb.flagCube()(cor,chn,ibln)) { // input UNflagged
+    IPosition flagPos(3, cor, chn, ibln);
+	if (!vb.flagCube()(flagPos)) { // input UNflagged
 	  // we will accumulate
 	  acc=True;
 	  if (avgFlagCube_(cor,chn,obln)) {  // output flagged
@@ -582,7 +583,8 @@ void PlotMSVBAverager::antAccumulate (vi::VisBuffer2& vb)
 	Bool acc_i(False),acc_j(False);
 
 	// Consider accumulation according to state of flags
-	if (!vb.flagCube()(cor,chn,ibln)) { // input UNflagged
+    IPosition flagPos(3, cor, chn, ibln);
+	if (!vb.flagCube()(flagPos)) { // input UNflagged
 	  // we will accumulate both ants
 	  acc_i = acc_j = True;
 
