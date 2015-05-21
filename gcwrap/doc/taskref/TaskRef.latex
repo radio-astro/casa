@@ -1,4 +1,4 @@
-\documentclass{book}
+\documentclass[oneside,openany]{book}
 \setcounter{tocdepth}{3}
 \usepackage{longtable,epsfig}
 \usepackage{makeidx}
