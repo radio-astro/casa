@@ -1,5 +1,6 @@
 # sd task for imaging
 import os
+import re
 import numpy
 
 from taskinit import casalog, gentools, qatool
@@ -283,6 +284,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 #                    and (self.antenna.find(';')==-1):
 #                 self.antenna = self.antenna + '&&&'
 
+    def _configure_map_property(self):
+        selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
+
         # stokes
         if self.stokes == '':
             self.stokes = 'I'
@@ -342,6 +346,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['movingsource'] = self.ephemsrcname
 
         # channel map
+        imhelper = cleanhelper(self.imager, self.infiles, casalog=casalog)
+        imhelper.sortvislist(self.spw, self.mode, self.width)
         spwsel = str(',').join([str(spwid) for spwid in selection_ids['spw']])
         srestf = self.imager_param['restfreq'] if is_string_type(self.imager_param['restfreq']) else "%fHz" % self.imager_param['restfreq']
         (imnchan, imstart, imwidth) = imhelper.setChannelizeDefault(self.mode, spwsel, self.field, self.nchan, self.start, self.width, self.imager_param['outframe'], self.veltype,self.imager_param['phasecenter'], srestf)
@@ -368,7 +374,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def execute(self):
         # imaging
         casalog.post("Start imaging...", "INFO")
-        casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
         if len(self.infiles) == 1:
             self.open_imager(self.infiles[0])
             selection_ids = self.get_selection_idx_for_ms(0)
@@ -399,6 +404,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                                       scan=selection_ids['scan'])
                 # need to do this
                 self.is_imager_opened = True
+                
+        # it should be called after infiles are registered to imager
+        self._configure_map_property()
+        
+        casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
+
         self.imager.defineimage(**self.imager_param)#self.__get_param())
         self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth, minweight = 0.)
@@ -609,85 +620,50 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         ret_dict = {}
         
         colname = self.pointingcolumn.upper()
-        subname = os.path.basename(self.pointing_table)
-        self.open_table(self.pointing_table)
-        try:
-            dirinfo = self.table.getcolkeywords(colname)
-            pointing = self.table.getcol(colname)
-        finally:
+
+        # MSs should be registered to imager
+        if not self.is_imager_opened:
+            raise RuntimeError('Internal error: imager should be opened here.')
+        
+        if self.phasecenter == "":
+            # defaut is J2000
+            base_mref = 'J2000'
+        elif isinstance(self.phasecenter, int) or self.phasecenter.isdigit():
+            # may be field id
+            self.open_table(self.field_table)
+            base_mref = self.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']
             self.close_table()
+        else:
+            # may be phasecenter is explicitly specified
+            pattern = '^(-?[0-9.]+([eE]?-?[0-9])?)|(-?[0-9][:h][0-9][:m][0-9.]s?)|(-?[0-9][.d][0-9][.d][0-9.]s?)$'
+            items = self.phasecenter.split()
+            base_mref = 'J2000'
+            for i in items:
+                s = i.strip()
+                if re.match(pattern, s) is None:
+                    base_mref = s
 
-        base_unit = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
-                    else ['rad', 'rad']
-        base_mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
-                    else 'J2000'
+        mapextent = self.imager.mapextent(ref=base_mref, movingsource=self.ephemsrcname, 
+                                          pointingcolumntouse=colname)
+        if mapextent['status'] is True:
+            qheight = my_qa.quantity(mapextent['extent'][1], 'rad')
+            qwidth = my_qa.quantity(mapextent['extent'][0], 'rad')
+            qcent0 = my_qa.quantity(mapextent['center'][0], 'rad')
+            qcent1 = my_qa.quantity(mapextent['center'][1], 'rad')
+            scenter = '%s %s %s'%(base_mref, my_qa.formxxx(qcent0, 'hms'), 
+                                  my_qa.formxxx(qcent1, 'dms'))
 
-        if is_string_type(self.phasecenter) and len(self.phasecenter) > 0:
-            rf = self.phasecenter.split()[0]
-            if rf != '' and rf != base_mref:
-                msg = "You are attempting to convert spatial coordinate frame. " +\
-                      "Pointing extent may not accrate in that case"
-                casalog.post(msg, priority='warn')
-
-        ymax_g = my_qa.convert('-90deg', base_unit[1])
-        ymin_g = my_qa.convert('90deg', base_unit[1])
-        xmax_g = my_qa.convert('-360deg', base_unit[0])
-        xmin_g = my_qa.convert('360deg', base_unit[0])
-        for name in self.infiles:
-            ptgname = name + "/" + subname
-            if not os.path.exists(ptgname):
-                raise Exception, "Could not find POINTING subtable, %s " % ptgname
-
-            self.open_table(ptgname)
-            try:
-                dirinfo = self.table.getcolkeywords(colname)
-                pointing = self.table.getcol(colname)
-            finally:
-                self.close_table()
-
-            dir_unit = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
-                       else ['rad', 'rad']
-            mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
-                   else 'J2000'
-
-            if mref.upper() != base_mref.upper():
-                msg = "Can not calculate map extent. Coordinate references are not the same in all MSes."
-                raise Exception, msg
-            
-            # Y-extent
-            qymax_loc = my_qa.convert(my_qa.quantity(pointing[1][0].max(), dir_unit[1]), base_unit[1])
-            qymin_loc = my_qa.convert(my_qa.quantity(pointing[1][0].min(), dir_unit[1]), base_unit[1])
-            # X-extent
-            x_to_rad = my_qa.convert(my_qa.quantity(1., dir_unit[0]), 'rad')['value']
-            xrad = pointing[0][0] * x_to_rad
-            del pointing
-            (xmin_rad, xmax_rad) = self._get_x_minmax(xrad)
-            qxmax_loc = my_qa.convert(my_qa.quantity(xmax_rad, 'rad'), base_unit[0])
-            qxmin_loc = my_qa.convert(my_qa.quantity(xmin_rad, 'rad'), base_unit[0])
-            # Global limit
-            xmax_g = my_qa.quantity(max(xmax_g['value'], qxmax_loc['value']), base_unit[0])
-            xmin_g = my_qa.quantity(min(xmin_g['value'], qxmin_loc['value']), base_unit[0])
-            ymax_g = my_qa.quantity(max(ymax_g['value'], qymax_loc['value']), base_unit[1])
-            ymin_g = my_qa.quantity(min(ymin_g['value'], qymin_loc['value']), base_unit[1])
-        # End of infiles loop
-
-        # POINTING center
-        qcentx = my_qa.quantity( 0.5*(xmax_g['value']+xmin_g['value']), base_unit[0] )
-        qcenty = my_qa.quantity( 0.5*(ymax_g['value']+ymin_g['value']), base_unit[1] )
-        # POINTING extent
-        qheight = my_qa.sub(ymax_g, ymin_g)
-        width_rad = my_qa.convert(my_qa.sub(xmax_g, xmin_g), 'rad')['value'] * \
-                    numpy.cos(my_qa.convert(qcenty, 'rad')['value'])
-        qwidth = my_qa.convert(my_qa.quantity(width_rad, 'rad'), base_unit[0])
-        scenter = "%s %s %s" % (base_mref, my_qa.formxxx(qcentx, "hms"), \
-                  my_qa.formxxx(qcenty, "dms"))
-
-        casalog.post("- Pointing center: %s" % scenter)
-        casalog.post("- Pointing extent: [%s, %s] (projected)" % (my_qa.tos(qwidth), \
+            casalog.post("- Pointing center: %s" % scenter)
+            casalog.post("- Pointing extent: [%s, %s] (projected)" % (my_qa.tos(qwidth), \
                                                                   my_qa.tos(qheight)))
-        ret_dict['center'] = scenter
-        ret_dict['width'] = qwidth
-        ret_dict['height'] = qheight
+            ret_dict['center'] = scenter
+            ret_dict['width'] = qwidth
+            ret_dict['height'] = qheight
+        else:
+            casalog.post('Failed to derive map extent from the MSs registered to the imager probably due to mising valid data.', priority='SEVERE')
+            ret_dict['center'] = ''
+            ret_dict['width'] = my_qa.quantity(0.0, 'rad')
+            ret_dict['height'] = my_qa.quantity(0.0, 'rad')
         return ret_dict
 
 

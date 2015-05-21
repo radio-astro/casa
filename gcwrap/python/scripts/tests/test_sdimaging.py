@@ -1179,7 +1179,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = ''
         region =  self.region_all
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1191,7 +1192,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '16'
         region =  self.region_topright
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1202,7 +1204,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '<16'
         region =  self.region_left
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1213,7 +1216,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '>16'
         region =  self.region_bottomright
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1224,7 +1228,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '16~17'
         region =  self.region_right
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1235,7 +1240,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '16,17'
         region =  self.region_right
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1246,7 +1252,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         scan = '16,>16'
         region =  self.region_right
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,scan=scan,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1260,7 +1267,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = ''
         region =  self.region_all
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1271,7 +1279,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '6'
         region =  self.region_bottomleft
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1282,7 +1291,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '<7'
         region =  self.region_bottom
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1293,7 +1303,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '>6'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1304,7 +1315,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '7~8'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1315,7 +1327,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '5,7'
         region =  self.region_right
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1326,7 +1339,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = '7,>7'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1337,7 +1351,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = 'bottom'
         region =  self.region_bottom
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1348,7 +1363,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = 'top*'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1359,7 +1375,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = 'topright,topleft'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1370,7 +1387,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         field = 'topr*,>7'
         region =  self.region_top
         infile = self.miscsel_ms
-        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,field=field,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
         refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
@@ -1386,7 +1404,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
         region =  self.spw_region_all
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1400,7 +1419,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1414,7 +1434,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1428,7 +1449,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1442,7 +1464,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1456,7 +1479,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1470,7 +1494,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1484,7 +1509,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1499,7 +1525,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
         region =  self.spw_region_all
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1519,7 +1546,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_all
         infile = self.unifreq_ms
         flux_list = self.spw_flux_unifreq
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1536,7 +1564,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1556,7 +1585,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
         # end of temporal change
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1575,7 +1605,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1589,7 +1620,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1603,7 +1635,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1622,7 +1655,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1636,7 +1670,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1656,7 +1691,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
         # end of temporal change
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1675,7 +1711,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
         selspw = range(len(flux_list))
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1689,7 +1726,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1703,7 +1741,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1723,7 +1762,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.spwsel_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
@@ -1757,7 +1797,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         region =  self.spw_region_chan1
         infile = self.unifreq_ms
         flux_list = self.__get_flux_value(infile)
-        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile)
+        task_param = dict(infiles=infile,spw=spw,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.spw_imsize_auto)
         flux = sum([flux_list[idx] for idx in selspw])/float(len(selspw))
         refstats = merge_dict(self.spw_stat_common, construct_refstat_uniform(flux, region['blc'], region['trc']) )
         out_shape = (self.spw_imsize_auto[0],self.spw_imsize_auto[1],1,self.spw_nchan)
