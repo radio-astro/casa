@@ -93,7 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     os << "[" << imagestore->getName() << "]";
-    os << " Run " << itsAlgorithmName << " minor-cycle on " ;
+    os << " Run " << itsAlgorithmName << " minor-cycle " ;
+    if( nSubChans>1 || nSubPols>1 ) os << "on ";
     if( nSubChans >1 ) os << nSubChans << " chans " ;
     if( nSubPols >1 ) os << nSubPols << " pols ";
     os << "| CycleThreshold=" << loopcontrols.getCycleThreshold()

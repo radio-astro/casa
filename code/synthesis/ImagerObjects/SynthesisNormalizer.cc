@@ -109,8 +109,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      cout << "Chosen normtype : " << itsNormType << endl;
 
       // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
+      /*
       if( normpars.isDefined("mtype") )  // A single string
 	{ itsMapperType = normpars.asString( RecordFieldId("mtype")); }
+      else
+	{ itsMapperType = "default";}
+      */
+
+      if( normpars.isDefined("deconvolver") )  // A single string
+	{ String dec = normpars.asString( RecordFieldId("deconvolver")); 
+	  if (dec == "mtmfs") { itsMapperType="multiterm"; }
+	  else itsMapperType="default";
+	}
       else
 	{ itsMapperType = "default";}
 

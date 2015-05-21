@@ -210,15 +210,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Imaging/Gridding Parameters                                                      -->
 <!--============================================== -->
 
-    <param type="string" name="gridmode">
+    <param type="string" name="gridder">
             <description>Gridding options (standard, widefield, mosaic, imagemosaic, awproject)</description>
 	    <value type="string">standard</value>
 	    <allowed kind="enum">
 	      <value>standard</value>
+	      <value>ft</value>
+	      <value>gridft</value>
               <value>widefield</value>
+              <value>wproject</value>
+              <value>wprojectft</value>
 	      <value>mosaic</value>
+	      <value>ftmosaic</value>
+	      <value>mosaicft</value>
 	      <value>imagemosaic</value>
 	      <value>awproject</value>
+	      <value>awprojectft</value>
 	    </allowed>
     </param>
 
@@ -544,14 +551,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
      </when>
 
-     <when param="gridmode">
+     <when param="gridder">
        <equals type="string" value="standard">
        </equals>
        <equals type="string" value="widefield">
 	 <default param="wprojplanes"><value>1</value></default>
 	 <default param="facets"><value>1</value></default>
        </equals>
+       <equals type="string" value="wproject">
+	 <default param="wprojplanes"><value>1</value></default>
+       </equals>
+       <equals type="string" value="wprojectft">
+	 <default param="wprojplanes"><value>1</value></default>
+       </equals>
        <equals type="string" value="mosaic">
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+       </equals>
+       <equals type="string" value="mosaicft">
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+       </equals>
+       <equals type="string" value="ftmosaic">
 	 <default param="pblimit"><value>0.01</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
@@ -561,6 +582,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
        <equals type="string" value="awproject">
+	 <default param="wprojplanes"><value>1</value></default>
+	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="normtype"><value>"flatnoise"</value></default>
+	 <default param="psterm"><value>False</value></default>
+	 <default param="cfcache"><value>""</value></default>
+	 <default param="computepastep"><value>360.0</value></default>
+	 <default param="rotatepastep"><value>5.0</value></default>
+	 <default param="wbawp"><value>False</value></default>
+	 <default param="conjbeams"><value>False</value></default>
+       </equals>
+       <equals type="string" value="awprojectft">
 	 <default param="wprojplanes"><value>1</value></default>
 	 <default param="pblimit"><value>0.01</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>

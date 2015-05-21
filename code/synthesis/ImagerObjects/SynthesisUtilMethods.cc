@@ -998,7 +998,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }//projection
 
 	// Frequency frame stuff. 
-	err += readVal( inrec, String("mode"), mode);
+	err += readVal( inrec, String("specmode"), mode);
         err += readVal( inrec, String("outframe"), frame);
         qmframe="";
         // mveltype is only set when start/step is given in mdoppler
@@ -1305,6 +1305,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
 
+	// Force nchan=1 for anything other than cube modes...
+	if(mode=="mfs") nchan=1;
+
 	err += verify();
 	
       }
@@ -1358,6 +1361,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //// default is nt=2 but deconvolver != mtmfs by default.
     //    if( nchan>1 and nTaylorTerms>1 )
     //  {err += "Cannot have more than one channel with ntaylorterms>1\n";}
+
+    if( (mode=="mfs") && nchan>1 )
+      { err += "specmode=mfs cannot have nchan="+String::toString(nchan)+" (must be 1)\n";}
 
     if( ! stokes.matches("I") && ! stokes.matches("Q") && 
 	! stokes.matches("U") && ! stokes.matches("V") && 
@@ -1458,7 +1464,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("phasecenterfieldid",phaseCenterFieldId);
     impar.define("projection", (useNCP? "NCP" : projection.name()) );
 
-    impar.define("mode", mode );
+    impar.define("specmode", mode );
     // start and step can be one of these types
     if( start!="" )
       { 
@@ -2479,13 +2485,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	
 	// FTMachine parameters
-	err += readVal( inrec, String("ftmachine"), ftmachine );
+	err += readVal( inrec, String("gridder"), gridder );
 	err += readVal( inrec, String("padding"), padding );
 	err += readVal( inrec, String("useautocorr"), useAutoCorr );
 	err += readVal( inrec, String("usedoubleprec"), useDoublePrec );
 	err += readVal( inrec, String("wprojplanes"), wprojplanes );
 	err += readVal( inrec, String("convfunc"), convFunc );
-	
+
+	//// convert 'gridder' to 'ftmachine' and 'mtype'
+	ftmachine="gridft";
+	mType="default";
+	if(gridder=="ft" || gridder=="gridft" || gridder=="standard" )
+	  { ftmachine="gridft"; }
+	if( gridder=="widefield" && wprojplanes>1)
+	  { ftmachine="wprojectft";}
+	if( gridder=="wproject" || gridder=="wprojectft")
+	  {ftmachine="wprojectft"; }
+
+	if(gridder=="ftmosaic" || gridder=="mosaicft" )
+	  { ftmachine="mosaicft"; }
+	if(gridder=="imagemosaic") {
+	    mType="imagemosaic";
+	    if (wprojplanes>1){ ftmachine="wprojectft"; }
+	  }
+	if(gridder=="awproject" || gridder=="awprojectft")
+	  {ftmachine="awprojectft";}
+
+	String deconvolver;
+	err += readVal( inrec, String("deconvolver"), deconvolver );
+	if( deconvolver== "mtmfs" ) 
+	  { mType="multiterm"; }// Takes precedence over imagemosaic
+
 	// facets	
 	err += readVal( inrec, String("facets"), facets);
 
@@ -2509,8 +2539,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("computepastep"), computePAStep );
 	err += readVal( inrec, String("rotatepastep"), rotatePAStep );
 
-	// Single or MultiTerm mapper
-	err += readVal( inrec, String("mtype"), mType );
+	// Single or MultiTerm mapper : read in 'deconvolver' and set mType here.
+	//	err += readVal( inrec, String("mtype"), mType );
 
 	err += verify();
 	
@@ -2548,6 +2578,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( facets < 1 )
       {err += "Must have at least 1 facet\n"; }
 
+    if(ftmachine=="wproject" && wprojplanes<=1)
+      {err += "The wproject gridder must be accompanied with wprojplanes>1\n";}
+
     if((ftmachine=="awprojectft") && (facets>1) )
       {err += "The awprojectft gridder supports A- and W-Projection. "
 	  "Instead of using facets>1 to deal with the W-term, please set the number of wprojplanes to a value > 1 "
@@ -2565,6 +2598,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // FTMachine parameters
     //ftmachine="GridFT";
     ftmachine="gridft";
+    gridder=ftmachine;
     padding=1.2;
     useAutoCorr=False;
     useDoublePrec=True; 
@@ -2604,7 +2638,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record gridpar;
 
     // FTMachine params
-    gridpar.define("ftmachine", ftmachine);
     gridpar.define("padding", padding);
     gridpar.define("useautocorr",useAutoCorr );
     gridpar.define("usedoubleprec", useDoublePrec);
@@ -2630,7 +2663,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("computepastep", computePAStep);
     gridpar.define("rotatepastep", rotatePAStep);
 
-    gridpar.define("mtype", mType);
+    if( mType=="multiterm") gridpar.define("deconvolver","mtmfs");
+    ///    else gridpar.define("deconvolver","singleterm");
+
+    if( mType=="imagemosaic") gridpar.define("gridder","imagemosaic");
+    else gridpar.define("gridder", gridder);
+
+    //    gridpar.define("mtype", mType);
 
     return gridpar;
   }

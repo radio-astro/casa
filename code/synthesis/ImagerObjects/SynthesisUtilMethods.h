@@ -266,7 +266,7 @@ public:
   Record toRecord() const;
 
   // FTMachine setup
-  String ftmachine, convFunc;
+  String gridder, ftmachine, convFunc;
   Int wprojplanes;
   Bool useDoublePrec, useAutoCorr; 
   Float padding;

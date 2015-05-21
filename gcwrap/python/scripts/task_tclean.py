@@ -57,7 +57,7 @@ def tclean(
     interpolation,#='',
     ## 
     ####### Gridding parameters
-    gridmode,#='ft', 
+    gridder,#='ft', 
     facets,#=1,
 
     wprojplanes,#=1,
@@ -125,33 +125,33 @@ def tclean(
     ####  Try to minimize this section..... ideally should not exist.
     #####################################################
 
-    ### This is temporary..... get rid of it.
-    if gridmode=='imagemosaic':
-        mtype='imagemosaic'
-    elif deconvolver=='mtmfs':
-        mtype='multiterm'
-    else:
-        mtype='default'
-
-
-    ### Set the ftmachine.
-    ftmachine = 'gridft'
-    if gridmode=='standard':
-        ftmachine='gridft'
-    elif gridmode=='widefield':
-        if wprojplanes>1:
-            ftmachine='wprojectft'
-    elif gridmode=='mosaic':
-        ftmachine='mosaicft'
-    elif gridmode=='imagemosaic':
-        if wprojplanes>1:
-            ftmachine='wprojectft'
-    elif gridmode=='awproject':
-        ftmachine='awprojectft'
-    else:
-        print 'Invalid gridmode'
-        return
-
+    ### This is temporary..... get rid of it.  Until then, outlierfiles have to hold these params.
+#    if gridder=='imagemosaic':
+#        mtype='imagemosaic'
+#    elif deconvolver=='mtmfs':
+#        mtype='multiterm'
+#    else:
+#        mtype='default'
+#
+#
+#    ### Set the ftmachine.
+#    ftmachine = 'gridft'
+#    if gridder=='standard':
+#        ftmachine='gridft'
+#    elif gridder=='widefield':
+#        if wprojplanes>1:
+#            ftmachine='wprojectft'
+#    elif gridder=='mosaic':
+#        ftmachine='mosaicft'
+#    elif gridder=='imagemosaic':
+#        if wprojplanes>1:
+#            ftmachine='wprojectft'
+#    elif gridder=='awproject':
+#        ftmachine='awprojectft'
+#    else:
+#        print 'Invalid gridder'
+#        return
+#
     ### Scratch column...
     usescratch=True
     readonly=True
@@ -195,7 +195,7 @@ def tclean(
         startmodel=startmodel,
 
         ### Spectral Image Coords
-        mode=specmode,
+        specmode=specmode,
         reffreq=reffreq,
         nchan=nchan,
         start=start,
@@ -207,7 +207,8 @@ def tclean(
         sysvelframe=sysvelframe,
         interpolation=interpolation,
 
-        ftmachine=ftmachine,
+        gridder=gridder,
+#        ftmachine=ftmachine,
         facets=facets,
 
         wprojplanes=wprojplanes,
@@ -247,7 +248,7 @@ def tclean(
         scales=scales,
         ntaylorterms=ntaylorterms,
         restoringbeam=restoringbeam,
-        mtype=mtype,
+#        mtype=mtype,
         mask=mask,
 
         usescratch=usescratch,

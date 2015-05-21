@@ -1097,7 +1097,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIImageStoreMultiTerm::calcSensitivity()
   {
-    LogIO os( LogOrigin("SIImageStore","calcSensitivity",WHERE) );
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","calcSensitivity",WHERE) );
 
     // Construct Hessian.
     

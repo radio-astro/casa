@@ -911,7 +911,7 @@ class ImagerParameters():
                  startmodel='', 
 
                  ## Spectral Parameters
-                 mode='mfs', 
+                 specmode='mfs', 
                  reffreq='',
                  nchan=1, 
                  start='', 
@@ -923,7 +923,8 @@ class ImagerParameters():
                  sysvelframe='',
                  interpolation='nearest',
 
-                 ftmachine='gridft', 
+                 gridder="standard",
+#                 ftmachine='gridft', 
                  facets=1, 
 
                  wprojplanes=1,
@@ -963,11 +964,12 @@ class ImagerParameters():
                  scales=[],
                  ntaylorterms=1, 
                  restoringbeam=[],
-                 mtype='default',
+#                 mtype='default',
                  mask='',
 
                  usescratch=True,
                  readonly=True,
+                 savemodel="none",
 
                  workdir='',
                  ):
@@ -990,28 +992,27 @@ class ImagerParameters():
         ######### Image definition
         self.allimpars = { self.defaultKey :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cell':cell, 'phasecenter':phasecenter, 'stokes': stokes,
-                                 #'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
-                                 #'freqstart':freqstart, 'freqstep':freqstep,
-                                 #'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
-                                 'mode':mode, 'start':start, 'width':width, 'veltype':veltype,
+                                 'specmode':specmode, 'start':start, 'width':width, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
                                  'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
                                  'overwrite':overwrite, 'startmodel':startmodel,}    }
         ######### Gridding
-        self.allgridpars = { self.defaultKey :{'ftmachine':ftmachine, 
+        self.allgridpars = { self.defaultKey :{'gridder':gridder,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
-                                   'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
-                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes   }     }
+                                   'rotatepastep':rotatepastep, #'mtype':mtype, # 'weightlimit':weightlimit,
+                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes,
+                                   'deconvolver':deconvolver }     }
         ######### weighting
         self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
 
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-        self.allnormpars = { self.defaultKey : {'mtype': mtype,
+        self.allnormpars = { self.defaultKey : {#'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
-                                 'normtype':normtype, 'workdir':workdir }     }
+                                 'normtype':normtype, 'workdir':workdir,
+                                 'deconvolver':deconvolver}     }
 
         ######### Deconvolution
         self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
@@ -1029,11 +1030,11 @@ class ImagerParameters():
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cell','phasecenter','startmodel',
                              'start','width',
-                             'ntaylorterms','reffreq','mode']
-        self.outgridparlist = ['ftmachine','mtype']
+                             'ntaylorterms','reffreq','specmode']
+        self.outgridparlist = ['gridder','deconvolver','wprojplanes']
         self.outweightparlist=[]
         self.outdecparlist=['deconvolver','startmodel','ntaylorterms','mask']
-        self.outnormparlist=['mtype','weightlimit','ntaylorterms']
+        self.outnormparlist=['deconvolver','weightlimit','ntaylorterms']
 #        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 
         ret = self.checkParameters()
@@ -1086,17 +1087,11 @@ class ImagerParameters():
 
         ### Copy them from 'impars' to 'normpars' and 'decpars'
         self.iterpars['allimages']={}
-#        self.iterpars['allntaylorterms']={}
         for immod in self.allimpars.keys() :
             self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'multiterm': (self.alldecpars[immod]['deconvolver']=='mtmfs') }
-##            self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
 
-#            if len(self.allnormpars[immod]['workdir'])==0:
-#                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
-
-        
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
 #            casalog.post('Parameter Errors : \n' + errs,'WARN')
@@ -1315,6 +1310,7 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'gridpars', 'wprojplanes', 'int' )
 #        returnlist = self.evalToTarget( returnlist, 'impars', 'reffreq', 'strvec' )
 
         ## Extra parsing for a few parameters.
