@@ -16,6 +16,7 @@
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisSetUtil.h>
 
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
 #include <singledish/SingleDish/BLParameterParser.h>
@@ -165,7 +166,6 @@ void SingleDishMS::setAverage(Record const &average, bool const verbose)
     if (tweightExpr != "")
       {os << "- Averaging weight: " << tweightExpr << LogIO::POST;}
 
-    os << LogIO::WARN << "NOTE: Averaging is not yet implemented" << LogIO::POST;
   }
 }
 
@@ -237,13 +237,15 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   os << LogIO::DEBUG1 << str << LogIO::POST;
   // Open the MS and select data
   sdh_->open();
-  // set large timebin
+  // set large timebin if not averaging
   Double timeBin;
   int exists = configure_param.fieldNumber("timebin");
   if (exists<0){
     timeBin = 1.0e8;
   } else {
-    configure_param.get(exists, timeBin);
+    String timebin_string;
+    configure_param.get(exists, timebin_string);
+    timeBin = casaQuantity(timebin_string).get("s").getValue();
   }
   // set sort column
   sdh_->setSortColumns(sortColumns, addDefaultSortCols, timeBin);
@@ -1808,3 +1810,4 @@ void SingleDishMS::do_scale(float const factor,
 }
 
 }  // End of casa namespace.
+

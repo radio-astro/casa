@@ -285,28 +285,45 @@ void SDMSManager::setIterationApproach()
   }
   // User column is set.
   uInt nSortColumns = userSortCols_.nelements();
-  Block<Int> removeCols(3);
+  Block<Int> removeCols(3), addCols(2);
   uInt nRemoveCols = 0 ;
+  uInt nAddCols = 0 ;
   logger_p.origin(_ORIGIN);
   if (timespan_p.contains("scan") && (getBlockId(userSortCols_, MS::SCAN_NUMBER)>-1)) {
-    logger_p << LogIO::WARN << "Combining data through scans for time average."
+    logger_p << LogIO::WARN << "Combining data through scans for time average. "
 	     << "Removing SCAN_NUMBER from user sort list." << LogIO::POST;    
     removeCols[nRemoveCols] = MS::SCAN_NUMBER;
     nRemoveCols += 1;
   }
   if (timespan_p.contains("state") && (getBlockId(userSortCols_, MS::STATE_ID)>-1)) {
-    logger_p << LogIO::WARN << "Combining data through scans for time average."
+    logger_p << LogIO::WARN << "Combining data through state for time average. "
 	     <<  "Removing STATE_ID form user sort list." << LogIO::POST;
     removeCols[nRemoveCols] = MS::STATE_ID;
     nRemoveCols += 1;
   }
   if (combinespws_p && (getBlockId(userSortCols_, MS::DATA_DESC_ID)>-1) ) {
-    logger_p << LogIO::WARN << "Combining data from selected spectral windows."
+    logger_p << LogIO::WARN << "Combining data from selected spectral windows. "
 	     << "Removing DATA_DESC_ID from user sort list" << LogIO::POST;
     removeCols[nRemoveCols] = MS::DATA_DESC_ID;
     nRemoveCols += 1;
   }
-  nSortColumns -= nRemoveCols;
+  if (timeAverage_p) {
+    if (!timespan_p.contains("scan")
+	&& (getBlockId(userSortCols_, MS::SCAN_NUMBER)<0)) {
+    logger_p << LogIO::WARN << "Splitting data by scans for time average. "
+	     <<  "Adding SCAN_NUMBER to user sort list." << LogIO::POST;
+    addCols[nAddCols] = MS::SCAN_NUMBER;
+    nAddCols += 1;
+    }
+    if (!timespan_p.contains("state")
+	&& (getBlockId(userSortCols_, MS::STATE_ID)<0)) {
+    logger_p << LogIO::WARN << "Splitting data by state for time average. "
+	     <<  "Adding STATE_ID to user sort list." << LogIO::POST;
+    addCols[nAddCols] = MS::STATE_ID;
+    nAddCols += 1;
+    }
+  }
+  nSortColumns += (nAddCols - nRemoveCols);
   sortColumns_p = Block<Int>(nSortColumns);
   uInt sortColumnIndex = 0;
 
@@ -321,6 +338,11 @@ void SDMSManager::setIterationApproach()
       ++sortColumnIndex;
     }
   }
+  for (size_t i=0; i<nAddCols; ++i) {
+    sortColumns_p[sortColumnIndex] = addCols[i];
+    ++sortColumnIndex;
+  }
+
   ostringstream oss;
   for (size_t i=0;i<sortColumns_p.nelements(); ++i)
     oss << sortColumns_p[i] << ", ";
