@@ -960,6 +960,12 @@ protected:
   //returns if mLocation_p is set (= non-default MPosition)
   Bool nonDefaultLocation();
  
+  // implementation of mapExtent
+  Bool getMapExtent(const MeasurementSet &ms,
+          const String &referenceFrame, const String &movingSource,
+          const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
+          Vector<Double> &trc, Vector<Double> &extent);
+
   ComponentList* componentList_p;
 
   String scaleMethod_p;   // "nscales"   or  "uservector"

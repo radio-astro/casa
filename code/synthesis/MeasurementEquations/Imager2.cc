@@ -4643,14 +4643,21 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 Bool Imager::mapExtent(const String &referenceFrame, const String &movingSource,
         const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
         Vector<Double> &trc, Vector<Double> &extent) {
+    return getMapExtent(*mssel_p, referenceFrame, movingSource, pointingColumn,
+            center, blc, trc, extent);
+}
+
+Bool Imager::getMapExtent(const MeasurementSet &ms, const String &referenceFrame,
+        const String &movingSource, const String &pointingColumn,
+        Vector<Double> &center, Vector<Double> &blc, Vector<Double> &trc, Vector<Double> &extent) {
     INITIALIZE_DIRECTION_VECTOR(center);
     INITIALIZE_DIRECTION_VECTOR(blc);
     INITIALIZE_DIRECTION_VECTOR(trc);
     INITIALIZE_DIRECTION_VECTOR(extent);
 
     try {
-        //cout << "mssel_p->nrow() = " << mssel_p->nrow() << endl;
-        PointingDirectionCalculator calc(*mssel_p);
+        //cout << "ms.nrow() = " << ms.nrow() << endl;
+        PointingDirectionCalculator calc(ms);
         //cout << "calc instantiated" << endl;
 
         calc.setDirectionColumn(pointingColumn);
@@ -4725,9 +4732,12 @@ Bool Imager::mapExtent(const String &referenceFrame, const String &movingSource,
         //cout << "result: blc " << blc << " trc " << trc << endl;
         //cout << "result: extent " << extent << endl;
 
+        // declination correction factor
+        Double declinationCorrection = 0.0;
         // center
         if (isOffsetColumn) {
             center = 0.0;
+            declinationCorrection = cos((blc[1] + trc[1]) / 2.0);
         }
         else if (doMovingSourceCorrection) {
             // shift center to moving source position at the time
@@ -4743,19 +4753,26 @@ Bool Imager::mapExtent(const String &referenceFrame, const String &movingSource,
             MDirection::Ref outRef(outDirectionType, referenceMeasFrame);
             MDirection sourceDirection = MDirection::Convert(azelDir, outRef)();
             center = sourceDirection.getAngle("rad").getValue();
+            declinationCorrection = cos(center[1]);
         }
         else {
             center = (blc + trc) / 2.0;
+            declinationCorrection = cos(center[1]);
         }
+        assert(declinationCorrection != 0.0);
+        //cout << "declinationCorrection = " << declinationCorrection << endl;
         //cout << "result: center " << center << endl;
+
+        // apply declinationCorrection to extent[0]
+        extent[0] *= declinationCorrection;
     }
     catch (AipsError &e) {
-        LogIO os(LogOrigin("Imager", "mapExtent", WHERE));
+        LogIO os(LogOrigin("Imager", "getMapExtent", WHERE));
         os << LogIO::SEVERE << "Failed due to the rror \"" << e.getMesg() << "\"" << LogIO::POST;
         return False;
     }
     catch (...) {
-        LogIO os(LogOrigin("Imager", "mapExtent", WHERE));
+        LogIO os(LogOrigin("Imager", "getMapExtent", WHERE));
         os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
         throw;
         return False;

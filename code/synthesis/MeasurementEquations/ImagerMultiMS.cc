@@ -25,6 +25,8 @@
 //#
 //# $Id$
 
+#include <cassert>
+
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <casa/BasicSL/String.h>
@@ -835,9 +837,6 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
  Bool ImagerMultiMS::mapExtent(const String &referenceFrame, const String &movingSource,
           const String &pointingColumn, Vector<Double> &center, Vector<Double> &blc,
           Vector<Double> &trc, Vector<Double> &extent) {
-      // save original address
-      MeasurementSet *msselSave = &(*mssel_p);
-
       // initialize if necessary
       INITIALIZE_DIRECTION_VECTOR(center);
       INITIALIZE_DIRECTION_VECTOR(blc);
@@ -847,13 +846,16 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
       try {
           Bool isValueSet = False;
           for (size_t i = 0; i < blockMSSel_p.nelements(); ++i) {
-              mssel_p = &blockMSSel_p[i];
+              //cout << "start MS " << i << endl;
+              MeasurementSet ms = blockMSSel_p[i];
               Vector<Double> wcenter(2);
               Vector<Double> wblc(2);
               Vector<Double> wtrc(2);
               Vector<Double> wextent(2);
-              Bool status = Imager::mapExtent(referenceFrame, movingSource, pointingColumn,
+              //cout << "run getMapExtent" << endl;
+              Bool status = getMapExtent(ms, referenceFrame, movingSource, pointingColumn,
                       wcenter, wblc, wtrc, wextent);
+              //cout << "done Imager::mapExtent" << endl;
               if (status) {
                   if (!isValueSet) {
                       center = wcenter;
@@ -871,8 +873,18 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
               }
           }
 
+          if (!isValueSet) {
+              LogIO os(LogOrigin("ImagerMultiMS", "mapExtent", WHERE));
+              os << LogIO::SEVERE << "No valid data found. Failed." << LogIO::POST;
+
+              return False;
+          }
+
           // extent is re-evaluated using true trc and blc
           extent = trc - blc;
+
+          // declination correction factor
+          Double declinationCorrection = cos(center[1]);
 
           // center needs to be updated according to specified column name
           // and moving source name
@@ -887,6 +899,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
           if (isOffsetColumn) {
               // center is always (0,0)
               center = 0.0;
+              declinationCorrection = cos((blc[1] + trc[1]) / 2.0);
           }
           else if (!doMovingSourceCorrection) {
               // initial center value should be kept
@@ -894,14 +907,16 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
               // otherwise, center should be re-evaluated
               // using true trc and blc
               center = (blc + trc) / 2.0;
+              declinationCorrection = cos(center[1]);
           }
 
-          // restore mssel_p
-          mssel_p = msselSave;
+          assert(declinationCorrection != 0.0);
+          //cout << "declinationCorrection = " << declinationCorrection << endl;
+
+          // apply declinationCorrection to extent[0]
+          extent[0] *= declinationCorrection;
       }
       catch (...) {
-          // restore mssel_p
-          mssel_p = msselSave;
           LogIO os(LogOrigin("ImagerMultiMS", "mapExtent", WHERE));
           os << LogIO::SEVERE << "Failed due to unknown error" << LogIO::POST;
           return False;
