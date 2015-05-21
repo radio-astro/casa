@@ -123,12 +123,13 @@ namespace casa {
 			//If the fit did not converge record an error.
 			if (!fitter.converged(0)) {
 				successfulFit = false;
-				errorMsg = "Fit did not converge.";
+				errorMsg = "Fit did not converge. Try selecting a smaller region or fitting fewer sources at one time.";
 			}
 		} catch( AipsError& error ) {
 			successfulFit = false;
 			QString specificProblem( error.what() );
-			errorMsg = "Fit did not converge";
+			qDebug() << "Error in fit: "<<specificProblem;
+			errorMsg = "There was an error fitting the data.";
 		}
 	}
 
