@@ -1990,34 +1990,30 @@ casac::record *imager::mapextent(const std::string &ref, const std::string &movi
 {
     Bool rstat = False;
     casac::record *returnValue;
-    cout << "ref = " << ref << endl;
-    cout << "movingsource = " << movingsource << endl;
-    cout << "pointingcolumntouse = " << pointingcolumntouse << endl;
+    Record r;
     if(hasValidMS_p){
-        Vector<Double> center;
-        Vector<Double> blc;
-        Vector<Double> trc;
-        Vector<Double> extent;
+        Vector<Double> center(2, 0.0);
+        Vector<Double> blc(2, 0.0);
+        Vector<Double> trc(2, 0.0);
+        Vector<Double> extent(2, 0.0);
         String directionRef(ref);
         String movingSource(movingsource);
         String columnName(pointingcolumntouse);
-        cout << "directionRef = " << directionRef << endl;
-        cout << "movingSource = " << movingSource << endl;
-        cout << "columnName = " << columnName << endl;
         rstat = itsImager->mapExtent(directionRef, movingSource, columnName,
                 center, blc, trc, extent);
-        Record r;
+        r.define("status", rstat);
         r.define("center", center);
         r.define("blc", blc);
         r.define("trc", trc);
         r.define("extent", extent);
-        returnValue = fromRecord(r);
     }
     else{
+        r.define("status", rstat);
         *itsLog << LogIO::SEVERE
                 << "No MeasurementSet has been assigned, please run open."
                 << LogIO::POST;
     }
+    returnValue = fromRecord(r);
     return returnValue;
 }
 
