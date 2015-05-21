@@ -469,7 +469,7 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   //UUU cout << "major " << totalIters_p << endl;
 
   /* Return the number of minor-cycle iterations completed in this run */
-  return(itercount_p);
+  return(itercount_p+1);
 }
 
 /* Indexing Rules... */
