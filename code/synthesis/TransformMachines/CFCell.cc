@@ -55,6 +55,8 @@ namespace casa{
     pa_p = other.pa_p;
     cfShape_p=other.storage_p->shape().asVector();
     cfShape_p.assign(other.cfShape_p);
+    conjFreq_p = other.conjFreq_p;
+    conjPoln_p = other.conjPoln_p;
   }
 
   void CFCell::show(const char *Mesg,ostream &os)
@@ -66,6 +68,8 @@ namespace casa{
        << "xSupport, ySupport: " << xSupport_p  << " " << ySupport_p << endl
        << "wValues: "            << wValue_p    << endl
        << "FreqValues: "         << freqValue_p << endl
+       << "ConjFreq: "           << conjFreq_p  << endl
+       << "ConjPoln: "           << conjPoln_p  << endl
        << "MuellerElements: "    << muellerElement_p << endl
        << "Data shape: "         << storage_p->shape() << " " << cfShape_p << endl
        << "Parallactic Angle(d): "  << pa_p.getValue("deg")
@@ -95,7 +99,11 @@ namespace casa{
     miscinfo.define("MuellerElement", muellerElement_p);
     miscinfo.define("WValue", wValue_p);
     miscinfo.define("Name", fileName_p);
+    miscinfo.define("ConjFreq", conjFreq_p);
+    miscinfo.define("ConjPoln", conjPoln_p);
     thisCF.setMiscInfo(miscinfo);
+
+    //show("thisCell: ", cout);
   }
 
 } // end casa namespace

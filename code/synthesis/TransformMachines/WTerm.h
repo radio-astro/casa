@@ -80,20 +80,20 @@ namespace casa{
     // The following functions are not required for W-Term but need to
     // be implemented here since they are pure virtuals in CFTerms
     // base class.
-    void applySky(ImageInterface<Float>& outputImages,
-		  const VisBuffer& vb, 
-		  const Bool doSquint=True,
-		  const Int& cfKey=0,
-	          const Int& muellerTerm=0,
-		  const Double /*freqVal*/=-1) 
-    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;}
-    void applySky(ImageInterface<Complex>& outputImages,
-		  const VisBuffer& vb, 
-		  const Bool doSquint=True,
-		  const Int& cfKey=0,
-		  const Int& muellerTerm=0,
-		  const Double /*freqVal*/=-1) 
-    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;};
+    void applySky(ImageInterface<Float>&,// outputImages,
+		  const VisBuffer&,// vb, 
+		  const Bool,/* doSquint=True,*/
+		  const Int&,/* cfKey=0,*/
+	          const Int&,/* muellerTerm=0,*/
+		  const Double /*freqVal*=-1*/) 
+    {};
+    void applySky(ImageInterface<Complex>&,// outputImages,
+		  const VisBuffer&,// vb, 
+		  const Bool,/* doSquint=True,*/
+		  const Int&,/* cfKey=0,*/
+		  const Int&,/* muellerTerm=0,*/
+		  const Double /*freqVal=-1*/) 
+    {};
     Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 
     {(void)vb;(void)nUnique;return Vector<Int>();};
     Int makePBPolnCoords(const VisBuffer& vb,

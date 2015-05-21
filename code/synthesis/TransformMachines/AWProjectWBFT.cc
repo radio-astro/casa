@@ -1473,4 +1473,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
   //  void AWProjectWBFT::resampleGridToData(VBStore& vbs, const VisBuffer& vb) {};
   
+  void AWProjectWBFT::setCFCache(CountedPtr<CFCache>& cfc, const Bool resetCFC) 
+  {
+    if (resetCFC) cfCache_p = cfc;
+    if (!cfCache_p.null())
+      {
+	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
+	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
+	
+	// cfCache_p->summarize(cfCache_p->memCache2_p,String("New CFC"));
+	// cfCache_p->summarize(cfCache_p->memCacheWt2_p,String(""));
+	avgPBReady_p=False;
+      }
+  }
+
 } //# NAMESPACE CASA - END

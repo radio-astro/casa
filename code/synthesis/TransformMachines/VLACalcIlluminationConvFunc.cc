@@ -80,8 +80,12 @@ namespace casa{
 							     Double /*refFreq*/)
   {
     CoordinateSystem FTCoords = imageCoordSys;
+    Int dirIndex=FTCoords.findCoordinate(Coordinate::LINEAR);
 
-    Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
+    // If LINEAR axis is found, assume that the coordsys is alread in FT domain
+    if (dirIndex >= 0) return FTCoords; 
+
+    dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
     Vector<Bool> axes(2); axes=True;
     Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
@@ -108,20 +112,25 @@ namespace casa{
   // Write PB to the pbImage
   //
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
-					    const VisBuffer& vb, const Vector<Float>& paList, 
+					    //const VisBuffer& vb, 
+					    Double& pa,
+					    const Vector<Float>& paList, 
 					    Int bandID, Bool doSquint)
   {
-    CoordinateSystem skyCS(pbImage.coordinates());
-    IPosition skyShape(pbImage.shape());
-    TempImage<Complex> uvGrid;
-    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
-    regridAperture(skyCS, skyShape, uvGrid, vb, paList, doSquint, bandID);
+    throw(AipsError("applyPB(paList) called!"));
+    // CoordinateSystem skyCS(pbImage.coordinates());
+    // IPosition skyShape(pbImage.shape());
+    // TempImage<Complex> uvGrid;
+    // if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
+    // regridAperture(skyCS, skyShape, uvGrid, pa, paList, doSquint, bandID);
 
-    fillPB(*(ap.aperture),pbImage);
+    // fillPB(*(ap.aperture),pbImage);
   }
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
-					    const VisBuffer& vb, Int bandID,
+					    //const VisBuffer& vb, 
+					    Double& pa,
+					    Int bandID,
 					    Bool doSquint, Double freqVal)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
@@ -130,11 +139,12 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     //    regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
-    regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID, freqVal);
+    regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID, 0, freqVal);
     fillPB(*(ap.aperture),pbImage);
   }
   void VLACalcIlluminationConvFunc::applyPB(ImageInterface<Complex>& pbImage, 
-					    const VisBuffer& vb,
+					    //const VisBuffer& vb,
+					    Double& pa,
 					    Bool doSquint, Int bandID,Int muellerTerm, Double freqVal)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
@@ -151,10 +161,10 @@ namespace casa{
     Int index= skyCS.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = skyCS.spectralCoordinate(index);
 //    cout<<"Ref Freq for sky jones is :"<<spCS.referenceValue()(0);
-    index=skyCS.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(index>=0, AipsError);
+    // index=skyCS.findCoordinate(Coordinate::DIRECTION);
+    // AlwaysAssert(index>=0, AipsError);
     
-    regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID, muellerTerm,freqVal);
+    regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID, muellerTerm,freqVal);
     
     pbImage.setCoordinateInfo(skyCS);
     // {
@@ -171,22 +181,26 @@ namespace casa{
   // Write PB^2 to the pbImage
   //
   void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
-					      const VisBuffer& vb, 
+					      //const VisBuffer& vb, 
+					      Double& pa,
 					      const Vector<Float>& paList, 
 					      Int bandID,
 					      Bool doSquint)
   {
-    CoordinateSystem skyCS(pbImage.coordinates());
-    IPosition skyShape(pbImage.shape());
-    TempImage<Complex> uvGrid;
-    if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
-    //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
-    regridAperture(skyCS, skyShape, uvGrid, vb, paList, doSquint, bandID);
+    throw(AipsError("applyPBSq(paList) called!"));
+    // CoordinateSystem skyCS(pbImage.coordinates());
+    // IPosition skyShape(pbImage.shape());
+    // TempImage<Complex> uvGrid;
+    // if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
+    // //    regridAperture(skyCS, skyShape, uvGrid, vb, paList, False, bandID);
+    // regridAperture(skyCS, skyShape, uvGrid, pa, paList, doSquint, bandID);
 
-    fillPB(*(ap.aperture),pbImage, True);
+    // fillPB(*(ap.aperture),pbImage, True);
   }
   void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Float>& pbImage,
-					      const VisBuffer& vb, Int bandID,
+					      //const VisBuffer& vb, 
+					      Double& pa,
+					      Int bandID,
 					      Bool doSquint)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
@@ -195,11 +209,13 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     //    regridAperture(skyCS, skyShape, uvGrid, vb,False, bandID);
-    regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
+    regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage,True);
   }
   void VLACalcIlluminationConvFunc::applyPBSq(ImageInterface<Complex>& pbImage, 
-					      const VisBuffer& vb, Int bandID,
+					      //const VisBuffer& vb, 
+					      Double& pa,
+					      Int bandID,
 					      Bool doSquint)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
@@ -208,7 +224,7 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
-    regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
+    regridAperture(skyCS, skyShape, uvGrid, pa, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage, True);
   }
   //
@@ -252,6 +268,7 @@ namespace casa{
     ap.aperture->set(0.0);
     //BeamCalc::Instance()->calculateAperture(&ap,inStokes);
     //cerr << ap.aperture->shape() << " " << inStokes << endl;
+    //BeamCalc::Instance()->calculateAperture(&ap);// The call in the absence of instokes allows the computation of all
     BeamCalc::Instance()->calculateAperture(&ap,inStokes);// The call in the absence of instokes allows the computation of all
 						 // the four jones parameters at one time.
 }
@@ -261,7 +278,8 @@ namespace casa{
   void VLACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						   IPosition& skyShape,
 						   TempImage<Complex>& /*uvGrid*/,
-						   const VisBuffer& vb,
+						   //const VisBuffer& vb,
+						   Double& pa,
 						   Bool doSquint, Int bandID,Int muellerTerm ,Double freqVal)
   {
     LogIO logIO(LogOrigin("VLACalcIlluminationConvFunc","regrid"));
@@ -270,11 +288,9 @@ namespace casa{
     Int index;
     //UNUSED: Double timeValue = getCurrentTimeStamp(vb);
     AlwaysAssert(bandID>=-1, AipsError);
-    Float pa;
     if (bandID != -1) ap.band = bandID;
-    pa = getPA(vb);
+    //Float pa = getPA(vb);
     Float Freq, freqLo, freqHi;
-    Vector<Double> chanFreq = vb.frequency();
 
     if (lastPA == pa)
       {
@@ -291,14 +307,16 @@ namespace casa{
       }
     else
       {
-	Vector<Double> chanFreq = vb.frequency();
+	//throw(AipsError("Freq. < 0 in VLACICF::regrid"));
+
+	// Vector<Double> chanFreq = vb.frequency();
 	index = skyCS.findCoordinate(Coordinate::SPECTRAL);
 	SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
 	Vector<Double> refVal = SpC.referenceValue();
 	
-	freqHi = max(chanFreq);
+	// freqHi = max(chanFreq);
 	freqHi = refVal[0];
-	freqLo = min(chanFreq);
+	// freqLo = min(chanFreq);
 	Freq = freqHi ;
 	ap.freq = Freq/1E9;
       }
@@ -704,10 +722,12 @@ namespace casa{
     // Now make SkyMuller
     //
     //skyMuller(uvgrid);
-    Int tempmueller=-1; // Set to -1 to ensure sanjay code and passing regression    
-    //Int tempmueller=0;
-    skyMuller(uvgrid,tempmueller);
-
+    Int tempmueller=-1; // Set to -1 to use sanjay's code which pass the regressions.
+    //tempmueller=0;
+    if (tempmueller==0)
+      skyMuller(uvgrid,muellerTerm);
+    else
+      skyMuller(uvgrid,-1);
   }
   
   void VLACalcIlluminationConvFunc::loadFromImage(String& /*fileName*/)
@@ -860,13 +880,13 @@ namespace casa{
 	
 //  cout<<"The Jones Matrix has been normalized using:"<< sqrt(Normalizesq)<<"\n";
     skyJones.put(tmp);
-//    ostringstream tt1;
-//    String name1("skyjones_normalized_conj.im");
-//    tt1 << name << "_"<< inStokes;
-//    storeImg(String(tt1),skyJones);
-//    exit(0);
-//    skyJones.put(tmp);
-//    cout<<"Finished writing the normalized conjugate sky jones \n";
+   ostringstream tt1;
+   String name1("skyjones_normalized_conj.im");
+   tt1 << name1 << "_"<< inStokes;
+   storeImg(String(tt1),skyJones);
+   // exit(0);
+   // skyJones.put(tmp);
+   cout<<"Finished writing the normalized conjugate sky jones \n";
 		
 //    cout<<"Begining the compute of Mueller Matrix term images \n";
 
@@ -977,9 +997,9 @@ namespace casa{
               M3(s0)=Jq*conj(Jq);
           }
           skyJones.put(M3);
-          //String name5("M3.im");
-          //storeImg(name5,skyJones);
-          //cout<<"Writing M3 to disk, muellerTerm : "<< muellerTerm <<"\n";
+          String name5("M3.im");
+          storeImg(name5,skyJones);
+          cout<<"Writing M3 to disk, muellerTerm : "<< muellerTerm <<"\n";
 	  M3.resize();
      }
 //    cout<<"Mueller Matrix row computation complete \n";	

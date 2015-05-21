@@ -993,7 +993,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Copy screen to the single pol. image.  Apply PB to it.  Copy 
 	    // the single pol. image plane to the twoDPB image.
 	    singlePolImg.set(1.0);
-	    vlaPB.applyPB(singlePolImg, vb, bandID_p, doSquint);
+	    Double pa=getPA(vb);
+	    Vector<Double> chanFreq = vb.frequency();
+	    //freqHi = max(chanFreq);
+	    Double Freq = max(chanFreq);
+
+	    vlaPB.applyPB(singlePolImg, pa, bandID_p, doSquint, Freq);
 	    PolnPlane(2)=whichPolPlane;   localPB.putSlice(singlePolImg.get(), PolnPlane);
 	  }
 	  whichPolPlane++;
@@ -1645,13 +1650,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      IPosition singlePolShape = pbSqShp;
 	      singlePolShape(2)=1;
 	      Bool doSquint=True;
+	      Double pa=getPA(vb);
+	      Vector<Double> chanFreq = vb.frequency();
+	      //freqHi = max(chanFreq);
+	      Double Freq = max(chanFreq);
 	      {
 		TempImage<Complex> singlePolImg(singlePolShape, singlePolCoords);
 		// Copy screen to the single pol. image.  Apply PB to it.  Copy 
 		// the single pol. image plane to the twoDPB image.
 		doSquint=True;
 		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
-		vlaPB.applyPB(singlePolImg, vb, doSquint,bandID_p);
+		vlaPB.applyPB(singlePolImg, pa, doSquint,bandID_p, 0, Freq);
 		PolnPlane(2)=whichPolPlane;   twoDPB.putSlice(singlePolImg.get(), PolnPlane);
 	      }
 	      {
@@ -1661,7 +1670,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		doSquint = False;
 		PolnPlane(2)=0;               singlePolImg.putSlice(screen, PolnPlane);
 		//vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
-		vlaPB.applyPB(singlePolImg, vb, doSquint, bandID_p);
+		vlaPB.applyPB(singlePolImg, pa, doSquint, bandID_p, 0, Freq);
 		PolnPlane(2)=whichPolPlane;   twoDPBSq.putSlice(singlePolImg.get(), PolnPlane);
 	      }
 

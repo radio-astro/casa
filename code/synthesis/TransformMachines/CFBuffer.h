@@ -142,6 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ~CFBuffer() 
     {
+      //cerr << "############### " << "~CFBuffer() called" << endl;
       // LogIO log_l(LogOrigin("CFBuffer","~CFBuffer[R&D]"));
       // log_l << "CF Hits stats gathered: " << cfHitsStats << endl;
     };
@@ -300,7 +301,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  Int& xSupport, Int& ySupport,
 				  const Double& freqValue, const Double& wValue, 
 				  const Int& muellerElement,
-				  const String& fileName=String());
+				  const String& fileName=String(),
+				  const Double& conjFreq=0.0,
+				  const Int& conjPol=-1);
     void setPointingOffset(const Vector<Double>& offset) 
     {pointingOffset_p.assign(offset);};
     Vector<Double> getPointingOffset() {return pointingOffset_p;};

@@ -391,6 +391,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void makeWBCFWt(CFStore2& cfs,const Double imRefFreq);
 
     CFBStruct cfbst_pub;
+    // Image Scaling and offset
+    Vector<Double> uvScale, uvOffset;
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -441,8 +443,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Useful IPositions
     IPosition centerLoc, offsetLoc;
     
-    // Image Scaling and offset
-    Vector<Double> uvScale, uvOffset;
+    // // Image Scaling and offset
+    // Vector<Double> uvScale, uvOffset;
     
    
     //    DirectionCoordinate directionCoord;

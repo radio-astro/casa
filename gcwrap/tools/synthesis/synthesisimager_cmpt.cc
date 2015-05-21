@@ -397,7 +397,7 @@ bool synthesisimager::setweighting(const std::string& type,
     return rstat;
   }
 
-  bool synthesisimager::drygridding()
+  bool synthesisimager::drygridding(const std::vector<std::string>& cfList)
   {
     Bool rstat(False);
     
@@ -405,7 +405,24 @@ bool synthesisimager::setweighting(const std::string& type,
       
       if( ! itsImager ) itsImager = new SynthesisImager();
       
-      itsImager->dryGridding();
+      itsImager->dryGridding(cfList);
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
+  bool synthesisimager::fillcfcache(const std::vector<std::string>& cfList)
+  {
+    Bool rstat(False);
+    
+    cerr << cfList << endl;
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->fillCFCache(cfList);
       
     } catch  (AipsError x) {
       RETHROW(x);

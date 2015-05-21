@@ -88,6 +88,23 @@ namespace casa{
 			  ) 
     {};
 
+    virtual void applySky(ImageInterface<Complex>&,// outImages,
+			  const Double&,// pa,
+			  const Bool,// doSquint,
+			  const Int&,// cfKey,
+			  const Int&,// muellerTerm,
+			  const Double// freqVal=-1.0
+			  )
+    {};
+
+    Int getBandID(const Double&, //freq 
+		  const String& //telescopeName
+		  )
+    {return 0;};
+
+    void cacheVBInfo(const VisBuffer& )
+    {};
+
     virtual void normalizeImage(Lattice<Complex>& ,//skyImage,
 				const Matrix<Float>& // weights
 				) 

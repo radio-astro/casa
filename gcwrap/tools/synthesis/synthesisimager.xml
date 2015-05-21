@@ -493,14 +493,43 @@ Define the image coordinate systems and shapes.
 
 <!-- ===================================== -->
 
+<method type="function" name="drygridding">
+  <shortdescription>Run a dry gridding run.</shortdescription>
 
-   <method type="function" name="drygridding">
-   <shortdescription>Run a dry gridding run.</shortdescription>
+  <description>
+  </description>
+  <input>
+    <param type="stringArray" name="cflist">
+      <description>
+	List of CFs
+      </description>
+      <value>
+      </value>
+    </param>
+  </input>
+  <returns type="bool"/>
+</method>
 
-<description>
-</description>
-<input/>
-<returns type="bool"/>
+<!-- ===================================== -->
+
+<method type="function" name="fillcfcache">
+  <shortdescription>
+    Fill a potentially blank CFCache held inside the AWProject-class
+    FTMachines.
+  </shortdescription>
+
+  <description>
+  </description>
+  <input>
+    <param type="stringArray" name="cflist">
+      <description>
+	List of CFs
+      </description>
+      <value>
+      </value>
+    </param>
+  </input>
+  <returns type="bool"/>
 </method>
 
 <!-- ===================================== -->

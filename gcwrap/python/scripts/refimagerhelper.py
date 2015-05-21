@@ -4,6 +4,7 @@ import math
 import shutil
 import string
 import time
+import re;
 from taskinit import *
 import copy
 #from simple_cluster import simple_cluster
@@ -41,6 +42,8 @@ class PySynthesisImager:
         # Iteration parameters
         self.iterpars = params.getIterPars() ## Or just params.iterpars
 
+        # CFCache params
+        self.cfcachepars = params.getCFCachePars()
         ## Number of fields ( main + outliers )
         self.NF = len(self.allimpars.keys())
         self.stopMinor = {}  ##[0]*self.NF
@@ -252,7 +255,14 @@ class PySynthesisImager:
 
 #############################################
     def dryGridding(self):
-        self.SItool.drygridding();
+        self.SItool.drygridding(**(self.cfcachepars)) ;
+#############################################
+    def fillCFCache(self):
+        cfcName = self.allgridpars['0']['cfcache'];
+        cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
+        self.cfcachepars['cflist']=cflist;
+
+        self.SItool.fillcfcache(**(self.cfcachepars)) ;
 
 #############################################
 ## Overloaded for parallel runs
@@ -972,6 +982,9 @@ class ImagerParameters():
                  savemodel="none",
 
                  workdir='',
+
+                 ## CFCache params
+                 cflist=[]
                  ):
 
         self.defaultKey="0";
@@ -1024,6 +1037,10 @@ class ImagerParameters():
                           'loopgain':loopgain, 'interactive':interactive,
                           'cyclefactor':cyclefactor, 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
 
+        ######### CFCache params. 
+        self.cfcachepars = {'cflist': cflist};
+
+
         #self.reusename=reuse
 
         ## List of supported parameters in outlier files.
@@ -1057,6 +1074,8 @@ class ImagerParameters():
         return self.iterpars
     def getNormPars(self):
         return self.allnormpars
+    def getCFCachePars(self):
+        return self.cfcachepars;
 
     def setSelPars(self,selpars):
         self.allselpars = selpars

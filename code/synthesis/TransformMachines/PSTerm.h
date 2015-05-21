@@ -90,35 +90,34 @@ namespace casa{
 
     virtual Float getSupportThreshold() {return 1e-3;};
 
-    void applySky(ImageInterface<Float>& outputImages,
-		  const VisBuffer& vb, 
-		  const Bool doSquint=True,
-		  const Int& cfKey=0,
-		  const Int& muellerTerm=0,
-		  const Double /*freqVal*/ =-1) 
-    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;}
+    void applySky(ImageInterface<Float>&,// outputImages,
+		  const VisBuffer&,// vb, 
+		  const Bool,// doSquint=True,
+		  const Int&,// cfKey=0,
+		  const Int&,// muellerTerm=0,
+		  const Double /*freqVal=-1*/) 
+    {};
 
-    void applySky(ImageInterface<Complex>& outputImages,
-		  const VisBuffer& vb, 
-		  const Bool doSquint=True,
-		  const Int& cfKey=0,
-		  const Int& muellerTerm=0,
-		  const Double /*freqVal*/ = -1) 
-    {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;};
+    void applySky(ImageInterface<Complex>&,// outputImages,
+		  const VisBuffer&,// vb, 
+		  const Bool,// doSquint=True,
+		  const Int&,// cfKey=0,
+		  const Int&,// muellerTerm=0,
+		  const Double /*freqVal= -1*/ ) 
+    {};
 
-    Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 
-    {(void)vb;(void)nUnique;return Vector<Int>();};
+    Vector<Int> vbRow2CFKeyMap(const VisBuffer& /*vb*/, Int& /*nUnique*/) 
+    {Vector<Int> tt;return tt;};
 
-    Int makePBPolnCoords(const VisBuffer& vb,
-			 const Int& convSize,
-			 const Int& convSampling,
-			 const CoordinateSystem& skyCoord,
-			 const Int& skyNx, const Int& skyNy,
-			 CoordinateSystem& feedCoord) 
-    {
-      (void)vb;(void)convSize;(void)convSampling;(void)skyCoord;(void)skyNx;(void)skyNy;(void)feedCoord;
-      return 0;
-    };
+    Int makePBPolnCoords(const VisBuffer&,// vb,
+			 const Int&,// convSize,
+			 const Int&,// convSampling,
+			 const CoordinateSystem&,// skyCoord,
+			 const Int&,// skyNx, 
+			 const Int&,// skyNy,
+			 CoordinateSystem&// feedCoord
+			 ) 
+    {return 0;};
 
     Int getConvSize() {return 0;};
     Int getOversampling() {return 1;};

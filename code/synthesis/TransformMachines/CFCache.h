@@ -160,7 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Method to set the disk cache directory name
     //
-    void setCacheDir(const char *dir) {Dir = dir;}
+    void setCacheDir(const char *dir) {Dir = String(dir);}
     String getCacheDir() {return Dir;};
 
     void setWtImagePrefix(const char *prefix) {WtImagePrefix = prefix;}
@@ -173,7 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void initCacheFromList2(const String& path, 
 			    const Vector<String>& cfFileNames, 
 			    const Vector<String>& cfWtFileNames, 
-			    Float selectedPA, Float dPA);
+			    Float selectedPA, Float dPA,
+			    const Int verbose=1);
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     inline Bool OTODone() {return OTODone_p;}
     //
@@ -263,6 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     Double& paVal,
 		     Int& xSupport, Int& ySupport,
 		     Double& fVal, Double& wVal, Int& mVal,
+		     Double& conjFreq, Int& conjPoln,
 		     Bool loadPixels=True);
     //
     // Methods to write the auxillary information from the memory
@@ -315,10 +317,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Float convSampling);
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
-    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False, Float selectPAVal=400.0, Float dPA=-1.0);
+    void fillCFSFromDisk(const Directory dirObj, const String& pattern, 
+			 CFStoreCacheType2& memStore, Bool showInfo=False, 
+			 Float selectPAVal=400.0, Float dPA=-1.0,
+			 const Int verbose=1);
     void fillCFListFromDisk(const Vector<String>& fileNames, const String& CFCDir,
 			    CFStoreCacheType2& memStore,
-			    Bool showInfo, Float selectPAVal, Float dPA);
+			    Bool showInfo, Float selectPAVal, Float dPA,
+			    const Int verbose=1);
 
     Bool avgPBReady_p;
     String avgPBReadyQualifier_p;

@@ -79,7 +79,7 @@ template<class T> class ImageInterface;
   virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};
   virtual Bool releaseImageLocks(){return itsImages->releaseLocks();};
 
-  const CountedPtr<FTMachine> getFTM() {return ift_p;};
+  const CountedPtr<FTMachine>& getFTM(const Bool ift=True) {if (ift) return ift_p; else return ft_p;};
 
 protected:
 

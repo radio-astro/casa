@@ -87,7 +87,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Bool doSquint=True,
 			  const Int& cfKey=0,
 			  const Double freqVal=-1.0)
-    {(void)freqVal;applySky(outputImage, vb, doSquint, cfKey, False);};
+    {
+      (void)freqVal;applySky(outputImage, vb, doSquint, cfKey, False);
+    };
     virtual void applySky(ImageInterface<Complex>& outputImage,
 			  const VisBuffer& vb, 
 			  const Bool doSquint=True,
@@ -107,6 +109,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  const Bool raytrace); // if True, use raytracing even if canned responses exist
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique);
+
+    void cacheVBInfo(const VisBuffer& vb);
+    Int getBandID(const Double& freq, const String& telescopeName);
 
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p.resize(0);polMap_p=polMap;};
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};

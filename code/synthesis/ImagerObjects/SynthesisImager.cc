@@ -82,6 +82,9 @@
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/OS/Directory.h>
+
 //#include <casadbus/utilities/BusAccess.h>
 //#include <casadbus/session/DBusSession.h>
 
@@ -1628,24 +1631,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::dryGridding()
+  // Method to run the AWProjectFT machine to seperate the CFCache
+  // construction from imaging.  This is done by splitting the
+  // operation in two steps: (1) run the FTM in "dry" mode to create a
+  // "blank" CFCache, and (2) re-load the "blank" CFCache and "fill"
+  // it.
+  //
+  // If someone can get me (SB) out of the horrible statc_casts in the
+  // code below, I will be most grateful.
+  //
+  void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
-    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
+    (void)cfList;
+    // If not an AWProject-class FTM, make this call a NoOp.  Might be
+    // useful to extend it to other projection FTMs -- but later.
+    String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
+    if (!ftmName.contains("AWProject")) return;
+
+    os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
+
+    //
+    // Got through the entire MS in "dry" mode to set up a "blank"
+    // CFCache.  This is done by setting the AWPWBFT in dryrun mode
+    // and gridding.  The process of gridding emits CFCache, which
+    // will be "blank" in a dry run.
     {
       VisBufferAutoPtr vb(rvi_p);
       rvi_p->originChunks();
       rvi_p->origin();
 
-      ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-		       "dryGridding", "","","",True);
+      ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",True);
 
       itsMappers.initializeGrid(*vb);
-      AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
-      tt.setDryRun(True);
-
+      // AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
+      // tt.setDryRun(True);
+      (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setDryRun(True);
+      //itsMappers.getFTM(whichFTM)->setDryRun(True);
       //(itsMappers.getFTM(whichFTM))->setDryRun(True);
+
+      os << "Making a \"blank\" CFCache" << LogIO::WARN << LogIO::POST;
 
       for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
 	{
@@ -1658,12 +1684,83 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       //itsMappers.finalizegrid(*vb);
     }
-
+    (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setDryRun(False);
     //itsMappers.checkOverlappingModels("restore");
     unlockMSs();
-
-    (itsMappers.getFTM(whichFTM))->setDryRun(False);
+    //fillCFCache(cfList);
   }
+  //
+  // Re-load the CFCache from the disk using the supplied list of CFs
+  // (as cfList).  Then extract the ConvFunc object (which was setup
+  // in the FTM) and call it's makeConvFunction2() to fill the CF.
+  // Finally, unset the dry-run mode of the FTM.
+  //
+  void SynthesisImager::fillCFCache(const Vector<String>& cfList)
+    {
+      LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
+
+      Int whichFTM=0;
+      // If not an AWProject-class FTM, make this call a NoOp.  Might be
+      // useful to extend it to other projection FTMs -- but later.
+      String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
+      if (!ftmName.contains("AWProject")) return;
+
+      String path = itsMappers.getFTM(whichFTM)->getCacheDir();
+      String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
+
+      //cerr << "Path = " << path << endl;
+
+      // CountedPtr<AWProjectWBFTNew> tmpFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
+
+
+      CountedPtr<CFCache> cfCacheObj = new CFCache();
+      Float dPA=360.0,selectedPA=-1;
+      if (cfList.nelements() > 0)
+      	{
+	  //Vector<String> wtCFList; wtCFList.resize(cfList.nelements());
+	  //for (Int i=0; i<wtCFList.nelements(); i++) wtCFList[i] = "WT"+cfList[i];
+	  Directory dir(path);
+	  Vector<String> cfList_p=cfList;//dir.find(Regex(Regex::fromPattern("CFS*")));
+	  Vector<String> wtCFList_p;
+	  wtCFList_p.resize(cfList_p.nelements());
+	  for (Int i=0; i<wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
+
+	  cerr << cfList_p << endl;
+      	  cfCacheObj->setCacheDir(path.data());
+
+	  os << "Re-loading the \"blank\" CFCache for filling" << LogIO::WARN << LogIO::POST;
+
+      	  cfCacheObj->initCacheFromList2(path, cfList_p, wtCFList_p,
+      					 selectedPA, dPA,0);
+	  // tmpFT->setCFCache(cfCacheObj);
+	  Vector<Double> uvScale, uvOffset;
+	  Matrix<Double> vbFreqSelection;
+	  CountedPtr<CFStore2> cfs2 = CountedPtr<CFStore2>(&cfCacheObj->memCache2_p[0],False);//new CFStore2;
+	  CountedPtr<CFStore2> cfwts2 =  CountedPtr<CFStore2>(&cfCacheObj->memCacheWt2_p[0],False);//new CFStore2;
+
+	  //
+	  // Get whichFTM from itsMappers (SIMapperCollection) and
+	  // cast it as AWProjectWBFTNew.  Then get the ConvFunc from
+	  // the FTM and cast it as AWConvFunc.  Finally call
+	  // AWConvFunc::makeConvFunction2().
+	  //
+	  (static_cast<AWConvFunc &> 
+	   (*(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getAWConvFunc())
+	   ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
+			       *cfs2, *cfwts2);
+      	}
+      cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
+      
+      // This assumes the itsMappers is always SIMapperCollection.
+      for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
+	{
+	  cerr << "Setting FTM-set " << whichFTM << endl;
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj); // Setup iFTM
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setCFCache(cfCacheObj); // Set FTM
+	}
+      //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
+      //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();
+    }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(){

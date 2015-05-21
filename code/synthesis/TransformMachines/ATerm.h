@@ -84,6 +84,13 @@ namespace casa{
 			  const Int& cfKey=0,
 			  const Int& muellerTerm=0,
 			  const Double freqVal=-1.0) = 0;
+    virtual void applySky(ImageInterface<Complex>& outImages,
+			  const Double& pa,
+			  const Bool doSquint,
+			  const Int& cfKey,
+			  const Int& muellerTerm,
+			  const Double freqVal)=0;
+
     //
     // Not sure if the following method is requried.  Leaving it in
     // the code for now with an implementation that does nothing.
@@ -111,7 +118,18 @@ namespace casa{
 				 const Int& convSampling,
 				 const CoordinateSystem& skyCoord,
 				 const Int& skyNx, const Int& skyNy,
+				 CoordinateSystem& feedCoord)
+    {
+      return makePBPolnCoords(vb.corrType(), convSize, convSampling, skyCoord,
+			      skyNx, skyNy, feedCoord);
+    };
+    virtual Int makePBPolnCoords(const Vector<Int>& vbCorrTypes,
+				 const Int& convSize,
+				 const Int& convSampling,
+				 const CoordinateSystem& skyCoord,
+				 const Int& skyNx, const Int& skyNy,
 				 CoordinateSystem& feedCoord);
+
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
@@ -157,6 +175,8 @@ namespace casa{
       throw(AipsError("Make ATerm::normalizeImage() pure virtual and implement in specializations"));
     };
 
+    virtual void cacheVBInfo(const VisBuffer& vb) = 0;
+    virtual Int getBandID(const Double& freq, const String& telescopeName) = 0;
     virtual int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) = 0;
     //
     // The mapping from VisBuffer polarizations map to the Image plane
@@ -177,6 +197,8 @@ namespace casa{
     Vector<Int> polMap_p_base;
     Int cachedOverSampling_p, cachedConvSize_p;
 
+    Float Diameter_p, Nant_p, HPBW, sigma;
+    String telescopeName_p;
   };
 
 };

@@ -97,15 +97,8 @@ namespace casa{
     return -1;
   }
   
-  int EVLAAperture::getVisParams(const VisBuffer& vb,const CoordinateSystem& /*im*/)
+  void EVLAAperture::cacheVBInfo(const VisBuffer& vb)
   {
-    Double Freq;
-		// {
-		//   LogIO log_l;
-		//   IPosition dummy;
-		//   im.list(log_l,MDoppler::RADIO,dummy,dummy);
-		// }
-
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++)
       {
@@ -124,8 +117,10 @@ namespace casa{
 	    throw(err);
 	  }
       }
+    telescopeName_p=telescopeNames[0];
+
     //    ROMSSpWindowColumns mssp(vb.msColumns().spectralWindow());
-    Freq = vb.msColumns().spectralWindow().refFrequency()(0);
+    //Freq = vb.msColumns().spectralWindow().refFrequency()(0);
     Diameter_p=0;
     Nant_p     = vb.msColumns().antenna().nrow();
     for (Int i=0; i < Nant_p; i++)
@@ -143,17 +138,34 @@ namespace casa{
 		<< LogIO::POST;
 	Diameter_p=25.0;
       }
+  }
+
+  Int EVLAAperture::getBandID(const Double& freq, const String& telescopeName)
+  {
+    Int bandID=0;
+    if (!isNoOp())
+      bandID = BeamCalc::Instance()->getBandID(freq,telescopeName);
     
+    return bandID;
+  };
+
+  int EVLAAperture::getVisParams(const VisBuffer& vb,const CoordinateSystem& /*im*/)
+  {
+    Double Freq;
+    cacheVBInfo(vb);
+    
+    Freq = vb.msColumns().spectralWindow().refFrequency()(0);
     Double Lambda=C::c/Freq;
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);
     //    awEij.setSigma(sigma);
     //    Int bandID = getVLABandID(Freq,telescopeNames(0),im);
-    Int bandID=0;
-    if (!isNoOp())
-      bandID = BeamCalc::Instance()->getBandID(Freq,telescopeNames(0));
+    return getBandID(Freq, telescopeName_p);
+    // Int bandID=0;
+    // if (!isNoOp())
+    //   bandID = BeamCalc::Instance()->getBandID(Freq,telescopeName_p);
     
-    return bandID;
+    // return bandID;
   }
   
   Int EVLAAperture::makePBPolnCoords(const VisBuffer&vb,
@@ -259,7 +271,8 @@ namespace casa{
 	VLACalcIlluminationConvFunc vlaPB;
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
-	bandID=getVisParams(vb,pbImage.coordinates());
+	bandID = getBandID(freqVal,telescopeName_p);
+	//bandID=getVisParams(vb,pbImage.coordinates());
 	vlaPB.makeFullJones(pbImage,vb, doSquint, bandID, freqVal);
       }
   }
@@ -271,20 +284,28 @@ namespace casa{
 			      const Int& muellerTerm,
 			      const Double freqVal)
   {
-    (void)cfKey;
-    if (!isNoOp())
-      {
-	VLACalcIlluminationConvFunc vlaPB;
-	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
-	vlaPB.setMaximumCacheSize(cachesize);
-	Int bandID=getVisParams(vb,outImages.coordinates());
-//	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
-	vlaPB.applyPB(outImages, vb, doSquint,bandID,muellerTerm,freqVal);
-      }
+//     (void)cfKey;
+//     if (!isNoOp())
+//       {
+// 	VLACalcIlluminationConvFunc vlaPB;
+// 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
+// 	vlaPB.setMaximumCacheSize(cachesize);
+// 	Int bandID;//=getVisParams(vb,outImages.coordinates());
+// 	bandID = getBandID(freqVal,telescopeName_p);
+// //	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
+// 	//vlaPB.applyPB(outImages, doSquint,bandID,muellerTerm,freqVal);
+// 	Double pa=getPA(vb);
+// 	vlaPB.applyPB(outImages, pa, doSquint,bandID,muellerTerm,freqVal);
+	
+//       }
+    Double pa=getPA(vb);
+    applySky(outImages,pa,doSquint,cfKey,muellerTerm, freqVal);
   }
-
-  void EVLAAperture::applySky(ImageInterface<Float>& outImages,
-			      const VisBuffer& vb, 
+  //
+  // This one without VB.  Should become the default (and the only one!).
+  //
+  void EVLAAperture::applySky(ImageInterface<Complex>& outImages,
+			      const Double& pa,
 			      const Bool doSquint,
 			      const Int& cfKey,
 			      const Int& muellerTerm,
@@ -296,8 +317,34 @@ namespace casa{
 	VLACalcIlluminationConvFunc vlaPB;
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
-	Int bandID=getVisParams(vb,outImages.coordinates());
-	vlaPB.applyPB(outImages, vb, bandID, doSquint,freqVal);
+	Int bandID;//=getVisParams(vb,outImages.coordinates());
+	bandID = getBandID(freqVal,telescopeName_p);
+//	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
+	//vlaPB.applyPB(outImages, doSquint,bandID,muellerTerm,freqVal);
+	Double pa_l=pa;  // Due to goofup in making sure complier type checking does not come in the way!
+	vlaPB.applyPB(outImages, pa_l, doSquint,bandID,muellerTerm,freqVal);
+	
+      }
+  }
+
+  void EVLAAperture::applySky(ImageInterface<Float>& outImages,
+			      const VisBuffer& vb, 
+			      const Bool doSquint,
+			      const Int& cfKey,
+			      const Int& muellerTerm,
+			      const Double freqVal)
+  {
+    (void)cfKey;
+    (void)muellerTerm;
+    if (!isNoOp())
+      {
+	VLACalcIlluminationConvFunc vlaPB;
+	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
+	vlaPB.setMaximumCacheSize(cachesize);
+	Int bandID;//=getVisParams(vb,outImages.coordinates());
+	bandID = getBandID(freqVal,telescopeName_p);
+	Double pa=getPA(vb);
+	vlaPB.applyPB(outImages, pa, bandID, doSquint,freqVal);
       }
   }
   

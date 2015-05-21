@@ -79,6 +79,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int shape[2];
     Float sampling;
     Int xSupport, ySupport;
+    Double wValue, freqValue,freqIncr;    
+    Int muellerElement;
   };
 
   using namespace CFDefs;
@@ -108,7 +110,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfShape_p.assign(storage_p->shape().asVector());
     };
 
-    ~CFCell() {};
+    ~CFCell() 
+    {
+      if (!storage_p.null()) 
+	{
+	  //cerr << "############### " << "~CFCell() called " << storage_p->shape() << endl;
+	  storage_p->resize();
+	}
+    };
 
     void getAsStruct(CFCStruct& cfst) 
     {
@@ -119,12 +128,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.sampling=sampling_p;
       cfst.xSupport=xSupport_p;
       cfst.ySupport=ySupport_p;
+      cfst.wValue=wValue_p;
+      cfst.freqValue=freqValue_p;
+      cfst.freqIncr=freqIncr_p;
+      cfst.muellerElement=muellerElement_p;
     }
     CountedPtr<Array<TT> >& getStorage() {return storage_p;}
     void makePersistent(const char *dir);
     CountedPtr<CFCell> clone();
     void setParams(const CFCell& other);
-    void initCache() {shape_p=storage_p->shape(); cfShape_p.assign(shape_p.asVector());};
+    void initCache() {shape_p=getShape(); cfShape_p.assign(shape_p.asVector());};
+    IPosition getShape() {return storage_p->shape();}
     //
     //============================= Functional Parts ============================
     //------------------------------------------------------------------
@@ -135,8 +149,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<Array<TT> > storage_p; // Nx x Ny
     CoordinateSystem coordSys_p;
     Float sampling_p;
-    Int xSupport_p,ySupport_p;
-    Double wValue_p, freqValue_p,freqIncr_p;
+    Int xSupport_p,ySupport_p, conjPoln_p;
+    Double wValue_p, freqValue_p,freqIncr_p, conjFreq_p;
     //    MuellerElementType muellerElement_p;
     Int muellerElement_p;
     Quantity pa_p;

@@ -40,6 +40,7 @@
 #include <synthesis/TransformMachines/ConvolutionFunction.h>
 #include <synthesis/TransformMachines/PolOuterProduct.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
@@ -104,24 +105,41 @@ namespace casa{
   //
   //----------------------------------------------------------------------
   //
-  void AWConvFunc::makeConjPolAxis(CoordinateSystem& cs)
+  void AWConvFunc::makeConjPolAxis(CoordinateSystem& cs,
+				   Int conjStokes_in)
   {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeConjPolAxis[R&D]"));
+    IPosition dummy;
+    Vector<String> csList;
+    Vector<Int> stokes, conjStokes;
+
+    // cout << "CoordSys: ";
+    // csList = cs.list(log_l,MDoppler::RADIO,dummy,dummy);
+    // cout << csList << endl;
     Int stokesIndex=cs.findCoordinate(Coordinate::STOKES);
     StokesCoordinate sc=cs.stokesCoordinate(stokesIndex);
-    Vector<Int> stokes, conjStokes;
-    stokes=sc.stokes();
-    conjStokes.resize(stokes.shape());
-    for (uInt i=0; i<stokes.nelements(); i++)
-      {
-	if (stokes(i) == Stokes::RR) conjStokes(i) = Stokes::LL;
-	if (stokes(i) == Stokes::LL) conjStokes(i) = Stokes::RR;
-	if (stokes(i) == Stokes::LR) conjStokes(i) = Stokes::RL;
-	if (stokes(i) == Stokes::RL) conjStokes(i) = Stokes::LR;
 
-	if (stokes(i) == Stokes::XX) conjStokes(i) = Stokes::YY;
-	if (stokes(i) == Stokes::YY) conjStokes(i) = Stokes::XX;
-	if (stokes(i) == Stokes::YX) conjStokes(i) = Stokes::XY;
-	if (stokes(i) == Stokes::XY) conjStokes(i) = Stokes::YX;
+    if (conjStokes_in == -1)
+      {
+	stokes=sc.stokes();
+	conjStokes.resize(stokes.shape());
+	for (uInt i=0; i<stokes.nelements(); i++)
+	  {
+	    if (stokes(i) == Stokes::RR) conjStokes(i) = Stokes::LL;
+	    if (stokes(i) == Stokes::LL) conjStokes(i) = Stokes::RR;
+	    if (stokes(i) == Stokes::LR) conjStokes(i) = Stokes::RL;
+	    if (stokes(i) == Stokes::RL) conjStokes(i) = Stokes::LR;
+
+	    if (stokes(i) == Stokes::XX) conjStokes(i) = Stokes::YY;
+	    if (stokes(i) == Stokes::YY) conjStokes(i) = Stokes::XX;
+	    if (stokes(i) == Stokes::YX) conjStokes(i) = Stokes::XY;
+	    if (stokes(i) == Stokes::XY) conjStokes(i) = Stokes::YX;
+	  }
+      }
+    else
+      {
+	conjStokes.resize(1);
+	conjStokes[0]=conjStokes_in;
       }
     sc.setStokes(conjStokes);
     cs.replaceCoordinate(sc,stokesIndex);
@@ -134,9 +152,11 @@ namespace casa{
 				      const Vector<Double>& freqValues,
 				      const Vector<Double>& wValues,
 				      const Double& wScale,
+				      const Double& vbPA, const Double& freqHi,
 				      const PolMapType& muellerElements,
 				      const PolMapType& muellerElementsIndex,
-				      const VisBuffer& vb, const Float& psScale,
+				      const VisBuffer& vb, 
+				      const Float& psScale,
 				      PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm,
 				      Bool isDryRun)
   {
@@ -147,8 +167,10 @@ namespace casa{
     LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer[R&D]"));
     //    Int ttt=0;
     Complex cfNorm, cfWtNorm;
-    Double vbPA = getPA(vb);
+    //Double vbPA = getPA(vb);
     Complex cpeak,wtcpeak;
+    aTerm.cacheVBInfo(vb);
+
     for (uInt imx=0;imx<muellerElements.nelements();imx++) // Loop over all MuellerElements
       for (uInt imy=0;imy<muellerElements(imx).nelements();imy++)
     	{
@@ -186,19 +208,40 @@ namespace casa{
 
 		CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l);
 		TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
+		Int index;
+		Vector<Int> conjPol;
+		index = conjPolCS_l.findCoordinate(Coordinate::STOKES);
+		conjPol = conjPolCS_l.stokesCoordinate(index).stokes();
+		//cerr << "ConjPol = " << conjPol << endl;
+
+		// {
+		//   // Vector<Double> chanFreq = vb.frequency();
+		//   CoordinateSystem skyCS(ftATerm_l.coordinates());
+		//   Int index = skyCS.findCoordinate(Coordinate::SPECTRAL);
+		//   SpectralCoordinate SpC = skyCS.spectralCoordinate(index);
+		//   Vector<Double> refVal = SpC.referenceValue();
+		  
+		//   Double ff = refVal[0];
+		//   cerr << "Freq, ConjFreq: " << freqValues(inu) << " " << conjFreq << " " << ff << endl;
+		// }
+
+
 		Bool doSquint=True; Complex tt;
 		//		Bool doSquint=False; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
+
+		Int me=muellerElements(imx)(imy);
 		if (!isDryRun)
-		aTerm.applySky(ftATerm_l, vb, doSquint, 0, muellerElements(imx)(imy));
-		// {
-		//   ostringstream name;
-		//   name << "ftATerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
-		//   storeImg(name,ftATerm_l);
-		// }
-		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
-		if (!isDryRun)
-		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,muellerElements(imx)(imy),conjFreq);
+		  {
+		    aTerm.applySky(ftATerm_l, vb, doSquint, 0, me, freqValues(inu));//freqHi);
+		    // {
+		    //   ostringstream name;
+		    //   name << "ftATerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+		    //   storeImg(name,ftATerm_l);
+		    // }
+		    //tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
+		    aTerm.applySky(ftATermSq_l, vb, doSquint, 0,me,conjFreq);
+		  }
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
 
@@ -224,10 +267,17 @@ namespace casa{
 		//
     		for (uInt iw=0;iw<wValues.nelements();iw++)     // All w-planes
     		  {
-		    log_l << " CF("
-			  << "M:"<<muellerElements(imx)(imy) 
-			  << ",C:" << inu 
-			  << ",W:" << iw << "): ";
+		    if (!isDryRun)
+		      log_l << " CF("
+			    << "M:"<<muellerElements(imx)(imy) 
+			    << ",C:" << inu 
+			    << ",W:" << iw << "): ";
+		    // {
+		    //   CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(freqValues(inu), wValues(iw), muellerElements(imx)(imy));
+		    //   thisCell->conjFreq_p = conjFreq;
+		    //   cerr << "ConjFreq: " << thisCell->conjFreq_p << " " << inu << " " << iw << " " << muellerElements(imx)(imy) << endl;
+		    // }
+
     		    Array<Complex> &cfWtBuf=(*(cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 								  muellerElements(imx)(imy))->storage_p));
 		    Array<Complex> &cfBuf=(*(cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
@@ -405,7 +455,9 @@ namespace casa{
 
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				    ftCoords, samplingWt, xSupportWt, ySupportWt,
-				    freqValues(inu), wValues(iw), muellerElements(imx)(imy));
+				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				    String(""), // Default ==> don't set it in the CFCell
+				    conjFreq, conjPol[0]);
 		    cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 				       muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
 
@@ -459,7 +511,9 @@ namespace casa{
 
 		    cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				  ftCoords, sampling, xSupport, ySupport,
-				  freqValues(inu), wValues(iw), muellerElements(imx)(imy));
+				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
+				  String(""), // Default ==> Don't set in the CFCell
+				  conjFreq, conjPol[0]);
 		    cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
 				     muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
 
@@ -918,10 +972,22 @@ namespace casa{
 	// will now be filled using the supplied PS-, W- ad A-term objects.
 	//
 	if (fillCF) log_l << "Making CFs for baseline type " << ib << LogIO::POST;
-	else        log_l << "Made empty CFs for baseline type " << ib << LogIO::POST;
-	fillConvFuncBuffer(*cfb_p, *cfwtb_p, convSize, convSize, freqValues, wValues, wScale,
-			   polMap, polIndexMap, vb, psScale,
-			   *psTerm_p, *wTerm_p, *aTerm_p, !fillCF);
+	else        log_l << "Making empty CFs for baseline type " << ib << LogIO::POST;
+	{
+	  Double vbPA = getPA(vb), freqHi;
+
+	  
+	  Vector<Double> chanFreq = vb.frequency();
+	  index = image.coordinates().findCoordinate(Coordinate::SPECTRAL);
+	  SpectralCoordinate SpC = cfb_cs.spectralCoordinate(index);
+	  Vector<Double> refVal = SpC.referenceValue();
+	
+	  freqHi = refVal[0];
+	  fillConvFuncBuffer(*cfb_p, *cfwtb_p, convSize, convSize, freqValues, wValues, wScale,
+			     vbPA, freqHi,
+			     polMap, polIndexMap, vb, psScale,
+			     *psTerm_p, *wTerm_p, *aTerm_p, !fillCF);
+	}
 	// cfb_p->show(NULL,cerr);
 	//cfb_p->makePersistent("test.cf");
 	// cfwtb_p->makePersistent("test.wtcf");
@@ -1396,5 +1462,360 @@ namespace casa{
   void AWConvFunc::setMiscInfo(const RecordInterface& params)
   {
     (void)params;
+  }
+  //
+  // REFACTORED CODE
+  //
+
+  //
+  //----------------------------------------------------------------------
+  //
+  void AWConvFunc::fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
+				       const Int& nx, const Int& ny, 
+				       const Double& freqValue,
+				       const Double& wValue,
+				       const Double& wScale,
+				       //const Double& vbPA, 
+				       const Double& freqHi,
+				       const Int& muellerElement,
+				       //const VisBuffer& vb,
+				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
+
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "fillConvFuncBuffer2[R&D]"));
+    Complex cfNorm, cfWtNorm;
+    Complex cpeak,wtcpeak;
+    {
+      Float sampling, samplingWt;
+      Int xSupport, ySupport, xSupportWt, ySupportWt;
+      CoordinateSystem cs_l;
+      // Extract the parameters index by (MuellerElement, Freq, W)
+      cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, 
+		      freqValue,
+		      //				wValues(iw), 
+		      wValue, 
+		      muellerElement);
+      cfb.getParams(cs_l, sampling, xSupport, ySupport, 
+		    freqValue,
+		    wValue, 
+		    muellerElement);
+      //
+      // Cache the A-Term for this polarization and frequency
+      //
+      Double conjFreq, vbPA;
+      CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(freqValue, wValue, muellerElement);
+      vbPA = thisCell->pa_p.getValue("rad");
+      conjFreq = thisCell->conjFreq_p;
+      CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l, thisCell->conjPoln_p);
+      IPosition pbshp(4,nx,ny,1,1);
+      TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
+      Bool doSquint=True; Complex tt;
+      ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
+      Double freq_l=freqValue;
+      //if (!isDryRun)
+      {
+	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, muellerElement,freq_l);//freqHi);
+	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,muellerElement,conjFreq);
+      }
+      // {
+      // 	Vector<String> csList;
+      // 	IPosition dummy;
+      // 	cout << "CoordSys:===================== ";
+      // 	csList = ftATermSq_l.coordinates().list(log_l,MDoppler::RADIO,dummy,dummy);
+      // 	cout << csList << endl;
+      // 	// csList = conjPolCS_l.list(log_l,MDoppler::RADIO,dummy,dummy);
+      // 	// cout << csList << endl;
+      // }
+
+      Vector<Double> cellSize;
+      {
+	Int linIndex=cs_l.findCoordinate(Coordinate::LINEAR);
+	LinearCoordinate lc=cs_l.linearCoordinate(linIndex);
+	Vector<Bool> axes(2); axes=True;
+	Vector<Int> dirShape(2); dirShape(0)=nx;dirShape(1)=ny;
+	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
+	cellSize = lc.increment();
+      }
+
+      // Int directionIndex=cs_l.findCoordinate(Coordinate::DIRECTION);
+      // DirectionCoordinate dc=cs_l.directionCoordinate(directionIndex);
+      // cellSize = dc.increment();
+      
+      //
+      // Now compute the PS x W-Term and apply the cached
+      // A-Term to build the full CF.
+      //
+      {
+	log_l << " CF("
+	      << "M:"<<muellerElement
+	      << ",C:" << freqValue/1e9
+	      << ",W:" << wValue << "): ";
+	Array<Complex> &cfWtBuf=(*(cfWtb.getCFCellPtr(freqValue, wValue, muellerElement))->storage_p);
+	Array<Complex> &cfBuf=(*(cfb.getCFCellPtr(freqValue, wValue, muellerElement))->storage_p);
+		    
+	cfWtBuf.resize(pbshp);
+	cfBuf.resize(pbshp);
+
+	const Vector<Double> sampling_l(2,sampling);
+	Matrix<Complex> cfBufMat(cfBuf.nonDegenerate()), 
+	  cfWtBufMat(cfWtBuf.nonDegenerate());
+	//
+	// Apply the Prolate Spheroidal and W-Term kernels
+	//
+	Vector<Double> s(2); s=sampling;
+	//Timer tim;
+	//tim.mark();
+	// if (psTerm.isNoOp() || isDryRun)
+	if (psTerm.isNoOp())
+	  cfBufMat = cfWtBufMat = 1.0;
+	else
+	  {
+	    psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+	    psTerm.applySky(cfWtBufMat, False); // Assign
+	  }
+
+	//tim.mark();
+	// if (!isDryRun)
+	  {
+	    if (wValue > 0)
+	      {
+		wTerm.applySky(cfBufMat, cellSize, wValue, cfBuf.shape()(0));///4);
+	      }
+	  }
+
+	IPosition PolnPlane(4,0,0,0,0),
+	  pbShape(4, cfBuf.shape()(0), cfBuf.shape()(1), 1, 1);
+	//
+	// Make TempImages and copy the buffers with PS *
+	// WKernel applied (too bad that TempImages can't be
+	// made with existing buffers)
+	//
+	//-------------------------------------------------------------		    
+	TempImage<Complex> twoDPB_l(pbShape, cs_l);
+	TempImage<Complex> twoDPBSq_l(pbShape,cs_l);
+	//-------------------------------------------------------------		    
+	// WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
+	cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+	//tim.mark();
+	cfBuf *= ftATerm_l.get();
+	//tim.show("W*A*2: ");
+	// WBAWP CODE END
+	//tim.mark();
+	twoDPB_l.putSlice(cfBuf, PolnPlane);
+	twoDPBSq_l.putSlice(cfWtBuf, PolnPlane);
+	//tim.show("putSlice:");
+
+	// To accumulate avgPB2, call this function. 
+	// PBSQWeight
+	// Bool PBSQ = False;
+	// if(PBSQ) makePBSq(twoDPBSq_l); 
+		    
+	//
+	// Set the ref. freq. of the co-ordinate system to
+	// that set by ATerm::applySky().
+	//
+	//tim.mark();
+	CoordinateSystem cs=twoDPB_l.coordinates();
+	Int index= twoDPB_l.coordinates().findCoordinate(Coordinate::SPECTRAL);
+	SpectralCoordinate SpCS = twoDPB_l.coordinates().spectralCoordinate(index);
+		    
+	Double cfRefFreq=SpCS.referenceValue()(0);
+	Vector<Double> refValue; refValue.resize(1); refValue(0)=cfRefFreq;
+	SpCS.setReferenceValue(refValue);
+	cs.replaceCoordinate(SpCS,index);
+	
+	//tim.mark();
+	// if (!isDryRun)
+	  {
+	    LatticeFFT::cfft2d(twoDPB_l);
+	    LatticeFFT::cfft2d(twoDPBSq_l);
+	  }
+	//tim.show("FFT*2:");
+
+	//tim.mark();
+	IPosition shp(twoDPB_l.shape());
+	IPosition start(4, 0, 0, 0, 0), pbSlice(4, shp[0]-1, shp[1]-1,1/*polInUse*/, 1),
+	  sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
+		    
+	cfBuf(Slicer(start,sliceLength)).nonDegenerate()
+	  =(twoDPB_l.getSlice(start, pbSlice, True));
+		    
+	shp = twoDPBSq_l.shape();
+	IPosition pbSqSlice(4, shp[0]-1, shp[1]-1, 1, 1),
+	  sqSliceLength(4,cfWtBuf.shape()(0)-1,cfWtBuf.shape()[1]-1,1,1);
+		    
+	cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
+	  =(twoDPBSq_l.getSlice(start, pbSqSlice, True));
+	//tim.show("Slicer*2:");
+	//
+	//tim.mark();
+	// if (!isDryRun)
+	  {
+	    if (wValue==0) wtcpeak = max(cfWtBuf);
+	    cfWtBuf /= wtcpeak;
+	  }
+	//tim.show("Norm");
+
+	//tim.mark();
+	// if (!isDryRun)
+	  resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+	//tim.show("Resize:");
+
+	//tim.mark();
+	Vector<Double> ftRef(2);
+	ftRef(0)=cfWtBuf.shape()(0)/2.0;
+	ftRef(1)=cfWtBuf.shape()(1)/2.0;
+	CoordinateSystem ftCoords=cs_l;
+	SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
+	
+	thisCell=cfWtb.getCFCellPtr(freqValue, wValue, muellerElement);
+	thisCell->coordSys_p = ftCoords;
+	thisCell->xSupport_p = xSupportWt;
+	thisCell->ySupport_p = ySupportWt;
+
+	//tim.show("CSStuff:");
+
+	//tim.mark();
+	// if (!isDryRun)
+	  {
+	    cpeak = max(cfBuf);
+	    cfBuf /= cpeak;
+	  }
+	//tim.show("Peaknorm:");
+
+	// if (!isDryRun) 
+	  resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
+
+	log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
+	
+	ftRef(0)=cfBuf.shape()(0)/2.0;
+	ftRef(1)=cfBuf.shape()(1)/2.0;
+
+	//tim.mark();
+	cfNorm=cfWtNorm=1.0;
+	// if ((wValue == 0) && (!isDryRun))
+	if (wValue == 0)
+	  {
+	    cfNorm=0; cfWtNorm=0;
+	    cfNorm = cfArea(cfBufMat, xSupport, ySupport, sampling);
+	    cfWtNorm = cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
+	  }
+	//tim.show("Area*2:");
+	
+	//tim.mark();
+	cfBuf /= cfNorm;
+	cfWtBuf /= cfWtNorm;
+	//tim.show("cfNorm*2:");
+
+	//tim.mark();
+	ftCoords=cs_l;
+	SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
+
+	CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(freqValue, wValue, muellerElement);
+	thisCell->pa_p=Quantity(vbPA,"rad");
+	thisCell->coordSys_p = ftCoords;
+	thisCell->xSupport_p = xSupport;
+	thisCell->ySupport_p = ySupport;
+
+	(cfWtb.getCFCellPtr(freqValue, wValue, muellerElement))->initCache();
+	(cfb.getCFCellPtr(freqValue, wValue, muellerElement))->initCache();
+	//tim.show("End*2:");
+      }
+    }
+  }
+
+
+  //
+  //----------------------------------------------------------------------
+  //
+  void AWConvFunc::makeConvFunction2(const String& cfCachePath,
+				     //const VisBuffer& vb,
+				     //const Int wConvSize,
+				     //const CountedPtr<PolOuterProduct>& pop,
+				     // const Float pa,
+				     // const Float dpa,
+				     const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				     const Matrix<Double>& ,//vbFreqSelection,
+				     CFStore2& cfs2,
+				     CFStore2& cfwts2)
+  {
+    LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
+    Int convSize, convSampling, polInUse;
+    Array<Complex> convFunc_l, convWeights_l;
+    Double wScale=0, cfRefFreq=-1, freqScale=1e8;
+    //  
+    // Get the coordinate system
+    //
+    const String uvGridDiskImage="uvgrid.im";
+    PagedImage<Complex> image_l(cfCachePath+"/"+uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
+    CoordinateSystem coords(image_l.coordinates());
+    
+    Int nx=image_l.shape()(0);//, ny=image.shape()(1);
+    CountedPtr<CFBuffer> cfb_p, cfwtb_p;
+    
+    IPosition cfsShape = cfs2.getShape();
+    IPosition wCFStShape = cfwts2.getShape();
+
+    Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
+
+    for (int iPA=0; iPA<cfsShape[0]; iPA++)
+      for (int iB=0; iB<cfsShape[1]; iB++)
+	  {
+	    log_l << "Filling CFs for baseline type " << iB << LogIO::WARN << LogIO::POST;
+	    cfb_p=cfs2.getCFBuffer(iPA,iB);
+	    cfwtb_p=cfwts2.getCFBuffer(iPA,iB);
+
+	    IPosition cfbShape = cfb_p->shape();
+	    for (int i=0; i<cfbShape(0); i++)
+	      for (int j=0; j<cfbShape(1); j++)
+		for (int k=0; k<cfbShape(2); k++)
+		  {
+		    CFCStruct miscInfo;
+		    CoordinateSystem cs_l;
+		    Int xSupport, ySupport;
+		    Float sampling;
+
+		    (*cfb_p)(i,j,k).getAsStruct(miscInfo); // Get the shape from CFCell
+
+		    convSampling=miscInfo.sampling;
+		    convSize=miscInfo.shape[0];
+		    cfb_p->getParams(cs_l, sampling, xSupport, ySupport,i,j,k);
+
+		    IPosition start(4, 0, 0, 0, 0);
+		    IPosition pbSlice(4, convSize, convSize, 1, 1);
+		    
+		    Matrix<Complex> screen(convSize, convSize);
+		    
+		    Int inner=convSize/(convSampling);
+		    //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
+		    Float innerQuaterFraction=4.0;
+		    
+		    // Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
+		    // psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
+		    
+		    //
+		    // By this point, the all the 4 axis (Time/PA, Freq, Pol,
+		    // Baseline) of the CFBuffer objects have been setup.  The CFs
+		    // will now be filled using the supplied PS-, W- ad A-term objects.
+		    //
+		    
+		    fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
+					miscInfo.freqValue, miscInfo.wValue, wScale, 
+					// (Double)pa, 
+					miscInfo.freqValue,
+					miscInfo.muellerElement, 
+					// polIndexMap, 
+					//vb, 
+					//psScale,
+					*psTerm_p, *wTerm_p, *aTerm_p);
+		    //cfb_p->show(NULL,cerr);
+		    //
+		    // Make the CFStores persistent.
+		    //
+		    cfs2.makePersistent(cfCachePath.c_str());
+		    cfwts2.makePersistent(cfCachePath.c_str(),"WT");
+		  }
+	  
+	  } // End of loop over baselines
   }
 };

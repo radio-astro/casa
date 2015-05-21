@@ -471,10 +471,11 @@ namespace casa{
 	// Apply the PB...
 	//
 	Bool doSquint=True;
-	vlaPB.applyPB(twoDPB, vb, bandID_p, doSquint);
+	Double pa=getPA(vb);
+	vlaPB.applyPB(twoDPB, pa, bandID_p, doSquint);
 	doSquint = False;
 	//	vlaPB.applyPBSq(twoDPBSq, vb, bandID_p, doSquint);
-	vlaPB.applyPB(twoDPBSq, vb, bandID_p, doSquint);
+	vlaPB.applyPB(twoDPBSq, pa, bandID_p, doSquint);
 	/*
 	// 	twoDPB.put(abs(twoDPB.get()));
 	// 	twoDPBSq.put(abs(twoDPBSq.get()));

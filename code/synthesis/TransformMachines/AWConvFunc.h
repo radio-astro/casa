@@ -80,11 +80,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Vector<Double>& freqValues,
 				    const Vector<Double>& wValues,
 				    const Double& wScale,
+				    const Double& vbPA, const Double& freqHi,
 				    const PolMapType& muellerElements,
 				    const PolMapType& muellerElementsIndex,
 				    const VisBuffer& vb, const Float& psScale,
 				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm, 
 				    Bool isDryRun=False);
+    void makeConvFunction2(const String& uvGridDiskimage,
+			   //const VisBuffer& vb,
+			   //const Int wConvSize,
+			   //const CountedPtr<PolOuterProduct>& pop,
+			   // const Float pa,
+			   // const Float dpa,
+			   const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+			   const Matrix<Double>& vbFreqSelection,
+			   CFStore2& cfs,
+			   CFStore2& cfwts);
+    void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
+			     const Int& nx, const Int& ny,
+			     const Double& freqValue,
+			     const Double& wValue,
+			     const Double& wScale,
+			     // const Double& vbPA, 
+			     const Double& freqHi,
+			     const Int& muellerElement,
+			     //const VisBuffer& vb,
+			     PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
 
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
@@ -128,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 ImageInterface<Float>& theavgPB,
 				 Bool reset=True);
     void makePBSq(ImageInterface<Complex>& inImage);
-    void makeConjPolAxis(CoordinateSystem& cs);
+    void makeConjPolAxis(CoordinateSystem& cs, Int conjStokes_in=-1);
 
     Complex cfArea(Matrix<Complex>& cf, const Int& xSupport, const Int& ySupport, const Float& sampling);
 

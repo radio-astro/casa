@@ -1130,7 +1130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 
-	isDryRun = False;
+	// isDryRun = True;
 	//cerr << "Is Dry Run = " << dryRun() << endl;
 	Bool pleaseDoAlsoFillTheCF=!dryRun();
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
@@ -1179,6 +1179,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     if (cfSource != CFDefs::MEMCACHE)
       {
+	if (dryRun())
+	  {
+	    PagedImage<Complex> thisGrid(lattice->shape(),image.coordinates(), 
+					 cfCache_p->getCacheDir()+"/uvgrid.im");
+	  }
+
 	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
 	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
 	Double memUsed=cfs2_p->memUsage();

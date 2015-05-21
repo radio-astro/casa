@@ -69,6 +69,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Int& cfKey=0,
 			  const Int& muellerTerm=0,
 			  const Double freqVal=-1.0);
+    virtual void applySky(ImageInterface<Complex>& outImages,
+			  const Double& pa,
+			  const Bool doSquint,
+			  const Int& cfKey,
+			  const Int& muellerTerm,
+			  const Double freqVal=-1.0);
+
+    void cacheVBInfo(const VisBuffer& vb);
+    Int getBandID(const Double& freq, const String& telescopeName);
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
@@ -93,7 +102,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 CoordinateSystem& feedCoord);
 
   private:
-    Float Diameter_p, Nant_p, HPBW, sigma;
     Vector<Int> polMap_p;
     Vector<Int> feedStokes_p;
   };

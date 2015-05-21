@@ -87,7 +87,7 @@ class SIMapperCollection
 
   Bool anyNonZeroModels();
 
-  const CountedPtr<FTMachine> getFTM(Int which) {return itsMappers[which]->getFTM();};
+  const CountedPtr<FTMachine> getFTM(Int which, const Bool ift=True) {return itsMappers[which]->getFTM(ift);};
 
 protected:
 

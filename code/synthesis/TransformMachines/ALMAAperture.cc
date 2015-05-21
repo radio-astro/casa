@@ -104,9 +104,7 @@ namespace casa{
       }
     return *this;
   }
-
-  Int ALMAAperture::getVisParams(const VisBuffer& vb, 
-                                 const CoordinateSystem& /*skyCoord*/)
+  void ALMAAperture::cacheVBInfo(const VisBuffer& vb)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++){
@@ -119,25 +117,53 @@ namespace casa{
 	throw(err);
       }
     }
+    telescopeName_p=telescopeNames[0];
+  }
 
-    MVFrequency FreqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
-    Double Freq = FreqQ.getValue();
-
+  Int ALMAAperture::getBandID(const Double& freq, const String& telescopeName)
+  {
     Int bandID = -1;
     if(haveCannedResponses_p){
       String bandName;
-      if(aR_p->getBandName(bandName, "ALMA", FreqQ)){
+      if(aR_p->getBandName(bandName, "ALMA", freq)){
 	bandID = atoi(bandName.substr(bandName.find("and")+3).c_str()); // band names start with "band" 
       }
       else{
 	logIO() << LogOrigin("ALMAAperture", "getVisParams")
 		<< LogIO::WARN
 		<< "We don't have predefined antenna responses for ALMA at "
-		<< Freq << " Hz. Will try to use raytracing instead."
+		<< freq << " Hz. Will try to use raytracing instead."
 		<< LogIO::POST;
       }      
     }
     return bandID;
+  }
+
+  Int ALMAAperture::getVisParams(const VisBuffer& vb, 
+                                 const CoordinateSystem& /*skyCoord*/)
+  {
+    cacheVBInfo(vb);
+
+    MVFrequency FreqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
+    Double Freq = FreqQ.getValue();
+
+    return getBandID(Freq, telescopeName_p);
+
+    // Int bandID = -1;
+    // if(haveCannedResponses_p){
+    //   String bandName;
+    //   if(aR_p->getBandName(bandName, "ALMA", FreqQ)){
+    // 	bandID = atoi(bandName.substr(bandName.find("and")+3).c_str()); // band names start with "band" 
+    //   }
+    //   else{
+    // 	logIO() << LogOrigin("ALMAAperture", "getVisParams")
+    // 		<< LogIO::WARN
+    // 		<< "We don't have predefined antenna responses for ALMA at "
+    // 		<< Freq << " Hz. Will try to use raytracing instead."
+    // 		<< LogIO::POST;
+    //   }      
+    // }
+    // return bandID;
   }
   
   void ALMAAperture::makeFullJones(ImageInterface<Complex>& pbImage,

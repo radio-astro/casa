@@ -2086,14 +2086,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  void FTMachine::setCFCache(CountedPtr<CFCache>& cfc) 
+  void FTMachine::setCFCache(CountedPtr<CFCache>& cfc, const Bool loadCFC) 
   {
-    cfCache_p = cfc;
-    if (!cfCache_p.null())
-      {
-	cfs2_p = CountedPtr<CFStore2>(&cfCache_p->memCache2_p[0],False);//new CFStore2;
-	cfwts2_p =  CountedPtr<CFStore2>(&cfCache_p->memCacheWt2_p[0],False);//new CFStore2;
-      }
+    throw(AipsError("FTMachine::setCFCache() directly called!"));
   }
   /*
   /// Move to individual FTMs............ make it pure virtual.

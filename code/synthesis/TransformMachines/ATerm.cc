@@ -59,7 +59,8 @@ namespace casa{
       }
   };
 
-  Int ATerm::makePBPolnCoords(const VisBuffer&vb,
+  Int ATerm::makePBPolnCoords(//const VisBuffer&vb,
+			      const Vector<Int>& vbCorrType,
 			      const Int& convSize,
 			      const Int& convSampling,
 			      const CoordinateSystem& skyCoord,
@@ -106,7 +107,7 @@ namespace casa{
     try
       {
 	//	cerr << "### " << polMap_p_base << " " << vb.corrType() << endl;
-	for(Int i=0;i<M;i++) if (polMap_p_base(i) > -1) {poln(N) = vb.corrType()(i);N++;}
+	for(Int i=0;i<M;i++) if (polMap_p_base(i) > -1) {poln(N) = vbCorrType(i);N++;}
 	StokesCoordinate polnCoord(poln);
 	Int StokesIndex = feedCoord.findCoordinate(Coordinate::STOKES);
 	feedCoord.replaceCoordinate(polnCoord,StokesIndex);

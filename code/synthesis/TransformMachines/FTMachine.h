@@ -260,6 +260,8 @@ public:
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
 
+  virtual const CountedPtr<ConvolutionFunction>& getAWConvFunc() {return convFuncCtor_p;};
+
   virtual void findConvFunction(const ImageInterface<Complex>&,// image,
 				const VisBuffer& /*vb*/) {};
   // Get the final weights image
@@ -343,6 +345,7 @@ public:
 
   virtual void setSpwChanSelection(const Cube<Int>& spwchansels);
   virtual void setSpwFreqSelection(const Matrix<Double>& spwfreqs);
+  virtual Matrix<Double> getSpwFreqSelection() {return spwFreqSel_p;};
 
   // set the order of the Taylor term for MFS this is to tell
   // A-Projection to qualify the accumulated avgPB for each Taylor
@@ -361,7 +364,8 @@ public:
   void setnumthreads(Int n);
   Int getnumthreads();
 
-  void setCFCache(CountedPtr<CFCache>& cfc);
+  virtual void setCFCache(CountedPtr<CFCache>& cfc, const Bool resetCFC=True);
+  CountedPtr<CFCache> getCFCache() {return cfCache_p;};
   String getCacheDir() { return cfCache_p->getCacheDir(); };
 
   virtual void setDryRun(Bool val) {isDryRun=val;cerr << "FTM: " << isDryRun << endl;};

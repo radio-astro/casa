@@ -70,7 +70,8 @@ namespace casa{
     void regridAperture(CoordinateSystem& skyCS, 
 			IPosition& skyShape, 
 			TempImage<Complex>& uvGrid, 
-			const VisBuffer& vb,
+			//const VisBuffer& vb,
+			Double& pa,
 			Bool doSquint=True,Int bandID=-1,Int muellerTerm=0 ,Double freqVal=-1.0);
     void regridAperture(CoordinateSystem& skyCS,
 			IPosition& skyShape,
@@ -88,18 +89,18 @@ namespace casa{
 			   const Vector<Double>& uvIncr);
 
 
-    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
+    void applyPB(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
 		 const Vector<Float>& paList, Int bandID, Bool doSquint=False);
-    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		 Bool doSquint=False, Double freqVal=-1.0);
-    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, 
+    void applyPB(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
+		 Int bandID=-1, Bool doSquint=False, Double freqVal=-1.0);
+    void applyPB(ImageInterface<Complex>& pbImage, Double& pa,//const VisBuffer& vb, 
 		 Bool doSquint=True,Int bandID=-1, Int muellerTerm=0, Double freqVal=-1.0);
-    void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, 
+    void applyPBSq(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
 		   const Vector<Float>& paList, Int bandID, Bool doSquint=False);
-    void applyPBSq(ImageInterface<Float>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		   Bool doSquint=False);
-    void applyPBSq(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Int bandID=-1, 
-		   Bool doSquint=True);
+    void applyPBSq(ImageInterface<Float>& pbImage, Double& pa,//const VisBuffer& vb, 
+		   Int bandID=-1, Bool doSquint=False);
+    void applyPBSq(ImageInterface<Complex>& pbImage, Double& pa,//const VisBuffer& vb, 
+		   Int bandID=-1,  Bool doSquint=True);
     void makeFullJones(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint, 
 	       Int bandID, Double freqVal=-1.0);
     void skyMuller(ImageInterface<Complex>& skyJones);

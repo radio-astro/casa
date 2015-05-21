@@ -156,7 +156,9 @@ namespace casa{
 					  Int& xSupport, Int& ySupport, 
 					  const Double& freqValue, const Double& wValue, 
 					  const Int& muellerElement,
-					  const String& fileName)
+					  const String& fileName,
+					  const Double& conjFreq,
+					  const Int& conjPoln)
   {
     RigidVector<Int,3> ndx=getIndex(freqValue, wValue, muellerElement);
     ndx(0)=inu; ndx(1)=iw;//ndx(2) = muellerElements_p(ipx)(ipy);
@@ -164,6 +166,8 @@ namespace casa{
     cfCells_p(ndx(0),ndx(1),ndx(2))->xSupport_p = xSupport;
     cfCells_p(ndx(0),ndx(1),ndx(2))->ySupport_p = ySupport;
     cfCells_p(ndx(0),ndx(1),ndx(2))->muellerElement_p = muellerElement;
+    cfCells_p(ndx(0),ndx(1),ndx(2))->conjFreq_p = conjFreq;
+    cfCells_p(ndx(0),ndx(1),ndx(2))->conjPoln_p = conjPoln;
     if (fileName != "")
       cfCells_p(ndx(0),ndx(1),ndx(2))->fileName_p = fileName;
 

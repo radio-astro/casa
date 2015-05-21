@@ -38,7 +38,10 @@
 // #include <tables/Tables/Table.h>
 
 namespace casa{
-  CFCache::~CFCache()  {}
+  CFCache::~CFCache()  
+  {
+    //cerr << "#################" << "~CFCache() called" << endl;
+  }
   //
   //-------------------------------------------------------------------------
   // Load just the axillary info. if found.  The convolution functions
@@ -181,12 +184,22 @@ namespace casa{
   void CFCache::initCacheFromList2(const String& path, 
 				   const Vector<String>& cfFileNames, 
 				   const Vector<String>& cfWtFileNames, 
-				   Float selectedPA, Float dPA)
+				   Float selectedPA, Float dPA,
+				   const Int verbose)
   {
-    fillCFListFromDisk(cfFileNames, path, memCache2_p, True, selectedPA, dPA);
-    fillCFListFromDisk(cfWtFileNames, path, memCacheWt2_p, False, selectedPA, dPA);
+    Vector<String> cf, wtcf;
+    cf=cfFileNames;
+    wtcf=cfWtFileNames;
+    // for (int i = 0; i < cfFileNames.nelements(); i++)
+    //   cf[i] = path+"/"+cfFileNames[i];
+    // for (int i = 0; i < cfWtFileNames.nelements(); i++)
+    //   wtcf[i] = path+"/"+cfWtFileNames[i];
+    fillCFListFromDisk(cf, path, memCache2_p, True, selectedPA, dPA,verbose);
+    fillCFListFromDisk(wtcf, path, memCacheWt2_p, False, selectedPA, dPA, verbose);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
+    if (verbose > 0) summarize(memCache2_p,   "CFS",   True);
+    //summarize(memCacheWt2_p, "WTCFS", False);
   }
 
   void CFCache::initCache2(Float selectedPA, Float dPA)
@@ -231,7 +244,8 @@ namespace casa{
   //
   void CFCache::fillCFListFromDisk(const Vector<String>& fileNames, 
 				   const String& CFCDir, CFStoreCacheType2& memStore,
-				   Bool showInfo, Float selectPAVal, Float dPA)
+				   Bool showInfo, Float selectPAVal, Float dPA,
+				   const Int verbose)
   {
     LogOrigin logOrigin("CFCache", "fillCFListFromDisk");
     LogIO log_l(logOrigin);
@@ -304,11 +318,11 @@ namespace casa{
 			       "Loading CFs", "","","",True);
 	      for (uInt i=0; i < fileNames.nelements(); i++)
 		{
-		  Double paVal, wVal, fVal, sampling; Int mVal, xSupport, ySupport;
+		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
 		  getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
-			      xSupport, ySupport, fVal, wVal, mVal,False);
+			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,False);
 		
 		  Bool pickThisCF=True;
 		  if (selectPA) pickThisCF = (fabs(paVal - selectPAVal) <= dPA);
@@ -374,14 +388,14 @@ namespace casa{
 		//
 		for (uInt nf=0; nf<fileNames.size(); nf++)
 		  {
-		    Double paVal, wVal, fVal, sampling; 
-		    Int mVal, xSupport, ySupport;
+		    Double paVal, wVal, fVal, sampling, conjFreq; 
+		    Int mVal, xSupport, ySupport, conjPoln;
 		    CoordinateSystem coordSys;
 		    //
 		    // Get the parameters from the CF file
 		    //
 		    getCFParams(fileNames[nf], pixBuf, coordSys,  sampling, paVal, 
-				xSupport, ySupport, fVal, wVal, mVal);
+				xSupport, ySupport, fVal, wVal, mVal, conjFreq, conjPoln);
 		    //
 		    // Get the storage buffer from the CFBuffer and
 		    // fill it in what we got from the getCFParams
@@ -410,7 +424,7 @@ namespace casa{
 		    // treatment for mndx, please don't ask.  Not just
 		    // yet (SB)).
 		    cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
-				   fVal, wVal, mVal,fileNames[nf]);
+				   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln);
 
 
 		    // if (nf==0)
@@ -419,7 +433,7 @@ namespace casa{
 		    // 	      << cfCacheTable_l[ipa].cfNameList.size()  << LogIO::POST;
 		    // 	log_l << "F: " << fList << endl << "M: " << mList << endl << "W: " << wList << endl << LogIO::POST;
 		    //   }
-		    log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << LogIO::POST;
+		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << LogIO::POST;
 		  }
 		// cfb->show("cfb: ");
 
@@ -446,8 +460,10 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore,
-				Bool showInfo, Float selectPAVal, Float dPA)
+  void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, 
+				CFStoreCacheType2& memStore,
+				Bool showInfo, Float selectPAVal, Float dPA, 
+				const Int verbose)
   {
     LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
     LogIO log_l(logOrigin);
@@ -461,7 +477,7 @@ namespace casa{
 		<< dirObj.path().originalName() << ": " 
 		<< fileNames.nelements() << LogIO::POST;
 	
-	fillCFListFromDisk(fileNames, CFCDir, memStore, showInfo, selectPAVal, dPA);
+	fillCFListFromDisk(fileNames, CFCDir, memStore, showInfo, selectPAVal, dPA, verbose);
       }
     catch(AipsError& x)
       {
@@ -479,6 +495,7 @@ namespace casa{
 			    Double& paVal,
 			    Int& xSupport, Int& ySupport,
 			    Double& fVal, Double& wVal, Int& mVal,
+			    Double& conjFreq, Int& conjPoln,
 			    Bool loadPixels)
   {
     try
@@ -493,6 +510,8 @@ namespace casa{
 	miscinfo.get("Xsupport", xSupport);
 	miscinfo.get("Ysupport", ySupport);
 	miscinfo.get("Sampling", sampling);
+	miscinfo.get("ConjFreq", conjFreq);
+	miscinfo.get("ConjPoln", conjPoln);
 	Int index= thisCF.coordinates().findCoordinate(Coordinate::SPECTRAL);
 	coordSys = thisCF.coordinates();
 	SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
