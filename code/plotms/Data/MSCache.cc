@@ -600,8 +600,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
 	for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 		for(vi.origin(); vi.more(); vi.next()) {
-
-            if (vb->nRows() > 0) { // make sure average yielded some data
+            if (vb->nRows() > 0) {
                 if (chunk >= nChunk_) {  // nChunk_ was just an estimate
                     increaseChunks(chunk-nChunk_+1);  // updates nChunk_
                     chshapes_.resize(4, nChunk_, True);
@@ -720,19 +719,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 		// Accumulate into the averager
 		pmsvba.accumulate(*vb);
 
-		// Advance to next VB
-		vi.next();
-		if (verby) ss << " next VB ";
-
-		if (!vi.more() && vi.moreChunks()) {
-			// go to first vb in next chunk
-			if (verby) ss << "  next chunk";
-			vi.nextChunk();
-			vi.origin();
-		}
-
-		if (verby) ss << "\n";
-		if (verby) logLoad(ss.str());
+		
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
 		// The averaged VisBuffer
@@ -750,9 +737,9 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			goodChunk_(chunk)  = True;
 
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
-				if (useAveragedVisBuffer(loadAxes[i]))
+				if (useAveragedVisBuffer(loadAxes[i])) 
 					vbToUse = &avb;
-				else
+                else
 					vbToUse = vb;
 				loadAxis(vbToUse, chunk, loadAxes[i], loadData[i]);
 			}
@@ -763,6 +750,19 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			chshapes_.column(chunk) = 0;
 		}
 
+        // Advance to next VB
+		vi.next();
+		if (verby) ss << " next VB ";
+
+		if (!vi.more() && vi.moreChunks()) {
+			// go to first vb in next chunk
+			if (verby) ss << "  next chunk";
+			vi.nextChunk();
+			vi.origin();
+		}
+
+		if (verby) ss << "\n";
+		if (verby) logLoad(ss.str());
 		// If a thread is given, update it.
 		if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
 				chunk % THREAD_SEGMENT == 0)) {
