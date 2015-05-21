@@ -53,6 +53,10 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 
+#include <casa/Logging/LogMessage.h>
+#include <casa/Logging/LogSink.h>
+#include <casa/Logging/LogFilter.h>
+
 #include <ctime>
 
 namespace casa {
@@ -333,9 +337,15 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("chanbin", chanVal);
 	}
 
+    LogFilter* oldfilter = static_cast<LogFilter*>(LogSink().globalSink().filter().clone());
 	MSTransformIteratorFactory* factory = NULL;
 	try {
+        // Filter out MSTransformManager setup messages
+        LogFilter filter(LogMessage::WARN);
+        LogSink().globalSink().filter(filter);
+
 		factory = new MSTransformIteratorFactory(configuration);
+
 		if (estimateMemory) {
 			visBufferShapes_ = factory->getVisBufferStructure();
 			Int chunks = visBufferShapes_.size();
@@ -344,11 +354,15 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		}
 		vi_p = new vi::VisibilityIterator2(*factory);
 	} catch(AipsError& log) {
+        // now put filter back
+        LogSink().globalSink().filter(*oldfilter);
 		try {
 			if (factory) delete factory;
 		} catch(AipsError ae) {}
 		throw(AipsError(log.getMesg()));
 	}
+    // now put filter back
+    LogSink().globalSink().filter(*oldfilter);
 	if (factory) delete factory;
 }
 

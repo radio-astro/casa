@@ -28,9 +28,6 @@
 #include <plotms/Threads/ThreadCommunication.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <msvis/MSVis/UtilJ.h>
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogFilter.h>
 #include <QDebug>
 
 namespace casa {
@@ -96,12 +93,7 @@ PlotMSPlot* CacheThread::getPlot(){
 bool CacheThread::doWork(){
 	bool success = true;
 
-	// change casalog filter level to remove MSTransformManager messages
-	LogMessage::Priority priority = LogMessage::WARN;
-        LogFilter filter(priority);
-        LogSink().globalSink().filter(filter);
-
-	 // Make sure axes data vector is same length as axes vector.
+	// Make sure axes data vector is same length as axes vector.
 	if(itsAxesData.size() != workAxes.size()){
 		 itsAxesData.resize(workAxes.size(), PMS::DEFAULT_DATACOLUMN);
 	}
