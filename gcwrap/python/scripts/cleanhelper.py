@@ -2279,6 +2279,7 @@ class cleanhelper:
             # ms must be closed here if ms.cvelfreqs failed with an exception
             ms.close()
             raise
+        ms.close()
         
         #print newfreqs
         descendingnewfreqs=False
@@ -2318,7 +2319,6 @@ class cleanhelper:
             print "len(newfreqs)===>",len(newfreqs)
           else:
             print "newfreqs=",newfreqs
-        ms.close()
 
         # set output number of channels
         if nchan ==1:
