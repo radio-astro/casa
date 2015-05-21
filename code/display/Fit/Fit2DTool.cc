@@ -321,6 +321,13 @@ namespace casa {
 					                      "There was an error writing the source estimates file.");
 					return;
 				}
+				else {
+					QFile estFile(estimatesFileName.c_str());
+					if (estFile.size() == 0 ){
+						QMessageBox::warning( this, "Empty Estimates File", "Estimates file is empty");
+						return;
+					}
+				}
 			}
 		}
 
