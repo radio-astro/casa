@@ -223,10 +223,8 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 	}
 
 	Vector<Double> newEFFECTIVE_BW(effectiveBWColr(id0));
-	Double newREF_FREQUENCY(refFrequencyColr(id0));
 	Int newMEAS_FREQ_REF = measFreqRefColr(id0);
 	Vector<Double> newRESOLUTION(resolutionColr(id0));
-	Double newTOTAL_BANDWIDTH = totalBandwidthColr(id0);
 
 	vector<Int> averageN; // For each new channel store the number of old channels to average over
 	vector<vector<Int> > averageWhichSPW; // For each new channel store the (old) SPWs to average over
@@ -698,10 +696,6 @@ Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
 		newCHAN_FREQ.assign(Vector<Double> (mergedChanFreq));
 		newCHAN_WIDTH.assign(Vector<Double> (mergedChanWidth));
 		newEFFECTIVE_BW.assign(Vector<Double> (mergedEffBW));
-		newREF_FREQUENCY = newCHAN_FREQ(0);
-		newTOTAL_BANDWIDTH =	fabs(newCHAN_FREQ(newNUM_CHAN - 1) - newCHAN_FREQ(0)) +
-								fabs(newCHAN_WIDTH(newNUM_CHAN - 1) / 2.) +
-								fabs(newCHAN_WIDTH(0) / 2.);
 		newRESOLUTION.assign(Vector<Double> (mergedRes));
 		averageN = mergedAverageN;
 		averageWhichSPW = mergedAverageWhichSPW;
