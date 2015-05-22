@@ -38,6 +38,12 @@ class WeightScaling;
 
 }
 
+#if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+    (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#define CASA_WPOP_UNUSED
+#endif
 
 class DummyBufferImpl: public vi::VisBuffer2
 {
@@ -218,6 +224,11 @@ protected:
     virtual void setRekeyable (Bool /*isRekeable*/) {}
 
 };
+
+#ifdef CASA_WPOP
+#pragma GCC diagnostic pop
+#define CASA_WPOP
+#endif
 
 
 class CTCache
