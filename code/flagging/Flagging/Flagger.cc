@@ -956,7 +956,7 @@ Bool Flagger::setmanualflags(Bool autocorr,
 	  The RFASelector will handle it. */
 		if (clipexpr.length() && cliprange.nelements() == 2 &&
 				(cliprange[0] < cliprange[1] ||
-						cliprange[0] <= cliprange[1] && !outside // i.e. exact matching
+						(cliprange[0] <= cliprange[1] && !outside) // i.e. exact matching
 				)
 		)
 		{
