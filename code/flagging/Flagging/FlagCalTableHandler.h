@@ -149,7 +149,7 @@ public:
     virtual void setWeightMat (const Matrix<Float>& /*value*/) {}
     virtual const Cube<Float> & weightSpectrum () const {static Cube<Float> dummy; return dummy;}
     virtual void setWeightSpectrum (const Cube<Float>& /*value*/) {}
-    virtual const Cube<float>& sigmaSpectrum() const {Cube<Float> dummy; return dummy;}
+    virtual const Cube<float>& sigmaSpectrum() const {static Cube<Float> dummy; return dummy;}
     virtual void setSigmaSpectrum(const Cube<float>&) {}
 
     virtual const Cube<Complex> & visCube () const {static Cube<Complex> dummy; return dummy;}

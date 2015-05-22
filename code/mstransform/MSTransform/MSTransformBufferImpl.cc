@@ -135,7 +135,7 @@ void MSTransformBufferImpl::resetState()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-const void MSTransformBufferImpl::generateWeights() const
+void MSTransformBufferImpl::generateWeights() const
 {
 	// Make sure shape is defined
 	getShape();
@@ -1387,11 +1387,11 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 
 	Complex cph;
 	Double ph, udx;
-	for (Int row_idx = 0; row_idx < nRows_p; ++row_idx)
+	for (uInt row_idx = 0; row_idx < nRows_p; ++row_idx)
 	{
 		udx = phase(row_idx) * -2.0 * C::pi / C::c; // in radian/Hz
 
-		for (Int chan_idx = 0; chan_idx < nChannels_p; ++chan_idx)
+		for (uInt chan_idx = 0; chan_idx < nChannels_p; ++chan_idx)
 		{
 			// Calculate the Complex factor for this row and channel
 			ph = udx * freq(chan_idx);
@@ -1401,7 +1401,7 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 				cph = Complex(cos(ph), sin(ph));
 
 				// Shift each correlation:
-				for (Int corr_idx = 0; corr_idx < nCorrelations_p; ++corr_idx)
+				for (uInt corr_idx = 0; corr_idx < nCorrelations_p; ++corr_idx)
 				{
 					if (visCubeOk_p)
 					{

@@ -1576,7 +1576,6 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 		// First find channel start and stop for this spw
 		Int currentSpw = visibilityBuffer_p->spectralWindows()(0);
 		Int nSpw,width;
-		bool spwFound = false;
 		uInt channelStart = 0,channelStop = UINT_MAX;
 		channelList_p.shape(nSpw,width);
 		for (uShort spw_i=0;spw_i<nSpw;spw_i++)
@@ -1585,7 +1584,6 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 			{
 				channelStart = channelList_p(spw_i,1);
 				channelStop = channelList_p(spw_i,2);
-				spwFound = true;
 				for (uInt channel_i=0;channel_i<nChannels;channel_i++)
 				{
 					if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);

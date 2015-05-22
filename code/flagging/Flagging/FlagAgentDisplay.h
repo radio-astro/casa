@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool showBandpass_p;
 
     Vector<dbus::variant> panels_p, report_panels_p;
-    char *dock_xml_p, *report_dock_xml_p;
+    const char *dock_xml_p, *report_dock_xml_p;
 //    Bool showBandpass_p;
 
     // Control parameters
