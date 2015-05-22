@@ -1867,7 +1867,7 @@ Bool MSTransformDataHandler::fillDDTables()
 	for (uInt k = 0; k < nddid; ++k)
 	{
 		// jagonzal (CAS-6733): I don't understand why we don't assign polID directly instead of the DDI row
-		if (spw2ddid_p[k] < polID_p.size())
+		if ((size_t)spw2ddid_p[k] < polID_p.size())
 		{
 			newPolId[k] = polID_p[spw2ddid_p[k]];
 		}
@@ -2604,7 +2604,7 @@ Bool MSTransformDataHandler::copyFeed()
 	    MSMetaData msmeta(&mssel_p, 0);
 	    std::set<uInt> wvrspw = msmeta.getWVRSpw();
 	    for (std::set<uInt>::iterator bbit = wvrspw.begin(); bbit != wvrspw.end(); ++bbit){
-	        if (spw_p[0] == *bbit){
+	        if ((uInt)spw_p[0] == *bbit){
 	            os << LogIO::DEBUG1 << "Skipping spw="<<*bbit<<" because it is WVR and has no FEED content" << LogIO::POST;
 	            return true;
 	        }
