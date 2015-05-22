@@ -1676,11 +1676,12 @@ Record Flagger::run (Bool trial, Bool reset)
 					// start pass for all active agents
 					//cout << "-----------subtitle=" << subtitle << endl;
 					for( uInt ival = 0; ival<acc.size(); ival++ )
-						if ( active(ival) )
+						if ( active(ival) ) {
 							if ( iter_mode(ival) == RFA::DATA )
 								acc[ival]->startData(new_field_spw);
 							else if ( iter_mode(ival) == RFA::DRY )
 								acc[ival]->startDry(new_field_spw);
+						}
 					// iterate over visbuffers
 					for( vi.origin(); vi.more() && nactive; vi++,itime++ ) {
 
@@ -1757,11 +1758,12 @@ Record Flagger::run (Bool trial, Bool reset)
 					// end pass for all agents
 					for( uInt ival = 0; ival<acc.size(); ival++ )
 					{
-						if ( active(ival) )
+						if ( active(ival) ) {
 							if ( iter_mode(ival) == RFA::DATA )
 								iter_mode(ival) = acc[ival]->endData();
 							else if ( iter_mode(ival) == RFA::DRY )
 								iter_mode(ival) = acc[ival]->endDry();
+						}
 					}
 				}
 				else  // dry pass only
