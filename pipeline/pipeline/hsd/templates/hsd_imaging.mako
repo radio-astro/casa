@@ -122,7 +122,7 @@ It generates an image combined spectral data from whole antenna as well as image
 <h3>Jy/K Conversion Factor</h3>
 The following table lists the Jy/K factor applied to the spectral data. 
 % if reffile is not None and len(reffile) > 0 and os.path.exists(os.path.join(stage_dir, os.path.basename(reffile))):
-Input file is <a class="replace-pre" href="${os.path.join(stage_dir, os.path.basename(reffile))}">${os.path.basename(reffile)}</a>.
+Input file is <a class="replace-pre" href="${os.path.relpath(reffile, pcontext.report_dir)}">${os.path.basename(reffile)}</a>.
 % else:
 No Jy/K factors file is specified. 
 % endif

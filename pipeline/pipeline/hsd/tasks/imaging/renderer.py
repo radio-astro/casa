@@ -62,12 +62,14 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                 if ckey is not None:
                                     jyperk[vis][ant][spwid][corr] = fp[ckey]
                 reffile = r.outcome['reffile']
+        reffile_copied = None
         if reffile is not None and os.path.exists(reffile):
             stage_dir = os.path.join(context.report_dir, 'stage%s'%(results.stage_number))
             LOG.debug('copying %s to %s'%(reffile, stage_dir))
             shutil.copy2(reffile, stage_dir)
+            reffile_copied = os.path.join(stage_dir, os.path.basename(reffile))
         ctx.update({'jyperk': jyperk,
-                    'reffile': reffile})
+                    'reffile': reffile_copied})
             
         map_types = {'sparsemap': {'type': 'sd_sparse_map',
                                    'plot_title': 'Sparse Profile Map'},
