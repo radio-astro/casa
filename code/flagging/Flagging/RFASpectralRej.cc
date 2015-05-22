@@ -152,19 +152,10 @@ RFASpectralRej::RFASpectralRej  ( RFChunkStats &ch,const RecordInterface &parm )
   {
     Vector<Int> dbg;
     parm.get(RF_DEBUG,dbg);
-    Int ifr=0,it=0;
-    if( dbg.nelements() == 2 )
+    if(dbg.nelements() != 2 && dbg.nelements() != 3)
     {
-      ifr = dbg(0); 
-      it = dbg(1);
-    }
-    else if( dbg.nelements() == 3 )
-    {
-      ifr = chunk.antToIfr(dbg(0),dbg(1));
-      it  = dbg(2);
-    }
-    else
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NIFR,NTIME] or [ANT1,ANT2,NTIME]"<<LogIO::EXCEPTION;
+    }
   }
 }
 
