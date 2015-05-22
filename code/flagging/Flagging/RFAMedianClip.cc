@@ -46,13 +46,9 @@ RFATimeMedian::RFATimeMedian( RFChunkStats &ch,const RecordInterface &parm ) :
   {
     Vector<Int> dbg;
     parm.get(RF_DEBUG,dbg);
-    Int ifr=0;
-    if( dbg.nelements() == 2 )
-      ifr = dbg(1);
-    else if( dbg.nelements() == 3 )
-      ifr = chunk.antToIfr(dbg(1),dbg(2));
-    else
+    if (dbg.nelements() != 2 && dbg.nelements() != 3) {
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NCH,NIFR] or [NCH,ANT1,ANT2]"<<LogIO::EXCEPTION;
+    }
   }
 }
 
@@ -248,19 +244,10 @@ RFAFreqMedian::RFAFreqMedian( RFChunkStats &ch,const RecordInterface &parm ) :
   {
     Vector<Int> dbg;
     parm.get(RF_DEBUG,dbg);
-    Int ifr,it;
-    if( dbg.nelements() == 2 )
+    if (dbg.nelements() != 2 && dbg.nelements() != 3)
     {
-      ifr = dbg(0); 
-      it = dbg(1);
-    }
-    else if( dbg.nelements() == 3 )
-    {
-      ifr = chunk.antToIfr(dbg(0),dbg(1));
-      it  = dbg(2);
-    }
-    else
       os<<"\""<<RF_DEBUG<<"\" parameter must be [NIFR,NTIME] or [ANT1,ANT2,NTIME]"<<LogIO::EXCEPTION;
+    }
   }
 }
 
