@@ -200,13 +200,14 @@ No Jy/K factors file is specified.
 		                    % for (ant, pols) in profilemap_entries[field].items():
 		                        <tr><td>${ant}</td>
 		                        % for pol in pols:
+		                            <% polstr = pol if len(pol)>1 else "stokes "+pol %>
 		                            <td align="center">
 		                            <a href="${os.path.join(dirname, profilemap_subpage[field])}"
 		                               class="replace"
 		                               data-spw="${plot.parameters['spw']}"
 		                               data-ant="${ant}"
 		                               data-pol="${pol}">
-		                            ${pol}
+		                            ${polstr}
 		                            </a>
 		                            </td>
 		                        % endfor
