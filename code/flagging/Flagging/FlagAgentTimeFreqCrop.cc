@@ -610,7 +610,7 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
   fit = tdata;
   
   Int psize=1;
-  Int leftover=1,leftover_back=0,leftover_front=0,npieces=1;
+  Int leftover=1,leftover_front=0,npieces=1;
   
   deg=1;
   npieces=1;
@@ -628,7 +628,6 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
       leftover = (int)(tdata.nelements() % npieces);
       
       leftover_front = (int)(leftover/2.0);
-      leftover_back = leftover - leftover_front;
       
       left=0; right=tdata.nelements()-1;
       for(Int p=0;p<npieces;p++)
