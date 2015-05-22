@@ -2919,45 +2919,24 @@ conformance with other ia tool methods.
 </description>
 
 <example>
- 
-"""
-#
-print "\t----\t continuumsub Ex 1 \t----"
-ia.fromarray(outfile='test.data',
-             pixels=ia.makearray(0, [64, 64, 4, 128]), overwrite=true)
-#im1csub=ia.continuumsub(region=rg.quarter(),
-#                        channels=range(3,9)+range(54,61),fitorder=0);
-innerquarter= rg.box([0.25,0.25],[0.75,0.75],frac=true)
-im1csub=ia.continuumsub(region=innerquarter,
-                        channels=range(3,9)+range(54,61),fitorder=0);
-im1csub.done()      # done the on-the-fly image tool
-ia.close()
-#
-"""
 
-In this first example, the continuum emission in each pixel of the
-inner quarter of the input image is estimated by averaging
-(fitorder=0) channels 3-8 and 54-60, inclusive.  (Python's range
-function includes the lower limit and excludes the upper limit.)
-im1csub is an image tool containing the result (only the inner quarter
-of the original image).
+Fit a second order polynomial (fitorder=2) to channels 3-8 and 54-60 (python's
+range function includes the lower limit and excludes the upper limit)
+to an RA x Dec x Frequency x Stokes cube.
 
- 
-"""
-#
-print "\t----\t continuumsub Ex 2 \t----"
-ia.fromarray(outfile='test.data',
-             pixels=ia.makearray(0, [64, 64, 4, 128]), overwrite=true)
-im2csub=ia.continuumsub(channels=range(3,9)+range(54,61),fitorder=2)
-im2csub.done()
-ia.close()
-#
-"""
+ia.open("myimage.im")
 
-In this second example, the Stokes I continuum emission in each pixel 
-of the whole input image is estimated with a 2nd-order polynomial
-fit to channels 3-8 and 54-60.  The output image tool (im2csub) contains
-only Stokes I, even if the original image had other stokes planes.
+# select stokes plane 1 on which to perform the fit, as well
+# as a box of pixels with blc=25,25 and trc=75,75 in the direction
+# plane, and channels 0 to 100. This will be the portion of the cube
+# from which the fit is subtracted
+reg = rb.box(blc=[25, 25, 0, 1], trc=[75, 75, 100, 1])
+csub = ia.continuumsub(region=reg, channels=range(3,9)+range(54,61), fitorder=2)
+
+# do stuff with original image (ia) and csub image tools as necessary and
+# finally close them
+ia.done()
+csub.done()
 
 </example>
 </method>

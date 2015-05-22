@@ -92,15 +92,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Default: none; Example: contfile='ngc5921_cont.im'
   fitorder -- Polynomial order for the continuum estimation.
     Default: 0; Example fitorder=2
-  region -- ImageRegion file to select a portion of the cube for output.
-    Default: '' (= everything)
-    Example: region='myimage.im.rgn'
-             region='region1'
-    Use the viewer on the image cube to define the continuum
-    regions.  This is more general than box but still experimental.
-    N.B. This is NOT for selecting a subset of the input for
-         fitting the continuum!  Only pixels that are in region
-         will be considered, however.
+  region -- region of interest. If specified, neither  box nor stokes
+        should be specified. See help par.region
 <!--                to retrieve the list of names. -->
   box --  A [blcx, blcy, trcx, trcy] region on the directional plane for
           selecting a subset for output.
@@ -117,11 +110,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            a multi-spw image, the channelization must be the same for all.
            Default: '' (all)
            Example: chans='3~6;>40'
-  stokes -- Stokes parameters to image, may or may not be separated
-            by commas but best if you use commas.
-            Default: none (all); Example: stokes='IQUV';
-            Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+  stokes -- Stokes parameter. Must be limited to a single Stokes.
 
+
+Fit a second order polynomial (fitorder=2) to channels 3-8 and 54-60 
+to an RA x Dec x Frequency x Stokes cube, selecting the Stokes I plane
+
+ch = '3~8, 54~60'
+imcontsub(imagename="myimage.im", linefile="mycontsub.im", fitorder=2, chans=ch, fitorder=2, stokes="I")
 
 </example>
 </task>
