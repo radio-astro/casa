@@ -319,14 +319,14 @@ inline const FlagMatrix & RFFlagCube::flagMatrix ()
    { return *flag_curs; }
 
 inline Bool RFFlagCube::preFlagged ( uInt ich,uInt ifr )
-   { return getFlag(ich,ifr)&check_corrmask != 0; }    
+   { return (getFlag(ich,ifr)&check_corrmask) != 0; }
 
 inline Bool RFFlagCube::anyFlagged ( uInt ich,uInt ifr )
    { 
      if (kiss) {
        throw std::logic_error("Cannot do this in kiss mode (program bug, please report)");
      }
-     return getFlag(ich,ifr)&(check_corrmask|my_corrflagmask) != 0; 
+     return (getFlag(ich,ifr)&(check_corrmask|my_corrflagmask)) != 0;
    }
 
 // Gets full row flag word

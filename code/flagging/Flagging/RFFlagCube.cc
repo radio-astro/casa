@@ -640,7 +640,7 @@ void RFFlagCube::setMSFlags(uInt itime)
                   RFlagWord cmask = 1;
                   if (num(CORR) == 1) {
                       
-                      if (fw & 1 || fw & corr_flagmask(1)) {
+                      if ((fw & 1) || (fw & corr_flagmask(1))) {
                           out_flagcube(0, ich, ir) = True;
                           chunk.nfChanIfr(ich,ifr)++;
                           chunk.nfIfrTime(ifr,itime)++;
@@ -649,9 +649,9 @@ void RFFlagCube::setMSFlags(uInt itime)
                   else {
                       for( uInt  icorr=0; icorr<num(CORR); icorr++, cmask<<=1 ) {
                           
-                          if( fw & cmask       // (a) if fw is set for this correlation
+                          if( (fw & cmask)       // (a) if fw is set for this correlation
                               ||
-                              fw & corr_flagmask(cmask) // (b) if agent flag in fw
+                              (fw & corr_flagmask(cmask)) // (b) if agent flag in fw
                               // is set for any agent that 
                               // deals with this correlation
                               ) {

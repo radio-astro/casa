@@ -82,7 +82,7 @@ public:
   uShort  corrMask () const         { return corrmask; }
 
   // Returns True if given correlations is masked
-  Bool    masked (uInt icorr) const  { return corrmask&(1<<icorr) != 0; }
+  Bool    masked (uInt icorr) const  { return (corrmask&(1<<icorr)) != 0; }
   
   // Tells if mapper is valid
   Bool    isValid () { return valid; }
