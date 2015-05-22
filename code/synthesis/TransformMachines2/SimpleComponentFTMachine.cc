@@ -49,6 +49,24 @@
 #include <omp.h>
 #endif
 
+namespace {
+
+  // This logic is only located here because it's late in the 4.4
+  // release cycle and this approach minimizes the scope of the change.
+  // For 4.5 this needs to be done correctly.
+
+  casa::Vector<casa::Int> getSelectedCorrelationTypes (const casa::vi::VisBuffer2 & vb){
+    casa::Vector<casa::Int> allTypes = vb.correlationTypes();
+    casa::Vector<casa::Int> selectedCorrelations = vb.getCorrelationTypes ();
+
+    for (casa::uInt i = 0; i < selectedCorrelations.size(); i++){
+
+      selectedCorrelations [i] = allTypes (selectedCorrelations [i]);
+    }
+
+    return selectedCorrelations;
+  }
+}
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -98,7 +116,7 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, SkyComponent& component,
   Vector<Double> invLambda = frequency/C::c;
    
   // Find the offsets in polarization. 
-  Vector<Int> corrType = vb.correlationTypes().copy();
+  Vector<Int> corrType = getSelectedCorrelationTypes (vb);
   {
     Int startPol = corrType(0);
     if((startPol > 4) && (startPol < 9)) {
@@ -248,9 +266,10 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, const ComponentList& compList
   frequency= vb.getFrequencies(0);
   Vector<Double> invLambda = frequency/C::c;
   // Find the offsets in polarization. 
-  Vector<Int> corrTypeL = vb.correlationTypes().copy();
-  Vector<Int> corrTypeC = vb.correlationTypes().copy();
-  Vector<Int> corrType = vb.correlationTypes().copy();
+
+  Vector<Int> corrTypeL = getSelectedCorrelationTypes (vb).copy();
+  Vector<Int> corrTypeC = getSelectedCorrelationTypes (vb).copy();
+  Vector<Int> corrType = getSelectedCorrelationTypes (vb).copy();
   corrTypeL -= 9;
   corrTypeC -= 5;
   Cube<DComplex> dVis(4, nChan, nRow);

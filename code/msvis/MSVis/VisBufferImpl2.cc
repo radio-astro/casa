@@ -733,7 +733,7 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 Vector<Int>
 VisBufferImpl2::getCorrelationTypes () const
 {
-    return state_p->correlations_p;
+    return state_p->correlations_p.copy();
 }
 
 
