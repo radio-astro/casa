@@ -291,6 +291,10 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 	Vector<Bool> listBaselines(nAnt*(nAnt-1)/2);
 	listBaselines = False;
 
+	/*
+	///
+	/// Commenting out this section, to force recalculation of UVWs for all baselines
+	///
 	// We know the starting row for this timestep. Find the ending row.
 	// This assumes that all baselines are grouped together.
 	// This is guaranteed by the sort-order defined for the visIterator.
@@ -314,10 +318,6 @@ void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer,
 
 	// (1) Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
 	// This row range represents all listed baselines in the "current" timestep.
-	/*
-	///
-	/// Commenting out this section, to force recalculation of UVWs for all baselines
-	///
     for (Int row_i=rownr;row_i<=endrownr;row_i++)
       {
 	// Retrieve antenna ids
