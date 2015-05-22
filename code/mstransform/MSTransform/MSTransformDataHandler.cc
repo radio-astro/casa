@@ -83,7 +83,7 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool virtualM
 		   fitspw_p("*"),
 		   fitoutspw_p("*"),
 		   virtualModelCol_p(virtualModelCol),
-		   virtualCorrectedCol_p(virtualModelCol)
+		   virtualCorrectedCol_p(virtualCorrectedCol)
 {
 	return;
 }
