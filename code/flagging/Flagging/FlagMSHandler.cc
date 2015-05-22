@@ -505,6 +505,7 @@ FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 * /*visIter*/)
 {
 	// Apply channel selection (in row selection cannot be done with MSSelection)
 	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
+	/*
 	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
     IPosition shape = spwchan.shape();
     uInt nSelections = shape[0];
@@ -520,7 +521,7 @@ FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 * /*visIter*/)
 		// jagonzal (TODO): Use the frequency selection capabilities of the new VI/VB framework
 		// visIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
 	}
-
+	*/
 	return;
 }
 
