@@ -16,8 +16,13 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
+try:
+    import testutils
+except:
+    import tests.testutils as testutils
+
 from sdimaging import sdimaging
-from sdutil import tbmanager
+from sdutil import tbmanager, toolmanager, table_selector
 import asap as sd
 
 #
@@ -2284,10 +2289,223 @@ class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
         self.run_test()
 
 
+###
+#
+# Test case for automatic phasecenter calculation
+#
+###
+class sdimaging_test_mapextent(unittest.TestCase):
+    """
+    Unit test for task sdimaging 
+    
+    This test case defines automatic calculation of phasecenter and 
+    imsize. Basic tests has already been defined in test109 and test402 
+    so that some specific tests are defined here:
+    
+        test_azel_pointing -- Verify phasecenter in J2000 is properly calculated 
+                              from AZELGEO pointing direction
+        test_data_selection -- Verify phasecenter is properly calculated from 
+                               only selected data
+        test_ephemeris -- Verify phasecenter for ephemeris source
+    """
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdimaging/'
+    infiles_ephem = ['Uranus1.cal.Ant0.spw34.ms',
+                     'Uranus2.cal.Ant0.spw34.ms']
+    infiles_selection = 'selection_misc.ms'
+    infiles_azel = 'azelpointing.ms'
+    outfile = 'sdimaging_test_mapextent.im'
+    
+    scan = '16'
+    region_topright = {'blc': [9, 9, 0, 0], 'trc': [20, 20, 0, 0]}
+    
+    param_base = {'mode': 'channel',
+                  'start': 0,
+                  'nchan': 1,
+                  'width': 1, 
+                  'cell': '6.7arcsec',
+                  'gridfunction': 'BOX',
+                  'outfile': outfile}
+    
+    def __remove_table(self, f):
+        if os.path.exists(f):
+            shutil.rmtree(f)
+    
+    def __copy_table(self, f):
+        self.__remove_table(f)
+        testutils.copytree_ignore_subversion(self.datapath, f)
+        
+    def setUp(self):
+        default(sdimaging)
+        self.param = self.param_base.copy()
+        
+    def tearDown(self):
+        for infile in self.infiles_ephem:
+            self.__remove_table(infile)
+        self.__remove_table(self.infiles_selection)
+        self.__remove_table(self.infiles_azel)
+        #self.__remove_table(self.outfile)
+        os.system('rm -rf %s*'%(self.outfile))
+        
+    def run_test(self, **kwargs):
+        self.param.update(**kwargs)
+        status = sdimaging(**self.param)
+        self.assertIsNone(status, msg='sdimaging failed to execute')
+        self.assertTrue(os.path.exists(self.outfile), msg='output image is not created.')
+        
+    def verify_mapextent(self, npix_ref, blc_ref, trc_ref):
+        self.assertTrue(os.path.exists(self.outfile), msg='output image is not created.')
+        stats = calc_statistics(self.outfile)
+        map_property = calc_mapproperty(stats)
+        npix = map_property['npix']
+        blc = map_property['blc']
+        trc = map_property['trc']
+        extent = map_property['extent']
+        #blc_ref = numpy.array([0.0, 0.0])
+        #trc_ref = numpy.array(map(str_to_deg, ['23:59:55.515', '+00.01.07.276']))
+        if trc_ref[0] > 180.0:
+            trc_ref[0] -= 360.0
+        if blc_ref[0] > 180.0:
+            blc_ref[0] -= 360.0
+        #self.verify_mapextent(npix_ref, blc_ref, trc_ref)
+        # resulting map contain reference position
+        print 'npix', npix, 'npix_ref', npix_ref
+        print 'blc', blc, 'blc_ref', blc_ref
+        print 'trc', trc, 'trc_ref', trc_ref 
+        print 'extent', extent
+        # check if map area covers whole pointing data
+        # this is done by comparing blc and trc with their references 
+        # that are usually computed from actual distribution of 
+        # pointing direction (which is calculated by sdsave task) 
+        self.assertTrue(all(npix == npix_ref), msg='Unexpected image pixel number')
+        self.assertTrue(blc[0] >= blc_ref[0], msg='Unexpected coordinate (blc RA is too narrow)')
+        self.assertTrue(blc[1] <= blc_ref[1], msg='Unexpected coordinate (blc DEC is too narrow)')
+        self.assertTrue(trc[0] <= trc_ref[0], msg='Unexpected coordinate (trc RA is too narrow)')
+        self.assertTrue(trc[1] >= trc_ref[1], msg='Unexpected coordinate (trc DEC is too narrow)')
+        # also check if resulting map is not too wide
+        # acceptable margin is 5% of the map extent
+	margin = 0.05
+        self.assertTrue(blc[0] < blc_ref[0] + margin * extent[0], msg='Unexpected coordinate (blc RA is too wide)')
+        self.assertTrue(blc[1] > blc_ref[1] - margin * extent[1], msg='Unexpected coordinate (blc DEC is too wide)')
+        self.assertTrue(trc[0] > trc_ref[0] - margin * extent[0], msg='Unexpected coordinate (trc RA is too wide)')
+        self.assertTrue(trc[1] < trc_ref[1] + margin * extent[1], msg='Unexpected coordinate (trc DEC is too wide)')              
+        
+    def test_azel_pointing(self):
+        """test_azel_pointing: Verify phasecenter in J2000 is properly calculated from AZELGEO pointing direction"""
+        self.__copy_table(self.infiles_azel)
+        self.run_test(infiles=self.infiles_azel)
+        npix_ref = numpy.array([27,37])
+        blc_ref, trc_ref = get_mapextent(self.infiles_azel)
+        self.verify_mapextent(npix_ref, blc_ref, trc_ref)
+    
+    def test_data_selection(self):
+        self.__copy_table(self.infiles_selection)
+        # here imsize is explicitly set to 13 
+        # this is because that auto-calculated imsize is 12 (even number) 
+        # it is known that phasecenter will not be a map center when 
+        # imsize is even number so that expected map coverage is shifted 
+        # by an order of 0.5 pixel 
+        # this effect causes unexpected failure of the test
+        self.run_test(infiles=self.infiles_selection, scan='16', imsize=13)
+        npix_ref = numpy.array([13,13])
+        blc_ref, trc_ref = get_mapextent(self.infiles_selection, scan='16')
+        self.verify_mapextent(npix_ref, blc_ref, trc_ref)
+
+    def test_ephemeris(self):
+        for infile in self.infiles_ephem:
+            self.__copy_table(infile)
+        self.run_test(infiles=self.infiles_ephem, ephemsrcname='Uranus', restfreq='230GHz')
+        npix_ref = numpy.array([37,26])
+        # set reference value manually since expected map area for 
+        # ephemeris object is difficult to calculate 
+        blcf_ref = '00:46:43.672 +04.14.51.504'
+        trcf_ref = '00:46:27.547 +04.17.39.004'
+        blc_ref = numpy.array(map(lambda x: qa.quantity(x)['value'], blcf_ref.split()))
+        trc_ref = numpy.array(map(lambda x: qa.quantity(x)['value'], trcf_ref.split()))
+        #blc_ref, trc_ref = get_mapextent_ephemeris(self.infiles_ephem)
+        self.verify_mapextent(npix_ref, blc_ref, trc_ref)
+    
+# utility for sdimaging_test_mapextent
+def get_mapextent(infile, scan=None):
+    s = sd.scantable(infile, average=False)
+    outfile = infile.rstrip('/') + '.tmp'
+    try:
+        s.save(outfile)
+        if scan is None:
+            with tbmanager(outfile) as tb:
+                dir = tb.getcol('DIRECTION')
+        else:
+            with table_selector(outfile, taql='SCANNO==16') as tb:
+                dir = tb.getcol('DIRECTION')
+        rad2deg = lambda x: x * 180.0 / numpy.pi
+        xmin = rad2deg(dir[0].min())
+        xmax = rad2deg(dir[0].max())
+        ymin = rad2deg(dir[1].min())
+        ymax = rad2deg(dir[1].max())
+        return numpy.array([xmax, ymin]), numpy.array([xmin, ymax])
+    finally:
+        if os.path.exists(outfile):
+            shutil.rmtree(outfile)
+            
+def get_mapextent_ephemeris(infiles):
+    mapcenter = None
+    xmin = None
+    xmax = None
+    ymin = None
+    ymax = None
+    for infile in infiles:
+        blc, trc = get_mapextent(infile)
+        if mapcenter is None:
+            mapcenter = 0.5 * (blc + trc)
+        if xmin is None:
+            xmin = trc[0]
+        else:
+            xmin = min(xmin, trc[0])
+        if xmax is None:
+            xmax = blc[0]
+        else:
+            xmax = max(xmax, blc[0])
+        if ymin is None:
+            ymin = blc[1]
+        else:
+            ymin = min(ymin, blc[1])
+        if ymax is None:
+            ymax = trc[1]
+        else:
+            ymax = max(ymax, trc[1])
+    return numpy.array([xmax, ymin]), numpy.array([xmin, ymax])
+    
+def str_to_deg(s):
+    return qa.quantity(s)['value']
+
+def calc_statistics(imagename):
+    with toolmanager(imagename, 'ia') as ia:
+        s = ia.statistics()
+    return s
+    
+def calc_mapproperty(statistics):
+    ra_in_deg = lambda x: qa.quantity(x.split(',')[0])['value']
+    dec_in_deg = lambda x: qa.quantity(x.split(',')[1])['value']
+    blcf = statistics['blcf']
+    trcf = statistics['trcf']
+    blcra = ra_in_deg(blcf)
+    if blcra > 180.0:
+        blcra -= 360.0
+    blcdec = dec_in_deg(blcf)
+    trcra = ra_in_deg(trcf)
+    if trcra > 180.0:
+        trcra -= 360.0
+    trcdec = dec_in_deg(trcf)
+    npix = statistics['trc'][:2] + 1
+    dra = abs((trcra - blcra) * numpy.cos(0.5 * (blcdec + trcdec)))
+    ddec = abs(trcdec - blcdec)
+    return {'extent': numpy.array([dra, ddec]), 'npix': npix,
+            'blc': numpy.array([blcra, blcdec]), 'trc': numpy.array([trcra, trcdec])}
+
+
 def suite():
     return [sdimaging_test0,sdimaging_test1,
             sdimaging_test2,sdimaging_test3,
             sdimaging_autocoord,sdimaging_test_selection,
             sdimaging_test_flag, 
-            sdimaging_test_polflag,sdimaging_test_mslist
-            ]
+            sdimaging_test_polflag,sdimaging_test_mslist,
+            sdimaging_test_mapextent]
