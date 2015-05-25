@@ -1311,7 +1311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             rec.get(String("refer"), mveltype);
             Record dopRecord = rec.subRecord("m0");
             String dopstr = recordQMToString(dopRecord);
-            cerr<<"dopstr="<<dopstr<<endl;
+            //cerr<<"dopstr="<<dopstr<<endl;
             MRadialVelocity::Types mvType;
             //use input frame
             qmframe = frame!=""? frame: "LSRK";
@@ -1566,7 +1566,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
-
     MDirection phaseCenterToUse = phaseCenter;
 
     if( phaseCenterFieldId != -1 )
@@ -1676,12 +1675,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           }
       }
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
-    if( qrestfreq.getValue("Hz")==0 ) 
+    String cubemode;
+    if ( qrestfreq.getValue("Hz")==0 ) 
       {
         MSDopplerUtil msdoppler(msobj);
         Vector<Double> restfreqvec;
-        msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
-        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+        msdoppler.dopplerInfo(restfreqvec, spwids(0), fld);
+        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec(0),"Hz"): Quantity(0.0, "Hz");
+        if ( qrestfreq.getValue("Hz")==0 and mode!="mfs" )
+          {
+          cubemode = findSpecMode(mode);
+          if ( cubemode=="channel" || cubemode=="frequency" )
+            {
+              Double provisional_restfreq = msc.spectralWindow().refFrequency()(spwids(0));
+              qrestfreq = Quantity(provisional_restfreq, "Hz");
+              os << LogIO::WARN << "No rest frequency info, using ref frequency(spw0):"
+                 << provisional_restfreq <<" Hz. Velocity labelling may not be correct." 
+                 << LogIO::POST;
+            } 
+          else { // must be vel mode
+            throw(AipsError("No valid rest frequency is defined in the data, please specify the restfreq parameter") );
+            } 
+        }
       }
     Double refPix;
     Vector<Double> chanFreq;
@@ -1718,6 +1733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             stepf=chanFreq[1]-chanFreq[0];
           }
         Double restf=qrestfreq.getValue("Hz");
+        if ( mode=="mfs" and restf == 0.0 ) restf = restFreq[0].getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 
         if(mode=="cubedata") 
@@ -1751,8 +1767,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     //cout << "Rest Freq : " << restFreq << endl;
 
-    for(uInt k=1 ; k < restFreq.nelements(); ++k)
-      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+    //for(uInt k=1 ; k < restFreq.nelements(); ++k)
+      //mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+     
+    uInt nrestfreq = restFreq.nelements();
+    if ( nrestfreq > 1 ) {
+      Vector<Double> restfreqval( nrestfreq - 1 );
+      for ( uInt k=1 ; k < nrestfreq; ++k ) {
+        restfreqval[k-1] = restFreq[k].getValue("Hz");
+      }    
+      mySpectral.setRestFrequencies(restfreqval, 0, True);
+    }
 
     if ( freqFrameValid ) {
       mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
@@ -2232,7 +2257,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         chanFreq[0] = refFreq.getValue("Hz"); 
         refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
       }
+
       if( nchan==-1 ) nchan=1;
+      if( qrestfreq.getValue("Hz")==0.0 )  {
+         restFreq.resize(1);
+         restFreq[0] = Quantity(freqmean,"Hz");
+      }
     }
     else {
        // unrecognized mode, error
