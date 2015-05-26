@@ -27,6 +27,7 @@ __all__ = ['score_polintents',                                # ALMA specific
            'score_poor_bandpass_solutions',                   # ALMA specific
            'score_flagging_view_exists',                      # ALMA specific
            'score_file_exists',
+           'score_path_exists',
            'score_flags_exist',
            'score_applycmds_exist',
            'score_caltables_exist',
@@ -969,10 +970,31 @@ def score_derived_fluxes_snr(ms, measurements):
                        vis=ms.basename)
 
 @log_qa
+def score_path_exists(mspath, path, pathtype):
+    '''
+    Score the existence of the path
+        1.0 if it exist
+        0.0 if it does not
+    '''
+
+    if os.path.exists(path):
+        score = 1.0
+        longmsg = 'The %s file %s for %s was created' % (pathtype, os.path.basename(path),
+	    os.path.basename(mspath))
+        shortmsg = 'The %s file was created' % (pathtype)
+    else:
+        score = 0.0
+        longmsg = 'The %s file %s for %s was not created' % (pathtype,
+	    os.path.basename(path), os.path.basename(mspath))
+        shortmsg = 'The %s file was not created' % (pathtype)
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
 def score_file_exists(filedir, filename, filetype):
     '''
-    Score the existence of a file
-        1.0 if it exist
+    Score the existence of a products file
+        1.0 if it exists
         0.0 if it does not
     '''
 
@@ -997,8 +1019,8 @@ def score_file_exists(filedir, filename, filetype):
 @log_qa
 def score_flags_exist(filedir, visdict):
     '''
-    Score the existence of a file
-        1.0 if the all exist
+    Score the existence of the flagging products files 
+        1.0 if they all exist
         n / nexpected if some of them exist
         0.0 if none exist
     '''
@@ -1030,8 +1052,8 @@ def score_flags_exist(filedir, visdict):
 @log_qa
 def score_applycmds_exist(filedir, visdict):
     '''
-    Score the existence of the files
-        1.0 if the all exist
+    Score the existence of the apply commands products files
+        1.0 if they all exist
         n / nexpected if some of them exist
         0.0 if none exist
     '''
@@ -1063,8 +1085,8 @@ def score_applycmds_exist(filedir, visdict):
 @log_qa
 def score_caltables_exist(filedir, sessiondict):
     '''
-    Score the existence of the files
-        1.0 if the all exist
+    Score the existence of the caltables products files
+        1.0 if theu all exist
         n / nexpected if some of them exist
         0.0 if none exist
     '''
