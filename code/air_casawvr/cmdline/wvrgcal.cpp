@@ -147,7 +147,7 @@ void checkMSandPars(const casa::MeasurementSet &ms,
 						  srcname);
     if (fselect.size() == 0)
     {
-      std::cout<<"WARNING: No fields appear to be identified with source "<<srcname <<std::endl
+      std::cout<<"WARNING: No Source table entries appear to be identified with source "<< srcname <<std::endl
 	       <<"         that you supplied to the statsource option"<<std::endl
 	       <<"         Statistics will be corrupted and wvrgcal may fail"<<std::endl
 	       <<std::endl;
@@ -547,7 +547,7 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
 	int srcid=boost::lexical_cast<int>(*j);
 	boost::bimap<size_t, std::string>::left_map::const_iterator it = srcmap.left.find(srcid);
 	if(it == srcmap.left.end()) { // id does not exist
-	  std::cerr << "Parameter 'tie': The field id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
+	  std::cerr << "Parameter 'tie': The source id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
 	  throw std::exception();
 	}
 	cs.insert(srcid);
@@ -559,7 +559,7 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
 	}
 	catch (const std::exception& y){
 	  std::ostringstream oss;
-	  oss << "Parameter 'tie': The field id " << *j << " is not recognised. Please check for typos." << std::endl;
+	  oss << "Parameter 'tie': The source id " << *j << " is not recognised. Please check for typos." << std::endl;
 	  throw LibAIR2::WVRUserError(oss.str());
 	}
       }
