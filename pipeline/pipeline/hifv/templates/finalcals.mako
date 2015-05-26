@@ -57,7 +57,7 @@ $(document).ready(function() {
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, bpsolphase_subpages[ms]), pcontext.report_dir)}">BP Phase solution </a> |
         <a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, bpsolphaseshort_subpages[ms]), pcontext.report_dir)}">BP Phase (short) gain solution </a> |
+           href="${os.path.relpath(os.path.join(dirname, bpsolphaseshort_subpages[ms]), pcontext.report_dir)}">Phase (short) gain solution</a> |
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, finalamptimecal_subpages[ms]), pcontext.report_dir)}">Final amp time cal </a> |
         <a class="replace"
