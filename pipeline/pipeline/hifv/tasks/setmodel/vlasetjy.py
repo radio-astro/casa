@@ -440,8 +440,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
                                  'model'          : model_image,
                                  'intent'         : '',
                                  'listmodels'     : False,
-                                 'scalebychan'    : True,
-                                 'fluxdensity'    : -1,
+                                 'scalebychan'    : inputs.scalebychan,
+                                 'fluxdensity'    : inputs.fluxdensity,
                                  'standard'       : inputs.standard,
                                  'usescratch'     : True}
                     
