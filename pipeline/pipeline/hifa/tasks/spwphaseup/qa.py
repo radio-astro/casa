@@ -22,7 +22,13 @@ class SpwPhaseupQAHandler(pqa.QAResultHandler):
         # one mapping
         score1 = self._phaseup_mapping_fraction(ms, result.inputs['field'],
                         result.inputs['intent'], result.phaseup_spwmap)
-        scores = [score1]
+	if not result.phaseup_result.final:
+	    score2= qacalc.score_path_exists(ms.name,
+	    list(result.phaseup_result.error)[0].gaintable, 'caltable')
+	else:
+	    score2= qacalc.score_path_exists(ms.name,
+	        result.phaseup_result.final[0].gaintable, 'caltable')
+        scores = [score1, score2]
             
         result.qa.pool.extend(scores)
     

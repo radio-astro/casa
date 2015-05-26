@@ -155,9 +155,6 @@ class SpwPhaseupResults(basetask.Results):
         super(SpwPhaseupResults, self).__init__()
         self.vis=vis
         self.phaseup_result = phaseup_result
-	#if not phaseup_spwmap:
-        #    self.phaseup_spwmap = None
-	#else:
         self.phaseup_spwmap = phaseup_spwmap
 
     def merge_with_context(self, context):
