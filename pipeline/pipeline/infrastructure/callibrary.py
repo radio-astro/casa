@@ -344,17 +344,18 @@ class CalFrom(object):
     """
 
     CALTYPES = {
-        'unknown'      : 0,
-        'gaincal'      : 1,
-        'bandpass'     : 2,
-        'tsys'         : 3,
-        'wvr'          : 4,
-        'polarization' : 5,
-        'antpos'       : 6,
-        'gc'           : 7,
-        'opac'         : 8,
-        'rq'           : 9,
-        'swpow'        : 10,
+        'unknown'           : 0,
+        'gaincal'           : 1,
+        'bandpass'          : 2,
+        'tsys'              : 3,
+        'wvr'               : 4,
+        'polarization'      : 5,
+        'antpos'            : 6,
+        'gc'                : 7,
+        'opac'              : 8,
+        'rq'                : 9,
+        'swpow'             : 10,
+        'finalcal'          : 11
     }
 
     CALTYPE_TO_VISCAL = {

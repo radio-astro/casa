@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
@@ -88,8 +89,10 @@ class Applycals(basetask.StandardTaskTemplate):
         tablesToAdd = ['finaldelay.k', 'finalBPcal.b', 'averagephasegain.g', 'finalampgaincal.g', 'finalphasegaincal.g']
         
         for addcaltable in tablesToAdd:
+            print addcaltable
+            print os.path.splitext(addcaltable)[0]
             calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
             self.inputs.context.callibrary.add(calto, calfrom)
         
         applycal_inputs = applycal.Applycal.Inputs(self.inputs.context,

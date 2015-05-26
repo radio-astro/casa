@@ -510,7 +510,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
         outfile = os.path.join(self.inputs.output_dir,
                                os.path.basename(asdm)+"_flagonline.txt")
                                
-        
+        '''
         task = casa_tasks.importevla(asdm=asdm, 
                                      vis=vis, 
                                      savecmds=self.inputs.save_flagonline,
@@ -523,6 +523,20 @@ class VLAImportData(basetask.StandardTaskTemplate):
         #                             verbose=True,
         #                             flagzero=False, flagpol=True,
         #                             shadow=True)
+        '''
+        
+        task = casa_tasks.importasdm(asdm=asdm, 
+                                     vis=vis, 
+                                     savecmds=self.inputs.save_flagonline,
+                                     outfile=outfile,
+                                     #process_caldevice=False,
+                                     asis="",
+                                     overwrite=self.inputs.overwrite)
+        
+        
+        
+        
+        
         
         '''
         task = casa_tasks.importevla(asdm=asdm,vis=vis,

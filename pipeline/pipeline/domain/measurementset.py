@@ -409,6 +409,13 @@ class MeasurementSet(object):
         
         return corrstring
         
+    def get_alma_corrstring(self):
+        '''Get correlation string for ALMA'''
+        
+        corrstring = 'XX,YY'
+        
+        return corrstring
+        
     def get_vla_spw2band(self):
     
         ddindex = self.get_vla_datadesc()
