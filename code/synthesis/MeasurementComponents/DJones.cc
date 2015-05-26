@@ -1431,6 +1431,16 @@ GlinXphJones::~GlinXphJones() {
   if (prtlev()>2) cout << "GlinXph::~GlinXph()" << endl;
 }
 
+void GlinXphJones::setApply(const Record& apply) {
+
+  GJones::setApply(apply);
+
+  // Force calwt to False 
+  calWt()=False;
+
+}
+
+
 
 void GlinXphJones::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
 
@@ -1845,6 +1855,7 @@ GlinXphfJones::GlinXphfJones(const Int& nAnt) :
 GlinXphfJones::~GlinXphfJones() {
   if (prtlev()>2) cout << "GlinXphf::~GlinXphf()" << endl;
 }
+
 
 
 
