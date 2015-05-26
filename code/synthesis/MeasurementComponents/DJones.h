@@ -450,6 +450,10 @@ public:
   virtual String typeName()     { return "GlinXph Jones"; };
   virtual String longTypeName() { return "GlinXph Jones (X-Y phase)"; };
 
+  // Local setapply  (unsets calWt)
+  using SolvableVisJones::setApply;
+  virtual void setApply(const Record& apply);
+
   // NOT FreqDep
   virtual Bool freqDepPar() { return False; };
 
