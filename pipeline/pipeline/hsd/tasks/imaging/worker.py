@@ -103,12 +103,20 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         # baseline
         #baseline = '0&&&'
     
-        # the number of pixels per beam
-        ### reccomended by EOC
+       # the number of pixels per beam
         grid_factor = 9.0
         # cellx and celly
-        grid_size = reference_data.beam_size[spwid]
-        #cellx = qa.div(grid_size, 3.0)
+        import sdbeamutil
+        # recommendation by EOC
+        fwhmfactor = 1.13
+        # hard-coded for ALMA-TP array
+        diameter_m = 12.0 #max([ context.observing_run[antid].antenna.diameter for antid in antenna_list ])
+        obscure_alma = 0.75
+        with casatools.MSMDReader(vislist[0]) as msmd:
+            freq_hz = msmd.meanfreq(spwid)
+        theory_beam_arcsec = sdbeamutil.primaryBeamArcsec(freq_hz, diameter_m, obscure_alma, 10.0, fwhmfactor=fwhmfactor)
+        grid_size = qa.quantity(theory_beam_arcsec, 'arcsec')
+#         grid_size = reference_data.beam_size[spwid]
         cellx = qa.div(grid_size, grid_factor)
         celly = cellx
         cell_in_deg = qa.convert(cellx, 'deg')['value']
@@ -172,12 +180,6 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         mode = 'channel'
     
         # stokes
-        # stokes = 'I'
-        #stokes = 'XXYY'
-#         a = set()
-#         for p in map(set, pols_list):
-#             a = a | p
-#         stokes = common.polstring(list(a))
         stokes = 'I'
     
         # start, nchan, step
@@ -195,7 +197,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             step = nchan
             nchan = 1
     
-        # restfreq
+         # restfreq
         spw = reference_data.spectral_window[spwid]
         rest_freqs = spw.rest_frequencies
         if len(rest_freqs) > 0:
@@ -207,16 +209,9 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         outframe = 'LSRK'
     
         # gridfunction
-        #gridfunction = 'GAUSS'
-        ### reccomended by EOC
         gridfunction = 'SF'
     
         # truncate, gwidth, jwidth, and convsupport
-        #truncate = '3pixel'
-        #gwidth = '1.5pixel'
-        #jwidth = '-1pixel'  # default (not used)
-        #convsupport = 3
-        ### reccomended by EOC
         truncate = gwidth = jwidth = -1  # defaults (not used)
         convsupport = 6
     
@@ -273,5 +268,3 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         self._executor.execute(image_job)
         
         return True
-            
-                
