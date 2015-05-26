@@ -89,7 +89,7 @@ class Applycals(basetask.StandardTaskTemplate):
         
         for addcaltable in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False)
+            calfrom = callibrary.CalFrom(gaintable=addcaltable, interp='', calwt=False, caltype='finalcal')
             self.inputs.context.callibrary.add(calto, calfrom)
         
         applycal_inputs = applycal.Applycal.Inputs(self.inputs.context,

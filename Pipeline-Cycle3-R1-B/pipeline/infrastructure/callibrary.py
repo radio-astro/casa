@@ -354,6 +354,7 @@ class CalFrom(object):
         'opac'         : 8,
         'rq'           : 9,
         'swpow'        : 10,
+        'finalcal'     : 11
     }
 
     CALTYPE_TO_VISCAL = {
