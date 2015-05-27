@@ -134,8 +134,16 @@ class FlagCmd(object):
         if intent is not None:
             flagcmd += " intent='%s'" % intent
 
-        if pol is not None:
-            flagcmd += " correlation='%s'" % pol
+        # Commenting this out for now.  There is confusion in the
+        # code between polarizations and correlations. Correlation
+        # selection is meaningless for caltables which always flag both
+        # polarizations. The conservative thing to do is flag
+        # all correlations in the data at least for now until this
+        # is sorted out. This also avoids problems when the flagging
+        # views are caltable derived, but the flags are applied to
+        # the data.
+        #if pol is not None:
+            #flagcmd += " correlation='%s'" % pol
 
         if spw is not None:
             flagcmd += " spw='%s'" % spw
