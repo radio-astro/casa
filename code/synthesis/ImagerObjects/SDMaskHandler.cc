@@ -683,17 +683,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
-    cerr<<"alg="<<alg<<endl;
+    cerr<<"autoMask alg="<<alg<<endl;
     TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
     Array<Float> resdata;
     Array<Float> maskdata;
+    Array<Float> psfdata;
     imstore->residual()->get(resdata);
     tempres->put(resdata);
+    tempres->setImageInfo(imstore->residual()->imageInfo());
+
+    TempImage<Float>* temppsf = new TempImage<Float>(imstore->psf()->shape(), imstore->psf()->coordinates()); 
+    imstore->psf()->get(psfdata);
+    temppsf->put(psfdata);
+    temppsf->setImageInfo(imstore->psf()->imageInfo());
+
     TempImage<Float>* tempmask = new TempImage<Float>(imstore->mask()->shape(), imstore->mask()->coordinates());
     // get current mask
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
+    //
     // create pixel mask (set to False for the previous selected region(s))
     LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, False, True) );
     TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
@@ -704,7 +713,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity qthresh(0,"");
     Quantity qreso(0,"");
     Quantity::read(qreso,resolution);
-    cerr<<"input resolution="<<resolution<<" qreso.getValue()="<<qreso.getValue()<<endl;
+    cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
     Float sigma;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
@@ -747,10 +756,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cerr<<"Stats -- rms.nelements()="<<rms.nelements()<<" rms(0)="<<rms[0]<<endl;
     cerr<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<endl;
     if (alg==String("")) {
+      cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {
-      autoMaskByThreshold(*tempmask, *tempres, qreso, qthresh, fracofpeak, thestats, sigma);
+      autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, qthresh, fracofpeak, thestats, sigma);
       cerr<<" automaskbyThreshold...."<<endl;
       tempmask->get(maskdata);
       imstore->mask()->put(maskdata);
@@ -760,6 +770,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SDMaskHandler::autoMaskByThreshold(ImageInterface<Float>& mask,
                                           const ImageInterface<Float>& res, 
+                                          const ImageInterface<Float>& psf, 
                                           const Quantity& resolution, 
                                           const Quantity& qthresh, 
                                           const Float& fracofpeak,
@@ -781,21 +792,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
      }
      else {
+       //use beam from residual or psf
        ImageInfo resInfo = res.imageInfo();
-       if (resInfo.hasBeam()) {
-         GaussianBeam beam;
+       ImageInfo psfInfo = psf.imageInfo();
+       GaussianBeam beam;
+       if (resInfo.hasBeam() || psfInfo.hasBeam()) {
          if (resInfo.hasSingleBeam()) {
            beam = resInfo.restoringBeam();  
          }
-         else {
-           //ImageBeamSet multiBeams = resINfo.getBeamSet();
+         else if (resInfo.hasMultipleBeams()) {
            beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
+         }
+         else if (psfInfo.hasSingleBeam()) {
+           beam = psfInfo.restoringBeam();  
+         }
+         else {
+           beam = CasaImageBeamSet(psfInfo.getBeamSet()).getCommonBeam(); 
          }
          Quantity bmaj = beam.getMajor();
          npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),bmaj)).get().getValue() ) );
        }
        else {
-          throw(AipsError("No restoring beam(s) in the input image or resolution is given"));
+          throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
        }
      }
      cerr<<"npix="<<npix<<endl;
@@ -829,26 +847,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      cerr<<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<endl;
 
      thresh = rmsthresh / sqrt(npix);
-     cerr<<" thresh="<<thresh<<endl;
+     //cerr<<" thresh="<<thresh<<endl;
      // apply threshold to rebinned image to generate a temp image mask
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );
      TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
      tempthreshIm.copyData(tempthresh);
-     //PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
-     //tempthreshimcopy.copyData(tempthreshIm);
-     ImageRegrid<Float> tempRegridIm; 
-     Vector<Int> axes(2); 
-     axes(0)=0; axes(1)=1;
+     PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
+     tempthreshimcopy.copyData(tempthreshIm);
+
+     //regrid
+     IPosition axes(3,0, 1, 2);
+     Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
+     axes(0) = dirAxes(0);
+     axes(1) = dirAxes(1);
+     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
      TempImage<Float> tempIm2(res.shape(), res.coordinates() );
+     ImageRegrid<Float> imRegrid; 
+     imRegrid.regrid(tempIm2, Interpolate2D::LINEAR, axes, tempthreshIm);
+
+     // convolve to a beam = npix
      TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
      SHARED_PTR<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
-     // regrid 
-     // convolve to a beam = npix
      Vector<Quantity> convbeam(3);
      convbeam[0] = Quantity(npix, "pix");
      convbeam[1] = Quantity(npix, "pix");
      convbeam[2] = Quantity(0.0, "deg");
      Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
+     PagedImage<Float> tempconvim(TiledShape(tempIm3_ptr->shape()), tempIm3_ptr->coordinates(), String("mytemp_convim"));
+     tempconvim.copyData(*tempIm3_ptr);
 
      // fudge factor?  
      Float afactor = 2.0;

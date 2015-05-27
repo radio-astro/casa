@@ -107,6 +107,7 @@ public:
   // automask algorithms...  
   void autoMaskByThreshold (ImageInterface<Float>& mask,
                            const ImageInterface<Float>& res, 
+                           const ImageInterface<Float>& psf, 
                            const Quantity& resolution, 
                            const Quantity& qthreshold, 
                            const Float& fracofpeak, 

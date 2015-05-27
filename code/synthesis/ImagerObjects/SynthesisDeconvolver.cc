@@ -167,7 +167,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Set up the mask too.
       if( itsIsMaskLoaded==False ) {
 	if(  itsMaskString.length()>0  ) {
-	  itsMaskHandler->fillMask( itsImages, itsMaskString );
+          if( itsMaskString.contains("auto") ) {
+            String alg;
+	    if ( itsMaskString=="auto") {
+              alg="";
+            }
+            else {
+              alg="thresh";
+            }
+            itsMaskHandler->autoMask( itsImages, alg);
+          }
+          else {
+	    itsMaskHandler->fillMask( itsImages, itsMaskString );
+          }
 	} else {
 
 	  //	  cout << "Setting mask to 1.0 everywhere to start with.... FIX THIS for interactive masking" << endl;
@@ -175,6 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  if( itsIsInteractive ) itsImages->mask()->set(0.0);
 	  else itsImages->mask()->set(1.0);
+
 	  
 	}
 	
