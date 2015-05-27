@@ -7,7 +7,7 @@ iamask=casac.image()
 qa=casac.quanta()
 rg=casac.regionmanager()
 
-def automask(image='', maskimage='', fracofpeak=0, rmsthresh=0, resolution=None, twopass=False):
+def automask(image='', maskimage='', fracofpeak=0, rmsthresh=3.0, resolution=None, twopass=False):
     """
     image : dirty image or residual to mask
     maskimage: name of mask to create. If already existant has to be same shape 
@@ -47,7 +47,7 @@ def automask(image='', maskimage='', fracofpeak=0, rmsthresh=0, resolution=None,
     elif(rmsthresh !=0):
         rms=stat['rms'][0]*rmsthresh
     else:
-        rms=stat['rms'][0]
+        rms=stat['rms'][0]*3.0
     
     ib=iaim.rebin('__rebin.image', [numpix, numpix, 1, 1], overwrite=True)
     ib.done()
@@ -101,6 +101,7 @@ def automask(image='', maskimage='', fracofpeak=0, rmsthresh=0, resolution=None,
    
 
 def automask2(image='', maskimage=''):
+    pdb.set_trace()
     iaim.open(image)
     stat=iaim.statistics(list=True, verbose=True)
     thresh=stat['rms'][0]*3.0
@@ -122,7 +123,9 @@ def automask2(image='', maskimage=''):
             cubeblc=ret['blc'][j,2]
             cubetrc=ret['trc'][j,2]
             #print 'cubeblc-trc', cubeblc, cubetrc 
-        arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, cubeblc:cubetrc]=ret['components'][j,0]
+            arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, cubeblc:cubetrc]=ret['components'][j,0]
+        else:
+             arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, 0]=ret['components'][j,0]
     iamask.putchunk(arr)
     ib=iamask.convolve2d(outfile='masky', major='10pix', minor='10pix', overwrite=True)
     rej=ib.statistics(list=True, verbose=True)['max'][0]
