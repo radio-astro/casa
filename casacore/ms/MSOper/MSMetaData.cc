@@ -38,6 +38,8 @@
 #include <casacore/tables/TaQL/TableParse.h>
 #include <casacore/tables/Tables/TableProxy.h>
 
+//#include <iomanip>
+
 #define _ORIGIN "MSMetaData::" + String(__FUNCTION__) + ": "
 
 namespace casacore {
@@ -1789,7 +1791,11 @@ std::set<Int> MSMetaData::getScansForTimes(
 	std::set<ScanKey>::const_iterator end = uniqueScans.end();
 	while (scan != end) {
 		std::set<Double> times = scanToTimesMap->find(*scan)->second;
-		if (*(++times.rend()) >= minTime && *times.begin() <= maxTime) {
+		Double maxScanTime = *max_element(times.begin(), times.end());
+		Double minScanTime = *min_element(times.begin(), times.end());
+        //cout << "scan " << *scan << "minscantime " << std::setprecision(20) << minScanTime
+         //   << " maxscantime " << maxScanTime << " minTime " << minTime << " maxTime " << maxTime << endl;
+        if (maxScanTime >= minTime && minScanTime <= maxTime) {
 			scans.insert(scan->scan);
 		}
 		++scan;
