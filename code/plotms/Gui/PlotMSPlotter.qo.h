@@ -215,9 +215,7 @@ public slots:
     // 2) ... anything else needed in the future ...
     void prepareForPlotting();
     
-    virtual bool close(){
-    	return QMainWindow::close();
-    }
+    virtual bool close();
 
     
 protected:

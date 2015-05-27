@@ -96,10 +96,10 @@ PlotMSDataSummaryTab::~PlotMSDataSummaryTab() {
 }
 
 void PlotMSDataSummaryTab::emptyLayout(){
-	QLayout* scrollLayout = scrollWidget->layout();
-	for ( int i = 0; i < dataList.size(); i++ ){
-		scrollLayout->removeWidget( dataList[i]);
-	}
+    // Start at end of QList to avoid indexing issues...
+    for ( int i=(dataList.size()-1); i >= 0; --i ){
+        close(dataList[i]);
+    }
 }
 
 void PlotMSDataSummaryTab::setGridSize( int rowCount, int colCount ){
