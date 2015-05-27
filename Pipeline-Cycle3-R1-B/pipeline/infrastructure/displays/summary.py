@@ -21,7 +21,7 @@ import pipeline.infrastructure.utils as utils
 import shutil
 
 LOG = infrastructure.get_logger(__name__)
-DISABLE_PLOTMS = True
+DISABLE_PLOTMS = False
 
 ticker.TickHelper.MAXTICKS = 10000
 
@@ -78,6 +78,27 @@ class AzElChart(object):
         if os.path.exists(self.figfile):
             return self._get_plot_object()
 
+        #inputs based on analysisUtils.plotElevationSummary
+        task_args = {'vis'             : self.ms.name,
+                     'xaxis'           : 'azimuth',
+                     'yaxis'           : 'elevation',
+                     'title'           : 'Elevation vs Azimuth for %s' % self.ms.basename,
+                     'coloraxis'       : 'field',
+                     'avgchannel'      : '9000',
+                     'avgtime'         : '10s',
+                     'antenna'         : '',
+                     'plotfile'        : self.figfile,
+                     'clearplots'      : True,
+                     'showgui'         : False}
+
+        #casa.plotms(**task_args)
+        
+        task = casa_tasks.plotms(**task_args)
+
+        task.execute()
+        
+
+        '''
         casa_tasks.plotms(vis=self.ms.name,
                           xaxis='azimuth',
                           yaxis='elevation',
@@ -86,7 +107,8 @@ class AzElChart(object):
                           highres=True,
                           interactive=False,
                           overwrite=True).execute()
-
+        '''
+        
         return self._get_plot_object()
 
     def _get_figfile(self):
@@ -164,14 +186,35 @@ class ElVsTimeChart(object):
         if os.path.exists(self.figfile):
             return self._get_plot_object()
 
+        #inputs based on analysisUtils.plotElevationSummary
+        task_args = {'vis'             : self.ms.name,
+                     'xaxis'           : 'time',
+                     'yaxis'           : 'elevation',
+                     'title'           : 'Elevation vs Time for %s' % self.ms.basename,
+                     'coloraxis'       : 'field',
+                     'avgchannel'      : '9000',
+                     'avgtime'         : '10s',
+                     'antenna'         : '',
+                     'plotfile'        : self.figfile,
+                     'clearplots'      : True,
+                     'showgui'         : False}
+
+        #casa.plotms(**task_args)
+        
+        task = casa_tasks.plotms(**task_args)
+        
+        task.execute()
+
+        '''
         casa_tasks.plotms(vis=self.ms.name,
                           xaxis='time',
                           yaxis='elevation',
-                          title='%%yaxis%% vs. %%xaxis%% for %s' % self.ms.basename,                           
+                          title='Elevation vs. Time for %s' % self.ms.basename,                           
                           plotfile=self.figfile,
                           highres=True,
                           interactive=False,
                           overwrite=True).execute()
+        '''
 
         return self._get_plot_object()
 

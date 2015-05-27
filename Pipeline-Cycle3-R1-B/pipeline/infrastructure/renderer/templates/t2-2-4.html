@@ -17,7 +17,7 @@ import os
 		    </a>
 		    <div class="caption">
 				<h4>Az/El</h4>
-				<p>Elevation vs. azimuth for ${ms.basename}.</p>
+				<p>Elevation vs. azimuth</p>
 			</div>
 		</div>
 	</li>
@@ -27,19 +27,17 @@ import os
 	  	<div class="thumbnail">
 			<a href="${os.path.relpath(el_vs_time_plot.abspath, pcontext.report_dir)}"
 			   class="fancybox">
-				<img src="${os.path.relpath(el_vs_time.thumbnail, pcontext.report_dir)}"
+				<img src="${os.path.relpath(el_vs_time_plot.thumbnail, pcontext.report_dir)}"
 					 title="Elevation vs. Time for ${ms.basename}"
 					 alt="Elevation vs. Time for ${ms.basename}" />
 		    </a>
 		    <div class="caption">
 				<h4>Elevation/Time</h4>
-				<p>Elevation vs. time for ${ms.basename}.</p>
+				<p>Elevation vs. time</p>
 			</div>
 		</div>
 	</li>
 % endif
 </ul>
 
-<ul>
-<li class="muted"> Sky setup displays</li>
-</ul>
+
