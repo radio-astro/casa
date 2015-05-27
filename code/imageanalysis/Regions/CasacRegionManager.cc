@@ -936,7 +936,9 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	);
     uInt nChan = 0;
     {
-	    ImageMetaData md(subimage);
+        // dynamic cast is necessary because gcc version under linux is too stupid
+        // to figure it out on its own
+        ImageMetaData md( DYNAMIC_POINTER_CAST<const ImageInterface<Float> >(subimage));
 	    nChan = md.nChannels();
     }
 	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();
