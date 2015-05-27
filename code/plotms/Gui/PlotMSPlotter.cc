@@ -447,8 +447,10 @@ void PlotMSPlotter::prepareForPlotting()   {
 	itsToolsTab_->toolsUnchecked();
 }
 
-
-
+bool PlotMSPlotter::close() {
+    itsPlotTab_->emptyLayout();
+    return QMainWindow::close();
+}
 
 // Protected Methods //
 

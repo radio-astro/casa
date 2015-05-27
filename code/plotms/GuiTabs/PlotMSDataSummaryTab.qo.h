@@ -79,6 +79,7 @@ public:
     //Return the currently supported plots.
     vector<PlotMSPlot*> getCurrentPlots();
 
+    void emptyLayout();
 
 
     //Get the files that the user loaded.
@@ -101,8 +102,7 @@ private:
 	//same canvas, we don't want to trigger a redraw until all the plots sharing
 	//the same canvas are done updating their data in background threads.
     void completePlotting( bool success, int plotIndex);
-	void emptyLayout();
-	void fillLayout();	
+    void fillLayout();
 
     QList<PlotMSDataCollapsible*> dataList;
     QWidget* scrollWidget;
