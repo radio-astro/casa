@@ -319,6 +319,7 @@ protected:
         : correctedData_p (False),
           modelData_p (False),
           observedData_p (False),
+          floatData_p(False),
           weightSpectrumIn_p (False),
           sigmaSpectrumIn_p (False),
           weightSpectrumOut_p (False),
@@ -328,6 +329,7 @@ protected:
         Bool correctedData_p;
         Bool modelData_p;
         Bool observedData_p;
+        Bool floatData_p;
         Bool weightSpectrumIn_p;
         Bool sigmaSpectrumIn_p;
         Bool weightSpectrumOut_p;
@@ -340,17 +342,14 @@ protected:
 
         AccumulationParameters (MsRow * rowInput, MsRowAvg * rowAveraged,
                                 Doing doing)
-        : correctedIn (doing.correctedData_p ? rowInput->corrected()
-                                            : Matrix<Complex> ()),
-          correctedOut (doing.correctedData_p ? rowAveraged->corrected()
-                                             : Matrix<Complex> ()),
-          modelIn (doing.modelData_p ? rowInput->model()
-                                    : Matrix<Complex> ()),
-          modelOut (doing.modelData_p ? rowAveraged->model()
-                                     : Matrix<Complex> ()),
-          observedIn (doing.observedData_p ? rowInput->observed()
-                                          : Matrix<Complex> ()),
+        : correctedIn (doing.correctedData_p ? rowInput->corrected(): Matrix<Complex> ()),
+          correctedOut (doing.correctedData_p ? rowAveraged->corrected(): Matrix<Complex> ()),
+          modelIn (doing.modelData_p ? rowInput->model(): Matrix<Complex> ()),
+          modelOut (doing.modelData_p ? rowAveraged->model(): Matrix<Complex> ()),
+          observedIn (doing.observedData_p ? rowInput->observed(): Matrix<Complex> ()),
           observedOut (doing.observedData_p ? rowAveraged->observed() : Matrix<Complex> ()),
+          floatIn (doing.floatData_p ? rowInput->singleDishData(): Matrix<Float> ()),
+          floatOut (doing.floatData_p ? rowAveraged->singleDishData() : Matrix<Float> ()),
           weightIn (rowInput->weight()),
           weightOut (rowAveraged->weight()),
           sigmaIn (rowInput->sigma()),
@@ -369,6 +368,8 @@ protected:
         Matrix<Complex>       modelOut;
         const Matrix<Complex> observedIn;
         Matrix<Complex>       observedOut;
+        const Matrix<Float>   floatIn;
+        Matrix<Float>         floatOut;
         const Vector<Float>   weightIn;
         Vector<Float>         weightOut;
         const Vector<Float>   sigmaIn;
@@ -864,7 +865,7 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
         	adjustedWeight(correlation) = accumulationParameters->weightIn(correlation);
         }
     }
-    else if (doing_p.observedData_p)
+    else if (doing_p.observedData_p or doing_p.floatData_p)
     {
         for (Int correlation = 0; correlation < nCorrelations; correlation ++)
         {
@@ -908,7 +909,6 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
 	if (doing_p.observedData_p)
 	{
 		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
-		// This has to
 		weightObserved = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
 
 		// Accumulate weighted average contribution (normalization will come at the end)
@@ -962,6 +962,23 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
 										1.0f, zeroAccumulation,
 										accumulationParameters->weightSpectrumOut (correlation, channel));
 		}
+	}
+
+	if (doing_p.floatData_p)
+	{
+
+		// The weight corresponding to FLOAT_DATA is that derived from the rms stored in SIGMA
+		weightObserved = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
+
+		// Accumulate weighted average contribution (normalization will come at the end)
+		accumulateElementForCube (	accumulationParameters->floatIn (correlation, channel),
+									weightObserved, zeroAccumulation,
+									accumulationParameters->floatOut (correlation, channel));
+
+		// The weight resulting from weighted average is the sum of the weights
+		accumulateElementForCube (	weightObserved,
+									1.0f, zeroAccumulation,
+									accumulationParameters->weightSpectrumOut (correlation, channel));
 	}
 
 	return;
@@ -1214,6 +1231,15 @@ VbAvg::finalizeCubeData (MsRowAvg * msRow)
 		}
 	}
 
+    if (doing_p.floatData_p)
+    {
+        typedef Divides <Float, Float, Float> DivideOpFloat;
+        DivideOpFloat opFloat;
+
+        Matrix<Float> visCubeFloat = msRow->singleDishDataMutable();
+        arrayTransformInPlace<Float, Float, DivideOpFloat > (visCubeFloat,msRow->weightSpectrum (), opFloat);
+    }
+
 
     return;
 }
@@ -1244,7 +1270,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
     	arrayTransformInPlace (sigmaSpectrun, AveragingTvi2::weightToSigma);
     }
-    // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
+    // Otherwise (doing only DATA/FLOAT_DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
     else
     {
     	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM
@@ -1640,6 +1666,10 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
         including += VisibilityCubeObserved;
     }
 
+    if (doing_p.floatData_p){
+        including += VisibilityCubeFloat;
+    }
+
     if (doing_p.weightSpectrumOut_p){
         including += WeightSpectrum;
     }
@@ -1671,8 +1701,11 @@ VbAvg::startChunk (ViImplementation2 * vi)
                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
     doing_p.modelData_p = vi->existsColumn (VisibilityCubeModel) &&
                           averagingOptions_p.contains (AveragingOptions::AverageModel);
+    doing_p.floatData_p = vi->existsColumn (VisibilityCubeFloat) &&
+                          averagingOptions_p.contains (AveragingOptions::AverageFloat);
+
     doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
-    doing_p.sigmaSpectrumIn_p = doing_p.observedData_p;
+    doing_p.sigmaSpectrumIn_p = doing_p.observedData_p || doing_p.floatData_p;
     doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
     doing_p.sigmaSpectrumOut_p = True; // We always use the output SigmaSpectrum
 
@@ -1690,6 +1723,10 @@ VbAvg::startChunk (ViImplementation2 * vi)
 
     if (doing_p.modelData_p){
         optionalComponentsToCopy_p += VisibilityCubeModel;
+    }
+
+    if (doing_p.floatData_p){
+        optionalComponentsToCopy_p += VisibilityCubeFloat;
     }
 
     if (doing_p.weightSpectrumOut_p){
@@ -2060,7 +2097,9 @@ AveragingTvi2::produceSubchunk ()
     vbAvg_p->setBufferToFill (vbToFill);
 
     Int nBaselines = nAntennas() * (nAntennas() -1) / 2;
-        // This is just a heuristic to keep output VBs from being too small
+
+    // jagonzal: Handle nBaselines for SD case
+    if (nBaselines == 0) nBaselines = 1;
 
     if (getVii()->more())
     {

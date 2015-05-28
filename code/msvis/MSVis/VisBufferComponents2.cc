@@ -195,6 +195,7 @@ VisBufferComponents2::name (Int id)
     names [VisibilityCubeCorrected] = "VisibilityCubeCorrected";
     names [VisibilityCubeModel] = "VisibilityCubeModel";
     names [VisibilityCubeObserved] = "VisibilityCubeObserved";
+    names [VisibilityCubeFloat] = "VisibilityCubeFloat";
 
     assert (names.size() == N_VisBufferComponents2);
 

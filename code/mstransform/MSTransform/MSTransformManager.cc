@@ -4264,8 +4264,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 
 		if (lagDataColumnAvailable_p)
@@ -4371,8 +4370,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 		else
 		{
@@ -4392,8 +4390,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 		else
 		{

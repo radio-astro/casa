@@ -1286,6 +1286,12 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
 
         break;
 
+    case VisibilityCubeFloat:
+
+        result = ! columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isDefined(0);
+
+        break;
+
     case WeightSpectrum:
 
         result = ! columns_p.weightSpectrum_p.isNull() && columns_p.weightSpectrum_p.isDefined(0);

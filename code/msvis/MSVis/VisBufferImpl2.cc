@@ -83,7 +83,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
         // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
-    floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, FloatData, NcNfNr, False);
+    floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, VisibilityCubeFloat, NcNfNr, False);
     imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight, NoCheck);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr, False);
 //    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
@@ -709,7 +709,7 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 Vector<Int>
 VisBufferImpl2::getCorrelationTypes () const
 {
-    return state_p->correlations_p;
+	return state_p->correlations_p.copy();
 }
 
 
