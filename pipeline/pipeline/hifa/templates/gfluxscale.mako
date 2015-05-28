@@ -167,7 +167,8 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-			                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
+			                       title="Baseband ${plot.parameters['baseband']}.(spw ${plot.parameters['spw']}). 
+			                              Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
 	                              Flux calibrator fields: ${plot.parameters['field']}."
 			                       rel="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
@@ -175,7 +176,9 @@ $(document).ready(function() {
 			                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 			                    </a>
 			                    <div class="caption">
-									<h4>Baseband ${plot.parameters['baseband']}</h4>
+									<h4>Baseband ${plot.parameters['baseband']}(spw ${plot.parameters['spw']})<br />
+									    Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
+									</h4>
 								    <p>Amp vs. uvdist for 
 								    <%
 									antlist = plot.parameters.get('ant','').split(',')
@@ -192,7 +195,8 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-			                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennas.' if antplot.parameters.get('ant','') == '' else 'Antennas: '+str(antplot.parameters['ant'])+'.' }
+			                       title="Baseband ${antplot.parameters['baseband']} (spw ${antplot.parameters['spw']}). 
+			                              Receiver bands: ${utils.commafy(antplot.parameters['receiver'], False)}.  ${'All antennas.' if antplot.parameters.get('ant','') == '' else 'Antennas: '+str(antplot.parameters['ant'])+'.' }
 	                              Flux calibrator fields: ${antplot.parameters['field']}."
 			                       rel="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
@@ -200,7 +204,9 @@ $(document).ready(function() {
 			                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
 			                    </a>
 			                    <div class="caption">
-									<h4>Baseband ${antplot.parameters['baseband']}</h4>
+									<h4>Baseband ${antplot.parameters['baseband']}(spw ${antplot.parameters['spw']})<br />
+									    Receiver bands: ${utils.commafy(antplot.parameters['receiver'], False)}<br />
+									    </h4>
 								    <p>Selection for 
 								    <%
 									antlist = antplot.parameters.get('ant','').split(',')
