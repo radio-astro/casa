@@ -295,7 +295,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="string" name="outframe" ignorecase="true" subparam="true">
-	    <description>velocity frame of output image </description>
+	    <description>default spectral frame of output image </description>
 	    <value></value>
     <allowed kind="enum">
             <value>lsrk</value>
@@ -556,7 +556,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="resmooth"><value type="bool">False</value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
-		<description>Velocity reference frame of output image; \'\' =input</description>
+		<description>spectral reference frame of output image; \'\' =input</description>
 	      </equals>
 	      <equals value="velocity">
 		<default param="nchan"><value>-1</value></default>
@@ -570,7 +570,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="resmooth"><value type="bool">False</value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value>
-		  <description>Velocity reference frame of output image; \'\' =input</description>
+		  <description>spectral reference frame of output image; \'\' =input</description>
                 </default>
 		<default param="veltype"><value type="string">radio</value>
 		  <description>Velocity definition of output image</description>
@@ -588,7 +588,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="resmooth"><value type="bool">False</value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
-		<description>Velocity reference frame of output image; \'\' =input</description>
+		<description>spectral reference frame of output image; \'\' =input</description>
 	      </equals>
 	    </when>
 	    
@@ -949,7 +949,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  example: chaniter=True; step through channels 
 
                outframe -- For mode='velocity', 'frequency', or 'channel':
-                             velocity reference frame of output image
+                             default spectral reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
                           'LGROUP','CMB'
                  default: ''; same as input data
