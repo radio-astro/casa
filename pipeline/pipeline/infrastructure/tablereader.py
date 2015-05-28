@@ -14,6 +14,12 @@ import pipeline.domain.measures as measures
 
 LOG = logging.get_logger(__name__)
 
+def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
+    """identify VLA band"""
+    i = bisect_left(bandlimits, frequency)
+
+    return BBAND[i]
+
 
 def _get_ms_name(ms):
     return ms.name if isinstance(ms, domain.MeasurementSet) else ms
@@ -144,7 +150,37 @@ class MeasurementSetReader(object):
             
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
-        
+            
+            #LOG.info('************************(1) '+spw.band+'********************')
+            
+            #Used EVLA band name from spw instead of frequency range
+            observatory = string.upper(ms.antenna_array.name)
+            if observatory in ('VLA', 'EVLA'):
+                spw2band = ms.get_vla_spw2band()
+                bands = spw2band.values()
+            
+                try:
+                    EVLA_band = spw2band[spw.id]
+                except:
+                    LOG.info('Unable to get band from spw id - using reference frequency instead')
+                    EVLA_band = find_EVLA_band(spw.ref_frequency)
+                
+                EVLA_band_dict = {'4' : '4m (4)',
+                                  'P' : '90cm (P)',
+                                  'L' : '20cm (L)',
+                                  'S' : '13cm (S)',
+                                  'C' : '6cm (C)',
+                                  'X' : '3cm (X)',
+                                  'U' : '2cm (Ku)',
+                                  'K' : '1.3cm (K)',
+                                  'A' : '1cm (Ka)',
+                                  'Q':  '0.7cm (Q)'}
+                
+                spw.band = EVLA_band_dict[EVLA_band]
+       
+            #LOG.info('************************(2) '+spw.band+'********************')
+            
+       
     @staticmethod
     def link_intents_to_spws(msmd, ms):
         # we can't use msmd.intentsforspw directly as we may have a modified
