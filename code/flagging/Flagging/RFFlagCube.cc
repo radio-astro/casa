@@ -615,14 +615,16 @@ void RFFlagCube::setMSFlags(uInt itime)
           if (kiss) {
 
               if (ncorr == 1) {
-                  if (outp[iout++] = inp[iin++]) {
+            	  /* TODO assignment correct? */
+                  if ((outp[iout++] = inp[iin++])) {
                       nfChanIfrp[iChanIfr]++;
                       iNfIfrTime++;
                   }
               }
               else {
                   for( uInt icorr = 0; icorr < ncorr; icorr++, iout++, iin++) {
-                      if (outp[iout] = inp[iin]) {
+                	  /* TODO assignment correct? */
+                      if ((outp[iout] = inp[iin])) {
                           nfChanIfrp[iChanIfr]++;
                           iNfIfrTime++;
                       }
