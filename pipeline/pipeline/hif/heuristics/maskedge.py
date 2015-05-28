@@ -1,13 +1,15 @@
-import pickle
 import copy as python_copy
-
-# package modules
+import pickle
 
 import numpy
 
+import pipeline.infrastructure as infrastructure
+
+LOG = infrastructure.get_logger(__name__)
+
+
 class BandpassEdgeFlagger(object):
     """Class to detect band edges."""
-
 
     def _add_flag_description(self, new_flags, flag, y2flag,
      data_description, stageDescription, rule):
@@ -82,11 +84,11 @@ class BandpassEdgeFlagger(object):
                 if not(flag['Current'][data_chan]):
                     ndata += 1
                     try:
-                       chisq += pow ((data[data_chan] - fit_profile[i])/
-                                     stddev[data_chan],2)
+                        chisq += pow ((data[data_chan] - fit_profile[i])/
+                                      stddev[data_chan],2)
                     except ZeroDivisionError:
-                       print 'caught zero division error'
-                       chisq += 1e6                 
+                        LOG.debug('caught zero division error')
+                        chisq += 1e6                 
         if ndata > 0:
             chisq /= ndata
         return chisq

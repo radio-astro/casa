@@ -686,10 +686,6 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
 
                     if antenna_id==tsysspectrum.ant[0]:
                         caltime = tsysspectrum.time
-                        print np.shape(data), np.shape(tsysspectrum.data)
-                        print times
-                        print caltime
-                        print times==caltime
                         data[:, caltime==times] = tsysspectrum.data.reshape([nchannels,1])
                         flag[:, caltime==times] = tsysspectrum.flag.reshape([nchannels,1])
 

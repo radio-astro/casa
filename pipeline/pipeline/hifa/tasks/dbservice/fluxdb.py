@@ -54,11 +54,7 @@ class FluxdbInputs(basetask.StandardInputs):
 class FluxdbResults(basetask.Results):
     def __init__(self, fluxtable=[]):
         super(FluxdbResults, self).__init__()
-
         self.fluxtable = fluxtable[:]
-        print self.fluxtable
-
-
         
     def merge_with_context(self, context):
         """Replace flux source table with new results from the database

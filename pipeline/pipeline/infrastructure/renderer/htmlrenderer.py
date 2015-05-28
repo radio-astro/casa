@@ -417,8 +417,6 @@ class T1_3MRenderer(RendererBase):
                 except:
                     LOG.debug('No flag summary table available yet from applycal')
 
-        print tablerows
-
         return {'pcontext' : context,
                 'registry' : registry,
                 'scores'   : scores,

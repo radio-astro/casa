@@ -266,7 +266,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     flagcount += int(summary['spw'][spw]['flagged'])
                     totalcount += int(summary['spw'][spw]['total'])
                 except:
-                    print spw, summary['spw'].keys()
+                    pass
+#                     print spw, summary['spw'].keys()
 
                 if previous_summary:
                     flagcount -= int(previous_summary['spw'][spw]['flagged'])
