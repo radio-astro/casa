@@ -1510,8 +1510,11 @@ void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   vb.flagCube();
   vb.weight();
   ///////////////////////////
-  Int nth=min(nchan_p, omp_get_max_threads());
-#pragma omp parallel for default(none) firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor ) shared(phasor, visFreq) num_threads(nth) schedule(dynamic, 1)
+  Int nth=1;
+#ifdef _OPENMP
+  nth=min(nchan_p, omp_get_max_threads());
+#endif
+#pragma omp parallel for firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor ) shared(phasor, visFreq) num_threads(nth) schedule(dynamic, 1)
 
   for(Int outchan=0; outchan < nchan_p; ++outchan){
     //cerr << "outchan " << outchan << "  " << chanMapRev_p[outchan] << endl;
