@@ -1037,6 +1037,111 @@ VbAvg::accumulateElementForCube (const T * unweightedValue,
     }
 }
 
+
+pair<Bool, Vector<Double> >
+VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
+{
+    // Accumulate the sums needed for averaging of cube data (e.g., visibility).
+
+    const Matrix<Bool> & inputFlags = rowInput->flags ();
+    Matrix<Bool> & averagedFlags = rowAveraged->flagsMutable ();
+    Matrix<Int>  counts = rowAveraged->counts ();
+    Vector<Bool>  correlationFlagged = rowAveraged->correlationFlagsMutable ();
+
+    AccumulationParameters accumulationParameters (rowInput, rowAveraged, doing_p);
+        // is a member variable to reduce memory allocations (jhj)
+
+    IPosition shape = inputFlags.shape();
+    const Int nChannels = shape (1);
+    const Int nCorrelations = shape (0);
+
+    Bool rowFlagged = True;  // True if all correlations and all channels flagged
+
+    for (Int channel = 0; channel < nChannels; channel ++){
+
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+
+            // Based on the current flag state of the accumulation and the current flag
+            // state of the correlation,channel, accumulate the data (or not).  Accumulate
+            // flagged data until the first unflagged datum appears.  Then restart the
+            // accumulation with that datum.
+
+            Bool inputFlagged = inputFlags (correlation, channel);
+            if (rowFlagged && ! inputFlagged){
+                rowFlagged = False;
+            }
+            //rowFlagged = rowFlagged && inputFlagged;
+            Bool accumulatorFlagged = averagedFlags (correlation, channel);
+
+            if (! accumulatorFlagged && inputFlagged){
+                accumulationParameters.incrementCubePointers();
+                continue;// good accumulation, bad data so toss it.
+            }
+
+            // If changing from flagged to unflagged for this cube element, reset the
+            // accumulation count to 1; otherwise increment the count.
+
+            Bool flagChange = (accumulatorFlagged && ! inputFlagged);
+            Bool zeroAccumulation = flagChange || counts (correlation, channel) == 0;
+
+            if (flagChange){
+                averagedFlags (correlation, channel) = False;
+            }
+
+            if (zeroAccumulation){
+                counts (correlation, channel) = 1;
+            }
+            else{
+                counts (correlation, channel) += 1;
+            }
+
+            // Accumulate the sum for each cube element
+
+            accumulateElementForCubes (accumulationParameters,
+                                       zeroAccumulation); // zeroes out accumulation
+
+            accumulationParameters.incrementCubePointers();
+
+            // Update correlation Flag
+
+            if (correlationFlagged (correlation) && ! inputFlagged){
+                correlationFlagged (correlation) = False;
+            }
+        }
+    }
+
+    Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 1);
+    if (doing_p.correctedData_p)
+    {
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = rowInput->weight(correlation);
+        }
+    }
+    else if (doing_p.observedData_p || doing_p.floatData_p)
+    {
+        const Vector<Float> & sigma = accumulationParameters.sigmaIn ();
+
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(rowInput->sigma (correlation));
+        }
+    }
+
+//    else if (doing_p.observedData_p or doing_p.floatData_p)
+//    {
+//        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+//        {
+//        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaIn(correlation));
+//        }
+//    }
+
+
+
+    return std::make_pair (rowFlagged, adjustedWeight);
+}
+
+
 inline void
 VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameters,
                                   Bool zeroAccumulation)
@@ -1143,6 +1248,7 @@ VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameter
 
 	return;
 }
+
 
 
 template <typename T>
