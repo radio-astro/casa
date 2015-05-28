@@ -137,11 +137,13 @@ $(document).ready(function(){
 	<%def name="mouseover(plot)">Click to show model amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']}		
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
+		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
