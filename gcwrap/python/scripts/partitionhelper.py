@@ -1147,12 +1147,8 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
 
         mytaql = []
         for ddi, scans in dmytaql.items():
-            # TODO: does taql do this optimization for us?
-            if len(scans) == 1:
-                mytaql.append(('(DATA_DESC_ID==%i && SCAN_NUMBER==%i)') % (ddi, scans[0]))
-            else:
-                scansel = '[' + ', '.join([str(x) for x in scans]) + ']'
-                mytaql.append(('(DATA_DESC_ID==%i && (SCAN_NUMBER IN %s))') % (ddi, scansel))
+            scansel = '[' + ', '.join([str(x) for x in scans]) + ']'
+            mytaql.append(('(DATA_DESC_ID==%i && (SCAN_NUMBER IN %s))') % (ddi, scansel))
 
         mytaql = ' OR '.join(mytaql)
 
