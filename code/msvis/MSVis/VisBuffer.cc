@@ -891,181 +891,180 @@ void VisBuffer::formStokes(Cube<Float>& fcube)
 
 void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
 {
- 
-  // TBD:
-  //  a. nChanAve examination
-  //  b. calmode=T  DONE
-  //  c. doWtSp clauses and rowWtFac (not needed?)
-  //  d. divide-by-zero safety  DONE
-  //  e. no-averaging case   sigma<->weight
+
+    // TBD:
+    //  a. nChanAve examination
+    //  b. calmode=T  DONE
+    //  c. doWtSp clauses and rowWtFac (not needed?)
+    //  d. divide-by-zero safety  DONE
+    //  e. no-averaging case   sigma<->weight
 
 
-  //  Only do something if there is something to do
-  if ( chanavebounds.nelements()>0 ) {
+    //  Only do something if there is something to do
+    if ( chanavebounds.nelements()>0 ) {
 
-    // refer to the supplied chanavebounds
-    chanAveBounds_p.reference(chanavebounds);
+        // refer to the supplied chanavebounds
+        chanAveBounds_p.reference(chanavebounds);
 
-    // Examine chanAveBounds_p for consistency, detect nChanAve
-    //   TBD: improve actual examination...
-    Int nChanAve = abs(chanAveBounds_p(0,1)-chanAveBounds_p(0,0))+1;
-    nChanAve = max(1,nChanAve);  // ensure >0
+        // Examine chanAveBounds_p for consistency, detect nChanAve
+        //   TBD: improve actual examination...
+        Int nChanAve = abs(chanAveBounds_p(0,1)-chanAveBounds_p(0,0))+1;
+        nChanAve = max(1,nChanAve);  // ensure >0
 
-    Int nChanOut(chanAveBounds_p.nrow());
-    Vector<Int> chans(channel()); // Ensure channels pre-filled
-    
-    // Row weight and sigma currently refer to the number of channels in the
-    // MS, regardless of any selection.
-    Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
+        Int nChanOut(chanAveBounds_p.nrow());
+        Vector<Int> chans(channel()); // Ensure channels pre-filled
 
-    const Bool doWtSp(visIter_p->existsWeightSpectrum());
+        // Row weight and sigma currently refer to the number of channels in the
+        // MS, regardless of any selection.
+        Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
 
-    // Apply averaging to whatever data is present
-    if (visCubeOK_p)          chanAveVisCube(visCube(),nChanOut);
-    if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
-    if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
-    if (floatDataCubeOK_p)    chanAveVisCube(floatDataCube(), nChanOut);
+        const Bool doWtSp(visIter_p->existsWeightSpectrum());
 
-    uInt nCor = nCorr();
-    uInt nrows = nRow();
-    Matrix<Float> rowWtFac(nCor, nrows);
+        // Apply averaging to whatever data is present
+        if (visCubeOK_p)          chanAveVisCube(visCube(),nChanOut);
+        if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
+        if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
+        if (floatDataCubeOK_p)    chanAveVisCube(floatDataCube(), nChanOut);
 
-    uInt nch = flagCube().shape()(1);   // # of selected channels
-    Double selChanFac;
+        uInt nCor = nCorr();
+        uInt nrows = nRow();
+        Matrix<Float> rowWtFac(nCor, nrows);
 
-    if(doWtSp){                                    // Get the total weight spectrum
-      const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
+        uInt nch = flagCube().shape()(1);   // # of selected channels
+        Double selChanFac;
 
-      for(uInt row = 0; row < nrows; ++row){
-        for(uInt icor = 0; icor < nCor; ++icor){
-          rowWtFac(icor, row) = 0.0;
-          for(uInt ichan = 0; ichan < nch; ++ichan)
-            // Presumably the input row weight was set without taking flagging
-            // into account.
-            rowWtFac(icor, row) += wtsp(icor, ichan, row);
+        if(doWtSp){                                    // Get the total weight spectrum
+            const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
+
+            for(uInt row = 0; row < nrows; ++row){
+                for(uInt icor = 0; icor < nCor; ++icor){
+                    rowWtFac(icor, row) = 0.0;
+                    for(uInt ichan = 0; ichan < nch; ++ichan)
+                        // Presumably the input row weight was set without taking flagging
+                        // into account.
+                        rowWtFac(icor, row) += wtsp(icor, ichan, row);
+                }
+            }
         }
-      }
-    }
-    else
-      rowWtFac = 1.0;
+        else
+            rowWtFac = 1.0;
 
-    // The false makes it leave weightSpectrum() averaged if it is present.
-    if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
+        // The false makes it leave weightSpectrum() averaged if it is present.
+        if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
 
-    if(flagCategoryOK_p)
-      chanAveFlagCategory(flagCategory(), nChanOut);
-    
-    // Collapse the frequency values themselves, and count the number of
-    // selected channels.
-    // TBD: move this up to bounds calculation loop?
-    Vector<Double> newFreq(nChanOut,0.0);
-    Vector<Int> newChan(nChanOut,0);
-    frequency(); // Ensure frequencies pre-filled
-    Int nChan0(chans.nelements());
-    Int ichan=0;
-    Int totn = 0;
-    for(Int ochan = 0; ochan < nChanOut; ++ochan){
-      Int n = 0;
+        if(flagCategoryOK_p)
+            chanAveFlagCategory(flagCategory(), nChanOut);
 
-      while(chans[ichan] >= chanAveBounds_p(ochan, 0) &&
-            chans[ichan] <= chanAveBounds_p(ochan, 1) &&
-            ichan < nChan0){
-	++n;
-	newFreq[ochan] += (frequency()[ichan] - newFreq[ochan]) / n;
-	newChan[ochan] += chans[ichan];
-	ichan++;
-      }
-      if (n>0) {
-	newChan[ochan] /= n;
-        totn += n;
-      }
-    }
-    
-    // Install the new values
-    frequency().reference(newFreq);
-    channel().reference(newChan);
-    nChannel()=nChanOut;
+        // Collapse the frequency values themselves, and count the number of
+        // selected channels.
+        // TBD: move this up to bounds calculation loop?
+        Vector<Double> newFreq(nChanOut,0.0);
+        Vector<Int> newChan(nChanOut,0);
+        frequency(); // Ensure frequencies pre-filled
+        Int nChan0(chans.nelements());
+        Int ichan=0;
+        Int totn = 0;
+        for(Int ochan = 0; ochan < nChanOut; ++ochan){
+            Int n = 0;
 
-    if(doWtSp){
-      // chanAccCube(weightSpectrum(), nChanOut); already done.
-      const Cube<Float>& wtsp(weightSpectrum());
-
-      for(uInt row = 0; row < nrows; ++row){
-        for(uInt icor = 0; icor < nCor; ++icor){
-          Float totwtsp = rowWtFac(icor, row);
-            
-          rowWtFac(icor, row) = 0.0;
-          for(Int ochan = 0; ochan < nChanOut; ++ochan){
-            Float oswt = wtsp(icor, ochan, row);       // output spectral
-            // weight
-            if(oswt > 0.0)
-              rowWtFac(icor, row) += oswt;
-            else
-              flagCube()(icor, ochan, row) = True;
-          }
-          if(totwtsp > 0.0)
-            rowWtFac(icor, row) /= totwtsp;
+            while(chans[ichan] >= chanAveBounds_p(ochan, 0) &&
+                    chans[ichan] <= chanAveBounds_p(ochan, 1) &&
+                    ichan < nChan0){
+                ++n;
+                newFreq[ochan] += (frequency()[ichan] - newFreq[ochan]) / n;
+                newChan[ochan] += chans[ichan];
+                ichan++;
+            }
+            if (n>0) {
+                newChan[ochan] /= n;
+                totn += n;
+            }
         }
-      }
-    }
-    // This is slightly fudgy because it ignores the unselected part of
-    // weightSpectrum.  Unfortunately now that selection is applied to
-    // weightSpectrum, we can't get at the unselected channel weights.
-    selChanFac = static_cast<Float>(totn) / nAllChan0;
 
-    for(uInt row = 0; row < nrows; ++row){
-      for(uInt icor = 0; icor < nCor; ++icor){
-        Float rwfcr = rowWtFac(icor, row);
+        // Install the new values
+        frequency().reference(newFreq);
+        channel().reference(newChan);
+        nChannel()=nChanOut;
 
-	if (calmode) {
+        if(doWtSp){
+            // chanAccCube(weightSpectrum(), nChanOut); already done.
+            const Cube<Float>& wtsp(weightSpectrum());
 
-	  // Downstream processing in calibration will use weightMat only
+            for(uInt row = 0; row < nrows; ++row){
+                for(uInt icor = 0; icor < nCor; ++icor){
+                    Float totwtsp = rowWtFac(icor, row);
 
-	  // Just magnify by channal averaging factor
-	  weightMat()(icor, row) *= nChanAve;
+                    rowWtFac(icor, row) = 0.0;
+                    for(Int ochan = 0; ochan < nChanOut; ++ochan){
+                        Float oswt = wtsp(icor, ochan, row);       // output spectral
+                        // weight
+                        if(oswt > 0.0)
+                            rowWtFac(icor, row) += oswt;
+                        else
+                            flagCube()(icor, ochan, row) = True;
+                    }
+                    if(totwtsp > 0.0)
+                        rowWtFac(icor, row) /= totwtsp;
+                }
+            }
+        }
+        // This is slightly fudgy because it ignores the unselected part of
+        // weightSpectrum.  Unfortunately now that selection is applied to
+        // weightSpectrum, we can't get at the unselected channel weights.
+        selChanFac = static_cast<Float>(totn) / nAllChan0;
 
-	  /*
+        for(uInt row = 0; row < nrows; ++row){
+            for(uInt icor = 0; icor < nCor; ++icor){
+                // Float rwfcr = rowWtFac(icor, row);
+
+                if (calmode) {
+
+                    // Downstream processing in calibration will use weightMat only
+
+                    // Just magnify by channal averaging factor
+                    weightMat()(icor, row) *= nChanAve;
+
+                    /*
 	  if(totn < nAllChan0)
 	    weightMat()(icor, row) *= selChanFac * rwfcr;
 	  if(rwfcr > 0.0)          // Unlike WEIGHT, SIGMA is for a single chan.
 	    sigmaMat()(icor, row) /= sqrt(nch * rwfcr / nChanOut);
-	  */
-	}
-	else {
+                     */
+                }
+                else {
 
 
-	  // selectively update sigma and weight info according to which
-	  //   columns were processed
+                    // selectively update sigma and weight info according to which
+                    //   columns were processed
 
-	  if (visCubeOK_p || floatDataCubeOK_p) {
-	    // update sigmaMat by inverse sqrt of number of channels averaged
-	    sigmaMat()(icor,row) /= sqrt(Double(nChanAve));   // nChanAve>0 already ensured
+                    if (visCubeOK_p || floatDataCubeOK_p) {
+                        // update sigmaMat by inverse sqrt of number of channels averaged
+                        sigmaMat()(icor,row) /= sqrt(Double(nChanAve));   // nChanAve>0 already ensured
 
-	    if (!correctedVisCubeOK_p) {
-	      // calc weightMat from sigmaMat
-	      Float &s= sigmaMat()(icor,row);
-	      weightMat()(icor,row)= (s>0.0 ? 1./square(s) : FLT_EPSILON);
-	    }
-	  }
+                        if (!correctedVisCubeOK_p) {
+                            // calc weightMat from sigmaMat
+                            Float &s= sigmaMat()(icor,row);
+                            weightMat()(icor,row)= (s>0.0 ? 1./square(s) : FLT_EPSILON);
+                        }
+                    }
 
-	  if (correctedVisCubeOK_p || modelVisCubeOK_p) {
-	    // update weightMat
-	    weightMat()(icor,row)*=Double(nChanAve);
-	    if (!visCubeOK_p) {
-	      // calc sigmaMat from weightMat
-	      Float &w = weightMat()(icor,row);
-	      sigmaMat()(icor,row)= ( w>0.0 ? 1./sqrt(w) : FLT_MAX );
-	    }
-	  }
+                    if (correctedVisCubeOK_p || modelVisCubeOK_p) {
+                        // update weightMat
+                        weightMat()(icor,row)*=Double(nChanAve);
+                        if (!visCubeOK_p) {
+                            // calc sigmaMat from weightMat
+                            Float &w = weightMat()(icor,row);
+                            sigmaMat()(icor,row)= ( w>0.0 ? 1./sqrt(w) : FLT_MAX );
+                        }
+                    }
 
-	} // calmode
+                } // calmode
 
-      }
-    }
-  } // chanavebounds
+            }
+        }
+    } // chanavebounds
 
-  // do we need to do something here that is datacolumn-specific to get sigma/weight reconciled?
-
+    // do we need to do something here that is datacolumn-specific to get sigma/weight reconciled?
 
 }
 

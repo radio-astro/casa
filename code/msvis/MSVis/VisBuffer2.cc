@@ -52,7 +52,7 @@ VisBuffer2::getRowMutable (Int)
 }
 
 // Rotate visibility phase for phase center offsets
-void VisBufferUtil2::phaseCenterShift (VisBuffer2 & vb, const Vector<Double>& phase)
+void VisBufferUtil2::phaseCenterShift (VisBuffer2 & /*vb*/, const Vector<Double>& /*phase*/)
 {
 
   // AlwaysAssert(static_cast<Int>(phase.nelements()) == vb.nRows(), AipsError);
@@ -97,7 +97,7 @@ void VisBufferUtil2::phaseCenterShift (VisBuffer2 & vb, const Vector<Double>& ph
 
 // Rotate visibility phase for phase center offsets
 void
-VisBufferUtil2::phaseCenterShift (VisBuffer2 & vb, Double dx, Double dy)
+VisBufferUtil2::phaseCenterShift (VisBuffer2 & /*vb*/, Double /*dx*/, Double /*dy*/)
 {
 
   // // no-op if no net shift

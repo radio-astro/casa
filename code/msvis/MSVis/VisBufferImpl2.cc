@@ -142,13 +142,14 @@ using namespace vi;
 // Other sections contain the accessor and filler methods
 
 VisBufferImpl2::VisBufferImpl2 (VisBufferOptions options)
-: cache_p (0), state_p (0)
+: cache_p (0), msRow_p (0), state_p (0)
 {
     construct (0, options);
 }
 
 VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options)
 : cache_p (0),
+  msRow_p (0),
   state_p (0)
 {
   construct (iter, options);
@@ -157,66 +158,97 @@ VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions opti
 VisBufferImpl2::~VisBufferImpl2 ()
 {
     delete cache_p;
+    delete msRow_p;
     delete state_p;
 }
 
-
 void
-VisBufferImpl2::appendRow (Vbi2MsRow * rowSrc, Int initialCapacity,
-                           const VisBufferComponents2 & optionalComponentsToCopy)
+VisBufferImpl2::appendRow (Vbi2MsRow * rowSrc,
+                           Int initialCapacity,
+                           const VisBufferComponents2 & optionalComponentsToCopy,
+                           bool doCopy)
 {
     // First check to see if the buffer needs to be reconfigured before another
     // row can be appended.
 
-    if (state_p->appendSize_p == 0 ||
-        state_p->appendSize_p == state_p->appendCapacity_p){
+//    if (state_p->appendSize_p == 0 ||
+//        state_p->appendSize_p == state_p->appendCapacity_p){
+//
+//        if (msRow_p == 0){
+//            msRow_p = new Vbi2MsRow (0, this);
+//        }
+//
+//        // The buffer is either empty or completely full; resize it so
+//        // that there is room to add more rows.
+//
+//        Int nRowsToAdd;
+//
+//        if (state_p->appendSize_p == 0){
+//
+//            // If appendSize is zero then the buffer is completely empty.
+//            // If capacity is nonzero then reuse that capacity.
+//
+//            nRowsToAdd = state_p->appendCapacity_p; // nonzero if buffer is being reused
+//
+//            if (nRowsToAdd == 0){
+//                nRowsToAdd = initialCapacity; // new buffer: use provided initial capacity
+//            }
+//
+//            state_p->appendCapacity_p = nRowsToAdd;
+//        }
+//        else{
+//
+//            // All rows in use so add 40% more rows
+//
+//            nRowsToAdd = (state_p->appendCapacity_p * 4) / 10;
+//            state_p->appendCapacity_p += nRowsToAdd;
+//        }
+//
+//        for (CacheRegistry::iterator i = cache_p->registry_p.begin();
+//             i != cache_p->registry_p.end();
+//             i++){
+//
+//            // Resize the various arrays so that they have the appropriate
+//            // row dimension.
+//
+//            (*i)->appendRows (state_p->appendCapacity_p);
+//        }
+//    }
 
-        // The buffer is either empty or completely full; resize it so
-        // that there is room to add more rows.
+    // Now append the row.
 
-        Int nRowsToAdd;
+//    Assert (state_p->appendSize_p <= cache_p->time_p.getItem().shape()(0));
 
-        if(state_p->appendSize_p == 0){
+    if (msRow_p == 0){
+        msRow_p = new Vbi2MsRow (0, this);
+    }
 
-            // If appendSize is zero then either the buffer is completely empty.
-            // If capacity is nonzero then reuse that capacity.
 
-            nRowsToAdd = state_p->appendCapacity_p; // nonzero if buffer is being reused
+    state_p->appendSize_p ++;
 
-            if (nRowsToAdd == 0){
-                nRowsToAdd = initialCapacity; // new buffer: use provided initial capacity
-            }
+    if (state_p->appendSize_p >= cache_p->time_p.getItem().shape().last()){
 
-            state_p->appendCapacity_p = nRowsToAdd;
-        }
-        else{
-
-            // All rows in use so add 40% more rows
-
-            nRowsToAdd = (state_p->appendCapacity_p * 4) / 10;
-            state_p->appendCapacity_p += nRowsToAdd;
-        }
+        Int desiredNRows = max (state_p->appendSize_p, initialCapacity);
 
         for (CacheRegistry::iterator i = cache_p->registry_p.begin();
-             i != cache_p->registry_p.end();
-             i++){
+                i != cache_p->registry_p.end();
+                i++){
 
             // Resize the various arrays so that they have the appropriate
             // row dimension.
 
-            (*i)->appendRows (nRowsToAdd);
+            (*i)->appendRows (desiredNRows);
         }
     }
 
-    // Now append the row.
-
-    state_p->appendSize_p ++;
-
     // Now copy the provided row into the next one in this buffer.
 
-    Vbi2MsRow rowDst = Vbi2MsRow (state_p->appendSize_p - 1, this);
+    if (doCopy){
 
-    rowDst.copy (rowSrc, optionalComponentsToCopy);
+        msRow_p->changeRow (state_p->appendSize_p - 1);
+
+        msRow_p->copy (rowSrc, optionalComponentsToCopy);
+    }
 }
 
 void
@@ -665,9 +697,7 @@ VisBufferImpl2::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) co
         frame = getVi()->getReportingFrameOfReference();
     }
 
-    Double t = time() (rowInBuffer);
-
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p (frequencyIndex);
 }
@@ -679,9 +709,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
         frame = getVi()->getReportingFrameOfReference();
     }
 
-    Double t = time() (rowInBuffer);
-
-    state_p->frequencies_p.updateCacheIfNeeded (getVi(), t, frame);
+    state_p->frequencies_p.updateCacheIfNeeded (getVi(), rowInBuffer, frame, this);
 
     return state_p->frequencies_p.values_p;
 }
@@ -689,9 +717,7 @@ VisBufferImpl2::getFrequencies (Int rowInBuffer, Int frame) const
 Int
 VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 {
-    Double t = time() (rowInBuffer);
-
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p (frequencyIndex);
 }
@@ -699,9 +725,7 @@ VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
 const Vector<Int> &
 VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 {
-    Double t = time() (rowInBuffer);
-
-    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), t, 0);
+    state_p->channelNumbers_p.updateCacheIfNeeded (getVi(), rowInBuffer, 0, this);
 
     return state_p->channelNumbers_p.values_p;
 }
@@ -1865,7 +1889,7 @@ VisBufferImpl2::getRow (Int row) const
 ms::MsRow *
 VisBufferImpl2::getRowMutable (Int row)
 {
-    ms::MsRow * msRow = new ms::Vbi2MsRow (row, this);
+    ms::MsRow * msRow  = new ms::Vbi2MsRow (row, this);
 
     return msRow;
 }
@@ -2735,24 +2759,29 @@ VisBufferImpl2::fillSigmaSpectrum (Cube<Float>& value) const
     }
     else{
 
+        int nRows = this->nRows();
+        int nCorrelations = this->nCorrelations ();
+        int nChannels = this->nChannels();
+
         // Sigma spectrum doesn't exist so create on using the sigma column.
 
-        Matrix<Float> theSigmas;
-        theSigmas = sigma();  // need a mutable copy so ensure no sharing.
+        const Matrix<Float> & theSigmas = sigma();
+        /////theSigmas = sigma();  // need a mutable copy so ensure no sharing.
 
-        value.resize (IPosition (3, nCorrelations (), nChannels (), nRows()));
+        value.resize (IPosition (3, nCorrelations, nChannels, nRows));
 
         // Copy the apportioned weight value into the sigma spectrum
 
         // jagonzal (TODO): Review this filling code (it should be row/channel/correlation)
         //                  Or even better direct array assignment
-        for (Int row = 0; row < nRows(); row ++){
 
-            for (Int correlation = 0; correlation < nCorrelations (); correlation ++){
+        for (Int row = 0; row < nRows; row ++){
+
+            for (Int correlation = 0; correlation < nCorrelations; correlation ++){
 
                 float theSigma = theSigmas (correlation, row);
 
-                for (Int channel = 0; channel < nChannels(); channel ++){
+                for (Int channel = 0; channel < nChannels; channel ++){
 
                     value (correlation, channel, row) = theSigma;
                 }

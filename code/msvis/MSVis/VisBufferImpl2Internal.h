@@ -44,7 +44,7 @@ class VbCacheItemBase {
 
 public:
 
-    VbCacheItemBase () : vbComponent_p (Unknown), vb_p (0) {}
+    VbCacheItemBase () : isKey_p (False), vbComponent_p (Unknown), vb_p (0) {}
 
     virtual ~VbCacheItemBase () {}
 
@@ -110,6 +110,8 @@ public:
     VbCacheItem ()
     : VbCacheItemBase (), isPresent_p (False)
     {}
+
+    virtual ~VbCacheItem () {}
 
     virtual void appendRows (Int, Bool)
     {
@@ -386,11 +388,16 @@ class VbCacheItemArray : public VbCacheItem<T, IsComputed> {
 public:
 
     typedef typename VbCacheItem<T>::Filler Filler;
+    typedef typename T::IteratorSTL::value_type ElementType;
 
+    VbCacheItemArray() : capacity_p (0), shapePattern_p (NoCheck) {}
     virtual ~VbCacheItemArray () {}
 
     virtual void appendRows (Int nRows, Bool truncate)
     {
+
+        // Only used when time averaging
+
         IPosition shape = this->getItem().shape();
         Int nDims = shape.size();
 
@@ -400,39 +407,74 @@ public:
         else if (truncate){
 
             // Make any excess rows disappear with a little hack to
-            // avoid a copy:
-            //
-            // The array tmp is copy constructed to reference this item's
-            // array, thus sharing its storage.  Then tmp is resized to have
-            // the appropriate shape (few rows). Finally the original array
-            // is set up to share the storage of tmp. This leave the current
-            // array with excess storage but the proper number of elements.
-            // When this item's array is freed or resized it will return all
-            // of the storage so there is no memory leak;
+            // avoid a copy.  This leaves the storage unchanged and merely
+            // changes the associated bookkeeping values.
 
-            shape [nDims - 1] = nRows;
+            AssertCc (nRows <= shape.last());
 
-            T tmp = this->getItem();
-            tmp.resize (shape, True);
-            this->getItem().reference (tmp);
+            shape.last() = nRows;
+
+            this->getItem().reformOrResize (shape, False);
+
         }
         else{
 
+            // The array needs to resized to hold nRows worth of data.  If the
+            // shape of the existing array is the same as the existing one ignoring
+            // the number of rows then we expect the array
+
+            this->setAsPresent(); // This VB is being filled manually
             IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
+            IPosition currentShape = getShape();
 
-            desiredShape [nDims - 1] = shape [nDims - 1] + nRows;
+            // Determine if the existing shape is the same as the desired shape
+            // ignoring rows.  If is the same, then the existing data will need
+            // to be copied in the event that the array needs to be resized
+            // (i.e., reallocated).
 
-            this->getItem().resize (desiredShape, True);
+            Bool shapeOk = True; // will ignore last dimension
+            for (uInt i = 0; i < currentShape.nelements() - 1; i++){
+                shapeOk = shapeOk && desiredShape [i] == currentShape [i];
+            }
+
+            desiredShape.last() = nRows;
+            this->getItem().reformOrResize (desiredShape, True, shapeOk, 20);
+                // add storage for 20% more rows.
+
+//            if (! shapeOk){
+//
+//                // Need to completely resize this.  Since we're reshaping, there's
+//                // no usable values to copy.
+//
+//                desiredShape.last() = nRows;
+//                this->getItem().resize (desiredShape, False);
+//                capacity_p = nRows;
+//            }
+//            else if (nRows > capacity_p){ // need more storage
+//                resizeRows (nRows); // preserves data
+//                capacity_p = nRows;
+//            }
+//            else{
+//
+//                // There's extra capacity in the array; just adjust the shape so it's
+//                // as big as desired
+//
+//                shape.last() = nRows;
+//                this->getItem().reformOrReshape (shape, False);
+//            }
         }
-
-        // Resize the array copying the existing values if needed.
-
     }
 
     virtual void copyRowElement (Int sourceRow, Int destinationRow)
     {
         copyRowElementAux (this->getItem(), sourceRow, destinationRow);
     }
+
+    virtual IPosition getShape() const
+    {
+        return this->getItem().shape();
+    }
+
 
     void
     initialize (VisBufferCache * cache,
@@ -473,6 +515,7 @@ public:
             IPosition desiredShape = this->getVb()->getValidShape (shapePattern_p);
 
             this->getItem().resize (desiredShape, copyValues);
+            capacity_p = desiredShape.last();
 
             if (! copyValues){
                 this->getItem() = typename T::value_type();
@@ -491,7 +534,7 @@ public:
             // Change the last dimension to be the new number of rows,
             // then resize, copying values.
 
-            shape (shape.nelements() - 1) = newNRows;
+            shape.last() = newNRows;
 
             this->getItem().resize (shape, True);
 
@@ -611,6 +654,7 @@ protected:
 
 private:
 
+    Int capacity_p;
     ShapePattern shapePattern_p;
 };
 
@@ -728,11 +772,19 @@ public:
     class FrequencyCache {
     public:
 
-        typedef Vector<T> (VisibilityIterator2::* Updater) (Double, Int) const;
+        typedef Vector<T> (VisibilityIterator2::* Updater) (Double, Int, Int, Int) const;
 
-        FrequencyCache (Updater updater) : updater_p (updater) {}
+        FrequencyCache (Updater updater)
+        : frame_p (-1),
+          msId_p (-1),
+          spectralWindowId_p (-1),
+          time_p (-1),
+          updater_p (updater)
+        {}
 
         Int frame_p;
+        Int msId_p;
+        Int spectralWindowId_p;
         Double time_p;
         Updater updater_p;
         Vector<T> values_p;
@@ -740,21 +792,30 @@ public:
         void
         flush ()
         {
-            time_p = -1;
+            time_p = -1; // will be enough to cause a reload
         }
 
         void
-        updateCacheIfNeeded (const VisibilityIterator2 * rovi, Double time,
-                             Int frame = VisBuffer2::FrameNotSpecified)
+        updateCacheIfNeeded (const VisibilityIterator2 * rovi,
+                             Int rowInBuffer,
+                             Int frame,
+                             const VisBufferImpl2 * vb)
         {
-            if (time == time_p && frame == frame_p){
+            Int msId = vb->msId();
+            Int spectralWindowId = vb->spectralWindows()(rowInBuffer);
+            Double time = vb->time()(rowInBuffer);
+
+            if (time == time_p && frame == frame_p && msId == msId_p &&
+                spectralWindowId == spectralWindowId_p){
                 return;
             }
 
             time_p = time;
             frame_p = frame;
+            msId_p = msId;
+            spectralWindowId_p = spectralWindowId;
 
-            values_p.assign ((rovi ->* updater_p) (time_p, frame_p));
+            values_p.assign ((rovi ->* updater_p) (time_p, frame_p, spectralWindowId_p, msId_p));
         }
     };
 
@@ -773,6 +834,7 @@ public:
       isNewSpectralWindow_p (False),
       isRekeyable_p (False),
       isWritable_p (False),
+      msId_p (-1),
       pointingTableLastRow_p (-1),
       validShapes_p (N_ShapePatterns),
       vi_p (0),
@@ -796,10 +858,10 @@ public:
     Bool isNewSpectralWindow_p;
     Bool isRekeyable_p;
     Bool isWritable_p;
-    mutable Int pointingTableLastRow_p;
     Int msId_p;
     String msName_p;
     Bool newMs_p;
+    mutable Int pointingTableLastRow_p;
     Subchunk subchunk_p;
     Vector<IPosition> validShapes_p;
     VisibilityIterator2 * vi_p; // [use]

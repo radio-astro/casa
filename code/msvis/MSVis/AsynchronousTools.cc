@@ -406,7 +406,7 @@ Logger::LoggerThread::run ()
     }
     catch (exception & e){
 
-       char * message = "*** Logging thread caught exception: ";
+       const char * message = "*** Logging thread caught exception: ";
 
        cerr <<  message << e.what() << endl;
        cerr.flush();
@@ -421,7 +421,7 @@ Logger::LoggerThread::run ()
     }
     catch (...){
 
-       char * message = "*** Logging thread caught unknown exception";
+       const char * message = "*** Logging thread caught unknown exception";
 
        cerr <<  message << endl;
        cerr.flush();

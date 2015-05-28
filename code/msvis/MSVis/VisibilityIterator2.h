@@ -473,6 +473,9 @@ public:
   static VisibilityIterator2 * copyingViFactory (const MeasurementSet & srcMs,
                                                  MeasurementSet & dstMs);
 
+  template <typename KlugeIn, typename KlugeOut>
+  static KlugeOut KlugeForTesting (KlugeIn);
+
   //
   // END Experimental Section
   //
@@ -1046,8 +1049,10 @@ protected:
 
   Vector<Int> getCorrelations () const;
 
-  Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
-  Vector<Int> getChannels (Double time, Int frameOfReference) const;
+  Vector<Double> getFrequencies (Double time, Int frameOfReference, Int spectralWndow = -1,
+                                 Int msId = -1) const;
+  Vector<Int> getChannels (Double time, Int frameOfReference, Int spectralWndow = -1,
+                           Int msId = -1) const;
 
   // Convert the frequency from the observe frame to lsr frame.
   // Returns True in convert if given spw was not observed

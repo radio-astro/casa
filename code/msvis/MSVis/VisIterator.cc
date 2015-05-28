@@ -40,8 +40,8 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledColumnStMan.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 #include <msvis/MSVis/VisibilityIteratorImpl.h>
 #include <cmath>
 

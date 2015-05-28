@@ -1,5 +1,5 @@
 #include "MsFactory.h"
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <ms/MSOper/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
 #include <tables/DataMan/TiledShapeStMan.h>
@@ -17,8 +17,7 @@ namespace test {
 
 
 MsFactory::MsFactory (const String & msName)
- : addCorrectedWeightSpectrum_p (False),
-   addWeightSpectrum_p (True),
+ : addWeightSpectrum_p (True),
    includeAutocorrelations_p (False),
    simulator_p (new NewMSSimulator (msName)),
    timeStart_p (-1)
@@ -219,20 +218,10 @@ MsFactory::addWeightSpectrum (Bool addIt)
 }
 
 void
-MsFactory::addCorrectedWeightSpectrum (Bool addIt)
-{
-    addCorrectedWeightSpectrum_p = addIt;
-}
-
-
-void
 MsFactory::addColumns ()
 {
     if (addWeightSpectrum_p){
         addCubeColumn (MS::WEIGHT_SPECTRUM, "WeightSpectrumTiled");
-    }
-    if (addCorrectedWeightSpectrum_p){
-        addCubeColumn (MS::CORRECTED_WEIGHT_SPECTRUM, "CorrectedWeightSpectrumTiled");
     }
 }
 
