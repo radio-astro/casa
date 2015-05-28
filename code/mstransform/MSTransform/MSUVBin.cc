@@ -411,9 +411,12 @@ Bool MSUVBin::fillNewBigOutputMS(){
 		Double rowsDone=0.0;
      for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
 	for(iter.origin(); iter.more(); iter.next()){
-	    if(doW_p)
-	      gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
-			   ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	  if(doW_p){
+	    //gridDataConv(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
+	    //		   ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	     gridDataConvThr(*vb, grid, wghtSpec,flag, rowFlag, uvw,
+	    		 ant1,ant2,timeCen, startchan, endchan, convFunc, convSupport, wScale, convSampling);
+	}
 	    else
 	      gridData(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
 		       ant1,ant2,timeCen, startchan, endchan);
@@ -733,6 +736,10 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 	//Vector<Double> visFreq;
 	//vbutil_p.convertFrequency(visFreq, vb, MFrequency::LSRK);
 	chanMap_p.resize(visFreq.nelements());
+	chanMapRev_p.resize(nchan_p);
+	for (Int chan=0; chan < nchan_p; ++chan){
+	  chanMapRev_p[chan].resize();
+	}
 	chanMap_p.set(-1);
 	for (Int chan=0; chan < vb.nChannels(); ++chan){
 		f[0]=visFreq[chan];
@@ -740,6 +747,8 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 			Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
 			if(pixel > -1 && pixel< nchan_p){
 				chanMap_p(chan)=pixel;
+				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1);
+				chanMapRev_p[pixel][chanMapRev_p[pixel].nelements()-1]=chan;
 				c[0]=pixel;
 				spec.toWorld(f, c);
 				//cout << " pixel " << pixel << " chan " << chan << endl;
@@ -1452,7 +1461,296 @@ void MSUVBin::gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 
 }
+void MSUVBin::gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
+			      Cube<Float>& wghtSpec,
+		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+			 Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling){
+  //all pixel that are touched the flag and flag Row shall be unset and the w be assigned
+  //later we'll deal with multiple w for the same uv
+  //we need polmap and chanmap;
+  
+  Double fracbw;
+  if(!datadescMap(vb, fracbw)) return;
+  //cerr << "fracbw " << fracbw << endl;
+  SpectralCoordinate spec=csys_p.spectralCoordinate(2);
+  DirectionCoordinate thedir=csys_p.directionCoordinate(0);
+  Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+  //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
+  Vector<Float> scale(2);
+  scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
+  scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+  //Dang i thought the new vb will return Data or FloatData if correctedData was
+  //not there
+  Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
+  Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
+  //cerr << "support " << convSupport << endl;
+  Vector<Double> phasor;
+  Matrix<Double> eluvw;
+  eluvw=vb.uvw();
+  Bool needRot=vbutil_p.rotateUVW(vb, phaseCenter_p, eluvw, phasor);
+  Bool gridCopy, weightCopy, flagCopy, rowFlagCopy, uvwCopy, ant1Copy, ant2Copy, timeCenCopy;
+  Complex * gridStor=grid.getStorage(gridCopy);
+  Float * wghtSpecStor=wghtSpec.getStorage(weightCopy);
+  Bool * flagStor=flag.getStorage(flagCopy);
+  Bool * rowFlagStor=rowFlag.getStorage(rowFlagCopy);
+  Double * uvwStor=uvw.getStorage(uvwCopy);
+  Int* ant1Stor=ant1.getStorage(ant1Copy);
+  Int* ant2Stor=ant2.getStorage(ant2Copy);
+  Double* timeCenStor= timeCen.getStorage(timeCenCopy);
+  //  Vector<Double> invLambda=visFreq/C::c;
+  
+  //Fill the caches in the master thread
+  //// these are thread unsafe...unless already cached
+  vb.flagRow(); vb.uvw(); vb.antenna1(); vb.antenna2(); vb.time();
+  vb.nRows(); vb.nCorrelations();
+  if(hasCorrected)  
+    vb.visCubeCorrected();
+  else
+    vb.visCube();
+  vb.flagCube();
+  vb.weight();
+  ///////////////////////////
+  Int nth=min(nchan_p, omp_get_max_threads());
+#pragma omp parallel for default(none) firstprivate(refFreq, scale, hasCorrected, needRot, fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, ant2Stor, timeCenStor ) shared(vb, phasor, visFreq, convFunc, convSupport) num_threads(nth) schedule(dynamic, 1)
 
+  for(Int outchan=0; outchan < nchan_p; ++outchan){
+    //cerr << "outchan " << outchan << "  " << chanMapRev_p[outchan] << endl;
+   
+    multiThrLoop(outchan, vb, refFreq, scale, hasCorrected, needRot, phasor, visFreq, 
+		 fracbw, gridStor, wghtSpecStor, flagStor, rowFlagStor, uvwStor, ant1Stor, 
+		 ant2Stor, timeCenStor, startchan, endchan, convFunc, convSupport, wScale, 
+		 convSampling); 
+
+    /*for(uInt nel=0; nel < chanMapRev_p[outchan].nelements(); ++nel ){
+      Int chan=chanMapRev_p[outchan][nel];
+      for (Int k=0; k < vb.nRows(); ++k){
+	if(!vb.flagRow()[k]){
+	  Int locu, locv, locw,supp, offu, offv;
+	  {
+	    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+	    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
+	    offv=Int ((Double(locv)-(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)))*Double(convSampling)+0.5);
+	    offu=Int ((Double(locu)-(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)))*Double(convSampling)+0.5);
+	    locw=Int(sqrt(fabs(wScale*vb.uvw()(2,k)*refFreq/C::c))+0.5);
+	    supp=locw < convSupport.shape()[0] ? convSupport(locw) :convSupport(convSupport.nelements()-1) ;
+	  }
+		
+	  Vector<Int> newrow((2*supp+1)*(2*supp+1), -1);
+	  if(locv < ny_p && locu < nx_p){
+	    for (Int yy=0; yy<  Int(2*supp+1); ++yy){
+	      Int newlocv=locv+ yy-supp;
+	      if(newlocv >0 && newlocv < ny_p){
+		for (Int xx=0; xx<  Int(2*supp+1); ++xx){
+		  Int newlocu=locu+xx-supp;
+		  if(newlocu < nx_p && newlocu >0){
+		    newrow(yy*(2*supp+1)+xx)=newlocv*nx_p+newlocu;
+			  }			  
+		}
+	      }
+	    }
+	  }
+		  Complex elphas(1.0, 0.0);
+		  
+		  if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
+		    if(needRot){
+		      Double phasmult=phasor(k)*invLambda(chan);
+		      Double s, c;
+		      SINCOS(phasmult, s, c);
+		      elphas=Complex(c, s);
+		    }
+		    if(fracbw > 0.05)
+		      {
+			locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+			locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+		      }
+		    if(locv < ny_p && locu < nx_p){
+		      for (Int yy=0; yy< Int(2*supp+1); ++yy){
+			Int locy=abs((yy-supp)*convSampling+offv);
+			
+			for (Int xx=0; xx< Int(2*supp+1); ++xx){
+			  Int locx=abs((xx-supp)*convSampling+offu);
+			  
+			  Int jj=yy*(2*supp+1)+xx;
+			  if(newrow[jj] >-1){
+			    Complex cwt=convFunc(locx, locy, locw);
+			    if(vb.uvw()(2,k) > 0.0)
+			      cwt=conj(cwt);
+			    if(rowFlag(newrow[jj]) && !(vb.flagRow()(k))){
+			      rowFlag(newrow[jj])=False;
+			      uvw(2,newrow[jj])=0;
+			      ant1(newrow[jj])=vb.antenna1()(k);
+			      ant2(newrow[jj])=vb.antenna2()(k);
+			      timeCen(newrow[jj])=vb.time()(k);
+			      
+			    }
+			    Int lechan=chanMap_p(chan)-startchan;
+			    for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+			      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0) && (fabs(cwt) > 0.0)){
+				//  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+				//   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+				//   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+				Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt:
+				  vb.visCube()(pol,chan,k)*vb.weight()(pol,k)*cwt;
+				if(needRot)
+				  toB *=elphas;
+				//  Double s, c;
+				//SINCOS(phaseCorr, s, c);
+				//  toB=toB*Complex(c,s);
+				//Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
+				//////////////TESTING
+				Float elwgt=vb.weight()(pol,k)* real(cwt);
+				///////////////////////////
+				grid(polMap_p(pol),lechan, newrow[jj])
+				  = (grid(polMap_p(pol),lechan, newrow[jj])// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
+				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
+				flag(polMap_p(pol), lechan, newrow[jj])=False;
+				//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
+				//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+				wghtSpec(polMap_p(pol),lechan, newrow[jj]) += elwgt;
+			      }
+			      ///We should do that at the end totally
+				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+			    }
+			  }//if(newrow)
+			}
+		      }
+		    }//locu && locv
+		  }
+	}
+      }
+			//sum wgtspec along channels for weight
+    }
+  */
+  }
+  grid.putStorage(gridStor, gridCopy);
+  wghtSpec.putStorage(wghtSpecStor, weightCopy);
+  flag.putStorage(flagStor, flagCopy);
+  rowFlag.putStorage(rowFlagStor, rowFlagCopy);
+  uvw.putStorage(uvwStor,uvwCopy);
+  ant1.putStorage(ant1Stor,ant1Copy);
+  ant2.putStorage(ant2Stor, ant2Copy);
+  timeCen.putStorage(timeCenStor, timeCenCopy);
+
+
+
+}
+
+void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double refFreq, Vector<Float> scale, Bool hasCorrected, Bool needRot, const Vector<Double>& phasor, const Vector<Double>& visFreq, const Double& fracbw, Complex*& grid,
+			     Float*& wghtSpec,
+			  Bool*& flag, Bool*& rowFlag, Double*& uvw, 
+			  Int*& ant1, Int*& ant2, Double*& timeCen, 
+			  const Int startchan, const Int endchan, 
+		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling ){
+
+   for(uInt nel=0; nel < chanMapRev_p[outchan].nelements(); ++nel ){
+      Int chan=chanMapRev_p[outchan][nel];
+      Double invLambda=visFreq[chan]/C::c;
+      for (Int k=0; k < vb.nRows(); ++k){
+	if(!vb.flagRow()[k]){
+	  Int locu, locv, locw,supp, offu, offv;
+	  {
+	    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+	    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
+	    offv=Int ((Double(locv)-(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)))*Double(convSampling)+0.5);
+	    offu=Int ((Double(locu)-(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)))*Double(convSampling)+0.5);
+	    locw=Int(sqrt(fabs(wScale*vb.uvw()(2,k)*refFreq/C::c))+0.5);
+	    supp=locw < convSupport.shape()[0] ? convSupport(locw) :convSupport(convSupport.nelements()-1) ;
+	  }
+		
+	  Vector<Int> newrow((2*supp+1)*(2*supp+1), -1);
+	  if(locv < ny_p && locu < nx_p){
+	    for (Int yy=0; yy<  Int(2*supp+1); ++yy){
+	      Int newlocv=locv+ yy-supp;
+	      if(newlocv >0 && newlocv < ny_p){
+		for (Int xx=0; xx<  Int(2*supp+1); ++xx){
+		  Int newlocu=locu+xx-supp;
+		  if(newlocu < nx_p && newlocu >0){
+		    newrow(yy*(2*supp+1)+xx)=newlocv*nx_p+newlocu;
+			  }			  
+		}
+	      }
+	    }
+	  }
+		  Complex elphas(1.0, 0.0);
+		  
+		  if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
+		    if(needRot){
+		      Double phasmult=phasor(k)*invLambda;
+		      Double s, c;
+		      SINCOS(phasmult, s, c);
+		      elphas=Complex(c, s);
+		    }
+		    if(fracbw > 0.05)
+		      {
+			locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+			locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+		      }
+		    if(locv < ny_p && locu < nx_p){
+		      for (Int yy=0; yy< Int(2*supp+1); ++yy){
+			Int locy=abs((yy-supp)*convSampling+offv);
+			
+			for (Int xx=0; xx< Int(2*supp+1); ++xx){
+			  Int locx=abs((xx-supp)*convSampling+offu);
+			  
+			  Int jj=yy*(2*supp+1)+xx;
+			  if(newrow[jj] >-1){
+			    Complex cwt=convFunc(locx, locy, locw);
+			    if(vb.uvw()(2,k) > 0.0)
+			      cwt=conj(cwt);
+			    if(rowFlag[newrow[jj]] && !(vb.flagRow()(k))){
+			      rowFlag[newrow[jj]]=False;
+			      uvw[2+newrow[jj]*3]=0;
+			      ant1[newrow[jj]]=vb.antenna1()(k);
+			      ant2[newrow[jj]]=vb.antenna2()(k);
+			      timeCen[newrow[jj]]=vb.time()(k);
+			      
+			    }
+			    Int lechan=chanMap_p(chan)-startchan;
+			    for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+			      if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0) && (fabs(cwt) > 0.0)){
+				//  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+				//   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+				//   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+				Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k)*cwt:
+				  vb.visCube()(pol,chan,k)*vb.weight()(pol,k)*cwt;
+				if(needRot)
+				  toB *=elphas;
+				//  Double s, c;
+				//SINCOS(phaseCorr, s, c);
+				//  toB=toB*Complex(c,s);
+				//Float elwgt=vb.weight()(pol,k)* fabs(real(cwt));
+				//////////////TESTING
+				Float elwgt=vb.weight()(pol,k)* real(cwt);
+				///////////////////////////
+				Int cubindx=newrow[jj]*npol_p*(endchan-startchan+1)+lechan*npol_p+polMap_p(pol);
+				grid[cubindx]
+				  = (grid[cubindx]// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
+				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
+				flag[cubindx]=False;
+				//cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
+				//wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+				wghtSpec[cubindx] += elwgt;
+			      }
+			      ///We should do that at the end totally
+				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+			    }
+			  }//if(newrow)
+			}
+		      }
+		    }//locu && locv
+		  }
+	}
+      }
+			//sum wgtspec along channels for weight
+			/*for (Int pol=0; pol < wght.shape()(0); ++pol){
+				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
+				wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+				//cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
+			}
+			*/
+    }
+
+}
 Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
 				const Cube<Float>&wghtSpec,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
@@ -1920,15 +2218,15 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   /////////////////////////////////
    //////////////////////////////////////////
    
-   /*for (Int iy=-inner/2;iy<inner/2;iy++) {
+  for (Int iy=-inner/2;iy<inner/2;iy++) {
      
      ggridder.correctX1D(correction, iy+inner/2);
      corr.row(iy+inner/2)=correction;
    }
    
-   */
-   //Bool cpcor;
-   //Complex *cor=corr.getStorage(cpcor);
+   
+   Bool cpcor;
+   Complex *cor=corr.getStorage(cpcor);
   Double s1=sampling(1);
   Double s0=sampling(0);
   ///////////Por FFTPack
@@ -1948,15 +2246,29 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
    Double cpWscale=wScale;
    Int cpConvSamp=convSampling;
   
+   ///////////////
+  
+  convSupport.resize(wConvSize);
+  convSupport=-1;
+  Vector<Int> pcsupp;
+  pcsupp=convSupport;
+  Bool delsupstor;
+  Int* suppstor=pcsupp.getStorage(delsupstor);
+  ////////////
+
    //Float max0=1.0;
-#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, maxptr, cpWscale,inner ) 
+#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, maxptr, cpWscale,inner, cor, maxConvSize, cpConvSamp, suppstor ) 
 
   for (Int iw=0; iw< cpWConvSize;iw++) {
     // First the w term
     Matrix<Complex> screen(cpConvSize, cpConvSize);
+    Matrix<Complex> screen2(cpConvSize, cpConvSize);
     screen=0.0;
+    screen2=0.0;
     Bool cpscr;
+    Bool cpscr2;
     Complex *scr=screen.getStorage(cpscr);
+    Complex *scr2=screen2.getStorage(cpscr2);
     Double twoPiW=2.0*C::pi*Double(iw*iw)/cpWscale;
     for (Int iy=-inner/2;iy<inner/2;iy++) {
       Double m=s1*Double(iy);
@@ -1976,7 +2288,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 	  SINCOS(phase, sval, cval);
 	  
 	  Complex comval(cval, sval);
-	  //scr[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
+	  scr2[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
 	  scr[ind]=comval;
 	  
 	}
@@ -1990,47 +2302,57 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     Bool worksave;
     Float *workptr=work.getStorage(worksave);
     FFTPack::cfft2f(cpConvSize, cpConvSize, cpConvSize, scr, wsaveptr, lsav, workptr, lenwrk, ier);
-    
+    FFTPack::cfft2f(cpConvSize, cpConvSize, cpConvSize, scr2, wsaveptr, lsav, workptr, lenwrk, ier);
     screen.putStorage(scr, cpscr);
+    screen2.putStorage(scr2, cpscr2);
     uInt offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
     maxptr[iw]=screen(0,0);
     for (uInt y=0; y< uInt(cpConvSize/2)-1; ++y){
       for (uInt x=0; x< uInt(cpConvSize/2)-1; ++x){
 	convFuncPtr[offset+y*(cpConvSize/2-1)+x] = screen(x,y);
       }
-    }
-
-
-  }
-   convFunc.putStorage(convFuncPtr, convFuncStor);
-   maxes.putStorage(maxptr, maxdel);
-   Complex maxconv=max(abs(maxes));
-   convFunc=convFunc/real(maxconv);
-   convSupport.resize(wConvSize);
-    convSupport=-1;
-    Vector<Int> pcsupp=convSupport;
-#ifdef _OPENMP
-  omp_set_nested(0);
-#endif
-  Bool delsupstor;
-  Int* suppstor=pcsupp.getStorage(delsupstor);
-  convFuncPtr=convFunc.getStorage(convFuncStor);
-#pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, cpConvSamp, convFuncPtr, maxConvSize)  
-  for (Int iw=0;iw<cpWConvSize;iw++) {
-    Bool found=False;
+    } 
+    /*    Bool found=False; 
     Int trial=0;
-    Int ploffset=(cpConvSize/2-1)*(cpConvSize/2-1)*iw;
-    /*   
-      for (trial=cpConvSize/2-2;trial>0;trial--) {
+     for (trial=0; trial<cpConvSize/2-2;++trial) {
       // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-	     if((abs(convFuncPtr[trial+ploffset])>1e-2)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])>1e-2) ) {
+       if((abs(screen(trial,0))<1e-3)||(abs(screen(0,trial))<1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
 	break;
       }
       }
+     if(found) {
+      suppstor[iw]=Int(0.5+Float(trial)/Float(cpConvSamp))+1;
+      if(suppstor[iw]*cpConvSamp*2 >= maxConvSize){
+	suppstor[iw]=cpConvSize/2/cpConvSamp-1;
+      }
+     }
     */
+  }
+   
+  
+#ifdef _OPENMP
+  omp_set_nested(0);
+#endif
+  convFuncPtr=convFunc.getStorage(convFuncStor);
+#pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, cpConvSamp, convFuncPtr, maxConvSize)  
+  for (Int iw=0;iw<cpWConvSize;iw++) {
+    Bool found=False;
+    Int trial=0;
+    Int ploffset=(cpConvSize/2-1)*(cpConvSize/2-1)*iw;
+    ////////////////  
+    //  for (trial=cpConvSize/2-2;trial>0;trial--) {
+    //  // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
+//	     if((abs(convFuncPtr[trial+ploffset])>1e-2)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])>1e-2) ) {
+//	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
+//	//   <<abs(convFunc(0,trial,iw)) << endl; 
+//	found=True;
+//	break;
+ //     }
+ //     }
+  ///////////////////////
         
        for (trial=0; trial<cpConvSize/2-2;++trial) {
       // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
@@ -2049,6 +2371,14 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       }
     }
   }
+  
+
+
+  convFunc.putStorage(convFuncPtr, convFuncStor);
+  maxes.putStorage(maxptr, maxdel);
+  Complex maxconv=max(abs(maxes));
+  convFunc=convFunc/real(maxconv);
+  
   pcsupp.putStorage(suppstor, delsupstor);
   convSupport=pcsupp;
   ////////////TESTING

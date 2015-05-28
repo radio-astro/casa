@@ -49,9 +49,9 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2015/03/27 by CM MLLN, HTST");
+  inp.version("2015/05/27 by CM (MLLN; CASA-BCST) ");
   // Title of CM  i.e Code Monkey is
-  //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
+  //Master Lead Lion Ninja: CASA-Big Cheese Synthesis Team
   inp.create("vis", "ngc5921.ms", "MS to be binned");
   inp.create("outvis", "OutMS.ms", "Output MS");
   inp.create("field", "*", "fields to use from input ms");

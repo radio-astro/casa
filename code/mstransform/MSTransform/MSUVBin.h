@@ -92,11 +92,24 @@ private:
 		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
 		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
+	void gridDataConvThr(const vi::VisBuffer2& vb, Cube<Complex>& grid,
+			     Cube<Float>& wghtSpec,
+		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
+		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
 	void inplaceGridData(const vi::VisBuffer2& vb);
 	void inplaceLargeBW(const vi::VisBuffer2& vb);
 	void inplaceSmallBW(const vi::VisBuffer2& vb);
 	void makeCoordsys();
 	void weightSync();
+	void multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double refFreq,  
+			 Vector<Float> scale, Bool hasCorrected,Bool needRot, 
+			 const Vector<Double>& phasor, const Vector<Double>& visFreq, 
+			 const Double& fracbw,  
+			 Complex*& grid, Float*& wghtSpec, Bool*& flag, 
+			 Bool*& rowFlag, Double*& uvw, Int*& ant1,
+			 Int*& ant2, Double*& timeCen, const Int startchan, 
+			 const Int endchan, const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling );
 	// returns a false if either no channel map or pol map onto grid
 	Bool datadescMap(const vi::VisBuffer2& vb, Double& fracbw);
 	Bool datadescMap(const VisBuffer& vb);
@@ -125,6 +138,7 @@ private:
 	Int nx_p, ny_p, nchan_p, npol_p;
 	Double freqStart_p, freqStep_p;
 	Vector<Int> chanMap_p, polMap_p;
+	Vector<Vector<Int> > chanMapRev_p;
 	MDirection phaseCenter_p;
 	Vector<Double> deltas_p;
 	Vector<Int> whichStokes_p;
