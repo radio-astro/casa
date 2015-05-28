@@ -125,8 +125,13 @@ caltables are presented below.</p>
 	</%def>
 
 	<%def name="preamble()">
-		<p>The following plots show the flagging metric used by the pipeline to
-        determine which antennas to flag.</p>
+		<p>The following plots show the flagging metric used by the pipeline
+		to determine which antennas' WVR corrections to flag. The RMS phase 
+		during observation of the bandpass calibrator is calculated without 
+		WVR corrections applied, and with WVR corrections applied, and the 
+		metric is the ratio of those two RMS values. If the WVR measurements 
+		are corrupted, or the wvrgcal task itself flags the WVR data on a 
+		given antenna, then the pipeline will not calculate a metric here.</p>
 	</%def>
 
 	<%def name="mouseover(plot)">Click to enlarge flag plot for spw ${plot.parameters['spw']}</%def>
@@ -143,9 +148,14 @@ caltables are presented below.</p>
 % if metric_plots:
 <h3>Flagging metric views</h3>
 
-<p>Flagging metric views were calculated for various data 
-intents. Click on a link below to show all flagging metric views for that 
-measurement set.</p>
+<p>Flagging metric views are calculated for various data intents after both 
+the pipeline and wvrgcal task have selected antennas whose WVR correction 
+needs flagging. The correction applied to those antennas in these plots is 
+the correction interpolated from neighboring antennas. Sometimes antennas can 
+have sufficiently corrupted data that the metric can still not be calculated, 
+but those antennas will in most cases be flagged for the rest of the 
+calibration process. Click on a link below to show all flagging metric views 
+for that measurement set.</p>
 
 <ul>
 % for ms, plot in metric_plots.items():
