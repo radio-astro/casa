@@ -35,7 +35,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         # Get results info
         info_dict = {}
 
-        qa = casatools.quanta
+        qaTool = casatools.quanta
 
         if results[0]:
             cresults = results[0].results
@@ -61,7 +61,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     coord_refs = coordsys.referencevalue(format='s')
                     pol = coord_refs['string'][coord_names == 'Stokes'][0]
                     frequency = coord_refs['string'][coord_names == 'Frequency'][0]
-                    frequency = qa.convert(frequency, 'GHz')
+                    frequency = qaTool.convert(frequency, 'GHz')
                     info_dict[(field, spw, pol, 'frequency')] = frequency
                     
                     info_dict[(field, spw, pol, 'image name')] = image.name(strippath=True)
@@ -75,11 +75,11 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         LOG.warning('%s has per-plane beam shape, displaying '
                                     'only first', 
                                     r.iterations[maxiter]['image'])
-                    major = qa.convert(beam['major'], 'arcsec')
+                    major = qaTool.convert(beam['major'], 'arcsec')
                     info_dict[(field, spw, pol, 'beam major')] = major
-                    minor = qa.convert(beam['minor'], 'arcsec')
+                    minor = qaTool.convert(beam['minor'], 'arcsec')
                     info_dict[(field, spw, pol, 'beam minor')] = minor
-                    pa = qa.convert(beam['positionangle'], 'deg')
+                    pa = qaTool.convert(beam['positionangle'], 'deg')
                     info_dict[(field, spw, pol, 'beam pa')] = pa
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
                     
@@ -88,10 +88,10 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     
                     summary = image.summary()
                     nchan = summary['shape'][3]
-                    width = qa.quantity(summary['incr'][3], 
+                    width = qaTool.quantity(summary['incr'][3], 
                                         summary['axisunits'][3])
-                    width = qa.convert(width, 'MHz')
-                    width = qa.tos(width, 2)
+                    width = qaTool.convert(width, 'MHz')
+                    width = qaTool.tos(width, 2)
                     
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width

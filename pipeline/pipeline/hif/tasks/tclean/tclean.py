@@ -7,6 +7,7 @@ from casac import casac
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.pipelineqa as pipelineqa
+import pipeline.domain.measures as measures
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -316,7 +317,7 @@ class Tclean(cleanbase.CleanBase):
 
         # Calculate sensitivities
         sensitivitySquares = []
-        imTool = casac.imager()
+        imTool = casatools.imager
         for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
             imTool.open(msName)
             imTool.selectvis(spw = spw, field = field)
@@ -338,6 +339,19 @@ class Tclean(cleanbase.CleanBase):
             imTool.close()
 
         sensitivity = numpy.sqrt(numpy.average(sensitivitySquares))
+
+        if (inputs.specmode == 'cube'):
+            if (inputs.nchan != -1):
+                sensitivity *= numpy.sqrt(inputs.nchan)
+            else:
+                ms = context.observing_run.measurement_sets[0]
+                spwDesc = ms.get_spectral_window(spw)
+                min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                qaTool = casatools.quanta
+                sensitivity *= numpy.sqrt(abs( \
+                                   (max_frequency - min_frequency) / \
+                                   qaTool.convert(inputs.width, 'GHz')['value']))
 
         return sensitivity
 
