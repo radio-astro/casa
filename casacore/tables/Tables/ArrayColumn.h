@@ -31,6 +31,7 @@
 
 //# Includes
 #include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
 #include <casacore/tables/Tables/TableColumn.h>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
@@ -42,6 +43,7 @@ template<class T> class BaseSlicesFunctor;
 class IPosition;
 class Slice;
 class Slicer;
+class SlicerSet;
 class String;
 
 
@@ -330,13 +332,14 @@ public:
     // Similar to getColumn (arraySlices, arr, resize) except it
     // gets the slices for the given rows instead of all rows.
     void getColumnCells (const RefRows& rows,
-                         const Vector<Vector<Slice> >& arraySlices,
-                         Array<T>& arr,
+                         const SlicerSet & slicerSet,
+                         Array<T>& destination,
                          Bool resize = False) const;
-    void getSliceForRows (const RefRows& rows,
-                          const Vector<Vector<Slice> >& arraySlices,
-                          Array<T>& destination) const
-      { getColumnCells (rows, arraySlices, destination, True); }
+
+//    void getSliceForRows (const RefRows& rows,
+//                          const Vector<Vector<Slice> >& arraySlices,
+//                          Array<T>& destination) const
+//      { getColumnCells (rows, arraySlices, destination, True); }
  
     // The get() function like above which does not check shapes, etc.
     // It is faster and can be used for performance reasons if one
@@ -499,6 +502,45 @@ protected:
     mutable Bool reaskAccessSlice_p;
     mutable Bool reaskAccessColumn_p;
     mutable Bool reaskAccessColumnSlice_p;
+};
+
+class SlicerSet {
+
+public:
+
+    SlicerSet (const IPosition & shape, Vector<Slicer *> dataSlicers, Vector<Slicer *> destinationSlicers)
+    : dataSlicers_p (dataSlicers),
+      destinationSlicers_p (destinationSlicers),
+      shape_p (shape)
+    {}
+
+    ~SlicerSet (){
+        for (uInt i = 0; i < dataSlicers_p.size(); i++){
+            delete dataSlicers_p [i];
+            delete destinationSlicers_p [i];
+        }
+    }
+
+    const Vector <Slicer *> & getDataSlicers () const
+    {
+        return dataSlicers_p;
+    }
+
+    const Vector <Slicer *> & getDestinationSlicers () const
+    {
+        return destinationSlicers_p;
+    }
+
+    const IPosition & shape () const
+    {
+        return shape_p;
+    }
+
+private:
+
+    Vector<Slicer *> dataSlicers_p;
+    Vector<Slicer *> destinationSlicers_p;
+    IPosition shape_p;
 };
 
 
