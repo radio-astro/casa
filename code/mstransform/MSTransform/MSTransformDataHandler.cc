@@ -2380,12 +2380,19 @@ Bool MSTransformDataHandler::copyPointing()
 					if (newAntInd > -1)
 					{
 						Bool matchT = false;
-						for (uInt tr = 0; tr < nTRanges; ++tr)
+						if (nTRanges == 0)
 						{
-							if (t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr))
+							matchT = true;
+						}
+						else
+						{
+							for (uInt tr = 0; tr < nTRanges; ++tr)
 							{
-								matchT = true;
-								break;
+								if (t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr))
+								{
+									matchT = true;
+									break;
+								}
 							}
 						}
 
@@ -2516,10 +2523,9 @@ Bool MSTransformDataHandler::copyAntenna()
 	outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
 	outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
-    TableCopy::copyRows(newAnt, oldAnt);
-    retval = True;
+    //TableCopy::copyRows(newAnt, oldAnt);
+    //retval = True;
 
-	/*
 	if (!antennaSel_p)
 	{
 		TableCopy::copyRows(newAnt, oldAnt);
@@ -2538,7 +2544,7 @@ Bool MSTransformDataHandler::copyAntenna()
 		newAnt.flush();
 		retval = True;
 	}
-	*/
+
 	return retval;
 }
 
