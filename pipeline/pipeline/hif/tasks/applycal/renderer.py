@@ -53,6 +53,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         vis = os.path.basename(result.inputs['vis'])
         ms = context.observing_run.get_ms(vis)
         corrstring = ms.get_alma_corrstring()
+        
+        
         #corrstring = ''
 
         ctx.update({'flags'    : flag_totals,
@@ -196,6 +198,8 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
         max_uvs = collections.defaultdict(dict)
         
+
+        
         by_source_id = lambda field: field.source.id
         for result in results:
             # Plot for 1 science field (either 1 science target or for a mosaic 1 
@@ -281,10 +285,13 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_uv_summary_plots, max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
-                                 uvrange=None, renderer_cls=None, **overrides):
+                                 uvrange=None, renderer_cls=None, correlation='', **overrides):
         # override field when plotting amp/phase vs frequency, as otherwise
-        # the field is resolved to a list of all field IDs  
-        overrides = {'coloraxis' : 'spw'}
+        # the field is resolved to a list of all field IDs
+        
+
+        
+        overrides = {'coloraxis' : 'spw', 'correlation' : correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
         
@@ -293,6 +300,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # override field when plotting amp/phase vs frequency, as otherwise
             # the field is resolved to a list of all field IDs  
             overrides['field'] = field
+            
             
             plotter = plotter_cls(context, result, ['TARGET'], **overrides)
             plots.extend(plotter.plot())
