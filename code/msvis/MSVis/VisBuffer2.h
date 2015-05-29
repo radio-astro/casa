@@ -36,6 +36,7 @@
 #include <casa/BasicSL/Complexfwd.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 //#include <msvis/MSVis/VisibilityIterator2.h>
+#include <measures/Measures/Stokes.h>
 
 #include <boost/utility.hpp>
 
@@ -264,6 +265,8 @@ public:
     // The frequency index is the zero-based index along the frequency axis of
     // a visibility cube.
 
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const = 0;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const = 0;
     virtual Vector<Int> getCorrelationTypes () const = 0;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
                                  Int frame = FrameNotSpecified) const = 0;
@@ -554,6 +557,8 @@ protected:
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
                                        const Vector<Int> & correlations,
+                                       const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                       const Vector<Stokes::StokesTypes> & correlationsSelected,
                                        CountedPtr<WeightScaling> weightScaling) = 0;
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;

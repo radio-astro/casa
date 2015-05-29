@@ -94,20 +94,61 @@ operator!= (const SubtableIterator<T> & a, const SubtableIterator<T> & b)
     return a.base() != b.base();
 }
 
-class SubtableBase {
+class Subtable {
 
 public:
 
-    virtual ~SubtableBase () {}
+    enum class ST : uInt {
+
+        Antenna,
+        DataDescription,
+        Feed,
+        Field,
+        Observation,
+        Pointing,
+        Polarization,
+        Processor,
+        SpectralWindow,
+        State,
+        Source,
+        Syscal,
+
+        N_Types
+    };
+
+    virtual ~Subtable () {}
+
+    Subtable * clone () const = 0;
+    ST getType () const;
+    String getName () const;
+    Bool isMemoryResident () const;
+    Bool isWritable () const;
+
+    static Subtable * create (ST type, const String & msPath);
+    static ST stFromString (const String & text);
+    static String stToString (ST type);
 
 protected:
 
-    SubtableBase () {}
+    Subtable (ST type, const String & name, bool isMemoryResident,
+              bool isWritable);
+
+private:
+
+    class Impl;
+
+    Bool isMemoryResident_p;
+    Bool isWritable_p;
+    String name_p;
+    ST type_p;
+
+    Subtable (const Subtable & other); // not implemented
+    Subtable & operator= (const Subtable & other); // not implemented
 };
 
 
 template <typename T>
-class Subtable : public SubtableBase {
+class SubtableImpl : public Subtable {
 
 public:
 
@@ -116,8 +157,8 @@ public:
     typedef SubtableIterator<T> iterator;
     typedef SubtableIterator<const T> const_iterator;
 
-    explicit Subtable (Int nRows = 0);
-    virtual ~Subtable ();
+    explicit SubtableImpl (Int nRows = 0);
+    virtual ~SubtableImpl ();
 
     Int append (const CasaTableRow & newRow);
 
@@ -141,7 +182,7 @@ public:
     iterator select (P predicate);
 
     void set (Int id, const T &);
-    Int size () const;
+    uInt size () const;
 
 protected:
 
@@ -153,13 +194,12 @@ private:
 };
 
 template <typename T>
-Subtable::Subtable (Int nRows = 0)
+SubtableImpl<T>::SubtableImpl (Int nRows)
 : rows_p (nRows, 0)
 {}
 
 template <typename T>
-Subtable::~Subtable (Int nRows = 0)
-: rows_p (nRows, 0)
+SubtableImpl<T>::~SubtableImpl ()
 {
     // Delete all of the subtable row objects
 
@@ -171,10 +211,10 @@ Subtable::~Subtable (Int nRows = 0)
 
 template <typename T>
 const T &
-Subtable::get(Int id) const
+SubtableImpl<T>::get (Int id) const
 {
     ThrowIf (id < 0 || id >= size(),
-             String::format ("Subtable::get index %d out of range [0, %d]\n%s",
+             String::format ("SubtableImpl::get index %d out of range [0, %d]\n%s",
                              id,
                              size()),
                              identifyTable().c_str());
@@ -183,7 +223,7 @@ Subtable::get(Int id) const
 
 template <typename T>
 Int
-Subtable::append(const T & subtable)
+SubtableImpl<T>::append (const T & subtable)
 {
     rows_p.push_back (subtable->clone());
 
@@ -193,31 +233,31 @@ Subtable::append(const T & subtable)
 
 template <typename T>
 const T &
-Subtable::set(Int id, const T & subtable)
+SubtableImpl<T>::set (Int id, const T & row)
 {
     ThrowIf (id < 0 || id >= size(),
-             String::format ("Subtable::set index %d out of range [0, %d]\n%s",
+             String::format ("SubtableImpl::set index %d out of range [0, %d]\n%s",
                              id,
                              size()),
                              identifyTable().c_str());
 
     delete rows_p [id];
 
-    rows_p = subtable->clone();
+    rows_p [id] = row->clone();
 }
 
 
 
 template <typename T>
-Int
-Subtable::size() const
+uInt
+SubtableImpl<T>::size () const
 {
     return rows_p.size();
 }
 
 template <typename T>
 void
-Subtable::resize (Int newSize) const
+SubtableImpl<T>::resize (Int newSize) const
 {
     if (newSize < size()){
 
@@ -235,6 +275,7 @@ Subtable::resize (Int newSize) const
     rows_p.resize (newSize, 0);
 }
 
+std::ostream & operator<< (std::ostream & os, Subtable::ST type);
 
 
 }

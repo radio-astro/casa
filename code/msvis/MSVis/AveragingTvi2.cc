@@ -1120,23 +1120,11 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     }
     else if (doing_p.observedData_p || doing_p.floatData_p)
     {
-        const Vector<Float> & sigma = accumulationParameters.sigmaIn ();
-
         for (Int correlation = 0; correlation < nCorrelations; correlation ++)
         {
         	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(rowInput->sigma (correlation));
         }
     }
-
-//    else if (doing_p.observedData_p or doing_p.floatData_p)
-//    {
-//        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
-//        {
-//        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaIn(correlation));
-//        }
-//    }
-
-
 
     return std::make_pair (rowFlagged, adjustedWeight);
 }
@@ -1747,6 +1735,8 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              srcVb->isNewSpectralWindow(),
                              subchunk,
                              srcVb->getCorrelationTypes (),
+                             srcVb->getCorrelationTypesDefined(),
+                             srcVb->getCorrelationTypesSelected(),
                              CountedPtr <WeightScaling> ( ));
 
     // Request info from the VB which will cause it to be filled

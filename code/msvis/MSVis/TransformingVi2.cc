@@ -125,6 +125,8 @@ TransformingVi2::configureNewSubchunk (){
                           nChannels,
                           nCorrs,
                           getCorrelations(),
+                          getCorrelationTypesDefined(),
+                          getCorrelationTypesSelected(),
                           getWeightScaling());
 }
 
@@ -134,6 +136,8 @@ TransformingVi2::configureNewSubchunk (Int msId, const String & msName, Bool isN
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
                                        const Vector<Int> & correlations,
+                                       const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                       const Vector<Stokes::StokesTypes> & correlationsSelected,
                                        CountedPtr<WeightScaling> weightScaling)
 {
     getVisBuffer()->configureNewSubchunk (msId, // always the first MS
@@ -147,6 +151,8 @@ TransformingVi2::configureNewSubchunk (Int msId, const String & msName, Bool isN
                                           nChannels,
                                           nCorrelations,
                                           correlations,
+                                          correlationsDefined,
+                                          correlationsSelected,
                                           weightScaling);
 }
 
@@ -266,6 +272,18 @@ Vector<Int>
 TransformingVi2::getCorrelations () const
 {
     return getVii()->getCorrelations();
+}
+
+Vector<Stokes::StokesTypes>
+TransformingVi2::getCorrelationTypesDefined () const
+{
+    return getVii()->getCorrelationTypesDefined();
+}
+
+Vector<Stokes::StokesTypes>
+TransformingVi2::getCorrelationTypesSelected () const
+{
+    return getVii()->getCorrelationTypesSelected();
 }
 
 MEpoch

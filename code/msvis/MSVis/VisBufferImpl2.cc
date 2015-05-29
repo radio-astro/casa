@@ -432,6 +432,8 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
                       other->isNewSpectralWindow (),
                       other->getSubchunk (),
                       other->getCorrelationTypes(),
+                      other->getCorrelationTypesDefined(),
+                      other->getCorrelationTypesSelected(),
                       other->getWeightScaling());
 
     Bool wasFillable = isFillable();
@@ -729,6 +731,19 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 
     return state_p->channelNumbers_p.values_p;
 }
+
+Vector<Stokes::StokesTypes>
+VisBufferImpl2::getCorrelationTypesDefined () const
+{
+    return state_p->correlationsDefined_p.copy();
+}
+
+Vector<Stokes::StokesTypes>
+VisBufferImpl2::getCorrelationTypesSelected () const
+{
+    return state_p->correlationsSelected_p.copy();
+}
+
 
 Vector<Int>
 VisBufferImpl2::getCorrelationTypes () const
@@ -1106,6 +1121,8 @@ VisBufferImpl2::setIterationInfo (Int msId,
                                   Bool isNewSpectralWindow,
                                   const Subchunk & subchunk,
                                   const Vector<Int> & correlations,
+                                  const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                  const Vector<Stokes::StokesTypes> & correlationsSelected,
                                   CountedPtr <WeightScaling> weightScaling)
 {
     // Set the iteration attributes into this VisBuffer
@@ -1119,6 +1136,8 @@ VisBufferImpl2::setIterationInfo (Int msId,
     state_p->isNewSpectralWindow_p = isNewSpectralWindow;
     state_p->subchunk_p = subchunk;
     state_p->correlations_p.assign (correlations);
+    state_p->correlationsDefined_p.assign (correlationsDefined);
+    state_p->correlationsSelected_p.assign (correlationsSelected);
     state_p->weightScaling_p = weightScaling;
 }
 
@@ -1142,6 +1161,8 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
                                       Int nChannels,
                                       Int nCorrelations,
                                       const Vector<Int> & correlations,
+                                      const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                      const Vector<Stokes::StokesTypes> & correlationsSelected,
                                       CountedPtr<WeightScaling> weightScaling)
 {
     // Prepare this VisBuffer for the new subchunk
@@ -1149,7 +1170,8 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
     cacheClear();
 
     setIterationInfo (msId, msName, isNewMs, isNewArrayId, isNewFieldId,
-                      isNewSpectralWindow, subchunk, correlations, weightScaling);
+                      isNewSpectralWindow, subchunk, correlations,
+                      correlationsDefined, correlationsSelected, weightScaling);
 
     setFillable (True); // New subchunk, so it's fillable
 

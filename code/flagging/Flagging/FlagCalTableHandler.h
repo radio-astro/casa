@@ -29,6 +29,7 @@
 #include <synthesis/CalTables/CTInterface.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <synthesis/CalTables/CalBuffer.h>
+#include <measures/Measures/Stokes.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -218,6 +219,8 @@ protected:
                                        Bool /*isNewSpectralWindow*/, const vi::Subchunk & /*subchunk*/,
                                        Int /*nRows*/, Int /*nChannels*/, Int /*nCorrelations*/,
                                        const Vector<Int> & /*correlations*/,
+                                       const Vector<Stokes::StokesTypes> &,
+                                       const Vector<Stokes::StokesTypes> &,
                                        CountedPtr <vi::WeightScaling> /*weightScaling*/) {}
     virtual void invalidate() {}
     virtual Bool isRekeyable () const {static Bool dummy; return dummy;}
@@ -350,6 +353,8 @@ public:
 	// Convenient public methods for compatibility with MS-like interface
 	const Vector<Int>& observationId() const {return ctCache_p->observationId();}
 	const Vector<Int>& correlationTypes() const {return ctCache_p->correlationTypes();}
+	Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const { throw AipsError ("Not Implemented");}
+	Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const { throw AipsError ("Not Implemented");}
 
 	// Methods for efficient synchronization with CTIter
 	void invalidate() {ctCache_p->invalidate();}

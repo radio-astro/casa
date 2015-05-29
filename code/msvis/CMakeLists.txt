@@ -39,6 +39,7 @@ casa_add_library( msvis
   MSVis/MsAverager.cc
   MSVis/MsRows.cc
   MSVis/Partition.cc
+  MSVis/PhaseShiftTvi.cc
   MSVis/Reweighter.cc
   MSVis/SelectAverageSpw.cc
   MSVis/SimpleSubMS.cc
@@ -107,6 +108,7 @@ install (FILES
 	MSVis/MSUtil.h
 	MSVis/MsAverager.h
 	MSVis/Partition.h
+	MSVis/PhaseShiftTvi.cc
 	MSVis/Reweighter.h
 	MSVis/SelectAverageSpw.h
 	MSVis/SimpleSubMS.h

@@ -698,7 +698,59 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
             }
         }
     }
+
+    checkCorrelations (spectralWindow, vb);
 }
+
+void
+BasicChannelSelection::checkCorrelations (Int spectralWindow, VisBuffer2 * vb)
+{
+    Vector<Stokes::StokesTypes> defined = vb->getCorrelationTypesDefined();
+    Vector<Stokes::StokesTypes> selected = vb->getCorrelationTypesSelected();
+
+    TestErrorIf (selected.size() > defined.size(), "Number of selected correlation types > number defined");
+
+    if (correlationSlices_p.empty()){
+
+        // All correlations are selected so the two vectors ought to match.
+
+        for (uInt i = 0; i < selected.size(); i++){
+
+            Stokes::StokesTypes expected = defined (i);
+            Stokes::StokesTypes actual = selected (i);
+
+            TestErrorIf (actual != expected,
+                         String::format ("Incorrect correlation type at %d; "
+                                 "actual=%d expected=%d (1)",
+                                 actual, expected, i));
+        }
+    } else {
+
+        Vector<Slice> slices = correlationSlices_p (spectralWindow);
+
+        uInt correlation = 0;
+
+        for (uInt i = 0; i < slices.size(); i++){
+
+            const Slice & slice = slices (i);
+
+            for (uInt j = slice.start(); j < slice.length(); j += slice.inc()){
+
+                Stokes::StokesTypes expected = defined (j);
+                Stokes::StokesTypes actual = selected (correlation);
+
+                TestErrorIf (actual != expected,
+                             String::format ("Incorrect correlation type at %d; "
+                                     "actual=%d expected=%d (2)",
+                                     actual, expected, correlation));
+
+                correlation ++;
+
+            }
+        }
+    }
+}
+
 
 void
 BasicChannelSelection::checkFlagCategory (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,

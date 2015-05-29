@@ -372,8 +372,9 @@ class ChannelSelector {
 
 public:
 
-    ChannelSelector (Double time, Int msId, Int spectralWindowId, const ChannelSlicer & slicer)
+    ChannelSelector (Double time, Int msId, Int spectralWindowId, Int polarizationId, const ChannelSlicer & slicer)
     : msId_p (msId),
+      polarizationId_p (polarizationId),
       slicer_p (slicer),
       spectralWindowId_p (spectralWindowId),
       timeStamp_p (time)
@@ -503,6 +504,12 @@ public:
         return nFrequencies_p;
     }
 
+    Int
+    getPolarizationId () const
+    {
+        return polarizationId_p;
+    }
+
     // Returns the ChannelSlicer object which contains the actual channelselection
     // for the current time, window and MS.
 
@@ -522,6 +529,7 @@ private:
 
     Int msId_p;
     Int nFrequencies_p;
+    Int polarizationId_p;
     ChannelSlicer slicer_p;
     ChannelSlicer slicerFlagCategories_p;
     Int spectralWindowId_p;
@@ -1154,6 +1162,38 @@ VisibilityIteratorImpl2::getCorrelations () const
     return channelSelector_p->getCorrelations ();
 }
 
+Vector<Stokes::StokesTypes>
+VisibilityIteratorImpl2::getCorrelationTypesDefined () const
+{
+    assert (channelSelector_p != 0);
+
+    Vector<Stokes::StokesTypes> correlationTypesDefined;
+    Vector<Int> tmp;
+    Int polarizationId = channelSelector_p->getPolarizationId();
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, tmp, True);
+
+    for (Int i = 0; i < tmp.size(); i ++){
+        correlationTypesDefined = static_cast<Stokes::StokesTypes> (tmp (i));
+    }
+
+    return correlationTypesDefined;
+}
+
+Vector<Stokes::StokesTypes>
+VisibilityIteratorImpl2::getCorrelationTypesSelected () const
+{
+    assert (channelSelector_p != 0);
+
+    Vector<Int> correlationIndices = getCorrelations();
+    Vector<Stokes::StokesTypes> correlationTypesDefined = getCorrelationTypesDefined();
+    Vector<Stokes::StokesTypes> correlationTypesSelected (correlationIndices.size());
+
+    for (uInt i = 0; i < correlationIndices.size(); i++){
+        correlationTypesSelected (i) = correlationTypesDefined (correlationIndices (i));
+    }
+
+    return correlationTypesSelected;
+}
 
 Double
 VisibilityIteratorImpl2::getInterval () const
@@ -1699,13 +1739,30 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
     Vector<Int> correlations = channelSelector_p->getCorrelations();
     nCorrelations_p = correlations.nelements();
 
+    Vector<Int> correlationsDefinedInt;
+    Int polarizationId = msIter_p->polarizationId ();
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, correlationsDefinedInt, True);
+
+    Vector<Stokes::StokesTypes> correlationsDefined (correlationsDefinedInt.size());
+    for (uInt i = 0; i < correlationsDefinedInt.size(); i++){
+        correlationsDefined (i) = static_cast <Stokes::StokesTypes> (correlationsDefinedInt (i));
+    }
+
+
+    Vector<Stokes::StokesTypes> correlationsSelected (correlations.size());
+
+    correlationsSelected.resize (correlations.size());
+    for (uInt i = 0; i < correlations.size(); i++){
+        correlationsSelected (i) = correlationsDefined (correlations (i));
+    }
+
+
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
                                 channelSelector_p->getNFrequencies(), nCorrelations_p,
-                                channelSelector_p->getCorrelations(),
+                                correlations, correlationsDefined, correlationsSelected,
                                 weightScaling_p);
-
 }
 
 const ChannelSelector *
@@ -1856,7 +1913,7 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
     // Package up the result and return it.
 
-    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, slices);
+    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, polarizationId, slices);
 
     return result;
 }
@@ -1933,7 +1990,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 
     // Package up result and return it.
 
-    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, slices);
+    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, polarizationId, slices);
 
     return result;
 }

@@ -15,7 +15,7 @@ namespace casa {
 
 namespace cdo {
 
-class Antennas : public Subtable <Antenna> {
+class Antennas : public SubtableImpl <Antenna> {
 
 public:
 
