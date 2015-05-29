@@ -1111,6 +1111,14 @@ Vector<Int> MSTransformBufferImpl::getCorrelationTypes () const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+const Vector<Int> & MSTransformBufferImpl::correlationTypes () const
+{
+	return manager_p->getVisBuffer()->correlationTypes();
+}	
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) const
 {
 	Bool newFrequencies = 	manager_p->combinespws_p ||

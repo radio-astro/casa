@@ -95,6 +95,7 @@ public:
     Double hourang(Double time) const;
 
     Vector<Int> getCorrelationTypes () const;
+    const Vector<Int> & correlationTypes () const;
 
     Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     const Vector<Double> & getFrequencies (Int rowInBuffer,Int frame = FrameNotSpecified) const;
