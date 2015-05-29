@@ -848,6 +848,8 @@ public:
     Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
     FrequencyCache<Int> channelNumbers_p;
     Vector<Int> correlations_p;
+    Vector<Stokes::StokesTypes> correlationsDefined_p;
+    Vector<Stokes::StokesTypes> correlationsSelected_p;
     VisBufferComponents2 dirtyComponents_p;
     FrequencyCache<Double> frequencies_p;
     Bool isAttached_p;

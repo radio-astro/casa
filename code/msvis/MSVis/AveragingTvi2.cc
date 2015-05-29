@@ -398,6 +398,7 @@ protected:
         : correctedData_p (False),
           modelData_p (False),
           observedData_p (False),
+          floatData_p(False),
           weightSpectrumIn_p (False),
           sigmaSpectrumIn_p (False),
           weightSpectrumOut_p (False),
@@ -407,6 +408,7 @@ protected:
         Bool correctedData_p;
         Bool modelData_p;
         Bool observedData_p;
+        Bool floatData_p;
         Bool weightSpectrumIn_p;
         Bool sigmaSpectrumIn_p;
         Bool weightSpectrumOut_p;
@@ -422,6 +424,8 @@ protected:
           correctedOut_p (doing.correctedData_p ? rowAveraged->correctedMutable ().data(): 0),
           flagCubeIn_p (rowInput->flags().data()),
           flagCubeOut_p (rowAveraged->flagsMutable().data()),
+          floatDataIn_p (doing.floatData_p ? rowInput->singleDishData().data() : 0),
+          floatDataOut_p (doing.floatData_p ? rowAveraged->singleDishDataMutable().data() : 0),
           modelIn_p (doing.modelData_p ? rowInput->model().data(): 0),
           modelOut_p (doing.modelData_p ? rowAveraged->modelMutable().data() : 0),
           observedIn_p (doing.observedData_p ? rowInput->observed().data() : 0),
@@ -443,12 +447,14 @@ protected:
 
             correctedIn_p && correctedIn_p ++;
             correctedOut_p && correctedOut_p ++;
+            flagCubeIn_p && flagCubeIn_p ++;
+            flagCubeOut_p && flagCubeOut_p ++;
+            floatDataIn_p && floatDataIn_p ++;
+            floatDataOut_p && floatDataOut_p ++;
             modelIn_p && modelIn_p ++;
             modelOut_p && modelOut_p ++;
             observedIn_p && observedIn_p ++;
             observedOut_p && observedOut_p ++;
-            flagCubeIn_p && flagCubeIn_p ++;
-            flagCubeOut_p && flagCubeOut_p ++;
             sigmaSpectrumIn_p && sigmaSpectrumIn_p ++;
             sigmaSpectrumOut_p && sigmaSpectrumOut_p ++;
             weightSpectrumIn_p && weightSpectrumIn_p ++;
@@ -467,6 +473,18 @@ protected:
         {
             assert (correctedOut_p != 0);
             return correctedOut_p;
+        }
+
+        inline const Float *
+        floatDataIn ()
+        {
+            return floatDataIn_p;
+        }
+
+        inline Float *
+        floatDataOut ()
+        {
+            return floatDataOut_p;
         }
 
         inline const Complex *
@@ -514,7 +532,6 @@ protected:
         inline const Float *
         sigmaSpectrumIn ()
         {
- /////////////            assert (sigmaSpectrumIn_p != 0);
             return sigmaSpectrumIn_p;
         }
 
@@ -575,6 +592,8 @@ protected:
         Complex * correctedOut_p;
         const Bool * flagCubeIn_p;
         Bool * flagCubeOut_p;
+        const Float * floatDataIn_p;
+        Float * floatDataOut_p;
         const Complex * modelIn_p;
         Complex * modelOut_p;
         const Complex * observedIn_p;
@@ -1018,6 +1037,99 @@ VbAvg::accumulateElementForCube (const T * unweightedValue,
     }
 }
 
+
+pair<Bool, Vector<Double> >
+VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
+{
+    // Accumulate the sums needed for averaging of cube data (e.g., visibility).
+
+    const Matrix<Bool> & inputFlags = rowInput->flags ();
+    Matrix<Bool> & averagedFlags = rowAveraged->flagsMutable ();
+    Matrix<Int>  counts = rowAveraged->counts ();
+    Vector<Bool>  correlationFlagged = rowAveraged->correlationFlagsMutable ();
+
+    AccumulationParameters accumulationParameters (rowInput, rowAveraged, doing_p);
+        // is a member variable to reduce memory allocations (jhj)
+
+    IPosition shape = inputFlags.shape();
+    const Int nChannels = shape (1);
+    const Int nCorrelations = shape (0);
+
+    Bool rowFlagged = True;  // True if all correlations and all channels flagged
+
+    for (Int channel = 0; channel < nChannels; channel ++){
+
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+
+            // Based on the current flag state of the accumulation and the current flag
+            // state of the correlation,channel, accumulate the data (or not).  Accumulate
+            // flagged data until the first unflagged datum appears.  Then restart the
+            // accumulation with that datum.
+
+            Bool inputFlagged = inputFlags (correlation, channel);
+            if (rowFlagged && ! inputFlagged){
+                rowFlagged = False;
+            }
+            //rowFlagged = rowFlagged && inputFlagged;
+            Bool accumulatorFlagged = averagedFlags (correlation, channel);
+
+            if (! accumulatorFlagged && inputFlagged){
+                accumulationParameters.incrementCubePointers();
+                continue;// good accumulation, bad data so toss it.
+            }
+
+            // If changing from flagged to unflagged for this cube element, reset the
+            // accumulation count to 1; otherwise increment the count.
+
+            Bool flagChange = (accumulatorFlagged && ! inputFlagged);
+            Bool zeroAccumulation = flagChange || counts (correlation, channel) == 0;
+
+            if (flagChange){
+                averagedFlags (correlation, channel) = False;
+            }
+
+            if (zeroAccumulation){
+                counts (correlation, channel) = 1;
+            }
+            else{
+                counts (correlation, channel) += 1;
+            }
+
+            // Accumulate the sum for each cube element
+
+            accumulateElementForCubes (accumulationParameters,
+                                       zeroAccumulation); // zeroes out accumulation
+
+            accumulationParameters.incrementCubePointers();
+
+            // Update correlation Flag
+
+            if (correlationFlagged (correlation) && ! inputFlagged){
+                correlationFlagged (correlation) = False;
+            }
+        }
+    }
+
+    Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 1);
+    if (doing_p.correctedData_p)
+    {
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = rowInput->weight(correlation);
+        }
+    }
+    else if (doing_p.observedData_p || doing_p.floatData_p)
+    {
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
+        {
+        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(rowInput->sigma (correlation));
+        }
+    }
+
+    return std::make_pair (rowFlagged, adjustedWeight);
+}
+
+
 inline void
 VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameters,
                                   Bool zeroAccumulation)
@@ -1105,102 +1217,26 @@ VbAvg::accumulateElementForCubes (AccumulationParameters & accumulationParameter
 		}
 	}
 
+	if (doing_p.floatData_p)
+	{
+
+		// The weight corresponding to FLOAT_DATA is that derived from the rms stored in SIGMA
+		weightObserved = AveragingTvi2::sigmaToWeight(* accumulationParameters.sigmaSpectrumIn ());
+
+		// Accumulate weighted average contribution (normalization will come at the end)
+		accumulateElementForCube (	accumulationParameters.floatDataIn (),
+									weightObserved, zeroAccumulation,
+									accumulationParameters.floatDataOut ());
+
+		// The weight resulting from weighted average is the sum of the weights
+		accumulateElementForCube (	& weightObserved,
+									1.0f, zeroAccumulation,
+									accumulationParameters.weightSpectrumOut ());
+	}
+
 	return;
 }
 
-
-pair<Bool, Vector<Double> >
-VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
-{
-    // Accumulate the sums needed for averaging of cube data (e.g., visibility).
-
-    const Matrix<Bool> & inputFlags = rowInput->flags ();
-    Matrix<Bool> & averagedFlags = rowAveraged->flagsMutable ();
-    Matrix<Int>  counts = rowAveraged->counts ();
-    Vector<Bool>  correlationFlagged = rowAveraged->correlationFlagsMutable ();
-
-    AccumulationParameters accumulationParameters (rowInput, rowAveraged, doing_p);
-        // is a member variable to reduce memory allocations (jhj)
-
-    IPosition shape = inputFlags.shape();
-    const Int nChannels = shape (1);
-    const Int nCorrelations = shape (0);
-
-    Bool rowFlagged = True;  // True if all correlations and all channels flagged
-
-    for (Int channel = 0; channel < nChannels; channel ++){
-
-        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
-
-            // Based on the current flag state of the accumulation and the current flag
-            // state of the correlation,channel, accumulate the data (or not).  Accumulate
-            // flagged data until the first unflagged datum appears.  Then restart the
-            // accumulation with that datum.
-
-            Bool inputFlagged = inputFlags (correlation, channel);
-            if (rowFlagged && ! inputFlagged){
-                rowFlagged = False;
-            }
-            //rowFlagged = rowFlagged && inputFlagged;
-            Bool accumulatorFlagged = averagedFlags (correlation, channel);
-
-            if (! accumulatorFlagged && inputFlagged){
-                accumulationParameters.incrementCubePointers();
-                continue;// good accumulation, bad data so toss it.
-            }
-
-            // If changing from flagged to unflagged for this cube element, reset the
-            // accumulation count to 1; otherwise increment the count.
-
-            Bool flagChange = (accumulatorFlagged && ! inputFlagged);
-            Bool zeroAccumulation = flagChange || counts (correlation, channel) == 0;
-
-            if (flagChange){
-                averagedFlags (correlation, channel) = False;
-            }
-
-            if (zeroAccumulation){
-                counts (correlation, channel) = 1;
-            }
-            else{
-                counts (correlation, channel) += 1;
-            }
-
-            // Accumulate the sum for each cube element
-
-            accumulateElementForCubes (accumulationParameters,
-                                       zeroAccumulation); // zeroes out accumulation
-
-            accumulationParameters.incrementCubePointers();
-
-            // Update correlation Flag
-
-            if (correlationFlagged (correlation) && ! inputFlagged){
-                correlationFlagged (correlation) = False;
-            }
-        }
-    }
-
-    Vector<Double> adjustedWeight = Vector<Double> (nCorrelations, 1);
-    if (doing_p.correctedData_p)
-    {
-        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
-        {
-        	adjustedWeight(correlation) = accumulationParameters.weightIn ()(correlation);
-        }
-    }
-    else if (doing_p.observedData_p)
-    {
-        const Vector<Float> & sigma = accumulationParameters.sigmaIn ();
-
-        for (Int correlation = 0; correlation < nCorrelations; correlation ++)
-        {
-        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(sigma (correlation));
-        }
-    }
-
-    return std::make_pair (rowFlagged, adjustedWeight);
-}
 
 
 template <typename T>
@@ -1457,6 +1493,15 @@ VbAvg::finalizeCubeData (MsRowAvg * msRow)
 		}
 	}
 
+    if (doing_p.floatData_p)
+    {
+        typedef Divides <Float, Float, Float> DivideOpFloat;
+        DivideOpFloat opFloat;
+
+        Matrix<Float> visCubeFloat = msRow->singleDishDataMutable();
+        arrayTransformInPlace<Float, Float, DivideOpFloat > (visCubeFloat,msRow->weightSpectrum (), opFloat);
+    }
+
 
     return;
 }
@@ -1487,7 +1532,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
     	arrayTransformInPlace (sigmaSpectrun, AveragingTvi2::weightToSigma);
     }
-    // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
+    // Otherwise (doing only DATA/FLOAT_DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
     else
     {
     	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM
@@ -1690,6 +1735,8 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              srcVb->isNewSpectralWindow(),
                              subchunk,
                              srcVb->getCorrelationTypes (),
+                             srcVb->getCorrelationTypesDefined(),
+                             srcVb->getCorrelationTypesSelected(),
                              CountedPtr <WeightScaling> ( ));
 
     // Request info from the VB which will cause it to be filled
@@ -1903,6 +1950,10 @@ VbAvg::setupArrays (Int nCorrelations, Int nChannels, Int nBaselines)
         including += VisibilityCubeObserved;
     }
 
+    if (doing_p.floatData_p){
+        including += VisibilityCubeFloat;
+    }
+
     if (doing_p.weightSpectrumOut_p){
         including += WeightSpectrum;
     }
@@ -1934,8 +1985,11 @@ VbAvg::startChunk (ViImplementation2 * vi)
                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
     doing_p.modelData_p = vi->existsColumn (VisibilityCubeModel) &&
                           averagingOptions_p.contains (AveragingOptions::AverageModel);
+    doing_p.floatData_p = vi->existsColumn (VisibilityCubeFloat) &&
+                          averagingOptions_p.contains (AveragingOptions::AverageFloat);
+
     doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
-    doing_p.sigmaSpectrumIn_p = doing_p.observedData_p;
+    doing_p.sigmaSpectrumIn_p = doing_p.observedData_p || doing_p.floatData_p;
     doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
     doing_p.sigmaSpectrumOut_p = True; // We always use the output SigmaSpectrum
 
@@ -1953,6 +2007,10 @@ VbAvg::startChunk (ViImplementation2 * vi)
 
     if (doing_p.modelData_p){
         optionalComponentsToCopy_p += VisibilityCubeModel;
+    }
+
+    if (doing_p.floatData_p){
+        optionalComponentsToCopy_p += VisibilityCubeFloat;
     }
 
     if (doing_p.weightSpectrumOut_p){
@@ -2317,6 +2375,9 @@ AveragingTvi2::produceSubchunk ()
     Int nBaselines = nAntennas() * (nAntennas() -1) / 2;
         // This is just a heuristic to keep output VBs from being too small
 
+    // jagonzal: Handle nBaselines for SD case
+    if (nBaselines == 0) nBaselines = 1;
+
     if (getVii()->more())
     {
         startBuffer_p = endBuffer_p + 1;
@@ -2390,7 +2451,8 @@ void
 AveragingTvi2::validateInputVi (ViImplementation2 *)
 {
     // Validate that the input VI is compatible with this VI.
-#warning "Implement AveragingTvi2::validateInputVi"
+
+    // No implmented right now
 }
 
 Float AveragingTvi2::weightToSigma (Float weight)
@@ -2398,25 +2460,14 @@ Float AveragingTvi2::weightToSigma (Float weight)
     return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
 }
 
-Vector<Float>
-AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
+Vector<Float> AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
 {
     IPosition shape = data.shape();
+    Vector<Float> result(shape(0),0);
+    Vector<uInt> samples(shape(0),0);
     uInt nCorrelations = shape (0);
     uInt nChannels = shape (1);
 
-    Vector<Float> result (nCorrelations, 0);
-    ////Vector<uInt> samples (nCorrelations, 0);
-
-    // Initialize accumulator flag
-    //////////Vector<Bool> accumulatorFlag (nCorrelations, False);
-
-//    for (uInt correlation = 0; correlation < nCorrelations; correlation++)
-//    {
-//        accumulatorFlag(correlation) = flags(correlation,0);
-//    }
-
-    // Business logic
     for (uInt correlation = 0; correlation < nCorrelations; correlation++)
     {
         int nSamples = 0;
@@ -2425,15 +2476,12 @@ AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
 
         for (uInt channel=0; channel< nChannels; channel++)
         {
-	  Bool inputFlag = flags(correlation,channel);
+            Bool inputFlag = flags(correlation,channel);
             // True/True or False/False
-	  if (accumulatorFlag == inputFlag)
+            if (accumulatorFlag == inputFlag)
             {
                 nSamples ++;
                 sum += data (correlation, channel);
-
-                ////samples(correlation) += 1;
-                ////result(correlation) += data (correlation,channel);
             }
             // True/False: Reset accumulation when accumulator switches from flagged to unflagged
             else if ( accumulatorFlag and ! inputFlag )

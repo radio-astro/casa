@@ -161,6 +161,8 @@ Vbi2MsRow::copy (Vbi2MsRow * other,
             & Vbi2MsRow::setModel, & Vbi2MsRow::model );
     copyIf (componentsToCopy.contains (vi::VisibilityCubeObserved), other,
             & Vbi2MsRow::setObserved, & Vbi2MsRow::observed );
+    copyIf (componentsToCopy.contains (vi::VisibilityCubeFloat), other,
+            & Vbi2MsRow::setSingleDishData, & Vbi2MsRow::singleDishData );
     copyIf (componentsToCopy.contains (vi::WeightSpectrum), other,
             & Vbi2MsRow::setWeightSpectrum, & Vbi2MsRow::weightSpectrum );
     copyIf (componentsToCopy.contains (vi::SigmaSpectrum), other,
@@ -526,6 +528,11 @@ Vbi2MsRow::observed (Int correlation, Int channel) const
     return vbi2_p->visCube () (correlation, channel, row ());
 }
 
+const Float & Vbi2MsRow::singleDishData (Int correlation, Int channel) const
+{
+    return vbi2_p->visCubeFloat () (correlation, channel, row ());
+}
+
 const Vector<Double>
 Vbi2MsRow::uvw () const
 {
@@ -621,6 +628,25 @@ Vbi2MsRow::setSigma (const Vector<Float> & value)
     Vector<Float> & sigma = sigmaCache_p.getCachedColumn (vbi2_p, row());
     sigma = value;
 }
+
+const Matrix<Float> Vbi2MsRow::singleDishData () const
+{
+    return vbi2_p->visCubeFloat ().xyPlane (row());
+}
+
+Matrix<Float>
+Vbi2MsRow::singleDishDataMutable ()
+{
+    return vbi2_p->visCubeFloat ().xyPlane (row());
+}
+
+void
+Vbi2MsRow::setSingleDishData (const Matrix<Float> & value)
+{
+    vbi2_p->cache_p->floatDataCube_p.getRef(False).xyPlane (row()) = value;
+}
+
+
 
 const Vector<Float> &
 Vbi2MsRow::weight () const
@@ -730,6 +756,14 @@ Vbi2MsRow::setObserved (Int correlation, Int channel, const Complex & value)
     AssertWritable();
 
     vbi2_p->cache_p->visCube_p.getRef (False)(correlation, channel, row ()) = value;
+}
+
+void
+Vbi2MsRow::setSingleDishData (Int correlation, Int channel, const Float & value)
+{
+    AssertWritable();
+
+    vbi2_p->cache_p->floatDataCube_p.getRef (False)(correlation, channel, row ()) = value;
 }
 
 

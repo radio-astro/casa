@@ -207,6 +207,11 @@ public:
     virtual void setObserved (Int correlation, Int channel, const Complex & value) = 0;
     virtual void setObserved (const Matrix<Complex> & value) = 0;
 
+    virtual const Float & singleDishData (Int correlation, Int channel) const = 0;
+    virtual const Matrix<Float> singleDishData () const = 0;
+    virtual void setSingleDishData (Int correlation, Int channel, const Float & value) = 0;
+    virtual void setSingleDishData (const Matrix<Float> & value) = 0;
+
     virtual Float sigma (Int correlation) const = 0;
     virtual const Vector<Float> & sigma () const = 0;
     virtual Float weight (Int correlation) const = 0;

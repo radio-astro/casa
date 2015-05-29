@@ -64,6 +64,7 @@ typedef enum {
     VisibilityCubeCorrected,
     VisibilityCubeModel,
     VisibilityCubeObserved,
+    VisibilityCubeFloat,
 
     N_VisBufferComponents2 // must be last
 

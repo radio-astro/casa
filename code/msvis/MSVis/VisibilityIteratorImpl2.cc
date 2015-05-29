@@ -372,8 +372,9 @@ class ChannelSelector {
 
 public:
 
-    ChannelSelector (Double time, Int msId, Int spectralWindowId, const ChannelSlicer & slicer)
+    ChannelSelector (Double time, Int msId, Int spectralWindowId, Int polarizationId, const ChannelSlicer & slicer)
     : msId_p (msId),
+      polarizationId_p (polarizationId),
       slicer_p (slicer),
       spectralWindowId_p (spectralWindowId),
       timeStamp_p (time)
@@ -503,6 +504,12 @@ public:
         return nFrequencies_p;
     }
 
+    Int
+    getPolarizationId () const
+    {
+        return polarizationId_p;
+    }
+
     // Returns the ChannelSlicer object which contains the actual channelselection
     // for the current time, window and MS.
 
@@ -522,6 +529,7 @@ private:
 
     Int msId_p;
     Int nFrequencies_p;
+    Int polarizationId_p;
     ChannelSlicer slicer_p;
     ChannelSlicer slicerFlagCategories_p;
     Int spectralWindowId_p;
@@ -815,7 +823,7 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
     Vector<Slicer *> dataSlicers, destinationSlicers;
-    ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer ();
+    ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer();
 
     column.getColumnCells (rowBounds_p.subchunkRows_p,
                            columnSlicer,
@@ -839,8 +847,6 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
         const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
 
         Vector<Slice> correlationSlices = subslicer.getSlices ();
-
-#warning "Redo this is a cleaner way"
 
         Vector<Slicer *> dataSlicers (correlationSlices.size(), 0);
         Vector<Slicer *> destinationSlicers (correlationSlices.size(), 0);
@@ -1156,6 +1162,38 @@ VisibilityIteratorImpl2::getCorrelations () const
     return channelSelector_p->getCorrelations ();
 }
 
+Vector<Stokes::StokesTypes>
+VisibilityIteratorImpl2::getCorrelationTypesDefined () const
+{
+    assert (channelSelector_p != 0);
+
+    Vector<Stokes::StokesTypes> correlationTypesDefined;
+    Vector<Int> tmp;
+    Int polarizationId = channelSelector_p->getPolarizationId();
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, tmp, True);
+
+    for (uInt i = 0; i < tmp.size(); i ++){
+        correlationTypesDefined = static_cast<Stokes::StokesTypes> (tmp (i));
+    }
+
+    return correlationTypesDefined;
+}
+
+Vector<Stokes::StokesTypes>
+VisibilityIteratorImpl2::getCorrelationTypesSelected () const
+{
+    assert (channelSelector_p != 0);
+
+    Vector<Int> correlationIndices = getCorrelations();
+    Vector<Stokes::StokesTypes> correlationTypesDefined = getCorrelationTypesDefined();
+    Vector<Stokes::StokesTypes> correlationTypesSelected (correlationIndices.size());
+
+    for (uInt i = 0; i < correlationIndices.size(); i++){
+        correlationTypesSelected (i) = correlationTypesDefined (correlationIndices (i));
+    }
+
+    return correlationTypesSelected;
+}
 
 Double
 VisibilityIteratorImpl2::getInterval () const
@@ -1376,6 +1414,12 @@ VisibilityIteratorImpl2::existsColumn (VisBufferComponent2 id) const
 
         result = (! columns_p.vis_p.isNull() && columns_p.vis_p.isDefined(0)) ||
         		(columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isNull());
+
+        break;
+
+    case VisibilityCubeFloat:
+
+        result = ! columns_p.floatVis_p.isNull() && columns_p.floatVis_p.isDefined(0);
 
         break;
 
@@ -1695,13 +1739,30 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
     Vector<Int> correlations = channelSelector_p->getCorrelations();
     nCorrelations_p = correlations.nelements();
 
+    Vector<Int> correlationsDefinedInt;
+    Int polarizationId = msIter_p->polarizationId ();
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, correlationsDefinedInt, True);
+
+    Vector<Stokes::StokesTypes> correlationsDefined (correlationsDefinedInt.size());
+    for (uInt i = 0; i < correlationsDefinedInt.size(); i++){
+        correlationsDefined (i) = static_cast <Stokes::StokesTypes> (correlationsDefinedInt (i));
+    }
+
+
+    Vector<Stokes::StokesTypes> correlationsSelected (correlations.size());
+
+    correlationsSelected.resize (correlations.size());
+    for (uInt i = 0; i < correlations.size(); i++){
+        correlationsSelected (i) = correlationsDefined (correlations (i));
+    }
+
+
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
                                 channelSelector_p->getNFrequencies(), nCorrelations_p,
-                                channelSelector_p->getCorrelations(),
+                                correlations, correlationsDefined, correlationsSelected,
                                 weightScaling_p);
-
 }
 
 const ChannelSelector *
@@ -1790,7 +1851,10 @@ VisibilityIteratorImpl2::getPolarizationId (Int spectralWindowId, Int msId) cons
 
     ThrowIf (True, String::format ("Could not find entry for spectral window id"
             "%d in data_description in MS #%d", spectralWindowId, msId));
+
+    return -1; // Can't get here so make the compiler happy
 }
+
 
 vi::ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & selectionIn,
@@ -1849,7 +1913,7 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
     // Package up the result and return it.
 
-    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, slices);
+    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, polarizationId, slices);
 
     return result;
 }
@@ -1926,7 +1990,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 
     // Package up result and return it.
 
-    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, slices);
+    ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, polarizationId, slices);
 
     return result;
 }
@@ -2196,8 +2260,8 @@ VisibilityIteratorImpl2::setTileCache ()
             ///will not work if each subms of a virtual ms has multi hypecube being
             ///accessed.
             if (theMs.tableInfo ().subType () == "CONCATENATED" &&
-                    msIterAtOrigin_p &&
-                    ! tileCacheIsSet_p[k]) {
+                msIterAtOrigin_p &&
+                ! tileCacheIsSet_p[k]) {
 #warning "*** VII2::setTileCache needs to reexamine the handling of concatenated tables."
                 Block<String> refTables = theMs.getPartNames (True);
 
@@ -2208,7 +2272,7 @@ VisibilityIteratorImpl2::setTileCache ()
                     // Skip existing but empty WEIGHT_SPECTRUM or SIGMA_SPECTRUM column
 
                     if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM) ||
-                            columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
+                        columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
                         TableColumn tc (elms, columns [k]);
                         if (! tc.hasContent()){
                             continue;
@@ -2217,21 +2281,21 @@ VisibilityIteratorImpl2::setTileCache ()
 
                     ROTiledStManAccessor tacc (elms, columns[k], True);
 
-                    const IPosition tileShape(tacc.tileShape(startrow));
-                    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-                    uInt nax=hypercubeShape.size();  // how many axes
+		    const IPosition tileShape(tacc.tileShape(startrow));
+		    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+		    uInt nax=hypercubeShape.size();  // how many axes
 
-                    // Accumulate axis factors up to--but NOT including--the row (last) axis
-                    //  "ceil" catches partially filled tiles...
-                    uInt cacheSize(1);
-                    for (uInt iax=0; iax<nax-1; ++iax)
-                        cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+		    // Accumulate axis factors up to--but NOT including--the row (last) axis
+		    //  "ceil" catches partially filled tiles...
+		    uInt cacheSize(1);
+		    for (uInt iax=0; iax<nax-1; ++iax)
+		      cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+		    
+		    cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
 
-#warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
-                    cacheSize*=2;
 
-                    tacc.clearCaches (); //One tile only for now ...seems to work faster
-                    tacc.setCacheSize (startrow, cacheSize);
+		    tacc.clearCaches (); //One tile only for now ...seems to work faster
+		    tacc.setCacheSize (startrow, cacheSize);
 
                     tileCacheIsSet_p[k] = True;
                 }
@@ -2248,19 +2312,18 @@ VisibilityIteratorImpl2::setTileCache ()
 
                 const IPosition tileShape(tacc.tileShape(startrow));
                 const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-                uInt nax=hypercubeShape.size();  // how many axes
+		uInt nax=hypercubeShape.size();  // how many axes
 
-                // Accumulate axis factors up to--but NOT including--the row (last) axis
-                //  "ceil" catches partially filled tiles...
-                uInt cacheSize(1);
-                for (uInt iax=0; iax<nax-1; ++iax)
-                    cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+		// Accumulate axis factors up to--but NOT including--the row (last) axis
+		//  "ceil" catches partially filled tiles...
+		uInt cacheSize(1);
+		for (uInt iax=0; iax<nax-1; ++iax)
+		  cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
 
-#warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
-                cacheSize*=2;
+		cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
-                tacc.setCacheSize (startrow, cacheSize);
+		tacc.setCacheSize (startrow, cacheSize);
 
             }
         }

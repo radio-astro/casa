@@ -29,6 +29,7 @@
 #include <synthesis/CalTables/CTInterface.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <synthesis/CalTables/CalBuffer.h>
+#include <measures/Measures/Stokes.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -38,6 +39,12 @@ class WeightScaling;
 
 }
 
+#if !defined(__clang__) && defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+    (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#define CASA_WPOP_UNUSED
+#endif
 
 class DummyBufferImpl: public vi::VisBuffer2
 {
@@ -143,7 +150,7 @@ public:
     virtual void setWeightMat (const Matrix<Float>& /*value*/) {}
     virtual const Cube<Float> & weightSpectrum () const {static Cube<Float> dummy; return dummy;}
     virtual void setWeightSpectrum (const Cube<Float>& /*value*/) {}
-    virtual const Cube<float>& sigmaSpectrum() const {Cube<Float> dummy; return dummy;}
+    virtual const Cube<float>& sigmaSpectrum() const {static Cube<Float> dummy; return dummy;}
     virtual void setSigmaSpectrum(const Cube<float>&) {}
 
     virtual const Cube<Complex> & visCube () const {static Cube<Complex> dummy; return dummy;}
@@ -212,12 +219,19 @@ protected:
                                        Bool /*isNewSpectralWindow*/, const vi::Subchunk & /*subchunk*/,
                                        Int /*nRows*/, Int /*nChannels*/, Int /*nCorrelations*/,
                                        const Vector<Int> & /*correlations*/,
+                                       const Vector<Stokes::StokesTypes> &,
+                                       const Vector<Stokes::StokesTypes> &,
                                        CountedPtr <vi::WeightScaling> /*weightScaling*/) {}
     virtual void invalidate() {}
     virtual Bool isRekeyable () const {static Bool dummy; return dummy;}
     virtual void setRekeyable (Bool /*isRekeable*/) {}
 
 };
+
+#ifdef CASA_WPOP
+#pragma GCC diagnostic pop
+#define CASA_WPOP
+#endif
 
 
 class CTCache
@@ -339,6 +353,8 @@ public:
 	// Convenient public methods for compatibility with MS-like interface
 	const Vector<Int>& observationId() const {return ctCache_p->observationId();}
 	const Vector<Int>& correlationTypes() const {return ctCache_p->correlationTypes();}
+	Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const { throw AipsError ("Not Implemented");}
+	Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const { throw AipsError ("Not Implemented");}
 
 	// Methods for efficient synchronization with CTIter
 	void invalidate() {ctCache_p->invalidate();}

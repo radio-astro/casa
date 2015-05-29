@@ -647,6 +647,8 @@ protected:
     Vector<Int> getChannels (Double time, Int frameOfReference,
                              Int spectralWindowId, Int msId) const;
     Vector<Int> getCorrelations () const;
+    Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
+    Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
 
     Int getPolarizationId (Int spectralWindowId, Int msId) const;
 

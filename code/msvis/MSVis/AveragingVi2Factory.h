@@ -33,21 +33,22 @@ public:
                   AverageObserved = 1 << 0,  // Average the observed data
                   AverageModel = 1 << 1,     // Average the model data
                   AverageCorrected = 1 << 2, // Average the corrected data
-                  ObservedPlainAvg = 1 << 3,
-                  ObservedFlagAvg = 1 << 4,
-                  ObservedWeightAvgFromSIGMA = 1 << 5,
-                  ObservedFlagWeightAvgFromSIGMA = 1 << 6,
-                  ModelPlainAvg = 1 << 7,
-                  ModelFlagAvg = 1 << 8,
-                  ModelWeightAvgFromWEIGHT = 1 << 9,
-                  ModelWeightAvgFromSIGMA = 1 << 10,
-                  ModelFlagWeightAvgFromWEIGHT = 1 << 11,
-                  ModelFlagWeightAvgFromSIGMA = 1 << 12,
-                  CorrectedPlainAvg = 1 << 13,
-                  CorrectedFlagAvg = 1 << 14,
-                  CorrectedWeightAvgFromWEIGHT = 1 << 15,
-                  CorrectedFlagWeightAvgFromWEIGHT = 1 << 16,
-                  BaselineDependentAveraging = 1 << 17, // Do averaging with lengths dependent on baselines
+                  AverageFloat = 1 << 3, 	 // Average float (single dish) data
+                  ObservedPlainAvg = 1 << 4,
+                  ObservedFlagAvg = 1 << 5,
+                  ObservedWeightAvgFromSIGMA = 1 << 6,
+                  ObservedFlagWeightAvgFromSIGMA = 1 << 7,
+                  ModelPlainAvg = 1 << 8,
+                  ModelFlagAvg = 1 << 9,
+                  ModelWeightAvgFromWEIGHT = 1 << 10,
+                  ModelWeightAvgFromSIGMA = 1 << 11,
+                  ModelFlagWeightAvgFromWEIGHT = 1 << 12,
+                  ModelFlagWeightAvgFromSIGMA = 1 << 13,
+                  CorrectedPlainAvg = 1 << 14,
+                  CorrectedFlagAvg = 1 << 15,
+                  CorrectedWeightAvgFromWEIGHT = 1 << 16,
+                  CorrectedFlagWeightAvgFromWEIGHT = 1 << 17,
+                  BaselineDependentAveraging = 1 << 18, // Do averaging with lengths dependent on baselines
                                                         // Requires specifying a max uvw distance parameter
                   MarksLast
     };

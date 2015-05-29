@@ -158,6 +158,9 @@ public:
     virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                                      Bool allowShapeChange = False, Bool fetchIfNeeded = True);
 
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
+
     virtual Vector<Int> getCorrelationTypes () const;
     virtual String getFillErrorMessage () const;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
@@ -394,6 +397,8 @@ protected:
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
                                        const Vector<Int> & correlations,
+                                       const Vector<Stokes::StokesTypes> & correlationsDefined,
+                                       const Vector<Stokes::StokesTypes> & correlationsSelected,
                                        CountedPtr<WeightScaling> weightScaling);
 
     virtual void copyRow (Int sourceRow, Int destinationRow);
@@ -438,6 +443,8 @@ protected:
     void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
                            Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
                            const Subchunk & subchunk, const Vector<Int> & correlations,
+                           const Vector<Stokes::StokesTypes> & correlationsDefined,
+                           const Vector<Stokes::StokesTypes> & correlationsSelected,
                            CountedPtr <WeightScaling> weightScaling);
     Bool weightSpectrumPresent () const;
     Bool sigmaSpectrumPresent () const;

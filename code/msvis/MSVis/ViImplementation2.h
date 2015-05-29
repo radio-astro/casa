@@ -32,6 +32,7 @@
 #include <casa/BasicSL.h>
 #include <msvis/MSVis/VisBufferComponents2.h>
 #include <measures/Measures/MFrequency.h>
+#include <measures/Measures/Stokes.h>
 
 #include <boost/noncopyable.hpp>
 #include <map>
@@ -467,6 +468,9 @@ public:
     virtual void setReportingFrameOfReference (Int frame) = 0;
 
     virtual Vector<Int> getCorrelations () const = 0;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const = 0;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const = 0;
+
     virtual Vector<Int> getChannels (Double time, Int frameOfReference, Int spectralWndow = -1,
                                      Int msId = -1) const = 0;
     virtual Vector<Double> getFrequencies (Double time, Int frameOfReference, Int spectralWndow = -1,

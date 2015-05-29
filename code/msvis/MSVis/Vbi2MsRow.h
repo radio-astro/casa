@@ -212,6 +212,12 @@ public:
     void setObserved (Int correlation, Int channel, const Complex & value);
     void setObserved (const Matrix<Complex> & value);
 
+    const Float & singleDishData (Int correlation, Int channel) const;
+    const Matrix<Float> singleDishData () const;
+    Matrix<Float> singleDishDataMutable ();
+    void setSingleDishData (Int correlation, Int channel, const Float & value);
+    void setSingleDishData (const Matrix<Float> & value);
+
     Float sigma (Int correlation) const;
     const Vector<Float> & sigma () const;
     Vector<Float> & sigmaMutable () const;

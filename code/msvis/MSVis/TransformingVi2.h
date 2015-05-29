@@ -35,6 +35,8 @@
 #include <map>
 #include <vector>
 
+#include <measures/Measures/Stokes.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class Vector;
@@ -432,6 +434,9 @@ public:
     virtual Vector<Int> getChannels (Double time, Int frameOfReference,
                                      Int spectralWindowId, Int msId) const;
     virtual Vector<Int> getCorrelations () const;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
+    virtual Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
+
     virtual Vector<Double> getFrequencies (Double time, Int frameOfReference,
                                            Int spectralWindowId, Int msId) const;
     virtual void dataDescriptionIds(Vector<Int> &) const;
@@ -558,6 +563,8 @@ protected:
                                Bool isNewSpectralWindow, const Subchunk & subchunk,
                                Int nRows, Int nChannels, Int nCorrelations,
                                const Vector<Int> & correlations,
+                               const Vector<Stokes::StokesTypes> & correlationsDefined,
+                               const Vector<Stokes::StokesTypes> & correlationsSelected,
                                CountedPtr<WeightScaling> weightScaling);
 
     VisibilityIterator2 * getVi () const;
