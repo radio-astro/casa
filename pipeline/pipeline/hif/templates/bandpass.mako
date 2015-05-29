@@ -12,10 +12,7 @@ $(document).ready(function() {
     // return a function that sets the Ant text field to the given ant
     var createAntSetter = function(ant) {
         return function() {
-        	if (typeof prop !== "undefined") {
-        		// trigger a change event, otherwise the filters are not changed
-            	$("#select-ant").select2("val", [ant]).trigger("change");
-        	}
+			$("#select-ant").select2("val", [ant]).trigger("change");
         };
     };
 
