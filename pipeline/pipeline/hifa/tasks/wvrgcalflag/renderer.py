@@ -187,8 +187,11 @@ class WvrcalflagMetricPlotsRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('flagging_metric-%s.html' % vis)
 
         super(WvrcalflagMetricPlotsRenderer, self).__init__(
-                'generic_x_vs_y_spw_field_detail_plots.mako', 
+                'generic_x_vs_y_spw_intent_plots.mako', 
                 context, result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        d['intent'] = plot.parameters['intent']
 
 
 class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
@@ -207,9 +210,9 @@ class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
                 context, result, plots, title, outfile)
          
     def update_json_dict(self, d, plot):
-	if plot.qa_score <= 0.0:
+        if plot.qa_score <= 0.0:
             d['ratio'] = 0.0
-	else:
+        else:
             d['ratio'] = 1.0 / plot.qa_score
         plot.score = d['ratio']
 
