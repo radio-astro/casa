@@ -425,8 +425,14 @@ void ImageStatistics<T>::displayStats(
 	// of min/max relative to the start of the parent lattice
 	//if (!fixedMinMax_p) {
 	CoordinateSystem cSys(pInImage_p->coordinates());
-	String minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys, precision_);
-	String maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys, precision_);
+    // one of minPos_p or maxPos_p will be empty for fit-to-half stats
+    String minPosString, maxPosString;
+    if (! minPos_p.empty()) {
+        minPosString = CoordinateUtil::formatCoordinate (minPos_p, cSys, precision_);
+    }
+    if (! maxPos_p.empty()) {
+        maxPosString = CoordinateUtil::formatCoordinate (maxPos_p, cSys, precision_);
+    }
 	//}
 
 	// Have to convert LogIO object to ostream before can apply
