@@ -83,7 +83,7 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool virtualM
 		   fitspw_p("*"),
 		   fitoutspw_p("*"),
 		   virtualModelCol_p(virtualModelCol),
-		   virtualCorrectedCol_p(virtualModelCol)
+		   virtualCorrectedCol_p(virtualCorrectedCol)
 {
 	return;
 }
@@ -1867,7 +1867,7 @@ Bool MSTransformDataHandler::fillDDTables()
 	for (uInt k = 0; k < nddid; ++k)
 	{
 		// jagonzal (CAS-6733): I don't understand why we don't assign polID directly instead of the DDI row
-		if (spw2ddid_p[k] < polID_p.size())
+		if ((size_t)spw2ddid_p[k] < polID_p.size())
 		{
 			newPolId[k] = polID_p[spw2ddid_p[k]];
 		}
@@ -2380,12 +2380,19 @@ Bool MSTransformDataHandler::copyPointing()
 					if (newAntInd > -1)
 					{
 						Bool matchT = false;
-						for (uInt tr = 0; tr < nTRanges; ++tr)
+						if (nTRanges == 0)
 						{
-							if (t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr))
+							matchT = true;
+						}
+						else
+						{
+							for (uInt tr = 0; tr < nTRanges; ++tr)
 							{
-								matchT = true;
-								break;
+								if (t >= selTimeRanges_p(0, tr) && t <= selTimeRanges_p(1, tr))
+								{
+									matchT = true;
+									break;
+								}
 							}
 						}
 
@@ -2516,10 +2523,9 @@ Bool MSTransformDataHandler::copyAntenna()
 	outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
 	outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
-    TableCopy::copyRows(newAnt, oldAnt);
-    retval = True;
+    //TableCopy::copyRows(newAnt, oldAnt);
+    //retval = True;
 
-	/*
 	if (!antennaSel_p)
 	{
 		TableCopy::copyRows(newAnt, oldAnt);
@@ -2538,7 +2544,7 @@ Bool MSTransformDataHandler::copyAntenna()
 		newAnt.flush();
 		retval = True;
 	}
-	*/
+
 	return retval;
 }
 
@@ -2604,7 +2610,7 @@ Bool MSTransformDataHandler::copyFeed()
 	    MSMetaData msmeta(&mssel_p, 0);
 	    std::set<uInt> wvrspw = msmeta.getWVRSpw();
 	    for (std::set<uInt>::iterator bbit = wvrspw.begin(); bbit != wvrspw.end(); ++bbit){
-	        if (spw_p[0] == *bbit){
+	        if ((uInt)spw_p[0] == *bbit){
 	            os << LogIO::DEBUG1 << "Skipping spw="<<*bbit<<" because it is WVR and has no FEED content" << LogIO::POST;
 	            return true;
 	        }
