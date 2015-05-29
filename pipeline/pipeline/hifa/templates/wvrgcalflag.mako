@@ -83,7 +83,7 @@ subsequent pre-applys if it gives a tangible improvement.</p>
             <th>Measurement Set</th>
 			<th>Antenna</th>
 			<th>WVR?</th>
-            <th>Flag?</th>
+            <th>Interpolated Correction</th>
             <th>RMS</th>
             <th>Disc</th>
 		</tr>
@@ -91,7 +91,7 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 	<tbody>
 % for ms in wvrinfos:
 	% for wvrinfo in wvrinfos[ms]:
-		<tr class="${'danger' if wvrinfo.flag else ''}">
+		<tr class="${'danger alert-danger' if wvrinfo.flag else ''}">
 			<td>${ms}</td>
 		  	<td>${wvrinfo.antenna}</td>
 		  	<td><span class="glyphicon glyphicon-${'ok' if wvrinfo.wvr else 'remove'}"></span></td>
