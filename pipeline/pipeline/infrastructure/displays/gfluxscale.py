@@ -72,6 +72,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
                      'avgscan'     : False,
                      'avgbaseline' : False,
                      'antenna'     : ant,
+                     'correlation' : 'XX,YY',
                      'plotrange'   : [uvrange['uvdist'][0], uvrange['uvdist'][1],pltmin,pltmax],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}

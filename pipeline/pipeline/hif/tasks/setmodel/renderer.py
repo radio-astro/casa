@@ -27,7 +27,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             plots = self.create_plots(context, 
                                       result, 
                                       setjy_display.AmpVsUVSummaryChart, 
-                                      intents)
+                                      intents, correlation='XX,YY')
             self.sort_plots_by_baseband(plots)
 
             key = intents
