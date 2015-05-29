@@ -42,9 +42,23 @@ def get_template_agents(agents):
 def sanitise(url):
 	return filenamer.sanitize(url)
 
+def spws_for_baseband(plot):
+	spws = plot.parameters['spw'].split(',')
+	if not spws:
+		return ''
+	return '<h6 style="margin-top: -11px;">Spw%s</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
 
-
-
+def rx_for_plot(plot):
+	rx = plot.parameters['receiver']
+	if not rx:
+		return ''
+	rx_string = utils.commafy(rx, quotes=False)
+	# Don't need receiver prefix for ALMA bands
+	if 'ALMA' not in rx_string:
+		prefix = 'Receiver bands: ' if len(rx) > 1 else 'Receiver band: '
+	else:
+		prefix = ''
+	return '<h6 style="margin-top: -11px;">%s%s</h6>' % (prefix, rx_string)
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -167,7 +181,7 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-			                       title="Baseband ${plot.parameters['baseband']}.(spw ${plot.parameters['spw']}). 
+			                       title="Baseband ${plot.parameters['baseband']} (spw ${plot.parameters['spw']}). 
 			                              Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
 	                              Flux calibrator fields: ${plot.parameters['field']}."
 			                       rel="amp_vs_uv-${ms}">
@@ -176,9 +190,10 @@ $(document).ready(function() {
 			                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 			                    </a>
 			                    <div class="caption">
-									<h4>Baseband ${plot.parameters['baseband']}(spw ${plot.parameters['spw']})<br />
-									    Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
-									</h4>
+									<h4>Baseband ${plot.parameters['baseband']}</h4>
+									${rx_for_plot(plot)}
+									${spws_for_baseband(plot)}									
+
 								    <p>Amp vs. uvdist for 
 								    <%
 									antlist = plot.parameters.get('ant','').split(',')
@@ -204,9 +219,10 @@ $(document).ready(function() {
 			                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
 			                    </a>
 			                    <div class="caption">
-									<h4>Baseband ${antplot.parameters['baseband']}(spw ${antplot.parameters['spw']})<br />
-									    Receiver bands: ${utils.commafy(antplot.parameters['receiver'], False)}<br />
-									    </h4>
+									<h4>Baseband ${antplot.parameters['baseband']}</h4>
+									${rx_for_plot(antplot)}
+									${spws_for_baseband(antplot)}									
+
 								    <p>Selection for 
 								    <%
 									antlist = antplot.parameters.get('ant','').split(',')

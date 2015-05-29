@@ -39,6 +39,24 @@ def get_template_agents(agents):
 def sanitise(url):
 	return filenamer.sanitize(url)
 
+def spws_for_baseband(plot):
+	spws = plot.parameters['spw'].split(',')
+	if not spws:
+		return ''
+	return '<h6 style="margin-top: -11px;">Spw%s</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
+
+def rx_for_plot(plot):
+	rx = plot.parameters['receiver']
+	if not rx:
+		return ''
+	rx_string = utils.commafy(rx, quotes=False)
+	# Don't need receiver prefix for ALMA bands
+	if 'ALMA' not in rx_string:
+		prefix = 'Receiver bands: ' if len(rx) > 1 else 'Receiver band: '
+	else:
+		prefix = ''
+	return '<h6 style="margin-top: -11px;">%s%s</h6>' % (prefix, rx_string)
+
 
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -137,14 +155,18 @@ $(document).ready(function(){
 	<%def name="mouseover(plot)">Click to show model amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}<br />
+		Baseband: ${plot.parameters['baseband']}
 	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
+ 		${spws_for_baseband(plot)}
+ 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
 		Model amplitude vs UV distance in baseband
