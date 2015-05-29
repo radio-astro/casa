@@ -480,10 +480,10 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 amp_vs_uv_summary_plots, max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
-                                 uvrange=None, renderer_cls=None, **overrides):
+                                 uvrange=None, renderer_cls=None, correlation='', **overrides):
         # override field when plotting amp/phase vs frequency, as otherwise
         # the field is resolved to a list of all field IDs  
-        overrides = {'coloraxis' : 'spw'}
+        overrides = {'coloraxis' : 'spw', 'correlation' : correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
         
