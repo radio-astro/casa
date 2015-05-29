@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import numpy
+import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -65,6 +66,10 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
         '''
         pltmin = 0
         pltmax = 0
+        
+        vis = os.path.basename(result.inputs['vis'])
+        ms = context.observing_run.get_ms(vis)
+        corrstring = ms.get_alma_corrstring()
     
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'field'       : fields,
@@ -72,7 +77,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
                      'avgscan'     : False,
                      'avgbaseline' : False,
                      'antenna'     : ant,
-                     'correlation' : 'XX,YY',
+                     'correlation' : corrstring,
                      'plotrange'   : [uvrange['uvdist'][0], uvrange['uvdist'][1],pltmin,pltmax],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}
