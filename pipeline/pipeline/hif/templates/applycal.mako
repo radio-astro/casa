@@ -44,7 +44,19 @@ def spws_for_baseband(plot):
 	spws = plot.parameters['spw'].split(',')
 	if not spws:
 		return ''
-	return '<h6 style="margin-top: -11px;">(Spw%s)</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
+	return '<h6 style="margin-top: -11px;">Spw%s</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
+
+def rx_for_plot(plot):
+	rx = plot.parameters['receiver']
+	if not rx:
+		return ''
+	rx_string = utils.commafy(rx, quotes=False)
+	# Don't need receiver prefix for ALMA bands
+	if 'ALMA' not in rx_string:
+		prefix = 'Receiver bands: ' if len(rx) > 1 else 'Receiver band: '
+	else:
+		prefix = ''
+	return '<h6 style="margin-top: -11px;">%s%s</h6>' % (prefix, rx_string)
 
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -273,18 +285,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Baseband ${plot.parameters['baseband']}<br>
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -315,18 +327,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Baseband ${plot.parameters['baseband']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -355,15 +367,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spectral window ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Spectral window: ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Spectral window: ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
@@ -389,15 +404,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show amplitude vs time for spectral window ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Spectral window: ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Spectral window: ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 	</%def>
 
 </%self:plot_group>
@@ -419,15 +437,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Spectral window: ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Spectral window: ${plot.parameters['spw']}<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 	</%def>
 
 </%self:plot_group>
@@ -464,19 +485,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
-		
+		Baseband ${plot.parameters['baseband']}		
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -518,18 +538,18 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Baseband ${plot.parameters['baseband']}
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
+		${rx_for_plot(plot)}
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -567,20 +587,20 @@ def space_comma(s):
 	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)} (spw ${plot.parameters['spw']})<br />
-		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br />
+		Receiver: ${utils.commafy(plot.parameters['receiver'], quotes=False)}<br>
+		Baseband: ${plot.parameters['baseband']} (spw ${plot.parameters['spw']})<br>
+		Intents: ${utils.commafy(plot.parameters['intent'], False)}<br>
 		Fields: ${cgi.escape(plot.parameters['field'], True)}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Baseband ${plot.parameters['baseband']}<br />
-		Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}
+		Baseband ${plot.parameters['baseband']}		
 	</%def>
 
 	<%def name="caption_subtitle(plot)">
-		${spws_for_baseband(plot)}
-	</%def>
+		${rx_for_plot(plot)}
+ 		${spws_for_baseband(plot)}
+ 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
 		Source #${source_id}
