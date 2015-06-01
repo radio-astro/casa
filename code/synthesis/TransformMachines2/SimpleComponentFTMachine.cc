@@ -98,7 +98,7 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, SkyComponent& component,
   Vector<Double> invLambda = frequency/C::c;
    
   // Find the offsets in polarization. 
-  Vector<Int> corrType = vb.correlationTypes().copy();
+  Vector<Int> corrType = vb.getCorrelationTypes().copy();
   {
     Int startPol = corrType(0);
     if((startPol > 4) && (startPol < 9)) {
@@ -248,16 +248,16 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, const ComponentList& compList
   frequency= vb.getFrequencies(0);
   Vector<Double> invLambda = frequency/C::c;
   // Find the offsets in polarization. 
-  Vector<Int> corrTypeL = vb.correlationTypes().copy();
-  Vector<Int> corrTypeC = vb.correlationTypes().copy();
-  Vector<Int> corrType = vb.correlationTypes().copy();
+  Vector<Int> corrTypeL = vb.getCorrelationTypes().copy();
+  Vector<Int> corrTypeC = vb.getCorrelationTypes().copy();
+  Vector<Int> corrType = vb.getCorrelationTypes().copy();
   corrTypeL -= 9;
   corrTypeC -= 5;
   Cube<DComplex> dVis(4, nChan, nRow);
   ComponentType::Polarisation poltype=ComponentType::CIRCULAR;
-  if(anyGT(Int(Stokes::RR), vb.correlationTypes())){
+  if(anyGT(Int(Stokes::RR), vb.getCorrelationTypes())){
     poltype=ComponentType::STOKES;
-    corrType = vb.correlationTypes()-1;
+    corrType = vb.getCorrelationTypes()-1;
   }
   else if(vb.polarizationFrame()==MSIter::Linear) {
     poltype=ComponentType::LINEAR;

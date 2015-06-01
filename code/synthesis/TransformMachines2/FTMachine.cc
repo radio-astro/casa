@@ -387,7 +387,7 @@ using namespace casa::vi;
       AlwaysAssert(stokesIndex>-1, AipsError);
       StokesCoordinate stokesCoord=coords.stokesCoordinate(stokesIndex);
       //cerr << " corr Types " << vb.correlationTypes() << " get corr types  " << vb.getCorrelationTypes() << endl;
-      Vector<Int> visPolMap(vb.correlationTypes());
+      Vector<Int> visPolMap(vb.getCorrelationTypes());
       nvispol=visPolMap.nelements();
       AlwaysAssert(nvispol>0, AipsError);
       polMap.resize(nvispol);
