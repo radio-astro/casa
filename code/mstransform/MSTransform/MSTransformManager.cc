@@ -1988,6 +1988,13 @@ void MSTransformManager::initRefFrameTransParams()
     	}
     }
 
+   if (radialVelocityCorrection_p &&
+		   (radialVelocity_p.getRef().getType() != MRadialVelocity::GEO)) {
+	   logger_p << LogIO::SEVERE << "Cannot perform radial velocity correction with ephemerides of type "
+			   << MRadialVelocity::showType(radialVelocity_p.getRef().getType()) << ".\nType needs to be GEO."
+			   << LogIO::EXCEPTION;
+   }
+
 	return;
 }
 
