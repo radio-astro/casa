@@ -412,7 +412,14 @@ class MeasurementSet(object):
     def get_alma_corrstring(self):
         '''Get correlation string for ALMA'''
         
-        corrstring = 'XX,YY'
+        datadescs = [dd for dd in self.data_descriptions]
+        
+        numpols = len(datadescs[0].polarizations)
+        
+        if numpols == 1:
+            corrstring= 'XX'
+        else:
+            corrstring = 'XX,YY'
         
         return corrstring
         
