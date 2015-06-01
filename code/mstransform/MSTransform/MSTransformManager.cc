@@ -4829,7 +4829,8 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	{
 		MRadialVelocity mRV = inputMSFieldCols_p->radVelMeas(vb->fieldId()(0),vb->time()(0));
 		Quantity mrv = mRV.get("m/s");
-		radVelCorr =  MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+		Quantity offsetMrv = radialVelocity_p.get("m/s"); // the radvel by which the out SPW def was shifted
+		radVelCorr =  MDoppler(mrv-(Quantity(2.)*offsetMrv));
 		if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = True;
 
 		inputFieldDirection = inputMSFieldCols_p->phaseDirMeas(vb->fieldId()(0), vb->time()(0));
