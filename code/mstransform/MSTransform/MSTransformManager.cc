@@ -1827,8 +1827,24 @@ void MSTransformManager::initDataSelectionParams()
 			for (uInt spw_i=0;spw_i<spwList.size();spw_i++)
 			{
 				freqbinMap_p[spwList(spw_i)] = freqbin_p(0);
+
 				// jagonzal (new WEIGHT/SIGMA convention)
-				newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(0);
+				// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
+				if (freqbin_p(0) > numOfSelChanMap_p[spwList(spw_i)])
+				{
+					logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+							<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
+							<< " for SPW " << spwList(spw_i)
+							<< " is smaller than specified chanbin " << freqbin_p(0) << endl
+							<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
+							<< " for SPW " << spwList(spw_i)
+							<< LogIO::POST;
+					newWeightFactorMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
+				}
+				else
+				{
+					newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(0);
+				}
 			}
 		}
 		else
@@ -1846,7 +1862,22 @@ void MSTransformManager::initDataSelectionParams()
 				{
 					freqbinMap_p[spwList(spw_i)] = freqbin_p(spw_i);
 					// jagonzal (new WEIGHT/SIGMA convention)
-					newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(spw_i);
+					// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
+					if (freqbin_p(spw_i) > numOfSelChanMap_p[spwList(spw_i)])
+					{
+						logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+								<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
+								<< " for SPW " << spwList(spw_i)
+								<< " is smaller than specified chanbin " << freqbin_p(0) << endl
+								<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
+								<< " for SPW " << spwList(spw_i)
+								<< LogIO::POST;
+						newWeightFactorMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
+					}
+					else
+					{
+						newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(spw_i);
+					}
 				}
 			}
 		}
