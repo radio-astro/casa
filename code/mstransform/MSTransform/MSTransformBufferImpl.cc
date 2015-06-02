@@ -1119,6 +1119,22 @@ const Vector<Int> & MSTransformBufferImpl::correlationTypes () const
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+Vector<Stokes::StokesTypes> MSTransformBufferImpl::getCorrelationTypesDefined () const
+{
+	return manager_p->getVisBuffer()->getCorrelationTypesDefined();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Vector<Stokes::StokesTypes> MSTransformBufferImpl::getCorrelationTypesSelected () const
+{
+	return manager_p->getVisBuffer()->getCorrelationTypesSelected();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame) const
 {
 	Bool newFrequencies = 	manager_p->combinespws_p ||

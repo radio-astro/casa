@@ -248,9 +248,12 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("inputms", String("Four_ants_3C286.ms"));
 				configuration.define ("timeaverage", True);
 				configuration.define ("timebin", "4s");
-				configuration.define ("chanaverage", True);
-				configuration.define ("chanbin", 4);
+				configuration.define ("chanaverage", False);
+				configuration.define ("chanbin", 8);
 				configuration.define ("datacolumn", string("ALL"));
+				configuration.define ("reindex", False);
+				configuration.define ("spw", "1");
+				configuration.define ("correlation", "RR,LL");
 			}
 			else
 			{
@@ -435,9 +438,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
 	// Access Transformed SPW sub-tables
-	MSField fieldSubTable = visIter->ms().field();
-	MSFieldColumns fieldeCols(fieldSubTable);
-	Vector<String> sourceNames = fieldeCols.name().getColumn();
+	// MSField fieldSubTable = visIter->ms().field();
+	// MSFieldColumns fieldeCols(fieldSubTable);
+	// Vector<String> sourceNames = fieldeCols.name().getColumn();
 
 	visIter->originChunks();
 	visIterRef.originChunks();
@@ -503,6 +506,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			// Re-indexable Vectors
+
+			/*
 			row = compareVector(visBuffer->dataDescriptionIds(),visBufferRef->dataDescriptionIds(),0);
 			if (row >= 0)
 			{
@@ -532,6 +537,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout << "=>spectralWindows match" << endl;
 			}
+			*/
 
 			row = compareVector(visBuffer->observationId(),visBufferRef->observationId(),0);
 			if (row >= 0)
@@ -578,7 +584,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			{
 				cout << GREEN;
 				cout << "=>fieldId match"<< endl;
-				cout << "Source is " << sourceNames(visBuffer->fieldId()[0]).c_str() << endl;
+				//cout << "Source is " << sourceNames(visBuffer->fieldId()[0]).c_str() << endl;
 			}
 
 
@@ -811,7 +817,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			else
 			{
 				cout << GREEN;
-				cout 	<< "=>getFrequencies match" << endl;
+				cout << "=>getFrequencies match" << endl;
 			}
 
 			if (abs(visBuffer->getChannelNumber(0,0)-visBufferRef->getChannelNumber(0,0)) > 0)
@@ -856,59 +862,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			{
 				cout << GREEN;
 				cout 	<< "=>rowIds match" << endl;
-			}
-
-			// Matrix cols
-
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " uvw does not match in position (row,col)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->uvw()(pos)
-						<< " transformFile=" << visBufferRef->uvw()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>uvw match" << endl;
-			}
-
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " weight does not match in position (row,pol)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->weight()(pos)
-						<< " transformFile=" << visBufferRef->weight()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>weight match" << endl;
-			}
-
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " sigma not match in position (row,pol)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->sigma()(pos)
-						<< " transformFile=" << visBufferRef->sigma()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>sigma match" << endl;
 			}
 
 			// Vis cubes
@@ -982,9 +935,22 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				}
 			}
 
+			// CAS-7412: Check that visModel is available no matter what
+			if (visBuffer->visCubeModel().shape() == visBufferRef->flagCube().shape())
+			{
+				cout << GREEN;
+				cout 	<< "=>visCubeModel available" << endl;
+			}
+			else
+			{
+				cout << RED;
+				cout 	<< "=>visCubeModel not available" << endl;
+				keepIterating = False;
+			}
+
 			pos.resize(0,False);
 			iter = myDataColMap.find(MS::MODEL_DATA);
-			if (iter != myDataColMap.end())
+			if (True)
 			{
 				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::MODEL_DATA,myDataColMap);
 				pos = compareCube(	visBuffer->visCubeModel(),
@@ -1004,6 +970,30 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				{
 					cout << GREEN;
 					cout 	<< "=>visCubeModel match" << endl;
+				}
+			}
+
+			pos.resize(0,False);
+			iter = myDataColMap.find(MS::FLOAT_DATA);
+			if (iter != myDataColMap.end())
+			{
+				pos = compareCube(	visBuffer->visCubeFloat(),
+									visBufferRef->visCubeFloat(),
+									tolerance);
+
+				if (pos.size() == 3)
+				{
+					cout << RED;
+					cout << " visCubeFloat does not match in position (row,chan,corr)="
+							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+							<< " transformBuffer=" << visBuffer->visCubeFloat()(pos)
+							<< " transformFile=" << visBufferRef->visCubeFloat()(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>visCubeFloat match" << endl;
 				}
 			}
 
@@ -1040,6 +1030,84 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout 	<< "=>sigmaSpectrum match" << endl;
 			}
+
+			// Matrix cols
+			pos.resize(0,False);
+			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),tolerance);
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " uvw does not match in position (row,col)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->uvw()(pos)
+						<< " transformFile=" << visBufferRef->uvw()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>uvw match" << endl;
+			}
+
+			pos.resize(0,False);
+			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),tolerance);
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " weight does not match in position (row,pol)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->weight()(pos)
+						<< " transformFile=" << visBufferRef->weight()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>weight match" << endl;
+			}
+
+			pos.resize(0,False);
+			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),tolerance);
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " sigma not match in position (row,pol)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->sigma()(pos)
+						<< " transformFile=" << visBufferRef->sigma()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>sigma match" << endl;
+			}
+
+			// CAS-7601: Get correlation types
+			for (uInt idx=0;idx<visBuffer->getCorrelationTypes().size();idx++)
+			{
+				uInt corrIdx = visBuffer->getCorrelationTypes()[idx];
+				Stokes::StokesTypes corrType = (Stokes::StokesTypes)visBuffer->correlationTypes()[corrIdx];
+				String corrTypeStr = Stokes::name(corrType);
+				cout << "Correlation product selected: " << corrTypeStr << endl;
+			}
+
+			// CAS-7601: New methods to access correlation types
+			for (uInt idx=0;idx<visBuffer->getCorrelationTypesDefined().size();idx++)
+			{
+				Stokes::StokesTypes corrType = visBuffer->getCorrelationTypesDefined()[idx];
+				String corrTypeStr = Stokes::name(corrType);
+				cout << "getCorrelationTypesDefined product selected: " << corrTypeStr << endl;
+			}
+
+			// CAS-7601: New methods to access correlation types
+			for (uInt idx=0;idx<visBuffer->getCorrelationTypesSelected().size();idx++)
+			{
+				Stokes::StokesTypes corrType = visBuffer->getCorrelationTypesSelected()[idx];
+				String corrTypeStr = Stokes::name(corrType);
+				cout << "getCorrelationTypesSelected product selected: " << corrTypeStr << endl;
+			}
+
 
 			// CAS-7315: Phase shifting
 			visBuffer->phaseCenterShift(0.1,0.1);
@@ -1137,9 +1205,12 @@ Bool test_bufferStructure(Record configuration)
 	vi::VisibilityIterator2 *visIter = new vi::VisibilityIterator2 (*factory);
 	vi::VisBuffer2 *visBuffer = visIter->getVisBuffer();
 
+	/*
+
 	// Start timer
 	logger << "Start TVI loop" << LogIO::POST;
 	startTime = std::time(NULL);
+
 
 	// Swap MS loading data cols
 	visIter->originChunks();
@@ -1183,6 +1254,8 @@ Bool test_bufferStructure(Record configuration)
 	// Stop timer
 	endTime = std::time(NULL);
 	logger << "Start TVI loop, total time: " << endTime-startTime << LogIO::POST;
+
+	*/
 
 	delete factory;
 	delete visIter;
