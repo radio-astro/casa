@@ -2166,12 +2166,46 @@ Bool MSTransformDataHandler::fillDDTables()
 		msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
 		msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
 		msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));
-		if (haveSpwAN) msSpW.assocNature().put(min_k, inSpWCols.assocNature()(spw_p[k]));
-		if (haveSpwASI) msSpW.assocSpwId().put(min_k, inSpWCols.assocSpwId()(spw_p[k]));
 		if (haveSpwBN) msSpW.bbcNo().put(min_k, inSpWCols.bbcNo()(spw_p[k]));
 		if (haveSpwBS) msSpW.bbcSideband().put(min_k, inSpWCols.bbcSideband()(spw_p[k]));
 		if (haveSpwDI) msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
 
+		if (haveSpwASI)
+		{
+			// Get list of SPWs associated to his one
+			std::vector<Int> selectedSPWs = spw_p.tovector();
+
+			// Get the list of selected SPWs and association nature
+			Array<Int> assocSpwId = inSpWCols.assocSpwId()(spw_p[k]);
+			Array<String> assocNature = inSpWCols.assocNature()(spw_p[k]);
+
+			// Find which associated SPWs are selected, and store the transformed Id
+			std::vector<Int>::iterator findIt;
+			std::vector<Int> selectedAssocSpwId;
+			std::vector<String> selectedAssocNature;
+			for (uInt idx=0;idx<assocSpwId.size();idx++)
+			{
+				IPosition pos(1,idx);
+				Int spw = assocSpwId(pos);
+				findIt = find (selectedSPWs.begin(), selectedSPWs.end(), spw);
+				if (findIt != selectedSPWs.end())
+				{
+					selectedAssocSpwId.push_back(spwRelabel_p[spw]);
+					if (haveSpwAN) selectedAssocNature.push_back(assocNature(pos));
+				}
+			}
+
+			// Store selected associated SPW Ids
+			Vector<Int> selectedAssocSpwIdVector(selectedAssocSpwId);
+			msSpW.assocSpwId().put(min_k, selectedAssocSpwIdVector);
+
+			// Store selected association nature
+			if (haveSpwAN)
+			{
+				Vector<String> selectedAssocNatureVector(selectedAssocNature);
+				msSpW.assocNature().put(min_k, selectedAssocNatureVector);
+			}
+		}
 	}
 
 	// Write to the DATA_DESCRIPTION table of output MS
