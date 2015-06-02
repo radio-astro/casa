@@ -92,6 +92,7 @@ private:
 
     void checkChannelAndFrequency (Int rowId, Int row, Int channel, Int channelIncrement, Int channelOffset,
                                    Int spectralWindow, const VisBuffer2 * vb);
+    void checkCorrelations (Int spectralWindow, VisBuffer2 * vb);
     void checkFlagCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
                         Int channelOffset, Int channelIncrement, VisBuffer2 * vb);
     void checkFlagCategory (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
