@@ -43,7 +43,7 @@ template<class T> class BaseSlicesFunctor;
 class IPosition;
 class Slice;
 class Slicer;
-class SlicerSet;
+class ColumnSlicer;
 class String;
 
 
@@ -332,7 +332,7 @@ public:
     // Similar to getColumn (arraySlices, arr, resize) except it
     // gets the slices for the given rows instead of all rows.
     void getColumnCells (const RefRows& rows,
-                         const SlicerSet & slicerSet,
+                         const ColumnSlicer & slicerSet,
                          Array<T>& destination,
                          Bool resize = False) const;
 
@@ -504,17 +504,17 @@ protected:
     mutable Bool reaskAccessColumnSlice_p;
 };
 
-class SlicerSet {
+class ColumnSlicer {
 
 public:
 
-    SlicerSet (const IPosition & shape, Vector<Slicer *> dataSlicers, Vector<Slicer *> destinationSlicers)
+    ColumnSlicer (const IPosition & shape, Vector<Slicer *> dataSlicers, Vector<Slicer *> destinationSlicers)
     : dataSlicers_p (dataSlicers),
       destinationSlicers_p (destinationSlicers),
       shape_p (shape)
     {}
 
-    ~SlicerSet (){
+    ~ColumnSlicer (){
         for (uInt i = 0; i < dataSlicers_p.size(); i++){
             delete dataSlicers_p [i];
             delete destinationSlicers_p [i];
