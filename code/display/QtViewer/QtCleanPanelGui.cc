@@ -571,14 +571,14 @@ void QtCleanPanelGui::NAME( String x, String y, String z, std::vector<int> hidde
 					maskNoMorePB_->setEnabled(true);
 				}
 
-				bool allchan =	allChanRB_->isChecked() && allChanRB_->text() == all_freq_ ||
-				                allHiddenRB_->isChecked() && allHiddenRB_->text() == all_freq_;
-				bool allpol  =	allChanRB_->isChecked() && allChanRB_->text() == all_pol_ ||
-				                allHiddenRB_->isChecked() && allHiddenRB_->text() == all_pol_;
-				bool allra =	allChanRB_->isChecked() && allChanRB_->text() == all_ra_ ||
-				                allHiddenRB_->isChecked() && allHiddenRB_->text() == all_ra_;
-				bool alldec =	allChanRB_->isChecked() && allChanRB_->text() == all_dec_ ||
-				                allHiddenRB_->isChecked() && allHiddenRB_->text() == all_dec_;
+				bool allchan =	(allChanRB_->isChecked() && allChanRB_->text() == all_freq_) ||
+				                (allHiddenRB_->isChecked() && allHiddenRB_->text() == all_freq_);
+				bool allpol  =	(allChanRB_->isChecked() && allChanRB_->text() == all_pol_) ||
+				                (allHiddenRB_->isChecked() && allHiddenRB_->text() == all_pol_);
+				bool allra =	(allChanRB_->isChecked() && allChanRB_->text() == all_ra_) ||
+				                (allHiddenRB_->isChecked() && allHiddenRB_->text() == all_ra_);
+				bool alldec =	(allChanRB_->isChecked() && allChanRB_->text() == all_dec_) ||
+				                (allHiddenRB_->isChecked() && allHiddenRB_->text() == all_dec_);
 
 				imagereg=imagedd_->mouseToImageRegion( mouseRegion, wch, allchan, allpol, allra, alldec );
 				// When the "image animator" is used to change the registered image, the region

@@ -165,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // Do we already have this WorldCanvasHolder registered?
-	const Bool MWCAnimator::isAlreadyRegistered(const MultiWCHolder &mholder) {
+	Bool MWCAnimator::isAlreadyRegistered(const MultiWCHolder &mholder) {
 		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
 		localMWCHLI.toStart();
 		while (!localMWCHLI.atEnd()) {

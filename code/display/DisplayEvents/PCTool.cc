@@ -54,10 +54,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsEventHandlersRegistered(False) {
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
-		} catch (AipsError x) {
-			if (&x) {
+		} catch (AipsError& x) {
+			//if (&x) {
 				itsKeyModifier = (Display::KeyModifier)0;
-			}
+			//}
 		}
 		itsPositionEH = new PCToolPosEH(this);
 		itsMotionEH = new PCToolMotEH(this);
@@ -138,10 +138,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsKeySym = keysym;
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
-		} catch (AipsError x) {
-			if (&x) {
+		} catch (AipsError& x) {
+			//if (&x) {
 				itsKeyModifier = (Display::KeyModifier)0;
-			}
+			//}
 		}
 	}
 

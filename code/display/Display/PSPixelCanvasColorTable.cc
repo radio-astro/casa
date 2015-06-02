@@ -766,11 +766,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 ////////////////////////////////////////////////////////////////
 
 // Convert from X11 color names to RGB values.
-	typedef struct XColors {
+	struct XColors {
 		int	red;
 		int	green;
 		int	blue;
-		char	*name;
+		const char	*name;
 	};
 	static XColors colorNames[] = {
 		{ 199,  21, 133,		"medium violet red"},

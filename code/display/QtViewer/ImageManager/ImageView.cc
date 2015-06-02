@@ -134,13 +134,13 @@ namespace casa {
 		ui.restUnitsCombo->blockSignals( true );
 
 		bool oldFreqSelected = ui.frequencyRadio->isChecked();
-		int oldIndex = ui.restUnitsCombo->currentIndex();
+		//int oldIndex = ui.restUnitsCombo->currentIndex();
 
 		//Change the frequency/wavelength selection, if necessary & update the text field.
 		restUnits = updateRestUI( originalFreq );
 		//Update the unit combo
 		this->updateFreqUnitCombo();
-		//Select the appropriate unit from the unit combo.
+		//Select the appropriate unit from the unit combo
 		this->selectRestUnits( restUnits );
 
 		_sendRestFrequencyChange( originalFreq );
@@ -155,7 +155,8 @@ namespace casa {
 			}
 			restChanged();
 		}
-		ui.restUnitsCombo->setCurrentIndex( oldIndex );
+		//Taken out with CAS-7185
+		//ui.restUnitsCombo->setCurrentIndex( oldIndex );
 		int unitIndex = originalFreq.index( restUnits.toStdString() );
 		if ( unitIndex > 0 ){
 			String restValue = originalFreq.before( unitIndex );

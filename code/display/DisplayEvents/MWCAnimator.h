@@ -119,7 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		List<MultiWCHolder *> itsMWCHList;
 
 		// Do we already have this MultiWCHolder registered?
-		const Bool isAlreadyRegistered(const MultiWCHolder &holder);
+		Bool isAlreadyRegistered(const MultiWCHolder &holder);
 
 	};
 

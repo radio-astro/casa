@@ -307,7 +307,7 @@ namespace casa {
 		if (!file.open(QFile::WriteOnly))
 			return ;
 
-		char* t = "png";
+		char* t = (char*)("png");
 		QString ext = fn.section('.', -1);
 		if (ext == "xpm" || ext == "jpg" || ext == "png" ||
 		        ext == "xbm" || ext == "ppm" || ext == "jpeg")
@@ -351,7 +351,7 @@ namespace casa {
 		if (!file.open(QFile::WriteOnly | QIODevice::Text))
 			return ;
 
-		char* t = "plt";
+		char* t = (char*)("plt");
 		QString ext = fn.section('.', -1);
 		if (ext == "txt" || ext == "plt")
 			t = (char*)ext.toLocal8Bit().constData();
