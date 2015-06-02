@@ -240,8 +240,8 @@ public:
         return rep;
     }
 
-    SlicerSet
-    getSlicerSet () const
+    ColumnSlicer
+    getColumnSlicer () const
     {
 
         // The goal is to create a 2D array of Slicers.  Two types of Slicers are
@@ -311,7 +311,7 @@ public:
             shape (Correlation) = correlationDestination;
         }
 
-        return SlicerSet (shape, dataSlices, destinationSlices);
+        return ColumnSlicer (shape, dataSlices, destinationSlices);
     }
 
     const ChannelSubslicer &
@@ -823,10 +823,10 @@ VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
     Vector<Slicer *> dataSlicers, destinationSlicers;
-    SlicerSet slicerSet = channelSelector_p->getSlicer().getSlicerSet();
+    ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer();
 
     column.getColumnCells (rowBounds_p.subchunkRows_p,
-                           slicerSet,
+                           columnSlicer,
                            array,
                            True);
 }
@@ -870,9 +870,9 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 
         IPosition shape (1, sliceStart);
 
-        SlicerSet slicerSet (shape, dataSlicers, destinationSlicers);
+        ColumnSlicer columnSlicer (shape, dataSlicers, destinationSlicers);
 
-        column.getColumnCells (rowBounds_p.subchunkRows_p, slicerSet, array, True);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, columnSlicer, array, True);
     }
     else{
 
@@ -1167,13 +1167,13 @@ VisibilityIteratorImpl2::getCorrelationTypesDefined () const
 {
     assert (channelSelector_p != 0);
 
-    Vector<Stokes::StokesTypes> correlationTypesDefined;
-    Vector<Int> tmp;
+    Vector<Int> typesAsInt;
     Int polarizationId = channelSelector_p->getPolarizationId();
-    subtableColumns_p->polarization ().corrType ().get (polarizationId, tmp, True);
+    subtableColumns_p->polarization ().corrType ().get (polarizationId, typesAsInt, True);
+    Vector<Stokes::StokesTypes> correlationTypesDefined (typesAsInt.size());
 
-    for (Int i = 0; i < tmp.size(); i ++){
-        correlationTypesDefined = static_cast<Stokes::StokesTypes> (tmp (i));
+    for (uInt i = 0; i < typesAsInt.size(); i ++){
+        correlationTypesDefined (i) = static_cast<Stokes::StokesTypes> (typesAsInt (i));
     }
 
     return correlationTypesDefined;
@@ -1739,23 +1739,8 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
     Vector<Int> correlations = channelSelector_p->getCorrelations();
     nCorrelations_p = correlations.nelements();
 
-    Vector<Int> correlationsDefinedInt;
-    Int polarizationId = msIter_p->polarizationId ();
-    subtableColumns_p->polarization ().corrType ().get (polarizationId, correlationsDefinedInt, True);
-
-    Vector<Stokes::StokesTypes> correlationsDefined (correlationsDefinedInt.size());
-    for (uInt i = 0; i < correlationsDefinedInt.size(); i++){
-        correlationsDefined (i) = static_cast <Stokes::StokesTypes> (correlationsDefinedInt (i));
-    }
-
-
-    Vector<Stokes::StokesTypes> correlationsSelected (correlations.size());
-
-    correlationsSelected.resize (correlations.size());
-    for (uInt i = 0; i < correlations.size(); i++){
-        correlationsSelected (i) = correlationsDefined (correlations (i));
-    }
-
+    Vector<Stokes::StokesTypes> correlationsDefined = getCorrelationTypesDefined();
+    Vector<Stokes::StokesTypes> correlationsSelected = getCorrelationTypesSelected();
 
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
