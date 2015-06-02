@@ -43,7 +43,7 @@ public:
 	void setRowIdOffset(uInt rowOffset) {rowIdOffset_p = rowOffset;}
 	void shiftRowIdOffset(Int nRows) {rowIdOffset_p += nRows;}
 
-	const void generateWeights() const;
+	void generateWeights() const;
 
 	// Re-indexable Vectors
     const Vector<Int> & dataDescriptionIds () const; // [nR]
@@ -96,6 +96,8 @@ public:
 
     Vector<Int> getCorrelationTypes () const;
     const Vector<Int> & correlationTypes () const;
+    Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
+    Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
 
     Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     const Vector<Double> & getFrequencies (Int rowInBuffer,Int frame = FrameNotSpecified) const;
