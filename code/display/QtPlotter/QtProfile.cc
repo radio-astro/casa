@@ -2970,18 +2970,20 @@ namespace casa {
 		SpectralCoordinate coord = getSpectralAxis( imagePtr, validSpectrum );
 		if ( validSpectrum ){
 			//If the overgplot image units are not what the main image is using, convert.
-			QString overplotUnits = getBrightnessUnit( imagePtr );
+			//Taken out with CAS-7207
+			/*QString overplotUnits = getBrightnessUnit( imagePtr );
+			qDebug() << "overPlotUnits="<<overplotUnits<<" yUnit="<<yUnit;
 			if ( overplotUnits != yUnit ){
 				pair<Vector<float>, Vector<float> > values = convertIntensity( xVals, yVals,
-									imagePtr, xaxisUnit.c_str(), overplotUnits, /*yUnitPrefix +*/ yUnit );
+									imagePtr, xaxisUnit.c_str(), overplotUnits,  yUnit );
 
-
+				qDebug() << "Converting units";
 				addCanvasMainCurve( xVals, values.second, ky, beamAngle, beamArea, coord );
 			}
 
-			else {
+			else {*/
 				addCanvasMainCurve( xVals, yVals, ky, beamAngle, beamArea, coord );
-			}
+			//}
 		}
 	}
 
