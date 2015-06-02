@@ -61,7 +61,8 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
     lines_map = collections.defaultdict(dict)
     nrow = 0
     for d in rowlist:
-        ix = d['RAID']
+        # reverse the data in horizontal (RA) direction
+        ix = num_ra - 1 - d['RAID']
         iy = d['DECID']
         rows = d['ROWS']
         ids = d['IDS']
