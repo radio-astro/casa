@@ -69,6 +69,9 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         phase_vs_time_subpages = {}
 
         for result in results:
+            if not result.final:
+                continue
+
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
             bandpass_table_rows.extend(self.get_bandpass_table(context, result, ms))
