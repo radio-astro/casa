@@ -2929,17 +2929,17 @@ namespace casa {
 		if ( validSpectrum ){
 			//If the overgplot image units are not what the main image is using, convert.
 			QString overplotUnits = getBrightnessUnit( imagePtr );
-			if ( overplotUnits != yUnit ){
+			/*if ( overplotUnits != yUnit ){
 				pair<Vector<float>, Vector<float> > values = convertIntensity( xVals, yVals,
-									imagePtr, xaxisUnit.c_str(), overplotUnits, /*yUnitPrefix +*/ yUnit );
+									imagePtr, xaxisUnit.c_str(), overplotUnits, yUnit );
 
 
 				addCanvasMainCurve( xVals, values.second, ky, beamAngle, beamArea, coord );
 			}
 
-			else {
+			else {*/
 				addCanvasMainCurve( xVals, yVals, ky, beamAngle, beamArea, coord );
-			}
+				//}
 		}
 	}
 
