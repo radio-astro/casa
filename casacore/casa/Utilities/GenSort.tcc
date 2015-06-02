@@ -35,7 +35,7 @@
 #include <casacore/casa/Arrays/Slice.h>
 #include <casacore/casa/Containers/Block.h>
 #include <casacore/casa/Exceptions/Error.h>
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4 (CAS-7378)
 # include <omp.h>
 #endif
 
@@ -80,7 +80,7 @@ void GenSort<T>::quickSortAsc (T* data, Int nr, Bool multiThread)
         /* TODO only uses 2 threads of the group, should use tasks
          * only parallelize when work time ~ barrier spin time (3ms)
          * otherwise oversubscription kills performance */
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for if (nr > 50000)
 #endif
       for (int thr=0; thr<2; ++thr) {
@@ -242,7 +242,7 @@ uInt GenSort<T>::parSort (T* data, uInt nr, Sort::Order ord, int opt,
                           int nthread)
 {
   int nthr = nthread;    // to avoid compiler warning
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
   if (nthread > 0) {
     nthr = nthread;
     // Do not use more threads than there are values.
@@ -263,7 +263,7 @@ uInt GenSort<T>::parSort (T* data, uInt nr, Sort::Order ord, int opt,
   for (int i=0; i<nthr; ++i) tinx[i] = i*step;
   tinx[nthr] = nr;
   // Use ifdef to avoid compiler warning.
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for num_threads(nthr)
 #endif
   for (int i=0; i<nthr; ++i) {
@@ -348,7 +348,7 @@ T* GenSort<T>::merge (T* data, T* tmp, uInt nr, uInt* index,
   T* last = data + index[np-1];
   while (np > 1) {
   // Use ifdef to avoid compiler warning.
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for schedule(dynamic)
 #endif
     for (int i=0; i<np; i+=2) {
@@ -436,7 +436,7 @@ uInt GenSort<T>::sort (T* data, uInt nr, Sort::Order ord, int opt)
   // Determine the default sort to use.
   if (opt - (opt&Sort::NoDuplicates) == Sort::DefaultSort) {
     int nthr = 1;
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
     nthr = omp_get_max_threads();
 #endif
     int type = (nr<1000 || nthr==1  ?  Sort::QuickSort : Sort::ParSort);
@@ -510,7 +510,7 @@ uInt GenSortIndirect<T>::sort (Vector<uInt>& indexVector, const T* data,
     // Determine the default sort to use.
     if (opt - (opt&Sort::NoDuplicates) == Sort::DefaultSort) {
         int nthr = 1;
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
         nthr = omp_get_max_threads();
 #endif
         int type = (nr<1000 || nthr==1  ?  Sort::QuickSort : Sort::ParSort);
@@ -580,7 +580,7 @@ uInt GenSortIndirect<T>::parSort (uInt* inx, const T* data, uInt nr,
                                   Sort::Order ord, int opt, int nthread)
 {
   int nthr = nthread;    // to avoid compiler warning
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
   if (nthread > 0) {
     nthr = nthread;
     // Do not use more threads than there are values.
@@ -601,7 +601,7 @@ uInt GenSortIndirect<T>::parSort (uInt* inx, const T* data, uInt nr,
   for (int i=0; i<nthr; ++i) tinx[i] = i*step;
   tinx[nthr] = nr;
   // Use ifdef to avoid compiler warning.
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for num_threads(nthr)
 #endif
   for (int i=0; i<nthr; ++i) {
@@ -672,7 +672,7 @@ uInt* GenSortIndirect<T>::merge (const T* data, uInt* inx, uInt* tmp, uInt nr,
   uInt* last = inx + index[np-1];
   while (np > 1) {
   // Use ifdef to avoid compiler warning.
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for schedule(dynamic)
 #endif
     for (int i=0; i<np; i+=2) {
@@ -759,7 +759,7 @@ void GenSortIndirect<T>::quickSortAsc (uInt* inx, const T* data, Int nr,
         /* TODO only uses 2 threads of the group, should use tasks
          * only parallelize when work time ~ barrier spin time (3ms)
          * otherwise oversubscription kills performance */
-#ifdef _OPENMP
+#ifdef DISABLED_FOR_4_4
 #pragma omp parallel for if (nr > 50000)
 #endif
       for (int thr=0; thr<2; ++thr) {
