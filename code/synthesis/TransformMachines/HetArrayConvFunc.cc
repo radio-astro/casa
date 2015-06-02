@@ -386,8 +386,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pixFieldDir=thePix_p;
     //toPix(pixFieldDir, vb);
     MDirection fieldDir=direction1_p;
-    //cout << "PixelFieldDir " << pixFieldDir << endl;
-    //cout << "vb.nrow() "<< vb.nRow() << endl;
     //shift from center
     pixFieldDir(0)=pixFieldDir(0)- Double(nx / 2);
     pixFieldDir(1)=pixFieldDir(1)- Double(ny / 2);
@@ -615,6 +613,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int newConvSize=2*(max(convSupport_p)+2)*convSampling;
       Int lattSize=convFuncTemp.shape()(0);
       (*convSupportBlock_p[actualConvIndex_p])=convSupport_p;
+     
       if(newConvSize < lattSize){
 	IPosition blc(5, (lattSize/2)-(newConvSize/2),
 		      (lattSize/2)-(newConvSize/2),0,0,0);
@@ -633,6 +632,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else{
 	(*convFunctions_p[actualConvIndex_p])=convFuncTemp.get();
 	(*convWeights_p[actualConvIndex_p])=weightConvFuncTemp.get();
+	convSize_p=convFuncTemp.shape()(0);
       }
       
 
@@ -707,7 +707,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convsize=*convSizes_p[actualConvIndex_p];
     convSupport=convSupport_p;
 
-
+  
   }
 
 
