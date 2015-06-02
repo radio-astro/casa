@@ -1004,9 +1004,16 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		break;
 	}
 
-	case PMS::CORR:
-		*corr_[vbnum] = vb->getCorrelationTypes();
+	case PMS::CORR: {
+        Vector<Stokes::StokesTypes> corrTypes = vb->getCorrelationTypesSelected();
+        Vector<Int> corrTypesInt;
+        corrTypesInt.resize(corrTypes.size());
+        for (uInt i=0; i<corrTypes.size(); ++i) {
+            corrTypesInt[i] = static_cast<Int>(corrTypes[i]);
+        }
+		*corr_[vbnum] = corrTypesInt;
 		break;
+    }
 
 	case PMS::ANTENNA1:
 		*antenna1_[vbnum] = vb->antenna1();
