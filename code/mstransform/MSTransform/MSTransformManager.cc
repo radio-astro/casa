@@ -1792,7 +1792,7 @@ void MSTransformManager::initDataSelectionParams()
 
 	    IPosition shape = spwchan.shape();
 	    uInt nSelections = shape[0];
-		Int spw,channelStart,channelStop,channelStep,channelWidth;
+		Int spw,channelStart,channelStop,channelWidth;
 		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
 		{
 			// Get spw id and set the input-output spw map
@@ -1801,7 +1801,6 @@ void MSTransformManager::initDataSelectionParams()
 			// Set the channel selection ()
 			channelStart = spwchan(selection_i,1);
 			channelStop = spwchan(selection_i,2);
-			channelStep = spwchan(selection_i,3);
 			channelWidth = channelStop-channelStart+1;
 			numOfSelChanMap_p[spw] = channelWidth;
 		}
@@ -4197,7 +4196,6 @@ void MSTransformManager::checkDataColumnsToFill()
 {
 	dataColMap_p.clear();
 	Bool mainColSet=False;
-	Bool modelDataChecked = False;
 
 
 	if (datacolumn_p.contains("ALL"))
@@ -4232,7 +4230,6 @@ void MSTransformManager::checkDataColumnsToFill()
 
 		if (modelDataColumnAvailable_p)
 		{
-			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
@@ -4267,8 +4264,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 
 		if (lagDataColumnAvailable_p)
@@ -4317,7 +4313,6 @@ void MSTransformManager::checkDataColumnsToFill()
 
 		if (modelDataColumnAvailable_p)
 		{
-			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
@@ -4375,8 +4370,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 		else
 		{
@@ -4396,8 +4390,7 @@ void MSTransformManager::checkDataColumnsToFill()
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
 			colCheckInfo(MS::columnName(MS::FLOAT_DATA),MS::columnName(dataColMap_p[MS::FLOAT_DATA]));
 
-			// TODO: FLOAT_DATA is not yet supported by TVI
-			// timeAvgOptions_p |= vi::AveragingOptions::AverageFloatData;
+			timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
 		}
 		else
 		{
@@ -4514,7 +4507,6 @@ void MSTransformManager::checkDataColumnsToFill()
 
 		if (modelDataColumnAvailable_p)
 		{
-			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
@@ -5341,14 +5333,13 @@ template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &
 	uInt row;
 	uInt baseline_index = 0;
 	vector<uInt> baselineRows;
-	T contributionFactor, normalizingFactor;
+	T contributionFactor;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
 		// Get baseline rows vector
 		baselineRows = iter->second;
 
 		// Reset normalizing factor
-		normalizingFactor = 0;
 
 		// Get value from first SPW (this is for Weight and Sigma and cvel is doing it so)
 		row = baselineRows.at(0);

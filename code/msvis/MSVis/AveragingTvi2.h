@@ -68,7 +68,11 @@ public:
     void writeFlag (const Cube<Bool> & flag);
     void writeFlagRow (const Vector<Bool> & rowflags);
 
-    static Float weightToSigma (Float weight);
+    static inline Float weightToSigma (Float weight)
+    {
+    	return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
+    }
+
     static inline Float sigmaToWeight (Float sigma)
     {
         return sigma > FLT_MIN ? 1.0 / (sigma * sigma) : 0.0; // bad sample

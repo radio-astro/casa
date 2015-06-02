@@ -2455,11 +2455,6 @@ AveragingTvi2::validateInputVi (ViImplementation2 *)
     // No implmented right now
 }
 
-Float AveragingTvi2::weightToSigma (Float weight)
-{
-    return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
-}
-
 Vector<Float> AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
 {
     IPosition shape = data.shape();
