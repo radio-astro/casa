@@ -292,7 +292,7 @@ p, li { white-space: pre-wrap; }
          <widget class="QLabel" name="dragLabel">
           <property name="font">
            <font>
-            <pointsize>8</pointsize>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="text">
