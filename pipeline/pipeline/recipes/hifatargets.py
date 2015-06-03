@@ -64,9 +64,6 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         # Make clean cube images for the selected targets
         hif_makeimages (pipelinemode=pipelinemode)
 
-        # Export the data
-        hif_exportdata(pipelinemode=pipelinemode)
-
     except Exception, e:
         if str(e) == IMPORT_ONLY:
             casatools.post_to_log ("Exiting after import step ...",
