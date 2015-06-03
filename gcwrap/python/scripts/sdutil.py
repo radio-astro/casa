@@ -1499,7 +1499,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
         dec_rad = [ dir['m1']['value'] for dir in direction_raw ]
     else:
         msmd_loc.open(msname)
-        me_loc.doframe(msmd_loc.observatoryposition(ant0))
+        me_loc.doframe(msmd_loc.antennaposition(ant0))
         msmd_loc.close()
         ra_rad = []
         dec_rad = []
