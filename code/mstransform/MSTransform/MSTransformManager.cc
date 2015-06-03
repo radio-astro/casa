@@ -2499,6 +2499,8 @@ void MSTransformManager::separateSpwSubtable()
 			Vector<Double> resolution = resolutionCol(0);
 
 			// Resize columns to be separated
+			// jagonzal (jagonzal (CAS-7435)): Last spw must have fewer channels
+			/*
 			if (tailOfChansforLastSpw_p)
 			{
 				uInt nInChannels = chanFreq.size();
@@ -2524,6 +2526,7 @@ void MSTransformManager::separateSpwSubtable()
 					resolution(outIndex) = lastResolution;
 				}
 			}
+			*/
 
 			// Calculate bandwidth per output spw
 			Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
@@ -2533,9 +2536,6 @@ void MSTransformManager::separateSpwSubtable()
 			{
 				// Add row
 				spwTable.addRow(1,True);
-
-				// Prepare slice
-				Slice slice(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
 
 				// Columns that can be just copied
 				spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
@@ -2577,17 +2577,37 @@ void MSTransformManager::separateSpwSubtable()
 					spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
 				}
 
-				// Array columns that have to be modified
-				Slice range(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
-				spwCols.chanFreq().put(rowIndex,chanFreq(range));
-				spwCols.chanWidth().put(rowIndex,chanWidth(range));
-				spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
-				spwCols.resolution().put(rowIndex,resolution(range));
+				if ( (spw_i < nspws_p-1) or (tailOfChansforLastSpw_p == 0) )
+				{
+					Slice range(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
 
-				// Scalar columns that have to be modified
-				spwCols.numChan().put(rowIndex,chansPerOutputSpw_p);
-				spwCols.totalBandwidth().put(rowIndex,totalBandwidth);
-				spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
+					// Array columns that have to be modified
+					spwCols.chanFreq().put(rowIndex,chanFreq(range));
+					spwCols.chanWidth().put(rowIndex,chanWidth(range));
+					spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
+					spwCols.resolution().put(rowIndex,resolution(range));
+
+					// Scalar columns that have to be modified
+					spwCols.numChan().put(rowIndex,chansPerOutputSpw_p);
+					spwCols.totalBandwidth().put(rowIndex,totalBandwidth);
+					spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
+				}
+				// jagonzal (jagonzal (CAS-7435)): Last spw must have fewer channels
+				else
+				{
+					Slice range(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
+
+					// Array columns that have to be modified
+					spwCols.chanFreq().put(rowIndex,chanFreq(range));
+					spwCols.chanWidth().put(rowIndex,chanWidth(range));
+					spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
+					spwCols.resolution().put(rowIndex,resolution(range));
+
+					// Scalar columns that have to be modified
+					spwCols.numChan().put(rowIndex,tailOfChansforLastSpw_p);
+					spwCols.totalBandwidth().put(rowIndex,chanWidth(0)*tailOfChansforLastSpw_p);
+					spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
+				}
 
 				rowIndex += 1;
 			}
@@ -6877,13 +6897,18 @@ template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt row
 	uInt outRow = relativeRow_p+spw_i;
 	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
 	Matrix<T> outputPlane_i = outputDataPlane(sliceX,sliceY);
-	outputPlane_i.resize(outputPlaneShape_i,True);
+	outputPlane_i.resize(outputPlaneShape_i,True); // Resize uses a new storage and copies the old values to it
+	// jagonzal (CAS-7435): We have to set the new values to 0
+	Slice sliceTail(tailOfChansforLastSpw_p,chansPerOutputSpw_p-tailOfChansforLastSpw_p);
+	outputPlane_i(sliceX,sliceTail) = 0; // Slices use reference semantics.
 	dataBufferPointer->xyPlane(outRow) = outputPlane_i;
 
 	if (flagBufferPointer != NULL)
 	{
 		Matrix<Bool> outputFlagPlane_i = outputFlagsPlane(sliceX,sliceY);
-		outputFlagPlane_i.resize(outputPlaneShape_i,True);
+		outputFlagPlane_i.resize(outputPlaneShape_i,True); // Resize uses a new storage and copies the old values to it
+		// jagonzal (CAS-7435): We have to set the new values to 0
+		outputFlagPlane_i(sliceX,sliceTail) = True; // Slices use reference semantics.
 		flagBufferPointer->xyPlane(outRow) = outputFlagPlane_i;
 	}
 
@@ -6947,10 +6972,11 @@ template <class T> void MSTransformManager::writeOutputPlanesInSlices(	uInt row,
 	}
 
 	uInt outRow = row+spw_i;
+	IPosition outputPlaneShape_tail(2,nCorrs,tailOfChansforLastSpw_p);
 	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
-	writeOutputPlaneReshapedSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+	writeOutputPlaneReshapedSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_tail,outRow);
 	(*this.*writeOutputFlagsPlaneReshapedSlices_p)(	outputFlagsPlane,outputFlagCol,
-													sliceX,sliceY,outputPlaneShape_i,outRow);
+													sliceX,sliceY,outputPlaneShape_tail,outRow);
 
 	return;
 }
