@@ -910,7 +910,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   else*/
   {
     Matrix<Double> xyPositions(2, endRow-startRow+1);
-    xyPositions=0.0;
+    xyPositions=-10.0; // make sure failed getXYPos does not fall on grid
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(getXYPos(vb, rownr)) {
 	xyPositions(0, rownr)=xyPos(0);
