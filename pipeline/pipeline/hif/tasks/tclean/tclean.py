@@ -344,14 +344,17 @@ class Tclean(cleanbase.CleanBase):
             if (inputs.nchan != -1):
                 sensitivity *= numpy.sqrt(inputs.nchan)
             else:
+                qaTool = casatools.quanta
                 ms = context.observing_run.measurement_sets[0]
                 spwDesc = ms.get_spectral_window(spw)
-                min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-                qaTool = casatools.quanta
-                sensitivity *= numpy.sqrt(abs( \
-                                   (max_frequency - min_frequency) / \
-                                   qaTool.convert(inputs.width, 'GHz')['value']))
+                if (qaTool.convert(inputs.width, 'GHz')['value'] == 0.0):
+                    sensitivity *= numpy.sqrt(len(spwDesc.channels))
+                else:
+                    min_frequency = float(spwDesc.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    max_frequency = float(spwDesc.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                    sensitivity *= numpy.sqrt(abs( \
+                                       (max_frequency - min_frequency) / \
+                                       qaTool.convert(inputs.width, 'GHz')['value']))
 
         return sensitivity
 
