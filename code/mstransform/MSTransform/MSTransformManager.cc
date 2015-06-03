@@ -1827,8 +1827,24 @@ void MSTransformManager::initDataSelectionParams()
 			for (uInt spw_i=0;spw_i<spwList.size();spw_i++)
 			{
 				freqbinMap_p[spwList(spw_i)] = freqbin_p(0);
+
 				// jagonzal (new WEIGHT/SIGMA convention)
-				newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(0);
+				// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
+				if (freqbin_p(0) > numOfSelChanMap_p[spwList(spw_i)])
+				{
+					logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+							<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
+							<< " for SPW " << spwList(spw_i)
+							<< " is smaller than specified chanbin " << freqbin_p(0) << endl
+							<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
+							<< " for SPW " << spwList(spw_i)
+							<< LogIO::POST;
+					newWeightFactorMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
+				}
+				else
+				{
+					newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(0);
+				}
 			}
 		}
 		else
@@ -1846,7 +1862,22 @@ void MSTransformManager::initDataSelectionParams()
 				{
 					freqbinMap_p[spwList(spw_i)] = freqbin_p(spw_i);
 					// jagonzal (new WEIGHT/SIGMA convention)
-					newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(spw_i);
+					// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
+					if (freqbin_p(spw_i) > numOfSelChanMap_p[spwList(spw_i)])
+					{
+						logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+								<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
+								<< " for SPW " << spwList(spw_i)
+								<< " is smaller than specified chanbin " << freqbin_p(0) << endl
+								<< "Setting chanbin to " << numOfSelChanMap_p[spwList(spw_i)]
+								<< " for SPW " << spwList(spw_i)
+								<< LogIO::POST;
+						newWeightFactorMap_p[spwList(spw_i)] = numOfSelChanMap_p[spwList(spw_i)];
+					}
+					else
+					{
+						newWeightFactorMap_p[spwList(spw_i)] = freqbin_p(spw_i);
+					}
 				}
 			}
 		}
@@ -1987,6 +2018,13 @@ void MSTransformManager::initRefFrameTransParams()
         	}
     	}
     }
+
+   if (radialVelocityCorrection_p &&
+		   (radialVelocity_p.getRef().getType() != MRadialVelocity::GEO)) {
+	   logger_p << LogIO::SEVERE << "Cannot perform radial velocity correction with ephemerides of type "
+			   << MRadialVelocity::showType(radialVelocity_p.getRef().getType()) << ".\nType needs to be GEO."
+			   << LogIO::EXCEPTION;
+   }
 
 	return;
 }
@@ -4822,7 +4860,8 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	{
 		MRadialVelocity mRV = inputMSFieldCols_p->radVelMeas(vb->fieldId()(0),vb->time()(0));
 		Quantity mrv = mRV.get("m/s");
-		radVelCorr =  MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+		Quantity offsetMrv = radialVelocity_p.get("m/s"); // the radvel by which the out SPW def was shifted
+		radVelCorr =  MDoppler(mrv-(Quantity(2.)*offsetMrv));
 		if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = True;
 
 		inputFieldDirection = inputMSFieldCols_p->phaseDirMeas(vb->fieldId()(0), vb->time()(0));
