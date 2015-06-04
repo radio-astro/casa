@@ -169,8 +169,11 @@ namespace casa{
 	      log_l << "Support Size (w: "<< iw <<",C): ";
 	      {
 		for (Int inu=0; inu<cfbShp[0]; inu++)
-		    log_l << cfb(inu, iw, ipol).xSupport_p << " ";
-
+		  {
+		    CFCell& cc=cfb(inu,iw,ipol);
+		    if (!cc.storage_p.null())
+		      log_l << cfb(inu, iw, ipol).xSupport_p << " ";
+		  }
 		log_l << LogIO::POST;
 	      }
 	    }
@@ -321,7 +324,7 @@ namespace casa{
 		  Double paVal, wVal, fVal, sampling, conjFreq; Int mVal, xSupport, ySupport, conjPoln;
 		  CoordinateSystem coordSys;
 
-		  getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+		  TableRecord miscInfo = getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
 			      xSupport, ySupport, fVal, wVal, mVal,conjFreq, conjPoln,False);
 		
 		  Bool pickThisCF=True;
@@ -394,7 +397,7 @@ namespace casa{
 		    //
 		    // Get the parameters from the CF file
 		    //
-		    getCFParams(fileNames[nf], pixBuf, coordSys,  sampling, paVal, 
+		    TableRecord miscInfo = getCFParams(fileNames[nf], pixBuf, coordSys,  sampling, paVal, 
 				xSupport, ySupport, fVal, wVal, mVal, conjFreq, conjPoln);
 		    //
 		    // Get the storage buffer from the CFBuffer and
@@ -423,9 +426,13 @@ namespace casa{
 		    // determined inside using mVal (why this
 		    // treatment for mndx, please don't ask.  Not just
 		    // yet (SB)).
+		    String telescopeName;miscInfo.get("TelescopeName",telescopeName);
+		    Float diameter; miscInfo.get("Diameter",diameter);
 		    cfb->setParams(fndx, wndx, 0,0, coordSys, fsampling, xSupport, ySupport, 
-				   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln);
+		    		   fVal, wVal, mVal,fileNames[nf],conjFreq, conjPoln,
+				   telescopeName, diameter);
 
+		    // cfb->setParams(fndx, wndx, mVal, miscInfo);
 
 		    // if (nf==0)
 		    //   {
@@ -433,7 +440,7 @@ namespace casa{
 		    // 	      << cfCacheTable_l[ipa].cfNameList.size()  << LogIO::POST;
 		    // 	log_l << "F: " << fList << endl << "M: " << mList << endl << "W: " << wList << endl << LogIO::POST;
 		    //   }
-		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << LogIO::POST;
+		    if (verbose > 0) log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << " " << xSupport << LogIO::POST;
 		  }
 		// cfb->show("cfb: ");
 
@@ -488,15 +495,15 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::getCFParams(const String& fileName,
-			    Array<Complex>& pixelBuffer,
-			    CoordinateSystem& coordSys, 
-			    Double& sampling,
-			    Double& paVal,
-			    Int& xSupport, Int& ySupport,
-			    Double& fVal, Double& wVal, Int& mVal,
-			    Double& conjFreq, Int& conjPoln,
-			    Bool loadPixels)
+  TableRecord CFCache::getCFParams(const String& fileName,
+				   Array<Complex>& pixelBuffer,
+				   CoordinateSystem& coordSys, 
+				   Double& sampling,
+				   Double& paVal,
+				   Int& xSupport, Int& ySupport,
+				   Double& fVal, Double& wVal, Int& mVal,
+				   Double& conjFreq, Int& conjPoln,
+				   Bool loadPixels)
   {
     try
       {
@@ -516,6 +523,7 @@ namespace casa{
 	coordSys = thisCF.coordinates();
 	SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
 	fVal=static_cast<casa::Float>(spCS.referenceValue()(0));
+	return miscinfo;
       }
     catch(AipsError& x)
       {

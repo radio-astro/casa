@@ -110,6 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique);
 
+    void cacheVBInfo(const String& telescopeName, const Float& diameter);
     void cacheVBInfo(const VisBuffer& vb);
     Int getBandID(const Double& freq, const String& telescopeName);
 

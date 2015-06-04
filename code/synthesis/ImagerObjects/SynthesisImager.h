@@ -178,6 +178,8 @@ class SynthesisImager
 
   void dryGridding(const Vector<String>& cfList);
   void fillCFCache(const Vector<String>& cfList); 
+  void reloadCFCache();
+
 
 protected:
  

@@ -75,12 +75,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   typedef Complex TT;
 
   struct  CFCStruct{
+    CoordinateSystem coordSys;
     TT * CFCStorage;
     Int shape[2];
-    Float sampling;
+    Float sampling,diameter;
     Int xSupport, ySupport;
-    Double wValue, freqValue,freqIncr;    
-    Int muellerElement;
+    Double wValue, freqValue,freqIncr, conjFreq;    
+    Int muellerElement, conjPoln;
+    String fileName, telescopeName;
   };
 
   using namespace CFDefs;
@@ -123,6 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       Bool dummy;
       cfst.CFCStorage = getStorage()->getStorage(dummy);
+      cfst.coordSys = coordSys_p;
       cfst.shape[0]=cfShape_p[0];
       cfst.shape[1]=cfShape_p[1];
       cfst.sampling=sampling_p;
@@ -132,12 +135,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfst.freqValue=freqValue_p;
       cfst.freqIncr=freqIncr_p;
       cfst.muellerElement=muellerElement_p;
+      cfst.conjFreq = conjFreq_p;
+      cfst.conjPoln = conjPoln_p;
+      cfst.diameter=diameter_p;
+      cfst.fileName = fileName_p;
+      cfst.telescopeName=telescopeName_p;
     }
     CountedPtr<Array<TT> >& getStorage() {return storage_p;}
-    void makePersistent(const char *dir);
+    void makePersistent(const char *dir, const char *cfName="");
     CountedPtr<CFCell> clone();
     void setParams(const CFCell& other);
-    void initCache() {shape_p=getShape(); cfShape_p.assign(shape_p.asVector());};
+    void initCache(const Bool& releaseSpace=False) {shape_p=getShape(); cfShape_p.assign(shape_p.asVector());IPosition tt=shape_p;tt=0;tt[0]=tt[1]=0;if (releaseSpace) storage_p->resize(tt);};
     IPosition getShape() {return storage_p->shape();}
     //
     //============================= Functional Parts ============================
@@ -148,14 +156,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition shape_p;
     CountedPtr<Array<TT> > storage_p; // Nx x Ny
     CoordinateSystem coordSys_p;
-    Float sampling_p;
+    Float sampling_p, diameter_p;
     Int xSupport_p,ySupport_p, conjPoln_p;
     Double wValue_p, freqValue_p,freqIncr_p, conjFreq_p;
     //    MuellerElementType muellerElement_p;
     Int muellerElement_p;
     Quantity pa_p;
     Vector<Int> cfShape_p;
-    String fileName_p;
+    String fileName_p,telescopeName_p;
   };
 } //# NAMESPACE CASA - END
 #endif

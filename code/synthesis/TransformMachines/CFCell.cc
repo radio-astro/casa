@@ -76,21 +76,48 @@ namespace casa{
        << endl;
     IPosition dummy;
     Vector<String> csList;
-    os << "CoordSys: ";
-    csList = coordSys_p.list(log_l,MDoppler::RADIO,dummy,dummy);
-    os << csList << endl;
+    // os << "CoordSys: ";
+    // csList = coordSys_p.list(log_l,MDoppler::RADIO,dummy,dummy);
+    // os << csList << endl;
   }
 
-  void CFCell::makePersistent(const char *dir)
+  void CFCell::makePersistent(const char *dir, const char* cfName)
   {
+    LogIO log_l(LogOrigin("CFCell","makePersistent[R&D]"));
     String name(dir);
-    if (fileName_p == "") fileName_p = name;
-    
+    // if (cfShape_p.nelements() == 0)
+    //   {
+    // 	log_l << "Skipping making " << name << " persistent." << LogIO::WARN << LogIO::POST;
+    // 	return;
+    //   }
+
+    // if (fileName_p != "" )name = "test.cf/"+fileName_p;
+    String tt=fileName_p;
+
+    if (fileName_p == "") fileName_p = String(cfName);
+    name = String(dir) + "/" + fileName_p;
+    // log_l << "Making " << name << " persistent. Was " << tt << LogIO::WARN << LogIO::POST;
     //    storeArrayAsImage(name, coordSys_p, *storage_p);
-    PagedImage<Complex> thisCF(storage_p->shape(),coordSys_p, name);
+
+    //    PagedImage<Complex> thisCF(storage_p->shape(),coordSys_p, name);
+
+    IPosition tmpShape;
+    tmpShape=shape_p;
+    // Zero storage buffer is a hint that this may be an "empty CFs"
+    // being made persistent.  So make a 2x2 pixel image (since I
+    // don't know how to make a 0x0 pixel image to just save the CS
+    // and miscInfo information to the disk).
+    if ((storage_p->shape()).product()==0) tmpShape[0]=tmpShape[1]=2;
+
+    PagedImage<Complex> thisCF(tmpShape,coordSys_p, name);
+    //cerr << "thisCF.shape() = " << thisCF.shape() << " " << tmpShape << " " << storage_p->shape() << endl;
+
     //    cerr << "Ref pixel = " << coordSys_p.referencePixel() << endl;
     //    show(NULL,cerr);
-    thisCF.put(*storage_p);
+    //cerr << storage_p->shape() << endl;
+
+    if ((storage_p->shape()).nelements()>0) thisCF.put(*storage_p);
+
     Record miscinfo;
     miscinfo.define("Xsupport", xSupport_p);
     miscinfo.define("Ysupport", ySupport_p);
@@ -101,6 +128,8 @@ namespace casa{
     miscinfo.define("Name", fileName_p);
     miscinfo.define("ConjFreq", conjFreq_p);
     miscinfo.define("ConjPoln", conjPoln_p);
+    miscinfo.define("TelescopeName", telescopeName_p);
+    miscinfo.define("Diameter", diameter_p);
     thisCF.setMiscInfo(miscinfo);
 
     //show("thisCell: ", cout);

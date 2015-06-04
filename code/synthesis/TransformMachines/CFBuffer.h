@@ -303,7 +303,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Int& muellerElement,
 				  const String& fileName=String(),
 				  const Double& conjFreq=0.0,
-				  const Int& conjPol=-1);
+				  const Int& conjPol=-1,
+				  const String& telescopeName=String(),
+				  const Float& diameter=25.0);
+    // RigidVector<Int, 3> setParams(const Int& inu, const Int& iw, const Int& muellerElement,
+    // 				  const TableRecord& miscInfo);
     void setPointingOffset(const Vector<Double>& offset) 
     {pointingOffset_p.assign(offset);};
     Vector<Double> getPointingOffset() {return pointingOffset_p;};
@@ -342,7 +346,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool null() {return (cfCells_p.nelements() == 0);};
     
     Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
-    void makePersistent(const char *dir);
+    void makePersistent(const char *dir, const char *cfName="");
     
     void primeTheCache();
     void initMaps(const VisBuffer& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);

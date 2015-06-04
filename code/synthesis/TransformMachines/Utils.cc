@@ -44,6 +44,7 @@
 #include <lattices/Lattices/LatticeStepper.h> 
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/System/Aipsrc.h>
+
 namespace casa{
   //
   //--------------------------------------------------------------------------------------------
@@ -1115,6 +1116,16 @@ namespace casa{
     return last;
   }
 
+  void SynthesisUtils::showCS(const CoordinateSystem& cs, ostream &os, const String& msg)
+  {
+    LogIO log_l(LogOrigin("SynthesisUtils","showCS"));
+    IPosition dummy;
+    Vector<String> csList;
+    if (msg!="")
+      os << "CoordSys: ";
+    csList = cs.list(log_l,MDoppler::RADIO,dummy,dummy);
+    os << csList << endl;
+  }
 
   template
   std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);

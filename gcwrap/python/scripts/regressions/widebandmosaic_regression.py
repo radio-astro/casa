@@ -202,7 +202,9 @@ else:
    # Test 1
    correct_cs_intensity = 0.6710
    #correct_cs_intensity_v = -0.0007073
-   correct_cs_intensity_v = -0.002090328
+   #correct_cs_intensity_v = -0.002090328
+   # 3June15 (SB): changed from above after turning on full-pol. CFs (PJ's code)
+   correct_cs_intensity_v = -0.0015946944477
    correct_cs_avgpb = 0.4830
    # Test 2
    correct_mtmfs_intensity = 0.6803

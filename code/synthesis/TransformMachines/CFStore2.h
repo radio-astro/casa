@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void show(const char *Mesg=NULL,ostream &os=cerr);
     //-------------------------------------------------------------------------
-    void makePersistent(const char *dir,const char *qualifier="");
+    void makePersistent(const char *dir,const char *name="", const char *qualifier="");
     //-------------------------------------------------------------------------
     void primeTheCFB();
     //-------------------------------------------------------------------------

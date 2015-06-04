@@ -417,12 +417,27 @@ bool synthesisimager::setweighting(const std::string& type,
   {
     Bool rstat(False);
     
-    cerr << cfList << endl;
     try {
       
       if( ! itsImager ) itsImager = new SynthesisImager();
       
       itsImager->fillCFCache(cfList);
+      
+    } catch  (AipsError x) {
+      RETHROW(x);
+    }
+    return rstat;
+  }
+
+  bool synthesisimager::reloadcfcache()
+  {
+    Bool rstat(False);
+    
+    try {
+      
+      if( ! itsImager ) itsImager = new SynthesisImager();
+      
+      itsImager->reloadCFCache();
       
     } catch  (AipsError x) {
       RETHROW(x);

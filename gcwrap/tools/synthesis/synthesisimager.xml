@@ -534,6 +534,21 @@ Define the image coordinate systems and shapes.
 
 <!-- ===================================== -->
 
+<method type="function" name="reloadcfcache">
+  <shortdescription>
+    Re-load the CFCache, the name of which should already be set in
+    the tool.
+  </shortdescription>
+
+  <description>
+  </description>
+  <input>
+  </input>
+  <returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
 
    <method type="function" name="executemajorcycle">
    <shortdescription>Run a major cycle</shortdescription>

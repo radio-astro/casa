@@ -151,6 +151,22 @@ namespace casa{
   //---------------------------------------------------------------
   //
   //  template <class T>  void CFBuffer<T>
+  // RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& muellerElement,
+  // 					  const TableRecord& miscInfo)
+  // {
+  //   RigidVector<Int,3> ndx = setParams(inu, iw, 
+  // 				       miscInfo.coordSys, miscInfo.sampling,
+  // 				       miscInfo.xSupport,miscInfo.ySupport,
+  // 				       miscInfo.freqValue, miscInfo.wValue,
+  // 				       muellerElements, 
+  // 				       miscInfo.fileName, miscInfo.conjfFreq,
+  // 				       miscinfo.conjPoln);
+  //   cfCells_p(ndx(0), ndx(1), ndx(2))->telescopeName = micsInfo.telescopeName;
+  // }
+  //
+  //---------------------------------------------------------------
+  //
+  //  template <class T>  void CFBuffer<T>
   RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
@@ -158,7 +174,9 @@ namespace casa{
 					  const Int& muellerElement,
 					  const String& fileName,
 					  const Double& conjFreq,
-					  const Int& conjPoln)
+					  const Int& conjPoln,
+					  const String& telescopeName,
+					  const Float& diameter)
   {
     RigidVector<Int,3> ndx=getIndex(freqValue, wValue, muellerElement);
     ndx(0)=inu; ndx(1)=iw;//ndx(2) = muellerElements_p(ipx)(ipy);
@@ -170,6 +188,8 @@ namespace casa{
     cfCells_p(ndx(0),ndx(1),ndx(2))->conjPoln_p = conjPoln;
     if (fileName != "")
       cfCells_p(ndx(0),ndx(1),ndx(2))->fileName_p = fileName;
+    cfCells_p(ndx(0),ndx(1),ndx(2))->telescopeName_p = telescopeName;//String("EVLA");
+    cfCells_p(ndx(0),ndx(1),ndx(2))->diameter_p = diameter;//25.0;
 
     Int index=cs.findCoordinate(Coordinate::SPECTRAL);
     SpectralCoordinate spCS = cs.spectralCoordinate(index);
@@ -390,15 +410,20 @@ namespace casa{
 	  }
   }
 
-  void CFBuffer::makePersistent(const char *dir)
+  void CFBuffer::makePersistent(const char *dir, const char *cfName)
   {
     for (Int i=0;i<cfCells_p.shape()(0);i++)
       for (Int j=0;j<cfCells_p.shape()(1);j++)
 	for (Int k=0;k<cfCells_p.shape()(2);k++)
 	  {
 	    ostringstream name;
-	    name << dir << "_CF_" << i << "_" << j << "_" << k << ".im";
-	    cfCells_p(i,j,k)->makePersistent(name.str().c_str());
+	    name << String(cfName) << "_CF_" << i << "_" << j << "_" << k << ".im";
+	    //cerr << "CFB Name : " << name.str() << endl;
+	    // const char *formedName;
+	    // if (cfName != "" ) formedName = name.str().c_str();
+	    // else               formedName = cfName;
+	    // cerr << "Formed name = " << formedName << endl;
+	    cfCells_p(i,j,k)->makePersistent(dir, name.str().c_str());
 	  }
   }
 

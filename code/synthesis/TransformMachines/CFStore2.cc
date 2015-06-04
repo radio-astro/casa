@@ -142,14 +142,20 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void CFStore2::makePersistent(const char *dir,const char *qualifier)
+  void CFStore2::makePersistent(const char *dir,
+				const char *cfName,
+				const char *qualifier)
   {
+    const char *formedName;
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
 	  ostringstream name;
-	  name << dir << "/" << qualifier << "CFS_" << i << "_" << j;
-	  storage_p(i,j)->makePersistent(name.str().c_str());
+	  //name << dir << "/" << qualifier << "CFS_" << i << "_" << j;
+	  name << String(qualifier) << "CFS_" << i << "_" << j;
+	  // if (String(cfName) == "") formedName = name.str().c_str();
+	  // else              formedName = cfName;
+	  storage_p(i,j)->makePersistent(dir,name.str().c_str());
 	}
   }
   //

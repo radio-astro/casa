@@ -76,6 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Int& muellerTerm,
 			  const Double freqVal=-1.0);
 
+    void cacheVBInfo(const String& telescopeName, const Float& diameter);
     void cacheVBInfo(const VisBuffer& vb);
     Int getBandID(const Double& freq, const String& telescopeName);
 

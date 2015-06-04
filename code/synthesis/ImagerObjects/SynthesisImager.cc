@@ -1704,6 +1704,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // useful to extend it to other projection FTMs -- but later.
       String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
       if (!ftmName.contains("AWProject")) return;
+      
+      os << "---------------------------------------------------- fillCFCache ---------------------------------------------" << LogIO::POST;
 
       String path = itsMappers.getFTM(whichFTM)->getCacheDir();
       String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
@@ -1713,17 +1715,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // CountedPtr<AWProjectWBFTNew> tmpFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
 
 
-      CountedPtr<CFCache> cfCacheObj = new CFCache();
-      Float dPA=360.0,selectedPA=-1;
+      Float dPA=360.0,selectedPA=2*360.0;
       if (cfList.nelements() > 0)
-      	{
+      {
+	  CountedPtr<CFCache> cfCacheObj = new CFCache();
 	  //Vector<String> wtCFList; wtCFList.resize(cfList.nelements());
 	  //for (Int i=0; i<wtCFList.nelements(); i++) wtCFList[i] = "WT"+cfList[i];
-	  Directory dir(path);
+	  //Directory dir(path);
 	  Vector<String> cfList_p=cfList;//dir.find(Regex(Regex::fromPattern("CFS*")));
 	  Vector<String> wtCFList_p;
 	  wtCFList_p.resize(cfList_p.nelements());
-	  for (Int i=0; i<wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
+	  for (Int i=0; i<(Int)wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
 
 	  cerr << cfList_p << endl;
       	  cfCacheObj->setCacheDir(path.data());
@@ -1731,7 +1733,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  os << "Re-loading the \"blank\" CFCache for filling" << LogIO::WARN << LogIO::POST;
 
       	  cfCacheObj->initCacheFromList2(path, cfList_p, wtCFList_p,
-      					 selectedPA, dPA,0);
+      					 selectedPA, dPA,1);
 	  // tmpFT->setCFCache(cfCacheObj);
 	  Vector<Double> uvScale, uvOffset;
 	  Matrix<Double> vbFreqSelection;
@@ -1749,19 +1751,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
 			       *cfs2, *cfwts2);
       	}
+      //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
+      //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();
+    }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::reloadCFCache()
+  {
+      LogIO os( LogOrigin("SynthesisImager","reloadCFCache",WHERE) );
+      Int whichFTM=0;
+      String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
+      if (!ftmName.contains("AWProject")) return;
+
+      os << "---------------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
+      String path = itsMappers.getFTM(whichFTM)->getCacheDir();
+      String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
+
+      CountedPtr<CFCache> cfCacheObj = new CFCache();
+      cfCacheObj->setCacheDir(path.data());
       cfCacheObj->setWtImagePrefix(imageNamePrefix.c_str());
+      cfCacheObj->initCache2();
       
       // This assumes the itsMappers is always SIMapperCollection.
       for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
 	{
 	  cerr << "Setting FTM-set " << whichFTM << endl;
-	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj); // Setup iFTM
-	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setCFCache(cfCacheObj); // Set FTM
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj,True); // Setup iFTM
+	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setCFCache(cfCacheObj,True); // Set FTM
 	}
-      //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
-      //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();
-    }
-
+  }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(){
     LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );

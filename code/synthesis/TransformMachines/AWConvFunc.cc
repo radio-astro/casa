@@ -452,15 +452,18 @@ namespace casa{
 		    ftRef(1)=cfWtBuf.shape()(1)/2.0;
 		    CoordinateSystem ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
+		    CountedPtr<CFCell> cfCellPtr;
 
 		    cfWtb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
 				    ftCoords, samplingWt, xSupportWt, ySupportWt,
 				    freqValues(inu), wValues(iw), muellerElements(imx)(imy),
 				    String(""), // Default ==> don't set it in the CFCell
 				    conjFreq, conjPol[0]);
-		    cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
-				       muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
-
+		    cfCellPtr = cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
+						   muellerElements(imx)(imy));
+		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
+		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
+		    //cerr << "AWConvFunc: Telescope name = " << cfCellPtr->telescopeName_p << " " << aTerm.getTelescopeName() << endl;
 		    //tim.show("CSStuff:");
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
 		    //		    if (iw==0) 
@@ -514,18 +517,21 @@ namespace casa{
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy),
 				  String(""), // Default ==> Don't set in the CFCell
 				  conjFreq, conjPol[0]);
-		    cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
-				     muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
+		    cfCellPtr=cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
+					       muellerElements(imx)(imy));
+		    cfCellPtr->pa_p=Quantity(vbPA,"rad");
+		    cfCellPtr->telescopeName_p = aTerm.getTelescopeName();
 
 		    //
 		    // Now tha the CFs have been computed, cache its
 		    // paramters in CFCell for quick access in tight
 		    // loops (in the re-sampler, e.g.).
 		    //
+
 		    (cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
-					muellerElements(imx)(imy)))->initCache();
+					muellerElements(imx)(imy)))->initCache(isDryRun);
 		    (cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
-				      muellerElements(imx)(imy)))->initCache();
+				      muellerElements(imx)(imy)))->initCache(isDryRun);
 
 		    //tim.show("End*2:");
     		  }
@@ -1512,20 +1518,24 @@ namespace casa{
       Bool doSquint=True; Complex tt;
       ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
       Double freq_l=freqValue;
-      //if (!isDryRun)
-      {
-	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, muellerElement,freq_l);//freqHi);
-	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,muellerElement,conjFreq);
-      }
       // {
       // 	Vector<String> csList;
       // 	IPosition dummy;
       // 	cout << "CoordSys:===================== ";
-      // 	csList = ftATermSq_l.coordinates().list(log_l,MDoppler::RADIO,dummy,dummy);
+      // 	//      	csList = ftATermSq_l.coordinates().list(log_l,MDoppler::RADIO,dummy,dummy);
+
+      // 	csList = cs_l.list(log_l,MDoppler::RADIO,dummy,dummy);
       // 	cout << csList << endl;
-      // 	// csList = conjPolCS_l.list(log_l,MDoppler::RADIO,dummy,dummy);
-      // 	// cout << csList << endl;
+      // 	csList = conjPolCS_l.list(log_l,MDoppler::RADIO,dummy,dummy);
+      // 	cout << csList << endl;
       // }
+
+      //if (!isDryRun)
+      // cerr << "#########$$$$$$ " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
+      {
+	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, muellerElement,freq_l);//freqHi);
+	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,muellerElement,conjFreq);
+      }
 
       Vector<Double> cellSize;
       {
@@ -1536,6 +1546,7 @@ namespace casa{
 	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
 	cellSize = lc.increment();
       }
+      // cerr << "#########$$$$$$ " << cellSize << endl;
 
       // Int directionIndex=cs_l.findCoordinate(Coordinate::DIRECTION);
       // DirectionCoordinate dc=cs_l.directionCoordinate(directionIndex);
@@ -1761,7 +1772,7 @@ namespace casa{
     for (int iPA=0; iPA<cfsShape[0]; iPA++)
       for (int iB=0; iB<cfsShape[1]; iB++)
 	  {
-	    log_l << "Filling CFs for baseline type " << iB << LogIO::WARN << LogIO::POST;
+	    log_l << "Filling CFs for baseline type " << iB << ", PA slot " << iPA << LogIO::WARN << LogIO::POST;
 	    cfb_p=cfs2.getCFBuffer(iPA,iB);
 	    cfwtb_p=cfwts2.getCFBuffer(iPA,iB);
 
@@ -1775,47 +1786,65 @@ namespace casa{
 		    Int xSupport, ySupport;
 		    Float sampling;
 
-		    (*cfb_p)(i,j,k).getAsStruct(miscInfo); // Get the shape from CFCell
+		    CountedPtr<CFCell>& tt=(*cfb_p).getCFCellPtr(i, j, k);
+		    //cerr << "####@#$#@$@ " << i << " " << j << " " << k << endl;
+		    //tt->show("test",cout);
+		    if (tt->cfShape_p.nelements() != 0)
+		       {
+			 (*cfb_p)(i,j,k).getAsStruct(miscInfo); // Get the shape from CFCell
 
-		    convSampling=miscInfo.sampling;
-		    convSize=miscInfo.shape[0];
-		    cfb_p->getParams(cs_l, sampling, xSupport, ySupport,i,j,k);
+			 aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
-		    IPosition start(4, 0, 0, 0, 0);
-		    IPosition pbSlice(4, convSize, convSize, 1, 1);
-		    
-		    Matrix<Complex> screen(convSize, convSize);
-		    
-		    Int inner=convSize/(convSampling);
-		    //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
-		    Float innerQuaterFraction=4.0;
-		    
-		    // Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
-		    // psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
-		    
-		    //
-		    // By this point, the all the 4 axis (Time/PA, Freq, Pol,
-		    // Baseline) of the CFBuffer objects have been setup.  The CFs
-		    // will now be filled using the supplied PS-, W- ad A-term objects.
-		    //
-		    
-		    fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
-					miscInfo.freqValue, miscInfo.wValue, wScale, 
-					// (Double)pa, 
-					miscInfo.freqValue,
-					miscInfo.muellerElement, 
-					// polIndexMap, 
-					//vb, 
-					//psScale,
-					*psTerm_p, *wTerm_p, *aTerm_p);
-		    //cfb_p->show(NULL,cerr);
-		    //
-		    // Make the CFStores persistent.
-		    //
-		    cfs2.makePersistent(cfCachePath.c_str());
-		    cfwts2.makePersistent(cfCachePath.c_str(),"WT");
+			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,i,j,k);
+			 convSampling=miscInfo.sampling;
+
+			 //convSize=miscInfo.shape[0];
+			 // This method loads "empty CFs".  Those have
+			 // support size equal to the CONVBUF size
+			 // required.  So use that, instead of the
+			 // "shape" information from CFs, since the
+			 // latter for empty CFs can be small (to save
+			 // disk space and i/o -- the CFs are supposed
+			 // to be empty anyway at this stage!)
+			 convSize=xSupport; 
+
+			 IPosition start(4, 0, 0, 0, 0);
+			 IPosition pbSlice(4, convSize, convSize, 1, 1);
+			 
+			 Matrix<Complex> screen(convSize, convSize);
+			 
+			 Int inner=convSize/(convSampling);
+			 //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
+			 Float innerQuaterFraction=4.0;
+			 
+			 // Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
+			 // psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
+			 
+			 //
+			 // By this point, the all the 4 axis (Time/PA, Freq, Pol,
+			 // Baseline) of the CFBuffer objects have been setup.  The CFs
+			 // will now be filled using the supplied PS-, W- ad A-term objects.
+			 //
+			 
+			 fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
+					     miscInfo.freqValue, miscInfo.wValue, wScale, 
+					     // (Double)pa, 
+					     miscInfo.freqValue,
+					     miscInfo.muellerElement, 
+					     // polIndexMap, 
+					     //vb, 
+					     //psScale,
+					     *psTerm_p, *wTerm_p, *aTerm_p);
+			 //cfb_p->show(NULL,cerr);
+			 //
+			 // Make the CFStores persistent.
+			 //
+			 // cfs2.makePersistent(cfCachePath.c_str());
+			 // cfwts2.makePersistent(cfCachePath.c_str(),"WT");
+		       }
 		  }
-	  
 	  } // End of loop over baselines
+    cfs2.makePersistent(cfCachePath.c_str());
+    cfwts2.makePersistent(cfCachePath.c_str(),"","WT");
   }
 };

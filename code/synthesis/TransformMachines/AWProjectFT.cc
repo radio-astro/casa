@@ -1186,7 +1186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 
 	cfs2_p->makePersistent(cfCache_p->getCacheDir().c_str());
-	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"WT");
+	cfwts2_p->makePersistent(cfCache_p->getCacheDir().c_str(),"","WT");
 	Double memUsed=cfs2_p->memUsage();
 	String unit(" KB");
 	memUsed = (Int)(memUsed/1024.0+0.5);

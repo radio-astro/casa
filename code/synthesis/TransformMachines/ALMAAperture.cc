@@ -104,6 +104,12 @@ namespace casa{
       }
     return *this;
   }
+  void ALMAAperture::cacheVBInfo(const String& telescopeName, 
+				 const Float& diameter)
+  {
+    telescopeName_p=telescopeName;
+    Diameter_p=diameter;
+  }
   void ALMAAperture::cacheVBInfo(const VisBuffer& vb)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();

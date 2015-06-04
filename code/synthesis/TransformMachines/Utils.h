@@ -35,6 +35,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/iostream.h>
 
 #ifndef SYNTHESIS_UTILS_H
 #define SYNTHESIS_UTILS_H
@@ -127,6 +128,7 @@ namespace casa
     template<class Iterator>
     Iterator Unique(Iterator first, Iterator last);
 			  
+    void showCS(const CoordinateSystem& cs, ostream& os, const String& msg=String());
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);

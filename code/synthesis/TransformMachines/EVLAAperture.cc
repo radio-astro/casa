@@ -97,6 +97,13 @@ namespace casa{
     return -1;
   }
   
+  void EVLAAperture::cacheVBInfo(const String& telescopeName, 
+				 const Float& diameter)
+  {
+    telescopeName_p=telescopeName;
+    Diameter_p=diameter;
+  }
+
   void EVLAAperture::cacheVBInfo(const VisBuffer& vb)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
@@ -111,7 +118,7 @@ namespace casa{
 	  }
 	if (telescopeNames(nt) != telescopeNames(0))
 	  {
-	    String mesg="We do not (yet) handle inhomogeneous arrays for A-Projection!\n";
+	    String mesg="We do not (yet) handle multiple telescopes for A-Projection!\n";
 	    mesg += "Not yet a \"priority\"!!";
 	    SynthesisError err(mesg);
 	    throw(err);
@@ -131,13 +138,14 @@ namespace casa{
 	}
     if (Diameter_p == 0)
       {
-	logIO() << LogOrigin("EVLAAperture", "getVisParams")
+	logIO() << LogOrigin("EVLAAperture", "cacheVBInfo")
 		<< "No valid or finite sized antenna found in the antenna table. "
 		<< "Assuming diameter = 25m."
 		<< LogIO::WARN
 		<< LogIO::POST;
 	Diameter_p=25.0;
       }
+    cacheVBInfo(telescopeNames[0], Diameter_p);
   }
 
   Int EVLAAperture::getBandID(const Double& freq, const String& telescopeName)
@@ -318,8 +326,8 @@ namespace casa{
 	Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
 	vlaPB.setMaximumCacheSize(cachesize);
 	Int bandID;//=getVisParams(vb,outImages.coordinates());
+	//cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<" " << telescopeName_p << endl;
 	bandID = getBandID(freqVal,telescopeName_p);
-//	cout<<"EVLAAperture : muellerTerm"<<muellerTerm <<"\n";
 	//vlaPB.applyPB(outImages, doSquint,bandID,muellerTerm,freqVal);
 	Double pa_l=pa;  // Due to goofup in making sure complier type checking does not come in the way!
 	vlaPB.applyPB(outImages, pa_l, doSquint,bandID,muellerTerm,freqVal);

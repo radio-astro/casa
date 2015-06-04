@@ -257,7 +257,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const String& nameQualifier="",
 			   const Int mosXPos=0, const Int mosYPos=0);
 
-    void getCFParams(const String& fileName,
+    TableRecord getCFParams(const String& fileName,
 		     Array<Complex>& pixelBuffer,
 		     CoordinateSystem& coordSys, 
 		     Double& sampling,

@@ -176,6 +176,7 @@ namespace casa{
     };
 
     virtual void cacheVBInfo(const VisBuffer& vb) = 0;
+    virtual void cacheVBInfo(const String& telescopeName, const Float& diameter)=0;
     virtual Int getBandID(const Double& freq, const String& telescopeName) = 0;
     virtual int getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord=CoordinateSystem()) = 0;
     //
@@ -191,6 +192,8 @@ namespace casa{
     virtual void rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
     virtual void rotate2(const VisBuffer& vb, CFCell& baseCFS, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
+    String getTelescopeName() {return telescopeName_p;};
+
   protected:
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;

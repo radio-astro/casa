@@ -65,6 +65,17 @@ class PySynthesisImager:
 #        return True
 
 #############################################
+    def makeCFCache(self,exists):
+        # Make the CFCache and re-load it.  The following calls beomce
+        # NoOps (in SynthesisImager.cc) if the gridder is not one
+        # which uses CFCache.
+        if (exists):
+            print "CFCache already exists";
+        else:
+            self.dryGridding();
+            self.fillCFCache();
+            self.reloadCFCache();
+        
 #############################################
     def initializeImagers(self):
         
@@ -80,8 +91,18 @@ class PySynthesisImager:
 #        nimpars = copy.deepcopy(self.allimpars)
 #        for fld in range(0,self.NF):
 #            self.SItool.defineimage( **( nimpars[str(fld)]  ) )
+        
+        # If cfcache directory already exists, assume that it is
+        # usable and is correct.  makeCFCache call then becomes a
+        # NoOp.
+        cfCacheName=self.allgridpars['0']['cfcache'];
+        exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
+
         for fld in range(0,self.NF):
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
+
+
+        #self.makeCFCache(exists);
 
 #############################################
 
@@ -257,12 +278,17 @@ class PySynthesisImager:
     def dryGridding(self):
         self.SItool.drygridding(**(self.cfcachepars)) ;
 #############################################
+## Overloaded for parallel runs
     def fillCFCache(self):
         cfcName = self.allgridpars['0']['cfcache'];
         cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
+#        cflist = ["CFS_0_0_CF_1_0_1.im", "CFS_0_0_CF_2_0_0.im", "CFS_0_0_CF_2_0_1.im"];
         self.cfcachepars['cflist']=cflist;
 
         self.SItool.fillcfcache(**(self.cfcachepars)) ;
+#############################################
+    def reloadCFCache(self):
+        self.SItool.reloadcfcache();
 
 #############################################
 ## Overloaded for parallel runs
@@ -377,26 +403,55 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
          self.PH = PyParallelImagerHelper()
          self.NN = self.PH.NN
+         self.selpars = self.allselpars;
          self.allselpars = self.PH.partitionContDataSelection(self.allselpars)
+         # self.allcflist = self.PH.partitionCFCacheList(self.cfcachepars['cflist']);
+         # self.allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
          self.listOfNodes = self.PH.getNodeList();
 
 #############################################
 #############################################
     def initializeImagers(self):
 
+        #PySynthesisImager.initializeImagers(self);
+
         joblist=[]
         #### MPIInterface related changes
         #for node in range(0,self.NN):
         for node in self.listOfNodes:
-            
             ## Initialize the tool for the current node
             self.PH.runcmd("toolsi = casac.synthesisimager()", node)
 
+        # nodes=[1];
+        # for node in nodes:
+        #     for mss in sorted( self.selpars.keys() ):
+        #         joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
+        # self.PH.checkJobs(joblist);
+
+        # joblist=[];
+        # for node in nodes:
+        #     for fld in range(0,self.NF):
+        #         # for fld in range(0,self.NF):
+        #         #     self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
+        #         cmd="toolsi.defineimage( impars=" + str( self.allimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")";
+        #         # print "#!$#!%#!$#@$#@$ ",node," ",cmd;
+        #         joblist.append( self.PH.runcmd(cmd, node ) );
+        # self.PH.checkJobs(joblist);
+
+        # self.dryGridding();
+
+        # self.deleteImagers();
+
+######################################################################################################################################
+        joblist=[];
+        print "################### List of nodes: ",self.listOfNodes;
+        for node in self.listOfNodes:
             ## Send in Selection parameters for all MSs in the list
             #### MPIInterface related changes (the -1 in the expression below)
             for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
                 joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
         self.PH.checkJobs(joblist);
+
 
         joblist=[];
         for node in self.listOfNodes:
@@ -410,9 +465,14 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 ###                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
 ###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
+                    # # Give the same CFCache name to all nodes
+                    # ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
+
+        # self.fillCFCache();
+        # self.reloadCFCache();
 
 #############################################
 
@@ -478,6 +538,45 @@ class PyParallelContSynthesisImager(PySynthesisImager):
     def deleteCluster(self):
          self.PH.takedownCluster()
     
+# #############################################
+    def dryGridding(self):
+        nodes=[1];
+        joblist=[];
+        for node in nodes:
+            dummy=[''];
+            cmd = "toolsi.drygridding("+str(dummy)+")";
+            joblist.append(self.PH.runcmd(cmd,node));
+        self.PH.checkJobs(joblist);
+
+#############################################
+    def reloadCFCache(self):
+        joblist=[];
+        for node in self.listOfNodes:
+            cmd = "toolsi.reloadcfcache()";
+            joblist.append(self.PH.runcmd(cmd,node));
+        self.PH.checkJobs(joblist);
+#############################################
+    def fillCFCache(self):
+        # cflist=[f for f in os.listdir(self.allgridpars['cfcache']) if re.match(r'CFS*', f)];
+        # partCFList = 
+        allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
+        print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+        print "AllCFList = ",allcflist;
+        print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
+
+        joblist=[];
+        for node in self.listOfNodes:
+            #print "#!$#!%#!$#@$#@$ ",allcflist;
+            cmd = "toolsi.fillcfcache("+str(allcflist[node])+")";
+            #print "CMD = ",node," ",cmd;
+            joblist.append(self.PH.runcmd(cmd,node));
+        self.PH.checkJobs(joblist);
+
+        # Linear code
+        # cfcName = self.allgridpars['0']['cfcache'];
+        # cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
+        # self.cfcachepars['cflist']=cflist;
+        # self.SItool.fillcfcache(**(self.cfcachepars)) ;
 #############################################
     def makePSFCore(self):
         ### Make PSFs
@@ -743,11 +842,38 @@ class PyParallelImagerHelper():
          self.nodeList=None;
          # Initialize cluster, and partitioning.
         ############### Number of nodes to parallelize on
+
+         # self.nodeList gets filled by setupCluster()
          self.NN = self.setupCluster()
 
     def getNodeList(self):
         return self.nodeList;
 
+#############################################
+    def partitionCFCacheList(self,gridPars):
+
+        cflist=[f for f in os.listdir(gridPars['cfcache']) if re.match(r'CFS*', f)];
+
+        nCF = len(cflist);
+        nProcs=len(self.nodeList);
+        
+        print "########################################################"
+        print "nCF = ",nCF," nProcs = ",nProcs," NodeList=",self.nodeList;
+        print "########################################################"
+
+        #n0=int(nCF/self.NN);
+        n0=int(nCF/nProcs);
+        allcfs = {};
+        nUsed=0; i=1;
+        while (nUsed < nCF):
+            m = nUsed+n0;
+            if (m > nCF): 
+		m=nCF;
+            allcfs[i]=cflist[nUsed:m];
+	    i=i+1;
+            nUsed = m;
+        return allcfs;
+            
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
     def partitionContDataSelection(self,oneselpars={}):

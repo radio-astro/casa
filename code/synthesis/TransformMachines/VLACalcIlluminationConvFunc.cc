@@ -268,9 +268,11 @@ namespace casa{
     ap.aperture->set(0.0);
     //BeamCalc::Instance()->calculateAperture(&ap,inStokes);
     //cerr << ap.aperture->shape() << " " << inStokes << endl;
-    //BeamCalc::Instance()->calculateAperture(&ap);// The call in the absence of instokes allows the computation of all
-    BeamCalc::Instance()->calculateAperture(&ap,inStokes);// The call in the absence of instokes allows the computation of all
-						 // the four jones parameters at one time.
+
+    // If full-pol. imaging, compute all 4 pols., else only the one given by inStokes.
+    BeamCalc::Instance()->calculateAperture(&ap);// The call in the absence of instokes allows the computation of all
+    //BeamCalc::Instance()->calculateAperture(&ap,inStokes);// The call in the absence of instokes allows the computation of all
+                                                            // the four jones parameters at one time.
 }
   //
   //--------------------------------------------------------------------------
@@ -323,7 +325,7 @@ namespace casa{
     
     IPosition imsize(skyShape);
     CoordinateSystem uvCoords = makeUVCoords(skyCoords,imsize,freqHi);
-    
+
     index = uvCoords.findCoordinate(Coordinate::LINEAR);
     LinearCoordinate lc=uvCoords.linearCoordinate(index);
     Vector<Double> uvIncr = lc.increment();
@@ -335,6 +337,7 @@ namespace casa{
     //Vector<Int> intSkyShape=skyShape.asVector();
     setApertureParams(ap, Freq, pa, bandID, inStokes,
 		      skyShape, uvIncr);
+    
     regridApertureEngine(ap, inStokes);
     IPosition apertureShape(ap.aperture->shape());
 
@@ -723,7 +726,10 @@ namespace casa{
     //
     //skyMuller(uvgrid);
     Int tempmueller=-1; // Set to -1 to use sanjay's code which pass the regressions.
-    //tempmueller=0;
+    tempmueller=0;    // Full-pol. imaging is requested, use PJ's code.  Else use SB's.
+
+    //if (uvgrid.shape()(3) > 2) tempmueller=0;
+
     if (tempmueller==0)
       skyMuller(uvgrid,muellerTerm);
     else
@@ -832,11 +838,12 @@ namespace casa{
     Array<Complex> Jp,Jq,Jpq,Jqp;
 //    skyMuller(buf,shape, inStokes);
 
-    // // {
-    // //   skyJones.put(buf);
-    // //   String name("skyjones.im");
-    // //   storeImg(name,skyJones);
-    // // }
+    if (muellerTerm == 5)
+    {
+      skyJones.put(buf);
+      String name("skyjones5.im");
+      storeImg(name,skyJones);
+    }
     // Int index = skyJones.coordinates().findCoordinate(Coordinate::STOKES);
     // Int inStokes = skyJones.coordinates().stokesCoordinate(index).stokes()(0);
     // Array<Complex> buf=skyJones.get(),tmp;
@@ -880,13 +887,13 @@ namespace casa{
 	
 //  cout<<"The Jones Matrix has been normalized using:"<< sqrt(Normalizesq)<<"\n";
     skyJones.put(tmp);
-   ostringstream tt1;
-   String name1("skyjones_normalized_conj.im");
-   tt1 << name1 << "_"<< inStokes;
-   storeImg(String(tt1),skyJones);
-   // exit(0);
-   // skyJones.put(tmp);
-   cout<<"Finished writing the normalized conjugate sky jones \n";
+   // ostringstream tt1;
+   // String name1("skyjones_normalized_conj.im");
+   // tt1 << name1 << "_"<< inStokes;
+   // storeImg(String(tt1),skyJones);
+   // // exit(0);
+   // // skyJones.put(tmp);
+   // cout<<"Finished writing the normalized conjugate sky jones \n";
 		
 //    cout<<"Begining the compute of Mueller Matrix term images \n";
 
@@ -934,9 +941,9 @@ namespace casa{
               M0(s0)=Jpq*conj(Jpq);
           }
           skyJones.put(M0);
-          //String name2("M0.im");
-          //storeImg(name2,skyJones);
-	  //cout<<"Writing M0 to disk, muellerTerm : "<< muellerTerm <<"\n";
+          // String name2("M0.im");
+          // storeImg(name2,skyJones);
+	  // cout<<"Writing M0 to disk, muellerTerm : "<< muellerTerm <<"\n";
           M0.resize();
       }
       else if ((4<=muellerTerm)&&(muellerTerm<8))
@@ -955,9 +962,9 @@ namespace casa{
               M1(s0)=Jpq*conj(Jq);
           }
           skyJones.put(M1);
-          //String name3("M1.im");
-          //storeImg(name3,skyJones);
-	  //cout<<"Writing M1 to disk, muellerTerm : "<< muellerTerm <<"\n";
+          // String name3("M1.im");
+          // storeImg(name3,skyJones);
+	  // cout<<"Writing M1 to disk, muellerTerm : "<< muellerTerm <<"\n";
 	  M1.resize();
      }
      else if ((8<=muellerTerm)&&(muellerTerm<12))
@@ -976,9 +983,9 @@ namespace casa{
               M2(s0)=Jq*conj(Jpq);
           }
           skyJones.put(M2);
-          //String name4("M2.im");
-          //storeImg(name4,skyJones);
-          //cout<<"Writing M2 to disk, muellerTerm : "<< muellerTerm <<"\n";
+          // String name4("M2.im");
+          // storeImg(name4,skyJones);
+          // cout<<"Writing M2 to disk, muellerTerm : "<< muellerTerm <<"\n";
 	  M2.resize();
      }
      else if ((12<=muellerTerm)&&(muellerTerm<16))
@@ -997,9 +1004,9 @@ namespace casa{
               M3(s0)=Jq*conj(Jq);
           }
           skyJones.put(M3);
-          String name5("M3.im");
-          storeImg(name5,skyJones);
-          cout<<"Writing M3 to disk, muellerTerm : "<< muellerTerm <<"\n";
+          // String name5("M3.im");
+          // storeImg(name5,skyJones);
+          // cout<<"Writing M3 to disk, muellerTerm : "<< muellerTerm <<"\n";
 	  M3.resize();
      }
 //    cout<<"Mueller Matrix row computation complete \n";	

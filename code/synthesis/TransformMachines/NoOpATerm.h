@@ -102,8 +102,8 @@ namespace casa{
 		  )
     {return 0;};
 
-    void cacheVBInfo(const VisBuffer& )
-    {};
+    void cacheVBInfo(const String& telescopeName, const Float& diameter) {};
+    void cacheVBInfo(const VisBuffer& )    {};
 
     virtual void normalizeImage(Lattice<Complex>& ,//skyImage,
 				const Matrix<Float>& // weights
