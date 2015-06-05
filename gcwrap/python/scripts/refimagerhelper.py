@@ -627,14 +627,59 @@ class PyParallelCubeSynthesisImager():
         self.weightpars = params.getWeightPars()
         self.decpars = params.getDecPars()
         self.iterpars = params.getIterPars()
-        
+        alldataimpars={}
+         
         self.PH = PyParallelImagerHelper()
         self.NN = self.PH.NN
         self.listOfNodes = self.PH.getNodeList();
         ## Partition both data and image coords the same way.
-        self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
-        self.allimpars = self.PH.partitionCubeDeconvolution(allimagepars)
+        #self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
+        #self.allimpars = self.PH.partitionCubeDeconvolution(allimagepars)
 
+        # to define final image coordinates, run selecdata and definemage
+        self.SItool = casac.synthesisimager()
+        #print "allselpars=",allselpars
+        for mss in sorted( allselpars.keys() ):
+            self.SItool.selectdata( allselpars[mss] )
+        for fid in sorted( allimagepars.keys() ):
+            self.SItool.defineimage( allimagepars[fid], self.allgridpars[fid] )
+            # insert coordsys record in imagepars 
+            # partionCubeSelection works per field ...
+            allimagepars[fid]['csys'] = self.SItool.getcsys()
+            alldataimpars[fid] = self.PH.partitionCubeSelection(allselpars,allimagepars[fid])
+
+        # reorganize allselpars and allimpars for partitioned data        
+        synu = casac.synthesisutils()
+        self.allselpars={}
+        self.allimpars={}
+        ###print "self.listOfNodes=",self.listOfNodes
+        # Repack the data/image parameters per node
+        #  - internally it stores zero-based node ids
+        #  
+        for ipart in self.listOfNodes:
+            # convert to zero-based indexing for nodes
+            nodeidx = str(ipart-1)
+            selparsPerNode= {nodeidx:{}}
+            imparsPerNode= {nodeidx:{}}
+            for fid in allimagepars.iterkeys():
+                for ky in alldataimpars[fid][nodeidx].iterkeys():
+                    selparsPerNode[nodeidx][fid]={}
+                    if ky.find('ms')==0:
+                        # data sel per field
+                        selparsPerNode[nodeidx][fid][ky] = alldataimpars[fid][nodeidx][ky].copy();
+                        if alldataimpars[fid][nodeidx][ky]['spw']=='-1':
+                            selparsPerNode[nodeidx][fid][ky]['spw']=''
+
+            imparsPerNode[nodeidx][fid] = allimagepars[fid].copy()
+            imparsPerNode[nodeidx][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
+            imparsPerNode[nodeidx][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
+            imparsPerNode[nodeidx]=synu.updateimpars(imparsPerNode[nodeidx])
+            self.allselpars.update(selparsPerNode)
+            self.allimpars.update(imparsPerNode)
+
+        #print "self.allimpars IN init>>>> ",self.allimpars
+
+        
         joblist=[]
         #### MPIInterface related changes
         #for node in range(0,self.NN):
@@ -644,20 +689,23 @@ class PyParallelCubeSynthesisImager():
             
 
     def initializeImagers(self):
+        #print "self.allimpars IN initImager=====",self.allimpars
         joblist=[]
         #### MPIInterface related changes
         #for node in range(0,self.NN):
         for node in self.listOfNodes:
 
             joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
-            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
-            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
-            joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node-1)]['0'])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node-1)])+")", node) )
+            #joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars[str(node-1)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
 
             joblist.append( self.PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
+
             joblist.append( self.PH.runcmd("imager.initializeImagers()", node) )
 
         self.PH.checkJobs( joblist )
@@ -677,6 +725,16 @@ class PyParallelCubeSynthesisImager():
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeNormalizers()", node) )
         self.PH.checkJobs( joblist )
+
+    def setWeighting(self):
+
+        ## Set weight parameters and accumulate weight density (natural)
+        joblist=[];
+        for node in self.listOfNodes:
+            ## Set weighting pars
+            joblist.append( self.PH.runcmd("imager.setWeighting()", node ) )
+        self.PH.checkJobs( joblist )
+
 
     def initializeIterationControl(self):
         joblist=[]
@@ -909,7 +967,7 @@ class PyParallelImagerHelper():
 #############################################
     def partitionCubeSelection(self, oneselpars={}, oneimpars={}):
         incsys = oneimpars['csys']
-        nchan = oneimpars['0']['nchan']
+        nchan = oneimpars['nchan']
         synu = casac.synthesisutils()
         allpars = synu.cubedataimagepartition(oneselpars, incsys, self.NN, nchan)
         synu.done()

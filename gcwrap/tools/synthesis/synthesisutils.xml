@@ -233,6 +233,25 @@ siu.cubedatapartition(selprs=pars, npart=20, fstart="1.412787GHz", fend="1.41328
 <returns type="record"/>
 </method>
 
+<!-- ===================================== -->                                                                                                   
+<!-- ===================================== -->                                                                                                   
+                                                                                                                                                 
+   <method type="function" name="updateimpars">                                                                                                  
+   <shortdescription>check the consistency between the csys record and other impars and update/modify impars if necessary</shortdescription>     
+                                                                                                                                                 
+<description>                                                                                                                                    
+</description>                                                                                                                                   
+<input>                                                                                                                                          
+     <param type="record" name="impars">                                                                                                         
+     <description>All image parameters of one image-field</description>                                                                          
+     <value type="record"></value>                                                                                                               
+     </param>                                                                                                                                    
+                                                                                                                                                 
+</input>                                                                                                                                         
+<returns type="record"/>                                                                                                                         
+</method>                                                                                                                                        
+                                                                                                                                                 
+                                           
 <!-- ===================================== -->
 <!-- ===================================== -->
 

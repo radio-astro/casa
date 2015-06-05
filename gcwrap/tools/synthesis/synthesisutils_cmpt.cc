@@ -180,6 +180,24 @@ synthesisutils::~synthesisutils()
   return rstat;
 }
 
+  casac::record*  synthesisutils::updateimpars(const casac::record& impars)
+{
+   casac::record* rstat(0);
+
+  try
+    {
+      SynthesisParamsImage pars;
+      casa::Record recpars = *toRecord( impars );
+      rstat = fromRecord( pars.updateParams( recpars ) );
+    }
+  catch  (AipsError x)
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
 /***
  bool 
  synthesisutils::makeimage(const casac::record& impars, const casac::record& selpars, const string& msname)

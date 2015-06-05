@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     cerr<<"cs.findCoord spec="<<cs.findCoordinate(Coordinate::SPECTRAL)<<endl;
     //cerr<<"cs2Rec.nfields()="<<cs2Record.nfields()<<" cs2Rec="<<cs2Record<<endl;
     impars.csysRecord=cs2Record;
-    cerr<<"Set impars.csysRecord="<<impars.csysRecord<<endl;
+    cerr<<"Set modified csys to impars.csysRecord="<<impars.csysRecord<<endl;
     CoordinateSystem cs2=impars.buildCoordinateSystem(&vi);
     cerr<<"cs2.findCoord spec="<<cs2.findCoordinate(Coordinate::SPECTRAL)<<endl;
     cs2.save(cs2Record2,"coordsys2");
@@ -149,6 +149,7 @@ int main(int argc, char **argv)
          Record newcsrec;
          Record newcsrec2;
          oCs[i].save(newcsrec,"coordsys");
+         impars.csysRecord=newcsrec;
          CoordinateSystem newcs = impars.buildCoordinateSystem(&vi);
          newcs.save(newcsrec2,"coordsys");
          cerr<<" rec no = "<<i<<" new cs ="<<newcsrec2<<endl; 

@@ -1280,8 +1280,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             //cerr<<"HAS CSYS KEY"<<endl;
             if( inrec.dataType("csys")==TpRecord )
               {
-                //cerr<<"CSYS is record...."<<endl;
-                csysRecord = inrec.subRecord("csys");
+                //csysRecord = inrec.subRecord("csys");
+                csysRecord.defineRecord("coordsys",inrec.subRecord("csys"));
               }
             if( inrec.isDefined("imshape") ) 
               {
@@ -1608,7 +1608,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Record subRec1;
         //cerr<<"USE THE EXISTING CSYS +++++++++++++++++"<<endl;
         CoordinateSystem *csysptr = CoordinateSystem::restore(csysRecord,"coordsys");
-        //cerr<<" spectral axis="<<csysptr->findCoordinate(Coordinate::SPECTRAL)<<endl;
         //csys = *csysptr; 
         //CoordinateSystem csys(*csysptr); 
         csys = *csysptr;
@@ -1852,7 +1851,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //store back csys to impars record
     //cerr<<"save csys to csysRecord..."<<endl;
     csys.save(csysRecord,"coordsys");
-    //cerr<<"new csysRecord ="<<csysRecord<<endl;
+    //cerr<<"BUILDCOORDSYS:: new csysRecord ="<<csysRecord<<endl;
     // imshape
     imshape.resize(4);
     imshape[0] = imsize[0];
