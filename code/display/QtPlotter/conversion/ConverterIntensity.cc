@@ -313,7 +313,7 @@ namespace casa {
 
 				}
 			} else {
-				qDebug() << "Unrecognized units:"<<oldUnits;
+				//qDebug() << "Unrecognized units:"<<oldUnits;
 			}
 		}
 		return convertedValue;
