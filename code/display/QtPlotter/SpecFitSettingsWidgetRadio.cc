@@ -558,10 +558,16 @@ namespace casa {
 			//CAS-7533 Post a warning if channel range is too small.
 			int channelRange = qAbs( endChannelIndex - startChannelIndex );
 			QString chanWarning("");
-			if ( channelRange <= 3 ){
+			if ( channelRange <= 1 && nGauss >= 1 ){
+			  QString errorMsg( "The channel range is too narrow to fit.");
+			  postStatus( errorMsg.toStdString().c_str() );
+			  Util::showUserMessage( errorMsg, this );
+			  return;
+			}
+			else if ( channelRange <= 3 ){
 				chanWarning = "Fit may not be valid due to narrow channel range.";
 			}
-			if ( startChannelIndex > endChannelIndex ){
+			else if ( startChannelIndex > endChannelIndex ){
 				int tmp = startChannelIndex;
 				startChannelIndex = endChannelIndex;
 				endChannelIndex = tmp;
