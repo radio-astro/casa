@@ -179,7 +179,10 @@ def gpcal_score(gpcal_stats):
 
     '''Calculate scores for phasee statistics.'''
 
-    gpcal_scores = {'SCORES': {'TOTAL': 1.0, 'XY_TOTAL': 1.0, 'X2X1_TOTAL': 1.0}}
+    gpcal_scores = {'SCORES': \
+        {'TOTAL': {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}, \
+         'XY_TOTAL': {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}, \
+         'X2X1_TOTAL': {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}}}
     gpcal_scores['FIELDS'] = copy.deepcopy(gpcal_stats['FIELDS'])
     gpcal_scores['SPWS'] = copy.deepcopy(gpcal_stats['SPWS'])
     gpcal_scores['ANTENNAS'] = copy.deepcopy(gpcal_stats['ANTENNAS'])
@@ -198,9 +201,9 @@ def gpcal_score(gpcal_stats):
 
         if fieldId not in gpcal_scores['SCORES']:
             gpcal_scores['SCORES'][fieldId] = {}
-            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = 1.0
-            gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = 1.0
-            gpcal_scores['SCORES'][fieldId]['TOTAL'] = 1.0
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}
+            gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}
+            gpcal_scores['SCORES'][fieldId]['TOTAL'] = {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 1.0}
 
         for spwId in gpcal_stats['STATS'][fieldId].iterkeys():
 
@@ -214,16 +217,17 @@ def gpcal_score(gpcal_stats):
 
                 try:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = xyScorer(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
-                    fieldXYMetrics.append(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
-                    totalXYMetrics.append(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
+                    currentXYContextScore = {'FIELD': fieldId, 'SPW': spwId, 'ANTENNA': antId, 'SCORE': gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY']}
+                    fieldXYMetrics.append({'FIELD': fieldId, 'SPW': spwId, 'ANTENNA': antId, 'METRIC': gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)']})
+                    totalXYMetrics.append({'FIELD': fieldId, 'SPW': spwId, 'ANTENNA': antId, 'METRIC': gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)']})
                     #gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = \
-                    #    min(gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #    filters.minDict([gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], currentXYContextScore], 'SCORE')
                     #gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
-                    #    min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #    filters.minDict([gpcal_scores['SCORES'][fieldId]['TOTAL'], currentXYContextScore], 'SCORE')
                     #gpcal_scores['SCORES']['XY_TOTAL'] = \
-                    #    min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #    filters.minDict([gpcal_scores['SCORES']['XY_TOTAL'], currentXYContextScore], 'SCORE')
                     #gpcal_scores['SCORES']['TOTAL'] = \
-                    #    min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #    filters.minDict([gpcal_scores['SCORES']['TOTAL'], currentXYContextScore], 'SCORE')
                 except Exception as e:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = 'C/C'
                     # Don't count this in the totals since it is likely due to missing solutions because of
@@ -231,32 +235,34 @@ def gpcal_score(gpcal_stats):
 
                 try:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = x2x1Scorer(gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'])
+                    currentX2X1ContextScore = {'FIELD': fieldId, 'SPW': spwId, 'ANTENNA': antId, 'SCORE': gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1']}
                     gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = \
-                        min(gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                        filters.minDict([gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'], currentX2X1ContextScore], 'SCORE')
                     gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
-                        min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                        filters.minDict([gpcal_scores['SCORES'][fieldId]['TOTAL'], currentX2X1ContextScore], 'SCORE')
                     gpcal_scores['SCORES']['X2X1_TOTAL'] = \
-                        min(gpcal_scores['SCORES']['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
-
+                        filters.minDict([gpcal_scores['SCORES']['X2X1_TOTAL'], currentX2X1ContextScore], 'SCORE')
                     gpcal_scores['SCORES']['TOTAL'] = \
-                        min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
+                        filters.minDict([gpcal_scores['SCORES']['TOTAL'], currentX2X1ContextScore], 'SCORE')
                 except Exception as e:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = 'C/C'
                     # Don't count this in the totals since it is likely due to missing solutions because of
                     # flagged antennas. Need to decide how to account for these cases.
 
-        fieldXYMetrics = filters.outlierFilter(fieldXYMetrics, 5.0)
+        fieldXYMetrics = filters.outlierDictFilter(fieldXYMetrics, 'METRIC', 5.0)
         if (len(fieldXYMetrics) > 0):
-            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = xyScorer(max(fieldXYMetrics))
-            gpcal_scores['SCORES'][fieldId]['TOTAL'] = min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId]['XY_TOTAL'])
+            maxFieldXYMetric = filters.maxDict(fieldXYMetrics, 'METRIC')
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = {'FIELD': maxFieldXYMetric['FIELD'], 'SPW': maxFieldXYMetric['SPW'], 'ANTENNA': maxFieldXYMetric['ANTENNA'], 'SCORE': xyScorer(maxFieldXYMetric['METRIC'])}
+            gpcal_scores['SCORES'][fieldId]['TOTAL'] = filters.minDict([gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId]['XY_TOTAL']], 'SCORE')
         else:
-            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = 'C/C'
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 'C/C'}
 
-    totalXYMetrics = filters.outlierFilter(totalXYMetrics, 5.0)
+    totalXYMetrics = filters.outlierDictFilter(totalXYMetrics, 'METRIC', 5.0)
     if (len(totalXYMetrics) > 0):
-        gpcal_scores['SCORES']['XY_TOTAL'] = xyScorer(max(totalXYMetrics))
-        gpcal_scores['SCORES']['TOTAL'] = min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES']['XY_TOTAL'])
+        maxTotalXYMetric = filters.maxDict(totalXYMetrics, 'METRIC')
+        gpcal_scores['SCORES']['XY_TOTAL'] = {'FIELD': maxTotalXYMetric['FIELD'], 'SPW': maxTotalXYMetric['SPW'], 'ANTENNA': maxTotalXYMetric['ANTENNA'], 'SCORE': xyScorer(maxTotalXYMetric['METRIC'])}
+        gpcal_scores['SCORES']['TOTAL'] = filters.minDict([gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES']['XY_TOTAL']], 'SCORE')
     else:
-        gpcal_scores['SCORES']['XY_TOTAL'] = 'C/C'
+        gpcal_scores['SCORES']['XY_TOTAL'] = {'FIELD': 'N/A', 'SPW': 'N/A', 'ANTENNA': 'N/A', 'SCORE': 'C/C'}
 
     return gpcal_scores

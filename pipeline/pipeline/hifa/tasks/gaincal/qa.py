@@ -26,8 +26,8 @@ class TimegaincalQAPool(pqa.QAScorePool):
         self.pool[:] = [self._get_qascore(ms, phase_field_ids, t) for t in self.score_types.iterkeys()]
 
     def _get_qascore(self, ms, phase_field_ids, score_type):
-        (total_score, table_name, ant_id, spw_id) = self._get_total(phase_field_ids, self.score_types[score_type][0])
-        longmsg = 'Total score for %s is %0.2f (%s %s spw %s)' % (self.score_types[score_type][1], total_score, ms.basename, ant_id, spw_id)
+        (total_score, table_name, field_name, ant_name, spw_name) = self._get_total(phase_field_ids, self.score_types[score_type][0])
+        longmsg = 'Total score for %s is %0.2f (%s field %s %s spw %s)' % (self.score_types[score_type][1], total_score, ms.basename, field_name, ant_name, spw_name)
         shortmsg = self.short_msg[score_type]
         return pqa.QAScore(total_score, longmsg=longmsg, shortmsg=shortmsg, 
                            vis=ms.basename)
@@ -37,21 +37,23 @@ class TimegaincalQAPool(pqa.QAScorePool):
         # attrs to hold score and QA identifiers
         total_score = 1.0
         total_table_name = None
-        total_ant_id = 'N/A'
-        total_spw_id = 'N/A'
+        total_field_name = 'N/A'
+        total_ant_name = 'N/A'
+        total_spw_name = 'N/A'
 
         for table_name in self.qa_results_dict.iterkeys():
             qa_result = self.qa_results_dict[table_name]
             for field_id in phase_field_ids:
-                qa_score = qa_result['QASCORES']['SCORES'][field_id][score_key]
-                if (qa_score != 'C/C'):
-                    if (qa_score < total_score):
-                        total_score = qa_score
+                qa_context_score = qa_result['QASCORES']['SCORES'][field_id][score_key]
+                if (qa_context_score['SCORE'] != 'C/C'):
+                    if (qa_context_score['SCORE'] < total_score):
+                        total_score = qa_context_score['SCORE']
+                        total_field_name = qa_result['QASCORES']['FIELDS'][qa_context_score['FIELD']]
+                        total_ant_name = qa_result['QASCORES']['ANTENNAS'][qa_context_score['ANTENNA']]
+                        total_spw_name = qa_result['QASCORES']['SPWS'][qa_context_score['SPW']]
                         total_table_name = table_name
-                        #total_ant_id = qa_result['QASCORES']['ANTENNAS'][ant_id]
-                        #total_spw_id = qa_result['QASCORES']['SPWS'][spw_id]
 
-        return (total_score, total_table_name, total_ant_id, total_spw_id)
+        return (total_score, total_table_name, total_field_name, total_ant_name, total_spw_name)
 
 
 class TimegaincalQAHandler(pqa.QAResultHandler):
