@@ -437,8 +437,10 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 	lastIndex_p=0;
 	msId_p=vb.msId();
       }
-      pointIndex=getIndex(act_mspc, vb.time()(row), 
-			  vb.timeInterval()(row));
+      pointIndex=getIndex(act_mspc, vb.time()(row));
+      if(pointIndex < 0)
+	pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+      
     }
     if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
       ostringstream o;
@@ -910,7 +912,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   else*/
   {
     Matrix<Double> xyPositions(2, endRow-startRow+1);
-    xyPositions=-10.0; // make sure failed getXYPos does not fall on grid
+    xyPositions=-1e9; // make sure failed getXYPos does not fall on grid
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(getXYPos(vb, rownr)) {
 	xyPositions(0, rownr)=xyPos(0);
@@ -1065,7 +1067,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
   else*/ 
   {
     Matrix<Double> xyPositions(2, endRow-startRow+1);
-    xyPositions=0.0;
+    xyPositions=-1e9;
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       if(getXYPos(vb, rownr)) {
 	xyPositions(0, rownr)=xyPos(0);
@@ -1337,8 +1339,9 @@ void SDGrid::ok() {
 // One could cure this by searching but it would be considerably
 // costlier.
 Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		     const Double& /*interval*/) {
+		     const Double& interval) {
   Int start=lastIndex_p;
+  Double tol=interval < 0.0 ? time*C::dbl_epsilon : interval/2.0;
   // Search forwards
   Int nrows=mspc.time().nrow();
   for (Int i=start;i<nrows;i++) {
@@ -1353,8 +1356,7 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
     else {
       // Is the midpoint of this pointing table entry within the specified
       // tolerance of the main table entry?
-      //if(abs(midpoint-time) < (mspc.interval()(i)/2.0)) {
-      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0)) {
+      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0+tol)) {
       	lastIndex_p=i;
 	return i;
       }
@@ -1370,8 +1372,7 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
     else {
       // Is the midpoint of this pointing table entry within the specified
       // tolerance of the main table entry?
-      //if(abs(midpoint-time) < (mspc.interval()(i)/2.0)) {
-      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0)) {
+      if(abs(midpoint-time) <= (mspc.interval()(i)/2.0+tol)) {
 	lastIndex_p=i;
 	return i;
       }
@@ -1394,8 +1395,10 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       lastIndex_p=0;
       msId_p=vb.msId();
     }
-    pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
-    
+    pointIndex=getIndex(act_mspc, vb.time()(row));
+    //Try again to locate a pointing within the integration 
+    if(pointIndex <0)
+      pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
   }
   if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
     ostringstream o;
@@ -1501,7 +1504,6 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
 
   return result;
-
   // Convert to pixel coordinates
 }
 

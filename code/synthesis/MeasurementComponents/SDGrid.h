@@ -289,7 +289,7 @@ private:
   Int msId_p;
 
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
-	       const Double& interval);
+	       const Double& interval=-1.0);
 
   Bool getXYPos(const VisBuffer& vb, Int row);
 
