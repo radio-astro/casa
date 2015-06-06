@@ -68,7 +68,6 @@ namespace casa{
     // clone->show("####CLONE: ",cerr);
     return clone;
   }
-
   void CFBuffer::allocCells(const Cube<CountedPtr<CFCell> >& cells)
   {
     IPosition shp(cells.shape());
@@ -143,6 +142,8 @@ namespace casa{
 		cfCells_p(i,j,k)->freqIncr_p = freqIncr;
 		cfCells_p(i,j,k)->wValue_p = wValues(j);
 		cfCells_p(i,j,k)->muellerElement_p = muellerElements_p(prow)(pcol);
+		cfCells_p(i,j,k)->xSupport_p = 0;
+		cfCells_p(i,j,k)->ySupport_p = 0;
 		k++;
 	      }
 	}
@@ -497,9 +498,6 @@ namespace casa{
 
   void CFBuffer::initPolMaps(PolMapType& polMap, PolMapType& conjPolMap) 
   {
-    // cerr << polMap << endl;
-    // cerr << muellerElementsIndex_p << endl;
-
     muellerElementsIndex_p.assign(polMap);
     conjMuellerElementsIndex_p.assign(conjPolMap);
   }

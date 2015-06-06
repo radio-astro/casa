@@ -838,12 +838,12 @@ namespace casa{
     Array<Complex> Jp,Jq,Jpq,Jqp;
 //    skyMuller(buf,shape, inStokes);
 
-    if (muellerTerm == 5)
-    {
-      skyJones.put(buf);
-      String name("skyjones5.im");
-      storeImg(name,skyJones);
-    }
+    // if (muellerTerm == 5)
+    // {
+    //   skyJones.put(buf);
+    //   String name("skyjones5.im");
+    //   storeImg(name,skyJones);
+    // }
     // Int index = skyJones.coordinates().findCoordinate(Coordinate::STOKES);
     // Int inStokes = skyJones.coordinates().stokesCoordinate(index).stokes()(0);
     // Array<Complex> buf=skyJones.get(),tmp;

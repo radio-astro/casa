@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CFStore2& operator=(const CFStore2& other);
     //-------------------------------------------------------------------------
-    void show(const char *Mesg=NULL,ostream &os=cerr);
+    void show(const char *Mesg=NULL,ostream &os=cerr, const Bool verbose=False);
     //-------------------------------------------------------------------------
     void makePersistent(const char *dir,const char *name="", const char *qualifier="");
     //-------------------------------------------------------------------------

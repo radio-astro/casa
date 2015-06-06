@@ -50,7 +50,7 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void CFStore2::show(const char *Mesg, ostream& os)
+  void CFStore2::show(const char *Mesg, ostream& os, const Bool verbose)
   {
     if (!null())
       {
@@ -60,6 +60,11 @@ namespace casa{
 	os << "Ant2: " << ant2_p << endl;
 	os << "PA = "; for (uInt i=0;i<pa_p.nelements();i++)
 			 os << pa_p[i].get("deg") << endl;
+
+	if (verbose)
+	  for (int i=0; i<storage_p.shape()(0); i++)
+	    for(int j=0;j<storage_p.shape()(1);j++)
+	      storage_p(i,j)->show(Mesg,os);
       }
   };
   //

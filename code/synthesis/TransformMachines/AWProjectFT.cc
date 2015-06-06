@@ -1151,9 +1151,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	Vector<Int> visPolMap(vb.corrType());
 
-	// PolMapType polMat, conjPolMat;
-	// polMat = pop_p->makePolMat(visPolMap,polMap);
-	// conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
+	PolMapType polMat, conjPolMat;
+	polMat = pop_p->makePolMat(visPolMap,polMap);
+	conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
 
 	PolMapType pNdx, cpNdx;
 	pNdx = pop_p->makePol2CFMat(visPolMap,polMap);

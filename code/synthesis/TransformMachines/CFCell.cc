@@ -85,11 +85,11 @@ namespace casa{
   {
     LogIO log_l(LogOrigin("CFCell","makePersistent[R&D]"));
     String name(dir);
-    // if (cfShape_p.nelements() == 0)
-    //   {
-    // 	log_l << "Skipping making " << name << " persistent." << LogIO::WARN << LogIO::POST;
-    // 	return;
-    //   }
+    if (cfShape_p.nelements() == 0)
+      {
+    	//log_l << "Skipping making " << name << "/" << cfName << " persistent." << LogIO::WARN << LogIO::POST;
+    	return;
+      }
 
     // if (fileName_p != "" )name = "test.cf/"+fileName_p;
     String tt=fileName_p;

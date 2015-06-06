@@ -166,7 +166,7 @@ namespace casa{
 	  IPosition cfbShp=cfb.getShape();
 	  for (Int iw=0; iw<cfbShp[1]; iw++)
 	    {
-	      log_l << "Support Size (w: "<< iw <<",C): ";
+	      log_l << "Support Size (w:"<< iw << ", PA:" << iPA << ", BL:" << iBL << ", C:*): ";
 	      {
 		for (Int inu=0; inu<cfbShp[0]; inu++)
 		  {
@@ -228,6 +228,8 @@ namespace casa{
 
     fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA);
     fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA);
+    // memCache2_p[0].show("Re-load CFS",cerr);
+    // memCacheWt2_p[0].show("Re-load WTCFS",cerr);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
 
@@ -241,6 +243,8 @@ namespace casa{
     summarize(memCacheWt2_p, "WTCFS", False);
 
     log_l << "Total CF Cache memory footprint: " << (memUsed0+memUsed1) << " (" << memUsed0 << "," << memUsed1 << ") KB" << LogIO::POST;
+    // memCache2_p[0].makePersistent("./junk.cf");
+    // memCacheWt2_p[0].makePersistent("./junk.cf","","WT");
   }
   //
   //-----------------------------------------------------------------------
