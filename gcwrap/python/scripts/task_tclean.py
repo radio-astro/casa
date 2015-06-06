@@ -285,6 +285,13 @@ def tclean(
         ## Init major cycle elements
         t0=time.time();
         imager.initializeImagers()
+    
+        # Construct the CFCache for AWProject-class of FTMs.  For
+        # other choices the following three calls become NoOps.
+        # imager.dryGridding();
+        # imager.fillCFCache();
+        # imager.reloadCFCache();
+
         imager.initializeNormalizers()
         imager.setWeighting()
         t1=time.time();

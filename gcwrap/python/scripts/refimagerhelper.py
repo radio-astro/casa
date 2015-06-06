@@ -102,7 +102,7 @@ class PySynthesisImager:
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
 
 
-        #self.makeCFCache(exists);
+        self.makeCFCache(exists);
 
 #############################################
 
@@ -422,25 +422,25 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ## Initialize the tool for the current node
             self.PH.runcmd("toolsi = casac.synthesisimager()", node)
 
-        # nodes=[1];
-        # for node in nodes:
-        #     for mss in sorted( self.selpars.keys() ):
-        #         joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
-        # self.PH.checkJobs(joblist);
+        nodes=[1];
+        for node in nodes:
+            for mss in sorted( self.selpars.keys() ):
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
+        self.PH.checkJobs(joblist);
 
-        # joblist=[];
-        # for node in nodes:
-        #     for fld in range(0,self.NF):
-        #         # for fld in range(0,self.NF):
-        #         #     self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
-        #         cmd="toolsi.defineimage( impars=" + str( self.allimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")";
-        #         # print "#!$#!%#!$#@$#@$ ",node," ",cmd;
-        #         joblist.append( self.PH.runcmd(cmd, node ) );
-        # self.PH.checkJobs(joblist);
+        joblist=[];
+        for node in nodes:
+            for fld in range(0,self.NF):
+                # for fld in range(0,self.NF):
+                #     self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
+                cmd="toolsi.defineimage( impars=" + str( self.allimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")";
+                # print "#!$#!%#!$#@$#@$ ",node," ",cmd;
+                joblist.append( self.PH.runcmd(cmd, node ) );
+        self.PH.checkJobs(joblist);
 
-        # self.dryGridding();
+        self.dryGridding();
 
-        # self.deleteImagers();
+        self.deleteImagers();
 
 ######################################################################################################################################
         joblist=[];
@@ -464,15 +464,16 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                     nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
 ###                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
 ###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
-                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
+
+#                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
                     # # Give the same CFCache name to all nodes
-                    # ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
+                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
 
-        # self.fillCFCache();
-        # self.reloadCFCache();
+        self.fillCFCache();
+        self.reloadCFCache();
 
 #############################################
 
