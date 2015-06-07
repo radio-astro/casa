@@ -962,7 +962,8 @@ class PyParallelImagerHelper():
 
         #n0=int(nCF/self.NN);
         n0=int(nCF/nProcs);
-        if (nProces < nCF) n0 = min(nCF,n0);
+        if (nProces < nCF):
+            n0 = min(nCF,n0);
         allcfs = {};
         nUsed=0; i=1;
         while (nUsed < nCF):
