@@ -550,8 +550,6 @@ class imfit_test(unittest.TestCase):
             myia = iatool()
             myia.open(convolved_model)
             res = myia.fitcomponents(estimates=estimates_convolved, box=box)
-            print "** image " + convolved_model
-            print "*** estimates " + estimates_convolved
             myia.done()
             return res
         def run_imfit():
@@ -619,6 +617,15 @@ class imfit_test(unittest.TestCase):
                 near(got, expected, epsilon),
                 test + "Position angle test failure, got " + str(got) + " expected " + str(expected)
             )
+
+        # test empty estimates file throws exception
+        myest = "empty.txt"
+        f = open(myest,"w")
+        f.close()
+        myia = iatool()
+        myia.open(convolved_model)
+        self.assertRaises(Exception, myia.fitcomponents, estimates=myest, box=box)
+        myia.done()
 
     def test_position_errors(self):
         '''Imfit: Test position errors'''
