@@ -80,7 +80,7 @@ String FitterEstimatesFileParser::getContents() const {
 void FitterEstimatesFileParser::_parseFile(
 	const RegularFile& myFile
 ) {
-	_log->origin(LogOrigin("FitterEstimatesFileParser","_parseFile"));
+	_log->origin(LogOrigin("FitterEstimatesFileParser",__func__));
 
 	RegularFileIO fileIO(myFile);
 	// I doubt a genuine estimates file will ever have this many characters
@@ -101,22 +101,23 @@ void FitterEstimatesFileParser::_parseFile(
 	Vector<String> lines = stringToVector(_contents, '\n');
 	Regex blankLine("^[ \n\t\r\v\f]+$",1000);
 	uInt componentIndex = 0;
-	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
+	Vector<String>::iterator end = lines.end();
+	String filename = myFile.path().dirName() + "/" + myFile.path().baseName();
+	for(Vector<String>::iterator iter=lines.begin(); iter!=end; iter++) {
 		if (iter->empty() || iter->firstchar() == '#' ||  iter->matches(blankLine)) {
 			// ignore comments and blank lines
 			continue;
 		}
 		uInt commaCount = iter->freq(',');
-		if (commaCount < 5 || commaCount > 6) {
-			*_log << "bad format for line " << *iter << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			commaCount < 5 || commaCount > 6,
+			"bad format for line " + *iter
+		);
 		Vector<String> parts = stringToVector(*iter);
 		for (Vector<String>::iterator viter = parts.begin(); viter != parts.end(); viter++) {
 			viter->trim();
 		}
-		String filename = myFile.path().dirName() + "/" + myFile.path().baseName();
 		String peak = parts[0];
-//		String flux = parts[0];
 		String xpos = parts[1];
 		String ypos = parts[2];
 		String maj = parts[3];
@@ -125,7 +126,6 @@ void FitterEstimatesFileParser::_parseFile(
 
 		String fixedMask;
 		_peakValues.resize(componentIndex + 1, True);
-//		fluxValues.resize(componentIndex + 1, True);
 		_xposValues.resize(componentIndex + 1, True);
 		_yposValues.resize(componentIndex + 1, True);
 		_majValues.resize(componentIndex + 1, True);
@@ -133,11 +133,11 @@ void FitterEstimatesFileParser::_parseFile(
 		_paValues.resize(componentIndex + 1, True);
 		_fixedValues.resize(componentIndex + 1, True);
 
-		if (! peak.matches(RXdouble) ) {
-			*_log << "File " << filename << ", line " << *iter
-				<< ": peak value " << peak << " is not numeric"
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! peak.matches(RXdouble),
+			"File " + filename + ", line " + *iter
+				+ ": peak value " + peak + " is not numeric"
+		);
 		_peakValues(componentIndex) = String::toDouble(peak);
 
 		if (! xpos.matches(RXdouble) ) {
@@ -155,27 +155,27 @@ void FitterEstimatesFileParser::_parseFile(
 		_yposValues(componentIndex) = String::toDouble(ypos);
 
 		Quantity majQuantity;
-		if (! readQuantity(majQuantity, maj)) {
-			*_log << "File " << filename << ", line " << *iter
-				<< ": Major axis value " << maj << " is not a quantity"
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! readQuantity(majQuantity, maj),
+			"File " + filename + ", line " + *iter
+				+ ": Major axis value " + maj + " is not a quantity"
+		);
 		_majValues(componentIndex) = majQuantity;
 
 		Quantity minQuantity;
-		if (! readQuantity(minQuantity, min)) {
-			*_log << "File " << filename << ", line " << *iter
-				<< ": Major axis value " << min << " is not a quantity"
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! readQuantity(minQuantity, min),
+			"File " + filename + ", line " + *iter
+				+ ": Major axis value " + min + " is not a quantity"
+		);
 		_minValues(componentIndex) = minQuantity;
 
 		Quantity paQuantity;
-		if (! readQuantity(paQuantity, pa)) {
-			*_log << "File " << filename << ", line " << *iter
-				<< ": Position angle value " << pa << " is not a quantity"
-				<< LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! readQuantity(paQuantity, pa),
+			"File " + filename + ", line " + *iter
+				+ ": Position angle value " + pa + " is not a quantity"
+		);
 		_paValues(componentIndex) = paQuantity;
 
 		if (parts.size() == 7) {
@@ -197,6 +197,7 @@ void FitterEstimatesFileParser::_parseFile(
 		_fixedValues(componentIndex) = fixedMask;
 		componentIndex++;
 	}
+	ThrowIf(componentIndex == 0, "No valid estmates were found in file " + filename);
 }
 
 void FitterEstimatesFileParser::_createComponentList(
