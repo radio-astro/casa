@@ -412,9 +412,10 @@ class MeasurementSet(object):
     def get_alma_corrstring(self):
         '''Get correlation string for ALMA'''
         
-        datadescs = [dd for dd in self.data_descriptions]
+        sci_spwlist = self.get_spectral_windows(science_windows_only=True)
+        sci_spwids = [spw.id for spw in sci_spwlist]
         
-        numpols = len(datadescs[0].polarizations)
+        datadescs = [dd for dd in self.data_descriptions if dd.spw.id in sci_spwids]
         
         if numpols == 1:
             corrstring= 'XX'
