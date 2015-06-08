@@ -94,7 +94,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     @property
     def tlimit(self):
         if self._tlimit is None:
-            return 2.0
+            return 1.0
         return self._tlimit
 
     @tlimit.setter
