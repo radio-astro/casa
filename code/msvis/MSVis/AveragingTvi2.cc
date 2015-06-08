@@ -1983,8 +1983,7 @@ VbAvg::startChunk (ViImplementation2 * vi)
     doing_p.observedData_p = averagingOptions_p.contains (AveragingOptions::AverageObserved);
     doing_p.correctedData_p = vi->existsColumn (VisibilityCubeCorrected) &&
                               averagingOptions_p.contains (AveragingOptions::AverageCorrected);
-    doing_p.modelData_p = vi->existsColumn (VisibilityCubeModel) &&
-                          averagingOptions_p.contains (AveragingOptions::AverageModel);
+    doing_p.modelData_p = averagingOptions_p.contains (AveragingOptions::AverageModel);
     doing_p.floatData_p = vi->existsColumn (VisibilityCubeFloat) &&
                           averagingOptions_p.contains (AveragingOptions::AverageFloat);
 
