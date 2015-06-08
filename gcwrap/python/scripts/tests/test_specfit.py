@@ -1001,5 +1001,36 @@ class specfit_test(unittest.TestCase):
         self.assertTrue(stats['rms'][0] < 1e-6)
         myia.done()
 
+    def test_CAS_7620(self):
+        """Test fix of segfault that occurred for small channel ranges"""
+        imagename = twogauss
+        box = ""
+        region = ""
+        chans = "3~4"
+        stokes = ""
+        axis = 2
+        mask = ""
+        ngauss = 1
+        poly = -1
+        multifit = False
+        model = ""
+        residual = ""
+        #for code in [run_fitprofile, run_specfit]:
+        self.assertRaises(
+            Exception, run_fitprofile,
+            imagename, box, region, chans,
+            stokes, axis, mask, ngauss, poly,
+            multifit, model, residual
+        )
+        self.assertFalse(
+            run_specfit(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual
+            )
+        )
+            #self.assertTrue(len(res["converged"]) == 1)
+            #self.assertFalse(res["converged"][0, 0, 0, 0])
+
 def suite():
     return [specfit_test]
