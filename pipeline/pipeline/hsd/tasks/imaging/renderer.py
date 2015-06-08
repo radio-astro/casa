@@ -44,6 +44,8 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                     ms = st.ms
                     vis = ms.basename
                     ant = st.antenna.name
+                    if not r.outcome['factors'].has_key(vis) or not r.outcome['factors'][vis].has_key(ant):
+                        continue
                     fs = r.outcome['factors'][vis][ant]
                     for (spwid,spw) in st.spectral_window.items():
                         corrs = st.polarization[spw.pol_association[0]].corr_string
