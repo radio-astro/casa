@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_setjy" category="pipeline">
+<shortdescription>Fill the model column with calibrated visibilities</shortdescription>
+<description>
+Fills the model column with the model visibilities.
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+	<description>List of input measurement sets</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="field" subparam="true">
+	<description>List of field names or ids</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="intent" subparam="true">
+    	<description>Observing intent of flux calibrators</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw" subparam="true">
+	<description>List of spectral window ids</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="model" subparam="true">
+	<description>File location for field model</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="reffile" subparam="true">
+        <description>Path to file with fluxes for non-solar system calibrators</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="fluxdensity">
+	<any type="variant" limittypes="int intArray doubleArray"/>
+	<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
+	<value type="int">-1</value>
+    </param>
+
+    <param type="double" name="spix" subparam="true">
+        <description>Spectral index of fluxdensity</description>
+        <value type="double">0.0</value>
+    </param>
+
+    <param type="string" name="reffreq" subparam="true">
+        <description>Reference frequency for spix</description>
+        <value>1GHz</value>
+    </param>
+
+    <param type="bool" name="scalebychan">
+	<description>Scale the flux density on a per channel basis or else on a per spw basis</description>
+	<value>True</value>
+    </param>
+
+    <param type="variant" name="standard">
+	<description>Flux density standard</description>
+	<value type="string"></value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+   </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display the commands(True)</description>
+	<value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Automatically accept results into the context</description>
+	<value type="bool">True</value>
+    </param>
+
+    <constraints>
+
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic" />
+	    <equals type="string" value="interactive">
+		<default param="vis"><value type="stringArray"></value></default>
+		<default param="field"><value type="string"></value></default>
+		<default param="intent"><value type="string"></value></default>
+		<default param="spw"><value type="string"></value></default>
+	        <default param="reffile"><value type="string"></value></default>
+		<default param="model"><value type="string"></value></default>
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+		<default param="vis"><value type="stringArray"></value></default>
+		<default param="field"><value type="string"></value></default>
+		<default param="intent"><value type="string"></value></default>
+		<default param="spw"><value type="string"></value></default>
+	        <default param="reffile"><value type="string"></value></default>
+		<default param="model"><value type="string"></value></default>
+	    </equals>
+	</when>
+
+        <when param="fluxdensity">
+           <notequals type="int" value="-1">
+              <default param="spix"><value type="int">0</value></default>
+              <default param="reffreq"><value type="string">1GHz</value></default>
+           </notequals>
+        </when>
+
+
+   </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Fills the model column with the model visibilities.
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+fluxdensity -- Specified flux density [I,Q,U,V] in Jy. Uses [1,0,0,0]
+    flux density for unrecognized sources, and standard flux densities for
+    ones recognized by 'standard', including 3C286, 3C48, 3C147, and several
+    planets, moons, and asteroids. 
+    default=-1
+    example: [3.06,0.0,0.0,0.0]
+
+reffile -- Path to a file containing flux densities for calibrators unknown to
+	CASA. Values given in this file take precedence over the CASA-derived values
+	for all calibrators except solar system calibrators. By default the path is
+	set to the CSV file created by h_importdata, consisting of catalogue fluxes 
+	extracted from the ASDM.
+	default: ''
+	example: '', 'working/flux.csv'
+
+spix -- Spectral index for fluxdensity S = fluxdensity * (freq/reffreq)**spix
+    Only used if fluxdensity is being used. If fluxdensity is positive, and
+    spix is nonzero, then reffreq must be set too.  It is applied in the same
+    way to all polarizations, and does not account for Faraday rotation or
+    depolarization.
+    Default: 0
+
+reffreq -- The reference frequency for spix, given with units. Provided
+    to avoid division by zero. If the flux density is being scaled by spectral
+    index, then reffreq must be set to whatever reference frequency is correct
+    for the given fluxdensity and spix.  It cannot be determined from vis.  On
+    the other hand, if spix is 0, then any positive frequency can be used and
+    will be ignored.
+    Default: '1GHz'
+    Examples: '86.0GHz', '4.65e9Hz'
+
+
+scalebychan -- This determines whether the fluxdensity set in the model is
+    calculated on a per channel basis. If False then only one fluxdensity
+    value is calculated per spw. 
+    default: True
+
+standard -- Flux density standard, used if fluxdensity[0] less than 0.0. The
+    options are: 'Baars','Perley 90','Perley-Taylor 95', 'Perley-Taylor 99',
+    'Perley-Butler 2010' and 'Butler-JPL-Horizons 2010'.
+    default: 'Butler-JPL-Horizons 2012' for solar system object 
+             'Perley-Butler 2010' otherwise
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets defined in the pipeline context.
+    default: []
+    example:
+
+field -- The list of field names or field ids for which the models are
+    to be set. Defaults to all fields with intent '*AMPLITUDE*'.
+    default: ''
+    example: '3C279', '3C279, M82'
+
+intent -- A string containing a comma delimited list of intents against
+    which the the selected fields are matched.  Defaults to all data
+    with amplitude intent.
+    default: ''
+    example: '*AMPLITUDE*'
+
+spw -- The list of spectral windows and channels for which bandpasses are
+    computed. Defaults to all science spectral windows.
+    default: ''
+    example: '11,13,15,17'
+
+model -- Model image for setting model visibilities. Not fully
+    supported.
+    default: ''
+    example: see details in help for CASA setjy task
+
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+       do not execute (False).
+       default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+       reject them (False).
+       default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Fills the model column with the model visibilities.
+
+Issues
+
+Support for the setjy spix parameter needs to be added.`
+
+Examples
+
+1. Set the model flux densities for all the amplitude calibrators.
+
+    hif_setjy()
+
+</example>
+
+</task>
+</casaxml>
