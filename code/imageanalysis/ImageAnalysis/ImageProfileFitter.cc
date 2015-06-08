@@ -222,14 +222,17 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
     *_getLog() << logOrigin;
     std::auto_ptr<ImageInterface<Float> > originalSigma(0);
     {
-        /*
-    	std::auto_ptr<ImageInterface<Float> > clone(
-    		_getImage()->cloneII()
-    	);
-        */
     	_subImage = SubImageFactory<Float>::createSubImageRO(
     	    *_getImage(), *_getRegion(), _getMask(), 0,
     		AxesSpecifier(), _getStretch()
+    	);
+    	uInt nUnknowns = _nUnknowns();
+    	ThrowIf(
+    		nUnknowns >= _subImage->shape()[_fitAxis],
+    		"There are not enough points ("
+    		+ String::toString(_subImage->shape()[_fitAxis])
+    		+ ") along the fit axis to fit " + String::toString(nUnknowns)
+    		+ " unknowns"
     	);
     	if (_sigma.get()) {
     		if (! _sigmaName.empty()) {
@@ -365,6 +368,37 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
     }
 	return _results;
 }
+
+uInt ImageProfileFitter::_nUnknowns() const {
+	uInt n = 0;
+	if (_polyOrder >= 0) {
+		n += _polyOrder + 1;
+	}
+	if (_nGaussSinglets > 0) {
+		n += 3*_nGaussSinglets;
+	}
+	uInt nel = _nonPolyEstimates.nelements();
+	if (n == 0) {
+		return n;
+	}
+	for (uInt i=0; i<nel; ++i) {
+		const SpectralElement *const x = _nonPolyEstimates[i];
+		Vector<Bool> fixed = x->fixed();
+		Vector<Bool>::const_iterator iter = fixed.begin();
+		Vector<Bool>::const_iterator end = fixed.end();
+		while (iter != end) {
+			if (*iter) {
+				--n;
+				if (n == 0) {
+					return n;
+				}
+			}
+			++iter;
+		}
+	}
+	return n;
+}
+
 
 void ImageProfileFitter::setPolyOrder(Int p) {
 	ThrowIf(p < 0,"A polynomial cannot have a negative order");
@@ -831,108 +865,67 @@ void ImageProfileFitter::_loopOverFits(
 	*/
 	Bool storeGoodPos = hasNonPolyEstimates && ! _fitters.empty();
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
-		//timer1.start();
 		if (showProgress && /*nProfiles % mark == 0 &&*/ nProfiles > 0) {
 			progressMeter->update(Double(nProfiles));
 		}
-		//timer1.stop();
-		//timer2.start();
-
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts && ! fitMask(curPos)) {
 			continue;
 		}
-		//timer2.stop();
-		//timer3.start();
 		++_nAttempted;
 		fitter.clearList();
-		//timer3.stop();
-		//timer4.start();
-		/*
 		if (abscissaSet) {
-			fitter.setAbscissa(abscissaValues);
-			abscissaSet = False;
-		}
-		*/
-		//timer4.stop();
-		//timer5.start();
-		if (abscissaSet) {
-			fitter.setData(
-				curPos, /* abcissaType, True, divisorPtr, xfunc, */ yfunc
-			);
+			fitter.setData(curPos, yfunc);
 		}
 		else {
 			fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
 			);
 		}
-		//timer5.stop();
-		//timer6.start();
-		_setFitterElements(
+		Bool canFit = _setFitterElements(
 			fitter, newEstimates, polyEl, goodPos,
 			fitterShape, curPos, nOrigComps
 		);
-		//timer6.stop();
-		//timer7.start();
-		if (hasXMask) {
-			fitter.setXMask(goodPlanes, True);
-		}
-		//timer7.stop();
-		try {
-			//timer8.start();
-			fitSuccess = fitter.fit();
-			//timer8.stop();
-			//timer9.start();
-			if (fitSuccess) {
-				if (fitter.converged()) {
-					_flagFitterIfNecessary(fitter);
-					++_nConverged;
-				}
-				fitSuccess = fitter.isValid();
+		if (canFit) {
+			if (hasXMask) {
+				fitter.setXMask(goodPlanes, True);
+			}
+			try {
+				fitSuccess = fitter.fit();
 				if (fitSuccess) {
-					++_nValid;
-					if (storeGoodPos) {
-						goodPos.push_back(curPos);
+					if (fitter.converged()) {
+						_flagFitterIfNecessary(fitter);
+						++_nConverged;
+					}
+					fitSuccess = fitter.isValid();
+					if (fitSuccess) {
+						++_nValid;
+						if (storeGoodPos) {
+							goodPos.push_back(curPos);
+						}
 					}
 				}
 			}
-			//timer9.stop();
+			catch (const AipsError& x) {
+				fitSuccess = False;
+			}
 		}
-		catch (const AipsError& x) {
+		else {
 			fitSuccess = False;
 		}
-		//timer10.start();
 		if (fitter.succeeded()) {
 			++_nSucceeded;
 		}
 		if (_storeFits) {
 			_fitters(curPos).reset(new ProfileFitResults(fitter));
 		}
-		//timer10.stop();
-		//timer11.start();
 		if (updateOutput) {
 			_updateModelAndResidual(
 				fitSuccess, fitter, sliceShape,
 				curPos, pFitMask, pResidMask
 			);
 		}
-		//timer11.stop();
 	}
-	/*
-	timer0.stop();
-	cout << "time to execute fit loop " << timer0.getReal() << endl;
-	cout << "time 1 " << timer1.getReal() << endl;
-	cout << "time 2 " << timer2.getReal() << endl;
-	cout << "time 3 " << timer3.getReal() << endl;
-	cout << "time 4 " << timer4.getReal() << endl;
-	cout << "time 5 " << timer5.getReal() << endl;
-	cout << "time 6 " << timer6.getReal() << endl;
-	cout << "time 7 " << timer7.getReal() << endl;
-	cout << "time 8 " << timer8.getReal() << endl;
-	cout << "time 9 " << timer9.getReal() << endl;
-	cout << "time 10 " << timer10.getReal() << endl;
-	cout << "time 11 " << timer11.getReal() << endl;
-	*/
 }
 
 void ImageProfileFitter::_updateModelAndResidual(
@@ -966,7 +959,7 @@ void ImageProfileFitter::_updateModelAndResidual(
 	}
 }
 
-void ImageProfileFitter::_setFitterElements(
+Bool ImageProfileFitter::_setFitterElements(
 	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
 	const PtrHolder<const PolynomialSpectralElement>& polyEl,
 	const std::vector<IPosition>& goodPos,
@@ -995,6 +988,11 @@ void ImageProfileFitter::_setFitterElements(
 		}
 		if (polyEl.ptr()) {
 			fitter.addElement(*polyEl);
+		}
+		else {
+			if (fitter.getList(False).nelements() == 0) {
+				return False;
+			}
 		}
 	}
 	else {
@@ -1041,6 +1039,7 @@ void ImageProfileFitter::_setFitterElements(
 		}
 		fitter.setElements(newEstimates);
 	}
+	return True;
 }
 
 void ImageProfileFitter::_setAbscissaDivisorIfNecessary(

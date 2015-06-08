@@ -312,7 +312,7 @@ private:
 
     void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
 
-    void _setFitterElements(
+    Bool _setFitterElements(
     	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
     	const PtrHolder<const PolynomialSpectralElement>& polyEl,
     	const vector<IPosition>& goodPos,
@@ -326,6 +326,8 @@ private:
     	Lattice<Bool>* const &pFitMask, Lattice<Bool>* const &pResidMask
     ) const;
 
+    // only implemented for the simplest cases so far
+    uInt _nUnknowns() const;
 
 };
 }
