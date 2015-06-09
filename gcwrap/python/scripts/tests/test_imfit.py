@@ -1819,5 +1819,29 @@ class imfit_test(unittest.TestCase):
                     self.assertTrue(near(qa.getvalue(longerr), 29.6355, 1e-3))
                     self.assertTrue(near(qa.getvalue(laterr), 21.1412, 1e-3))
 
+    def test_CAS_7621(self):
+        """Test that results are written to the proper channels in output images"""
+        resid = "myresid.im"
+        model = "mymodel.im"
+        myia = iatool()
+        imagename = datapath + "one_chan_out_of_ten.im"
+        myia.open(imagename)
+        zz = myia.fitcomponents(chans="5", residual=resid, model=model)
+        self.assertTrue(zz)
+        for im in [model, resid]:
+            myia.open(im)
+            res = myia.statistics()
+            self.assertTrue(res['maxpos'][2] == 5)
+            if im == resid:
+                self.assertTrue(res['minpos'][2] == 5)
+            res = myia.statistics(region=rg.box([0, 0, 0], [99, 99, 4]))
+            self.assertTrue(res['max'][0] == 0)
+            self.assertTrue(res['min'][0] == 0)
+            res = myia.statistics(region=rg.box([0, 0, 6], [99, 99, 9]))
+            self.assertTrue(res['max'][0] == 0)
+            self.assertTrue(res['min'][0] == 0)
+        myia.done()
+        
+
 def suite():
     return [imfit_test]
