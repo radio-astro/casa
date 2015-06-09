@@ -118,7 +118,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		try {
 			trapExcessVolume(pendingLoadAxes_);
 			// Now set up TransformingVi2 for averaging/loading data
-			setUpVisIter(selection_, calibration_, dataColumn);
+			setUpVisIter(selection_, calibration_, dataColumn, False, False);
 			loadChunks(*vi_p, averaging_, nIterPerAve,
 			   loadAxes, loadData, thread);
 		} catch(AipsError& log) {
@@ -130,7 +130,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		try {
 			// setUpVisIter also gets the VB shapes and 
 			// calls trapExcessVolume:
-			setUpVisIter(selection_, calibration_, dataColumn, True);
+			setUpVisIter(selection_, calibration_, dataColumn, False, True);
 			loadChunks(*vi_p, loadAxes, loadData, thread);
 		} catch(AipsError& log) {
 			loadError(log.getMesg());
@@ -292,7 +292,8 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
 
 void MSCache::setUpVisIter(PlotMSSelection& selection,
 		PlotMSCalibration& calibration,
-		String dataColumn, Bool estimateMemory) {
+		String dataColumn, Bool interactive,
+        Bool estimateMemory) {
 	/* Create plain or averaging (time or channel) VI with 
            configuration Record and MSTransformIterator factory */
 
@@ -306,6 +307,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 	configuration.define("datacolumn", dataColumn);
 	configuration.define("buffermode", True);
 	configuration.define("reindex", False);
+    configuration.define("interactive", interactive);
 
 	// Add transformation selection with expected keywords and string value
 	configuration.merge(transformations_.toRecord());
@@ -342,7 +344,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 	try {
         // Filter out MSTransformManager setup messages
         LogFilter filter(LogMessage::WARN);
-        LogSink().globalSink().filter(filter);
+        //LogSink().globalSink().filter(filter);
 
 		factory = new MSTransformIteratorFactory(configuration);
 
@@ -1473,7 +1475,7 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 
 	// Establish a scope in which the VisBuffer is properly created/destroyed
 	{
-		setUpVisIter(selection_, calibration_, "DATA");
+		setUpVisIter(selection_, calibration_, "DATA", True, False);
 
 		vi_p->originChunks();
 		vi_p->origin();

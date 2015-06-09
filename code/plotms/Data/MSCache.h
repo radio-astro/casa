@@ -98,6 +98,7 @@ private:
   void setUpVisIter(PlotMSSelection& selection,
 		    PlotMSCalibration& calibration,
 		    String dataColumn,
+            Bool interactive=False,
 		    Bool estimateMemory=False);
   vi::VisibilityIterator2* setUpVisIter(MeasurementSet& selectedMS,
 	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel);
