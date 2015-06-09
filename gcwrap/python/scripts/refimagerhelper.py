@@ -977,7 +977,7 @@ class PyParallelImagerHelper():
         print "########################################################"
 
         #n0=int(nCF/self.NN);
-        n0=int(nCF/nProcs);
+        n0=int(float(nCF)/nProcs+0.5);
         if (nProcs >= nCF):
             n0 = 1;
         allcfs = {};
@@ -987,8 +987,12 @@ class PyParallelImagerHelper():
             if (m > nCF): 
 		m=nCF;
             allcfs[i]=cflist[nUsed:m];
-	    i=i+1;
             nUsed = m;
+            if (i >= nProcs):
+                break;
+	    i=i+1;
+        if (nUsed < nCF):
+            allcfs[nProcs].append(cflist[i]);
         return allcfs;
             
 #############################################
