@@ -308,7 +308,7 @@ def tclean(
         imager.deleteTools() 
 
         larg = list(e.args)
-        larg[0] = 'Exception from task_tclean : ' + larg[0]
+        larg[0] = 'Exception from task_tclean : ' + str(larg[0])
         e.args = tuple(larg)
         raise
 
