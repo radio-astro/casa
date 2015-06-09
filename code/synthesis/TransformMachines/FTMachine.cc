@@ -1992,18 +1992,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(sj_p.nelements() == 0 ) 
       {
 	correlationToStokes( getImage(sumWeights, False) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
-	
+
 	if( useWeightImage() && dopsf ) { 
 	  getWeightImage( *(imstore->weight())  , sumWeights); 
 	  // Fill weight image only once, during PSF generation. Remember.... it is normalized only once
 	  // during PSF generation.
 	}
-	
+
+	// TODO : Need a function that takes sumWeights from corrToStokes here....
+		
 	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
 
 	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
 	
+
       }
     //------------------------------------------------------------------------------------
     // Image Mosaic only :  Multiply the residual, and weight image by the PB.
@@ -2044,6 +2047,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  LatticeExpr<Float> addToWgt( weightImage + temp );
 	  weightImage.copyData(addToWgt);
 	  
+	  
 	  AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 			((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
 
@@ -2052,6 +2056,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  temp2.put( sumWeights.reform(sumwtImage.shape()) );
 	  LatticeExpr<Float> addToWgt2( sumwtImage + temp2 );
 	  sumwtImage.copyData(addToWgt2);
+	  
 	  
 	  //cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
 	  

@@ -271,7 +271,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="double" name="rotatepastep" subparam="true">
       <description>At what parallactic angle interval to rotate nearest AIF (deg) </description>
-      <value type="double">5.0</value>
+      <value type="double">360.0</value>
     </param>
 
     <param type="double" name="pblimit" subparam="true">
@@ -588,7 +588,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="psterm"><value>False</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
-	 <default param="rotatepastep"><value>5.0</value></default>
+	 <default param="rotatepastep"><value>360.0</value></default>
 	 <default param="wbawp"><value>False</value></default>
 	 <default param="conjbeams"><value>False</value></default>
        </equals>
@@ -599,7 +599,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="psterm"><value>False</value></default>
 	 <default param="cfcache"><value>""</value></default>
 	 <default param="computepastep"><value>360.0</value></default>
-	 <default param="rotatepastep"><value>5.0</value></default>
+	 <default param="rotatepastep"><value>360.0</value></default>
 	 <default param="wbawp"><value>False</value></default>
 	 <default param="conjbeams"><value>False</value></default>
        </equals>

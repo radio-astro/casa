@@ -204,6 +204,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsLoopController.setMaxPsfSidelobe( itsImages->getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
 
+    os << "---------------------------------------------------- Start Minor Cycles ---------------------------------------------" << LogIO::POST;
       itsImages->printImageStats();
       itsImages->mask()->unlock();
 

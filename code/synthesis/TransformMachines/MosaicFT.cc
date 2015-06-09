@@ -630,67 +630,6 @@ void MosaicFT::finalizeToSky()
 
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
- void MosaicFT::finalizeToSkyNew(Bool dopsf, 
-				 const VisBuffer& /*vb*/,
-				   CountedPtr<SIImageStore> imstore  )
- {
-
-
-   ////This function is used by the refactored imaging and it is using 
-   ////sumWeight redundantly right now...so fudging it here
-
-   Matrix<Float> sumWeights;
-   Bool calcWeightImage=doneWeightImage_p;
-   finalizeToSky(); 
-
-   correlationToStokes( getImage(sumWeights, False) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
-   if(!calcWeightImage){
-     getWeightImage( *(imstore->weight())  , sumWeights); 
-     IPosition blc(4, 0,0,0,0);
-     IPosition shp=image->shape();
-     shp[2]=1;
-     shp[3]=1;
-     
-     for (Int k =0;  k < nchan; ++k){
-       blc[3]=k;
-       for (Int j=0; j < npol; ++j ){
-	 blc[2]=j;	      
-	 sumWeights(j,k)=max(imstore->weight()->getSlice(blc, shp));
-       }
-     }
-     AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
-		   ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
-     (imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
-     
-     
-   }
-
-   if(dopsf){
-
-     //cerr << "max psf " << LatticeExprNode(max( *(imstore->psf()))).getFloat() << " max sumwt " << LatticeExprNode(max((*(imstore->sumwt())))).getFloat() << " imweight " << imstore->weight()->getAt(IPosition(4, nx/2, ny/2, 0, 0))<< endl;
-     IPosition blc(4, 0,0,0,0);
-     IPosition trc=image->shape()-1;
-     
-     for (Int k =0;  k < nchan; ++k){
-       blc[3]=k; trc[3]=k;
-       Float centerWeight=imstore->weight()->getAt(IPosition(4, nx/2, ny/2, 0, k));
-       for (Int j=0; j < npol; ++j ){
-	 blc[2]=j;	 trc[2]=j;     
-	 Slicer sl(blc, trc, Slicer::endIsLast);
-	 SubImage<Float> psfsub((*(imstore->psf())), sl, True);
-	 LatticeExpr<Float> le((psfsub)/max( psfsub)*centerWeight);
-	 psfsub.copyData(le);
-
-       }
-     }
-     //LatticeExpr<Float> le((*(imstore->psf()))/max( *(imstore->psf()))*max((*(imstore->sumwt()))));
-     //(imstore->psf())->copyData(le);
-
-   }
-   
-
- }
-
 
 
 Array<Complex>* MosaicFT::getDataPointer(const IPosition& centerLoc2D,

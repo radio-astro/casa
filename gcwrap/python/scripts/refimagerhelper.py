@@ -1175,7 +1175,7 @@ class ImagerParameters():
                  dopbcorr = True,
                  conjbeams = True,
                  computepastep =360.0,
-                 rotatepastep =5.0,
+                 rotatepastep =360.0,
                  
                  pblimit=0.01,
                  normtype='flatnoise',
@@ -1204,8 +1204,8 @@ class ImagerParameters():
 #                 mtype='default',
                  mask='',
 
-                 usescratch=True,
-                 readonly=True,
+#                 usescratch=True,
+#                 readonly=True,
                  savemodel="none",
 
                  workdir='',
@@ -1221,7 +1221,8 @@ class ImagerParameters():
         self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'scan':scan,
                            'timestr':timestr, 'uvdist':uvdist, 'antenna':antenna, 'obs':obs,'state':state,
                            'datacolumn':datacolumn,
-                           'usescratch':usescratch, 'readonly':readonly}
+                           'savemodel':savemodel }
+#                           'usescratch':usescratch, 'readonly':readonly}
 
         ## Imaging/deconvolution parameters
         ## The outermost dictionary index is image field. 
@@ -1637,13 +1638,13 @@ class ImagerParameters():
 
 
     def printParameters(self):
-        casalog.post('SelPars : ' + str(self.allselpars), 'INFO')
-        casalog.post('ImagePars : ' + str(self.allimpars), 'INFO')
-        casalog.post('GridPars : ' + str(self.allgridpars), 'INFO')
-        casalog.post('NormPars : ' + str(self.allnormpars), 'INFO')
-        casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
-        casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
-        casalog.post('IterPars : ' + str(self.iterpars), 'INFO')
+        casalog.post('SelPars : ' + str(self.allselpars), 'INFO2')
+        casalog.post('ImagePars : ' + str(self.allimpars), 'INFO2')
+        casalog.post('GridPars : ' + str(self.allgridpars), 'INFO2')
+        casalog.post('NormPars : ' + str(self.allnormpars), 'INFO2')
+        casalog.post('Weightpars : ' + str(self.weightpars), 'INFO2')
+        casalog.post('DecPars : ' + str(self.alldecpars), 'INFO2')
+        casalog.post('IterPars : ' + str(self.iterpars), 'INFO2')
 
 
     def incrementImageName(self,imagename):

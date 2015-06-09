@@ -170,9 +170,7 @@ public:
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
   void finalizeToSky();
-  virtual void finalizeToSkyNew(Bool dopsf, 
-				   const VisBuffer& vb,
-			CountedPtr<SIImageStore> imstore  );	
+
   // Get actual coherence from grid by degridding
   void get(VisBuffer& vb, Int row=-1);
 

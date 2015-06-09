@@ -337,6 +337,8 @@ protected:
 
   FTMachine::Type datacol_p;
 
+  Int nMajorCycles;
+
 };
 
 

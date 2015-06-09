@@ -196,11 +196,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     memer.solve(*residEqn);
 
     Record info=itsImages->model()->miscInfo();
-    info.define("ALPHA", memer.getBeta());
-    info.define("BETA",  memer.getAlpha());
+    info.define("ALPHA", memer.getAlpha());
+    info.define("BETA",  memer.getBeta());
     itsImages->model()->setMiscInfo(info);
 
     iterdone = memer.numberIterations();
+
+    LatticeExprNode maxres( max( memer.getResidual() ) );
+    cout << "MAX RES at end : " << maxres.getFloat() << endl;
 
     // Retrieve residual before major cycle
     itsImages->residual()->copyData( memer.getResidual() );

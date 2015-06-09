@@ -252,10 +252,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else {
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
         { itsFacetImageStores[facet]->dividePSFByWeight( ); }
+
+      /// Now that all facets are invidually normalized and sumwt per facet has
+      /// been recorded from unnormed psfs, copy one psf to the centre because the
+      /// minor cycle needs a 'normal' psf for whole image.
+
+      setPsfFromOneFacet();
+
     }
 
     //        cout << "UU Validating parent imstore " << endl;
     //        itsImages->validate();
+
+
 
       // Check PSF quality by fitting beams
     {
@@ -535,6 +544,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { return new SIImageStore( imagename, csys, shp, False, useweightimage );   }
     //      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
   }
+
+  //
+  //---------------------------------------------------------------
+  //
+   void SynthesisNormalizer::setPsfFromOneFacet()
+   {
+       // Copy the PSF from one facet to the center of the full image, to use for the minor cycle
+    //
+    // This code segment will work for single and multi-term 
+    // - for single term, the index will always be 0, and SIImageStore's access functions know this.
+    // - for multi-term, the index will be the taylor index and SIImageStoreMultiTerm knows this.
+
+     /// itsImages
+     /// itsFacetImageStores
+
+      {
+	IPosition shape=(itsImages->psf(0))->shape();
+	IPosition blc(4, 0, 0, 0, 0);
+	IPosition trc=shape-1;
+	for(uInt tix=0; tix<2 * itsImages->getNTaylorTerms() - 1; tix++)
+	  {
+	    TempImage<Float> onepsf((itsFacetImageStores[0]->psf(tix))->shape(), 
+				    (itsFacetImageStores[0]->psf(tix))->coordinates());
+	    onepsf.copyData(*(itsFacetImageStores[0]->psf(tix)));
+	    //now set the original to 0 as we have a copy of one facet psf
+	    (itsImages->psf(tix))->set(0.0);
+	    blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
+	    trc[0]=onepsf.shape()[0]+blc[0]-1;
+	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
+	    trc[1]=onepsf.shape()[1]+blc[1]-1;
+	    Slicer sl(blc, trc, Slicer::endIsLast);
+	    SubImage<Float> sub(*(itsImages->psf(tix)), sl, True);
+	    sub.copyData(onepsf);
+	  }
+      }
+
+      cout << "In setPsfFromOneFacet : sumwt : " << itsImages->sumwt()->get() << endl;
+  
+   }
 
 
 

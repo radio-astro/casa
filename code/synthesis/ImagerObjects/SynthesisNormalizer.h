@@ -93,6 +93,8 @@ protected:
   CountedPtr<SIImageStore> makeImageStore( String imagename );
   CountedPtr<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp, Bool useweightimage );
 
+  void setPsfFromOneFacet();
+
   /////////////// Member Objects
 
   CountedPtr<SIImageStore> itsImages;

@@ -77,7 +77,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWts.resize(0);
     itsMask=NULL;
     itsGridWt=NULL;
-
+    itsPB=NULL;
+    
     itsForwardGrids.resize(0);
     itsBackwardGrids.resize(0);
 
@@ -126,6 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMask=NULL;
     itsGridWt=NULL;
+    itsPB=NULL;
 
     itsForwardGrids.resize(itsNTerms);
     itsBackwardGrids.resize(2 * itsNTerms - 1);
@@ -171,6 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWts.resize(2 * itsNTerms - 1);
     itsMask=NULL;
     itsGridWt=NULL;
+    itsPB=NULL;
 
     itsMiscInfo=Record();
 
@@ -468,6 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( !itsAlpha.null() ) releaseImage( itsAlpha );
     if( !itsBeta.null() ) releaseImage( itsBeta );
     if( !itsGridWt.null() ) releaseImage( itsGridWt );
+    if( !itsPB.null() ) releaseImage( itsPB );
     
     return True; // do something more intelligent here.
   }
@@ -568,9 +572,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     accessImage( itsSumWts[term], itsParentSumWts[term], imageExts(SUMWT)+".tt"+String::toString(term) );
 
+    /*
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) 
       {itsUseWeight = getUseWeightImage( *itsParentSumWts[0] );}
-    setUseWeightImage( *(itsSumWts[term]) , itsUseWeight); // Sets a flag in the SumWt image. 
+      setUseWeightImage( *(itsSumWts[term]) , itsUseWeight); // Sets a flag in the SumWt image. */
 
     return itsSumWts[term];
   }
@@ -710,7 +715,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(addweight)
 	  {
 
-	    if( itsUseWeight ) //getUseWeightImage( *(imagestoadd->psf(tix)) ) ) // Access and add weight only if it is needed.
+	    if(doesImageExist(itsImageName+String(".weight.tt0"))  ) //getUseWeightImage( *(imagestoadd->psf(tix)) ) ) // Access and add weight only if it is needed.
 	      {
 		LatticeExpr<Float> adderWeight( *(weight(tix)) + *(imagestoadd->weight(tix)) ); 
 		weight(tix)->copyData(adderWeight);
@@ -745,23 +750,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
 
+    /*
     // Fill all sumwts by that of the first term.
     Matrix<Float> sumwt = getSumWt( *psf(0) );
     for(uInt tix=1;tix<2*itsNTerms-1;tix++)
       { setSumWt( *psf(tix) , sumwt ); }
-    
-    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
-      {
-	divideImageByWeightVal( *psf(tix) );
-	if( itsUseWeight ) 
-	  { 
-	    divideImageByWeightVal( *weight(tix) ); 
-	    itsPBScaleFactor = getPbMax();
-	    //	cout << " pbscale : " << itsPBScaleFactor << endl;
+    */
 
-	    LatticeExpr<Float> ratio(  (*(psf(tix))) / ( itsPBScaleFactor*itsPBScaleFactor ) );
+    ////    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
+    for(Int tix=2*itsNTerms-1-1;tix>-1;tix--) // AAH go backwards so that zeroth term is normalized last..... sigh sigh sigh.
+      {
+
+	cout << "npsfs : " << itsPsfs.nelements() << " and tix : " << tix << endl;
+
+	//	divideImageByWeightVal( *psf(tix) );
+	normPSF(tix);
+
+	if(doesImageExist(itsImageName+String(".weight.tt0"))  ) 
+	  { 
 	    
-	    psf(tix)->copyData(ratio);
+	    divideImageByWeightVal( *weight(tix) ); 
+
+	    makePBFromWeight();
+
 	  }
       }
 
@@ -775,16 +786,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideResidualByWeight",WHERE) );
 
+    /*
     // Fill all sumwts by that of the first term.
     Matrix<Float> sumwt = getSumWt( *residual(0) );
     for(uInt tix=1;tix<itsNTerms;tix++)  { setSumWt( *residual(tix) , sumwt ); }
+    */
 
     Bool useweightimage = itsUseWeight; // getUseWeightImage( *residual(0) );
 
-    if( useweightimage )
+    if( doesImageExist(itsImageName+String(".weight.tt0")) )
       {
+	/*
 	sumwt = getSumWt( *weight(0) );
 	for(uInt tix=1;tix<itsNTerms;tix++) { setSumWt( *weight(tix) , sumwt ); }
+	*/
 
 	itsPBScaleFactor = getPbMax();
 
@@ -795,20 +810,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	divideImageByWeightVal( *residual(tix) );
 
-	if( useweightimage == True )
+	if(doesImageExist(itsImageName+String(".weight.tt0"))  )
 	  {
 	    
 	    LatticeExpr<Float> deno;
 	    if( normtype=="flatnoise"){
 	      deno = LatticeExpr<Float> ( sqrt( abs(*(weight(0)) ) ) * itsPBScaleFactor );
-	      os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) ;
+	      os << LogIO::NORMAL1 << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) ;
 	      os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
 	      os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
 	      
 	    }
 	    if( normtype=="flatsky") {
 	      deno = LatticeExpr<Float> ( *(weight(0)) );
-	      os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) ;
+	      os << LogIO::NORMAL1 << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) ;
 	      os << " by [ weight ] to get flat sky"<< LogIO::POST;
 	    }
 	    
@@ -853,10 +868,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideModelByWeight",WHERE) );
 
-    if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
+    /*    if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
 	itsUseWeight // only when needed
 	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+    */
+    if( doesImageExist(itsImageName+String(".weight.tt0"))  )
       {
 
 	if( normtype=="flatsky") {
@@ -873,7 +890,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	for(uInt tix=0;tix<itsNTerms;tix++)
 	  {
-	    os << "Dividing " << itsImageName+String(".model")+String::toString(tix);
+	    os << LogIO::NORMAL1 << "Dividing " << itsImageName+String(".model")+String::toString(tix);
 	    os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
 	    os <<" ] to get to flat sky model before prediction" << LogIO::POST;
 	    
@@ -903,12 +920,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","multiplyModelByWeight",WHERE) );
 
+    /*
     if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
 	//&& 
        itsUseWeight // only when needed
 	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-      {
+    */
+    if( doesImageExist(itsImageName+String(".weight.tt0"))      )
+{
 
 	if( normtype=="flatsky") {
 	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
@@ -920,7 +940,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(uInt tix=0;tix<itsNTerms;tix++)
 	  {
 
-	    os << "Multiplying " << itsImageName+String(".model")+String::toString(tix);
+	    os << LogIO::NORMAL1 << "Multiplying " << itsImageName+String(".model")+String::toString(tix);
 	  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
 	  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
 	  
@@ -1191,6 +1211,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return  emptymodel;
   }
 
+  void SIImageStoreMultiTerm::printImageStats()
+  {
+    LogIO os( LogOrigin("SIImageStoreMultiTerm","printImageStats",WHERE) );
+    Float minresmask, maxresmask, minres, maxres;
+    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    os << "[" << itsImageName << "]" ;
+    os << " Peak residual (max,min) " ;
+    if( minresmask!=0.0 || maxresmask!=0.0 )
+      { os << "within mask : (" << maxresmask << "," << minresmask << ") "; }
+    os << "over full image : (" << maxres << "," << minres << ")" << LogIO::POST;
+
+    os << "[" << itsImageName << "] Total Model Flux : " ;
+    for(uInt tix=0;tix<itsNTerms;tix++)
+      {os << getModelFlux(tix) << "(tt" << String::toString(tix) << ")"; }
+    os<<LogIO::POST;
+
+  }
   
   /*  
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getFacetImageStore(const Int facet, const Int nfacets)
@@ -1266,6 +1304,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imageExts(WEIGHT)=".weight";
     imageExts(IMAGE)=".image";
     imageExts(SUMWT)=".sumwt";
+    imageExts(GRIDWT)=".gridwt";
+    imageExts(PB)=".pb";
     imageExts(FORWARDGRID)=".forward";
     imageExts(BACKWARDGRID)=".backward";
 

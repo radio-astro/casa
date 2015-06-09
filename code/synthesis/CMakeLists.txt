@@ -57,6 +57,7 @@ casa_add_library( synthesis
   TransformMachines/rGridFT.cc
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
+  TransformMachines/MosaicFTNew.cc
   TransformMachines/MultiTermFT.cc	
   TransformMachines/MultiTermFTNew.cc	
   TransformMachines/NewMultiTermFT.cc	
@@ -600,6 +601,7 @@ install (FILES
 	TransformMachines/SetJyGridFT.h
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
+	TransformMachines/MosaicFTNew.h
 	TransformMachines/MultiTermFT.h
 	TransformMachines/MultiTermFTNew.h
 	TransformMachines/NewMultiTermFT.h

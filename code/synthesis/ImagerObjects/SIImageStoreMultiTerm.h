@@ -165,6 +165,8 @@ protected:
 
   Bool createMask(LatticeExpr<Bool> &lemask, CountedPtr<ImageInterface<Float> >outimage);
 
+  virtual void printImageStats();
+
 private:
 
   uInt itsNTerms;

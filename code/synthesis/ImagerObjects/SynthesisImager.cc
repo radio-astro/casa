@@ -73,7 +73,7 @@
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
-#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines/MosaicFTNew.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
 #include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
@@ -112,6 +112,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      facetsStore_p=-1;
      unFacettedImStore_p=NULL;
      dataSel_p.resize();
+
+     nMajorCycles=0;
 
   }
   
@@ -694,6 +696,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","executeMajorCycle",WHERE) );
 
+    nMajorCycles++;
 
     Bool lastcycle=False;
     if( controlRecord.isDefined("lastcycle") )
@@ -705,7 +708,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     os << "----------------------------------------------------------- Run ";
     if (lastcycle) os << "(Last) " ;
-    os << "Major Cycle -------------------------------------" << LogIO::POST;
+    os << "Major Cycle " << nMajorCycles << " -------------------------------------" << LogIO::POST;
 
     try
       {    
@@ -733,10 +736,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	runMajorCycle(True, False);
 
-    	  if(facetsStore_p >1)
-	    {
-	      setPsfFromOneFacet();
-	    }
+	//  	  if(facetsStore_p >1)
+	//   {
+	//     setPsfFromOneFacet();
+	//     }
 
     	  itsMappers.releaseImageLocks();
 
@@ -1168,7 +1171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(facets > 1 && itsMappers.nMappers() > 0)
 	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
       
-      AlwaysAssert( ( ( ! (ftm->name()=="MosaicFT" && mappertype=="imagemosaic") )  && 
+      AlwaysAssert( ( ( ! (ftm->name()=="MosaicFTNew" && mappertype=="imagemosaic") )  && 
       		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
 		    AipsError );
       //---------------------------------------------
@@ -1494,9 +1497,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager:: createMosFTMachine(CountedPtr<FTMachine>& theFT,CountedPtr<FTMachine>&  theIFT, const Float /*padding*/, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String stokes){
     
+    LogIO os(LogOrigin("SynthesisImager", "createMosFTMachine",WHERE));
    
     ROMSColumns msc(rvi_p->ms());
     String telescop=msc.observation().telescopeName()(0);
+    // Hack...start
+    if(telescop=="EVLA"){os << LogIO::WARN << "vpmanager does not list EVLA. Using VLA beam parameters" << LogIO::POST; telescop="VLA";}
+    // Hack...stop
     VPManager *vpman=VPManager::Instance();
     PBMath::CommonPB kpb;
     PBMath::enumerateCommonPB(telescop, kpb);
@@ -1511,7 +1518,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
     }
     
-    theFT = new MosaicFT(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
+    theFT = new MosaicFTNew(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
 		      useDoublePrec);
     PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
     if(rec.asString("name")=="IMAGE")
@@ -1520,10 +1527,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
        || (kpb==PBMath::ALMA)){
       CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
-      static_cast<MosaicFT &>(*theFT).setConvFunc(mospb);
+      static_cast<MosaicFTNew &>(*theFT).setConvFunc(mospb);
     }
     ///////////////////make sure both FTMachine share the same conv functions.
-    theIFT= new MosaicFT(static_cast<MosaicFT &>(*theFT));
+    theIFT= new MosaicFTNew(static_cast<MosaicFTNew &>(*theFT));
 
     
   }

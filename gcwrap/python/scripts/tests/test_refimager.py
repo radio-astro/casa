@@ -58,7 +58,8 @@ class testref_base(unittest.TestCase):
           self.img = "tst"
 
      def tearDown(self):
-          self.delData()
+          """ don't delete it all """
+#          self.delData()
 
      # Separate functions here, for special-case tests that need their own MS.
      def prepData(self,msname=""):
@@ -245,6 +246,10 @@ class testref_base(unittest.TestCase):
           testname = inspect.stack()[2][3]
           
           out = True
+
+          if numpy.isnan(val) or numpy.isinf(val):
+               out=False
+
           if correctval == None and val != None: 
                out = False
           if correctval != None and val == None: 
@@ -286,6 +291,11 @@ class testref_base(unittest.TestCase):
           testname = inspect.stack()[2][3]
 #          maxvals, maxvalposs = self.get_max(imname)
           readval = self.get_pix(imname,thepos)
+
+          res=True
+
+          if numpy.isnan(readval) or numpy.isinf(readval):
+               res=False
 
           if abs(theval)>1e-08:
                if abs(readval - theval)/abs(theval) > self.epsilon: 
@@ -365,9 +375,6 @@ class testref_base(unittest.TestCase):
 ##Task level tests : one field, 2chan.
 class test_onefield(testref_base):
      
-     def setUp(self):
-          testref_base.setUp(self)
-
      def test_onefield_defaults(self):
           """ [onefield] Test_Onefield_defaults : Defaults """
           self.prepData('refim_twochan.ms')
@@ -389,8 +396,8 @@ class test_onefield(testref_base):
      def test_onefield_mem(self):
           """ [onefield] Test_Onefield_mem : mfs with mem minor cycle """
           self.prepData('refim_eptwochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=10,deconvolver='mem',scales=[0,20,40,100],interactive=0)
-          self.checkall(ret=ret, peakres=2.3, modflux=2.87, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=10,deconvolver='mem',interactive=0)
+          self.checkall(ret=ret, peakres=7.84, modflux=6.49, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[100,100,0,0])])
 
      def test_onefield_multiscale(self):
           """ [onefield] Test_Onefield_multiscale : mfs with multiscale minor cycle """
@@ -402,7 +409,7 @@ class test_onefield(testref_base):
           """ [onefield] Test_Onefield_mtmfs : mt-mfs with minor cycle iterations """
           self.prepData('refim_twochan.ms')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',interactive=0)
-          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=11, imexist=[self.img+'.psf.tt0', self.img+'.residual.tt0', self.img+'.image.tt0', self.img+'.model.tt0',self.img+'.model.tt1',self.img+'.alpha'], imval=[(self.img+'.psf.tt0',1.0,[50,50,0,0]),(self.img+'.psf.tt1',1.039e-05,[50,50,0,0])])
+          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, imexist=[self.img+'.psf.tt0', self.img+'.residual.tt0', self.img+'.image.tt0', self.img+'.model.tt0',self.img+'.model.tt1',self.img+'.alpha'], imval=[(self.img+'.psf.tt0',1.0,[50,50,0,0]),(self.img+'.psf.tt1',1.039e-05,[50,50,0,0])])
           ## iterdone=11 only because of the return (iterdone_p+1) in MultiTermMatrixCleaner::mtclean() !
 
      def test_onefield_autonames(self):
@@ -486,9 +493,6 @@ class test_onefield(testref_base):
 
 ##Task level tests : iteration controls
 class test_iterbot(testref_base):
-
-     def setUp(self):
-          testref_base.setUp(self)
 
      def test_iterbot_mfs_1(self):
           """ [iterbot] Test_Iterbot_Mfs_1 : Zero Iterations """
@@ -579,19 +583,13 @@ class test_iterbot(testref_base):
 ### For some of these tests, do the same with uvsub and compare ? 
 class test_multifield(testref_base):
      
-     def setUp(self):
-          testref_base.setUp(self)
-
-     def tearDown(self):
-          """ none """
-
      def test_multifield_both_mfs(self):
           """ [multifield] Test_Multifield_both_mfs : Two fields, both mfs """
           self.prepData("refim_twopoints_twochan.ms")
           write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0)
           self.checkall(ret=ret, 
-                        iterdone=20,
+                        iterdone=20, ## should be 20 but for the iter+1 returned from mtcleaner...
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.075,[50,50,0,0]),
@@ -633,12 +631,12 @@ class test_multifield(testref_base):
           write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nspecmode=mfs\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0,specmode='cube',nchan=2,interpolation='nearest')
           self.checkall(ret=ret, 
-                        iterdone=28,
+                        iterdone=30,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
-                        imval=[(self.img+'.image',1.434,[50,50,0,0]),
-                               (self.img+'1.image',7.452,[40,40,0,0]),
-                               (self.img+'.image',0.338,[50,50,0,1])])
+                        imval=[(self.img+'.image',1.4,[50,50,0,0]),
+                               (self.img+'1.image',5.6,[40,40,0,0]),
+                               (self.img+'.image',0.7,[50,50,0,1])])
 
      def test_multifield_mfs_mtmfs(self):
           """ [multifield] Test_Multifield_mfs_mtmfs : Two fields, one mt-mfs and one mfs (i.e. different deconvolvers)"""
@@ -646,7 +644,7 @@ class test_multifield(testref_base):
           write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nreffreq=1.5GHz\ndeconvolver=mtmfs\n')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',interactive=0)
           self.checkall(ret=ret, 
-                        iterdone=28,
+                        iterdone=20,
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image.tt0',self.img+'1.alpha'],
                         imval=[(self.img+'.image',1.094,[50,50,0,0]),
@@ -672,9 +670,9 @@ class test_multifield(testref_base):
           """ [multifield] Test_Multifield_diff_gridders : Two fields, both mfs, gridft and wproject """
           self.prepData("refim_twopoints_twochan.ms")
 #          ##Outlier uses gridft
-#          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]\ngridder=gridft')
-          ## Outlier uses wproject but with different number of planes as the main field
-          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]\ngridder=wproject\nwprojplanes=6')
+          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]\ngridder=gridft')
+#          ## Outlier uses wproject but with different number of planes as the main field
+#          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]\ngridder=wproject\nwprojplanes=6')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",outlierfile=self.img+'.out.txt',niter=10,deconvolver='hogbom',gridder='wproject',wprojplanes=4,interactive=0)
           self.checkall(ret=ret, 
                         iterdone=20,
@@ -689,48 +687,47 @@ class test_multifield(testref_base):
           self.prepData("refim_twopoints_twochan.ms")
           write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=1\nimsize=[80,80]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt')
-          #self.assertTrue(self.exists(self.img+'.psf') and self.exists(self.img+'1.psf'))
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',overwrite=False)
-          #self.assertTrue(self.exists(self.img+'_1.psf') and self.exists(self.img+'1_1.psf') )
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',overwrite=False) # no outlier...
-          #self.assertTrue(self.exists(self.img+'_2.psf') and not self.exists(self.img+'1_2.psf') ) # no outlier
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',outlierfile=self.img+'.out.txt',overwrite=False)
-          #self.assertTrue(self.exists(self.img+'_3.psf') and self.exists(self.img+'1_3.psf') ) # increment should jump for outlier.
 
           self.checkall(imexist=[self.img+'.psf',self.img+'1.psf',self.img+'_2.psf',self.img+'1_2.psf',self.img+'_3.psf',self.img+'_4.psf',self.img+'1_4.psf'], imexistnot=[self.img+'1_3.psf'] )
 
 
 ### TODO :  Either put a check so that if any fields overlap, an error is thrown. Or, do sensible model choosing for some modes but detect and complain for other modes where it's harder to pick which model image to use.
-     def test_multifield_7(self):
-          """ [multifield] Test_Multifield_7 : Two overlapping image fields, both mfs """
+     def test_multifield_overlap_mfs(self):
+          """ [multifield] Test_Multifield_overlap_mfs : Two overlapping image fields, both mfs """
           self.prepData("refim_twopoints_twochan.ms")
           write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[200,200]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559')
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:58:39.580 +40.55.55.931",outlierfile=self.img+'.out.txt',niter=20,deconvolver='hogbom',interactive=0)
 
           self.checkall(ret=ret, 
-                        iterdone=20,
+                        iterdone=40, ## both images see the brightest source. 
                         nmajordone=2,
                         imexist=[self.img+'.image', self.img+'1.image'],
-                        imval=[(self.img+'.image',1.075,[50,50,0,0]),
-                               (self.img+'1.image',5.590,[40,40,0,0])]) #### not in middle... look at image for position.
+                        imval=[(self.img+'.image',5.575,[48,51,0,0]),
+                               (self.img+'1.image',5.574,[130,136,0,0])]) ## both images have correct flux (not twice or zero !)
 
 
-     def test_multifield_8(self):
-          """ [multifield] Test_Multifield_7 : Two overlapping image fields, both mt-mfs """
+     def test_multifield_overlap_mtmfs(self):
+          """ [multifield] Test_Multifield_overlap_mtmfs : Two overlapping image fields, both mt-mfs """
           self.prepData("refim_twopoints_twochan.ms")
-          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nnchan=1\nimsize=[200,200]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559\n')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:58:39.580 +40.55.55.931",outlierfile=self.img+'.out.txt',niter=10,deconvolver='mtmfs')
-          self.assertTrue(self.exists(self.img+'.psf') and self.exists(self.img+'1.psf'))
-          self.assertTrue(self.exists(self.img+'.image') and self.exists(self.img+'1.image'))
+          write_file(self.img+'.out.txt', 'imagename='+self.img+'1\nimsize=[200,200]\ncell=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:59:02.426 +40.51.14.559\n')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',phasecenter="J2000 19:58:39.580 +40.55.55.931",outlierfile=self.img+'.out.txt',niter=20,deconvolver='mtmfs',interactive=0)
+          self.checkall(ret=ret, 
+                        iterdone=40, ## both images see the brightest source.
+                        nmajordone=2,
+                        imexist=[self.img+'.image.tt0', self.img+'1.image.tt0'],
+                        imval=[(self.img+'.image.tt0',5.53,[48,51,0,0]),
+                                (self.img+'1.image.tt0',5.53,[130,136,0,0]),
+                               (self.img+'.alpha',-0.965,[48,51,0,0]),
+                               (self.img+'1.alpha',-0.965,[130,136,0,0])]) 
 
 ##############################################
 ##############################################
 
 ##Task level tests : Stokes imaging options
 class test_stokes(testref_base):
-
-     def setUp(self):
-          testref_base.setUp(self)
 
      def test_stokes_mfs_I(self):
           """ [onefield] Test_Stokes_I_mfs mfs with stokes I"""
@@ -929,9 +926,6 @@ class test_cube(testref_base):
 ##Task level tests : masks and clean boxes.
 class test_mask(testref_base):
 
-     def setUp(self):
-          testref_base.setUp(self)
-
      def test_mask_1(self):
           """ [mask] test_mask_1 : Input mask as file and string : mfs """
 
@@ -967,13 +961,6 @@ class test_mask(testref_base):
 ##Task level tests : awproject and mosaics
 class test_widefield(testref_base):
      
-     def setUp(self):
-          testref_base.setUp(self)
-
-## Uncomment this empty function if you want the resulting images to NOT be deleted. 
-#     def tearDown(self):
-#          """ none """
-
      def test_widefield_wproj_mfs(self):
           """ [widefield] Test_Widefield_wproj : W-Projection """ 
           ### Need better test dataset for this.....
@@ -1089,12 +1076,6 @@ class test_widefield(testref_base):
 ##Task level tests : model prediction.
 class test_modelvis(testref_base):
      
-     def setUp(self):
-          ret = None
-          self.msfile = 'refim_point.ms'
-          self.img = 'tst'
-          self.prepData(self.msfile)
-
      def test_modelvis_1(self):
           """ [modelpredict] Test_modelvis_1 : mfs with no save model """
           self.delmodels(self.msfile)

@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class SIImageStore 
 {
  public:
-  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,GRIDWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
+  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,GRIDWT,PB,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
   // Default constructor
 
   SIImageStore();
@@ -105,6 +105,7 @@ class SIImageStore
   virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
 
   virtual CountedPtr<ImageInterface<Float> > gridwt(uInt term=0);
+  virtual CountedPtr<ImageInterface<Float> > pb(uInt term=0);
 
   virtual void setModelImage( String modelname );
   virtual void setWeightDensity( CountedPtr<SIImageStore> imagetoset );
@@ -160,14 +161,14 @@ class SIImageStore
   // Image Statistics....
   Float getPeakResidual();
   Float getPeakResidualWithinMask();
-  Float getModelFlux();
+  Float getModelFlux(uInt term=0);
   virtual Bool isModelEmpty();
   Float getPSFSidelobeLevel();
   void findMinMax(const Array<Float>& lattice,
 		  const Array<Float>& mask,
 		  Float& minVal, Float& maxVal,
 		  Float& minValMask, Float& maxValMask);
-  void printImageStats();
+  virtual void printImageStats();
   Float getMaskSum();
 
   //
@@ -197,7 +198,11 @@ protected:
   void setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt);
   void setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage);
 
+  void fillSumWt(Int term=0);
   Bool divideImageByWeightVal( ImageInterface<Float>& target );
+  void normPSF(Int term=0);
+
+  void makePBFromWeight();
 
   void accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
 		    CountedPtr<ImageInterface<Float> > &parentptr, 
@@ -210,7 +215,6 @@ protected:
 
   Double getPbMax();
 
-
   ///////////////////// Member Objects
 
   IPosition itsImageShape, itsParentImageShape;
@@ -219,8 +223,9 @@ protected:
 
   Bool itsUseWeight;
   Record itsMiscInfo;
-  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt; // mutliterm shares this...
+  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
   Double itsPBScaleFactor;
+  Double itsPSFScaleFactor;
 
   Int itsNFacets, itsFacetId;
   Int itsNChanChunks, itsChanId;
@@ -240,7 +245,7 @@ private:
   CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
-  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt;
+  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB;
 
 
 };

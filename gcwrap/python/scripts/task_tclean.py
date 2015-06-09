@@ -68,7 +68,7 @@ def tclean(
     conjbeams ,#= True,
     cfcache ,#= "",
     computepastep ,#=360.0,
-    rotatepastep ,#=5.0,
+    rotatepastep ,#=360.0,
 
     pblimit,#=0.01,
     normtype,#='flatnoise',
@@ -121,54 +121,7 @@ def tclean(
         return
 
     #####################################################
-    #### Translate interface-specific parameters into ones used by ImagerParameters
-    ####  Try to minimize this section..... ideally should not exist.
-    #####################################################
-
-    ### This is temporary..... get rid of it.  Until then, outlierfiles have to hold these params.
-#    if gridder=='imagemosaic':
-#        mtype='imagemosaic'
-#    elif deconvolver=='mtmfs':
-#        mtype='multiterm'
-#    else:
-#        mtype='default'
-#
-#
-#    ### Set the ftmachine.
-#    ftmachine = 'gridft'
-#    if gridder=='standard':
-#        ftmachine='gridft'
-#    elif gridder=='widefield':
-#        if wprojplanes>1:
-#            ftmachine='wprojectft'
-#    elif gridder=='mosaic':
-#        ftmachine='mosaicft'
-#    elif gridder=='imagemosaic':
-#        if wprojplanes>1:
-#            ftmachine='wprojectft'
-#    elif gridder=='awproject':
-#        ftmachine='awprojectft'
-#    else:
-#        print 'Invalid gridder'
-#        return
-#
-    ### Scratch column...
-    usescratch=True
-    readonly=True
-    if savemodel=="virtual":
-        usescratch=False
-        readonly=False
-    elif savemodel=="modelcolumn":
-        usescratch=True
-        readonly=False
-
-    #####################################################
-    # Increment output image name if required.
-    #####################################################
-    ##imagename = incrementname( imagename )
-
-    #####################################################
-    #### Construct ImagerParameterss object
+    #### Construct ImagerParameters object
     #####################################################
 
     # Put all parameters into dictionaries and check them. 
@@ -248,18 +201,11 @@ def tclean(
         scales=scales,
         ntaylorterms=ntaylorterms,
         restoringbeam=restoringbeam,
-#        mtype=mtype,
         mask=mask,
 
-        usescratch=usescratch,
-        readonly=readonly,
-#        workdir=workdir
+        savemodel=savemodel
         )
     
-    ## Do some type-checking, parse outlier files, and modify image name if needed.
-    #if paramList.checkParameters() == False:
-    #   return False
-
     #paramList.printParameters()
 
     pcube=False
