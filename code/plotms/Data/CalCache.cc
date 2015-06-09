@@ -311,7 +311,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 }
 
   void CalCache::loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis) {
-  
+
   switch(axis) {
     
   case PMS::SCAN: // assumes scan unique
@@ -507,6 +507,13 @@ void CalCache::loadCalChunks(ROCTIter& ci,
       break;
     }
  */
+  case PMS::OBSERVATION: {
+    *obsid_[chunk] = cti.thisObs();
+    break;
+  }
+  case PMS::INTENT: {
+    break;
+  }
   default:
     throw(AipsError("Axis choice not supported for Cal Tables"));
     break;
