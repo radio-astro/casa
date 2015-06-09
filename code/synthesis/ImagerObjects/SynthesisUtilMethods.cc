@@ -721,7 +721,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// override with entries from savemodel.
 	String savemodel("");
 	err += readVal( inrec, String("savemodel"), savemodel );
-	if( savemodel=="virtual" ){usescratch=False; readonly=False;}
+	if( savemodel=="none" ){usescratch=False; readonly=True;}
+	else if( savemodel=="virtual" ){usescratch=False; readonly=False;}
 	else if ( savemodel=="modelcolumn" ){ usescratch=True; readonly=False; }
 
 	err += readVal( inrec, String("incrmodel"), incrmodel );
@@ -797,7 +798,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     state="";
     uvdist="";
     taql="";
-    usescratch=True;
+    usescratch=False;
     readonly=True;
     incrmodel=False;
     datacolumn="corrected";
