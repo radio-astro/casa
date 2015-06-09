@@ -66,7 +66,7 @@ class PySynthesisImager:
 
 #############################################
     def makeCFCache(self,exists):
-        # Make the CFCache and re-load it.  The following calls beomce
+        # Make the CFCache and re-load it.  The following calls become
         # NoOps (in SynthesisImager.cc) if the gridder is not one
         # which uses CFCache.
         if (exists):
@@ -96,7 +96,9 @@ class PySynthesisImager:
         # usable and is correct.  makeCFCache call then becomes a
         # NoOp.
         cfCacheName=self.allgridpars['0']['cfcache'];
-        exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
+        exists=False;
+        if (not (cfCacheName == '')):
+            exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
 
         for fld in range(0,self.NF):
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
@@ -281,8 +283,10 @@ class PySynthesisImager:
 ## Overloaded for parallel runs
     def fillCFCache(self):
         cfcName = self.allgridpars['0']['cfcache'];
-        cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
-#        cflist = ["CFS_0_0_CF_1_0_1.im", "CFS_0_0_CF_2_0_0.im", "CFS_0_0_CF_2_0_1.im"];
+        cflist=[];
+        if (not (cfcName == '')):
+            cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
+        #cflist = ["CFS_0_0_CF_0_0_0.im"];
         self.cfcachepars['cflist']=cflist;
 
         self.SItool.fillcfcache(**(self.cfcachepars)) ;
@@ -422,10 +426,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #       - call dryGridding.  This should b a NoOp for FTMs which are not of the AWProject-class 
         #           This makes an "empty" cfcache
         #  4. call setdata() for images on all nodes
-        #  5. If cfcache does not exist, call fillCFCache()
+        #  5. Now call defineImage() on all nodes, which sets up the FTMs.
+        #  6. If cfcache does not exist, call fillCFCache()
         #       This will fill the "empty" CFCache in parallel
-        #  6. call reloadCFCache() on all nodes.
-        #  7. Finally also call defineImage() on all nodes.
+        #  7. Finally call reloadCFCache() on all nodes.  
+        #     This loads the latest cfcache from the disk
         
         #PySynthesisImager.initializeImagers(self);
 
@@ -443,8 +448,12 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #  2. Check if cfcache exists
         #
         cfCacheName=self.allgridpars['0']['cfcache'];
-        cfcExists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
-
+        
+        if (not (cfCacheName == '')):
+            cfcExists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
+        else:
+            cfcExists = False;
+        print "CFCACHE = ",cfCacheName;
         #---------------------------------------
         #  3. If cfcache does not exist
         #       - call setdata() and defineimage() for the imager on the first node
@@ -485,16 +494,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs(joblist);
 
         #---------------------------------------
-        #  5. If cfcache does not exist, call fillCFCache()
-        #       This will fill the "empty" CFCache in parallel
-        #  6. call reloadCFCache() on all nodes.
-        if (not cfcExists):
-            self.fillCFCache();
-        self.reloadCFCache();
-
-
-        #---------------------------------------
-        #  7. Finally also call defineImage() on all nodes.
+        #  5. Call defineImage() on all nodes.  This sets up the FTMs.
         #
         joblist=[];
         for node in self.listOfNodes:
@@ -514,6 +514,16 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
+
+        #---------------------------------------
+        #  6. If cfcache does not exist, call fillCFCache()
+        #       This will fill the "empty" CFCache in parallel
+        #  7. Now call reloadCFCache() on all nodes.
+        #     This reloads the latest cfcahce.
+        if (not cfcExists):
+            self.fillCFCache();
+        self.reloadCFCache();
+
 
 #############################################
 
@@ -594,6 +604,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         joblist=[];
         for node in self.listOfNodes:
             cmd = "toolsi.reloadcfcache()";
+            print "CMD = ",node," ",cmd;
             joblist.append(self.PH.runcmd(cmd,node));
         self.PH.checkJobs(joblist);
 #############################################
@@ -603,10 +614,12 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
         print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
         print "AllCFList = ",allcflist;
+        m = len(allcflist);
+        print "No. of nodes used: ", m
         print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
 
         joblist=[];
-        for node in self.listOfNodes:
+        for node in self.listOfNodes[:m]:
             #print "#!$#!%#!$#@$#@$ ",allcflist;
             cmd = "toolsi.fillcfcache("+str(allcflist[node])+")";
             print "CMD = ",node," ",cmd;
@@ -951,7 +964,10 @@ class PyParallelImagerHelper():
 #############################################
     def partitionCFCacheList(self,gridPars):
 
-        cflist=[f for f in os.listdir(gridPars['cfcache']) if re.match(r'CFS*', f)];
+        cfcName = gridPars['cfcache'];
+        cflist=[];
+        if (not (cfcName == '')):
+            cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
 
         nCF = len(cflist);
         nProcs=len(self.nodeList);
@@ -962,7 +978,7 @@ class PyParallelImagerHelper():
 
         #n0=int(nCF/self.NN);
         n0=int(nCF/nProcs);
-        if (nProcs > nCF):
+        if (nProcs >= nCF):
             n0 = 1;
         allcfs = {};
         nUsed=0; i=1;
