@@ -962,38 +962,66 @@ class PyParallelImagerHelper():
         return self.nodeList;
 
 #############################################
+    def chunkify(self,lst,n):
+        return [ lst[i::n] for i in xrange(n) ]
+
     def partitionCFCacheList(self,gridPars):
 
         cfcName = gridPars['cfcache'];
         cflist=[];
         if (not (cfcName == '')):
             cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
-
         nCF = len(cflist);
         nProcs=len(self.nodeList);
         
+        if (nProcs > nCF):
+            n=nCF;
+        else:
+            n=nProcs;
         print "########################################################"
-        print "nCF = ",nCF," nProcs = ",nProcs," NodeList=",self.nodeList;
+        print "nCF = ",nCF," nProcs = ",n," NodeList=",self.nodeList;
         print "########################################################"
+        xx=self.chunkify(cflist,n);
+        allcfs={};
+        for i in range(n):
+            allcfs[i+1]=xx[i];
 
-        #n0=int(nCF/self.NN);
-        n0=int(float(nCF)/nProcs+0.5);
-        if (nProcs >= nCF):
-            n0 = 1;
-        allcfs = {};
-        nUsed=0; i=1;
-        while (nUsed < nCF):
-            m = nUsed+n0;
-            if (m > nCF): 
-		m=nCF;
-            allcfs[i]=cflist[nUsed:m];
-            nUsed = m;
-            if (i >= nProcs):
-                break;
-	    i=i+1;
-        if (nUsed < nCF):
-            allcfs[nProcs].append(cflist[i]);
         return allcfs;
+#############################################
+# The above version works better (better balanced chunking).
+# Keeping the code below in the file sometime, just in case...(SB).
+    # def partitionCFCacheList(self,gridPars):
+
+    #     cfcName = gridPars['cfcache'];
+    #     cflist=[];
+    #     if (not (cfcName == '')):
+    #         cflist=[f for f in os.listdir(cfcName) if re.match(r'CFS*', f)];
+
+    #     nCF = len(cflist);
+    #     nProcs=len(self.nodeList);
+        
+    #     print "########################################################"
+    #     print "nCF = ",nCF," nProcs = ",nProcs," NodeList=",self.nodeList;
+    #     print "########################################################"
+
+    #     #n0=int(nCF/self.NN);
+    #     n0=int(float(nCF)/nProcs+0.5);
+    #     if (nProcs >= nCF):
+    #         n0 = 1;
+    #     allcfs = {};
+    #     nUsed=0; i=1;
+    #     while (nUsed < nCF):
+    #         m = nUsed+n0;
+    #         if (m > nCF): 
+    #     	m=nCF;
+    #         allcfs[i]=cflist[nUsed:m];
+    #         nUsed = m;
+    #         if (i >= nProcs):
+    #             break;
+    #         i=i+1;
+    #     if (nUsed < nCF):
+    #         allcfs[nProcs].append(cflist[i]);
+    #     return allcfs;
             
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
