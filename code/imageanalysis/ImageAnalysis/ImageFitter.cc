@@ -308,7 +308,7 @@ void ImageFitter::_fitLoop(
 	Bool& anyConverged, ComponentList& convolvedList,
 	ComponentList& deconvolvedList, SPIIF templateImage,
 	SPIIF residualImage, SPIIF modelImage,
-	/*LCMask& completePixelMask, */ String& resultsString
+	String& resultsString
 ) {
 	Bool converged = False;
 	Bool deconvolve = False;
@@ -460,9 +460,6 @@ void ImageFitter::_doConverged(
 	);
 	SHARED_PTR<TempImage<Float> > fittedResid;
 	if (outputImages) {
-		if (hasSpectralAxis) {
-			location[spectralAxisNumber] = _curChan - _chanVec[0];
-		}
 		Array<Bool> myMask(templateImage->shape(), True);
 		residualImage->putSlice(curResidPixels, location);
 		if (modelImage) {
