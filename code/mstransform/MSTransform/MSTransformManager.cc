@@ -259,6 +259,7 @@ void MSTransformManager::initialize()
 	bufferMode_p = False;
 	userBufferMode_p = False;
 	reindex_p = True;
+	interactive_p = True;
 	spectrumReshape_p = False;
 	cubeTransformation_p = False;
 	dataColumnAvailable_p = False;
@@ -323,6 +324,8 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 
 	if (userBufferMode_p)
 	{
+		interactive_p = True;
+
 		// Data column matters for the time averaging options because they are not applied on demand
 		exists = configuration.fieldNumber ("datacolumn");
 		if (exists >= 0)
@@ -354,9 +357,28 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 						<< "Re-index is disabled " << LogIO::POST;
 			}
 		}
+
+		exists = configuration.fieldNumber ("interactive");
+		if (exists >= 0)
+		{
+			configuration.get (exists, interactive_p);
+
+			if (interactive_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Interactive mode is enabled - flagging will be applied on input MS " << LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Interactive mode is disabled - flagging will not be applied on input MS " << LogIO::POST;
+			}
+		}
 	}
 	else
 	{
+		interactive_p = False;
+
 		exists = configuration.fieldNumber ("outputms");
 		if (exists >= 0)
 		{
@@ -1020,7 +1042,7 @@ void MSTransformManager::parseCalParams(Record &configuration)
 void MSTransformManager::open()
 {
 	// Initialize MSTransformDataHandler to open the MeasurementSet object
-	if (bufferMode_p)
+	if (interactive_p)
 	{
 		// In buffer mode we may have to modify the flags
 		dataHandler_p = new MSTransformDataHandler(inpMsName_p,Table::Update);
@@ -4725,7 +4747,7 @@ void MSTransformManager::setIterationApproach()
 void MSTransformManager::generateIterator()
 {
 	Bool isWritable = False;
-	if (bufferMode_p) isWritable = True;
+	if (interactive_p) isWritable = True;
 
 	if (calibrate_p)
 	{
