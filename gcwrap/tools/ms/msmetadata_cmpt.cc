@@ -1071,7 +1071,19 @@ vector<int> msmetadata::scansforintent(const string& intent, int obsid, int arra
 		if (expand) {
 			std::map<String COMMA std::set<ScanKey> > mymap = _msmd->getIntentToScansMap();
 			std::set<ScanKey> ids = _idsFromExpansion(mymap, intent);
-			std::set<Int> scans = scanNumbers(ids);
+			std::set<ScanKey>::const_iterator iter = ids.begin();
+			std::set<ScanKey>::const_iterator end = ids.end();
+			std::set<ScanKey> myids;
+			while (iter != end) {
+				if (
+					iter->obsID == obsid
+					&& iter->arrayID == arrayid
+				) {
+					myids.insert(*iter);
+				}
+				++iter;
+			}
+			std::set<Int> scans = scanNumbers(myids);
 			return _setIntToVectorInt(scans);
 		}
 		else {
