@@ -35,7 +35,8 @@
 #include <casacore/casa/Arrays/Slice.h>
 #include <casacore/casa/Containers/Block.h>
 #include <casacore/casa/Exceptions/Error.h>
-#ifdef DISABLED_FOR_4_4 (CAS-7378)
+// (CAS-7378)
+#ifdef DISABLED_FOR_4_4
 # include <omp.h>
 #endif
 
