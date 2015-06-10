@@ -226,9 +226,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                         self.restfreq=self.table.getcell('REST_FREQUENCY',i)[0]
                         break
             self.close_table()
-            casalog.post("restfreq set to %s"%self.restfreq, "INFO")
+            casalog.post("restfreq set to %s" % self.restfreq, "INFO")
+        # REST_FREQUENCY column is optional (need retry if not exists)
         self.imager_param['restfreq'] = self.restfreq
-        
+    
         # 
         # spw (define representative spw id = spwid_ref)
         spwid_ref = selection_ids['spw'][0] if type(selection_ids['spw']) != int else selection_ids['spw']
@@ -247,6 +248,12 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.allchannels = self.table.getcell('NUM_CHAN',spwid_ref)
         freq_chan0 = self.table.getcell('CHAN_FREQ',spwid_ref)[0]
         freq_inc0 = self.table.getcell('CHAN_WIDTH',spwid_ref)[0]
+        # in case rest frequency is not defined yet.
+        if self.restfreq=='':
+            self.restfreq = '%fHz' % self.table.getcell('CHAN_FREQ',spwid_ref).mean()
+            self.imager_param['restfreq'] = self.restfreq
+            casalog.post("Using mean freq of spw %d as restfreq: %s" %
+                         (spwid_ref, self.restfreq), "INFO")
         self.close_table()
         self.imager_param['spw'] = -1 #spwid_ref
 
