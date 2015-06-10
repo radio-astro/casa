@@ -261,7 +261,12 @@ def setjy_core(vis=None, field=None, spw=None,
             elif userFluxDensity:
                 userFluxDensity = fluxdensity > 0.0
 
-            if standard=="Butler-JPL-Horizons 2012" and not userFluxDensity:
+            #in mpirun somehow subparameter defaulting does not work properly, 
+            #it seems to pick up default defined in "constraint" clause in the task xml instead
+            #of the one defined in "param", so userFluxDensity is not reliable to use in here
+            # (and somewhat redundant in this case).
+            #if standard=="Butler-JPL-Horizons 2012" and not userFluxDensity:
+            if standard=="Butler-JPL-Horizons 2012":
                 casalog.post("Using Butler-JPL-Horizons 2012")
                 ssmoddirs = findCalModels(target='SolarSystemModels',
                           roots=[casa['dirs']['data']],
@@ -278,11 +283,6 @@ def setjy_core(vis=None, field=None, spw=None,
                 # Need to branch out the process for fluxscale since the input dictionary may 
                 # contains multiple fields. Since fluxdensity parameter is just a vector contains 
                 # IQUV flux densities and so need to run im.setjy per field 
-
-                #pol stuff (not yet exposed...)
-                #polindex=[0.0]
-                #polangle=[0.0]
-                #rotmeas=0.0
 
                 if standard=="fluxscale": 
                     instandard="Perley-Butler 2010"
