@@ -31,6 +31,8 @@
 #include <dbus_cmpt.h>
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <signal.h>
 
 namespace casac {
 
@@ -50,6 +52,7 @@ const unsigned int plotms::LAUNCH_TOTAL_WAIT_US    = 5000000;
   plotms::plotms() : itsWatcher_(this){
 	  showGui = true;
 	  asyncCall = true;
+	  app_pid = -1;
 
   }
 
@@ -761,6 +764,14 @@ bool plotms::isClosed() {
 	return retValue;
 }
 
+void plotms::killApp() {
+
+	if (app_pid > 0)
+	{
+		kill(app_pid,9);
+	}
+}
+
 // Private Methods //
 
 bool plotms::displaySet() {
@@ -781,6 +792,7 @@ void plotms::launchApp() {
 
 	// Launch PlotMS application with the DBus switch.
 	pid_t pid = fork();
+	app_pid = pid;
 	if(pid == 0) {
 		String scriptClient;
 		if ( !showGui ){

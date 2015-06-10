@@ -1931,6 +1931,19 @@ State Methods
   <returns />
  
 </method>
+
+<method type="function" name="killApp">
+  <keyword>killApp</keyword>
+  
+  <shortdescription>Kill plotms app using SIGTERM</shortdescription>
+  
+  <description />
+  
+  <input />
+  <example />
+  <returns />
+ 
+</method>
 <!--
 ###############################################################################
 Miscellaneous Methods

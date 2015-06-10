@@ -259,7 +259,7 @@ void MSTransformManager::initialize()
 	bufferMode_p = False;
 	userBufferMode_p = False;
 	reindex_p = True;
-	interactive_p = True;
+	interactive_p = False;
 	spectrumReshape_p = False;
 	cubeTransformation_p = False;
 	dataColumnAvailable_p = False;

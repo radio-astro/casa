@@ -55,6 +55,9 @@ plotms_app app;
 // Casapy watcher.
 plotms_watcher itsWatcher_;
 
+// PID of the plotms_app
+pid_t app_pid;
+
 // Log parameters that are set before the application is launched.
 // <group>
 String itsLogFilename_, itsLogFilter_;
