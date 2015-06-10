@@ -335,10 +335,20 @@ class testref_base(unittest.TestCase):
           tb.putcol('MODEL_DATA', dat)
           tb.close();
 
-     def delmodels(self,msname=""):
-          resetmodelcol(msname)  ## Set model column to zero
+     def delmodels(self,msname="",dmodcol=False):
+          if dmodcol:
+               self.delmodelcol(msname) ## Delete model column
+          else:
+               self.resetmodelcol(msname)  ## Set model column to zero
           delmod(msname)  ## Get rid of OTF model
-          delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+          self.delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+
+     def delmodelcol(self,msname=""):
+          tb.open( msname, nomodify=False )
+          hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
+          if hasmodcol:
+               tb.removecols('MODEL_DATA')
+          tb.close()
 
      def checkmodel(self,msname=""):
           tb.open( msname )
@@ -636,7 +646,7 @@ class test_multifield(testref_base):
                         imexist=[self.img+'.image', self.img+'1.image'],
                         imval=[(self.img+'.image',1.4,[50,50,0,0]),
                                (self.img+'1.image',5.6,[40,40,0,0]),
-                               (self.img+'.image',0.7,[50,50,0,1])])
+                               (self.img+'.image',0.75,[50,50,0,1])])
 
      def test_multifield_mfs_mtmfs(self):
           """ [multifield] Test_Multifield_mfs_mtmfs : Two fields, one mt-mfs and one mfs (i.e. different deconvolvers)"""
@@ -1078,18 +1088,23 @@ class test_modelvis(testref_base):
      
      def test_modelvis_1(self):
           """ [modelpredict] Test_modelvis_1 : mfs with no save model """
-          self.delmodels(self.msfile)
+          self.prepData("refim_twochan.ms")
+          self.delmodels(msname=self.msfile,dmodcol=True)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,savemodel='none')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==False )
 
      def test_modelvis_2(self):
           """ [modelpredict] Test_modelvis_2 : mfs with save model column """
-          self.delmodels(self.msfile)
+          self.prepData("refim_twochan.ms")
+
+          ## Save model after deconvolution
+          self.delmodels(self.msfile,True)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
+          ##Predict from input model image (startmodel)
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, niter=0,savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1097,11 +1112,15 @@ class test_modelvis(testref_base):
 
      def test_modelvis_3(self):
           """ [modelpredict] Test_modelvis_3 : mfs with save virtual model """
-          self.delmodels(self.msfile)
+          self.prepData("refim_twochan.ms")
+
+          ## Save model after deconvolution
+          self.delmodels(self.msfile,True)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==True )
 
+          ##Predict from input model image (startmodel)
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, niter=0,savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1109,6 +1128,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_4(self):
           """ [modelpredict] Test_modelvis_4 : mt-mfs with no save model """
+          self.prepData("refim_twochan.ms")
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',savemodel='none')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1116,6 +1136,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_5(self):
           """ [modelpredict] Test_modelvis_5 : mt-mfs with save model column """
+          self.prepData("refim_twochan.ms")
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1128,6 +1149,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_6(self):
           """ [modelpredict] Test_modelvis_6 : mt-mfs with save virtual model """
+          self.prepData("refim_twochan.ms")
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1141,6 +1163,7 @@ class test_modelvis(testref_base):
      def test_modelvis_7(self):
           """ [modelpredict] Test_modelvis_7 : cube with chan selection and save model column """
           ## check explicit channels ...
+          self.prepData("refim_point.ms")
           self.delmodels(self.msfile)
           ret = tclean(vis=self.msfile,spw='0:5~12',imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',niter=10,savemodel='modelcolumn')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
@@ -1158,6 +1181,7 @@ class test_modelvis(testref_base):
           """ [modelpredict] Test_modelvis_8 : cube with chan selection and save virtual model """
           ## check explicit channels ...
           self.delmodels(self.msfile)
+          self.prepData("refim_point.ms")
           ret = tclean(vis=self.msfile,spw='0:5~12',imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',niter=10,savemodel='virtual')
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==False and hasvirmod==True )
@@ -1169,6 +1193,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_9(self):
           """ [modelpredict] Test_modelvis_9 : Don't de-grid channels with zero model. Also test limited-freq mask """
+          self.prepData("refim_point.ms")
           masklist=''  # choose only a few channels here.
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,mask=masklist)
           self.assertTrue(self.exists(self.img+'.model') )
@@ -1181,6 +1206,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_10(self):
           """ [modelpredict] Test_modelvis_10 : Use input model of different (narrower) freq range than data """
+          self.prepData("refim_point.ms")
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec', spw='0:5~12',niter=10)
           self.assertTrue(self.exists(self.img+'.model') )
           self.assertTrue( self.checkmodelchan(self.msfile,10) > 0.0 and self.checkmodelchan(self.msfile,3) == 0.0 )
@@ -1195,6 +1221,7 @@ class test_modelvis(testref_base):
 
      def test_modelvis_11(self):
           """ [modelpredict] Test_modelvis_11 : Predict model image over channel gaps not included in imaging """
+          self.prepData("refim_point.ms")
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec', spw='0:0~8;12~19',niter=10)
           self.assertTrue(self.exists(self.img+'.model') )
           self.assertTrue( self.checkmodelchan(self.msfile,10) == 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )

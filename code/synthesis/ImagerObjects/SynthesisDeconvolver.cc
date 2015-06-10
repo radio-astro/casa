@@ -170,12 +170,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           if( itsMaskString.contains("auto") ) {
             String alg;
 	    if ( itsMaskString=="auto") {
-              alg="";
+	      itsMaskHandler->autoMask( itsImages, "");
             }
-            else {
-              alg="thresh";
+            else  if ( itsMaskString.contains("thresh")) {
+	      itsMaskHandler->autoMask( itsImages, "thresh");
             }
-            itsMaskHandler->autoMask( itsImages, alg);
+	    else if  ( itsMaskString == "auto-pb") {
+	      itsMaskHandler->makePBMask( itsImages, 0.2);
+	    }
+	    else if  ( itsMaskString == "auto-within-pb") {
+	      itsMaskHandler->autoMaskWithinPB( itsImages, 0.2);
+	    }
           }
           else {
 	    itsMaskHandler->fillMask( itsImages, itsMaskString );

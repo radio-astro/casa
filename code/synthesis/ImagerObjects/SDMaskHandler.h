@@ -116,7 +116,8 @@ public:
                            
 
 
-  void makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit);
+  void makePBMask(CountedPtr<SIImageStore> imstore, Float pblimit=0.1);
+  void autoMaskWithinPB(CountedPtr<SIImageStore> imstore, Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
   Bool checkMaskImage(ImageInterface<Float>& maskiamge, Bool normalize=True);

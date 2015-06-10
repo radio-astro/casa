@@ -883,18 +883,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
   }
   
-  void SDMaskHandler::makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit)
+  void SDMaskHandler::makePBMask(CountedPtr<SIImageStore> imstore, Float pblimit)
   {
-    LogIO os( LogOrigin("SDMaskHandler","makeAutoMask",WHERE) );
-    os << "Make autobox mask" << LogIO::POST;
+    LogIO os( LogOrigin("SDMaskHandler","makePBMask",WHERE) );
 
-    if( ! imstore->hasSensitivity() )
-      { throw(AipsError("Need PB/Sensitivity/Weight image before a PB-based mask can be made for "+imstore->getName())); }
+    if( imstore->hasPB() ) // Projection algorithms will have this.
+      {
+	LatticeExpr<Float> themask( iif( (*(imstore->pb())) > pblimit , 1.0, 0.0 ) );
+	imstore->mask()->copyData( themask );
+      }
+    else // Calculate it here...
+      {
+	// Get antenna diameter
+	// Get frequency
+	// Assuming a Gaussian, construct a circle region at pblimit.
 
-    LatticeExpr<Float> themask( iif( (*(imstore->weight())) > weightlimit , 1.0, 0.0 ) );
-    imstore->mask()->copyData( themask );
-  }
+	// But for now...
+	throw(AipsError("Need PB/Sensitivity/Weight image before a PB-based mask can be made for "+imstore->getName())); 
+      }
+    // Also add option to just use the vpmanager or whatever centralized PB repository there will be (sometime in the distant future...).
 
+  }// end of makePBMask
+
+  void SDMaskHandler::autoMaskWithinPB(CountedPtr<SIImageStore> imstore, Float pblimit)
+  {
+    LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
+
+    autoMask( imstore, "thresh" );
+
+    if( imstore->hasPB() ) // Projection algorithms will have this.
+      {
+	LatticeExpr<Float> themask( iif( (*(imstore->pb())) > pblimit , (*(imstore->mask())), 0.0 ) );
+	imstore->mask()->copyData( themask );
+      }
+    // else... same options as makePBMask (put it into a helper function)
+  }// end of autoMaskWithinPB
 
 } //# NAMESPACE CASA - END
 

@@ -151,7 +151,12 @@ class SIImageStore
 
   Bool getUseWeightImage(ImageInterface<Float>& target);
 
+  //  virtual Bool hasSensitivity(){return doesImageExist(itsImageName+imageExts(WEIGHT));}
+  virtual Bool hasPB(){return doesImageExist(itsImageName+imageExts(PB));}
+
   virtual Bool hasSensitivity(){return !itsWeight.null();}
+  //virtual Bool hasPB(){return !itsPB.null();}
+
   virtual Bool hasMask(){return !itsMask.null(); }
   virtual Bool hasModel() {return !itsModel.null();}
   virtual Bool hasPsf() {return !itsPsf.null();}
