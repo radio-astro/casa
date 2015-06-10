@@ -422,6 +422,43 @@ class MPICommandClient:
                         
             casalog.post("Received response from all servers to start service signal","INFO",casalog_call_origin)
             
+            
+        def __send_app_control_signal(self,app,cmd):
+            
+            casalog_call_origin = "MPICommandClient::send_app_control_signal"
+            
+            casalog.post("Sending %s control signal to all servers: %s" % (app,cmd),"INFO",casalog_call_origin)
+            
+            # Prepare app control request
+            request = {}
+            request['signal'] = 'app_control'
+            request['app'] = app
+            request['command'] = cmd
+            
+            # Send request to all servers
+            self.__communicator.control_service_request_broadcast(request,casalog)
+                        
+            # Then wait until all servers have handled the signal
+            mpi_server_rank_list = self.__monitor_client.get_server_rank_online()
+            while len(mpi_server_rank_list)>0:
+                response_available = False
+                response_available = self.__communicator.control_service_response_probe()
+                if response_available:
+                    # Receive start service response to know what server has started
+                    response = self.__communicator.control_service_response_recv()
+                    rank = response['rank']
+                    # Remove server from list
+                    mpi_server_rank_list.remove(rank)
+                    # Communicate that server response to start service signal has been received
+                    casalog.post("Server with rank %s sent %s signal to %s app" 
+                                 % (str(rank),cmd,app),
+                                 "INFO",casalog_call_origin)
+                else:
+                    time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
+            
+            # Send request to all servers          
+            casalog.post("%s %s signal sent to all servers" % (app,cmd),"INFO",casalog_call_origin)                 
+            
         
         def __send_stop_service_signal(self,force_command_request_interruption=True,finalize_mpi_environment=False):
             
@@ -593,6 +630,9 @@ class MPICommandClient:
             # Stop client command request-response services
             self.__stop_command_request_queue_service()
             self.__stop_command_response_handler_service()          
+            
+            # Shutdown apps
+            self.__send_app_control_signal("plotms","pm.killApp()")            
                 
             # Send stop signal to servers
             self.__send_stop_service_signal(force_command_request_interruption,finalize_mpi_environment)

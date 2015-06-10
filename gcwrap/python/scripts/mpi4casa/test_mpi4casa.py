@@ -6,6 +6,7 @@ import socket
 import traceback
 import unittest
 import testhelper
+import filecmp
 from taskinit import mstool,tbtool,cbtool,casalog,casac
 from tasks import setjy,flagdata,applycal,uvcontsub
 from mpi4casa.MPIEnvironment import MPIEnvironment
@@ -51,7 +52,7 @@ def setUpFileCore(file,type_file):
         os.system('rm -rf ' + file)
 
     casalog.post("Copy %s file %s into the working area..." % (type_file,file),"INFO","test_mpi4casa")
-    os.system('cp -R ' + os.environ.get('CASAPATH').split()[0] + 
+    os.system('cp -RL ' + os.environ.get('CASAPATH').split()[0] + 
               '/data/regression/unittest/simplecluster/' + file + ' ' + file)
 
 def setUpFile(file,type_file):
@@ -1073,7 +1074,7 @@ class test_mpi4casa_setjy(unittest.TestCase):
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
-        listSubMSs.append(self.vis)
+        #listSubMSs.append(self.vis)
         for subMS in listSubMSs:
             tblocal = tbtool()
             tblocal.open(subMS + '/SOURCE')
@@ -1105,21 +1106,25 @@ class test_mpi4casa_setjy(unittest.TestCase):
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
-        listSubMSs.append(self.vis)
+        #listSubMSs.append(self.vis)
         for subMS in listSubMSs:
             tblocal = tbtool()
             tblocal.open(subMS + '/SOURCE')
             nrows = tblocal.nrows()
             for row_i in range(0,nrows):
-                model_i = tblocal.getcell('SOURCE_MODEL',row_i)
-                if (row_i == 0):
-                    self.assertEqual(model_i['cl_0']['fields'][0],row_i)
-                    self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1331.)
-                elif (row_i == 1):
-                    self.assertEqual(model_i['cl_0']['fields'][0],row_i)
-                    self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1445.)                    
-                else:
-                    self.assertEqual(len(model_i),0)
+                try:
+                    model_i = tblocal.getcell('SOURCE_MODEL',row_i)
+                    if (row_i == 0):
+                        self.assertEqual(model_i['cl_0']['fields'][0],row_i)
+                        self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                    elif (row_i == 1):
+                        self.assertEqual(model_i['cl_0']['fields'][0],row_i)
+                        self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1445.)                    
+                    else:
+                        self.assertEqual(len(model_i),0)
+                except:
+                    casalog.post("Problem accesing SOURCE_MODEL col from subMS %s" % subMS ,
+                                 "SEVERE","test2_setjy_scratchless_mode_multiple_model")                        
             tblocal.close()            
             
     def test3_setjy_scratch_mode_single_model(self):
@@ -1314,6 +1319,57 @@ class test_mpi4casa_NullSelection(unittest.TestCase):
             logfile = '%s/MSSelectionNullSelection.log-server-%s' % (cwd,str(server))
             content = open(logfile, 'r').read()
             self.assertEqual(content.find("MSSelectionNullSelection")<0, True, "MSSelectionNullSelection should be filtered out")
+            
+            
+class test_mpi4casa_plotms(unittest.TestCase):
+
+    def setUp(self):
+        
+        self.vis = 'Four_ants_3C286.mms'
+        setUpFile(self.vis,'vis')
+        
+        self.client = MPICommandClient()
+        self.client.set_log_mode('redirect')
+        self.client.start_services()       
+        
+        # Prepare list of servers
+        self.server_list = []
+        server_list = self.client.get_server_status()
+        for server in server_list:
+            if not server_list[server]['timeout']:
+                self.server_list.append(server_list[server]['rank'])          
+
+    def tearDown(self):
+
+        os.system('rm -rf ' + self.vis)
+    
+    def test_mpi4casa_plotms_concurrent(self):
+        """Run plotms on the same MS from each server simulateneously"""
+        
+        # Change current working directory
+        self.client.push_command_request("os.chdir('%s')" % os.getcwd(),True,self.server_list)
+        
+        # Farm plotms jobs
+        command_request_id_list = []
+        for server in self.server_list:
+            plotfile = 'test_mpi4casa_plotms_concurrent-%s.png' % str(server)
+            cmd = "plotms('%s', avgchannel='8',avgtime='60s',plotfile='%s',showgui=False)" % (self.vis,plotfile)
+            command_request_id = self.client.push_command_request(cmd,False,server)
+            command_request_id_list.append(command_request_id[0])
+            
+        # Get response in block mode
+        command_response_list = self.client.get_command_response(command_request_id_list,True,True)
+        
+        # Compare files
+        for server_idx in range(0,len(self.server_list)):
+            for server_idy in range(server_idx+1,len(self.server_list)):
+                server_x = self.server_list[server_idx]
+                server_y = self.server_list[server_idy]
+                plotfile_server_idx = 'test_mpi4casa_plotms_concurrent-%s.png' % str(server_x)
+                plotfile_server_idy = 'test_mpi4casa_plotms_concurrent-%s.png' % str(server_y)
+                areEqual = filecmp.cmp(plotfile_server_idx,plotfile_server_idy)
+                self.assertTrue(areEqual,"Plotfile generated by server %s is different from plotfile generated by server %s" 
+                                % (str(server_x),str(server_y)))
         
 
 def suite():
@@ -1324,4 +1380,5 @@ def suite():
             test_mpi4casa_applycal,
             test_mpi4casa_uvcont,
             test_MPICommandServer,
-            test_mpi4casa_NullSelection]
+            test_mpi4casa_NullSelection,
+            test_mpi4casa_plotms]

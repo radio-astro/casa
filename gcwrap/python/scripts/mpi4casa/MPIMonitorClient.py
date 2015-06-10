@@ -336,6 +336,16 @@ class MPIMonitorClient:
             return server_rank_available
         
         
+        def get_server_rank_online(self,verbose=False):
+                     
+            server_rank_online = []
+            for rank in self.__server_status_list:
+                if not self.__server_status_list[rank]['timeout']:
+                    server_rank_online.append(rank)
+                
+            return server_rank_online        
+        
+        
         def get_server_timeout(self):
             
             casalog_call_origin = "MPIMonitorClient::get_server_timeout"

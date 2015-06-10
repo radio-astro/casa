@@ -64,6 +64,7 @@ from mstransform_pg import mstransform_pg as mstransform
 from split2_pg import split2_pg as split2
 from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from cvel2_pg import cvel2_pg as cvel2
+from plotms_pg import plotms_pg as plotms
 
 
 # EOF
