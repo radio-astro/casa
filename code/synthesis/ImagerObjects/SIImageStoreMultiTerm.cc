@@ -761,7 +761,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int tix=2*itsNTerms-1-1;tix>-1;tix--) // AAH go backwards so that zeroth term is normalized last..... sigh sigh sigh.
       {
 
-	cout << "npsfs : " << itsPsfs.nelements() << " and tix : " << tix << endl;
+	//cout << "npsfs : " << itsPsfs.nelements() << " and tix : " << tix << endl;
 
 	//	divideImageByWeightVal( *psf(tix) );
 	normPSF(tix);

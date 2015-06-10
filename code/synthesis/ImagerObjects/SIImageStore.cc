@@ -228,7 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	doesImageExist(itsImageName+String(".psf")) )
       {
 
-	/*
+	
     if( doesImageExist(itsImageName+String(".sumwt"))  )
       {
 	CountedPtr<ImageInterface<Float> > imptr;
@@ -248,14 +248,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
-	*/
-     
+
+    /*     
 	itsNFacets = 1; // TODO : set to input parameter from somewhere...
 	itsFacetId = 0;
 	itsUseWeight = hasSensitivity();
 	itsPBScaleFactor=1.0; ///// No need to set properly here as it will be calc'd in dividePSF...()
 	itsPSFScaleFactor=1.0;
-
+    */
 
       }// if psf or residual exist...
 
@@ -1082,6 +1082,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	    setUseWeightImage( *weight(),  getUseWeightImage(*(imagestoadd->weight()) ) );
 	  }
 
+	Array<Float> qqq, www;
+	imagestoadd->sumwt()->get(qqq,True);
+	sumwt()->get(www,True);
+	cout << "SUMWT : Adding : " << qqq << " to " << www << endl;
+
+
 	LatticeExpr<Float> adderSumWt( *(sumwt()) + *(imagestoadd->sumwt()) ); 
 	sumwt()->copyData(adderSumWt);
 	setUseWeightImage( *sumwt(),  getUseWeightImage(*(imagestoadd->sumwt()) ) );
@@ -1130,7 +1136,7 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
     //// Don't do any extra norm. Minor cycle will operate with native PB.
     //return 1.0;
 
-    //// Normalize PB to 1 at the center of the image
+    //// Normalize PB to 1 at the center of the image OF CHANNEL ZERO
     
         IPosition shp = weight(0)->shape();
         IPosition center(4, shp[0]/2, shp[1]/2,0,0);
@@ -1952,24 +1958,36 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
   void  SIImageStore::normPSF(Int term)
   {
 
+    /*	    
     IPosition center(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
-	    
+
     ///    LatticeExpr<Float> normed( (*(psf(term))) / (psf(0))->getAt(center) );
     LatticeExpr<Float> normed( (*(psf(term))) / max(*(psf(0))) );
     psf(term)->copyData( normed );
+    */
 
-	    /*
+
     for(Int pol=0; pol<itsImageShape[2]; pol++)
       {
 	for(Int chan=0; chan<itsImageShape[3]; chan++)
 	  {
-	    IPosition center(4,itsImageShape[0]/2,itsImageShape[1]/2,pol,chan);
+	    ///	    IPosition center(4,itsImageShape[0]/2,itsImageShape[1]/2,pol,chan);
 	    
-	    LatticeExpr<Float> normed( (*(psf(term))) / (psf(0))->getAt(center) );
-	    psf(term)->copyData( normed );
+	    CountedPtr<ImageInterface<Float> > subim=makeSubImage(0,1, 
+								  chan, itsImageShape[3],
+								  pol, itsImageShape[2], 
+								  (*psf(term)) );
+
+	    CountedPtr<ImageInterface<Float> > subim0=makeSubImage(0,1, 
+								  chan, itsImageShape[3],
+								  pol, itsImageShape[2], 
+								  (*psf(0)) );
+
+	    LatticeExpr<Float> normed( (*(subim)) / max(*(subim0)) );
+	    subim->copyData( normed );
 	  }
       }
-	    */
+
   }
 
   void SIImageStore::calcSensitivity()
