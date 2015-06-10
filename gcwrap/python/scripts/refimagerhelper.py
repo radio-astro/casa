@@ -417,21 +417,6 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 #############################################
     def initializeImagers(self):
 
-        #
-        # The sequence of operations in the method is the following:
-        #  1. Start imagers on all nodes
-        #  2. Check if cfcache exists
-        #  3. If cfcache does not exist
-        #       - call setdata() and defineimage() for the imager on the first node
-        #       - call dryGridding.  This should b a NoOp for FTMs which are not of the AWProject-class 
-        #           This makes an "empty" cfcache
-        #  4. call setdata() for images on all nodes
-        #  5. Now call defineImage() on all nodes, which sets up the FTMs.
-        #  6. If cfcache does not exist, call fillCFCache()
-        #       This will fill the "empty" CFCache in parallel
-        #  7. Finally call reloadCFCache() on all nodes.  
-        #     This loads the latest cfcache from the disk
-        
         #PySynthesisImager.initializeImagers(self);
 
         #--------------------------------------
@@ -441,8 +426,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #### MPIInterface related changes
         #for node in range(0,self.NN):
         for node in self.listOfNodes:
-            ## Initialize the tool for the current node
-            self.PH.runcmd("toolsi = casac.synthesisimager()", node)
+            joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
+        self.PH.checkJobs(joblist);
 
         #---------------------------------------
         #  2. Check if cfcache exists
@@ -456,46 +441,17 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         print "CFCACHE = ",cfCacheName;
         #---------------------------------------
         #  3. If cfcache does not exist
-        #       - call setdata() and defineimage() for the imager on the first node
+        #       - call selectdata() and defineimage() for the imager on the all nodes
         #       - call dryGridding.  This should b a NoOp for FTMs which are not of the AWProject-class 
         #           This makes an "empty" cfcache
-        if (not cfcExists):
-            nodes=[1];
-            for node in nodes:
-                for mss in sorted( self.selpars.keys() ):
-                    joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
-            self.PH.checkJobs(joblist);
-
-            joblist=[];
-            for node in nodes:
-                for fld in range(0,self.NF):
-                    # for fld in range(0,self.NF):
-                    #     self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
-                    cmd="toolsi.defineimage( impars=" + str( self.allimpars[str(fld)] ) + ", gridpars=" + str( self.allgridpars[str(fld)] )   + ")";
-                # print "#!$#!%#!$#@$#@$ ",node," ",cmd;
-                    joblist.append( self.PH.runcmd(cmd, node ) );
-            self.PH.checkJobs(joblist);
-
-            self.dryGridding();
-
-            #self.deleteImagers();
-
-######################################################################################################################################
-        #---------------------------------------
-        #  4. call setdata() for images on all nodes
-        #
-        joblist=[];
         print "################### List of nodes: ",self.listOfNodes;
-        for node in self.listOfNodes:
-            ## Send in Selection parameters for all MSs in the list
-            #### MPIInterface related changes (the -1 in the expression below)
-            for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
-                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
+        joblist=[];
+        nodes=self.listOfNodes;#[1];
+        for node in nodes:
+            for mss in sorted( self.selpars.keys() ):
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
         self.PH.checkJobs(joblist);
 
-        #---------------------------------------
-        #  5. Call defineImage() on all nodes.  This sets up the FTMs.
-        #
         joblist=[];
         for node in self.listOfNodes:
             ## For each image-field, define imaging parameters
@@ -505,15 +461,48 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             for fld in range(0,self.NF):
                 if self.NN>1:
                     nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
-###                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
-###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
-
-#                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
                     # # Give the same CFCache name to all nodes
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
+
+        if (not cfcExists):
+            self.dryGridding();
+
+######################################################################################################################################
+        #---------------------------------------
+        #  4. call setdata() for images on all nodes
+        #
+        # joblist=[];
+        # for node in self.listOfNodes:
+        #     ## Send in Selection parameters for all MSs in the list
+        #     #### MPIInterface related changes (the -1 in the expression below)
+        #     for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
+        #         joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
+        # self.PH.checkJobs(joblist);
+
+        #---------------------------------------
+        #  5. Call defineImage() on all nodes.  This sets up the FTMs.
+        #
+#         joblist=[];
+#         for node in self.listOfNodes:
+#             ## For each image-field, define imaging parameters
+#             nimpars = copy.deepcopy(self.allimpars)
+#             #print "nimpars = ",nimpars;
+#             ngridpars = copy.deepcopy(self.allgridpars)
+#             for fld in range(0,self.NF):
+#                 if self.NN>1:
+#                     nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+# ###                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+# ###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
+
+# #                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
+#                     # # Give the same CFCache name to all nodes
+#                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
+
+#                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+#         self.PH.checkJobs(joblist);
 
         #---------------------------------------
         #  6. If cfcache does not exist, call fillCFCache()
@@ -522,7 +511,40 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #     This reloads the latest cfcahce.
         if (not cfcExists):
             self.fillCFCache();
-        self.reloadCFCache();
+#        self.reloadCFCache();
+        
+
+
+        # TRY: Start all over again!
+        self.deleteImagers();
+
+        joblist=[]
+
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("toolsi = casac.synthesisimager()", node) );
+        self.PH.checkJobs(joblist);
+
+        joblist=[];
+        nodes=self.listOfNodes;#[1];
+        for node in nodes:
+            for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
+                    # for mss in sorted( self.selpars.keys() ):
+                    #     joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.selpars[mss])+")", node) )
+        self.PH.checkJobs(joblist);
+
+        joblist=[];
+        for node in self.listOfNodes:
+            nimpars = copy.deepcopy(self.allimpars)
+            ngridpars = copy.deepcopy(self.allgridpars)
+            for fld in range(0,self.NF):
+                if self.NN>1:
+                    nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    # # Give the same CFCache name to all nodes
+                    ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache'];
+
+                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+        self.PH.checkJobs(joblist);
 
 
 #############################################
