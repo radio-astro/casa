@@ -1825,7 +1825,7 @@ class imfit_test(unittest.TestCase):
         model = "mymodel.im"
         myia = iatool()
         imagename = datapath + "one_chan_out_of_ten.im"
-        myia.open(imagename)
+        self.assertTrue(myia.open(imagename))
         zz = myia.fitcomponents(chans="5", residual=resid, model=model)
         self.assertTrue(zz)
         for im in [model, resid]:
@@ -1841,7 +1841,6 @@ class imfit_test(unittest.TestCase):
             self.assertTrue(res['max'][0] == 0)
             self.assertTrue(res['min'][0] == 0)
         myia.done()
-        
 
 def suite():
     return [imfit_test]
