@@ -572,10 +572,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     accessImage( itsSumWts[term], itsParentSumWts[term], imageExts(SUMWT)+".tt"+String::toString(term) );
 
-    /*
+    
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) 
       {itsUseWeight = getUseWeightImage( *itsParentSumWts[0] );}
-      setUseWeightImage( *(itsSumWts[term]) , itsUseWeight); // Sets a flag in the SumWt image. */
+      setUseWeightImage( *(itsSumWts[term]) , itsUseWeight); // Sets a flag in the SumWt image. 
 
     return itsSumWts[term];
   }
@@ -715,7 +715,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(addweight)
 	  {
 
-	    if(doesImageExist(itsImageName+String(".weight.tt0"))  ) //getUseWeightImage( *(imagestoadd->psf(tix)) ) ) // Access and add weight only if it is needed.
+	    if(getUseWeightImage( *(imagestoadd->psf(tix)) ) ) // Access and add weight only if it is needed.
 	      {
 		LatticeExpr<Float> adderWeight( *(weight(tix)) + *(imagestoadd->weight(tix)) ); 
 		weight(tix)->copyData(adderWeight);
@@ -766,15 +766,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	divideImageByWeightVal( *psf(tix) );
 	normPSF(tix);
 
-	if(doesImageExist(itsImageName+String(".weight.tt0"))  ) 
-	  { 
+	//	if(doesImageExist(itsImageName+String(".weight.tt0"))  ) 
+	if( itsUseWeight )
+	{ 
 	    
 	    divideImageByWeightVal( *weight(tix) ); 
 
-	    makePBFromWeight();
-
 	  }
       }
+    makePBFromWeight();
 
     //    calcSensitivity();
     // createMask
@@ -792,10 +792,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=1;tix<itsNTerms;tix++)  { setSumWt( *residual(tix) , sumwt ); }
     */
 
-    Bool useweightimage = itsUseWeight; // getUseWeightImage( *residual(0) );
+    //    Bool useweightimage = itsUseWeight; // getUseWeightImage( *residual(0) );
 
-    if( doesImageExist(itsImageName+String(".weight.tt0")) )
-      {
+    //    if( doesImageExist(itsImageName+String(".weight.tt0")) )
+    if( itsUseWeight )  
+    {
 	/*
 	sumwt = getSumWt( *weight(0) );
 	for(uInt tix=1;tix<itsNTerms;tix++) { setSumWt( *weight(tix) , sumwt ); }
@@ -810,8 +811,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	divideImageByWeightVal( *residual(tix) );
 
-	if(doesImageExist(itsImageName+String(".weight.tt0"))  )
-	  {
+	//	if(doesImageExist(itsImageName+String(".weight.tt0"))  )
+	if( itsUseWeight )
+	{
 	    
 	    LatticeExpr<Float> deno;
 	    if( normtype=="flatnoise"){
@@ -868,12 +870,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideModelByWeight",WHERE) );
 
-    /*    if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
+        if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
 	itsUseWeight // only when needed
 	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    */
-    if( doesImageExist(itsImageName+String(".weight.tt0"))  )
+    
+	  // if( doesImageExist(itsImageName+String(".weight.tt0"))  )
       {
 
 	if( normtype=="flatsky") {
@@ -920,14 +922,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","multiplyModelByWeight",WHERE) );
 
-    /*
+    
     if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
 	//&& 
        itsUseWeight // only when needed
 	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    */
-    if( doesImageExist(itsImageName+String(".weight.tt0"))      )
+    
+      //  if( doesImageExist(itsImageName+String(".weight.tt0"))      )
 {
 
 	if( normtype=="flatsky") {

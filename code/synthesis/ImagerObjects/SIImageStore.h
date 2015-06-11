@@ -230,7 +230,6 @@ protected:
   Record itsMiscInfo;
   CountedPtr<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
   Double itsPBScaleFactor;
-  Double itsPSFScaleFactor;
 
   Int itsNFacets, itsFacetId;
   Int itsNChanChunks, itsChanId;

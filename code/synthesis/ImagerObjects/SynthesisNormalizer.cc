@@ -250,14 +250,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsImages->dividePSFByWeight();
     }
     else {
-      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
-        { itsFacetImageStores[facet]->dividePSFByWeight( ); }
+      // Since PSFs are normed just by their max, this sequence is OK.
+      setPsfFromOneFacet();
+      itsImages->dividePSFByWeight();
 
-      /// Now that all facets are invidually normalized and sumwt per facet has
+      /*
+      /// All facets are invidually normalized and sumwt per facet has
       /// been recorded from unnormed psfs, copy one psf to the centre because the
       /// minor cycle needs a 'normal' psf for whole image.
-
+      for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
+        { itsFacetImageStores[facet]->dividePSFByWeight( ); }
       setPsfFromOneFacet();
+      */
 
     }
 

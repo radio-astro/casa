@@ -111,7 +111,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=NULL;
     itsUseWeight=False;
     itsPBScaleFactor=1.0;
-    itsPSFScaleFactor=1.0;
 
     itsNFacets=1;
     itsFacetId=0;
@@ -152,7 +151,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=NULL;
     itsUseWeight=useweightimage;
     itsPBScaleFactor=1.0;
-    itsPSFScaleFactor=1.0;
 
     itsNFacets=1;
     itsFacetId=0;
@@ -237,7 +235,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsFacetId = 0;
 	itsUseWeight = getUseWeightImage( *imptr );
 	itsPBScaleFactor=1.0; ///// No need to set properly here as it will be calc'd in dividePSF...()
-	itsPSFScaleFactor=1.0;
 
 	if( itsUseWeight && ! doesImageExist(itsImageName+String(".weight")) )
 	  {
@@ -248,14 +245,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError( "SumWt information does not exist. Please create either a PSF or Residual" ) );
       }
-
-    /*     
-	itsNFacets = 1; // TODO : set to input parameter from somewhere...
-	itsFacetId = 0;
-	itsUseWeight = hasSensitivity();
-	itsPBScaleFactor=1.0; ///// No need to set properly here as it will be calc'd in dividePSF...()
-	itsPSFScaleFactor=1.0;
-    */
 
       }// if psf or residual exist...
 
@@ -292,7 +281,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsFacetId=0;
     itsUseWeight=getUseWeightImage( *sumwtim );
     itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
-	itsPSFScaleFactor=1.0;
 
     itsImageShape=psfim->shape();
     itsCoordSys = psfim->coordinates();
@@ -333,7 +321,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsSumWt=sumwtim;
 
     itsPBScaleFactor=1.0;// No need to set properly here as it will be computed in makePSF.
-	itsPSFScaleFactor=1.0;
 
     itsNFacets = nfacets;
     itsFacetId = facet;
@@ -882,11 +869,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     accessImage( itsSumWt, itsParentSumWt, imageExts(SUMWT) );
 
-    /*
+    
     if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 ) 
       { itsUseWeight = getUseWeightImage( *itsParentSumWt );}
     setUseWeightImage( *itsSumWt , itsUseWeight); // Sets a flag in the SumWt image. 
-    */
+    
 
     // if( itsUseWeight ){ 
       //      weight(); // Since it needs the weight image, make it. 
@@ -1073,7 +1060,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if(addweight)
       {
-	if( doesImageExist(itsImageName+String(".weight")) ) // getUseWeightImage( *(imagestoadd->psf()) ) ) // Access and add weight only if it is needed.
+	if( getUseWeightImage( *(imagestoadd->psf()) ) ) // Access and add weight only if it is needed.
 	  {
 	    LatticeExpr<Float> adderWeight( *(weight()) + *(imagestoadd->weight()) ); 
 	    weight()->copyData(adderWeight);
@@ -1173,8 +1160,9 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
     normPSF();
 
     //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
-    if( doesImageExist(itsImageName+String(".weight")) ) 
-      { 
+    //    if( doesImageExist(itsImageName+String(".weight")) ) 
+    if( itsUseWeight )
+    { 
 	
 	divideImageByWeightVal( *weight() ); 
 
@@ -1197,11 +1185,12 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 
     // Normalize by the sumwt, per plane. 
     Bool didNorm = divideImageByWeightVal( *residual() );
-    Bool useweightimage = itsUseWeight; //getUseWeightImage( *residual() );
+    //    Bool useweightimage = itsUseWeight; //getUseWeightImage( *residual() );
 
     //    cout << "SIIM div residual by weight : useweightimage : " << useweightimage << endl;
 
-    if( doesImageExist(itsImageName+String(".weight")) )
+    //    if( doesImageExist(itsImageName+String(".weight")) )
+    if( itsUseWeight )
       {
 	//	divideImageByWeightVal( *weight() ); // Assume already normalized by PSF making.
 
@@ -1234,7 +1223,7 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
     
     // If no normalization happened, print a warning. The user must check if it's right or not.
     // Or... later if we get a gridder that does pre-norms, this warning can go. 
-    if( (didNorm | useweightimage) != True ) 
+    if( (didNorm | itsUseWeight) != True ) 
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
 
     // createMask
@@ -1245,12 +1234,12 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
 
-    ////    if( ///!itsModel.null() 
+        if( ///!itsModel.null() 
 	//	&& getUseWeightImage( *residual() ) == True // only when needed
 	//&& 
-       ////	itsUseWeight // only when needed
-       ////	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    if( doesImageExist(itsImageName+String(".weight")) )
+       	itsUseWeight // only when needed
+       	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+    //    if( doesImageExist(itsImageName+String(".weight")) )
       {
 
 	if( normtype=="flatsky") {
@@ -1291,12 +1280,12 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
   {
     LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
 
-    ////    if( //!itsModel.null() // anything to do ? 
+        if( //!itsModel.null() // anything to do ? 
        //	getUseWeightImage( *residual() ) == True // only when needed
 	//&& 
-    ////	itsUseWeight // only when needed
-    ////	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    if( doesImageExist(itsImageName+String(".weight")) )     
+    	itsUseWeight // only when needed
+    	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
+	  // if( doesImageExist(itsImageName+String(".weight")) )     
       {
 	if( normtype=="flatsky") {
 	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
