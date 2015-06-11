@@ -273,4 +273,22 @@ singledishms::set_selection(::casac::variant const& spw,
   return rstat;
 }
 
+bool
+singledishms::smooth(string const &type, float const width,
+        string const &datacolumn, string const &outfile)
+{
+    bool rstat(false);
+    *itsLog << _ORIGIN;
+    try {
+      assert_valid_ms();
+      itsSd->smooth(type, width, datacolumn, outfile);
+      rstat = true;
+    } catch  (AipsError x) {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+          << LogIO::POST;
+      RETHROW(x);
+    }
+    return rstat;
+}
+
 } // end of casac namespace

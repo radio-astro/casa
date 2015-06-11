@@ -413,5 +413,46 @@ sdms.set_selection(field="M100", spw="3,5")
   </example>
 </method>
 
+<method type="function" name="smooth">
+  <shortdescription>Smooth data with arbitrary smoothing kernel</shortdescription>
+  
+  <description>
+  NOTE: currently only Gaussian kernel is supported.
+  </description>
+  <input>
+    <param type="string" name="type">
+      <description>Smoothing kernel type</description>
+      <value>GAUSS</value>
+      <allowed kind="enum">
+        <value>GAUSS</value>
+      </allowed>
+    </param>
+    
+    <param type="float" name="width">
+      <description>Smoothing kernel width</description>
+      <value>0.0</value>
+    </param>
+      
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	    <value>data</value>
+	    <value>float_data</value>
+	    <value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+  </input> 
+  
+  <returns type="bool"/>
+  <example>
+  </example> 
+</method>
+
 </tool>
 </casaxml>
