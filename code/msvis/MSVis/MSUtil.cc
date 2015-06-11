@@ -162,13 +162,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  }
 			  }
 			  if(!hasthisspw){
-				  uInt nout=outspw.nelements();
-				  outspw.resize(nout+1);
-				  outnchan.resize(nout+1);
-				  outstart.resize(nout+1);
+			    uInt nout=outspw.nelements();
+				  outspw.resize(nout+1, True);
+				  outnchan.resize(nout+1, True);
+				  outstart.resize(nout+1, True);
 				  outspw[nout]=locspw[j];
 				  outstart[nout]=locstart[j];
 				  outnchan[nout]=locnchan[j];
+				 
 
 
 			  }
