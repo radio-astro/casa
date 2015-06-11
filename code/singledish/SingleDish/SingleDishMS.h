@@ -82,6 +82,11 @@ public:
 				string const& in_ppp, 
 				string const& param_file);
 
+  // smooth data with arbitrary smoothing kernel
+  // currently only gaussian smoothing is supported
+  void smooth(string const &kernelType, float const kernelWidth,
+          string const &columnName, string const&outMsName);
+
 private:
   /////////////////////////
   /// Utility functions ///
@@ -252,6 +257,8 @@ private:
   Record average_;
   // SDMSManager
   SDMSManager *sdh_;
+  // pointer to accessor function
+  void (*visCubeAccessor_)(vi::VisBuffer2 const &vb, Cube<Float> &cube);
 
 }; // class SingleDishMS -END
 

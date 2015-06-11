@@ -12,14 +12,21 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 
+#include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisSetUtil.h>
+
+#include <scimath/Mathematics/Convolver.h>
+#include <scimath/Mathematics/VectorKernel.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
 #include <singledish/SingleDish/BLParameterParser.h>
+
+#include <tables/Tables/ScalarColumn.h>
 
 //---for measuring elapse time------------------------
 #include <sys/time.h>
@@ -31,6 +38,72 @@ double gettimeofday_sec() {
 //----------------------------------------------------
 
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
+
+namespace {
+using casa::vi::VisBuffer2;
+using casa::Matrix;
+using casa::Cube;
+using casa::Float;
+using casa::Complex;
+
+template<class CUBE_ACCESSOR>
+struct DataAccessorInterface
+{
+    static void GetCube(VisBuffer2 const &vb, Cube<Float> &cube) {
+        real(cube, CUBE_ACCESSOR::GetVisCube(vb));
+    }
+    static void GetSlice(VisBuffer2 const &vb, size_t const iPol,
+            Matrix<Float> &cubeSlice)
+    {
+        real(cubeSlice, CUBE_ACCESSOR::GetVisCube(vb).yzPlane(iPol));
+    }
+};
+  
+struct DataAccessor : public DataAccessorInterface<DataAccessor>
+{
+    static Cube<Complex> GetVisCube(VisBuffer2 const &vb) {
+        return vb.visCube();
+    }      
+};
+
+struct CorrectedDataAccessor : public DataAccessorInterface<CorrectedDataAccessor>
+{
+    static Cube<Complex> GetVisCube(VisBuffer2 const &vb) {
+        return vb.visCubeCorrected();
+    }      
+};
+
+struct FloatDataAccessor
+{
+    static void GetCube(VisBuffer2 const &vb, Cube<Float> &cube) {
+        cube = GetVisCube(vb);
+    }
+    static void GetSlice(VisBuffer2 const &vb, size_t const iPol,
+            Matrix<Float> &cubeSlice)
+    {
+        cubeSlice = GetVisCube(vb).yzPlane(iPol);
+    }
+private:
+    static Cube<Float> GetVisCube(VisBuffer2 const &vb) {
+        return vb.visCubeFloat();
+    }
+};
+
+inline void GetCubeFromData(VisBuffer2 const &vb, Cube<Float> &cube)
+{
+    DataAccessor::GetCube(vb, cube);
+}
+
+inline void GetCubeFromCorrected(VisBuffer2 const &vb, Cube<Float> &cube)
+{
+    CorrectedDataAccessor::GetCube(vb, cube);
+}
+
+inline void GetCubeFromFloat(VisBuffer2 const &vb, Cube<Float> &cube)
+{
+    FloatDataAccessor::GetCube(vb, cube);
+}
+} // anonymous namespace
 
 namespace casa {
 
@@ -1809,5 +1882,116 @@ void SingleDishMS::do_scale(float const factor,
     data[i] *= factor;
 }
 
+void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
+        string const &columnName, string const &outMSName) {
+    LogIO os(_ORIGIN);
+    os //<< LogIO::DEBUGGING
+            << "Input parameter summary:" << endl
+            << "   kernelType = " << kernelType << endl
+            << "   kernelWidth = " << kernelWidth << endl
+            << "   columnName = " << columnName << endl
+            << "   outMSName = " << outMSName << LogIO::POST;
+
+    // Initialization
+    prepare_for_process(columnName, outMSName);
+
+    // Initial inspection
+    // If there are at least one spw that cannot apply smoothing (nchan==1 etc.),
+    // abort here
+    MeasurementSet const &ms = sdh_->getMS();
+    MSSpectralWindow const &msSpw = ms.spectralWindow();
+    ROScalarColumn<Int> numChanColumn(msSpw, "NUM_CHAN");
+    os << "msSpw.nrow() = " << numChanColumn.nrow() << LogIO::POST;
+    Vector<Int> spwIdList;
+    if (selection_.empty()) {
+        spwIdList.resize(numChanColumn.nrow());
+        indgen(spwIdList);
+    }
+    else {
+        MSSelection mss(selection_);
+        mss.toTableExprNode(&ms);
+        spwIdList = mss.getSpwList();
+    }
+    os << "spwIdList = " << spwIdList << LogIO::POST;
+    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
+        os << "examine spw " << i << ": nchan = " << numChanColumn(i) << LogIO::POST;
+        if (numChanColumn(i) == 1) {
+            stringstream ss;
+            ss << "smooth: Failed due to wrong spw " << i;
+            finalize_process();
+            throw AipsError(ss.str());
+        }
+    }
+
+    if (in_column_ == MS::DATA) {
+        visCubeAccessor_ = GetCubeFromData;
+    }
+    else if (in_column_ == MS::CORRECTED_DATA) {
+        visCubeAccessor_ = GetCubeFromCorrected;
+    }
+    else if (in_column_ == MS::FLOAT_DATA) {
+        visCubeAccessor_ = GetCubeFromFloat;
+    }
+    else {
+        assert(false);
+    }
+
+    // kernel type
+    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
+
+    // get VI/VB2 access
+    vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+    vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+    // working Vector for convolver
+    Vector<Float> wrapper;
+
+    for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+        // Convolver setup
+        for (vi->origin(); vi->more(); vi->next()) {
+            size_t const numRow = static_cast<size_t>(vb->nRows());
+            size_t const numChan = static_cast<size_t>(vb->nChannels());
+            size_t const numPol = static_cast<size_t>(vb->nCorrelations());
+            // TODO: reuse convolver and kernel as much as possible
+            Vector<Float> kernel = VectorKernel::make(type, kernelWidth, numChan, True, False);
+            Convolver<Float> convolver(kernel, IPosition(1, numChan));
+            Cube<Float> dataChunk(numPol, numChan, numRow);
+            visCubeAccessor_(*vb, dataChunk);
+
+            SakuraAlignedArray<float> spectrum(numChan);
+            Vector<Bool> flagRow = vb->flagRow();
+            Cube<Bool> flagCube = vb->flagCube();
+
+            // loop over row
+            for (size_t irow=0; irow < numRow; ++irow) {
+                // skip row if flagged
+                if (!flagRow[irow]) {
+                    continue;
+                }
+              
+                // loop over polarization
+                for (size_t ipol=0; ipol < numPol; ++ipol) {
+                    // get a spectrum from data cube
+                    get_spectrum_from_cube(dataChunk, irow, ipol, numChan, spectrum);
+                    // TODO: replace flagged channel data with zero
+                    for (size_t ichan = 0; ichan < numChan; ++ichan) {
+                    }
+                    wrapper.takeStorage(IPosition(1, numChan), spectrum.data, SHARE);
+                    convolver.linearConv(wrapper, kernel);
+
+                    // set back a spectrum to data cube
+                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, spectrum.data);
+                }
+
+            }
+            
+            // write back data cube to Output MS
+            sdh_->fillCubeToOutputMs(vb, dataChunk);
+        }
+    }
+
+    // Finalization
+    finalize_process();
+}
 }  // End of casa namespace.
 
