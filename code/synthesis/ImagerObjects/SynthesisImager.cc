@@ -1650,6 +1650,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
+    if (cfList.nelements() == 0) 
+      os << "NoOp due to zero-length cfList" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
     (void)cfList;
     // If not an AWProject-class FTM, make this call a NoOp.  Might be
@@ -1705,6 +1707,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::fillCFCache(const Vector<String>& cfList)
     {
       LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
+      if (cfList.nelements() == 0) 
+	os << "NoOp due to zero-length cfList" << LogIO::POST;
 
       Int whichFTM=0;
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
@@ -1782,7 +1786,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // This assumes the itsMappers is always SIMapperCollection.
       for (whichFTM = 0; whichFTM < itsMappers.nMappers(); whichFTM++)
 	{
-	  cerr << "Setting FTM-set " << whichFTM << endl;
 	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setCFCache(cfCacheObj,True); // Setup iFTM
 	  (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setCFCache(cfCacheObj,True); // Set FTM
 	}

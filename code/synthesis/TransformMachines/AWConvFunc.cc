@@ -45,6 +45,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/Utilities/CompositeNumber.h>
+#include <casa/OS/Directory.h>
 #include <casa/OS/Timer.h>
 #include <ostream>
 #ifdef _OPENMP
@@ -1757,8 +1758,8 @@ namespace casa{
     //  
     // Get the coordinate system
     //
-    const String uvGridDiskImage="uvgrid.im";
-    PagedImage<Complex> image_l(cfCachePath+"/"+uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
+    const String uvGridDiskImage=cfCachePath+"/"+"uvgrid.im";
+    PagedImage<Complex> image_l(uvGridDiskImage);//cfs2.getCacheDir()+"/uvgrid.im");
     CoordinateSystem coords(image_l.coordinates());
     
     Int nx=image_l.shape()(0);//, ny=image.shape()(1);
@@ -1777,25 +1778,25 @@ namespace casa{
 	    cfwtb_p=cfwts2.getCFBuffer(iPA,iB);
 
 	    IPosition cfbShape = cfb_p->shape();
-	    for (int i=0; i<cfbShape(0); i++)
-	      for (int j=0; j<cfbShape(1); j++)
-		for (int k=0; k<cfbShape(2); k++)
+	    for (int iNu=0; iNu<cfbShape(0); iNu++)       // Frequency axis
+	      for (int iPol=0; iPol<cfbShape(2); iPol++)     // Polarization axis
+		for (int iW=0; iW<cfbShape(1); iW++)   // W axis
 		  {
 		    CFCStruct miscInfo;
 		    CoordinateSystem cs_l;
 		    Int xSupport, ySupport;
 		    Float sampling;
 
-		    CountedPtr<CFCell>& tt=(*cfb_p).getCFCellPtr(i, j, k);
-		    //cerr << "####@#$#@$@ " << i << " " << j << " " << k << endl;
+		    CountedPtr<CFCell>& tt=(*cfb_p).getCFCellPtr(iNu, iW, iPol);
+		    //cerr << "####@#$#@$@ " << iNu << " " << iW << " " << iPol << endl;
 		    //tt->show("test",cout);
 		    if (tt->cfShape_p.nelements() != 0)
 		       {
-			 (*cfb_p)(i,j,k).getAsStruct(miscInfo); // Get the shape from CFCell
+			 (*cfb_p)(iNu,iW,iPol).getAsStruct(miscInfo); // Get misc. info. for this CFCell
 
 			 aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
-			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,i,j,k);
+			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,iNu,iW,iPol);
 			 convSampling=miscInfo.sampling;
 
 			 //convSize=miscInfo.shape[0];
@@ -1844,7 +1845,11 @@ namespace casa{
 		       }
 		  }
 	  } // End of loop over baselines
+
     cfs2.makePersistent(cfCachePath.c_str());
     cfwts2.makePersistent(cfCachePath.c_str(),"","WT");
+    Directory dir(uvGridDiskImage);
+    dir.removeRecursive(False);
+    dir.remove();
   }
 };
