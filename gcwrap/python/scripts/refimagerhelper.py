@@ -104,7 +104,7 @@ class PySynthesisImager:
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
 
 
-        self.makeCFCache(exists);
+        #self.makeCFCache(exists);
 
 #############################################
 
@@ -432,9 +432,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         for node in nodes:
             for mss in sorted( self.selpars.keys() ):
                 if (partialSelPars):
-                    joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(thisSelPars[str(node-1)][mss])+")", node) )
+                    selStr=str(thisSelPars[str(node-1)][mss]);
                 else:
-                    joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(thisSelPars[mss])+")", node) )
+                    #joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(thisSelPars[mss])+")", node) )
+                    selStr=str(thisSelPars[mss]);
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+selStr+")", node) )
         self.PH.checkJobs(joblist);
 
         #
@@ -450,7 +452,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
                 if self.NN>1:
                     nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
 
-                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
+                joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) 
+                                               + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
         self.PH.checkJobs(joblist);
         
 #############################################
