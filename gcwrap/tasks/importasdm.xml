@@ -124,7 +124,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="savecmds" subparam="true">
         <description>Save flag commands to an ASCII file</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="any" name="outfile" subparam="true">
