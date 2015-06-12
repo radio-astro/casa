@@ -79,6 +79,8 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
+#include <asdmstman/AsdmStMan.h>
+
 #include <casa/namespace.h>
 #include <cassert>
 
