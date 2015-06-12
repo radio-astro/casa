@@ -69,7 +69,7 @@
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -773,7 +773,7 @@ void GridFT::put(const vi::VisBuffer2& vb, Int row, Bool dopsf,
   Double cinv=Double(1.0)/C::c;
   Int dow=0;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }
@@ -1060,7 +1060,7 @@ void GridFT::get(vi::VisBuffer2& vb, Int row)
   Double cinv=Double(1.0)/C::c;
   Int dow=0;
   Int nth=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
   }

@@ -24,6 +24,7 @@ casa_add_library( synthesis
   TransformMachines2/GridFT.cc	
   TransformMachines2/FTMachine.cc
   TransformMachines2/MultiTermFTNew.cc
+  TransformMachines2/SetJyGridFT.cc
   TransformMachines2/SimpleComponentFTMachine.cc
   TransformMachines2/SkyJones.cc
   TransformMachines2/VisModelData.cc
@@ -570,6 +571,7 @@ install (FILES
 	TransformMachines2/GridFT.h
 	TransformMachines2/FTMachine.h
         TransformMachines2/MultiTermFTNew.h
+	TransformMachines2/SetJyGridFT.h
 	TransformMachines2/SimpleComponentFTMachine.h
 	TransformMachines2/SkyJones.h
 	TransformMachines2/VisModelData.h

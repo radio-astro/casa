@@ -51,7 +51,7 @@
 #include <synthesis/TransformMachines2/WProjectFT.h>
 //#include <synthesis/TransformMachines/MultiTermFT.h>
 #include <synthesis/TransformMachines2/MultiTermFTNew.h>
-//#include <synthesis/TransformMachines/SetJyGridFT.h>
+#include <synthesis/TransformMachines2/SetJyGridFT.h>
 
 namespace {
 
@@ -767,6 +767,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 	    ftholder_p.resize(indexft+1, False, True);
 	    ftholder_p[indexft].resize(1);
 	    ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
+	    if(!(ftholder_p[indexft][0]))
+	      throw(AipsError("Unknown FTMachine saved in virtual model"));
 	    ftholder_p[indexft][0]->initMaps(vb);
 	    
 	    for( uInt fi=0; fi < fields.nelements(); ++fi){
@@ -865,8 +867,8 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //  return new MultiTermFT(ftrec);
     //if(name=="MosaicFT")
     //  return new MosaicFT(ftrec);
-    //if(name=="SetJyGridFT")
-    //  return new SetJyGridFT(ftrec);
+    if(name=="SetJyGridFT")
+      return new SetJyGridFT(ftrec);
     if(name=="MultiTermFTNew")
       return new MultiTermFTNew(ftrec);
     //When the following have constructors from Record they should be uncommented
