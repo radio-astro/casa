@@ -44,7 +44,8 @@ import inspect
 
 ## List to be run
 def suite():
-     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
+#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
 refdatapath = "/export/home/riya/rurvashi/Work/ImagerRefactor/Runs/UnitData/"
@@ -753,9 +754,9 @@ class test_stokes(testref_base):
 
      def test_stokes_mfs_Q(self):
           """ [onefield] Test_Stokes_mfs_Q : mfs with stokes Q"""
-          self.prepData('refim_point_linRL.ms')
-          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q')
-          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]) ] )
+#          self.prepData('refim_point_linRL.ms')
+#          tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q')
+#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]) ] )
 
      def test_stokes_cube_I(self):
           """ [onefield] Test_Stokes_cube_I : cube with stokes I"""
@@ -771,9 +772,9 @@ class test_stokes(testref_base):
 
      def test_stokes_cube_Q(self):
           """ [onefield] Test_Stokes_cube_Q : cube with stokes Q"""
-          self.prepData('refim_point_linRL.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q',interactive=0,specmode='cube',interpolation='nearest')
-          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]) ,(self.img+'.image',2.0,[50,50,0,2]) ])
+#          self.prepData('refim_point_linRL.ms')
+#          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='Q',interactive=0,specmode='cube',interpolation='nearest')
+#          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',2.0,[50,50,0,0]),(self.img+'.image',2.0,[50,50,0,1]) ,(self.img+'.image',2.0,[50,50,0,2]) ])
 
      def test_stokes_cube_IQUV_fromRL(self):
           """ [onefield] Test_Stokes_cube_IQUV_fromRL : cube with stokes IQUV"""
@@ -789,13 +790,13 @@ class test_stokes(testref_base):
 
      def test_stokes_cube_I_flags(self):
           """ [onefield] Test_Stokes_cube_I_flags : cube with stokes I and only XY or YX flagged"""
-          self.prepData('refim_point_linXY.ms')
+#          self.prepData('refim_point_linXY.ms')
 #          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube')
 #          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,1,1]), (self.img+'.image',3.0,[50,50,2,1]),(self.img+'.image',4.0,[50,50,4,1]) ])
 
      def test_stokes_cube_pseudo_I_flags(self):
           """ [onefield] Test_Stokes_cube_pseudo_I_flags : cube with stokes I and one of XX or YY flagged"""
-          self.prepData('refim_point_linXY.ms')
+#          self.prepData('refim_point_linXY.ms')
 #          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, stokes='IQUV',interactive=0,specmode='cube')
 #          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',1.0,[50,50,0,1]),(self.img+'.image',2.0,[50,50,1,1]), (self.img+'.image',3.0,[50,50,2,1]),(self.img+'.image',4.0,[50,50,4,1]) ])
 
@@ -992,9 +993,9 @@ class test_widefield(testref_base):
 
      def test_widefield_imagemosaic(self):
           """ [widefield] Test_Widefield_imagemosaic : Image domain mosaic for single-term mfs (or narrowband)  """
-          self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='imagemosaic',deconvolver='hogbom')
-          self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
+#          self.prepData("refim_mawproject.ms")
+#          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='imagemosaic',deconvolver='hogbom')
+#          self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
 
      ## CHECK NORMALIZATION OF WEIGHTIMAGE = not normed... but internal norming happens to peak=1
      def test_widefield_mosaic_aproj_mfs(self):
@@ -1243,6 +1244,8 @@ class test_modelvis(testref_base):
           """ [modelpredict] Test_modelvis_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
 
 ##############################################
+
+
 ##############################################
 
 ##(2) Tool level tests

@@ -509,14 +509,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	    if( newmodel->shape() != model(tix)->shape() )
 	      {
+		os << "Regridding input model to target coordinate system for term " << tix << LogIO::POST;
+		regridToModelImage( *newmodel , tix);
 		// For now, throw an exception.
-		throw( AipsError( "Input model image "+modelname+".model.tt"+String::toString(tix)+" is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
+		//throw( AipsError( "Input model image "+modelname+".model.tt"+String::toString(tix)+" is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
 	      }
-	    
-	    //os << "Setting " << modelname << " as model for term " << tix << LogIO::POST;
-	    // Then, add its contents to itsModel.
-	    //itsModel->put( itsModel->get() + model->get() );
-	    ( model(tix) )->put( newmodel->get() );
+	    else
+	      {
+		os << "Setting " << modelname << " as model for term " << tix << LogIO::POST;
+		// Then, add its contents to itsModel.
+		//itsModel->put( itsModel->get() + model->get() );
+		( model(tix) )->put( newmodel->get() );
+	      }
 	  }
       }//nterms
   }
@@ -527,49 +531,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::psf(uInt term)
   {
     AlwaysAssert( itsPsfs.nelements() > term, AipsError );
-    /*
-    if( !itsPsfs[term].null() && itsPsfs[term]->shape() == itsImageShape ) { return itsPsfs[term]; }
-    checkRef( itsPsfs[term] , "psf.tt"+String::toString(term) );
-    itsPsfs[term] = openImage( itsImageName+String(".psf.tt")+String::toString(term) , False );
-    */
-
     accessImage( itsPsfs[term], itsParentPsfs[term], imageExts(PSF)+".tt"+String::toString(term) );
     return itsPsfs[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::residual(uInt term)
   {
-    /*
-    if( !itsResiduals[term].null() && itsResiduals[term]->shape() == itsImageShape ) { return itsResiduals[term]; }
-    checkRef( itsPsfs[term] , "psf.tt"+String::toString(term) );
-    itsResiduals[term] = openImage( itsImageName+String(".residual.tt")+String::toString(term) , False );
-    */
-
     accessImage( itsResiduals[term], itsParentResiduals[term], imageExts(RESIDUAL)+".tt"+String::toString(term) );
     return itsResiduals[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::weight(uInt term)
   {
-    /*
-    if( !itsWeights[term].null() && itsWeights[term]->shape() == itsImageShape ) { return itsWeights[term]; }
-    checkRef( itsWeights[term] , "weight.tt"+String::toString(term) );
-    itsWeights[term] = openImage( itsImageName+String(".weight.tt")+String::toString(term) , False );
-    */
-
     accessImage( itsWeights[term], itsParentWeights[term], imageExts(WEIGHT)+".tt"+String::toString(term) );
     return itsWeights[term];
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::sumwt(uInt term)
   {
-    /*
-    IPosition useShape( itsImageShape );
-    useShape[0] = itsNFacets;
-    useShape[1] = itsNFacets;
-    */
-    //    if( !itsSumWts[term].null() && itsSumWts[term]->shape() == useShape ) { return itsSumWts[term]; }
-    //    checkRef( itsSumWts[term], "sumwt.tt"+String::toString(term) );
-    //    itsSumWts[term] = openImage( itsImageName+String(".sumwt.tt")+String::toString(term) , False, True/*dosumwt*/ ); 
-
-
     accessImage( itsSumWts[term], itsParentSumWts[term], imageExts(SUMWT)+".tt"+String::toString(term) );
 
     
@@ -581,11 +557,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::model(uInt term)
   {
-    /*
-    if( !itsModels[term].null() && itsModels[term]->shape() == itsImageShape ) { return itsModels[term]; }
-    checkRef( itsModels[term] , "model.tt"+String::toString(term) );
-    itsModels[term] = openImage( itsImageName+String(".model.tt")+String::toString(term) , False );
-    */
 
     accessImage( itsModels[term], itsParentModels[term], imageExts(MODEL)+".tt"+String::toString(term) );
 
@@ -603,11 +574,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::image(uInt term)
   {
-    /*
-    if( !itsImages[term].null() && itsImages[term]->shape() == itsImageShape ) { return itsImages[term]; }
-    checkRef( itsImages[term] , "image.tt"+String::toString(term) );
-    itsImages[term] = openImage( itsImageName+String(".image.tt")+String::toString(term) , False );
-    */
 
     accessImage( itsImages[term], itsParentImages[term], imageExts(IMAGE)+".tt"+String::toString(term) );
     itsImages[term]->setUnits("Jy/beam");
@@ -639,21 +605,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsBackwardGrids[term]=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
     return itsBackwardGrids[term];
     }
-  /*
-  CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::forwardGrid(uInt term){
-	  if(!itsForwardGrids[term].null() && (itsForwardGrids[term]->shape() == itsImageShape))
-		  return itsForwardGrids[term];
-	  itsForwardGrids[term]=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
-	  return itsForwardGrids[term];
-  }
-  CountedPtr<ImageInterface<Complex> > SIImageStoreMultiTerm::backwardGrid(uInt term){
-  	  if(!itsBackwardGrids[term].null() && (itsBackwardGrids[term]->shape() == itsImageShape))
-  		  return itsBackwardGrids[term];
-	  //	  cout << "MT : Making backward grid of shape : " << itsImageShape << endl;
-  	  itsBackwardGrids[term]=new TempImage<Complex>(TiledShape(itsImageShape, tileShape()), itsCoordSys, memoryBeforeLattice());
-  	  return itsBackwardGrids[term];
-    }
-  */
 
   CountedPtr<ImageInterface<Float> > SIImageStoreMultiTerm::alpha()
   {
@@ -708,19 +659,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    LatticeExpr<Float> adderPsf( *(psf(tix)) + *(imagestoadd->psf(tix)) ); 
 	    psf(tix)->copyData(adderPsf);	
-
-	    //	    addSumWts( *psf(tix), *(imagestoadd->psf(tix)) );
-
 	  }
 	if(addweight)
 	  {
 
-	    if(getUseWeightImage( *(imagestoadd->psf(tix)) ) ) // Access and add weight only if it is needed.
+	    if(getUseWeightImage( *(imagestoadd->sumwt(tix)) ) ) // Access and add weight only if it is needed.
 	      {
 		LatticeExpr<Float> adderWeight( *(weight(tix)) + *(imagestoadd->weight(tix)) ); 
 		weight(tix)->copyData(adderWeight);
-		
-		//		addSumWts( *weight(tix), *(imagestoadd->weight(tix)) );
 	      }
 
 	    LatticeExpr<Float> adderSumWt( *(sumwt(tix)) + *(imagestoadd->sumwt(tix)) ); 
@@ -732,9 +678,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    LatticeExpr<Float> adderRes( *(residual(tix)) + *(imagestoadd->residual(tix)) ); 
 	    residual(tix)->copyData(adderRes);
-
-	    //	    addSumWts( *residual(tix), *(imagestoadd->residual(tix)) );
-
 	  }
 
 	if( tix==0 && adddensity )
@@ -750,23 +693,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
 
-    /*
-    // Fill all sumwts by that of the first term.
-    Matrix<Float> sumwt = getSumWt( *psf(0) );
-    for(uInt tix=1;tix<2*itsNTerms-1;tix++)
-      { setSumWt( *psf(tix) , sumwt ); }
-    */
-
     ////    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
     for(Int tix=2*itsNTerms-1-1;tix>-1;tix--) // AAH go backwards so that zeroth term is normalized last..... sigh sigh sigh.
       {
 
 	//cout << "npsfs : " << itsPsfs.nelements() << " and tix : " << tix << endl;
 
-	//	divideImageByWeightVal( *psf(tix) );
 	normPSF(tix);
 
-	//	if(doesImageExist(itsImageName+String(".weight.tt0"))  ) 
 	if( itsUseWeight )
 	{ 
 	    
@@ -786,24 +720,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideResidualByWeight",WHERE) );
 
-    /*
-    // Fill all sumwts by that of the first term.
-    Matrix<Float> sumwt = getSumWt( *residual(0) );
-    for(uInt tix=1;tix<itsNTerms;tix++)  { setSumWt( *residual(tix) , sumwt ); }
-    */
-
-    //    Bool useweightimage = itsUseWeight; // getUseWeightImage( *residual(0) );
-
-    //    if( doesImageExist(itsImageName+String(".weight.tt0")) )
     if( itsUseWeight )  
     {
-	/*
-	sumwt = getSumWt( *weight(0) );
-	for(uInt tix=1;tix<itsNTerms;tix++) { setSumWt( *weight(tix) , sumwt ); }
-	*/
-
 	itsPBScaleFactor = getPbMax();
-
       }
 
     for(uInt tix=0;tix<itsNTerms;tix++)
@@ -833,49 +752,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
 	    LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / ( deno + maskinv ) );
 
-	/*	
-	    os << "Dividing " << itsImageName+String(".residual.tt")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
-	    
-	    LatticeExpr<Float> mask( iif( (*(weight(0))) > weightlimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > weightlimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
-	*/
-
 	    residual(tix)->copyData(ratio);
 	  }
       }
     // createMask
   }
 
-  /*
-  void SIImageStoreMultiTerm::divideSensitivityPatternByWeight()
-  {
-    LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
-
-    // Fill all sumwts by that of the first term.
-    Matrix<Float> sumwt = getSumWt( *weight(0) );
-    for(uInt tix=1;tix<2*itsNTerms-1;tix++)
-      { setSumWt( *weight(tix) , sumwt ); }
-
-    for(uInt tix=0;tix<2*itsNTerms-1;tix++)
-      {
-	divideImageByWeightVal( *weight(tix) );
-      }
-    // createMask
-  }
-  */
-
   void SIImageStoreMultiTerm::divideModelByWeight(Float pblimit, const String normtype)
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","divideModelByWeight",WHERE) );
 
-        if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
-	itsUseWeight // only when needed
-	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
+        if( 	itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    
-	  // if( doesImageExist(itsImageName+String(".weight.tt0"))  )
       {
 
 	if( normtype=="flatsky") {
@@ -902,15 +790,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
 	    LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) / ( deno + maskinv ) );
 
-
-	    /*
-	    os << "Dividing " << itsImageName+String(".model")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
-	    
-	    LatticeExpr<Float> mask( iif( (*(weight(0))) > pblimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > pblimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) / sqrt( (*(weight(0))) + maskinv) );
-	    */
 	    itsModels[tix]->copyData(ratio);
 	  }    
       }
@@ -923,14 +802,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIImageStoreMultiTerm","multiplyModelByWeight",WHERE) );
 
     
-    if( //!itsResiduals[0].null() // information exists on whether weight image is needed or not
-	//&& 
-       itsUseWeight // only when needed
-	//	&& getUseWeightImage( *residual(0) ) == True // only when needed
+    if(        itsUseWeight // only when needed
 	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
-    
-      //  if( doesImageExist(itsImageName+String(".weight.tt0"))      )
-{
+      {
 
 	if( normtype=="flatsky") {
 	  os << "Model is already flat sky. No need to multiply back after prediction" << LogIO::POST;
@@ -952,14 +826,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
 	  LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) * ( deno + maskinv ) );
 
-	  /*
-	    os << "Multiplying " << itsImageName+String(".model")+String::toString(tix) << " by the weight image " << itsImageName+String(".weight.tt0") << LogIO::POST;
-	    
-	    LatticeExpr<Float> mask( iif( (*(weight(0))) > pblimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (*(weight(0))) > pblimit , 0.0, 1.0 ) );
-	    
-	    LatticeExpr<Float> ratio( ( (*(model(tix))) * mask ) * sqrt( (*(weight(0))) + maskinv) );
-	  */
 	    itsModels[tix]->copyData(ratio);
 	  }    
       }
@@ -1013,90 +879,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
  
   }
-
-  /*
-  GaussianBeam SIImageStoreMultiTerm::restorePlane()
-  {
-
-    LogIO os( LogOrigin("SIImageStoreMultiTerm","restorePlane",WHERE) );
-
-    Bool validbeam=False;
-    GaussianBeam beam;
-
-    try
-      {
-	// Fit a Gaussian to the PSF.
-	beam = getPSFGaussian();
-	validbeam = True;
-      }
-    catch(AipsError &x)
-      {
-	os << LogIO::WARN << "Beam fit error : " + x.getMesg() << LogIO::POST;
-      }
-    
-    try
-      {
-
-	if( validbeam==True )
-	  {
-	    os << "Restore with beam : " 
-	       << beam.getMajor(Unit("arcmin")) << " arcmin, " 
-	       << beam.getMinor(Unit("arcmin"))<< " arcmin, " 
-	       << beam.getPA(Unit("deg")) << " deg" << LogIO::POST; 
-	    os << "With " << itsNTerms << " Taylor coefficient(s), spectral index " 
-	       << ((itsNTerms>2)?String("and curvature"):String("")) << " will "
-	       << ((itsNTerms>1)?String(""):String("not")) << " be computed." << LogIO::POST;
-	    
-	    // Restore all terms
-	    ImageInfo ii = image(0)->imageInfo();
-	    //ii.setRestoringBeam( beam );
-	    ii.setBeams( beam );
-	    
-	    for(uInt tix=0; tix<itsNTerms; tix++)
-	      {
-		(image(tix))->set(0.0);
-		(image(tix))->copyData( LatticeExpr<Float>(*(model(tix))) );
-		StokesImageUtil::Convolve( *(image(tix)) , beam);
-		(image(tix))->copyData( LatticeExpr<Float>
-					( *(image(tix)) + *(residual(tix)) )   );
-		//image()->setImageInfo(ii); // no use.... its a reference subimage.
-	      }	
-	    
-	    if( itsNTerms > 1)
-	      {
-		// Calculate alpha and beta
-		LatticeExprNode leMaxRes = max( *( residual(0) ) );
-		Float maxres = leMaxRes.getFloat();
-		Float specthreshold = maxres/10.0;  //////////// do something better here..... 
-		
-		os << "Calculating spectral parameters for  Intensity > peakresidual/10 = " << specthreshold << " Jy/beam" << LogIO::POST;
-		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
-		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
-		
-		/////// Calculate alpha
-		LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
-		alpha()->copyData(alphacalc);
-		
-		// Set the restoring beam for alpha
-		alpha()->setImageInfo(ii);
-		//alpha()->table().unmarkForDelete();
-		
-		// Make a mask for the alpha image
-		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
-		
-		//      createMask( lemask, (alpha()) );
-	      }
-	    
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Multi-Term Restoration Error : " + x.getMesg() ) );
-      }
-    return beam;
-  }
-*/
-
 
   Bool SIImageStoreMultiTerm::createMask(LatticeExpr<Bool> &lemask, 
 					 CountedPtr<ImageInterface<Float> > outimage)
@@ -1232,14 +1014,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
   
-  /*  
-  CountedPtr<SIImageStore> SIImageStoreMultiTerm::getFacetImageStore(const Int facet, const Int nfacets)
-  {
-
-    return new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask , itsAlpha, itsBeta, itsCoordSys, itsParentImageShape, itsImageName,  facet, nfacets);
-
-  }
-  */
   CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStore(const Int facet, const Int nfacets, 
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
@@ -1248,46 +1022,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  /*
-  CountedPtr<SIImageStore> SIImageStoreMultiTerm::getSubImageStoreOld(const Int chan, const Bool onechan,
-							  const Int pol, const Bool onepol)
-  {
-
-    ///    cout << "in MT subImStor : " << chan << " " << onechan << " " << pol << " " << onepol << endl;
-
-    if( !onechan && !onepol ) {return this;}    // No slicing is required. 
-
-    Block<CountedPtr<ImageInterface<Float> > > psflist(2*itsNTerms-1);
-    Block<CountedPtr<ImageInterface<Float> > > modellist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > residuallist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > weightlist(2*itsNTerms-1);
-    Block<CountedPtr<ImageInterface<Float> > > imagelist(itsNTerms);
-    Block<CountedPtr<ImageInterface<Float> > > sumwtlist(2*itsNTerms-1);
-    CountedPtr<ImageInterface<Float> > newmask;
-    CountedPtr<ImageInterface<Float> > newalpha;
-    CountedPtr<ImageInterface<Float> > newbeta;
-
-    for(uInt tix=0; tix<2*itsNTerms-1;tix++)
-      {
-	psflist[tix] = itsPsfs[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsPsfs[tix]);
-	weightlist[tix] = itsWeights[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsWeights[tix]);
-	sumwtlist[tix] = itsSumWts[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsSumWts[tix]);
-	
-	if( tix<itsNTerms )
-	  {
-	    modellist[tix] = itsModels[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsModels[tix]);
-	    residuallist[tix] = itsResiduals[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsResiduals[tix]);
-	    imagelist[tix] = itsImages[tix].null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsImages[tix]);
-	  }
-      }
-    newmask = itsMask.null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsMask);
-    newalpha = itsAlpha.null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsAlpha);
-    newbeta = itsBeta.null()?NULL:makePlane( chan,onechan,pol,onepol,  *itsBeta);
-    
-    return new SIImageStoreMultiTerm(modellist, residuallist, psflist, weightlist, imagelist, sumwtlist, newmask, newalpha,newbeta);
-
-  }
-  */
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
