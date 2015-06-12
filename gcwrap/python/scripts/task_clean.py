@@ -817,7 +817,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             elif sclt == 'NONE':
                 ia.open(newimage+'.image')
                 pixels=result+'*'+fluxscale_image
-                ia.calc(pixels=pixels)
+                ia.calc(pixels=pixels,verbose=False)
                 ia.close()
                 ia.open(newimage+'.residual')
                 pixels=residim+'*'+fluxscale_image
