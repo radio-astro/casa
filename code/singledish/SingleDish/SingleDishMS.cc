@@ -1892,6 +1892,16 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
             << "   columnName = " << columnName << endl
             << "   outMSName = " << outMSName << LogIO::POST;
 
+    // kernel type
+    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
+
+    // Fail if type is not GAUSSIAN since other kernel types are not supported yet
+    if (type != VectorKernel::GAUSSIAN) {
+        stringstream oss;
+        oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
+        throw AipsError(oss.str());
+    }
+
     // Initialization
     prepare_for_process(columnName, outMSName);
 
@@ -1936,9 +1946,6 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
         assert(false);
     }
 
-    // kernel type
-    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
-
     // get VI/VB2 access
     vi::VisibilityIterator2 *vi = sdh_->getVisIter();
     vi::VisBuffer2 *vb = vi->getVisBuffer();
@@ -1981,6 +1988,8 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
                     // set back a spectrum to data cube
                     set_spectrum_to_cube(dataChunk, irow, ipol, numChan, spectrum.data);
+
+                    // TODO: weight handling
                 }
 
             }
