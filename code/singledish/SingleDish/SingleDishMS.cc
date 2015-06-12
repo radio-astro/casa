@@ -1291,6 +1291,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 				      string const& out_ms_name,
 				      string const in_spw)
 {
+  /*
   LogIO os(_ORIGIN);
   os << "Apply baseline table " << in_bltable_name << " to MS. " << LogIO::POST;
 
@@ -1422,17 +1423,17 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
 
-	/***************/
+	/ *************** /
 	// get fit parameter for this row by binary search in time sequence
 	// skip(continue) if (1) no entries in bltable corresponding to this MS row found 
-	/***************/
+	/ *************** /
 
   	// loop over polarization
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-  	  /***************/
+  	  / *************** /
 	  // skip(continue) if (1) apply is False
 	  //                   (2) all channels flagged
-  	  /***************/
+  	  / *************** /
 
   	  // get a channel mask from data cube
   	  // (note that the variable 'mask' is flag in the next line 
@@ -1465,14 +1466,14 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
 
   	  // actual execution of single spectrum
-	  /*
+	  / *
 	  map< const LIBSAKURA_SYMBOL(BaselineType),
 	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
 	    iter = context_reservoir.find(fit_param.baseline_type);
 	  if (iter==context_reservoir.end())
 	    throw(AipsError("Invalid baseline type detected!"));
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
-	  */
+	  * /
 	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
 	  
@@ -1493,6 +1494,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
     destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
     ++ctxiter;
   }
+  */
 }
 
 // Baseline subtraction by per spectrum fitting parameters

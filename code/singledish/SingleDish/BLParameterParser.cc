@@ -59,6 +59,7 @@ uint16_t BLParameterParser::get_max_order(LIBSAKURA_SYMBOL(BaselineType) const t
   throw(AipsError("The baseline type is not in file."));
 }
 
+/*
 BLTableParser::BLTableParser(string const file_name, string const spw) : BLParameterParser(file_name)
 {
   initialize();
@@ -123,6 +124,7 @@ void BLTableParser::parse(string const file_name, string const spw)
     }
   }
 }
+*/
 
 void BLParameterParser::parse(string const file_name)
 {

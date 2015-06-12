@@ -152,6 +152,7 @@ protected:
 
 }; // class BLParameterParser -END
 
+/*
 class BLTableParser : public BLParameterParser {
  public:
   explicit BLTableParser(string const file_name, string const spw);
@@ -162,6 +163,7 @@ class BLTableParser : public BLParameterParser {
   uint16_t GetTypeOrder(size_t const &baseline_type, BaselineTable const &bt,
 			uInt const irow, uInt const ipol);
 };
+*/
 
 } //# NAMESPACE CASA - END
   
