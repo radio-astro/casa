@@ -422,9 +422,9 @@ sdms.set_selection(field="M100", spw="3,5")
   <input>
     <param type="string" name="type">
       <description>Smoothing kernel type</description>
-      <value>GAUSS</value>
+      <value>gaussian</value>
       <allowed kind="enum">
-        <value>GAUSS</value>
+        <value>gaussian</value>
       </allowed>
     </param>
     

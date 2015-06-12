@@ -125,6 +125,7 @@ statwt.xml
 tclean.xml
 testconcat.xml
 tsdcal.xml
+tsdsmooth.xml
 uvcontsub.xml
 uvcontsub3.xml
 uvmodelfit.xml
