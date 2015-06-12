@@ -2148,14 +2148,21 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
                 for (size_t ipol=0; ipol < numPol; ++ipol) {
                     // get a spectrum from data cube
                     get_spectrum_from_cube(dataChunk, irow, ipol, numChan, spectrum);
-                    // TODO: replace flagged channel data with zero
+                    float *data = spectrum.data;
+
+                    // replace flagged channel data with zero
                     for (size_t ichan = 0; ichan < numChan; ++ichan) {
+                        if (flagCube(ipol, ichan, irow)) {
+                            data[ichan] = 0.0f;
+                        }
                     }
-                    wrapper.takeStorage(IPosition(1, numChan), spectrum.data, SHARE);
+
+                    // smoothing
+                    wrapper.takeStorage(IPosition(1, numChan), data, SHARE);
                     convolver.linearConv(wrapper, kernel);
 
                     // set back a spectrum to data cube
-                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, spectrum.data);
+                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, data);
 
                     // TODO: weight handling
                 }
