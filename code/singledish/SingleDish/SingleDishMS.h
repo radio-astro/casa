@@ -237,6 +237,9 @@ private:
   // returns the number of channels with true in input mask
   size_t NValidMask(size_t const num_mask, bool const* mask);
 
+  // inspection for smoothing
+  void inspectNumChan(MeasurementSet const &ms);
+
   /////////////////////////////////
   /// Array execution functions ///
   /////////////////////////////////

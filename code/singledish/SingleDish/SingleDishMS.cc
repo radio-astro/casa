@@ -10,6 +10,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Utilities/GenSort.h>
 #include <casa/Arrays/ArrayMath.h>
 
 #include <ms/MeasurementSets/MSSpectralWindow.h>
@@ -28,6 +29,10 @@
 
 #include <tables/Tables/ScalarColumn.h>
 
+
+#define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
+
+namespace {
 //---for measuring elapse time------------------------
 #include <sys/time.h>
 double gettimeofday_sec() {
@@ -37,9 +42,6 @@ double gettimeofday_sec() {
 }
 //----------------------------------------------------
 
-#define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
-
-namespace {
 using casa::vi::VisBuffer2;
 using casa::Matrix;
 using casa::Cube;
@@ -1905,34 +1907,16 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
     // Initialization
     prepare_for_process(columnName, outMSName);
 
+    // get VI/VB2 access
+    vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+    vi::VisBuffer2 *vb = vi->getVisBuffer();
+
     // Initial inspection
     // If there are at least one spw that cannot apply smoothing (nchan==1 etc.),
     // abort here
-    MeasurementSet const &ms = sdh_->getMS();
-    MSSpectralWindow const &msSpw = ms.spectralWindow();
-    ROScalarColumn<Int> numChanColumn(msSpw, "NUM_CHAN");
-    os << "msSpw.nrow() = " << numChanColumn.nrow() << LogIO::POST;
-    Vector<Int> spwIdList;
-    if (selection_.empty()) {
-        spwIdList.resize(numChanColumn.nrow());
-        indgen(spwIdList);
-    }
-    else {
-        MSSelection mss(selection_);
-        mss.toTableExprNode(&ms);
-        spwIdList = mss.getSpwList();
-    }
-    os << "spwIdList = " << spwIdList << LogIO::POST;
-    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
-        os << "examine spw " << i << ": nchan = " << numChanColumn(i) << LogIO::POST;
-        if (numChanColumn(i) == 1) {
-            stringstream ss;
-            ss << "smooth: Failed due to wrong spw " << i;
-            finalize_process();
-            throw AipsError(ss.str());
-        }
-    }
+    inspectNumChan(vi->ms());
 
+    // attach accessor method depending on input data column
     if (in_column_ == MS::DATA) {
         visCubeAccessor_ = GetCubeFromData;
     }
@@ -1946,12 +1930,10 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
         assert(false);
     }
 
-    // get VI/VB2 access
-    vi::VisibilityIterator2 *vi = sdh_->getVisIter();
-    vi::VisBuffer2 *vb = vi->getVisBuffer();
-
     // working Vector for convolver
     Vector<Float> wrapper;
+
+    double startTime = gettimeofday_sec();
 
     for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
         // Convolver setup
@@ -1999,8 +1981,39 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
         }
     }
 
+    double endTime = gettimeofday_sec();
+    os << "Elapsed time for VI/VB loop: " << endTime - startTime << " sec" << LogIO::POST;
+
     // Finalization
     finalize_process();
 }
+
+void SingleDishMS::inspectNumChan(MeasurementSet const &ms)
+{
+    LogIO os(_ORIGIN);
+
+    ROScalarColumn<Int> col(ms, "DATA_DESC_ID");
+    Vector<Int> ddIdList = col.getColumn();
+    uInt numDDId = GenSort<Int>::sort(ddIdList, Sort::Ascending,
+            Sort::QuickSort | Sort::NoDuplicates);
+    col.attach(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
+    Vector<Int> spwIdList(numDDId);
+    for (uInt i = 0; i < numDDId; ++i) {
+        spwIdList[i] = col(ddIdList[i]);
+    }
+    col.attach(ms.spectralWindow(), "NUM_CHAN");
+    os << "spwIdList = " << spwIdList << LogIO::POST;
+    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
+        os << "examine spw " << i << ": nchan = " << col(i) << LogIO::POST;
+        if (col(i) == 1) {
+            stringstream ss;
+            ss << "smooth: Failed due to wrong spw " << i;
+            finalize_process();
+            throw AipsError(ss.str());
+        }
+    }
+
+}
+
 }  // End of casa namespace.
 
