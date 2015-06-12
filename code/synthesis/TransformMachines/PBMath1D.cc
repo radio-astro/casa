@@ -1019,11 +1019,10 @@ PBMath1D::apply(SkyComponent& in,
     MVDirection mvd1( compDir.getAngle() );
     MVDirection mvd2( newpointDirE.getAngle() );
     Quantity sep =  mvd1.separation(mvd2, "'"); 
-    double r = sep.getValue("'") * frequency.getValue("Hz") / 1.0e+9;  // arcminutes * GHz
-    
+    double r = sep.getValue("'") * frequency.getValue("Hz") / 1.0e+9;  // arcminutes * GHz 
     Complex taper;
     Int ir = Int(r*inverseIncrementRadius_p);
-    Complex vpVal = vp_p(ir);
+    Complex vpVal = ir >= Int(vp_p.nelements()) ? Complex(0) : vp_p(ir);
     if (wideFit_p) {
       if (ifit==0) {
 	vpVal = wbvp_p(ir,0);

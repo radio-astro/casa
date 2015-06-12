@@ -268,7 +268,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
   convFuncChanMap.resize(vb.nChannel());
   Vector<Double> beamFreqs;
   findUsefulChannels(convFuncChanMap, beamFreqs, vb, visFreq);
-  //cerr << "CHANMAP " << convFuncChanMap << endl;
+  //cerr << "CHANMAP " << convFuncChanMap << " beamFreqs " << beamFreqs << endl;
   Int nBeamChans=beamFreqs.nelements();
   //indgen(convFuncChanMap);
   convFuncPolMap.resize(vb.nCorr());
@@ -581,23 +581,28 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       
       */ 
       
-      
+      /*
       if(0) {
 	CoordinateSystem ftCoords(coords);
-	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
-	AlwaysAssert(directionIndex>=0, AipsError);
+	//directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+	//AlwaysAssert(directionIndex>=0, AipsError);
 	dc=coords.directionCoordinate(directionIndex);
 	Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
 	Vector<Int> shape(2); shape(0)=convSize_p;shape(1)=convSize_p;
 	Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
-	ftCoords.replaceCoordinate(*ftdc, directionIndex);
+	//ftCoords.replaceCoordinate(*ftdc, directionIndex);
 	delete ftdc; ftdc=0;
 	ostringstream os1;
 	os1 << "Screen_" << vb.fieldId() ;
 	PagedImage<Complex> thisScreen(twoDPB2.shape(), ftCoords, String(os1));
 	//LatticeExpr<Float> le(abs(twoDPB2));
 	thisScreen.copyData(twoDPB2);
+	LatticeFFT::cfft2d(thisScreen, False);
+	PagedImage<Complex> thisScreen0(twoDPB.shape(), ftCoords, String("PB_")+String(os1));
+	thisScreen0.copyData(twoDPB);
+	LatticeFFT::cfft2d(thisScreen0, False);
       }
+      */
       /* 
       // Now FFT and get the result back
       //LatticeFFT::cfft2d(twoDPB);
@@ -667,6 +672,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       // steps of convSampling)
       
       Double pbSum=0.0;
+      //Double pbSum2=0.0;
       
       
 
@@ -675,10 +681,12 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 	  Complex val=convFunc_p(ix*convSampling+tempConvSize/2,
 				 iy*convSampling+tempConvSize/2);
 	  pbSum+=real(val);
+      
 	  //pbSum+=sqrt(real(val)*real(val)+ imag(val)*imag(val));
 	}
       }
       
+ 
       //pbSum=sum(amplitude(convFunc_p))/Double(convSampling)/Double(convSampling);
 
       if(pbSum>0.0) {
@@ -717,11 +725,24 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       convFunctions_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
       //cerr << "convFunc shape " << (convFunctions_p[actualConvIndex_p])->shape() << 
       //"  " << " twoDPB shape " <<twoDPB.get(False)(blc,trc).shape() << endl;
-      convFunctions_p[actualConvIndex_p]->copyMatchingPart(twoDPB.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
+      convFunctions_p[actualConvIndex_p]->copyMatchingPart(twoDPB.get(False)(blc,trc));//*Complex(1.0/pbSum,0.0));
       convSize_p=newConvSize;
       convWeights_p[actualConvIndex_p]->resize(IPosition(5, newConvSize, newConvSize, 1, nBeamChans,1));
-      convWeights_p[actualConvIndex_p]->copyMatchingPart(twoDPB2.get(False)(blc,trc)*Complex(1.0/pbSum,0.0));
-	
+      convWeights_p[actualConvIndex_p]->copyMatchingPart(twoDPB2.get(False)(blc,trc));//*Complex(1.0/pbSum2,0.0));
+      blc.resize(5, False);
+      trc.resize(5,False);
+      blc=IPosition(5, 0, 0, 0, 0,0);
+      trc=IPosition(5, newConvSize-1, newConvSize-1, 0, 0,0);
+      for (Int bc=0; bc< nBeamChans; ++bc){
+	blc[3]=bc;
+	trc[3]=bc;
+	pbSum=real(sum((*convFunctions_p[actualConvIndex_p])(blc,trc)))/Double(convSampling)/Double(convSampling);
+	(*convFunctions_p[actualConvIndex_p])(blc,trc)= 	(*convFunctions_p[actualConvIndex_p])(blc,trc)/pbSum;
+	(*convWeights_p[actualConvIndex_p])(blc,trc)= 	(*convWeights_p[actualConvIndex_p])(blc,trc)/pbSum;
+      }
+
+
+
       convFunc_p.resize();//break any reference
       (*convSizes_p[actualConvIndex_p])[0]=convSize_p;
       doneMainConv_p[actualConvIndex_p]=True;
