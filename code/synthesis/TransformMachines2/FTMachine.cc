@@ -231,7 +231,7 @@ using namespace casa::vi;
        for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
        cfStokes_p.resize(polInUse_p);
        for(uInt i=0;i<polMap.nelements();i++)
- 	if (polMap(i) > -1) {cfStokes_p(N) = vb.correlationTypes()(i);N++;}
+ 	if (polMap(i) > -1) {cfStokes_p(N) = vb.getCorrelationTypesSelected()(i);N++;}
      }
    }
   //----------------------------------------------------------------------
@@ -387,7 +387,7 @@ using namespace casa::vi;
       AlwaysAssert(stokesIndex>-1, AipsError);
       StokesCoordinate stokesCoord=coords.stokesCoordinate(stokesIndex);
       //cerr << " corr Types " << vb.correlationTypes() << " get corr types  " << vb.getCorrelationTypes() << endl;
-      Vector<Int> visPolMap(vb.correlationTypes());
+      Vector<Stokes::StokesTypes> visPolMap(vb.getCorrelationTypesSelected());
       nvispol=visPolMap.nelements();
       AlwaysAssert(nvispol>0, AipsError);
       polMap.resize(nvispol);
@@ -444,7 +444,11 @@ using namespace casa::vi;
       //	    << LogIO::POST;
 
       initPolInfo(vb);
-      pop_p->initCFMaps(visPolMap, polMap);
+      Vector<Int> intpolmap(visPolMap.nelements());
+      for (uInt kk=0; kk < intpolmap.nelements(); ++kk){
+	intpolmap[kk]=Int(visPolMap[kk]);
+      }
+      pop_p->initCFMaps(intpolmap, polMap);
 
       //cerr << "initmaps polmap "<< polMap << endl;
 
@@ -1289,7 +1293,6 @@ using namespace casa::vi;
 	  nVisChan_p.resize();
 	  nVisChan_p=elnchan;
 
-	  //cerr << "elspw "<< elspw << " elnchan " << elnchan << endl;
 
       doConversion_p.resize(max(selectedSpw_p)+1);
       doConversion_p.set(True);

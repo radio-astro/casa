@@ -955,7 +955,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       
       vb.setVisCubeModel(Complex(1.0));
       Cube<Complex> modelCube(vb.visCubeModel());
-      Vector<Int> corrType=vb.getCorrelationTypes();
+      Vector<Stokes::StokesTypes> corrType=vb.getCorrelationTypesSelected();
       uInt nCorr = corrType.nelements();
       for (uInt i=0; i<nCorr; i++) {
 	  if(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
