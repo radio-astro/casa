@@ -102,7 +102,8 @@ public:
   //Returns the maximum fit order of specified baseline type to construct BaselineContext
   uint16_t get_max_order(LIBSAKURA_SYMBOL(BaselineType) const type);
 
-private:
+protected:
+  //private:
   void initialize();
   void Clearup();
   // parse a file
@@ -151,6 +152,16 @@ private:
 
 }; // class BLParameterParser -END
 
+class BLTableParser : public BLParameterParser {
+ public:
+  explicit BLTableParser(string const file_name, string const spw);
+  ~BLTableParser();
+ private:
+  void parse(string const file_name, string const spw);
+  //Returns order or npiece in BLParameterSet structure depending on datatype.
+  uint16_t GetTypeOrder(size_t const &baseline_type, BaselineTable const &bt,
+			uInt const irow, uInt const ipol);
+};
 
 } //# NAMESPACE CASA - END
   

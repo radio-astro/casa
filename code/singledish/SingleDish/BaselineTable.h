@@ -39,6 +39,28 @@ public:
   Vector<Double> getTime() const {return timeCol_.getColumn();}
 
   void save(const std::string &filename);
+  bool getApply(uInt irow, uInt ipol) const;
+  uint getSpw(uInt irow) const {return static_cast<uint>(ifCol_.get(irow));}
+  uint getBaselineType(uInt irow, uInt ipol) const;
+  int getFPar(uInt irow, uInt ipol) const;
+
+  void getdata(uInt irow, uInt *scanno, 
+               uInt *beamno, uInt *ifno, 
+               uInt *freqid, Double *time, 
+	       Array<Bool> *apply,
+               Array<uInt> *ftype, 
+	       Array<Int> *fpar, 
+	       Array<Float> *ffpar, 
+               Array<uInt> *mask,
+	       Array<Float> *res,
+               Array<Float> *rms, 
+               uInt *nchan, 
+	       Array<Float> *cthres,
+               Array<uInt> *citer, 
+	       Array<Bool> *uself,
+	       Array<Float> *lfthres, 
+	       Array<uInt> *lfavg, 
+	       Array<uInt> *lfedge);
   void setdata(uInt irow, uInt scanno, 
                uInt beamno, uInt ifno, 
                uInt freqid, Double time, 
@@ -109,11 +131,11 @@ private:
   void setbasedata(uInt irow, uInt scanno, 
                    uInt beamno, uInt ifno, 
                    uInt freqid, Double time);
-  Table table_, originaltable_;
+  Table table_, timeSortedTable_, originaltable_;
   ScalarColumn<uInt> scanCol_, beamCol_, ifCol_, freqidCol_;
   ScalarColumn<Double> timeCol_;
   MEpoch::ScalarColumn timeMeasCol_;
-
+  bool sorted_;
   static const String name_;
 
   ArrayColumn<Bool> applyCol_;

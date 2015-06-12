@@ -28,7 +28,7 @@ public:
 		      Double timebin=0.0);
 
   Record getSelRec(string const &spw);
-  MeasurementSet getMS();
+  //MeasurementSet getMS();
 
   //SDMSManager &operator=(SDMSManager const &other);
   // Destructor

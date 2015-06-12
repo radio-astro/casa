@@ -1,7 +1,7 @@
 #include <fstream>
 
 #include <casa/Utilities/Assert.h>
-
+#include <singledish/SingleDish/BaselineTable.h>
 #include <singledish/SingleDish/BLParameterParser.h>
 
 using namespace std;
@@ -59,6 +59,70 @@ uint16_t BLParameterParser::get_max_order(LIBSAKURA_SYMBOL(BaselineType) const t
   throw(AipsError("The baseline type is not in file."));
 }
 
+BLTableParser::BLTableParser(string const file_name, string const spw) : BLParameterParser(file_name)
+{
+  initialize();
+  parse(file_name, spw);
+  blparam_file_ = file_name;
+}
+
+uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, BaselineTable const &bt,
+				     uInt const irow, uInt const ipol)
+{
+  LIBSAKURA_SYMBOL(BaselineType) const type = 
+    static_cast<LIBSAKURA_SYMBOL(BaselineType)>(baseline_type);
+  switch (type)
+  {
+  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+    {
+      return static_cast<uint16_t>(bt.getFPar(irow, ipol));
+      break;
+    }
+  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+    {
+      uInt npiece = bt.getFPar(irow, ipol);
+      AlwaysAssert(npiece <= USHRT_MAX, AipsError);//UINT16_MAX);
+      return static_cast<uint16_t>(npiece);
+      break;
+    }
+//   case LIBSAKURA_SYMBOL(BaselineType_kSinusoidal):
+//     return static_cast<size_t>(nwave.size());
+//     break;
+  default:
+    throw(AipsError("Unsupported baseline type."));
+  }
+}
+void BLTableParser::parse(string const file_name, string const spw)
+{
+  uInt const npol = 2;
+  uInt i_spw;
+  istringstream is(spw);
+  is >> i_spw;
+  BaselineTable bt(file_name);
+  size_t nrow = bt.nrow();
+  for (uInt irow = 0; irow < nrow; ++irow) {
+    if (bt.getSpw(irow) != i_spw) continue;
+    for (uInt ipol = 0; ipol < npol; ++ipol) {
+      if (!bt.getApply(irow, ipol)) continue;
+      LIBSAKURA_SYMBOL(BaselineType) curr_type_idx = 
+	static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt.getBaselineType(irow, ipol));
+      bool new_type = true;
+      for (size_t i = 0; i < baseline_types_.size(); ++i){
+	if (curr_type_idx == baseline_types_[i]){
+	  new_type = false;
+	  break;
+	}
+      }
+      if (new_type) baseline_types_.push_back(curr_type_idx);
+      // update max_orders_
+      size_t curr_order = GetTypeOrder(curr_type_idx, bt, irow, ipol);
+      if (curr_order > max_orders_[curr_type_idx]) {
+	max_orders_[curr_type_idx] = curr_order;
+      }
+    }
+  }
+}
 
 void BLParameterParser::parse(string const file_name)
 {

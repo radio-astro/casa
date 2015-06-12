@@ -12,20 +12,18 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Arrays/ArrayMath.h>
-
+#include <casa_sakura/SakuraUtils.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisSetUtil.h>
-
 #include <scimath/Mathematics/Convolver.h>
 #include <scimath/Mathematics/VectorKernel.h>
-
-#include <stdcasa/StdCasa/CasacSupport.h>
-#include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
+#include <singledish/SingleDish/BaselineTable.h>
 #include <singledish/SingleDish/BLParameterParser.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 
 #include <tables/Tables/ScalarColumn.h>
 
@@ -790,8 +788,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   vi::VisBuffer2 *vb = vi->getVisBuffer();
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
-  if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
-  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  if (write_baseline_table) bt = new BaselineTable(vi->ms());
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -807,10 +804,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   }
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
-  LIBSAKURA_SYMBOL(BaselineType) bltype;
-  if (blfunc == "poly") {
-    bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
-  } else if (blfunc == "chebyshev") {
+  LIBSAKURA_SYMBOL(BaselineType) bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+  if (blfunc == "chebyshev") {
     bltype = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
   }
   Vector<bool> pol;
@@ -996,16 +991,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 	  // write to baseline table
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
-	  /*
-	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
-	      masklist_mtx[imask][ipol] = 0;
-	    }
-	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
-	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
-	    }
-	  }
-	  */
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
@@ -1069,8 +1054,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   vi::VisBuffer2 *vb = vi->getVisBuffer();
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
-  if (write_baseline_table) bt = new BaselineTable(sdh_->getMS());
-  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  if (write_baseline_table) bt = new BaselineTable(vi->ms());
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1277,16 +1261,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 	  // write to baseline table
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
-	  /*
-	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-	    for (size_t imask = 0; imask < num_masklist_max; ++imask) {
-	      masklist_mtx[imask][ipol] = 0;
-	    }
-	    for (size_t imask = 0; imask < masklist_mtx_tmp[ipol].size(); ++imask) {
-	      masklist_mtx[imask][ipol] = masklist_mtx_tmp[ipol][imask];
-	    }
-	  }
-	  */
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
@@ -1309,6 +1283,216 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
   //double tend = gettimeofday_sec();
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+}
+
+// Apply baseline table to MS
+void SingleDishMS::applyBaselineTable(string const& in_column_name,
+				      string const& in_bltable_name,
+				      string const& out_ms_name,
+				      string const in_spw)
+{
+  LogIO os(_ORIGIN);
+  os << "Apply baseline table " << in_bltable_name << " to MS. " << LogIO::POST;
+
+  //checking in_bltable_name
+  if (in_bltable_name == "") {
+    throw(AipsError("baseline table is not given."));
+  }
+
+  // parse fitting parameters in the text file
+  BLTableParser parser(in_bltable_name, in_spw);
+  std::vector<LIBSAKURA_SYMBOL(BaselineType)> 
+    baseline_types = parser.get_function_types();
+  map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
+  for (size_t i = 0; i < baseline_types.size(); ++i) {
+    max_orders[baseline_types[i]] 
+      = parser.get_max_order(baseline_types[i]);
+  }
+  { //DEBUG ouput
+    os << LogIO::DEBUG1 << "spw ID = " << in_spw << LogIO::POST;
+    os << LogIO::DEBUG1 << "Baseline Types = " << baseline_types << LogIO::POST;
+    os << LogIO::DEBUG1 << "Max Orders:"<< LogIO::POST;
+    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator iter=max_orders.begin();
+    while (iter != max_orders.end() ) {
+      os << LogIO::DEBUG1 << "- type " << (*iter).first << ": " << (*iter).second << LogIO::POST;
+      ++iter;
+    }
+  }
+
+  // Setup VisIter for input MS
+  Block<Int> columns(1);
+  columns[0] = MS::TIME;
+
+  prepare_for_process(in_column_name, out_ms_name, columns, false);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+  BaselineTable *bt = new BaselineTable(in_bltable_name);
+
+  // SPW and channelization reservoir
+  Vector<Int> recspw;
+  Matrix<Int> recchan;
+  Vector<size_t> nchan;
+  Vector<Vector<Bool> > in_mask;
+  Vector<bool> nchan_set;
+  parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+  // Baseline Contexts reservoir
+  // key: Sakura_BaselineType enum,
+  // value: a vector of Sakura_BaselineContext for various nchans
+  map< const LIBSAKURA_SYMBOL(BaselineType),
+    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> > context_reservoir;
+  {
+    map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
+      iter = max_orders.begin();
+    while (iter != max_orders.end() ) {
+      context_reservoir[(*iter).first] = std::vector<LIBSAKURA_SYMBOL(BaselineContext) *>() ;
+      ++iter;
+    }
+  }
+
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+  Vector<size_t> ctx_indices;
+  ctx_indices.resize(nchan.nelements());
+  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
+    ctx_indices(ictx) = 0;
+  }
+
+  // Iterate over MS and subtract baseline
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    //cout << "New chunk" << endl;
+    for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> scans = vb->scan();
+      Vector<Double> times = vb->time();
+      Vector<Int> beams = vb->feed1();
+
+      Vector<Int> data_spw = vb->spectralWindows();
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Vector<uInt> orig_rows = vb->rowIds();
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<bool> mask(num_chan);
+      //cout << "New iteration: num_row=" << num_row << ", num_chan=" << num_chan << ", num_pol=" << num_pol << ", spwid=" << data_spw << endl;
+
+      bool new_nchan=false;
+      get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
+      if (new_nchan) {
+	// Generate context for all necessary baseline types
+	map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t>::iterator
+	  iter = max_orders.begin();
+	while (iter != max_orders.end() ) {
+	  get_baseline_context((*iter).first,(*iter).second,
+			       num_chan, nchan, nchan_set, ctx_indices,
+			       context_reservoir[(*iter).first]);
+	  ++iter;
+	}
+      }
+      // get data/flag cubes (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      get_flag_cube(*vb, flag_chunk);
+
+      // loop over MS rows
+      for (size_t irow = 0; irow < num_row; ++irow) {
+	//cout << "Processing original rowid=" << orig_rows[irow] << ", spwid=" << data_spw[irow] << endl;
+  	size_t idx = 0;
+  	for (size_t ispw = 0; ispw < recspw.nelements(); ++ispw) {
+  	  if (data_spw[irow] == recspw[ispw]) {
+  	    idx = ispw;
+  	    break;
+  	  }
+  	}
+
+	//prepare varables for writing baseline table
+	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
+	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
+	size_t num_ffpar_max = 0;
+	std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
+	size_t num_masklist_max = 0;
+	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
+	size_t num_coeff_max = 0;
+	std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
+	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
+	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
+	Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
+	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
+	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
+
+	/***************/
+	// get fit parameter for this row by binary search in time sequence
+	// skip(continue) if (1) no entries in bltable corresponding to this MS row found 
+	/***************/
+
+  	// loop over polarization
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+  	  /***************/
+	  // skip(continue) if (1) apply is False
+	  //                   (2) all channels flagged
+  	  /***************/
+
+  	  // get a channel mask from data cube
+  	  // (note that the variable 'mask' is flag in the next line 
+	  // actually, then it will be converted to real mask when 
+	  // taking AND with user-given mask info. this is just for 
+	  // saving memory usage...)
+  	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // skip spectrum if all channels flagged
+	  if (allchannels_flagged(num_chan, mask.data)) {
+	    continue;
+	  }
+
+  	  // convert flag to mask by taking logical NOT of flag
+  	  // and then operate logical AND with in_mask
+  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
+  	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+  	  }
+
+	  // get fitting parameter as BLParameterSet <-- should be done befor this loop for pol
+	  // get mask from BLParameterset and create composit mask
+	  // check for composit mask and flag if no valid channel to fit
+	  if (NValidMask(num_chan, mask.data)==0) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
+	       << ", Pol " << ipol
+	       << ": No valid channel to fit. Skipping" << LogIO::POST;
+	    continue;
+	  }
+  	  // get a spectrum from data cube
+  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+
+  	  // actual execution of single spectrum
+	  /*
+	  map< const LIBSAKURA_SYMBOL(BaselineType),
+	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
+	    iter = context_reservoir.find(fit_param.baseline_type);
+	  if (iter==context_reservoir.end())
+	    throw(AipsError("Invalid baseline type detected!"));
+	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
+	  */
+	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
+
+	  
+          //----------------------------
+          //----------------------------
+  	} // end of polarization loop
+
+      } // end of chunk row loop
+      // write back data and flag cube to VisBuffer
+      sdh_->fillCubeToOutputMs(vb, data_chunk, &flag_chunk);
+    } // end of vi loop
+  } // end of chunk loop
+
+  finalize_process();
+  // destroy baseline contexts
+  map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
+  while (ctxiter != context_reservoir.end() ) {
+    destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
+    ++ctxiter;
+  }
 }
 
 // Baseline subtraction by per spectrum fitting parameters
@@ -1350,8 +1534,8 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   vi::VisBuffer2 *vb = vi->getVisBuffer();
   BaselineTable *bt = 0;
   bool write_baseline_table = (out_bltable_name != "");
-  if (write_baseline_table) bt= new BaselineTable(sdh_->getMS());
-  //bool do_set_spectrum_to_cube = (do_subtract || !write_baseline_table);
+  if (write_baseline_table) bt= new BaselineTable(vi->ms());
+
   // SPW and channelization reservoir
   Vector<Int> recspw;
   Matrix<Int> recchan;

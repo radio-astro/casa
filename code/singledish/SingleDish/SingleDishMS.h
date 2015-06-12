@@ -12,8 +12,6 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <singledish/SingleDish/SDMSManager.h>
 
-#include "BaselineTable.h"
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class SingleDishMS {
@@ -82,10 +80,16 @@ public:
 				string const& in_ppp, 
 				string const& param_file);
 
+  // apply baseline table
+  void applyBaselineTable(string const& in_column_name,
+			  string const& in_bltable_name,
+			  string const& out_ms_name,
+			  string const in_spw);
+
   // smooth data with arbitrary smoothing kernel
   // currently only gaussian smoothing is supported
   void smooth(string const &kernelType, float const kernelWidth,
-          string const &columnName, string const&outMsName);
+	      string const &columnName, string const&outMsName);
 
 private:
   /////////////////////////

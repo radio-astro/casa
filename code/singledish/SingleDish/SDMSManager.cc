@@ -358,10 +358,12 @@ Record SDMSManager::getSelRec(string const &spw)
   return myms.msseltoindex(toCasaString(spw));
 }
 
+/*
 MeasurementSet SDMSManager::getMS()
 {
   MeasurementSet myms = MeasurementSet(inpMsName_p);
   return myms;
 }
+*/
 
 }  // End of casa namespace.

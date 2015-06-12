@@ -1,17 +1,19 @@
 #include <assert.h>
 
+#include <casa/Containers/ValueHolder.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Path.h>
+#include <measures/TableMeasures/TableMeasDesc.h>
+#include <measures/TableMeasures/TableMeasRefDesc.h>
+#include <measures/TableMeasures/TableMeasValueDesc.h>
+#include <singledish/SingleDish/BaselineTable.h>
+#include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/TableRecord.h>
-#include <measures/TableMeasures/TableMeasDesc.h>
-#include <measures/TableMeasures/TableMeasRefDesc.h>
-#include <measures/TableMeasures/TableMeasValueDesc.h>
-
-#include "BaselineTable.h"
+#include <tables/Tables/TableProxy.h>
 
 namespace casa {
 
@@ -38,12 +40,11 @@ BaselineTable::BaselineTable(const MeasurementSet& parent)
   table_.rwKeywordSet().define("MSName", parent.tableName());
   table_.rwKeywordSet().define("ApplyType", "NONE");
   table_.rwKeywordSet().defineTable("FREQUENCIES", parent.spectralWindow());
-
   table_.tableInfo().setType("ApplyTable");
-
   originaltable_ = table_;
 
   setup();
+  sorted_ = false;
 }
 
 BaselineTable::BaselineTable(const String &name)
@@ -51,8 +52,8 @@ BaselineTable::BaselineTable(const String &name)
   table_ = Table(name, Table::Update);
   attachBaseColumns();
   originaltable_ = table_;
-
   attachOptionalColumns();
+  sorted_ = false;
 }
 
 BaselineTable::~BaselineTable()
@@ -125,6 +126,69 @@ void BaselineTable::save(const std::string &filename)
   Path path(inname);
   inname = path.expandedName();
   table_.deepCopy(inname, Table::New);
+}
+
+bool BaselineTable::getApply(uInt irow, uInt ipol) const
+{
+  Vector<Bool> apply = applyCol_.get(irow);
+  return static_cast<bool>(apply[ipol]);
+}
+
+uint BaselineTable::getBaselineType(uInt irow, uInt ipol) const
+{
+  Vector<uInt> ftype = ftypeCol_.get(irow);
+  return static_cast<uint>(ftype[ipol]);
+}
+
+int BaselineTable::getFPar(uInt irow, uInt ipol) const
+{
+  Vector<Int> fpar = fparCol_.get(irow);
+  return static_cast<int>(fpar[ipol]);
+}
+
+void BaselineTable::getdata(uInt irow, uInt *scanno, 
+			    uInt *beamno, uInt *ifno, 
+			    uInt *freqid, Double *time, 
+			    Array<Bool> *apply,
+			    Array<uInt> *ftype, 
+			    Array<Int> *fpar, 
+			    Array<Float> *ffpar, 
+			    Array<uInt> *mask,
+			    Array<Float> *res,
+			    Array<Float> *rms, 
+			    uInt *nchan, 
+			    Array<Float> *cthres,
+			    Array<uInt> *citer, 
+			    Array<Bool> *uself,
+			    Array<Float> *lfthres, 
+			    Array<uInt> *lfavg, 
+			    Array<uInt> *lfedge)
+{
+  if (!sorted_) {
+    timeSortedTable_ = table_.sort("TIME");
+  }
+
+  TableProxy tst(timeSortedTable_);
+
+  scanno  = (uInt *)fromValueHolder(tst.getCell("SCANNO", irow));
+  beamno  = (uInt *)fromValueHolder(tst.getCell("BEAMNO", irow));
+  ifno    = (uInt *)fromValueHolder(tst.getCell("IFNO", irow));
+  freqid  = (uInt *)fromValueHolder(tst.getCell("FREQ_ID", irow));
+  time    = (Double *)fromValueHolder(tst.getCell("TIME", irow));
+  apply   = (Array<Bool> *)fromValueHolder(tst.getCell("APPLY", irow));
+  ftype   = (Array<uInt> *)fromValueHolder(tst.getCell("FUNC_TYPE", irow));
+  fpar    = (Array<Int> *)fromValueHolder(tst.getCell("FUNC_PARAM", irow));
+  ffpar   = (Array<Float> *)fromValueHolder(tst.getCell("FUNC_FPARAM", irow));
+  mask    = (Array<uInt> *)fromValueHolder(tst.getCell("MASKLIST", irow));
+  res     = (Array<Float> *)fromValueHolder(tst.getCell("RESULT", irow));
+  rms     = (Array<Float> *)fromValueHolder(tst.getCell("RMS", irow));
+  nchan   = (uInt *)fromValueHolder(tst.getCell("NCHAN", irow));
+  cthres  = (Array<Float> *)fromValueHolder(tst.getCell("CLIP_THRESHOLD", irow));
+  citer   = (Array<uInt> *)fromValueHolder(tst.getCell("CLIP_ITERATION", irow));
+  uself   = (Array<Bool> *)fromValueHolder(tst.getCell("USE_LF", irow));
+  lfthres = (Array<Float> *)fromValueHolder(tst.getCell("LF_THRESHOLD", irow));
+  lfavg   = (Array<uInt> *)fromValueHolder(tst.getCell("LF_AVERAGE", irow));
+  lfedge  = (Array<uInt> *)fromValueHolder(tst.getCell("LF_EDGE", irow));
 }
 
 void BaselineTable::setbasedata(uInt irow, uInt scanno, 
