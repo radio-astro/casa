@@ -22,6 +22,7 @@ class ParallelTaskHelper:
     """
     
     __bypass_parallel_processing = 0
+    __async_mode = False
     
     def __init__(self, task_name, args = {}):
         self._arg = args
@@ -148,6 +149,7 @@ class ParallelTaskHelper:
                 command_request_id = self._cluster.push_command_request(job[0],False,None,job[1])
                 self._command_request_id_list.append(command_request_id[0])
 
+
     def postExecution(self):   
         
         casalog.origin("ParallelTaskHelper")
@@ -169,40 +171,45 @@ class ParallelTaskHelper:
         else:
             return None
         
+        ret = ret_list
+        if self._consolidateOutput: ret = ParallelTaskHelper.consolidateResults(ret_list,self._taskName)
+        
+        return ret
+        
+        
+    @staticmethod
+    def consolidateResults(ret_list,taskname):
+        
         index = 0
-        if isinstance(ret_list.values()[0],bool) and self._consolidateOutput:
+        if isinstance(ret_list.values()[0],bool):
             retval = True
             for subMs in ret_list:
                 if not ret_list[subMs]:
-                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),"WARN","postExecution")
+                    casalog.post("%s failed for sub-MS %s" % (taskname,subMs),"WARN","postExecution")
                     retval = False
                 index += 1
             return retval
-        elif any(isinstance(v,dict) for v in ret_list.itervalues()) and self._consolidateOutput:
+        elif any(isinstance(v,dict) for v in ret_list.itervalues()):
             ret_dict = {}
             for subMs in ret_list:
                 dict_i = ret_list[subMs]
-                # (CAS-4119): Neglectable NullSelection errors may cause flagdata to return None
                 if isinstance(dict_i,dict):
                     try:
-                        ret_dict = self.sum_dictionaries(dict_i,ret_dict)
+                        ret_dict = ParallelTaskHelper.sum_dictionaries(dict_i,ret_dict)
                     except Exception, instance:
                         casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","postExecution")
-            return ret_dict     
-        elif (ret_list.values()[0]==None) and self._consolidateOutput:  
-            return None      
-        else:
-            return ret_list
+            return ret_dict
         
-    # (CAS-4376): Consolidate list of return variables from the different engines into one single value 
-    def sum_dictionaries(self,dict_list,ret_dict):
+        
+    @staticmethod
+    def sum_dictionaries(dict_list,ret_dict):
         for key in dict_list:
             item = dict_list[key]
             if isinstance(item,dict):
                 if ret_dict.has_key(key):
-                    ret_dict[key] = self.sum_dictionaries(item,ret_dict[key])
+                    ret_dict[key] = ParallelTaskHelper.sum_dictionaries(item,ret_dict[key])
                 else:
-                    ret_dict[key] = self.sum_dictionaries(item,{})
+                    ret_dict[key] = ParallelTaskHelper.sum_dictionaries(item,{})
             else:
                 if ret_dict.has_key(key):
                     if not isinstance(ret_dict[key],str):
@@ -210,6 +217,28 @@ class ParallelTaskHelper:
                 else:
                     ret_dict[key] = item
         return ret_dict   
+    
+    
+    @staticmethod
+    def getResult(command_request_id_list,taskname):
+        
+        # Access MPICommandClietn singleton instance
+        client = MPICommandClient()
+        
+        # Get response list
+        command_response_list =  client.get_command_response(command_request_id_list,True,True)
+                
+        # Format list in the form of vis dict
+        ret_list = {}
+        for command_response in command_response_list:
+            vis = command_response['parameters']['vis']
+            ret_list[vis] = command_response['ret']
+            
+        # Consolidate results and return
+        ret = ParallelTaskHelper.consolidateResults(ret_list,taskname)
+        
+        return ret                    
+            
             
     def go(self):
         
@@ -218,12 +247,16 @@ class ParallelTaskHelper:
         self.initialize()
         if (self.generateJobs()):
             self.executeJobs()
-            try:
-                retVar = self.postExecution()
-            except Exception, instance:
-                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","go")
-                traceback.print_tb(sys.exc_info()[2])
-                return False
+            
+            if ParallelTaskHelper.__async_mode:
+                return list(self._command_request_id_list)
+            else:
+                try:
+                    retVar = self.postExecution()
+                except Exception, instance:
+                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","go")
+                    traceback.print_tb(sys.exc_info()[2])
+                    return False
         else:
             retVar = False
             
@@ -323,6 +356,14 @@ class ParallelTaskHelper:
         switch=2 => Process the MMS as a normal MS
         """        
         return ParallelTaskHelper.__bypass_parallel_processing        
+    
+    @staticmethod
+    def setAsyncMode(async=False):     
+        ParallelTaskHelper.__async_mode = async
+        
+    @staticmethod
+    def getAsyncMode():
+        return ParallelTaskHelper.__async_mode    
     
     @staticmethod
     def isParallelMS(vis):

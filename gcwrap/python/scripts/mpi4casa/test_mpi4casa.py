@@ -1012,10 +1012,23 @@ class test_mpi4casa_flagdata(unittest.TestCase):
         
         self.vis = "Four_ants_3C286.mms"
         setUpFile(self.vis,'vis')
+        
+        # Tmp files
+        self.vis2 = self.vis + '.2'
+        self.vis3 = self.vis + '.3'    
+        
+        # Set up cluster
+        self.client = MPICommandClient()
+        self.client.set_log_mode('redirect')
+        self.client.start_services()  
 
     def tearDown(self):
 
         os.system('rm -rf ' + self.vis)
+        
+        # Remove tmp files
+        os.system('rm -rf ' + self.vis2)
+        os.system('rm -rf ' + self.vis3)        
     
     def test_mpi4casa_flagdata_list_return(self):
         """Test support for MMS using flagdata in unflag+clip mode"""
@@ -1050,6 +1063,48 @@ class test_mpi4casa_flagdata(unittest.TestCase):
         self.assertTrue(ret_dict['spw']['12']['flagged'] == 131896.0)
         self.assertTrue(ret_dict['spw']['13']['flagged'] == 125074.0)
         self.assertTrue(ret_dict['spw']['14']['flagged'] == 118039.0)
+        
+    def test_mpi4casa_flagdata_list_return_async(self):
+        """Test flagdata summary in async mode"""
+        
+        # First run flagdata sequentially
+        bypassParallelProcessing = ParallelTaskHelper.getBypassParallelProcessing()
+        ParallelTaskHelper.bypassParallelProcessing(2)
+        res = flagdata(vis=self.vis, mode='summary')
+        ParallelTaskHelper.bypassParallelProcessing(bypassParallelProcessing)
+        
+        # Make a copy of the input MMS for each flagdata instance
+        os.system("cp -r %s %s" % (self.vis,self.vis2))
+        os.system("cp -r %s %s" % (self.vis,self.vis3))
+        
+        # Set async mode in ParallelTaskHelper
+        aysncMode = ParallelTaskHelper.getAsyncMode()
+        ParallelTaskHelper.setAsyncMode(True)
+        
+        # Run applycal in MMS mode with the first set
+        request_id_1 = flagdata(vis=self.vis, mode='summary')    
+        
+        # Run applycal in MMS mode with the second set
+        request_id_2 = flagdata(vis=self.vis2, mode='summary')
+        
+        # Run applycal in MMS mode with the third set
+        request_id_3 = flagdata(vis=self.vis3, mode='summary')
+        
+        # Get response in block mode
+        reques_id_list = request_id_1 + request_id_2 + request_id_3
+        command_response_list = self.client.get_command_response(reques_id_list,True,True)        
+        
+        # Get result
+        res1 = ParallelTaskHelper.getResult(request_id_1,'flagdata')
+        res2 = ParallelTaskHelper.getResult(request_id_2,'flagdata')
+        res3 = ParallelTaskHelper.getResult(request_id_3,'flagdata')   
+        
+        self.assertEqual(res1,res, "flagdata dictionary does not match for the first flagdata run")
+        self.assertEqual(res2,res, "flagdata dictionary does not match for the second flagdata run")
+        self.assertEqual(res3,res, "flagdata dictionary does not match for the third flagdata run")
+        
+        # Unset async mode in ParallelTaskHelper
+        ParallelTaskHelper.setAsyncMode(aysncMode)        
         
         
 class test_mpi4casa_setjy(unittest.TestCase):
@@ -1186,39 +1241,73 @@ class test_mpi4casa_setjy(unittest.TestCase):
 class test_mpi4casa_applycal(unittest.TestCase):
 
     def setUp(self):
+        
         # Set-up MMS
         self.vis = "ngc5921.applycal.mms"
         self.vis_sorted = "ngc5921.applycal.sorted.mms"
         setUpFile(self.vis,'vis')
+        
         # Set-up reference MMS
         self.ref = "ngc5921.applycal.ms"
         self.ref_sorted = "ngc5921.applycal.sorted.ms"
         setUpFile(self.ref,'ref')
+        
         # Set-up auxiliary files
         self.aux = ["ngc5921.fluxscale", "ngc5921.gcal", "ngc5921.bcal"]
         setUpFile(self.aux ,'aux')
-
-    def tearDown(self):
-        # Remove MMS
-        os.system('rm -rf ' + self.vis) 
-        os.system('rm -rf ' + self.vis_sorted) 
-        # Remove ref MMS
-        os.system('rm -rf ' + self.ref) 
-        os.system('rm -rf ' + self.ref_sorted) 
-        # Remove aux files
-        for file in self.aux:
-            os.system('rm -rf ' + file)         
         
-    def test1_applycal_fluxscale_gcal_bcal(self):
-        """Test 1: Apply calibration using fluxscal gcal and bcal tables"""
-
         # Repository caltables are pre-v4.1, and we
         # must update them _before_ applycal to avoid contention
         casalog.post("Updating pre-v4.1 caltables: %s" % str(self.aux),"WARN","test1_applycal_fluxscale_gcal_bcal")
         cblocal = cbtool()
         for oldct in self.aux:
             cblocal.updatecaltable(oldct)
-        casalog.post("Pre-v4.1 caltables updated","INFO","test1_applycal_fluxscale_gcal_bcal")
+        casalog.post("Pre-v4.1 caltables updated","INFO","test_mpi4casa_applycal")        
+        
+        # Tmp files
+        self.vis2 = self.vis + '.2'
+        self.vis3 = self.vis + '.3'
+        self.vis_sorted2 = self.vis_sorted + '.2'
+        self.vis_sorted3 = self.vis_sorted + '.3'
+        
+        # Tmp aux files
+        self.aux2 = []
+        self.aux3 = []
+        for file in self.aux:
+            self.aux2.append(file + '.2')
+            self.aux3.append(file + '.3')
+        
+        # Set up cluster
+        self.client = MPICommandClient()
+        self.client.set_log_mode('redirect')
+        self.client.start_services()          
+
+    def tearDown(self):
+        
+        # Remove MMS
+        os.system('rm -rf ' + self.vis) 
+        os.system('rm -rf ' + self.vis_sorted) 
+        
+        # Remove ref MMS
+        os.system('rm -rf ' + self.ref) 
+        os.system('rm -rf ' + self.ref_sorted) 
+        
+        # Remove tmp files
+        os.system('rm -rf ' + self.vis2)
+        os.system('rm -rf ' + self.vis3)
+        os.system('rm -rf ' + self.vis_sorted2)
+        os.system('rm -rf ' + self.vis_sorted3)        
+        
+        # Remove aux files
+        for file in self.aux: os.system('rm -rf ' + file)
+            
+        # Remove tmp aux files
+        for file in self.aux2: os.system('rm -rf ' + file)            
+        for file in self.aux3: os.system('rm -rf ' + file)                  
+                     
+        
+    def test1_applycal_fluxscale_gcal_bcal(self):
+        """Test 1: Apply calibration using fluxscal gcal and bcal tables"""
         
         # Run applycal in MS mode
         applycal(vis=self.ref,field='',spw='',selectdata=False,gaintable=self.aux,
@@ -1238,7 +1327,67 @@ class test_mpi4casa_applycal(unittest.TestCase):
         
         # Compare files
         compare = testhelper.compTables(self.ref_sorted,self.vis_sorted,['FLAG_CATEGORY'])
-        self.assertTrue(compare)        
+        self.assertTrue(compare)      
+        
+    def test2_applycal_fluxscale_gcal_bcal_async_mode(self):
+        """Test 2: Apply calibration using fluxscal gcal and bcal tables in async mode"""
+        
+        # Run applycal in MS mode
+        applycal(vis=self.ref,gaintable=self.aux,
+                 gainfield=['nearest','nearest','0'],
+                 interp=['linear', 'linear','nearest'])        
+       
+        # Make a copy of the input MMS for each applycal instance
+        os.system("cp -r %s %s" % (self.vis,self.vis2))
+        os.system("cp -r %s %s" % (self.vis,self.vis3))
+        
+        # Make a copy of cal tables for each applycal instance
+        for idx in range(0,len(self.aux)):
+             os.system("cp -r %s %s" % (self.aux[idx],self.aux2[idx]))
+             os.system("cp -r %s %s" % (self.aux[idx],self.aux3[idx]))
+             
+        # Set async mode in ParallelTaskHelper
+        aysncMode = ParallelTaskHelper.getAsyncMode()
+        ParallelTaskHelper.setAsyncMode(True)
+        
+        # Run applycal in MMS mode with the first set
+        request_id_1 = applycal(vis=self.vis,gaintable=self.aux,
+                                gainfield=['nearest','nearest','0'],
+                                interp=['linear', 'linear','nearest'])    
+        
+        # Run applycal in MMS mode with the second set
+        request_id_2 = applycal(vis=self.vis2,gaintable=self.aux2,
+                                gainfield=['nearest','nearest','0'],
+                                interp=['linear', 'linear','nearest'])    
+        
+        # Run applycal in MMS mode with the third set
+        request_id_3 = applycal(vis=self.vis3,gaintable=self.aux3,
+                                gainfield=['nearest','nearest','0'],
+                                interp=['linear', 'linear','nearest'])   
+        
+        # Get response in block mode
+        reques_id_list = request_id_1 + request_id_2 + request_id_3
+        command_response_list = self.client.get_command_response(reques_id_list,True,True)        
+        
+        # Unset async mode in ParallelTaskHelper
+        ParallelTaskHelper.setAsyncMode(aysncMode)
+        
+        # Sort ref file to properly match rows for comparison
+        casalog.post("Sorting vis file: %s" % str(self.vis),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis,self.vis_sorted)  
+        casalog.post("Sorting vis file: %s" % str(self.vis2),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis2,self.vis_sorted2)       
+        casalog.post("Sorting vis file: %s" % str(self.vis3),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis3,self.vis_sorted3)              
+        casalog.post("Sorting ref file: %s" % str(self.ref),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")    
+        sortFile(self.ref,self.ref_sorted)        
+        
+        # Compare files
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted,['FLAG_CATEGORY'])
+        self.assertTrue(compare)
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted2,['FLAG_CATEGORY'])
+        self.assertTrue(compare)
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted3,['FLAG_CATEGORY'])  
 
         
 class test_mpi4casa_uvcont(unittest.TestCase):

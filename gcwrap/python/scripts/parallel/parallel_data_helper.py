@@ -1351,7 +1351,6 @@ class ParallelDataHelper(ParallelTaskHelper):
         """
 
         casalog.origin("ParallelDataHelper")        
-        casalog.post("Finalizing MMS structure")
                 
         if self._msTool:
             self._msTool.close()
@@ -1471,6 +1470,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             
         # Copy sub-tables from first subMS to the others. The tables in
         # subtabs_to_omit are linked instead of copied.
+        casalog.post("Finalizing MMS structure")
         ph.makeMMS(self._arg['outputvis'], subMSList,
                    True, # copy subtables
                    subtabs_to_omit, # omitting these

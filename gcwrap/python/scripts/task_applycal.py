@@ -36,8 +36,11 @@ def applycal(vis=None,
                 # To be safe convert file names to absolute paths.
                 gaintable = ParallelTaskHelper.findAbsPath(gaintable)
                 helper = ParallelTaskHelper('applycal', locals())
-                helper.go()
-                return
+                ret = helper.go()
+                if ParallelTaskHelper.getAsyncMode():
+                	return ret
+                else:
+                	return
 
 	try:
                 mycb = cbtool()

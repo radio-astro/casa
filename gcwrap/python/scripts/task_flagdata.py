@@ -244,16 +244,20 @@ def flagdata(vis,
         # Execute the parallel engines
         retVar = FHelper.go()
         
-        # Filter summary at MMS level
-        if (mode == 'summary'):
-            if filterSummary:
-                retVar = filter_summary(retVar,minrel,maxrel,minabs,maxabs)
+        # In async mode return the job ids
+        if ParallelTaskHelper.getAsyncMode():
             return retVar
-        # Save parameters at MMS level
-        elif savepars:
-            action = 'none'
         else:
-            return retVar
+            # Filter summary at MMS level
+            if (mode == 'summary'):
+                if filterSummary:
+                    retVar = filter_summary(retVar,minrel,maxrel,minabs,maxabs)
+                return retVar
+            # Save parameters at MMS level
+            elif savepars:
+                action = 'none'
+            else:
+                return retVar
     
     summary_stats={};
     
