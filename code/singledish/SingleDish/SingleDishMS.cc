@@ -2100,7 +2100,8 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
     // Initial inspection
     // If there are at least one spw that cannot apply smoothing (nchan==1 etc.),
     // abort here
-    inspectNumChan(vi->ms());
+    Vector<Int> numChanList = inspectNumChan(vi->ms());
+    os << "numChanList = " << numChanList << LogIO::POST;
 
     // attach accessor method depending on input data column
     if (in_column_ == MS::DATA) {
@@ -2121,15 +2122,36 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
     double startTime = gettimeofday_sec();
 
+    Int numChanCache = -1;
+    // prepare kernel and convolver for necessary array length
+    map<Int, Vector<Float> > kernelPool;
+    map<Int, Convolver<Float> > convolverPool;
+    for (size_t i = 0; i < numChanList.nelements(); ++i) {
+        Int numChan = numChanList[i];
+        Vector<Float> theKernel = VectorKernel::make(type, kernelWidth, numChan, True, False);
+        kernelPool[numChan] = theKernel;
+        convolverPool[numChan] = Convolver<Float>(theKernel, IPosition(1, numChan));
+    }
+    // TODO: reduce number of data flipping before and after fft (after unit tests defined)
+    Vector<Float> kernel;
+    Convolver<Float> convolver;
+
     for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
         // Convolver setup
         for (vi->origin(); vi->more(); vi->next()) {
-            size_t const numRow = static_cast<size_t>(vb->nRows());
-            size_t const numChan = static_cast<size_t>(vb->nChannels());
-            size_t const numPol = static_cast<size_t>(vb->nCorrelations());
-            // TODO: reuse convolver and kernel as much as possible
-            Vector<Float> kernel = VectorKernel::make(type, kernelWidth, numChan, True, False);
-            Convolver<Float> convolver(kernel, IPosition(1, numChan));
+            Int const numRow = vb->nRows();
+            Int const numChan = vb->nChannels();
+            Int const numPol = vb->nCorrelations();
+            //os << "current chunk: nrow " << numRow << " nchan " << numChan << " npol " << numPol << LogIO::POST;
+            // advanced caching: keep created kernel-convolver pair to map objects and reuse them
+            assert(numChan > 0);
+            if (numChan != numChanCache) {
+                //os << "numChan " << numChan << ": need to switch kernel/convolver" << LogIO::POST;
+                assert(kernelPool.find(numChan) != kernelPool.end());
+                kernel.assign(kernelPool[numChan]);
+                convolver = convolverPool[numChan];
+                numChanCache = numChan;
+            }
             Cube<Float> dataChunk(numPol, numChan, numRow);
             visCubeAccessor_(*vb, dataChunk);
 
@@ -2138,20 +2160,20 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
             Cube<Bool> flagCube = vb->flagCube();
 
             // loop over row
-            for (size_t irow=0; irow < numRow; ++irow) {
+            for (Int irow=0; irow < numRow; ++irow) {
                 // skip row if flagged
                 if (!flagRow[irow]) {
                     continue;
                 }
               
                 // loop over polarization
-                for (size_t ipol=0; ipol < numPol; ++ipol) {
+                for (Int ipol=0; ipol < numPol; ++ipol) {
                     // get a spectrum from data cube
                     get_spectrum_from_cube(dataChunk, irow, ipol, numChan, spectrum);
                     float *data = spectrum.data;
 
                     // replace flagged channel data with zero
-                    for (size_t ichan = 0; ichan < numChan; ++ichan) {
+                    for (Int ichan = 0; ichan < numChan; ++ichan) {
                         if (flagCube(ipol, ichan, irow)) {
                             data[ichan] = 0.0f;
                         }
@@ -2181,7 +2203,7 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
     finalize_process();
 }
 
-void SingleDishMS::inspectNumChan(MeasurementSet const &ms)
+Vector<Int> SingleDishMS::inspectNumChan(MeasurementSet const &ms)
 {
     LogIO os(_ORIGIN);
 
@@ -2194,11 +2216,15 @@ void SingleDishMS::inspectNumChan(MeasurementSet const &ms)
     for (uInt i = 0; i < numDDId; ++i) {
         spwIdList[i] = col(ddIdList[i]);
     }
+    Vector<Int> numChanList(numDDId);
     col.attach(ms.spectralWindow(), "NUM_CHAN");
     os << "spwIdList = " << spwIdList << LogIO::POST;
     for (size_t i = 0; i < spwIdList.nelements(); ++i) {
-        os << "examine spw " << i << ": nchan = " << col(i) << LogIO::POST;
-        if (col(i) == 1) {
+        Int spwId = spwIdList[i];
+        Int numChan = col(spwId);
+        numChanList[i] = numChan;
+        os << "examine spw " << spwId << ": nchan = " << numChan << LogIO::POST;
+        if (numChan == 1) {
             stringstream ss;
             ss << "smooth: Failed due to wrong spw " << i;
             finalize_process();
@@ -2206,6 +2232,9 @@ void SingleDishMS::inspectNumChan(MeasurementSet const &ms)
         }
     }
 
+    uInt numNumChan = GenSort<Int>::sort(numChanList, Sort::Ascending,
+            Sort::QuickSort | Sort::NoDuplicates);
+    return numChanList(Slice(0, numNumChan));
 }
 
 }  // End of casa namespace.
