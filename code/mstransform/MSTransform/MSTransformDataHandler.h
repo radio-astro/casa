@@ -33,7 +33,6 @@
 // Needed by setupMS
 #include <tables/Tables.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
-#include <asdmstman/AsdmStMan.h>
 
 // Needed by copyTable
 #include <tables/Tables/PlainTable.h>

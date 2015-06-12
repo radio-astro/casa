@@ -1852,7 +1852,7 @@ void MSTransformManager::initDataSelectionParams()
 
 				// jagonzal (new WEIGHT/SIGMA convention)
 				// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
-				if (freqbin_p(0) > numOfSelChanMap_p[spwList(spw_i)])
+				if (freqbin_p(0) > (Int)numOfSelChanMap_p[spwList(spw_i)])
 				{
 					logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 							<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
@@ -1885,7 +1885,7 @@ void MSTransformManager::initDataSelectionParams()
 					freqbinMap_p[spwList(spw_i)] = freqbin_p(spw_i);
 					// jagonzal (new WEIGHT/SIGMA convention)
 					// jagonzal (CAS-7149): Cut chanbin to not exceed n# selected channels
-					if (freqbin_p(spw_i) > numOfSelChanMap_p[spwList(spw_i)])
+					if (freqbin_p(spw_i) > (Int)numOfSelChanMap_p[spwList(spw_i)])
 					{
 						logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
 								<< "Number of selected channels " << numOfSelChanMap_p[spwList(spw_i)]
@@ -5832,7 +5832,7 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 													ArrayColumn<Float> &outputCubeCol,
 													ArrayColumn<Float> &outputMatrixCol,
 													MSTransformations::weightTransformation weightTransformation,
-													Bool flushSpectrumCube)
+													Bool  /* flushSpectrumCube */)
 {
 	// Dummy auxiliary weightSpectrum
 	const Cube<Float> applicableSpectrum;
@@ -5980,7 +5980,7 @@ const Cube<Float>& MSTransformManager::getApplicableSpectrum(vi::VisBuffer2 *vb,
 // -----------------------------------------------------------------------
 // Get output weight column
 // -----------------------------------------------------------------------
-ArrayColumn<Float>&  MSTransformManager::getOutputWeightColumn(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol)
+ArrayColumn<Float>&  MSTransformManager::getOutputWeightColumn(vi::VisBuffer2 *, MS::PredefinedColumns datacol)
 {
 	if (userBufferMode_p)
 	{
@@ -6142,7 +6142,7 @@ template <class T> void MSTransformManager::copyCubeOfData(	vi::VisBuffer2 *vb,
 																const Cube<T> &inputDataCube,
 																ArrayColumn<T> &outputDataCol,
 																ArrayColumn<Bool> *outputFlagCol,
-																const Cube<Float> &inputWeightCube)
+																const Cube<Float> & /* inputWeightCube */)
 {
 	writeCube(inputDataCube,outputDataCol,rowRef);
 	if (outputFlagCol != NULL)
@@ -6601,7 +6601,7 @@ template <class T> void MSTransformManager::separateCubeOfData(	vi::VisBuffer2 *
 																	const Cube<T> &inputDataCube,
 																	ArrayColumn<T> &outputDataCol,
 																	ArrayColumn<Bool> *outputFlagCol,
-																	const Cube<Float> &inputWeightCube)
+																	const Cube<Float> & /* inputWeightCube */)
 {
 	// Write flag column too?
 	if (outputFlagCol != NULL)
@@ -6883,11 +6883,11 @@ template <class T> void  MSTransformManager::bufferOutputPlanes(	uInt ,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt row,
+template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt,
 																		Matrix<T> &outputDataPlane,
 																		Matrix<Bool> &outputFlagsPlane,
-																		ArrayColumn<T> &outputDataCol,
-																		ArrayColumn<Bool> &outputFlagCol)
+																		ArrayColumn<T> & /* outputDataCol */,
+																		ArrayColumn<Bool> & /* outputFlagCol */)
 {
 	// Get buffer pointers
 	Cube<T> *dataBufferPointer;
@@ -7412,7 +7412,7 @@ template <class T> void MSTransformManager::flagCumSumKernel(	Vector<T> &inputDa
 // -----------------------------------------------------------------------
 template <class T> void MSTransformManager::flagNonZeroAverageKernel(	Vector<T> &inputData,
 																		Vector<Bool> &inputFlags,
-																		Vector<Float> &inputWeights,
+																		Vector<Float> & /* inputWeights */,
 																		Vector<T> &outputData,
 																		Vector<Bool> &outputFlags,
 																		uInt startInputPos,
@@ -7535,7 +7535,7 @@ template <class T> void MSTransformManager::flagWeightNonZeroAverageKernel(	Vect
 // -----------------------------------------------------------------------
 template <class T> void MSTransformManager::flagCumSumNonZeroKernel(	Vector<T> &inputData,
 																		Vector<Bool> &inputFlags,
-																		Vector<Float> &inputWeights,
+																		Vector<Float> & /* inputWeights */,
 																		Vector<T> &outputData,
 																		Vector<Bool> &outputFlags,
 																		uInt startInputPos,

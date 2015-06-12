@@ -24,6 +24,7 @@
 #include <tables/Tables/TableProxy.h>
 #include <tables/TaQL/TableParse.h>
 #include <ms/MSOper/MSMetaData.h>
+#include <asdmstman/AsdmStMan.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
