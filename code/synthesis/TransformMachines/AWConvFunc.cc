@@ -327,7 +327,10 @@ namespace casa{
 
 		    //tim.mark();
 		    if (!isDryRun)
-		      wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
+		      {
+			wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
+			//cerr << iw << " " << cellSize << " " << iw*iw/wScale << endl;
+		      }
 		    //tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
 
@@ -486,7 +489,8 @@ namespace casa{
 		    if (!isDryRun)
 		      resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
 
-		    log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
+		    if (!isDryRun)
+		      log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 
 		    // cfb.getCFCellPtr(freqValues(inu), wValues(iw), muellerElement)->storage_p->assign(cfBuf);
 		    // ftRef(0)=cfBuf.shape()(0)/2-1;
@@ -575,7 +579,8 @@ namespace casa{
   Vector<Double> AWConvFunc::makeWValList(const Double &dW, const Int &nW)
   {
     Vector<Double> wValues(nW);
-    for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*dW;
+    //    for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*dW;
+    for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*iw/dW;
     return wValues;
   }
 
@@ -1479,6 +1484,8 @@ namespace casa{
   //
   void AWConvFunc::fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 				       const Int& nx, const Int& ny, 
+				       const CoordinateSystem& skyCoords,
+				       const CFCStruct& miscInfo,
 				       const Double& freqValue,
 				       const Double& wValue,
 				       const Double& wScale,
@@ -1539,15 +1546,21 @@ namespace casa{
       }
 
       Vector<Double> cellSize;
+      // {
+      // 	Int linIndex=cs_l.findCoordinate(Coordinate::LINEAR);
+      // 	LinearCoordinate lc=cs_l.linearCoordinate(linIndex);
+      // 	Vector<Bool> axes(2); axes=True;
+      // 	Vector<Int> dirShape(2); dirShape(0)=nx;dirShape(1)=ny;
+      // 	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
+      // 	cellSize = lc.increment();
+      // }
       {
-	Int linIndex=cs_l.findCoordinate(Coordinate::LINEAR);
-	LinearCoordinate lc=cs_l.linearCoordinate(linIndex);
-	Vector<Bool> axes(2); axes=True;
-	Vector<Int> dirShape(2); dirShape(0)=nx;dirShape(1)=ny;
-	Coordinate* FTlc=lc.makeFourierCoordinate(axes,dirShape);
-	cellSize = lc.increment();
+	Int directionIndex=skyCoords.findCoordinate(Coordinate::DIRECTION);
+	DirectionCoordinate dc=skyCoords.directionCoordinate(directionIndex);
+	//Vector<Double> cellSize;
+	cellSize = dc.increment()*(Double)miscInfo.sampling;
       }
-      // cerr << "#########$$$$$$ " << cellSize << endl;
+      //cerr << "#########$$$$$$ " << cellSize << endl;
 
       // Int directionIndex=cs_l.findCoordinate(Coordinate::DIRECTION);
       // DirectionCoordinate dc=cs_l.directionCoordinate(directionIndex);
@@ -1592,6 +1605,7 @@ namespace casa{
 	    if (wValue > 0)
 	      {
 		wTerm.applySky(cfBufMat, cellSize, wValue, cfBuf.shape()(0));///4);
+		//cerr << cellSize << " " << wValue << endl;
 	      }
 	  }
 
@@ -1662,10 +1676,10 @@ namespace casa{
 	//
 	//tim.mark();
 	// if (!isDryRun)
-	  {
-	    if (wValue==0) wtcpeak = max(cfWtBuf);
-	    cfWtBuf /= wtcpeak;
-	  }
+	  // {
+	  //   if (wValue==0) wtcpeak = max(cfWtBuf);
+	  //   cfWtBuf /= wtcpeak;
+	  // }
 	//tim.show("Norm");
 
 	//tim.mark();
@@ -1828,6 +1842,7 @@ namespace casa{
 			 //
 			 
 			 fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
+					     coords, miscInfo,
 					     miscInfo.freqValue, miscInfo.wValue, wScale, 
 					     // (Double)pa, 
 					     miscInfo.freqValue,
@@ -1848,8 +1863,8 @@ namespace casa{
 
     cfs2.makePersistent(cfCachePath.c_str());
     cfwts2.makePersistent(cfCachePath.c_str(),"","WT");
-    Directory dir(uvGridDiskImage);
-    dir.removeRecursive(False);
-    dir.remove();
+    // Directory dir(uvGridDiskImage);
+    // dir.removeRecursive(False);
+    // dir.remove();
   }
 };

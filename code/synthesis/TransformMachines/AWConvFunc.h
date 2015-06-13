@@ -98,6 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   CFStore2& cfwts);
     void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 			     const Int& nx, const Int& ny,
+			     const CoordinateSystem& skyCoords,
+			     const CFCStruct& miscInfo,
 			     const Double& freqValue,
 			     const Double& wValue,
 			     const Double& wScale,
