@@ -632,7 +632,8 @@ class MPICommandClient:
             self.__stop_command_response_handler_service()          
             
             # Shutdown apps
-            self.__send_app_control_signal("plotms","pm.killApp()")            
+            self.__send_app_control_signal("plotms","pm.killApp()")
+            self.__send_app_control_signal("Xvfb","self.stop_virtual_frame_buffer()")        
                 
             # Send stop signal to servers
             self.__send_stop_service_signal(force_command_request_interruption,finalize_mpi_environment)

@@ -2,6 +2,7 @@
 import thread # To handle service threads like monitoring
 import time # To handle sleep times
 import traceback # To pretty-print tracebacks
+import subprocess # To deploy virtual frame buffer
     
 # Import casalog and casa dictionary
 from taskinit import *
@@ -76,7 +77,14 @@ class MPICommandServer:
             self.__communicator = MPICommunicator()
             
             # Instantiate MPIMonitorClient reference
-            self.__monitor_server = MPIMonitorServer(False)            
+            self.__monitor_server = MPIMonitorServer(False)
+            
+            # Initialize logfile descriptor
+            self.__logfile_descriptor = open(casalog.logfile(), 'w')
+            
+            # Initialize virtual frame buffer state
+            self.__virtual_frame_buffer_port = None
+            self.__virtual_frame_buffer_process = None
             
             # Automatically start services
             if start_services:
@@ -154,7 +162,7 @@ class MPICommandServer:
                             casalog.post("Going to execute command request with id# %s as a statement via exec: %s" 
                                          % (str(command_request_id),command_request['command']),
                                          "INFO",casalog_call_origin)      
-                            code = compile(command_request['command'], '<string>', 'exec')                                                   
+                            code = compile(command_request['command'], casalog_call_origin, 'exec')                                                   
                             exec(code)
                             command_response['ret'] = None
                         elif command_request['mode']=='push':
@@ -252,22 +260,75 @@ class MPICommandServer:
                 time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
 
             casalog.post("MPI command request handler service stopped","INFO",casalog_call_origin)
-   
+      
             
         ################################################################################################################            
         # Public methods ###############################################################################################
         ################################################################################################################            
             
             
+        def start_virtual_frame_buffer(self):
+            
+            casalog_call_origin = "MPICommandServer::start_virtual_frame_buffer"
+
+            try:
+                self.__virtual_frame_buffer_port = ":%s" % str(os.getpid())
+                self.__virtual_frame_buffer_process = subprocess.Popen(['Xvfb',self.__virtual_frame_buffer_port],
+                                                                       stdout=self.__logfile_descriptor, 
+                                                                       stderr=self.__logfile_descriptor,
+                                                                       shell=False)
+                os.environ['DISPLAY']=self.__virtual_frame_buffer_port
+                casalog.post("Deployed virtual frame buffer at %s with pid %s" % 
+                             (self.__virtual_frame_buffer_port,
+                              str(self.__virtual_frame_buffer_process.pid)),
+                             "INFO",casalog_call_origin)
+            except Exception, instance:
+                self.__virtual_frame_buffer_process = None                
+                formatted_traceback = traceback.format_exc()
+                casalog.post("Exception deploying virtual frame buffer at %s: %s" 
+                             % (self.__virtual_frame_buffer_port,
+                                str(formatted_traceback)),
+                             "SEVERE",casalog_call_origin)
+                
+                
+        def stop_virtual_frame_buffer(self):
+            
+            casalog_call_origin = "MPICommandServer::stop_virtual_frame_buffer"
+            
+            if self.__virtual_frame_buffer_process is not None:
+                try:
+                    self.__virtual_frame_buffer_process.terminate()
+                    casalog.post("Virtual frame buffer deployed at %s with pid %s successfully shutdown" % 
+                                 (self.__virtual_frame_buffer_port,
+                                  str(self.__virtual_frame_buffer_process.pid)),
+                                 "INFO",casalog_call_origin)
+                    self.__virtual_frame_buffer_process = None
+                except Exception, instance:
+                    formatted_traceback = traceback.format_exc()
+                    casalog.post("Exception shutting down virtual frame buffer deployed at %s with pid %s: %s" 
+                                 % (self.__virtual_frame_buffer_port,
+                                    str(self.__virtual_frame_buffer_process.pid),
+                                    str(formatted_traceback)),
+                                    "SEVERE",casalog_call_origin)
+            else:
+                casalog.post("Virtual frame buffer not deployed","WARN",casalog_call_origin)            
+            
+            
         def start_services(self):
         
             self.__monitor_server.start_services()
             self.__start_command_request_handler_service()
+            self.start_virtual_frame_buffer()
         
         
         def stop_services(self,force_command_request_interruption=False):
 
+            if self.__logfile_descriptor is not None:
+                 self.__logfile_descriptor.close()
+                 self.__logfile_descriptor = None
+                 
             self.__monitor_server.stop_services()
+            
             if not force_command_request_interruption:
                 self.__stop_command_request_handler_service()
             
@@ -291,7 +352,7 @@ class MPICommandServer:
                     control_service_request = self.__communicator.control_service_request_recv()
                     if control_service_request['signal'] == 'app_control':
                         try:
-                            code = compile(control_service_request['command'], '<string>', 'exec')                                                   
+                            code = compile(control_service_request['command'], casalog_call_origin, 'exec')                                                   
                             exec(code)
                         except Exception, instance:
                             formatted_traceback = traceback.format_exc()
