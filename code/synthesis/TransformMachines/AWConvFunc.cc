@@ -27,6 +27,7 @@
 //# $Id$
 //
 #include <synthesis/TransformMachines/AWConvFunc.h>
+#include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <images/Images/ImageInterface.h>
 #include <synthesis/TransformMachines/Utils.h>
@@ -207,7 +208,7 @@ namespace casa{
 //		      << conjFreq << " " 
 //		      << endl;
 
-		CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l);
+		CoordinateSystem conjPolCS_l=cs_l;  AWConvFunc::makeConjPolAxis(conjPolCS_l);
 		TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
 		Int index;
 		Vector<Int> conjPol;
@@ -435,6 +436,7 @@ namespace casa{
 		    // support sizes.
 		    //
 		    //tim.mark();
+		    Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
 		    if (!isDryRun)
 		      {
 			if (iw==0) wtcpeak = max(cfWtBuf);
@@ -444,7 +446,7 @@ namespace casa{
 
 		    //tim.mark();
 		    if (!isDryRun)
-		      resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+		      AWConvFunc::resizeCF(cfWtBuf, xSupportWt, ySupportWt, supportBuffer, samplingWt,0.0);
 		    //log_l << "CF WT Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 		    //tim.show("Resize:");
 
@@ -472,6 +474,8 @@ namespace casa{
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
 		    //		    if (iw==0) 
 		    //tim.mark();
+		    //Int supportBuffer = (Int)(aTerm->getOversampling()*1.5);
+
 		    if (!isDryRun)
 		      {
 			cpeak = max(cfBuf);
@@ -487,7 +491,7 @@ namespace casa{
     		    // }
 
 		    if (!isDryRun)
-		      resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
+		      AWConvFunc::resizeCF(cfBuf, xSupport, ySupport, supportBuffer, sampling,0.0);
 
 		    if (!isDryRun)
 		      log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
@@ -503,8 +507,8 @@ namespace casa{
 		    if ((iw == 0) && (!isDryRun))
 		      {
 			cfNorm=0; cfWtNorm=0;
-			cfNorm = cfArea(cfBufMat, xSupport, ySupport, sampling);
-			cfWtNorm = cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
+			cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
+			cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
 		      }
 		    //tim.show("Area*2:");
 
@@ -580,7 +584,9 @@ namespace casa{
   {
     Vector<Double> wValues(nW);
     //    for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*dW;
-    for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*iw/dW;
+    wValues = 0.0;
+    if (dW > 0.0)
+      for (Int iw=0;iw<nW;iw++) wValues[iw]=iw*iw/dW;
     return wValues;
   }
 
@@ -706,7 +712,7 @@ namespace casa{
   {
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction[R&D]"));
     Int convSize, convSampling, polInUse;
-    Double wScale=0; Int bandID_l=-1;
+    Double wScale=0.0; Int bandID_l=-1;
     Array<Complex> convFunc_l, convWeights_l;
     Double cfRefFreq=-1, freqScale=1e8;
     Quantity paQuant(pa,"rad");
@@ -1050,7 +1056,7 @@ namespace casa{
     //
     // Timer tim;
     // tim.mark();
-    if ((found = findSupport(func,threshold,convFuncOrigin,R)))
+    if ((found = AWConvFunc::awFindSupport(func,threshold,convFuncOrigin,R)))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
     // tim.show("findSupport:");
 
@@ -1071,14 +1077,14 @@ namespace casa{
   //----------------------------------------------------------------------
   //
   Bool AWConvFunc::resizeCF(Array<Complex>& func, Int& xSupport, Int& ySupport,
-			    const Float& sampling, const Complex& peak)
+			    const Int& supportBuffer, const Float& sampling, const Complex& peak)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "resizeCF[R&D]"));
     Int ConvFuncOrigin=func.shape()[0]/2;  // Conv. Func. is half that size of convSize
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
 
-    Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
+    //Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
     //    bot *= 2; top *= 2;
@@ -1135,6 +1141,11 @@ namespace casa{
   //----------------------------------------------------------------------
   //
   Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold, 
+			       Int& origin, Int& radius)
+  {
+    return awFindSupport(func, threshold, origin, radius);
+  }
+  Bool AWConvFunc::awFindSupport(Array<Complex>& func, Float& threshold, 
 			       Int& origin, Int& radius)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
@@ -1486,13 +1497,6 @@ namespace casa{
 				       const Int& nx, const Int& ny, 
 				       const CoordinateSystem& skyCoords,
 				       const CFCStruct& miscInfo,
-				       const Double& freqValue,
-				       const Double& wValue,
-				       const Double& wScale,
-				       //const Double& vbPA, 
-				       const Double& freqHi,
-				       const Int& muellerElement,
-				       //const VisBuffer& vb,
 				       PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm)
 
   {
@@ -1505,27 +1509,27 @@ namespace casa{
       CoordinateSystem cs_l;
       // Extract the parameters index by (MuellerElement, Freq, W)
       cfWtb.getParams(cs_l, samplingWt, xSupportWt, ySupportWt, 
-		      freqValue,
+		      miscInfo.freqValue,
 		      //				wValues(iw), 
-		      wValue, 
-		      muellerElement);
+		      miscInfo.wValue, 
+		      miscInfo.muellerElement);
       cfb.getParams(cs_l, sampling, xSupport, ySupport, 
-		    freqValue,
-		    wValue, 
-		    muellerElement);
+		    miscInfo.freqValue,
+		    miscInfo.wValue, 
+		    miscInfo.muellerElement);
       //
       // Cache the A-Term for this polarization and frequency
       //
       Double conjFreq, vbPA;
-      CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(freqValue, wValue, muellerElement);
+      CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
       vbPA = thisCell->pa_p.getValue("rad");
       conjFreq = thisCell->conjFreq_p;
-      CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l, thisCell->conjPoln_p);
+      CoordinateSystem conjPolCS_l=cs_l;  AWConvFunc::makeConjPolAxis(conjPolCS_l, thisCell->conjPoln_p);
       IPosition pbshp(4,nx,ny,1,1);
       TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
       Bool doSquint=True; Complex tt;
       ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
-      Double freq_l=freqValue;
+      Double freq_l=miscInfo.freqValue;
       // {
       // 	Vector<String> csList;
       // 	IPosition dummy;
@@ -1541,8 +1545,8 @@ namespace casa{
       //if (!isDryRun)
       // cerr << "#########$$$$$$ " << pbshp << " " << nx << " " << freq_l << " " << conjFreq << endl;
       {
-	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, muellerElement,freq_l);//freqHi);
-	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,muellerElement,conjFreq);
+	aTerm.applySky(ftATerm_l, vbPA, doSquint, 0, miscInfo.muellerElement,freq_l);//freqHi);
+	aTerm.applySky(ftATermSq_l, vbPA, doSquint, 0,miscInfo.muellerElement,conjFreq);
       }
 
       Vector<Double> cellSize;
@@ -1572,11 +1576,11 @@ namespace casa{
       //
       {
 	log_l << " CF("
-	      << "M:"<<muellerElement
-	      << ",C:" << freqValue/1e9
-	      << ",W:" << wValue << "): ";
-	Array<Complex> &cfWtBuf=(*(cfWtb.getCFCellPtr(freqValue, wValue, muellerElement))->storage_p);
-	Array<Complex> &cfBuf=(*(cfb.getCFCellPtr(freqValue, wValue, muellerElement))->storage_p);
+	      << "M:"<< miscInfo.muellerElement
+	      << ",C:" << miscInfo.freqValue/1e9
+	      << ",W:" << miscInfo.wValue << "): ";
+	Array<Complex> &cfWtBuf=(*(cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->storage_p);
+	Array<Complex> &cfBuf=(*(cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->storage_p);
 		    
 	cfWtBuf.resize(pbshp);
 	cfBuf.resize(pbshp);
@@ -1602,9 +1606,9 @@ namespace casa{
 	//tim.mark();
 	// if (!isDryRun)
 	  {
-	    if (wValue > 0)
+	    if (miscInfo.wValue > 0)
 	      {
-		wTerm.applySky(cfBufMat, cellSize, wValue, cfBuf.shape()(0));///4);
+		wTerm.applySky(cfBufMat, cellSize, miscInfo.wValue, cfBuf.shape()(0));///4);
 		//cerr << cellSize << " " << wValue << endl;
 	      }
 	  }
@@ -1684,7 +1688,9 @@ namespace casa{
 
 	//tim.mark();
 	// if (!isDryRun)
-	  resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+	Int supportBuffer = (Int)(aTerm.getOversampling()*1.5);
+
+	AWConvFunc::resizeCF(cfWtBuf, xSupportWt, ySupportWt, supportBuffer, samplingWt,0.0);
 	//tim.show("Resize:");
 
 	//tim.mark();
@@ -1694,7 +1700,7 @@ namespace casa{
 	CoordinateSystem ftCoords=cs_l;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
 	
-	thisCell=cfWtb.getCFCellPtr(freqValue, wValue, muellerElement);
+	thisCell=cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupportWt;
 	thisCell->ySupport_p = ySupportWt;
@@ -1710,7 +1716,7 @@ namespace casa{
 	//tim.show("Peaknorm:");
 
 	// if (!isDryRun) 
-	  resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
+	  AWConvFunc::resizeCF(cfBuf, xSupport, ySupport, supportBuffer, sampling,0.0);
 
 	log_l << "CF Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 	
@@ -1720,11 +1726,11 @@ namespace casa{
 	//tim.mark();
 	cfNorm=cfWtNorm=1.0;
 	// if ((wValue == 0) && (!isDryRun))
-	if (wValue == 0)
+	if (miscInfo.wValue == 0)
 	  {
 	    cfNorm=0; cfWtNorm=0;
-	    cfNorm = cfArea(cfBufMat, xSupport, ySupport, sampling);
-	    cfWtNorm = cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
+	    cfNorm = AWConvFunc::cfArea(cfBufMat, xSupport, ySupport, sampling);
+	    cfWtNorm = AWConvFunc::cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
 	  }
 	//tim.show("Area*2:");
 	
@@ -1737,14 +1743,14 @@ namespace casa{
 	ftCoords=cs_l;
 	SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
-	CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(freqValue, wValue, muellerElement);
+	CountedPtr<CFCell> thisCell=cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement);
 	thisCell->pa_p=Quantity(vbPA,"rad");
 	thisCell->coordSys_p = ftCoords;
 	thisCell->xSupport_p = xSupport;
 	thisCell->ySupport_p = ySupport;
 
-	(cfWtb.getCFCellPtr(freqValue, wValue, muellerElement))->initCache();
-	(cfb.getCFCellPtr(freqValue, wValue, muellerElement))->initCache();
+	(cfWtb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
+	(cfb.getCFCellPtr(miscInfo.freqValue, miscInfo.wValue, miscInfo.muellerElement))->initCache();
 	//tim.show("End*2:");
       }
     }
@@ -1755,11 +1761,6 @@ namespace casa{
   //----------------------------------------------------------------------
   //
   void AWConvFunc::makeConvFunction2(const String& cfCachePath,
-				     //const VisBuffer& vb,
-				     //const Int wConvSize,
-				     //const CountedPtr<PolOuterProduct>& pop,
-				     // const Float pa,
-				     // const Float dpa,
 				     const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				     const Matrix<Double>& ,//vbFreqSelection,
 				     CFStore2& cfs2,
@@ -1768,7 +1769,7 @@ namespace casa{
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
     Int convSize, convSampling, polInUse;
     Array<Complex> convFunc_l, convWeights_l;
-    Double wScale=0, cfRefFreq=-1, freqScale=1e8;
+    Double cfRefFreq=-1, freqScale=1e8;
     //  
     // Get the coordinate system
     //
@@ -1782,7 +1783,7 @@ namespace casa{
     IPosition cfsShape = cfs2.getShape();
     IPosition wCFStShape = cfwts2.getShape();
 
-    Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
+    //Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
 
     for (int iPA=0; iPA<cfsShape[0]; iPA++)
       for (int iB=0; iB<cfsShape[1]; iB++)
@@ -1808,7 +1809,10 @@ namespace casa{
 		       {
 			 (*cfb_p)(iNu,iW,iPol).getAsStruct(miscInfo); // Get misc. info. for this CFCell
 
-			 aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
+			 CountedPtr<ConvolutionFunction> awCF = AWProjectFT::makeCFObject(miscInfo.telescopeName,
+										 True, False, True, True, True);
+			 (static_cast<AWConvFunc &>(*awCF)).aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
+			 //aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
 			 cfb_p->getParams(cs_l, sampling, xSupport, ySupport,iNu,iW,iPol);
 			 convSampling=miscInfo.sampling;
@@ -1841,16 +1845,13 @@ namespace casa{
 			 // will now be filled using the supplied PS-, W- ad A-term objects.
 			 //
 			 
-			 fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
+			 AWConvFunc::fillConvFuncBuffer2(*cfb_p, *cfwtb_p, convSize, convSize, 
 					     coords, miscInfo,
-					     miscInfo.freqValue, miscInfo.wValue, wScale, 
-					     // (Double)pa, 
-					     miscInfo.freqValue,
-					     miscInfo.muellerElement, 
-					     // polIndexMap, 
-					     //vb, 
-					     //psScale,
-					     *psTerm_p, *wTerm_p, *aTerm_p);
+					     *((static_cast<AWConvFunc &>(*awCF)).psTerm_p),
+					     *((static_cast<AWConvFunc &>(*awCF)).wTerm_p),
+					     *((static_cast<AWConvFunc &>(*awCF)).aTerm_p));
+					     
+			 //				     *psTerm_p, *wTerm_p, *aTerm_p);
 			 //cfb_p->show(NULL,cerr);
 			 //
 			 // Make the CFStores persistent.

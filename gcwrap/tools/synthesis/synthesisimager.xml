@@ -528,6 +528,23 @@ Define the image coordinate systems and shapes.
       <value>
       </value>
     </param>
+
+    <param type="string" name="ftmname">
+      <description>
+	Name of the FTMachine used
+      </description>
+      <value>
+      </value>
+    </param>
+
+    <param type="string" name="cfcpath">
+      <description>
+	Path to the CFCache on the disk
+      </description>
+      <value>
+      </value>
+    </param>
+
   </input>
   <returns type="bool"/>
 </method>

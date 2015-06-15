@@ -54,6 +54,12 @@
 #include <casa/iostream.h>
 #include <casa/OS/Timer.h>
 
+#include <synthesis/TransformMachines/ATerm.h>
+#include <synthesis/TransformMachines/NoOpATerm.h>
+#include <synthesis/TransformMachines/AWConvFunc.h>
+#include <synthesis/TransformMachines/EVLAAperture.h>
+#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+
 #define CONVSIZE (1024*2)
 // #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
@@ -102,6 +108,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       *dweight1 = d1;
       *dweight2 = d2;
     }
+  }
+
+  ATerm* AWProjectFT::createTelescopeATerm(const String& telescopeName, const Bool& isATermOn)
+  {
+    LogIO os(LogOrigin("AWProjectFT", "createTelescopeATerm",WHERE));
+    
+    if (!isATermOn) return new NoOpATerm();
+    
+    // ROMSObservationColumns msoc(ms.observation());
+    // String ObsName=msoc.telescopeName()(0);
+    if ((telescopeName == "EVLA") || (telescopeName == "VLA"))
+      return new EVLAAperture();
+    else
+      {
+	os << "Telescope name ('"+
+	  telescopeName+"') in the MS not recognized to create the telescope specific ATerm" 
+	   << LogIO::WARN;
+      }
+    
+    return NULL;
+  }
+
+  CountedPtr<ConvolutionFunction> AWProjectFT::makeCFObject(const String& telescopeName,
+							    const Bool aTermOn,
+							    const Bool psTermOn,
+							    const Bool wTermOn,
+							    const Bool mTermOn,
+							    const Bool wbAWP)
+  {
+    (void)wTermOn;//Unused
+    CountedPtr<ATerm> apertureFunction = AWProjectFT::createTelescopeATerm(telescopeName, aTermOn);
+    CountedPtr<PSTerm> psTerm = new PSTerm();
+    CountedPtr<WTerm> wTerm = new WTerm();
+    
+    //
+    // Selectively switch off CFTerms.
+    //
+    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+
+    //
+    // Construct the CF object with appropriate CFTerms.
+    //
+    CountedPtr<ConvolutionFunction> awConvFunc;
+    //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
+    //if ((ftmName=="mawprojectft") || (mTermOn))
+    if (mTermOn)
+      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
+    else
+      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
+    return awConvFunc;
   }
   //
   //---------------------------------------------------------------

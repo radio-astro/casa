@@ -59,6 +59,10 @@
 #include <images/Images/ImageInterface.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
+#include <synthesis/TransformMachines/AWConvFunc.h>
+#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines/ATerm.h>
+
 #include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -142,6 +146,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SolvableVisJones;
   class AWProjectFT : public FTMachine {
   public:
+    static ATerm* createTelescopeATerm(const String& telescopeName, 
+				       const Bool& isATermOn);
+    static CountedPtr<ConvolutionFunction> makeCFObject(const String& telescopeName,
+							const Bool aTermOn,
+							const Bool psTermOn,
+							const Bool wTermOn,
+							const Bool mTermOn,
+							const Bool wBAWP);
     AWProjectFT();
     
     // Constructor: cachesize is the size of the cache in words

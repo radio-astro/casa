@@ -1383,26 +1383,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
-    CountedPtr<PSTerm> psTerm = new PSTerm();
-    CountedPtr<WTerm> wTerm = new WTerm();
+    // CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
+    // CountedPtr<PSTerm> psTerm = new PSTerm();
+    // CountedPtr<WTerm> wTerm = new WTerm();
     
-    //
-    // Selectively switch off CFTerms.
-    //
-    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
+    // //
+    // // Selectively switch off CFTerms.
+    // //
+    // if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
+    // if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
 
-    //
-    // Construct the CF object with appropriate CFTerms.
-    //
-    CountedPtr<ConvolutionFunction> awConvFunc;
-    //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
-    if ((ftmName=="mawprojectft") || (mTermOn))
-      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
-    else
-      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
+    // //
+    // // Construct the CF object with appropriate CFTerms.
+    // //
+    // CountedPtr<ConvolutionFunction> tt;
+    // tt = AWProjectFT::makeCFObject(aTermOn, psTermOn, True, mTermOn, wbAWP);
+    // CountedPtr<ConvolutionFunction> awConvFunc;
+    // //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
+    // if ((ftmName=="mawprojectft") || (mTermOn))
+    //   awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
+    // else
+    //   awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
 
+    ROMSObservationColumns msoc(mss4vi_p[0].observation());
+    String telescopeName=msoc.telescopeName()(0);
+    CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, aTermOn, psTermOn, True, mTermOn, wbAWP);
     //
     // Construct the appropriate re-sampler.
     //
@@ -1704,7 +1709,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // in the FTM) and call it's makeConvFunction2() to fill the CF.
   // Finally, unset the dry-run mode of the FTM.
   //
-  void SynthesisImager::fillCFCache(const Vector<String>& cfList)
+  void SynthesisImager::fillCFCache(const Vector<String>& cfList,
+				    const String& ftmName,
+				    const String& cfcPath)
     {
       LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
       if (cfList.nelements() == 0) 
@@ -1713,13 +1720,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int whichFTM=0;
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
       // useful to extend it to other projection FTMs -- but later.
-      String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
-      if (!ftmName.contains("AWProject")) return;
+      // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
+
+      //if (!ftmName.contains("AWProject")) return;
+      if (!ftmName.contains("awproject")) return;
       
       os << "---------------------------------------------------- fillCFCache ---------------------------------------------" << LogIO::POST;
 
-      String path = itsMappers.getFTM(whichFTM)->getCacheDir();
-      String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
+      //String cfcPath = itsMappers.getFTM(whichFTM)->getCacheDir();
+      //String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
 
       //cerr << "Path = " << path << endl;
 
@@ -1739,11 +1748,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  for (Int i=0; i<(Int)wtCFList_p.nelements(); i++) wtCFList_p[i]="WT"+cfList_p[i];
 
 	  cerr << cfList_p << endl;
-      	  cfCacheObj->setCacheDir(path.data());
+      	  cfCacheObj->setCacheDir(cfcPath.data());
 
 	  os << "Re-loading the \"blank\" CFCache for filling" << LogIO::WARN << LogIO::POST;
 
-      	  cfCacheObj->initCacheFromList2(path, cfList_p, wtCFList_p,
+      	  cfCacheObj->initCacheFromList2(cfcPath, cfList_p, wtCFList_p,
       					 selectedPA, dPA,1);
 	  // tmpFT->setCFCache(cfCacheObj);
 	  Vector<Double> uvScale, uvOffset;
@@ -1757,10 +1766,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // the FTM and cast it as AWConvFunc.  Finally call
 	  // AWConvFunc::makeConvFunction2().
 	  //
-	  (static_cast<AWConvFunc &> 
-	   (*(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getAWConvFunc())
-	   ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
-			       *cfs2, *cfwts2);
+	  // (static_cast<AWConvFunc &> 
+	  //  (*(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getAWConvFunc())
+	  //  ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
+	  // 		       *cfs2, *cfwts2);
+
+	  AWConvFunc::makeConvFunction2(String(cfcPath), uvScale, uvOffset, vbFreqSelection,
+					*cfs2, *cfwts2);
       	}
       //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
       //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();

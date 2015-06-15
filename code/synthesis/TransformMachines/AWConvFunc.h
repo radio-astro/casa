@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const VisBuffer& vb, const Float& psScale,
 				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm, 
 				    Bool isDryRun=False);
-    void makeConvFunction2(const String& uvGridDiskimage,
+    static void makeConvFunction2(const String& uvGridDiskimage,
 			   //const VisBuffer& vb,
 			   //const Int wConvSize,
 			   //const CountedPtr<PolOuterProduct>& pop,
@@ -96,17 +96,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const Matrix<Double>& vbFreqSelection,
 			   CFStore2& cfs,
 			   CFStore2& cfwts);
-    void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
+    static void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 			     const Int& nx, const Int& ny,
 			     const CoordinateSystem& skyCoords,
 			     const CFCStruct& miscInfo,
-			     const Double& freqValue,
-			     const Double& wValue,
-			     const Double& wScale,
-			     // const Double& vbPA, 
-			     const Double& freqHi,
-			     const Int& muellerElement,
-			     //const VisBuffer& vb,
 			     PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm);
 
     virtual Bool makeAverageResponse(const VisBuffer& vb, 
@@ -124,14 +117,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
     virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& /*image*/,
 					      const VisBuffer& /*vb*/) {Vector<Double> tt(2); tt=0;return tt;};
-    virtual Bool setUpCFSupport(Array<Complex>& func, 
-				Int& xSupport, Int& ySupport,
-				const Float& sampling,
-				const Complex& peak);
-    virtual Bool resizeCF(Array<Complex>& func, 
-			  Int& xSupport, Int& ySupport,
-			  const Float& sampling,
-			  const Complex& peak);
     virtual void prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& cfs);
     Int mapAntIDToAntType(const Int& ant) {return aTerm_p->mapAntIDToAntType(ant);};
 
@@ -143,6 +128,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setMiscInfo(const RecordInterface& params);
     virtual Matrix<Double> getFreqRangePerSpw(const VisBuffer& vb);
 
+
+
+    //
+    // Global methods (services)
+    //
+    static void makeConjPolAxis(CoordinateSystem& cs, Int conjStokes_in=-1);
+    static Complex cfArea(Matrix<Complex>& cf, const Int& xSupport, const Int& ySupport, const Float& sampling);
+    static Bool awFindSupport(Array<Complex>& func, Float& threshold, Int& origin, Int& radius);
+    static Bool setUpCFSupport(Array<Complex>& func, Int& xSupport, Int& ySupport,
+			       const Float& sampling, const Complex& peak);
+    static Bool resizeCF(Array<Complex>& func,  Int& xSupport, Int& ySupport,
+			 const Int& supportBuffer, const Float& sampling, const Complex& peak);
+    
+    CountedPtr<ATerm> aTerm_p;
+    CountedPtr<PSTerm> psTerm_p;
+    CountedPtr<WTerm> wTerm_p;
+
   protected:
     void normalizeAvgPB(ImageInterface<Complex>& inImage,
 			ImageInterface<Float>& outImage);
@@ -151,13 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 ImageInterface<Float>& theavgPB,
 				 Bool reset=True);
     void makePBSq(ImageInterface<Complex>& inImage);
-    void makeConjPolAxis(CoordinateSystem& cs, Int conjStokes_in=-1);
 
-    Complex cfArea(Matrix<Complex>& cf, const Int& xSupport, const Int& ySupport, const Float& sampling);
 
-    CountedPtr<ATerm> aTerm_p;
-    CountedPtr<PSTerm> psTerm_p;
-    CountedPtr<WTerm> wTerm_p;
     Vector<Double> thePix_p, pixFieldGrad_p;
     Double imRefFreq_p;
     Bool wbAWP_p;

@@ -289,7 +289,10 @@ class PySynthesisImager:
         #cflist = ["CFS_0_0_CF_0_0_0.im"];
         self.cfcachepars['cflist']=cflist;
 
-        self.SItool.fillcfcache(**(self.cfcachepars)) ;
+        #self.SItool.fillcfcache(**(self.cfcachepars), self.allgridpars['0']['gridder'],cfcName);
+        print "##########",self.allgridpars['0']['gridder'],cfcName;
+        self.SItool.fillcfcache(cflist, self.allgridpars['0']['gridder'],cfcName);
+                  
 #############################################
     def reloadCFCache(self):
         self.SItool.reloadcfcache();
@@ -429,6 +432,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         #
         joblist=[];
         nodes=self.listOfNodes;#[1];
+        if (not partialSelPars):
+            nodes = [1];
         for node in nodes:
             for mss in sorted( self.selpars.keys() ):
                 if (partialSelPars):
@@ -443,7 +448,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         # Call defineimage at each node.
         #
         joblist=[];
-        for node in self.listOfNodes:
+        for node in nodes:
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
             #print "nimpars = ",nimpars;
@@ -651,16 +656,18 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         # cflist=[f for f in os.listdir(self.allgridpars['cfcache']) if re.match(r'CFS*', f)];
         # partCFList = 
         allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
+        cfcPath = "\""+str(self.allgridpars['0']['cfcache'])+"\"";
+        ftmname = "\""+str(self.allgridpars['0']['gridder'])+"\"";
         print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
         print "AllCFList = ",allcflist;
         m = len(allcflist);
-        print "No. of nodes used: ", m
+        print "No. of nodes used: ", m,cfcPath,ftmname;
         print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
 
         joblist=[];
         for node in self.listOfNodes[:m]:
             #print "#!$#!%#!$#@$#@$ ",allcflist;
-            cmd = "toolsi.fillcfcache("+str(allcflist[node])+")";
+            cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+")";
             print "CMD = ",node," ",cmd;
             joblist.append(self.PH.runcmd(cmd,node));
         self.PH.checkJobs(joblist);
