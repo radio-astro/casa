@@ -6124,11 +6124,11 @@ Bool Imager::sjy_setRadiusLimit(TempImage<Float>* tmodimage,
     Quantity qrad(arad,"arcsec");
     Float prad=Float(qrad.get(Unit("rad")).getValue()/abs(dircsys.increment()(0)));
     Float radius = (prad >0.5 ? prad: 0.5);
-    String tempmaskname="__tmp_mask_setjy_radiuslimit";
+    //Add current ms name to avoid file access clash for MMS processing
+    String tempmaskname=ms_p->tableName()+"__tmp_mask_setjy_radiuslimit";
     PagedImage<Float> maskImage(TiledShape(modimage.shape(),
                                            modimage.niceCursorShape()),
                                 modimage.coordinates(), tempmaskname);
-
     maskImage.table().markForDelete();
     Matrix<Float> circ(1,3);
     Record *imrec=0;
