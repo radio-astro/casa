@@ -228,6 +228,8 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
                         MS::columnName(MS::WEIGHT_SPECTRUM));
          			if (!weightSpectrum.hasContent())  // CAS-7517
 				    	logWarn("load_cache", "Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)");
+                        // Also send to console
+				    	cout << "WARNING: Plotting WEIGHT column, WEIGHT_SPECTRUM (WTSP) has not been initialized (this can be changed with initweights task)" << endl;
 				}
                 break;
 			}
@@ -344,7 +346,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 	try {
         // Filter out MSTransformManager setup messages
         LogFilter filter(LogMessage::WARN);
-        //LogSink().globalSink().filter(filter);
+        LogSink().globalSink().filter(filter);
 
 		factory = new MSTransformIteratorFactory(configuration);
 
