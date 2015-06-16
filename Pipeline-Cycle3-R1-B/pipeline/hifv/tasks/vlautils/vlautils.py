@@ -1211,15 +1211,15 @@ class VLAUtils(basetask.StandardTaskTemplate):
         for i in range(max(self.scanNums)):
             if self.scanNums.count(i+1) == 1: pass
             else:
-                #logprint ("WARNING: Scan "+str(i+1)+" is not present", logfileout='logs/msinfo.log')
+                LOG.warn("WARNING: Scan "+str(i+1)+" is not present")
                 self.missingScans += 1
                 self.missingScanStr = self.missingScanStr+str(i+1)+', '
         
         if (self.missingScans > 0):
-            print("WARNING: There were "+str(self.missingScans)+" missing scans in this MS")
+            LOG.warn("WARNING: There were "+str(self.missingScans)+" missing scans in this MS")
             #logprint ("WARNING: There were "+str(missingScans)+" missing scans in this MS", logfileout='logs/msinfo.log')
         else:
-            print("No missing scans found.")
+            LOG.warn("No missing scans found.")
             #logprint ("No missing scans found.", logfileout='logs/msinfo.log')
 
         return True
