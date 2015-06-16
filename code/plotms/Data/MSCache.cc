@@ -341,7 +341,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		configuration.define("chanbin", chanVal);
 	}
 
-    LogFilter* oldfilter = static_cast<LogFilter*>(LogSink().globalSink().filter().clone());
+    LogFilter oldFilter(plotms_->getParameters().logPriority());
 	MSTransformIteratorFactory* factory = NULL;
 	try {
         // Filter out MSTransformManager setup messages
@@ -359,14 +359,14 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		vi_p = new vi::VisibilityIterator2(*factory);
 	} catch(AipsError& log) {
         // now put filter back
-        LogSink().globalSink().filter(*oldfilter);
+        LogSink().globalSink().filter(oldFilter);
 		try {
 			if (factory) delete factory;
 		} catch(AipsError ae) {}
 		throw(AipsError(log.getMesg()));
 	}
     // now put filter back
-    LogSink().globalSink().filter(*oldfilter);
+    LogSink().globalSink().filter(oldFilter);
 	if (factory) delete factory;
 }
 
