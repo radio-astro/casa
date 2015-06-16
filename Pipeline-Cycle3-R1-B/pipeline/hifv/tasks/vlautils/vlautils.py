@@ -1219,7 +1219,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
             LOG.warn("WARNING: There were "+str(self.missingScans)+" missing scans in this MS")
             #logprint ("WARNING: There were "+str(missingScans)+" missing scans in this MS", logfileout='logs/msinfo.log')
         else:
-            LOG.warn("No missing scans found.")
+            LOG.info("No missing scans found.")
             #logprint ("No missing scans found.", logfileout='logs/msinfo.log')
 
         return True
