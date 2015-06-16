@@ -747,7 +747,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 			Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
 			if(pixel > -1 && pixel< nchan_p){
 				chanMap_p(chan)=pixel;
-				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1);
+				chanMapRev_p[pixel].resize(chanMapRev_p[pixel].nelements()+1, True);
 				chanMapRev_p[pixel][chanMapRev_p[pixel].nelements()-1]=chan;
 				c[0]=pixel;
 				spec.toWorld(f, c);
@@ -1725,7 +1725,8 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				//////////////TESTING
 				Float elwgt=vb.weight()(pol,k)* real(cwt);
 				///////////////////////////
-				Int cubindx=newrow[jj]*npol_p*(endchan-startchan+1)+lechan*npol_p+polMap_p(pol);
+				uLong cubindx=uLong(newrow[jj])*uLong(npol_p)*uLong(endchan-startchan+1)+uLong(lechan*npol_p)+uLong(polMap_p(pol));
+				//cerr << jj << " newrow[jj] " << newrow[jj] << " polMap_p(pol) " <<polMap_p(pol) << " cubindex " << cubindx << endl; 
 				grid[cubindx]
 				  = (grid[cubindx]// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
 				     + toB); ///(elwgt+wghtSpec(polMap_p(pol),lechan,newrow[jj]));
