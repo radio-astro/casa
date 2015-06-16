@@ -364,7 +364,7 @@ class MakeImListHeuristics(object):
             return 'standard'
 
     def deconvolver(self, intent, field):
-        return 'clark'
+        return 'hogbom'
 
     def phasecenter(self, fields, centreonly=True):
 
