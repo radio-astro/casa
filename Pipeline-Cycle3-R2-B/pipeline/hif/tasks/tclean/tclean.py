@@ -316,7 +316,7 @@ class Tclean(cleanbase.CleanBase):
         spw = inputs.spw
 
         # Calculate sensitivities
-        sensitivitySquares = []
+        sensitivities = []
         imTool = casatools.imager
         for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
             imTool.open(msName)
@@ -332,13 +332,17 @@ class Tclean(cleanbase.CleanBase):
 
             try:
                 result = imTool.apparentsens()
-                sensitivitySquares.append(result[1]**2)
+                sensitivities.append(result[1])
             except Exception as e:
-                sensitivitySquares.append(0.01**2)
+                sensitivities.append(0.01)
                 LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
             imTool.close()
 
-        sensitivity = numpy.sqrt(numpy.average(sensitivitySquares))
+        try:
+            sensitivity = 1.0/numpy.sqrt(numpy.sum(1.0/numpy.array(sensitivities)**2))
+        except Exception as e:
+            sensitivity = 0.01
+            LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
 
         if (inputs.specmode == 'cube'):
             if (inputs.nchan != -1):
