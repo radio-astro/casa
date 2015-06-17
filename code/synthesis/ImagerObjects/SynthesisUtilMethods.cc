@@ -1597,15 +1597,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rvi->allSelectedSpectralWindows(spwids,nvischan);
     Int fld = rvi->fieldId();
     Double freqmin=0, freqmax=0;
+    Double datafstart, datafend;
     freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
     rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
-    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax );
+    // Following three lines are  kind of redundant but need to get freq range in the data frame to be used
+    // to select channel range for default start 
+    ROMSColumns msc(msobj);
+    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
+    rvi->getFreqInSpwRange(datafstart, datafend, dataFrame );
+    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
 
   CoordinateSystem SynthesisParamsImage::buildCoordinateSystemCore(
 								   MeasurementSet& msobj, 
 								   Vector<Int> spwids, Int fld, 
-								   Double freqmin, Double freqmax)
+								   Double freqmin, Double freqmax,
+                                                                   Double datafstart, Double datafend )
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
@@ -1730,6 +1737,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
+      }
+    if(start=="") {
+        // limit data chan freq vector for default start case with channel selection
+        Int chanStart, chanEnd;
+        Int lochan = 0;
+        Int nDataChan = dataChanFreq.nelements();
+        Int hichan = nDataChan-1;
+        Double diff_fmin, diff_fmax;
+        Bool ascending = dataChanFreq[nDataChan-1] - dataChanFreq[0] > 0;
+        for(uInt ichan = 0; ichan < nDataChan; ichan++) 
+          {
+            diff_fmin = dataChanFreq[ichan] - datafstart;  
+            diff_fmax = datafend - dataChanFreq[ichan];  
+            // freqmin and freqmax should corresponds to the channel edges
+            if(ascending) 
+              {
+                
+                if( diff_fmin > 0 &&  diff_fmin <= dataChanWidth[ichan]/2. )
+                  {
+                    lochan = ichan;
+                  }
+                else if(diff_fmax > 0 && diff_fmax <= dataChanWidth[ichan]/2. )
+                  {
+                    hichan = ichan;
+                  }
+              }
+            else
+              {
+                if( diff_fmax > 0 && diff_fmax <= dataChanWidth[ichan]/2. )
+                  {
+                    hichan = ichan;
+                  }
+                else if( diff_fmin > 0 && diff_fmin <= dataChanWidth[ichan]/2. )
+                  {
+                    lochan = ichan;
+                  }   
+              }
+           }
+        chanStart = lochan;
+        chanEnd = hichan;
+        if (lochan > hichan) 
+          {
+            chanStart=hichan;
+            chanEnd=lochan; 
+          }
+        Vector<Double> tempChanFreq = dataChanFreq(Slice(chanStart,chanEnd-chanStart+1,1)); 
+        Vector<Double> tempChanWidth = dataChanWidth(Slice(chanStart,chanEnd-chanStart+1,1)); 
+        dataChanFreq.resize(tempChanFreq.nelements());
+        dataChanWidth.resize(tempChanWidth.nelements());
+        dataChanFreq = tempChanFreq;
+        dataChanWidth = tempChanWidth;
       }
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
     String cubemode;
@@ -2255,7 +2313,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //
       os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
          <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe
-         <<" dataFrame="<<dataFrame <<" veltype="<<veltype
+         <<" dataFrame="<<dataFrame <<" veltype="<<veltype<<" nchan="<<nchan
          << LogIO::POST;
       ostringstream ostr;
       ostr << " phaseCenter='" << phaseCenter;

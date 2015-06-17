@@ -199,7 +199,8 @@ public:
   CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2* vi2);
   CoordinateSystem buildCoordinateSystemCore(MeasurementSet& msobj, 
 					     Vector<Int> spwids, Int fld, 
-					     Double freqmin, Double freqmax);
+					     Double freqmin, Double freqmax, 
+                                             Double datafstart, Double datafend);
 
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
