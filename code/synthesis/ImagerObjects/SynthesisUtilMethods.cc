@@ -1738,7 +1738,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
       }
-    if(start=="") {
+    if(nchan == -1) {
         // limit data chan freq vector for default start case with channel selection
         Int chanStart, chanEnd;
         Int lochan = 0;
