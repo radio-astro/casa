@@ -69,7 +69,10 @@ $(document).ready(function() {
                 width: 50,
                 height: 50,
             }
-        }
+        },
+        afterShow: function() {
+        	$('#cmdmodal').modal();
+        }        
     });
 });
 </script>

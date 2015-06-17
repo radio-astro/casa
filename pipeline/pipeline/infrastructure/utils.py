@@ -4,7 +4,6 @@ import copy
 import datetime
 import decimal
 import errno
-import functools
 import glob
 import inspect
 import itertools
@@ -21,8 +20,9 @@ import re
 import string
 import StringIO
 import types
-import weakref
 import uuid
+
+import cachetools
 
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
@@ -342,40 +342,6 @@ def get_calfroms(inputs, caltypes=None):
 
     return [cf for cf in calfroms if cf.caltype in caltypes]
 
-
-class memoized(object):
-    '''
-    Function decorator. Caches a function's return value each time it is
-    called. If called later with the same arguments, the cached value is
-    returned (not re-evaluated).
-    '''
-    def __init__(self, func):
-        self.func = func
-#        self.cache = weakref.WeakKeyDictionary()
-        self.cache = {}
-    def __call__(self, *args):
-        if not isinstance(args, collections.Hashable):
-            # uncacheable. a list, for instance.
-            # better to not cache than blow up.
-            return self.func(*args)
-        if args in self.cache:
-            return self.cache[args]
-        else:
-            value = self.func(*args)
-            try:
-                self.cache[args] = value
-            except TypeError:
-                # can't create reference to primitive types
-                pass
-            return value
-    def __repr__(self):
-        '''Return the function's docstring.'''
-        return self.func.__doc__
-    def __get__(self, obj, objtype):
-        '''Support instance methods.'''
-        return functools.partial(self.__call__, obj)
-
-
 def areEqual(a, b):
     """
     Return True if the contents of the given arrays are equal.
@@ -605,7 +571,7 @@ def ant_arg_to_id(ms_path, ant_arg):
     all_indices = _convert_arg_to_id('baseline', ms_path, str(ant_arg))    
     return all_indices['antenna1'].tolist()
 
-@memoized
+@cachetools.lru_cache(maxsize=1000)
 def _convert_arg_to_id(arg_name, ms_path, arg_val):
     """
     Parse the CASA input argument and return the matching IDs.
@@ -812,7 +778,6 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
                                  for idx, job in zip(iter_indexes, component_jobs)]
             else:
                 raise NotImplementedError('Plotms mapping not known for iteraxis=%s' % iteraxis)
-            
 
         dest_filenames = [job.kw['plotfile'] for job in component_jobs]
 

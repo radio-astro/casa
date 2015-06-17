@@ -8,6 +8,7 @@ import types
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
@@ -95,6 +96,9 @@ $(document).ready(function() {
                 width: 50,
                 height: 50,
             }
+        },
+        afterShow: function() {
+        	$('#cmdmodal').modal();
         }
     });
 });
@@ -181,9 +185,12 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-			                       title="Baseband ${plot.parameters['baseband']} (spw ${plot.parameters['spw']}). 
-			                              Receiver bands: ${utils.commafy(plot.parameters['receiver'], False)}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
-	                              Flux calibrator fields: ${plot.parameters['field']}."
+								   title='<div class="pull-left">Baseband ${plot.parameters["baseband"]} (spw ${plot.parameters["spw"]}).<br> 
+			                              Receiver bands: ${utils.commafy(plot.parameters["receiver"], False)}.<br>
+			                              ${"All antennas." if plot.parameters.get("ant","") == "" else "Antennas: "+str(plot.parameters["ant"])+"."}<br>
+			                              Flux calibrator fields: ${plot.parameters["field"]}.</div>
+			                              <div class="pull-right"><a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}">Full Size</a><br>
+			                              ${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
 			                       rel="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 			                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
@@ -210,9 +217,12 @@ $(document).ready(function() {
 			                <div class="thumbnail">
 			                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
 			                       class="fancybox"
-			                       title="Baseband ${antplot.parameters['baseband']} (spw ${antplot.parameters['spw']}). 
-			                              Receiver bands: ${utils.commafy(antplot.parameters['receiver'], False)}.  ${'All antennas.' if antplot.parameters.get('ant','') == '' else 'Antennas: '+str(antplot.parameters['ant'])+'.' }
-	                              Flux calibrator fields: ${antplot.parameters['field']}."
+								   title='<div class="pull-left">Baseband ${antplot.parameters["baseband"]} (spw ${antplot.parameters["spw"]}).<br> 
+			                              Receiver bands: ${utils.commafy(antplot.parameters["receiver"], False)}.<br>
+			                              ${"All antennas." if antplot.parameters.get("ant","") == "" else "Antennas: "+str(antplot.parameters["ant"])+"."}<br>
+			                              Flux calibrator fields: ${antplot.parameters["field"]}.</div>
+			                              <div class="pull-right"><a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}">Full Size</a><br>
+			                              ${rendererutils.get_plot_command_markup(pcontext, antplot.command)}</div>'
 			                       rel="amp_vs_uv-${ms}">
 			                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
 			                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
