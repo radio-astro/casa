@@ -316,29 +316,36 @@ class Tclean(cleanbase.CleanBase):
         spw = inputs.spw
 
         # Calculate sensitivities
-        sensitivitySquares = []
+        sensitivities = []
+        if inputs.specmode in ['mfs','cont']:
+            specmode = 'mfs'
+        elif inputs.specmode == 'cube':
+            specmode = 'cube'
+        else:
+            raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
         imTool = casatools.imager
         for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
-            imTool.open(msName)
-            imTool.selectvis(spw = spw, field = field)
-            imTool.defineimage(mode = inputs.specmode, \
-                               spw = int(spw), \
-                               cellx = inputs.cell[0], \
-                               celly = inputs.cell[0], \
-                               nx = inputs.imsize[0], \
-                               ny = inputs.imsize[1])
-            # TODO: Mosaic switch needed ?
-            imTool.weight(type=inputs.weighting, robust=inputs.robust)
+            for intSpw in map(int, spw.split(',')):
+                imTool.open(msName)
+                imTool.selectvis(spw = intSpw, field = field)
+                imTool.defineimage(mode = specmode, \
+                                   spw = intSpw, \
+                                   cellx = inputs.cell[0], \
+                                   celly = inputs.cell[0], \
+                                   nx = inputs.imsize[0], \
+                                   ny = inputs.imsize[1])
+                # TODO: Mosaic switch needed ?
+                imTool.weight(type=inputs.weighting, robust=inputs.robust)
 
-            try:
-                result = imTool.apparentsens()
-                sensitivitySquares.append(result[1]**2)
-            except Exception as e:
-                sensitivitySquares.append(0.01**2)
-                LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
-            imTool.close()
+                try:
+                    result = imTool.apparentsens()
+                    sensitivities.append(result[1])
+                except Exception as e:
+                    sensitivities.append(0.01)
+                    LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
+                imTool.close()
 
-        sensitivity = numpy.sqrt(numpy.average(sensitivitySquares))
+        sensitivity = 1.0/numpy.sqrt(numpy.sum(1.0/numpy.array(sensitivities)**2))
 
         if (inputs.specmode == 'cube'):
             if (inputs.nchan != -1):
@@ -364,6 +371,13 @@ class Tclean(cleanbase.CleanBase):
 
         inputs = self.inputs
 
+        if inputs.specmode in ['mfs','cont']:
+            specmode = 'mfs'
+        elif inputs.specmode == 'cube':
+            specmode = 'cube'
+        else:
+            raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
+
 	clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
 	    output_dir=inputs.output_dir,
 	    vis=inputs.vis,
@@ -373,7 +387,7 @@ class Tclean(cleanbase.CleanBase):
 	    spw=inputs.spw,
 	    spwsel=inputs.spwsel,
 	    uvrange=inputs.uvrange,
-	    specmode=inputs.specmode,
+	    specmode=specmode,
 	    gridmode=inputs.gridmode,
 	    deconvolver=inputs.deconvolver,
 	    outframe=inputs.outframe,

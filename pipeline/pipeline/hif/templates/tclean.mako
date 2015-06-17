@@ -6,10 +6,10 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 columns = {'cleanmask' : 'Clean Mask',
-		   'image' : 'Image',
-		   'residual' : 'Residual',
-		   'model' : 'Final Model',
-		   'psf' : 'PSF'}
+           'image' : 'Image',
+           'residual' : 'Residual',
+           'model' : 'Final Model',
+           'psf' : 'PSF'}
 
 colorder = ['image', 'residual', 'cleanmask']
 
@@ -45,7 +45,13 @@ def get_plot(plots, field, spw, i, colname):
                 <%
                 ## get sorted key lists so that table entries are ordered
                 fields = sorted(set([k[0] for k in info_dict.keys()]))
-                spws = sorted(set([int(k[1]) for k in info_dict.keys()]))
+                spws = []
+                for k in info_dict.keys():
+                    try:
+                        spws.append(int(k[1]))
+                    except:
+                        spws.append(k[1])
+                spws = sorted(set(spws))
                 pols = sorted(set([k[2] for k in info_dict.keys()]))
                 %>
                 % for field in fields:

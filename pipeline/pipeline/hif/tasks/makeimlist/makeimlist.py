@@ -217,6 +217,9 @@ class MakeImList(basetask.StandardTaskTemplate):
         spwlist = spw.replace('[','').replace(']','')
         spwlist = spwlist[1:-1].split("','")
 
+        if inputs.specmode == 'cont':
+            spwlist = [reduce(lambda x,y: x+','+y, spwlist)]
+
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
         self.heuristics = makeimlist.MakeImListHeuristics(
