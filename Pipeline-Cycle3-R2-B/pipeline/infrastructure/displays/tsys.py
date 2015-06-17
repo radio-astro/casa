@@ -45,7 +45,7 @@ class TsysSummaryChart(object):
                                    for tsys_spw in self._tsysmap)
 
 
-    def create_task(self):
+    def create_plot(self):
         unique_tsys_spws = set(self._spwmap.values())
         spw_arg = ','.join([str(spw) for spw in unique_tsys_spws])
         
@@ -61,26 +61,25 @@ class TsysSummaryChart(object):
                      'subplot'     : 11,
                      'figfile'     : self._figroot}
 
-        return casa_tasks.plotbandpass(**task_args)
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
 
     def plot(self):
         wrappers = []
-
-        task = self.create_task()
+        
         for tsys_spw, science_spws in self._tsysmap.items():
             wrapper = logger.Plot(self._real_figfiles[tsys_spw],
                                   x_axis='freq',
                                   y_axis='tsys',
                                   parameters={'vis'      : self._vis_basename,
                                               'spw'      : science_spws,
-                                              'tsys_spw' : tsys_spw},
-                                  command=str(task))
+                                              'tsys_spw' : tsys_spw})
             wrappers.append(wrapper)
         
         if not all([os.path.exists(w.abspath) for w in wrappers]):
             LOG.trace('Tsys summary plots not found. Creating new plots.')
             try:
-                task.execute(dry_run=False)
+                self.create_plot()
             except Exception as ex:
                 LOG.error('Could not create Tsys summary plots')
                 LOG.exception(ex)
@@ -129,8 +128,7 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
             spw_ids = ','.join(set([str(spw_id) for spw_id, _ in missing]))
             ant_ids = ','.join(set([str(ant_id) for _, ant_id in missing]))
             try:
-                task = self.create_task(spw_ids, ant_ids)
-                task.execute(dry_run=False)
+                self.create_plot(spw_ids, ant_ids)
             except Exception as ex:
                 LOG.error('Could not create plotbandpass details plots')
                 LOG.exception(ex)
@@ -143,15 +141,13 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
             for antenna_id, figfile in self._figfile[tsys_spw_id].items():
                 ant_name = self._antmap[antenna_id]
                 if os.path.exists(figfile):                    
-                    task = self.create_task(tsys_spw_id, antenna_id)
                     wrapper = logger.Plot(figfile,
                                           x_axis=self._xaxis,
                                           y_axis=self._yaxis,
                                           parameters={'vis'      : self._vis_basename,
                                                       'ant'      : ant_name,
                                                       'spw'      : science_spws,
-                                                      'tsys_spw' : tsys_spw_id},
-                                          command=str(task))
+                                                      'tsys_spw' : tsys_spw_id})
                     wrappers.append(wrapper)
                 else:
                     LOG.trace('No plotbandpass detail plot found for %s spw '

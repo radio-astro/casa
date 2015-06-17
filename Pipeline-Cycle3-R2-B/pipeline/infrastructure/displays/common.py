@@ -2,14 +2,11 @@ from __future__ import absolute_import
 import collections
 import itertools
 import re
-import operator
 import os
 
 import matplotlib
 import matplotlib.pyplot as pyplot
 import numpy
-
-import cachetools
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
@@ -88,7 +85,7 @@ class PlotbandpassDetailBase(object):
                                                    time, ext)
             self._figfile[spw_id][ant_id] = real_figfile
 
-    def create_task(self, spw_arg, antenna_arg):
+    def create_plot(self, spw_arg, antenna_arg):
         task_args = {'vis'         : self._vis,
                      'caltable'    : self._caltable,
                      'xaxis'       : self._xaxis,
@@ -100,7 +97,8 @@ class PlotbandpassDetailBase(object):
                      'figfile'     : self._figroot}
         task_args.update(**self._kwargs)
 
-        return casa_tasks.plotbandpass(**task_args)
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
 
     def plot(self):
         pass
@@ -257,8 +255,7 @@ class PlotbandpassLeaf(object):
         self._showatm = showatm
         
     def plot(self):
-        task = self._create_task()
-        plots = [self._get_plot_wrapper(task)]
+        plots = [self._get_plot_wrapper()]
         return [p for p in plots 
                 if p is not None
                 and os.path.exists(p.abspath)]
@@ -279,11 +276,11 @@ class PlotbandpassLeaf(object):
                             'stage%s' % self._result.stage_number,
                             png)
 
-    def _get_plot_wrapper(self, task):
+    def _get_plot_wrapper(self):
         if not os.path.exists(self._pb_figfile):
             LOG.trace('Creating new plot: %s' % self._pb_figfile)
             try:
-                task.execute(dry_run=False)
+                self._create_plot()
             except Exception as ex:
                 LOG.error('Could not create plot %s' % self._pb_figfile)
                 LOG.exception(ex)
@@ -300,12 +297,11 @@ class PlotbandpassLeaf(object):
         wrapper = logger.Plot(self._pb_figfile,
                               x_axis=self._xaxis,
                               y_axis=self._yaxis,
-                              parameters=parameters,
-                              command=str(task))
+                              parameters=parameters)
             
         return wrapper
 
-    def _create_task(self):
+    def _create_plot(self):
         task_args = {'vis'         : self._vis,
                      'caltable'    : self._caltable,
                      'xaxis'       : self._xaxis,
@@ -319,7 +315,8 @@ class PlotbandpassLeaf(object):
                      'interactive' : False,
                      'subplot'     : 11}
 
-        return casa_tasks.plotbandpass(**task_args)
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
 
 
 class LeafComposite(object):
@@ -650,8 +647,6 @@ class PhaseVsBaselineData(object):
         self.data_for_corr = self.data.data[corr_id]
         self.__refant_id = int(refant_id)
 
-        self._cache = cachetools.LRUCache(maxsize=100)
-
         if len(self.data_for_corr) is 0:
             raise ValueError('No data for spw %s ant %s scan %s' % (data.spw[0],
                                                                     data.antenna[0],
@@ -678,7 +673,7 @@ class PhaseVsBaselineData(object):
         return self.__refant_id
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def baselines(self):
         """
         Get the baselines for the antenna in this data selection in metres.
@@ -687,11 +682,11 @@ class PhaseVsBaselineData(object):
         baselines = [float(b.length.to_units(measures.DistanceUnits.METRE))
                      for b in self.ms.antenna_array.baselines
                      if b.antenna1.id in antenna_ids 
-                     or b.antenna2.id in antenna_ids]
+                     or b.antenna2.id in antenna_ids]                
         return baselines
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def distance_to_refant(self):
         """
         Return the distance between this antenna and the reference antenna in 
@@ -705,7 +700,7 @@ class PhaseVsBaselineData(object):
         return float(baseline.length.to_units(measures.DistanceUnits.METRE))
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def median_baseline(self):
         """
         Return the median baseline for this antenna in metres.
@@ -713,7 +708,7 @@ class PhaseVsBaselineData(object):
         return numpy.median(self.baselines)
 
     @property          
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized  
     def mean_baseline(self):
         """
         Return the mean baseline for this antenna in metres.
@@ -721,7 +716,7 @@ class PhaseVsBaselineData(object):
         return numpy.mean(self.baselines)
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def unwrapped_data(self):
         rads = numpy.deg2rad(self.data_for_corr)
         unwrapped_rads = numpy.unwrap(rads)
@@ -732,7 +727,7 @@ class PhaseVsBaselineData(object):
         return remasked
         
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def offsets_from_median(self):
         try:
             unwrapped_degs = self.unwrapped_data
@@ -745,7 +740,7 @@ class PhaseVsBaselineData(object):
             raise
         
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def rms_offset(self):
         saved_handler = None
         saved_err = None
@@ -767,7 +762,7 @@ class PhaseVsBaselineData(object):
                 numpy.seterr(**saved_err)
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def unwrapped_rms(self):
         saved_handler = None
         saved_err = None
@@ -789,7 +784,7 @@ class PhaseVsBaselineData(object):
                 numpy.seterr(**saved_err)
         
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def median_offset(self):            
         abs_offset = numpy.ma.abs(self.offsets_from_median)
         return numpy.ma.median(abs_offset)
@@ -854,8 +849,6 @@ class DataRatio(object):
         self.__scans = frozenset(before.data.scan).union(set(after.data.scan))
         self.__corr = frozenset((before.corr, after.corr))
 
-        self._cache = cachetools.LRUCache(maxsize=100)
-
     @property
     def after(self):
         return self.__after
@@ -892,7 +885,7 @@ class DataRatio(object):
         return len(self.__before.data)
 
     @property
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))
+    @utils.memoized
     def y(self):
         before = self.__before.y
         after = self.__after.y

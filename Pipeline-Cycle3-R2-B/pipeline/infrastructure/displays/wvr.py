@@ -1,9 +1,7 @@
 from __future__ import absolute_import
 import collections
 import os
-import operator
 
-import cachetools
 import matplotlib
 import matplotlib.pyplot as pyplot
 import numpy
@@ -20,9 +18,8 @@ LOG = infrastructure.get_logger(__name__)
 class WVRScoreFinder(object):
     def __init__(self, delegate):
         self._delegate = delegate
-        self._cache = cachetools.LRUCache(maxsize=1000)
         
-    @cachetools.cachedmethod(operator.attrgetter('_cache'))    
+    @utils.memoized
     def get_score(self, spw, antenna):
         spw_id = spw.id
         antenna_id = antenna.id
@@ -32,8 +29,8 @@ class WVRScoreFinder(object):
         #assert len(spw_viewlist) is 1, ('Unexpected number of views for spw '
                                         #'%s. Expected %s but got '
                                         #'%s' % (spw_id, 1, len(spw_viewlist)))
-        if len(spw_viewlist) <= 0:
-            return 0.0
+	if len(spw_viewlist) <= 0:
+	    return 0.0
 
         LOG.todo('Is the QA score the first or last viewlist?')
         spw_imageresult = spw_viewlist[0][-1]
@@ -269,7 +266,7 @@ class WVRPhaseVsBaselineChart(object):
         # all scans with this calibration intent were observed with the
         # same polarisation setup
         #corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
-        #             if dd.spw.id == spw.id]
+                     #if dd.spw.id == spw.id]
         corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
                      if dd.spw.id == spw.id]
         # discard WVR and other strange data descriptions 
