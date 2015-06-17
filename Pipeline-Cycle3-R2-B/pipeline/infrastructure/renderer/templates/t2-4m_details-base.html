@@ -1,6 +1,7 @@
 <%!
 import cgi
 import os
+import xml.sax.saxutils as saxutils
 
 import pipeline.domain.measures as measures
 import pipeline.extern.asizeof as asizeof
@@ -46,7 +47,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 	else:
 		icon = ''
 	return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
-	
+
 %>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False, plot_accessor=lambda d: [('No Intent', d)])">
@@ -95,7 +96,7 @@ def format_notification(tr_class, alert, msg, icon_class=None):
 						   class="fancybox"
 						   rel="${relurl}"
 						   % if hasattr(caller, 'fancybox_caption'):
-						   title="${caller.fancybox_caption(plot)}"
+						   title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
 						   % endif
 						   data-thumbnail="${thumbnail_relpath}">
 							<img src="${thumbnail_relpath}"

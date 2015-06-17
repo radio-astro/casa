@@ -32,7 +32,8 @@ class BandpassDetailChart(common.PlotbandpassDetailBase):
             spw_ids = ','.join(set([str(spw_id) for spw_id, _ in missing]))
             ant_ids = ','.join(set([str(ant_id) for _, ant_id in missing]))
             try:
-                self.create_plot(spw_ids, ant_ids)
+                task = self.create_task(spw_ids, ant_ids)
+                task.execute(dry_run=False)
             except Exception as ex:
                 LOG.error('Could not create plotbandpass details plots')
                 LOG.exception(ex)
@@ -43,12 +44,14 @@ class BandpassDetailChart(common.PlotbandpassDetailBase):
             for antenna_id, figfile in self._figfile[spw_id].items():
                 ant_name = self._antmap[antenna_id]
                 if os.path.exists(figfile):
+                    task = self.create_task(spw_id, antenna_id)
                     wrapper = logger.Plot(figfile,
                                           x_axis=self._xaxis,
                                           y_axis=self._yaxis,
                                           parameters={'vis' : self._vis_basename,
                                                       'ant' : ant_name,
-                                                      'spw' : spw_id})
+                                                      'spw' : spw_id},
+                                          command=str(task))
                     wrappers.append(wrapper)
                 else:
                     LOG.trace('No plotbandpass detail plot found for %s spw '
@@ -83,7 +86,8 @@ class BandpassSummaryChart(common.PlotbandpassDetailBase):
             LOG.trace('Executing new plotbandpass job for missing figures')
             ant_ids = ','.join([str(ant_id) for ant_id in missing])
             try:
-                self.create_plot('', ant_ids)
+                task = self.create_task('', ant_ids)
+                task.execute(dry_run=False)
             except Exception as ex:
                 LOG.error('Could not create plotbandpass summary plots')
                 LOG.exception(ex)
@@ -93,11 +97,13 @@ class BandpassSummaryChart(common.PlotbandpassDetailBase):
         for antenna_id, figfiles in self._figfile.items():
             for figfile in figfiles:
                 if os.path.exists(figfile):
+                    task = self.create_task('', antenna_id)
                     wrapper = logger.Plot(figfile,
                                           x_axis=self._xaxis,
                                           y_axis=self._yaxis,
                                           parameters={'vis' : self._vis_basename,
-                                                      'ant' : self._antmap[antenna_id]})
+                                                      'ant' : self._antmap[antenna_id]},
+                                          command=str(task))
                     wrappers.append(wrapper)
                     break
             else:

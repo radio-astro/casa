@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import datetime
-import math
 import os
 import operator
 
@@ -76,9 +75,6 @@ class AzElChart(object):
             LOG.debug('Disabling AzEl plot due to problems with plotms')
             return None
 
-        if os.path.exists(self.figfile):
-            return self._get_plot_object()
-
         #inputs based on analysisUtils.plotElevationSummary
         task_args = {'vis'             : self.ms.name,
                      'xaxis'           : 'azimuth',
@@ -92,41 +88,27 @@ class AzElChart(object):
                      'clearplots'      : True,
                      'showgui'         : False}
 
-        #casa.plotms(**task_args)
-        
         task = casa_tasks.plotms(**task_args)
 
-        task.execute()
+        if not os.path.exists(self.figfile):
+            task.execute()
         
-
-        '''
-        casa_tasks.plotms(vis=self.ms.name,
-                          xaxis='azimuth',
-                          yaxis='elevation',
-                          title='Elevation vs Azimuth for %s' % self.ms.basename,                           
-                          plotfile=self.figfile,
-                          highres=True,
-                          interactive=False,
-                          overwrite=True).execute()
-        '''
-
-
-        return self._get_plot_object()
+        return self._get_plot_object(task)
 
     def _get_figfile(self):
         session_part = self.ms.session
         ms_part = self.ms.basename
-
         
         return os.path.join(self.context.report_dir, 
                             'session%s' % session_part, 
                             ms_part, 'azel.png')
 
-    def _get_plot_object(self):
+    def _get_plot_object(self, task):
         return logger.Plot(self.figfile,
                            x_axis='Azimuth',
                            y_axis='Elevation',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis' : self.ms.basename},
+                           command=str(task))
 
 
 class WeatherChart(object):
@@ -187,9 +169,6 @@ class ElVsTimeChart(object):
             LOG.debug('Disabling ElVsTime plot due to problems with plotms')
             return None
     
-        if os.path.exists(self.figfile):
-            return self._get_plot_object()
-        
         #inputs based on analysisUtils.plotElevationSummary
         task_args = {'vis'             : self.ms.name,
                      'xaxis'           : 'time',
@@ -203,24 +182,11 @@ class ElVsTimeChart(object):
                      'clearplots'      : True,
                      'showgui'         : False}
 
-        #casa.plotms(**task_args)
-        
         task = casa_tasks.plotms(**task_args)
-        
-        task.execute()
+        if not os.path.exists(self.figfile):
+            task.execute()
 
-        '''
-        casa_tasks.plotms(vis=self.ms.name,
-                          xaxis='time',
-                          yaxis='elevation',
-                          title='Elevation vs. Time for %s' % self.ms.basename,                           
-                          plotfile=self.figfile,
-                          highres=True,
-                          interactive=False,
-                          overwrite=True).execute()
-        '''
-        
-        return self._get_plot_object()
+        return self._get_plot_object(task)
 
     def _get_figfile(self):
         session_part = self.ms.session
@@ -229,11 +195,12 @@ class ElVsTimeChart(object):
                             'session%s' % session_part, 
                             ms_part, 'el_vs_time.png')
 
-    def _get_plot_object(self):
+    def _get_plot_object(self, task):
         return logger.Plot(self.figfile,
                            x_axis='Time',
                            y_axis='Elevation',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis' : self.ms.basename},
+                           command=str(task))
 
 
 class FieldVsTimeChartInputs(basetask.StandardInputs):

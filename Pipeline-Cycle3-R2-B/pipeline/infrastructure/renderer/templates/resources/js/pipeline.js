@@ -3,6 +3,29 @@ var pipeline = pipeline || {};
 pipeline.pages = pipeline.pages || function() {
 	var module = {};
 		
+	module.t1_1 = function() {
+		var innerModule = {};
+		
+		innerModule.ready = function() {
+			var target = $("div#qa2_narrative");
+			var href = $(target).data("href");
+
+	    	$(target).load(href, function (response, status, xhr) {
+	    		if (status == "error") {
+	    			// no-op
+	            };
+
+	            if (status == "success") {
+	            	if ($(target).text().length > 0) {
+	            		target.prepend('<h2>QA2 Narrative</h2>');
+	            	};
+	            }
+	        });
+		};
+
+		return innerModule;
+	}();
+	
 	module.t2_1 = function() {
 		var innerModule = {};
 		
@@ -613,7 +636,7 @@ UTILS = (function () {
                 }
             },
             afterLoad: function() {
-            	this.title = '<div class="pull-left">' + this.title + '</div><div class="pull-right"><a href="' + this.href + '">Full Size</a><div>';
+            	$('#cmdmodal').modal();
             },
         });
     };

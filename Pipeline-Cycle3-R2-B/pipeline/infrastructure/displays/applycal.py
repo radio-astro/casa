@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 import os
 import string
 
@@ -96,7 +95,8 @@ class PlotmsLeaf(object):
         self._plotfile = self._get_plotfile()
 
     def plot(self):
-        return [(self._get_plot_task(), self._get_plot_wrapper())]
+        task = self._get_plot_task()
+        return [(task, self._get_plot_wrapper(task))]
             
     def _get_plotfile(self):
         fileparts = {
@@ -134,15 +134,7 @@ class PlotmsLeaf(object):
                             'stage%s' % self._result.stage_number,
                             png)
 
-    def _get_plot_wrapper(self):
-#         if not os.path.exists(self._plotfile):
-#             LOG.trace('Creating new plot: %s' % self._plotfile)
-#             try:
-#                 self._create_plot()
-#             except Exception as ex:
-#                 LOG.error('Could not create plot %s' % self._plotfile)
-#                 LOG.exception(ex)
-#                 return None
+    def _get_plot_wrapper(self, task):
         parameters={'vis' : self._vis}
         
         domain_spws = self._ms.get_spectral_windows(self._spw)
@@ -162,8 +154,9 @@ class PlotmsLeaf(object):
         wrapper = logger.Plot(self._plotfile,
                               x_axis=self._xaxis,
                               y_axis=self._yaxis,
-                              parameters=parameters)
-            
+                              parameters=parameters,
+                              command=str(task))
+
         return wrapper
 
     def _get_plot_task(self):
@@ -182,11 +175,6 @@ class PlotmsLeaf(object):
         
         task = casa_tasks.plotms(**task_args)
         return task
-
-#         if not os.path.exists(self._plotfile):
-#             LOG.info('The last plotms call did not generate an output file. '
-#                      'If the data selection was flagged, this is to be ' 
-#                      'expected.')
 
 
 class SpwComposite(common.LeafComposite):
