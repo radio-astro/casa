@@ -196,9 +196,9 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the amplitude calibration
         ampresult = self._do_target_ampcal()
-	if phaseupspwmap:
-            self._mod_last_spwmap(ampresult.pool[0], phaseupspwmap)
-            self._mod_last_spwmap(ampresult.final[0], phaseupspwmap)
+	#if phaseupspwmap:
+            #self._mod_last_spwmap(ampresult.pool[0], phaseupspwmap)
+            #self._mod_last_spwmap(ampresult.final[0], phaseupspwmap)
 
         # Accept the amplitude result as is.
         result.pool.extend(ampresult.pool)
