@@ -357,9 +357,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {    if( thisms.tableDesc().isColumn("DATA") ) { datacol_p = FTMachine::OBSERVED; }
            else { os << LogIO::SEVERE <<"DATA column does not exist" << LogIO::EXCEPTION;}
       }
-    else if( selpars.datacolumn.contains("corr") )
-      {    if( thisms.tableDesc().isColumn("CORRECTED_DATA") ) { datacol_p = FTMachine::CORRECTED; }
-           else { os << LogIO::SEVERE <<"CORRECTED_DATA column does not exist" << LogIO::EXCEPTION;}
+    else if( selpars.datacolumn.contains("corr") ) {    
+      if( thisms.tableDesc().isColumn("CORRECTED_DATA") ) { datacol_p = FTMachine::CORRECTED; } 
+      else 
+	{
+	  if( thisms.tableDesc().isColumn("DATA") ) { 
+	    datacol_p = FTMachine::OBSERVED;
+	    os << "CORRECTED_DATA column does not exist. Using DATA column instead" << LogIO::POST; 
+	  }
+	  else { 
+	    os << LogIO::SEVERE <<"Neither CORRECTED_DATA nor DATA columns exist" << LogIO::EXCEPTION;
+	  }
+	}
+	
       }
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
@@ -496,10 +506,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem csys;
     CountedPtr<FTMachine> ftm, iftm;
 
+
     try
       {
 
-	os << "Define image [" << impars.imageName << "]" << LogIO::POST;
+	os << "Define image coordinates for [" << impars.imageName << "] : " << LogIO::POST;
 
 	csys = impars.buildCoordinateSystem( rvi_p );
 	IPosition imshape = impars.shp();
@@ -530,6 +541,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     try
       {
+	os << "Set Gridding options for [" << impars.imageName << "] with ftmachine : " << gridpars.ftmachine << LogIO::POST;
+
 	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
 			gridpars.facets, gridpars.wprojplanes,
 			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,

@@ -1012,6 +1012,8 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 
     //    cout << "makeImBeamSet : imshape : " << itsImageShape << endl;
 
+    String blankpsfs="";
+
     for( Int chanid=0; chanid<nchan;chanid++) {
       for( Int polid=0; polid<npol; polid++ ) {
 
@@ -1020,21 +1022,36 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 	Slicer psfslice(substart, substop,Slicer::endIsLast);
 	SubImage<Float> subPsf( *psf() , psfslice, True );
 	GaussianBeam beam;
-	
-	try
+
+	Bool tryfit=True;
+	LatticeExprNode le( sum(subPsf) );
+	tryfit = le.getFloat()>0.0;
+
+	if(tryfit)
 	  {
-	    StokesImageUtil::FitGaussianPSF( subPsf, beam );
-	    itsPSFBeams.setBeam( chanid, polid, beam );
-	  }
-	catch(AipsError &x)
-	  {
+	    try
+	      {
+		StokesImageUtil::FitGaussianPSF( subPsf, beam );
+		itsPSFBeams.setBeam( chanid, polid, beam );
+	      }
+	    catch(AipsError &x)
+	      {
 	    	os << LogIO::WARN << "[Chan" << chanid << ":Pol" << polid << "] Error Gaussian fit to PSF : " << x.getMesg() ;
 		//		os << LogIO::POST;
 		os << " :  Setting restoring beam to largest valid beam." << LogIO::POST;
+	      }
+	  }
+	else
+	  {
+	    //	    os << LogIO::WARN << "[Chan" << chanid << ":Pol" << polid << "] PSF is blank. Setting null restoring beam." << LogIO::POST ;
+	    blankpsfs += "[C" +String::toString(chanid) + ":P" + String::toString(polid) + "] ";
 	  }
 
       }// end of pol loop
     }// end of chan loop
+
+    if( blankpsfs.length() >0 )
+      os << LogIO::WARN << "PSF is blank for" << blankpsfs << LogIO::POST;
 
     //// Replace null (and bad) beams with the good one. 
     ////GaussianBeam maxbeam = findGoodBeam(True);
