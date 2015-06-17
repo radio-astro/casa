@@ -6,6 +6,10 @@ import shutil
 import simple_cluster
 import partitionhelper as ph
 
+# To handle thread-based Tier-2 parallelization
+import thread 
+import threading
+
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 
@@ -23,6 +27,7 @@ class ParallelTaskHelper:
     
     __bypass_parallel_processing = 0
     __async_mode = False
+    __multithreading = False    
     
     def __init__(self, task_name, args = {}):
         self._arg = args
@@ -160,6 +165,13 @@ class ParallelTaskHelper:
             self._sequential_return_list = {}        
         elif (self._cluster != None):
             if self._mpi_cluster:
+                # jagonzal (CAS-7631): Support for thread-based Tier-2 parallelization
+                if ParallelTaskHelper.getMultithreadingMode():
+                    event = self._cluster.get_command_response_event(self._command_request_id_list)
+                    ParallelTaskWorker.releaseTaskLock()
+                    event.wait()
+                    ParallelTaskWorker.acquireTaskLock()
+                # Get command response
                 command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
                 # Format list in the form of vis dict
                 ret_list = {}
@@ -185,7 +197,7 @@ class ParallelTaskHelper:
             retval = True
             for subMs in ret_list:
                 if not ret_list[subMs]:
-                    casalog.post("%s failed for sub-MS %s" % (taskname,subMs),"WARN","postExecution")
+                    casalog.post("%s failed for sub-MS %s" % (taskname,subMs),"WARN","consolidateResults")
                     retval = False
                 index += 1
             return retval
@@ -197,7 +209,7 @@ class ParallelTaskHelper:
                     try:
                         ret_dict = ParallelTaskHelper.sum_dictionaries(dict_i,ret_dict)
                     except Exception, instance:
-                        casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","postExecution")
+                        casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","consolidateResults")
             return ret_dict
         
         
@@ -366,6 +378,14 @@ class ParallelTaskHelper:
         return ParallelTaskHelper.__async_mode    
     
     @staticmethod
+    def setMultithreadingMode(multithreading=False):     
+        ParallelTaskHelper.__multithreading = multithreading
+        
+    @staticmethod
+    def getMultithreadingMode():
+        return ParallelTaskHelper.__multithreading
+    
+    @staticmethod
     def isParallelMS(vis):
         """
         This method will let us know if we can do the simple form
@@ -425,3 +445,103 @@ class ParallelTaskHelper:
         compactStrings.append(selectionString(rangeStart,lastValue))
 
         return ','.join([a for a in compactStrings])
+    
+
+class ParallelTaskWorker:
+    
+    # Initialize task lock
+    __task_lock = threading.Lock()
+    
+    def __init__(self, cmd):
+        
+        self.__cmd = compile(cmd,"ParallelTaskWorker", "eval")
+        self.__state = "initialized"
+        self.__res = None        
+        self.__thread = None
+        self.__environment = self.getEnvironment()
+        self.__formatted_traceback = None        
+        self.__completion_event = threading.Event()  
+
+    def getEnvironment(self):
+        
+        stack=inspect.stack()
+        for stack_level in range(len(stack)):
+            frame_globals=sys._getframe(stack_level).f_globals
+            if frame_globals.has_key('update_params'):
+                return dict(frame_globals)
+            
+        raise Exception("CASA top level environment not found")
+        
+    def start(self):
+        
+        # Initialize completion event
+        self.__completion_event.clear()        
+               
+        # Spawn thread
+        self.__thread = thread.start_new_thread(self.runCmd, ())
+        
+        # Mark state as running
+        self.__state = "running"        
+
+    def runCmd(self):
+        
+        # Acquire lock
+        ParallelTaskWorker.acquireTaskLock()
+        
+        # Update environment with globals from calling context
+        globals().update(self.__environment)
+        
+        # Run compiled command
+        try:
+            self.__res = eval(self.__cmd)
+            # Mark state as successful
+            self.__state = "successful"
+            # Release task lock
+            ParallelTaskWorker.releaseTaskLock()            
+        except Exception, instance:
+            # Mark state as failed
+            self.__state = "failed"
+            # Release task lock if necessary
+            if ParallelTaskWorker.checkTaskLock():ParallelTaskWorker.releaseTaskLock()
+            # Post error message
+            self.__formatted_traceback = traceback.format_exc()
+            casalog.post("Exception executing command '%s': %s" 
+                         % (self.__cmd,self.__formatted_traceback),
+                         "SEVERE","ParallelTaskWorker::runCmd")
+        
+        # Send completion event signal
+        self.__completion_event.set()
+        
+    def getResult(self):
+        
+        if self.__state == "running":
+            # Wait until completion event signal is received
+            self.__completion_event.wait()
+            
+            
+        if self.__state == "initialized":
+            casalog.post("Worker not started",
+                         "WARN","ParallelTaskWorker::getResult")
+        elif self.__state == "successful":
+            return self.__res            
+        elif self.__state == "failed":
+            casalog.post("Exception executing command '%s': %s" 
+                         % (self.__cmd,self.__formatted_traceback),
+                         "SEVERE","ParallelTaskWorker::runCmd")                        
+    
+    @staticmethod
+    def acquireTaskLock():
+        
+        ParallelTaskWorker.__task_lock.acquire()
+        
+    @staticmethod
+    def releaseTaskLock():
+        
+        ParallelTaskWorker.__task_lock.release()
+        
+    @staticmethod
+    def checkTaskLock():
+        
+        return ParallelTaskWorker.__task_lock.locked()        
+          
+          

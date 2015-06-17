@@ -78,6 +78,10 @@ class MPICommandClient:
             self.__command_request_list = {}
             self.__command_response_list = {}
             
+            # Initialize command group response state
+            self.__command_group_response_counter = 1
+            self.__command_group_response_list = {}            
+            
             # Initialize command response handler service state
             self.__command_response_handler_service_on = False
             self.__command_response_handler_service_running = False
@@ -170,7 +174,14 @@ class MPICommandClient:
                         else:
                             casalog.post("Command request with id %s failed in server n# %s with traceback %s" 
                                          % (str(command_id),str(server),str(command_response['traceback'])),
-                                         "INFO",casalog_call_origin)                            
+                                         "INFO",casalog_call_origin)          
+                        # If this request belongs to a group update the group response object
+                        if self.__command_request_list[command_id].has_key('group'):
+                            command_group_response_id = self.__command_request_list[command_id]['group']
+                            self.__command_group_response_list[command_group_response_id]['list'].remove(command_id)
+                            # If there are no requests pending from this group send the group response signal
+                            if len(self.__command_group_response_list[command_group_response_id]['list']) == 0:
+                                self.__command_group_response_list[command_group_response_id]['event'].set()
                     except Exception, instance:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception receiving command request response msg: %s" 
@@ -804,6 +815,33 @@ class MPICommandClient:
                         
                 return command_response_list
             
+            
+        def get_command_response_event(self,command_request_id_list):
+            
+            # Get command group response id
+            command_group_response_id = self.__command_group_response_counter
+            
+            # Setup event object
+            command_group_response_event = threading.Event()
+            command_group_response_event.clear()
+            
+            # Setup command group response
+            command_group_response = {}
+            command_group_response['id'] = command_group_response_id
+            command_group_response['list'] = list(command_request_id_list) # Make a copy of the list 
+            command_group_response['event'] = command_group_response_event
+            
+            # Register command group response
+            self.__command_group_response_list[command_group_response_id]=command_group_response
+            for command_request_id in command_request_id_list:
+                self.__command_request_list[command_request_id]['group'] = command_group_response_id
+             
+            # Increment command id counter
+            self.__command_group_response_counter = self.__command_group_response_counter + 1    
+            
+            # Return command response event object
+            return command_group_response_event
+        
         
         def get_server_status(self,server=None):
             return self.__monitor_client.get_server_status(server)
@@ -812,8 +850,10 @@ class MPICommandClient:
         def get_command_request_list(self):
             return self.__command_request_list
         
+        
         def get_command_response_list(self):
             return self.__command_response_list        
+        
         
         def set_log_mode(self,logmode):
             self.__log_mode = logmode

@@ -7,13 +7,14 @@ import traceback
 import unittest
 import testhelper
 import filecmp
-from taskinit import mstool,tbtool,cbtool,casalog,casac
+from taskinit import mstool,tbtool,cbtool,casalog,casac,casa
 from tasks import setjy,flagdata,applycal,uvcontsub
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from mpi4casa.MPICommandClient import MPICommandClient
 from mpi4casa.MPICommandServer import MPICommandServer
 from mpi4casa.MPIInterface import MPIInterface
 from parallel.parallel_task_helper import ParallelTaskHelper
+from parallel.parallel_task_helper import ParallelTaskWorker
 
 
 def waitForFile( file, seconds):
@@ -1078,7 +1079,6 @@ class test_mpi4casa_flagdata(unittest.TestCase):
         os.system("cp -r %s %s" % (self.vis,self.vis3))
         
         # Set async mode in ParallelTaskHelper
-        aysncMode = ParallelTaskHelper.getAsyncMode()
         ParallelTaskHelper.setAsyncMode(True)
         
         # Run applycal in MMS mode with the first set
@@ -1099,12 +1099,55 @@ class test_mpi4casa_flagdata(unittest.TestCase):
         res2 = ParallelTaskHelper.getResult(request_id_2,'flagdata')
         res3 = ParallelTaskHelper.getResult(request_id_3,'flagdata')   
         
+        # Unset async mode in ParallelTaskHelper
+        ParallelTaskHelper.setAsyncMode(False)         
+        
         self.assertEqual(res1,res, "flagdata dictionary does not match for the first flagdata run")
         self.assertEqual(res2,res, "flagdata dictionary does not match for the second flagdata run")
-        self.assertEqual(res3,res, "flagdata dictionary does not match for the third flagdata run")
+        self.assertEqual(res3,res, "flagdata dictionary does not match for the third flagdata run")       
         
-        # Unset async mode in ParallelTaskHelper
-        ParallelTaskHelper.setAsyncMode(aysncMode)        
+        
+    def test_mpi4casa_flagdata_list_return_multithreading(self):
+        """Test flagdata summary in multithreading mode"""
+        
+        # First run flagdata sequentially
+        bypassParallelProcessing = ParallelTaskHelper.getBypassParallelProcessing()
+        ParallelTaskHelper.bypassParallelProcessing(2)
+        res = flagdata(vis=self.vis, mode='summary')
+        ParallelTaskHelper.bypassParallelProcessing(bypassParallelProcessing)
+        
+        # Make a copy of the input MMS for each flagdata instance
+        os.system("cp -r %s %s" % (self.vis,self.vis2))
+        os.system("cp -r %s %s" % (self.vis,self.vis3))
+        
+        ParallelTaskHelper.setMultithreadingMode(True)        
+        
+        # Set up workers
+        cmd1 = "flagdata(vis='%s', mode='summary')" % (self.vis)
+        worker1 = ParallelTaskWorker(cmd1)
+        
+        cmd2 = "flagdata(vis='%s', mode='summary')" % (self.vis2)
+        worker2 = ParallelTaskWorker(cmd2)        
+        
+        cmd3 = "flagdata(vis='%s', mode='summary')" % (self.vis3)
+        worker3 = ParallelTaskWorker(cmd3)          
+        
+        # Spawn worker threads
+        worker1.start()
+        worker2.start()
+        worker3.start()
+        
+        # Get resulting summary ict from each worker
+        res1 = worker1.getResult()
+        res2 = worker2.getResult()
+        res3 = worker3.getResult()
+        
+        ParallelTaskHelper.setMultithreadingMode(False) 
+        
+        # Compare return summary dicts with the one generated with a sequential run
+        self.assertEqual(res1,res, "flagdata dictionary does not match for the first flagdata run")
+        self.assertEqual(res2,res, "flagdata dictionary does not match for the second flagdata run")
+        self.assertEqual(res3,res, "flagdata dictionary does not match for the third flagdata run")    
         
         
 class test_mpi4casa_setjy(unittest.TestCase):
@@ -1347,7 +1390,6 @@ class test_mpi4casa_applycal(unittest.TestCase):
              os.system("cp -r %s %s" % (self.aux[idx],self.aux3[idx]))
              
         # Set async mode in ParallelTaskHelper
-        aysncMode = ParallelTaskHelper.getAsyncMode()
         ParallelTaskHelper.setAsyncMode(True)
         
         # Run applycal in MMS mode with the first set
@@ -1370,7 +1412,7 @@ class test_mpi4casa_applycal(unittest.TestCase):
         command_response_list = self.client.get_command_response(reques_id_list,True,True)        
         
         # Unset async mode in ParallelTaskHelper
-        ParallelTaskHelper.setAsyncMode(aysncMode)
+        ParallelTaskHelper.setAsyncMode(False)
         
         # Sort ref file to properly match rows for comparison
         casalog.post("Sorting vis file: %s" % str(self.vis),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
@@ -1388,6 +1430,62 @@ class test_mpi4casa_applycal(unittest.TestCase):
         compare = testhelper.compTables(self.ref_sorted,self.vis_sorted2,['FLAG_CATEGORY'])
         self.assertTrue(compare)
         compare = testhelper.compTables(self.ref_sorted,self.vis_sorted3,['FLAG_CATEGORY'])  
+        
+        
+    def test3_applycal_fluxscale_gcal_bcal_multithreading_mode(self):
+        """Test 2: Apply calibration using fluxscal gcal and bcal tables in multithreading mode"""
+        
+        # Run applycal in MS mode
+        applycal(vis=self.ref,gaintable=self.aux,
+                 gainfield=['nearest','nearest','0'],
+                 interp=['linear', 'linear','nearest'])        
+       
+        # Make a copy of the input MMS for each applycal instance
+        os.system("cp -r %s %s" % (self.vis,self.vis2))
+        os.system("cp -r %s %s" % (self.vis,self.vis3))
+        
+        # Make a copy of cal tables for each applycal instance
+        for idx in range(0,len(self.aux)):
+             os.system("cp -r %s %s" % (self.aux[idx],self.aux2[idx]))
+             os.system("cp -r %s %s" % (self.aux[idx],self.aux3[idx]))
+        
+        ParallelTaskHelper.setMultithreadingMode(True)
+        
+        cmd1 = "applycal(vis='%s',gaintable=['%s','%s','%s'],gainfield=['nearest','nearest','0'],interp=['linear', 'linear','nearest'])" % (self.vis,self.aux[0],self.aux[1],self.aux[2])
+        worker1 = ParallelTaskWorker(cmd1)
+        
+        cmd2 = "applycal(vis='%s',gaintable=['%s','%s','%s'],gainfield=['nearest','nearest','0'],interp=['linear', 'linear','nearest'])" % (self.vis2,self.aux2[0],self.aux2[1],self.aux2[2])
+        worker2 = ParallelTaskWorker(cmd2)        
+        
+        cmd3 = "applycal(vis='%s',gaintable=['%s','%s','%s'],gainfield=['nearest','nearest','0'],interp=['linear', 'linear','nearest'])" % (self.vis3,self.aux3[0],self.aux3[1],self.aux3[2])
+        worker3 = ParallelTaskWorker(cmd3)          
+        
+        worker1.start()
+        worker2.start()
+        worker3.start()
+        
+        worker1.getResult()
+        worker2.getResult()
+        worker3.getResult()
+        
+        ParallelTaskHelper.setMultithreadingMode(False)
+        
+        # Sort ref file to properly match rows for comparison
+        casalog.post("Sorting vis file: %s" % str(self.vis),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis,self.vis_sorted)  
+        casalog.post("Sorting vis file: %s" % str(self.vis2),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis2,self.vis_sorted2)       
+        casalog.post("Sorting vis file: %s" % str(self.vis3),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")
+        sortFile(self.vis3,self.vis_sorted3)              
+        casalog.post("Sorting ref file: %s" % str(self.ref),"INFO","test2_applycal_fluxscale_gcal_bcal_async_mode")    
+        sortFile(self.ref,self.ref_sorted)        
+        
+        # Compare files
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted,['FLAG_CATEGORY'])
+        self.assertTrue(compare)
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted2,['FLAG_CATEGORY'])
+        self.assertTrue(compare)
+        compare = testhelper.compTables(self.ref_sorted,self.vis_sorted3,['FLAG_CATEGORY'])          
 
         
 class test_mpi4casa_uvcont(unittest.TestCase):
@@ -1396,13 +1494,19 @@ class test_mpi4casa_uvcont(unittest.TestCase):
         # Set-up MMS
         self.vis = "ngc5921.uvcont.mms"
         setUpFile(self.vis,'vis')
+        # Tmp files
+        self.vis2 = self.vis + '.2'
+        self.vis3 = self.vis + '.3'        
         # Set-up reference MMS
         self.ref = ["ngc5921.mms.cont", "ngc5921.mms.contsub"]
         setUpFile(self.ref,'ref')      
 
     def tearDown(self):
         # Remove MMS
-        os.system('rm -rf ' + self.vis)
+        os.system('rm -rf ' + self.vis + '*')
+        # Remove tmp files
+        os.system('rm -rf ' + self.vis2 + '*')
+        os.system('rm -rf ' + self.vis3 + '*')        
         # Remove ref MMS
         for file in self.ref:
             os.system('rm -rf ' + file) 
@@ -1417,6 +1521,49 @@ class test_mpi4casa_uvcont(unittest.TestCase):
         self.assertTrue(compare_cont)
         compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
         self.assertTrue(compare_contsub)             
+        
+    def test2_uvcont_single_spw_multithreading_mode(self):
+        """Test 2: Extract continuum from one single SPW using uvcontsub in multithreading mode"""   
+                
+        # First run in sequential mode
+        os.system("cp -r %s %s" % (self.vis,self.vis2))
+        os.system("cp -r %s %s" % (self.vis,self.vis3))
+        
+        ParallelTaskHelper.setMultithreadingMode(True)
+
+        cmd1 = "uvcontsub(vis='%s',field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True)" % (self.vis)
+        worker1 = ParallelTaskWorker(cmd1)
+        
+        cmd2 = "uvcontsub(vis='%s',field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True)" % (self.vis2)
+        worker2 = ParallelTaskWorker(cmd2)        
+        
+        cmd3 = "uvcontsub(vis='%s',field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True)" % (self.vis3)
+        worker3 = ParallelTaskWorker(cmd3)          
+        
+        worker1.start()
+        worker2.start()
+        worker3.start()
+        
+        worker1.getResult()
+        worker2.getResult()
+        worker3.getResult()
+        
+        ParallelTaskHelper.setMultithreadingMode(False)        
+        
+        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_cont)
+        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_contsub)   
+        
+        compare_cont2 = testhelper.compTables(self.ref[0],self.vis2+".cont",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_cont2)
+        compare_contsub2 = testhelper.compTables(self.ref[1],self.vis2+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_contsub2)   
+        
+        compare_cont3 = testhelper.compTables(self.ref[0],self.vis3+".cont",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_cont3)
+        compare_contsub3 = testhelper.compTables(self.ref[1],self.vis3+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        self.assertTrue(compare_contsub3)
         
         
 class test_mpi4casa_NullSelection(unittest.TestCase):
