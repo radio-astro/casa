@@ -161,7 +161,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="start" subparam="true">
-      <description>First channel (e.g. chan=3,chan=\'1.1GHz\',chan=\'15343km/s\')</description>
+      <description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</description>
       <value type="string"></value>
     </param>
 
