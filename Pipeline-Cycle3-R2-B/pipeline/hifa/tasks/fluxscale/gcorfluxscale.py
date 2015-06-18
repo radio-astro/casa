@@ -228,7 +228,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
                 intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
 	        calmode='a', solint=inputs.solint, antenna=allantenna, refant=refant,
-	        minblperant=minblperant, phaseupspwmap=phaseupspwmap, append=False, merge=True)
+	        minblperant=minblperant, phaseupspwmap=None, append=False, merge=True)
 
             # get the gaincal caltable from the results
             # this is the table that will be fluxscaled
