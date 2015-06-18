@@ -1372,7 +1372,10 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       }
 
       double mjd0 = ArrayTime(t0MS).getMJD();
-      double dmjd = 0.001;
+      double dmjd = interpolate_ephemeris ? 0.001 : v[0]->getTimeInterval().getDuration().get() / 1000000000LL / 86400.0; // Grid time step == 0.001 if ephemeris interpolation requested
+                                                                                                 // otherwise == the interval of time of the first element of ephemeris converted in days.
+                                                                                                 // *SUPPOSEDLY* constant over all the ephemeris. 
+
       
       // Prepare the table keywords with the values computed above.
       TableDesc tableDesc;
