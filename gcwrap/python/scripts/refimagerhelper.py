@@ -102,7 +102,8 @@ class PySynthesisImager:
 
         for fld in range(0,self.NF):
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
-
+    
+        self.SItool.tuneselectdata()
 
         #self.makeCFCache(exists);
 
