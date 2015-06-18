@@ -196,7 +196,7 @@ class MakeImListHeuristics(object):
 
         return beam
 
-    def cell(self, field_intent_list, spwspec, oversample=3.0):
+    def cell(self, field_intent_list, spwspec, oversample=2.5):
         # reset state of imager
         casatools.imager.done()
 
