@@ -7,7 +7,7 @@ pipeline.pages = pipeline.pages || function() {
 		var innerModule = {};
 		
 		innerModule.ready = function() {
-			var target = $("div#qa2_narrative");
+			var target = $("div#qa_notes");
 			var href = $(target).data("href");
 
 	    	$(target).load(href, function (response, status, xhr) {
