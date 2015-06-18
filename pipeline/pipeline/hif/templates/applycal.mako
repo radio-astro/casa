@@ -110,14 +110,8 @@ $(document).ready(function(){
     	beforeShow : function() {
         	this.title = $(this.element).attr('title');
        	},
-        afterShow: function() {
-        	$('#cmdmodal').modal();
-        }
     }); 
 
-	$(document).on("click", "a[name='cmdbtn']", function (e) {
-	});
-    
 	$('.caltable_filename').tooltip({
 	    'selector': '',
 	    'placement': 'left',

@@ -162,10 +162,11 @@ def get_plot_command_markup(ctx, command):
         return ''
     stripped = command.replace('%s/' % ctx.report_dir, '')
     stripped = stripped.replace('%s/' % ctx.output_dir, '')
-    escaped = cgi.escape(stripped, True).replace('\'', '&#39;')    
-    btn = '''<a id="cmdmodal" data-toggle="modal" data-target=".bs-example-modal-lg">Plot command</a>
+    escaped = cgi.escape(stripped, True).replace('\'', '&#39;')
 
-<div class="modal fade bs-example-modal-lg">
+    btn = '''<a data-toggle="modal" data-target=".plot-command-modal">Plot command</a>
+
+<div class="modal fade plot-command-modal">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">

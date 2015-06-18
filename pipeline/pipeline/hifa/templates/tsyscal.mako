@@ -40,9 +40,6 @@ $(document).ready(function() {
                 height: 50,
             }
         },
-        afterShow: function() {
-        	$('#cmdmodal').modal();
-        },
     	beforeShow : function() {
         	this.title = $(this.element).attr('title');
        	}
