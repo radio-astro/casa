@@ -177,7 +177,8 @@ class SynthesisImager
   //SIIterBot& getLoopControls();
 
   void dryGridding(const Vector<String>& cfList);
-  void fillCFCache(const Vector<String>& cfList, const String& ftmName, const String& cfcPath); 
+  void fillCFCache(const Vector<String>& cfList, const String& ftmName, const String& cfcPath,
+		   const Bool& psTermOn, const Bool& aTermOn); 
   void reloadCFCache();
 
 

@@ -545,6 +545,24 @@ Define the image coordinate systems and shapes.
       </value>
     </param>
 
+    <param type="bool" name="pstermon">
+      <description>
+	Is the PS-term ON?
+      </description>
+      <value>
+	false
+      </value>
+    </param>
+
+    <param type="bool" name="atermon">
+      <description>
+	Is the A-term ON?
+      </description>
+      <value>
+	true
+      </value>
+    </param>
+
   </input>
   <returns type="bool"/>
 </method>

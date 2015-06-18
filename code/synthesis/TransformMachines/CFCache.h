@@ -169,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method to initialize the internal memory cache.
     //
     void initCache();
-    void initCache2(Float selectedPA=400.0, Float dPA=-1.0);
+    void initCache2(Bool verbose=False, Float selectedPA=400.0, Float dPA=-1.0);
     void initCacheFromList2(const String& path, 
 			    const Vector<String>& cfFileNames, 
 			    const Vector<String>& cfWtFileNames, 

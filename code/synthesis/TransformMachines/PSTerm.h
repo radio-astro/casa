@@ -123,6 +123,8 @@ namespace casa{
     Int getOversampling() {return 1;};
     Float getConvWeightSizeFactor() {return 1.0;};
 
+    Bool rotationallySymmetric() {return True;};
+
   private:
     // spheroidal function
     CountedPtr<ConvolveGridder<Double, Complex> > psCtor_p;

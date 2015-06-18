@@ -87,15 +87,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    PSTerm& psTerm, WTerm& wTerm, ATerm& aTerm, 
 				    Bool isDryRun=False);
     static void makeConvFunction2(const String& uvGridDiskimage,
-			   //const VisBuffer& vb,
-			   //const Int wConvSize,
-			   //const CountedPtr<PolOuterProduct>& pop,
-			   // const Float pa,
-			   // const Float dpa,
-			   const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
-			   const Matrix<Double>& vbFreqSelection,
-			   CFStore2& cfs,
-			   CFStore2& cfwts);
+				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				  const Matrix<Double>& vbFreqSelection,
+				  CFStore2& cfs,
+				  CFStore2& cfwts,
+				  const Bool psTermOn,
+				  const Bool aTermOn);
     static void fillConvFuncBuffer2(CFBuffer& cfb, CFBuffer& cfWtb,
 			     const Int& nx, const Int& ny,
 			     const CoordinateSystem& skyCoords,

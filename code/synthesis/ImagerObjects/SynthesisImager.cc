@@ -1354,7 +1354,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   void SynthesisImager::createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
-					   const String& ftmName,
+					   const String&,// ftmName,
 					   const Int,// facets,            //=1
 					   //------------------------------
 					   const Int wprojPlane,        //=1,
@@ -1420,7 +1420,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     ROMSObservationColumns msoc(mss4vi_p[0].observation());
     String telescopeName=msoc.telescopeName()(0);
-    CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, aTermOn, psTermOn, True, mTermOn, wbAWP);
+    CountedPtr<ConvolutionFunction> awConvFunc = AWProjectFT::makeCFObject(telescopeName, 
+									   aTermOn,
+									   psTermOn, True, mTermOn, wbAWP);
     //
     // Construct the appropriate re-sampler.
     //
@@ -1724,13 +1726,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   void SynthesisImager::fillCFCache(const Vector<String>& cfList,
 				    const String& ftmName,
-				    const String& cfcPath)
+				    const String& cfcPath,
+				    const Bool& psTermOn,
+				    const Bool& aTermOn)
     {
       LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
       if (cfList.nelements() == 0) 
 	os << "NoOp due to zero-length cfList" << LogIO::POST;
 
-      Int whichFTM=0;
+      //Int whichFTM=0;
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
       // useful to extend it to other projection FTMs -- but later.
       // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
@@ -1784,8 +1788,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //  ).makeConvFunction2(String(path), uvScale, uvOffset, vbFreqSelection,
 	  // 		       *cfs2, *cfwts2);
 
+	  // This is a global methond in AWConvFunc.  Does not require
+	  // FTM to be constructed (which can be expensive in terms of
+	  // memory footprint).
 	  AWConvFunc::makeConvFunction2(String(cfcPath), uvScale, uvOffset, vbFreqSelection,
-					*cfs2, *cfwts2);
+					*cfs2, *cfwts2, psTermOn, aTermOn);
       	}
       //cerr << "Mem used = " << itsMappers.getFTM(whichFTM)->getCFCache()->memCache2_p[0].memUsage() << endl;
       //(static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).getCFCache()->initCache2();

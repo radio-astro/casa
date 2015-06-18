@@ -107,6 +107,9 @@ namespace casa{
       return 0;
     };
 
+    Bool rotationallySymmetric() {return True;};
+
+
     Int getConvSize() {return 0;};
     Int getOversampling() {return 1;};
     Float getConvWeightSizeFactor() {return 1.0;};

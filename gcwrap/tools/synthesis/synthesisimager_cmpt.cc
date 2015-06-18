@@ -415,7 +415,9 @@ bool synthesisimager::setweighting(const std::string& type,
 
   bool synthesisimager::fillcfcache(const std::vector<std::string>& cfList,
 				    const std::string& ftmName,
-				    const std::string& cfcPath)
+				    const std::string& cfcPath,
+				    const bool psTermOn,
+				    const bool aTermOn)
   {
     Bool rstat(False);
     
@@ -423,7 +425,7 @@ bool synthesisimager::setweighting(const std::string& type,
       
       if( ! itsImager ) itsImager = new SynthesisImager();
       
-      itsImager->fillCFCache(cfList,ftmName, cfcPath);
+      itsImager->fillCFCache(cfList,ftmName, cfcPath, psTermOn, aTermOn);
       
     } catch  (AipsError x) {
       RETHROW(x);

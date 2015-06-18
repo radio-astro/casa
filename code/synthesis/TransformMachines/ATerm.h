@@ -193,6 +193,7 @@ namespace casa{
     virtual void rotate2(const VisBuffer& vb, CFCell& baseCFS, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
     String getTelescopeName() {return telescopeName_p;};
+    virtual Bool rotationallySymmetric() {return True;};
 
   protected:
     LogIO& logIO() {return logIO_p;}

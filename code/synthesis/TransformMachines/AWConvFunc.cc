@@ -44,6 +44,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <casa/System/ProgressMeter.h>
 #include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/Utilities/CompositeNumber.h>
 #include <casa/OS/Directory.h>
@@ -312,6 +313,7 @@ namespace casa{
 		      {
 			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
 			psTerm.applySky(cfWtBufMat, False); // Assign
+			cfWtBuf *= cfWtBuf;
 		      }
 		    //tim.show("PSTerm*2: ");
 
@@ -886,7 +888,9 @@ namespace casa{
     Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
     //Quantity dPA(360.0,"deg");
     Quantity dPA(dpa,"rad");
-
+    Int totalCFs=uniqueBaselineTypeList.shape().product()*wConvSize*freqValues.nelements()*polMap.shape().product();
+    ProgressMeter pm(1.0, Double(totalCFs), "makeCF", "","","",True);
+    int cfDone=0;
     for(Int ib=0;ib<uniqueBaselineTypeList.shape()(0);ib++)
       {
 	Vector<Int> pos;
@@ -924,7 +928,7 @@ namespace casa{
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=4.0;
+	  innerQuaterFraction=1.0;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
@@ -981,6 +985,7 @@ namespace casa{
 		      cfwtb_p->setParams(inu, iw, ipolx,ipoly,//polMap(ipolx)(ipoly),
 					 cfb_cs,s, convSize, convSize, 
 		      			 freqValues(inu), wValues(iw), polMap(ipolx)(ipoly));
+		      pm.update((Double)cfDone++);
 		    }
 		} // End of loop over Mueller elements.
 	  } // End of loop over w
@@ -1420,6 +1425,7 @@ namespace casa{
   //
   void AWConvFunc::prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& theMap)
   {
+    if (aTerm_p->rotationallySymmetric() == False) return;
     Int nRow=theMap.nelements();
     // CountedPtr<CFBuffer> cfb, cbPtr;
     // CountedPtr<CFCell>  cfc;
@@ -1456,7 +1462,7 @@ namespace casa{
 	    log_l << "Rotating the base CFB from PA=" << cfb->getCFCellPtr(0,0,0)->pa_p.getValue("deg") 
 		  << " to " << actualPA*57.2957795131 
 		  << " " << cfb->getCFCellPtr(0,0,0)->shape_p
-		  << LogIO::POST;
+		  << LogIO::DEBUG1 << LogIO::POST;
 
 	    IPosition shp(cfb->shape());
 	    cbPtr = cfb;
@@ -1601,6 +1607,7 @@ namespace casa{
 	  {
 	    psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
 	    psTerm.applySky(cfWtBufMat, False); // Assign
+	    cfWtBuf *= cfWtBuf;
 	  }
 
 	//tim.mark();
@@ -1764,7 +1771,9 @@ namespace casa{
 				     const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				     const Matrix<Double>& ,//vbFreqSelection,
 				     CFStore2& cfs2,
-				     CFStore2& cfwts2)
+				     CFStore2& cfwts2,
+				     const Bool psTermOn,
+				     const Bool aTermOn)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "makeConvFunction2[R&D]"));
     Int convSize, convSampling, polInUse;
@@ -1810,7 +1819,7 @@ namespace casa{
 			 (*cfb_p)(iNu,iW,iPol).getAsStruct(miscInfo); // Get misc. info. for this CFCell
 
 			 CountedPtr<ConvolutionFunction> awCF = AWProjectFT::makeCFObject(miscInfo.telescopeName,
-										 True, False, True, True, True);
+											  aTermOn, psTermOn, True, True, True);
 			 (static_cast<AWConvFunc &>(*awCF)).aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 			 //aTerm_p->cacheVBInfo(miscInfo.telescopeName, miscInfo.diameter);
 
@@ -1834,10 +1843,10 @@ namespace casa{
 			 
 			 Int inner=convSize/(convSampling);
 			 //Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
-			 Float innerQuaterFraction=4.0;
+			 Float innerQuaterFraction=1.0;
 			 
-			 // Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
-			 // psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
+			 Float psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
+			 ((static_cast<AWConvFunc &>(*awCF)).psTerm_p)->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
 			 
 			 //
 			 // By this point, the all the 4 axis (Time/PA, Freq, Pol,

@@ -205,7 +205,7 @@ namespace casa{
     //summarize(memCacheWt2_p, "WTCFS", False);
   }
 
-  void CFCache::initCache2(Float selectedPA, Float dPA)
+  void CFCache::initCache2(Bool verbose, Float selectedPA, Float dPA)
   {
     LogOrigin logOrigin("CFCache", "initCache2");
     LogIO log_l(logOrigin);
@@ -226,8 +226,8 @@ namespace casa{
 					     " exists but is unreadable/unwriteable")));
       }
 
-    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA);
-    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA);
+    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA, verbose);
+    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA, verbose);
     // memCache2_p[0].show("Re-load CFS",cerr);
     // memCacheWt2_p[0].show("Re-load WTCFS",cerr);
     memCache2_p[0].primeTheCFB();

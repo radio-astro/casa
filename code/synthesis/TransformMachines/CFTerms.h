@@ -126,7 +126,7 @@ namespace casa{
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
 
-
+    virtual Bool rotationallySymmetric() = 0;
 
   protected:
     LogIO& logIO() {return logIO_p;}

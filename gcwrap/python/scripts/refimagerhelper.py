@@ -291,8 +291,10 @@ class PySynthesisImager:
         self.cfcachepars['cflist']=cflist;
 
         #self.SItool.fillcfcache(**(self.cfcachepars), self.allgridpars['0']['gridder'],cfcName);
-        print "##########",self.allgridpars['0']['gridder'],cfcName;
-        self.SItool.fillcfcache(cflist, self.allgridpars['0']['gridder'],cfcName);
+        
+        self.SItool.fillcfcache(cflist, self.allgridpars['0']['gridder'],
+                                cfcName,self.allgridpars['0']['psterm'],
+                                cfcName,self.allgridpars['0']['aterm']);
                   
 #############################################
     def reloadCFCache(self):
@@ -659,6 +661,9 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
         cfcPath = "\""+str(self.allgridpars['0']['cfcache'])+"\"";
         ftmname = "\""+str(self.allgridpars['0']['gridder'])+"\"";
+        psTermOn = str(self.allgridpars['0']['psterm']);
+        aTermOn = str(self.allgridpars['0']['aterm']);
+        aTermOn = str(True);
         print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@";
         print "AllCFList = ",allcflist;
         m = len(allcflist);
@@ -668,7 +673,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         joblist=[];
         for node in self.listOfNodes[:m]:
             #print "#!$#!%#!$#@$#@$ ",allcflist;
-            cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+")";
+            cmd = "toolsi.fillcfcache("+str(allcflist[node])+","+str(ftmname)+","+str(cfcPath)+","+psTermOn+","+aTermOn+")";
             print "CMD = ",node," ",cmd;
             joblist.append(self.PH.runcmd(cmd,node));
         self.PH.checkJobs(joblist);
