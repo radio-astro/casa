@@ -1194,7 +1194,7 @@ void HetArrayConvFunc::sliceFluxScale(Int npol) {
        SubImage<Float> fluxScaleSub = SubImage<Float> (fluxScale_p, sl, True);
        SubImage<Float> convWeightImageSub = SubImage<Float> (*convWeightImage_p, sl, True);
        fluxScale_p = TempImage<Float>(fluxScaleSub.shape(),fluxScaleSub.coordinates());
-       TempImage<Float>* convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
+       convWeightImage_p = new TempImage<Float> (convWeightImageSub.shape(),convWeightImageSub.coordinates());
        LatticeExpr<Float> le(fluxScaleSub);
        fluxScale_p.copyData(le);
        LatticeExpr<Float> le2(convWeightImageSub);

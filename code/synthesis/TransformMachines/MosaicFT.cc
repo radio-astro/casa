@@ -536,9 +536,9 @@ void MosaicFT::finalizeToSky()
        || stokes_p=="YY" || stokes_p=="Q" || stokes_p=="U" || stokes_p=="V"){
       npol=1;
       whichStokes(0)=Stokes::type(stokes_p);
-      // if single plane Q U or V are used...the weight should be the I weight
-      if(stokes_p=="Q" || stokes_p=="U" || stokes_p=="V")
-	whichStokes(0)=Stokes::type("I");
+       // if single plane Q U or V are used...the weight should be the I weight
+      //if(stokes_p=="Q" || stokes_p=="U" || stokes_p=="V")
+      //whichStokes(0)=Stokes::type("I");
     }
     else if(stokes_p=="IV"){
       npol=2;
@@ -595,7 +595,7 @@ void MosaicFT::finalizeToSky()
     // Do the copy
     IPosition start(4, 0);
     convWeightImage_p->put(griddedWeight(blc, trc));
-    StokesImageUtil::To(*skyCoverage_p, *convWeightImage_p);
+    StokesImageUtil::ToStokesPSF(*skyCoverage_p, *convWeightImage_p);
     if(npol>1){
       // only the I get it right Q and U or V may end up with zero depending 
       // if RR or XX
@@ -912,6 +912,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     return;
 
 
+  //cerr << "chanMap " << chanMap << endl;
  
 
   const Matrix<Float> *imagingweight;
@@ -1725,10 +1726,15 @@ void MosaicFT::getWeightImage(ImageInterface<Float>& weightImage,
 
 void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
 
-  if (stokes_p=="QU" || stokes_p=="Q" || stokes_p=="U"){
-    stokes_p=="QU" ? pbConvFunc_p->sliceFluxScale(2) : pbConvFunc_p->sliceFluxScale(1);
+  if (stokes_p=="QU" || stokes_p=="IV"){
+    pbConvFunc_p->sliceFluxScale(2);
   }
-  
+  else if(stokes_p=="Q" || stokes_p=="U" ||  stokes_p=="V" || stokes_p=="I" ){
+     pbConvFunc_p->sliceFluxScale(1);
+  }
+   else if(stokes_p=="IQU"){
+       pbConvFunc_p->sliceFluxScale(3);
+   }
   IPosition inShape=(pbConvFunc_p->getFluxScaleImage()).shape();
   IPosition outShape=fluxImage.shape();
   if(outShape==inShape){
