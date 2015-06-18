@@ -762,3 +762,44 @@ ALL_IN_ONE = function() {
 
     return module;
 }();
+
+var pipeline = pipeline || {};
+
+pipeline.pages = pipeline.pages || function() {
+	var module = {};
+		
+	module.t1_1 = function() {
+		var innerModule = {};
+		
+		innerModule.ready = function() {
+			var target = $("div#qa_notes");
+			var href = $(target).data("href");
+
+	    	$(target).load(href, function (response, status, xhr) {
+	    		if (status === "error") {
+	    			// no-op
+	            };
+
+	            if (status === "success") {
+	            	if (response.length > 0) {
+	            		
+            			// display raw text as preformatted text, but display
+	            		// HTML content as-is
+	            		
+	            		// tests whether the loaded file contains HTML tags
+	            		var newHtml = $('<div></div>').html(response).text();          		
+	            		if (newHtml === response) {
+		                    $(target).wrapInner("<pre />");
+	            		};
+	            		
+	            		target.prepend('<h2>Quality Assurance notes</h2>');
+	            	};
+	            }
+	        });
+		};
+
+		return innerModule;
+	}();
+
+	return module;
+}();
