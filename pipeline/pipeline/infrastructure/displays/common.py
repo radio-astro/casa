@@ -164,10 +164,12 @@ class PlotcalLeaf(object):
                             png)
 
     def _get_plot_wrapper(self):
+        task = self._create_task()
+
         if not os.path.exists(self._figfile):
             LOG.trace('Creating new plot: %s' % self._figfile)
             try:
-                self._create_plot()
+                task.execute(dry_run=False)
             except Exception as ex:
                 LOG.error('Could not create plot %s' % self._figfile)
                 LOG.exception(ex)
@@ -184,11 +186,12 @@ class PlotcalLeaf(object):
         wrapper = logger.Plot(self._figfile,
                               x_axis=self._xaxis,
                               y_axis=self._yaxis,
-                              parameters=parameters)
+                              parameters=parameters,
+                              command=str(task))
             
         return wrapper
 
-    def _create_plot(self):
+    def _create_task(self):
         task_args = {'caltable'  : self._caltable,
                      'xaxis'     : self._xaxis,
                      'yaxis'     : self._yaxis,
@@ -198,8 +201,7 @@ class PlotcalLeaf(object):
                      'figfile'   : self._figfile,
                      'plotrange' : self._plotrange}
 
-        task = casa_tasks.plotcal(**task_args)
-        task.execute(dry_run=False)
+        return casa_tasks.plotcal(**task_args) 
 
 
 class PlotbandpassLeaf(object):
