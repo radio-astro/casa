@@ -42,23 +42,23 @@ class SpectralWindow(object):
     
     __slots__ = ('id', 'band', 'bandwidth', 'type', 'intents',
                  'ref_frequency', 'name', 'baseband', 'sideband',
-                 'mean_frequency', '__min_frequency', '__max_frequency',
-                 '__centre_frequency', '__chan_freqs', '__chan_widths',
+                 'mean_frequency', '_min_frequency', '_max_frequency',
+                 '_centre_frequency', '_chan_freqs', '_chan_widths',
                  '_channels')
 
     def __getstate__(self):
         return (self.id, self.band, self.bandwidth, self.type, self.intents,
                 self.ref_frequency, self.name, self.baseband, self.sideband, 
-                self.mean_frequency, self.__min_frequency, 
-                self.__max_frequency, self.__centre_frequency, self.__chan_freqs,
-                self.__chan_widths)
+                self.mean_frequency, self._min_frequency, 
+                self._max_frequency, self._centre_frequency, self._chan_freqs,
+                self._chan_widths)
 
     def __setstate__(self, state):
         (self.id, self.band, self.bandwidth, self.type, self.intents,
                 self.ref_frequency, self.name, self.baseband, self.sideband, 
-                self.mean_frequency, self.__min_frequency, 
-                self.__max_frequency, self.__centre_frequency, self.__chan_freqs,
-                self.__chan_widths) = state
+                self.mean_frequency, self._min_frequency, 
+                self._max_frequency, self._centre_frequency, self._chan_freqs,
+                self._chan_widths) = state
     
     def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
                  chan_freqs, chan_widths, sideband, baseband, band='Unknown'):
@@ -79,16 +79,16 @@ class SpectralWindow(object):
         self.sideband = str(sideband)
         self.baseband = str(baseband)
     
-        self.__chan_freqs = chan_freqs
-        self.__chan_widths = chan_widths
+        self._chan_freqs = chan_freqs
+        self._chan_widths = chan_widths
                 
-        self.__min_frequency = min(self.channels, key=lambda r: r.low).low
-        self.__max_frequency = max(self.channels, key=lambda r: r.high).high
-        self.__centre_frequency = (self.__min_frequency + self.__max_frequency) / 2.0
+        self._min_frequency = min(self.channels, key=lambda r: r.low).low
+        self._max_frequency = max(self.channels, key=lambda r: r.high).high
+        self._centre_frequency = (self._min_frequency + self._max_frequency) / 2.0
 
     @property
     def centre_frequency(self):
-        return self.__centre_frequency
+        return self._centre_frequency
 
     def channel_range(self, minfreq, maxfreq):
         '''
@@ -138,7 +138,7 @@ class SpectralWindow(object):
     def channels(self):
         if not hasattr(self, '_channels') or self._channels is None:
             channels = []
-            for centre, width in zip(self.__chan_freqs, self.__chan_widths):
+            for centre, width in zip(self._chan_freqs, self._chan_widths):
                 dec_centre = decimal.Decimal(str(centre))
                 dec_width= decimal.Decimal(str(width))
                 delta = dec_width / decimal.Decimal('2') 
@@ -153,15 +153,15 @@ class SpectralWindow(object):
 
     @property
     def min_frequency(self):
-        return self.__min_frequency
+        return self._min_frequency
         
     @property
     def max_frequency(self):
-        return self.__max_frequency
+        return self._max_frequency
         
     @property
     def num_channels(self):
-        return len(self.__chan_freqs)
+        return len(self._chan_freqs)
 
     def __repr__(self):
         args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
