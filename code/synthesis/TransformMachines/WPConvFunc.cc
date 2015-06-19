@@ -69,6 +69,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+  typedef unsigned long long ooLong; 
 
   WPConvFunc::WPConvFunc(const Double minW, const Double maxW, const Double rmsW):
    convFunctionMap_p(-1), 
@@ -357,11 +358,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Double msq=m*m;
 	//////Int offset= (iy+convSize/2)*convSize;
 	///fftpack likes it flipped
-	Int offset= (iy>-1 ? iy : (iy+cpConvSize))*cpConvSize;
+	ooLong offset= (iy>-1 ? ooLong(iy) : ooLong(iy+cpConvSize))*ooLong(cpConvSize);
 	for (Int ix=-inner/2;ix<inner/2;ix++) {
 	  //////	  Int ind=offset+ix+convSize/2;
 	  ///fftpack likes it flipped
-	  Int ind=offset+(ix > -1 ? ix : ix+cpConvSize);
+	  ooLong ind=offset+(ix > -1 ? ooLong(ix) : ooLong(ix+cpConvSize));
 	  Double l=s0*Double(ix);
 	  Double rsq=l*l+msq;
 	  if(rsq<1.0) {
@@ -438,13 +439,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///////convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
     //////Matrix<Complex> quarter(twoDPB.getSlice(start, pbSlice, True));
     //   cerr << "quartershape " << quarter.shape() << endl;
-    uInt offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
+    ooLong offset=ooLong(ooLong(iw)*ooLong(cpConvSize/2-1)*ooLong(cpConvSize/2-1));
     //    cerr << "offset " << offset << " convfuncshape " << convFunc.shape() << " convSize " << convSize  << endl;
     maxptr[iw]=screen(0,0);
-    for (uInt y=0; y< uInt(cpConvSize/2)-1; ++y){
-      for (uInt x=0; x< uInt(cpConvSize/2)-1; ++x){
+    for (ooLong y=0; y< ooLong(cpConvSize/2)-1; ++y){
+      for (ooLong x=0; x< ooLong(cpConvSize/2)-1; ++x){
 	////////convFuncPtr[offset+y*(convSize/2-1)+x] = quarter(x,y);
-	convFuncPtr[offset+y*(cpConvSize/2-1)+x] = screen(x,y);
+	convFuncPtr[offset+y*ooLong(cpConvSize/2-1)+x] = screen(x,y);
       }
     }
   }
@@ -473,10 +474,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   for (Int iw=0;iw<cpWConvSize;iw++) {
     Bool found=False;
     Int trial=0;
-    Int ploffset=(cpConvSize/2-1)*(cpConvSize/2-1)*iw;
+    ooLong ploffset=(ooLong)(cpConvSize/2-1)*(ooLong)(cpConvSize/2-1)*(ooLong)iw;
     for (trial=cpConvSize/2-2;trial>0;trial--) {
       // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-      if((abs(convFuncPtr[trial+ploffset])>1e-3)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])>1e-3) ) {
+      if((abs(convFuncPtr[(ooLong)(trial)+ploffset])>1e-3)||(abs(convFuncPtr[(ooLong)(trial*(cpConvSize/2-1))+ploffset])>1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
