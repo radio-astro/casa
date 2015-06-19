@@ -6,16 +6,33 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="partition" category="manipulation">
-     <shortdescription>Task to produce multi-MSs using parallelism</shortdescription>
+     <shortdescription>Task to produce Multi-MSs using parallelism</shortdescription>
 
 <description>
-    Partition is a task to create a multi-MS out of an MS. General selection
+    Partition is a task to create a Multi-MS out of an MS. General selection
     parameters are included, and one or all of the various data columns
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
-    CORRECTED_DATA) can be selected. It can also be used to create a normal
-    MS, split based on the given data selection parameters.
+    CORRECTED_DATA) can be selected.
+    
+    The partition task creates a Multi-MS in parallel, using the CASA MPI framework.
+    The user should start CASA as follows in order to run it in parallel.
+    
+    1) Running on a single node with 8 engines.
+        mpicasa -n 5 casa --nogui --log2term
+        CASA> partition(.....)
+        
+    2) Running on a group of nodes in a cluster.
+        mpicasa -hostfile user_hostfile casa ....
+        CASA> partition(.....)
+            
+        where user_hostfile contains the names of the nodes and the number of engines to use 
+        in each one of them. Example:
+            pc001234a, slots=5
+            pc001234b, slots=4
+     
 
-    The partition task creates a multi-MS using the parallelization framework.
+    If CASA is started without a call to mpicasa, the default will fall-back to
+    using the simple_cluster implemetation.
     If a cluster is not present, it will create a default cluster based on the
     resources of the system. One can create a simple_cluster prior to running
     partition by doing the following.
@@ -46,14 +63,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     from a multi-MS.
     
     When partition processes an MMS in parallel, each sub-MS is processed independently in an engine.
-    The log messages of the engines are not showed in the logger; they are written in
-    the local disk in files called engine-0.log, engine-1.log, etc.Depending on the way the MMS is partitioned, 
-    some sub-MSs may not contain the data selection parameters specified by the task and they will
-    issue a NULL MS selection exception. These exceptions are not cause for concern, unless
-    the master engine exits with a failure too. The NULL MS selection exceptions are not showed
-    in the controller terminal. They will only appear in the engines logs. Watch for the end of the 
-    processing to make sure there were no errors in the processing.
-  
+    The log messages of the engines are identified by the string MPIServer-#, where # gives the number
+    of the engine running that process. When the task runs sequentially, it shows the MPIClient text
+    in the origin of the log messages or does not show anything.
+      
 </description>
 
 <input>
@@ -214,8 +227,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         default: True
         If False, it will work like the split task and create a
         normal MS, split according to the given data selection parameters.
-        Note that, when this parameter is set to False, a simple_cluster
-        will not be created.
+        Note that, when this parameter is set to False, a cluster
+        will not be used.
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'

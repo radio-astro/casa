@@ -1,12 +1,17 @@
 import os
+import shutil
 from taskinit import *
 import flaghelper as fh
 from casac import casac
+from parallel.parallel_data_helper import ParallelDataHelper
 
 
 def importasdm(
     asdm=None,
     vis=None,
+    createmms=None,
+    separationaxis=None,
+    numsubms=None,    
     singledish=None,
     antenna=None,
     corr_mode=None,
@@ -160,7 +165,7 @@ def importasdm(
         """
 
     # Python script
-
+    
     # make agentflagger tool local
     aflocal = casac.agentflagger()
 
@@ -180,7 +185,7 @@ def importasdm(
                         #        theexecutable = 'oldasdm2ASAP'
             if compression:
                 casalog.post('compression=True has no effect for single-dish format.')
-                
+                                
             cmd = 'which %s > /dev/null 2>&1' % theexecutable
             ret = os.system(cmd)
             if ret == 0:
@@ -409,8 +414,9 @@ def importasdm(
         if not os.path.exists(visoc):
             vistoproc = [myviso for myviso in vistoproc if myviso != visoc]
 
+        # CAS-7369. HISTORY should be written after createmms is tested
         #
-        # Populate the HISTORY table of the MS with informations about the context in which it's been created
+        # Populate the HISTORY table of the MS with information about the context in which it's been created
         #
         try: 
             mslocal = mstool() 
@@ -555,6 +561,48 @@ def importasdm(
             import recipes.ephemerides.convertephem as ce
             for myviso in vistoproc:
                 ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
+        
+        # CAS-7369 - Create an output MMS
+        if createmms:
+            # Get the default parameters of partition
+            from tasks import partition
+            fpars = partition.parameters
+            for mypar in fpars.keys():
+                fpars[mypar] = partition.itsdefault(mypar)
+                
+            # Call the cluster for each MS
+            for myviso in vistoproc:
+                casalog.origin('importasdm')
+                outputmms = myviso.replace('.ms','.mms')
+                if singledish:
+                    fpars['datacolumn'] = 'float_data'
+                    
+                casalog.post('Will create a Multi-MS for: '+myviso)
+                
+                fpars['vis'] =  myviso
+                # TODO: done already by importasdm. Need to see about the .flagversions name
+                fpars['flagbackup'] =  False 
+                fpars['outputvis'] = outputmms
+                fpars['separationaxis'] = separationaxis
+                fpars['numsubms'] = numsubms
+#                fpars['datacolumn'] = 'float_data'
+                pdh = ParallelDataHelper('partition', fpars) 
+            
+                # Get a cluster
+                pdh.setupCluster(thistask='partition')
+                try:
+                    pdh.go()
+                    
+                    # Rename MMS to MS 
+                    shutil.rmtree(myviso)
+                    shutil.move(outputmms, myviso)
+
+                except Exception, instance:
+                    casalog.post('%s'%instance,'ERROR')
+                    return False
+                
+            casalog.origin('importasdm')
+            return
         
         
     except Exception, instance:

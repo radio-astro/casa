@@ -22,6 +22,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <value></value>
     </param>
 
+            <param type="bool" name="createmms">
+            <description>Create a multi-MS output</description>
+            <value>False</value>
+        </param>
+        <param type="string" name="separationaxis" ignorecase="true" subparam="true">
+            <description>Axis to do parallelization across(scan, spw, auto)</description>
+            <value>auto</value>
+            <allowed kind="enum" ignorecase="true">
+                <value>auto</value>
+                <value>scan</value>
+                <value>spw</value>
+            </allowed>
+        </param>
+        <param type="any" name="numsubms" subparam="true">
+            <description>The number of SubMSs to create (auto or any number)</description>
+            <any type="variant" limittypes="string int"/>
+         <value type="string">auto</value>
+        </param>
+    
     <param type="bool" name="singledish">
           <description>Set true to output single-dish data format </description>
           <value>False</value>
@@ -154,22 +173,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <constraints>
-            <when param="singledish">
-                <equals type="bool" value="False"/>
-                <equals type="bool" value="True">
-                    <default param="antenna"><value type="int">0</value></default>
-                </equals>
-            </when>
-            
-            <when param="process_flags">
-                 <equals type="bool" value="True">
-                      <default param="tbuff"><value type="float">0.0</value></default>
-                      <default param="applyflags"><value type="bool">False</value></default>
-                      <default param="savecmds"><value type="bool">False</value></default>
-                      <default param="outfile"><value type="string"></value></default>
-                 </equals>
-                 <equals type="bool" value="False"/>
-            </when>
+        <when param="createmms">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="separationaxis"><value type="string">auto</value></default>
+                <default param="numsubms"><value type="string">auto</value></default>
+            </equals>
+        </when>
+      
+        <when param="singledish">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="antenna"><value type="int">0</value></default>
+            </equals>
+        </when>
+        
+        <when param="process_flags">
+             <equals type="bool" value="True">
+                  <default param="tbuff"><value type="float">0.0</value></default>
+                  <default param="applyflags"><value type="bool">False</value></default>
+                  <default param="savecmds"><value type="bool">False</value></default>
+                  <default param="outfile"><value type="string"></value></default>
+             </equals>
+             <equals type="bool" value="False"/>
+        </when>
 
     </constraints>
 
@@ -214,6 +241,34 @@ asdm -- Name of input ASDM file (directory)
 vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
              default: none
 
+createmms -- Create a multi-MS partitioned according to the given separation axis.
+             For more detailed documentation on partition, Multi-MS and the MPI use in
+             CASA, please see the help partition and help mstransform.
+             default: True
+
+        separationaxis -- Axis to do parallelization across. 
+                      default: 'auto'
+                      Options: 'scan', 'spw', 'auto'
+
+                      The 'auto' option will partition per scan/spw to obtain optimal load balancing 
+                      with the following criteria:
+
+                    1 - Maximize the scan/spw/field distribution across sub-MSs
+                    2 - Generate sub-MSs with similar size
+       
+        numsubms -- The number of sub-MSs to create in the Multi-Ms.
+                default: 'auto'
+                Options: any integer number (example: numsubms=4)
+
+                The default 'auto' is to partition using the number of available servers given when launching CASA.
+                If the task is unable to determine the number of running servers, it uses 8 as the default.
+      
+                Example: Launch CASA with 5 servers, where 4 of them will be used to create the MMS. The first
+                    server is used as the MPI client.
+      
+                mpicasa -n 5 casa --nogui --log2term
+                CASA> importasdm('uid__A1', createmms=True)
+      
 singledish   -- Set True to write data as single-dish format (Scantable)
                 default: False
 

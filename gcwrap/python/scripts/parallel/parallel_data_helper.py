@@ -110,7 +110,8 @@ See examples in task_mstransform, task_partition.py, task_split2 or task_hanning
 class ParallelDataHelper(ParallelTaskHelper):
 
     def __init__(self, thistask, args={}):
-        self.__args = args
+        self.__args = dict(args)
+
         self.__taskname = thistask
         
         self.__selectionScanList = None
@@ -120,6 +121,9 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         if not self.__args.has_key('spw'):
             self.__args['spw'] = ''
+            
+        if not self.__args.has_key('scan'):
+		      self.__args['scan'] = ''
             
         self.__spwSelection = self.__args['spw']
         self.__spwList = None
@@ -871,7 +875,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         # Iterate over list of subMSs
         for subms in partitionMap:
             
-            mmsCmd = copy.copy(self._arg)
+            mmsCmd = copy.deepcopy(self._arg)
             mmsCmd['createmms'] = False 
             mmsCmd['taql'] = partitionMap[subms]['taql']
             mmsCmd['outputvis'] = self.dataDir + '/%s.%04d.ms' % (self.outputBase, subms)
@@ -1351,7 +1355,6 @@ class ParallelDataHelper(ParallelTaskHelper):
         """
 
         casalog.origin("ParallelDataHelper")        
-                
         if self._msTool:
             self._msTool.close()
                 
@@ -1460,6 +1463,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         # Parallel axis to write to table.info of MMS
         # By default take the one from the input MMS
+
         parallel_axis = ph.axisType(self.__args['vis'])
         if self._arg.has_key('createmms') and self._arg['createmms'] == True:
             parallel_axis = self._arg['separationaxis']

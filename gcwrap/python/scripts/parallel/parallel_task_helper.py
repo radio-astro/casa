@@ -30,7 +30,7 @@ class ParallelTaskHelper:
     __multithreading = False    
     
     def __init__(self, task_name, args = {}):
-        self._arg = args
+        self._arg = dict(args)
         self._arguser = {}
         self._taskName = task_name
         self._executionList = []
@@ -101,7 +101,7 @@ class ParallelTaskHelper:
 
             subMs_idx = 0
             for subMS in msTool.getreferencedtables():
-                localArgs = copy.copy(self._arg)
+                localArgs = copy.deepcopy(self._arg)
                 localArgs['vis'] = subMS
                 
                 for key in self._arguser:
