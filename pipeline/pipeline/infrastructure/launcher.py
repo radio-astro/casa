@@ -261,6 +261,10 @@ class Pipeline(object):
                 LOG.info ('Reading context from file {0}'.format(context))          
                 last_context = utils.pickle_load(context_file)
                 self.context = last_context
+            
+            if name:       
+                self.context.name = name
+            self.context.output_dir = output_dir
 
         self._link_casa_log(self.context)
 
