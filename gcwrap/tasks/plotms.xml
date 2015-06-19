@@ -856,8 +856,7 @@ Export plot as image Parameters
      </param>
      
      <param type="string" name="callib">
-     	<description>Calibration library filename or dictionary for on-the-fly calibration.</description>
-     	<value></value>
+     	<description>Calibration library string or filename for on-the-fly calibration.</description>
      </param>
      
      
@@ -1642,7 +1641,7 @@ Constraints
         overwrite -- Overwrite plot file if it already exists?
                      default: false
       
-    callib -- calibration library filename or dictionary
+    callib -- calibration library string or filename
                 default: '' 
     
     showgui - Whether or not to display the plotting GUI

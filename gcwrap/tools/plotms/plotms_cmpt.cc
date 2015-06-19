@@ -331,37 +331,22 @@ record* plotms::getPlotMSTransformations(const int plotIndex) {
 
 
 void plotms::setPlotMSCalibration(const bool use, 
-				const std::string& filename,
-				const record& callib,
+				const std::string& callibrary,
 				const bool updateImmediately, 
 				const int plotIndex) {
-    PlotMSCalibration pmscalib;
     
+    PlotMSCalibration pmscalib;
     pmscalib.setUseCallib(use);
-    pmscalib.setCallibFile(filename);
-    pmscalib.setCallibRec(*toRecord(callib));
+    pmscalib.setCalLibrary(callibrary);
     setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
 }
 
-void plotms::setPlotMSCalibrationRec(const record& calibration, 
-					 const bool updateImmediately, 
-					 const int plotIndex) {
-    Record* calib1 = toRecord(calibration);
-    PlotMSCalibration pmscalib;
-    pmscalib.fromRecord(*calib1);
-    delete calib1;
-    
-    setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
-}
-
-void plotms::setcallib(const record& callib, const bool updateImmediately,
+void plotms::setcallib(const string& callib, const bool updateImmediately,
 			const int plotIndex) {
+    
     PlotMSCalibration pmscalib;
-    
     pmscalib.setUseCallib(True);
-    pmscalib.setCallibFile("");
-    pmscalib.setCallibRec(*(toRecord(callib)));
-    
+    pmscalib.setCalLibrary(callib);
     setPlotMSCalibration_(pmscalib, updateImmediately, plotIndex);
 }
 

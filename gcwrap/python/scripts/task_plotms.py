@@ -180,7 +180,7 @@ def plotms(vis=None,
                     Exterior legends can be located on the right, left, top, or bottom.
                     default: 'upperright'
     clearplots -- clear existing plots so that the new ones coming in can replace them.                 
-    callib -- calibration library dictionary or filename for on-the-fly calibration
+    callib -- calibration library string or filename for on-the-fly calibration
 
     """
     # Check if DISPLAY environment variable is set.
@@ -358,29 +358,37 @@ def plotms(vis=None,
         pm.setPlotMSTransformations(freqframe,veldef,restfreq,shift[0],shift[1],
                                     False, plotindex)
 
-        # Set calibration
-        if not callib:
-            useCallib = False
-            callibFile = ''
-            callibRec = {}
-        elif isinstance(callib, dict):
-            useCallib = True
-            callibFile = ''
-            callibRec = callib
-        elif isinstance(callib, str):
-            callibFile = callib.strip()
-            if len(callibFile) > 0:
-                callibFile = os.path.abspath(callib)
-                try:
-                    mycallib = callibrary()
-                    mycallib.read(callibFile)
-                    callibRec = mycallib.cld
-                    useCallib = True
-                except Exception, e:
-                    print e
-                    casalog.post("Cannot validate callib file")
-                    raise RuntimeError("Cannot validate callib file")
-        pm.setPlotMSCalibration(useCallib, callibFile, callibRec, False, plotindex) 
+        # Set calibration: None, string (filename), dictionary
+        useCallib = False
+        callibString = ''
+        if isinstance(callib, str):
+            # Determine if filename or string of params
+            if '=' in callib:
+                useCallib = True
+                callibString = callib
+            else:
+                callibFile = callib.strip()
+                if len(callibFile) > 0:
+                    callibFile = os.path.abspath(callib)
+                    if os.path.exists(callibFile):
+                        useCallib = True
+                        callibString = callibFile
+                        """
+                        try:
+                            mycallib = callibrary()
+                            mycallib.read(callibFile)
+                            callibRec = mycallib.cld
+                            useCallib = True
+                        except Exception, e:
+                            print e
+                            casalog.post("Cannot validate callib file")
+                            raise RuntimeError("Cannot validate callib file")
+                        """
+                    else:
+                        casalog.post("Callib file does not exist")
+                        raise RuntimeError("Callib file does not exist")
+        # elif isinstance(callib, list):   TBD: list of strings!
+        pm.setPlotMSCalibration(useCallib, callibString, False, plotindex) 
 
         # Set flag extension
         # for now, some options here are not available:

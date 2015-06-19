@@ -333,14 +333,14 @@ Gets the MS filename for the plot at the given index.
   
   <description>
 Sets the calibration parameters for the plot at the given index, using a
-record.  If updateImmediately is true, this change takes effect immediately IF
-the plotms window is currently shown; otherwise it will only be applied next
-time update() and/or show() is called.
+string or filename.  If updateImmediately is true, this change takes effect
+immediately IF the plotms window is currently shown; otherwise it will only be
+applied next time update() and/or show() is called.
   </description>
   
   <input>
-    <param type="record" name="callib">
-      <description>calibration parameters, in record form</description>
+    <param type="string" name="callib">
+      <description>calibration parameters, as a string or filename</description>
     </param>
     
     <param type="bool" name="updateImmediately">
@@ -695,8 +695,8 @@ and/or show() is called.
   
   <description>
 Sets the MS calibration parameters for the plot at the given index, using
-individual values.  These parameters may be in a record (python dictionary) or
-a file.  If updateImmediately is true, this change takes effect immediately IF
+individual values.  These parameters may be in a string or a file.
+If updateImmediately is true, this change takes effect immediately IF
 the plotms window is currently shown; otherwise it will only be applied next
 time update() and/or show() is called.
   </description>
@@ -707,13 +707,8 @@ time update() and/or show() is called.
       <value>false</value>
     </param>
     
-    <param type="string" name="filename">
-      <description>Calibration Library filename</description>
-      <value />
-    </param>
-    
-    <param type="record" name="callib">
-      <description>Rest frequency (w/ units) to use when calculating velocities</description>
+    <param type="string" name="callibrary">
+      <description>Calibration Library as a string or filename</description>
       <value />
     </param>
     
@@ -854,39 +849,6 @@ Gets the MS transformations parameters for the plot at the given index as a reco
   <returns type="record">
     <description>MS transformations parameters, in record form</description>
   </returns>
-</method>
-
-<method type="function" name="setPlotMSCalibrationRec">
-  <keyword>setPlotMSCalibrationRec</keyword>
-  
-  <shortdescription>Sets the MS calibration parameters.</shortdescription>
-  
-  <description>
-Sets the MS calibration parameters for the plot at the given index, using a
-record (see PlotMSCalibration::toRecord()).  If updateImmediately is true, this
-change takes effect immediately IF the plotms window is currently shown;
-otherwise it will only be applied next time update() and/or show() is called.
-  </description>
-  
-  <input>
-    <param type="record" name="calibration">
-      <description>MS calibration parameters, in record form</description>
-    </param>
-    
-    <param type="bool" name="updateImmediately">
-      <description>whether to apply this change immediately, IF the window is currently shown</description>
-      <value>true</value>
-    </param>
-    
-    <param type="int" name="plotIndex">
-      <description>Index of the plot (0-based).</description>
-      <value>0</value>
-    </param>
-  </input>
-  
-  <example />
-  
-  <returns />
 </method>
 
 <method type="function" name="getPlotMSCalibration">
