@@ -74,6 +74,7 @@
 #endif
 
 
+typedef unsigned long long ooLong;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -1725,7 +1726,7 @@ void MSUVBin::multiThrLoop(const Int outchan, const vi::VisBuffer2& vb, Double r
 				//////////////TESTING
 				Float elwgt=vb.weight()(pol,k)* real(cwt);
 				///////////////////////////
-				uLong cubindx=uLong(newrow[jj])*uLong(npol_p)*uLong(endchan-startchan+1)+uLong(lechan*npol_p)+uLong(polMap_p(pol));
+			       ooLong cubindx=ooLong(newrow[jj])*uLong(npol_p)*ooLong(endchan-startchan+1)+ooLong(lechan*npol_p)+ooLong(polMap_p(pol));
 				//cerr << jj << " newrow[jj] " << newrow[jj] << " polMap_p(pol) " <<polMap_p(pol) << " cubindex " << cubindx << endl; 
 				grid[cubindx]
 				  = (grid[cubindx]// *wghtSpec(polMap_p(pol),lechan,newrow[jj])
@@ -2279,11 +2280,11 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
       Double msq=m*m;
       //////Int offset= (iy+convSize/2)*convSize;
       ///fftpack likes it flipped
-      Int offset= (iy>-1 ? iy : (iy+cpConvSize))*cpConvSize;
+      ooLong offset= (iy>-1 ? iy : ooLong(iy+cpConvSize))*ooLong(cpConvSize);
       for (Int ix=-inner/2;ix<inner/2;ix++) {
 	//////	  Int ind=offset+ix+convSize/2;
 	///fftpack likes it flipped
-	Int ind=offset+(ix > -1 ? ix : ix+cpConvSize);
+	ooLong ind=offset+(ix > -1 ? ooLong(ix) : ooLong(ix+cpConvSize));
 	Double l=s0*Double(ix);
 	Double rsq=l*l+msq;
 	if(rsq<1.0) {
@@ -2292,7 +2293,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
 	  SINCOS(phase, sval, cval);
 	  
 	  Complex comval(cval, sval);
-	  scr2[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
+	  scr2[ind]=(cor[ooLong(ix+inner/2)+ ooLong((iy+inner/2))*ooLong(inner)])*comval;
 	  scr[ind]=comval;
 	  
 	}
@@ -2309,11 +2310,11 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
     FFTPack::cfft2f(cpConvSize, cpConvSize, cpConvSize, scr2, wsaveptr, lsav, workptr, lenwrk, ier);
     screen.putStorage(scr, cpscr);
     screen2.putStorage(scr2, cpscr2);
-    uInt offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
+    ooLong offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
     maxptr[iw]=screen(0,0);
     for (uInt y=0; y< uInt(cpConvSize/2)-1; ++y){
       for (uInt x=0; x< uInt(cpConvSize/2)-1; ++x){
-	convFuncPtr[offset+y*(cpConvSize/2-1)+x] = screen(x,y);
+	convFuncPtr[offset+ooLong(y*(cpConvSize/2-1))+ooLong(x)] = screen(x,y);
       }
     } 
     /*    Bool found=False; 
@@ -2345,7 +2346,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
   for (Int iw=0;iw<cpWConvSize;iw++) {
     Bool found=False;
     Int trial=0;
-    Int ploffset=(cpConvSize/2-1)*(cpConvSize/2-1)*iw;
+    ooLong ploffset=ooLong(cpConvSize/2-1)*ooLong(cpConvSize/2-1)*ooLong(iw);
     ////////////////  
     //  for (trial=cpConvSize/2-2;trial>0;trial--) {
     //  // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
@@ -2360,7 +2361,7 @@ void MSUVBin::makeWConv(vi::VisibilityIterator2& iter, Cube<Complex>& convFunc, 
         
        for (trial=0; trial<cpConvSize/2-2;++trial) {
       // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
-      if((abs(convFuncPtr[trial+ploffset])<1e-3)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])<1e-3) ) {
+	 if((abs(convFuncPtr[ooLong(trial)+ploffset])<1e-3)||(abs(convFuncPtr[ooLong(trial*(cpConvSize/2-1))+ploffset])<1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
