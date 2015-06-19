@@ -33,34 +33,39 @@ public:
 
   uInt nrow() {return table_.nrow();}
 
-  Vector<uInt> getScan() const {return scanCol_.getColumn();}
-  Vector<uInt> getBeam() const {return beamCol_.getColumn();}
-  Vector<uInt> getIF() const {return ifCol_.getColumn();}
-  Vector<Double> getTime() const {return timeCol_.getColumn();}
-
-  void save(const std::string &filename);
-  bool getApply(uInt irow, uInt ipol) const;
+  uInt getScan(uInt irow) const {return scanCol_.get(irow);}
+  uInt getBeam(uInt irow) const {return beamCol_.get(irow);}
   uint getSpw(uInt irow) const {return static_cast<uint>(ifCol_.get(irow));}
+  double getTime(uInt irow) const {return static_cast<double>(timeCol_.get(irow));}
+
+  bool getApply(uInt irow, uInt ipol) const;
   uint getBaselineType(uInt irow, uInt ipol) const;
   int getFPar(uInt irow, uInt ipol) const;
 
-  void getdata(uInt irow, uInt *scanno, 
-               uInt *beamno, uInt *ifno, 
-               uInt *freqid, Double *time, 
-	       Array<Bool> *apply,
-               Array<uInt> *ftype, 
-	       Array<Int> *fpar, 
-	       Array<Float> *ffpar, 
-               Array<uInt> *mask,
-	       Array<Float> *res,
-               Array<Float> *rms, 
-               uInt *nchan, 
-	       Array<Float> *cthres,
-               Array<uInt> *citer, 
-	       Array<Bool> *uself,
-	       Array<Float> *lfthres, 
-	       Array<uInt> *lfavg, 
-	       Array<uInt> *lfedge);
+  double getTimeTimeSorted(uInt irow);
+  void getIdsTimeSorted(uInt irow, uInt *scanno, 
+			uInt *beamno, uInt *ifno);
+  void getDataTimeSorted(uInt irow, uInt *scanno, 
+			 uInt *beamno, uInt *ifno, 
+			 //uInt *freqid, 
+			 Double *time, 
+			 Array<Bool> *apply,
+			 Array<uInt> *ftype, 
+			 Array<Int> *fpar, 
+			 Array<Float> *ffpar, 
+			 Array<uInt> *mask,
+			 Array<Float> *res//,
+			 /*
+			   Array<Float> *rms, 
+			   uInt *nchan, 
+			   Array<Float> *cthres,
+			   Array<uInt> *citer, 
+			   Array<Bool> *uself,
+			   Array<Float> *lfthres, 
+			   Array<uInt> *lfavg, 
+			   Array<uInt> *lfedge
+			 */
+			 );
   void setdata(uInt irow, uInt scanno, 
                uInt beamno, uInt ifno, 
                uInt freqid, Double time, 
@@ -101,10 +106,10 @@ public:
   void setresult(uInt irow, 
 		 Vector<Float> res, 
 		 Array<Float> rms);
+  void save(const std::string &filename);
   uInt nchan(uInt ifno);
 
   Matrix<Bool> getApply() {return applyCol_.getColumn();}
-  ////bool getApply(int irow, int ipol);
   void setApply(int irow, int ipol, bool apply);
   ////Matrix<uInt> getFunction() {return ftypeCol_.getColumn();}
   ////Matrix<BaselineType> getFunctionNames();

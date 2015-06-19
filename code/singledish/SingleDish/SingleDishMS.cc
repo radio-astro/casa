@@ -1326,7 +1326,6 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
-  BaselineTable *bt = new BaselineTable(in_bltable_name);
 
   // SPW and channelization reservoir
   Vector<Int> recspw;
@@ -1350,7 +1349,6 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   }
 
   LIBSAKURA_SYMBOL(Status) status;
-  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
   Vector<size_t> ctx_indices;
   ctx_indices.resize(nchan.nelements());
   for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
@@ -1364,7 +1362,6 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
       Vector<Int> scans = vb->scan();
       Vector<Double> times = vb->time();
       Vector<Int> beams = vb->feed1();
-
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
@@ -1405,34 +1402,33 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   	}
 
 	//prepare varables for writing baseline table
-	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
-	size_t num_ffpar_max = 0;
 	std::vector<std::vector<double> > ffpar_mtx_tmp(num_pol);
-	size_t num_masklist_max = 0;
-	std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
-	size_t num_coeff_max = 0;
 	std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
-	Array<Float> rms_mtx(IPosition(2, num_pol, 1));
-	Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
-	Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
-	Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
-	Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
 
-	/***************/
-	// get fit parameter for this row by binary search in time sequence
-	// skip(continue) if (1) no entries in bltable corresponding to this MS row found 
-	/***************/
+	size_t idx_fit_param;
+	if (!parser.GetFitParameterIdx(times[irow], scans[irow], 
+				       beams[irow], data_spw[irow], 
+				       idx_fit_param)) {
+	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	    flag_spectrum_in_cube(flag_chunk, irow, ipol); //flag
+	  }
+	  continue;
+	}
 
   	// loop over polarization
   	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-  	  /***************/
-	  // skip(continue) if (1) apply is False
-	  //                   (2) all channels flagged
-  	  /***************/
+	  bool apply;
+	  std::vector<float> bl_coeff;
+	  std::vector<double> bl_boundary;
+	  BLParameterSet fit_param;
+	  parser.GetFitParameterByIdx(idx_fit_param, ipol, apply, 
+				      bl_coeff, bl_boundary, fit_param);
+	  if (!apply) {
+	    flag_spectrum_in_cube(flag_chunk, irow, ipol); //flag
+	    continue;
+	  }
 
   	  // get a channel mask from data cube
   	  // (note that the variable 'mask' is flag in the next line 
@@ -1445,39 +1441,63 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 	    continue;
 	  }
 
-  	  // convert flag to mask by taking logical NOT of flag
-  	  // and then operate logical AND with in_mask
-  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-  	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
-  	  }
-
-	  // get fitting parameter as BLParameterSet <-- should be done befor this loop for pol
-	  // get mask from BLParameterset and create composit mask
-	  // check for composit mask and flag if no valid channel to fit
-	  if (NValidMask(num_chan, mask.data)==0) {
-	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
-	    os << LogIO::DEBUG1 << "Row " << orig_rows[irow]
-	       << ", Pol " << ipol
-	       << ": No valid channel to fit. Skipping" << LogIO::POST;
-	    continue;
-	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
 
   	  // actual execution of single spectrum
-	  /*
 	  map< const LIBSAKURA_SYMBOL(BaselineType),
 	    std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator
 	    iter = context_reservoir.find(fit_param.baseline_type);
 	  if (iter==context_reservoir.end())
 	    throw(AipsError("Invalid baseline type detected!"));
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
-	  */
 	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
+	  size_t num_coeff = bl_coeff.size();
+	  SakuraAlignedArray<double> coeff(num_coeff);
+	  for (size_t i = 0; i < num_coeff; ++i) {
+            coeff.data[i] = bl_coeff[i];
+          }
+	  size_t num_boundary = bl_boundary.size();
+	  SakuraAlignedArray<double> boundary(num_boundary);
+          for (size_t i = 0; i < num_boundary; ++i) {
+            boundary.data[i] = bl_boundary[i];
+          }
+
+	  string subtract_funcname;
+	  switch (fit_param.baseline_type) {
+	  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	    //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+	    status = 
+	    LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context, 
+								     num_chan,
+								     spec.data, 
+								     num_coeff,
+								     coeff.data, 
+								     spec.data);
+	    subtract_funcname = "sakura_SubtractBaselineUsingCoefficientsFloat";
+	    break;
+	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	    //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+	    status = 
+	    LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
+										num_chan,
+										spec.data, 
+										num_boundary,
+										coeff.data,
+										boundary.data,
+										spec.data);
+	    subtract_funcname = "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
+	    break;
+	  default:
+	    throw(AipsError("Unsupported baseline type."));
+	  }
+	  check_sakura_status(subtract_funcname, status);
 	  
-          //----------------------------
-          //----------------------------
+  	  // set back a spectrum to data cube
+	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+
   	} // end of polarization loop
 
       } // end of chunk row loop

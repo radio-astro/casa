@@ -62,15 +62,27 @@ uint16_t BLParameterParser::get_max_order(LIBSAKURA_SYMBOL(BaselineType) const t
 BLTableParser::BLTableParser(string const file_name, string const spw) : BLParameterParser(file_name)
 {
   initialize();
-  parse(file_name, spw);
   blparam_file_ = file_name;
+  bt_ = new BaselineTable(file_name);
+  parse(spw);
 }
 
 BLTableParser::~BLTableParser()
 {
+  delete bt_;
 }
 
-uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, BaselineTable const &bt,
+void BLTableParser::initialize()
+{
+  baseline_types_.resize(0);
+  // initialize max orders
+  size_t num_type = static_cast<size_t>(LIBSAKURA_SYMBOL(BaselineType_kNumElements));
+  for (size_t i=0; i<num_type; ++i) {
+    max_orders_[i] = 0;
+  }
+}
+
+uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, 
 				     uInt const irow, uInt const ipol)
 {
   LIBSAKURA_SYMBOL(BaselineType) const type = 
@@ -80,12 +92,12 @@ uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, BaselineTable 
   case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
   case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
     {
-      return static_cast<uint16_t>(bt.getFPar(irow, ipol));
+      return static_cast<uint16_t>(bt_->getFPar(irow, ipol));
       break;
     }
   case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
     {
-      uInt npiece = bt.getFPar(irow, ipol);
+      uInt npiece = bt_->getFPar(irow, ipol);
       AlwaysAssert(npiece <= USHRT_MAX, AipsError);//UINT16_MAX);
       return static_cast<uint16_t>(npiece);
       break;
@@ -97,20 +109,19 @@ uint16_t BLTableParser::GetTypeOrder(size_t const &baseline_type, BaselineTable 
     throw(AipsError("Unsupported baseline type."));
   }
 }
-void BLTableParser::parse(string const file_name, string const spw)
+void BLTableParser::parse(string const spw)
 {
   uInt const npol = 2;
   uInt i_spw;
   istringstream is(spw);
   is >> i_spw;
-  BaselineTable bt(file_name);
-  size_t nrow = bt.nrow();
+  size_t nrow = bt_->nrow();
   for (uInt irow = 0; irow < nrow; ++irow) {
-    if (bt.getSpw(irow) != i_spw) continue;
+    if (bt_->getSpw(irow) != i_spw) continue;
     for (uInt ipol = 0; ipol < npol; ++ipol) {
-      if (!bt.getApply(irow, ipol)) continue;
+      if (!bt_->getApply(irow, ipol)) continue;
       LIBSAKURA_SYMBOL(BaselineType) curr_type_idx = 
-	static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt.getBaselineType(irow, ipol));
+	static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt_->getBaselineType(irow, ipol));
       bool new_type = true;
       for (size_t i = 0; i < baseline_types_.size(); ++i){
 	if (curr_type_idx == baseline_types_[i]){
@@ -120,7 +131,7 @@ void BLTableParser::parse(string const file_name, string const spw)
       }
       if (new_type) baseline_types_.push_back(curr_type_idx);
       // update max_orders_
-      size_t curr_order = GetTypeOrder(curr_type_idx, bt, irow, ipol);
+      size_t curr_order = GetTypeOrder(curr_type_idx, irow, ipol);
       if (curr_order > max_orders_[curr_type_idx]) {
 	max_orders_[curr_type_idx] = curr_order;
       }
@@ -269,6 +280,117 @@ uint16_t BLParameterParser::GetTypeOrder(BLParameterSet const &bl_param)
 //   case LIBSAKURA_SYMBOL(BaselineType_kSinusoidal):
 //     return static_cast<size_t>(bl_param.nwave.size());
 //     break;
+  default:
+    throw(AipsError("Unsupported baseline type."));
+  }
+}
+
+bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid, 
+				       size_t const beamid, size_t const spwid, 
+				       size_t &idx)
+{
+  bool found = false;
+  uInt idx_top = 0;
+  uInt idx_end = bt_->nrow() - 1;
+  uInt idx_mid = (idx_top + idx_end)/2;
+  double time_top = bt_->getTimeTimeSorted(idx_top);
+  double time_end = bt_->getTimeTimeSorted(idx_end);
+  double time_mid = bt_->getTimeTimeSorted(idx_mid);
+  if ((time < time_top)||(time_end < time)) { // out of range.
+    return false;
+  }
+
+  //binary search in time-sorted table.
+  while (idx_end - idx_top > 1) {
+    if (time_top == time) {
+      idx = idx_top;
+      found = true;
+      break;
+    } else if (time_mid == time) {
+      idx = idx_mid;
+      found = true;
+      break;
+    } else if (time_end == time) {
+      idx = idx_end;
+      found = true;
+      break;
+    } else if (time_mid < time) {
+      idx_top = idx_mid;
+      time_top = time_mid;
+    } else {
+      idx_end = idx_mid;
+      time_end = time_mid;
+    }
+    idx_mid = (idx_top + idx_end)/2;
+    time_mid = bt_->getTimeTimeSorted(idx_mid);
+  }
+  if (!found) {
+    //only two candidates should exist now. 
+    //check if there is one with time identical to the specified time
+    for (size_t i = idx_top; i <= idx_end; ++i) {
+      if (time == bt_->getTimeTimeSorted(i)) {
+	idx = i;
+	found = true;
+	break;
+      }
+    }
+    if (!found) {
+      return false;
+    }
+  }
+  //finally, validate the candidate using its ids.
+  uInt bt_scanid;
+  uInt bt_beamid;
+  uInt bt_spwid;
+  bt_->getIdsTimeSorted((uInt)idx, &bt_scanid, &bt_beamid, &bt_spwid);
+  return (scanid == bt_scanid)&&(beamid == bt_beamid)&&(spwid == bt_spwid);
+}
+
+void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol, 
+					 bool &apply, std::vector<float> &coeff, 
+					 std::vector<double> &boundary, 
+					 BLParameterSet &bl_param)
+{
+  uInt scanno;
+  uInt beamno;
+  uInt ifno;
+  Double time;
+  Array<Bool> btapply;
+  Array<uInt> ftype; 
+  Array<Int> fpar;
+  Array<Float> ffpar; 
+  Array<uInt> mask;
+  Array<Float> res;
+
+  bt_->getDataTimeSorted(idx, &scanno, &beamno, &ifno, &time, &btapply, &ftype, &fpar, &ffpar, &mask, &res);
+  Vector<Bool> tmpapply(btapply[0]);
+  apply = (bool)tmpapply[ipol];
+  Vector<uInt> tmpftype(ftype[0]);
+  bl_param.baseline_type = static_cast<LIBSAKURA_SYMBOL(BaselineType)>(tmpftype[ipol]);
+  Vector<Int> tmpfpar(fpar[0]);
+  switch (bl_param.baseline_type) {
+  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+    bl_param.order = tmpfpar[ipol];
+    coeff.resize(bl_param.order + 1);
+    for (size_t i = 0; i < coeff.size(); ++i) {
+      Vector<Float> tmpres(res[i]);
+      coeff[i] = tmpres[ipol];
+    }
+    break;
+  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+    bl_param.npiece = tmpfpar[ipol];
+    boundary.resize(bl_param.npiece);
+    for (size_t i = 0; i < boundary.size(); ++i) {
+      Vector<Float> tmpffpar(ffpar[i]);
+      boundary[i] = tmpffpar[ipol];
+    }
+    coeff.resize(bl_param.npiece * 4);
+    for (size_t i = 0; i < coeff.size(); ++i) {
+      Vector<Float> tmpres(res[i]);
+      coeff[i] = tmpres[ipol];
+    }
+    break;
   default:
     throw(AipsError("Unsupported baseline type."));
   }

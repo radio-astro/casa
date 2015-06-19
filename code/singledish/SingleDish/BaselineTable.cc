@@ -146,23 +146,19 @@ int BaselineTable::getFPar(uInt irow, uInt ipol) const
   return static_cast<int>(fpar[ipol]);
 }
 
-void BaselineTable::getdata(uInt irow, uInt *scanno, 
-			    uInt *beamno, uInt *ifno, 
-			    uInt *freqid, Double *time, 
-			    Array<Bool> *apply,
-			    Array<uInt> *ftype, 
-			    Array<Int> *fpar, 
-			    Array<Float> *ffpar, 
-			    Array<uInt> *mask,
-			    Array<Float> *res,
-			    Array<Float> *rms, 
-			    uInt *nchan, 
-			    Array<Float> *cthres,
-			    Array<uInt> *citer, 
-			    Array<Bool> *uself,
-			    Array<Float> *lfthres, 
-			    Array<uInt> *lfavg, 
-			    Array<uInt> *lfedge)
+double BaselineTable::getTimeTimeSorted(uInt irow)
+{
+  if (!sorted_) {
+    timeSortedTable_ = table_.sort("TIME");
+  }
+
+  TableProxy tst(timeSortedTable_);
+  double *time = reinterpret_cast<double *>(fromValueHolder(tst.getCell("TIME", irow)));
+  return *time;
+}
+   
+void BaselineTable::getIdsTimeSorted(uInt irow, uInt *scanno, 
+				     uInt *beamno, uInt *ifno)
 {
   if (!sorted_) {
     timeSortedTable_ = table_.sort("TIME");
@@ -173,7 +169,39 @@ void BaselineTable::getdata(uInt irow, uInt *scanno,
   scanno  = (uInt *)fromValueHolder(tst.getCell("SCANNO", irow));
   beamno  = (uInt *)fromValueHolder(tst.getCell("BEAMNO", irow));
   ifno    = (uInt *)fromValueHolder(tst.getCell("IFNO", irow));
-  freqid  = (uInt *)fromValueHolder(tst.getCell("FREQ_ID", irow));
+}
+
+void BaselineTable::getDataTimeSorted(uInt irow, uInt *scanno, 
+				      uInt *beamno, uInt *ifno, 
+				      //uInt *freqid, 
+				      Double *time, 
+				      Array<Bool> *apply,
+				      Array<uInt> *ftype, 
+				      Array<Int> *fpar, 
+				      Array<Float> *ffpar, 
+				      Array<uInt> *mask,
+				      Array<Float> *res
+				      //,
+				      //Array<Float> *rms, 
+				      //uInt *nchan, 
+				      //Array<Float> *cthres,
+				      //Array<uInt> *citer, 
+				      //Array<Bool> *uself,
+				      //Array<Float> *lfthres, 
+				      //Array<uInt> *lfavg, 
+				      //Array<uInt> *lfedge
+				      )
+{
+  if (!sorted_) {
+    timeSortedTable_ = table_.sort("TIME");
+  }
+
+  TableProxy tst(timeSortedTable_);
+
+  scanno  = (uInt *)fromValueHolder(tst.getCell("SCANNO", irow));
+  beamno  = (uInt *)fromValueHolder(tst.getCell("BEAMNO", irow));
+  ifno    = (uInt *)fromValueHolder(tst.getCell("IFNO", irow));
+  //freqid  = (uInt *)fromValueHolder(tst.getCell("FREQ_ID", irow));
   time    = (Double *)fromValueHolder(tst.getCell("TIME", irow));
   apply   = (Array<Bool> *)fromValueHolder(tst.getCell("APPLY", irow));
   ftype   = (Array<uInt> *)fromValueHolder(tst.getCell("FUNC_TYPE", irow));
@@ -181,14 +209,14 @@ void BaselineTable::getdata(uInt irow, uInt *scanno,
   ffpar   = (Array<Float> *)fromValueHolder(tst.getCell("FUNC_FPARAM", irow));
   mask    = (Array<uInt> *)fromValueHolder(tst.getCell("MASKLIST", irow));
   res     = (Array<Float> *)fromValueHolder(tst.getCell("RESULT", irow));
-  rms     = (Array<Float> *)fromValueHolder(tst.getCell("RMS", irow));
-  nchan   = (uInt *)fromValueHolder(tst.getCell("NCHAN", irow));
-  cthres  = (Array<Float> *)fromValueHolder(tst.getCell("CLIP_THRESHOLD", irow));
-  citer   = (Array<uInt> *)fromValueHolder(tst.getCell("CLIP_ITERATION", irow));
-  uself   = (Array<Bool> *)fromValueHolder(tst.getCell("USE_LF", irow));
-  lfthres = (Array<Float> *)fromValueHolder(tst.getCell("LF_THRESHOLD", irow));
-  lfavg   = (Array<uInt> *)fromValueHolder(tst.getCell("LF_AVERAGE", irow));
-  lfedge  = (Array<uInt> *)fromValueHolder(tst.getCell("LF_EDGE", irow));
+  //rms     = (Array<Float> *)fromValueHolder(tst.getCell("RMS", irow));
+  //nchan   = (uInt *)fromValueHolder(tst.getCell("NCHAN", irow));
+  //cthres  = (Array<Float> *)fromValueHolder(tst.getCell("CLIP_THRESHOLD", irow));
+  //citer   = (Array<uInt> *)fromValueHolder(tst.getCell("CLIP_ITERATION", irow));
+  //uself   = (Array<Bool> *)fromValueHolder(tst.getCell("USE_LF", irow));
+  //lfthres = (Array<Float> *)fromValueHolder(tst.getCell("LF_THRESHOLD", irow));
+  //lfavg   = (Array<uInt> *)fromValueHolder(tst.getCell("LF_AVERAGE", irow));
+  //lfedge  = (Array<uInt> *)fromValueHolder(tst.getCell("LF_EDGE", irow));
 }
 
 void BaselineTable::setbasedata(uInt irow, uInt scanno, 
