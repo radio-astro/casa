@@ -40,19 +40,25 @@ class SpectralWindow(object):
         window
     """
     
-    __slots__ = ('id', 'band', 'bandwidth', 'channels', 'type', 'intents',
+    __slots__ = ('id', 'band', 'bandwidth', 'type', 'intents',
                  'ref_frequency', 'name', 'baseband', 'sideband',
-                 'mean_frequency')
+                 'mean_frequency', '__min_frequency', '__max_frequency',
+                 '__centre_frequency', '__chan_freqs', '__chan_widths',
+                 '_channels')
 
     def __getstate__(self):
-        return (self.id, self.band, self.bandwidth, self.channels, self.type,
-            self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband, self.mean_frequency)
+        return (self.id, self.band, self.bandwidth, self.type, self.intents,
+                self.ref_frequency, self.name, self.baseband, self.sideband, 
+                self.mean_frequency, self.__min_frequency, 
+                self.__max_frequency, self.__centre_frequency, self.__chan_freqs,
+                self.__chan_widths)
 
     def __setstate__(self, state):
-        (self.id, self.band, self.bandwidth, self.channels, self.type,
-            self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband, self.mean_frequency) = state
+        (self.id, self.band, self.bandwidth, self.type, self.intents,
+                self.ref_frequency, self.name, self.baseband, self.sideband, 
+                self.mean_frequency, self.__min_frequency, 
+                self.__max_frequency, self.__centre_frequency, self.__chan_freqs,
+                self.__chan_widths) = state
     
     def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
                  chan_freqs, chan_widths, sideband, baseband, band='Unknown'):
@@ -72,23 +78,17 @@ class SpectralWindow(object):
         self.name = str(name)
         self.sideband = str(sideband)
         self.baseband = str(baseband)
-        
-        channels = []
-        for centre, width in zip(chan_freqs, chan_widths):
-            dec_centre = decimal.Decimal(str(centre))
-            dec_width= decimal.Decimal(str(width))
-            delta = dec_width / decimal.Decimal('2') 
-            
-            f_lo = measures.Frequency(dec_centre - delta,
-                                      measures.FrequencyUnits.HERTZ)
-            f_hi = measures.Frequency(dec_centre + delta,
-                                      measures.FrequencyUnits.HERTZ)
-            channels.append(measures.FrequencyRange(f_lo, f_hi))
-        self.channels = channels
+    
+        self.__chan_freqs = chan_freqs
+        self.__chan_widths = chan_widths
+                
+        self.__min_frequency = min(self.channels, key=lambda r: r.low).low
+        self.__max_frequency = max(self.channels, key=lambda r: r.high).high
+        self.__centre_frequency = (self.__min_frequency + self.__max_frequency) / 2.0
 
     @property
     def centre_frequency(self):
-        return (self.min_frequency + self.max_frequency) / 2.0
+        return self.__centre_frequency
 
     def channel_range(self, minfreq, maxfreq):
         '''
@@ -100,7 +100,7 @@ class SpectralWindow(object):
         freqmax = maxfreq
     
         # Check for the no overlap case.
-        nchan = len(self.channels)
+        nchan = self.num_channels
         if freqmax < self.min_frequency:
             return (None, None)
         if freqmin > self.max_frequency:
@@ -135,16 +135,33 @@ class SpectralWindow(object):
         return (chanmin, chanmax)
 
     @property
+    def channels(self):
+        if not hasattr(self, '_channels') or self._channels is None:
+            channels = []
+            for centre, width in zip(self.__chan_freqs, self.__chan_widths):
+                dec_centre = decimal.Decimal(str(centre))
+                dec_width= decimal.Decimal(str(width))
+                delta = dec_width / decimal.Decimal('2') 
+                
+                f_lo = measures.Frequency(dec_centre - delta,
+                                          measures.FrequencyUnits.HERTZ)
+                f_hi = measures.Frequency(dec_centre + delta,
+                                          measures.FrequencyUnits.HERTZ)
+                channels.append(measures.FrequencyRange(f_lo, f_hi))
+            self._channels = channels
+        return self._channels
+
+    @property
     def min_frequency(self):
-        return min(self.channels, key=lambda r: r.low).low
+        return self.__min_frequency
         
     @property
     def max_frequency(self):
-        return max(self.channels, key=lambda r: r.high).high
+        return self.__max_frequency
         
     @property
     def num_channels(self):
-        return len(self.channels)
+        return len(self.__chan_freqs)
 
     def __repr__(self):
         args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
