@@ -37,7 +37,7 @@ PlotMSCalibrationWidget::PlotMSCalibrationWidget(QWidget* parent) :
   // Setup the gui
   setupUi(this);
 
-  // Connect widget
+  // Connect widgets
   connect(calOff, SIGNAL(toggled(bool)), SIGNAL(changed()));
   connect(calOn, SIGNAL(toggled(bool)), SIGNAL(changed()));
 }
@@ -48,23 +48,11 @@ PlotMSCalibrationWidget::~PlotMSCalibrationWidget() { }
 PlotMSCalibration PlotMSCalibrationWidget::getValue() const {
     PlotMSCalibration calib;
     calib.setUseCallib(calOn->isChecked());
-    calib.setCallibFile(itsFile_);
-    calib.setCallibRec(itsRecord_);
     return calib;
 }
 
 void PlotMSCalibrationWidget::setValue(const PlotMSCalibration& calibration ) {
-    itsFile_ = calibration.callibFile();
-    itsRecord_ = calibration.callibRec();
-    
     // Set widget values
-    String callibFilename = calibration.callibFile();
-    if (callibFilename.size() > 0) {
-	// remove path, doesn't fit in GUI
-        locationLabel->setText(QString::fromStdString(String(callibFilename, callibFilename.rfind('/')+1)));
-    }
-    else
-    	locationLabel->setText(QString::fromStdString(callibFilename));
     Bool calibrationOn = calibration.useCallib();
     calOn->setChecked(calibrationOn);
     calOff->setChecked(!calibrationOn);

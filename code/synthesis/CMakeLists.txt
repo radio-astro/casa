@@ -18,6 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
+BISON_TARGET (CalLibraryGram CalLibrary/CalLibraryGram.yy ${CMAKE_CURRENT_BINARY_DIR}/CalLibraryGram.ycc COMPILE_FLAGS "-y -p CalLibraryGram --output-file=CalLibraryGram.ycc")
+FLEX_TARGET (CalLibraryGram CalLibrary/CalLibraryGram.ll ${CMAKE_CURRENT_BINARY_DIR}/CalLibraryGram.lcc COMPILE_FLAGS "-PCalLibraryGram")
+
+include_directories (${CMAKE_CURRENT_BINARY_DIR})
+
 casa_add_library( synthesis
   TransformMachines2/BeamSkyJones.cc
   TransformMachines2/ComponentFTMachine.cc
@@ -94,6 +100,8 @@ casa_add_library( synthesis
   fortran/wprojgrid.f
   fortran/faccumulateToGrid.f
   fortran/faccumulateFromGrid.f
+  CalLibrary/CalLibraryTools.cc
+  CalLibrary/CalLibraryParse.cc
   CalTables/BJonesDesc.cc
   CalTables/BJonesMBuf.cc
   CalTables/BJonesMCol.cc
@@ -316,6 +324,8 @@ casa_add_library( synthesis
 # ImagerObjects2/SIMapperImageMosaic.cc
  ImagerObjects/InteractiveMasking.cc
  Utilities/PointingDirectionCalculator.cc
+ ${BISON_CalLibraryGram_OUTPUTS}
+ ${FLEX_CalLibraryGram_OUTPUTS}
   )
 
 install (FILES
@@ -409,6 +419,11 @@ install (FILES
 	CalTables/SolvableCalSetMCol.tcc
 	DESTINATION include/casacode/synthesis/CalTables
 	)
+install (FILES
+    CalLibrary/CalLibraryTools.h
+    CalLibrary/CalLibraryParse.h
+	DESTINATION include/casacode/synthesis/CalLibrary
+    )
 install (FILES
 	DataSampling/DataSampling.h
 	DataSampling/ImageDataSampling.h

@@ -196,6 +196,10 @@ if( OPENMP_FOUND )
     set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
 endif()
 
+# For CalLibrary parser
+find_package (FLEX REQUIRED)
+find_package (BISON REQUIRED)
+
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
 add_custom_target( check ${CMAKE_CTEST_COMMAND} )

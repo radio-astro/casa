@@ -37,18 +37,6 @@ namespace casa {
 // Specifies calibration parameters for an MS.
 class PlotMSCalibration {
 public:
-  // Static //
-  
-  // Enum and methods to define the different fields for MS calibration.
-  // <group>
-  PMS_ENUM1(Field, fields, fieldStrings, field,
-	    CALLIBFILE)
-  PMS_ENUM2(Field, fields, fieldStrings, field,
-	    "callibFile")
-  // </group>
-              
-  // Non-Static //
-    
   // Constructor, which sets default values.
   PlotMSCalibration();
 
@@ -70,16 +58,17 @@ public:
   // Convenience methods for returning the standard field values.
   // <group>
   Bool useCallib() const { return itsCallibUse_; };
-  String callibFile() const  { return itsCallibFile_; }
-  Record callibRec() const { return itsCallibRec_; };
+  String calLibrary() const  { return itsCalLibrary_; }
+
+  // Returns parsed cal library as a Record
+  Record callibRec() const;
   // </group>
   
   
   // Convenience methods for setting the standard field values.
   // <group>
-  void setUseCallib(const Bool use) { itsCallibUse_ = use; };
-  void setCallibFile(const String& filename) { itsCallibFile_ = filename; };
-  void setCallibRec(const Record callib) { itsCallibRec_ = callib; };
+  void setUseCallib(const Bool use) { itsCallibUse_ = use; }
+  void setCalLibrary(const String& callib) { itsCalLibrary_ = callib;}
   // </group>
   
   
@@ -97,7 +86,7 @@ public:
   
 private:
   Bool itsCallibUse_;
-  String itsCallibFile_;
+  String itsCalLibrary_;
   Record itsCallibRec_;
 
   // Sets the default values.

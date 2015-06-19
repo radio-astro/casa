@@ -28,20 +28,18 @@
 #define PLOTMSCALIBRATIONTAB_QO_H_
 
 #include <plotms/GuiTabs/PlotMSCalibrationTab.ui.h>
-
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
-
 #include <casa/namespace.h>
 
 namespace casa {
 
 //# Forward declarations
 class PlotMSCalibrationWidget;
-
+class QtFileWidget;
 
 // Subclass of PlotMSTab that handles using a calibration library
 // (initially settable only from casapy session) 
-class PlotMSCalibrationTab : public PlotMSPlotSubtab, Ui::CalibTab {
+class PlotMSCalibrationTab : public PlotMSPlotSubtab {
     Q_OBJECT
     
 public:    
@@ -65,8 +63,14 @@ public:
     
 private:
 
-    // Widget for MS selection.
+    // Widget for callib file selection.
+    QtFileWidget* itsFileWidget_;
+    // Widget to enable/disable callib
     PlotMSCalibrationWidget* itsCalibrationWidget_;
+
+    Ui::PlotMSCalibTabClass ui;
+
+    String getCallibFile() const;
 };
 
 }

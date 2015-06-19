@@ -42,63 +42,73 @@ namespace casa {
 // Constructors/Destructors//
 
 PlotMSCalibrationTab::PlotMSCalibrationTab(PlotMSPlotTab* plotTab, 
-						   PlotMSPlotter* parent) :
+        PlotMSPlotter* parent) :
         PlotMSPlotSubtab(plotTab, parent) {
-    setupUi(this);
+    ui.setupUi(this);
     
     // Setup widgets
+    itsFileWidget_ = new QtFileWidget(false, false);
+    QtUtilities::putInFrame(ui.calibFileFrame, itsFileWidget_);
     itsCalibrationWidget_ = new PlotMSCalibrationWidget();
-    QtUtilities::putInFrame(calibFrame, itsCalibrationWidget_);
+    QtUtilities::putInFrame(ui.calibFrame, itsCalibrationWidget_);
     
-    itsLabelDefaults_.insert(calibLabel, calibLabel->text());
+    itsLabelDefaults_.insert(ui.calibLabel, ui.calibLabel->text());
     
     // Connect widgets
     connect(itsCalibrationWidget_, SIGNAL(changed()), SIGNAL(changed()));
-    
+    connect(itsFileWidget_, SIGNAL(changed()), SIGNAL(changed()));
 }
 
 PlotMSCalibrationTab::~PlotMSCalibrationTab() { }
 
 
-// Public Methods //
-
 void PlotMSCalibrationTab::getValue(PlotMSPlotParameters& params) const {
+    // Gets values from GUI and sets them in plot parameters
+ 
     PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>();
     if(d == NULL) {
         params.setGroup<PMS_PP_MSData>();
         d = params.typedGroup<PMS_PP_MSData>();
     }
-
-    // Just deal with useCallib for now;  later add file widget for callib filename
-    // Get MSData calibration so you don't wipe out filename and record
     PlotMSCalibration calibparams = d->calibration();
+    calibparams.setCalLibrary(getCallibFile());
+
     PlotMSCalibration guiCalib = itsCalibrationWidget_->getValue();
     // check if calibration library record is set, else can't use it!
     if ((guiCalib.useCallib()) && (d->calibration().callibRec().nfields()==0)) {
-	String message("Calibration library has not been set from the casapy console.");
-	this->itsPlotter_->showError( message, "callib not set", true);
-	calibparams.setUseCallib(false);
-	d->setCalibration(calibparams);
+        String message("Calibration library file parsing failed.");
+        this->itsPlotter_->showError( message, "callib parsing failed", true);
+        calibparams.setUseCallib(false);
+        d->setCalibration(calibparams);
     }
     else {
-	calibparams.setUseCallib(guiCalib.useCallib());
-	d->setCalibration(calibparams);
+        calibparams.setUseCallib(guiCalib.useCallib());
+        d->setCalibration(calibparams);
     }
 }
 
 void PlotMSCalibrationTab::setValue(const PlotMSPlotParameters& params) {
+    // Gets values from plot parameters and sets them in GUI
+
     const PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
-    
-    itsCalibrationWidget_->setValue(d->calibration());
+    PlotMSCalibration calibparams = d->calibration();
+
+    itsFileWidget_->setFile(calibparams.calLibrary());
+    itsCalibrationWidget_->setValue(calibparams);
 }
 
 void PlotMSCalibrationTab::update(const PlotMSPlot& plot) {
     const PMS_PP_MSData* d = plot.parameters().typedGroup<PMS_PP_MSData>();
     if(d == NULL) return;
 
-    highlightWidgetText(calibLabel,
-		itsCalibrationWidget_->getValue() != d->calibration());
+    PlotMSCalibration widgetCal = itsCalibrationWidget_->getValue();
+    widgetCal.setCalLibrary(itsFileWidget_->getFile());
+    highlightWidgetText(ui.calibLabel, (widgetCal != d->calibration()));
+}
+
+String PlotMSCalibrationTab::getCallibFile() const {
+    return itsFileWidget_->getFile();
 }
 
 }

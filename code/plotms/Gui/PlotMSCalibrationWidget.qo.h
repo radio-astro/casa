@@ -54,10 +54,8 @@ public:
     // </group>
 
 private:
-    
+   
     PlotMSCalibration itsValue_;
-    String itsFile_;
-    Record itsRecord_;
     bool itsFlag_;
 
 };
