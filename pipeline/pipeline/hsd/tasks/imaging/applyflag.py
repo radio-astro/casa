@@ -99,7 +99,7 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
             
         # flag by spw id (exclude WVR, SQLD, POINTING, ATMCAL, ...)
         spws = data.spectral_window
-        nonscience = common.list_to_selection(common.nonscience_spw(spws))
+        nonscience = common.list_to_selection(list(common.nonscience_spw(spws)))
         if len(nonscience) > 0:
             args = {'infile': filename,
                     'mode': 'manual',
