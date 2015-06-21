@@ -341,7 +341,7 @@ class ScantableReaderFromMS(ScantableReader):
         spectral_window = {}
         spw_list = ms.get_all_spectral_windows()
         for spw in spw_list:
-            entry = domain.singledish.Frequencies.from_spectral_window(spw)
+            entry = domain.singledish.SpectralWindowAdapter.from_spectral_window(spw)
             spectral_window[spw.id] = entry
                                 
 
