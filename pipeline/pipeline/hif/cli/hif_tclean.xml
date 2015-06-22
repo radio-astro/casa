@@ -144,7 +144,7 @@ Compute a clean map.
 
   <param type="int" name="npixels" subparam="true">
     <description>Weighting algorithm parameter</description>
-    <value type="int">1</value>
+    <value type="int">0</value>
   </param>
 
   <param type="stringArray" name="restoringbeam" subparam="true">
