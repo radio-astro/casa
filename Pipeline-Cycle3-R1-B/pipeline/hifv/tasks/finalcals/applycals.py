@@ -9,6 +9,7 @@ import pipeline.infrastructure.callibrary as callibrary
 
 from pipeline.hifv.tasks.flagging.uncalspw import Uncalspw
 
+import os
 import itertools
 
 from pipeline.hif.tasks import applycal
@@ -84,8 +85,11 @@ class Applycals(basetask.StandardTaskTemplate):
         """Run CASA task applycal"""
         
         m = context.observing_run.measurement_sets[0]
+        basevis = os.path.basename(self.inputs.vis)
         
         tablesToAdd = ['finaldelay.k', 'finalBPcal.b', 'averagephasegain.g', 'finalampgaincal.g', 'finalphasegaincal.g']
+        
+        tablesToAdd = [basevis +'.' + table for table in tablesToAdd]
         
         for addcaltable in tablesToAdd:
             calto = callibrary.CalTo(self.inputs.vis)

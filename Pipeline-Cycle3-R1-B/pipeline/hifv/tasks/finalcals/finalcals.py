@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.hif.heuristics.findrefant as findrefant
 
+import os
 import itertools
 import numpy as np
 import math
@@ -46,10 +47,12 @@ class Finalcals(basetask.StandardTaskTemplate):
     
     def prepare(self):
         
-        gtypecaltable = 'finaldelayinitialgain.g'
-        ktypecaltable = 'finaldelay.k'
-        bpcaltable = 'finalBPcal.b'
-        tablebase = 'finalBPinitialgain'
+        basevis = os.path.basename(self.inputs.vis)
+        
+        gtypecaltable = basevis+'.finaldelayinitialgain.g'
+        ktypecaltable = basevis+'.finaldelay.k'
+        bpcaltable = basevis+'.finalBPcal.b'
+        tablebase = basevis+'.finalBPinitialgain'
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
@@ -119,23 +122,25 @@ class Finalcals(basetask.StandardTaskTemplate):
         #Derive an average phase solution for the bandpass calibrator to apply
         #to all data to make QA plots easier to interpret.
         
-        avgphase_result = self._do_avgphasegaincal('averagephasegain.g', context, refAnt)
+        avgpgain = basevis + '.averagephasegain.g'
+        
+        avgphase_result = self._do_avgphasegaincal(avgpgain, context, refAnt)
         
         
         #In case any antenna is flagged by this process, unflag all solutions
         #in this gain table (if an antenna does exist or has bad solutions from
         #other steps, it will be flagged by those gain tables).
         
-        unflag_result = self._do_unflag('averagephasegain.g')
+        unflag_result = self._do_unflag(avgpgain)
         
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='', calwt=False)
+        calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
         context.callibrary.add(calto, calfrom)
 
         applycal_result = self._do_applycal(context=context)
         
         calto = callibrary.CalTo(self.inputs.vis)
-        calfrom = callibrary.CalFrom(gaintable='averagephasegain.g', interp='', calwt=False)
+        calfrom = callibrary.CalFrom(gaintable=avgpgain, interp='', calwt=False)
         context.callibrary._remove(calto, calfrom, context.callibrary._active)
         
         #---------------------------------------------------
@@ -154,12 +159,12 @@ class Finalcals(basetask.StandardTaskTemplate):
         
         m = context.observing_run.measurement_sets[0]
         new_gain_solint1 = context.evla['msinfo'][m.name].new_gain_solint1
-        phaseshortgaincal_results = self._do_calibratorgaincal(calMs, 'phaseshortgaincal.g', new_gain_solint1, 3.0, 'p', [''], refAnt)
+        phaseshortgaincal_results = self._do_calibratorgaincal(calMs, basevis+'.phaseshortgaincal.g', new_gain_solint1, 3.0, 'p', [''], refAnt)
         
         gain_solint2 = context.evla['msinfo'][m.name].gain_solint2
-        finalampgaincal_results = self._do_calibratorgaincal(calMs, 'finalampgaincal.g', gain_solint2, 5.0, 'ap', ['phaseshortgaincal.g'], refAnt)
+        finalampgaincal_results = self._do_calibratorgaincal(calMs, basevis+'.finalampgaincal.g', gain_solint2, 5.0, 'ap', [basevis+'.phaseshortgaincal.g'], refAnt)
         
-        finalphasegaincal_results = self._do_calibratorgaincal(calMs, 'finalphasegaincal.g', gain_solint2, 3.0, 'p', ['finalampgaincal.g'], refAnt)
+        finalphasegaincal_results = self._do_calibratorgaincal(calMs, basevis+'.finalphasegaincal.g', gain_solint2, 3.0, 'p', [basevis+'.finalampgaincal.g'], refAnt)
 
         return FinalcalsResults()                        
 

@@ -738,7 +738,10 @@ class ExportData(basetask.StandardTaskTemplate):
 	    if filename.endswith('.ms'):
 	        filename, filext = os.path.splitext(filename)
 	    tmpvislist.append(filename)
-	task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list) 
+	task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list)
+	
+	if context.project_summary.telescope in ('VLA', 'EVLA'):
+            task_string += '\n    hifv_statwt()'
 
         template = '''__rethrow_casa_exceptions = True
 h_init()

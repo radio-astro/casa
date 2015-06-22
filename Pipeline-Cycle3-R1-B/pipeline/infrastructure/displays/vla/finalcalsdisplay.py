@@ -22,6 +22,7 @@ class finalcalsSummaryChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         #self.caltable = result.final[0].gaintable
+        self.basevis = os.path.basename(result.inputs['vis'])
 
     def plot(self):
         ##science_spws = self.ms.get_spectral_windows(science_windows_only=True)
@@ -58,7 +59,7 @@ class finalcalsSummaryChart(object):
         task.execute(dry_run=False)
         '''
         
-        casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+        casa.plotcal(caltable=self.basevis+'.finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
         
 
 
@@ -101,6 +102,7 @@ class finalDelaysPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -175,7 +177,7 @@ class finalDelaysPerAntennaChart(object):
 	        
 	        
 	            
-	            casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            
 	            #plots.append(figfile)
 
@@ -219,6 +221,7 @@ class finalphaseGainPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -273,7 +276,7 @@ class finalphaseGainPerAntennaChart(object):
 	        try:
 	        
 	            LOG.info("Plotting final phase gain solutions")
-	            casa.plotcal(caltable='finalBPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalBPinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -313,6 +316,7 @@ class finalbpSolAmpPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -344,7 +348,7 @@ class finalbpSolAmpPerAntennaChart(object):
 	nplots=int(numAntenna/3)
         
         
-        with casatools.TableReader('finalBPcal.b') as tb:
+        with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
@@ -417,7 +421,7 @@ class finalbpSolAmpPerAntennaChart(object):
 	            '''
 	            
 	            
-	            casa.plotcal(caltable='finalBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            
 	            #plots.append(figfile)
 
@@ -462,6 +466,7 @@ class finalbpSolPhasePerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -490,7 +495,7 @@ class finalbpSolPhasePerAntennaChart(object):
         
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('finalBPcal.b') as tb:
+	with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
@@ -561,7 +566,7 @@ class finalbpSolPhasePerAntennaChart(object):
 	            '''
 
 	            
-	            casa.plotcal(caltable='finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile)
 	            
 	            
 	            #plots.append(figfile)
@@ -605,6 +610,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -633,7 +639,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('finalBPcal.b') as tb:
+	with casatools.TableReader(self.basevis+'.finalBPcal.b') as tb:
             dataVarCol = tb.getvarcol('CPARAM')
             flagVarCol = tb.getvarcol('FLAG')
     
@@ -682,7 +688,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting phase short gaincal")
-	            casa.plotcal(caltable='phaseshortgaincal.g', xaxis='time', yaxis='phase', poln='', field='', antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.phaseshortgaincal.g', xaxis='time', yaxis='phase', poln='', field='', antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -724,6 +730,7 @@ class finalAmpTimeCalPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -752,7 +759,7 @@ class finalAmpTimeCalPerAntennaChart(object):
         
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('finalampgaincal.g') as tb:
+	with casatools.TableReader(self.basevis+'.finalampgaincal.g') as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -782,7 +789,7 @@ class finalAmpTimeCalPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting final amp timecal")
-	            casa.plotcal(caltable='finalampgaincal.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalampgaincal.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
@@ -822,6 +829,7 @@ class finalAmpFreqCalPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -850,7 +858,7 @@ class finalAmpFreqCalPerAntennaChart(object):
         
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('finalampgaincal.g') as tb:
+	with casatools.TableReader(self.basevis+'.finalampgaincal.g') as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -900,7 +908,7 @@ class finalAmpFreqCalPerAntennaChart(object):
 	            '''
 	            
 	            
-	            casa.plotcal(caltable='finalampgaincal.g', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalampgaincal.g', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            
 	            #plots.append(figfile)
 
@@ -944,6 +952,7 @@ class finalPhaseGainCalPerAntennaChart(object):
         self.result = result
         self.ms = context.observing_run.get_ms(result.inputs['vis'])
         ms = self.ms
+        self.basevis = os.path.basename(result.inputs['vis'])
         
         self.json = {}
         self.json_filename = os.path.join(context.report_dir, 
@@ -972,7 +981,7 @@ class finalPhaseGainCalPerAntennaChart(object):
         
 	nplots=int(numAntenna/3)
 	
-	with casatools.TableReader('finalphasegaincal.g') as tb:
+	with casatools.TableReader(self.basevis+'.finalphasegaincal.g') as tb:
             cpar=tb.getcol('CPARAM')
             flgs=tb.getcol('FLAG')
         amps=np.abs(cpar)
@@ -1002,7 +1011,7 @@ class finalPhaseGainCalPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting final amp freqcal")
-	            casa.plotcal(caltable='finalphasegaincal.g', xaxis='time', yaxis='phase',  poln='', field='', antenna=antPlot, spw='',  timerange='',        subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=[0,0,-180,180],  showflags=False,       plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
+	            casa.plotcal(caltable=self.basevis+'.finalphasegaincal.g', xaxis='time', yaxis='phase',  poln='', field='', antenna=antPlot, spw='',  timerange='',        subplot=111,  overplot=False, clearpanel='Auto',  iteration='antenna',  plotrange=[0,0,-180,180],  showflags=False,       plotsymbol='o-', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
 	        except:
