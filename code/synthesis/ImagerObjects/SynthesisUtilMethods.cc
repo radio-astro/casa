@@ -1802,9 +1802,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           cubemode = findSpecMode(mode);
           if ( cubemode=="channel" || cubemode=="frequency" )
             {
-              Double provisional_restfreq = msc.spectralWindow().refFrequency()(spwids(0));
+              //Double provisional_restfreq = msc.spectralWindow().refFrequency()(spwids(0));
+              //By PLWG request, changed to center (mean) frequency of the selected spws -2015-06-22(TT) 
+              Double provisional_restfreq = (datafend+datafstart)/2.0;
               qrestfreq = Quantity(provisional_restfreq, "Hz");
-              os << LogIO::WARN << "No rest frequency info, using ref frequency(spw0):"
+              os << LogIO::WARN << "No rest frequency info, using the center of the selected spw(s):"
                  << provisional_restfreq <<" Hz. Velocity labelling may not be correct." 
                  << LogIO::POST;
             } 
