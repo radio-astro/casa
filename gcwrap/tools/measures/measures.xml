@@ -2229,6 +2229,7 @@ print qa.form.long(me.riseset(me.direction('sun')).rise.utc.m0)
 posangle will give the position angle from a direction to another. I.e. the
 angle in a direction between the direction to the North pole and the other
 direction. 
+The posiation angle is calculated in the frame of the first argument. m2 is thus converted to the frame of m1 before calculating the position angle.
 </description>
 <example>
 
@@ -2247,6 +2248,12 @@ print me.doframe(pos)
 #True
 print me.posangle(a,b)
 #{'value': -0.0, 'unit': 'deg'}
+
+###Example of how to calculate the parallactic angle of a given direction on thesky.
+
+###set the frames and epoch
+
+ 
 
 <!-- : me.posangle(a,b)
 [value=7.99647705, unit=deg] ??? -->
@@ -2289,6 +2296,17 @@ c=me.measure(b,'azel')                     # try with different type
 print me.separation(a,c)
 #{'value': 10.000000000062277, 'unit': 'deg'}
 
+### the example below is how to calculate 
+### the parallactic angle 
+me.doframe(me.epoch('utc','2015/06/30/19:30:40')))
+me.doframe(me.observatory('ALMA'))
+mydir = me.direction('J2000','17h28m00','-28d00m00' )
+#convert direction to AZEL
+mydirazel=me.measure(mydir, 'AZEL')
+hadecpol=me.direction('HADEC', '00h00m00', '90d00m00')
+### no need to convert north pole direction to AZEL
+### as it will coverted to the frame of mydirazel
+parAngle=me.posangle(mydirazel, hadecpol)
 </example>
 </method>
 
