@@ -305,7 +305,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((specmode != 'mfs') and (nchan == -1) and (width == '')):
+        if ((specmode not in ('mfs', 'cont')) and (nchan == -1) and (width == '')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:
@@ -345,8 +345,10 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
-                if ((specmode == 'mfs') or (specmode == 'cont')):
+                if (specmode == 'mfs'):
                     spwsel = self.heuristics.cont_ranges[spwspec]
+                elif (specmode == 'cont'):
+                    spwsel = ''
                 else:
                     spwsel = ''
 

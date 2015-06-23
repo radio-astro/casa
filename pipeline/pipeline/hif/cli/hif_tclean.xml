@@ -194,7 +194,7 @@ Compute a clean map.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>2.0</value>
+       <value>1.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
