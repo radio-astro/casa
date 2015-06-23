@@ -78,4 +78,5 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
   ppdisk2_regression.py
   testcube2_regression.py
   testcompsim.py
+  pipelineTest_regression.py
 )
