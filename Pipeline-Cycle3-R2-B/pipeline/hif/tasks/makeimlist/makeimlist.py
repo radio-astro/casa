@@ -332,7 +332,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     imagenames[(field_intent,spwspec)] = \
                       self.heuristics.imagename(
                       output_dir=inputs.output_dir, intent=field_intent[1],
-                      field=field_intent[0], spwspec=spwspec)
+                      field=field_intent[0], spwspec=spwspec, specmode=specmode)
                 else:
                     imagenames[(field_intent,spwspec)] = inputs.imagename
 

@@ -47,7 +47,7 @@ Compute clean results from a list of specified targets.
 
   <param type="int" name="npixels" subparam="true">
     <description>number of pixels for superuniform or briggs weighting</description>
-    <value>1</value>
+    <value>0</value>
   </param>
 
   <param type="string" name="hm_masking">

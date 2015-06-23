@@ -528,7 +528,7 @@ class MakeImListHeuristics(object):
 
         return [nxpix, nypix]
 
-    def imagename(self, output_dir=None, intent=None, field=None, spwspec=None):
+    def imagename(self, output_dir=None, intent=None, field=None, spwspec=None, specmode=None):
         try:
             nameroot = self.context.project_structure.ousstatus_entity_id
 	    if nameroot == 'unknown':
@@ -558,6 +558,8 @@ class MakeImListHeuristics(object):
             spwids.sort()
             spw = '_'.join(spwids)
             namer.spectral_window(spw)
+        if specmode:
+            namer.specmode(specmode)
 
         # filenamer returns a sanitized filename (i.e. one with 
         # illegal characters replace by '_'), no need to check
