@@ -248,7 +248,7 @@ Compute a clean map.
         <default param="phasecenter"><value type="string"></value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
-        <default param="npixels"><value type="int">1</value></default>
+        <default param="npixels"><value type="int">0</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -478,8 +478,8 @@ noise -- Parameter for 'briggsabs' weighting
     example: '0.5Jy'
 
 npixels -- Parameter for 'briggs' and 'briggsabs; weighting
-    default: 1
-    example: 1
+    default: 0
+    example: 0
 
 restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
     default: \'\'
