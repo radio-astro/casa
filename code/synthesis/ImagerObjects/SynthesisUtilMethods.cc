@@ -435,7 +435,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( rec.isDefined( id ) )
       {
-	if( rec.dataType( id )==TpString ) { rec.get( id , val ); return String(""); }
+	String inval("");
+	if( rec.dataType( id )==TpString ) 
+	  { rec.get( id , inval );  // Read into temp string
+	    //	    val = inval;
+	    //	    return String("");
+	    // Set value only if it is not a null string. Otherwise, leave it unchanged as it will
+	    // retain the default value that was set before this function was called.
+	    if(inval.length()>0){val=inval;}
+	    return String(""); 
+	  }
 	else { return String(id + " must be a string\n"); }
       }
     else { return String("");}
@@ -1746,7 +1755,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Int hichan = nDataChan-1;
         Double diff_fmin, diff_fmax;
         Bool ascending = dataChanFreq[nDataChan-1] - dataChanFreq[0] > 0;
-        for(uInt ichan = 0; ichan < nDataChan; ichan++) 
+        for(Int ichan = 0; ichan < nDataChan; ichan++) 
           {
             diff_fmin = dataChanFreq[ichan] - datafstart;  
             diff_fmax = datafend - dataChanFreq[ichan];  

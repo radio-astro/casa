@@ -100,8 +100,8 @@ def tclean(
     interactive,#=False, 
     mask,#='',
     savemodel,#="none",
-    recalcres,#=True,
-    recalcpsf,#=True,
+    calcres,#=True,
+    calcpsf,#=True,
 
     ####### State parameters
     parallel):#=False):
@@ -254,7 +254,7 @@ def tclean(
             casalog.post("***Time for initializing deconvolver(s): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
             
         ## Make PSF
-        if recalcpsf==True:
+        if calcpsf==True:
             t0=time.time();
 
             imager.makePSF()
@@ -265,14 +265,14 @@ def tclean(
         if niter >=0 : 
 
             ## Make dirty image
-            if recalcres==True:
+            if calcres==True:
                 t0=time.time();
                 imager.runMajorCycle()
                 t1=time.time();
-                casalog.post("***Time for major cycle (recalcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+                casalog.post("***Time for major cycle (calcres=T): "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
             ## In case of no deconvolution iterations....
-            if niter==0 and recalcres==False:
+            if niter==0 and calcres==False:
                 if savemodel != "none":
                     imager.predictModel()
         
