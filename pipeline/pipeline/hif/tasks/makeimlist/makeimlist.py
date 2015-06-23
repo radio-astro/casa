@@ -335,7 +335,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     imagenames[(field_intent,spwspec)] = \
                       self.heuristics.imagename(
                       output_dir=inputs.output_dir, intent=field_intent[1],
-                      field=field_intent[0], spwspec=spwspec)
+                      field=field_intent[0], spwspec=spwspec, specmode=specmode)
                 else:
                     imagenames[(field_intent,spwspec)] = inputs.imagename
 
@@ -345,7 +345,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
-                if (specmode == 'mfs'):
+                if ((specmode == 'mfs') or (specmode == 'cont')):
                     spwsel = self.heuristics.cont_ranges[spwspec]
                 else:
                     spwsel = ''
