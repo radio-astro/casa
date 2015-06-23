@@ -2560,7 +2560,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	
+	err += readVal( inrec, String("imagename"), imageName);
+
 	// FTMachine parameters
 	err += readVal( inrec, String("gridder"), gridder );
 	err += readVal( inrec, String("padding"), padding );
@@ -2619,6 +2620,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Single or MultiTerm mapper : read in 'deconvolver' and set mType here.
 	//	err += readVal( inrec, String("mtype"), mType );
 
+	if( ftmachine=="awprojectft" && cfCache=="" )
+	  {cfCache=imageName+".cf"; }
+
 	err += verify();
 	
       }
@@ -2672,6 +2676,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SynthesisParamsGrid::setDefaults()
   {
+    imageName="";
     // FTMachine parameters
     //ftmachine="GridFT";
     ftmachine="gridft";

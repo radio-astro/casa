@@ -605,7 +605,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs( joblist )
 
         ## If only one field, do the get/gather/set of the weight density.
-        if self.NF == 1 :   ## Remove after gridded wts appear for all fields correctly (i.e. new FTM).
+        if self.NF == 1 and self.allimpars['0']['stokes']=="I":   ## Remove after gridded wts appear for all fields correctly (i.e. new FTM).
 
           if self.weightpars['type'] != 'natural' :  ## For natural, this array isn't created at all.
                                                                        ## Remove when we switch to new FTM
@@ -1339,7 +1339,7 @@ class ImagerParameters():
                                  'projection':projection,
                                  'overwrite':overwrite, 'startmodel':startmodel,}    }
         ######### Gridding
-        self.allgridpars = { self.defaultKey :{'gridder':gridder,
+        self.allgridpars = { self.defaultKey :{'imagename':imagename, 'gridder':gridder,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,

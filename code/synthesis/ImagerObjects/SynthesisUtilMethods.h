@@ -266,6 +266,8 @@ public:
   String verify() const;
   Record toRecord() const;
 
+  String imageName;
+
   // FTMachine setup
   String gridder, ftmachine, convFunc;
   Int wprojplanes;
