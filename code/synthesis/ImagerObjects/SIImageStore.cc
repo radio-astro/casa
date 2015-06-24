@@ -1024,7 +1024,7 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 	GaussianBeam beam;
 
 	Bool tryfit=True;
-	LatticeExprNode le( sum(subPsf) );
+	LatticeExprNode le( max(subPsf) );
 	tryfit = le.getFloat()>0.0;
 
 	if(tryfit)
