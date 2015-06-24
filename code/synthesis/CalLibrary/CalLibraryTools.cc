@@ -25,6 +25,7 @@
 //#
 
 #include <synthesis/CalLibrary/CalLibraryTools.h>
+#include <fstream>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
@@ -45,6 +46,7 @@ int CalLibraryGramwrap()
 namespace casa {
 
 static Int callib_linenum = 0;
+static const Char* strpCalLibraryGram = 0;
 
 Record callibSetParams(const String& calLibrary) {
     Record callibRec;
@@ -60,21 +62,64 @@ Record callibSetParams(const String& calLibrary) {
 }
 
 Record calLibraryGramParseCommand(CalLibraryParse* parser, const String& calLibrary) {
-    FILE* myfile = NULL;
+    ifstream myfile;
     try {
-        myfile = fopen(calLibrary.c_str(), "r");
-        CalLibraryGramin = myfile;
-        CalLibraryParse::thisCalLibParser = parser;
-        callib_linenum = 1;
-        do {
-            CalLibraryGramparse(); // parse the file!
-	    } while (!feof(CalLibraryGramin));
-        fclose(myfile);
-        return *(parser->record());
+        if (calLibrary.contains("=")) {
+            //calLibrary is a String
+            CalLibraryGramrestart(CalLibraryGramin);
+            yy_start = 1;
+            String inputstr = calLibrary + "\n"; // caltable terminator
+            strpCalLibraryGram = inputstr.chars();
+            callib_linenum = 1;
+            CalLibraryParse::thisCalLibParser = parser;
+            CalLibraryGramparse();
+            return *(parser->record());
+        } else {
+            // calLibrary is a File
+            CalLibraryGramrestart(CalLibraryGramin);
+            yy_start = 1;
+            callib_linenum = 1;
+            CalLibraryParse::thisCalLibParser = parser;
+
+            myfile.open(calLibrary.chars());
+            if (myfile.is_open()) {
+                string line;
+                string inputstr="";
+                while (getline(myfile, line)) {
+                    inputstr += line + "\n"; // caltable terminator
+                }
+                strpCalLibraryGram = inputstr.c_str();
+                CalLibraryGramparse(); 
+                myfile.close();
+                return *(parser->record());
+            } else {
+                throw (AipsError("Cal Library parser failed to open file"));
+            }
+        }
     } catch(AipsError &x) {
-        fclose(myfile);
+        myfile.close();
         throw;
     }
+}
+
+//# Get the next input characters for flex.
+int calLibraryGramInput (char* buf, int max_size)
+{
+    int nr=0;
+    //clearBuf(buf, max_size);
+
+    while (*strpCalLibraryGram != 0) {
+      if (nr >= max_size) {
+        break;                         // get max. max_size char.
+      }
+      buf[nr++] = *strpCalLibraryGram++;
+    }
+    return nr;
+}
+
+void clearBuf(char* buf, int size) {
+    for (int i=0; i<size; i++)
+        buf[i] = 0;
 }
 
 void CalLibraryGramerror(const char* s) {

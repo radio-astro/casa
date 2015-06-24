@@ -30,7 +30,8 @@
 %option nounput
 
 %{
-
+#undef YY_INPUT
+#define YY_INPUT(buf,result,max_size) result = calLibraryGramInput(buf, max_size)
 #undef YY_DECL
 #define YY_DECL int CalLibraryGramlex (YYSTYPE* lvalp)
 #include <string>
@@ -48,7 +49,7 @@ False|F           { lvalp->bval = false; return BOOLEAN; }
 [0-9]+\.[0-9]+    { lvalp->fval = atof(CalLibraryGramtext); return FLOAT; }
 [0-9]+            { lvalp->ival = atoi(CalLibraryGramtext); return INT; }
 "="               { return EQ; }
-\n                { ++(calLibLineNum()); return ENDL; }
+[,\n]             { ++(calLibLineNum()); return ENDL; }
 
 [a-zA-Z0-9]+   {
 	// copy in case CalLibraryGramtext changes underneath us:

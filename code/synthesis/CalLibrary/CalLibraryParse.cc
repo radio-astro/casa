@@ -25,6 +25,8 @@
 //#
 
 #include <synthesis/CalLibrary/CalLibraryParse.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casa/Logging/LogSink.h>
 
 namespace casa {
 
@@ -78,7 +80,10 @@ void CalLibraryParse::addDefaultMap(String key) {
 }
 
 void CalLibraryParse::issueKeywordWarning(String key) {
-    cout << "WARNING: undefined keyword " << key << " will be ignored." << endl;
+    LogIO logIO;
+    stringstream ss;
+    ss << "Cal Library: undefined keyword " << key << " will be ignored.";
+    logIO << ss.str() << LogIO::WARN << LogIO::POST;
 }
 
 void CalLibraryParse::addStringParam(String key, String val) {

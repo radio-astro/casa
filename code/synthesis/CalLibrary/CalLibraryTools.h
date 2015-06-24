@@ -63,6 +63,10 @@ Record calLibraryGramParseCommand(CalLibraryParse* parser, const String& calLibr
 // It throws an exception with the current token.
 void CalLibraryGramerror(const char* s);
 
+// Declare the input routine for flex/bison.
+int calLibraryGramInput (char* buf, int max_size);
+void clearBuf(char* buf, int size);
+
 // Current line number in file, for parse errors
 Int& calLibLineNum();
 

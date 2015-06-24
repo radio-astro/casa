@@ -730,4 +730,5 @@ casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
 
 
 casa_add_test( synthesis ../mstransform/MSTransform/test/tMSTransformIterator.cc )
+casa_add_test( synthesis CalLibrary/test/tCalLibraryParse.cc )
 
