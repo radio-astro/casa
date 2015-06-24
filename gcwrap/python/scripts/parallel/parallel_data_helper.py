@@ -1459,7 +1459,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         # copying the sub-tables to the other subMSs  
         mastersubms = subMSList[0]
             
-        subtabs_to_omit = ['POINTING','SYSCAL']
+        subtabs_to_omit = ['POINTING','SYSCAL','SYSPOWER']
         
         # Parallel axis to write to table.info of MMS
         # By default take the one from the input MMS

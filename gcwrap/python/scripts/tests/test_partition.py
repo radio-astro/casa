@@ -900,7 +900,22 @@ class test_partition_balanced_multiple_scan(test_base):
         self.assertEqual(len(listpartition_dict[1]['scanId']), 26)
         self.assertEqual(sum([x['nrows'] for x in listpartition_dict[1]['scanId'].values()]), 4344)
         self.assertEqual(sum([x['nrows'] for x in listpartition_dict[0]['scanId'].values()]), 4344)
+       
+    def test_linked_cols(self):
+        '''partition: Verify that SYSPOWER, POINTING and SYSCAL are links'''
+        self.outputms = "linkcols.mms"
+        partition(self.vis, outputvis=self.outputms, numsubms=4, flagbackup=False)
+        self.assertTrue(os.path.exists(self.outputms),'Output MMS does not exist')
         
+        # Columns SYSPOWER, POINTING and SYSCAL should be links in most subMS
+        mslocal = mstool()
+        mslocal.open(self.outputms)
+        subms = mslocal.getreferencedtables()
+        mslocal.close()
+        cols = ['POINTING','SYSCAL','SYSPOWER']
+        for col in cols:
+            self.assertTrue(os.path.islink(subms[1] + '/' + col))
+ 
 
 # Cleanup class 
 class partition_cleanup(test_base):
