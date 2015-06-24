@@ -16,13 +16,6 @@ except:
 
 __rethrow_casa_exceptions = True
 
-# Setup paths
-# Should no longer be needed
-#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
-
 # CASA imports
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
@@ -44,8 +37,10 @@ from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
-from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
-from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+#from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
+from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
+#from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
 from h_save_cli import h_save_cli as h_save
 
@@ -117,10 +112,10 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_applycal (pipelinemode=pipelinemode)
     
         # Make a list of expected point source calibrators to be cleaned
-        hif_makecleanlist (intent='PHASE,BANDPASS,CHECK', pipelinemode=pipelinemode)
+        hif_makeimlist (intent='PHASE,BANDPASS,CHECK', pipelinemode=pipelinemode)
     
         # Make clean images for the selected calibrators
-        hif_cleanlist (pipelinemode=pipelinemode)
+        hif_makeimages (pipelinemode=pipelinemode)
     
         # Export the data
         hif_exportdata(pipelinemode=pipelinemode)
