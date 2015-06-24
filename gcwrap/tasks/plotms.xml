@@ -1641,7 +1641,7 @@ Constraints
         overwrite -- Overwrite plot file if it already exists?
                      default: false
       
-    callib -- calibration library string or filename
+    callib -- calibration library string, list of strings, or filename
                 default: '' 
     
     showgui - Whether or not to display the plotting GUI

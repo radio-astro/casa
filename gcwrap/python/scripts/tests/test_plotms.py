@@ -10,7 +10,9 @@ import sha
 import time
 
 # Path for data
-datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/plotms/"
+casapath = os.environ.get('CASAPATH').split()[0]
+testpath = casapath + "/data/regression/unittest/"
+plotmspath = testpath + "plotms/"
 
 # Pick up alternative data directory to run tests on MMSs
 testmms = False
@@ -18,16 +20,16 @@ if os.environ.has_key('TEST_DATADIR'):
     DATADIR = str(os.environ.get('TEST_DATADIR'))+'/plotms/'
     if os.path.isdir(DATADIR):
         testmms = True
-        datapath = DATADIR         
+        plotmspath = DATADIR         
 
 class test_base(unittest.TestCase):
 
     ms = "pm_ngc5921.ms"
     if testmms:
         ms = "pm_ngc5921.mms"
-    datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/plotms/'
+    plotmspath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/plotms/'
     if not testmms:
-        ms = datapath + ms
+        ms = plotmspath + ms
     outputDir='/tmp/'
     plotfile_jpg = "/tmp/myplot.jpg"
     display = os.environ.get("DISPLAY")
@@ -44,7 +46,7 @@ class test_base(unittest.TestCase):
             self.res = None
             default(plotms)
             self._cleanUp()
-            shutil.copytree(datapath+self.ms, self.ms, symlinks=True)            
+            shutil.copytree(plotmspath+self.ms, self.ms, symlinks=True)            
 
     def tearDowndata(self):
         if not self.display.startswith(':'):
@@ -1075,7 +1077,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         #self._checkPlotFile(94000, self.plotfile_jpg)
      
-    def test038(self):
+    def stest038(self):
         '''Plotms 38: Test for CAS-6975 overplotting problem.'''
         self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -1083,7 +1085,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
             os.remove( self.plotfile_jpg)
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
+
         '''Create the first plot'''
+        myvis = "/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg"
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X8666c7_X1fa.ms.split.cal',
                           spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
                           field="0",correlation="XX", showgui=False)
@@ -1394,7 +1398,29 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         fileCount = self._getFileCount( self.outputDir, "testPlot049_" )
         self.assertTrue( fileCount == 42 )
         print  
-                                            
+
+    def test050(self):
+        """ Plotms 50: CAS-3034, CAS-7502 callib parameter for OTF calibration """
+        self.plotfile_jpg = self.outputDir + "testPlot050.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+
+        msfile = testpath + "gaincal/ngc5921.ms"
+        calfile = testpath + "gaincal/ngc5921.ref1a.gcal"
+        callib = "caltable='" + calfile + "' calwt=True tinterp='nearest'"
+
+        '''Create the plot with OTF calibration'''
+        self.res = plotms(vis=msfile,
+                          ydatacolumn="corrected", xaxis="frequency",
+                          showgui=False, clearplots=True, overwrite=True,
+                          plotfile = self.plotfile_jpg, exprange='all', 
+                          callib=callib)
+        self.assertTrue( self.res )
+        self._checkPlotFile( 250000, self.plotfile_jpg )
+        print
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'

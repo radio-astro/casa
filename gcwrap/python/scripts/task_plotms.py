@@ -180,7 +180,7 @@ def plotms(vis=None,
                     Exterior legends can be located on the right, left, top, or bottom.
                     default: 'upperright'
     clearplots -- clear existing plots so that the new ones coming in can replace them.                 
-    callib -- calibration library string or filename for on-the-fly calibration
+    callib -- calibration library string, list of strings, or filename for on-the-fly calibration
 
     """
     # Check if DISPLAY environment variable is set.
@@ -387,7 +387,9 @@ def plotms(vis=None,
                     else:
                         casalog.post("Callib file does not exist")
                         raise RuntimeError("Callib file does not exist")
-        # elif isinstance(callib, list):   TBD: list of strings!
+        elif isinstance(callib, list):
+            useCallib = True
+            callibString = ",".join(callib)
         pm.setPlotMSCalibration(useCallib, callibString, False, plotindex) 
 
         # Set flag extension
