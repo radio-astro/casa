@@ -181,10 +181,10 @@ public:
     PMS_ENUM1(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
               UNONE, UDATETIME, GHERTZ, METERS_PER_SECOND, KILOMETERS_PER_SECOND,
               KILOMETERS, METERS, HOURS, WAVELENGTHS, DEGREES, NANOSECONDS, KELVIN,
-              NEPERS);
+              NEPERS, SECONDS);
     PMS_ENUM2(AxisUnit, axesUnits, axesUnitStrings, axisUnit,
-              "", "s", "GHz", "m/s", "km/s", "km", "m", "hours",
-              "<html>&lambda;</html>", "degrees", "ns", "K", "neper");
+              "", "hh:mm:ss", "GHz", "m/s", "km/s", "km", "m", "hours",
+              "<html>&lambda;</html>", "degrees", "ns", "K", "neper", "s");
 
     // </group>
               

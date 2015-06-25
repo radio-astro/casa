@@ -78,8 +78,9 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     switch(axis) {
     
     case TIME:
-    case TIME_INTERVAL:
        	return UDATETIME;
+    case TIME_INTERVAL:
+        return SECONDS;
     case FREQUENCY:
        	return GHERTZ;
     case VELOCITY:
