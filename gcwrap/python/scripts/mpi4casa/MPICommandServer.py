@@ -80,7 +80,7 @@ class MPICommandServer:
             self.__monitor_server = MPIMonitorServer(False)
             
             # Initialize logfile descriptor
-            self.__logfile_descriptor = open(casalog.logfile(), 'w')
+            self.__logfile_descriptor = open(casalog.logfile(), 'a')
             
             # Initialize virtual frame buffer state
             self.__virtual_frame_buffer_port = None
