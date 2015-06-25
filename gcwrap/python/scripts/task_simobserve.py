@@ -866,8 +866,6 @@ def simobserve(
                          dishdiameter=diam.tolist(),
                          mount=[mounttype], antname=antnames, padname=padnames, 
                          coordsystem='global', referencelocation=posobs)
-            import pdb
-            pdb.set_trace()
             if str.upper(telescopename).find('VLA') >= 0:
                 sm.setspwindow(spwname=fband, freq=qa.tos(model_start),
                                deltafreq=qa.tos(model_width),
