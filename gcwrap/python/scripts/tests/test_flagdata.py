@@ -1887,6 +1887,13 @@ class test_clip(test_base):
         res = flagdata(vis=self.vis, mode='summary', spw='5,9,10,11')
         self.assertEqual(res['flagged'], 0)
                 
+    def test_residual_col(self):
+        '''flagdata: clip RESIDUAL column'''
+        self.setUp_data4tfcrop()
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='RESIDUAL', clipzeros=True)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 137472)
+
 
 class test_CASA_4_0_bug_fix(test_base):
     """flagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""

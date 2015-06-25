@@ -623,6 +623,7 @@ AgentFlagger::initAgents()
 					if (!createAgent)
 					{
 						os << LogIO::WARN << "Agent " << agent_name << " cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
+						os << LogIO::WARN << "If wishing to flag residuals, use datacolumn=\'RESIDUAL_DATA\', which will calculate DATA-MODEL" << LogIO::POST;
 					}
 				}
 			}
@@ -1085,9 +1086,11 @@ AgentFlagger::validateDataColumn(String datacol)
                 (datacol.compare("SNR") == 0))
             datacolumn = datacol;
     }
-
-    // Check if requested column exist
-    if (fdh_p->checkIfColumnExists(datacolumn))
+    // Check if requested column exist. Residual is calculated later from CORRECTED-MODEL
+    if (datacolumn.compare("RESIDUAL") == 0 or datacolumn.compare("RESIDUAL_DATA") == 0){
+    	ret = true;
+    }
+    else if (fdh_p->checkIfColumnExists(datacolumn))
         ret = true;
 
     return ret;
