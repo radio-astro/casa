@@ -23,7 +23,7 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
                  fluxtable=None, reference=None, transfer=None, 
                  refspwmap=None, refintent=None, transintent=None,
                  solint=None, phaseupsolint=None, minsnr=None, refant=None,
-                 hm_resolvedcals=None, antenna=None, peak_fraction=None):
+                 hm_resolvedcals=None, antenna=None, uvrange=None, peak_fraction=None):
         self._init_properties(vars())
 
     @property
@@ -97,6 +97,16 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
         self._antenna = value
 
     @property
+    def uvrange(self):
+        if self._uvrange is None:
+            return ''
+        return self._uvrange
+
+    @uvrange.setter
+    def uvrange(self, value):
+        self._uvrange = value
+
+    @property
     def peak_fraction(self):
         if self._peak_fraction is None:
             return 0.2
@@ -113,19 +123,19 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         inputs = self.inputs
         ms = inputs.ms
-        result = commonfluxresults.FluxCalibrationResults(inputs.vis)
-        
-        #Line added to prevent weblog error 
-        result.resantenna = ''
 
-        # check that the measurement set does have an amplitude calibrator.
+        # Initialize results.
+        result = commonfluxresults.FluxCalibrationResults(inputs.vis,
+            resantenna='', uvrange='')
+        
+        # Check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
             # No point carrying on if not.
             LOG.error('%s has no data with reference intent %s'
                       '' % (ms.basename, inputs.refintent))
             return result
 
-        #Added Feb 2015
+        # Run setjy for sources in the reference list which have transfer intents.
         if inputs.ms.get_fields(inputs.reference, intent=inputs.transintent):
             setjy_result = self._do_setjy(reffile=None, field=inputs.reference)
         else:
@@ -134,7 +144,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         refant = inputs.refant
         if refant == '':
-            # get the reference antenna for this measurement set from the 
+            # Get the reference antenna for this measurement set from the 
             # context. This comes back as a string containing a ranked
             # list of antenna names. Choose the first one.
             refant = ms.reference_antenna
@@ -161,77 +171,82 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 	# to the default one to one  mapping.
 	phaseupspwmap = ms.phaseup_spwmap
                    
-        # This needs improvement if users start specifying the input antennas.
-	#    Force minblperant to be 2 instead of None to avoid ACA and Tsys
-	#    flagging issues for now.  
-        hm_resolvedcals = inputs.hm_resolvedcals
+        # Resolved source heuristics.
+        #    Needs improvement if users start specifying the input antennas.
+	#    For the time being force minblperant to be 2 instead of None to
+        #    avoid ACA and Tsys flagging issues.  
+
         allantenna = inputs.antenna
+        minblperant = 2
+        hm_resolvedcals = inputs.hm_resolvedcals
+
         if hm_resolvedcals == 'automatic':
-            nant = len(ms.antennas)
-            result.resantenna = ''
-            # get the antennas to be used in the gaincals, limiting
+
+            # Get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            resantenna = heuristics.fluxscale.antenna(ms=ms,
+            resantenna, uvrange = heuristics.fluxscale.antenna(ms=ms,
               refsource=inputs.reference, refant=refant,
               peak_frac=inputs.peak_fraction)
-            # Store the resolved antenna list for use in web page
-            if resantenna == '':
-                #minblperant = None
-                minblperant = 2
+
+            # Do nothing if the source is unresolved.
+            # If the source is resolved but the number of
+            # antennas equals the total number of antennas
+            # use all the antennas but pass along the uvrange
+            # limit.
+            if resantenna == '' and uvrange == '':
+                pass
             else:
+                nant = len(ms.antennas)
                 nresant = len(resantenna.split(',')) 
-                if nresant < nant:
-                    minblperant = 2
-                    result.resantenna = resantenna
-                else:
-                    #minblperant = None
-                    minblperant = 2
+                if nresant >= nant:
+                    resantenna = allantenna
         else:
             resantenna = allantenna
-            result.resantenna = resantenna
-            #minblperant = None
-            minblperant = 2
+            uvrange = inputs.uvrange
 
-        # do a phase-only gaincal on the flux calibrator using a restricted
+        result.resantenna = resantenna
+        result.uvrange = uvrange
+
+        # Do a phase-only gaincal on the flux calibrator using a restricted
         # set of antennas
         r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
 	    gaintype='G', calmode='p', solint=inputs.phaseupsolint,
-	    antenna=resantenna, refant=refant, minblperant=minblperant,
+	    antenna=resantenna, uvrange=uvrange, refant=refant, minblperant=minblperant,
 	    phaseupspwmap=None, append=False, merge=False)
 
-	# test for the existence of the caltable
+	# Test for the existence of the caltable
 	try:
             caltable = r.final.pop().gaintable
 	except:
             caltable = r.error.pop().gaintable
             LOG.warn('Cannot compute phase solution table %s for the flux calibrator' % (os.path.basename(caltable)))
 
-        # do a phase-only gaincal on the remaining calibrators using the full
+        # Do a phase-only gaincal on the remaining calibrators using the full
         # set of antennas
 	if os.path.exists(caltable):
             r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
 	        intent=inputs.transintent, gaintype='G', calmode='p', 
-                solint=inputs.phaseupsolint, antenna=allantenna, 
+                solint=inputs.phaseupsolint, antenna=allantenna, uvrange='', 
                 minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
 	        append=True, merge=True)
 	else:
             r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
 	        intent=inputs.transintent, gaintype='G', calmode='p', 
-                solint=inputs.phaseupsolint, antenna=allantenna, 
+                solint=inputs.phaseupsolint, antenna=allantenna, uvrange='', 
                 minblperant=None, refant=refant, phaseupspwmap=phaseupspwmap,
 	        append=False, merge=True)
 
-        # now do the amplitude-only gaincal. This will produce the caltable
+        # Now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
 	try:
             caltable = r.final.pop().gaintable
             r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
                 intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
-	        calmode='a', solint=inputs.solint, antenna=allantenna, refant=refant,
-	        minblperant=minblperant, phaseupspwmap=None, append=False, merge=True)
+	        calmode='a', solint=inputs.solint, antenna=allantenna, uvrange='',
+                refant=refant, minblperant=minblperant, phaseupspwmap=None,
+                append=False, merge=True)
 
-            # get the gaincal caltable from the results
-            # this is the table that will be fluxscaled
+            # Get the gaincal caltable from the results
 	    try:
                 caltable = r.final.pop().gaintable
 	    except:
@@ -281,7 +296,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 result.measurements.update(fluxscale_result.measurements)
                 
             except Exception, e:
-                # something has gone wrong, return an empty result
+                # Something has gone wrong, return an empty result
                 LOG.error('Unable to complete flux scaling operation for MS %s' % (os.path.basename(inputs.vis)))
                 #LOG.exception(e)
                 return result
@@ -341,7 +356,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         return True
                                 
     def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
-        calmode=None, solint=None, antenna=None, refant=None,
+        calmode=None, solint=None, antenna=None, uvrange='', refant=None,
 	minblperant=None, phaseupspwmap=None, append=None, merge=True):
 
         inputs = self.inputs
@@ -372,6 +387,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                      'combine'     : '',
                      'refant'      : refant,
                      'antenna'     : antenna,
+                     'uvrange'     : uvrange,
                      'minblperant' : minblperant,
                      'solnorm'     : False,
                      'append'      : append}
