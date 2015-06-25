@@ -117,6 +117,7 @@ $(document).ready(function() {
 	<thead>
 	    <tr>
 	        <th scope="col">Measurement Set</th>
+	        <th scope="col">UV Range</th>
 	        <th scope="col">Antennas</th>
 	    </tr>
 	</thead>
@@ -124,6 +125,7 @@ $(document).ready(function() {
 % for single_result in result:
 		<tr>
 			<td>${os.path.basename(single_result.vis)}</td>
+                	<td>${single_result.uvrange}</td>
                 	<td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
 		</tr>
 % endfor
