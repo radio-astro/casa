@@ -882,11 +882,14 @@
                              'WEIGHT_SPECTRUM', 'WEIGHT', 'FLOAT_DATA'.
                              Cal table columns: 'FPARAM', 'CPARAM', 'SNR','WEIGHT'.
                              
-                    NOTE: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
+                    NOTE1: RESIDUAL = CORRECTED - MODEL
+                           RESIDUAL_DATA = DATA - MODEL
+                   
+                    NOTE2: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
                            If WEIGHT_SPECTRUM does not exist, it will create one on-the-fly
                            based on the values of WEIGHT. The clipminmax values will be divided
                            by the number of channels and used to flag the data.
-                    
+
                clipoutside -- Clip OUTSIDE the range?
                     default: True
                     example: False; flag data WITHIN the clipminmax range.
@@ -992,7 +995,7 @@
                         sorting columns, therefore it will only accumulate across scans if
                         ntime is not set to 'scan'.
 
-               datacolumn -- Column to use for flagging.
+               datacolumn -- Column to use for flagging. (See also the datacolumn explanation in clip)
                     default: 'DATA'
                     options: MS columns: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'WEIGHT_SPECTRUM', 'WEIGHT', 'FLOAT_DATA'.
@@ -1181,7 +1184,7 @@
                         sorting columns, therefore it will only accumulate across scans if
                         ntime is not set to 'scan'.
 
-               datacolumn -- Column to use for flagging.
+               datacolumn -- Column to use for flagging. (See also the datacolumn explanation in clip)
                     default: 'DATA'
                     options: MS columns: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'WEIGHT_SPECTRUM', 'WEIGHT', 'FLOAT_DATA'.
