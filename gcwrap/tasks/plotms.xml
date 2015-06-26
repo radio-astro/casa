@@ -855,7 +855,7 @@ Export plot as image Parameters
      	<value>True</value>
      </param>
      
-     <param type="string" name="callib">
+     <param type="stringArray" name="callib">
      	<description>Calibration library string or filename for on-the-fly calibration.</description>
         <value></value>
      </param>
