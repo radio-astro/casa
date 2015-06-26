@@ -22,7 +22,7 @@ endTime=0.0
 startProc=0.0
 endProc=0.0
 regstate = True
-standard_context_file = 'VLApipeline44-standard'
+standard_file = 'VLApipeline44-standard'
 
 def load_context(filename):
     with open(filename, 'rb') as picklefile:
@@ -35,8 +35,8 @@ EPS       = 1e-5  # Logical "zero"
 #
 def pipeline_regression():
     global regstate
-    ASDM      = "/export/home/icarus_2/awells/CASA_stable/data/regression/foo/vla_pipeline_data/rawdata/13A-537.sb24066356.eb24324502.56514.05971091435"
-
+    #ASDM      = "/export/home/icarus_2/awells/CASA_stable/data/regression/foo/vla_pipeline_data/rawdata/13A-537.sb24066356.eb24324502.56514.05971091435"
+    ASDM = "13A-537.sb24066356.eb24324502.56514.05971091435"
     try:
         import pipeline.recipes.hifv as hifv
     except ImportError, e:
