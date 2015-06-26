@@ -47,24 +47,13 @@ public:
 			uInt *beamno, uInt *ifno);
   void getDataTimeSorted(uInt irow, uInt *scanno, 
 			 uInt *beamno, uInt *ifno, 
-			 //uInt *freqid, 
 			 Double *time, 
 			 Array<Bool> *apply,
 			 Array<uInt> *ftype, 
 			 Array<Int> *fpar, 
 			 Array<Float> *ffpar, 
 			 Array<uInt> *mask,
-			 Array<Float> *res//,
-			 /*
-			   Array<Float> *rms, 
-			   uInt *nchan, 
-			   Array<Float> *cthres,
-			   Array<uInt> *citer, 
-			   Array<Bool> *uself,
-			   Array<Float> *lfthres, 
-			   Array<uInt> *lfavg, 
-			   Array<uInt> *lfedge
-			 */
+			 Array<Float> *res
 			 );
   void setdata(uInt irow, uInt scanno, 
                uInt beamno, uInt ifno, 
