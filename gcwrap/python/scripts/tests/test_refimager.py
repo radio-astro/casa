@@ -973,8 +973,12 @@ class test_cube(testref_base):
 #          ret = tclean(vis=self.msfile,field='1',spw='0:105~135',specmode='cubesrc',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
 #          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
 
-     def test_cube_continuum_subtract(self):
-          """ [cube] Test_Cube_continuum_subtract :  """
+     def test_cube_continuum_subtract_uvsub(self):
+          """ [cube] Test_Cube_continuum_subtract :  Using uvsub """
+          self.prepData('refim_pointline.ms')
+
+     def test_cube_continuum_subtract_otf(self):
+          """ [cube] Test_Cube_continuum_subtract :  On-The-Fly using multifield """
           self.prepData('refim_pointline.ms')
 
 ##############################################

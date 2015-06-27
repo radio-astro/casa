@@ -606,9 +606,12 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
         ## If only one field, do the get/gather/set of the weight density.
         if self.NF == 1 and self.allimpars['0']['stokes']=="I":   ## Remove after gridded wts appear for all fields correctly (i.e. new FTM).
-
+   
           if self.weightpars['type'] != 'natural' :  ## For natural, this array isn't created at all.
                                                                        ## Remove when we switch to new FTM
+
+            casalog.post("Gathering/Merging/Scattering Weight Density for PSF generation",INFO)
+
             joblist=[];
             for node in self.listOfNodes:
                 joblist.append( self.PH.runcmd("toolsi.getweightdensity()", node ) )
@@ -754,6 +757,10 @@ class PyParallelCubeSynthesisImager():
             allimagepars[fid]['csys'] = self.SItool.getcsys()
             alldataimpars[fid] = self.PH.partitionCubeSelection(allselpars,allimagepars[fid])
 
+        print "********************** ", alldataimpars.keys()
+        for kk in alldataimpars.keys():
+            print "KEY : ", kk , " --->", alldataimpars[kk].keys()
+
         # reorganize allselpars and allimpars for partitioned data        
         synu = casac.synthesisutils()
         self.allselpars={}
@@ -765,26 +772,29 @@ class PyParallelCubeSynthesisImager():
         for ipart in self.listOfNodes:
             # convert to zero-based indexing for nodes
             nodeidx = str(ipart-1)
-            selparsPerNode= {nodeidx:{}}
-            imparsPerNode= {nodeidx:{}}
+            tnode = str(ipart)
+            selparsPerNode= {tnode:{}}
+            imparsPerNode= {tnode:{}}
             for fid in allimagepars.iterkeys():
                 for ky in alldataimpars[fid][nodeidx].iterkeys():
-                    selparsPerNode[nodeidx][fid]={}
+                    selparsPerNode[tnode]={}
                     if ky.find('ms')==0:
                         # data sel per field
-                        selparsPerNode[nodeidx][fid][ky] = alldataimpars[fid][nodeidx][ky].copy();
+                        selparsPerNode[tnode][ky] = alldataimpars[fid][nodeidx][ky].copy();
                         if alldataimpars[fid][nodeidx][ky]['spw']=='-1':
-                            selparsPerNode[nodeidx][fid][ky]['spw']=''
+                            selparsPerNode[tnode][ky]['spw']=''
 
-            imparsPerNode[nodeidx][fid] = allimagepars[fid].copy()
-            imparsPerNode[nodeidx][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
-            imparsPerNode[nodeidx][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
-            imparsPerNode[nodeidx]=synu.updateimpars(imparsPerNode[nodeidx])
+            imparsPerNode[tnode][fid] = allimagepars[fid].copy()
+            imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
+            imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
+            imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
+            imparsPerNode[tnode]=synu.updateimpars(imparsPerNode[tnode])
             self.allselpars.update(selparsPerNode)
             self.allimpars.update(imparsPerNode)
 
         #print "self.allimpars IN init>>>> ",self.allimpars
 
+        print "****** SELPARS in init **********", self.allselpars
         
         joblist=[]
         #### MPIInterface related changes
@@ -792,48 +802,47 @@ class PyParallelCubeSynthesisImager():
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
         self.PH.checkJobs( joblist )
-            
 
-    def initializeImagers(self):
-        #print "self.allimpars IN initImager=====",self.allimpars
         joblist=[]
         #### MPIInterface related changes
         #for node in range(0,self.NN):
         for node in self.listOfNodes:
 
             joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
-            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node-1)]['0'])+")", node) )
-            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node-1)])+")", node) )
-            #joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars[str(node-1)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setImagePars("+str(self.allimpars[str(node)])+")", node) )
+
             joblist.append( self.PH.runcmd("paramList.setGridPars("+str(self.allgridpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setWeightPars("+str(self.weightpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setDecPars("+str(self.decpars)+")", node) )
             joblist.append( self.PH.runcmd("paramList.setIterPars("+str(self.iterpars)+")", node) )
+            joblist.append( self.PH.runcmd("paramList.setNormPars("+str(self.allnormpars)+")", node) )
+
+            joblist.append( self.PH.runcmd("paramList.checkParameters()", node) )
 
             joblist.append( self.PH.runcmd("imager = PySynthesisImager(params=paramList)", node) )
 
-            joblist.append( self.PH.runcmd("imager.initializeImagers()", node) )
+        self.PH.checkJobs( joblist )
 
+    def initializeImagers(self):
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("imager.initializeImagers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeDeconvolvers(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeDeconvolvers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeNormalizers(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeNormalizers()", node) )
         self.PH.checkJobs( joblist )
 
     def setWeighting(self):
-
         ## Set weight parameters and accumulate weight density (natural)
         joblist=[];
         for node in self.listOfNodes:
@@ -844,64 +853,73 @@ class PyParallelCubeSynthesisImager():
 
     def initializeIterationControl(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeIterationControl()", node) )
         self.PH.checkJobs( joblist )
 
     def makePSF(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.makePSF()", node) )
         self.PH.checkJobs( joblist )
 
     def runMajorMinorLoops(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.runMajorMinorLoops()", node) )
         self.PH.checkJobs( joblist )
 
     def runMajorCycle(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.runMajorCycle()", node) )
         self.PH.checkJobs( joblist )
 
+    def runMinorCycle(self):
+        joblist=[]
+        for node in self.listOfNodes:
+            joblist.append( self.PH.runcmd("imager.runMinorCycle()", node) )
+        self.PH.checkJobs( joblist )
+
+    ## Merge the results from all pieces. Maintain an 'active' list of nodes...
+    def hasConverged(self):
+        self.PH.runcmdcheck("rest = imager.hasConverged()")
+
+        retval = True
+        for node in self.listOfNodes:
+             rest = self.PH.pullval("rest", node )
+             retval = retval and rest
+             print "Node " , node , " converged : ", rest;
+
+        return retval
+
     def predictModel(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.predictmodel()", node) )
         self.PH.checkJobs( joblist )
 
     def restoreImages(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
         self.PH.checkJobs( joblist )
 
     def getSummary(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
-            joblist.append( self.PH.runcmd("imager.getSummary("+str(node)+")", node) )
+            joblist.append( self.PH.runcmd("summ = imager.getSummary("+str(node)+")", node) )
         self.PH.checkJobs( joblist )
+
+        fullsumm={}
+        for node in self.listOfNodes:
+             summ = self.PH.pullval("summ", node )
+             fullsumm["node"+str(node)] = summ
+
+        return fullsumm
 
     def deleteTools(self):
         joblist=[]
-        #### MPIInterface related changes
-        #for node in range(0,self.NN):
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.deleteTools()", node) )
         self.PH.checkJobs( joblist )
@@ -1339,7 +1357,7 @@ class ImagerParameters():
                                  'projection':projection,
                                  'overwrite':overwrite, 'startmodel':startmodel,}    }
         ######### Gridding
-        self.allgridpars = { self.defaultKey :{'imagename':imagename, 'gridder':gridder,
+        self.allgridpars = { self.defaultKey :{'gridder':gridder,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
@@ -1437,6 +1455,7 @@ class ImagerParameters():
         for immod in self.allimpars.keys() :
             self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            self.allgridpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'multiterm': (self.alldecpars[immod]['deconvolver']=='mtmfs') }
 
         ## If there are errors, print a message and exit.
@@ -1451,6 +1470,17 @@ class ImagerParameters():
 
     def checkAndFixSelectionPars(self):
         errs=""
+
+        # If it's already a dict with ms0,ms1,etc...leave it be.
+        ok=True
+        for kk in self.allselpars.keys():
+            if kk.find('ms')!=0:
+                ok=False
+
+        if ok==True:
+            print "Already in correct format"
+            return errs
+
         # msname, field, spw, etc must all be equal-length lists of strings, or all except msname must be of length 1.
         if not self.allselpars.has_key('msname'):
             errs = errs + 'MS name(s) not specified'
@@ -1528,10 +1558,21 @@ class ImagerParameters():
 
         #print self.allimpars
 
-        for immod in self.allimpars.keys() :
-            synu = casac.synthesisutils()
-            self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
-            synu.done()
+#
+#        print "REMOVING CHECKS to check..."
+#### This does not handle the conversions of the csys correctly.....
+####
+#        for immod in self.allimpars.keys() :
+#            tempcsys = {}
+#            if self.allimpars[immod].has_key('csys'):
+#                tempcsys = self.allimpars[immod]['csys']
+#
+#            synu = casac.synthesisutils()
+#            self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
+#            synu.done()
+#
+#            if len(tempcsys.keys())==0:
+#                self.allimpars[immod]['csys'] = tempcsys
 
         ## Check for name increments, and copy from impars to decpars and normpars.
         self.handleImageNames()

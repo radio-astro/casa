@@ -124,6 +124,9 @@ def tclean(
     #### Construct ImagerParameters object
     #####################################################
 
+    imager = None
+    paramList = None
+
     # Put all parameters into dictionaries and check them. 
     paramList = ImagerParameters(
         msname =vis,
@@ -212,6 +215,7 @@ def tclean(
     if parallel==True and specmode!='mfs':
         pcube=True
         parallel=False
+
 
     ## Setup Imager objects, for different parallelization schemes.
     if parallel==False and pcube==False:
@@ -304,8 +308,9 @@ def tclean(
 
     except Exception as e:
         #print 'Exception : ' + str(e)
-        casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
-        imager.deleteTools() 
+        casalog.post('Exception from task_tclean : ' + str(e), "SEVERE", "task_tclean")
+        if imager != None:
+            imager.deleteTools() 
 
         larg = list(e.args)
         larg[0] = 'Exception from task_tclean : ' + str(larg[0])

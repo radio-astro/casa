@@ -1295,7 +1295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         // if exist use them. May need a consistency check with the rest of impars?
         if( inrec.isDefined("csys") )
           { 
-            //cerr<<"HAS CSYS KEY"<<endl;
+	    //            cout<<"HAS CSYS KEY - got from input record"<<endl;
             if( inrec.dataType("csys")==TpRecord )
               {
                 //csysRecord = inrec.subRecord("csys");
@@ -1561,10 +1561,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( csysRecord.nfields() != 0 )
       {
-        //cerr<<" GOT CSYS INFO...."<<endl;
+	//        cout <<" HAS CSYS INFO.... writing to output record"<<endl;
         impar.defineRecord("csys", csys);
         impar.define("imshape", imshape);
       } 
+    //    else cout << " NO CSYS INFO to write to output record " << endl;
 
     return impar;
   }
@@ -1631,7 +1632,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         //use cysRecord
         Record subRec1;
-        //cerr<<"USE THE EXISTING CSYS +++++++++++++++++"<<endl;
+	//        cout<<"USE THE EXISTING CSYS +++++++++++++++++"<<endl;
         CoordinateSystem *csysptr = CoordinateSystem::restore(csysRecord,"coordsys");
         //csys = *csysptr; 
         //CoordinateSystem csys(*csysptr); 
@@ -1969,7 +1970,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }// if MS is provided.
       ***/
     } // end of else when coordsys record is not defined...
-    return csys;
+ 
+    //    cout << " ----- ----- ------ ------ CSYS WORLD AXIS UNITS : " << csys.worldAxisUnits() << endl;
+
+   return csys;
   }
 
 
