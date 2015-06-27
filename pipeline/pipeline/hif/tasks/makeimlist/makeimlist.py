@@ -345,10 +345,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
-                if (specmode == 'mfs'):
-                    spwsel = self.heuristics.cont_ranges[spwspec]
-                elif (specmode == 'cont'):
-                    spwsel = ''
+                if (specmode in ('mfs', 'cont')):
+                    spwsel = ','.join(self.heuristics.cont_ranges[spwid] for spwid in spwspec.split(','))
                 else:
                     spwsel = ''
 

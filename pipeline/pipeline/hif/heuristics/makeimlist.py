@@ -354,7 +354,7 @@ class MakeImListHeuristics(object):
 
         return valid_data
 
-    def gridmode(self, intent, field):
+    def gridder(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
         self.field(intent, field)
 

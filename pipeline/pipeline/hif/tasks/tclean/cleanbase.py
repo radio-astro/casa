@@ -23,7 +23,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
         intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
-        gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
+        gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
         phasecenter=None, nchan=None, start=None, width=None, stokes=None,
 	weighting=None, robust=None, noise=None, npixels=None,
 	restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
@@ -108,14 +108,14 @@ class CleanBaseInputs(basetask.StandardInputs):
         self._specmode = value
 
     @property
-    def gridmode(self):
-        if self._gridmode is None:
+    def gridder(self):
+        if self._gridder is None:
             return ''
-        return self._gridmode
+        return self._gridder
 
-    @gridmode.setter
-    def gridmode(self, value):
-        self._gridmode = value
+    @gridder.setter
+    def gridder(self, value):
+        self._gridder = value
 
     @property
     def deconvolver(self):
@@ -338,9 +338,9 @@ class CleanBase(basetask.StandardTaskTemplate):
             inputs.imagename = clheuristics.imagename(intent=inputs.intent,
                 field=inputs.field, spwspec=inputs.spw)
 
-        # Determine the default gridmode
-        if inputs.gridmode == '':
-            inputs.gridmode = clheuristics.gridmode (inputs.intent,
+        # Determine the default gridder
+        if inputs.gridder == '':
+            inputs.gridder = clheuristics.gridder (inputs.intent,
                 inputs.field)
 
         # Determine the default deconvolver
@@ -470,7 +470,7 @@ class CleanBase(basetask.StandardTaskTemplate):
           inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
           inputs.imagename, inputs.stokes, iter)
-        if (inputs.gridmode == 'mosaic'):
+        if (inputs.gridder == 'mosaic'):
             flux_name = '%s.%s.iter%s.weight' % (
               inputs.imagename, inputs.stokes, iter)
         else:
@@ -501,9 +501,9 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Call CASA tclean.
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw='%s%s%s' % (inputs.spw, ':'*(1 if len(inputs.spwsel) > 0 else 0), inputs.spwsel),
+            spw=reduce(lambda x,y: x+','+y, ['%s%s%s' % (spwid, ':'*(1 if len(spwsel) > 0 else 0), spwsel) for spwid,spwsel in zip(inputs.spw.split(','), inputs.spwsel.split(','))]),
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode, gridmode=inputs.gridmode,
+            scan=scanidlist, specmode=inputs.specmode, gridder=inputs.gridder,
             pblimit=0.2, niter=inputs.niter,
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,

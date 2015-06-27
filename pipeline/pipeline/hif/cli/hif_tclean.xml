@@ -57,7 +57,7 @@ Compute a clean map.
        </allowed>
   </param>
 
-  <param type="string" name="gridmode" subparam="true">
+  <param type="string" name="gridder" subparam="true">
      <description>Gridding options (standard, mosaic, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
@@ -240,7 +240,7 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="gridmode"><value type="string"></value></default>
+        <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
@@ -260,7 +260,7 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="gridmode"><value type="string"></value></default>
+        <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
@@ -415,12 +415,12 @@ specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
     default: ''
     example: 'mfs', 'cube'
 
-gridmode -- Gridding options, 'standard', 'mosaic'.
+gridder -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
       1. The 'field' parameter is converted into a list of field_ids for
          each measurement set in 'vis'.
       2. If there is more than 1 field_id in the list for any measurement 
-         set then gridmode is set to 'mosaic', otherwise it will be set
+         set then gridder is set to 'mosaic', otherwise it will be set
          to 'standard'. 
     default: ''
     'standard'

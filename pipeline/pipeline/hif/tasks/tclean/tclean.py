@@ -24,7 +24,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
        intent=None, field=None, spw=None, spwsel=None, uvrange=None, specmode=None,
-       gridmode=None, deconvolver=None, outframe=None, imsize=None, cell=None,
+       gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
        restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
@@ -33,7 +33,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
-           field=field, spw=spw, spwsel=spwsel, uvrange=uvrange, specmode=specmode, gridmode=gridmode,
+           field=field, spw=spw, spwsel=spwsel, uvrange=uvrange, specmode=specmode, gridder=gridder,
            deconvolver=deconvolver, outframe=outframe, imsize=imsize, cell=cell,
            phasecenter=phasecenter, nchan=nchan, start=start, width=width,
            weighting=weighting, robust=robust, noise=noise, npixels=npixels,
@@ -166,7 +166,7 @@ class Tclean(cleanbase.CleanBase):
                 elif inputs.hm_cleaning == 'rms':
                     threshold = '%sJy' % (inputs.tlimit * sensitivity)
                 sequence_manager = ImageCentreThresholdSequence(
-                  gridmode=inputs.gridmode, threshold=threshold,
+                  gridder=inputs.gridder, threshold=threshold,
                   sensitivity=sensitivity)
 
             elif inputs.hm_masking == 'psfiter':
@@ -388,7 +388,7 @@ class Tclean(cleanbase.CleanBase):
 	    spwsel=inputs.spwsel,
 	    uvrange=inputs.uvrange,
 	    specmode=specmode,
-	    gridmode=inputs.gridmode,
+	    gridder=inputs.gridder,
 	    deconvolver=inputs.deconvolver,
 	    outframe=inputs.outframe,
 	    imsize=inputs.imsize,
