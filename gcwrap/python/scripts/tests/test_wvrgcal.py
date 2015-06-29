@@ -10,8 +10,6 @@ from taskinit import *
 import unittest
 import testhelper as th
 
-import casadef
-
 class wvrgcal_test(unittest.TestCase):
 
     vis_f = 'multisource_unittest.ms'
@@ -56,15 +54,6 @@ class wvrgcal_test(unittest.TestCase):
 ## 17   'wvrgcalctest_disperse.W':'--disperse', .......................... test12
 
     makeref = False # set this to true to generate new reference tables 
-    darwin = False # indicates whether we are running under OSX
-    comptol = 0.01 # tolerance for comparison to reference cal tables
-    phasetoldeg=1.
-
-    if 'darwin' in casadef.task_directory:
-        darwin=True # we are on a Mac and need to use relaxed tolerances because the Boost version is different from Linux
-        print "RUNNING UNDER DARWIN: applying relaxed tolerances to account for different Boost version"
-        comptol = 0.2
-        phasetoldeg=15.
 
     out = 'mycaltable.wvr'
     rval = False
@@ -128,20 +117,20 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT', 'CPARAM']) # ignore WEIGHT because it is empty
-            self.rval = self.rval and th.compTables(self.ref[1], self.out, ['WEIGHT',
-                                                                            'TIME',
-                                                                            'FIELD_ID',
-                                                                            'SPECTRAL_WINDOW_ID',
-                                                                            'ANTENNA1',
-                                                                            'ANTENNA2',
-                                                                            'INTERVAL',
-                                                                            'SCAN_NUMBER',
-                                                                            'PARAMERR',
-                                                                            'FLAG',
-                                                                            'SNR'
-                                                                            ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
+            self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT'] # ignore WEIGHT because it is empty
+##                                             ['TIME',
+##                                              'FIELD_ID',
+##                                              'SPECTRAL_WINDOW_ID',
+##                                              'ANTENNA1',
+##                                              'ANTENNA2',
+##                                              'INTERVAL',
+##                                              'SCAN_NUMBER',
+##                                              'CPARAM',
+##                                              'PARAMERR',
+##                                              'FLAG',
+##                                              'SNR',
+##                                              'WEIGHT']
+                                            )
 
         self.assertTrue(self.rval)
 
@@ -161,22 +150,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[3], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol) 
-            self.rval = self.rval and th.compTables(self.ref[3], self.out, ['WEIGHT',
-                                                                            'TIME',
-                                                                            'FIELD_ID',
-                                                                            'SPECTRAL_WINDOW_ID',
-                                                                            'ANTENNA1',
-                                                                            'ANTENNA2',
-                                                                            'INTERVAL',
-                                                                            'SCAN_NUMBER',
-                                                                            'PARAMERR',
-                                                                            'FLAG',
-                                                                            'SNR'
-                                                                            ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[3], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test4(self):
@@ -196,22 +170,7 @@ class wvrgcal_test(unittest.TestCase):
 
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[8], self.out, ['WEIGHT', 'CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[8], self.out, ['WEIGHT',
-                                                                            'TIME',
-                                                                            'FIELD_ID',
-                                                                            'SPECTRAL_WINDOW_ID',
-                                                                            'ANTENNA1',
-                                                                            'ANTENNA2',
-                                                                            'INTERVAL',
-                                                                            'SCAN_NUMBER',
-                                                                            'PARAMERR',
-                                                                            'FLAG',
-                                                                            'SNR'
-                                                                            ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[8], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
 
@@ -234,22 +193,8 @@ class wvrgcal_test(unittest.TestCase):
 		  smoothtype = 'mean',
 		  smoothtime = 3.)
         if(self.rval):
-            self.rval = th.compTables(self.out+'_ref', self.out, ['WEIGHT', 'CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol) 
-            self.rval = self.rval and th.compTables(self.out+'_ref', self.out, ['WEIGHT',
-                                                                                'TIME',
-                                                                                'FIELD_ID',
-                                                                                'SPECTRAL_WINDOW_ID',
-                                                                                'ANTENNA1',
-                                                                                'ANTENNA2',
-                                                                                'INTERVAL',
-                                                                                'SCAN_NUMBER',
-                                                                                'PARAMERR',
-                                                                                'FLAG',
-                                                                                'SNR'
-                                                                                ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.out+'_ref', self.out, ['WEIGHT'], # ignore WEIGHT because it is empty
+                                      0.01) # tolerance 1 % to accomodate differences between Linux and Mac OSX
         self.assertTrue(self.rval)
 
     def test6(self):
@@ -268,22 +213,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[10], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                          self.comptol) 
-            self.rval = self.rval and th.compTables(self.ref[10], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[10], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test7(self):
@@ -302,22 +232,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[11], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol) 
-            self.rval = self.rval and th.compTables(self.ref[11], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[11], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test8(self):
@@ -336,21 +251,9 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[12], self.out, ['WEIGHT','CPARAM'], self.comptol) # ignore WEIGHT because it is empty,
-            self.rval = self.rval and th.compTables(self.ref[12], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[12], self.out, ['WEIGHT'], 0.01) # ignore WEIGHT because it is empty,
+                                                                                  # increase tolerance to 1 % to temporarily
+                                                                                  # overcome difference between 32bit and 64bit output
         self.assertTrue(self.rval)
 
     def test9(self):
@@ -369,22 +272,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[14], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[14], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[14], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test10(self):
@@ -403,22 +291,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[15], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[15], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[15], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test11(self):
@@ -437,22 +310,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[16], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[16], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[16], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test12(self):
@@ -471,22 +329,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[17], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[17], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[17], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
     def test13(self):
@@ -527,13 +370,8 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
-            if self.darwin:
-                # accommodate differences between Linux and Mac OSX 
-                rvaldict2['Disc_um'][14]= 63.5 # The value for antenna14 is the only one expected to be different
-                rvaldict2['RMS_um'][14]= 57.5 # The value for antenna14 is the only one expected to be different
-            else:
-                rvaldict2['Disc_um'][14]= 64.299999999999997 # The value for antenna14 is the only one expected to be different
-                rvaldict2['RMS_um'][14]= 55.600000000000001 # The value for antenna14 is the only one expected to be different
+            rvaldict2['Disc_um'][14]= 64.299999999999997 # The value for antenna14 is the only one expected to be different
+            rvaldict2['RMS_um'][14]= 55.600000000000001 # The value for antenna14 is the only one expected to be different
             
             self.rval = (rvaldict==rvaldict2)
                
@@ -564,13 +402,9 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
-            rvaldict2['Disc_um'][2]=rvaldict['Disc_um'][2] # The value for antenna2 is the only one expected to be different
-                                                           # as it was flagged. Replace by value for the unflagged case
-                                                           # to make following test pass if all else agrees.
-                
-            for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
-                print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
-
+            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
             self.rval = (rvaldict==rvaldict2)
 
         self.assertTrue(self.rval)
@@ -627,16 +461,13 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
-            rvaldict2['Disc_um'][2]=rvaldict['Disc_um'][2] # The value for antenna 2 is the only one expected to be different
-                                                           # as it was flagged. Replace by value for the unflagged case
-                                                           # to make following test pass if all else agrees.
-            rvaldict2['RMS_um'][2]=rvaldict['RMS_um'][2] # by the same logic as above
-
+            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna 2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
             rvaldict2['Flag'][2]=True # by the same logic as above
-
+            rvaldict2['RMS_um'][2]=66.900000000000006 # by the same logic as above
             for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
                 print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
-
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
@@ -661,16 +492,13 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success'] and rvaldict2['success']
 
         if(self.rval):
-            rvaldict2['Disc_um'][12]=rvaldict['Disc_um'][12] # The value for antenna 2 is the only one expected to be different
-                                                             # as it was flagged. Replace by value for the unflagged case
-                                                             # to make following test pass if all else agrees.
-            rvaldict2['RMS_um'][12]=rvaldict['RMS_um'][12] # by the same logic as above
-
+            rvaldict2['Disc_um'][12]=42.100000000000001 # The value for antenna 2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
             rvaldict2['Flag'][12]=False # by the same logic as above
-
+            rvaldict2['RMS_um'][12]=66.0 # by the same logic as above
             for mykey in ['Name', 'WVR', 'RMS_um', 'Disc_um']:  
                 print mykey+" "+str(rvaldict[mykey]==rvaldict2[mykey])
-
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
@@ -695,22 +523,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            self.rval = th.compTables(self.ref[19], self.out, ['WEIGHT','CPARAM'], # ignore WEIGHT because it is empty
-                                      self.comptol)
-            self.rval = self.rval and th.compTables(self.ref[19], self.out, ['WEIGHT',
-                                                                             'TIME',
-                                                                             'FIELD_ID',
-                                                                             'SPECTRAL_WINDOW_ID',
-                                                                             'ANTENNA1',
-                                                                             'ANTENNA2',
-                                                                             'INTERVAL',
-                                                                             'SCAN_NUMBER',
-                                                                             'PARAMERR',
-                                                                             'FLAG',
-                                                                             'SNR'
-                                                                             ], # only test CPARAM
-                                                    self.phasetoldeg, mode='phaseabsdeg') 
-
+            self.rval = th.compTables(self.ref[19], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
 
@@ -754,16 +567,9 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            if self.darwin:
-                # accommodate differences between Linux and Mac OSX
-                self.assertTrue(rvaldict['Disc_um']==[0.0, 275.0, 362.0, 351.0, 498.0, 303.0, 331.0, 235.0, 345.0, 255.0, 325.0, 360.0, 343.0, 
-                                                      241.0, 359.0, 346.0, 388.0, 308.0, 387.0, 354.0, 315.0, 0.0, 422.0, 296.0, 328.0, 173.0, 
-                                                      293.0, 321.0, 362.0])
-
-            else:
-                self.assertTrue(rvaldict['Disc_um']==[0.0, 6790.0, 6920.0, 7170.0, 7180.0, 6810.0, 7100.0, 6720.0, 6860.0, 6600.0, 7090.0, 7000.0,
-                                                      6990.0, 6700.0, 7280.0, 7040.0, 7160.0, 6790.0, 6980.0, 6890.0, 7120.0, 0.0, 7080.0, 6970.0,
-                                                      6950.0, 6930.0, 7060.0, 6850.0, 7030.0])
+            self.assertTrue(rvaldict['Disc_um']==[0.0, 6790.0, 6920.0, 7170.0, 7180.0, 6810.0, 7100.0, 6720.0, 6860.0, 6600.0, 7090.0, 7000.0,
+                                                  6990.0, 6700.0, 7280.0, 7040.0, 7160.0, 6790.0, 6980.0, 6890.0, 7120.0, 0.0, 7080.0, 6970.0,
+                                                  6950.0, 6930.0, 7060.0, 6850.0, 7030.0])
 
 
 def suite():
