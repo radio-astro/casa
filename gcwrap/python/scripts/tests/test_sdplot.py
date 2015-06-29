@@ -2191,9 +2191,11 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
 
     def test_totalpowerRflag(self):
         """test row flag in plottype='totalpower'"""
-        self._flag_table(row=[1])
-        data = [ sp.mean() for sp in self.masked_spec ]
-        mask = [ 0, 1, 0, 0 ]
+        self._flag_table(row=[0])
+        # only pol 0 will be plotted
+        rowids = [ 0, 2 ]
+        data = [ self.masked_spec[irow].mean() for irow in rowids ]
+        mask = [ 1, 0 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
         self.run_test(refdata, 'totalpower', stack='i')
         
@@ -2207,8 +2209,10 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
             tb.putcell('SPECTRA', 0, [10, 0, 0, 10])
         except: raise
         finally: tb.close()
-        data = [ sp.mean() for sp in self.masked_spec ]
-        mask = [ 0, 0, 1, 0 ]
+        # only pol 0 will be plotted
+        rowids = [ 0, 2 ]
+        data = [ self.masked_spec[irow].mean() for irow in rowids ]
+        mask = [ 0, 1 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
         self.run_test(refdata, 'totalpower', stack='i')
 
