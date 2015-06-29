@@ -322,41 +322,49 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 		bufferMode_p = userBufferMode_p;
 	}
 
+	// In buffer mode this is needed for the time average VI/VB which needs to be informed beforehand
+	exists = configuration.fieldNumber ("datacolumn");
+	if (exists >= 0)
+	{
+		configuration.get (exists, datacolumn_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+				<< "Data column is " << datacolumn_p << LogIO::POST;
+	}
+
+	// In buffer mode outputms is just a random generated filename used as a placeholder for the re-indexed subtables
+	exists = configuration.fieldNumber ("outputms");
+	if (exists >= 0)
+	{
+		configuration.get (exists, outMsName_p);
+
+		// Inform of filename only in normal mode, as in buffer mode is random generated
+		if (not bufferMode_p)
+		{
+			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+						<< "Output file name is " << outMsName_p << LogIO::POST;
+		}
+	}
+
+	exists = configuration.fieldNumber ("reindex");
+	if (exists >= 0)
+	{
+		configuration.get (exists, reindex_p);
+
+		if (reindex_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Re-index is enabled " << LogIO::POST;
+		}
+		else
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Re-index is disabled " << LogIO::POST;
+		}
+	}
+
 	if (userBufferMode_p)
 	{
 		interactive_p = True;
-
-		// Data column matters for the time averaging options because they are not applied on demand
-		exists = configuration.fieldNumber ("datacolumn");
-		if (exists >= 0)
-		{
-			configuration.get (exists, datacolumn_p);
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "Data column is " << datacolumn_p << LogIO::POST;
-		}
-
-		exists = configuration.fieldNumber ("outputms");
-		if (exists >= 0)
-		{
-			configuration.get (exists, outMsName_p);
-		}
-
-		exists = configuration.fieldNumber ("reindex");
-		if (exists >= 0)
-		{
-			configuration.get (exists, reindex_p);
-
-			if (reindex_p)
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Re-index is enabled " << LogIO::POST;
-			}
-			else
-			{
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Re-index is disabled " << LogIO::POST;
-			}
-		}
 
 		exists = configuration.fieldNumber ("interactive");
 		if (exists >= 0)
@@ -378,22 +386,6 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 	else
 	{
 		interactive_p = False;
-
-		exists = configuration.fieldNumber ("outputms");
-		if (exists >= 0)
-		{
-			configuration.get (exists, outMsName_p);
-			logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-						<< "Output file name is " << outMsName_p << LogIO::POST;
-		}
-
-		exists = configuration.fieldNumber ("datacolumn");
-		if (exists >= 0)
-		{
-			configuration.get (exists, datacolumn_p);
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "Data column is " << datacolumn_p << LogIO::POST;
-		}
 
 		exists = configuration.fieldNumber ("realmodelcol");
 		if (exists >= 0)
