@@ -42,6 +42,8 @@
 #include <stdcasa/xerces.h>
 #include <stdcasa/version.h>
 #include <sstream>
+#include <QFile>
+#include <QtCore>
 
 using namespace xercesc;
 using namespace casa::xerces;
@@ -57,63 +59,26 @@ namespace casa {
 TBHelp::TBHelp() {
 	setupUi(this);
 
-	helpdir = TBConstants::aipspath();
-	String error = "Help location has not been defined.";
-	if(!helpdir.empty()) {
-		helpdir += TBConstants::HELP_DIR;
+	QFile file (":/help/index.html");
 
-		// make sure directory and xml file exist
-		fstream fin;
-		fin.open(helpdir.c_str(), ios::in);
-		bool open = fin.is_open();
-		fin.close();
-		String xml = helpdir + TBConstants::HELP_XML;
-		fin.open(xml.c_str(), ios::in);
-		open = open && fin.is_open();
-		fin.close();
+	if (!file.exists()) {
+	    cout << "Couldn't locate help file";
+			return;
+	}
 
-		if(open) {
-			// make index exists
-			String index = helpdir + TBConstants::HELP_INDEX;
-			fin.open(index.c_str(), ios::in);
-			open = fin.is_open();
+	QFileInfo fileInfo(file.fileName());
+	QString filename(fileInfo.fileName());
 
-			bool rb = !open;
-			if(open) {
-				// make sure time of index.html > time of help.xml
-				String xml = helpdir + TBConstants::HELP_XML;
-				struct stat xmlattr, indattr;
-				stat(xml.c_str(), &xmlattr);
-				stat(index.c_str(), &indattr);
-				int it = indattr.st_mtime;
-				int xt = xmlattr.st_mtime;
-				rb = xt >= it;
-			}
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		cout << "Couldn't open help file";
+		return;
+    }
 
-			if(rb) {
-				TBConstants::dprint(TBConstants::DEBUG_HIGH,
-						"Rebuilding help HTML files...");
-				rb = !rebuild();
-				if(rb)
-					TBConstants::dprint(TBConstants::DEBUG_HIGH,
-							"...rebuild failed!");
-				else
-					TBConstants::dprint(TBConstants::DEBUG_HIGH,
-							"...rebuild succeeded!");
-			}
+	QTextStream in(&file);
+    QString helpIndex = in.readAll();
 
-			if(!rb) {
-				String url = "file://" + helpdir + TBConstants::HELP_INDEX;
-				browser->setSource(QUrl(url.c_str()));
-			}
-			else browser->setHtml(error.c_str());
-		} else browser->setHtml(error.c_str());
-	} else browser->setHtml(error.c_str());
-
-	// For general release, close the rebuild button since users may not
-	// have write access to the code directories.
+	browser->setHtml(helpIndex.toUtf8().data());
 	rebuildButton->close();
-	//connect(rebuildButton, SIGNAL(clicked()), this, SLOT(rebuildClicked()));
 }
 
 TBHelp::~TBHelp() { }

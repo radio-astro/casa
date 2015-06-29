@@ -20,5 +20,37 @@
         <file>images/redo.png</file>
         <file>images/sort.png</file>
         <file>images/undo.png</file>
+        <file>help/browsing.html</file>
+        <file>help/editing.html</file>
+        <file>help/general_use.html</file>
+        <file>help/help.xml</file>
+        <file>help/index.html</file>
+        <file>help/other.html</file>
+        <file>help/plotting.html</file>
+        <file>help/style.css</file>
+        <file>help/images/1-opentable.png</file>
+        <file>help/images/2-closetable.png</file>
+        <file>help/images/3-tableinfo.png</file>
+        <file>help/images/4-viewarray.png</file>
+        <file>help/images/5-pagenav.png</file>
+        <file>help/images/6-followref.png</file>
+        <file>help/images/7-filter.png</file>
+        <file>help/images/8-format.png</file>
+        <file>help/images/9-hidecolumn.png</file>
+        <file>help/images/10-edittable.png</file>
+        <file>help/images/11-editerror.png</file>
+        <file>help/images/12-undo.png</file>
+        <file>help/images/13-exportvotable.png</file>
+        <file>help/images/14-validity.png</file>
+        <file>help/images/15-plot.png</file>
+        <file>help/images/16-plot.png</file>
+        <file>help/images/17-sort1.png</file>
+        <file>help/images/18-sort2.png</file>
+        <file>help/images/19-sort3.png</file>
+        <file>help/images/20-insert.png</file>
+        <file>help/images/21-delete.png</file>
+        <file>help/images/22-options.png</file>
+        <file>help/images/23-taql.png</file>
+        <file>help/images/24-fieldopts.png</file>
     </qresource>
 </RCC>
