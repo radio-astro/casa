@@ -14,8 +14,8 @@
 #ifndef _BNMIN1_NESTEDINITIAL_HXX__
 #define _BNMIN1_NESTEDINITIAL_HXX__
 
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/mersenne_twister.hpp>
+#include "random_uniform_int.hxx"
+#include "random_mersenne_twister.hxx"
 
 namespace Minim {
 
@@ -56,8 +56,8 @@ namespace Minim {
   class InitialRandom:
     public NestedInitial
   {
-    boost::mt19937 eng;
-    boost::uniform_int<size_t> gen;
+    bnmin1boost::mt19937 eng;
+    bnmin1boost::uniform_int<size_t> gen;
 			   
   public:
 

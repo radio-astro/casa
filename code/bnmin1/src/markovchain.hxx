@@ -13,10 +13,10 @@
 
 #include <vector>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
+#include "random_mersenne_twister.hxx"
+#include "random_normal_distribution.hxx"
+#include "random_uniform_real.hxx"
+#include "random_variate_generator.hxx"
 
 #include <boost/function.hpp>
 
@@ -43,7 +43,7 @@ namespace Minim {
   public:
 
     /// Type of the interger random number generator
-    typedef boost::mt19937  irg_t;
+    typedef bnmin1boost::mt19937  irg_t;
 
     /// Vector type
     typedef std::vector<double>  v_t;
@@ -56,7 +56,7 @@ namespace Minim {
     /// The integer random number generator
     irg_t igen;
     
-    boost::normal_distribution<> norm_dist;
+    bnmin1boost::normal_distribution<> norm_dist;
 
   protected:
 
@@ -76,8 +76,8 @@ namespace Minim {
 
     /// The normal distribution generator
     mutable
-    boost::variate_generator<irg_t&, 
-			     boost::normal_distribution<> > 
+    bnmin1boost::variate_generator<irg_t&, 
+				   bnmin1boost::normal_distribution<> > 
     ngen;
 
     /**  Uniform random numbers between 0 and 1
@@ -85,7 +85,7 @@ namespace Minim {
 	 \note The generator is take by copy
     */
     mutable
-    boost::uniform_01<irg_t> u01gen;
+    bnmin1boost::uniform_01<irg_t> u01gen;
     
 
     // ---------- Public data -----------------------------    

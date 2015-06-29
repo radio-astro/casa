@@ -31,7 +31,8 @@
 #include <boost/assign/std/vector.hpp>
 #include <boost/random.hpp>
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
+#include "../src/random_normal_distribution.hxx"
+#include "../src/random_variate_generator.hxx"
 #include <boost/random/uniform_real.hpp>
 
 #include <casa/aips.h>
@@ -104,7 +105,6 @@ void QuadT1()
   minimiser.solve();
 
   PrettyPrint(minimiser);
-
   AlwaysAssertExit( qo->qm.a == 1);
 
   AlwaysAssertExit(near( qo->qm.b,
@@ -704,8 +704,8 @@ void metropolis_accept()
 void normal() {
   unsigned seed = 42;
   boost::mt19937 rng(seed);
-  boost::normal_distribution<double> distro(0., 1.);
-  boost::variate_generator<boost::mt19937, boost::normal_distribution<double> > norm(rng, distro);
+  bnmin1boost::normal_distribution<double> distro(0., 1.);
+  bnmin1boost::variate_generator<boost::mt19937, bnmin1boost::normal_distribution<double> > norm(rng, distro);
   std::cout << "normal" << std::endl;
   std::cout << distro.mean() << " " << distro.sigma() << std::endl;
   for (int i=0; i<10; ++i) {
