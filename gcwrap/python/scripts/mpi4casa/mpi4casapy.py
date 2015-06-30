@@ -59,7 +59,8 @@ def run():
             casalog.showconsole(True)
             
         # Install filter to remove MSSelectionNullSelection errors
-        casalog.filter('NORMAL','MSSelectionNullSelection')
+        casalog.filter('NORMAL1')
+        casalog.filterMsg('MSSelectionNullSelection')
         
         # Post MPI welcome msg
         casalog.post(MPIEnvironment.mpi_info_msg,"INFO",casalog_call_origin)

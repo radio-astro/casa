@@ -450,6 +450,11 @@ class MPIInterface:
             
             # Return job status table
             return job_status_list     
+        
+        
+        def set_log_level(self,log_level):
+            
+            self.__command_client.set_log_level(log_level)
              
             
 # EOF

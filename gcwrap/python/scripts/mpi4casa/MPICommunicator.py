@@ -190,7 +190,7 @@ class MPICommunicator:
             for rank in mpi_server_rank_list:
                 if logger is not None:
                     logger.post("Sending %s service signal to server %s" 
-                                % (request['signal'],str(rank)),"INFO","MPICommunicator::control_service_request_send_all")
+                                % (request['signal'],str(rank)),"DEBUG","MPICommunicator::control_service_request_send_all")
                 self.control_service_request_send(request=request,server=rank)      
                     
         

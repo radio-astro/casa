@@ -167,7 +167,10 @@ class MPIEnvironment:
             processor_origin = "@" + hostname + ":MPIClient"
         else:
             # Rank information of server is written in the C++ level
-            processor_origin = "@" + hostname      
+            processor_origin = "@" + hostname   
+            
+    # Set pre-determined log level
+    command_handling_log_level = "NORMAL"
             
     # Set ANY_SOURCE and ANY_TAG constants
     if is_mpi_enabled:

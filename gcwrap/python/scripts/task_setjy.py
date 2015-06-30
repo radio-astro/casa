@@ -18,10 +18,6 @@ class SetjyHelper():
         casalog.post("Resetting the log filter to WARN", "DEBUG")
         casalog.post("Initialize the MODEL columns of sub-MSs to default 1", "DEBUG")
         casalog.filter('WARN')
-        if os.environ.has_key('CASA_ENGINE'):
-            casalog.filter('WARN','MSSelectionNullSelection')
-        else:
-            casalog.filter('WARN')
 
         myms = mstool()
         try:
@@ -46,10 +42,7 @@ class SetjyHelper():
         except:
             rstatus = False
                 
-        if os.environ.has_key('CASA_ENGINE'):
-            casalog.filter('INFO','MSSelectionNullSelection')
-        else:
-            casalog.filter('INFO')
+        casalog.filter('INFO')
 
         return rstatus
 

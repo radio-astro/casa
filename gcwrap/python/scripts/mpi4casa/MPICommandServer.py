@@ -120,7 +120,7 @@ class MPICommandServer:
                     try:
                         command_request = self.__communicator.command_request_recv()
                         casalog.post("Received command request msg: %s" 
-                                     % command_request['command'],"INFO",casalog_call_origin)
+                                     % command_request['command'],MPIEnvironment.command_handling_log_level,casalog_call_origin)
                         msg_received = True
                     except Exception, instance:
                         formatted_traceback = traceback.format_exc()
@@ -156,19 +156,19 @@ class MPICommandServer:
                         if command_request['mode']=='eval':
                             casalog.post("Going to evaluate command request with id# %s as an expression via eval: %s" 
                                          % (str(command_request_id),str(command_request['command'])),
-                                         "INFO",casalog_call_origin) 
+                                         MPIEnvironment.command_handling_log_level,casalog_call_origin) 
                             command_response['ret'] = eval(command_request['command'])
                         elif command_request['mode']=='exec':
                             casalog.post("Going to execute command request with id# %s as a statement via exec: %s" 
                                          % (str(command_request_id),command_request['command']),
-                                         "INFO",casalog_call_origin)      
+                                         MPIEnvironment.command_handling_log_level,casalog_call_origin)      
                             code = compile(command_request['command'], casalog_call_origin, 'exec')                                                   
                             exec(code)
                             command_response['ret'] = None
                         elif command_request['mode']=='push':
                             casalog.post("Command request with id# %s is a push operation" 
                                          % str(command_request_id),
-                                         "INFO",casalog_call_origin)  
+                                         MPIEnvironment.command_handling_log_level,casalog_call_origin)  
                             command_response['ret'] = None
                                     
                         # Set command response parameters
@@ -207,7 +207,7 @@ class MPICommandServer:
                     try:
                         casalog.post("Command request with id %s successfully processed in %s mode, sending back response ..." 
                                      % (str(command_response['id']),str(command_response['mode'])),
-                                     "INFO",casalog_call_origin)                           
+                                     MPIEnvironment.command_handling_log_level,casalog_call_origin)                           
                         self.__communicator.command_response_send(response=command_response)
                     except Exception, instance:
                         formatted_traceback = traceback.format_exc()
@@ -301,7 +301,7 @@ class MPICommandServer:
                     casalog.post("Virtual frame buffer deployed at %s with pid %s successfully shutdown" % 
                                  (self.__virtual_frame_buffer_port,
                                   str(self.__virtual_frame_buffer_process.pid)),
-                                 "INFO",casalog_call_origin)
+                                 "DEBUG",casalog_call_origin)
                     self.__virtual_frame_buffer_process = None
                 except Exception, instance:
                     formatted_traceback = traceback.format_exc()
@@ -347,21 +347,60 @@ class MPICommandServer:
             # Keep serving until a stop signal service is received
             control_service_request = {}
             stop_service_requested = False
-            while ((not stop_service_requested) and (not self.__monitor_server.get_client_timeout())):  
-                if self.__communicator.control_service_request_probe():
-                    control_service_request = self.__communicator.control_service_request_recv()
-                    if control_service_request['signal'] == 'app_control':
+            while ((not stop_service_requested) and (not self.__monitor_server.get_client_timeout())):
+                
+                # Check if there is an incoming control service msg
+                msg_available = False
+                try:
+                    msg_available = self.__communicator.control_service_request_probe()
+                except Exception, instance:
+                    msg_available = False
+                    formatted_traceback = traceback.format_exc()
+                    casalog.post("Exception checking if control service msg is available: %s" 
+                                 % str(formatted_traceback),"SEVERE",casalog_call_origin)                        
+                
+                # Notify to MPICommandClient that control signal has been processed
+                if msg_available:
+                    
+                    # Receive control service msg
+                    msg_received = False
+                    try:
+                        control_service_request = self.__communicator.control_service_request_recv()
+                        msg_received = True
+                    except Exception, instance:
+                        msg_received = False
+                        formatted_traceback = traceback.format_exc()
+                        casalog.post("Exception receiving control service msg: %s"
+                                     % str(formatted_traceback),"SEVERE",casalog_call_origin)
+                        continue
+                    
+                    # Process control service msg
+                    if msg_received:
                         try:
-                            code = compile(control_service_request['command'], casalog_call_origin, 'exec')                                                   
+                            cmd = control_service_request['command']
+                            code = compile(cmd, casalog_call_origin, 'exec')                                                   
                             exec(code)
+                            casalog.post("Control signal %s successfully handled by server %s" 
+                                         % (str(cmd),str(MPIEnvironment.mpi_processor_rank)),
+                                         "INFO",casalog_call_origin)                            
                         except Exception, instance:
                             formatted_traceback = traceback.format_exc()
-                            casalog.post("Exception executing app_control request via exec: %s" 
-                                         % str(formatted_traceback),"SEVERE",casalog_call_origin)
-                        # Notify to MPICommandClient that control signal has been processed
-                        self.__communicator.control_service_response_send(response=self.__monitor_server.get_status())
-                    else:
-                        stop_service_requested = True
+                            casalog.post("Exception handling control signal command %s in server %s: %s" 
+                                         % (str(cmd),str(MPIEnvironment.mpi_processor_rank),str(formatted_traceback)),
+                                         "SEVERE",casalog_call_origin)
+                            
+                    # Notify to MPICommandClient that control signal has been processed
+                    send_response = False
+                    send_response = control_service_request['send_response']
+                    if send_response:
+                        try:
+                            self.__communicator.control_service_response_send(response=self.__monitor_server.get_status())
+                        except Exception, instance:
+                            formatted_traceback = traceback.format_exc()
+                            casalog.post("Exception sending response to control signal command %s in server %s: %s" 
+                                         % (str(cmd),str(MPIEnvironment.mpi_processor_rank),str(formatted_traceback)),
+                                         "SEVERE",casalog_call_origin)
+                    
                 time.sleep(MPIEnvironment.mpi_stop_service_sleep_time)
             
             # Process stop service request

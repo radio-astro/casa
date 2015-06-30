@@ -77,15 +77,30 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 			<value>DEBUG1</value>
 			<value>DEBUG2</value>
 			<choice>INFO</choice>
-		</param>
-     	<param type="stringArray" name="exclueMsg">
-     		<description>Array of strings to filter out undesired messages </description>
-     		<value></value>
-     	</param>		
+		</param>	
 	</input>
 	
   <returns type="bool"/>
 </method>
+
+<method type="function" name="filterMsg">
+	<shortdescription>Add messages to the filter out list</shortdescription>
+	<description>Add messages to the filter out list</description>
+	<input>
+     	<param type="stringArray" name="msgList">
+     		<description>Array of strings identifying messages to filter out</description>
+     		<value></value>
+     	</param>		
+	</input>
+  	<returns type="void"/>
+</method>
+
+<method type="function" name="clearFilterMsgList">
+	<shortdescription>Clear list of messages to be filter out</shortdescription>
+	<description>Clear list of messages to be filter out</description>
+  	<returns type="void"/>
+</method>
+
 <method type="function" direction="in" name="post">
   <shortdescription>Post a message</shortdescription>
   <description>If the message passes the filter, write it (same as postLocally)</description>

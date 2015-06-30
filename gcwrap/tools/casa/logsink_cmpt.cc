@@ -56,9 +56,11 @@ logsink::logsink()
   thelogsink = new casa::TSLogSink();
   setlogfile(theLogName);
   itsorigin = new LogOrigin("casa");
+  logLevel =  LogMessage::NORMAL;
   thelogsink->postLocally(LogMessage("", *itsorigin, LogMessage::NORMAL));
   globalsink = false;
   logname = theLogName ;
+  filterMsgList.clear();
   //version();
   
    string tmpname = "" ;
@@ -135,76 +137,110 @@ bool logsink::processorOrigin(const std::string &fromwhere)
     return rstat;
 }
 
-bool logsink::filter(const std::string &level, const std::vector<std::string>& excludeMsg)
+bool logsink::filter(const std::string &level)
 {
-    if(!thelogsink){
+	bool rstat = true;
+
+	logLevel = getLogLevel(level);
+
+	installLogFilter();
+
+	return rstat;
+}
+
+void logsink::filterMsg(const std::vector<std::string>& msgList)
+{
+	// By default SWIG create a vector of one empty string
+	if ((msgList.size() >= 1) and (msgList[0].size() > 0))
+	{
+		for(std::vector<std::string>::const_iterator  it = msgList.begin(); it != msgList.end(); ++it)
+		{
+			if (it->size() > 0) filterMsgList.push_back(*it);
+		}
+
+		installLogFilter();
+	}
+
+	return;
+}
+
+void logsink::clearFilterMsgList()
+{
+	filterMsgList.clear();
+	installLogFilter();
+
+	return;
+}
+
+void logsink::installLogFilter()
+{
+    if (!thelogsink)
+    {
        thelogsink = &LogSink().globalSink();
     }
-	bool rstat(true);
-	LogMessage::Priority priority = LogMessage::NORMAL;
-        if (level == "DEBUG" || level == "DEBUGGING")
-           priority = LogMessage::DEBUGGING;
-        else if (level == "DEBUG1")
-           priority = LogMessage::DEBUG1;
-        else if (level == "DEBUG2")
-           priority = LogMessage::DEBUG2;
-        else if (level == "NORMAL")
-           priority = LogMessage::NORMAL;
-        else if (level == "NORMAL1")
-           priority = LogMessage::NORMAL1;
-        else if (level == "NORMAL2")
-           priority = LogMessage::NORMAL2;
-        else if (level == "NORMAL3")
-           priority = LogMessage::NORMAL3;
-        else if (level == "NORMAL4")
-           priority = LogMessage::NORMAL4;
-        else if (level == "NORMAL5")
-           priority = LogMessage::NORMAL5;
-        else if (level == "INFO" || level == "NORMAL")
-           priority = LogMessage::NORMAL;
-        else if (level == "INFO1")
-           priority = LogMessage::NORMAL1;
-        else if (level == "INFO2")
-           priority = LogMessage::NORMAL2;
-        else if (level == "INFO3")
-           priority = LogMessage::NORMAL3;
-        else if (level == "INFO4")
-           priority = LogMessage::NORMAL4;
-        else if (level == "INFO5")
-           priority = LogMessage::NORMAL5;
-        else if (level == "WARN")
-           priority = LogMessage::WARN;
-        else if (level == "ERROR" || level == "SEVERE")
-           priority = LogMessage::SEVERE;
-	else 
-		rstat = false;
-	if(rstat){
 
-	   // By default SWIG create a vector of one empty string
-	   if ((excludeMsg.size() >= 1) and (excludeMsg[0].size() > 0))
-	   {
-		   LogFilterParallel filter(priority);
-		   for(std::vector<std::string>::const_iterator  it = excludeMsg.begin(); it != excludeMsg.end(); ++it)
-		   {
-			   if (it->size() > 0)
-			   {
-				   filter.filterOut(it->c_str());
-			   }
-		   }
+	// Use a LogFilterParallel to filter out the specified messages
+	if (filterMsgList.size() >= 1)
+	{
+		LogFilterParallel filter(logLevel);
+		for(std::vector<std::string>::const_iterator  it = filterMsgList.begin(); it != filterMsgList.end(); ++it)
+		{
+			if (it->size() > 0) filter.filterOut(it->c_str());
+		}
 
-		   thelogsink->filter(filter);
-	   }
-	   // Normal operation filtering only on priority
-	   else
-	   {
-		   LogFilter filter(priority);
-		   thelogsink->filter(filter);
-	   }
-	   
-	   // Also set for any watchers.
-	   CasapyWatcher::logChanged_(priority);
+		thelogsink->filter(filter);
 	}
-	return rstat;
+	// Normal operation filtering only on priority
+	else
+	{
+		LogFilter filter(logLevel);
+		thelogsink->filter(filter);
+	}
+
+	// Also set for any watchers.
+	CasapyWatcher::logChanged_(logLevel);
+}
+
+LogMessage::Priority logsink::getLogLevel(const std::string &level)
+{
+	LogMessage::Priority priority = LogMessage::NORMAL;
+
+	if (level == "DEBUG" || level == "DEBUGGING")
+		priority = LogMessage::DEBUGGING;
+	else if (level == "DEBUG1")
+		priority = LogMessage::DEBUG1;
+	else if (level == "DEBUG2")
+		priority = LogMessage::DEBUG2;
+	else if (level == "NORMAL")
+		priority = LogMessage::NORMAL;
+	else if (level == "NORMAL1")
+		priority = LogMessage::NORMAL1;
+	else if (level == "NORMAL2")
+		priority = LogMessage::NORMAL2;
+	else if (level == "NORMAL3")
+		priority = LogMessage::NORMAL3;
+	else if (level == "NORMAL4")
+		priority = LogMessage::NORMAL4;
+	else if (level == "NORMAL5")
+		priority = LogMessage::NORMAL5;
+	else if (level == "INFO" || level == "NORMAL")
+		priority = LogMessage::NORMAL;
+	else if (level == "INFO1")
+		priority = LogMessage::NORMAL1;
+	else if (level == "INFO2")
+		priority = LogMessage::NORMAL2;
+	else if (level == "INFO3")
+		priority = LogMessage::NORMAL3;
+	else if (level == "INFO4")
+		priority = LogMessage::NORMAL4;
+	else if (level == "INFO5")
+		priority = LogMessage::NORMAL5;
+	else if (level == "WARN")
+		priority = LogMessage::WARN;
+	else if (level == "ERROR" || level == "SEVERE")
+		priority = LogMessage::SEVERE;
+
+	return priority;
 }
 
 bool logsink::post(const std::string& message,
@@ -217,60 +253,21 @@ bool logsink::post(const std::string& message,
 bool
 logsink::postLocally(const std::string& message,
                      const std::string& priority,
-		     const std::string& origin)
+                     const std::string& origin)
 {
-    LogMessage::Priority messagePriority = LogMessage::NORMAL;
+    if(!thelogsink) thelogsink = &LogSink().globalSink();
 
-    if(!thelogsink){
-       thelogsink = &LogSink().globalSink();
-    }
-    if(!itsorigin)
-       itsorigin = new LogOrigin(processor_name);
+    if(!itsorigin) itsorigin = new LogOrigin(processor_name);
+
+    // Set origin
     itsorigin->className(origin);
-    taskname = new String(origin);
-    //String* taskname = new String(origin);
-    //cout << "(*taskname==\"\")=" <<  (*taskname == "") << endl;
-    thelogsink->setTaskName(*taskname);
-    //LogSink().globalSink().setTaskName(*taskname);
-    if (priority == "DEBUG" || priority == "DEBUGGING")
-       messagePriority = LogMessage::DEBUGGING;
-    else if (priority == "DEBUG1")
-       messagePriority = LogMessage::DEBUG1;
-    else if (priority == "DEBUG2")
-       messagePriority = LogMessage::DEBUG2;
-    else if (priority == "NORMAL5")
-       messagePriority = LogMessage::NORMAL5;
-    else if (priority == "NORMAL4")
-       messagePriority = LogMessage::NORMAL4;
-    else if (priority == "NORMAL3")
-       messagePriority = LogMessage::NORMAL3;
-    else if (priority == "NORMAL2")
-       messagePriority = LogMessage::NORMAL2;
-    else if (priority == "NORMAL1")
-       messagePriority = LogMessage::NORMAL1;
-    else if (priority == "NORMAL")
-       messagePriority = LogMessage::NORMAL;
-    else if (priority == "INFO5")
-       messagePriority = LogMessage::NORMAL5;
-    else if (priority == "INFO4")
-       messagePriority = LogMessage::NORMAL4;
-    else if (priority == "INFO3")
-       messagePriority = LogMessage::NORMAL3;
-    else if (priority == "INFO2")
-       messagePriority = LogMessage::NORMAL2;
-    else if (priority == "INFO1")
-       messagePriority = LogMessage::NORMAL1;
-    else if (priority == "INFO")
-       messagePriority = LogMessage::NORMAL;
-    else if (priority == "WARN")
-       messagePriority = LogMessage::WARN;
-    else if (priority == "SEVERE")
-       messagePriority = LogMessage::SEVERE;
-    else if (priority == "ERROR")
-       messagePriority = LogMessage::SEVERE;
-    return thelogsink->postLocally(LogMessage(message,
-       *itsorigin,
-       messagePriority));
+    thelogsink->setTaskName(origin);
+
+    // Get priority
+    LogMessage::Priority messagePriority = getLogLevel(priority);
+
+    // Recursive call to LogSinkInterface::postLocally
+    return thelogsink->postLocally(LogMessage(message,*itsorigin,messagePriority));
 }
 
 std::string

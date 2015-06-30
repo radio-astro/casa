@@ -16,6 +16,10 @@ from MPICommunicator import MPICommunicator
 
 # Import MPIMonitorClient singleton
 from MPIMonitorClient import MPIMonitorClient
+
+# Define log levels
+log_levels = ['DEBUG','DEBUG1','DEBUG2','NORMAL','NORMAL1','NORMAL2','NORMAL3','NORMAL4','NORMAL5',
+              'INFO','INFO1','INFO2','INFO3','INFO4','INFO5']
         
 
 class MPICommandClient:
@@ -170,11 +174,11 @@ class MPICommandClient:
                         # Notify that command response has been received
                         if successful:
                             casalog.post("Command request with id %s successfully handled by server n# %s" 
-                                         % (str(command_id),str(server)),"INFO",casalog_call_origin)                                  
+                                         % (str(command_id),str(server)),MPIEnvironment.command_handling_log_level,casalog_call_origin)                                  
                         else:
                             casalog.post("Command request with id %s failed in server n# %s with traceback %s" 
                                          % (str(command_id),str(server),str(command_response['traceback'])),
-                                         "INFO",casalog_call_origin)          
+                                         "SEVERE",casalog_call_origin)          
                         # If this request belongs to a group update the group response object
                         if self.__command_request_list[command_id].has_key('group'):
                             command_group_response_id = self.__command_request_list[command_id]['group']
@@ -294,7 +298,7 @@ class MPICommandClient:
                                 self.__command_request_list[command_request_id]['status']='request sent'
                                 # Notify that command request has been sent
                                 casalog.post("Command request with id# %s sent to server n# %s" 
-                                             % (str(command_request_id),str(server)),"INFO",casalog_call_origin)
+                                             % (str(command_request_id),str(server)),MPIEnvironment.command_handling_log_level,casalog_call_origin)
                             except Exception, instance:
                                 # Get and format traceback
                                 formatted_traceback = traceback.format_exc()
@@ -434,59 +438,65 @@ class MPICommandClient:
             casalog.post("Received response from all servers to start service signal","INFO",casalog_call_origin)
             
             
-        def __send_app_control_signal(self,app,cmd):
+        def __send_control_signal(self,signal,check_response=True):
             
             casalog_call_origin = "MPICommandClient::send_app_control_signal"
             
-            casalog.post("Sending %s control signal to all servers: %s" % (app,cmd),"INFO",casalog_call_origin)
+            casalog.post("Sending control signal to all servers: %s" % signal['command'],"INFO",casalog_call_origin)
             
-            # Prepare app control request
-            request = {}
-            request['signal'] = 'app_control'
-            request['app'] = app
-            request['command'] = cmd
+            # Add check_response to signal
+            signal['send_response'] = check_response
             
             # Send request to all servers
-            self.__communicator.control_service_request_broadcast(request,casalog)
+            try:
+                self.__communicator.control_service_request_broadcast(signal,casalog)
+            except Exception, instance:
+                formatted_traceback = traceback.format_exc()
+                casalog.post("Exception sending control signal to all servers: %s" % str(formatted_traceback),
+                             "SEVERE",casalog_call_origin)
+                return
                         
             # Then wait until all servers have handled the signal
-            mpi_server_rank_list = self.__monitor_client.get_server_rank_online()
-            while len(mpi_server_rank_list)>0:
-                response_available = False
-                response_available = self.__communicator.control_service_response_probe()
-                if response_available:
-                    # Receive start service response to know what server has started
-                    response = self.__communicator.control_service_response_recv()
-                    rank = response['rank']
-                    # Remove server from list
-                    mpi_server_rank_list.remove(rank)
-                    # Communicate that server response to start service signal has been received
-                    casalog.post("Server with rank %s sent %s signal to %s app" 
-                                 % (str(rank),cmd,app),
-                                 "INFO",casalog_call_origin)
-                else:
-                    time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
-            
-            # Send request to all servers          
-            casalog.post("%s %s signal sent to all servers" % (app,cmd),"INFO",casalog_call_origin)                 
-            
-        
-        def __send_stop_service_signal(self,force_command_request_interruption=True,finalize_mpi_environment=False):
-            
-            casalog_call_origin = "MPICommandClient::send_stop_service_signal"
-            
-            casalog.post("Sending stop service signal to all servers","INFO",casalog_call_origin)
-            
-            # Prepare stop service request
-            request = {}
-            request['signal'] = 'stop'
-            request['force_command_request_interruption'] = force_command_request_interruption
-            request['finalize_mpi_environment'] = finalize_mpi_environment
-            
-            # Send request to all servers
-            self.__communicator.control_service_request_broadcast(request,casalog)
-            
-            casalog.post("Stop service signal sent to all servers","INFO",casalog_call_origin)
+            if check_response:
+                
+                try:
+                    mpi_server_rank_list = self.__monitor_client.get_server_rank_online()
+                except Exception, instance:
+                    formatted_traceback = traceback.format_exc()
+                    casalog.post("Exception checking for response to control signal: %s" % str(formatted_traceback),
+                                 "SEVERE",casalog_call_origin)
+                    return
+                    
+                while len(mpi_server_rank_list)>0:
+                    
+                    response_available = False
+                    try:
+                        response_available = self.__communicator.control_service_response_probe()
+                    except Exception, instance:
+                        response_available = False
+                        formatted_traceback = traceback.format_exc()
+                        casalog.post("Exception getting response to control signal: %s" % str(formatted_traceback),
+                                     "SEVERE",casalog_call_origin)
+                        return
+                        
+                    if response_available:
+                        # Receive control signal response
+                        response = self.__communicator.control_service_response_recv()
+                        rank = response['rank']
+                        # Remove server from list
+                        mpi_server_rank_list.remove(rank)
+                        # Communicate that server response to start service signal has been received
+                        casalog.post("Server with rank %s handled control signal %s" 
+                                     % (str(rank),signal['command']),
+                                     "DEBUG",casalog_call_origin)
+                    else:
+                        time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
+                
+                casalog.post("Control signal handled by all servers: %s" % signal['command'],"INFO",casalog_call_origin)     
+                  
+            else:
+                  
+                casalog.post("Control signal sent to all servers: %s" % signal['command'],"INFO",casalog_call_origin)       
             
             
         def __validate_target_servers(self,target_server):
@@ -642,12 +652,22 @@ class MPICommandClient:
             self.__stop_command_request_queue_service()
             self.__stop_command_response_handler_service()          
             
-            # Shutdown apps
-            self.__send_app_control_signal("plotms","pm.killApp()")
-            self.__send_app_control_signal("Xvfb","self.stop_virtual_frame_buffer()")        
+            # Shutdown plotms process
+            self.__send_control_signal({'command':'pm.killApp()',
+                                        'signal':'process_control'},
+                                       check_response=True)
+            
+            # Shutdown virtual frame buffer
+            self.__send_control_signal({'command':'self.stop_virtual_frame_buffer()',
+                                        'signal':'process_control'},
+                                       check_response=True)      
                 
             # Send stop signal to servers
-            self.__send_stop_service_signal(force_command_request_interruption,finalize_mpi_environment)
+            self.__send_control_signal({'command':'stop_service_requested = True',
+                                        'signal':'stop',
+                                        'force_command_request_interruption':force_command_request_interruption,
+                                        'finalize_mpi_environment':finalize_mpi_environment},
+                                       check_response=False)    
             
             # Finalize MPI environment            
             if finalize_mpi_environment:
@@ -857,6 +877,23 @@ class MPICommandClient:
         
         def set_log_mode(self,logmode):
             self.__log_mode = logmode
+            
+            
+        def set_log_level(self,log_level):
+            
+            casalog_call_origin = "MPICommandClient::set_log_level"    
+            
+            if log_level not in log_levels:
+                raise Exception("Unknown log level %s, recognized levels are: %s" % (str(log_level),str(log_levels)))
+                
+            MPIEnvironment.command_handling_log_level = log_level
+            
+            self.__send_control_signal({'command':"MPIEnvironment.command_handling_log_level = '%s'" % log_level,
+                                        'signal':'process_control'},
+                                       check_response=True)   
+            
+            
+                      
             
             
    
