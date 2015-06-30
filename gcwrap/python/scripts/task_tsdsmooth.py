@@ -11,10 +11,13 @@ def tsdsmooth(infile=None, datacolumn=None, antenna=None,
     casalog.origin('tsdsmooth')
 
     try:
-        casalog.post('This is tsdsmooth!')
+        if len(outfile) == 0:
+            errmsg = 'outfile is empty.'
+            raise_exception(errmsg)
         
-        if ((os.path.exists(outfile)) and (not overwrite)):
-            raise Exception(outfile+' exists.')
+        if (os.path.exists(outfile)) and (not overwrite):
+            errmsg = outfile+' exists.'
+            raise_exception(errmsg)
 
         sdms.open(infile)
         sdms.set_selection(spw=spw, field=field, 
@@ -26,3 +29,6 @@ def tsdsmooth(infile=None, datacolumn=None, antenna=None,
     finally:
         sdms.close()
 
+def raise_exception(errmsg):
+    casalog.post(errmsg, priority='SEVERE')
+    raise Exception(errmsg)
