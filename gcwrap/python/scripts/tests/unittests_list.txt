@@ -153,6 +153,7 @@ test_spxfit                     dmehring@nrao.edu
 test_statwt                     ttsutsum@nrao.edu
 test_tsdbaseline                wataru.kawasaki@nao.ac.jp
 test_tsdcal                     masaya.kuniyoshi@nao.ac.jp
+test_tsdsmooth                  takeshi.nakazato@nao.ac.jp
 test_uvcontsub			ttsutsum@nrao.edu
 test_uvcontsub3			ttsutsum@nrao.edu
 #test_testconcat                 dpetry@eso.org
