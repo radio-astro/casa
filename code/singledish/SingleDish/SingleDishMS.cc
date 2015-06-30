@@ -2162,6 +2162,7 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
     // working Vector for convolver
     Vector<Float> wrapper;
+    Vector<Float> outwrapper;
 
     double startTime = gettimeofday_sec();
 
@@ -2176,8 +2177,8 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
         convolverPool[numChan] = Convolver<Float>(theKernel, IPosition(1, numChan));
     }
     // TODO: reduce number of data flipping before and after fft (after unit tests defined)
-    Vector<Float> kernel;
-    Convolver<Float> convolver;
+    Vector<Float> *kernel;
+    Convolver<Float> *convolver;
 
     for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
         // Convolver setup
@@ -2191,21 +2192,22 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
             if (numChan != numChanCache) {
                 //os << "numChan " << numChan << ": need to switch kernel/convolver" << LogIO::POST;
                 assert(kernelPool.find(numChan) != kernelPool.end());
-                kernel.assign(kernelPool[numChan]);
-                convolver = convolverPool[numChan];
+                kernel = &kernelPool[numChan];
+                convolver = &convolverPool[numChan];
                 numChanCache = numChan;
             }
             Cube<Float> dataChunk(numPol, numChan, numRow);
             visCubeAccessor_(*vb, dataChunk);
 
             SakuraAlignedArray<float> spectrum(numChan);
+            SakuraAlignedArray<float> outspectrum(numChan);
             Vector<Bool> flagRow = vb->flagRow();
             Cube<Bool> flagCube = vb->flagCube();
 
             // loop over row
             for (Int irow=0; irow < numRow; ++irow) {
                 // skip row if flagged
-                if (!flagRow[irow]) {
+                if (flagRow[irow]) {
                     continue;
                 }
               
@@ -2214,6 +2216,7 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
                     // get a spectrum from data cube
                     get_spectrum_from_cube(dataChunk, irow, ipol, numChan, spectrum);
                     float *data = spectrum.data;
+                    float *outdata = outspectrum.data;
 
                     // replace flagged channel data with zero
                     for (Int ichan = 0; ichan < numChan; ++ichan) {
@@ -2224,10 +2227,11 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
                     // smoothing
                     wrapper.takeStorage(IPosition(1, numChan), data, SHARE);
-                    convolver.linearConv(wrapper, kernel);
+                    outwrapper.takeStorage(IPosition(1, numChan), outdata, SHARE);
+                    convolver->linearConv(outwrapper, wrapper);
 
                     // set back a spectrum to data cube
-                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, data);
+                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, outdata);
 
                     // TODO: weight handling
                 }
