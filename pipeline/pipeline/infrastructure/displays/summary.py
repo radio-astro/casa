@@ -14,6 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
+from . import plotpwv
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
@@ -21,6 +22,7 @@ import casa
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = False
+#DISABLE_PLOTMS = True
 
 ticker.TickHelper.MAXTICKS = 10000
 
@@ -481,7 +483,7 @@ class PWVChart(object):
             return self._get_plot_object()
 
         try:
-            analysisUtils.plotPWV(self.ms.name, self.figfile)
+            plotpwv.plotPWV(self.ms.name, figfile=self.figfile)
         except:
             LOG.debug('Could not create PWV plot')
             return None
