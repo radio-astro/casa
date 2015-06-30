@@ -113,7 +113,7 @@
     </ProcessingCommand>
     
     <ProcessingCommand>
-        <Command xmlns="">hif_makecleanlist</Command>
+        <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
 	    <Parameter>
 		<Keyword xmlns="">intent</Keyword>
@@ -123,7 +123,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_cleanlist</Command>
+        <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
