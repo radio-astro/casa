@@ -388,8 +388,9 @@ def plotms(vis=None,
                         casalog.post("Callib file does not exist")
                         raise RuntimeError("Callib file does not exist")
         elif isinstance(callib, list):
-            useCallib = True
-            callibString = ",".join(callib)
+            if len(callib[0]) > 0:  # no param is a list (default in plotms.xml?)
+                useCallib = True
+                callibString = ",".join(callib)
         pm.setPlotMSCalibration(useCallib, callibString, False, plotindex) 
 
         # Set flag extension
