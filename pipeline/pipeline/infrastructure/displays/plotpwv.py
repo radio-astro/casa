@@ -64,7 +64,7 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
         # Confirm that it is ALMA data
         observatory = getObservatoryName(ms)
         if (observatory.find('ALMA') < 0 and observatory.find('ACA') < 0):
-            LOG.warn("This is not ALMA data")
+            LOG.warn("This is not ALMA data.  No PWV plot made.")
         else:
             LOG.warn("Could not find either %s/ASDM_CALWVR or ASDM_CALATMOSPHERE" % (ms))
         return
