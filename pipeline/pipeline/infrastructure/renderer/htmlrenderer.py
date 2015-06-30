@@ -571,6 +571,9 @@ class T2_1DetailsRenderer(object):
 
         task = summary.WeatherChart(context, ms)
         weather_plot = task.plot()
+
+        task = summary.PWVChart(context, ms)
+        pwv_plot = task.plot()
         
         task = summary.AzElChart(context, ms)
         azel_plot = task.plot()
@@ -598,8 +601,9 @@ class T2_1DetailsRenderer(object):
             'field_vs_time'   : field_vs_time,
             'dirname'         : dirname,
             'weather_plot'    : weather_plot,
+            'pwv_plot'        : pwv_plot,
             'azel_plot'       : azel_plot,
-            'el_vs_time_plot'      : el_vs_time_plot
+            'el_vs_time_plot' : el_vs_time_plot
         }
 
     @classmethod
