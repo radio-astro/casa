@@ -67,6 +67,7 @@
 	    <value>true</value>
 	    <value>false</value>
 	</allowed>
+    </param>
 
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
