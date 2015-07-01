@@ -114,9 +114,8 @@ pipeline processing for huge dataset.
         <value type="string">table</value>
         <allowed kind="enum">
             <value>table</value>
-            <!-- <value>text</value> -->
-            <!-- <value>csv</value> -->
-            <!-- <value></value> -->
+            <value>text</value>
+            <value>csv</value>
         </allowed>
     </param>
 
