@@ -223,7 +223,7 @@ class Task(object):
         self.inputs = inputs
 
     @abc.abstractmethod
-    def execute(self, dry_run=True, **parameters):
+    def execute(self, dry_run=False, **parameters):
         """
         Run this task and return the :class:`Results`.
 

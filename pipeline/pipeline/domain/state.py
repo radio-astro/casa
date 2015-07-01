@@ -17,7 +17,7 @@ class State(object):
     def __setstate__(self, state):
         self.id, self.obs_mode = state
     
-    def __init__(self, state_id, obs_mode, is_cycle0=False):
+    def __init__(self, state_id, obs_mode):
         self.id = state_id
         # work around NumPy bug with empty strings
         # http://projects.scipy.org/numpy/ticket/1239
@@ -114,7 +114,7 @@ class StateALMA(State):
         'CALIBRATE_ATMOSPHERE_ON_SOURCE'     : 'ATMOSPHERE',
         'CALIBRATE_ATMOSPHERE#OFF_SOURCE'    : 'ATMOSPHERE',
         'CALIBRATE_ATMOSPHERE.OFF_SOURCE'    : 'ATMOSPHERE',
-        'CALIBRATE_ATMOSPHERE_OFF_SOURCE'     : 'ATMOSPHERE',
+        'CALIBRATE_ATMOSPHERE_OFF_SOURCE'    : 'ATMOSPHERE',
         'CALIBRATE_SIDEBAND_RATIO#ON_SOURCE' : 'SIDEBAND',
         'CALIBRATE_SIDEBAND_RATIO.ON_SOURCE' : 'SIDEBAND',
         'CALIBRATE_SIDEBAND_RATIO_ON_SOURCE' : 'SIDEBAND',

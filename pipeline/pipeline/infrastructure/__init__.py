@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import collections
 import sys
 
 from . import api
@@ -9,6 +8,7 @@ from . import filenamer
 from . import imagelibrary
 from . import jobrequest
 from . import logging
+from . import mpihelpers
 from . import utils
 
 from .callibrary import CalLibrary, CalTo, CalFrom, CalApplication, CalState, SDCalLibrary 

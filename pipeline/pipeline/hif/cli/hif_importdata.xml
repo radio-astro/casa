@@ -59,6 +59,15 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="createmms">
+	<description>Create a MMS</description>
+    <value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>true</value>
+	    <value>false</value>
+	</allowed>
+
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -152,6 +161,11 @@ lazy -- Use the lazy import option
 
 dbservice -- Use online flux catalog on import
    default: True
+
+createmms -- create a multi-measurement set ('true') ready for parallel
+    processing, or a standard measurement set ('false'). The default setting
+    ('automatic') creates an MMS if running in a cluster environment.
+    default: automatic
 
 --- pipeline task execution modes
 

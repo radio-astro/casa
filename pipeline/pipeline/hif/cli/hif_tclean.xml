@@ -207,6 +207,16 @@ Compute a clean map.
     <value>1</value>
   </param>
 
+  <param type="string" name="parallel">
+    <description>Clean images using MPI cluster</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>true</value>
+      <value>false</value>
+    </allowed>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -506,6 +516,9 @@ threshold -- Threshold for cleaning
 maxncleans -- Maximum number of clean calls
     default: 1
     example: 10
+
+parallel -- use MPI cluster to clean images
+    default: \'automatic\'
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

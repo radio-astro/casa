@@ -7,7 +7,7 @@ import pipeline.h.cli.utils as utils
 def hif_makeimages(vis=None, target_list=None, weighting=None,
                    robust=None, noise=None, npixels=None, hm_masking=None,
                    hm_cleaning=None, tlimit=None, masklimit=None,
-                   maxncleans=None, 
+                   maxncleans=None, parallel=None,
                    pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

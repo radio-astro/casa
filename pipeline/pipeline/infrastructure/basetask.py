@@ -393,11 +393,17 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
     """
     __metaclass__ = abc.ABCMeta
 
-    def _init_properties(self, properties={}, kw_ignore=['self']):
+    def _init_properties(self, properties=None, kw_ignore=None):
         """
         Set the instance properties using a dictionary of keyword/value pairs.
         Properties named in kw_ignore will not be set.
         """
+        if properties is None:
+            properties = {}
+        if kw_ignore is None:
+            kw_ignore = []
+        kw_ignore.append('self')
+
         # set the value of each parameter to that given in the input arguments
         # force context to be set first as some of the others depend on it.
         setattr(self, 'context', properties['context'])
