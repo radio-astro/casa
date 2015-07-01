@@ -339,6 +339,52 @@ sdms.subtract_baseline_variable('m100_fitparam.txt')
 </method>
 
 
+<method type="function" name="apply_baseline_table">
+  <shortdescription>Apply baseline table to MS.
+  </shortdescription>
+  <description>
+For each row of given baseline table, read baseline parameters, 
+constrct baseline, then subtract it from the corresponding spectrum 
+in the MS.
+  </description>
+  <input>
+
+    <param type="string" name="bltable">
+      <description>The name of input Baseline Table</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="any" name="spw">
+      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
+  </input>
+  <returns type="bool"/>
+  <example>
+sdms.open('m100_sd.ms')
+sdms.set_selection(field='M100')
+sdms.apply_baseline_table('m100_sd.bltable')
+  </example>
+</method>
+
+
 <method type="function" name="set_selection">
   <shortdescription>Select Measurementset to process</shortdescription>
   

@@ -200,6 +200,26 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
 }
 
 bool
+singledishms::apply_baseline_table(string const& bltable,
+				   string const& datacolumn,
+				   ::casac::variant const& spw,
+				   string const& outfile)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->applyBaselineTable(datacolumn, bltable, toCasaString(spw), outfile);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
 singledishms::set_selection(::casac::variant const& spw,
 		    ::casac::variant const& field, 
 		    ::casac::variant const& antenna, 
