@@ -44,11 +44,13 @@ These methods and models are described in detail in EVLA Memo 143, VLA Test Memo
 Saves the plot to the following default file:  MS name + .plotweather.png
 Custom plot filenames must end in one of: .png, .pdf, .ps, .eps or .svg
 
-If run as a function, will return the mean zenith opacity per spectral window
+If run as a function, will return the mean zenith opacity per spectral window.
+
+The wind direction is defined as the direction where the wind is coming from. 
+The wind direction is thus in the opposite side of the arrow, with north at
+the top and counterclockwise through west, south, and east. 
 
 Written by Josh Marvil, revised 02/06/12
-Please direct questions/comments/bug reports to: jmarvil@aoc.nrao.edu
-
 
 example:
 myTau = plotweather(vis='myMS.ms',seasonal_weight=0.5, doPlot=True)
