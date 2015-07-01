@@ -1714,15 +1714,17 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	}
 
 	// Custom axes ranges set by user
-    // OR CAS-3263 points near zero are not plotted so fudge the lower bound slightly
+    // OR CAS-3263 points near zero are not plotted so add margin to the lower bound 
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
+        double xmin, xmax, ymin, ymax;
+        itsCache_->indexer(0,iteration).minsMaxes(xmin, xmax, ymin, ymax);
 		if ( axesParams->xRangeSet() ){
 			canvas->setAxisRange(cx, axesParams->xRange());
 		} else {
-            pair<Double, Double> xbounds = itsCache_->getXAxisBounds();
-            if ((xbounds.first > 0.0) && (xbounds.first < 1.0) && (xbounds.second > 2.0)) {
-                xbounds.first -= 0.1;
+            if ((xmin > -0.5) && (xmin < 1.0) && (xmax > 10.0)) {
+                xmin -= 0.1;
+                pair<double, double> xbounds = make_pair(xmin, xmax);
 			    canvas->setAxisRange(cx, xbounds);
             }
         }
@@ -1731,9 +1733,9 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			if ( axesParams->yRangeSet(i) ){
 				canvas->setAxisRange(cy, axesParams->yRange(i));
 			} else {
-                pair<Double, Double> ybounds = itsCache_->getYAxisBounds();
-                if ((ybounds.first > 0.0) && (ybounds.first < 1.0) && (ybounds.second > 2.0)) {
-                    ybounds.first -= 0.1;
+                if ((ymin > -0.5) && (ymin < 1.0) && (ymax > 10.0)) {
+                    ymin -= 0.1;
+                    pair<double, double> ybounds = make_pair(ymin, ymax);
                     canvas->setAxisRange(cy, ybounds);
                 }
 		    }
