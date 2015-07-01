@@ -13,7 +13,7 @@ def hifa_importdata(vis=None, session=None, pipelinemode=None, asis=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'ImportData'
+    task_name = 'ALMAImportData'
     
     ##########################################################################
     #                                                                        #
