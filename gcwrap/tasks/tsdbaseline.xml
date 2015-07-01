@@ -111,7 +111,7 @@ pipeline processing for huge dataset.
         <shortdescription>format(s) of file(s) in which best-fit parameters are written [\'text\', \'csv\', \'table\' or \'\']</shortdescription>
         <description>format(s) of file(s) in which best-fit parameters are written</description>
         <any type="variant" limittypes="string stringArray"/>
-        <value type="string">table</value>
+        <value type="string">text</value>
         <allowed kind="enum">
             <value>table</value>
             <value>text</value>
@@ -245,7 +245,7 @@ pipeline processing for huge dataset.
             <when param="blmode">
                 <equals value="fit">
                         <default param="dosubtract"><value>True</value></default>
-                        <default param="blformat"><value type="string">table</value></default>
+                        <default param="blformat"><value type="string">text</value></default>
                         <default param="bloutput"><value type="string"></value></default>
                 </equals>
                 <equals value="apply">
