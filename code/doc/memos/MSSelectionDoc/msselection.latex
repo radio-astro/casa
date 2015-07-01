@@ -753,18 +753,18 @@ any of the above mentioned uv-distance specifications.  E.g.
 Frequency selection expression consists of two specifications
 separated by colon (':') in the form:
 \begin{verbatim}
-      SPWSPEC[:CHANSPEC]
+      SPWSPEC[:FREQSPEC]
 \end{verbatim}
-where SPW is the spectral window specification and CHANSPEC is the
+where SPW is the spectral window specification and FREQSPEC is the
 optional frequency specification for selection within the selected
 spectral windows.  When channel specification is omitted, all channels
 of the selected SPW are selected.
 
-SPWSPEC and CHANSPEC allow use of semi-colon separated lists.  As a
+SPWSPEC and FREQSPEC allow use of semi-colon separated lists.  As a
 result, list of SPWSPEC can be given in two ways: (1) a semi-colon
 separated list, (2) coma separated list.  This allows simple
 selections to remain simple and more complex selections consistent
-with the syntax for CHANSPEC list.
+with the syntax for FREQSPEC list.
 
 The full syntax is shown in the Railroad Diagram format in
 Table~\ref{Tab:RAILROAD_SPW} and explained in the following sections.
@@ -776,13 +776,13 @@ Table~\ref{Tab:RAILROAD_SPW} and explained in the following sections.
 \hline
 \small {Syntax of} & \small{Railroad Diagram}\\
 \hline
-   SPW[:FREQ] expression    &  \includegraphics[width=8cm]{SPW-EXPR.png}  \\
+   SPWSPEC[:FREQSPEC] expression    &  \includegraphics[width=8cm]{SPW-EXPR.png}  \\
 \hline
-   SPWID Spec.   &   \includegraphics[width=8cm]{SPWID.png}\\
+   SPWSPEC   &   \includegraphics[width=8cm]{SPWID.png}\\
 \hline
-   FREQ Spec.    &   \includegraphics[width=8cm]{FREQ.png}\\
+   FREQSPEC    &   \includegraphics[width=8cm]{FREQ.png}\\
 \hline
-   RANGE Spec.   &   \includegraphics[width=8cm]{RANGE.png}\\
+   RANGESPEC   &   \includegraphics[width=8cm]{RANGE.png}\\
 \hline
 \end{tabular}
 \label{Tab:RAILROAD_SPW}
@@ -811,7 +811,7 @@ a list of boolean expressions involving IDs.  E.g.
   value.
 \item spwspec={\tt 1,2,3} selects spectral window IDs 1,2 and 3
 \item spwspec={\tt 1;2;3} same as above.  This style can be used along
-  with CHANSPEC
+  with FREQSPEC
 \item spwspec={\tt 1$\sim$3} same as above
 \end{itemize}
 
@@ -849,7 +849,7 @@ allowed units are Hz, KHz, MHz, GHz or THz.  E.g.
 \item spwspec={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
   frequency 1421.0, 1422.0 and 1423.0 MHz.
 \item spwspec={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
-  can be used along with CHANSPEC.
+  can be used along with FREQSPEC.
 \item spwspec={\tt $>$327MHz} selects all spectral windows with reference
   frequency greater than 327.0 MHz
 \item spwspec={\tt $<$327MHz} selects all spectral windows with reference
@@ -864,7 +864,7 @@ Channel specification\footnote{\it The \MSS\ module is currently
   applied to the data.  The list of tuples per SPW is passed to the
   application program layer and the interpretation of the tuples for
   actual selection depends on the application programmer.} (referred
-to as CHANSPEC in the following description) is a START, STOP, STEP
+to as FREQSPEC in the following description) is a START, STOP, STEP
 tuple corresponding to the first frequency channel, the last frequency
 channel and the step size to increment from the first to the last
 channel.  The START and STOP part of the tuple can be
@@ -912,9 +912,9 @@ channel specifications.  E.g.
 
 The specifications for SPW and channels can be combined to form a
 fully qualified frequency selection expression of the form
-SPWSPEC[:CHANSPEC] (square brackets indicate that :CHANSPEC is
+SPWSPEC[:FREQSPEC] (square brackets indicate that :FREQSPEC is
 optional).  A frequency selection expression is a comma-separated list
-of SPWSPEC[:CHANSPEC] specifications.  Channel selections apply to all
+of SPWSPEC[:FREQSPEC] specifications.  Channel selections apply to all
 SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 
 \begin{itemize}
@@ -954,7 +954,7 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 
 Figure~\ref{FIG:SPW} shows an example frequency setup to motivate the
 need to separate the full frequency selection expression into SPWSPEC
-and CHANSPEC parts.  SPW0 covers the frequency range 1.0--2.0~GHz with
+and FREQSPEC parts.  SPW0 covers the frequency range 1.0--2.0~GHz with
 SPW1 overlapping in the range 1.6--1.7~GHz, with a reference frequency
 of 1.5~GHz and 1.65~GHz respectively.  With independent specifications
 for SPW and channel selection, selection expressions can be

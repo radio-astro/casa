@@ -30,8 +30,8 @@ set all_graphs {
     {
 	loop 
 	{
-	    line {loop SPWID ;} 
-	    {line {or nil  {line : {loop FREQ ;}}}}
+	    line {loop SPWSPEC ;} 
+	    {line {or nil  {line : {loop FREQSPEC ;}}}}
 	} ,
     }
 
@@ -40,14 +40,14 @@ set all_graphs {
 	line 
 	{
 	    or 
-	    {line {or nil > <} {or INTEGER FREQ}}
-	    REGEX RANGE
+	    {line {or nil > <} {or INTEGER FREQSPEC}}
+	    REGEX RANGESPEC
 	}
     }
 
     FREQ 
     {
-	line {or NUMBER RANGE} {or K M G T} Hz
+	line {or NUMBER RANGESPEC} {or K M G T} Hz
     }
 
     RANGE
