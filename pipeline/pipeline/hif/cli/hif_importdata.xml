@@ -31,7 +31,7 @@
 
     <param type="string" name="asis" subparam="true">
 	<description>ASDM to convert as is</description>
-	<value>Antenna Station Receiver CalAtmosphere</value>
+	<value></value>
     </param>
 
     <param type="bool" name="process_caldevice" subparam="true">
@@ -84,7 +84,7 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string"></value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -92,7 +92,7 @@
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string"></value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
