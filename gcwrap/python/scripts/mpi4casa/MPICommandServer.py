@@ -20,6 +20,8 @@ from MPICommunicator import MPICommunicator
 
 # Import MPIMonitorServer singleton
 from MPIMonitorServer import MPIMonitorServer
+import tempfile
+import uuid
 
 
 class MPICommandServer: 
@@ -271,13 +273,33 @@ class MPICommandServer:
             
             casalog_call_origin = "MPICommandServer::start_virtual_frame_buffer"
 
+            displayport = os.getpid()
+            while os.path.exists('/tmp/.X%d-lock' % displayport):
+                displayport += 1
+
+            self.__virtual_frame_buffer_port = ":%d" % displayport
+
+            self.__xauthfile = tempfile.NamedTemporaryFile()
+
             try:
-                self.__virtual_frame_buffer_port = ":%s" % str(os.getpid())
-                self.__virtual_frame_buffer_process = subprocess.Popen(['Xvfb',self.__virtual_frame_buffer_port],
+                cookie = subprocess.check_output(['mcookie'], universal_newlines=True).strip()
+            except:
+                cookie = str(uuid.uuid4()).replace('-', '')
+
+            #sometimes also works without auth, so accept failure
+            subprocess.call(['xauth', '-f', self.__xauthfile.name, 'add'
+                             self.__virtual_frame_buffer_port, '.', cookie],
+                             stdout=self.__logfile_descriptor,
+                             stderr=self.__logfile_descriptor)
+
+            try:
+                self.__virtual_frame_buffer_process = subprocess.Popen(['Xvfb',self.__virtual_frame_buffer_port,
+                                                                       '-auth', self.__xauthfile.name],
                                                                        stdout=self.__logfile_descriptor, 
                                                                        stderr=self.__logfile_descriptor,
                                                                        shell=False)
                 os.environ['DISPLAY']=self.__virtual_frame_buffer_port
+                os.environ['XAUTHORITY'] = self.__xauthfile.name
                 casalog.post("Deployed virtual frame buffer at %s with pid %s" % 
                              (self.__virtual_frame_buffer_port,
                               str(self.__virtual_frame_buffer_process.pid)),
@@ -312,7 +334,12 @@ class MPICommandServer:
                                     "SEVERE",casalog_call_origin)
             else:
                 casalog.post("Virtual frame buffer not deployed","WARN",casalog_call_origin)            
-            
+
+            self.__xauthfile.close()
+            subprocess.call(['xauth', '-f', self.__xauthfile.name, 'remove'
+                             self.__virtual_frame_buffer_port],
+                             stdout=self.__logfile_descriptor,
+                             stderr=self.__logfile_descriptor)
             
         def start_services(self):
         
