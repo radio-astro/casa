@@ -135,7 +135,7 @@ class TcleanHeuristics(object):
             return 'standard'
 
     def deconvolver(self, intent, field):
-        return 'hogbom'
+        return 'clark'
 
     def imsize(self, fields, cell, max_pixels=None):
         # get spread of beams
