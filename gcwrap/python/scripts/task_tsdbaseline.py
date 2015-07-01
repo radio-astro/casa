@@ -72,10 +72,16 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                antenna=str(antenna), timerange=timerange, 
                                scan=scan)
 
+            #if isinstance(blformat, list)
+
+            #if isinstance(bloutput, list)
+
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
-                                                  bltable=bloutput,
+                                                 # bltable=bloutput,
+                                                  blformat=blformat,
+                                                  bloutput=bloutput,
                                                   dosubtract=dosubtract,
                                                   spw=spw,
                                                   pol=pol,
