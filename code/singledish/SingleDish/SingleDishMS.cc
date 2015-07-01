@@ -1303,8 +1303,8 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 // Apply baseline table to MS
 void SingleDishMS::applyBaselineTable(string const& in_column_name,
 				      string const& in_bltable_name,
-				      string const& out_ms_name,
-				      string const in_spw)
+				      string const& in_spw,
+				      string const& out_ms_name)
 {
   LogIO os(_ORIGIN);
   os << "Apply baseline table " << in_bltable_name << " to MS. " << LogIO::POST;
@@ -1512,7 +1512,6 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 	  
   	  // set back a spectrum to data cube
 	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
-
   	} // end of polarization loop
 
       } // end of chunk row loop

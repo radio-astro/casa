@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 
 #include <casa/Utilities/Assert.h>
 #include <singledish/SingleDish/BaselineTable.h>
@@ -70,6 +71,7 @@ BLTableParser::BLTableParser(string const file_name, string const spw) : BLParam
 BLTableParser::~BLTableParser()
 {
   delete bt_;
+  bt_ = 0;
 }
 
 void BLTableParser::initialize()
@@ -117,7 +119,6 @@ void BLTableParser::parse(string const spw)
   is >> i_spw;
   size_t nrow = bt_->nrow();
   for (uInt irow = 0; irow < nrow; ++irow) {
-    if (bt_->getSpw(irow) != i_spw) continue;
     for (uInt ipol = 0; ipol < npol; ++ipol) {
       if (!bt_->getApply(irow, ipol)) continue;
       LIBSAKURA_SYMBOL(BaselineType) curr_type_idx = 
@@ -290,12 +291,35 @@ bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid,
 				       size_t &idx)
 {
   bool found = false;
+  uInt idx_end = bt_->nrow() - 1;
+  uInt bt_scanid;
+  uInt bt_beamid;
+  uInt bt_spwid;
+  for (uInt i = 0; i <= idx_end; ++i) {
+    bt_scanid = bt_->getScan(i);
+    bt_beamid = bt_->getBeam(i);
+    bt_spwid = bt_->getSpw(i);
+    if ((scanid == bt_scanid)&&(beamid == bt_beamid)&&(spwid == bt_spwid)) {
+      idx = i;
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+/*
+bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid, 
+				       size_t const beamid, size_t const spwid, 
+				       size_t &idx)
+{
+  bool found = false;
   uInt idx_top = 0;
   uInt idx_end = bt_->nrow() - 1;
   uInt idx_mid = (idx_top + idx_end)/2;
   double time_top = bt_->getTimeTimeSorted(idx_top);
   double time_end = bt_->getTimeTimeSorted(idx_end);
   double time_mid = bt_->getTimeTimeSorted(idx_mid);
+  std::cout << "time_top = " << time_top << "(" << idx_top << "),  time_mid = " << time_mid << "(" << idx_mid << "),  time_end = " << time_end << "(" << idx_end << ")" << std::endl;
   if ((time < time_top)||(time_end < time)) { // out of range.
     return false;
   }
@@ -323,6 +347,7 @@ bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid,
     }
     idx_mid = (idx_top + idx_end)/2;
     time_mid = bt_->getTimeTimeSorted(idx_mid);
+    std::cout << "time_top = " << time_top << "(" << idx_top << "),  time_mid = " << time_mid << "(" << idx_mid << "),  time_end = " << time_end << "(" << idx_end << ")" << std::endl;
   }
   if (!found) {
     //only two candidates should exist now. 
@@ -343,9 +368,49 @@ bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid,
   uInt bt_beamid;
   uInt bt_spwid;
   bt_->getIdsTimeSorted((uInt)idx, &bt_scanid, &bt_beamid, &bt_spwid);
-  return (scanid == bt_scanid)&&(beamid == bt_beamid)&&(spwid == bt_spwid);
+  found = (scanid == bt_scanid)&&(beamid == bt_beamid)&&(spwid == bt_spwid);
+  std::cout << "****[blparams found = " << (found ? "YES!" : "NO...") << "]" << std::endl;
+  return found;
 }
+*/
 
+void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol, 
+					 bool &apply, std::vector<float> &coeff, 
+					 std::vector<double> &boundary, 
+					 BLParameterSet &bl_param)
+{
+  apply = bt_->getApply(idx, ipol);
+  if (!apply) return;
+  bl_param.baseline_type = static_cast<LIBSAKURA_SYMBOL(BaselineType)>(bt_->getBaselineType(idx, ipol));
+  Vector<Int> fpar(bt_->getFuncParam(idx)[0]);
+  switch (bl_param.baseline_type) {
+  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+    bl_param.order = fpar[ipol];
+    coeff.resize(bl_param.order + 1);
+    for (size_t i = 0; i < coeff.size(); ++i) {
+      Vector<Float> res(bt_->getResult(idx)[i]);
+      coeff[i] = res[ipol];
+    }
+    break;
+  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+    bl_param.npiece = fpar[ipol];
+    boundary.resize(bl_param.npiece);
+    for (size_t i = 0; i < boundary.size(); ++i) {
+      Vector<Float> ffpar(bt_->getFuncFParam(idx)[i]);
+      boundary[i] = ffpar[ipol];
+    }
+    coeff.resize(bl_param.npiece * 4);
+    for (size_t i = 0; i < coeff.size(); ++i) {
+      Vector<Float> res(bt_->getResult(idx)[i]);
+      coeff[i] = res[ipol];
+    }
+    break;
+  default:
+    throw(AipsError("Unsupported baseline type."));
+  }
+}
+/*
 void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol, 
 					 bool &apply, std::vector<float> &coeff, 
 					 std::vector<double> &boundary, 
@@ -395,6 +460,7 @@ void BLTableParser::GetFitParameterByIdx(size_t const idx, size_t const ipol,
     throw(AipsError("Unsupported baseline type."));
   }
 }
+*/
 
 bool BLParameterParser::GetFitParameter(size_t const rowid,size_t const polid, BLParameterSet &bl_param)
 {

@@ -104,11 +104,14 @@ public:
   ////Matrix<BaselineType> getFunctionNames();
   ////BaselineType getFunctionName(int irow, int ipol);
   Matrix<Int> getFuncParam() {return fparCol_.getColumn();}
+  Matrix<Int> getFuncParam(uInt irow) {return fparCol_.get(irow);}
   ////std::vector<int> getFuncParam(int irow, int ipol);
   Matrix<Float> getFuncFParam() {return ffparCol_.getColumn();}
+  Matrix<Float> getFuncFParam(uInt irow) {return ffparCol_.get(irow);}
   Matrix<uInt> getMaskList() {return maskCol_.getColumn();}
   ////std::vector<bool> getMask(int irow, int ipol);
   Matrix<Float> getResult() {return resCol_.getColumn();}
+  Matrix<Float> getResult(uInt irow) {return resCol_.get(irow);}
   Matrix<Float> getRms() {return rmsCol_.getColumn();}
   Vector<uInt> getNChan() {return nchanCol_.getColumn();}
   uInt getNChan(int irow);

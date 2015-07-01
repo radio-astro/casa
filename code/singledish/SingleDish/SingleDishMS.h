@@ -83,8 +83,8 @@ public:
   // apply baseline table
   void applyBaselineTable(string const& in_column_name,
 			  string const& in_bltable_name,
-			  string const& out_ms_name,
-			  string const in_spw);
+			  string const& in_spw,
+			  string const& out_ms_name);
 
   // smooth data with arbitrary smoothing kernel
   // currently only gaussian smoothing is supported
