@@ -37,7 +37,8 @@ class ImportDataInputs(basetask.StandardInputs):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
+    #asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
+    asis = basetask.property_with_default('asis', '')
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     bdfflags = basetask.property_with_default('bdfflags', True)
