@@ -732,6 +732,20 @@ pair<Double,Double> PlotMSCacheBase::getTimeBounds() const {
 	return timeBounds;
 }
 
+pair<Double,Double> PlotMSCacheBase::getYAxisBounds() const {
+    pair<Double,Double> axisBounds;
+	axisBounds.first = yminG_;
+	axisBounds.second = ymaxG_;
+	return axisBounds;
+}
+
+pair<Double,Double> PlotMSCacheBase::getXAxisBounds() const {
+    pair<Double,Double> axisBounds;
+	axisBounds.first = xminG_;
+	axisBounds.second = xmaxG_;
+	return axisBounds;
+}
+
 bool PlotMSCacheBase::isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
 		Bool globalYRange, int dataIndex ) const {
 	bool initialized = true;

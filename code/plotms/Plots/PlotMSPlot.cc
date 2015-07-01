@@ -1713,18 +1713,31 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 		canvas->setAxisFont(Y_RIGHT, yFont);
 	}
 
-	// Custom axes ranges
+	// Custom axes ranges set by user
+    // OR CAS-3263 points near zero are not plotted so fudge the lower bound slightly
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
 		if ( axesParams->xRangeSet() ){
 			canvas->setAxisRange(cx, axesParams->xRange());
-		}
+		} else {
+            pair<Double, Double> xbounds = itsCache_->getXAxisBounds();
+            if ((xbounds.first > 0.0) && (xbounds.first < 1.0) && (xbounds.second > 2.0)) {
+                xbounds.first -= 0.1;
+			    canvas->setAxisRange(cx, xbounds);
+            }
+        }
 		for ( int i = 0; i < yAxisCount; i++ ){
+			PlotAxis cy = axesParams->yAxis( i );
 			if ( axesParams->yRangeSet(i) ){
-				PlotAxis cy = axesParams->yAxis( i );
 				canvas->setAxisRange(cy, axesParams->yRange(i));
-			}
-		}
+			} else {
+                pair<Double, Double> ybounds = itsCache_->getYAxisBounds();
+                if ((ybounds.first > 0.0) && (ybounds.first < 1.0) && (ybounds.second > 2.0)) {
+                    ybounds.first -= 0.1;
+                    canvas->setAxisRange(cy, ybounds);
+                }
+		    }
+        }
 	}
 
 	// Title

@@ -241,6 +241,9 @@ public:
   String getTimeBounds( int iterValue );
   // Return the time as doubles 
   pair<Double,Double> getTimeBounds() const;
+  // Return the axes ranges
+  pair<Double,Double> getXAxisBounds() const;
+  pair<Double,Double> getYAxisBounds() const;
 
 protected:
     
