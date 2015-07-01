@@ -190,6 +190,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MeasurementSet thisms(selpars.msname, TableLock(TableLock::AutoNoReadLocking),
 				selpars.readonly ? Table::Old : Table::Update);
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+
     useScratch_p=selpars.usescratch;
     readOnly_p = selpars.readonly;
     //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
@@ -1665,24 +1666,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // it.
   //
   // If someone can get me (SB) out of the horrible statc_casts in the
-  // code below, I will be most grateful.
+  // code below, I will be most grateful (we are out of it! :-)).
   //
   void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
-    if (cfList.nelements() == 0) 
-      os << "NoOp due to zero-length cfList" << LogIO::POST;
+    // if (cfList.nelements() == 0) 
+    //   os << "NoOp due to zero-length cfList" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
     (void)cfList;
     // If not an AWProject-class FTM, make this call a NoOp.  Might be
     // useful to extend it to other projection FTMs -- but later.
     String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
-    if (!ftmName.contains("AWProject")) return;
+
+    //cerr << "FTM name = " << ftmName << endl;
+    if (!((itsMappers.getFTM(whichFTM,True))->isUsingCFCache())) return;
+    // if (!ftmName.contains("AWProject") and
+    // 	!ftmName.contains("MultiTermFTNew")) return;
 
     os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
 
     //
-    // Got through the entire MS in "dry" mode to set up a "blank"
+    // Go through the entire MS in "dry" mode to set up a "blank"
     // CFCache.  This is done by setting the AWPWBFT in dryrun mode
     // and gridding.  The process of gridding emits CFCache, which
     // will be "blank" in a dry run.
@@ -1694,14 +1699,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",True);
 
       itsMappers.initializeGrid(*vb);
+
       // AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
       // tt.setDryRun(True);
-      (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setDryRun(True);
-      //itsMappers.getFTM(whichFTM)->setDryRun(True);
-      //(itsMappers.getFTM(whichFTM))->setDryRun(True);
+      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
+      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
+
+      // The following code requiring FTM-specific static_cast may (?)
+      // not be required now.  Leaving it here for a few cycles before
+      // getting rid of it.
+    // if (ftmName=="MultiTermFTNew")
+    //   {
+    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
+    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
+    //   }
+    // else
+    //   {
+    // 	(*(itsMappers.getFTM(whichFTM,True))).setDryRun(True);
+    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(True);
+    //   }
+    
+      // Set the gridder (iFTM) to run in dry-gridding mode
+      (itsMappers.getFTM(whichFTM,True))->setDryRun(True);
 
       os << "Making a \"blank\" CFCache" << LogIO::WARN << LogIO::POST;
 
+      // Step through the MS.  This triggers the logic in the Gridder
+      // to determine all the CFs that will be required.  These empty
+      // CFs are written to the CFCache.
       for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
 	{
 	  
@@ -1713,7 +1738,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       //itsMappers.finalizegrid(*vb);
     }
-    (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM)))).setDryRun(False);
+    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
+    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
+
+    // if (ftmName=="MultiTermFTNew")
+    //   {
+    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
+    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
+    //   }
+    // else
+    //   {
+    // 	(itsMappers.getFTM(whichFTM,True))->setDryRun(False);
+    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(False);
+    //   }
+
+    // Unset the dry-gridding mode.
+    (itsMappers.getFTM(whichFTM,True))->setDryRun(False);
+
     //itsMappers.checkOverlappingModels("restore");
     unlockMSs();
     //fillCFCache(cfList);
@@ -1731,16 +1772,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool& aTermOn)
     {
       LogIO os( LogOrigin("SynthesisImager","fillCFCache",WHERE) );
-      if (cfList.nelements() == 0) 
-	os << "NoOp due to zero-length cfList" << LogIO::POST;
-
-      //Int whichFTM=0;
       // If not an AWProject-class FTM, make this call a NoOp.  Might be
       // useful to extend it to other projection FTMs -- but later.
       // String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
 
-      //if (!ftmName.contains("AWProject")) return;
-      if (!ftmName.contains("awproject")) return;
+      if (!ftmName.contains("awproject") and
+	  !ftmName.contains("multitermftnew")) return;
+      //if (!ftmName.contains("awproject")) return;
       
       os << "---------------------------------------------------- fillCFCache ---------------------------------------------" << LogIO::POST;
 

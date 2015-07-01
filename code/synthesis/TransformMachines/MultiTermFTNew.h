@@ -169,6 +169,14 @@ public:
   };
 
   FTMachine* cloneFTM();
+  virtual void setDryRun(Bool val) 
+  {
+    isDryRun=val;
+    //cerr << "MTFTMN: " << isDryRun << endl;
+    for (Int i=0;i<subftms_p.nelements();i++)
+      subftms_p[i]->setDryRun(val);
+  };
+  virtual Bool isUsingCFCache() {Bool v=False; if (subftms_p.nelements() > 0) v=subftms_p[0]->isUsingCFCache(); return v;};
 
 protected:
   // have to call the initmaps of subftm

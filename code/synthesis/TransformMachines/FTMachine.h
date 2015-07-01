@@ -368,8 +368,17 @@ public:
   CountedPtr<CFCache> getCFCache() {return cfCache_p;};
   String getCacheDir() { return cfCache_p->getCacheDir(); };
 
-  virtual void setDryRun(Bool val) {isDryRun=val;cerr << "FTM: " << isDryRun << endl;};
+  virtual void setDryRun(Bool val) 
+  {
+    isDryRun=val;
+    //cerr << "FTM: " << isDryRun << endl;
+  };
   virtual Bool dryRun() {return isDryRun;}
+  virtual Bool isUsingCFCache() 
+  {
+    // cerr << "@#%$@% = " << cfCache_p.nrefs() << endl;
+    return (cfCache_p.nrefs()!=0);
+  }
   Bool isDryRun;
 
 protected:

@@ -12,7 +12,7 @@ namespace casa{
     };
   Double EVLABandMinFreqDefaults[EVLABeamCalc_NumBandCodes] = 
     {
-      0.9E9, 2.1E9, 4.0E9, 8.0E9, 12.0E9, 18.0E9, 26.5E9, 40.0E9 
+      0.9E9, 2.0E9, 4.0E9, 8.0E9, 12.0E9, 18.0E9, 26.5E9, 40.0E9 
     };
   Double EVLABandMaxFreqDefaults[EVLABeamCalc_NumBandCodes] = 
     {

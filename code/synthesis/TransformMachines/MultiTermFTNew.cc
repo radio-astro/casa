@@ -384,19 +384,22 @@ void MultiTermFTNew::put(VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type typ
     
     subftms_p[0]->put(vb,row,dopsf,type);
     
-    Int gridnterms=nterms_p;
-    if(dopsf==True) // && donePSF_p==False) 
+    if (!dryRun())
       {
-	gridnterms=2*nterms_p-1;
-      }
-    
-    //cout << "  Calling put for " << gridnterms << " terms, nelements :  " << subftms_p.nelements() << "  and dopsf " << dopsf << endl;
-    
-    for(Int tix=1;tix<gridnterms;tix++)
-      {
-	modifyVisWeights(vb,tix);
-	subftms_p[tix]->put(vb,row,dopsf,type); 
-	restoreImagingWeights(vb);
+	Int gridnterms=nterms_p;
+	if(dopsf==True) // && donePSF_p==False) 
+	  {
+	    gridnterms=2*nterms_p-1;
+	  }
+	
+	//cout << "  Calling put for " << gridnterms << " terms, nelements :  " << subftms_p.nelements() << "  and dopsf " << dopsf << endl;
+	
+	for(Int tix=1;tix<gridnterms;tix++)
+	  {
+	    modifyVisWeights(vb,tix);
+	    subftms_p[tix]->put(vb,row,dopsf,type); 
+	    restoreImagingWeights(vb);
+	  }
       }
     
     

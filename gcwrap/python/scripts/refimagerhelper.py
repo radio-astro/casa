@@ -293,8 +293,9 @@ class PySynthesisImager:
         #self.SItool.fillcfcache(**(self.cfcachepars), self.allgridpars['0']['gridder'],cfcName);
         
         self.SItool.fillcfcache(cflist, self.allgridpars['0']['gridder'],
-                                cfcName,self.allgridpars['0']['psterm'],
-                                cfcName,self.allgridpars['0']['aterm']);
+                                cfcName,
+                                self.allgridpars['0']['psterm'],
+                                self.allgridpars['0']['aterm']);
                   
 #############################################
     def reloadCFCache(self):
@@ -659,6 +660,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs(joblist);
 #############################################
     def fillCFCache(self):
+        print "-----------------------fillCFCache------------------------------------"
         # cflist=[f for f in os.listdir(self.allgridpars['cfcache']) if re.match(r'CFS*', f)];
         # partCFList = 
         allcflist = self.PH.partitionCFCacheList(self.allgridpars['0']);
