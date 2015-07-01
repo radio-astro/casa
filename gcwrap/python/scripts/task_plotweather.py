@@ -21,12 +21,12 @@ import os.path as osp
 def jm_clip_Yticks():
     xa=pl.gca()
     nlabels=0
-    for label in xa.yaxis.get_ticklabels(): 
+    for label in xa.yaxis.get_ticklabels():
         nlabels+=1
     thislabel=0
     if nlabels>3:
-        for label in xa.yaxis.get_ticklabels(): 
-            if thislabel==0: label.set_alpha(0)            
+        for label in xa.yaxis.get_ticklabels():
+            if thislabel==0: label.set_alpha(0)
             if thislabel==nlabels-1: label.set_alpha(0)
             thislabel+=1
 
@@ -58,14 +58,14 @@ def jm_set_Yvar_ticks(myScale=4):
 
 ###############
 ## calculates K-band zenith opacity from temperature and dewpoint
-def Tau_K_Calc(D,T,day, weights=(.5,.5)): 
-    P = pl.exp(1.81+(17.27*D)/(D+237.3)) # water vapor partial pressure 
-    h = 324.7*P/(T+273.15) # PWV in mm 
+def Tau_K_Calc(D,T,day, weights=(.5,.5)):
+    P = pl.exp(1.81+(17.27*D)/(D+237.3)) # water vapor partial pressure
+    h = 324.7*P/(T+273.15) # PWV in mm
     tau_w = 3.8 + 0.23*h + 0.065*h**2 # tau from weather, in %, at 22GHz
-    if day > 199: day = day - 365. 
-    m = day + 165. # modified day of the year 
-    tau_d = 22.1 - 0.178*m + 0.00044*m**2 # tau from seaonal model, in % 
-    tau_k = weights[0]*tau_w + weights[1]*tau_d # the average, with equal weights (as in the AIPS default) 
+    if day > 199: day = day - 365.
+    m = day + 165. # modified day of the year
+    tau_d = 22.1 - 0.178*m + 0.00044*m**2 # tau from seaonal model, in %
+    tau_k = weights[0]*tau_w + weights[1]*tau_d # the average, with equal weights (as in the AIPS default)
     return tau_k, h
 
 ################
@@ -85,7 +85,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     # check for weather table
 
     if osp.isdir(myMS+'/WEATHER'):
-    
+
         try:
             tb.open(myMS+'/WEATHER')
             firstTime = tb.getcol('TIME')[0]
@@ -107,18 +107,21 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
 
     ##retrieve center frequency for each sub-band
     tb.open(myMS+'/SPECTRAL_WINDOW')
-    spwFreqs=tb.getcol('REF_FREQUENCY') * 1e-9   
+    spwFreqs=tb.getcol('REF_FREQUENCY') * 1e-9
     tb.close()
 
     ##retrieve stuff from weather table, if exists
-    
+
     if WEATHER_table_exists:
         tb.open(myMS+'/WEATHER')
         mytime=tb.getcol('TIME')
         mytemp=tb.getcol('TEMPERATURE') - 273.15
         mydew=tb.getcol('DEW_POINT') - 273.15
         mywinds=tb.getcol('WIND_SPEED')
-        mywindd=tb.getcol('WIND_DIRECTION')*(180.0/pi) - 90
+        # Text starts at 90 degrees, whereas the wind direction starts at 0
+        # Hence the wind direction is adjusted 90 degrees counterclockwise
+        # to make the arrows point to right direction
+        mywindd=270-tb.getcol('WIND_DIRECTION')*(180.0/pi)
         mypres=tb.getcol('PRESSURE')
         myhum=tb.getcol('REL_HUMIDITY')
         tb.close()
@@ -134,7 +137,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     for time in mytime:
         t1= qa.quantity(time,'s')
         myday=qa.convert(t1,'d')
-        sunEL1=jm_sunEL(myday)        
+        sunEL1=jm_sunEL(myday)
         sunEL.append(sunEL1)
 
     ##convert time to a string of date/time
@@ -146,12 +149,12 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
         time2=qa.time(q1,form='local')[0]
         myTimestr.append(time1)
         myTimestr2.append(time2)
- 
+
     ##convert time to a decimal
-    numtime=pl.datestr2num(myTimestr)    
+    numtime=pl.datestr2num(myTimestr)
 
     ##### calculate opacity as in EVLA memo 143
-    thisday= 30*(float(myTimestr[0][5:7])-1)+float(myTimestr[0][8:10]) 
+    thisday= 30*(float(myTimestr[0][5:7])-1)+float(myTimestr[0][8:10])
     thisday=thisday + 5 * (thisday / 365.)
 
 
@@ -161,19 +164,19 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
         myTauZ1, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(0,1.0))
         myTauZ2, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(1.0,0))
 
-        # estimate pwv from seasonal model zenith opacity    
+        # estimate pwv from seasonal model zenith opacity
         myPWV2 = -1.71 + 1.3647*myTauZ1
         myPWV = (1-seasonal_weight)*myPWV1 + seasonal_weight*myPWV2
- 
+
     else:
         day = thisday*1.0
-        if day > 199: day = day - 365. 
-        m = day + 165. # modified day of the year 
-        myTauZ = 22.1 - 0.178*m + 0.00044*m**2 # tau from seaonal model, in % 
+        if day > 199: day = day - 365.
+        m = day + 165. # modified day of the year
+        myTauZ = 22.1 - 0.178*m + 0.00044*m**2 # tau from seaonal model, in %
         myPWV = -1.71 + 1.3647*myTauZ
         myPWV1, myPWV2 = myPWV, myPWV
         myTauZ1, myTauZ2 = myTauZ, myTauZ
- 
+
     tmp = qa.quantity(270.0,'K')
     pre = qa.quantity(790.0,'mbar')
     alt = qa.quantity(2125,'m')
@@ -199,9 +202,9 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     mysg = sg['value']
 
     nstep = 20
-    pwv = []  
+    pwv = []
     opac = pl.zeros((len(mysg),nstep))
-    
+
     for i in range(nstep):
         hum = 20.0*(i+1)
         myatm = at.initAtmProfile(alt,tmp,pre,mxA,hum,wvl,dpr,dpm,h0,att)
@@ -222,7 +225,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     for i in range(len(mysg)):
         myfit=pl.polyfit(pwv,opac[i,:],1)
         pwv_coef[i,:]=myfit
-    
+
     freqs=pl.array(mysg)/1e9
     coef0=pwv_coef[:,1]/1e-3
     coef1=pwv_coef[:,0]/1e-3
@@ -241,12 +244,12 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
 
 
     tau_allF = (pl.array(coef0) + pl.array(coef1)*pl.mean(myPWV)) * 1e-1  #percent
-    tau_allF1 = (pl.array(coef0) + pl.array(coef1)*pl.mean(myPWV1)) *1e-1  
-    tau_allF2 = (pl.array(coef0) + pl.array(coef1)*pl.mean(myPWV2)) *1e-1  
+    tau_allF1 = (pl.array(coef0) + pl.array(coef1)*pl.mean(myPWV1)) *1e-1
+    tau_allF2 = (pl.array(coef0) + pl.array(coef1)*pl.mean(myPWV2)) *1e-1
 
     casalog.post('SPW : Frequency (GHz) : Zenith opacity (nepers)')
     for i in range(len(meanTau)):
-        myStr = str(i).rjust(3) + '  :  ' 
+        myStr = str(i).rjust(3) + '  :  '
         myStr2 = '%.3f'%(spwFreqs[i])
         myStr += myStr2.rjust(7) + '  :  ' +str(round(meanTau[i], 3))
         casalog.post(myStr)
@@ -261,7 +264,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     pl.ioff()
     myColor2='#A6A6A6'
     myColorW='#92B5F2'
-    myColor1='#4D4DFF'  
+    myColor1='#4D4DFF'
     myOrangeColor='#FF6600'
     myYellowColor='#FFCC00'
     myWeirdColor='#006666'
@@ -299,7 +302,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     nwind=60
     myj=pl.array(pl.linspace(0,len(mywinds)-1,nwind),dtype='int')
     for i in myj:
-        pl.text(numtime[i]+Xtextoffset,Ytextoffset+mywinds[i],'-->',rotation=mywindd[i], alpha=1,color='purple',fontsize=12) 
+        pl.text(numtime[i]+Xtextoffset,Ytextoffset+mywinds[i],'-->',rotation=mywindd[i], alpha=1,color='purple',fontsize=12)
 
     pl.plot(numtime, .3+mywinds,'.', color='black', ms=2, alpha=0)
     jm_set_Ylabel_pos(pos=(0,.5))
@@ -310,8 +313,8 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     xa.set_xticks(pl.linspace(min(numtime),max(numtime),3))
 
     sp4=thisfig.add_axes([.13,.5,.8,.15])
-    pl.plot(numtime, mytemp,'-', color=myOrangeColor,lw=2)      
-    pl.plot(numtime, mydew,'-', color=myWeirdColor,lw=2)      
+    pl.plot(numtime, mytemp,'-', color=myOrangeColor,lw=2)
+    pl.plot(numtime, mydew,'-', color=myWeirdColor,lw=2)
     pl.ylabel('temp,dew')
     jm_set_Ylabel_pos(pos=(0, .5))
     xa=pl.gca(); xa.set_xticklabels('')
@@ -335,7 +338,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
 
     middletimei=int(floor(len(myTimestr)/2.))
     middletimes=str(myTimestr[middletimei])[11:]
-    endtimes=myTimestr[-1][11:]                
+    endtimes=myTimestr[-1][11:]
     ax=pl.gca()
     axt=ax.get_xticks()
     ax.set_xticks(pl.linspace(min(numtime),max(numtime),3))
@@ -346,7 +349,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     pl.plot(freqs,.01*tau_allF1,'-', color=myColor1, lw=2, label='weather station')
     pl.plot(freqs,.01*tau_allF,'-', color=myColorW, lw=2,label='weighted')
 
-  
+
     sp8.legend(loc=2, borderaxespad=0)
     pl.ylabel('Tau_Z (nepers)')
     pl.xlabel('Frequency (GHz)')
@@ -358,5 +361,3 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
 
     casalog.post('wrote weather figure: '+plotName)
     return meanTau
-
-
