@@ -1889,7 +1889,6 @@ class test_clip(test_base):
                 
     def test_residual_col(self):
         '''flagdata: clip RESIDUAL column'''
-        self.setUp_data4tfcrop()
         flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='RESIDUAL', clipzeros=True)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 137472)

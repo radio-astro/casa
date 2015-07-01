@@ -25,6 +25,7 @@ test_fixplanets                 dpetry@nrao.edu
 test_fixvis                     dpetry@nrao.edu
 test_flagcmd                    scastro@eso.org
 test_flagdata                   scastro@eso.org
+test_flaghelper                 scastro@eso.org
 test_fluxscale                  ttsutsum@nrao.edu
 test_gaincal			gmoellen@aoc.nrao.edu
 test_gencal                     ttsutsum@nrao.edu

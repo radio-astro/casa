@@ -1849,13 +1849,13 @@ def evaluateParameters(pardict):
                     # Try string                    
                     if val.count("'") > 0:
                         val = val.strip("'")
-                    if val.count('"') > 0:
+                    elif val.count('"') > 0:
                         val = val.strip('"')
                         
                     # CAS-6553 cannot have only one quote. remove it
                     if val.count("'") == 1:
                         val = val.replace("'", '')
-                    if val.count('"') == 1:
+                    elif val.count('"') == 1:
                         val = val.replace('"', '')
                         
                     newval = str(val).strip()
@@ -2127,7 +2127,7 @@ def parseXML(sdmfile, mytbuff):
         antid = str(rowid[0].childNodes[0].nodeValue).strip()
         antdict[antid] = ant
     casalog.post('Found ' + str(rowlist.length)
-                 + ' antennas in Antenna.xml')
+                 + ' rows in Antenna.xml')
 
     # construct look-up dictionary of name vs. id from SpectralWindow.xml
     if spwexist:
@@ -2135,17 +2135,19 @@ def parseXML(sdmfile, mytbuff):
         spwdict = {}
         rowlist = xmlspws.getElementsByTagName('row')
         ispw = 0
+        wvrnominal = False
         for rownode in rowlist:
             rowid = rownode.getElementsByTagName('spectralWindowId')
             # CAS-4532: remove spaces between content and tags
             spwid = str(rowid[0].childNodes[0].nodeValue).strip()
             spwdict[spwid] = {}
             spwdict[spwid]['index'] = ispw
-            # SMC: 6/3/2012 ALMA SDM does not have name
             if rownode.getElementsByTagName('name'):
                 rowname = rownode.getElementsByTagName('name')
-                spw = str(rowname[0].childNodes[0].nodeValue).strip()
-                spwdict[spwid]['name'] = spw
+                spwname = str(rowname[0].childNodes[0].nodeValue).strip()
+                if spwname == 'WVR#NOMINAL':
+                    wvrnominal = True
+                spwdict[spwid]['name'] = spwname
             else:
                 spwmode = -1
                 
@@ -2155,7 +2157,7 @@ def parseXML(sdmfile, mytbuff):
 #            spwdict[spwid]['index'] = ispw
             ispw += 1
         casalog.post('Found ' + str(rowlist.length)
-                     + ' spw in SpectralWindow.xml')
+                     + ' rows in SpectralWindow.xml')
 
     # report chosen spw and pol modes
     if spwmode > 0:
@@ -2260,24 +2262,30 @@ def parseXML(sdmfile, mytbuff):
                     casalog.post('Cannot open ' + sdmfile
                                  + '/SpectralWindow.xml', 'SEVERE')
                     exit(1)
-                casalog.post('Found SpectralWindow=' + str(nspw)
+                casalog.post('Found numSpectralWindow=' + str(nspw)
                              + ' must be a new style SDM')
             newspw = 1
             if nspw > 0:
-                rowspwid = \
-                    rownode.getElementsByTagName('spectralWindowId')
+                rowspwid = rownode.getElementsByTagName('spectralWindowId')
                 spwids = rowspwid[0].childNodes[0].nodeValue
                 xspw = spwids.split()
                 for isp in range(nspw):
                     spid = str(xspw[2 + isp])
                     if spwmode > 0:
-                        spstr = spwdict[spid]['name']
+                        spstr =spwdict[spid]['name']
+                        # Skip the WVR#Antenna_* if WVR#NOMINAL is present
+                        if spstr.__contains__('WVR#Antenna') and wvrnominal==True:
+                            continue
+                        if spwstring == '':
+                            spwstring = '"'+spstr+'"'
+                        else:
+                            spwstring += ',' + '"'+spstr+'"'
                     else:
-                        spstr = str(spwdict[spid]['index'])
-                    if spwstring == '':
-                        spwstring = spstr
-                    else:
-                        spwstring += ',' + spstr
+                        spstr = (spwdict[spid]['index'])
+                        if spwstring == '':
+                            spwstring = spstr
+                        else:
+                            spwstring += ',' + spstr
         polstring = ''
         rownpol = rownode.getElementsByTagName('numPolarizationType')
         if polmode != 0 and rownpol.__len__() > 0:
@@ -2312,7 +2320,7 @@ def parseXML(sdmfile, mytbuff):
         cmddict['timerange'] = timestr
         if spwstring != '':
 #            cmd += " spw='" + spwstring + "'"
-#            flagdict[fid]['spw'] = spwstring
+            flagdict[fid]['spw'] = spwstring
             cmddict['spw'] = spwstring
 #        if polstring != '':
 #            cmd += " poln='" + polstring + "'"

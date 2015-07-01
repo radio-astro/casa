@@ -199,6 +199,14 @@ class test_base(unittest.TestCase):
         os.system('ln -sf '+datapath+myasdmname)
         default(importasdm)
 
+    def setUp_flags(self):
+        res = None
+        myasdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
+
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
+        os.system('ln -sf '+datapath+myasdmname)
+        default(importasdm)
+
 
 ###########################
 # beginning of actual test 
@@ -1238,7 +1246,7 @@ class asdm_import8(test_base):
     def setUp(self):
         self.setUp_12mex()
         self.setUp_acaex()
-       
+        
     def tearDown(self):
         for myasdmname in ['uid___A002_X71e4ae_X317_short', 'uid___A002_X72bc38_X000']:
             os.system('rm -f '+myasdmname) # a link
@@ -1541,6 +1549,31 @@ class asdm_import8(test_base):
         os.system("mv moved_"+myasdmname+" "+myasdmname)
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+class asdm_import9(test_base):
+    '''Test importasdm with spw selection in online flags'''
+    
+    def setUp(self):
+        self.setUp_flags()
+       
+    def tearDown(self):
+        for myasdmname in ['test_uid___A002_X997a62_X8c-short']:
+            os.system('rm -f '+myasdmname) # a link
+            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+
+    def test_online1(self):
+        '''test_online1: online flags file with spw selection by name'''
+        myasdmname = 'test_uid___A002_X997a62_X8c-short'
+        themsname = myasdmname+".ms"
+        flagfile = myasdmname+'_cmd.txt'
+
+        importasdm(myasdmname, vis=themsname, scans='1', savecmds=True)
+        flist = open(flagfile,'r').read().splitlines()
+        self.assertTrue(flist[0].__contains__('spw'))
+        self.assertFalse(flist[3].__contains__('WVR#Antenna'))
+        self.assertFalse(flist[4].__contains__('WVR#Antenna'))
+
         
         
 def suite():
@@ -1551,6 +1584,7 @@ def suite():
             asdm_import5,
             asdm_import6,
             asdm_import7,
-            asdm_import8]        
+            asdm_import8,
+            asdm_import9]        
         
     

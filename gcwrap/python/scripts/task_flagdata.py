@@ -339,48 +339,51 @@ def flagdata(vis,
                 # If tbuff is requested, read and Parse
                 if tbuff == 0.0 or tbuff == [] or tbuff == None:
                     doPadding = False
-                    
+                     
                 if doPadding:
                     casalog.post('Will apply time buffer padding')
-
+ 
                     # inpfile is a file
                     if isinstance(inpfile, str):
                         inpfile = [inpfile]
-                        
+                         
                     # read in the list and do a simple parsing to apply tbuff
                     flaglist = fh.readAndParse(inpfile, tbuff)
-                    
+                     
                 else:                    
                     # inpfile is a file
                     if isinstance(inpfile, str) and os.path.isfile(inpfile):
                         flaglist = fh.readFile(inpfile)
                         nlines = len(flaglist)
                         casalog.post('Read %s command(s) from file: %s'%(nlines, inpfile))                              
-                        
+                         
                     # inpfile is a list of files
                     elif isinstance(inpfile, list) and os.path.isfile(inpfile[0]):
                         flaglist = fh.readFiles(inpfile)
-                        
-                    # must be a Python list of strings
-                    else:
+                         
+                    # Python list of strings
+                    elif isinstance(inpfile, list):                    
                         flaglist = inpfile
-                            
                         
+                    else:
+                        raise Exception, 'Unsupported input list of flag commands or input file does not exist'
+                             
+                         
                 # Parse and create a dictionary
                 flagcmd = fh.parseDictionary(flaglist, reason)
-                
+                 
                 # Validate the dictionary. 
                 # IMPORTANT: if any parameter changes its type, the following
                 # function needs to be updated. The same if any new parameter is
                 # added or removed from the task
                 fh.evaluateFlagParameters(flagcmd,orig_locals)
-                    
+                     
                 # List of flag commands in dictionary
                 vrows = flagcmd.keys()
-
+ 
                 casalog.post('%s'%flagcmd,'DEBUG1')
-                
-                
+                 
+                 
             except Exception, instance:
                 casalog.post('%s'%instance,'ERROR')
                 raise Exception, 'Error reading the input list. Make sure the syntax used in the list '\
@@ -615,28 +618,33 @@ def flagdata(vis,
             
             unionpars = {}
             # Do not create union for a cal table
-            if iscal:
-                if vrows.__len__() == 1:
-                    unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
-                    casalog.post('The selected subset of the cal table will be: ');
-                    casalog.post('%s'%unionpars);
-                    
-            else:
-                if vrows.__len__() > 1:
-                   unionpars = fh.parseUnion(vis, flagcmd)
-                   
-                   if( len( unionpars.keys() ) > 0 ):
-                        casalog.post('Pre-selecting a subset of the MS : ');
-                        casalog.post('%s'%unionpars)
-                        
-                   else:
-                        casalog.post('Iterating through the entire MS');
-                                                
-                # Get all the selection parameters, but set correlation to ''
-                elif vrows.__len__() == 1:
-                    unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
-                    casalog.post('The selected subset of the MS will be: ');
-                    casalog.post('%s'%unionpars);
+#             if iscal:
+#                 if vrows.__len__() == 1:
+#                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
+#                     casalog.post('The selected subset of the cal table will be: ');
+#                     casalog.post('%s'%unionpars);
+#                      
+#             else:
+#                 if vrows.__len__() > 1:
+#                    unionpars = fh.parseUnion(vis, flagcmd)
+#                      
+#                    if( len( unionpars.keys() ) > 0 ):
+#                         casalog.post('Pre-selecting a subset of the MS : ');
+#                         casalog.post('%s'%unionpars)
+#                           
+#                    else:
+#                         casalog.post('Iterating through the entire MS');
+#                                                  
+#                 # Get all the selection parameters, but set correlation to ''
+#                 if vrows.__len__() == 1:
+#                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
+#                     casalog.post('The selected subset of the MS will be: ');
+#                     casalog.post('%s'%unionpars);
+                
+            if vrows.__len__() == 1:
+                unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
+                casalog.post('The selected subset of the MS will be: ');
+                casalog.post('%s'%unionpars);
                 
             aflocal.selectdata(unionpars);
 

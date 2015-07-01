@@ -84,9 +84,19 @@ class test_base(unittest.TestCase):
         if not os.path.exists(self.inpfile):
             os.system('cp '+datapath + self.inpfile +' '+ self.inpfile)
             
+    def setUp_mockasdm(self):
+        '''Mock ASDM containing only XML files'''
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/importasdm/"
+        self.inpfile = 'uid___MockASDM'
+
+        if not os.path.exists(self.inpfile):
+            os.system('cp -RL ' +datapath + self.inpfile +' '+ self.inpfile)
+            
     def tearDown_all(self):
         '''Remove used files'''
         os.system('rm -rf flaghelper*.txt')
+        
+    
         
 
 class test_flaghelper(test_base):
@@ -499,6 +509,18 @@ class test_flaghelper(test_base):
         
         self.assertTrue(fh.evaluateFlagParameters(adict, fparams))
         
+    def test_parseXML1(self):
+        '''flaghelper: test parsing XML for online flags'''
+        self.setUp_mockasdm()
+        fdict = fh.parseXML(self.inpfile, 0.0)
+        self.assertTrue(fdict[0].has_key('spw'))
+        spw0 = fdict[0]['spw']
+        cmd0 = fdict[0]['command']
+        self.assertTrue(spw0.__contains__('WVR#NOMINAL'))
+        self.assertFalse(spw0.__contains__('WVR#Antenna'))
+        self.assertEqual(len(fdict.keys()), 12572)
+        self.assertTrue(cmd0.has_key('spw'))
+
         
 def suite():
     return [test_flaghelper]
