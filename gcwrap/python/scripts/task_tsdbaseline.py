@@ -9,14 +9,15 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     casalog.origin('tsdbaseline')
 
     try:
-        if ((os.path.exists(outfile)) and (not overwrite)):
-            raise Exception(outfile+' exists.')
+        if os.path.exists(outfile) and not overwrite:
+            raise Exception(outfile + ' exists.')
         if (maskmode!='list'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
         if (blfunc=='variable' and not os.path.exists(blparam)):
             raise ValueError, "input file '%s' does not exists" % blparam
-        if (spw == ''): spw = '*'
         
+        if (spw == ''): spw = '*'
+
         if blmode == 'apply':
             if not os.path.exists(bltable):
                 raise ValueError, "file specified in bltable '%s' does not exist." % bltable
@@ -27,25 +28,25 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 ant_ids = range(tb.nrows())
             with sdutil.tbmanager(infile + '/FEED') as tb:
                 feed_ids = numpy.unique(tb.getcol('FEED_ID'))
-            
-            sel_cond_list = []
-            for spw_idx in spw_ids:
-                for ant_idx in ant_ids:
-                    for feed_idx in feed_ids:
-                        sel_cond_list.append({'spw': str(spw_idx),
-                                              'ant': str(ant_idx),
-                                              'feed': str(feed_idx)})
 
             sorttab_info = remove_sorted_table_keyword(infile)
+
+            if overwrite and os.path.exists(outfile):
+                os.system('rm -rf %s' % outfile)
+
+            selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
+                                        baseline=str(antenna), time=timerange, 
+                                        scan=scan)
+            sdms.open(infile)
+            sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
+                               antenna=str(antenna), timerange=timerange, 
+                               scan=scan)
+            sdms.apply_baseline_table(bltable=bltable,
+                                      datacolumn=datacolumn,
+                                      spw=spw,
+                                      outfile=outfile)
+            sdms.close()
             
-            for sel_cond in sel_cond_list:
-                sdms.open(infile)
-                sdms.set_selection(spw=sel_cond['spw'], field=field, 
-                                   antenna=sel_cond['ant'],
-                                   timerange=timerange, scan=scan)
-                #sdms.apply_baseline_table()
-                sdms.close()
-                
             restore_sorted_table_keyword(infile, sorttab_info)
             
         elif blmode == 'fit':
@@ -79,7 +80,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
-                                                 # bltable=bloutput,
+                                                  bltable=bloutput, # remove this line once text/csv output becomes available (2015/7/1 WK)
                                                   blformat=blformat,
                                                   bloutput=bloutput,
                                                   dosubtract=dosubtract,
@@ -90,6 +91,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                                   blparam=blparam,
                                                   clip_threshold_sigma=clipthresh,
                                                   num_fitting_max=clipniter+1)
+            if overwrite and os.path.exists(outfile):
+                os.system('rm -rf %s' % outfile)
             func(**params)
 
             if (blfunc == 'variable'):
