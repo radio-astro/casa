@@ -335,11 +335,11 @@ class MPICommandServer:
             else:
                 casalog.post("Virtual frame buffer not deployed","WARN",casalog_call_origin)            
 
-            self.__xauthfile.close()
             subprocess.call(['xauth', '-f', self.__xauthfile.name, 'remove'
                              self.__virtual_frame_buffer_port],
                              stdout=self.__logfile_descriptor,
                              stderr=self.__logfile_descriptor)
+            self.__xauthfile.close()
             
         def start_services(self):
         
