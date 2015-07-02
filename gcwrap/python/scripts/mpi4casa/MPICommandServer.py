@@ -11,6 +11,7 @@ from taskinit import *
 # so we need to re-define the global CASA task and macro definitions at this level.
 from task_wrappers import *
 from task_macros import *
+from taskinit import casalog
 
 # Import MPIEnvironment static class
 from MPIEnvironment import MPIEnvironment
@@ -22,6 +23,7 @@ from MPICommunicator import MPICommunicator
 from MPIMonitorServer import MPIMonitorServer
 import tempfile
 import uuid
+import os
 
 
 class MPICommandServer: 
@@ -111,7 +113,7 @@ class MPICommandServer:
                 msg_available = False
                 try:
                     msg_available = self.__communicator.command_request_probe()
-                except Exception, instance:
+                except Exception as instance:
                     casalog.post("Exception checking if command request msg is available: %s" 
                                  % str(instance),"SEVERE",casalog_call_origin)
                     msg_available = False
@@ -124,7 +126,7 @@ class MPICommandServer:
                         casalog.post("Received command request msg: %s" 
                                      % command_request['command'],MPIEnvironment.command_handling_log_level,casalog_call_origin)
                         msg_received = True
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception receiving command request msg: %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)
@@ -177,7 +179,7 @@ class MPICommandServer:
                         command_response['successful'] = True
                         command_response['traceback'] = None
                         
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception executing command request via %s: %s" 
                                      % (command_request['mode'],str(formatted_traceback)),"SEVERE",casalog_call_origin)
@@ -192,7 +194,7 @@ class MPICommandServer:
                             for parameter in command_request['parameters']:
                                 try:
                                     del globals()[parameter]
-                                except Exception, instance:
+                                except:
                                     formatted_traceback = traceback.format_exc()
                                     casalog.post("Exception deleting parameter variable '%s' from global environment: %s" 
                                                  % (str(parameter),str(formatted_traceback)),"WARN",casalog_call_origin)
@@ -211,7 +213,7 @@ class MPICommandServer:
                                      % (str(command_response['id']),str(command_response['mode'])),
                                      MPIEnvironment.command_handling_log_level,casalog_call_origin)                           
                         self.__communicator.command_response_send(response=command_response)
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception sending back command response: %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)                
@@ -233,7 +235,7 @@ class MPICommandServer:
             try:
                 self.__command_request_handler_service_on = True
                 self.__command_request_handler_service_thread = thread.start_new_thread(self.__command_request_handler_service, ())
-            except Exception, instance:
+            except Exception as instance:
                 self.__command_request_handler_service_on = False
                 self.__command_request_handler_service_running = False
                 casalog.post("Exception starting MPI command request handler service: %s" 
@@ -304,7 +306,7 @@ class MPICommandServer:
                              (self.__virtual_frame_buffer_port,
                               str(self.__virtual_frame_buffer_process.pid)),
                              "INFO",casalog_call_origin)
-            except Exception, instance:
+            except:
                 self.__virtual_frame_buffer_process = None                
                 formatted_traceback = traceback.format_exc()
                 casalog.post("Exception deploying virtual frame buffer at %s: %s" 
@@ -325,7 +327,7 @@ class MPICommandServer:
                                   str(self.__virtual_frame_buffer_process.pid)),
                                  "DEBUG",casalog_call_origin)
                     self.__virtual_frame_buffer_process = None
-                except Exception, instance:
+                except:
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception shutting down virtual frame buffer deployed at %s with pid %s: %s" 
                                  % (self.__virtual_frame_buffer_port,
@@ -380,7 +382,7 @@ class MPICommandServer:
                 msg_available = False
                 try:
                     msg_available = self.__communicator.control_service_request_probe()
-                except Exception, instance:
+                except:
                     msg_available = False
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception checking if control service msg is available: %s" 
@@ -394,7 +396,7 @@ class MPICommandServer:
                     try:
                         control_service_request = self.__communicator.control_service_request_recv()
                         msg_received = True
-                    except Exception, instance:
+                    except:
                         msg_received = False
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception receiving control service msg: %s"
@@ -410,7 +412,7 @@ class MPICommandServer:
                             casalog.post("Control signal %s successfully handled by server %s" 
                                          % (str(cmd),str(MPIEnvironment.mpi_processor_rank)),
                                          "INFO",casalog_call_origin)                            
-                        except Exception, instance:
+                        except:
                             formatted_traceback = traceback.format_exc()
                             casalog.post("Exception handling control signal command %s in server %s: %s" 
                                          % (str(cmd),str(MPIEnvironment.mpi_processor_rank),str(formatted_traceback)),
@@ -422,7 +424,7 @@ class MPICommandServer:
                     if send_response:
                         try:
                             self.__communicator.control_service_response_send(response=self.__monitor_server.get_status())
-                        except Exception, instance:
+                        except:
                             formatted_traceback = traceback.format_exc()
                             casalog.post("Exception sending response to control signal command %s in server %s: %s" 
                                          % (str(cmd),str(MPIEnvironment.mpi_processor_rank),str(formatted_traceback)),
@@ -456,7 +458,7 @@ class MPICommandServer:
                 try:
                     casalog.post("Going to finalize MPI environment","INFO",casalog_call_origin)
                     MPIEnvironment.finalize_mpi_environment()
-                except Exception, instance:
+                except:
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception finalizing MPI environment %s" 
                                  % str(formatted_traceback),"SEVERE",casalog_call_origin)

@@ -5,8 +5,8 @@ import time # To handle sleep times
 import traceback # To pretty-print tracebacks
 import atexit # To handle destructors
 
- # Import casalog and casa dictionary
-from taskinit import *
+from taskinit import casalog
+from taskinit import casa
 
 # Import MPIEnvironment static class
 from MPIEnvironment import MPIEnvironment
@@ -147,7 +147,7 @@ class MPICommandClient:
                 msg_available = False
                 try:
                     msg_available = self.__communicator.command_response_probe()
-                except Exception, instance:
+                except:
                     msg_available = False
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception checking if command response msg is available: %s" 
@@ -186,7 +186,7 @@ class MPICommandClient:
                             # If there are no requests pending from this group send the group response signal
                             if len(self.__command_group_response_list[command_group_response_id]['list']) == 0:
                                 self.__command_group_response_list[command_group_response_id]['event'].set()
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception receiving command request response msg: %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)
@@ -208,7 +208,7 @@ class MPICommandClient:
             try:
                 self.__command_response_handler_service_on = True
                 self.__command_response_handler_service_thread = thread.start_new_thread(self.__command_response_handler_service, ())
-            except Exception, instance:
+            except:
                 formatted_traceback = traceback.format_exc()
                 self.__command_response_handler_service_on = False
                 self.__command_response_handler_service_running = False
@@ -299,7 +299,7 @@ class MPICommandClient:
                                 # Notify that command request has been sent
                                 casalog.post("Command request with id# %s sent to server n# %s" 
                                              % (str(command_request_id),str(server)),MPIEnvironment.command_handling_log_level,casalog_call_origin)
-                            except Exception, instance:
+                            except:
                                 # Get and format traceback
                                 formatted_traceback = traceback.format_exc()
                                 # Simulate response
@@ -365,7 +365,7 @@ class MPICommandClient:
             try:
                 self.__command_request_queue_service_on = True
                 self.__command_request_queue_service_thread = thread.start_new_thread(self.__command_request_queue_service, ())
-            except Exception, instance:
+            except:
                 formatted_traceback = traceback.format_exc()
                 self.__command_request_queue_service_on = False
                 self.__command_request_queue_service_running = False
@@ -450,7 +450,7 @@ class MPICommandClient:
             # Send request to all servers
             try:
                 self.__communicator.control_service_request_broadcast(signal,casalog)
-            except Exception, instance:
+            except:
                 formatted_traceback = traceback.format_exc()
                 casalog.post("Exception sending control signal to all servers: %s" % str(formatted_traceback),
                              "SEVERE",casalog_call_origin)
@@ -461,7 +461,7 @@ class MPICommandClient:
                 
                 try:
                     mpi_server_rank_list = self.__monitor_client.get_server_rank_online()
-                except Exception, instance:
+                except:
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception checking for response to control signal: %s" % str(formatted_traceback),
                                  "SEVERE",casalog_call_origin)
@@ -472,7 +472,7 @@ class MPICommandClient:
                     response_available = False
                     try:
                         response_available = self.__communicator.control_service_response_probe()
-                    except Exception, instance:
+                    except:
                         response_available = False
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception getting response to control signal: %s" % str(formatted_traceback),
@@ -674,7 +674,7 @@ class MPICommandClient:
                 try:
                     casalog.post("Going to finalize MPI environment","INFO",casalog_call_origin)
                     MPIEnvironment.finalize_mpi_environment()
-                except Exception, instance:
+                except:
                     formatted_traceback = traceback.format_exc()
                     casalog.post("Exception finalizing MPI environment %s" 
                                  % str(formatted_traceback),"SEVERE",casalog_call_origin)
@@ -719,13 +719,13 @@ class MPICommandClient:
                     command_request['mode']='eval'
                     casalog.post("Command will be evaluated as an expression with return value",
                                  "DEBUG",casalog_call_origin)                
-                except Exception, instance:
+                except:
                     try:
                         code = compile(command_request['command'],"send_command_request", "exec")
                         command_request['mode']='exec'
                         casalog.post("Command will be executed as an statement w/o return code",
                                      "DEBUG",casalog_call_origin)                    
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Command cannot be executed neither as a statement nor as an expression, it will be rejected: %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)

@@ -2,9 +2,9 @@
 import thread # To handle service threads like monitoring
 import time # To handle sleep times
 import traceback # To pretty-print tracebacks
+import os
     
-# Import casalog and casa dictionary
-from taskinit import *
+from taskinit import casalog
 
 # Import MPIEnvironment static class
 from MPIEnvironment import MPIEnvironment
@@ -102,7 +102,7 @@ class MPIMonitorServer:
                 msg_available = False
                 try:
                     msg_available = self.__communicator.ping_status_request_probe()
-                except Exception, instance:
+                except Exception as instance:
                     casalog.post("Exception checking if ping status request msg is available: %s" 
                                  % str(instance),"SEVERE",casalog_call_origin)
                     msg_available = False
@@ -112,9 +112,9 @@ class MPIMonitorServer:
                 if (msg_available):
                     self.__last_ping_status_request_time = time.time()
                     try:
-                        ping_status_request = self.__communicator.ping_status_request_recv()
+                        self.__communicator.ping_status_request_recv()
                         msg_received = True
-                    except Exception, instance:
+                    except Exception as instance:
                         
                         casalog.post("Exception receiving ping status request msg: %s" 
                                      % str(instance),"SEVERE",casalog_call_origin)
@@ -136,7 +136,7 @@ class MPIMonitorServer:
                 if (msg_received):
                     try:
                         self.__communicator.ping_status_response_send(response=self.__status)
-                    except Exception, instance:
+                    except:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception sending back ping status response: %s" 
                                      % str(formatted_traceback),"SEVERE",casalog_call_origin)
@@ -162,7 +162,7 @@ class MPIMonitorServer:
             try:
                 self.__ping_status_request_handler_service_on = True
                 self.__ping_status_request_handler_service_thread = thread.start_new_thread(self.__ping_status_request_handler_service, ())
-            except Exception, instance:
+            except Exception as instance:
                 self.__ping_status_request_handler_service_on = False
                 self.__ping_status_request_handler_service_running = False
                 casalog.post("Exception starting MPI ping status request handler service: %s" 
