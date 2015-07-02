@@ -1,13 +1,8 @@
 import os
-import commands
-import math
-import pdb
-import shutil
-import string
 import time
 import ast
 import copy
-from taskinit import *
+from taskinit import casalog, tbtool, qa, tb, ms, aftool
 from parallel.parallel_task_helper import ParallelTaskHelper
 from collections import deque,defaultdict
 # needed in Python 2.6
@@ -1751,7 +1746,6 @@ def plotFlagCommands(myflags,plotname,t1sdata,t2sdata,):
                 thisOffset = readict[thisReason]['offset']
                 t1s = plotflag[ipf]['t1s']
                 t2s = plotflag[ipf]['t2s']
-                myTimeSpan = t2s - t1s
     
                 ax1.plot([t1s, t2s], [antind + thisOffset, antind
                      + thisOffset], color=thisColor, lw=2, alpha=.7)
@@ -2426,7 +2420,7 @@ def addAbsPath(input_file):
         input_file_id.close()
         output_file_id.close()
         raise Exception, 'Error reading lines from file ' \
-            + flagtable
+            + input_file
             
     input_file_id.close()
     output_file_id.close()
@@ -3168,7 +3162,6 @@ def getNumPar(cmddict):
                     elif xkey == "array":
                         ari += 1
                         npars['array'] = ari
-                        arrays += xval + ','
                         
                     elif xkey == "uvrange":
                         ui += 1
@@ -4438,7 +4431,7 @@ def evalString(cmdline):
     
     try:
         pairs = cmdline.split()
-    except Exception, instance:
+    except:
         raise "Whitespace in parameter values is not yet supported"
     
     for kv in pairs:
