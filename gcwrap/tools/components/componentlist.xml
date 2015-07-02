@@ -1000,7 +1000,11 @@ and available in Glish as mycl.
     \item[freqframe] See the 
       <link anchor="componentmodels:componentlist.setfreqframe.function">setfreq</link> 
       function.
-    \item[spectrumtype, index] See the 
+    \item[spectrumtype, index] 
+      The spectral index $\alpha$ such that flux density S as a function of frequency $\nu$ is given by the formula: $S\propto\nu^\alpha$  
+      \newline
+      \newline 
+      See the 
       <link anchor="componentmodels:componentlist.setspectrum.function">setspectrum</link> 
       function.
       
