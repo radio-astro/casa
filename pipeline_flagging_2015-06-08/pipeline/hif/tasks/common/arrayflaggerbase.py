@@ -111,8 +111,8 @@ class FlagCmd(object):
     def __init__(self, filename=None, rulename=None, ruleaxis=None, spw=None,
       antenna=None, intent=None, pol=None, axisnames=None,
       flagcoords=None, channel_axis=None, reason=None,
-      extendfields=None):
-        print 'FlagCmd intent%s spw%s antenna%s axisnames%s flagcoords%s pol%s reason%s' % (
+      extendfields=None, antenna_id_to_name=None):
+        print 'FlagCmd intent=%s spw=%s antenna=%s axisnames=%s flagcoords=%s pol=%s reason=%s' % (
           intent, spw, antenna, axisnames, flagcoords, pol, reason)
 
         self.filename = filename
@@ -127,6 +127,7 @@ class FlagCmd(object):
         self.channel_axis = channel_axis
         self.reason = reason
         self.extendfields = extendfields
+        self.antenna_id_to_name = antenna_id_to_name
 
         # construct the corresponding flag command
         flagcmd = ""
@@ -188,7 +189,11 @@ class FlagCmd(object):
                 elif name.upper()=='BASELINE':
                     ax_antenna = flagcoords[k]
             if ax_antenna is not None:
-                flagcmd += " antenna='%s'" % (ax_antenna)
+                if antenna_id_to_name is None:
+                    flagcmd += " antenna='%s'" % (ax_antenna)
+                else:
+                    flagcmd += " antenna='%s'" % (antenna_id_to_name[ax_antenna])
+                
 #                self.antenna = ax_antenna
 
             flag_time = None
