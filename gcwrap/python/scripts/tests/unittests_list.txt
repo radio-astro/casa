@@ -6,6 +6,7 @@
 # The second column gives the name of the person responsible for each test
 # Do not include the suffix .py
 
+test_applycal                   scastro@eso.org
 test_bandpass			gmoellen@aoc.nrao.edu
 test_boxit                      dmehring@nrao.edu
 test_calanalysis		gmoellen@aoc.nrao.edu
