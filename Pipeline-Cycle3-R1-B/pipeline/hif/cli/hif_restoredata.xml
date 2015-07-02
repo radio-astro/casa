@@ -34,6 +34,11 @@
 	<value>../rawdata</value>
     </param>
 
+    <param type="bool" name="bdfflags">
+        <description>Set the BDF flags</description>
+        <value>True</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -115,6 +120,10 @@ products_dir -- Name of the data products directory. Currently not
 rawdata_dir -- Name of the rawdata subdirectory. 
    default: '../rawdata'
    example: rawdata_dir='myrawdatapath'
+
+bdfflags -- Set the BDF flags
+   default: True
+   example: bdfflags=False
 
 
 --- pipeline task execution modes
