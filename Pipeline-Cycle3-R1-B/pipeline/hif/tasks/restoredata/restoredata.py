@@ -82,7 +82,8 @@ class RestoreDataInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
-        rawdata_dir=None, output_dir=None, session=None, vis=None):
+        rawdata_dir=None, output_dir=None, session=None, vis=None,
+        bdfflags=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -102,6 +103,9 @@ class RestoreDataInputs(basetask.StandardInputs):
         :type session: a string or list of strings
         :param vis: the ASDMs(s) for which data is to be restored
         :type vis: a string or list of strings
+        :param bdfflags: set the BDF flags
+        :type bdfflags: boolean True or False
+
         """
 
         # set the properties to the values given as input arguments
@@ -170,6 +174,16 @@ class RestoreDataInputs(basetask.StandardInputs):
         if type(value) is types.ListType:
             self._my_vislist = value
         self._vis = value
+
+    @property
+    def bdfflags(self):
+        if self._bdfflags is None:
+            self._bdfflags = True
+        return self._bdfflags
+
+    @bdfflags.setter
+    def bdfflags(self, value):
+        self._bdfflags = value
 
 
 class RestoreDataResults(basetask.Results):
@@ -327,7 +341,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         inputs = self.inputs
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    dbservice=False)
+	    bdfflags=inputs.bdfflags, dbservice=False)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
