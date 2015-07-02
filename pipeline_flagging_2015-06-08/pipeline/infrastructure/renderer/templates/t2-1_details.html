@@ -146,6 +146,8 @@ $(document).ready(function(){
 	</div>
 </div>
 
+
+
 <div class="row">        
 	<div class="col-md-6">
 		<a href="${os.path.relpath(weather_plot.abspath, pcontext.report_dir)}" class="fancybox">
@@ -165,6 +167,31 @@ $(document).ready(function(){
 			</div>
 		</div>
 	</div>
+	
+	
+	% if pcontext.project_summary.telescope.lower() in ('alma'):
+	
+	<div class="col-md-6">
+		<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}" class="fancybox">
+			<h3>PWV</h3>
+		</a>
+		<div class="col-md-6">
+		  	<div class="thumbnail">
+				<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}"
+				   class="fancybox">
+					<img src="${os.path.relpath(pwv_plot.thumbnail, pcontext.report_dir)}"
+						 title="PWV Details for ${ms.basename}"
+						 alt="PWV Details for ${ms.basename}" />
+			    </a>
+			    <div class="caption">
+					<h4>PWV plot</h4>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	% endif
+	
 	<div class="col-md-6">
 		<a class="replace" href='${os.path.join(dirname, "t2-2-6.html")}'><h3>Scans</h3></a>
 	</div>	

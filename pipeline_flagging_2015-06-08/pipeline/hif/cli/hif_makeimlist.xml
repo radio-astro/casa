@@ -53,6 +53,7 @@ Create a a list of images to be cleaned.
        <allowed kind="enum">
          <value></value>
          <value>mfs</value>
+         <value>cont</value>
          <value>cube</value>
        </allowed>
   </param>

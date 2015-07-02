@@ -217,6 +217,9 @@ class MakeImList(basetask.StandardTaskTemplate):
         spwlist = spw.replace('[','').replace(']','')
         spwlist = spwlist[1:-1].split("','")
 
+        if inputs.specmode == 'cont':
+            spwlist = [reduce(lambda x,y: x+','+y, spwlist)]
+
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
         self.heuristics = makeimlist.MakeImListHeuristics(
@@ -302,7 +305,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((specmode != 'mfs') and (nchan == -1) and (width == '')):
+        if ((specmode not in ('mfs', 'cont')) and (nchan == -1) and (width == '')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:
@@ -332,7 +335,7 @@ class MakeImList(basetask.StandardTaskTemplate):
                     imagenames[(field_intent,spwspec)] = \
                       self.heuristics.imagename(
                       output_dir=inputs.output_dir, intent=field_intent[1],
-                      field=field_intent[0], spwspec=spwspec)
+                      field=field_intent[0], spwspec=spwspec, specmode=specmode)
                 else:
                     imagenames[(field_intent,spwspec)] = inputs.imagename
 
@@ -342,8 +345,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         result.set_max_num_targets(len(field_intent_list)*len(spwlist))
         for field_intent in field_intent_list:
             for spwspec in spwlist:
-                if (specmode == 'mfs'):
-                    spwsel = self.heuristics.cont_ranges[spwspec]
+                if (specmode in ('mfs', 'cont')):
+                    spwsel = ','.join(self.heuristics.cont_ranges[spwid] for spwid in spwspec.split(','))
                 else:
                     spwsel = ''
 

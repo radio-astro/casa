@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import cgi
 
 import numpy as np
 
@@ -155,3 +156,31 @@ def get_suboptimal_badge(result):
         return '<span class="badge alert-info pull-right">%s</span>' % l
     else:
         return ''
+
+def get_plot_command_markup(ctx, command):
+    if not command:
+        return ''
+    stripped = command.replace('%s/' % ctx.report_dir, '')
+    stripped = stripped.replace('%s/' % ctx.output_dir, '')
+    escaped = cgi.escape(stripped, True).replace('\'', '&#39;')
+
+    btn = '''<a data-toggle="modal" data-target=".plot-command-modal">Plot command</a>
+
+<div class="modal fade plot-command-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Plot command</h4>
+      </div>
+      <div class="modal-body">
+        <p>%s</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->''' % escaped
+
+    return btn

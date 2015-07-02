@@ -41,6 +41,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
             LOG.warn("Unable to obtain plotting ranges for gfluxscale uvdist.")
             uvrange["uvdist"] = numpy.array([0,0])
         
+        
         #Get amp min/max   for vertical axis
         #Visstat call removed for 4.2.2 release
         
@@ -78,6 +79,7 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
                      'avgbaseline' : False,
                      'antenna'     : ant,
                      'correlation' : corrstring,
+                     'uvrange'     : result.uvrange,   #Specified in hifa_gfluxscale task inputs
                      'plotrange'   : [uvrange['uvdist'][0], uvrange['uvdist'][1],pltmin,pltmax],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}

@@ -9,7 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class BaseCleanSequence:
 
-    def __init__(self): 
+    def __init__(self):
         """Constructor.
         """
         self.iter = None
@@ -30,7 +30,7 @@ class BaseCleanSequence:
         self.thresholds = []
 
     def iteration_result(self, iter, psf, model, restored, residual,
-      flux, cleanmask, threshold=None):
+                         flux, cleanmask, threshold=None):
         """This method sets the iteration counter and returns statistics for
         that iteration.
         """
@@ -42,9 +42,9 @@ class BaseCleanSequence:
         self.flux = flux
 
         #if cleanmask is not None and os.path.exists(cleanmask):
-        model_sum, clean_rms, non_cleaned_rms, residual_max,\
-          residual_min, rms2d, image_max = cbheuristic.analyse_clean_result(
-          model, restored, residual, flux, cleanmask)
+        model_sum, clean_rms, non_cleaned_rms, residual_max, \
+            residual_min, rms2d, image_max = cbheuristic.analyse_clean_result(
+            model, restored, residual, flux, cleanmask)
 
         # Append the statistics.
         self.iters.append(iter)
@@ -57,21 +57,21 @@ class BaseCleanSequence:
         self.non_cleaned_rms_list.append(non_cleaned_rms)
 
         return model_sum, clean_rms, non_cleaned_rms, residual_max, \
-          residual_min, rms2d, image_max
+               residual_min, rms2d, image_max
 
-    def iteration (self, new_cleanmask):
+    def iteration(self, new_cleanmask):
         """The base boxworker allows only one iteration.
         """
 
-	if self.iter is None:
-	    raise Exception, 'no data for iteration'
+        if self.iter is None:
+            raise Exception, 'no data for iteration'
 
-	else:
+        else:
             self.result.threshold = '0.0Jy'
             self.result.cleanmask = ''
             self.result.niter = 0
             self.result.iterating = False
 
-	return self.result
+        return self.result
 
 

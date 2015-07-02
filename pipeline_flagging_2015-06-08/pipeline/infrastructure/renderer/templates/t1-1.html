@@ -12,6 +12,15 @@ import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="base.html"/>
 
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
+<script>
+$(document).ready(function() {
+	pipeline.pages.t1_1.ready();
+});
+</script>
+
+
 <%block name="title">Home</%block>
 
 <div class="row">
@@ -140,6 +149,7 @@ import pipeline.infrastructure.utils as utils
 </div>
 
 
+		<div id="qa_notes" data-href="qa_notes.html"></div>
 
 	    <h2>Observation Summary</h2>
 

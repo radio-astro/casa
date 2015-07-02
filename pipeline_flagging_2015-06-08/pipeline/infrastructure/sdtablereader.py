@@ -49,20 +49,28 @@ class ObservingRunReader(object):
             observing_run.add_measurement_set(ms)
         LOG.info('measurement_sets=%s'%(observing_run.measurement_sets))
         LOG.info('st_ms_map=%s'%(st_ms_map))
+        spw_pool = {}
         for (st_file,index) in zip(st_files,st_ms_map):
             ms = observing_run.measurement_sets[index] if index >= 0 else None
-            st = ScantableReaderFromMS.get_scantable(st_file, ms)
+            if spw_pool.has_key(index):
+                st = ScantableReaderFromMS.get_scantable(st_file, ms, spw_pool[index])
+            else:
+                st = ScantableReaderFromMS.get_scantable(st_file, ms)
+                spw_pool[index] = st.spectral_window
             observing_run.append(st)
         return observing_run
 
 ### single dish specific
 class ScantableReader(object):
     @staticmethod
-    def get_scantable(name):
+    def get_scantable(name, shared_spw=None):
         st = domain.singledish.ScantableRep(name)
         st.antenna = ScantableReader.get_antenna(st)
         st.source = ScantableReader.get_source(st)
-        st.spectral_window = ScantableReader.get_spectral_window(st)
+        if shared_spw is None:
+            st.spectral_window = ScantableReader.get_spectral_window(st)
+        else:
+            st.spectral_window = shared_spw
         st.polarization = ScantableReader.get_polarization(st)
         ScantableReader.configure_observation(st)
         ScantableReader.configure_calibration(st)
@@ -290,11 +298,14 @@ class ScantableReader(object):
 
 class ScantableReaderFromMS(ScantableReader):
     @staticmethod
-    def get_scantable(name, ms):
+    def get_scantable(name, ms, shared_spw=None):
         st = domain.singledish.ScantableRep(name, ms=ms)
         st.antenna = ScantableReaderFromMS.get_antenna(st, ms)
         st.source = ScantableReaderFromMS.get_source(st, ms)
-        st.spectral_window = ScantableReaderFromMS.get_spectral_window(st, ms)
+        if shared_spw is None:
+            st.spectral_window = ScantableReaderFromMS.get_spectral_window(st, ms)
+        else:
+            st.spectral_window = shared_spw
         st.polarization = ScantableReaderFromMS.get_polarization(st, ms)
         ScantableReaderFromMS.configure_observation(st)
         ScantableReaderFromMS.configure_calibration(st, ms)
@@ -330,7 +341,7 @@ class ScantableReaderFromMS(ScantableReader):
         spectral_window = {}
         spw_list = ms.get_all_spectral_windows()
         for spw in spw_list:
-            entry = domain.singledish.Frequencies.from_spectral_window(spw)
+            entry = domain.singledish.SpectralWindowAdapter.from_spectral_window(spw)
             spectral_window[spw.id] = entry
                                 
 

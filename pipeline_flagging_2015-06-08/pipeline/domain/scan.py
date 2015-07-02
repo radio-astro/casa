@@ -12,10 +12,23 @@ class Scan(object):
     """
     Class containing info about a single scan.
     """
-    def __init__(self, id=None, antennas=[], intents=[], fields=[],
-                 states=[], data_descriptions=[], scan_times=[]):
+    def __init__(self, id=None, antennas=None, intents=None, fields=None,
+                 states=None, data_descriptions=None, scan_times=None):
         self.id = id
-        
+
+        if antennas is None:
+            antennas = []
+        if intents is None:
+            intents = []
+        if fields is None:
+            fields = []
+        if states is None:
+            states = []
+        if data_descriptions is None:
+            data_descriptions = []
+        if scan_times is None:
+            scan_times = {}
+
         self.antennas = frozenset(antennas)
         self.fields = frozenset(fields)
         self.intents = frozenset(intents)
@@ -26,9 +39,9 @@ class Scan(object):
         # construct the integration-time-per-spw mapping directly from the
         # first subscan entry. The MS spec states that these integration 
         # values are given in seconds, which is just what we want
-        int_seconds = {k : v[0][1]['value']
-                       for k,v in scan_times.iteritems()}
-        self.__mean_intervals = {k : datetime.timedelta(seconds=v)
+        int_seconds = {k: v[0][1]['value']
+                       for k, v in scan_times.iteritems()}
+        self.__mean_intervals = {k: datetime.timedelta(seconds=v)
                                  for k, v in int_seconds.items()}
 
         # will hold the start and end epochs per spw
@@ -36,8 +49,8 @@ class Scan(object):
         self.__end_time = None
         
         # midpoints is a list of tuple of (midpoint epochs, integation time)            
-        sorted_epochs = {spw_id : sorted(midpoints, key=lambda e: e[0]['m0']['value'])
-                             for spw_id, midpoints in scan_times.iteritems()}
+        sorted_epochs = {spw_id: sorted(midpoints, key=lambda e: e[0]['m0']['value'])
+                         for spw_id, midpoints in scan_times.iteritems()}
 
         qt = casatools.quanta
         mt = casatools.measures            
@@ -69,7 +82,7 @@ class Scan(object):
 
             # set end time as latest time over all spectral windows
             if self.__end_time is None or qt.gt(max_val, self.__end_time['m0']):
-                self.__end_time =  range_end_epoch
+                self.__end_time = range_end_epoch
 
     def __repr__(self):
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '

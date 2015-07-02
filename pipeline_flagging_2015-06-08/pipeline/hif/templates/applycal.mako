@@ -109,9 +109,9 @@ $(document).ready(function(){
         },
     	beforeShow : function() {
         	this.title = $(this.element).attr('title');
-       	}    
+       	},
     }); 
-	
+
 	$('.caltable_filename').tooltip({
 	    'selector': '',
 	    'placement': 'left',

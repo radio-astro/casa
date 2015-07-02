@@ -42,7 +42,7 @@ $(document).ready(function() {
         },
     	beforeShow : function() {
         	this.title = $(this.element).attr('title');
-       	}    
+       	}
     }); 
 });
 </script>

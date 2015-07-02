@@ -31,7 +31,7 @@
 
     <param type="string" name="asis" subparam="true">
 	<description>ASDM to convert as is</description>
-	<value>Antenna Station Receiver CalAtmosphere</value>
+	<value></value>
     </param>
 
     <param type="bool" name="process_caldevice" subparam="true">
@@ -59,6 +59,16 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="createmms">
+	<description>Create a MMS</description>
+    <value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>true</value>
+	    <value>false</value>
+	</allowed>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
 	<value>False</value>
@@ -74,7 +84,7 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string"></value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -82,7 +92,7 @@
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
-		<default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+		<default param="asis"><value type="string"></value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
@@ -152,6 +162,11 @@ lazy -- Use the lazy import option
 
 dbservice -- Use online flux catalog on import
    default: True
+
+createmms -- create a multi-measurement set ('true') ready for parallel
+    processing, or a standard measurement set ('false'). The default setting
+    ('automatic') creates an MMS if running in a cluster environment.
+    default: automatic
 
 --- pipeline task execution modes
 

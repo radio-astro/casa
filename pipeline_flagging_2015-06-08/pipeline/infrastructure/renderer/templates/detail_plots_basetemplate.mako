@@ -29,6 +29,7 @@ so that the plot panels are ordered consistently.
 rsc_path = ""
 import cgi
 import os
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 import pipeline.infrastructure.utils as utils
 
 SELECTORS = []
@@ -70,6 +71,7 @@ def format_options(options):
 	sorted_options = utils.numericSort(as_strings)
 	# return HTML element for each option
 	return ['%s' % option for option in sorted_options]
+
 %>
 
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
@@ -160,7 +162,7 @@ $(document).ready(function () {
 					<a href="${fullsize_relpath}"
 					   class="fancybox"
 					   % if hasattr(caller, 'fancybox_caption'):
-					   title="${caller.fancybox_caption(plot)}"
+					   title='<div class="pull-left">${caller.fancybox_caption(plot)}</div><div class="pull-right"><a href="${fullsize_relpath}">Full Size</a><br>${rendererutils.get_plot_command_markup(pcontext, plot.command)}</div>'
 					   % endif
 					   data-thumbnail="${thumbnail_relpath}">
 						<img src="${thumbnail_relpath}"

@@ -127,7 +127,7 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     return clean_more
 
 def niter_and_mask(psf, residual, new_mask):
-    """Method for calibrators reported bY Erci Villard.
+    """Method for calibrators reported bY Eric Villard.
 
     Starting with peak in image, find islands; contiguous pixels above
     threshold. If peak bright enough to cleanbox then adds chosen region
@@ -147,7 +147,7 @@ def niter_and_mask(psf, residual, new_mask):
                         edges of map where spikes may occur.
     """
 
-    sidelobe_ratio =  psf_sidelobe_ratio(psf=psf, island_threshold=0.01)
+    sidelobe_ratio = psf_sidelobe_ratio(psf=psf, island_threshold=0.01)
 
     with casatools.ImageReader(residual) as image:
         # collapse the residual along the frequency axis

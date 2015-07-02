@@ -36,6 +36,22 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         self._antenna = value
 
     @property
+    def uvrange(self):
+        if self._uvrange is not None:
+            return self._uvrange
+        
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('uvrange')
+
+        return ''
+
+    @uvrange.setter
+    def uvrange(self, value):
+        if value is None:
+            value = ''
+        self._uvrange = value
+
+    @property
     def caltable(self):
         """
         Get the caltable argument for these inputs.

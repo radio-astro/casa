@@ -69,7 +69,7 @@ $(document).ready(function() {
                 width: 50,
                 height: 50,
             }
-        }
+        }     
     });
 });
 </script>

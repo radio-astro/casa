@@ -47,7 +47,7 @@ Compute clean results from a list of specified targets.
 
   <param type="int" name="npixels" subparam="true">
     <description>number of pixels for superuniform or briggs weighting</description>
-    <value>1</value>
+    <value>0</value>
   </param>
 
   <param type="string" name="hm_masking">
@@ -75,7 +75,7 @@ Compute clean results from a list of specified targets.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>2.0</value>
+       <value>1.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -86,6 +86,16 @@ Compute clean results from a list of specified targets.
   <param type="int" name="maxncleans" subparam="true">
     <description>Maximum number of clean task calls</description>
     <value>1</value>
+  </param>
+
+  <param type="string" name="parallel">
+    <description>Clean images using MPI cluster</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>true</value>
+      <value>false</value>
+    </allowed>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -224,6 +234,8 @@ weighting_noise -- For weighting='briggsabs'
                        noise parameter to use for Briggs "abs" weighting
                        example noise='1.0mJy'
 
+parallel -- use multiple CPU nodes to clean images
+    default: \'automatic\'
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

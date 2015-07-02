@@ -24,7 +24,7 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-MIN_CASA_REVISION = 28322
+MIN_CASA_REVISION = 33755
 # maximum allowed CASA revision. Set to 0 or None to disable
 MAX_CASA_REVISION = None
 
@@ -205,7 +205,8 @@ class Pipeline(object):
     """
 
     def __init__(self, context=None, output_dir='./', loglevel='info',
-                 casa_version_check=True, name=None, plotlevel='default'):
+                 casa_version_check=True, name=None, plotlevel='default',
+                 path_overrides={}):
         """
         Initialise the pipeline, creating a new ~Context or loading a saved
         ~Context from disk.
@@ -261,6 +262,9 @@ class Pipeline(object):
                 LOG.info ('Reading context from file {0}'.format(context))          
                 last_context = utils.pickle_load(context_file)
                 self.context = last_context
+                
+            for k,v in path_overrides.items():
+                setattr(self.context, k, v)
 
         self._link_casa_log(self.context)
 

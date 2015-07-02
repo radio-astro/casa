@@ -23,7 +23,7 @@ class GSplineGaincalInputs(common.CommonGaincalInputs):
                  # 
                  vis=None, caltable=None, 
                  # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
+                 field=None, spw=None, antenna=None, uvrange=None, intent=None,
                  # solution parameters
                  smodel=None, calmode=None,  refant=None, splinetime=None,
                  npointaver=None, append=None, phasewrap=None,

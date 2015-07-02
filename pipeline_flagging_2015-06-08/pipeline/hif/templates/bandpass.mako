@@ -1,6 +1,7 @@
 <%!
 rsc_path = ""
 import os
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 %>
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />

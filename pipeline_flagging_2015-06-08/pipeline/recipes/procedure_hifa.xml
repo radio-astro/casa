@@ -3,6 +3,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_importdata</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">createmms</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -91,7 +95,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_makecleanlist</Command>
+        <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">intent</Keyword>
@@ -101,20 +105,24 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_cleanlist</Command>
+        <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_makecleanlist</Command>
+        <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_cleanlist</Command>
+        <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">parallel</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

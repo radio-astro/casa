@@ -17,7 +17,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  # 
                  vis=None, caltable=None, 
                  # data selection arguments
-                 field=None, spw=None, antenna=None, intent=None,
+                 field=None, spw=None, antenna=None, uvrange=None, intent=None,
                  selectdata=None,
                  # solution parameters
                  gaintype=None, smodel=None, calmode=None, solint=None,

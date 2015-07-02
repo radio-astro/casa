@@ -412,7 +412,10 @@ class CalFrom(object):
         return result
     
     def __new__(cls, gaintable=None, gainfield='', interp='linear,linear', 
-                spwmap=[], caltype='unknown', calwt=True):
+                spwmap=None, caltype='unknown', calwt=True):
+        if spwmap is None:
+            spwmap = []
+        
         if gaintable is None:
             raise ValueError, 'gaintable must be specified. Got None'
         

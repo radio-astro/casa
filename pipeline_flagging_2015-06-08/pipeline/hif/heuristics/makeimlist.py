@@ -196,7 +196,7 @@ class MakeImListHeuristics(object):
 
         return beam
 
-    def cell(self, field_intent_list, spwspec, oversample=3.0):
+    def cell(self, field_intent_list, spwspec, oversample=2.5):
         # reset state of imager
         casatools.imager.done()
 
@@ -354,7 +354,7 @@ class MakeImListHeuristics(object):
 
         return valid_data
 
-    def gridmode(self, intent, field):
+    def gridder(self, intent, field):
         # the field heuristic which decides whether this is a mosaic or not
         self.field(intent, field)
 
@@ -528,7 +528,7 @@ class MakeImListHeuristics(object):
 
         return [nxpix, nypix]
 
-    def imagename(self, output_dir=None, intent=None, field=None, spwspec=None):
+    def imagename(self, output_dir=None, intent=None, field=None, spwspec=None, specmode=None):
         try:
             nameroot = self.context.project_structure.ousstatus_entity_id
 	    if nameroot == 'unknown':
@@ -558,6 +558,8 @@ class MakeImListHeuristics(object):
             spwids.sort()
             spw = '_'.join(spwids)
             namer.spectral_window(spw)
+        if specmode:
+            namer.specmode(specmode)
 
         # filenamer returns a sanitized filename (i.e. one with 
         # illegal characters replace by '_'), no need to check

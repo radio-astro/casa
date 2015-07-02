@@ -1,12 +1,25 @@
 from __future__ import absolute_import
+import collections
 import decimal
 import itertools
 import operator
+
+import numpy
 
 from . import measures
 import pipeline.infrastructure as infrastructure
 
 LOG = infrastructure.get_logger(__name__)
+
+
+ArithmeticProgression = collections.namedtuple('ArithmeticProgression', 'start delta num_terms')
+
+def expand_ap(ap):
+    """
+    Expand an ArithmeticProgression back to its original sequence.
+    """
+    g = itertools.count(ap.start, ap.delta)
+    return itertools.islice(g, 0, ap.num_terms)
 
 
 class SpectralWindow(object):
@@ -40,19 +53,25 @@ class SpectralWindow(object):
         window
     """
     
-    __slots__ = ('id', 'band', 'bandwidth', 'channels', 'type', 'intents',
+    __slots__ = ('id', 'band', 'bandwidth', 'type', 'intents',
                  'ref_frequency', 'name', 'baseband', 'sideband',
-                 'mean_frequency')
+                 'mean_frequency', '_min_frequency', '_max_frequency',
+                 '_centre_frequency', '_chan_freqs', '_chan_widths',
+                 '_channels', '_num_channels')
 
     def __getstate__(self):
-        return (self.id, self.band, self.bandwidth, self.channels, self.type,
-            self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband, self.mean_frequency)
+        return (self.id, self.band, self.bandwidth, self.type, self.intents,
+                self.ref_frequency, self.name, self.baseband, self.sideband, 
+                self.mean_frequency, self._min_frequency, 
+                self._max_frequency, self._centre_frequency, self._chan_freqs,
+                self._chan_widths, self._num_channels)
 
     def __setstate__(self, state):
-        (self.id, self.band, self.bandwidth, self.channels, self.type,
-            self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband, self.mean_frequency) = state
+        (self.id, self.band, self.bandwidth, self.type, self.intents,
+                self.ref_frequency, self.name, self.baseband, self.sideband, 
+                self.mean_frequency, self._min_frequency, 
+                self._max_frequency, self._centre_frequency, self._chan_freqs,
+                self._chan_widths, self._num_channels) = state
     
     def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
                  chan_freqs, chan_widths, sideband, baseband, band='Unknown'):
@@ -72,23 +91,34 @@ class SpectralWindow(object):
         self.name = str(name)
         self.sideband = str(sideband)
         self.baseband = str(baseband)
-        
-        channels = []
-        for centre, width in zip(chan_freqs, chan_widths):
-            dec_centre = decimal.Decimal(str(centre))
-            dec_width= decimal.Decimal(str(width))
-            delta = dec_width / decimal.Decimal('2') 
-            
-            f_lo = measures.Frequency(dec_centre - delta,
-                                      measures.FrequencyUnits.HERTZ)
-            f_hi = measures.Frequency(dec_centre + delta,
-                                      measures.FrequencyUnits.HERTZ)
-            channels.append(measures.FrequencyRange(f_lo, f_hi))
-        self.channels = channels
+    
+        self._chan_freqs = self.__create_arithmetic_progression(chan_freqs)
+        self._chan_widths = self.__create_arithmetic_progression(chan_widths)
+
+        channels = self.channels
+        self._num_channels = len(chan_freqs)
+
+        self._min_frequency = min(channels, key=lambda r: r.low).low
+        self._max_frequency = max(channels, key=lambda r: r.high).high
+        self._centre_frequency = (self._min_frequency + self._max_frequency) / 2.0
+
+    def __create_arithmetic_progression(self, values):
+        """
+        If the numbers in the given list constitute an arithmetic progression,
+        return an ArithmeticProgression object that summarises it as such. If
+        the list cannot be summarised as a simple arithmetic progression,
+        return the list as given.
+        """
+        deltas = set(numpy.diff(values))
+        if len(deltas) is 1:
+            delta = deltas.pop()
+            return ArithmeticProgression(values[0], delta, len(values))
+        else:
+            return values
 
     @property
     def centre_frequency(self):
-        return (self.min_frequency + self.max_frequency) / 2.0
+        return self._centre_frequency
 
     def channel_range(self, minfreq, maxfreq):
         '''
@@ -100,7 +130,7 @@ class SpectralWindow(object):
         freqmax = maxfreq
     
         # Check for the no overlap case.
-        nchan = len(self.channels)
+        nchan = self.num_channels
         if freqmax < self.min_frequency:
             return (None, None)
         if freqmin > self.max_frequency:
@@ -135,23 +165,48 @@ class SpectralWindow(object):
         return (chanmin, chanmax)
 
     @property
+    def channels(self):
+        if not hasattr(self, '_channels') or self._channels is None:
+            channels = []
+
+            chan_freqs = self._chan_freqs
+            if isinstance(chan_freqs, ArithmeticProgression):
+                chan_freqs = expand_ap(chan_freqs)
+
+            chan_widths = self._chan_widths
+            if isinstance(chan_widths, ArithmeticProgression):
+                chan_widths = expand_ap(chan_widths)
+
+            for centre, width in zip(chan_freqs, chan_widths):
+                dec_centre = decimal.Decimal(str(centre))
+                dec_width= decimal.Decimal(str(width))
+                delta = dec_width / decimal.Decimal('2')
+
+                f_lo = measures.Frequency(dec_centre - delta,
+                                          measures.FrequencyUnits.HERTZ)
+                f_hi = measures.Frequency(dec_centre + delta,
+                                          measures.FrequencyUnits.HERTZ)
+                channels.append(measures.FrequencyRange(f_lo, f_hi))
+            self._channels = channels
+
+        return self._channels
+
+    @property
     def min_frequency(self):
-        return min(self.channels, key=lambda r: r.low).low
+        return self._min_frequency
         
     @property
     def max_frequency(self):
-        return max(self.channels, key=lambda r: r.high).high
+        return self._max_frequency
         
     @property
     def num_channels(self):
-        return len(self.channels)
+        return self._num_channels
 
     def __repr__(self):
         args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
                          self.type])
         return 'SpectralWindow({0})'.format(', '.join(args))
-
-        
 
 
 class SpectralWindowWithChannelSelection(object):

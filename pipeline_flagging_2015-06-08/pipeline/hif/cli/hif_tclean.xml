@@ -57,7 +57,7 @@ Compute a clean map.
        </allowed>
   </param>
 
-  <param type="string" name="gridmode" subparam="true">
+  <param type="string" name="gridder" subparam="true">
      <description>Gridding options (standard, mosaic, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
@@ -144,7 +144,7 @@ Compute a clean map.
 
   <param type="int" name="npixels" subparam="true">
     <description>Weighting algorithm parameter</description>
-    <value type="int">1</value>
+    <value type="int">0</value>
   </param>
 
   <param type="stringArray" name="restoringbeam" subparam="true">
@@ -194,7 +194,7 @@ Compute a clean map.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>2.0</value>
+       <value>1.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -205,6 +205,16 @@ Compute a clean map.
   <param type="int" name="maxncleans" subparam="true">
     <description>Maximum number of clean task calls</description>
     <value>1</value>
+  </param>
+
+  <param type="string" name="parallel">
+    <description>Clean images using MPI cluster</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>true</value>
+      <value>false</value>
+    </allowed>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -240,7 +250,7 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="gridmode"><value type="string"></value></default>
+        <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
@@ -248,7 +258,7 @@ Compute a clean map.
         <default param="phasecenter"><value type="string"></value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
-        <default param="npixels"><value type="int">1</value></default>
+        <default param="npixels"><value type="int">0</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -260,7 +270,7 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="spwsel"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="gridmode"><value type="string"></value></default>
+        <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
@@ -415,12 +425,12 @@ specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
     default: ''
     example: 'mfs', 'cube'
 
-gridmode -- Gridding options, 'standard', 'mosaic'.
+gridder -- Gridding options, 'standard', 'mosaic'.
    Derived as follows:
       1. The 'field' parameter is converted into a list of field_ids for
          each measurement set in 'vis'.
       2. If there is more than 1 field_id in the list for any measurement 
-         set then gridmode is set to 'mosaic', otherwise it will be set
+         set then gridder is set to 'mosaic', otherwise it will be set
          to 'standard'. 
     default: ''
     'standard'
@@ -478,8 +488,8 @@ noise -- Parameter for 'briggsabs' weighting
     example: '0.5Jy'
 
 npixels -- Parameter for 'briggs' and 'briggsabs; weighting
-    default: 1
-    example: 1
+    default: 0
+    example: 0
 
 restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
     default: \'\'
@@ -506,6 +516,9 @@ threshold -- Threshold for cleaning
 maxncleans -- Maximum number of clean calls
     default: 1
     example: 10
+
+parallel -- use MPI cluster to clean images
+    default: \'automatic\'
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but

@@ -338,9 +338,11 @@ class RestoreData(basetask.StandardTaskTemplate):
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
+        # The asis is temporary until we get the EVLA / ALMA factoring
+        # figured out.
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    lazy=inputs.lazy, dbservice=False)
+	    lazy=inputs.lazy, dbservice=False, asis='Antenna Station Receiver Source CalAtmosphere CalWVR')
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 

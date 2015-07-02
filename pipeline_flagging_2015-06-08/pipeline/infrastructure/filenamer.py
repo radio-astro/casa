@@ -3,7 +3,7 @@ import os
 import shutil
 import string
 
-_valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)    
+_valid_chars = "_.-+%s%s" % (string.ascii_letters, string.digits)    
 def _char_replacer(s):
     '''A small utility function that echoes the argument or returns '_' if the 
     argument is in a list of forbidden characters.
@@ -37,6 +37,7 @@ class FileNameComponentBuilder(object):
         self._source = None
         self._spectral_window = None
         self._spectral_window_nochan = None
+        self._specmode = None
         self._type = None
 
         # these associations are not in the file naming proposal, but are used
@@ -56,6 +57,7 @@ class FileNameComponentBuilder(object):
                       '_'.join([x for x in (self._source, self._intent) if x is not None]),
                       self._spectral_window,
                       self._spectral_window_nochan,
+                      self._specmode,
                       self._line_region,
                       self._polarization,
                       self._type,
@@ -162,6 +164,13 @@ class FileNameComponentBuilder(object):
             self._spectral_window = 'spw' + str(window)
         else:
             self._spectral_window = None
+        return self
+
+    def specmode(self, specmode):
+        if specmode not in [None, 'None', '']:
+            self._specmode = str(specmode)
+        else:
+            self._specmode = None
         return self
 
     def stage(self, stage):
@@ -546,6 +555,10 @@ class Image(NamingTemplate):
     
     def spectral_window(self, window):
         self._associations.spectral_window(window)
+        return self
+    
+    def specmode(self, specmode):
+        self._associations.specmode(specmode)
         return self
     
     def type(self, type):
