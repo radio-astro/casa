@@ -145,7 +145,53 @@ class tsdbaseline_unittest_base:
 
     #complist = ['max','min','rms','median','stddev']
 
+    blparam_order = ['row', 'pol', 'mask', 'nclip', 'cthre',
+                     'uself', 'lthre', 'ledge', 'redge', 'chavg',
+                     'btype', 'order', 'npiec', 'nwave']
+    blparam_dic = {}
+    blparam_dic['row']   = [0, 0, 1, 1, 2, 2, 3, 3]
+    blparam_dic['pol']   = [0, 1, 0, 1, 0, 1, 0, 1]
+    blparam_dic['mask']  = ['0~4000;6000~8000']*3 + ['']*5
+    blparam_dic['nclip'] = [0]*8
+    blparam_dic['cthre'] = ['3.']*8
+    blparam_dic['uself'] = ['false']*4 + ['true'] + ['false']*3
+    blparam_dic['lthre'] = ['0.']*4 + ['3.', '', '', '0.']
+    blparam_dic['ledge'] = [0]*4 + [10, 50, '', 0]
+    blparam_dic['redge'] = [0]*4 + [10, 50, '', 0]
+    blparam_dic['chavg'] = [0]*4 + [4, '', '', 0]
+    blparam_dic['btype'] = ['poly'] + ['chebyshev']*2 + ['poly', 'chebyshev', 'poly'] + ['cspline']*2
+    blparam_dic['order'] = [0, 0, 1, 1, 2, 2, '', '']
+    blparam_dic['npiec'] = [0]*6 + [1]*2
+    blparam_dic['nwave'] = [[]]*3 + ['']*2 + [[]]*3
+
     ### helper functions for tests ###
+    def _createBlparamFile(self, file, param_order, val, option=''):
+        nspec = 8
+        f = open(file, 'w')
+        assert(len(param_order) == len(val.keys()))
+        for key in val.keys():
+            assert(len(val[key]) == nspec)
+        for i in range(nspec):
+            do_write = True
+            s = ''
+            for key in param_order:
+                v = val[key][i]
+                if key == 'nwave':
+                    if v != '':
+                        s += ','
+                        s += str(v)
+                else:
+                    s += str(v)
+                    if key != 'npiec': s += ','
+            s += '\n'
+            if (option == 'r2p1less') and (val['row'][i] == 2) and (val['pol'][i] == 1):
+                do_write = False
+            if (option == 'r2p1cout') and (val['row'][i] == 2) and (val['pol'][i] == 1):
+                s = '#' + s
+            if do_write:
+                f.write(s)
+        f.close()
+
     def _checkfile(self, name, fail=True):
         """
         Check if the file exists.
@@ -964,9 +1010,9 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base, unittest.TestCase):
             self._compareStats(currstat,reference[ifno])
 
 
-class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
-    Tests for baseline table
+    Tests for outputting baseline table
 
     List of tests
     test300 --- blmode='fit', bloutput='', dosubtract=False (no baselining, no bltable output)
@@ -996,6 +1042,7 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     tid = None
     ftype = {'poly': 0, 'chebyshev': 1, 'cspline': 2, 'sinusoid': 3}
 
+    """
     blparam_order = ['row', 'pol', 'mask', 'nclip', 'cthre',
                      'uself', 'lthre', 'ledge', 'redge', 'chavg',
                      'btype', 'order', 'npiec', 'nwave']
@@ -1014,6 +1061,7 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     blparam_dic['order'] = [0, 0, 1, 1, 2, 2, '', '']
     blparam_dic['npiec'] = [0]*6 + [1]*2
     blparam_dic['nwave'] = [[]]*3 + ['']*2 + [[]]*3
+    """
 
     def setUp(self):
         if os.path.exists(self.infile):
@@ -1097,7 +1145,8 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
         #print 'rel=' + str(rel)
         if rel > tol:
             raise Exception, 'result and reference differs!'
-        
+
+    """
     def _createBlparamFile(self, file, param_order, val, option=''):
         nspec = 8
         f = open(file, 'w')
@@ -1124,9 +1173,10 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
             if do_write:
                 f.write(s)
         f.close()
+    """
 
     def test300(self):
-        """Mask Test 300: no baselining, no bltable output"""
+        """test300: no baselining, no bltable output"""
         self.tid='300'
         infile = self.infile
         outfile = self.outroot+self.tid+'.ms'
@@ -1159,7 +1209,7 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                                      ",pol="+str(ipol)+",chan="+str(ichan))
 
     def test301(self):
-        """Mask Test 301: poly/chebyshev/cspline baselining, output bltable"""
+        """test301: poly/chebyshev/cspline baselining, output bltable"""
         self.tid='301'
         infile = self.infile
         datacolumn='float_data'
@@ -1194,7 +1244,7 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
             print 'OK'
 
     def test302(self):
-        """Mask Test 302: per-spectrum baselining, output bltable"""
+        """test302: per-spectrum baselining, output bltable"""
         self.tid='302'
         infile = self.infile
         datacolumn='float_data'
@@ -1216,6 +1266,151 @@ class tsdbaseline_bltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                              msg="The task returned '"+str(result)+"' instead of None")
             self._checkBltableVar(outfile, bloutput, self.blparam_dic, option)
 
+
+class tsdbaseline_applybltableTest(tsdbaseline_unittest_base, unittest.TestCase):
+    """
+    Tests for applying baseline table
+    (blmode='apply' mode)
+
+    List of tests
+    test400 --- MS with no all-channel-flagged, bltable with apply=True for all spectra
+    test401 --- MS with one spectrum (irow=2,ipol=1) with all channels flagged, while apply=True throughout bltable
+    test402 --- MS with no all-channel-flagged, while apply=False for one spectrum (irow=2,ipol=1) in bltable
+    test403 --- MS with no all-channel-flagger, while bltable lacks one row (irow=2)
+
+    Note: for tests401-403, the spectrum with all channels flagged, or the corresponding
+    data in baseline table has apply=False or is inexist, should not be subtracted baseline.
+    """
+    # Input and output names
+    infile = 'OrionS_rawACSmod_calave.ms'
+    outroot = tsdbaseline_unittest_base.taskname+'_bltabletest'
+    reffile = outroot+'.ms'
+    blmode = 'apply'
+    bltable = outroot+'.bltable'
+    tid = None
+    
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdbaseline)
+        #create baseline table
+        blparam = self.outroot+'.blparam'
+        self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, '')
+        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+                             blmode='fit',blformat='table',bloutput=self.bltable,
+                             blfunc='variable',blparam=blparam,
+                             dosubtract=True,outfile=self.reffile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        default(tsdbaseline)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system('rm -rf '+self.outroot+'*')
+
+    def _checkResult(self, outfile, option):
+        npol = 2
+        with tbmanager(outfile) as tb:
+            out_spec = tb.getcol('FLOAT_DATA')
+            out_flag = tb.getcol('FLAG')
+        with tbmanager(self.reffile) as tb:
+            ref_spec = tb.getcol('FLOAT_DATA')
+            ref_flag = tb.getcol('FLAG')
+        with tbmanager(self.infile) as tb:
+            in_spec = tb.getcol('FLOAT_DATA')
+            in_flag = tb.getcol('FLAG')
+            nrow     = tb.nrows()
+            nchan    = len(in_spec[0][0])
+
+        for ipol in range(npol):
+            for ichan in range(nchan):
+                for irow in range(nrow):
+                    outspec = out_spec[ipol][ichan][irow]
+                    outflag = out_flag[ipol][ichan][irow]
+                    if ((option == 'r2p1msflagged') and (irow == 2) and (ipol == 1)) or \
+                       ((option == 'r2p1bltnotapply') and (irow == 2) and (ipol == 1)) or \
+                       ((option == 'r2p1bltinexist') and (irow == 2)):
+                        ansspec = in_spec[ipol][ichan][irow]
+                        ansflag = True
+                    else:
+                        ansspec = ref_spec[ipol][ichan][irow]
+                        ansflag = ref_flag[ipol][ichan][irow]
+
+                    self.assertTrue(abs(outspec-ansspec)<1e-6, msg='spec: result != answer')
+                    self.assertEqual(outflag, ansflag, msg='flag: result != answer')
+
+
+    def test400(self):
+        """test400: apply baseline table. all bltable entries applied to all MS data."""
+        self.tid = '400'
+        outfile = self.outroot+self.tid+'.ms'
+        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+                             blmode=self.blmode,bltable=self.bltable,
+                             outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(outfile, '')
+
+    def test401(self):
+        """test401: apply baseline table to MS with a spectrum totally flagged."""
+        self.tid = '401'
+        outfile = self.outroot+self.tid+'.ms'
+        try:
+            tb.open(tablename=self.infile, nomodify=False)
+            tmpflag = tb.getcell('FLAG', 2)
+            for ichan in range(len(tmpflag[0])):
+                tmpflag[1][ichan] = True
+            tb.putcell('FLAG', 2, tmpflag)
+        finally:
+            tb.close()
+        
+        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+                             blmode=self.blmode,bltable=self.bltable,
+                             outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(outfile, 'r2p1msflagged')
+
+    def test402(self):
+        """test402: apply baseline table containing apply=False data."""
+        self.tid = '402'
+        outfile = self.outroot+self.tid+'.ms'
+
+        try:
+            tb.open(tablename=self.bltable, nomodify=False)
+            tmpapply = tb.getcell('APPLY', 2)
+            tmpapply[1] = False
+            tb.putcell('APPLY', 2, tmpapply)
+        finally:
+            tb.close()
+        
+        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+                             blmode=self.blmode,bltable=self.bltable,
+                             outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(outfile, 'r2p1bltnotapply')
+
+    def test403(self):
+        """test403: apply baseline table lacking data for a spectrum in MS."""
+        self.tid = '403'
+        outfile = self.outroot+self.tid+'.ms'
+
+        try:
+            tb.open(tablename=self.bltable, nomodify=False)
+            tb.removerows([2])
+            self.assertEquals(tb.nrows(), 3, msg='failed to remove a row in bltable.')
+        finally:
+            tb.close()
+        
+        result = tsdbaseline(infile=self.infile,datacolumn='float_data',
+                             blmode=self.blmode,bltable=self.bltable,
+                             outfile=outfile)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        self._checkResult(outfile, 'r2p1bltinexist')
 
 class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
@@ -1367,7 +1562,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
-            #tsdbaseline_multi_IF_test,
-            tsdbaseline_bltableTest,
+            tsdbaseline_outbltableTest,
+            tsdbaseline_applybltableTest,
             tsdbaseline_variableTest
             ]
