@@ -39,6 +39,11 @@
 	<value>False</value>
     </param>
 
+    <param type="bool" name="bdfflags">
+	<description>Set the BDF flags</description>
+	<value>True</value>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -124,6 +129,10 @@ rawdata_dir -- Name of the rawdata subdirectory.
 lazy -- Use the lazy fillter option
    default: False
    example: lazy=True
+
+bdfflags -- Set the BDF flags
+   default: True
+   example: bdfflags=False
 
 
 
