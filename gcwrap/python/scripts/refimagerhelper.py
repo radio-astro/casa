@@ -611,7 +611,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
           if self.weightpars['type'] != 'natural' :  ## For natural, this array isn't created at all.
                                                                        ## Remove when we switch to new FTM
 
-            casalog.post("Gathering/Merging/Scattering Weight Density for PSF generation",INFO)
+            casalog.post("Gathering/Merging/Scattering Weight Density for PSF generation","INFO")
 
             joblist=[];
             for node in self.listOfNodes:
