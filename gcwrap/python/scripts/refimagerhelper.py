@@ -1152,6 +1152,10 @@ class PyParallelImagerHelper():
         # * casapy-<timestamp>.log-server-<rank>-host-<hostname>-pid-<pid>: Server logs 
         mpi_clustermanager.set_log_mode('redirect');
 
+        rr = mpi_clustermanager()
+        rr.start_cluster()
+        rr.set_log_level('DEBUG')
+
         self.sc=mpi_clustermanager.getCluster()
                 
         self.CL=self.sc._cluster
