@@ -83,7 +83,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
         rawdata_dir=None, output_dir=None, session=None, vis=None,
-	lazy=None):
+	bdfflags=None, lazy=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -103,6 +103,8 @@ class RestoreDataInputs(basetask.StandardInputs):
         :type session: a string or list of strings
         :param vis: the ASDMs(s) for which data is to be restored
         :type vis: a string or list of strings
+        :param bdfflags: set the BDF flags
+        :type bdfflags: boolean True or False
         :param lazy: use the lazy filler to restore data
         :type lazy: boolean True or False
         """
@@ -175,6 +177,16 @@ class RestoreDataInputs(basetask.StandardInputs):
         self._vis = value
 
     @property
+    def bdfflags(self):
+        if self._bdfflags is None:
+            self._bdfflags = True
+        return self._bdfflags
+
+    @bdfflags.setter
+    def bdfflags(self, value):
+        self._bdfflags = value
+
+    @property
     def lazy(self):
         if self._lazy is None:
             self._lazy = False
@@ -183,6 +195,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     @lazy.setter
     def lazy(self, value):
         self._lazy = value
+
 
 
 class RestoreDataResults(basetask.Results):
@@ -342,7 +355,8 @@ class RestoreData(basetask.StandardTaskTemplate):
         # figured out.
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    lazy=inputs.lazy, dbservice=False, asis='Antenna Station Receiver Source CalAtmosphere CalWVR')
+	    lazy=inputs.lazy, bdfflags=inputs.bdfflags, dbservice=False,
+            asis='Antenna Station Receiver Source CalAtmosphere CalWVR')
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
