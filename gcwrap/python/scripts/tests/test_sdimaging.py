@@ -250,6 +250,20 @@ class sdimaging_unittest_base:
         self.assertAlmostEqual(abs(maj_asec-maj_asec_ref)/max(maj_asec_ref,1.e-12), 0., places=3, msg="major axis = %f arcsec (expected: %f)" % (maj_asec, maj_asec_ref))
         self.assertAlmostEqual(abs(min_asec-min_asec_ref)/max(min_asec_ref,1.e-12), 0., places=3, msg="minor axis = %f arcsec (expected: %f)" % (min_asec, min_asec_ref))
     
+    def _check_restfreq(self, imagename, restfreq):
+        """ Test image rest frequency"""
+        self.assertTrue(qa.compare(restfreq, 'Hz'))
+        myunit = qa.getunit(restfreq)
+        refval = qa.getvalue(restfreq)[0]
+        ia.open(imagename)
+        csys = ia.coordsys()
+        ia.close()
+        testval = qa.getvalue(qa.convert(csys.restfrequency(), myunit))
+        csys.done()
+        ret=numpy.allclose(testval,refval, atol=1.e-5, rtol=1.e-5)
+        self.assertTrue(ret)
+        
+        
 ###
 # Test on bad parameter settings
 ###
@@ -2288,6 +2302,96 @@ class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
         self.default_param['spw'] = [self.spw, self.spw]
         self.run_test()
 
+###
+#
+# Test ways to define image rest frequency
+#
+###
+class sdimaging_test_restfreq(unittest.TestCase,sdimaging_unittest_base):
+    """
+    Unit test for task sdimaging 
+    
+    Test 3 different ways to define image rest frequency.
+    (1) defined by parameter restfreq (test_restfreq_param)
+    (2) obtain a value in REST_FREQUENCY column in SOURCE subtable
+        (test_restfreq_source)
+    (3) define as mean frequency of representative SPW (test_restfreq_mean)
+    
+    The rest frequency value will affect three numbers in image:
+    - the rest frequency of the image
+    - the default cell size of the image
+    - the beam size of the image
+    """
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdimaging/'
+    infiles = 'selection_spw.ms'
+    outfile = 'sdimaging_restfreq.im'
+    param_base = dict(infiles=infiles,outfile=outfile,
+                      outframe='lsrk',stokes='I',spw='1',
+                      phasecenter='J2000 00:00:00 00.00.00',
+                      restfreq='',overwrite=True)
+    unifval = 5.98155
+
+    def setUp(self):
+        if os.path.exists(self.infiles):
+            shutil.rmtree(self.infiles)
+        shutil.copytree(self.datapath+self.infiles, self.infiles)
+        default(sdimaging)
+        self.param = self.param_base.copy()
+        
+    def tearDown(self):
+        if os.path.exists(self.infiles):
+            shutil.rmtree(self.infiles)
+
+    def run_test(self, restfreq_ref, beam_ref, cell_ref, stats, **kwargs):
+        self.param.update(**kwargs)
+        sdimaging(**self.param)
+        stats.pop('sumsq')
+        self._checkstats(self.outfile, stats, atol=1.e-3, rtol=1.e-3)
+        self._check_beam(self.outfile, beam_ref)
+        # check restfreq
+        self._check_restfreq(self.outfile,restfreq_ref)
+        # check cell size
+        self._checkdirax(self.outfile, self.param['phasecenter'],
+                         cell_ref, self.param['imsize'])
+
+    def test_restfreq_param(self):
+        """Rest frequency from restfreq parameter"""
+        restfreq='200GHz'
+        beam_ref = dict(major='30.276442arcsec',minor='30.276442arcsec')
+        cell_ref = '10.091393059432447arcsec'
+        stats = construct_refstat_uniform(self.unifval,[0, 0, 0, 0],
+                                          [7 , 7 ,  0,  9])
+        self.run_test(restfreq, beam_ref, cell_ref, stats,
+                      restfreq=restfreq,imsize=[8,8])
+        
+    def test_restfreq_source(self):
+        """Rest Frequency from SOURCE table"""
+        restfreq='300GHz'
+        beam_ref = dict(major='20.339973arcsec',minor='20.339973arcsec')
+        cell_ref = '6.727595372954963arcsec'
+        stats = construct_refstat_uniform(self.unifval,[0, 0, 0, 0],
+                                          [10, 10,  0,  9])
+        self.run_test(restfreq, beam_ref, cell_ref, stats,
+                      restfreq='',imsize=[11,11])
+
+    def test_restfreq_mean(self):
+        """Rest frequency from mean of SPW frequencies"""
+        restfreq='300.5GHz'
+        beam_ref = dict(major='20.303418arcsec', minor='20.303418arcsec')
+        cell_ref = '6.716401370670513arcsec'
+        stats = construct_refstat_uniform(self.unifval,[0, 0, 0, 0],
+                                          [10, 10,  0,  9])
+        # remove REST_REQUENCY in SOURCE TABLE
+        tb.open(self.infiles+'/SOURCE', nomodify=False)
+        rf = tb.getcell('REST_FREQUENCY',0)
+        rf.resize(0)
+        for idx in xrange(tb.nrows()):
+            tb.putcell('REST_FREQUENCY', idx, rf)
+            self.assertTrue(len(tb.getcell('REST_FREQUENCY',idx))==0)
+        tb.flush()
+        tb.close()
+        self.run_test(restfreq, beam_ref, cell_ref, stats,
+                      restfreq='', imsize=[11,11])
 
 ###
 #
@@ -2508,4 +2612,4 @@ def suite():
             sdimaging_autocoord,sdimaging_test_selection,
             sdimaging_test_flag, 
             sdimaging_test_polflag,sdimaging_test_mslist,
-            sdimaging_test_mapextent]
+            sdimaging_test_restfreq, sdimaging_test_mapextent]
