@@ -292,14 +292,19 @@ bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid,
 {
   bool found = false;
   uInt idx_end = bt_->nrow() - 1;
+  double bt_time;
   uInt bt_scanid;
   uInt bt_beamid;
   uInt bt_spwid;
   for (uInt i = 0; i <= idx_end; ++i) {
+    bt_time = bt_->getTime(i);
     bt_scanid = bt_->getScan(i);
     bt_beamid = bt_->getBeam(i);
     bt_spwid = bt_->getSpw(i);
-    if ((scanid == bt_scanid)&&(beamid == bt_beamid)&&(spwid == bt_spwid)) {
+    if ((time == bt_time)&&
+	(scanid == bt_scanid)&&
+	(beamid == bt_beamid)&&
+	(spwid == bt_spwid)) {
       idx = i;
       found = true;
       break;
