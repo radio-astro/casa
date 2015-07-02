@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity);
 
-  void dividePSFByWeight();
+  void dividePSFByWeight(const Float pblimit=C::minfloat);
 
   void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   //  void divideSensitivityPatternByWeight();

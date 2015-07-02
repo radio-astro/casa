@@ -689,7 +689,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
 
-  void SIImageStoreMultiTerm::dividePSFByWeight()
+  void SIImageStoreMultiTerm::dividePSFByWeight(const Float pblimit)
   {
     LogIO os( LogOrigin("SIImageStoreMultiTerm","dividePSFByWeight",WHERE) );
 
@@ -708,7 +708,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  }
       }
-    makePBFromWeight();
+    makePBFromWeight(pblimit);
 
     //    calcSensitivity();
     // createMask

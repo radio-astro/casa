@@ -117,7 +117,7 @@ class SIImageStore
 			  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity );
 
   ///// Normalizers
-  virtual void dividePSFByWeight();
+  virtual void dividePSFByWeight(const Float pblimit=C::minfloat);
   virtual void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
@@ -207,7 +207,7 @@ protected:
   Bool divideImageByWeightVal( ImageInterface<Float>& target );
   void normPSF(Int term=0);
 
-  void makePBFromWeight();
+  void makePBFromWeight(const Float pblimit);
 
   void accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
 		    CountedPtr<ImageInterface<Float> > &parentptr, 

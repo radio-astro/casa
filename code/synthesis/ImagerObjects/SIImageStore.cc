@@ -832,17 +832,15 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
     */
   }
 
-  void  SIImageStore::makePBFromWeight()
+  void  SIImageStore::makePBFromWeight(const Float pblimit)
   {
 
     LatticeExpr<Float> normed( sqrt(*(weight())) / getPbMax()   );
-    pb()->copyData( normed );
+    LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+    pb()->copyData( limited );
   }
 
-
-
-
-  void SIImageStore::dividePSFByWeight()
+  void SIImageStore::dividePSFByWeight(const Float pblimit)
   {
     LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
 
@@ -856,7 +854,7 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 
 	os << "Scale factor to keep the model image w.r.to a PB of max=1 is " << getPbMax() << LogIO::POST;
 
-	makePBFromWeight();
+	makePBFromWeight(pblimit);
 	
     }
     
@@ -890,8 +888,9 @@ void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
 	  os << " by [ weight ] to get flat sky"<< LogIO::POST;
 	}
 	
-	LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+	LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / ( deno + maskinv ) );
 	
 	residual()->copyData(ratio);

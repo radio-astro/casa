@@ -247,12 +247,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisNormalizer", "dividePSFByWeight",WHERE) );
     
     if( itsNFacets==1) {
-      itsImages->dividePSFByWeight();
+      itsImages->dividePSFByWeight(itsPBLimit);
     }
     else {
       // Since PSFs are normed just by their max, this sequence is OK.
       setPsfFromOneFacet();
-      itsImages->dividePSFByWeight();
+      itsImages->dividePSFByWeight(itsPBLimit);
 
       /*
       /// All facets are invidually normalized and sumwt per facet has

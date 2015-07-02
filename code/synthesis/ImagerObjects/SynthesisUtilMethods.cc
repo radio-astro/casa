@@ -2584,7 +2584,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( gridder=="wproject" || gridder=="wprojectft")
 	  {ftmachine="wprojectft"; }
 
-	if(gridder=="ftmosaic" || gridder=="mosaicft" )
+	if(gridder=="ftmosaic" || gridder=="mosaicft" || gridder=="mosaic" )
 	  { ftmachine="mosaicft"; }
 	if(gridder=="imagemosaic") {
 	    mType="imagemosaic";
