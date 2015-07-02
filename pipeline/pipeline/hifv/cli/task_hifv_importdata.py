@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hifv_importdata(vis=None, session=None, pipelinemode=None, asis=None,
-    overwrite=None, dryrun=None, acceptresults=None):
+    overwrite=None, createmms=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

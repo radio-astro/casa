@@ -35,7 +35,7 @@ class VLAImportDataInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None, 
-                 asis=None, session=None, overwrite=None, save_flagonline=None):
+                 asis=None, session=None, overwrite=None, save_flagonline=None, createmms=None):
         self._init_properties(vars())
 
     @property
