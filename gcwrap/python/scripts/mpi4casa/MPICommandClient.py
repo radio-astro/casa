@@ -883,8 +883,17 @@ class MPICommandClient:
             
             casalog_call_origin = "MPICommandClient::set_log_level"    
             
+            if self.__life_cycle_state == 0:
+                casalog.post("Services not started","WARN",casalog_call_origin)
+                return       
+            elif self.__life_cycle_state == 2:
+                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                return             
+            
             if log_level not in log_levels:
-                raise Exception("Unknown log level %s, recognized levels are: %s" % (str(log_level),str(log_levels)))
+                casalog.post("Unknown log level %s, recognized levels are: %s" % (str(log_level),str(log_levels)),
+                             "WARN",casalog_call_origin)
+                return
                 
             MPIEnvironment.command_handling_log_level = log_level
             
