@@ -13,13 +13,15 @@ class IntensityScalingQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
+        #LOG.warn("Invoking IntensityScalingQAHandler")
         # No QA score if not applying
         if not result.outcome['must_apply']: return
         # Factors should have been applied
         is_missing_factor = result.outcome['factormissing']
-        msg = "Missing Jy/K factors for some data" if is_missing_factor else "Jy/K factor is applied to all data"
+        shortmsg = "Missing Jy/K factors for some data" if is_missing_factor else "Jy/K factor is applied to all data"
+        longmsg = "Missing Jy/K factors for some data. Images and their units may be wrong with the data" if is_missing_factor else shortmsg
         score = 0.0 if is_missing_factor else 1.0
-        scores = [ pqa.QAScore(score, longmsg=msg, shortmsg=msg) ]
+        scores = [ pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg) ]
         result.qa.pool.extend(scores)
         #result.qa.pool[:] = scores
 
@@ -31,5 +33,6 @@ class IntensityScalingListQAHandler(pqa.QAResultHandler):
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our
         # own QAscore list
+        #LOG.warn("Invoking IntensityScalingListQAHandler")
         collated = utils.flatten([r.qa.pool for r in result]) 
         result.qa.pool[:] = collated
