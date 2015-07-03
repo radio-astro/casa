@@ -374,7 +374,7 @@ class ScantableReaderFromMS(ScantableReader):
         with casatools.TableReader(spw_name) as tb:
             for spw in spectral_window.keys():
                 frame_id = tb.getcell('MEAS_FREQ_REF')
-                spectral_window[spw].frame = domain.singledish.Frequencies.frame_map[frame_id]
+                spectral_window[spw].frame = domain.singledish.SpectralWindowAdapter.frame_map[frame_id]
 
         with casatools.TableReader(source_name) as tb:
             for spw in spectral_window.keys():
