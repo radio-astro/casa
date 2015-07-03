@@ -137,7 +137,10 @@ class CleanTaskFactory(object):
         is_tier0_job = is_mpi_ready and is_cal_image
 
         if is_tier0_job and self.__inputs.parallel:
-            return mpihelpers.AsyncTask(Tclean, task_args, self.__context_path)
+            executable = mpihelpers.Tier0PipelineTask(Tclean,
+                                                      task_args,
+                                                      self.__context_path)
+            return mpihelpers.AsyncTask(executable)
         else:
             inputs = Tclean.Inputs(self.__context, **task_args)
             task = Tclean(inputs)

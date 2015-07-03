@@ -789,8 +789,9 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
         # execute merged job if some of the output files are missing
         if not all([os.path.exists(dest) for dest in dest_filenames]):
             if mpihelpers.is_mpi_ready():
-                queued_job = mpihelpers.AsyncTask(casa_tasks.plotms,
-                                                  job_to_execute.kw)
+                executable = mpihelpers.Tier0CASATask(casa_tasks.plotms,
+                                                      job_to_execute.kw)
+                queued_job = mpihelpers.AsyncTask(executable)
             else:
                 queued_job = mpihelpers.SyncTask(job_to_execute)
 
@@ -812,6 +813,8 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             LOG.trace('Skipping unnecessary job: %s' % job_to_execute)
 
     # now execute all the callbacks, which will rename the output files
+    LOG.info('Compressed %s jobs to %s iterated jobs',
+             len(jobs_and_wrappers), len(jobs_and_callbacks))
     for (queued_job, callback) in jobs_and_callbacks:
         queued_job.get_result()
         callback()
