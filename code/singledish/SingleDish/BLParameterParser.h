@@ -158,9 +158,9 @@ class BLTableParser : public BLParameterParser {
  public:
   explicit BLTableParser(string const file_name, string const spw);
   ~BLTableParser();
-  bool GetFitParameterIdx(double const time, size_t const scanid, 
-			  size_t const beamid, size_t const spwid, 
-			  size_t &idx);
+  bool GetFitParameterIdx(double const time, double const interval, 
+			  size_t const scanid, size_t const beamid, 
+			  size_t const spwid, size_t &idx);
   void GetFitParameterByIdx(size_t const idx, size_t const ipol, 
 			    bool &apply, std::vector<float> &coeff, 
 			    std::vector<double> &boundary, 

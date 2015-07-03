@@ -279,16 +279,16 @@ uint16_t BLParameterParser::GetTypeOrder(BLParameterSet const &bl_param)
     return static_cast<uint16_t>(bl_param.npiece);
     break;
 //   case LIBSAKURA_SYMBOL(BaselineType_kSinusoidal):
-//     return static_cast<size_t>(bl_param.nwave.size());
+//     return static_cast<size_t>(bl_param.nwave.size()); <== must be max of nwave elements
 //     break;
   default:
     throw(AipsError("Unsupported baseline type."));
   }
 }
 
-bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid, 
-				       size_t const beamid, size_t const spwid, 
-				       size_t &idx)
+bool BLTableParser::GetFitParameterIdx(double const time, double const interval, 
+				       size_t const scanid, size_t const beamid, 
+				       size_t const spwid, size_t &idx)
 {
   bool found = false;
   uInt idx_end = bt_->nrow() - 1;
@@ -301,9 +301,8 @@ bool BLTableParser::GetFitParameterIdx(double const time, size_t const scanid,
     bt_scanid = bt_->getScan(i);
     bt_beamid = bt_->getBeam(i);
     bt_spwid = bt_->getSpw(i);
-    if ((time == bt_time)&&
-	(scanid == bt_scanid)&&
-	(beamid == bt_beamid)&&
+    if ((bt_time-interval < time) && (time < bt_time+interval) &&
+	(scanid == bt_scanid) && (beamid == bt_beamid) &&
 	(spwid == bt_spwid)) {
       idx = i;
       found = true;

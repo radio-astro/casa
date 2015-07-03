@@ -1379,6 +1379,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> scans = vb->scan();
       Vector<Double> times = vb->time();
+      Vector<Double> intervals = vb->timeInterval();
       Vector<Int> beams = vb->feed1();
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
@@ -1426,8 +1427,8 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 	std::vector<std::vector<double> > coeff_mtx_tmp(num_pol);
 
 	size_t idx_fit_param;
-	if (!parser.GetFitParameterIdx(times[irow], scans[irow], 
-				       beams[irow], data_spw[irow], 
+	if (!parser.GetFitParameterIdx(times[irow], intervals[irow],
+				       scans[irow], beams[irow], data_spw[irow], 
 				       idx_fit_param)) {
 	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	    flag_spectrum_in_cube(flag_chunk, irow, ipol); //flag
@@ -1604,6 +1605,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
   Vector<bool> pol;
   bool pol_set = false;
+
   // Iterate over MS and subtract baseline
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     //cout << "New chunk" << endl;
@@ -1750,8 +1752,17 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
 	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
-	  //float rms;  //<--comment out until new API becomes available
-	  //SakuraAlignedArray<double> boundary(fit_param.npiece);  //<--comment out until new API becomes available
+	  //<--comment out until new API becomes available
+	  //<--***start***
+	  /*
+	  float rms;
+	  size_t num_boundary = 0;
+	  if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	    num_boundary = fit_param.npiece;
+	  }
+	  SakuraAlignedArray<double> boundary(num_boundary);
+          */
+	  //<--***end***
 	  if (write_baseline_table) {
 	    bltype_mtx[0][ipol] = (uInt)fit_param.baseline_type;
 	    Int fpar_tmp;
@@ -2016,7 +2027,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   }
 }
 
-//<--remove when new API becomes available
+//<--remove when new API becomes available, ALSO declaration of this function in the header file.
 //<--***start***
 // --------------------------------------------------------------------
 // this function is temporarily copied from sakura code to get 
