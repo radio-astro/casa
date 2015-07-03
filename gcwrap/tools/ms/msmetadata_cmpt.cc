@@ -37,6 +37,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
+#include <casa/Quanta/QVector.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/MDirection.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
