@@ -1042,27 +1042,6 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     tid = None
     ftype = {'poly': 0, 'chebyshev': 1, 'cspline': 2, 'sinusoid': 3}
 
-    """
-    blparam_order = ['row', 'pol', 'mask', 'nclip', 'cthre',
-                     'uself', 'lthre', 'ledge', 'redge', 'chavg',
-                     'btype', 'order', 'npiec', 'nwave']
-    blparam_dic = {}
-    blparam_dic['row']   = [0, 0, 1, 1, 2, 2, 3, 3]
-    blparam_dic['pol']   = [0, 1, 0, 1, 0, 1, 0, 1]
-    blparam_dic['mask']  = ['0~4000;6000~8000']*3 + ['']*5
-    blparam_dic['nclip'] = [0]*8
-    blparam_dic['cthre'] = ['3.']*8
-    blparam_dic['uself'] = ['false']*4 + ['true'] + ['false']*3
-    blparam_dic['lthre'] = ['0.']*4 + ['3.', '', '', '0.']
-    blparam_dic['ledge'] = [0]*4 + [10, 50, '', 0]
-    blparam_dic['redge'] = [0]*4 + [10, 50, '', 0]
-    blparam_dic['chavg'] = [0]*4 + [4, '', '', 0]
-    blparam_dic['btype'] = ['poly'] + ['chebyshev']*2 + ['poly', 'chebyshev', 'poly'] + ['cspline']*2
-    blparam_dic['order'] = [0, 0, 1, 1, 2, 2, '', '']
-    blparam_dic['npiec'] = [0]*6 + [1]*2
-    blparam_dic['nwave'] = [[]]*3 + ['']*2 + [[]]*3
-    """
-
     def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -1070,6 +1049,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
         default(tsdbaseline)
 
     def tearDown(self):
+        #pass
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
@@ -1082,7 +1062,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                    [4.18074942e+00, 4.44418511e-05, -6.81303991e-09, 3.36383428e-13],
                    [3.93746042e+00, 5.36526677e-05, -1.11215614e-08, 7.00922610e-13]
                    ]
-        rms = [0.160806953907, 0.172459229827, 0.145005837083, 0.167485550046,
+        rms = [0.160806953907, 0.172459229827, 0.145005837083, 0.167485550046, 
                0.141711354256, 0.874852001667, 0.134670868516, 0.149306803942]
         tb.open(bltable)
         for i in range(npol*tb.nrows()):
@@ -1140,40 +1120,13 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     def _checkValue(self, ref, out, tol=1.0e-02):
         if ref != 0.0:
             rel = abs((out - ref)/ref)
-        else:
+        elif out != 0.0:
             rel = abs((out - ref)/out)
+        else:
+            rel = abs(out - ref)
         #print 'rel=' + str(rel)
         if rel > tol:
             raise Exception, 'result and reference differs!'
-
-    """
-    def _createBlparamFile(self, file, param_order, val, option=''):
-        nspec = 8
-        f = open(file, 'w')
-        assert(len(param_order) == len(val.keys()))
-        for key in val.keys():
-            assert(len(val[key]) == nspec)
-        for i in range(nspec):
-            do_write = True
-            s = ''
-            for key in param_order:
-                v = val[key][i]
-                if key == 'nwave':
-                    if v != '':
-                        s += ','
-                        s += str(v)
-                else:
-                    s += str(v)
-                    if key != 'npiec': s += ','
-            s += '\n'
-            if (option == 'r2p1less') and (val['row'][i] == 2) and (val['pol'][i] == 1):
-                do_write = False
-            if (option == 'r2p1cout') and (val['row'][i] == 2) and (val['pol'][i] == 1):
-                s = '#' + s
-            if do_write:
-                f.write(s)
-        f.close()
-    """
 
     def test300(self):
         """test300: no baselining, no bltable output"""
