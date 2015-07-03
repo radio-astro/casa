@@ -28,7 +28,7 @@ class SDImportDataInputs(almaimportdata.ALMAImportDataInputs):
                  with_pointing_correction=None, createmms=None):
         self._init_properties(vars())
 
-    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
+    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere CalWVR')
     with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
 
 class SDImportDataResults(basetask.Results):
