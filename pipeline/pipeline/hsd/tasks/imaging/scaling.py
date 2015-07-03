@@ -16,7 +16,7 @@ class IntensityScalingInputs(common.SingleDishInputs):
     """
     Intensity Scaling for each MS 
     """
-    def __init__(self, context, infiles=None, reffile=None):
+    def __init__(self, context, infiles=None, reffile=None, mustapply=None):
         self._init_properties(vars())
         self._to_list(['infiles'])
         
@@ -38,10 +38,14 @@ class IntensityScaling(common.SingleDishTaskTemplate):
     
     @common.datatable_setter
     def prepare(self):
+        mustapply = self.inputs.mustapply
+        logfunc = LOG.error if mustapply else LOG.warn
+        any_failed = False
         if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
             factors = None
             reffile = self.inputs.reffile
-            LOG.warn('No scaling factors available. Use 1.0 for all antennas.')
+            logfunc('No scaling factors available. Use 1.0 for all antennas.')
+            any_failed = mustapply
         else:
             # do scaling
             # read scaling factor list
@@ -55,11 +59,13 @@ class IntensityScaling(common.SingleDishTaskTemplate):
             factors = rearrange_factors_list(factors_list)
                         
             # apply scaling factor to the data
-            self._apply_scaling_factors(factors)
+            any_failed = self._apply_scaling_factors(factors, mustapply)
         self._change_unit()
 
         outcome = {'factors': factors,
-                   'reffile': reffile}
+                   'reffile': reffile,
+                   'must_apply': mustapply,
+                   'factormissing': any_failed}
         result = IntensityScalingResults(task=self.__class__,
                                  success=True,
                                  outcome=outcome)
@@ -75,9 +81,11 @@ class IntensityScaling(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
     
-    def _apply_scaling_factors(self, factors):
+    def _apply_scaling_factors(self, factors, mustapply):
         infiles = self.inputs.infiles
         context = self.inputs.context
+        any_failed = False
+        logfunc = LOG.error if mustapply else LOG.warn
         for st in context.observing_run:
             if st.basename in infiles:
                 # try to apply scaling factor
@@ -95,13 +103,17 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                                     factors_per_pol = factors[vis][ant][spwid]
                                     self._do_scaling(st, spwid, factors_per_pol)
                                 else:
-                                    LOG.warn('Scaling factor for (%s,%s,%s) is missing. Use 1.0' % \
+                                    logfunc('Scaling factor for (%s,%s,%s) is missing. Use 1.0' % \
                                              (vis,ant,spwid))
+                                    any_failed = mustapply
                     else:
-                        LOG.warn('Scaling factor for (%s,%s) is missing. Use 1.0.'%(vis,ant))
+                        logfunc('Scaling factor for (%s,%s) is missing. Use 1.0.'%(vis,ant))
+                        any_failed = mustapply
                 else:
-                    LOG.warn('Scaling factor for %s is missing. Use 1.0'%(vis))
-        
+                    logfunc('Scaling factor for %s is missing. Use 1.0'%(vis))
+                    any_failed = mustapply
+        return any_failed
+
     def _do_scaling(self, st, spwid, factors):
         vis = st.ms.basename
         ms_name = st.exported_ms
