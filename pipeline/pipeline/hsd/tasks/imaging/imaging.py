@@ -133,10 +133,12 @@ class SDImaging(common.SingleDishTaskTemplate):
         # Step 3.
         # Intensity scaling
         LOG.info('Step 3. Intensity scaling')
+        spec_unit = 'K' if imagemode=='AMPCAL' else 'Jy'
         scaling_inputs = scaling.IntensityScaling.Inputs(context, 
                                                          infiles=infiles, 
                                                          reffile=reffile,
-                                                         mustapply=(imagemode!='AMPCAL'))
+                                                         mustapply=(imagemode!='AMPCAL'),
+                                                         spec_unit=spec_unit)
         scaling_task = scaling.IntensityScaling(scaling_inputs)
         scaling_results = self._executor.execute(scaling_task, merge=True)
         logrecords.extend(scaling_results.logrecords)

@@ -16,7 +16,7 @@ class IntensityScalingInputs(common.SingleDishInputs):
     """
     Intensity Scaling for each MS 
     """
-    def __init__(self, context, infiles=None, reffile=None, mustapply=None):
+    def __init__(self, context, infiles=None, reffile=None, mustapply=None, spec_unit=None):
         self._init_properties(vars())
         self._to_list(['infiles'])
         
@@ -60,7 +60,8 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                         
             # apply scaling factor to the data
             any_failed = self._apply_scaling_factors(factors, mustapply)
-        self._change_unit()
+        spec_unit = 'Jy' if self.inputs.spec_unit is None else self.inputs.spec_unit
+        self._change_unit(spec_unit)
 
         outcome = {'factors': factors,
                    'reffile': reffile,
@@ -204,14 +205,14 @@ class IntensityScaling(common.SingleDishTaskTemplate):
                 startrow += nrow    
             tsel.close()   
             
-    def _change_unit(self):
+    def _change_unit(self, spec_unit):
         infiles = self.inputs.infiles
         context = self.inputs.context
         for st in context.observing_run:
             if st.basename in infiles:
                 ms_abspath = os.path.join(os.path.dirname(st.name), st.exported_ms)
                 with casatools.TableReader(ms_abspath, nomodify=False) as tb:
-                    tb.putcolkeyword('FLOAT_DATA', 'UNIT', 'Jy')
+                    tb.putcolkeyword('FLOAT_DATA', 'UNIT', spec_unit)
 
 def read_scaling_factor(reffile):
     factor_list = []
