@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import collections
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -82,7 +83,21 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
             value = 0.048387
         self._fracspwfps = value
 
+    @property
+    def intents(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('intents')
 
+        if self._intents is not None:
+            return self._intents
+
+        # return just the unwanted intents that are present in the MS
+        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND','UNKNOWN', 'SYSTEM_CONFIGURATION', 'CHECK'])
+        return ','.join(self.ms.intents.intersection(intents_to_flag))
+    
+    @intents.setter
+    def intents(self, value):
+        self._intents = value
 
     def to_casa_args(self):
 
