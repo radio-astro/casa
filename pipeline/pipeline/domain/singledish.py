@@ -321,11 +321,17 @@ class SpectralWindowAdapter:
     
     @property
     def chan_freqs(self):
-        return self.spw._chan_freqs
+        chan_freqs = self.spw._chan_freqs
+        if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
+            chan_freqs = numpy.array(list(spectralwindow.expand_ap(chan_freqs)))
+        return chan_freqs
         
     @property
     def chan_widths(self):
-        return self.spw._chan_widths
+        chan_widths = self.spw._chan_widths
+        if isinstance(chan_widths, spectralwindow.ArithmeticProgression):
+            chan_widths = numpy.array(list(spectralwindow.expand_ap(chan_widths)))
+        return chan_widths
     
     @property
     def channels(self):
@@ -347,7 +353,6 @@ class SpectralWindowAdapter:
     def freq_max(self):
         if not hasattr(self, '_freq_max') or self._freq_max is None:
             i = self.chan_freqs.argmax()
-            #self._freq_max = self.chan_freqs[i] + 0.5 * abs(self.chan_widths[i])
             decimal_width = decimal.Decimal(str(abs(self.chan_widths[i])))
             delta = decimal_width / decimal.Decimal('2')
             self._freq_max = float(decimal.Decimal(str(self.chan_freqs[i])) + delta)
@@ -357,7 +362,6 @@ class SpectralWindowAdapter:
     def freq_min(self):
         if not hasattr(self, '_freq_min') or self._freq_min is None:
             i = self.chan_freqs.argmin()
-            #self._freq_min = self.chan_freqs[i] - 0.5 * abs(self.chan_widths[i])
             decimal_width = decimal.Decimal(str(abs(self.chan_widths[i])))
             delta = decimal_width / decimal.Decimal('2')
             self._freq_min = float(decimal.Decimal(str(self.chan_freqs[i])) - delta)
@@ -488,110 +492,113 @@ class SpectralWindowAdapter:
                          self.type])
         return 'SpectralWindow({0})'.format(', '.join(args))
     
-class Frequencies(spectralwindow.SpectralWindow, SingleDishBase):
-
-    frame_map = { 0: 'REST',
-                  1: 'LSRK',
-                  2: 'LSRD',
-                  3: 'BARY',
-                  4: 'GEO',
-                  5: 'TOPO',
-                  6: 'GALACTO',
-                  7: 'LGROUP',
-                  8: 'CMB' }
-
-    def __getstate__(self):
-        state_dictionary = self.__dict__.copy()
-        for attribute in self.__slots__:
-            state_dictionary[attribute] = getattr(self, attribute)
-        return state_dictionary
-
-    def __setstate__(self, d):
-        for (k,v) in d.items():
-            if not hasattr(self, k):
-                setattr(self, k, v)
-        self.__dict__ = d
-    
-    @staticmethod
-    def from_spectral_window(spw):
-        nchan = spw.num_channels
-        spw_type = ('TP' if nchan == 1 else \
-                    ('WVR' if nchan == 4 else 'SP'))
-        center_freq0 = spw._chan_freqs[0]
-        refpix = 0
-        refval = center_freq0
-        if nchan == 1:
-            increment = spw._chan_widths[0]
-        else:
-            center_freq1 = spw._chan_freqs[1]
-            increment = center_freq1 - center_freq0
-
-        entry = Frequencies(id=spw.id,
-                            type=spw_type,
-                            nchan=nchan,
-                            bandwidth=float(to_numeric_freq(spw.bandwidth)),
-                            refpix=refpix,
-                            refval=refval,
-                            increment=increment,
-                            freq_min=to_numeric_freq(spw.min_frequency),
-                            freq_max=to_numeric_freq(spw.max_frequency),
-                            name=spw.name,
-                            sideband=spw.sideband,
-                            baseband=spw.baseband)
-        return entry
-        
-    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None,name=None,sideband=None,baseband=None, hif_spw=None):
-        if increment is not None and nchan is not None:
-            chan_widths = [increment] * nchan
-        else:
-            chan_widths = None
-        if refpix is not None and refval is not None:
-            chan_freqs = [refval + refpix * increment * ichan for ichan in xrange(nchan)]
-        else:
-            chan_freqs = None
-
-#       spectralwindow.SpectralWindow.__init__(self, id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
-        # assume reference frequency and mean frequency are one and the same
-        mean_freq = numpy.mean(chan_freqs)
-        ref_freq = mean_freq
-        spectralwindow.SpectralWindow.__init__(self, id, name, type, bandwidth, ref_freq, mean_freq, chan_freqs, chan_widths, sideband, baseband)
-
-        self._init_properties(vars(),kw_ignore=['self','bandwidth'])
-        intents = self.intent.split(':')
-        for intent in intents:
-            if self.type == 'WVR':
-                self.intents.add(self.type)
-            else:
-                self.intents.add(intent)
-
-    @property
-    def frequency_range(self):
-        return [self.freq_min, self.freq_max]
-
-    @property
-    def intent(self):
-        return self._intent
-
-    @intent.setter
-    def intent(self, value):
-        self._intent = '' if value is None else value
-
-    @property
-    def pol_association(self):
-        return self._pol_association
-
-    @pol_association.setter
-    def pol_association(self, value):
-        self._pol_association = [] if value is None else value
-
-    @property
-    def is_target(self):
-        #return (self.type == 'SP' and self.intent.find('TARGET') != -1)
-        return (self.intent.find('TARGET') != -1)
-
-    @property
-    def is_atmcal(self):
-        return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
+# 2015/07/03 TN
+# Frequency object is replaced with SpectralWindowAdapter object
+#
+# class Frequencies(spectralwindow.SpectralWindow, SingleDishBase):
+# 
+#     frame_map = { 0: 'REST',
+#                   1: 'LSRK',
+#                   2: 'LSRD',
+#                   3: 'BARY',
+#                   4: 'GEO',
+#                   5: 'TOPO',
+#                   6: 'GALACTO',
+#                   7: 'LGROUP',
+#                   8: 'CMB' }
+# 
+#     def __getstate__(self):
+#         state_dictionary = self.__dict__.copy()
+#         for attribute in self.__slots__:
+#             state_dictionary[attribute] = getattr(self, attribute)
+#         return state_dictionary
+# 
+#     def __setstate__(self, d):
+#         for (k,v) in d.items():
+#             if not hasattr(self, k):
+#                 setattr(self, k, v)
+#         self.__dict__ = d
+#     
+#     @staticmethod
+#     def from_spectral_window(spw):
+#         nchan = spw.num_channels
+#         spw_type = ('TP' if nchan == 1 else \
+#                     ('WVR' if nchan == 4 else 'SP'))
+#         center_freq0 = spw._chan_freqs[0]
+#         refpix = 0
+#         refval = center_freq0
+#         if nchan == 1:
+#             increment = spw._chan_widths[0]
+#         else:
+#             center_freq1 = spw._chan_freqs[1]
+#             increment = center_freq1 - center_freq0
+# 
+#         entry = Frequencies(id=spw.id,
+#                             type=spw_type,
+#                             nchan=nchan,
+#                             bandwidth=float(to_numeric_freq(spw.bandwidth)),
+#                             refpix=refpix,
+#                             refval=refval,
+#                             increment=increment,
+#                             freq_min=to_numeric_freq(spw.min_frequency),
+#                             freq_max=to_numeric_freq(spw.max_frequency),
+#                             name=spw.name,
+#                             sideband=spw.sideband,
+#                             baseband=spw.baseband)
+#         return entry
+#         
+#     def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None,name=None,sideband=None,baseband=None, hif_spw=None):
+#         if increment is not None and nchan is not None:
+#             chan_widths = [increment] * nchan
+#         else:
+#             chan_widths = None
+#         if refpix is not None and refval is not None:
+#             chan_freqs = [refval + refpix * increment * ichan for ichan in xrange(nchan)]
+#         else:
+#             chan_freqs = None
+# 
+# #       spectralwindow.SpectralWindow.__init__(self, id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
+#         # assume reference frequency and mean frequency are one and the same
+#         mean_freq = numpy.mean(chan_freqs)
+#         ref_freq = mean_freq
+#         spectralwindow.SpectralWindow.__init__(self, id, name, type, bandwidth, ref_freq, mean_freq, chan_freqs, chan_widths, sideband, baseband)
+# 
+#         self._init_properties(vars(),kw_ignore=['self','bandwidth'])
+#         intents = self.intent.split(':')
+#         for intent in intents:
+#             if self.type == 'WVR':
+#                 self.intents.add(self.type)
+#             else:
+#                 self.intents.add(intent)
+# 
+#     @property
+#     def frequency_range(self):
+#         return [self.freq_min, self.freq_max]
+# 
+#     @property
+#     def intent(self):
+#         return self._intent
+# 
+#     @intent.setter
+#     def intent(self, value):
+#         self._intent = '' if value is None else value
+# 
+#     @property
+#     def pol_association(self):
+#         return self._pol_association
+# 
+#     @pol_association.setter
+#     def pol_association(self, value):
+#         self._pol_association = [] if value is None else value
+# 
+#     @property
+#     def is_target(self):
+#         #return (self.type == 'SP' and self.intent.find('TARGET') != -1)
+#         return (self.intent.find('TARGET') != -1)
+# 
+#     @property
+#     def is_atmcal(self):
+#         return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
 
 
 class ReductionGroupMember(object):
