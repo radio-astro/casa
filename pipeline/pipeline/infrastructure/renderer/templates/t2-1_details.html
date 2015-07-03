@@ -169,7 +169,7 @@ $(document).ready(function(){
 	</div>
 	
 	
-	% if pcontext.project_summary.telescope.lower() in ('alma'):
+	% if pcontext.project_summary.telescope.lower() in ('alma') and pwv_plot is not None:
 	
 	<div class="col-md-6">
 		<a href="${os.path.relpath(pwv_plot.abspath, pcontext.report_dir)}" class="fancybox">
