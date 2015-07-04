@@ -118,7 +118,11 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
     watertime = newtime
     water = newwater
     regularTime = np.linspace(watertime[0], watertime[-1], len(watertime))
-    ius = splrep(watertime, water,s=len(watertime)-math.sqrt(2*len(watertime)))
+    #ius = splrep(watertime, water,s=len(watertime)-math.sqrt(2*len(watertime)))
+    order = 3
+    if len(water) <=3:
+        order = 1                 # required for data sets with too few points
+    ius = splrep(watertime, water, s=len(watertime)-math.sqrt(2*len(watertime)), k=order)
     water = splev(regularTime, ius, der=0)
     list_of_date_times = mjdSecondsListToDateTime(regularTime)
     timeplot = pb.date2num(list_of_date_times)
