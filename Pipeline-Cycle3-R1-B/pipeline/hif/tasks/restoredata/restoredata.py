@@ -83,7 +83,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
         rawdata_dir=None, output_dir=None, session=None, vis=None,
-        bdfflags=None):
+        bdfflags=None, asis=None, process_caldevice=None, ocorr_mode=None):
 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -184,6 +184,26 @@ class RestoreDataInputs(basetask.StandardInputs):
     @bdfflags.setter
     def bdfflags(self, value):
         self._bdfflags = value
+
+    @property
+    def process_caldevice (self):
+        if self._process_caldevice is None:
+            self._process_caldevice = False
+        return self._process_caldevice
+
+    @process_caldevice.setter
+    def process_caldevice(self, value):
+        self._process_caldevice = value
+
+    @property
+    def ocorr_mode (self):
+        if self._ocorr_mode is None:
+            self._ocorr_mode = 'ca'
+        return self._ocorr_mode
+
+    @ocorr_mode.setter
+    def ocorr_mode(self, value):
+        self._ocorr_mode = value
 
 
 class RestoreDataResults(basetask.Results):
@@ -341,7 +361,9 @@ class RestoreData(basetask.StandardTaskTemplate):
         inputs = self.inputs
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
-	    bdfflags=inputs.bdfflags, dbservice=False)
+	    bdfflags=inputs.bdfflags, dbservice=False,
+            process_caldevice=inputs.process_caldevice,
+            ocorr_mode=inputs.ocorr_mode)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
 
