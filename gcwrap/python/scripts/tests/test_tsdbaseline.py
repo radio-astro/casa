@@ -592,7 +592,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
     def tearDown(self):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        #os.system('rm -rf '+self.outroot+'*')
+        os.system('rm -rf '+self.outroot+'*')
 
     def test000(self):
         """Basic Test 000: default values for all parameters"""
