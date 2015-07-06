@@ -859,6 +859,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
 	//prepare varables for writing baseline table
 	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	size_t num_apply_true = 0;
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	Array<Float> ffpar_mtx(IPosition(2, num_pol, 0));//1));
@@ -919,6 +920,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   	  // actual execution of single spectrum
 	  //float rms;  //<--comment out until new API becomes available
 	  if (write_baseline_table) {
+	    num_apply_true++;
 	    SakuraAlignedArray<double> coeff(num_coeff);
 	    status = 
 	    LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(bl_contexts[ctx_indices[idx]], 
@@ -998,7 +1000,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   	} // end of polarization loop
 
 	if (write_baseline_table) {
-	  // write to baseline table
+	  // write to baseline table if there is apply=True spectrum.
+	  if (num_apply_true > 0) {
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
@@ -1007,6 +1010,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 
 			 cthres_mtx, citer_mtx, 
 			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+	  }
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
@@ -1128,6 +1132,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
 	//prepare varables for writing baseline table
 	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	size_t num_apply_true = 0;
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	Array<Float> ffpar_mtx(IPosition(2, num_pol, npiece));
@@ -1189,6 +1194,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 	  //float rms;  //<--comment out until new API becomes available
 	  //SakuraAlignedArray<double> boundary(npiece);  //<--comment out until new API becomes available
 	  if (write_baseline_table) {
+	    num_apply_true++;
 	    status = 
 	    LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(bl_contexts[ctx_indices[idx]], 
 									     num_chan,
@@ -1276,7 +1282,8 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   	} // end of polarization loop
 
 	if (write_baseline_table) {
-	  // write to baseline table
+	  // write to baseline table if there is apply=True spectrum.
+	  if (num_apply_true > 0) {
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
 	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
@@ -1285,6 +1292,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 
 			 cthres_mtx, citer_mtx, 
 			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+	  }
 	}
       } // end of chunk row loop
       // write back data cube to VisBuffer
@@ -1659,6 +1667,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
 	//prepare varables for writing baseline table
 	Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+	size_t num_apply_true = 0;
 	Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
 	Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
 	size_t num_ffpar_max = 0;
@@ -1764,6 +1773,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           */
 	  //<--***end***
 	  if (write_baseline_table) {
+	    num_apply_true++;
 	    bltype_mtx[0][ipol] = (uInt)fit_param.baseline_type;
 	    Int fpar_tmp;
 	    switch (fit_param.baseline_type) {
@@ -1994,7 +2004,8 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
   	} // end of polarization loop
 
 	if (write_baseline_table) {
-	  //write to baseline table
+	  //write to baseline table if there is apply=True spectrum.
+	  if (num_apply_true > 0 ) {
 	  Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
 	  set_matrix_for_bltable<double, Float>(num_pol, num_ffpar_max, ffpar_mtx_tmp, ffpar_mtx);
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
@@ -2007,6 +2018,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 
 			 cthres_mtx, citer_mtx, 
 			 uself_mtx, lfthres_mtx, lfavg_mtx, lfedge_mtx);
+	  }
 	}
       } // end of chunk row loop
       // write back data and flag cube to VisBuffer
