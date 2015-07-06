@@ -16,7 +16,7 @@ class IntensityScalingInputs(common.SingleDishInputs):
     """
     Intensity Scaling for each MS 
     """
-    def __init__(self, context, infiles=None, reffile=None, mustapply=None, spec_unit=None):
+    def __init__(self, context, infiles=None, reffile=None, imagemode=None):
         self._init_properties(vars())
         self._to_list(['infiles'])
         
@@ -38,7 +38,8 @@ class IntensityScaling(common.SingleDishTaskTemplate):
     
     @common.datatable_setter
     def prepare(self):
-        mustapply = self.inputs.mustapply
+        imagemode = self.inputs.imagemode
+        mustapply = (imagemode!='AMPCAL')
         logfunc = LOG.error if mustapply else LOG.warn
         any_failed = False
         if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
@@ -59,10 +60,12 @@ class IntensityScaling(common.SingleDishTaskTemplate):
             # generate scaling factor dictionary
             factors = rearrange_factors_list(factors_list)
                         
-            if not mustapply: LOG.warn("Applying Jy/K factor to AmpCal sources.")
+            if imagemode=='AMPCAL': LOG.warn("Applying Jy/K factor to AmpCal sources. Image unit will be wrong.")
             # apply scaling factor to the data
             any_failed = self._apply_scaling_factors(factors, mustapply)
-        spec_unit = 'Jy' if self.inputs.spec_unit is None else self.inputs.spec_unit
+
+        # modify the unit of FLOAT_DATA
+        spec_unit = 'K' if imagemode=='AMPCAL' else 'Jy'
         self._change_unit(spec_unit)
 
         outcome = {'factors': factors,

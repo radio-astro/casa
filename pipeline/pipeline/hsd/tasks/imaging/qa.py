@@ -29,7 +29,8 @@ class SDImagingQAHandler(pqa.QAResultHandler):
     child_cls = None
 
     def handle(self, context, result):
-        LOG.warn("Nothing is ivoked as SDImagingQAHandler yet.")
+        pass
+        #LOG.warn("Nothing is ivoked as SDImagingQAHandler yet.")
 
 class SDImagingVariableListQAHandler(pqa.QAResultHandler):
     result_cls = list
