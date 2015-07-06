@@ -407,11 +407,11 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                 #ANTENNA_NOT_ON_SOURCE FLAG
                 cmdlist = self._read_flagfile(inputs.fileonline)
                 flag_cmds.extend([cmd for cmd in cmdlist if ('ANTENNA_NOT_ON_SOURCE' in cmd)])
-                flag_cmds.append('mode=summary name=anos')
+                flag_cmds.append('mode=\'summary\' name=\'anos\'')
                 
                 #All other online flags
                 flag_cmds.extend([cmd for cmd in cmdlist if not ('ANTENNA_NOT_ON_SOURCE' in cmd)])
-                flag_cmds.append('mode=summary name=online')
+                flag_cmds.append('mode=\'summary\' name=\'online\'')
         
         # flag template?
         if inputs.template:
@@ -421,7 +421,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                                                            inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
-                flag_cmds.append('mode=summary name=template')
+                flag_cmds.append('mode=\'summary\' name=\'template\'')
                 
         # Flag autocorrelations?
         #if inputs.autocorr:
@@ -430,26 +430,26 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
     
         # Flag autocorrelations?
         if inputs.autocorr:
-            flag_cmds.append('mode=manual autocorr=True reason=autocorr')
-            flag_cmds.append('mode=summary name=autocorr')
+            flag_cmds.append('mode=\'manual\' autocorr=True reason=\'autocorr\'')
+            flag_cmds.append('mode=\'summary\' name=\'autocorr\'')
     
         # Flag shadowed antennas?
         if inputs.shadow:
-            flag_cmds.append('mode=shadow reason=shadow')
-            flag_cmds.append('mode=summary name=shadow')
+            flag_cmds.append('mode=\'shadow\' reason=\'shadow\'')
+            flag_cmds.append('mode=\'summary\' name=\'shadow\'')
             
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
-            flag_cmds.append('mode=manual scan=%s reason=scans' % inputs.scannumber)
-            flag_cmds.append('mode=summary name=scans')
+            flag_cmds.append('mode=\'manual\' scan=\'%s\' reason=\'scans\'' % inputs.scannumber)
+            flag_cmds.append('mode=\'summary\' name=\'scans\'')
 
         # These must be separated due to the way agent flagging works
         if inputs.intents != '':
             for intent in inputs.intents.split(','):
                 if '*' not in intent:
                     intent = '*%s*' % intent
-                flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
-            flag_cmds.append('mode=summary name=intents')
+                flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent)
+            flag_cmds.append('mode=\'summary\' name=\'intents\'')
             
         # Flag end 5 percent of each spw or minimum of 3 channels
         if inputs.edgespw:
@@ -457,20 +457,20 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             if to_flag:
                 spw_arg = ','.join(to_flag)
                 flag_cmds.append(spw_arg)
-                flag_cmds.append('mode=summary name=edgespw')
+                flag_cmds.append('mode=\'summary\' name=\'edgespw\'')
 
         #############
         #VLA specific commands
 
         # Flag mode clip
         if inputs.clip:
-            flag_cmds.append('mode=clip correlation=ABS_ALL clipzeros=True reason=clip')
-            flag_cmds.append('mode=summary name=clip')
+            flag_cmds.append('mode=\'clip\' correlation=\'ABS_ALL\' clipzeros=True reason=\'clip\'')
+            flag_cmds.append('mode=\'summary\' name=\'clip\'')
         
         # Flag quack
         if inputs.quack: 
             flag_cmds.append(self._get_quack_cmds())
-            flag_cmds.append('mode=summary name=quack')
+            flag_cmds.append('mode=\'summary\' name=\'quack\'')
             
         
             
@@ -479,14 +479,14 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             to_flag = self._get_baseband_cmds()
             if to_flag:
                 flag_cmds.append(to_flag)
-                flag_cmds.append('mode=summary name=baseband')
+                flag_cmds.append('mode=\'summary\' name=\'baseband\'')
         
         if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
         
         # summarise the state before flagging rather than assuming the initial
         # state is unflagged
         if flag_cmds:
-            flag_cmds.insert(0, 'mode=summary name=before')
+            flag_cmds.insert(0, "mode='summary' name='before'")
             
         #print flag_cmds
         
@@ -496,7 +496,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 
     def _get_autocorr_cmd (self):
         #return 'mode=manual antenna=*&&&'
-        return 'mode=manual autocorr=True'
+        return 'mode=\'manual\' autocorr=True'
 
 
 
