@@ -42,7 +42,7 @@ class MakeImagesInputs(basetask.StandardInputs):
 
     @target_list.setter
     def target_list(self, value):
-        if value is None:
+        if not value:
             value = self.context.clean_list_pending
         self._target_list = value
 
