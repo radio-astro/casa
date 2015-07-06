@@ -395,7 +395,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                                                            inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.fileonline))
-                flag_cmds.append('mode=summary name=online')
+                flag_cmds.append("mode='summary' name='online'")
         
         # flag template?
         if inputs.template:
@@ -405,59 +405,56 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                                                            inputs.ms.basename))
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
-                flag_cmds.append('mode=summary name=template')
+                flag_cmds.append("mode='summary' name='template'")
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            flag_cmds.append('mode=manual autocorr=True reason=autocorr')
-            flag_cmds.append('mode=summary name=autocorr')
+            flag_cmds.append("mode='manual' autocorr='True' reason='autocorr'")
+            flag_cmds.append("mode='summary' name='autocorr'")
     
         # Flag shadowed antennas?
         if inputs.shadow:
-            flag_cmds.append('mode=shadow reason=shadow')
-            flag_cmds.append('mode=summary name=shadow')
+            flag_cmds.append("mode='shadow' reason='shadow'")
+            flag_cmds.append("mode='summary' name='shadow'")
         
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
-            flag_cmds.append('mode=manual scan=%s reason=scans' % inputs.scannumber)
-            flag_cmds.append('mode=summary name=scans')
+            flag_cmds.append("mode='manual' scan='%s' reason='scans'" % inputs.scannumber)
+            flag_cmds.append("mode='summary' name='scans'")
 
         # These must be separated due to the way agent flagging works
         if inputs.intents != '':
             #for intent in inputs.intents.split(','):
             #    if '*' not in intent:
             #        intent = '*%s*' % intent
-            #    flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
-            #flag_cmds.append('mode=summary name=intents')
+            #    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent)
+            #flag_cmds.append("mode='summary' name='intents'")
             for intent in inputs.intents.split(','):
                 #if '*' not in intent:
                     #intent = '*%s*' % intent
                 intentlist = list(inputs.ms.get_original_intent(intent))
                 for intent_item in intentlist:
-                    flag_cmds.append('mode=manual intent=%s reason=intents' % intent_item)
-            flag_cmds.append('mode=summary name=intents') 
-            
-            
-            
-
+                    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent_item)
+            flag_cmds.append("mode='summary' name='intents'") 
+        
         # Flag spectral window edge channels?
         if inputs.edgespw: 
             to_flag = self._get_edgespw_cmds()
             if to_flag:
                 spw_arg = ','.join(to_flag)
-                flag_cmds.append('mode=manual spw=%s reason=edgespw' % spw_arg)
-                flag_cmds.append('mode=summary name=edgespw')
+                flag_cmds.append("mode='manual' spw='%s' reason='edgespw'" % spw_arg)
+                flag_cmds.append("mode='summary' name='edgespw'")
 
         # summarise the state before flagging rather than assuming the initial
         # state is unflagged
         if flag_cmds:
-            flag_cmds.insert(0, 'mode=summary name=before')
+            flag_cmds.insert(0, "mode='summary' name='before'")
 
         return flag_cmds
 
     def _get_autocorr_cmd (self):
-        #return 'mode=manual antenna=*&&&'
-        return 'mode=manual autocorr=True'
+        #return "mode='manual' antenna='*&&&'"
+        return "mode='manual' autocorr='True'"
 
     
     def verify_spw(self, spw):
