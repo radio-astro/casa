@@ -9,7 +9,8 @@ from . import renderer
 from . import qa
 
 pipelineqa.registry.add_handler(qa.IntensityScalingQAHandler())
-pipelineqa.registry.add_handler(qa.IntensityScalingListQAHandler())
+pipelineqa.registry.add_handler(qa.SDImagingQAHandler())
+pipelineqa.registry.add_handler(qa.SDImagingVariableListQAHandler())
 
 qaadapter.registry.register_to_imaging_topic(imaging.SDImagingResults)
 qaadapter.registry.register_to_imaging_topic(scaling.IntensityScalingResults)

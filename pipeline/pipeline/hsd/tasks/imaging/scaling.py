@@ -44,7 +44,8 @@ class IntensityScaling(common.SingleDishTaskTemplate):
         if self.inputs.reffile is None or not os.path.exists(self.inputs.reffile):
             factors = None
             reffile = self.inputs.reffile
-            logfunc('No scaling factors available. Use 1.0 for all antennas.')
+            if mustapply:
+                logfunc('No scaling factors available. Use 1.0 for all antennas.')
             any_failed = mustapply
         else:
             # do scaling
@@ -58,6 +59,7 @@ class IntensityScaling(common.SingleDishTaskTemplate):
             # generate scaling factor dictionary
             factors = rearrange_factors_list(factors_list)
                         
+            if not mustapply: LOG.warn("Applying Jy/K factor to AmpCal sources.")
             # apply scaling factor to the data
             any_failed = self._apply_scaling_factors(factors, mustapply)
         spec_unit = 'Jy' if self.inputs.spec_unit is None else self.inputs.spec_unit
