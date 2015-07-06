@@ -33,7 +33,7 @@ class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
 		 session=None, overwrite=None, save_flagonline=None,
-		 bdfflags=None, dbservice=None):
+		 bdfflags=None, dbservice=None, ocorr_mode=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -43,6 +43,7 @@ class ImportDataInputs(basetask.StandardInputs):
     bdfflags = basetask.property_with_default('bdfflags', True)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
     dbservice = basetask.property_with_default('dbservice', True)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
 
     @property
     def session(self):
@@ -342,6 +343,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      outfile=outfile,
                                      process_caldevice=inputs.process_caldevice,
                                      asis=inputs.asis,
+                                     ocorr_mode=inputs.ocorr_mode,
                                      overwrite=inputs.overwrite,
 				     bdfflags=inputs.bdfflags)
 
