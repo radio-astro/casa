@@ -1812,7 +1812,7 @@ void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage, Int te
 	
       }catch(AipsError &x)
       {
-	throw("Error in regridding input model image to target coordsys : " + x.getMesg());
+	throw(AipsError("Error in regridding input model image to target coordsys : " + x.getMesg()));
       }
   }
 
