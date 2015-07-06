@@ -15,11 +15,13 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
     bdfflags  = basetask.property_with_default('bdfflags', True)
     dbservice = basetask.property_with_default('dbservice', True)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'ca')
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
                  process_caldevice=None, session=None, overwrite=None,
-                 bdfflags=None, save_flagonline=None, dbservice=None):
+                 bdfflags=None, save_flagonline=None, dbservice=None,
+                 ocorr_mode=None):
         self._init_properties(vars())
 
 
