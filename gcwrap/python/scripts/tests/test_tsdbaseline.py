@@ -1025,6 +1025,13 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                     (1) blparam contains values for all spectra
                     (2) no values for a spectrum (row=2,pol=1), which is to be skipped
                     (3) values commented out for a spectrum (row=2,pol=1), which is to be skipped
+    test303 --- blmode='fit', bloutput!='', dosubtract=True, blfunc='poly','chebyshev','cspline'
+                testing if bltable is shortened
+                testing 3 cases:
+                    (1) all spectra in row 2 are flagged entirely
+                    (2) in row 2, entirely flagged for pol 0, also pol 1 is unselected
+                    (3) in row 2, entirely flagged for pol 1, also pol 0 is unselected
+    test304 --- same as test303, but for blfunc='variable'
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -1050,7 +1057,6 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
         default(tsdbaseline)
 
     def tearDown(self):
-        #pass
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
         os.system('rm -rf '+self.outroot+'*')
@@ -1085,7 +1091,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                 result = 0.0 if is_skipped else results[i][j]
                 self._checkValue(result, tb.getcell('RESULT', irow)[ipol][j], 1.0e-5)
             if not is_skipped:
-                self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-5)
+                self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-1)
                 self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
                 self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
                 uself = (blparam['uself'][i] == 'true')
@@ -1196,7 +1202,6 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
 
             fparam = npiece if blfunc[i] == 'cspline' else order
             self._checkBltable(outfile, bloutput, blfunc[i], fparam, mask)
-            print 'OK'
 
     def test302(self):
         """test302: per-spectrum baselining, output bltable"""
@@ -1221,7 +1226,106 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                              msg="The task returned '"+str(result)+"' instead of None")
             self._checkBltableVar(outfile, bloutput, self.blparam_dic, option)
 
+    def test303(self):
+        """test303: testing shortening baseline table for poly,chebyshev,cspline"""
+        self.tid = '303'
+        infile = self.infile
+        datacolumn='float_data'
+        spw=''
+        blmode='fit'
+        blformat='table'
+        dosubtract=True
+        blfunc=['poly','chebyshev','cspline']
+        order=5
+        npiece=4
+        with tbmanager(infile) as tb:
+            nrow_data = tb.nrows()
+        testmode = ['masked_masked', 'masked_unselect', 'unselect_masked']
+        prange = [[0,1], [0], [1]]
+        polval = ['', '0', '1']
+        for i in range(len(blfunc)):
+            for j in range(len(testmode)):
+                print 'testing blfunc='+blfunc[i]+', testmode='+testmode[j]+'...'
+                #prepare input data
+                if os.path.exists(infile):
+                    shutil.rmtree(infile)
+                shutil.copytree(self.datapath+self.infile, infile)
 
+                tb.open(tablename=infile, nomodify=False)
+                r2msk = tb.getcell('FLAG', 2)
+                for ipol in prange[j]:
+                    for ichan in range(len(r2msk[0])):
+                        r2msk[ipol][ichan] = True
+                tb.putcell('FLAG', 2, r2msk)
+                tb.close()
+                pol = polval[j]
+
+                outfile = self.outroot+self.tid+blfunc[i]+testmode[j]+'.ms'
+                bloutput= self.outroot+self.tid+blfunc[i]+testmode[j]+'.bltable'
+                result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                                     blmode=blmode,blformat=blformat,bloutput=bloutput,
+                                     spw=spw,pol=pol,blfunc=blfunc[i],order=order,npiece=npiece,
+                                     dosubtract=dosubtract,outfile=outfile)
+                self.assertEqual(result,None,
+                                 msg="The task returned '"+str(result)+"' instead of None")
+                with tbmanager(bloutput) as tb:
+                    nrow_bltable = tb.nrows()
+                self.assertTrue((nrow_bltable == nrow_data - 1), 
+                                msg="The baseline table is not shortened...")
+                #delete used data
+                if (os.path.exists(self.infile)):
+                    shutil.rmtree(self.infile)
+                os.system('rm -rf '+self.outroot+'*')
+    
+    def test304(self):
+        """test304: testing shortening baseline table for blfunc=variable"""
+        self.tid = '304'
+        infile = self.infile
+        datacolumn='float_data'
+        spw=''
+        blmode='fit'
+        blformat='table'
+        blfunc='variable'
+        dosubtract=True
+        with tbmanager(infile) as tb:
+            nrow_data = tb.nrows()
+        testmode = ['masked_masked', 'masked_unselect', 'unselect_masked']
+        prange = [[0,1], [0], [1]]
+        polval = ['', '0', '1']
+        for j in range(len(testmode)):
+            print 'testing blfunc='+blfunc+', testmode='+testmode[j]+'...'
+            #prepare input data
+            if os.path.exists(self.infile):
+                shutil.rmtree(self.infile)
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+            blparam = self.outroot+'.blparam'
+            self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, '')
+
+            tb.open(tablename=infile, nomodify=False)
+            r2msk = tb.getcell('FLAG', 2)
+            for ipol in prange[j]:
+                for ichan in range(len(r2msk[0])):
+                    r2msk[ipol][ichan] = True
+            tb.putcell('FLAG', 2, r2msk)
+            tb.close()
+            pol = polval[j]
+
+            outfile = self.outroot+self.tid+blfunc+'.ms'
+            bloutput= self.outroot+self.tid+blfunc+'.bltable'
+            result = tsdbaseline(infile=infile,datacolumn=datacolumn,
+                                 blmode=blmode,blformat=blformat,bloutput=bloutput,
+                                 spw=spw,pol=pol,blfunc=blfunc,blparam=blparam,
+                                 dosubtract=dosubtract,outfile=outfile)
+            with tbmanager(bloutput) as tb:
+                nrow_bltable = tb.nrows()
+            self.assertTrue((nrow_bltable == nrow_data - 1), 
+                            msg="The baseline table is not shortened...")
+            #delete used data
+            if (os.path.exists(self.infile)):
+                shutil.rmtree(self.infile)
+            os.system('rm -rf '+self.outroot+'*')
+    
 class tsdbaseline_applybltableTest(tsdbaseline_unittest_base, unittest.TestCase):
     """
     Tests for applying baseline table
