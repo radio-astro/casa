@@ -294,25 +294,80 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockStep_p[msin].resize(nSelections);
       blockSpw_p[msin].resize(nSelections);
       ///////////////////////
+      
+      ////Channel selection 'flags' need for when using old VI/VB
+      //set up Cube for storing the 'flags' for all MSes
+      //find max no. channels from the current ms 
+      const ROMSSpWindowColumns spwc(thisms.spectralWindow());
+      uInt nspw = spwc.nrow();
+      const ROScalarColumn<Int> spwNchans(spwc.numChan());
+      Vector<Int> nchanvec = spwNchans.getColumn();
+      Int maxnchan = 0;
+      for (uInt i=0;i<nchanvec.nelements();i++) {
+        maxnchan=max(nchanvec[i],maxnchan);
+      }
+      uInt maxnspw = 0;
+      // msin is now zero based index
+      for (Int i=0;i<msin+1;i++) {
+        maxnspw=max(maxnspw,nspw);
+      }
+      //maxnspw=max(nspw,maxnspw);
+      // update the channel selections and initialize to 1's (all selected)
+      chanSel_p.resize(msin+1,nspw,maxnchan,True);
+      chanSel_p.yzPlane(msin)=1;
 
       if(selpars.freqbeg==""){
+	  //re-initialize to false 
+          chanSel_p.yzPlane(msin)=0;
+          Vector<Int> loChans(nspw, -1);
     	  /////So this gymnastic is needed
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
-	  
+
     		  spw = chanlist(k,0);
-	  
+                 
     		  // channel selection
     		  chanStart = chanlist(k,1);
     		  chanEnd = chanlist(k,2);
     		  chanStep = chanlist(k,3);
     		  nchan = chanEnd-chanStart+1;
+
+                  // find lowest selected channel for each spw
+                  if(loChans(spw) == -1) { 
+                    loChans(spw) = chanStart;
+                  }
+                  else {
+                    if ( loChans(spw) > chanStart) loChans(spw) = chanStart;
+                  }
+
     		  //channelSelector.add (spw, chanStart, nchan,chanStep);
     		  ///////////////Temporary revert to using Vi/vb
     		  blockNChan_p[msin][k]=nchan;
     		  blockStart_p[msin][k]=chanStart;
     		  blockStep_p[msin][k]=chanStep;
     		  blockSpw_p[msin][k]=spw;
+           }
+           
+           Int relStart=0;
+    	   for(uInt k=0; k < nSelections; ++k)
+           {
+    		  spw = chanlist(k,0);
+    		  chanStart = chanlist(k,1);
+    		  chanEnd = chanlist(k,2);
+                  
+                  // for 'channel flags' (for old VI/VB)
+                  // MSSelect will be applied before the channel flags in FTMachine so
+                  // chanSel_p will be relative to the start chan
+                  //for (uInt k=chanStart;k<(chanEnd+1);k+=chanStep) {
+                  if (loChans(spw) == chanStart ) {
+                    relStart = 0;
+                  }
+                  else {
+                    relStart = chanStart - loChans(spw);
+                  }
+                  for (uInt k=relStart;k<(chanEnd-loChans(spw)+1);k+=chanStep) {
+                    chanSel_p(msin,spw,k)=1;
+                  }
     		  /////////////////////////////////////////
 
     	  }
@@ -1349,6 +1404,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     theFT->setFreqInterpolation( interpolation );
     theIFT->setFreqInterpolation( interpolation );
 
+    //channel selections from spw param
+    theFT->setSpwChanSelection(chanSel_p);
+    theIFT->setSpwChanSelection(chanSel_p);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

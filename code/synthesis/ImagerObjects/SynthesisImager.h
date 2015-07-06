@@ -324,6 +324,8 @@ protected:
   Block<Vector<Int> > blockStep_p;
   Block<Vector<Int> > blockSpw_p;
   Matrix<Double> mssFreqSel_p;
+  //the 'channel flags' to handle various channel selections in the spw parameter
+  Cube<Int > chanSel_p;
 
   /////////////////////////////////////////////////////////////////////////////////
   Bool writeAccess_p;
