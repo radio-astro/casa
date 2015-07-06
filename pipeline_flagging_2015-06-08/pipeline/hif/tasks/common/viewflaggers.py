@@ -900,18 +900,17 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # Flag the view
             newflags, newflags_reason = self.flag_view(viewresult, inputs.rules)
         
-            # Stop iteration if no new flags were found
+            # Report how many flags were found in this iteration and
+            # stop iteration if no new flags were found
             if len(newflags) == 0:
-                break
-
-            # Report how many flags were found in this iteration
-            if newflags:
-                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
-                            (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
-            else:
-                #fixme, can't get here
+                # If no new flags are found, report as a log message
                 LOG.info('%s%s iteration %s raised %s flagging commands' % \
                          (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+                break
+            else:
+                # Report newly found flags as a warning message
+                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                            (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
 
             # Accumulate new flags and flag reasons
             flags += newflags
@@ -972,6 +971,13 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
                     stats_before, stats_after = self.set_flags(newflags, 
                                                                summarize_before=True, 
                                                                summarize_after=True)
+            
+            # Store the final set of flags in the final result
+            self.result.addflags(flags)
+            
+            # Store the flag reasons in the last (i.e. post-flagging) view in the final result
+            self.result.add_flag_reason_plane(flag_reason_plane, self.flag_reason_key)
+        
         # if no flags were found at all
         else:
             # Run a single flagging summary and use the result as both the "before" 
@@ -979,14 +985,9 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             summary_job = casa_tasks.flagdata(vis=self.inputs.vis, mode='summary')
             stats_before = self._executor.execute(summary_job)
             stats_after = stats_before        
-
-        # Store the final set of flags in the final result
-        self.result.addflags(flags)
         
-        # Store the flag reasons in the last (i.e. post-flagging) view in the final result
-        self.result.add_flag_reason_plane(flag_reason_plane, self.flag_reason_key)
-        
-        # Store the "measurement set or caltable to flag" in the final result
+        # Store in the final result the name of the measurement set or caltable to 
+        # which any potentially found flags would need to be applied to
         self.result.table = self.flagsettertask.inputs.table
         
         # Store the flagging summaries in the final result
@@ -996,7 +997,6 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
 
     def analyse(self, result):
         return result
-
         
     def flag_view(self, view, rules):
         newflags = []
@@ -1022,14 +1022,14 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
 
         # Add the "before" summary to the flagging commands
         if summarize_before:
-            allflagcmds = ['mode=summary name=before']
+            allflagcmds = ["mode='summary' name='before'"]
         
         # Add the flagging commands
         allflagcmds.extend(flags)
         
         # Add the "before" summary to the flagging commands
         if summarize_after:
-            allflagcmds.append('mode=summary name=after')
+            allflagcmds.append("mode='summary' name='after'")
         
         # Update flag setting task with all flagging commands
         self.flagsettertask.flags_to_set(allflagcmds)
