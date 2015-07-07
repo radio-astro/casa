@@ -5,12 +5,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="split2" category="manipulation"  visibility="experimental">
+<task type="function" name="split2" category="manipulation">
      <shortdescription>Create a visibility subset from an existing visibility set</shortdescription>
 
 <description>
 
-This task is experimental! It uses the MSTransform framework underneath.
+This task uses the MSTransform framework underneath.
 Split2 is the general purpose program to make a new data set that is a
 subset or averaged form of an existing data set.  General selection
 parameters are included, and one or all of the various data columns
@@ -171,6 +171,10 @@ see the help of partition and mstransform.
     outputvis -- Name of output Measurement set or Multi-MS (MMS).
         default: none; 
         example: outputvis='ngc5921_src.ms'
+    
+        IMPORTANT: if a .flagversions file with the name of the output MS exist, this task will
+                   exit with an error. The user needs to rename or remove the existing flagbackup
+                   or choose a different output name for the MS.
 
     keepmms -- Create a Multi-MS as the output if the input is a Multi-MS.
         default: True
