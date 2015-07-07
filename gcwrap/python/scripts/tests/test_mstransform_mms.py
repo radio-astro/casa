@@ -3,7 +3,7 @@ import unittest
 import os
 import numpy
 import exceptions
-from tasks import *
+from tasks import mstransform, partition, flagdata, cvel, listobs, listpartition
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th

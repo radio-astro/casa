@@ -28,8 +28,8 @@ import exceptions
 from __main__ import default
 from recipes.listshapes import listshapes
 import testhelper as th
-from tasks import *
-from taskinit import *
+from tasks import split2, partition, split, listobs, flagdata
+from taskinit import mstool, msmdtool, tbtool
 import unittest
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -52,6 +52,9 @@ if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
     Start of old tests, which are the same as test_split.
     class SplitFlags on are new tests.
 '''
+
+# local copy of tool
+tblocal = tbtool()
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
@@ -82,28 +85,28 @@ def slurp_table(tabname):
     Returns a dictionary containing the CASA table tabname.  The dictionary
     is arranged like:
 
-    {'keywords': tb.getkeywords(),
-     'cols': {colname0, {'desc': tb.getcoldesc(colname0),
-                         'keywords': tb.getcolkeywords(colname0),
-                         'data': tb.getcol(colname0)},
-              colname1, {'desc': tb.getcoldesc(colname1),
-                             'keywords': tb.getcolkeywords(colname1),
-                         'data': tb.getcol(colname1)},
+    {'keywords': tblocal.getkeywords(),
+     'cols': {colname0, {'desc': tblocal.getcoldesc(colname0),
+                         'keywords': tblocal.getcolkeywords(colname0),
+                         'data': tblocal.getcol(colname0)},
+              colname1, {'desc': tblocal.getcoldesc(colname1),
+                             'keywords': tblocal.getcolkeywords(colname1),
+                         'data': tblocal.getcol(colname1)},
               ...}}
     """
-    tb.open(tabname)
-    retval = {'keywords': tb.getkeywords(),
+    tblocal.open(tabname)
+    retval = {'keywords': tblocal.getkeywords(),
               'cols': {}}
-    cols = tb.colnames()
+    cols = tblocal.colnames()
     for col in cols:
-        entry = {'desc': tb.getcoldesc(col),
-                 'keywords': tb.getcolkeywords(col)}
-        if tb.isvarcol(col):
-            entry['data'] = tb.getvarcol(col)
+        entry = {'desc': tblocal.getcoldesc(col),
+                 'keywords': tblocal.getcolkeywords(col)}
+        if tblocal.isvarcol(col):
+            entry['data'] = tblocal.getvarcol(col)
         else:
-            entry['data'] = tb.getcol(col)
+            entry['data'] = tblocal.getcol(col)
         retval['cols'][col] = entry
-    tb.close()
+    tblocal.close()
     return retval
     
 def compare_tables(tabname, exptabname, tol=None):
@@ -244,11 +247,11 @@ class split_test_tav(SplitChecker):
                              timebin='20s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(outms)
-            record['data']   = tb.getcell('DATA', 2)
-            record['weight'] = tb.getcell('WEIGHT', 5)
-            record['sigma']  = tb.getcell('SIGMA', 7)
-            tb.close()
+            tblocal.open(outms)
+            record['data']   = tblocal.getcell('DATA', 2)
+            record['weight'] = tblocal.getcell('WEIGHT', 5)
+            record['sigma']  = tblocal.getcell('SIGMA', 7)
+            tblocal.close()
         except Exception, e:
             print "Error time averaging and reading", outms
             raise e
@@ -423,11 +426,11 @@ class split_test_cav(SplitChecker):
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(outms)
-            record['data']   = tb.getcell('DATA', 2)
-            record['weight'] = tb.getcell('WEIGHT', 5)
-            record['sigma']  = tb.getcell('SIGMA', 7)
-            tb.close()
+            tblocal.open(outms)
+            record['data']   = tblocal.getcell('DATA', 2)
+            record['weight'] = tblocal.getcell('WEIGHT', 5)
+            record['sigma']  = tblocal.getcell('SIGMA', 7)
+            tblocal.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
@@ -531,11 +534,11 @@ class split_test_cav5(SplitChecker):
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(outms)
-            record['data']   = tb.getcell('DATA', 2)
-            record['weight'] = tb.getcell('WEIGHT', 5)
-            record['sigma']  = tb.getcell('SIGMA', 7)
-            tb.close()
+            tblocal.open(outms)
+            record['data']   = tblocal.getcell('DATA', 2)
+            record['weight'] = tblocal.getcell('WEIGHT', 5)
+            record['sigma']  = tblocal.getcell('SIGMA', 7)
+            tblocal.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
@@ -623,10 +626,10 @@ class split_test_cdsp(SplitChecker):
                              correlation='')
             for st in ('CALDEVICE', 'SYSPOWER'):
                 record[st] = {}
-                tb.open(outms + '/' + st)
+                tblocal.open(outms + '/' + st)
                 for c in ('ANTENNA_ID', 'SPECTRAL_WINDOW_ID'):
-                    record[st][c]   = tb.getcol(c)
-                tb.close()
+                    record[st][c]   = tblocal.getcol(c)
+                tblocal.close()
         except Exception, e:
             print "Error channel averaging and reading", outms
             raise e
@@ -721,18 +724,18 @@ class split_test_cst(SplitChecker):
             print "Error splitting to", self.outms
             raise e
         try:
-            tb.open(self.outms + '/SOURCE')
-            record['srcids'] = tb.getcol('SOURCE_ID')
-            tb.close()
-            tb.open(self.outms)
-            #record['lastmainobsid'] = tb.getcell('OBSERVATION_ID', tb.nrows() - 1)
-            tcol = tb.getcol('OBSERVATION_ID')
+            tblocal.open(self.outms + '/SOURCE')
+            record['srcids'] = tblocal.getcol('SOURCE_ID')
+            tblocal.close()
+            tblocal.open(self.outms)
+            #record['lastmainobsid'] = tblocal.getcell('OBSERVATION_ID', tblocal.nrows() - 1)
+            tcol = tblocal.getcol('OBSERVATION_ID')
             tcol.sort()
-            record['lastmainobsid'] = tcol[tb.nrows() - 1]
-            tb.close()
-            tb.open(self.outms + '/OBSERVATION')
-            record['ebs'] = tb.getcol('SCHEDULE')[1]
-            tb.close()
+            record['lastmainobsid'] = tcol[tblocal.nrows() - 1]
+            tblocal.close()
+            tblocal.open(self.outms + '/OBSERVATION')
+            record['ebs'] = tblocal.getcol('SCHEDULE')[1]
+            tblocal.close()
             shutil.rmtree(self.outms, ignore_errors=True)
         except Exception, e:
             print "Error getting results from", self.outms
@@ -791,12 +794,12 @@ class split_test_state(unittest.TestCase):
         """
         Is STATE correct after selecting by intent?
         """
-        tb.open(self.outms + '/STATE')
-        om = tb.getcol('OBS_MODE')
-        tb.close()
+        tblocal.open(self.outms + '/STATE')
+        om = tblocal.getcol('OBS_MODE')
+        tblocal.close()
         check_eq(om, numpy.array(['OBSERVE_TARGET.UNSPECIFIED']))
-        tb.open(self.outms)
-        mytime = tb.getcol('TIME')
+        tblocal.open(self.outms)
+        mytime = tblocal.getcol('TIME')
         myrow = 0
         for i in xrange(len(mytime)):
             if mytime[i]==4785966752.5:
@@ -805,8 +808,8 @@ class split_test_state(unittest.TestCase):
         rec = {}
         for c in ('ANTENNA1', 'ANTENNA2', 'DATA_DESC_ID', 'DATA',
                   'SCAN_NUMBER', 'STATE_ID', 'TIME'):
-            rec[c] = tb.getcell(c, myrow)
-        tb.close()
+            rec[c] = tblocal.getcell(c, myrow)
+        tblocal.close()
         # Row 1330 in inpms is the first one with STATE_ID 0.
         check_eq(rec, {'ANTENNA1': 0,
                        'ANTENNA2': 1,
@@ -858,9 +861,9 @@ class split_test_cavcd(unittest.TestCase):
         """
         Was the CORRECTED_DATA column channel averaged?
         """
-        tb.open(self.outms)
-        cod = tb.getcell('DATA', 0)
-        tb.close()
+        tblocal.open(self.outms)
+        cod = tblocal.getcell('DATA', 0)
+        tblocal.close()
         check_eq(cod.shape, (1, 2))
 
 class split_test_genericsubtables(unittest.TestCase):
@@ -892,9 +895,9 @@ class split_test_genericsubtables(unittest.TestCase):
         """
         Can we copy generic subtables?
         """
-        tb.open(self.outms)
-        kws = tb.keywordnames()
-        tb.close()
+        tblocal.open(self.outms)
+        kws = tblocal.keywordnames()
+        tblocal.close()
         # Just check a few, and order does not matter.  Include both "generic"
         # and "standard" (mandatory and optional) subtables.
         for subtab in ('ASDM_CALWVR', 'ASDM_CALDELAY', 'DATA_DESCRIPTION',
@@ -943,12 +946,12 @@ class split_test_singchan(unittest.TestCase):
         """
         Did we get the right channel?
         """
-        tb.open(self.inpms)
-        data_orig = tb.getcell('DATA', 3)
-        tb.close()
-        tb.open(self.outms)
-        data_sp = tb.getcell('DATA', 3)
-        tb.close()
+        tblocal.open(self.inpms)
+        data_orig = tblocal.getcell('DATA', 3)
+        tblocal.close()
+        tblocal.open(self.outms)
+        data_sp = tblocal.getcell('DATA', 3)
+        tblocal.close()
         
         # For all correlations, compare output channel 0 to input channel 25.
         check_eq(data_sp[:,0], data_orig[:,25], 0.0001)
@@ -1030,12 +1033,12 @@ class split_test_almapol(SplitChecker):
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(outms + '/WEATHER')
-            record['nsid'] = {0: tb.getcell('NS_WX_STATION_ID', 0),
-                              1: tb.getcell('NS_WX_STATION_ID', 1)}
-            record['nspos'] = {0: tb.getcell('NS_WX_STATION_POSITION', 0),
-                               1: tb.getcell('NS_WX_STATION_POSITION', 1)}
-            tb.close()
+            tblocal.open(outms + '/WEATHER')
+            record['nsid'] = {0: tblocal.getcell('NS_WX_STATION_ID', 0),
+                              1: tblocal.getcell('NS_WX_STATION_ID', 1)}
+            record['nspos'] = {0: tblocal.getcell('NS_WX_STATION_POSITION', 0),
+                               1: tblocal.getcell('NS_WX_STATION_POSITION', 1)}
+            tblocal.close()
         except Exception, e:
             print "Error selecting %s from %s:" % (corrsel, outms)
             raise e
@@ -1086,9 +1089,9 @@ class split_test_unorderedpolspw(SplitChecker):
                              timebin='0s', timerange='18:32:40~18:33:20',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(outms)
-            record['data'] = tb.getcell('DATA', 2)
-            tb.close()
+            tblocal.open(outms)
+            record['data'] = tblocal.getcell('DATA', 2)
+            tblocal.close()
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
             raise e
@@ -1132,23 +1135,23 @@ class split_test_sw_and_fc(SplitChecker):
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tb.open(outms + '/SPECTRAL_WINDOW')
-            cf = tb.getcell('CHAN_FREQ', 0)
+            tblocal.open(outms + '/SPECTRAL_WINDOW')
+            cf = tblocal.getcell('CHAN_FREQ', 0)
             record['nchan'] = cf.shape[0]
             record['cf0']   = cf[0]
             record['cf']    = cf[33]
             record['cflc']  = cf[-1]
-            record['res']   = tb.getcell('RESOLUTION', 0)
-            record['cw']    = tb.getcell('CHAN_WIDTH', 0)
-            record['eb']    = tb.getcell('EFFECTIVE_BW', 0)
-            record['tb']    = tb.getcell('TOTAL_BANDWIDTH', 0)
-            record['rf']    = tb.getcell('REF_FREQUENCY', 0)
-            tb.close()
-            tb.open(outms + '/FLAG_CMD')
+            record['res']   = tblocal.getcell('RESOLUTION', 0)
+            record['cw']    = tblocal.getcell('CHAN_WIDTH', 0)
+            record['eb']    = tblocal.getcell('EFFECTIVE_BW', 0)
+            record['tb']    = tblocal.getcell('TOTAL_BANDWIDTH', 0)
+            record['rf']    = tblocal.getcell('REF_FREQUENCY', 0)
+            tblocal.close()
+            tblocal.open(outms + '/FLAG_CMD')
             record['fc'] = []
             for i in (0, 1, 2, 3, 4, 515, 516):
-                record['fc'].append(tb.getcell('COMMAND', i))
-            tb.close()
+                record['fc'].append(tblocal.getcell('COMMAND', i))
+            tblocal.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
@@ -1342,10 +1345,10 @@ class split_test_optswc(SplitChecker):
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tb.open(outms + '/SPECTRAL_WINDOW')
-            record['colnames'] = set(tb.colnames())
-            record['bbc_no']   = tb.getcell('BBC_NO', 0)
-            tb.close()
+            tblocal.open(outms + '/SPECTRAL_WINDOW')
+            record['colnames'] = set(tblocal.colnames())
+            record['bbc_no']   = tblocal.getcell('BBC_NO', 0)
+            tblocal.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
@@ -1403,14 +1406,14 @@ class split_test_tav_then_cvel(SplitChecker):
                              timebin='10s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel)
-            tb.open(tavms)
+            tblocal.open(tavms)
             for c in ['DATA', 'WEIGHT', 'INTERVAL', 'SCAN_NUMBER', 'STATE_ID', 'TIME']:
                 record['tav'][c] = {}
                 for r in [0, 4, 5, 6, 7, 90, 91]:
-                    record['tav'][c][r] = tb.getcell(c, r)
+                    record['tav'][c][r] = tblocal.getcell(c, r)
             for c in ['SCAN_NUMBER', 'STATE_ID', 'TIME']:
-                record['tav'][c][123] = tb.getcell(c, 123)
-            tb.close()
+                record['tav'][c][123] = tblocal.getcell(c, 123)
+            tblocal.close()
         except Exception, e:
             print "Error time averaging and reading", tavms
             raise e
@@ -1544,10 +1547,10 @@ class split_test_wttosig(SplitChecker):
                              timebin=dcwtb[2], timerange='',
                              scan='', array='', uvrange='',
                              correlation='')
-            tb.open(outms)
-            record['sigma'] = tb.getcol('SIGMA')[:,0:5].transpose()
-            record['wt']    = tb.getcol('WEIGHT')[:,0:5].transpose()
-            tb.close()
+            tblocal.open(outms)
+            record['sigma'] = tblocal.getcol('SIGMA')[:,0:5].transpose()
+            record['wt']    = tblocal.getcol('WEIGHT')[:,0:5].transpose()
+            tblocal.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error splitting %s from %s", (dcwtb, self.inpms)
@@ -1696,10 +1699,10 @@ class split_test_fc(SplitChecker):
                              timebin=trwtb[2], timerange=trwtb[0],
                              scan='', array='', uvrange='',
                              correlation='')
-            tb.open(outms)
-            record['fc'] = tb.getcell('FLAG_CATEGORY', 5)[2]
-            categories = tb.getcolkeyword('FLAG_CATEGORY', 'CATEGORY')
-            tb.close()
+            tblocal.open(outms)
+            record['fc'] = tblocal.getcell('FLAG_CATEGORY', 5)[2]
+            categories = tblocal.getcolkeyword('FLAG_CATEGORY', 'CATEGORY')
+            tblocal.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error splitting %s from %s", (trwtb, self.inpms)
@@ -1855,7 +1858,7 @@ class test_base(unittest.TestCase):
            self.cleanup()
 
         os.system('cp -RL '+self.datapath + self.vis +' '+ self.vis)
-        default(mstransform)
+        default(split2)
 
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''

@@ -3,8 +3,8 @@ import unittest
 import os
 import filecmp
 import pprint
-from tasks import *
-from taskinit import *
+from tasks import flagcmd, flagdata, flagmanager, mstransform
+from taskinit import aftool, tbtool
 from __main__ import default
 import exceptions
 from parallel.parallel_task_helper import ParallelTaskHelper
@@ -60,7 +60,7 @@ if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
 
 # Local copy of the agentflagger tool
-aflocal = casac.agentflagger()
+aflocal = aftool()
 
 # Base class which defines setUp functions
 # for importing different data sets

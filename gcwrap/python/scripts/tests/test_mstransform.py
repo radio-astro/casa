@@ -3,14 +3,14 @@ import unittest
 import os
 import numpy
 import math
+import sys
 import exceptions
-from tasks import *
+from tasks import mstransform, cvel, listpartition, listobs, setjy, flagdata, split
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
 import partitionhelper as ph
 from recipes.listshapes import listshapes
-from parallel.parallel_task_helper import ParallelTaskHelper
 from parallel.parallel_data_helper import ParallelDataHelper
 from unittest.case import expectedFailure
 

@@ -3,8 +3,8 @@ import os
 import numpy
 import shutil
 from __main__ import default
-from tasks import *
-from taskinit import *
+from tasks import cvel2, cvel, partition, importuvfits, split2
+from taskinit import tbtool, mstool, qa
 from parallel.parallel_task_helper import ParallelTaskHelper
 from parallel.parallel_data_helper import ParallelDataHelper
 import unittest
@@ -34,7 +34,9 @@ vis_e = 'evla-highres-sample-thinned.ms'
 vis_f = 'test_cvel1.ms'
 vis_g = 'jup.ms'
 outfile = 'cvel-output.ms'
+
 mytb = tbtool()
+myms = mstool()
 
 def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     msg = ''
@@ -122,7 +124,7 @@ class test_base(unittest.TestCase):
         elif(not os.path.exists(vis_g)):
             # construct an MS with attached Jupiter ephemeris from vis_c
             self.setUp_vis_c()
-            split(vis=vis_c, outputvis=vis_g, field='JUPITER', datacolumn='data')
+            split2(vis=vis_c, outputvis=vis_g, field='JUPITER', datacolumn='data')
             mytb.open(vis_g, nomodify=False)
             a = mytb.getcol('TIME')
             delta = (54709.*86400-a[0])
@@ -145,10 +147,10 @@ class test_base(unittest.TestCase):
             a = a + delta
             mytb.putcol('TIME', a)
             mytb.close()
-            ms.open(vis_g, nomodify=False)
-            ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
+            myms.open(vis_g, nomodify=False)
+            myms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
                             'Jupiter_54708-55437dUTC', 0)
-            ms.close()
+            myms.close()
     
     def setUp_4ants(self):
         # data set with spw=0~15, 64 channels each in TOPO
@@ -844,10 +846,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
-        tb.close()
+        mytb.close()
 
         rval = cvel2(
             vis = 'myinput.ms',
@@ -865,10 +867,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
-        tb.close()
+        mytb.close()
 
         rval = cvel2(
             vis = 'myinput.ms',
@@ -886,10 +888,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
-        tb.close()
+        mytb.close()
 
         rval = cvel2(
             vis = 'myinput.ms',
@@ -908,10 +910,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
-        tb.close()
+        mytb.close()
 
         rval = cvel2(
             vis = 'myinput.ms',
@@ -930,10 +932,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
-        tb.close()
+        mytb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/restf 
@@ -959,10 +961,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
-        tb.close()
+        mytb.close()
 
         restf = a[0] 
         bv1 = c * (restf-a[3])/restf 
@@ -988,10 +990,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
-        tb.close()
+        mytb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/a[5] 
@@ -1021,10 +1023,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         c =  qa.constants('c')['value']
-        tb.close()
+        mytb.close()
         
         restf = a[0] 
         bv1 = c * (restf-a[5])/a[5] 
@@ -1142,10 +1144,10 @@ class cvel2_test(test_base):
         self.setUp_vis_b()
         myvis = vis_b
         os.system('ln -sf ' + myvis + ' myinput.ms')
-        tb.open('myinput.ms/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open('myinput.ms/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array([a[1], a[2], a[3]])
-        tb.close()
+        mytb.close()
 
         rval = cvel2(
             vis = 'myinput.ms',
@@ -1198,10 +1200,10 @@ class cvel2_test(test_base):
             outframe = 'CMB'
             )
         
-        tb.open(outfile+'/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open(outfile+'/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array(a)
-        tb.close()
+        mytb.close()
 
         shutil.rmtree(outfile, ignore_errors=True)
 
@@ -1238,10 +1240,10 @@ class cvel2_test(test_base):
             outframe = 'BARY'
             )
         
-        tb.open(outfile+'/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open(outfile+'/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array(a)
-        tb.close()
+        mytb.close()
 
         shutil.rmtree(outfile, ignore_errors=True)
 
@@ -1278,10 +1280,10 @@ class cvel2_test(test_base):
             outframe = 'CMB'
             )
         
-        tb.open(outfile+'/SPECTRAL_WINDOW')
-        a = tb.getcell('CHAN_FREQ')
+        mytb.open(outfile+'/SPECTRAL_WINDOW')
+        a = mytb.getcell('CHAN_FREQ')
         b = numpy.array(a)
-        tb.close()
+        mytb.close()
 
         shutil.rmtree(outfile, ignore_errors=True)
 

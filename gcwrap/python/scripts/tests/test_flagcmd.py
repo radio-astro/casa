@@ -3,8 +3,8 @@ import unittest
 import os
 import filecmp
 import exceptions
-from tasks import *
-from taskinit import *
+from tasks import flagcmd, flagdata, flagmanager
+from taskinit import aftool, tbtool
 from __main__ import default
 from OrderedDictionary import OrderedDict
 
@@ -67,7 +67,7 @@ def create_input1(str_text, filename):
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
 
 # Local copy of the agentflagger tool
-aflocal = casac.agentflagger()
+aflocal = aftool()
 
 # Base class which defines setUp functions
 # for importing different data sets

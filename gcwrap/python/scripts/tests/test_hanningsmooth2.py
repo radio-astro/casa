@@ -2,8 +2,8 @@ import os
 import sys
 import shutil
 from __main__ import default
-from tasks import *
-from taskinit import *
+from tasks import hanningsmooth2, mstransform, partition, cvel, split2, clearcal
+from taskinit import mstool
 import exceptions
 import testhelper as th
 from parallel.parallel_data_helper import ParallelDataHelper
@@ -149,9 +149,10 @@ class hanningsmooth2_test1(test_base):
         self.outputms = 'hann4.mms'
         
       # check correct flagging (just for one row as a sample)
-        ms.open(self.msfile)
-        ms.sort('sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
-        ms.close()
+        mslocal = mstool()
+        mslocal.open(self.msfile)
+        mslocal.sort('sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        mslocal.close()
         self.msfile = 'sorted.ms'
         flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
@@ -164,9 +165,9 @@ class hanningsmooth2_test1(test_base):
         self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms), 'Output should be an MMS')
 
       # Sort the MMS
-        ms.open(self.outputms)
-        ms.sort('sorted.mms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
-        ms.close()
+        mslocal.open(self.outputms)
+        mslocal.sort('sorted.mms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        mslocal.close()
         self.outputms = 'sorted.mms'
         
         corr_col = th.getVarCol(self.outputms, 'DATA')

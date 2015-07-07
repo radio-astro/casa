@@ -27,7 +27,7 @@ import sys
 import shutil
 import commands
 from __main__ import default
-from tasks import *
+from tasks import importevla, flagdata, flagcmd
 from taskinit import *
 import unittest
 
