@@ -822,7 +822,6 @@ void
 VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
-    Vector<Slicer *> dataSlicers, destinationSlicers;
     ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer();
 
     column.getColumnCells (rowBounds_p.subchunkRows_p,
@@ -892,12 +891,18 @@ template <typename T>
 void
 VisibilityIteratorImpl2::putColumnRows (ArrayColumn<T> & column, const Array<T> & array)
 {
-    RefRows & rows = rowBounds_p.subchunkRows_p;
+    ColumnSlicer columnSlicer = channelSelector_p->getSlicer().getColumnSlicer();
 
-    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
-    column.putSliceFromRows (rows,
-                             slicer.getSlicerInCoreRep(),
-                             array);
+    column.putColumnCells (rowBounds_p.subchunkRows_p,
+                           columnSlicer,
+                           array);
+
+//    RefRows & rows = rowBounds_p.subchunkRows_p;
+//
+//    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
+//    column.putSliceFromRows (rows,
+//                             slicer.getSlicerInCoreRep(),
+//                             array);
 }
 
 template <typename T>

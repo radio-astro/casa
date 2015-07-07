@@ -414,7 +414,7 @@ public:
 
             shape.last() = nRows;
 
-            this->getItem().reformOrResize (shape, False);
+            this->getItem().adjustLastAxis (shape);
 
         }
         else{
@@ -438,30 +438,21 @@ public:
             }
 
             desiredShape.last() = nRows;
-            this->getItem().reformOrResize (desiredShape, True, shapeOk, 20);
-                // add storage for 20% more rows.
 
-//            if (! shapeOk){
-//
-//                // Need to completely resize this.  Since we're reshaping, there's
-//                // no usable values to copy.
-//
-//                desiredShape.last() = nRows;
-//                this->getItem().resize (desiredShape, False);
-//                capacity_p = nRows;
-//            }
-//            else if (nRows > capacity_p){ // need more storage
-//                resizeRows (nRows); // preserves data
-//                capacity_p = nRows;
-//            }
-//            else{
-//
-//                // There's extra capacity in the array; just adjust the shape so it's
-//                // as big as desired
-//
-//                shape.last() = nRows;
-//                this->getItem().reformOrReshape (shape, False);
-//            }
+	    if (shapeOk){
+
+	      // Only the number of rows differs from the current shape.  
+	      // This call will preserve any existing data.
+
+	      this->getItem().adjustLastAxis (desiredShape, 20);
+	    } 
+	    else {
+
+	      // Since the core shape is changing, the existing data is
+              // not useful; this call will not preserve it.
+
+	      this->getItem().reformOrResize (desiredShape);
+	    }
         }
     }
 
