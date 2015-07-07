@@ -351,21 +351,11 @@ class SpectralWindowAdapter:
     
     @property
     def freq_max(self):
-        if not hasattr(self, '_freq_max') or self._freq_max is None:
-            i = self.chan_freqs.argmax()
-            decimal_width = decimal.Decimal(str(abs(self.chan_widths[i])))
-            delta = decimal_width / decimal.Decimal('2')
-            self._freq_max = float(decimal.Decimal(str(self.chan_freqs[i])) + delta)
-        return self._freq_max
+        return float(self.spw._max_frequency.value)
                                  
     @property
     def freq_min(self):
-        if not hasattr(self, '_freq_min') or self._freq_min is None:
-            i = self.chan_freqs.argmin()
-            decimal_width = decimal.Decimal(str(abs(self.chan_widths[i])))
-            delta = decimal_width / decimal.Decimal('2')
-            self._freq_min = float(decimal.Decimal(str(self.chan_freqs[i])) - delta)
-        return self._freq_min
+        return float(self.spw._min_frequency.value)
     
     @property
     def frequency_range(self):
@@ -381,11 +371,21 @@ class SpectralWindowAdapter:
     
     @property
     def increment(self):
-        if self.nchan == 1:
-            return self.chan_widths[0]
-        else:
-            return self.chan_freqs[1] - self.chan_freqs[0]
-    
+        if not hasattr(self, '_increment') or self._increment is None:
+            if self.nchan == 1:
+                chan_widths = self.spw._chan_widths
+                if isinstance(chan_widths, spectralwindow.ArithmeticProgression):
+                    self._increment = chan_widths.start
+                else:
+                    self._increment = chan_widths[0]
+            else:
+                chan_freqs = self.spw._chan_freqs
+                if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
+                    self._increment = chan_freqs.delta
+                else:
+                    self._increment = chan_freqs[1] - chan_freqs[0]
+        return self._increment
+   
     @property
     def intent(self):
         if hasattr(self, '_intent'):
@@ -420,7 +420,7 @@ class SpectralWindowAdapter:
     
     @property
     def mean_freq(self):
-        return self.chan_freqs.mean()
+        return float(self.spw.mean_frequency.value)
     
     @property
     def mean_frequency(self):
@@ -466,7 +466,13 @@ class SpectralWindowAdapter:
     
     @property
     def refval(self):
-        return self.chan_freqs[0]
+        if not hasattr(self, '_refval') or self._refval is None:
+            chan_freqs = self.spw._chan_freqs
+            if isinstance(chan_freqs, spectralwindow.ArithmeticProgression):
+                self._refval = chan_freqs.start
+            else:
+                self._refval = chan_freqs[0]
+        return self._refval
     
     @property
     def rest_frequencies(self):
