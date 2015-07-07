@@ -120,6 +120,9 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	ousstatus_entity_id = ds['ousstatus_entity_id'][1],
 	ppr_file=pprXmlFile)
 
+    # Create performance parameters object
+    context.project_performance_parameters = project.PerformanceParameters()
+
     # Get the session info from the intents dictionary
     if len(intentsDict) > 0:
         sessionsDict = _getSessions (intentsDict)

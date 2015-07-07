@@ -47,14 +47,14 @@ class CleanBaseInputs(basetask.StandardInputs):
     outframe = basetask.property_with_default('outframe', 'LSRK')
     phasecenter = basetask.property_with_default('phasecenter', '')
     restoringbeam = basetask.property_with_default('restoringbeam', '')
-    robust = basetask.property_with_default('robust', 0.0)
+    robust = basetask.property_with_default('robust', 0.5)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
     spwsel = basetask.property_with_default('spwsel', '')
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
     threshold = basetask.property_with_default('threshold', '0.0mJy')
     uvrange = basetask.property_with_default('uvrange', '')
-    weighting = basetask.property_with_default('weighting', 'natural')
+    weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
 
     @property

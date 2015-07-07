@@ -52,9 +52,9 @@ class MakeImagesInputs(basetask.StandardInputs):
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
     npixels = basetask.property_with_default('npixels', 0)
-    robust = basetask.property_with_default('robust', 0.0)
+    robust = basetask.property_with_default('robust', -999.0)
     tlimit = basetask.property_with_default('tlimit', 1.0)
-    weighting = basetask.property_with_default('weighting', 'natural')
+    weighting = basetask.property_with_default('weighting', 'briggs')
 
 
 class MakeImages(basetask.StandardTaskTemplate):

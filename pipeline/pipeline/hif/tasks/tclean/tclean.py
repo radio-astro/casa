@@ -9,6 +9,7 @@ from pipeline.infrastructure import basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.domain.measures as measures
+from pipeline.hif.heuristics import tclean
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -28,12 +29,13 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
                  masklimit=None, maxncleans=None, parallel=None):
         self._init_properties(vars())
+        self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
     # Add extra getters and setters here
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
-    masklimit = basetask.property_with_default('masklimit', 2.0)
-    tlimit = basetask.property_with_default('tlimit', 2.0)
+    masklimit = basetask.property_with_default('masklimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 4.0)
 
     @property
     def noiseimage(self):
@@ -60,6 +62,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @maxncleans.setter
     def maxncleans(self, value):
         self._maxncleans = value
+
+    @property
+    def robust(self):
+        if self._robust == -999.0:
+            return self.heuristics.robust(self.spw)
+        else:
+            return self._robust
+
+    @robust.setter
+    def robust(self, value):
+        self._robust = value
 
 
 class Tclean(cleanbase.CleanBase):

@@ -274,4 +274,41 @@ class TcleanHeuristics(object):
         width = str(width)
         return width
 
+    def robust(self, spw):
+        # Check if there is a non-zero desired angular resolution
+        cqa = casatools.quanta
+        desired_angular_resolution = cqa.convert(self.context.project_performance_parameters.desired_angular_resolution, '')['value']
+        if (desired_angular_resolution == 0.0):
+            LOG.warning('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
+            return 0.5
 
+        # Get maximum baseline length in metres
+        bmax = 0.0
+        for ms in self.context.observing_run.get_measurement_sets():
+            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
+                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
+
+        if (bmax == 0.0):
+            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
+            return 0.5
+
+        # Get spw center wavelength
+
+        # get the spw from the first vis set, assume all others the same for now
+        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        spw = ms.get_spectral_window(spw)
+
+        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
+        centre_lambda = 2.99792458e8 / centre_frequency
+
+        # Smallest spatial scale
+        smallest_spatial_scale = 1.2 * centre_lambda / bmax
+
+        if (desired_angular_resolution > 1.2 * smallest_spatial_scale):
+            robust = 1.0
+        elif (desired_angular_resolution < 0.8 * smallest_spatial_scale):
+            robust = 0.0
+        else:
+            robust = 0.5
+
+        return robust
