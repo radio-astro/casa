@@ -66,7 +66,7 @@ QString FitterPoisson::getSolutionStatistics() const {
 	if ( solutionConverged ){
 		result.append( "The following fit was found:\n\n");
 		result.append( formatResultLine( "Lambda:", actualLambda, false)+ " "+ units + "\n");
-		result.append( formatResultLine( "Height:", solutionHeight));
+		//result.append( formatResultLine( "Fit Count:", solutionHeight));
 		result.append( formatResultLine( "Chi-square:", solutionChiSquared));
 		int count = actualXValues.size();
 		result.append( formatResultLine( "Degrees of Freedom:", count));
@@ -146,7 +146,6 @@ bool FitterPoisson::doFit(){
 		//Scale lambda to fit range.
 		double lambdaPercent = (lambda - domainBounds.first ) / domainRange;
 		double approx = FIT_X_LOW + fitRange * lambdaPercent;
-
 		PoissonFunction<Double> poissonFunction(/*lambda*/approx, height);
 		fitter.setFunction(poissonFunction);
 
