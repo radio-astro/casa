@@ -37,6 +37,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.tablereader as tablereader
 from .. import applycal
 from .. import importdata
 
@@ -322,6 +323,14 @@ class RestoreData(basetask.StandardTaskTemplate):
         #    TBD: Add error handling
         import_results = self._do_importasdm(sessionlist=sessionlist,
             vislist=vislist)
+        
+        #For the VLA, do hanning smoothing
+        ms_name = import_results[0].mses[0].name
+        telescope_name = tablereader.ObservationTable.get_telescope_name(ms_name)
+        if telescope_name in ('VLA', 'EVLA', 'vla', 'evla'):
+            #print "Hanning Smoothing"
+            LOG.info('Hanning smoothing for the EVLA')
+            hanning_results = self._do_hanningsmooth(import_results=import_results)
 
         # Restore final MS.flagversions and flags
         flag_version_name = 'Pipeline_Final'
@@ -359,13 +368,26 @@ class RestoreData(basetask.StandardTaskTemplate):
 
     def _do_importasdm(self, sessionlist, vislist):
         inputs = self.inputs
+        #print inputs.bdfflags
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
             vis=vislist, session=sessionlist, save_flagonline=False,
 	    bdfflags=inputs.bdfflags, dbservice=False,
             process_caldevice=inputs.process_caldevice,
-            ocorr_mode=inputs.ocorr_mode)
+            ocorr_mode=inputs.ocorr_mode, asis=inputs.asis)
         importdata_task = importdata.ImportData(importdata_inputs)
         return self._executor.execute(importdata_task, merge=True)
+    
+    def _do_hanningsmooth(self, import_results):
+        inputs = self.inputs
+        for result in import_results:
+            ms_name = result.mses[0].name
+            task = casa_tasks.hanningsmooth(vis=ms_name, 
+                                        datacolumn='data',
+                                        outputvis='')
+            task_exec = self._executor.execute(task)
+        
+        return True
+        
 
     def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
         inputs = self.inputs

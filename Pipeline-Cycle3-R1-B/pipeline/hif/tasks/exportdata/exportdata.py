@@ -47,6 +47,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.tablereader as tablereader
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -738,12 +739,17 @@ class ExportData(basetask.StandardTaskTemplate):
 	    if filename.endswith('.ms'):
 	        filename, filext = os.path.splitext(filename)
 	    tmpvislist.append(filename)
-	    
-	if context.project_summary.telescope in ('ALMA','alma'):
+	
+	
+	ms_object = context.observing_run.get_ms(vislist[0])
+        ms_name = ms_object.name
+        telescope_name = tablereader.ObservationTable.get_telescope_name(ms_name)
+	
+	if telescope_name in ('ALMA','alma'):
 	    task_string = '    hif_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list)
 	
 
-	if context.project_summary.telescope in ('VLA', 'EVLA', 'vla', 'evla'):
+	if telescope_name in ('VLA', 'EVLA', 'vla', 'evla'):
 	    task_string = '    hifv_restoredata (vis=%s, session=%s)' % (tmpvislist, session_list)
             task_string += '\n    hifv_statwt()'
 

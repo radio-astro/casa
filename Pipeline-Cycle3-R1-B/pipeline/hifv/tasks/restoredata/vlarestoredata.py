@@ -49,11 +49,14 @@ class VLARestoreDataInputs(restoredata.RestoreDataInputs):
     
      
     bdfflags  = basetask.property_with_default('bdfflags', False)
+    process_caldevice = basetask.property_with_default('process_caldevice', True)
+    ocorr_mode = basetask.property_with_default('ocorr_mode', 'co')
+    #asis = basetask.property_with_default('asis', '')
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, copytoraw=None, products_dir=None,
         rawdata_dir=None, output_dir=None, session=None, vis=None,
-        bdfflags=None):
+        bdfflags=None, asis=None, process_caldevice=None, ocorr_mode=None):
         self._init_properties(vars())
 
 

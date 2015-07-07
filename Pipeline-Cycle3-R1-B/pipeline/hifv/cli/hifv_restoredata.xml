@@ -36,7 +36,7 @@
 
     <param type="bool" name="bdfflags">
         <description>Set the BDF flags</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="string" name="pipelinemode">
