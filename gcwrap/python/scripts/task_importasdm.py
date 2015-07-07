@@ -2,6 +2,7 @@ import os
 import shutil
 from taskinit import *
 import flaghelper as fh
+import testhelper as th
 from casac import casac
 from parallel.parallel_data_helper import ParallelDataHelper
 
@@ -53,6 +54,9 @@ def importasdm(
 
        vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
            default: none
+           
+       createmms  -- Create a Multi-MS
+           default: False
            
        singledish   -- Set True to write data as single-dish format (Scantable)
                default: False singledish expandable parameter
@@ -562,7 +566,7 @@ def importasdm(
             for myviso in vistoproc:
                 ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
         
-        # CAS-7369 - Create an output MMS
+        # CAS-7369 - Create an output Multi-MS (MMS)
         if createmms:
             # Get the default parameters of partition
             from tasks import partition
@@ -574,18 +578,24 @@ def importasdm(
             for myviso in vistoproc:
                 casalog.origin('importasdm')
                 outputmms = myviso.replace('.ms','.mms')
-                if singledish:
-                    fpars['datacolumn'] = 'float_data'
+                
+                # Get the proper column
+                datacolumn = 'DATA'
+                dcols = ['DATA', 'FLOAT_DATA']
+                for dc in dcols:
+                    if len(th.getColDesc(myviso, dc)) > 0:
+                        datacolumn = dc
+                        break
+                    
+                fpars['datacolumn'] = datacolumn
                     
                 casalog.post('Will create a Multi-MS for: '+myviso)
                 
                 fpars['vis'] =  myviso
-                # TODO: done already by importasdm. Need to see about the .flagversions name
                 fpars['flagbackup'] =  False 
                 fpars['outputvis'] = outputmms
                 fpars['separationaxis'] = separationaxis
                 fpars['numsubms'] = numsubms
-#                fpars['datacolumn'] = 'float_data'
                 pdh = ParallelDataHelper('partition', fpars) 
             
                 # Get a cluster

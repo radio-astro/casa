@@ -27,8 +27,8 @@ import os
 import sys
 import shutil
 from __main__ import default
-from tasks import *
-from taskinit import *
+from tasks import importasdm, flagdata, exportasdm, flagcmd
+from taskinit import mstool, tbtool
 import testhelper as th
 import unittest
 import partitionhelper as ph
@@ -49,14 +49,18 @@ asdmname = myms_dataset_name+'.asdm'
 # name of the reimported MS
 reimp_msname = 'reimported-'+myms_dataset_name
 
+# make local copies of the tools
+tblocal = tbtool()
+mslocal = mstool()
+
 def checktable(thename, theexpectation):
     global msname, myname
-    tb.open(msname+"/"+thename)
+    tblocal.open(msname+"/"+thename)
     if thename == "":
         thename = "MAIN"
     for mycell in theexpectation:
         print myname, ": comparing ", mycell
-        value = tb.getcell(mycell[0], mycell[1])
+        value = tblocal.getcell(mycell[0], mycell[1])
         # see if value is array
         try:
             isarray = value.__len__
@@ -78,9 +82,9 @@ def checktable(thename, theexpectation):
             print myname, ":  Error in MS subtable", thename, ":"
             print "     column ", mycell[0], " row ", mycell[1], " contains ", value
             print "     expected value is ", mycell[2]
-            tb.close()
+            tblocal.close()
             return False
-    tb.close()
+    tblocal.close()
     print myname, ": table ", thename, " as expected."
     return True
 
@@ -207,6 +211,14 @@ class test_base(unittest.TestCase):
         os.system('ln -sf '+datapath+myasdmname)
         default(importasdm)
 
+    def setUp_SD(self):
+        res = None
+        myasdmname = 'uid___A002_X6218fb_X264/' # Single-dish ASDM
+
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/alma-sd/M100/'
+        os.system('ln -sf '+datapath+myasdmname)
+        default(importasdm)
+
 
 ###########################
 # beginning of actual test 
@@ -278,13 +290,13 @@ class asdm_import1(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(msname)
+            mslocal.open(msname)
         except:
             print myname, ": Error  Cannot open MS table", msname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             # check main table first
@@ -368,13 +380,13 @@ class asdm_import1(test_base):
                 print "MS ", reimp_msname, " doesn't exist."
                 raise Exception
             print "Testing equivalence of the original and the reimported MS."
-            tb.open(myms_dataset_name)
-            nrowsorig = tb.nrows()
+            tblocal.open(myms_dataset_name)
+            nrowsorig = tblocal.nrows()
             print "Original MS contains ", nrowsorig, "integrations."
-            tb.close()
-            tb.open(reimp_msname)
-            nrowsreimp = tb.nrows()
-            tb.close()
+            tblocal.close()
+            tblocal.open(reimp_msname)
+            nrowsreimp = tblocal.nrows()
+            tblocal.close()
             print "Reimported MS contains ", nrowsreimp, "integrations."
             if(not nrowsreimp==nrowsorig):
                 print "Numbers of integrations disagree."
@@ -451,13 +463,13 @@ class asdm_import2(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(msname)
+            mslocal.open(msname)
         except:
             print myname, ": Error  Cannot open MS table", msname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             # check main table first
@@ -549,13 +561,13 @@ class asdm_import2(test_base):
                 print "MS ", reimp_msname, " doesn't exist."
                 raise Exception
             print "Testing equivalence of the original and the reimported MS."
-            tb.open(myms_dataset_name)
-            nrowsorig = tb.nrows()
+            tblocal.open(myms_dataset_name)
+            nrowsorig = tblocal.nrows()
             print "Original MS contains ", nrowsorig, "integrations."
-            tb.close()
-            tb.open(reimp_msname)
-            nrowsreimp = tb.nrows()
-            tb.close()
+            tblocal.close()
+            tblocal.open(reimp_msname)
+            nrowsreimp = tblocal.nrows()
+            tblocal.close()
             print "Reimported MS contains ", nrowsreimp, "integrations."
             if(not nrowsreimp==nrowsorig):
                 print "Numbers of integrations disagree."
@@ -739,13 +751,13 @@ class asdm_import5(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(msname)
+            mslocal.open(msname)
         except:
             print myname, ": Error  Cannot open MS table", msname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm=myasdm_dataset_name, vis='reference.ms', lazy=False, overwrite=True)
@@ -862,13 +874,13 @@ class asdm_import6(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
+            mslocal.open(themsname)
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm=myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
@@ -987,22 +999,22 @@ class asdm_import7(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
-            ms.close()
+            mslocal.open(themsname)
+            mslocal.close()
             print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
-            ms.open(themsname)
-            ms.asdmref("./moved_"+myasdmname)
-            ms.close()
+            mslocal.open(themsname)
+            mslocal.asdmref("./moved_"+myasdmname)
+            mslocal.close()
             os.system("mv "+myasdmname+" moved_"+myasdmname)
             
-            ms.open(themsname)
+            mslocal.open(themsname)
             
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3')
@@ -1121,13 +1133,13 @@ class asdm_import7(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
+            mslocal.open(themsname)
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm=myasdmname, vis='reference.ms', lazy=True, overwrite=True, bdfflags=False)
@@ -1213,19 +1225,19 @@ class asdm_import7(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All relevant tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
+            mslocal.open(themsname)
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK."
 
         for name in ["FIELD/EPHEM0_Mars_57034.896000000001.tab",
                      "FIELD/EPHEM1_Titania_57034.934999999998.tab"]:
-            tb.open(themsname+"/"+name)
-            kw = tb.getkeywords()
+            tblocal.open(themsname+"/"+name)
+            kw = tblocal.getkeywords()
             geodist = kw['GeoDist'] # (km above reference ellipsoid)
             geolat = kw['GeoLat'] # (deg)
             geolong = kw['GeoLong'] # (deg)
@@ -1236,7 +1248,7 @@ class asdm_import7(test_base):
                 retValue['error_msgs']=retValue['error_msgs']+'Ephemeris was not converted to GEO for '+themsname+'\n'
             else:
                 print myname, ": OK."
-            tb.close()
+            tblocal.close()
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
@@ -1331,13 +1343,13 @@ class asdm_import8(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
+            mslocal.open(themsname)
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm=myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3',
@@ -1464,22 +1476,22 @@ class asdm_import8(test_base):
                 print myname, ": ", name, "present."
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
-            ms.open(themsname)
-            ms.close()
+            mslocal.open(themsname)
+            mslocal.close()
             print  myname, ": MS can be opened. Now testing the changing of the asdmref ..."
-            ms.open(themsname)
-            ms.asdmref("./moved_"+myasdmname)
-            ms.close()
+            mslocal.open(themsname)
+            mslocal.asdmref("./moved_"+myasdmname)
+            mslocal.close()
             os.system("mv "+myasdmname+" moved_"+myasdmname)
             
-            ms.open(themsname)
+            mslocal.open(themsname)
             
         except:
             print myname, ": Error  Cannot open MS table", themsname
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
         else:
-            ms.close()
+            mslocal.close()
             print myname, ": OK. Checking tables in detail ..."
     
             importasdm(asdm="moved_"+myasdmname, vis='reference.ms', lazy=False, overwrite=True, scans='0:1~3', createmms=True)
@@ -1563,7 +1575,7 @@ class asdm_import9(test_base):
             shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
 
     def test_online1(self):
-        '''test_online1: online flags file with spw selection by name'''
+        '''importasdm: online flags file with spw selection by name'''
         myasdmname = 'test_uid___A002_X997a62_X8c-short'
         themsname = myasdmname+".ms"
         flagfile = myasdmname+'_cmd.txt'
@@ -1574,7 +1586,37 @@ class asdm_import9(test_base):
         self.assertFalse(flist[3].__contains__('WVR#Antenna'))
         self.assertFalse(flist[4].__contains__('WVR#Antenna'))
 
-        
+
+class asdm_import10(test_base):
+    '''Test importasdm with single-dish data'''
+    
+    def setUp(self):
+        self.setUp_SD()
+       
+    def tearDown(self):
+        for myasdmname in ['uid___A002_X6218fb_X264']:
+            os.system('rm -f '+myasdmname) # a link
+            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+
+    def test_float_data_mms(self):
+        '''importasdm: Create an MMS from a FLOAT_DATA MS '''
+        myasdmname = 'uid___A002_X6218fb_X264'
+        themsname = myasdmname+".ms"
+
+        importasdm(myasdmname, vis=themsname, ocorr_mode='ao', createmms=True, scans='1')
+        self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')        
+        self.assertTrue(len(th.getColDesc(themsname, 'FLOAT_DATA')) > 0)
+
+    def test_sd_data_mms(self):
+        '''importasdm: Create an MMS from a single-dish MS and DATA column '''
+        myasdmname = 'uid___A002_X6218fb_X264'
+        themsname = myasdmname+".ms"
+
+        importasdm(myasdmname, vis=themsname, scans='1,4', createmms=True, separationaxis='scan', numsubms=2, flagbackup=False)
+        self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')
+        self.assertTrue(len(th.getColDesc(themsname, 'DATA')) > 0)
+
         
 def suite():
     return [asdm_import1, 
@@ -1585,6 +1627,7 @@ def suite():
             asdm_import6,
             asdm_import7,
             asdm_import8,
-            asdm_import9]        
+            asdm_import9,
+            asdm_import10]        
         
     
