@@ -1133,8 +1133,8 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                 rel = abs((out - ref)/out)
             else:
                 rel = abs(out - ref)
-            if rel > tol:
-                raise Exception, 'result and reference differs!'
+            self.assertTrue((rel < tol), msg='the output ('+str(out)+') differs from reference ('+str(ref)+')')
+
 
     def test300(self):
         """test300: no baselining, no bltable output"""
