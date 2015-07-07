@@ -409,7 +409,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            flag_cmds.append("mode='manual' autocorr='True' reason='autocorr'")
+            flag_cmds.append("mode='manual' autocorr=True reason='autocorr'")
             flag_cmds.append("mode='summary' name='autocorr'")
     
         # Flag shadowed antennas?
@@ -454,7 +454,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
     def _get_autocorr_cmd (self):
         #return "mode='manual' antenna='*&&&'"
-        return "mode='manual' autocorr='True'"
+        return "mode='manual' autocorr=True"
 
     
     def verify_spw(self, spw):
