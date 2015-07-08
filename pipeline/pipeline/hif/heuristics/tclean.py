@@ -134,8 +134,25 @@ class TcleanHeuristics(object):
         else:
             return 'standard'
 
-    def deconvolver(self, intent, field):
-        return 'clark'
+    def deconvolver(self, specmode, spwspec):
+        if (specmode == 'cont'):
+            abs_min_frequency = 1.0e15
+            abs_max_frequency = 0.0
+            ms = self.context.observing_run.get_ms(name=self.vislist[0])
+            for spwid in spwspec.split(','):
+                spw = ms.get_spectral_window(spwid)
+                min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.HERTZ))
+                if (min_frequency < abs_min_frequency):
+                    abs_min_frequency = min_frequency
+                max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.HERTZ))
+                if (max_frequency > abs_max_frequency):
+                    abs_max_frequency = max_frequency
+            if (2.0 * (abs_max_frequency - abs_min_frequency) / (abs_min_frequency + abs_max_frequency) > 0.1):
+                return 'mtmfs'
+            else:
+                return 'clark'
+        else:
+            return 'clark'
 
     def imsize(self, fields, cell, max_pixels=None):
         # get spread of beams

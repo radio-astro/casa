@@ -68,12 +68,13 @@ Compute a clean map.
   </param>
 
   <param type="string" name="deconvolver" subparam="true">
-     <description>Minor cycle algorithm (clark, hogbom, \'\' for default)</description>
+     <description>Minor cycle algorithm (clark, hogbom, mtmfs, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>clark</value>
          <value>hogbom</value>
+         <value>mtmfs</value>
        </allowed>
   </param>
 
@@ -436,7 +437,7 @@ gridder -- Gridding options, 'standard', 'mosaic'.
     'standard'
 
 deconvolver -- Minor cycle algorithm e.g. clark or hogbom clean. \'\' defaults to
-    'clark'
+    ''
 
 outframe -- The reference frame of the output image. The only supported option
     is 'LSRK'

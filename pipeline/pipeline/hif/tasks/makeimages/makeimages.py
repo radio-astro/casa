@@ -176,8 +176,9 @@ class CleanTaskFactory(object):
                 spw=task_args['spw'])
         task_args['gridder'] = clheuristics.gridder(
                 task_args['intent'], task_args['field'])
-        task_args['deconvolver'] = clheuristics.deconvolver(
-                task_args['intent'], task_args['field'])
+        # Let the Tclean heuristics determine the deconvolver
+        #task_args['deconvolver'] = clheuristics.deconvolver(
+        #        task_args['intent'], task_args['field'])
 
         if inputs.hm_masking == '':
             if 'TARGET' in task_args['intent']:

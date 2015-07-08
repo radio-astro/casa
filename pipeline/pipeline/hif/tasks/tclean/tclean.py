@@ -64,6 +64,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self._maxncleans = value
 
     @property
+    def deconvolver(self):
+        if not self._deconvolver:
+            return self.heuristics.deconvolver(self.specmode, self.spw)
+        else:
+            return self._deconvolver
+
+    @deconvolver.setter
+    def deconvolver(self, value):
+        self._deconvolver = value
+
+    @property
     def robust(self):
         if self._robust == -999.0:
             if (self.spw.find(',') == -1):
