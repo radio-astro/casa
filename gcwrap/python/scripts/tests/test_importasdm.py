@@ -213,7 +213,7 @@ class test_base(unittest.TestCase):
 
     def setUp_SD(self):
         res = None
-        myasdmname = 'uid___A002_X6218fb_X264/' # Single-dish ASDM
+        myasdmname = 'uid___A002_X6218fb_X264' # Single-dish ASDM
 
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/alma-sd/M100/'
         os.system('ln -sf '+datapath+myasdmname)
