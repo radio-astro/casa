@@ -241,9 +241,6 @@ private:
   // returns the number of channels with true in input mask
   size_t NValidMask(size_t const num_mask, bool const* mask);
 
-  // inspection for smoothing
-  Vector<Int> inspectNumChan(MeasurementSet const &ms);
-
   /////////////////////////////////
   /// Array execution functions ///
   /////////////////////////////////
@@ -266,6 +263,8 @@ private:
   SDMSManager *sdh_;
   // pointer to accessor function
   void (*visCubeAccessor_)(vi::VisBuffer2 const &vb, Cube<Float> &cube);
+  // smoothing flag
+  Bool doSmoothing_;
 
 }; // class SingleDishMS -END
 

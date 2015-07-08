@@ -277,6 +277,9 @@ void MSTransformManager::initialize()
 	sigma_p = NULL;
 	relativeRow_p = 0;
 
+	// single dish specific
+	smoothFourier_p = False;
+
 	return;
 }
 
@@ -675,6 +678,16 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Hanning Smooth is activated" << LogIO::POST;
 		}
+	}
+
+	exists = configuration.fieldNumber("smoothFourier");
+	if (exists >= 0)
+	{
+	    configuration.get(exists, smoothFourier_p);
+	    if (smoothFourier_p) {
+	        logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+	                << "Fourier smoothing (single dish specific) is activated" << LogIO::POST;
+	    }
 	}
 
 	return;
@@ -1266,7 +1279,7 @@ void MSTransformManager::setup()
 		spectrumReshape_p = True;
 		cubeTransformation_p = True;
 	}
-	else if (hanningSmooth_p)
+	else if (hanningSmooth_p || smoothFourier_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::smoothCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::smoothCubeOfData;
@@ -1323,6 +1336,10 @@ void MSTransformManager::setup()
 	{
 		transformStripeOfDataComplex_p = &MSTransformManager::averageSmoothRegrid;
 		transformStripeOfDataFloat_p = &MSTransformManager::averageSmoothRegrid;
+	}
+	else if (smoothFourier_p) {
+        transformStripeOfDataComplex_p = &MSTransformManager::smoothFourierComplex;
+        transformStripeOfDataFloat_p = &MSTransformManager::smoothFourierFloat;
 	}
 
 	// If there is not inputWeightSpectrumAvailable_p and no time average then
@@ -7813,6 +7830,51 @@ template <class T> void MSTransformManager::averageSmoothRegrid(Int inputSpw,
 			inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::smoothFourierFloat(Int,
+        Vector<Float> &inputDataStripe, Vector<Bool> &inputFlagStripe,
+        Vector<Float> &inputWeightStripe,
+        Vector<Float> &outputDataStripe, Vector<Bool> &outputFlagStripe) {
+    // replace flagged channel data with zero
+    Int const numChan = inputDataStripe.nelements();
+    for (Int ichan = 0; ichan < numChan; ++ichan) {
+        if (inputFlagStripe[ichan]) {
+            inputDataStripe[ichan] = 0.0f;
+        }
+    }
+
+    // execute convolution
+    Convolver<Float> *convolver = getConvolver(numChan);
+    convolver->linearConv(outputDataStripe, inputDataStripe);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::smoothFourierComplex(Int n,
+        Vector<Complex> &inputDataStripe, Vector<Bool> &inputFlagStripe,
+        Vector<Float> &inputWeightStripe,
+        Vector<Complex> &outputDataStripe, Vector<Bool> &outputFlagStripe)
+{
+    Vector<Float> inputDataStripeFloat = real(inputDataStripe);
+    Vector<Float> outputDataStripeFloat(inputDataStripeFloat.nelements());
+    smoothFourierFloat(n, inputDataStripeFloat, inputFlagStripe,
+            inputWeightStripe, outputDataStripeFloat, outputFlagStripe);
+    convertArray(outputDataStripe, outputDataStripeFloat);
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Convolver<Float> *MSTransformManager::getConvolver(Int const numChan) {
+    if (convolverPool_.find(numChan) == convolverPool_.end()) {
+        throw AipsError("Failed to get convolver. Smoothing is not properly configured.");
+    }
+    return &convolverPool_[numChan];
 }
 
 } //# NAMESPACE CASA - END

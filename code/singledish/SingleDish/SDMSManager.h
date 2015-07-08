@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 
 #include <libsakura/sakura.h>
 
@@ -12,6 +13,8 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <mstransform/MSTransform/MSTransformManager.h>
+#include <scimath/Mathematics/Convolver.h>
+#include <scimath/Mathematics/VectorKernel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -26,6 +29,13 @@ public:
   void setSortColumns(Block<Int> sortColumns,
 		      bool addDefaultSortCols=false,
 		      Double timebin=0.0);
+
+  // Set/unset smoothing parameter
+  void setSmoothing(string const &kernelType, float const &kernelWidth);
+  void unsetSmoothing();
+
+  // Initialize smoothing operation
+  void initializeSmoothing();
 
   Record getSelRec(string const &spw);
   //MeasurementSet getMS();
@@ -51,8 +61,16 @@ protected:
 
   int getBlockId(Block<Int> const &data, Int const value);
 
+  // Inspection for smoothing operation
+  Vector<Int> inspectNumChan();
+
 private:
   Block<Int> userSortCols_;
+
+  // for Gaussian smoothing
+  Bool doSmoothing_;
+  VectorKernel::KernelTypes kernelType_;
+  float kernelWidth_;
 
 }; // class SDMSManager -END
 

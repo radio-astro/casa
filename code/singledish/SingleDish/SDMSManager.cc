@@ -21,6 +21,7 @@
 namespace casa {
 
 SDMSManager::SDMSManager()
+    : doSmoothing_(False)
 {
 }
 
@@ -365,5 +366,78 @@ MeasurementSet SDMSManager::getMS()
   return myms;
 }
 */
+
+void SDMSManager::setSmoothing(string const &kernelType, float const &kernelWidth)
+{
+    // kernel type
+    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
+
+    // Fail if type is not GAUSSIAN since other kernel types are not supported yet
+    if (type != VectorKernel::GAUSSIAN) {
+        stringstream oss;
+        oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
+        throw AipsError(oss.str());
+    }
+
+    doSmoothing_ = True;
+    kernelType_ = type;
+    kernelWidth_ = kernelWidth;
+}
+
+void SDMSManager::unsetSmoothing()
+{
+    doSmoothing_ = False;
+}
+
+void SDMSManager::initializeSmoothing()
+{
+    if (!doSmoothing_) {
+        return;
+    }
+
+    Vector<Int> numChanList = inspectNumChan();
+    for (size_t i = 0; i < numChanList.nelements(); ++i) {
+        Int numChan = numChanList[i];
+        Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
+        convolverPool_[numChan] = Convolver<Float>(theKernel, IPosition(1, numChan));
+    }
+}
+
+Vector<Int> SDMSManager::inspectNumChan()
+{
+    LogIO os(_ORIGIN);
+
+    if (selectedInputMs_p == NULL) {
+        throw AipsError("Input MS is not opened yet.");
+    }
+
+    ROScalarColumn<Int> col(*selectedInputMs_p, "DATA_DESC_ID");
+    Vector<Int> ddIdList = col.getColumn();
+    uInt numDDId = GenSort<Int>::sort(ddIdList, Sort::Ascending,
+            Sort::QuickSort | Sort::NoDuplicates);
+    col.attach(selectedInputMs_p->dataDescription(), "SPECTRAL_WINDOW_ID");
+    Vector<Int> spwIdList(numDDId);
+    for (uInt i = 0; i < numDDId; ++i) {
+        spwIdList[i] = col(ddIdList[i]);
+    }
+    Vector<Int> numChanList(numDDId);
+    col.attach(selectedInputMs_p->spectralWindow(), "NUM_CHAN");
+    os << "spwIdList = " << spwIdList << LogIO::POST;
+    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
+        Int spwId = spwIdList[i];
+        Int numChan = col(spwId);
+        numChanList[i] = numChan;
+        os << "examine spw " << spwId << ": nchan = " << numChan << LogIO::POST;
+        if (numChan == 1) {
+            stringstream ss;
+            ss << "smooth: Failed due to wrong spw " << i;
+            throw AipsError(ss.str());
+        }
+    }
+
+    uInt numNumChan = GenSort<Int>::sort(numChanList, Sort::Ascending,
+            Sort::QuickSort | Sort::NoDuplicates);
+    return numChanList(Slice(0, numNumChan));
+}
 
 }  // End of casa namespace.

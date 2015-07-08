@@ -133,6 +133,7 @@ void SingleDishMS::initialize()
 {
   in_column_ = MS::UNDEFINED_COLUMN;
   //  out_column_ = MS::UNDEFINED_COLUMN;
+  doSmoothing_ = False;
 }
 
 bool SingleDishMS::close()
@@ -296,6 +297,8 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   // - mode, nchan, start, width, veltype,
   // - timeaverage, timebin, timespan, maxuvwdistance
 
+  // smoothing
+  configure_param.define("smoothFourier", doSmoothing_);
 
   // Generate SDMSManager
   sdh_ = new SDMSManager();
@@ -2151,123 +2154,23 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
             << "   columnName = " << columnName << endl
             << "   outMSName = " << outMSName << LogIO::POST;
 
-    // kernel type
-    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
-
-    // Fail if type is not GAUSSIAN since other kernel types are not supported yet
-    if (type != VectorKernel::GAUSSIAN) {
-        stringstream oss;
-        oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
-        throw AipsError(oss.str());
-    }
-
     // Initialization
+    doSmoothing_ = True;
     prepare_for_process(columnName, outMSName);
 
+    // configure smoothing
+    sdh_->setSmoothing(kernelType, kernelWidth);
+    sdh_->initializeSmoothing();
+
     // get VI/VB2 access
-    vi::VisibilityIterator2 *vi = sdh_->getVisIter();
-    vi::VisBuffer2 *vb = vi->getVisBuffer();
-
-    // Initial inspection
-    // If there are at least one spw that cannot apply smoothing (nchan==1 etc.),
-    // abort here
-    Vector<Int> numChanList = inspectNumChan(vi->ms());
-    os << "numChanList = " << numChanList << LogIO::POST;
-
-    // attach accessor method depending on input data column
-    if (in_column_ == MS::DATA) {
-        visCubeAccessor_ = GetCubeFromData;
-    }
-    else if (in_column_ == MS::CORRECTED_DATA) {
-        visCubeAccessor_ = GetCubeFromCorrected;
-    }
-    else if (in_column_ == MS::FLOAT_DATA) {
-        visCubeAccessor_ = GetCubeFromFloat;
-    }
-    else {
-        assert(false);
-    }
-
-    // working Vector for convolver
-    Vector<Float> wrapper;
-    Vector<Float> outwrapper;
+    vi::VisibilityIterator2 *visIter = sdh_->getVisIter();
+    vi::VisBuffer2 *vb = visIter->getVisBuffer();
 
     double startTime = gettimeofday_sec();
 
-    Int numChanCache = -1;
-    // prepare kernel and convolver for necessary array length
-    map<Int, Vector<Float> > kernelPool;
-    map<Int, Convolver<Float> > convolverPool;
-    for (size_t i = 0; i < numChanList.nelements(); ++i) {
-        Int numChan = numChanList[i];
-        Vector<Float> theKernel = VectorKernel::make(type, kernelWidth, numChan, True, False);
-        kernelPool[numChan] = theKernel;
-        convolverPool[numChan] = Convolver<Float>(theKernel, IPosition(1, numChan));
-    }
-    // TODO: reduce number of data flipping before and after fft (after unit tests defined)
-    Vector<Float> *kernel;
-    Convolver<Float> *convolver;
-
-    for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
-        // Convolver setup
-        for (vi->origin(); vi->more(); vi->next()) {
-            Int const numRow = vb->nRows();
-            Int const numChan = vb->nChannels();
-            Int const numPol = vb->nCorrelations();
-            //os << "current chunk: nrow " << numRow << " nchan " << numChan << " npol " << numPol << LogIO::POST;
-            // advanced caching: keep created kernel-convolver pair to map objects and reuse them
-            assert(numChan > 0);
-            if (numChan != numChanCache) {
-                //os << "numChan " << numChan << ": need to switch kernel/convolver" << LogIO::POST;
-                assert(kernelPool.find(numChan) != kernelPool.end());
-                kernel = &kernelPool[numChan];
-                convolver = &convolverPool[numChan];
-                numChanCache = numChan;
-            }
-            Cube<Float> dataChunk(numPol, numChan, numRow);
-            visCubeAccessor_(*vb, dataChunk);
-
-            SakuraAlignedArray<float> spectrum(numChan);
-            SakuraAlignedArray<float> outspectrum(numChan);
-            Vector<Bool> flagRow = vb->flagRow();
-            Cube<Bool> flagCube = vb->flagCube();
-
-            // loop over row
-            for (Int irow=0; irow < numRow; ++irow) {
-                // skip row if flagged
-                if (flagRow[irow]) {
-                    continue;
-                }
-              
-                // loop over polarization
-                for (Int ipol=0; ipol < numPol; ++ipol) {
-                    // get a spectrum from data cube
-                    get_spectrum_from_cube(dataChunk, irow, ipol, numChan, spectrum);
-                    float *data = spectrum.data;
-                    float *outdata = outspectrum.data;
-
-                    // replace flagged channel data with zero
-                    for (Int ichan = 0; ichan < numChan; ++ichan) {
-                        if (flagCube(ipol, ichan, irow)) {
-                            data[ichan] = 0.0f;
-                        }
-                    }
-
-                    // smoothing
-                    wrapper.takeStorage(IPosition(1, numChan), data, SHARE);
-                    outwrapper.takeStorage(IPosition(1, numChan), outdata, SHARE);
-                    convolver->linearConv(outwrapper, wrapper);
-
-                    // set back a spectrum to data cube
-                    set_spectrum_to_cube(dataChunk, irow, ipol, numChan, outdata);
-
-                    // TODO: weight handling
-                }
-
-            }
-            
-            // write back data cube to Output MS
-            sdh_->fillCubeToOutputMs(vb, dataChunk);
+    for (visIter->originChunks(); visIter->moreChunks(); visIter->nextChunk()) {
+        for (visIter->origin(); visIter->more(); visIter->next()) {
+            sdh_->fillOutputMs(vb);
         }
     }
 
@@ -2276,40 +2179,6 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
 
     // Finalization
     finalize_process();
-}
-
-Vector<Int> SingleDishMS::inspectNumChan(MeasurementSet const &ms)
-{
-    LogIO os(_ORIGIN);
-
-    ROScalarColumn<Int> col(ms, "DATA_DESC_ID");
-    Vector<Int> ddIdList = col.getColumn();
-    uInt numDDId = GenSort<Int>::sort(ddIdList, Sort::Ascending,
-            Sort::QuickSort | Sort::NoDuplicates);
-    col.attach(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
-    Vector<Int> spwIdList(numDDId);
-    for (uInt i = 0; i < numDDId; ++i) {
-        spwIdList[i] = col(ddIdList[i]);
-    }
-    Vector<Int> numChanList(numDDId);
-    col.attach(ms.spectralWindow(), "NUM_CHAN");
-    os << "spwIdList = " << spwIdList << LogIO::POST;
-    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
-        Int spwId = spwIdList[i];
-        Int numChan = col(spwId);
-        numChanList[i] = numChan;
-        os << "examine spw " << spwId << ": nchan = " << numChan << LogIO::POST;
-        if (numChan == 1) {
-            stringstream ss;
-            ss << "smooth: Failed due to wrong spw " << i;
-            finalize_process();
-            throw AipsError(ss.str());
-        }
-    }
-
-    uInt numNumChan = GenSort<Int>::sort(numChanList, Sort::Ascending,
-            Sort::QuickSort | Sort::NoDuplicates);
-    return numChanList(Slice(0, numNumChan));
 }
 
 }  // End of casa namespace.

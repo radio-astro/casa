@@ -68,6 +68,10 @@
 // to compute partial medians
 #include <casa/Arrays/ArrayPartMath.h>
 
+// single dish specific
+#include <map>
+#include <scimath/Mathematics/Convolver.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -1150,6 +1154,14 @@ protected:
 													Vector<T> &outputDataStripe,
 													Vector<Bool> &outputFlagsStripe);
 
+	// The following methods are single dish specific so far
+	void smoothFourierFloat(Int , Vector<Float> &inputDataStripe,
+	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,
+	          Vector<Float> &outputDataStripe, Vector<Bool> &outputFlagsStripe);
+	void smoothFourierComplex(Int , Vector<Complex> &inputDataStripe,
+	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,
+	          Vector<Complex> &outputDataStripe, Vector<Bool> &outputFlagsStripe);
+	Convolver<Float> *getConvolver(Int const numChan);
 
 	// MS specification parameters
 	String inpMsName_p;
@@ -1317,6 +1329,10 @@ protected:
 	Matrix<Float> *weight_p;
 	Matrix<Float> *sigma_p;
 	ArrayColumn<Float> dummyWeightCol_p;
+
+	// single dish specific
+	Bool smoothFourier_p;
+	map<Int, Convolver<Float> > convolverPool_;
 
 	// Logging
 	LogIO logger_p;
