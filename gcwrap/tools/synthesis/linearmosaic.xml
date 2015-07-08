@@ -186,7 +186,7 @@ lm.setoutputimage(outputimage='testoo.linmos', outputweight='testoo.linmos.weigh
    <shortdescription>Use this function to create a Sault-weighted image</shortdescription>
    
 <description>
- "Sault weighted" image is one which is more pleasant to view (without high noise at the edges of mosaic images), it is flux correct upto a where the beam coverage becomes low and is tapered off onwards just to keep the noise from rising in the overall image.
+ "Sault weighted" image is one which is more pleasant to view (without high noise at the edges of mosaic images), it is flux correct upto a where the beam coverage becomes low and is tapered off onwards just to keep the noise from rising in the overall image(see  Eq[2] from Sault, Staveley-Smith and Brouw (1996), Astron. Astrophys. Suppl, 120, 375)
 
 </description>
 <input>

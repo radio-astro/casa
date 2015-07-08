@@ -122,34 +122,35 @@ bool linearmosaic::setlinmostype(const  string& linmostype){
 
 	  if(images.nelements() != weightimages.nelements())
 		  throw(AipsError("number of images and weightimages not equal"));
-	  Vector<CountedPtr<ImageInterface<Float> > > im(1), wgt(1);
+	  Vector<CountedPtr<ImageInterface<Float> > > im(images.nelements()), wgt(images.nelements());
 	  for (uInt k=0; k < images.nelements(); ++k){
 
           if(wgttype==1){
-        	  wgt[0]=new casa::PagedImage<Float>(weightimages[k]);
+        	  wgt[k]=new casa::PagedImage<Float>(weightimages[k]);
           }
           else if(wgttype==2){
         	  PagedImage<Float>tmp(weightimages[k]);
-        	  wgt[0]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
-        	  wgt[0]->copyData((LatticeExpr<Float>)(abs(tmp)));
+        	  wgt[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+        	  wgt[k]->copyData((LatticeExpr<Float>)(sqrt(abs(tmp))));
           }
 		  if(imagewgttype==1)
-			  im[0]=new casa::PagedImage<Float>(images[k]);
+			  im[k]=new casa::PagedImage<Float>(images[k]);
 		  else if(imagewgttype==0){
 			  PagedImage<Float>tmp(images[k]);
-			  im[0]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
-			  im[0]->copyData((LatticeExpr<Float>)(tmp*(*wgt[0])));
+			  im[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+			  im[k]->copyData((LatticeExpr<Float>)(tmp*(*wgt[k])));
 		  }
 		  else if(imagewgttype==2){
 			  PagedImage<Float>tmp(images[k]);
-			  im[0]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
-			  im[0]->copyData((LatticeExpr<Float>)(iif(*(wgt[0]) > (0.0),
-			  						       (tmp/(*wgt[0])), 0)));
+			  im[k]=new casa::TempImage<Float>(tmp.shape(), tmp.coordinates());
+			  im[k]->copyData((LatticeExpr<Float>)(iif(*(wgt[k]) > (0.0),
+			  						       (tmp/(*wgt[k])), 0)));
 		  }
 		  else
 			  throw(AipsError("image is weighted in an unknown fashion"));
-		  rstat=rstat && itsMos->makeMosaic(im, wgt);
+		  //rstat=rstat && itsMos->makeMosaic(im, wgt);
 	  }
+	  rstat=rstat && itsMos->makeMosaic(im, wgt);
     
   } catch  (AipsError x) {
 
