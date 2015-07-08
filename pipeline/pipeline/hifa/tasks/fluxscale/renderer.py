@@ -65,7 +65,7 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
     def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
         """
-        Create plots and return a dictionary of vis:[Plots].
+        Create plots and return a dictionary of vis:[Plots].  No antenna or UVrange selection.
         """
         d = {}
         for result in results:
@@ -76,20 +76,21 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def create_plots_ants(self, context, results, plotter_cls, intents,
                           renderer_cls=None):
         """
-        Create plots and return a dictionary of vis:[Plots].
+        Create plots and return a dictionary of vis:[Plots].  Antenna and UVrange selection
+                                                              determined by heuristics.
         """
         d = {}
         for result in results:
             plots = self.plots_for_result(context, result, plotter_cls,
-                    intents, renderer_cls, ant=result.resantenna)
+                    intents, renderer_cls, ant=result.resantenna, uvrange=result.uvrange)
             d = utils.dict_merge(d, plots)
         return d
 
     def plots_for_result(self, context, result, plotter_cls, intents,
-                         renderer_cls=None, ant=''):
+                         renderer_cls=None, ant='', uvrange=''):
         vis = os.path.basename(result.inputs['vis'])
         
-        plotter = plotter_cls(context, result, intents, ant=ant)
+        plotter = plotter_cls(context, result, intents, ant=ant, uvrange=uvrange)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)

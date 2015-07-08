@@ -26,20 +26,20 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
     """
     Create an amplitude vs UV distance plot for baseband.
     """
-    def __init__(self, context, result, intent='', ydatacolumn='model', ant=''):
+    def __init__(self, context, result, intent='', ydatacolumn='model', ant='', uvrange='', **overrides):
     
         #Reference fields
         fields = result.inputs['reference']
     
         #Get uvdist min/max  for horizontal axis
-        uvrange = {}
+        uvrangeplot = {}
         
         try:
             with casatools.MSReader(result.vis) as msfile:
-                uvrange = msfile.range(['uvdist'])
+                uvrangeplot = msfile.range(['uvdist'])
         except:
             LOG.warn("Unable to obtain plotting ranges for gfluxscale uvdist.")
-            uvrange["uvdist"] = numpy.array([0,0])
+            uvrangeplot["uvdist"] = numpy.array([0,0])
         
         
         #Get amp min/max   for vertical axis
@@ -71,6 +71,8 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
         vis = os.path.basename(result.inputs['vis'])
         ms = context.observing_run.get_ms(vis)
         corrstring = ms.get_alma_corrstring()
+        
+        #LOG.info("GFLUXSCALE DISPLAY UVRANGE: "+uvrange)
     
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'field'       : fields,
@@ -79,10 +81,11 @@ class GFluxscaleSummaryChart(setjy.BasebandSummaryChart):
                      'avgbaseline' : False,
                      'antenna'     : ant,
                      'correlation' : corrstring,
-                     'uvrange'     : result.uvrange,   #Specified in hifa_gfluxscale task inputs
-                     'plotrange'   : [uvrange['uvdist'][0], uvrange['uvdist'][1],pltmin,pltmax],
+                     'uvrange'     : uvrange,   #Specified in hifa_gfluxscale task inputs
+                     'plotrange'   : [uvrangeplot['uvdist'][0], uvrangeplot['uvdist'][1],pltmin,pltmax],
                      'coloraxis'   : 'spw',
                      'overwrite'   : True}
+        plot_args.update(**overrides)
         
         super(GFluxscaleSummaryChart, self).__init__(
                 context, result, xaxis='uvdist', yaxis='amp', intent=intent, ant=ant,
