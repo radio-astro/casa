@@ -66,7 +66,15 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     @property
     def robust(self):
         if self._robust == -999.0:
-            return self.heuristics.robust(self.spw)
+            if (self.spw.find(',') == -1):
+                return self.heuristics.robust(self.spw)
+            else:
+                robust = 0.0
+                spws = self.spw.split(',')
+                for spw in spws:
+                    robust += self.heuristics.robust(spw)
+                robust /= len(spws)
+                return robust
         else:
             return self._robust
 
