@@ -821,6 +821,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
       Vector<Int> scans = vb->scan();
       Vector<Double> times = vb->time();
       Vector<Int> beams = vb->feed1();
+      Vector<Int> antennas = vb->antenna1();
 
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
@@ -1007,7 +1008,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 	  if (num_apply_true > 0) {
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
-	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
+	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], 
+			 (uInt)antennas[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 
@@ -1095,6 +1097,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
       Vector<Int> scans = vb->scan();
       Vector<Double> times = vb->time();
       Vector<Int> beams = vb->feed1();
+      Vector<Int> antennas = vb->antenna1();
 
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
@@ -1289,7 +1292,8 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 	  if (num_apply_true > 0) {
 	  Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
-	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
+	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], 
+			 (uInt)antennas[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 
@@ -1329,7 +1333,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
   }
 
   // parse fitting parameters in the text file
-  BLTableParser parser(in_bltable_name, in_spw);
+  BLTableParser parser(in_bltable_name);
   std::vector<LIBSAKURA_SYMBOL(BaselineType)> 
     baseline_types = parser.get_function_types();
   map<const LIBSAKURA_SYMBOL(BaselineType), uint16_t> max_orders;
@@ -1392,6 +1396,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
       Vector<Double> times = vb->time();
       Vector<Double> intervals = vb->timeInterval();
       Vector<Int> beams = vb->feed1();
+      Vector<Int> antennas = vb->antenna1();
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
@@ -1439,7 +1444,8 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
 
 	size_t idx_fit_param;
 	if (!parser.GetFitParameterIdx(times[irow], intervals[irow],
-				       scans[irow], beams[irow], data_spw[irow], 
+				       scans[irow], beams[irow], 
+				       antennas[irow], data_spw[irow], 
 				       idx_fit_param)) {
 	  for (size_t ipol = 0; ipol < num_pol; ++ipol) {
 	    flag_spectrum_in_cube(flag_chunk, irow, ipol); //flag
@@ -1624,7 +1630,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       Vector<Int> scans = vb->scan();
       Vector<Double> times = vb->time();
       Vector<Int> beams = vb->feed1();
-
+      Vector<Int> antennas = vb->antenna1();
       Vector<Int> data_spw = vb->spectralWindows();
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
@@ -2015,7 +2021,8 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 	  set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
 	  Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff_max));
 	  set_matrix_for_bltable<double, Float>(num_pol, num_coeff_max, coeff_mtx_tmp, coeff_mtx);
-	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], (uInt)data_spw[irow],
+	  bt->appenddata((uInt)scans[irow], (uInt)beams[irow], 
+			 (uInt)antennas[irow], (uInt)data_spw[irow],
 			 0, times[irow], apply_mtx, bltype_mtx, 
 			 fpar_mtx, ffpar_mtx, masklist_mtx,
 			 coeff_mtx, rms_mtx, (uInt)num_chan, 

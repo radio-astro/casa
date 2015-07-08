@@ -35,6 +35,7 @@ public:
 
   uInt getScan(uInt irow) const {return scanCol_.get(irow);}
   uInt getBeam(uInt irow) const {return beamCol_.get(irow);}
+  uInt getAntenna(uInt irow) const {return antCol_.get(irow);}
   uint getSpw(uInt irow) const {return static_cast<uint>(ifCol_.get(irow));}
   double getTime(uInt irow) const {return static_cast<double>(timeCol_.get(irow));}
 
@@ -42,21 +43,8 @@ public:
   uint getBaselineType(uInt irow, uInt ipol) const;
   int getFPar(uInt irow, uInt ipol) const;
 
-  double getTimeTimeSorted(uInt irow);
-  void getIdsTimeSorted(uInt irow, uInt *scanno, 
-			uInt *beamno, uInt *ifno);
-  void getDataTimeSorted(uInt irow, uInt *scanno, 
-			 uInt *beamno, uInt *ifno, 
-			 Double *time, 
-			 Array<Bool> *apply,
-			 Array<uInt> *ftype, 
-			 Array<Int> *fpar, 
-			 Array<Float> *ffpar, 
-			 Array<uInt> *mask,
-			 Array<Float> *res
-			 );
-  void setdata(uInt irow, uInt scanno, 
-               uInt beamno, uInt ifno, 
+  void setdata(uInt irow, uInt scanno, uInt beamno, 
+	       uInt antno, uInt ifno, 
                uInt freqid, Double time, 
 	       Array<Bool> apply,
                Array<uInt> ftype, 
@@ -72,8 +60,8 @@ public:
 	       Array<Float> lfthres, 
 	       Array<uInt> lfavg, 
 	       Array<uInt> lfedge);
-  void appenddata(uInt scanno, 
-                  uInt beamno, uInt ifno, 
+  void appenddata(uInt scanno, uInt beamno, 
+		  uInt antno, uInt ifno, 
                   uInt freqid, Double time, 
 		  Array<Bool> apply,
 		  Array<uInt> ftype, 
@@ -89,8 +77,7 @@ public:
 		  Array<Float> lfthres, 
 		  Array<uInt> lfavg, 
 		  Array<uInt> lfedge);
-  void appendbasedata(int scanno, 
-		      int beamno, int ifno, 
+  void appendbasedata(int scanno, int beamno, int antno, int ifno, 
 		      int freqid, Double time);
   void setresult(uInt irow, 
 		 Vector<Float> res, 
@@ -100,16 +87,11 @@ public:
 
   Matrix<Bool> getApply() {return applyCol_.getColumn();}
   void setApply(int irow, int ipol, bool apply);
-  ////Matrix<uInt> getFunction() {return ftypeCol_.getColumn();}
-  ////Matrix<BaselineType> getFunctionNames();
-  ////BaselineType getFunctionName(int irow, int ipol);
   Matrix<Int> getFuncParam() {return fparCol_.getColumn();}
   Matrix<Int> getFuncParam(uInt irow) {return fparCol_.get(irow);}
-  ////std::vector<int> getFuncParam(int irow, int ipol);
   Matrix<Float> getFuncFParam() {return ffparCol_.getColumn();}
   Matrix<Float> getFuncFParam(uInt irow) {return ffparCol_.get(irow);}
   Matrix<uInt> getMaskList() {return maskCol_.getColumn();}
-  ////std::vector<bool> getMask(int irow, int ipol);
   Matrix<Float> getResult() {return resCol_.getColumn();}
   Matrix<Float> getResult(uInt irow) {return resCol_.get(irow);}
   Matrix<Float> getRms() {return rmsCol_.getColumn();}
@@ -125,14 +107,12 @@ public:
   std::vector<bool> getMaskFromMaskList(uInt const nchan, std::vector<int> const& masklist);
 
 private:
-  void setbasedata(uInt irow, uInt scanno, 
-                   uInt beamno, uInt ifno, 
-                   uInt freqid, Double time);
-  Table table_, timeSortedTable_, originaltable_;
-  ScalarColumn<uInt> scanCol_, beamCol_, ifCol_, freqidCol_;
+  void setbasedata(uInt irow, uInt scanno, uInt beamno, uInt antno, 
+		   uInt ifno, uInt freqid, Double time);
+  Table table_, originaltable_;
+  ScalarColumn<uInt> scanCol_, beamCol_, antCol_, ifCol_, freqidCol_;
   ScalarColumn<Double> timeCol_;
   MEpoch::ScalarColumn timeMeasCol_;
-  bool sorted_;
   static const String name_;
 
   ArrayColumn<Bool> applyCol_;

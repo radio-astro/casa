@@ -24,6 +24,7 @@ BaselineTable::BaselineTable(const MeasurementSet& parent)
   TableDesc td("", "1", TableDesc::Scratch);
   td.addColumn(ScalarColumnDesc<uInt>("SCANNO"));
   td.addColumn(ScalarColumnDesc<uInt>("BEAMNO"));
+  td.addColumn(ScalarColumnDesc<uInt>("ANTNO"));
   td.addColumn(ScalarColumnDesc<uInt>("IFNO"));
   td.addColumn(ScalarColumnDesc<uInt>("FREQ_ID"));
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
@@ -44,7 +45,6 @@ BaselineTable::BaselineTable(const MeasurementSet& parent)
   originaltable_ = table_;
 
   setup();
-  sorted_ = false;
 }
 
 BaselineTable::BaselineTable(const String &name)
@@ -53,7 +53,6 @@ BaselineTable::BaselineTable(const String &name)
   attachBaseColumns();
   originaltable_ = table_;
   attachOptionalColumns();
-  sorted_ = false;
 }
 
 BaselineTable::~BaselineTable()
@@ -70,6 +69,7 @@ void BaselineTable::attachBaseColumns()
 {
   scanCol_.attach(table_, "SCANNO");
   beamCol_.attach(table_, "BEAMNO");
+  antCol_.attach(table_, "ANTNO");
   ifCol_.attach(table_, "IFNO");
   timeCol_.attach(table_, "TIME");
   timeMeasCol_.attach(table_, "TIME");
@@ -146,73 +146,19 @@ int BaselineTable::getFPar(uInt irow, uInt ipol) const
   return static_cast<int>(fpar[ipol]);
 }
 
-double BaselineTable::getTimeTimeSorted(uInt irow)
-{
-  if (!sorted_) {
-    timeSortedTable_ = table_.sort("TIME");
-  }
-
-  TableProxy tst(timeSortedTable_);
-  double *time = reinterpret_cast<double *>(fromValueHolder(tst.getCell("TIME", irow)));
-  return *time;
-}
-   
-void BaselineTable::getIdsTimeSorted(uInt irow, uInt *scanno, 
-				     uInt *beamno, uInt *ifno)
-{
-  if (!sorted_) {
-    timeSortedTable_ = table_.sort("TIME");
-  }
-
-  TableProxy tst(timeSortedTable_);
-
-  scanno  = (uInt *)fromValueHolder(tst.getCell("SCANNO", irow));
-  beamno  = (uInt *)fromValueHolder(tst.getCell("BEAMNO", irow));
-  ifno    = (uInt *)fromValueHolder(tst.getCell("IFNO", irow));
-}
-
-void BaselineTable::getDataTimeSorted(uInt irow, uInt *scanno, 
-				      uInt *beamno, uInt *ifno, 
-				      Double *time, 
-				      Array<Bool> *apply,
-				      Array<uInt> *ftype, 
-				      Array<Int> *fpar, 
-				      Array<Float> *ffpar, 
-				      Array<uInt> *mask,
-				      Array<Float> *res
-				      )
-{
-  if (!sorted_) {
-    timeSortedTable_ = table_.sort("TIME");
-  }
-
-  TableProxy tst(timeSortedTable_);
-
-  scanno  = (uInt *)fromValueHolder(tst.getCell("SCANNO", irow));
-  beamno  = (uInt *)fromValueHolder(tst.getCell("BEAMNO", irow));
-  ifno    = (uInt *)fromValueHolder(tst.getCell("IFNO", irow));
-  time    = (Double *)fromValueHolder(tst.getCell("TIME", irow));
-  apply   = (Array<Bool> *)fromValueHolder(tst.getCell("APPLY", irow));
-  ftype   = (Array<uInt> *)fromValueHolder(tst.getCell("FUNC_TYPE", irow));
-  fpar    = (Array<Int> *)fromValueHolder(tst.getCell("FUNC_PARAM", irow));
-  ffpar   = (Array<Float> *)fromValueHolder(tst.getCell("FUNC_FPARAM", irow));
-  mask    = (Array<uInt> *)fromValueHolder(tst.getCell("MASKLIST", irow));
-  res     = (Array<Float> *)fromValueHolder(tst.getCell("RESULT", irow));
-}
-
-void BaselineTable::setbasedata(uInt irow, uInt scanno, 
-                                uInt beamno, uInt ifno, 
-                                uInt freqid, Double time)
+void BaselineTable::setbasedata(uInt irow, uInt scanno, uInt beamno, uInt antno, 
+				uInt ifno, uInt freqid, Double time)
 {
   scanCol_.put(irow, scanno);
   beamCol_.put(irow, beamno);
+  antCol_.put(irow, antno);
   ifCol_.put(irow, ifno);
   timeCol_.put(irow, time);
   freqidCol_.put(irow, freqid);
 }
 
 void BaselineTable::setdata(uInt irow, uInt scanno, 
-			    uInt beamno, uInt ifno, 
+			    uInt beamno, uInt antno, uInt ifno, 
 			    uInt freqid, Double time, 
 			    Array<Bool> apply, 
 		            Array<uInt> ftype,
@@ -235,7 +181,7 @@ void BaselineTable::setdata(uInt irow, uInt scanno,
     throw AipsError(ss.str());
   }
 
-  setbasedata(irow, scanno, beamno, ifno, freqid, time);
+  setbasedata(irow, scanno, beamno, antno, ifno, freqid, time);
   applyCol_.put(irow, apply);
   ftypeCol_.put(irow, ftype);
   fparCol_.put(irow, fpar);
@@ -252,8 +198,8 @@ void BaselineTable::setdata(uInt irow, uInt scanno,
   lfedgeCol_.put(irow, lfedge);
 }
 
-void BaselineTable::appenddata(uInt scanno, 
-			       uInt beamno, uInt ifno, 
+void BaselineTable::appenddata(uInt scanno, uInt beamno, 
+			       uInt antno, uInt ifno, 
 			       uInt freqid, Double time, 
 			       Array<Bool> apply, 
 			       Array<uInt> ftype, 
@@ -272,18 +218,19 @@ void BaselineTable::appenddata(uInt scanno,
 {
   uInt irow = nrow();
   table_.addRow(1, True);
-  setdata(irow, scanno, beamno, ifno, freqid, time, 
+  setdata(irow, scanno, beamno, antno, ifno, freqid, time, 
 	  apply, ftype, fpar, ffpar, mask, res, rms, 
 	  nchan, cthres, citer, uself, lfthres, lfavg, lfedge);
 }
 
-void BaselineTable::appendbasedata(int scanno, 
-				   int beamno, int ifno, 
+void BaselineTable::appendbasedata(int scanno, int beamno, 
+				   int antno, int ifno, 
 				   int freqid, Double time)
 {
   uInt irow = nrow();
   table_.addRow(1, True);
-  setbasedata(irow, uInt(scanno), uInt(beamno), uInt(ifno), uInt(freqid), time);
+  setbasedata(irow, uInt(scanno), uInt(beamno), uInt(antno), 
+	      uInt(ifno), uInt(freqid), time);
 }
 
 void BaselineTable::setresult(uInt irow, 
@@ -294,55 +241,6 @@ void BaselineTable::setresult(uInt irow,
   rmsCol_.put(irow, rms);
 }
 
-/*
-bool BaselineTable::getApply(int irow, int ipol)
-{
-  //return (bool)applyCol_.get(irow);
-  return (bool)((applyCol_.get(irow))[0][0][ipol]);
-}
-
-void BaselineTable::setApply(int irow, int ipol, bool apply)
-{
-  //applyCol_.put(uInt(irow), Bool(apply));
-}
-
-Vector<BaselineType> BaselineTable::getFunctionNames()
-{
-  Vector<uInt> rawBlfuncColumn = ftypeCol_.getColumn();
-  uInt n = rawBlfuncColumn.nelements();
-  Vector<BaselineType> blfuncColumn(n);
-  for (uInt i = 0; i < n; ++i) {
-    blfuncColumn[i] = BaselineType(rawBlfuncColumn(i));
-  }
-  return blfuncColumn;
-}
-
-BaselineType BaselineTable::getFunctionName(int irow, int ipol)
-{
-  return BaselineType(ftypeCol_.get(irow)[ipol]);
-}
-
-std::vector<int> BaselineTable::getFuncParam(int irow, int ipol)
-{
-  Vector<Int> uiparam = fparCol_.get(irow)[ipol];
-  std::vector<int> res(uiparam.size());
-  for (uInt i = 0; i < res.size(); ++i) {
-    res[i] = (int)uiparam[i];
-  }
-  return res;
-}
-
-std::vector<bool> BaselineTable::getMask(int irow, int ipol)
-{
-  uInt nchan = getNChan(irow);
-  Vector<uInt> masklist = maskCol_.get(irow);
-  std::vector<int> masklist1(masklist.size());
-  for (uInt i = 0; i < masklist1.size(); ++i) {
-    masklist1[i] = (int)masklist[i];
-  }
-  return getMaskFromMaskList(nchan, masklist1);
-}
-*/
 uInt BaselineTable::getNChan(int irow)
 {
   return nchanCol_.get(irow);

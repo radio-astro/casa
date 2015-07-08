@@ -156,23 +156,25 @@ struct BLIdSet {};
 
 class BLTableParser : public BLParameterParser {
  public:
-  explicit BLTableParser(string const file_name, string const spw);
+  explicit BLTableParser(string const file_name);
   ~BLTableParser();
   bool GetFitParameterIdx(double const time, double const interval, 
 			  size_t const scanid, size_t const beamid, 
-			  size_t const spwid, size_t &idx);
+			  size_t const antid, size_t const spwid, size_t &idx);
   void GetFitParameterByIdx(size_t const idx, size_t const ipol, 
 			    bool &apply, std::vector<float> &coeff, 
 			    std::vector<double> &boundary, 
 			    BLParameterSet &bl_param);
  private:
   void initialize();
-  void parse(string const spw);
+  void parse();
   //Returns order or npiece in BLParameterSet structure depending on datatype.
   uint16_t GetTypeOrder(size_t const &baseline_type, 
 			uInt const irow, uInt const ipol);
   BaselineTable *bt_;
-  std::vector<double> times_;
+  std::map<string, std::vector<double> > sortedTimes_;
+  std::map<string, std::vector<uInt> > timeSortedIdx_;
+  std::map<string, size_t> numRows_;
 };
 
 } //# NAMESPACE CASA - END
