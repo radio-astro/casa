@@ -35,6 +35,7 @@
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/WCBox.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/LinearMosaic.h>
 using namespace std;
 
@@ -48,6 +49,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx,
 			const Int ny, const Quantity cellx, const Quantity celly, const Int linmostype) :outImage_p(NULL), outWgt_p(NULL), linmosType_p(linmostype) {
 		outImName_p=outim;
+		///Null image so assigning same weight type as requested
+		imageWeightType_p=linmostype;
+		weightType_p=linmostype;
 
 		outWgtName_p= outwgt=="" ? outim+String(".weight") : outwgt;
 		nx_p=nx;
@@ -58,8 +62,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	 }
 	LinearMosaic::LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-				const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-				const Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype) : linmosType_p(linmostype){
+				   Vector<CountedPtr<ImageInterface<Float> > >& ims,
+				   Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype) : linmosType_p(linmostype){
 		Int nchan=ims[0]->shape()[3];
 		Int npol=ims[0]->shape()[2];
 		for (uInt k=0; k< ims.nelements(); ++k){
@@ -81,8 +85,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		linmosType_p=linmostype;
 	}
 	Bool LinearMosaic::makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
+				      Vector<CountedPtr<ImageInterface<Float> > >& ims,
+				      Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
 		Bool retval=True;
 		if(ims.nelements() != wgtims.nelements())
@@ -94,8 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 	Bool LinearMosaic::makeMosaic(
-				  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-				  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
+				  	  Vector<CountedPtr<ImageInterface<Float> > >& ims,
+				  	  Vector<CountedPtr<ImageInterface<Float> > >& wgtims){
 
 			Bool retval=True;
 			if(outImage_p.null() && outImName_p=="")
@@ -106,6 +110,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				ThrowCc("Unequal number of images and weight images ");
 			for (uInt k=0; k < ims.nelements(); ++k){
 				retval=retval && addOnToImage(*outImage_p, *outWgt_p, *(ims[k]), *(wgtims[k]), (k==ims.nelements()-1));
+				ims[k]=0;
+				wgtims[k]=0;
 			}
 			return retval;
 
@@ -131,6 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//if(!outImIsWeighted){
 		{
+		  //cerr << "limosType " << linmosType_p << " imageWeightType " << imageWeightType_p << " weightType " << weightType_p << endl;
 			if(linmosType_p==2){
 				if(imageWeightType_p==1)
 					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
@@ -141,6 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					outwgt.copyData((LatticeExpr<Float>)(outwgt*outwgt));
 				weightType_p=2;
 			}
+			//cerr << " imageWeightType " << imageWeightType_p << " weightType " << weightType_p << endl;
 			if(linmosType_p==1){
 				if(imageWeightType_p==0)
 					outim.copyData((LatticeExpr<Float>)(outim*outwgt));
@@ -159,36 +167,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		IPosition iblc(inIm.shape().nelements(),0);
-		IPosition itrc(inIm.shape());
-		itrc=itrc-Int(1);
+		IPosition itrc=inIm.shape();
+		//		cerr << "itrc " << itrc << endl;
+		itrc -=1;
 
 
 
+		//cerr << "blc " << iblc << " trc " << itrc << endl;
 		LCBox lbox(iblc, itrc, inIm.shape());
-		ImageRegion imagreg(WCBox(lbox, incs) );
+		WCBox wbox(lbox, incs);
+		//cerr << "wbox " << wbox.toRecord("") << endl;
+		ImageRegion imagreg(wbox );
 		SubImage<Float> subOutIm;
 		SubImage<Float> subOutWgt;
 		try{
-			subOutIm=SubImage<Float>(outim, imagreg, True);
-			subOutWgt=SubImage<Float>(outwgt, imagreg, True);
+	       	
+		  subOutIm=SubImage<Float>(outim, imagreg, True);
+		  subOutWgt=SubImage<Float>(outwgt, imagreg, True);
 		}
 		catch(...){
 			//Failed to make a subimage let us use the full image
+		  //cerr << "Failed to make subImage " << x.what()<< endl;
 			subOutIm=SubImage<Float>(outim, True);
 			subOutWgt=SubImage<Float>(outwgt, True);
 
 		}
 		TempImage<Float> fullImage(subOutWgt.shape(), subOutIm.coordinates(), meminMB/8.0);
 		TempImage<Float> fullWeight(subOutWgt.shape(), subOutIm.coordinates(), meminMB/8.0);
+		fullImage.set(0.0);
+		fullWeight.set(0.0);
 		ImageRegrid<Float> regridder;
 		{
 
 			if(linmosType_p==2){
 				TempImage<Float> trueWeightIm(inWgt.shape(), inWgt.coordinates(), meminMB/8.0);
+				if(inWgt.getDefaultMask() != ""){
+				  Imager::copyMask(trueWeightIm, inWgt,  inWgt.getDefaultMask());
+				  fullWeight.makeMask(inWgt.getDefaultMask(), True, True, True, True);
+				}
 				trueWeightIm.copyData((LatticeExpr<Float>)(inWgt*inWgt));
+				
 				regridder.regrid( fullWeight, Interpolate2D::LINEAR,
 						IPosition(2,0,1), trueWeightIm);
-				TempImage<Float> inWeightedIm(inIm.shape(), inIm.coordinates(), meminMB/8.0);
+				TempImage<Float> inWeightedIm(inIm.shape(), inIm.coordinates(), meminMB/8.0);	
+				if(inIm.getDefaultMask() != ""){
+				  Imager::copyMask(inWeightedIm, inIm,  inIm.getDefaultMask());
+				  fullImage.makeMask(inIm.getDefaultMask(), True, True, True, True);
+				}
+				
 				inWeightedIm.copyData((LatticeExpr<Float>)(inIm*inWgt));
 				ImageRegrid<Float> regridder;
 				regridder.regrid( fullImage, Interpolate2D::LINEAR,
@@ -196,6 +222,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			}
 			else if (linmosType_p==1){
+			  if(inIm.getDefaultMask() != ""){
+				  fullImage.makeMask(inIm.getDefaultMask(), True, True, True, True);
+			  }
+			  if(inWgt.getDefaultMask() != ""){
+			    fullWeight.makeMask(inWgt.getDefaultMask(), True, True, True, True);
+			  }
 				regridder.regrid( fullWeight, Interpolate2D::LINEAR,
 										IPosition(2,0,1), inWgt);
 				regridder.regrid( fullImage, Interpolate2D::LINEAR,
@@ -272,7 +304,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> incr=dc.increment();
 		String elunit=dc.worldAxisUnits()[0];
 		if(cellx_p.getValue() !=  0.0)
-			incr[0]=cellx_p.getValue(elunit);
+			incr[0]=-cellx_p.getValue(elunit);
 		if(celly_p.getValue() != 0.0)
 			incr[1]=celly_p.getValue(elunit);
 		dc.setIncrement(incr);

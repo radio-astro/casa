@@ -51,13 +51,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //Coordinate System of output image along with the different pointing images and weight images
 	  // linmostype 1 or 2.. ie. mosaic in PB or PB^2
 	  LinearMosaic(const String outim, const String outwgt, const MDirection& imcen, const Int nx, const Int ny,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype=2);
+			  	  Vector<CountedPtr<ImageInterface<Float> > >& ims,
+			  	  Vector<CountedPtr<ImageInterface<Float> > >& wgtims, const Int linmostype=2);
 	  Bool makeMosaic(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-			  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
-	  Bool makeMosaic(const Vector<CountedPtr<ImageInterface<Float> > >& ims,
-		  	  const Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
+			  Vector<CountedPtr<ImageInterface<Float> > >& ims,
+			  Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
+	  Bool makeMosaic(Vector<CountedPtr<ImageInterface<Float> > >& ims,
+		  	   Vector<CountedPtr<ImageInterface<Float> > >& wgtims);
 
 	  // outim is weighted 0: flux correct, 1: flat noise, 2: noise optimal
 	  void setOutImages(ImageInterface<Float>& outim, ImageInterface<Float>& outwgt, const Int imageWeightType=1, const Int weightType=2);
