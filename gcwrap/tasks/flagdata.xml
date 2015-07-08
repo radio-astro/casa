@@ -377,6 +377,10 @@
                 <description>Print summary counts per baseline</description>
                 <value type="bool">False</value>
             </param>
+            <param type="bool" name="fieldcnt" subparam="true">
+                <description>Produce a separated breakdown for each field</description>
+                <value type="fieldcnt">False</value>
+            </param>            
 
             <param type="string" name="name" subparam="true">
                 <description>Name of this summary report (key in summary dictionary)</description>
@@ -1338,6 +1342,9 @@
 
                basecnt -- list the number of flags per baseline
                     default: False
+                    
+               fieldcnt -- produce a separated breakdown per field
+                    default: False                    
 
                name -- Name for this summary, to be used as a key in the returned
                        Python dictionary. It is possible to call the summary mode

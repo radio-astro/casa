@@ -131,6 +131,7 @@ def flagdata(vis,
              spwchan,
              spwcorr,
              basecnt,
+             fieldcnt,
              name,
              action,           # run or not the tool
              display,
@@ -516,6 +517,7 @@ def flagdata(vis,
             agent_pars['spwchan'] = spwchan
             agent_pars['spwcorr'] = spwcorr
             agent_pars['basecnt'] = basecnt
+            agent_pars['fieldcnt'] = fieldcnt
             agent_pars['name'] = name
             
             # Disable writeflags and savepars
@@ -811,19 +813,19 @@ def delspace(word, replace):
 def filter_summary(summary_stats,minrel,maxrel,minabs,maxabs):
     
     if type(summary_stats) is dict:
-        for x in summary_stats.keys():
-            if type(summary_stats[x]) is dict:
-                for xx in summary_stats[x].keys():
-                    flagged = summary_stats[x][xx]
-                    assert type(flagged) is dict
-                    assert flagged.has_key('flagged')
-                    assert flagged.has_key('total')
-                    if flagged['flagged'] < minabs or \
-                       (flagged['flagged'] > maxabs and maxabs >= 0) or \
-                       flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
-                       flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
-                        del summary_stats[x][xx]
-                        
+        if  summary_stats.has_key('flagged') and \
+            summary_stats.has_key('total') and \
+            not summary_stats.has_key('type'):
+            if  (summary_stats['flagged'] < minabs) or \
+                (summary_stats['flagged'] > maxabs and maxabs >= 0) or \
+                (summary_stats['flagged'] * 1.0 / summary_stats['total'] < minrel) or \
+                (summary_stats['flagged'] * 1.0 / summary_stats['total'] > maxrel):
+                return None
+        else:
+             for x in summary_stats.keys():
+                 res = filter_summary(summary_stats[x],minrel,maxrel,minabs,maxabs)
+                 if res == None: del summary_stats[x]
+                 
     return summary_stats
 
 def create_arg_dict(subMS_list,value):

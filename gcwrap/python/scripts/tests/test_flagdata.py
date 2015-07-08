@@ -1282,6 +1282,30 @@ class test_selections2(test_base):
         self.assertEqual(res['observation']['0']['flagged'], 2854278.0)
         self.assertEqual(res['observation']['1']['flagged'], 0, 'Only observation 0 should be flagged')
         
+    def test_field_breakdown(self):
+        '''flagdata: Produce a separated dictionary per field'''
+        
+        # First pre-clip the data to have interesting flag counts
+        flagdata(vis=self.vis, mode='clip',clipminmax=[0,2],savepars=False,flagbackup=False)
+        
+        # Obtain list of summaries per field
+        summary = flagdata(vis=self.vis, mode='summary', fieldcnt=True,savepars=False,flagbackup=False)
+        
+        field_list = ['1331+30500002_0','1331+30500002_0','N5921_2','NGC7538C']
+        
+        # Obtain list of summaries for each field separatelly
+        summary_list={}
+        for field in field_list:
+            summary_list[field] = flagdata(vis=self.vis, mode='summary', field=field,
+                                           fieldcnt=False,savepars=False,flagbackup=False)  
+        
+        # Compare results
+        for field in field_list:
+            self.assertEqual(summary[field]['total'], summary_list[field]['total'],
+                             'Total number of counts different for field' + field)
+            self.assertEqual(summary[field]['flagged'], summary_list[field]['flagged'],
+                             'Total number of flags different for field' + field)
+        
                 
 class test_elevation(test_base):
     """Test of mode = 'elevation'"""

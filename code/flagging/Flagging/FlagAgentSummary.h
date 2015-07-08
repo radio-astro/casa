@@ -29,6 +29,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class FlagAgentSummary : public FlagAgentBase {
 
+	struct summary
+	{
+		summary()
+		{
+			accumflags.clear();
+			accumtotal.clear();
+			accumChannelflags.clear();
+			accumChanneltotal.clear();
+			accumPolarizationflags.clear();
+			accumPolarizationtotal.clear();
+			accumAntScanflags.clear();
+			accumAntScantotal.clear();
+			accumTotalFlags = 0;
+			accumTotalCount = 0;
+		}
+
+		std::map<std::string, std::map<std::string, uInt64> > accumflags;
+		std::map<std::string, std::map<std::string, uInt64> > accumtotal;
+
+		std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
+		std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
+
+		std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
+		std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
+
+		std::map<Int, std::map<Int, uInt64> > accumAntScanflags;
+		std::map<Int, std::map<Int, uInt64> > accumAntScantotal;
+
+		uInt64 accumTotalFlags, accumTotalCount;
+	};
+
 public:
 
 	FlagAgentSummary(FlagDataHandler *dh, Record config);
@@ -47,33 +78,25 @@ protected:
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
 
-        // Get the summary dictionary, and 'view' reports.
-        FlagReport getReport();
+	// Get the summary dictionary, and 'view' reports.
+	FlagReport getReport();
+
+	// Utility method to facilitate creation of sub-summaries per field
+	void getResultCore(Record &summary);
 
 private:
 
-        // Build simple plot-reports from the summary dictionary
-        FlagReport buildFlagCountPlots();
-        std::map<Int , std::vector<Double> > frequencyList;
+	// Build simple plot-reports from the summary dictionary
+	FlagReport buildFlagCountPlots();
+	std::map<Int , std::vector<Double> > frequencyList;
 
 	Bool spwChannelCounts;
 	Bool spwPolarizationCounts;
-        Bool baselineCounts;
+	Bool baselineCounts;
+	Bool fieldCounts;
 
-        std::map<std::string, std::map<std::string, uInt64> > accumflags;
-        std::map<std::string, std::map<std::string, uInt64> > accumtotal;
-
-        std::map<Int, std::map<uInt, uInt64> > accumChannelflags;
-        std::map<Int, std::map<uInt, uInt64> > accumChanneltotal;
-
-        std::map<Int, std::map<std::string, uInt64> > accumPolarizationflags;
-        std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
-
-        std::map<Int, std::map<Int, uInt64> > accumAntScanflags;
-        std::map<Int, std::map<Int, uInt64> > accumAntScantotal;
-
-        uInt64 accumTotalFlags, accumTotalCount;
-
+	std::map<std::string, summary* > fieldSummaryMap;
+	summary *currentSummary;
 	Int arrayId;
 	Int fieldId;
 	Int spw;
