@@ -149,7 +149,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 	phaseupspwmap = inputs.ms.phaseup_spwmap
 
         # Produce the diagnostic table for displaying amplitude vs time plots. 
-	# Not special mapping required here.
+	# No special mapping required here.
         calampresult = self._do_caltarget_ampcal()
         result.calampresult = calampresult
 
@@ -173,12 +173,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         result.final.extend(targetphaseresult.final)
 
         # Compute the calibrator target phase solution
-        # A local merge to context is done here.
         calphaseresult = self._do_caltarget_phasecal()
-
-        # Readjust to the true calto.intent
-        calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
-        calphaseresult.final[0].calto.intent = 'AMPLITUDE,BANDPASS'
 
         # CalFroms are immutable, so we must replace them with a new 
         self._mod_last_calwt(calphaseresult.pool[0], False)
@@ -189,6 +184,10 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
 	# Do a local merge of this result.
 	calphaseresult.accept(inputs.context)
+
+        # Readjust to the true calto.intent
+        calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
+        calphaseresult.final[0].calto.intent = 'AMPLITUDE,BANDPASS'
 
         # Accept calphase result as is.
         result.pool.extend(calphaseresult.pool)
