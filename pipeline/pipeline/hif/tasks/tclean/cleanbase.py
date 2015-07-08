@@ -318,7 +318,8 @@ class CleanBase(basetask.StandardTaskTemplate):
             weighting=inputs.weighting, robust=inputs.robust,
             npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, savemodel='none', parallel=inputs.parallel)
+            mask=inputs.mask, savemodel='none', ntaylorterms=2,
+            parallel=inputs.parallel)
         self._executor.execute(job)
 
         # Store the model.
