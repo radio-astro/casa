@@ -20,7 +20,7 @@ ShowPlot = False
 DPISummary = 90
 #DPIDetail = 120
 DPIDetail = 130
-LightSpeed = 29972.458 # km/s
+LightSpeed = 299792.458 # km/s
 
 class SingleDishDisplayInputs(object):
     def __init__(self, context, result):

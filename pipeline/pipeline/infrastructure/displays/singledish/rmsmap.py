@@ -21,7 +21,7 @@ LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
-LightSpeed = 29972.458 # km/s
+LightSpeed = 299792.458 # km/s
 
 class RmsMapAxesManager(tpimage.ChannelAveragedAxesManager):
     @property
