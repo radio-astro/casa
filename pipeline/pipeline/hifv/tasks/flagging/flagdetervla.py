@@ -618,7 +618,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             else:
                 SPWtoflag=SPWtoflag+str(ispw)+':'+str(startch1)+'~'+str(startch2)+';'+str(endch1)+'~'+str(endch2)
                 
-        edgespw_cmd = ["mode=manual spw=" + SPWtoflag + " reason=edgespw name=edgespw"]
+        edgespw_cmd = ['mode=\'manual\' spw=\'%s\' reason=\'edgespw\' name=\'edgespw\'' % SPWtoflag]
         
         return edgespw_cmd
         
@@ -643,8 +643,11 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             #int_time = context.evla['msinfo'][m.name].int_time
             int_time = m.get_vla_max_integration_time()
             
-            quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + \
-                ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack name=quack'
+            quack_mode_cmd = 'mode=\'quack\' scan=\'%s\' quackinterval=%s quackmode=\'beg\' quackincrement=False reason=\'quack\' name=\'quack\'' % (quack_scan_string, str(1.5*int_time))
+            
+            print ''
+            print quack_mode_cmd
+            print ''
             
             return quack_mode_cmd
 
@@ -743,7 +746,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         
         if (bottomSPW != ''):
             SPWtoflag = bottomSPW + ',' + topSPW
-            baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband name=baseband'
+            baseband_cmd = 'mode=\'manual\' spw=\'%s\' reason=\'baseband\' name=\'baseband\'' % SPWtoflag
 
         return baseband_cmd
 
