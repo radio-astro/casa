@@ -645,9 +645,6 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             
             quack_mode_cmd = 'mode=\'quack\' scan=\'%s\' quackinterval=%s quackmode=\'beg\' quackincrement=False reason=\'quack\' name=\'quack\'' % (quack_scan_string, str(1.5*int_time))
             
-            print ''
-            print quack_mode_cmd
-            print ''
             
             return quack_mode_cmd
 
