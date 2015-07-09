@@ -154,6 +154,7 @@ from uvsub import  uvsub
 from viewer import  viewer
 from vishead import  vishead
 from visstat import  visstat
+from visstat2 import  visstat2
 from widefield import  widefield
 
 
