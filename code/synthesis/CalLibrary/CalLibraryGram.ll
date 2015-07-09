@@ -34,7 +34,7 @@
 #define YY_INPUT(buf,result,max_size) result = calLibraryGramInput(buf, max_size)
 #undef YY_DECL
 #define YY_DECL int CalLibraryGramlex (YYSTYPE* lvalp)
-#include <string>
+#include <string.h>
 %}
 
 QSTRING   [\'\"][^\"\'\n]*[\"\']
