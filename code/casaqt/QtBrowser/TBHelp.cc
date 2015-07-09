@@ -40,7 +40,7 @@
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <stdcasa/xerces.h>
-#include <stdcasa/version.h>
+
 #include <sstream>
 #include <QFile>
 #include <QtCore>
@@ -130,10 +130,7 @@ bool TBHelp::rebuild() {
 		ofstream index;
 		index.open((helpdir + TBConstants::HELP_INDEX).c_str());
 		index << header1 << "Home" << header2;
-		std::stringstream versionStream;
-		VersionInfo::report( versionStream );
-		String text = versionStream.str();
-		index << "<h6>CASA Version: "<<text <<"</h6>"<<spacing;
+
 
 		index << greeting << spacing;
 

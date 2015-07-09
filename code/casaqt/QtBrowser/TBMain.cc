@@ -42,6 +42,7 @@
 #include <casaqt/QtBrowser/TBTaQL.qo.h>
 #include <casaqt/PlotterImplementations/PlotterImplementations.h>
 #include <casaqt/QtUtilities/QtFileDialog.qo.h>
+#include <stdcasa/version.h>
 
 namespace casa {
 
@@ -152,6 +153,7 @@ void TBMain::setup() {
     connect(actionOpenTable, SIGNAL(triggered()), this, SLOT(openTable()));
     //connect(actionOpenTableWithOptions, SIGNAL(triggered()),
     //        this, SLOT(openTableWithOptions()));
+
     connect(actionOpenTaQL, SIGNAL(triggered()), this, SLOT(openTaQL()));
     connect(actionCloseTable, SIGNAL(triggered()), this, SLOT(closeTable()));
     connect(actionCloseAll, SIGNAL(triggered()), this, SLOT(closeAll()));
@@ -198,6 +200,7 @@ void TBMain::setup() {
             this, SLOT(formatDisplay(QAction*)));
 
     connect(actionHelp, SIGNAL(triggered()), this, SLOT(openHelp()));
+    connect(actionAbout, SIGNAL(triggered()), this, SLOT(showVersion()));
 
     fileBar = addToolBar("&File");
     fileBar->addAction(actionOpenTable);
@@ -246,6 +249,7 @@ void TBMain::setupKeyboardShortcuts() {
     actionFindPrevious->setShortcut(QKeySequence("Shift+F3"));
     actionTableInformation->setShortcut(QKeySequence("Ctrl+I"));
     actionHelp->setShortcut(QKeySequence("Ctrl+H"));
+    actionAbout->setShortcut(QKeySequence("Ctrl+A"));
 }
 
 void TBMain::enableMenus(bool en) {
@@ -355,6 +359,14 @@ void TBMain::openTableWithOptions() {
     con->exec();
 }
 */
+
+void TBMain::showVersion(){
+	std::stringstream versionStream;
+	VersionInfo::report( versionStream );
+	String versionInfo = versionStream.str();
+	String content = "CASA Version: "+versionInfo;
+	QMessageBox::about( this, "Version", content.c_str() );
+}
 
 void TBMain::tableOpened(String name, String fullpath) {
     statusBar->showMessage(tr(("Browsing table: " + fullpath).c_str()));

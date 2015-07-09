@@ -167,6 +167,8 @@ private slots:
     // Closes all currently opened tables and closes the window.
     void closeAllAndExit();
     
+    void showVersion();
+
     // Connects with TBBrowser::tableClosed() signal.  Updates dynamic menus
     // as necessary.
     void tableClosed(String name);
