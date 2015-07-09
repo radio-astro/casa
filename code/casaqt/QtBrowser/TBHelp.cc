@@ -79,6 +79,7 @@ TBHelp::TBHelp() {
 
 	browser->setHtml(helpIndex.toUtf8().data());
 	rebuildButton->close();
+
 }
 
 TBHelp::~TBHelp() { }
@@ -129,8 +130,13 @@ bool TBHelp::rebuild() {
 		ofstream index;
 		index.open((helpdir + TBConstants::HELP_INDEX).c_str());
 		index << header1 << "Home" << header2;
+		std::stringstream versionStream;
+		VersionInfo::report( versionStream );
+		String text = versionStream.str();
+		index << "<h6>CASA Version: "<<text <<"</h6>"<<spacing;
 
 		index << greeting << spacing;
+
 
 		DOMNodeList* nodes = e->getElementsByTagName(XMLString::transcode(
 				TBConstants::HELP_XML_CATEGORY.c_str()));
@@ -208,11 +214,7 @@ bool TBHelp::rebuild() {
 					}
 
 					String text = ss2.str();
-					if ( name == "CASA Version"){
-						std::stringstream versionStream;
-						VersionInfo::report( versionStream );
-						text = versionStream.str();
-					}
+
 					//XMLString::transcode(e->getTextContent());
 					index << "<li><a href=\"" << filename << "#" << taskname;
 					index << k << "\">" << name << "</a></li>\n";

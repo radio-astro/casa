@@ -26,8 +26,7 @@
                 CasaBrowser is also accessible from within casapy by using the
                 browsetable() command.
             </item>
-            <item name="CASA Version"> 
-            </item>
+           
         </group>
         <group name="Information">
             <item name="CASA Table Data Types">
