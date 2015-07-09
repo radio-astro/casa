@@ -316,7 +316,7 @@ class TcleanHeuristics(object):
         spw = ms.get_spectral_window(spw)
 
         centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
-        centre_lambda = 2.99792458e8 / centre_frequency
+        centre_lambda = cqa.constants('c')['value'] / centre_frequency
 
         # Smallest spatial scale
         smallest_spatial_scale = 1.2 * centre_lambda / bmax
