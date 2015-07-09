@@ -20,7 +20,8 @@ ShowPlot = False
 DPISummary = 90
 #DPIDetail = 120
 DPIDetail = 130
-LightSpeed = 299792.458 # km/s
+LightSpeedQuantity = casatools.quanta.constants('c')
+LightSpeed = casatools.quanta.convert(LightSpeedQuantity, 'km/s')['value'] # speed of light in km/s
 
 class SingleDishDisplayInputs(object):
     def __init__(self, context, result):

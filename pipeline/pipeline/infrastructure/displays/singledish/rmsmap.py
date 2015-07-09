@@ -14,14 +14,13 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
 from .utils import sd_polmap as polmap
-from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
+from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam, LightSpeed
 from . import tpimage
 
 LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
-LightSpeed = 299792.458 # km/s
 
 class RmsMapAxesManager(tpimage.ChannelAveragedAxesManager):
     @property
