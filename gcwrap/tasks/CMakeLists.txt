@@ -135,5 +135,6 @@ wvrgcal.xml
 virtualconcat.xml
 vishead.xml
 visstat.xml
+visstat2.xml
 widebandpbcor.xml
 widefield.xml )
