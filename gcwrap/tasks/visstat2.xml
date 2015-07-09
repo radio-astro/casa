@@ -142,10 +142,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="string" name="reportingaxis">
-      <description>Which reporting axix to use (ddid, integration)</description>
+      <description>Which reporting axis to use (ddid, field, integration)</description>
       <value type="string">ddid</value>
       <allowed kind="enum">
         <value>ddid</value>
+        <value>field</value>
         <value>integration</value>
       </allowed>
     </param>
