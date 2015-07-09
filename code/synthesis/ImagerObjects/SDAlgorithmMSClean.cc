@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmMSClean","initializeDeconvolver",WHERE) );
 
-    AlwaysAssert( !itsImages.null(), AipsError );
+    AlwaysAssert( (bool) itsImages, AipsError );
 
     (itsImages->residual())->get( itsMatResidual , True );
     (itsImages->model())->get( itsMatModel , True );

@@ -56,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SDAlgorithmMSMFS(uInt nTaylorTerms, Vector<Float> scalesizes);
     virtual  ~SDAlgorithmMSMFS();
     
-    void restore( CountedPtr<SIImageStore> imagestore );
+    void restore( SHARED_PTR<SIImageStore> imagestore );
     
   protected:
     
@@ -69,11 +69,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     uInt getNTaylorTerms(){ return itsNTerms; };
     
-    //    void initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim);
+    //    void initializeSubImages( SHARED_PTR<SIImageStore> &imagestore, uInt subim);
 
     Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
 
-    //    CountedPtr<SIImageStore> itsImages;
+    //    SHARED_PTR<SIImageStore> itsImages;
 
     Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
     Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...

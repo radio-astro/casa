@@ -11,9 +11,20 @@
 */
 
 #include <sstream>
-
+#include <algorithm>
 #include "wvrgcalerrors.hpp"
 
+
+#if __cplusplus < 201103L
+struct hack01 {
+	void operator()( const std::map<size_t, std::string >::value_type &p ) {
+		msgb << p.second << ", ";
+	}
+	hack01( std::ostringstream &m ) : msgb(m) { }
+    std::ostringstream &msgb;
+};
+#endif
+	
 namespace LibAIR2 {
 
   AntIDError::AntIDError(const std::string &aname,
@@ -23,13 +34,16 @@ namespace LibAIR2 {
     std::ostringstream msgb;
     msgb<<"Error: Antenna name "<<aname<<" does not appear in the antenna table"<<std::endl
 	<<"These are the known antenna names: "<<std::endl;
-    for (aname_t::right_const_iterator i=anames.right.begin();
-	 i!=anames.right.end();
-	 ++i)
-    {
-      std::string a=i->first;
-      msgb<<a<<", ";
-    }
+	std::for_each( anames.begin( ),
+				   anames.end( ),
+#if __cplusplus >= 201103L
+				   [&]( const aname_t::value_type &p ) {
+					   msgb << p.second << ", ";
+				   }
+#else
+				   hack01(msgb)
+#endif
+ );
     msg=msgb.str();
   }
 
@@ -40,13 +54,16 @@ namespace LibAIR2 {
     std::ostringstream msgb;
     msgb<<"Antenna number "<<a<<" does not appear in the antenna table"<<std::endl
 	<<"These are the known antenna numbers: "<<std::endl;
-    for (aname_t::left_const_iterator i=anames.left.begin();
-	 i!=anames.left.end();
-	 ++i)
-    {
-      int ca=i->first;
-      msgb<<ca<<", ";
-    }
+	std::for_each( anames.begin( ),
+				   anames.end( ),
+#if __cplusplus >= 201103L
+				   [&]( const aname_t::value_type &p ) {
+					   msgb << p.first << ", ";
+				   }
+#else
+				   hack01(msgb)
+#endif
+);
     msg=msgb.str();
     
   }

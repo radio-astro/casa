@@ -58,8 +58,8 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisNormalizer::SynthesisNormalizer() : 
-				       itsImages(CountedPtr<SIImageStore>()),
-				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
+				       itsImages(SHARED_PTR<SIImageStore>()),
+				       itsPartImages(Vector<SHARED_PTR<SIImageStore> >()),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
 				       itsPBLimit(0.1),
@@ -284,7 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisNormalizer::divideModelByWeight()
   {
     LogIO os( LogOrigin("SynthesisNormalizer", "divideModelByWeight",WHERE) );
-    if( itsImages.null() ) 
+    if( ! itsImages ) 
       {
 	//os << LogIO::WARN << "No imagestore yet. Trying to construct, so that the starting model can be divided by wt if needed...." << LogIO::POST;
 	
@@ -320,7 +320,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  }
 
 
-  CountedPtr<SIImageStore> SynthesisNormalizer::getImageStore()
+  SHARED_PTR<SIImageStore> SynthesisNormalizer::getImageStore()
   {
     LogIO os( LogOrigin("SynthesisNormalizer", "getImageStore", WHERE) );
     return itsImages;
@@ -329,7 +329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisNormalizer::setImageStore( SIImageStore* imstore )
   {
     LogIO os( LogOrigin("SynthesisNormalizer", "setImageStore", WHERE) );
-    itsImages = imstore;
+    itsImages.reset( imstore );
   }
 
 
@@ -529,23 +529,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end of setupImagesOnDisk
 
 
-  CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
+  SHARED_PTR<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
   {
     if( itsMapperType == "multiterm" )
-      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, True );   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, True ));   }
     else
-      { return new SIImageStore( imagename, True );   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, True ));   }
   }
 
 
-  CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename, 
+  SHARED_PTR<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename, 
 							    CoordinateSystem& csys, 
 								IPosition shp, Bool useweightimage )
   {
     if( itsMapperType == "multiterm" )
-      { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage );   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage ));   }
     else
-      { return new SIImageStore( imagename, csys, shp, False, useweightimage );   }
+      { return SHARED_PTR<SIImageStore>(new SIImageStore( imagename, csys, shp, False, useweightimage ));   }
     //      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
   }
 

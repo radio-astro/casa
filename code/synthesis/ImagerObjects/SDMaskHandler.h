@@ -51,10 +51,10 @@ public:
   SDMaskHandler();
   ~SDMaskHandler();
 
-  void resetMask(CountedPtr<SIImageStore> imstore);
+  void resetMask(SHARED_PTR<SIImageStore> imstore);
 
-  void fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings);
-  void fillMask(CountedPtr<SIImageStore> imstore, String maskString);
+  void fillMask(SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings);
+  void fillMask(SHARED_PTR<SIImageStore> imstore, String maskString);
 
   // Collection of methods translate mask description (text, record, threshold, etc) to
   // mask image where the region(s) of interest are represented by the value (default = 1.0)
@@ -62,7 +62,7 @@ public:
   //
   //void makeMask();
   // Create a mask image with maskName from tempim with a threshold applied to the pixel intensity
-  CountedPtr<ImageInterface<Float> > makeMask(const String& maskName, const Quantity threshold, ImageInterface<Float>& tempim);
+  SHARED_PTR<ImageInterface<Float> > makeMask(const String& maskName, const Quantity threshold, ImageInterface<Float>& tempim);
   
   // Make a mask image from Record, Matrix of (nboxes,4) where each row contains [blc_x,blc_y, trc_x,trc_y], 
   // and Matrix of (ncircles, 3) with the specified 'value'. Each row of circles are radius, x_center, y_center in pixels.
@@ -84,7 +84,7 @@ public:
   static void regionTextToImageRegion(const String& text, const ImageInterface<Float>& regionImage, ImageRegion*& imageRegion);
 
   // merge mask images to outimage
-  void copyAllMasks(const Vector< ImageInterface<Float> >& inimage, ImageInterface<Float>& outimage);
+  void copyAllMasks(const Vector< SHARED_PTR<ImageInterface<Float> > > inImageMasks, ImageInterface<Float>& outImageMask);
   // copy and regrid a mask image to outimage
   void copyMask(const ImageInterface<Float>& inimage, ImageInterface<Float>& outimage);
   // expand smaller chan mask image to larger one. - currently only works for a single channel (continuum) input mask 
@@ -92,14 +92,14 @@ public:
   // convert internal mask to imageRegion
   void InMaskToImageRegion(const ImageInterface<Float>& inimage );
 
-  int makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
+  int makeInteractiveMask(SHARED_PTR<SIImageStore>& imstore,
 			  Int& niter, Int& cycleniter,
 			  String& threshold, String& cyclethreshold);
 
   // Return a reference to an imageinterface for the mask.
-  void makeAutoMask(CountedPtr<SIImageStore> imstore);
+  void makeAutoMask(SHARED_PTR<SIImageStore> imstore);
   // Top level autoMask interface...
-  void autoMask(CountedPtr<SIImageStore> imstore, 
+  void autoMask(SHARED_PTR<SIImageStore> imstore, 
                 const String& alg="",
                 const String& threshold="",
                 const Float& fracpeak=0.0,
@@ -116,8 +116,8 @@ public:
                            
 
 
-  void makePBMask(CountedPtr<SIImageStore> imstore, Float pblimit=0.1);
-  void autoMaskWithinPB(CountedPtr<SIImageStore> imstore, Float pblimit=0.1);
+  void makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
+  void autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, Float pblimit=0.1);
 
   // check if input image is a mask image with 0 or a value (if normalize=true, 1)
   Bool checkMaskImage(ImageInterface<Float>& maskiamge, Bool normalize=True);

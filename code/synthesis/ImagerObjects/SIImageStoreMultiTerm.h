@@ -59,26 +59,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			const Bool overwrite=False, uInt ntaylorterms=1,Bool useweightimage=False);
 
   /*
-  SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
-			Block<CountedPtr<ImageInterface<Float> > >residims,
-			Block<CountedPtr<ImageInterface<Float> > >psfims, 
-			Block<CountedPtr<ImageInterface<Float> > >weightims, 
-			Block<CountedPtr<ImageInterface<Float> > >restoredims,
-			Block<CountedPtr<ImageInterface<Float> > >sumwtims, 
-			CountedPtr<ImageInterface<Float> > newmask,
-			CountedPtr<ImageInterface<Float> > newalpha,
-			CountedPtr<ImageInterface<Float> > newbeta);
+  SIImageStoreMultiTerm(Block<SHARED_PTR<ImageInterface<Float> > >modelims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >residims,
+			Block<SHARED_PTR<ImageInterface<Float> > >psfims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >weightims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >restoredims,
+			Block<SHARED_PTR<ImageInterface<Float> > >sumwtims, 
+			SHARED_PTR<ImageInterface<Float> > newmask,
+			SHARED_PTR<ImageInterface<Float> > newalpha,
+			SHARED_PTR<ImageInterface<Float> > newbeta);
   */
 
- SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
-			Block<CountedPtr<ImageInterface<Float> > >residims,
-			Block<CountedPtr<ImageInterface<Float> > >psfims, 
-			Block<CountedPtr<ImageInterface<Float> > >weightims, 
-			Block<CountedPtr<ImageInterface<Float> > >restoredims,
-			Block<CountedPtr<ImageInterface<Float> > >sumwtims, 
-			CountedPtr<ImageInterface<Float> > newmask,
-			CountedPtr<ImageInterface<Float> > newalpha,
-			CountedPtr<ImageInterface<Float> > newbeta,
+ SIImageStoreMultiTerm(Block<SHARED_PTR<ImageInterface<Float> > >modelims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >residims,
+			Block<SHARED_PTR<ImageInterface<Float> > >psfims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >weightims, 
+			Block<SHARED_PTR<ImageInterface<Float> > >restoredims,
+			Block<SHARED_PTR<ImageInterface<Float> > >sumwtims, 
+			SHARED_PTR<ImageInterface<Float> > newmask,
+			SHARED_PTR<ImageInterface<Float> > newalpha,
+			SHARED_PTR<ImageInterface<Float> > newbeta,
 		       CoordinateSystem& csys, 
 		       IPosition imshape, 
 		       String imagename, 
@@ -92,27 +92,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   virtual String getType(){return "multiterm";}
 
-  virtual CountedPtr<ImageInterface<Float> > psf(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > residual(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > sumwt(uInt term=0);
-  ///   virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0); // take from base class.
-  virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
-  virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > psf(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > residual(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > weight(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > model(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > image(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > sumwt(uInt term=0);
+  ///   virtual SHARED_PTR<ImageInterface<Float> > mask(uInt term=0); // take from base class.
+  virtual SHARED_PTR<ImageInterface<Complex> > forwardGrid(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Complex> > backwardGrid(uInt term=0);
 
-  virtual CountedPtr<ImageInterface<Float> > alpha();
-  virtual CountedPtr<ImageInterface<Float> > beta();
+  virtual SHARED_PTR<ImageInterface<Float> > alpha();
+  virtual SHARED_PTR<ImageInterface<Float> > beta();
 
-  //  virtual CountedPtr<ImageInterface<Float> > gridwt(uInt term=0);
+  //  virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
 
   void setModelImage( String modelname );
 
   Bool doesImageExist(String imagename);
 
   void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
-  void addImages( CountedPtr<SIImageStore> imagestoadd, 
+  void addImages( SHARED_PTR<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity);
 
   void dividePSFByWeight(const Float pblimit=C::minfloat);
@@ -139,21 +139,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void pbcorPlane();
 
   /*
-  CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
-  CountedPtr<SIImageStore> getSubImageStoreOld(const Int chan, const Bool onechan, 
+  SHARED_PTR<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
+  SHARED_PTR<SIImageStore> getSubImageStoreOld(const Int chan, const Bool onechan, 
 					    const Int pol, const Bool onepol);
   */
 
-  CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
+  SHARED_PTR<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
 					    const Int chan=0, const Int nchanchunks=1, 
 					    const Int pol=0, const Int npolchunks=1);
   
 
-  virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && !itsWeights[0].null();}
-  virtual Bool hasModel() {return itsModels.nelements()>0 && !itsModels[0].null();}
-  virtual Bool hasPsf(){return itsPsfs.nelements()>0 && !itsPsfs[0].null();}
-  virtual Bool hasResidual() {return itsResiduals.nelements()>0 && !itsResiduals[0].null();}
-  virtual Bool hasSumWt() {return itsSumWts.nelements()>0 && !itsSumWts[0].null();}
+  virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && itsWeights[0];}
+  virtual Bool hasModel() {return itsModels.nelements()>0 && itsModels[0];}
+  virtual Bool hasPsf(){return itsPsfs.nelements()>0 && itsPsfs[0];}
+  virtual Bool hasResidual() {return itsResiduals.nelements()>0 && itsResiduals[0];}
+  virtual Bool hasSumWt() {return itsSumWts.nelements()>0 && itsSumWts[0];}
 
   //  virtual Bool getUseWeightImage();
   //  {return ( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) ? False : getUseWeightImage( *(itsParentSumWts[0]) ); };
@@ -163,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 protected:
 
-  Bool createMask(LatticeExpr<Bool> &lemask, CountedPtr<ImageInterface<Float> >outimage);
+  Bool createMask(LatticeExpr<Bool> &lemask, SHARED_PTR<ImageInterface<Float> >outimage);
 
   virtual void printImageStats();
 
@@ -171,11 +171,11 @@ private:
 
   uInt itsNTerms;
 
-  Block<CountedPtr<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
-  Block<CountedPtr<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
-  CountedPtr<ImageInterface<Float> > itsAlpha, itsBeta;
+  Block<SHARED_PTR<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
+  Block<SHARED_PTR<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
+  SHARED_PTR<ImageInterface<Float> > itsAlpha, itsBeta;
 
-  Block<CountedPtr<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts;
+  Block<SHARED_PTR<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts;
 
 };
 

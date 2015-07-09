@@ -98,8 +98,8 @@ namespace LibAIR2 {
     for(aname_t::const_iterator i=names.begin(); i !=names.end(); ++i)
     {
       AntennaInfo x;
-      x.no= i->left;
-      x.name= i->right;
+      x.no= i->first;
+      x.name= i->second;
       x.haswvr=(not (nowvr.count(x.no)));
       x.flag=flag.count(x.no);
       x.pathRMS=rms[x.no];

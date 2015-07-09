@@ -11,6 +11,7 @@
 */
 
 #include <algorithm> 
+#include <numeric>
 #include <boost/format.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
@@ -90,9 +91,19 @@ namespace LibAIR2 {
     err=e;
   }
 
+#if __cplusplus < 201103L
+struct hack01 {
+	bool operator()(bool acc, double v) { return acc || std::isnan(v); }
+};
+#endif
+
   bool dTdLCoeffsSingle::isnan(void) const
   {
-    return std::count_if(c.begin(), c.end(), std::isnan<double>);
+#if __cplusplus >= 201103L
+    return std::accumulate(c.begin(),c.end(),false,[](bool acc, double v) { return acc || std::isnan(v); });
+#else
+    return std::accumulate(c.begin(),c.end(),false,hack01( ));
+#endif
   }
 
   dTdLCoeffsIndiv::dTdLCoeffsIndiv(const coeff_t &c):
@@ -155,9 +166,14 @@ namespace LibAIR2 {
 
   bool dTdLCoeffsIndiv::isnan(void) const
   {
-    return std::count_if(coeff.origin(), 
-			 coeff.origin()+(coeff.shape()[0]*coeff.shape()[1]*coeff.shape()[2]), 
-			 std::isnan<double>);
+    return std::accumulate(coeff.origin(), 
+             coeff.origin()+(coeff.shape()[0]*coeff.shape()[1]*coeff.shape()[2]), false,
+#if __cplusplus >= 201103L
+             [](bool acc, double v) { return acc || std::isnan(v); }
+#else
+             hack01( )
+#endif
+);
   }
 
 

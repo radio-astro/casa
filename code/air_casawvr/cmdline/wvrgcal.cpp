@@ -17,7 +17,7 @@
 
 
 #include <iostream>
-
+#include <numeric>
 #include <boost/program_options.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -160,6 +160,28 @@ void checkMSandPars(const casa::MeasurementSet &ms,
     antenna numbers or names and always return as a sequence of
     antenna numbers.
  */
+
+
+						   
+#if __cplusplus < 201103L
+struct hack01 {
+	bool operator()(bool acc, const std::map<size_t, std::string >::value_type &p){
+		bool cmp = p.second == ele;
+		if ( cmp ) match = p.first;
+		return acc || cmp;
+	}
+	hack01( size_t &m, const std::string &e ) : match(m), ele(e) { }
+	size_t &match;
+	const std::string &ele;
+};
+
+struct hack02 {
+	bool operator()(bool acc, const std::map<size_t, std::string >::value_type &p) { return acc || (p.first == n); }
+	hack02( int x ) : n(x) { }
+	int n;
+};
+#endif
+
 LibAIR2::AntSet getAntPars(const std::string &s,
 			   const boost::program_options::variables_map &vm,
 			   const casa::MeasurementSet &ms)
@@ -170,17 +192,38 @@ LibAIR2::AntSet getAntPars(const std::string &s,
   LibAIR2::AntSet res;
   for (size_t i=0; i<pars.size(); ++i)
   {
-    if (anames.right.count(pars[i]))
+	  size_t match;
+	  if (std::accumulate( anames.begin( ),
+						   anames.end( ), false,
+#if __cplusplus >= 201103L
+						   [&](bool acc, const aname_t::value_type &p){
+							   bool cmp = p.second == pars[i];
+							   if ( cmp ) match = p.first;
+							   return acc || cmp;
+						   }
+#else
+						   hack01(match,pars[i])
+#endif
+))
     {
-      res.insert(anames.right.at(pars[i]));
+      res.insert(match);
     }
     else
     {
       // should be an antenna number
       try {
 	int n=boost::lexical_cast<int>(pars[i]);
-	if (anames.left.count(n) ==0)
-	{
+    if ( std::accumulate( anames.begin(),
+                          anames.end(), false,
+#if __cplusplus >= 201103L
+                          [=](bool acc, const aname_t::value_type &p) {
+                              return acc || (p.first == n);
+                          }
+#else
+						  hack02(n)
+#endif
+) == false )
+    {
 	  throw AntIDError(n,
 			   anames);
 	}
@@ -387,6 +430,7 @@ void printExpectedPerf(const LibAIR2::ArrayGains &g,
 /** Compute the time intervals over which the statistics should be
     computed
  */
+
 void statTimeMask(const casa::MeasurementSet &ms,
 		  const boost::program_options::variables_map &vm,
 		  std::vector<std::pair<double, double> > &tmask,
@@ -427,10 +471,21 @@ void statTimeMask(const casa::MeasurementSet &ms,
     LibAIR2::field_t fnames=LibAIR2::getFieldNames(ms);
 
     std::set<size_t> fselect;
-    if (fnames.right.count(fields[0])) // User supplied  field *name*
+	size_t val;
+    if (std::accumulate( fnames.begin( ),
+						 fnames.end( ), false,
+#if __cplusplus >= 201103L
+						 [&](bool acc, const LibAIR2::field_t::value_type &p) {
+							 bool cmp = p.second == fields[0];
+							 if ( cmp ) val = p.first;
+							 return acc || cmp;
+						 }
+#else
+						 hack01(val,fields[0])
+#endif
+))  // User supplied  field *name*
     {
-      size_t n=fnames.right.at(fields[0]);
-      fselect.insert(n);
+      fselect.insert(val);
     }
     else
     {
@@ -533,7 +588,7 @@ std::vector<std::set<std::string> > getTied(const boost::program_options::variab
 std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> > &tied,
 					const casa::MeasurementSet &ms)
 {
-  boost::bimap<size_t, std::string > srcmap=LibAIR2::getSourceNames(ms);
+  std::map<size_t, std::string > srcmap=LibAIR2::getSourceNames(ms);
   std::vector<std::set<size_t> > res;
   for (size_t i=0; i<tied.size(); ++i)
   {
@@ -545,8 +600,8 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
       try
       {
 	int srcid=boost::lexical_cast<int>(*j);
-	boost::bimap<size_t, std::string>::left_map::const_iterator it = srcmap.left.find(srcid);
-	if(it == srcmap.left.end()) { // id does not exist
+	std::map<size_t, std::string>::const_iterator it = srcmap.find(srcid);
+	if(it == srcmap.end()) { // id does not exist
 	  std::cerr << "Parameter 'tie': The source id " << *j << " is an integer but not a valid numerical Source ID. Will try to interpret it as a name ..." << std::endl;
 	  throw std::exception();
 	}
@@ -554,14 +609,25 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
       }
       catch (const std::exception& x)
       {
-	try{
-	  cs.insert(srcmap.right.at(*j));
-	}
-	catch (const std::exception& y){
-	  std::ostringstream oss;
-	  oss << "Parameter 'tie': The source id " << *j << " is not recognised. Please check for typos." << std::endl;
-	  throw LibAIR2::WVRUserError(oss.str());
-	}
+        size_t match;
+        if ( std::accumulate( srcmap.begin( ),
+                              srcmap.end( ), false,
+#if __cplusplus >= 201103L
+                              [&](bool acc, const std::map<size_t, std::string >::value_type &p) {
+                                  bool cmp = p.second == *j;
+                                  if ( cmp ) match = p.first;
+                                  return acc || cmp;
+                              }
+#else
+							  hack01(match,*j)
+#endif
+)) {
+          cs.insert(match);
+        } else {
+          std::ostringstream oss;
+          oss << "Parameter 'tie': The field " << *j << " is not recognised. Please check for typos." << std::endl;
+          throw LibAIR2::WVRUserError(oss.str());
+		}
       }
     } // end for
     res.push_back(cs);
@@ -601,10 +667,25 @@ void printTied(const std::vector<std::set<std::string> > &tied,
 std::set<size_t> sourceSet(const std::vector<std::string> &sources,
 			   const casa::MeasurementSet &ms)
 {
-  boost::bimap<size_t, std::string > snames=LibAIR2::getSourceNames(ms);
+  std::map<size_t, std::string > snames=LibAIR2::getSourceNames(ms);
   std::set<size_t> sset;
-  for(size_t i=0; i<sources.size(); ++i)
-    sset.insert(snames.right.at(sources[i]));  
+  for(size_t i=0; i<sources.size(); ++i) {
+	size_t match;
+	if (std::accumulate( snames.begin( ),
+						 snames.end( ), false,
+#if __cplusplus >= 201103L
+						 [&](bool acc, const std::map<size_t, std::string >::value_type &p) {
+							 bool cmp = p.second == sources[i];
+							 if ( cmp ) match = p.first;
+							 return acc || cmp;
+						 }
+#else
+						 hack01(match,sources[i])
+#endif
+)) {
+		sset.insert(match);
+	}
+  }
   return sset;
 }
   
@@ -684,8 +765,8 @@ LibAIR2::AntSet NoWVRAnts(const LibAIR2::aname_t &an)
       i!= an.end();
       ++i)
   {
-    if (i->right[0]=='C' and i->right[1]=='M')
-      res.insert(i->left);
+    if (i->second[0]=='C' and i->second[1]=='M')
+      res.insert(i->first);
   }
   return res;
 }
@@ -955,7 +1036,7 @@ int main(int argc,  char* argv[])
 	   break;
 	 }
 	 else{
-	   std::cout << "Given reference antenna " << *it << "==" << anames.left.at(*it) 
+	   std::cout << "Given reference antenna " << *it << "==" << anames.at(*it) 
 		     << " is flagged and cannot be interpolated." << std::endl;
 	 }	   
        }
@@ -985,7 +1066,7 @@ int main(int argc,  char* argv[])
      if(interpwvrs.count(refant)>0){
        std::cout << " (interpolated)";
      }
-     std::cout << " antenna " << refant  << " == " << anames.left.at(refant)
+     std::cout << " antenna " << refant  << " == " << anames.at(refant)
 	       << " as reference antenna for dTdL calculations." << std::endl;
 
 
@@ -1116,8 +1197,8 @@ int main(int argc,  char* argv[])
 	   if(iterations<2){
 	     for(LibAIR2::AntSet::const_iterator it=problemAnts.begin(); it!=problemAnts.end(); it++){
 		 if(interpwvrs.count(*it)==0){
-		    std::cerr	<< "Flagging antenna " << *it << " == " << anames.left.at(*it) << std::endl;
-		    std::cout	<< "Flagging antenna " << *it << " == " << anames.left.at(*it) << std::endl;
+		    std::cerr	<< "Flagging antenna " << *it << " == " << anames.at(*it) << std::endl;
+		    std::cout	<< "Flagging antenna " << *it << " == " << anames.at(*it) << std::endl;
 		    interpwvrs.insert(*it); // for flagInterp()
 		    wvrflag.insert(*it); // for later log output
 		 }

@@ -45,7 +45,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   template <class T>
-  void openImage(const String& imagenamefull,CountedPtr<ImageInterface<T> >* img);
+  void openImage(const String& imagenamefull,SHARED_PTR<ImageInterface<T> >* img);
     
 
 class SIImageStore 
@@ -65,13 +65,13 @@ class SIImageStore
 	       const Bool overwrite=False,
 	       const Bool useweightimage=False);
 
-  SIImageStore(CountedPtr<ImageInterface<Float> > modelim, 
-	       CountedPtr<ImageInterface<Float> > residim,
-	       CountedPtr<ImageInterface<Float> > psfim, 
-	       CountedPtr<ImageInterface<Float> > weightim, 
-	       CountedPtr<ImageInterface<Float> > restoredim, 
-	       CountedPtr<ImageInterface<Float> > maskim,
-	       CountedPtr<ImageInterface<Float> > sumwtim,
+  SIImageStore(SHARED_PTR<ImageInterface<Float> > modelim, 
+	       SHARED_PTR<ImageInterface<Float> > residim,
+	       SHARED_PTR<ImageInterface<Float> > psfim, 
+	       SHARED_PTR<ImageInterface<Float> > weightim, 
+	       SHARED_PTR<ImageInterface<Float> > restoredim, 
+	       SHARED_PTR<ImageInterface<Float> > maskim,
+	       SHARED_PTR<ImageInterface<Float> > sumwtim,
 	       CoordinateSystem& csys, 
 	       IPosition imshape, 
 	       String imagename, 
@@ -91,29 +91,29 @@ class SIImageStore
 
   virtual String getType(){return "default";}
 
-  virtual CountedPtr<ImageInterface<Float> > psf(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > residual(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0);
-  virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
-  virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > sumwt(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > psf(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > residual(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > weight(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > model(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > image(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > mask(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Complex> > forwardGrid(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Complex> > backwardGrid(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > sumwt(uInt term=0);
 
-  virtual CountedPtr<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
-  virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
+  virtual SHARED_PTR<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
+  virtual SHARED_PTR<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
 
-  virtual CountedPtr<ImageInterface<Float> > gridwt(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > pb(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
+  virtual SHARED_PTR<ImageInterface<Float> > pb(uInt term=0);
 
   virtual void setModelImage( String modelname );
-  virtual void setWeightDensity( CountedPtr<SIImageStore> imagetoset );
+  virtual void setWeightDensity( SHARED_PTR<SIImageStore> imagetoset );
   virtual Bool doesImageExist(String imagename);
   void setImageInfo(const Record miscinfo);
 
   virtual void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
-  virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
+  virtual void addImages( SHARED_PTR<SIImageStore> imagestoadd, 
 			  Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity );
 
   ///// Normalizers
@@ -124,7 +124,7 @@ class SIImageStore
 
   /// Other
   virtual Bool releaseLocks();
-  void releaseImage( CountedPtr<ImageInterface<Float> > im );
+  void releaseImage( SHARED_PTR<ImageInterface<Float> > im );
   virtual Double getReferenceFrequency(){return 0.0;}
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
   GaussianBeam getPSFGaussian();
@@ -145,7 +145,7 @@ class SIImageStore
 
   // The images internall will reference back to a given section of the main of this.
   //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
-  virtual CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
+  virtual SHARED_PTR<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
 						    const Int chan=0, const Int nchanchunks=1, 
 						    const Int pol=0, const Int npolchunks=1);
 
@@ -154,14 +154,14 @@ class SIImageStore
   //  virtual Bool hasSensitivity(){return doesImageExist(itsImageName+imageExts(WEIGHT));}
   virtual Bool hasPB(){return doesImageExist(itsImageName+imageExts(PB));}
 
-  virtual Bool hasSensitivity(){return !itsWeight.null();}
-  //virtual Bool hasPB(){return !itsPB.null();}
+  virtual Bool hasSensitivity(){return (bool) itsWeight;}
+  //virtual Bool hasPB(){return (bool) itsPB;}
 
-  virtual Bool hasMask(){return !itsMask.null(); }
-  virtual Bool hasModel() {return !itsModel.null();}
-  virtual Bool hasPsf() {return !itsPsf.null();}
-  virtual Bool hasResidual() {return !itsResidual.null();}
-  virtual Bool hasSumWt() {return !itsSumWt.null();}
+  virtual Bool hasMask(){return (bool) itsMask; }
+  virtual Bool hasModel() {return (bool) itsModel;}
+  virtual Bool hasPsf() {return (bool) itsPsf;}
+  virtual Bool hasResidual() {return (bool) itsResidual;}
+  virtual Bool hasSumWt() {return (bool) itsSumWt;}
 
   // Image Statistics....
   Float getPeakResidual();
@@ -189,7 +189,7 @@ class SIImageStore
   virtual void calcSensitivity();
 
 protected:
-  CountedPtr<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
+  SHARED_PTR<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
 						  const Int chan, const Int nchanchunks,
 						  const Int pol, const Int npolchunks,
 						  ImageInterface<Float>& image);
@@ -209,11 +209,11 @@ protected:
 
   void makePBFromWeight(const Float pblimit);
 
-  void accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
-		    CountedPtr<ImageInterface<Float> > &parentptr, 
+  void accessImage( SHARED_PTR<ImageInterface<Float> > &ptr, 
+		    SHARED_PTR<ImageInterface<Float> > &parentptr, 
 		    const String label );
 
-  CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, 
+  SHARED_PTR<ImageInterface<Float> > openImage(const String imagenamefull, 
 					       const Bool overwrite, 
 					       const Bool dosumwt=False,
 					       const Int nfacetsperside=1);
@@ -228,7 +228,7 @@ protected:
 
   Bool itsUseWeight;
   Record itsMiscInfo;
-  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
+  SHARED_PTR<ImageInterface<Float> > itsMask, itsParentMask, itsGridWt, itsPB; // mutliterm shares this...
   Double itsPBScaleFactor;
 
   Int itsNFacets, itsFacetId;
@@ -246,10 +246,10 @@ protected:
 
 private:
 
-  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
-  CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
+  SHARED_PTR<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
+  SHARED_PTR<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
-  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB;
+  SHARED_PTR<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt, itsParentGridWt, itsParentPB;
 
 
 };

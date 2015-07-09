@@ -38,6 +38,7 @@
 #include <QDebug>
 #include <assert.h>
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 namespace casa {
@@ -273,7 +274,7 @@ namespace casa {
 					MDoppler dop = MRadialVelocity( Quantity(val, unitString), referenceType).toDoppler();
 					MDoppler doppler = MDoppler::Convert ( dop, dopplerType)();
 					val = doppler.getValue ();
-					if ( isnan( val )) {
+					if ( std::isnan( val )) {
 						valid = false;
 					}
 				}
@@ -451,12 +452,12 @@ namespace casa {
 				actualMax = convertedMinVal;
 			}
 			if (  minEmpty ) {
-				if ( !isnan( actualMin ) ){
+				if ( !std::isnan( actualMin ) ){
 					ui.rangeMinLineEdit->setText( QString::number( actualMin, 'f', 6));
 				}
 			}
 			if ( maxEmpty ) {
-				if ( !isnan( actualMax ) ){
+				if ( !std::isnan( actualMax ) ){
 					ui.rangeMaxLineEdit->setText( QString::number( actualMax, 'f', 6));
 				}
 			}

@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmMSMFS","initializeDeconvolver",WHERE) );
 
-    AlwaysAssert( !itsImages.null(), AipsError );
+    AlwaysAssert( (bool) itsImages, AipsError );
     AlwaysAssert( itsNTerms == itsImages->getNTaylorTerms() , AipsError );
 
     itsMatPsfs.resize( 2*itsNTerms-1 );
@@ -201,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   
-   void SDAlgorithmMSMFS::restore(CountedPtr<SIImageStore> imagestore )
+   void SDAlgorithmMSMFS::restore(SHARED_PTR<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmMSMFS","restore",WHERE) );

@@ -10,6 +10,7 @@
 
 */
 
+#include <stdexcept>
 #include "msutils.hpp"
 
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
@@ -152,9 +153,9 @@ namespace LibAIR2 {
     return res;
   }
 
-  boost::bimap<size_t, std::string > getSourceNames(const casa::MeasurementSet &ms)
+  field_t getSourceNames(const casa::MeasurementSet &ms)
   {
-    boost::bimap<size_t, std::string > res;
+    field_t res;
     const casa::MSSource & srcTab(ms.source());
     const size_t nsource=srcTab.nrow();
 
@@ -176,14 +177,14 @@ namespace LibAIR2 {
     const casa::MSField & fieldT(ms.field());
     const size_t nfields=fieldT.nrow();
 
-    boost::bimap<size_t, std::string > sources=getSourceNames(ms);
+    field_t sources=getSourceNames(ms);
 
     casa::ROMSFieldColumns fcols(fieldT);
     const casa::ROScalarColumn<casa::Int> &fieldsrc (fcols.sourceId());
     for(size_t i=0; i<nfields; ++i)
     {
       try {
-	if(sources.left.at(fieldsrc(i))==source)
+	if(sources.at(fieldsrc(i))==source)
 	  res.insert(i);
       }
       catch (const std::out_of_range &e)

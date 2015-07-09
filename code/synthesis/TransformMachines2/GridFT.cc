@@ -176,9 +176,9 @@ GridFT& GridFT::operator=(const GridFT& other)
     }
     isTiled=other.isTiled;
     //lattice=other.lattice;
-    lattice=0;
+    lattice.reset( );
     tilesize=other.tilesize;
-    arrayLattice=0;
+    arrayLattice.reset( );
     maxAbsData=other.maxAbsData;
     centerLoc=other.centerLoc;
     offsetLoc=other.offsetLoc;
@@ -322,7 +322,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
   /*if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
+    lattice=SHARED_PTR<Lattice<Complex> >(image, False);
   }
   else {
      
@@ -352,7 +352,7 @@ void GridFT::prepGridForDegrid(){
   griddedData(blc, trc) = image->getSlice(start, image->shape());
   
   //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-  arrayLattice = new ArrayLattice<Complex>(griddedData);
+  arrayLattice.reset( new ArrayLattice<Complex>(griddedData) );
   lattice=arrayLattice;
   //logIO() << LogIO::DEBUGGING
   //	  << "Starting grid correction and FFT of image" << LogIO::POST;
@@ -399,6 +399,10 @@ void GridFT::finalizeToVis()
 }
 
 
+template<class T>  struct leaker {
+  void operator()(T *p) { std::cout << p << std::endl; }
+};
+
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
 // grid. 
 void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
@@ -426,7 +430,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
   if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
+    lattice=SHARED_PTR<Lattice<Complex> >(image, leaker<Lattice<Complex> >( ));
   }
   else {
     IPosition gridShape(4, nx, ny, npol, nchan);
@@ -1216,11 +1220,11 @@ ImageInterface<Complex>& GridFT::getImage(Matrix<Float>& weights, Bool normalize
 	
 	//Don't need the double-prec grid anymore...
 	griddedData2.resize();
-	arrayLattice = new ArrayLattice<Complex>(griddedData);
+	arrayLattice.reset( new ArrayLattice<Complex>(griddedData) );
 	lattice=arrayLattice;
       }
     else{
-      arrayLattice = new ArrayLattice<Complex>(griddedData);
+      arrayLattice.reset( new ArrayLattice<Complex>(griddedData) );
       lattice=arrayLattice;
       LatticeFFT::cfft2d(*lattice,False);
     }
@@ -1340,7 +1344,7 @@ Bool GridFT::fromRecord(String& error,
   Bool retval = True;
   if(!FTMachine::fromRecord(error, inRec))
     return False;
-  gridder=0; imageCache=0; lattice=0; arrayLattice=0;
+  gridder=0; imageCache=0; lattice.reset( ); arrayLattice.reset( );
   //For some reason int64 seems to be getting lost...
   //this is not an important parameter...so filing a jira 
   if(inRec.isDefined("cachesize"))
@@ -1373,7 +1377,7 @@ Bool GridFT::fromRecord(String& error,
     // Might be changing the shape of sumWeight
 
     if(isTiled) {
-      lattice=CountedPtr<Lattice<Complex> >(image, False);
+      lattice=SHARED_PTR<Lattice<Complex> >(image, False);
     }
     else {
       // Make the grid the correct shape and turn it into an array lattice

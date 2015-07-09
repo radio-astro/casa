@@ -66,13 +66,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Global method that I (SB) could make work in SynthesisUtilsMethods.
   //
   template <class T>
-  void openImage(const String& imagenamefull,CountedPtr<ImageInterface<T> >& imPtr )
+  void openImage(const String& imagenamefull,SHARED_PTR<ImageInterface<T> >& imPtr )
   {
     LogIO logIO ( LogOrigin("SynthesisImager","openImage(name)") );
     try
       {
 	if (Table::isReadable(imagenamefull))
-	  imPtr=new PagedImage<T>( imagenamefull );
+	  imPtr.reset( new PagedImage<T>( imagenamefull ) );
       }
     catch (AipsError &x)
       {
@@ -83,9 +83,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //--------------------------------------------------------------
   //
   template 
-  void openImage(const String& imagenamefull, CountedPtr<ImageInterface<Float> >& img );
+  void openImage(const String& imagenamefull, SHARED_PTR<ImageInterface<Float> >& img );
   template 
-  void openImage(const String& imagenamefull, CountedPtr<ImageInterface<Complex> >& img );
+  void openImage(const String& imagenamefull, SHARED_PTR<ImageInterface<Complex> >& img );
   //
   //===========================================================================
 
@@ -99,16 +99,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIImageStore::SIImageStore() 
   {
-    itsPsf=NULL;
-    itsModel=NULL;
-    itsResidual=NULL;
-    itsWeight=NULL;
-    itsImage=NULL;
-    itsMask=NULL;
-    itsGridWt=NULL;
-    itsPB=NULL;
+    itsPsf.reset( );
+    itsModel.reset( );
+    itsResidual.reset( );
+    itsWeight.reset( );
+    itsImage.reset( );
+    itsMask.reset( );
+    itsGridWt.reset( );
+    itsPB.reset( );
 
-    itsSumWt=NULL;
+    itsSumWt.reset( );
     itsUseWeight=False;
     itsPBScaleFactor=1.0;
 
@@ -139,16 +139,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","Open new Images",WHERE) );
 
-    itsPsf=NULL;
-    itsModel=NULL;
-    itsResidual=NULL;
-    itsWeight=NULL;
-    itsImage=NULL;
-    itsMask=NULL;
-    itsGridWt=NULL;
-    itsPB=NULL;
+    itsPsf.reset( );
+    itsModel.reset( );
+    itsResidual.reset( );
+    itsWeight.reset( );
+    itsImage.reset( );
+    itsMask.reset( );
+    itsGridWt.reset( );
+    itsPB.reset( );
 
-    itsSumWt=NULL;
+    itsSumWt.reset( );
     itsUseWeight=useweightimage;
     itsPBScaleFactor=1.0;
 
@@ -181,17 +181,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
 
    
-    itsPsf=NULL;
-    itsModel=NULL;
-    itsResidual=NULL;
-    itsWeight=NULL;   
-    itsImage=NULL;
-    itsMask=NULL;
-    itsGridWt=NULL;
-    itsPB=NULL;
+    itsPsf.reset( );
+    itsModel.reset( );
+    itsResidual.reset( );
+    itsWeight.reset( );   
+    itsImage.reset( );
+    itsMask.reset( );
+    itsGridWt.reset( );
+    itsPB.reset( );
     itsMiscInfo=Record();
 
-    itsSumWt=NULL;
+    itsSumWt.reset( );
     itsNFacets=1;
     itsFacetId=0;
     itsNChanChunks = 1;
@@ -206,13 +206,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	doesImageExist(itsImageName+String(".psf")) ||
 	doesImageExist(itsImageName+String(".gridwt"))  )
       {
-	CountedPtr<ImageInterface<Float> > imptr;
+	SHARED_PTR<ImageInterface<Float> > imptr;
 	if( doesImageExist(itsImageName+String(".psf")) )
-	  imptr = new PagedImage<Float> (itsImageName+String(".psf"));
+	  imptr.reset( new PagedImage<Float> (itsImageName+String(".psf")) );
 	else if ( doesImageExist(itsImageName+String(".residual")) )
-	  imptr = new PagedImage<Float> (itsImageName+String(".residual"));
+	  imptr.reset( new PagedImage<Float> (itsImageName+String(".residual")) );
 	else 
-	  imptr = new PagedImage<Float> (itsImageName+String(".gridwt"));
+	  imptr.reset( new PagedImage<Float> (itsImageName+String(".gridwt")) );
 	  
 	itsImageShape = imptr->shape();
 	itsCoordSys = imptr->coordinates();
@@ -229,8 +229,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
     if( doesImageExist(itsImageName+String(".sumwt"))  )
       {
-	CountedPtr<ImageInterface<Float> > imptr;
-	imptr = new PagedImage<Float> (itsImageName+String(".sumwt"));
+	SHARED_PTR<ImageInterface<Float> > imptr;
+	imptr.reset( new PagedImage<Float> (itsImageName+String(".sumwt")) );
 	itsNFacets = imptr->shape()[0];
 	itsFacetId = 0;
 	itsUseWeight = getUseWeightImage( *imptr );
@@ -255,13 +255,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     validate();
   }
 
-  SIImageStore::SIImageStore(CountedPtr<ImageInterface<Float> > modelim, 
-			     CountedPtr<ImageInterface<Float> > residim,
-			     CountedPtr<ImageInterface<Float> > psfim, 
-			     CountedPtr<ImageInterface<Float> > weightim, 
-			     CountedPtr<ImageInterface<Float> > restoredim, 
-			     CountedPtr<ImageInterface<Float> > maskim,
-			     CountedPtr<ImageInterface<Float> > sumwtim,
+  SIImageStore::SIImageStore(SHARED_PTR<ImageInterface<Float> > modelim, 
+			     SHARED_PTR<ImageInterface<Float> > residim,
+			     SHARED_PTR<ImageInterface<Float> > psfim, 
+			     SHARED_PTR<ImageInterface<Float> > weightim, 
+			     SHARED_PTR<ImageInterface<Float> > restoredim, 
+			     SHARED_PTR<ImageInterface<Float> > maskim,
+			     SHARED_PTR<ImageInterface<Float> > sumwtim,
 			     CoordinateSystem& csys,
 			     IPosition imshape,
 			     String imagename,
@@ -299,13 +299,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-----------------------
 
     // Set these to null, to be set later upon first access.
-    itsPsf=NULL;
-    itsModel=NULL;
-    itsResidual=NULL;
-    itsWeight=NULL;
-    itsImage=NULL;
-    itsMask=NULL;
-    itsSumWt=NULL;
+    itsPsf.reset( );
+    itsModel.reset( );
+    itsResidual.reset( );
+    itsWeight.reset( );
+    itsImage.reset( );
+    itsMask.reset( );
+    itsSumWt.reset( );
 
 
     validate();
@@ -369,22 +369,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  CountedPtr<SIImageStore> SIImageStore::getSubImageStore(const Int facet, const Int nfacets, 
+  SHARED_PTR<SIImageStore> SIImageStore::getSubImageStore(const Int facet, const Int nfacets, 
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
   {
-    return new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks);
+    return SHARED_PTR<SIImageStore>(new SIImageStore(itsModel, itsResidual, itsPsf, itsWeight, itsImage, itsMask, itsSumWt, itsCoordSys,itsImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //// Either read an image from disk, or construct one. 
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::openImage(const String imagenamefull, 
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::openImage(const String imagenamefull, 
 							     const Bool overwrite, 
 							     const Bool dosumwt, const Int nfacetsperside)
   {
 
-    CountedPtr<ImageInterface<Float> > imPtr;
+    SHARED_PTR<ImageInterface<Float> > imPtr;
 
     IPosition useShape( itsParentImageShape );
 
@@ -397,7 +397,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( overwrite || !Table::isWritable( imagenamefull ) )
       {
-	imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
+	imPtr.reset( new PagedImage<Float> (useShape, itsCoordSys, imagenamefull) );
 	// initialize to zeros...
 	imPtr->set(0.0);
       }
@@ -407,11 +407,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    //cerr << "Trying to open "<< imagenamefull << endl;
 	    try{
-	      imPtr=new PagedImage<Float>( imagenamefull );
+	      imPtr.reset( new PagedImage<Float>( imagenamefull ) );
 	    }
 	    catch (AipsError &x){
 	      cerr << "Writable table exists, but cannot open. Creating temp image. : " << x.getMesg() << endl;
-	      imPtr=new TempImage<Float> (useShape, itsCoordSys);
+	      imPtr.reset( new TempImage<Float> (useShape, itsCoordSys) );
 	      //  imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
 	      imPtr->set(0.0);
 	    }
@@ -419,7 +419,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else
 	  {
 	    cerr << "Table " << imagenamefull << " is not writeable. Creating temp image." << endl;
-	    imPtr=new TempImage<Float> (useShape, itsCoordSys);
+	    imPtr.reset( new TempImage<Float> (useShape, itsCoordSys) );
 	    imPtr->set(0.0);
 	  }
       }
@@ -434,7 +434,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::makeSubImage(const Int facet, const Int nfacets,
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::makeSubImage(const Int facet, const Int nfacets,
 								const Int chan, const Int nchanchunks,
 								const Int pol, const Int npolchunks,
 								ImageInterface<Float>& image)
@@ -448,7 +448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Add checks for all dimensions..
     if((facet>(nfacets-1))||(facet<0)) {
       os << LogIO::SEVERE << "Illegal facet " << facet << LogIO::POST;
-      return CountedPtr<ImageInterface<Float> >();
+      return SHARED_PTR<ImageInterface<Float> >();
     }
     IPosition imshp=image.shape();
     IPosition blc(imshp.nelements(), 0);
@@ -479,7 +479,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Slicer imslice(blc, trc, inc, Slicer::endIsLast);
 
     // Now create the sub image
-    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(image, imslice, True);
+    SHARED_PTR<ImageInterface<Float> >  referenceImage( new SubImage<Float>(image, imslice, True) );
     referenceImage->setMiscInfo(image.miscInfo());
     referenceImage->setUnits(image.units());
 
@@ -507,20 +507,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    String fname( itsImageName+String(".info") );
     //    makePersistent( fname );
 
-    if( ! itsPsf.null() ) releaseImage( itsPsf );
-    if( ! itsModel.null() ) releaseImage( itsModel );
-    if( ! itsResidual.null() ) releaseImage( itsResidual );
-    if( ! itsImage.null() ) releaseImage( itsImage );
-    if( ! itsWeight.null() ) releaseImage( itsWeight );
-    if( ! itsMask.null() ) releaseImage( itsMask );
-    if( ! itsSumWt.null() ) releaseImage( itsSumWt );
-    if( ! itsGridWt.null() ) releaseImage( itsGridWt );
-    if( ! itsPB.null() ) releaseImage( itsPB );
+    if( itsPsf ) releaseImage( itsPsf );
+    if( itsModel ) releaseImage( itsModel );
+    if( itsResidual ) releaseImage( itsResidual );
+    if( itsImage ) releaseImage( itsImage );
+    if( itsWeight ) releaseImage( itsWeight );
+    if( itsMask ) releaseImage( itsMask );
+    if( itsSumWt ) releaseImage( itsSumWt );
+    if( itsGridWt ) releaseImage( itsGridWt );
+    if( itsPB ) releaseImage( itsPB );
 
     return True; // do something more intelligent here.
   }
 
-  void SIImageStore::releaseImage( CountedPtr<ImageInterface<Float> > im )
+  void SIImageStore::releaseImage( SHARED_PTR<ImageInterface<Float> > im )
   {
     im->unlock();
     im->tempClose();
@@ -540,7 +540,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	return;
       }
 
-    CountedPtr<PagedImage<Float> > newmodel = new PagedImage<Float>( modelname +String(".model") );
+    SHARED_PTR<PagedImage<Float> > newmodel( new PagedImage<Float>( modelname +String(".model") ) );
     // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
 
     if( (newmodel->shape() != model()->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
@@ -579,15 +579,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   /*
-  void SIImageStore::checkRef( CountedPtr<ImageInterface<Float> > ptr, const String label )
+  void SIImageStore::checkRef( SHARED_PTR<ImageInterface<Float> > ptr, const String label )
   {
-    if( ptr.null() && itsImageName==String("reference") ) 
+    if( ! ptr && itsImageName==String("reference") ) 
       {throw(AipsError("Internal Error : Attempt to access null subImageStore "+label + " by reference."));}
   }
   */
 
-  void SIImageStore::accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
-		    CountedPtr<ImageInterface<Float> > &parentptr, 
+  void SIImageStore::accessImage( SHARED_PTR<ImageInterface<Float> > &ptr, 
+		    SHARED_PTR<ImageInterface<Float> > &parentptr, 
 		    const String label )
   {
     // if ptr is not null, assume it's OK. Perhaps add more checks.
@@ -595,12 +595,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool sw=False;
     if( label.contains(imageExts(SUMWT)) ) sw=True;
     
-    if( ptr.null() )
+    if( !ptr )
       {
 	//cout << itsNFacets << " " << itsNChanChunks << " " << itsNPolChunks << endl;
 	if( itsNFacets>1 || itsNChanChunks>1 || itsNPolChunks>1 )
 	  {
-	    if( parentptr.null() ) 
+	    if( ! parentptr ) 
 	      {
 		//cout << "Making parent : " << label << "    sw : " << sw << endl; 
 		parentptr = openImage(itsImageName+label , False, sw, itsNFacets );  
@@ -631,23 +631,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::psf(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::psf(uInt /*nterm*/)
   {
     accessImage( itsPsf, itsParentPsf, imageExts(PSF) );
     return itsPsf;
   }
-  CountedPtr<ImageInterface<Float> > SIImageStore::residual(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::residual(uInt /*nterm*/)
   {
     accessImage( itsResidual, itsParentResidual, imageExts(RESIDUAL) );
     return itsResidual;
   }
-  CountedPtr<ImageInterface<Float> > SIImageStore::weight(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::weight(uInt /*nterm*/)
   {
     accessImage( itsWeight, itsParentWeight, imageExts(WEIGHT) );
     return itsWeight;
   }
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::sumwt(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::sumwt(uInt /*nterm*/)
   {
 
     accessImage( itsSumWt, itsParentSumWt, imageExts(SUMWT) );
@@ -659,7 +659,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsSumWt;
   }
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::model(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::model(uInt /*nterm*/)
   {
     accessImage( itsModel, itsParentModel, imageExts(MODEL) );
 
@@ -674,7 +674,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return itsModel;
   }
-  CountedPtr<ImageInterface<Float> > SIImageStore::image(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::image(uInt /*nterm*/)
   {
     accessImage( itsImage, itsParentImage, imageExts(IMAGE) );
 
@@ -682,26 +682,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImage;
   }
 
-  CountedPtr<ImageInterface<Float> > SIImageStore::mask(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::mask(uInt /*nterm*/)
   {
     accessImage( itsMask, itsParentMask, imageExts(MASK) );
     return itsMask;
   }
-  CountedPtr<ImageInterface<Float> > SIImageStore::gridwt(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::gridwt(uInt /*nterm*/)
   {
     accessImage( itsGridWt, itsParentGridWt, imageExts(GRIDWT) );
     /// change the coordinate system here, to uv.
     return itsGridWt;
   }
-  CountedPtr<ImageInterface<Float> > SIImageStore::pb(uInt /*nterm*/)
+  SHARED_PTR<ImageInterface<Float> > SIImageStore::pb(uInt /*nterm*/)
   {
     accessImage( itsPB, itsParentPB, imageExts(PB) );
     /// change the coordinate system here, to uv.
     return itsPB;
   }
 
-  CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
-    if(!itsForwardGrid.null()) // && (itsForwardGrid->shape() == itsImageShape))
+  SHARED_PTR<ImageInterface<Complex> > SIImageStore::forwardGrid(uInt /*nterm*/){
+    if( itsForwardGrid ) // && (itsForwardGrid->shape() == itsImageShape))
       {
 	//	cout << "Forward grid has shape : " << itsForwardGrid->shape() << endl;
 	return itsForwardGrid;
@@ -713,13 +713,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								  whichStokes, itsDataPolRep);
     cimageShape(2)=whichStokes.nelements();
     //cout << "Making forward grid of shape : " << cimageShape << " for imshape : " << itsImageShape << endl;
-    itsForwardGrid=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+    itsForwardGrid.reset( new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice()) );
 
     return itsForwardGrid;
   }
 
-  CountedPtr<ImageInterface<Complex> > SIImageStore::backwardGrid(uInt /*nterm*/){
-    if(!itsBackwardGrid.null() ) //&& (itsBackwardGrid->shape() == itsImageShape))
+  SHARED_PTR<ImageInterface<Complex> > SIImageStore::backwardGrid(uInt /*nterm*/){
+    if( itsBackwardGrid ) //&& (itsBackwardGrid->shape() == itsImageShape))
       {
 	//	cout << "Backward grid has shape : " << itsBackwardGrid->shape() << endl;
 	return itsBackwardGrid;
@@ -731,7 +731,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								  whichStokes, itsDataPolRep);
     cimageShape(2)=whichStokes.nelements();
     //cout << "Making backward grid of shape : " << cimageShape << " for imshape : " << itsImageShape << endl;
-    itsBackwardGrid=new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice());
+    itsBackwardGrid.reset( new TempImage<Complex>(TiledShape(cimageShape, tileShape()), cimageCoord, memoryBeforeLattice()) );
     return itsBackwardGrid;
     }
   Double SIImageStore::memoryBeforeLattice(){
@@ -756,11 +756,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( resetpsf ) psf()->set(0.0);
     if( resetresidual ) residual()->set(0.0);
-    if( resetweight && !itsWeight.null() ) weight()->set(0.0);
+    if( resetweight && itsWeight ) weight()->set(0.0);
     if( resetweight ) sumwt()->set(0.0);
   }
 
-  void SIImageStore::addImages( CountedPtr<SIImageStore> imagestoadd,
+  void SIImageStore::addImages( SHARED_PTR<SIImageStore> imagestoadd,
 				Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity)
   {
 
@@ -802,7 +802,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-void SIImageStore::setWeightDensity( CountedPtr<SIImageStore> imagetoset )
+void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
     LogIO os( LogOrigin("SIImageStore","setWeightDensity",WHERE) );
 
@@ -1511,7 +1511,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
   /*
   Bool SIImageStore::getUseWeightImage()
   {
-    if( itsParentSumWt.null() )
+    if( ! itsParentSumWt )
       return False;
     else 
      return  getUseWeightImage( *itsParentSumWt );
@@ -1549,7 +1549,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	    if( lsumwt(pos) != 1.0 )
 	      { 
 		//		SubImage<Float>* subim=makePlane(  chan, True ,pol, True, target );
-		CountedPtr<ImageInterface<Float> > subim=makeSubImage(0,1, 
+		SHARED_PTR<ImageInterface<Float> > subim=makeSubImage(0,1, 
 								      chan, lsumwt.shape()[3],
 								      pol, lsumwt.shape()[2], 
 								      target );
@@ -1582,12 +1582,12 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 	  {
 	    ///	    IPosition center(4,itsImageShape[0]/2,itsImageShape[1]/2,pol,chan);
 	    
-	    CountedPtr<ImageInterface<Float> > subim=makeSubImage(0,1, 
+	    SHARED_PTR<ImageInterface<Float> > subim=makeSubImage(0,1, 
 								  chan, itsImageShape[3],
 								  pol, itsImageShape[2], 
 								  (*psf(term)) );
 
-	    CountedPtr<ImageInterface<Float> > subim0=makeSubImage(0,1, 
+	    SHARED_PTR<ImageInterface<Float> > subim0=makeSubImage(0,1, 
 								  chan, itsImageShape[3],
 								  pol, itsImageShape[2], 
 								  (*psf(0)) );
@@ -1812,7 +1812,7 @@ void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage, Int te
 	
       }catch(AipsError &x)
       {
-	throw(AipsError("Error in regridding input model image to target coordsys : " + x.getMesg()));
+	throw("Error in regridding input model image to target coordsys : " + x.getMesg());
       }
   }
 
@@ -1845,22 +1845,22 @@ void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage, Int te
     //    Record itsMiscInfo; 
     itsMiscInfo.print(outFile);
     
-    // CountedPtr<ImageInterface<Float> > itsMask, itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
-    // CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
+    // SHARED_PTR<ImageInterface<Float> > itsMask, itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
+    // SHARED_PTR<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
 
     Vector<Bool> ImageExists(MAX_IMAGE_IDS);
-    if (itsMask.null())     ImageExists(MASK)=False;
-    if (itsPsf.null())      ImageExists(PSF)=False;
-    if (itsModel.null())    ImageExists(MODEL)=False;
-    if (itsResidual.null()) ImageExists(RESIDUAL)=False;
-    if (itsWeight.null())   ImageExists(WEIGHT)=False;
-    if (itsImage.null())    ImageExists(IMAGE)=False;
-    if (itsSumWt.null())    ImageExists(SUMWT)=False;
-    if (itsGridWt.null())    ImageExists(GRIDWT)=False;
-    if (itsPB.null())    ImageExists(PB)=False;
+    if ( ! itsMask )     ImageExists(MASK)=False;
+    if ( ! itsPsf )      ImageExists(PSF)=False;
+    if ( ! itsModel )    ImageExists(MODEL)=False;
+    if ( ! itsResidual ) ImageExists(RESIDUAL)=False;
+    if ( ! itsWeight )   ImageExists(WEIGHT)=False;
+    if ( ! itsImage )    ImageExists(IMAGE)=False;
+    if ( ! itsSumWt )    ImageExists(SUMWT)=False;
+    if ( ! itsGridWt )   ImageExists(GRIDWT)=False;
+    if ( ! itsPB )       ImageExists(PB)=False;
 
-    if (itsForwardGrid.null())    ImageExists(FORWARDGRID)=False;
-    if (itsBackwardGrid.null())    ImageExists(BACKWARDGRID)=False;
+    if ( ! itsForwardGrid )    ImageExists(FORWARDGRID)=False;
+    if ( ! itsBackwardGrid )   ImageExists(BACKWARDGRID)=False;
     
     outFile << "ImagesExist: " << ImageExists << endl;
   }

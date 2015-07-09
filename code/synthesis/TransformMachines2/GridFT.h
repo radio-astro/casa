@@ -258,11 +258,11 @@ protected:
   Bool isTiled;
 
   // Array lattice
-  CountedPtr<Lattice<Complex> > arrayLattice;
+  SHARED_PTR<Lattice<Complex> > arrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  CountedPtr<Lattice<Complex> > lattice;
+  SHARED_PTR<Lattice<Complex> > lattice;
 
   String convType;
 

@@ -64,15 +64,15 @@ public:
 
   // Non virtual. Wrapper function implemented only in the base class. 
   void deconvolve( SIMinorCycleController& loopController,  
-		   CountedPtr<SIImageStore> &imagestore,
+		   SHARED_PTR<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
   void setRestoringBeam( GaussianBeam restbeam, String usebeam );
   //  void setMaskOptions( String maskstring );
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
-  virtual void restore( CountedPtr<SIImageStore> imagestore );
-  virtual void pbcor( CountedPtr<SIImageStore> imagestore );
+  virtual void restore( SHARED_PTR<SIImageStore> imagestore );
+  virtual void pbcor( SHARED_PTR<SIImageStore> imagestore );
 
   virtual String getAlgorithmName(){return itsAlgorithmName;};
 
@@ -100,7 +100,7 @@ protected:
   // Algorithm name
   String itsAlgorithmName;
 
-  CountedPtr<SIImageStore> itsImages; //sOriginalImages;
+  SHARED_PTR<SIImageStore> itsImages; //sOriginalImages;
 
   //    Vector<Slicer> itsDecSlices;
   //   SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;

@@ -95,7 +95,7 @@ class SynthesisDeconvolver
 
 protected:
 
-  CountedPtr<SIImageStore> makeImageStore( String imagename );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename );
   /*
   void findMinMax(const Array<Float>& lattice,
 					const Array<Float>& mask,
@@ -119,10 +119,10 @@ protected:
 
   /////////////// Member Objects
 
-  CountedPtr<SDAlgorithmBase> itsDeconvolver;
-  CountedPtr<SDMaskHandler> itsMaskHandler;
+  SHARED_PTR<SDAlgorithmBase> itsDeconvolver;
+  SHARED_PTR<SDMaskHandler> itsMaskHandler;
 
-  CountedPtr<SIImageStore> itsImages;
+  SHARED_PTR<SIImageStore> itsImages;
 
   IPosition itsImageShape;
   

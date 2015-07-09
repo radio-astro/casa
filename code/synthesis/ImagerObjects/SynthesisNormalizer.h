@@ -75,7 +75,7 @@ class SynthesisNormalizer
   // Scatter summed gridded weights to all parts
   void scatterWeightDensity();
 
-  CountedPtr<SIImageStore> getImageStore();
+  SHARED_PTR<SIImageStore> getImageStore();
   void setImageStore( SIImageStore* imstore );
 
   void divideResidualByWeight();
@@ -90,16 +90,16 @@ protected:
   Bool setupImagesOnDisk();
   Bool doImagesExist( String imagename );
 
-  CountedPtr<SIImageStore> makeImageStore( String imagename );
-  CountedPtr<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp, Bool useweightimage );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename );
+  SHARED_PTR<SIImageStore> makeImageStore( String imagename, CoordinateSystem& csys, IPosition shp, Bool useweightimage );
 
   void setPsfFromOneFacet();
 
   /////////////// Member Objects
 
-  CountedPtr<SIImageStore> itsImages;
-  Vector<CountedPtr<SIImageStore> > itsPartImages;
-  Block<CountedPtr<SIImageStore> > itsFacetImageStores;
+  SHARED_PTR<SIImageStore> itsImages;
+  Vector<SHARED_PTR<SIImageStore> > itsPartImages;
+  Block<SHARED_PTR<SIImageStore> > itsFacetImageStores;
 
   IPosition itsImageShape;
   

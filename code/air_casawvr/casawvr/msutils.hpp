@@ -19,8 +19,6 @@
 #include <map>
 #include <set>
 
-#include <boost/bimap.hpp>
-
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 namespace LibAIR2 {
@@ -66,12 +64,12 @@ namespace LibAIR2 {
   std::set<size_t> skyStateIDs(const casa::MeasurementSet &ms);
 
   /// Association between field number and field names
-  typedef boost::bimap<size_t, std::string > field_t;
+  typedef std::map<size_t, std::string > field_t;
   field_t getFieldNames(const casa::MeasurementSet &ms);
 
 
   /// Association between source IDs and source names
-  boost::bimap<size_t, std::string > getSourceNames(const casa::MeasurementSet &ms);
+  field_t getSourceNames(const casa::MeasurementSet &ms);
 
   /** Get all fields associated with a particular source name
    */

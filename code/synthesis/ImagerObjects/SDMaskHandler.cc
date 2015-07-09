@@ -80,14 +80,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       delete interactiveMasker_p;
   }
   
-  void SDMaskHandler::resetMask(CountedPtr<SIImageStore> imstore)
+  void SDMaskHandler::resetMask(SHARED_PTR<SIImageStore> imstore)
   {
     imstore->mask()->set(1.0);
     imstore->mask()->unlock();
   }
 
 /***
-  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings)
+  void SDMaskHandler::fillMask(SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings)
   {
       String maskString;
       if (maskStrings.nelements()) {
@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 ***/
 
-  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings)
+  void SDMaskHandler::fillMask(SHARED_PTR<SIImageStore> imstore, Vector<String> maskStrings)
   {
     LogIO os( LogOrigin("SDMaskHandler","fillMask",WHERE) );
     String maskString;
@@ -187,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   
-  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, String maskString)
+  void SDMaskHandler::fillMask(SHARED_PTR<SIImageStore> imstore, String maskString)
   {
 
     try {
@@ -245,7 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LCBox::verify(blc, trc, inc, imshp);
 	Slicer imslice(blc, trc, inc, Slicer::endIsLast);
 	
-	CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*(imstore->mask()), imslice, True);
+	SHARED_PTR<ImageInterface<Float> >  referenceImage( new SubImage<Float>(*(imstore->mask()), imslice, True) );
 	referenceImage->set(1.0);
       }
 
@@ -258,7 +258,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   //void SDMaskHandler::makeMask()
-   CountedPtr<ImageInterface<Float> > SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
+   SHARED_PTR<ImageInterface<Float> > SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
    //void SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
                                ImageInterface<Float>& tempim)
    //                             ImageInterface<Float>& tempim,
@@ -279,7 +279,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //newMaskImage = PagedImage<Float>(maskFileName, TableLock::AutoNoReadLocking);
     //PagedImage<Float>(maskFileName, TableLock::AutoNoReadLocking);
     StokesImageUtil::MaskFrom(*newMaskImage, tempim, threshold);
-    return newMaskImage;
+    return SHARED_PTR<ImageInterface<Float> >(newMaskImage);
   }
 
   //Bool SDMaskHandler::regionToImageMask(const String& maskName, Record* regionRec, Matrix<Quantity>& blctrcs,
@@ -291,8 +291,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try {
       //PagedImage<Float> tempmask(TiledShape(maskImage->shape(),
       //                                    maskImage->niceCursorShape()), maskImage->coordinates(), tempfname);
-      CountedPtr<ImageInterface<Float> > tempmask;
-      tempmask = new TempImage<Float>(TiledShape(maskImage.shape(),maskImage.niceCursorShape()), maskImage.coordinates());
+      SHARED_PTR<ImageInterface<Float> > tempmask;
+      tempmask.reset( new TempImage<Float>(TiledShape(maskImage.shape(),maskImage.niceCursorShape()), maskImage.coordinates()) );
       //tempmask = new PagedImage<Float>(maskImage.shape(), maskImage.coordinates(),"__tmp_rgmask");
       tempmask->copyData(maskImage);
 
@@ -475,14 +475,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      }  
   }
 
-  void SDMaskHandler::copyAllMasks(const Vector< ImageInterface<Float> >& inImageMasks, ImageInterface<Float>& outImageMask)
+  void SDMaskHandler::copyAllMasks(const Vector< SHARED_PTR<ImageInterface<Float> > > inImageMasks, ImageInterface<Float>& outImageMask)
   {
      LogIO os( LogOrigin("SDMaskHandler", "copyAllMasks", WHERE) );
 
      TempImage<Float> tempoutmask(outImageMask.shape(), outImageMask.coordinates());
      
      for (uInt i = 0; i < inImageMasks.nelements(); i++) {
-       copyMask(inImageMasks(i), tempoutmask);
+       copyMask(*inImageMasks(i), tempoutmask);
         outImageMask.copyData( (LatticeExpr<Float>)(tempoutmask+outImageMask) );
      }
   }
@@ -595,7 +595,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  Int SDMaskHandler::makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
+  Int SDMaskHandler::makeInteractiveMask(SHARED_PTR<SIImageStore>& imstore,
 					 Int& niter, Int& cycleniter, 
 					 String& threshold, String& cyclethreshold)
   {
@@ -614,7 +614,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return ret;
   }
 
-  void SDMaskHandler::makeAutoMask(CountedPtr<SIImageStore> imstore)
+  void SDMaskHandler::makeAutoMask(SHARED_PTR<SIImageStore> imstore)
   {
     LogIO os( LogOrigin("SDMaskHandler","makeAutoMask",WHERE) );
 
@@ -675,7 +675,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SDMaskHandler::autoMask(CountedPtr<SIImageStore> imstore, 
+  void SDMaskHandler::autoMask(SHARED_PTR<SIImageStore> imstore, 
                                const String& alg, 
                                const String& threshold, 
                                const Float& fracofpeak, 
@@ -883,7 +883,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
   }
   
-  void SDMaskHandler::makePBMask(CountedPtr<SIImageStore> imstore, Float pblimit)
+  void SDMaskHandler::makePBMask(SHARED_PTR<SIImageStore> imstore, Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","makePBMask",WHERE) );
 
@@ -905,7 +905,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of makePBMask
 
-  void SDMaskHandler::autoMaskWithinPB(CountedPtr<SIImageStore> imstore, Float pblimit)
+  void SDMaskHandler::autoMaskWithinPB(SHARED_PTR<SIImageStore> imstore, Float pblimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMaskWithinPB",WHERE) );
 

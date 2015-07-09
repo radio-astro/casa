@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <assert.h>
 #include <limits>
+#include <cmath>
 using namespace std;
 
 namespace casa {
@@ -262,7 +263,7 @@ namespace casa {
 				String unitString = unitStr.toStdString();
 				Quantity velQuantity = mVelocity.get( unitString );
 				double velocity = velQuantity.getValue();
-				if ( !isnan(velocity) ) {
+				if ( !std::isnan(velocity) ) {
 					ui.velocityLineEdit->setText( QString::number( velocity ));
 				} else {
 					ui.velocityLineEdit->setText("");

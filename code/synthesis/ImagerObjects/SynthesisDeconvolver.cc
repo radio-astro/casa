@@ -60,8 +60,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisDeconvolver::SynthesisDeconvolver() : 
 				       itsDeconvolver( ), 
 				       itsMaskHandler( ),
-				       itsImages(CountedPtr<SIImageStore>()),
-				       //				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
 				       //                                       itsPartImageNames(Vector<String>(0)),
 				       itsBeam(0.0),
@@ -94,31 +92,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if(decpars.algorithm==String("hogbom"))
 	  {
-	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
+	    itsDeconvolver.reset(new SDAlgorithmHogbomClean()); 
 	  }
 	else if(decpars.algorithm==String("mtmfs"))
 	  {
-	    itsDeconvolver = new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales ); 
+	    itsDeconvolver.reset(new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales )); 
 	  } 
 	else if(decpars.algorithm==String("clark"))
 	  {
-	    itsDeconvolver = new SDAlgorithmClarkClean("clark"); 
+	    itsDeconvolver.reset(new SDAlgorithmClarkClean("clark")); 
 	  } 
 	else if(decpars.algorithm==String("clarkstokes"))
 	  {
-	    itsDeconvolver = new SDAlgorithmClarkClean("clarkstokes"); 
+	    itsDeconvolver.reset(new SDAlgorithmClarkClean("clarkstokes")); 
 	  } 
 	else if(decpars.algorithm==String("multiscale"))
 	  {
-	    itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
+	    itsDeconvolver.reset(new SDAlgorithmMSClean( decpars.scales )); 
 	  } 
 	else if(decpars.algorithm==String("mem"))
 	  {
-	    itsDeconvolver = new SDAlgorithmMEM( "entropy" ); 
+	    itsDeconvolver.reset(new SDAlgorithmMEM( "entropy" )); 
 	  } 
 	else if (decpars.algorithm==String("aasp"))
 	  {
-	    itsDeconvolver = new SDAlgorithmAAspClean();
+	    itsDeconvolver.reset(new SDAlgorithmAAspClean());
 	  }
 	else
 	  {
@@ -130,7 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// Set Masking options
 	//	itsDeconvolver->setMaskOptions( decpars.maskType );
-	itsMaskHandler = new SDMaskHandler();
+	itsMaskHandler.reset(new SDMaskHandler());
 	itsMaskString = decpars.maskString;
 	itsIsInteractive = decpars.interactive;
 	
@@ -246,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       else throw(AipsError("SD::interactiveGui() needs valid niter, cycleniter, threshold to start up."));
       
-      if( itsImages.null() ) itsImages = makeImageStore( itsImageName );
+      if( ! itsImages ) itsImages = makeImageStore( itsImageName );
       
       //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
@@ -308,7 +306,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","restoreImage",WHERE) );
 
-    if( itsImages.null() )
+    if( ! itsImages )
       {
 	itsImages = makeImageStore( itsImageName );
       }
@@ -322,7 +320,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","pbcor",WHERE) );
 
-    if( itsImages.null() )
+    if( ! itsImages )
       {
 	itsImages = makeImageStore( itsImageName );
       }
@@ -337,13 +335,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////    Internal Functions start here.  These are not visible to the tool layer.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
+  SHARED_PTR<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
   {
-    CountedPtr<SIImageStore> imstore;
+    SHARED_PTR<SIImageStore> imstore;
     if( itsDeconvolver->getAlgorithmName() == "mtmfs" )
-      {  imstore =  new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), True ); }
+      {  imstore.reset( new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), True ) ); }
     else
-      {  imstore = new SIImageStore( imagename, True ); }
+      {  imstore.reset( new SIImageStore( imagename, True ) ); }
 
     return imstore;
 
@@ -365,7 +363,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	
-	if( itsStartingModelName.length()>0 && !itsImages.null() )
+	if( itsStartingModelName.length()>0 && itsImages )
 	  {
 	    os << "Setting " << itsStartingModelName << " as starting model for deconvolution " << LogIO::POST;
 	    itsImages->setModelImage( itsStartingModelName );

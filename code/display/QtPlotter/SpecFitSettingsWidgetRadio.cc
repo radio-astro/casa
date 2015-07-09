@@ -49,6 +49,7 @@
 #include <QThread>
 #include <sys/time.h>
 #include <limits>
+#include <cmath>
 
 
 namespace casa {
@@ -1073,8 +1074,8 @@ namespace casa {
 		Double centerValPix = pcf->getCenter();
 		double fwhmValPix = pcf->getFWHM();
 		float peakVal = static_cast<float>(pcf->getAmpl());
-		if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
-		        isinf( fwhmValPix) || isinf( centerValPix) || isinf( peakVal)) {
+		if ( std::isnan( fwhmValPix) || std::isnan( centerValPix ) || std::isnan( peakVal ) ||
+		        std::isinf( fwhmValPix) || std::isinf( centerValPix) || std::isinf( peakVal)) {
 			return false;
 		}
 
@@ -1119,7 +1120,7 @@ namespace casa {
 			}
 		}
 		float fwhmVal = 2 * abs(fwhmValX - centerVal);
-		if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ) {
+		if ( std::isnan( centerVal ) || std::isnan( fwhmVal) || std::isinf(fwhmVal) || std::isinf(centerVal) ) {
 			return false;
 		}
 

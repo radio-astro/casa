@@ -13,8 +13,8 @@
 #ifndef _LIBAIR_CASAWVR_MSANTDATA_HPP__
 #define _LIBAIR_CASAWVR_MSANTDATA_HPP__
 
+#include <map>
 #include <string>
-#include <boost/bimap.hpp>
 
 #include "../src/apps/antennautils.hpp"
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -27,7 +27,7 @@ namespace LibAIR2 {
 		 antpos_t &res);
 
   /// Association between antenna numbers and names
-  typedef boost::bimap<size_t, std::string > aname_t;
+  typedef std::map<size_t, std::string > aname_t;
 
   aname_t getAName(const casa::MeasurementSet &ms);
   
