@@ -55,6 +55,43 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </param>
 
 
+                <param type="string" name="antenna" subparam="true">
+                        <description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="string" name="uvrange" subparam="true">
+                        <description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="string" name="timerange" subparam="true">
+                        <description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="string" name="correlation" subparam="true">
+                        <description>Select data based on correlation</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="string" name="scan" subparam="true">
+                        <description>scan numbers: \'\'==>all</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="string" name="array" subparam="true">
+                        <description>(sub)array numbers: \'\'==>all</description>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="observation" subparam="true">
+                        <description>observation ID number(s): \'\' = all</description>
+            			<any type="variant" limittypes="string int"/>
+                        <value type="string"></value>
+                </param>
+
+
 
 
 
@@ -102,41 +139,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 
-                <param type="string" name="antenna" subparam="true">
-                        <description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
-                        <value type="string"></value>
-                </param>
 
-                <param type="string" name="uvrange" subparam="true">
-                        <description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
-                        <value type="string"></value>
-                </param>
 
-                <param type="string" name="timerange" subparam="true">
-                        <description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
-                        <value type="string"></value>
-                </param>
-
-                <param type="string" name="correlation" subparam="true">
-                        <description>Select data based on correlation</description>
-                        <value type="string"></value>
-                </param>
-
-                <param type="string" name="scan" subparam="true">
-                        <description>scan numbers: \'\'==>all</description>
-                        <value type="string"></value>
-                </param>
-
-                <param type="string" name="array" subparam="true">
-                        <description>(sub)array numbers: \'\'==>all</description>
-                        <value type="string"></value>
-                </param>
-
-                <param type="any" name="observation" subparam="true">
-                        <description>observation ID number(s): \'\' = all</description>
-			<any type="variant" limittypes="string int"/>
-                        <value type="string"></value>
-                </param>
+    <param type="string" name="reportingaxis">
+      <description>Which reporting axix to use (ddid, integration)</description>
+      <value type="string">ddid</value>
+      <allowed kind="enum">
+        <value>ddid</value>
+        <value>integration</value>
+      </allowed>
+    </param>
 
 
 
