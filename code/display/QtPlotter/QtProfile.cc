@@ -2140,7 +2140,8 @@ namespace casa {
 		ts << "]\n";
 		ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
 		ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
-		QString displayYUnits =  pixelCanvas->getDisplayYUnits();
+		//QString displayYUnits =  pixelCanvas->getDisplayYUnits();
+		QString displayYUnits = yAxisCombo->currentText();
 		ts << "#yLabel: " << "[" << displayYUnits << "] "<< plotMode->currentText() << "\n";
 		if (z_eval.size() > 0){
 			ts << "#eLabel: " << "[" << displayYUnits << "] " << errorMode->currentText() << "\n";

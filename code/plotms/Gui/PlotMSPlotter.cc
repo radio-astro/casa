@@ -816,6 +816,11 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     // Instance info
     ss << (useHTML ? "<hr />" : "\n\n");
     if(useHTML) ss << "<table><tr><td>";
+    // CASA info
+    ss << "CASA Version:";
+    ss << (useHTML ? "</td><td>" : "\t");
+    VersionInfo::report( ss );
+    ss << (useHTML ? "</td></tr><tr><td>" : "\n");
     ss << "PlotMS Version:";
     ss << (useHTML ? "</td><td>" : "\t");
     ss << PLOTMS_VERSION_STR;
@@ -828,12 +833,8 @@ String PlotMSPlotter::aboutText(Plotter::Implementation impl, bool useHTML) {
     ss << PlotterImplementations::implementationAbout(impl, useHTML);
     ss << (useHTML ? "</td></tr><tr><td>" : "\n");
     
-    // CASA info
-    ss << "CASA Version:";
-    ss << (useHTML ? "</td><td>" : "\t");
-    VersionInfo::report( ss );
-    ss << (useHTML ? "</td></tr><tr><td>" : "\n");
     
+
     // Qt info
     ss << "Qt Version:";
     ss << (useHTML ? "</td><td>" : "\t");

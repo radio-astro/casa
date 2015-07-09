@@ -40,14 +40,17 @@ AboutDialog::AboutDialog(QWidget *parent)
 
 QString AboutDialog::getDescription() const {
 	std::stringstream ss;
+
+	// CASA info
+    ss << "CASA Version:  ";
+    VersionInfo::report( ss );
+	ss << "\n\n";
+
 	ss<<"Feather is a tool for combining two images with different spatial resolutions using their Fourier transforms.\n";
 	ss<<"Typically one image is a high-resolution (interferometric) image and the other is a lower resolution image.\n";
 	ss<<"Feather is part of the CASA (Common Astronomy Software Applications) package.\n\n";
 
-	// CASA info
-	ss << "CASA Version:  ";
-	VersionInfo::report( ss );
-	ss << "\n\n";
+
 
 	QString aboutStr( ss.str().c_str() );
 	return aboutStr;

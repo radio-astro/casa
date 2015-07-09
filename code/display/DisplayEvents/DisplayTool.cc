@@ -67,11 +67,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void DisplayTool::chooseKeyModifier() {
 		try {
 			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
-		} catch (AipsError x) {
+		} catch (AipsError& x) {
 			// use x to avoid compiler warning
-			if (&x) {
+			//if (&x) {
 				itsKeyModifier = static_cast<Display::KeyModifier>(0);
-			}
+			//}
 		}
 	}
 

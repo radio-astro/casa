@@ -41,16 +41,21 @@ AboutDialogViewer::AboutDialogViewer(QWidget *parent)
 
 QString AboutDialogViewer::getDescription() const {
 	std::stringstream ss;
+
+	// CASA info
+	ss << "CASA Version:  ";
+	VersionInfo::report( ss );
+	ss << "\n\n";
+
+
+
 	ss<<"The Viewer is a tool for visualizing images and measurement sets in raster, contour, vector, or marker form.\n";
 	ss<<"Images can be blinked, and movies are available for spectral-line image cubes. A variety of image analysis tools\n";
 	ss<<"such as histograms, moment calculations, two-dimensional fitting, interactive position-velocity diagrams, \n";
 	ss<<"and spatial profiling are also available in the viewer.\n\n";
 	ss<<"The Viewer is part of the CASA (Common Astronomy Software Applications) package.\n\n";
 
-	// CASA info
-	ss << "CASA Version:  ";
-	VersionInfo::report( ss );
-	ss << "\n\n";
+
 
 	QString aboutStr( ss.str().c_str() );
 	return aboutStr;
