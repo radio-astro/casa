@@ -175,7 +175,8 @@ class MeasurementSetReader(object):
                     EVLA_band = spw2band[spw.id]
                 except:
                     LOG.info('Unable to get band from spw id - using reference frequency instead')
-                    EVLA_band = find_EVLA_band(spw.ref_frequency)
+                    freqHz = float(spw.ref_frequency.value)
+                    EVLA_band = find_EVLA_band(freqHz)
                 
                 EVLA_band_dict = {'4' : '4m (4)',
                                   'P' : '90cm (P)',
