@@ -2457,7 +2457,9 @@ void VisibilityIteratorReadImpl::getFreqInSpwRange(Double& freqStart, Double& fr
 
     Vector<Int> spws =  msChannels_p.spw_p[msId];
     Vector<Int> starts = msChannels_p.start_p[msId];
-    Vector<Int> nchan = msChannels_p.width_p[msId];
+    Vector<Int> nchan;
+    // careful here as we don't want to change width_p as it is multiplied by incr below
+    nchan= msChannels_p.width_p[msId];
     Vector<Int> incr = msChannels_p.inc_p[msId];
     nchan=nchan*incr;
     Vector<uInt>  uniqIndx;
