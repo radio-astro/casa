@@ -4,6 +4,7 @@ import itertools
 import os
 import re
 import string
+from bisect import bisect_left
 
 import numpy
 
