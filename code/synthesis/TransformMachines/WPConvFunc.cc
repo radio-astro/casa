@@ -457,7 +457,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //Complex maxconv=max(abs(convFunc));
  Complex maxconv=max(abs(maxes));
  //cerr << maxes << " maxconv " << maxconv << endl;
- convFunc=convFunc/real(maxconv);
+ //Do it by plane as the / operator makes a copy of the whole array
+ for (uInt iw=0; iw< uInt(wConvSize); ++iw)
+   convFunc.xyPlane(iw)=convFunc.xyPlane(iw)/real(maxconv);
  //tim.show("After convFunc norming ");
   // Find the edge of the function by stepping in from the
   // uv plane edge. We do this for each plane to save time on the
