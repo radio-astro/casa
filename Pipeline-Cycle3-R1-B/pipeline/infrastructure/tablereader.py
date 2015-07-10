@@ -4,6 +4,7 @@ import itertools
 import os
 import re
 import string
+from bisect import bisect_left
 
 import numpy
 
@@ -12,6 +13,7 @@ from . import logging
 from . import utils
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
+
 
 LOG = logging.get_logger(__name__)
 
