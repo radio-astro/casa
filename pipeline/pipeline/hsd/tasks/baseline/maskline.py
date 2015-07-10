@@ -70,8 +70,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         datatable = context.observing_run.datatable_instance
         pols_list = self.inputs.pols_list
         srctype = reference_data.calibration_strategy['srctype']
-        index_list = list(common.get_index_list(datatable, file_index, spwid_list, pols_list, srctype))
-        index_list.sort()
+        index_list = common.get_index_list2(datatable, file_index, spwid_list, pols_list, srctype)
 
         LOG.debug('index_list=%s'%(index_list))
         if len(index_list) == 0:

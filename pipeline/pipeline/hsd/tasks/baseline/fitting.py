@@ -168,7 +168,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         blinfo = []
 
         for pol in pollist:
-            time_table = datatable.get_timetable(antennaid, spwid, pol)
+            time_table = datatable.get_timetable2(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
 
             index_list_per_pol = rows_to_process.take(numpy.where(_polnos==pol)[0])

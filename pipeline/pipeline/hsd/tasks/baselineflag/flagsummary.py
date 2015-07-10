@@ -82,7 +82,7 @@ class SDBLFlagSummary(object):
             asdm = common.asdm_name(st)
             LOG.info("*** Summarizing table: %s ***" % (os.path.basename(filename_in)))
             for pol in pollist:
-                time_table = datatable.get_timetable(idx, spwid, pol)               
+                time_table = datatable.get_timetable2(idx, spwid, pol)               
                 # Select time gap list: 'subscan': large gap; 'raster': small gap
                 if flagRule['Flagging']['ApplicableDuration'] == "subscan":
                     TimeTable = time_table[1]

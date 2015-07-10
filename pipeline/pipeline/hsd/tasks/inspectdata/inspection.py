@@ -39,13 +39,27 @@ class SDInspectDataResults(common.SingleDishResults):
         datatable.putcol('POSGRP', self.outcome.pop('position_group'))
         datatable.putkeyword('POSGRP_REP', self.outcome.pop('position_group_rep'))
         datatable.putkeyword('POSGRP_LIST', self.outcome.pop('position_group_list'))
-        datatable.putkeyword('TIMEGRP_LIST', self.outcome.pop('time_group_list'))
+        time_group_list = self.outcome.pop('time_group_list')
+        #datatable.putkeyword('TIMEGRP_LIST', time_group_list)
         time_group = self.outcome.pop('time_group')
         time_gap = self.outcome.pop('time_gap')
-        datatable.putcol('TIMEGRP_S', time_group[0])
-        datatable.putcol('TIMEGRP_L', time_group[1])
+        #datatable.putcol('TIMEGRP_S', time_group[0])
+        #datatable.putcol('TIMEGRP_L', time_group[1])
         datatable.putkeyword('TIMEGAP_S', time_gap[0])
         datatable.putkeyword('TIMEGAP_L', time_gap[1])
+        
+        LOG.info('type(time_group_list) = %s'%(type(time_group_list)))
+        LOG.info('type(time_group[0]) = %s'%(type(time_group[0])))
+        
+        # put time group to DataTable keyword
+        reduction_group = self.outcome['reduction_group']
+        for (group_id, member_list) in reduction_group.items():
+            for member in member_list:
+                ant = member.antenna
+                spw = member.spw
+                pols = member.pols
+                for pol in pols:
+                    datatable.set_timetable(ant, spw, pol, time_group_list[ant][spw][pol], numpy.array(time_group[0]), numpy.array(time_group[1]))
 
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)

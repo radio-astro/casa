@@ -167,9 +167,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             member_list.sort()
             antenna_list = [group_desc[i].antenna for i in member_list]
             spwid_list = [group_desc[i].spw for i in member_list]
-            pols_tmp = [None if pols_list[i] == group_desc[i].pols else pols_list[i] \
-                        for i in member_list]
-            LOG.debug('pols_tmp=%s'%(pols_tmp))
             pols_list = [pols_list[i] for i in member_list]
             LOG.debug('pols_list=%s'%(pols_list))
             
@@ -178,7 +175,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
             
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
-                                                       pols_tmp, window, edge, broadline)
+                                                       pols_list, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
             grid_table = maskline_result.outcome['grid_table']
