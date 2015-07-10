@@ -1,7 +1,5 @@
-from taskinit import *
-import time
+from taskinit import casalog, casac, qa, tb, write_history
 import os
-import sys
 import copy
 import flaghelper as fh
 
@@ -110,10 +108,6 @@ def flagcmd(
                 t = qa.quantity(ms_startmjds, 's')
                 t1sdata = t['value']
                 ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
-                ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
-                t0 = qa.totime(ms_startdate + '/00:00:00.00')
-                t0d = qa.convert(t0, 'd')
-                t0s = qa.convert(t0, 's')
                 t = qa.quantity(ms_endmjds, 's')
                 t2sdata = t['value']
                 ms_endtime = qa.time(t, form='ymd', prec=9)[0]
@@ -122,7 +116,6 @@ def flagcmd(
                              + ms_endtime)
     
             myflagcmd = {}
-            cmdlist = []
     
             if action == 'clear':
                 casalog.post('Action "clear" will disregard inpmode (no reading)')
@@ -320,7 +313,7 @@ def flagcmd(
                     fh.backupFlags(aflocal, msfile='', prename='flagcmd')
     
                 # Run the tool
-                stats = aflocal.run(True)
+                aflocal.run(True)
     
                 aflocal.done()
     
@@ -505,9 +498,6 @@ def readFromTable(
                 continue
 
             # Extract antenna and timerange strings from cmd
-            antstr = ''
-            timstr = ''
-
             flagd['id'] = str(i)
             flagd['antenna'] = ''
             flagd['mode'] = ''
@@ -590,7 +580,6 @@ def readFromCmd(cmdlist, ms_startmjds, ms_endmjds):
             reas = ''
             cmd = ''
             fid = str(i)
-            mode = ''
             typ = 'FLAG'
             appl = False
             levl = 0
@@ -798,7 +787,6 @@ def readFromFile(
             reas = ''
             cmd = ''
             fid = str(i)
-            mode = ''
             typ = 'FLAG'
             appl = False
             levl = 0
@@ -1464,7 +1452,6 @@ def clearFlagCmd(msfile, myrowlist=[]):
             raise Exception, 'Error removing rows ' + str(rowlist) \
                 + ' from table ' + mstable
 
-        nnew = int(tb.nrows())
     else:
         casalog.post('No rows to clear')
 
@@ -1870,7 +1857,6 @@ def newplotflags(
                 thisOffset = readict[thisReason]['offset']
                 t1s = plotflag[ipf]['t1s']
                 t2s = plotflag[ipf]['t2s']
-                myTimeSpan = t2s - t1s
     
                 ax1.plot([t1s, t2s], [antind + thisOffset, antind
                      + thisOffset], color=thisColor, lw=2, alpha=.7)
@@ -2024,21 +2010,3 @@ def applyCalCmds(aflocal, caltable, myflagcmd, tablerows, flagbackup, outfile):
     aflocal.run(True, True)
     
     aflocal.done()
-     
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
