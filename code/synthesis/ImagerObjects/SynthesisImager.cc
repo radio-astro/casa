@@ -365,7 +365,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                   else {
                     relStart = chanStart - loChans(spw);
                   }
-                  for (uInt k=relStart;k<(chanEnd-loChans(spw)+1);k+=chanStep) {
+                  for (uInt k=relStart;k<(uInt)(chanEnd-loChans(spw)+1);k+=chanStep) {
                     chanSel_p(msin,spw,k)=1;
                   }
     		  /////////////////////////////////////////
@@ -375,6 +375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
     	  Quantity freq;
+          //cerr<<"selfpars.freqbeg="<<selpars.freqbeg<<endl;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
@@ -384,7 +385,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  Vector<Int> elspw, elstart, elnchan;
     	  Vector<Int>fields=thisSelection.getFieldList( & mss4vi_p[msin]);
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
-    	  MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,1.0, selpars.freqframe, fieldid);
+    	  //getSpwInFreqRange seems to assume the freqs to be the center of a channel while freqbeg and freqend appear to be
+    	  //frequencies at the channel range edges. So set freqStep = 0.0 .
+    	  //MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,1.0, selpars.freqframe, fieldid);
+    	  MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,0.0, selpars.freqframe, fieldid);
     	  //im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
     	  blockNChan_p[msin].resize(elspw.nelements());
     	  blockStart_p[msin].resize(elspw.nelements());
@@ -696,8 +700,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   freq1=freq2;
 		   freq2=tmp;
 	   }
-	   String freqbeg=String::toString(freq1)+units;
-	   String freqend=String::toString(freq2)+units;
+	   //String freqbeg=String::toString(freq1)+units;
+	   //String freqend=String::toString(freq2)+units;
+	   // String::toString drops the digits for double precision
+	   String freqbeg=doubleToString(freq1)+units;
+	   String freqend=doubleToString(freq2)+units;
 	   //Record outRec=SynthesisUtilMethods::cubeDataPartition(selpars, 1, freq1, freq2);
 	   //Record partRec=outRec.asRecord("0");
 	   ///resetting the block ms
@@ -1968,6 +1975,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
   }// end of predictModel
 
+  //Utility function to properly convert Double to String.
+  //With C++11 we can probably use STL to_string() function instead...
+  String SynthesisImager::doubleToString(const Double& df) {
+    std::ostringstream ss;
+    ss.precision(std::numeric_limits<double>::digits10+2);
+    ss << df;
+    return ss.str();
+  }
 
  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

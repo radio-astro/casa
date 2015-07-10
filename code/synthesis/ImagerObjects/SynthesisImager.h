@@ -181,7 +181,8 @@ class SynthesisImager
 		   const Bool& psTermOn, const Bool& aTermOn); 
   void reloadCFCache();
 
-
+  static String doubleToString(const Double& df); 
+ 
 protected:
  
   /////////////// Internal Functions
