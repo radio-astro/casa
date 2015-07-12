@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import types
+import csv
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -13,19 +14,21 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class AntposResults(basetask.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
+    def __init__(self, final=[], pool=[], preceding=[], antenna='', offsets=[]):
         super(AntposResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.antenna=antenna
+        self.offsets=offsets
 
     def merge_with_context(self, context):
         """
         See :method:`~pipeline.api.Results.merge_with_context`
         """
         if not self.final:
-            LOG.error('No results to merge')
+            LOG.warn('No antenna position results to merge')
             return
 
         for calapp in self.final:
@@ -66,8 +69,7 @@ class AntposInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('antposfile')
 
         if self._antposfile is None:
-            vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_antposlist.txt'
+            return 'antennapos.csv'
         return self._antposfile
 
     @antposfile.setter
@@ -128,8 +130,9 @@ class AntposInputs(basetask.StandardInputs):
             antenna = self.antenna
             offsets = self.offsets
         elif self.hm_antpos == 'file':
-            filename = os.path.join(self.output_dir, self.antposfile)            
-            antenna, offsets = self._read_antpos_file(filename)
+            filename = os.path.join(self.output_dir, self.antposfile)           
+            antenna, offsets = self._read_antpos_csvfile(filename,
+                os.path.basename(self.vis))
         else:
             antenna = ''
             offsets = []
@@ -140,7 +143,7 @@ class AntposInputs(basetask.StandardInputs):
                 'antenna'   : antenna,
                 'parameter' : offsets       }
 
-    def _read_antpos_file(self, filename):
+    def _read_antpos_txtfile(self, filename):
         """
         Read and return the contents of a file or list of files.
         """
@@ -168,7 +171,48 @@ class AntposInputs(basetask.StandardInputs):
                 if len(fields) < 4:
                     continue
                 antennas.append(fields[0])
-                parameters.extend([float(fields[1]), float(fields[2]), float(fields[3])])
+                parameters.extend([float(fields[1]), float(fields[2]),
+                    float(fields[3])])
+
+        # Convert the list to a string since CASA wants it that way?
+        return ','.join(antennas), parameters
+
+    def _read_antpos_csvfile (self, filename, msbasename):
+        """
+        Read and return the contents of a file or list of files.
+        """
+
+        # This assumes a very simple csv file format containing the following
+        # columns
+        #    ms
+        #    antenna
+        #    xoffset in meters
+        #    yoffset in meters
+        #    zoffset in meters
+        #    comment
+        # Rewrite this when we know the real format
+        antennas = []
+        parameters = []
+
+        if not os.path.exists(filename):
+            LOG.warn('Antenna position offsets file does not exist')
+            return ','.join(antennas), parameters
+
+        with open(filename, 'rt') as f:
+            reader = csv.reader(f)
+
+            # First row is header row
+            reader.next()
+
+            # Loop over the rows
+            for row in reader:
+                (ms_name, ant_name, xoffset, yoffset, zoffset, _) = row
+                if ms_name != msbasename:
+                    continue
+                antennas.append(ant_name)
+                parameters.extend([float(xoffset), float(yoffset),
+                    float(zoffset)])
+
 
         # Convert the list to a string since CASA wants it that way?
         return ','.join(antennas), parameters
@@ -182,11 +226,12 @@ class Antpos(basetask.StandardTaskTemplate):
 
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
-        self._executor.execute(gencal_job)
+        if inputs.hm_antpos == 'file' and  gencal_args['antenna'] == '':
+            LOG.info('No antenna position offsets are defined')
+        else:
+            self._executor.execute(gencal_job)
 
         calto = callibrary.CalTo(vis=inputs.vis)
-#        calto = callibrary.CalTo(vis=inputs.vis),
-#                                 antenna=gencal_args['antenna'])
         # careful now! Calling inputs.caltable mid-task will remove the
         # newly-created caltable, so we must look at the task arguments
         # instead
@@ -197,7 +242,8 @@ class Antpos(basetask.StandardTaskTemplate):
 
         calapp = callibrary.CalApplication(calto, calfrom)
 
-        return AntposResults(pool=[calapp])
+        return AntposResults(pool=[calapp], antenna=gencal_args['antenna'],
+            offsets=gencal_args['parameter'])
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one
