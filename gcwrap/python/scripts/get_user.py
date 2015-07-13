@@ -17,7 +17,7 @@ def get_user():
         if not user:
             # ...but when su is being used it's hard to tell in advance
             # whether the uid or euid is wanted.
-            return pwd_module.getpwuid(os.getuid()).pw_name
+            return pwd.getpwuid(os.getuid()).pw_name
 
         return user
 
