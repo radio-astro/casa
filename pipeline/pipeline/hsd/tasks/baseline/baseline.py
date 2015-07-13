@@ -118,11 +118,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
         
         baselined = []
 
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-
         # generate storage for baselined data
         self._generate_storage_for_baselined(context, reduction_group)
 
@@ -218,7 +213,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                         source_name = source.name.replace(' ', '_').replace('/','_')
                 prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
                 plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
-                                                   context.observing_run[ant].name, stage_dir, prefix, channelmap_range))
+                                                   context.observing_run[ant].baseline_source, stage_dir, prefix, channelmap_range))
                 prefix = prefix.replace('before', 'after')
                 plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, outfile, stage_dir, prefix, channelmap_range))
                 
