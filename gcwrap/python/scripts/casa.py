@@ -147,6 +147,7 @@ from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split
 from split2 import split2
+from tclean import tclean
 from tsdcal import tsdcal
 from uvcontsub import  uvcontsub
 from uvmodelfit import  uvmodelfit

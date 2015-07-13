@@ -241,6 +241,7 @@ from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 from cvel2_pg import cvel2_pg as cvel2
 from tsdcal_pg import tsdcal_pg as tsdcal
+from tclean_pg import tclean_pg as tclean
 
 ##
 ## asap may not be available with every casa installation
