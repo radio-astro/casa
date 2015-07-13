@@ -3,7 +3,7 @@ import unittest
 import os
 import filecmp
 import pprint
-from tasks import flagcmd, flagdata, flagmanager, mstransform
+from tasks import flagcmd, flagdata, mstransform
 from taskinit import aftool, tbtool
 from __main__ import default
 import exceptions
@@ -663,104 +663,6 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
         self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
         self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)
-
-class test_flagmanager(test_base):
-    
-    def setUp(self):
-        os.system("rm -rf flagdatatest.ms*") # test1 needs a clean start
-        self.setUp_flagdatatest()
-        
-    def test1m(self):
-        '''flagmanager test1m: mode=list, flagbackup=True/False'''
-        
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 2)
-        aflocal.done()
-
-
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 2)
-        aflocal.done()
-
-        flagdata(vis=self.vis, mode='unflag', flagbackup=True)
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
-        aflocal.done()
-        
-        newname = 'Ha! The best version ever!'
-
-        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_1', versionname=newname, 
-                    comment='This is a *much* better name')
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
-        aflocal.done()
-        
-        self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
-                        'Flagversion file does not exist: flags.'+newname)
-        
-        # Specific for MMS
-        if testmms:
-            areg = self.vis+'/SUBMSS/*flagversions*'
-            import glob
-            print 'Check for .flagversions in the wrong place.'
-            self.assertEqual(glob.glob(areg), [], 'There should not be any .flagversions in the'
-                                                ' SUBMSS directory')
-            
-
-    def test2m(self):
-        """flagmanager test2m: Create, then restore autoflag"""
-
-        flagdata(vis=self.vis, mode='summary')
-        flagmanager(vis=self.vis)
-        
-        flagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
-        
-        flagmanager(vis=self.vis)
-        ant2 = flagdata(vis=self.vis, mode='summary')['flagged']
-
-        print "After flagging antenna 2 there were", ant2, "flags"
-
-        # Change flags, then restore
-        flagdata(vis=self.vis, mode='manual', antenna="3", flagbackup=True)
-        flagmanager(vis = self.vis)
-        ant3 = flagdata(vis=self.vis, mode='summary')['flagged']
-
-        print "After flagging antenna 2 and 3 there were", ant3, "flags"
-
-        flagmanager(vis=self.vis, mode='restore', versionname='flagdata_2')
-        restore2 = flagdata(vis=self.vis, mode='summary')['flagged']
-
-        print "After restoring pre-antenna 2 flagging, there are", restore2, "flags; should be", ant2
-
-        self.assertEqual(restore2, ant2)
-
-    def test_CAS2701(self):
-        """flagmanager: Do not allow flagversion=''"""
-                
-        aflocal.open(self.vis)
-        l = len(aflocal.getflagversionlist())
-        aflocal.done()
-        
-        flagmanager(vis = self.vis,
-                    mode = "save",
-                    versionname = "non-empty-string")
-
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), l+1)
-        aflocal.done()
-
-        flagmanager(vis = self.vis,
-                    mode = "save",
-                    versionname = "non-empty-string")
-
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), l+1)
-        aflocal.done()
 
 
 class test_msselection(test_base):
@@ -2556,42 +2458,6 @@ class test_bandpass(test_base):
         assert abs(pos['flagged'] - 2*30426) <= 10
         assert abs(pos['correlation']['Sol2']['flagged'] - 30426) <= 5        
 
-    def test_caltable_flagbackup(self):
-        '''Flagmanager:: cal table mode=list, flagbackup=True/False'''
-        
-        # Need a fresh start
-        os.system('rm -rf cal.fewscans.bpass*')
-        self.setUp_bpass_case()
-        
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 2)
-        aflocal.done()
-
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 2)
-        aflocal.done()
-
-        flagdata(vis=self.vis, mode='unflag', flagbackup=True)
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
-        aflocal.done()
-        
-        newname = 'Ha! The best version ever!'
-
-        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_1', versionname=newname, 
-                    comment='This is a *much* better name')
-        flagmanager(vis=self.vis, mode='list')
-        aflocal.open(self.vis)
-        self.assertEqual(len(aflocal.getflagversionlist()), 3)
-        aflocal.done()
-        
-        self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
-                        'Flagversion file does not exist: flags.'+newname)        
-
     def test_cal_time1(self):
         '''Flagdata: clip a timerange from one field'''
         # this timerange corresponds to field 3C286_A
@@ -3117,7 +2983,6 @@ def suite():
     return [test_rflag,
             test_tfcrop,
             test_shadow,
-            test_flagmanager,
             test_selections,
             test_selections2,
             test_alma,

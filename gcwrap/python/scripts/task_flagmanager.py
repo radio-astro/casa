@@ -24,21 +24,29 @@ def flagmanager(
         if mode == 'list':
             aflocal.getflagversionlist()
             print 'See logger for flag versions for this MS'
+            
         elif mode == 'save':
             if versionname == '':
-                raise Exception("Illegal versionname: ''")
+                raise IOError, "Illegal empty versionname: ''"
+            
+            tmpname = vis+'.flagversions/flags.'+versionname
+            if os.path.exists(tmpname):
+                raise IOError, ("Version name \'%s\' already exist. Please provide another versionname."%tmpname)
+            
             casalog.post('Save current flagversion in ' + versionname)
             aflocal.saveflagversion(versionname=versionname,
                                     comment=comment, merge=merge)
         elif mode == 'restore':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
-            casalog.post('Restore flagversion ' + versionname)
+            
+            casalog.post('Restore flagversions ' + versionname)
             aflocal.restoreflagversion(versionname=versionname,
                     merge=merge)
         elif mode == 'delete':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
+            
             aflocal.deleteflagversion(versionname=versionname)
         elif mode == 'rename':
             if versionname == '':
@@ -51,12 +59,13 @@ def flagmanager(
             olddir = vis + '.flagversions/flags.' + oldname
             newdir = vis + '.flagversions/flags.' + versionname
             if not os.path.isdir(olddir):
-                raise Exception, 'No such flagversion: ' + str(oldname)
+                raise Exception, 'No such flagversions: ' + str(oldname)
+            
             if os.path.exists(newdir):
-                raise Exception, 'Flagversion ' + str(versionname) \
+                raise Exception, 'Flagversions ' + str(versionname) \
                     + ' already exists!'
 
-            casalog.post('Rename flagversion "%s" to "%s"' % (oldname,
+            casalog.post('Rename flagversions "%s" to "%s"' % (oldname,
                          versionname))
 
             os.rename(olddir, newdir)
@@ -82,6 +91,7 @@ def flagmanager(
         
         aflocal.done()
     except Exception, instance:
-        print '*** Error ***', instance
+#        print '*** Error ***', instance
+        raise Exception, instance
 
 
