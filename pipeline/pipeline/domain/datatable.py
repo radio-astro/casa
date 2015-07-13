@@ -84,8 +84,6 @@ TD_DESC_RW = [
     __coldesc('integer', 0, 0,  2, 'List of mask ranges'),
     __coldesc('integer', 0, 0, -1, 'Unchanged row or not'),
     __coldesc('integer', 0, 0, -1, 'Position group id')#,
-#     __coldesc('integer', 0, 0, -1, 'Time group id for large gap'),
-#     __coldesc('integer', 0, 0, -1, 'Time group id for small gap')
     ]
 
 def __tabledescro():
@@ -101,8 +99,7 @@ def __tabledescrw():
     name = [
         'STATISTICS', 'FLAG', 'FLAG_PERMANENT',
         'FLAG_SUMMARY', 'NMASK', 'MASKLIST', 'NOCHANGE',
-        'POSGRP'#, 'TIMEGRP_S', 'TIMEGRP_L'
-        ]
+        'POSGRP']
     return dict( zip(name,TD_DESC_RW) )
 
 TABLEDESC_RO = __tabledescro()
@@ -382,70 +379,6 @@ class DataTableImpl( object ):
                 posdict[row] = [[-1,key],[rep]]
 
         return posdict
-
-#     def get_timetable(self, ant, spw, pol):
-#         # time table format
-#         # TimeTable: [TimeTableSmallGap, TimeTableLargeGap]
-#         # TimeTableXXXGap: [[[row0, row1, ...], [idx0, idx1, ...]], ...]
-#         LOG.info('get_timetable start')
-#         start_time = time.time()
-#         timegrp_list = self.getkeyword('TIMEGRP_LIST')
-#         try:
-#             mygrp = timegrp_list[str(ant)][str(spw)][str(pol)]
-#         except KeyError, e:
-#             raise KeyError('ant %s spw %s pol %s not in reduction group list'%(ant,spw,pol))
-#         except Exception, e:
-#             raise e
-# 
-#         mygrp_s = mygrp['small']
-#         mygrp_l = mygrp['large']
-#         timegrp_s = self.getcol('TIMEGRP_S')
-#         timegrp_l = self.getcol('TIMEGRP_L')
-#         rows = self.getcol('ROW')
-# 
-#         timetable = [[],[]]
-#         timedic_s = {}
-#         timedic_l = {}
-#         for idx in xrange(len(rows)):
-#             grp_s = timegrp_s[idx]
-#             if grp_s not in mygrp_s:
-#                 continue
-#             if not timedic_s.has_key(grp_s):
-#                 timedic_s[grp_s] = [[],[]]
-#             timedic_s[grp_s][0].append(rows[idx])
-#             timedic_s[grp_s][1].append(idx)
-#         for idx in xrange(len(rows)):
-#             grp_l = timegrp_l[idx]
-#             if grp_l not in mygrp_l:
-#                 continue
-#             if not timedic_l.has_key(grp_l):
-#                 timedic_l[grp_l] = [[],[]]
-#             timedic_l[grp_l][0].append(rows[idx])
-#             timedic_l[grp_l][1].append(idx)
-#         for idx in xrange(len(mygrp_s)):
-#             grp = timedic_s[mygrp_s[idx]]
-#             timetable[0].append(grp)
-#         for idx in xrange(len(mygrp_l)):
-#             grp = timedic_l[mygrp_l[idx]]
-#             timetable[1].append(grp)
-#         end_time = time.time()
-#         LOG.info('construct timetable: Elapsed time %s sec'%(end_time - start_time))
-#         
-#         # put time table to table keyword
-#         start_time2 = time.time()
-#         key_small = timetable_key('SMALL', ant, spw, pol)
-#         key_large = timetable_key('LARGE', ant, spw, pol)
-#         keys = self.tb2.keywordnames()
-#         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
-#         if key_small not in keys or key_large not in keys:
-#             self.putkeyword(key_small, dictify(timetable[0]))
-#             self.putkeyword(key_large, dictify(timetable[1]))
-#             #self.exportdata(minimal=True)
-#         end_time = time.time()
-#         LOG.info('put timetable: Elapsed time %s sec'%(end_time - start_time2))
-#         LOG.info('get_timetable end: Elapsed time %s sec'%(end_time - start_time))
-#         
-#         return timetable
     
     def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l):
         # time table format
@@ -482,7 +415,7 @@ class DataTableImpl( object ):
         LOG.info('put timetable: Elapsed time %s sec'%(end_time - start_time2))
         LOG.info('set get_timetable end: Elapsed time %s sec'%(end_time - start_time))
 
-    def get_timetable2(self, ant, spw, pol):
+    def get_timetable(self, ant, spw, pol):
         LOG.info('new get_timetable start')
         start_time = time.time()
         key_small = timetable_key('SMALL', ant, spw, pol)

@@ -123,7 +123,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         print 'cell=%s' % (cellx)
     
         # nx and ny
-        index_list = common.get_index_list2(datatable, antenna_list, spwid_list, pols_list, srctype)
+        index_list = common.get_index_list(datatable, antenna_list, spwid_list, pols_list, srctype)
         
         if len(index_list) == 0:
             antenna_name = reference_data.antenna.name

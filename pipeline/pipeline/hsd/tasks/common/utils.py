@@ -183,7 +183,7 @@ def temporary_filename(name='_heuristics.temporary.table', removesubfiles=False)
             command += '*'
         os.system(command)
 
-def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
+def _get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     LOG.info('get_index_list_org start')
     start_time = time.time()
     assert len(antenna) == len(spw)
@@ -221,7 +221,7 @@ def _get_index_list2(datatable, antenna, spw, pols):
     online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [OnlineFlagIndex], [OnlineFlagIndex], 1)[0]
     for (_ant, _spw, _pols) in zip(antenna, spw, pols):
         for _pol in _pols:
-            time_table = datatable.get_timetable2(_ant, _spw, _pol)
+            time_table = datatable.get_timetable(_ant, _spw, _pol)
             # time table separated by large time gap
             the_table = time_table[1]
             for group in the_table:
@@ -229,12 +229,12 @@ def _get_index_list2(datatable, antenna, spw, pols):
                     if online_flag[row] == 1:
                         yield row
 
-def get_index_list2(datatable, antenna, spw, pols=None, srctype=None):
+def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     LOG.info('new get_index_list start')
     start_time = time.time()
     
     if pols is None or pols.count(None) > 0 or srctype is None:
-        index_list = list(get_index_list(datatable, antenna, spw, pols, srctype))
+        index_list = list(_get_index_list(datatable, antenna, spw, pols, srctype))
     else:
         index_list = list(_get_index_list2(datatable, antenna, spw, pols))
     index_list.sort()

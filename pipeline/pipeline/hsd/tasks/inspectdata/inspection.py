@@ -40,16 +40,10 @@ class SDInspectDataResults(common.SingleDishResults):
         datatable.putkeyword('POSGRP_REP', self.outcome.pop('position_group_rep'))
         datatable.putkeyword('POSGRP_LIST', self.outcome.pop('position_group_list'))
         time_group_list = self.outcome.pop('time_group_list')
-        #datatable.putkeyword('TIMEGRP_LIST', time_group_list)
         time_group = self.outcome.pop('time_group')
         time_gap = self.outcome.pop('time_gap')
-        #datatable.putcol('TIMEGRP_S', time_group[0])
-        #datatable.putcol('TIMEGRP_L', time_group[1])
         datatable.putkeyword('TIMEGAP_S', time_gap[0])
         datatable.putkeyword('TIMEGAP_L', time_gap[1])
-        
-        LOG.info('type(time_group_list) = %s'%(type(time_group_list)))
-        LOG.info('type(time_group[0]) = %s'%(type(time_group[0])))
         
         # put time group to DataTable keyword
         reduction_group = self.outcome['reduction_group']

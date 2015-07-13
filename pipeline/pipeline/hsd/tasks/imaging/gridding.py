@@ -133,7 +133,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
         start = time.time()
 
         table = self.datatable.tb1
-        index_list = common.get_index_list2(self.datatable, self.antenna, self.spw, self.pol, self.srctype)
+        index_list = common.get_index_list(self.datatable, self.antenna, self.spw, self.pol, self.srctype)
         #pols = table.getcol('POL').take(index_list)
         #index_list = numpy.take(index_list, numpy.where(pols == self.pol)[0])
         #del pols
