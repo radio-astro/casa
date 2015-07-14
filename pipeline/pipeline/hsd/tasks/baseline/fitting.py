@@ -12,10 +12,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
-from . import utils
 from pipeline.hsd.tasks.common import utils as sdutils
-from .baselinetable import SplineBaselineTableGenerator
-from .baselinetable import PolynomialBaselineTableGenerator
 
 LOG = infrastructure.get_logger(__name__)
 
