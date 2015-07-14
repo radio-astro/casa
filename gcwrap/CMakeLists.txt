@@ -35,7 +35,7 @@ include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
 set( CASA_MINOR_VERSION 5 )
-set( CASA_PATCH_VERSION 0 )
+set( CASA_PATCH_VERSION 64 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
 ###
@@ -620,14 +620,22 @@ casa_find( FFTW3
            INCLUDES fftw3.h
            LIBS fftw3_threads fftw3f_threads fftw3f fftw3 )
 
-# BLAS
-casa_find( BLAS
+if( ${arch} STREQUAL "darwin" )
+    message(STATUS "prefix yes")
+    find_package (BLAS REQUIRED)
+    find_package (LAPACK REQUIRED)
+else()
+     message(STATUS "prefix no")
+     # BLAS
+     casa_find( BLAS
            LIBS blas )
 
-# LAPACK
-casa_find( LAPACK
-           LIBS lapack 
+     # LAPACK
+     casa_find( LAPACK
+           LIBS lapack
            DEPENDS BLAS )
+endif()
+
 
 # DL
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} CACHE STRING "dl libraries" FORCE )
