@@ -1,6 +1,7 @@
 from parallel.pimager import pimager
 import pdb
 import simple_cluster
+import simple_cluster as simpl
 import string
 import commands
 from taskinit import *
@@ -128,7 +129,7 @@ def pclean(vis=None,
                 tmppc = phasecenter
             phasecenter = tmppc           
     if((clusterdef != '') and os.path.exists(clusterdef)):
-        cl=simple_cluster.simple_cluster()
+        cl=simpl.simple_cluster()
         if(cl.get_status()==None):
             cl.init_cluster(clusterdef)
 ####checking done
@@ -140,7 +141,7 @@ def pclean(vis=None,
     elif(arch=='darwin'):
         totmem=string.atof(commands.getoutput('sysctl hw.memsize').split()[1])
 
-    sc=simple_cluster.simple_cluster.getCluster()
+    sc=simpl.simple_cluster.getCluster()
     ###################
     #sc.stop_cluster()
     #sc.start_cluster()
