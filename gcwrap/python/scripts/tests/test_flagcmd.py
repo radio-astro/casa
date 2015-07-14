@@ -822,6 +822,35 @@ class test_actions(test_base):
         flagcmd(vis=self.vis, inpmode='list', inpfile=cmds, action='plot',plotfile=outplot)
                 
         self.assertTrue(os.path.exists(outplot),'Plot file was not created')
+
+    def test_action_plot_large(self):
+        '''flagcmd: Test action=plot to plot many antennas into multiple pages'''
+        cmds = []
+        for i in range(60):
+            cmds.append("antenna='ea%03d' reason='none%d'" % (i, i % 5))
+
+        r = flagcmd(vis=self.vis, inpmode='list', inpfile=cmds, action='plot',
+                    plotfile='manyplot.png')
+        self.assertIn('plotfiles', r)
+        self.assertEqual(len(r['plotfiles']), 3)
+        self.assertEqual(r['plotfiles'],
+                         ['manyplot-001.png',
+                          'manyplot-002.png','manyplot-003.png'])
+        for f in r['plotfiles']:
+            self.assertTrue(os.path.exists(f))
+
+    def test_action_plot_da(self):
+        '''flagcmd: Test action=plot to plot page with DA antenna CAS-5187'''
+        cmds = []
+        for i in range(28):
+            cmds.append("antenna='DA%03d' reason='none%d'" % (i, i % 5))
+
+        r = flagcmd(vis=self.vis, inpmode='list', inpfile=cmds, action='plot',
+                    plotfile='manyplot.png')
+        self.assertIn('plotfiles', r)
+        self.assertEqual(len(r['plotfiles']), 1)
+        self.assertEqual(r['plotfiles'], ['manyplot.png'])
+        self.assertTrue(os.path.exists('manyplot.png'))
         
     def test_action_list1(self):
          '''flagcmd: action=list with inpmode from a list'''

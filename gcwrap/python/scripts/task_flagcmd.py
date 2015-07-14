@@ -2,6 +2,8 @@ from taskinit import casalog, casac, qa, tb, write_history
 import os
 import copy
 import flaghelper as fh
+import numpy as np
+from collections import defaultdict
 
 def flagcmd(
     vis=None,
@@ -354,7 +356,11 @@ def flagcmd(
                     # Plot flag commands from FLAG_CMD or xml
                     casalog.post('Warning: will only reliably plot individual per-antenna flags'
                                  )
-                    newplotflags(myflagcmd, plotfile, t1sdata, t2sdata)
+                    fns = newplotflags(myflagcmd, plotfile, t1sdata, t2sdata)
+                    if fns:
+                        return {'plotfiles': fns}
+                    else:
+                        return True
                 else:
                     casalog.post('Warning: empty flag dictionary, nothing to plot'
                                  )
@@ -1596,7 +1602,7 @@ def newplotflags(
     except ImportError, e:
         print 'failed to load casa:\n', e
         exit(1)
-        
+
     # After the swig converstion, it seems that the following
     # line is not needed anymore
 #    qa = casac.qa = qatool = casac.quanta()
@@ -1834,35 +1840,95 @@ def newplotflags(
     nlegend = reakeys.__len__()
     casalog.post('Will plot ' + str(nlegend) + ' reasons in legend')
 
-    antind = 0
     if plotname == '':
         pl.ion()
     else:
         pl.ioff()
 
-    f1 = pl.figure()
-    ax1 = f1.add_axes([.15, .1, .75, .85])
-#    ax1.set_ylabel('antenna')
-#    ax1.set_xlabel('time')
-    # badflags=[]
-    nplotted = 0
-    for thisant in myants:
-        antind += 1
-        for ipf in range(npf):
-            if plotflag[ipf]['show'] and plotflag[ipf]['antenna'] \
-                == thisant:
-                # plot this flag
-                thisReason = plotflag[ipf]['reason']
-                thisColor = readict[thisReason]['color']
-                thisOffset = readict[thisReason]['offset']
-                t1s = plotflag[ipf]['t1s']
-                t2s = plotflag[ipf]['t2s']
-    
-                ax1.plot([t1s, t2s], [antind + thisOffset, antind
-                     + thisOffset], color=thisColor, lw=2, alpha=.7)
-                nplotted += 1
+    plotflagperant = defaultdict(list)
+    for ipf, flag in plotflag.iteritems():
+        if not flag['show']:
+            continue
+        nflag = flag.copy()
+        nflag['color'] = readict[flag['reason']]['color']
+        nflag['offset'] = readict[flag['reason']]['offset']
+        plotflagperant[flag['antenna']].append(nflag)
 
-    casalog.post('Plotted ' + str(nplotted) + ' flags')
+    nplotted = sum(len(x) for x in plotflagperant.values())
+    casalog.post('Plotted %d flags' % nplotted)
+
+    figs = []
+    # maximum number of antennas per plot page (CAS-5187)
+    antlimit = 28
+    if len(myants) <= antlimit:
+        figs.append(pl.figure())
+        _plotants(figs[0], plotflagperant, myants, readict)
+    else:
+        # prefer DA on first page
+        da = [x for x in myants if ('DA' in x) or ('CM' in x)]
+        no_da = [x for x in myants if x not in da]
+        # but limit to 28 antennas per figure
+        if len(da) > antlimit:
+            no_da.extend(da[antlimit:])
+            da = da[:antlimit]
+
+        if da:
+            figs.append(pl.figure())
+            _plotants(figs[-1], plotflagperant, da, readict)
+
+        # stuff the rest on other figures
+        while no_da:
+            figs.append(pl.figure())
+            _plotants(figs[-1], plotflagperant, no_da[:antlimit], readict)
+            no_da = no_da[antlimit:]
+
+    filenames = []
+    if plotname == '':
+        pl.draw()
+    else:
+        if len(figs) == 1:
+            figs[0].savefig(plotname, dpi=150)
+            filenames.append(plotname)
+        else:
+            fdirname = os.path.dirname(plotname)
+            filename, ext = os.path.splitext(os.path.basename(plotname))
+            for i, f in enumerate(figs):
+                fn = '%s-%03d%s' % (os.path.join(fdirname, filename), i + 1, ext)
+                filenames.append(fn)
+                f.savefig(fn, dpi=150)
+    return filenames
+
+
+def _plotants(figure, plotflagperant, antlist, readict_inp):
+    """
+    plot flags of antennas
+
+    Parameters
+    ----------
+    figure : matplotlib figure
+    plotflagperant: dict
+        dictionary of antennas containing list of flag plot dictionaries
+    antlist: dict
+        list of antenna names to plot
+    readict:
+        list of reasons for the legend
+    """
+
+    ax1 = figure.add_axes([.15, .1, .75, .85])
+    nants = len(antlist)
+    readict = dict()
+    used_reasons = set()
+    for antind, thisant in enumerate(antlist):
+        for flag in plotflagperant[thisant]:
+            thisoffset = flag['offset'] + antind + 1
+            ax1.plot([flag['t1s'], flag['t2s']], [thisoffset] * 2,
+                     color=flag['color'], lw=2, alpha=.7)
+            used_reasons.add(flag['reason'])
+
+    # remove reasons that are not needed
+    for k, v in readict_inp.items():
+        if k in used_reasons:
+            readict[k] = v
 
     myXlim = ax1.get_xlim()
     myXrange = myXlim[1] - myXlim[0]
@@ -1880,22 +1946,20 @@ def newplotflags(
         x1 = myXlim[1]
 
     legendFontSize = 12
-    myYupper = nants + nlegend + 1.5
+    myYupper = nants + len(readict) + 1.5
     # place legend text
-    i = nants
     x = x0 + 0.050000000000000003 * myXrange
-    for reas in reakeys:
-        i += 1
+    for i, reas in enumerate(readict.keys()):
         colr = readict[reas]['color']
-        ax1.text(x, i, reas, color=colr, size=legendFontSize)
+        ax1.text(x, i + nants + 1, reas, color=colr, size=legendFontSize)
     ax1.set_ylim([0, myYupper])
 
-    ax1.set_yticks(range(1, len(myants) + 1))
-    ax1.set_yticklabels(myants)
+    ax1.set_yticks(range(1, len(antlist) + 1))
+    ax1.set_yticklabels(antlist)
     # print '  Relabled y axis'
 
     nxticks = 3
-    ax1.set_xticks(pl.linspace(myXlim[0], myXlim[1], nxticks))
+    ax1.set_xticks(np.linspace(myXlim[0], myXlim[1], nxticks))
 
     mytime = []
     myTimestr = []
@@ -1912,13 +1976,6 @@ def newplotflags(
         myTimestr.append(time1s)
 
     ax1.set_xticklabels(myTimestr)
-    # print myTimestr
-    if plotname == '':
-        pl.draw()
-    else:
-        pl.savefig(plotname, dpi=150)
-    return
-
 
 # def isModeValid(line):
 #     '''Check if mode is valid based on a line
