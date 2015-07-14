@@ -25,6 +25,7 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
                 'todo': NOTSET,       # 0
                 'trace': NOTSET }     # 0
 
+import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
@@ -408,3 +409,20 @@ def asap_force_storage(storage='disk'):
     sd.rcParams[key] = storage  
     yield None
     sd.rcParams[key] = storage_org
+    
+# helper functions for parallel execution
+def create_serial_job(task_cls, task_args, context):
+    inputs = task_cls.Inputs(context, **task_args)
+    task = task_cls(inputs)
+    job = mpihelpers.SyncTask(task)
+    LOG.debug('Serial Job: %s'%(task))
+    return job
+
+def create_parallel_job(task_cls, task_args, context):
+    context_path = os.path.join(context.output_dir, context.name + '.context')
+    if not os.path.exists(context_path):
+        context.save(context_path)
+    task = mpihelpers.Tier0PipelineTask(task_cls, task_args, context_path)
+    job = mpihelpers.AsyncTask(task)
+    LOG.debug('Parallel Job: %s'%(task))
+    return job

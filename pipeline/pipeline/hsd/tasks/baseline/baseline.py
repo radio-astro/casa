@@ -5,6 +5,7 @@ import shutil
 import glob
 import numpy
 
+import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.sdfilenamer as filenamer
@@ -185,6 +186,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
+            job_list = []
+            if mpihelpers.is_mpi_ready():
+                context_path = os.path.join(context.output_dir, context.name + '.context')
+                context.save(context_path)
+                job_generator = common.create_parallel_job
+            else:
+                job_generator = common.create_serial_job
+            # create job 
             for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
                 if len(pols) == 0:
                     LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
@@ -195,14 +204,32 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 _iteration = group_desc.get_iteration(ant, spwid)
                 outfile = self._get_dummy_name(context, ant)
                 LOG.debug('pols=%s'%(pols))
-                fitter_inputs = fitter_cls.Inputs(context, ant, spwid, pols, _iteration, 
-                                                  fitorder, edge, outfile)
-                fitter = fitter_cls(fitter_inputs)
-                fitter_result = self._executor.execute(fitter, merge=True)
-                # store temporal scantable name
+                fitter_args = {"antennaid": ant,
+                             "spwid": spwid,
+                             "pollist": pols,
+                             "iteration": _iteration,
+                             "fit_order": fitorder,
+                             "edge": edge,
+                             "outfile": outfile}
+                        
+                job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
+                                 'meta': (ant, spwid, pols, outfile)})
+
+            # execute job, get result, and generate plots before/after baseline subtraction
+            for job_entry in job_list:
+                job = job_entry['job']
+                ant, spwid, pols, outfile = job_entry['meta']
+                fitter_result = job.get_result()
+                if isinstance(fitter_result, basetask.ResultsList):
+                    temp_name = fitter_result[0].outcome.pop('outtable')
+                    for r in fitter_result:
+                        r.accept(context)
+                else:
+                    temp_name = fitter_result.outcome.pop('outtable')
+                    fitter_result.accept(context)
                 if not files_temp.has_key(ant):
-                    files_temp[ant] = fitter_result.outcome.pop('outtable')
-                    
+                    files_temp[ant] = temp_name#fitter_result.outcome.pop('outtable')
+
                 # generate plot for weblog
                 # prefix for spectral plot before baseline subtraction
                 st = context.observing_run[ant]
@@ -322,3 +349,4 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 #plot_list.append(plot)
                 yield plot
         #return plot_list
+
