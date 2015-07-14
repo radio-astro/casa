@@ -336,7 +336,7 @@ public:
 	// Parse parameters for summary
 	bool parseSummaryParameters(String field, String spw, String array, String feed,
 			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt,
+       	    String intent, String observation, Bool spwchan, Bool spwcorr, Bool basecnt, Bool fieldcnt,
        	    String name);
 
 private:

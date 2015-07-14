@@ -2,6 +2,7 @@ import shutil
 import unittest
 import os
 import filecmp
+import pprint
 from taskinit import aftool
 from __main__ import default
 
@@ -139,14 +140,29 @@ class test_tsys(test_base):
         aflocal.parseagentparameters({'mode':'shadow','spw':'3'}) #unsupported mode
         aflocal.parseelevationparameters()     # unsupported mode
         aflocal.parsemanualparameters(spw='5')
-        aflocal.parsesummaryparameters(spw='1,3,5')
+        aflocal.parsesummaryparameters(spw='1,3,5', fieldcnt=True)
         aflocal.init()
         res = aflocal.run(writeflags=True)
         aflocal.done() 
-        self.assertEqual(res['report0']['spw']['1']['flagged'], 32256)
-        self.assertEqual(res['report0']['spw']['3']['flagged'], 0)
-        self.assertEqual(res['report0']['spw']['5']['flagged'], 32256)
-        self.assertEqual(res['report0']['flagged'], 32256*2)
+        
+        # Check the summary dictionary with field breakdown
+        fields = res['report0'].keys()
+        fields.remove('name')
+        fields.remove('type')
+        fflags1 = 0
+        fflags3 = 0
+        fflags5 = 0
+        totalflags = 0
+        for ff in fields:
+          fflags1 += res['report0'][ff]['spw']['1']['flagged']
+          fflags3 += res['report0'][ff]['spw']['3']['flagged']
+          fflags5 += res['report0'][ff]['spw']['5']['flagged']
+          totalflags += res['report0'][ff]['flagged']
+
+        self.assertEqual(fflags1, 32256)
+        self.assertEqual(fflags3, 0)
+        self.assertEqual(fflags5, 32256)
+        self.assertEqual(totalflags, 32256*2)
         
     def test_manual_field_selection_agent_layer_for_tsys_CalTable(self):
         """AgentFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """

@@ -1239,6 +1239,11 @@ for the summary mode.
      <value>false</value>
      </param>
 
+     <param type="bool" name="fieldcnt">
+     <description>List the number of flags per field. Default: </description>
+     <value>false</value>
+     </param>
+     
      <param type="string" name="name">
      <description>Name of this summary report. Default: summary </description>
      <value></value>

@@ -1409,7 +1409,7 @@ AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 		String feed, String scan, String antenna,
 		String uvrange,  String timerange, String correlation,
 		String intent, String observation,
-		Bool spwchan, Bool spwcorr, Bool basecnt, String name)
+		Bool spwchan, Bool spwcorr, Bool basecnt, Bool fieldcnt, String name)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1438,6 +1438,7 @@ AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 	agent_record.define("spwchan", spwchan);
 	agent_record.define("spwcorr", spwcorr);
 	agent_record.define("basecnt", basecnt);
+    agent_record.define("fieldcnt", fieldcnt);
 	agent_record.define("name", name);
 
 	// Call the main method

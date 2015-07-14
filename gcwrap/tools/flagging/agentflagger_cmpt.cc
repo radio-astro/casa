@@ -573,6 +573,7 @@ agentflagger::parsesummaryparameters(
 		const bool spwchan,
 		const bool spwcorr,
 		const bool basecnt,
+		const bool fieldcnt,
 		const std::string& name)
 {
 
@@ -586,7 +587,7 @@ agentflagger::parsesummaryparameters(
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
 					String(intent), String(observation), Bool(spwchan),
-					Bool(spwcorr), Bool(basecnt), String(name));
+					Bool(spwcorr), Bool(basecnt), Bool(fieldcnt), String(name));
 
 		}
 
