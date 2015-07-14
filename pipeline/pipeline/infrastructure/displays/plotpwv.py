@@ -164,6 +164,7 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
         pb.savefig(figfile)
     else:
         LOG.warn("Failed to create PWV plot")
+    pb.close()
 
 
 def readPWVFromMS(vis):
