@@ -1025,7 +1025,7 @@ EOT
      if [ "$PGPLOT_FONT" = "" ] ; then
         # see if PGPLOT is anywhere obvious...
 	PGPLOT_FONT=$AIPSARCH/lib/grfont.dat
-        for i in /usr/lib /usr/local/lib /opt/local/lib /usr/local/pgplot \
+        for i in /usr/lib /usr/local/lib /opt/casa/01/lib /opt/local/lib /usr/local/pgplot \
 	         /opt/local/pgplot /usr/lib/pgplot /usr/local/lib/pgplot \
 		 /opt/local/lib/pgplot
         do

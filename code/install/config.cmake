@@ -330,7 +330,7 @@ macro( casa_find package )
   ##
   set( _standard_include_paths "" )
   foreach( _p ${CMAKE_INSTALL_PREFIX}/include ${casa_packages}/include
-              /opt/local/include /sw/include /opt/include )
+              /opt/casa/01/include /opt/local/include /sw/include /opt/include )
     set(_ok "yes")
     foreach( _ix ${_ignore} )
       if( ${_p} MATCHES "^${_ix}" )
@@ -345,7 +345,7 @@ macro( casa_find package )
 
   set( _standard_library_paths "" )
   foreach( _p  ${CMAKE_INSTALL_PREFIX}/lib ${casa_packages}/lib
-               /opt/local/lib /sw/lib /opt/lib )
+               /opt/casa/01/lib /opt/local/lib /sw/lib /opt/lib )
     set(_ok "yes")
     foreach( _ix ${_ignore} )
       if( ${_p} MATCHES "^${_ix}" )
