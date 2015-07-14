@@ -45,4 +45,22 @@ class FlaggableViewResults(object):
 
     def last(self, description):
         return copy.deepcopy(self.view[description][-1])
+    
+    def importfrom(self, result):
+        if isinstance(result, FlaggableViewResults):
+            
+            # copy over the views
+            for description in result.descriptions():
+                for view in result.view[description]:
+                    self.addview(description, view)
 
+            # copy over the flagging
+            self.flagging += result.flagging
+            
+            # copy over table if present
+            try:
+                self.table = result.table
+            except AttributeError:
+                pass
+            
+    

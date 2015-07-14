@@ -419,7 +419,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
-            flag_cmds.append('mode=\'manual\' scan=\'%s\' reason=\'scans\'' % inputs.scannumber)
+            flag_cmds.append("mode='manual' scan='%s' reason='scans'" % inputs.scannumber)
             flag_cmds.append("mode='summary' name='scans'")
 
         # These must be separated due to the way agent flagging works
@@ -427,25 +427,22 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             #for intent in inputs.intents.split(','):
             #    if '*' not in intent:
             #        intent = '*%s*' % intent
-            #    flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
-            #flag_cmds.append('mode=summary name=intents')
+            #    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent)
+            #flag_cmds.append("mode='summary' name='intents'")
             for intent in inputs.intents.split(','):
                 #if '*' not in intent:
                     #intent = '*%s*' % intent
                 intentlist = list(inputs.ms.get_original_intent(intent))
                 for intent_item in intentlist:
-                    flag_cmds.append('mode=\'manual\' intent=\'%s\' reason=\'intents\'' % intent_item)
+                    flag_cmds.append("mode='manual' intent='%s' reason='intents'" % intent_item)
             flag_cmds.append("mode='summary' name='intents'") 
-            
-            
-            
-
+        
         # Flag spectral window edge channels?
         if inputs.edgespw: 
             to_flag = self._get_edgespw_cmds()
             if to_flag:
                 spw_arg = ','.join(to_flag)
-                flag_cmds.append('mode=\'manual\' spw=\'%s\' reason=\'edgespw\'' % spw_arg)
+                flag_cmds.append("mode='manual' spw='%s' reason='edgespw'" % spw_arg)
                 flag_cmds.append("mode='summary' name='edgespw'")
 
         # summarise the state before flagging rather than assuming the initial
@@ -456,7 +453,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         return flag_cmds
 
     def _get_autocorr_cmd (self):
-        #return 'mode=manual antenna=*&&&'
+        #return "mode='manual' antenna='*&&&'"
         return "mode='manual' autocorr=True"
 
     

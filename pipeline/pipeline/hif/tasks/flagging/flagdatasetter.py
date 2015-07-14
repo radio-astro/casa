@@ -8,6 +8,7 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+from pipeline.hif.tasks.common.arrayflaggerbase import FlagCmd
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -46,12 +47,13 @@ class FlagdataSetterInputs(basetask.StandardInputs):
     
 
 class FlagdataSetterResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=[], results=[]):
         """
         Initialise the results object with the given list of JobRequests.
         """
         super(FlagdataSetterResults, self).__init__()
         self.jobs = jobs
+        self.results = results
 
     def __repr__(self):
         s = 'flagdata results:\n'
@@ -89,10 +91,11 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
             raise Exception, 'flag commands not in list'
 
         # execute any jobs
+        results = []
         for job in jobs:
-            self._executor.execute(job)
+            results.append(self._executor.execute(job))
         
-        return FlagdataSetterResults(jobs)
+        return FlagdataSetterResults(jobs, results)
 
     def analyse(self, results):
         """
@@ -107,6 +110,9 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
         if type(inputs.inpfile) is types.ListType:
             # add to list of flagcmds
             for flag in flags:
-                inputs.inpfile.append(flag.flagcmd)
+                if isinstance(flag, FlagCmd):
+                    inputs.inpfile.append(flag.flagcmd)
+                else:
+                    inputs.inpfile.append(flag)
         else:
             raise Exception, 'flagcmds not as list'

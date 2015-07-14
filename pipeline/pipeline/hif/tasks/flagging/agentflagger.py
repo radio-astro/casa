@@ -157,7 +157,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
         # parseAgents does not set the summary name, so we have to replace
         # it with the name extracted from the command. This should no
-	# longer be necesssary
+        # longer be necessary
         #for summary in summary_reps:
         #    _, agent_num = summary['name'].split('_')
         #    agent_num = int(agent_num)
@@ -219,7 +219,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             # If the twice the number of flagged channels is greater than the
             # number of channels for a given spectral window, skip it.
             #frac_chan = int(round(fracspw * spw.num_channels + 0.5))
-	    # Make flagging less agressive
+            # Make flagging less aggressive
             frac_chan = int(round(fracspw * spw.num_channels))
             if 2*frac_chan >= spw.num_channels:
                 LOG.debug('Too many flagged channels %s for spw %s '
@@ -230,7 +230,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             # left minimum as it is always channel 0.
             l_max = frac_chan - 1
             #r_min = spw.num_channels - frac_chan - 1
-	    # Fix high / low assymetry.
+            # Fix high / low asymmetry.
             r_min = spw.num_channels - frac_chan 
             r_max = spw.num_channels - 1
 
@@ -256,7 +256,7 @@ class AgentFlagger(basetask.StandardTaskTemplate):
                                                            inputs.ms.basename))
             else:
                 cmds.extend(self._read_flagfile(inputs.fileonline))
-                cmds.append('mode=summary name=online')
+                cmds.append("mode='summary' name='online'")
 
         # flag template?
         if inputs.template:
@@ -266,43 +266,43 @@ class AgentFlagger(basetask.StandardTaskTemplate):
                                                            inputs.ms.basename))
             else:
                 cmds.extend(self._read_flagfile(inputs.filetemplate))
-                cmds.append('mode=summary name=template')
+                cmds.append("mode='summary' name='template'")
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            cmds.append('mode=manual autocorr=True reason=autocorr')
-            cmds.append('mode=summary name=autocorr')
+            cmds.append("mode='manual' autocorr='True' reason='autocorr'")
+            cmds.append("mode='summary' name='autocorr'")
 
         # Flag shadowed antennas?
         if inputs.shadow:
-            cmds.append('mode=shadow reason=shadow')
-            cmds.append('mode=summary name=shadow')
+            cmds.append("mode='shadow' reason='shadow'")
+            cmds.append("mode='summary' name='shadow'")
 
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
-            cmds.append('mode=manual scan=%s reason=scans' % inputs.scannumber)
-            cmds.append('mode=summary name=scans')
+            cmds.append("mode='manual' scan='%s' reason='scans'" % inputs.scannumber)
+            cmds.append("mode='summary' name='scans'")
 
         # These must be separated due to the way agent flagging works
         if inputs.intents != '':
             for intent in inputs.intents.split(','):
                 if '*' not in intent:
                     intent = '*%s*' % intent
-                cmds.append('mode=manual intent=%s reason=intents' % intent)
-            cmds.append('mode=summary name=intents')
+                cmds.append("mode='manual' intent='%s' reason='intents'" % intent)
+            cmds.append("mode='summary' name='intents'")
 
         # Flag spectral window edge channels?
         if inputs.edgespw: 
             to_flag = self._get_edgespw_cmds()
             if to_flag:
                 spw_arg = ','.join(to_flag)
-                cmds.append('mode=manual spw=%s reason=edgespw' % spw_arg)
-                cmds.append('mode=summary name=edgespw')
+                cmds.append("mode='manual' spw='%s' reason='edgespw'" % spw_arg)
+                cmds.append("mode='summary' name='edgespw'")
 
         # summarise the state before flagging rather than assuming the initial
         # state is unflagged
         if cmds:
-            cmds.insert(0, 'mode=summary name=before')
+            cmds.insert(0, "mode='summary' name='before'")
 
         LOG.trace('Flag commands for %s:\n%s' % (inputs.ms.basename, 
                                                  '\n'.join(cmds)))
