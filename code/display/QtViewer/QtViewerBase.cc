@@ -31,6 +31,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtApp.h>
 #include <tables/Tables/TableInfo.h>
+#include <images/Images/ImageOpener.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <casa/iomanip.h>
 
@@ -245,6 +246,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if (fileInfo.isFile()) {
+		  if(ImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR)
+		    return "Image";
 
 			QFile file(pathName);
 			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {

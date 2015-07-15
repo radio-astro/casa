@@ -42,6 +42,7 @@
 #include <display/DisplayDatas/SkyCatOverlayDD.h>
 #include <casa/OS/Path.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageConcat.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/FITSImgParser.h>
@@ -340,6 +341,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					case ImageOpener::MIRIAD: {
 						im_.reset(new MIRIADImage(path));
 						break;
+					}
+					case ImageOpener::IMAGECONCAT:{
+					   AipsIO aio(path, ByteIO::Old);
+					   AlwaysAssert (aio.getstart("CompoundImage-Conc") == 0, AipsError);
+					   Int dtype;
+					   aio >> dtype;
+					   if(dtype==TpFloat)
+					     im_.reset(new ImageConcat<Float> (aio, path));
+					   else if(dtype==TpComplex)
+					     cim_.reset(new ImageConcat<Complex> (aio, path));
+					   else
+					      throw AipsError( "Concatenated CASA images are not Float or Complex.");
+					  break;
 					}
 
 					default: {
