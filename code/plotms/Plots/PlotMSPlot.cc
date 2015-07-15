@@ -1717,8 +1717,20 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
     // OR CAS-3263 points near zero are not plotted so add margin to the lower bound 
 	canvas->setAxesAutoRescale(true);
 	if ( set ){
+	    PMS_PP_Display *display = itsParams_.typedGroup<PMS_PP_Display>();
         double xmin, xmax, ymin, ymax;
-        itsCache_->indexer(0,iteration).minsMaxes(xmin, xmax, ymin, ymax);
+        bool displayUnflagged = (display->unflaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL);
+        bool displayFlagged = (display->flaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL);
+        if (displayUnflagged && !displayFlagged) {
+            // get range of unflagged data only
+            itsCache_->indexer(0,iteration).unmaskedMinsMaxesRaw(xmin, xmax, ymin, ymax);
+        } else if (displayFlagged && !displayUnflagged) {
+            // get range of flagged data only
+            itsCache_->indexer(0,iteration).maskedMinsMaxesRaw(xmin, xmax, ymin, ymax);
+        } else {
+            // get range of all data
+            itsCache_->indexer(0,iteration).minsMaxes(xmin, xmax, ymin, ymax);
+        }
 		if ( axesParams->xRangeSet() ){
 			canvas->setAxisRange(cx, axesParams->xRange());
 		} else {
