@@ -10,6 +10,7 @@ from parallel.parallel_data_helper import ParallelDataHelper
 import flaghelper as fh
 from update_spw import update_spwchan
 import inspect
+from callibrary import callibrary
 
 
 def mstransform(
@@ -53,6 +54,8 @@ def mstransform(
              timebin,
              timespan,
              maxuvwdistance,
+             calibration,
+             callib,
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
              taql,               # HIDDEN internal parameter
@@ -253,6 +256,13 @@ def mstransform(
             config['timebin'] = timebin
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
+            
+        if calibration:
+            casalog.post('Parse calibration parameters')
+            mycallib = callibrary()
+            mycallib.read(callib)
+            config['calibration'] = True
+            config['callib'] = mycallib.cld
         
         # Configure the tool and all the parameters
         

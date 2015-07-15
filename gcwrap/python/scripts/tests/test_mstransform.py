@@ -5,7 +5,7 @@ import numpy
 import math
 import sys
 import exceptions
-from tasks import mstransform, cvel, listpartition, listobs, setjy, flagdata, split
+from tasks import mstransform, cvel, listpartition, listobs, setjy, flagdata, split, applycal, split2
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
@@ -5169,7 +5169,46 @@ class test_spectrum_transformations_flagged_average(test_base):
             refCol = mytb.getcol(col)
             mytb.close()            
             self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')  
+            
+            
+class test_otf_calibration(test_base_compare):
+    '''Check that corrected data produce otf by mstransform is the same as produced otf by applycal'''
 
+    def tearDown(self):
+        super(test_channelAverageByDefault,self).tearDown()
+            
+    def setUp(self):
+
+        super(test_otf_calibration,self).setUp()
+        
+        if os.path.exists('ngc5921_regression'): os.system('rm -rf ' + 'ngc5921_regression')
+        os.system('cp -RL '+ datapath + 'ngc5921_regression' + ' .')
+        
+        self.vis = 'ngc5921_regression/ngc5921.ms'
+        self.outvis = 'mst_otf_calibration.ms'
+        self.refvis = 'applycal_split_otf_calibration.ms'
+        self.outvis_sorted = 'mst_otf_calibration-sorted.ms'
+        self.refvis_sorted = 'applycal_split_otf_sorted.ms'
+        self.auxfile = 'ngc5921_regression/ngc5921_callib.txt'
+        
+        default(mstransform) 
+        
+    def tearDown(self):
+        
+        super(test_otf_calibration,self).tearDown()
+        
+        os.system('rm -rf '+ 'ngc5921_regression')
+        
+    def test_otf_calibration_mst_vs_applycal_split2(self):
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,calibration=True,callib=self.auxfile)
+
+        applycal(vis=self.vis,docallib=True,callib=self.auxfile)
+        split2(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED') 
+        
+        self.generate_tolerance_map()
+        
+        self.post_process()        
                                                 
 # Cleanup class
 class Cleanup(test_base):
@@ -5184,7 +5223,7 @@ class Cleanup(test_base):
 
     def test_runTest(self):
         '''mstransform: Cleanup'''
-        pass
+        pass         
 
 
 def suite():
@@ -5222,6 +5261,7 @@ def suite():
             test_spectrum_transformations_sigma_unit,
             test_spectrum_transformations_flagged_average,   
             test_spectrum_transformations_mean,
+            test_otf_calibration,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 

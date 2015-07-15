@@ -325,6 +325,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Maximum separation of start-to-end baselines that can be included in an average. (meters)</description>
             <value type="double">0.0</value>
         </param>
+        
+        <!-- OTF CALIBRATION parameters -->
+        
+	    <param type="bool" name="calibration" >
+	        <description>Enable OTF calibration</description>
+	        <value>False</value>
+	    </param>
+
+	    <param type="string" name="callib" subparam="true" >
+	        <description>Cal Library filename</description>
+	        <value type="string"></value>
+	    </param>        
 
         <!-- HIDDEN PARAMETERS, UNRELATED to TIME AVERAGING -->
         <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
