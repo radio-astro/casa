@@ -30,6 +30,10 @@ friend msmetadata* ms::metadata(const float maxcache);
 
 void _init(const casa::MeasurementSet *const &ms, const float maxcache);
 
+void _checkAntennaId(int id, bool throwIfNegative) const;
+
+void _checkFieldId(int id, bool throwIfNegative) const;
+
 void _checkObsId(int id, bool throwIfNegative) const;
 
 void _checkSpwId(int id, bool throwIfNegative) const;

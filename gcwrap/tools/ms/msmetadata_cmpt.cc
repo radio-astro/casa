@@ -136,6 +136,32 @@ vector<String> msmetadata::_vectorStdStringToVectorString(
 	return outset;
 }
 
+record* msmetadata::antennadiameter(const variant& antenna) {
+	_FUNC(
+		variant::TYPE type = antenna.type();
+		int antID;
+		if (type == variant::INT) {
+			antID = antenna.toInt();
+			_checkAntennaId(antID, True);
+		}
+		else if (type == variant::STRING) {
+			antID = _msmd->getAntennaID(antenna.toString());
+		}
+		else {
+			ThrowCc(
+				"Unsupported type for input parameter antenna. "
+				"Supported types are int and string"
+			);
+		}
+		Quantum<Vector<Double> > out = _msmd->getAntennaDiameters();
+		QuantumHolder qh(casa::Quantity(out.getValue()[antID], out.getFullUnit()));
+		Record rec;
+		qh.toRecord(rec);
+		return fromRecord(rec);
+	)
+	return NULL;
+}
+
 vector<int> msmetadata::antennaids(
 	const variant& names, const variant& mindiameter,
 	const variant& maxdiameter
@@ -383,6 +409,18 @@ vector<string> msmetadata::antennastations(const variant& ants) {
 	return vector<string>();
 }
 
+vector<int> msmetadata::antennasforscan(int scan, int obsid, int arrayid) {
+	_FUNC(
+		_checkObsId(obsid, True);
+		ScanKey scanKey;
+		scanKey.obsID = obsid;
+		scanKey.arrayID = arrayid;
+		scanKey.scan = scan;
+		return _setIntToVectorInt(_msmd->getAntennasForScan(scanKey));
+	)
+	return vector<int>();
+}
+
 variant* msmetadata::bandwidths(const variant& spws) {
 	_FUNC(
 		variant::TYPE type = spws.type();
@@ -481,6 +519,26 @@ bool msmetadata::close() {
 		return true;
 	)
 	return false;
+}
+
+variant* msmetadata::corrprodsforpol(int polid) {
+	_FUNC(
+		_checkPolId(polid, True);
+		Array<Int> prods = _msmd->getCorrProducts()[polid];
+		return new variant(
+			vector<int>(prods.begin(), prods.end()),
+			prods.shape().asStdVector()
+		);
+	)
+	return NULL;
+}
+
+vector<int> msmetadata::corrtypesforpol(int polid) {
+	_FUNC(
+		_checkPolId(polid, True);
+		return _msmd->getCorrTypes()[polid];
+	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::datadescids(int spw, int pol) {
@@ -906,6 +964,17 @@ int msmetadata::nchan(int spw) {
 	return 0;
 }
 
+variant* msmetadata::ncorrforpol(int polid) {
+	_FUNC(
+		_checkPolId(polid, False);
+		vector<Int> ncorr = _msmd->getNumCorrs();
+		if (polid < 0) {
+			return new variant(ncorr);
+		}
+		return new variant(ncorr[polid]);
+	)
+	return NULL;
+}
 
 int msmetadata::nfields() {
 	_FUNC(
@@ -925,6 +994,13 @@ int msmetadata::nobservations() {
 int msmetadata::nscans() {
 	_FUNC(
 		return _msmd->nScans();
+	)
+	return 0;
+}
+
+int msmetadata::nsources() {
+	_FUNC(
+		return _msmd->nUniqueSourceIDsFromSourceTable();
 	)
 	return 0;
 }
@@ -954,6 +1030,13 @@ double msmetadata::nrows(const bool ac, const bool flagged) {
 		}
 	)
 	return 0;
+}
+
+vector<string> msmetadata::observers() {
+	_FUNC(
+		return _vectorStringToStdVectorString(_msmd->getObservers());
+	)
+	return vector<string>();
 }
 
 vector<string> msmetadata::observatorynames() {
@@ -1023,6 +1106,7 @@ record* msmetadata::pointingdirection(int rowid, bool const interpolate, int con
 		ret.defineRecord("antenna2", ant2Rec);
 		return fromRecord(ret);
 	);
+	return NULL;
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
@@ -1036,6 +1120,58 @@ bool msmetadata::open(const string& msname, const float cachesize) {
 		return true;
 	)
 	return false;
+}
+
+variant* msmetadata::polidfordatadesc(int ddid) {
+	_FUNC(
+		vector<uInt> pols = _msmd->getDataDescIDToPolIDMap();
+		if (ddid < 0) {
+			return new variant(pols);
+		}
+		int nddids = pols.size();
+		ThrowIf(ddid >= nddids, "ddid must be less than " + String::toString(nddids));
+		return new variant(pols[ddid]);
+	)
+	return NULL;
+}
+
+vector<string> msmetadata::projects() {
+	_FUNC(
+		return _vectorStringToStdVectorString(_msmd->getProjects());
+	)
+	return vector<string>();
+}
+
+record* msmetadata::propermotions() {
+	_FUNC(
+		vector<std::pair<casa::Quantity COMMA casa::Quantity> > mu = _msmd->getProperMotions();
+		Record rec;
+		Record subrec;
+		uInt n = mu.size();
+		Vector<Record> v(2);
+		for (uInt i=0; i<n; ++i) {
+			QuantumHolder q0(mu[i].first);
+			QuantumHolder q1(mu[i].second);
+			q0.toRecord(v[0]);
+			q1.toRecord(v[1]);
+			subrec.defineRecord("longitude", v[0]);
+			subrec.defineRecord("latitude", v[1]);
+			rec.defineRecord(casa::String::toString(i), subrec);
+		}
+		return fromRecord(rec);
+	)
+	return NULL;
+}
+
+record* msmetadata::reffreq(int spw) {
+	_FUNC(
+		_checkSpwId(spw, True);
+		MeasureHolder freq(_msmd->getRefFreqs()[spw]);
+		Record ret;
+		freq.toRecord(ret);
+		return fromRecord(ret);
+	)
+	return NULL;
 }
 
 vector<int> msmetadata::scannumbers(int obsid, int arrayid) {
@@ -1113,13 +1249,21 @@ vector<int> msmetadata::scansfortimes(const double center, const double tol, int
 
 vector<int> msmetadata::scansforstate(int state, int obsid, int arrayid) {
 	_FUNC(
-		if (state < 0) {
-			throw AipsError("State ID must be nonnegative.");
-		}
+		ThrowIf(
+			state < 0, "State ID must be nonnegative."
+		);
 		_checkObsId(obsid, True);
 		return _setIntToVectorInt(_msmd->getScansForState(state, obsid, arrayid));
 	)
 	return vector<int>();
+}
+
+vector<string> msmetadata::schedule(int obsid) {
+	_FUNC(
+		_checkObsId(obsid, True);
+		return _vectorStringToStdVectorString(_msmd->getSchedules()[obsid]);
+	)
+	return vector<string>();
 }
 
 int msmetadata::sideband(int spw) {
@@ -1128,6 +1272,61 @@ int msmetadata::sideband(int spw) {
 		return _msmd->getNetSidebands()[spw];
 	)
 	return 0;
+}
+
+record* msmetadata::sourcedirs() {
+	_FUNC(
+		std::vector<casacore::MDirection> mdirs = _msmd->getSourceDirections();
+		uInt i = 0;
+		vector<casacore::MDirection>::const_iterator iter = mdirs.begin();
+		vector<casacore::MDirection>::const_iterator end = mdirs.end();
+		Record r;
+		Record mr;
+		while (iter != end) {
+			MeasureHolder mh(*iter);
+			mh.toRecord(mr);
+			r.defineRecord(casa::String::toString(i), mr);
+			++iter;
+			++i;
+		}
+		return fromRecord(r);
+	)
+	return NULL;
+}
+
+int msmetadata::sourceidforfield(int field) {
+	_FUNC(
+		_checkFieldId(field, True);
+		return _msmd->getFieldTableSourceIDs()[field];
+	)
+	return 0;
+}
+
+vector<int> msmetadata::sourceidsfromsourcetable() {
+	_FUNC(
+		return _msmd->getSourceTableSourceIDs();
+	)
+	return vector<int>();
+}
+
+vector<string> msmetadata::sourcenames() {
+	_FUNC(
+		return _vectorStringToStdVectorString(_msmd->getSourceNames());
+	)
+	return vector<string>();
+}
+
+variant* msmetadata::spwfordatadesc(int ddid) {
+	_FUNC(
+		vector<uInt> spws = _msmd->getDataDescIDToSpwMap();
+		if (ddid < 0) {
+			return new variant(spws);
+		}
+		int nddids = spws.size();
+		ThrowIf(ddid >= nddids, "ddid must be less than " + String::toString(nddids));
+		return new variant(spws[ddid]);
+	)
+	return NULL;
 }
 
 variant* msmetadata::spwsforbaseband(int bb, const string& sqldmode) {
@@ -1229,16 +1428,30 @@ vector<int> msmetadata::spwsforscan(int scan, int obsid, int arrayid) {
 
 vector<int> msmetadata::statesforscan(int scan, int obsid, int arrayid) {
 	_FUNC(
-		if (scan < 0) {
-			throw AipsError("Scan number must be nonnegative");
-		}
+		ThrowIf(scan < 0, "Scan number must be nonnegative");
 		_checkObsId(obsid, True);
 		return _setIntToVectorInt(_msmd->getStatesForScan(obsid, arrayid, scan));
 	)
 	return vector<int>();
 }
 
-vector<double> msmetadata::timesforfield(const int field) {
+record* msmetadata::timerangeforobs(int obsid) {
+	_FUNC(
+		_checkObsId(obsid, True);
+		std::pair<MEpoch COMMA MEpoch> range = _msmd->getTimeRangesOfObservations()[obsid];
+		MeasureHolder begin(range.first);
+		MeasureHolder end(range.second);
+		Record ret COMMA beginRec COMMA endRec;
+		begin.toRecord(beginRec);
+		end.toRecord(endRec);
+		ret.defineRecord("begin", beginRec);
+		ret.defineRecord("end", endRec);
+		return fromRecord(ret);
+	)
+	return NULL;
+}
+
+vector<double> msmetadata::timesforfield(int field) {
 	_FUNC(
 		if (field < 0) {
 			throw AipsError("Field ID must be nonnegative");
@@ -1262,7 +1475,7 @@ vector<double> msmetadata::timesforintent(const string& intent) {
 	return vector<double>();
 }
 
-vector<double> msmetadata::timesforscan(int scan, int obsid, int arrayid) {
+variant* msmetadata::timesforscan(int scan, int obsid, int arrayid, bool perspw) {
 	_FUNC(
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative");
@@ -1272,9 +1485,27 @@ vector<double> msmetadata::timesforscan(int scan, int obsid, int arrayid) {
 		scanKey.obsID = obsid;
 		scanKey.arrayID = arrayid;
 		scanKey.scan = scan;
-		return _setDoubleToVectorDouble(_msmd->getTimesForScan(scanKey));
+		if (perspw) {
+			std::map<uInt COMMA std::set<Double> > mymap = _msmd->getSpwToTimesForScan(scanKey);
+			Record ret;
+			std::map<uInt COMMA std::set<Double> >::const_iterator iter = mymap.begin();
+			std::map<uInt COMMA std::set<Double> >::const_iterator end = mymap.end();
+			while(iter != end) {
+				ret.define(
+					casa::String::toString(
+						iter->first) COMMA Vector<Double>(_setDoubleToVectorDouble(iter->second)
+					)
+				);
+				++iter;
+			}
+			SHARED_PTR<record> rec(fromRecord(ret));
+			return new variant(*rec);
+		}
+		else {
+			return new variant(_setDoubleToVectorDouble(_msmd->getTimesForScan(scanKey)));
+		}
 	)
-	return vector<double>();
+	return NULL;
 }
 
 vector<double> msmetadata::timesforscans(const vector<int>& scans, int obsid, int arrayid) {
@@ -1410,6 +1641,24 @@ std::vector<uint> msmetadata::_vectorIntToVectorUInt(const std::vector<Int>& ins
 	return output;
 }
 
+void msmetadata::_checkAntennaId(int id, bool throwIfNegative) const {
+	ThrowIf(
+		id >= (int)_msmd->nAntennas() || (throwIfNegative && id < 0),
+		"Antenna ID " + String::toString(id)
+		+ " out of range, must be less than "
+		+ String::toString((int)_msmd->nAntennas())
+	);
+}
+
+void msmetadata::_checkFieldId(int id, bool throwIfNegative) const {
+	ThrowIf(
+		id >= (int)_msmd->nFields() || (throwIfNegative && id < 0),
+		"Antenna ID " + String::toString(id)
+		+ " out of range, must be less than "
+		+ String::toString((int)_msmd->nFields())
+	);
+}
+
 void msmetadata::_checkObsId(int id, bool throwIfNegative) const {
 	ThrowIf(
 		id >= (int)_msmd->nObservations() || (throwIfNegative && id < 0),
@@ -1430,11 +1679,12 @@ void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 
 void msmetadata::_checkPolId(int id, bool throwIfNegative) const {
 	ThrowIf(
-		id >= (int)_msmd->nPol() || (throwIfNegative && id < 0),
+		id >= (int)_msmd->nPol(),
 		"Polarization ID " + String::toString(id)
 		+ " out of range, must be less than "
 		+ String::toString((int)_msmd->nPol())
 	);
+	ThrowIf(throwIfNegative && id < 0, "Polarization ID cannot be negative");
 }
 
 template <class T>
@@ -1493,6 +1743,4 @@ std::string msmetadata::_escapeExpansion(const casa::String& stringToEscape) {
 	);
 }
 
-
 } // casac namespace
-

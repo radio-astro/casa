@@ -5,13 +5,9 @@
 #include <ms_cmpt.h>
 #include <memory>
 
-
 namespace casa {
 	class MSMetaData;
 	class MeasurementSet;
 	class LogIO;
 	class String;
 };
-
-
-

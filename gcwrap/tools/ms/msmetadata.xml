@@ -124,6 +124,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="antennadiameter">
+            <shortdescription>Get the diameter for the specified antenna.</shortdescription>
+            <input>
+                <param type="any" direction="in" name="antenna">
+                    <description>Zero-based antenna in the ANTENNA table, or antenna name.</description>
+                    <any type="variant" limittypes="string int"/>
+                    <value type="int">-1</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the diameter for the specified antenna. The antenna can be specified either by
+                its zero-based ID from the ANTENNA table or by its name in that table. The returned
+                dictionary is a valid quantity.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # Get the diameter of the antenna named "VB2"
+    diameter = msmd.antennadiameter("VB2")
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="antennaids">
             <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
              <input>
@@ -186,7 +209,7 @@ windows in the dataset and close the tool.
             <shortdescription>Get the offset position of the specified antenna relative to the array reference position.</shortdescription>
             <input>
                 <param type="any" direction="in" name="which">
-                    <description>Zero-based antenna in the ANTENNA table.</description>
+                    <description>Zero-based antenna in the ANTENNA table, or antenna name.</description>
                     <any type="variant" limittypes="string int"/>
                     <value type="int">0</value>
                     
@@ -254,6 +277,34 @@ windows in the dataset and close the tool.
     stations = msmd.antennastations(-1)
     # get the stations of the antennas named DV07 and DV01
     stations = msmd.antennaposition(["DV07", "DV01"])
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="antennasforscan">
+            <shortdescription>Get an array of the unique antenna IDs for the specified scan, obsservation ID, and array ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the intents.</description>
+                    <value>-1</value>
+                </param>
+                <param type="int" direction="in" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="arrayid">
+                    <description>Array ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique antennaIDs for the specified scan, observation ID, and array ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the antennas associated with scan 4 (obsid=0, arrayid = 0)
+    antennas = msmd.antennasforscan(4)
     msmd.done()
             </example>
         </method>
@@ -389,6 +440,48 @@ windows in the dataset and close the tool.
                 # do things with tool
                 # finish, close tool and free up resources.
                 msmd.close()
+            </example>
+        </method>
+        
+        <method type="function" name="corrprodsforpol">
+            <shortdescription>Get the correlation products associated with the specified polarization ID</shortdescription>
+            <input>
+                <param type="int" name="pol">
+                    <description>Polarization ID. Must be nonnegative.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="any">
+                <any type="variant"/>
+            </returns>
+            <description>
+                Get the correlation products associated with the specified polarization ID.
+            </description>
+            <example>
+                msmd.open("my.ms")
+                # get correlation products for polarization ID 3
+                corrprods = msmd.corrprodsforpol(3)
+                msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="corrtypesforpol">
+            <shortdescription>Get the correlation types associated with the specified polarization ID</shortdescription>
+            <input>
+                <param type="int" name="pol">
+                    <description>Polarization ID. Must be nonnegative.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get the correlation types associated with the specified polarization ID.
+            </description>
+            <example>
+                msmd.open("my.ms")
+                # get correlation types for polarization ID 3
+                corrtypes = msmd.corrtypesforpol(3)
+                msmd.done()
             </example>
         </method>
         
@@ -926,6 +1019,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="ncorrforpol">
+            <shortdescription>Get the number of correlations for the specified polarization ID.</shortdescription>
+             <input>
+                <param type="int" name="polid">
+                    <description>Zero-based polarization ID. A negative number will cause all the numbers of correlations to be returned.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="variant"/>
+            <description>
+                Get the number of correlations for the specified polarization ID. If the specified polarization ID
+                is negative, an array of numbers of correlations is returned. The indices of that array represent polarization IDs.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the number of correlations associated with polarization ID 4
+    polid = msmd.ncorrforpol(4)
+    # get the array of numbers of correlations from the POLARIZATION table
+    polids = msmd.ncorrforpol(-1)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="nfields">
             <shortdescription>Get the number of fields associated with the MS.</shortdescription>
             <returns type="int"/>
@@ -997,6 +1113,20 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="nsources">
+            <shortdescription>Get the number of unique values from the SOURCE_ID column in the SOURCE table.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of unique values from the SOURCE_ID column in the SOURCE table. The number of rows in the
+                SOURCE table may be greater than this value.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_unique_source_ids = msmd.nsources()
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="nrows">
             <shortdescription>Get the number of visibilities (from the main table) associated with the MS.</shortdescription>
             <input>
@@ -1023,6 +1153,20 @@ windows in the dataset and close the tool.
     ngood = msmd.nrows(flagged=False)
     # get the number of unflagged cross correlation rows
     ncrossunflagged = msmd.nrows(auto=False, flagged=False)
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="observers">
+            <shortdescription>Get an array observers as they are listed in the OBSERVATIONS table.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of observers as they are listed in the OBSERVATIONS table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the observers
+    observers = msmd.observers()
     msmd.done()
             </example>
         </method>
@@ -1109,6 +1253,7 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+        
         <method type="function" name="pointingdirection">
             <shortdescription>Get the pointing direction for antennas at the specified row number in the main MS table.</shortdescription>
             <input>
@@ -1135,6 +1280,83 @@ windows in the dataset and close the tool.
                 # get the pointing directions for row ID 500
                 dirs = msmd.pointingdirection(500)
                 msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="polidfordatadesc">
+            <shortdescription>Get the polarization ID associated with the specified data description ID.</shortdescription>
+             <input>
+                <param type="int" name="ddid">
+                    <description>Zero-based data description ID. A negative number will cause all the polarization IDs to be returned.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="variant"/>
+            <description>
+                Get the polarization ID associated with the specified data description ID. If the specified data description ID
+                is negative, an array of polarization IDs is returned. The indices of that array represent data description IDs.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the polarization ID associated with data description ID 3
+    polid = msmd.polidfordatadesc(3)
+    # get the array of polarization IDs in the order they appear in the DATA_DESCRIPTION table
+    polids = msmd.polidfordatadesc(-1)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="projects">
+            <shortdescription>Get an array projects as they are listed in the OBSERVATIONS table.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of projects as they are listed in the OBSERVATIONS table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the projects
+    projects = msmd.projects()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="propermotions">
+            <shortdescription>Get the values of the PROPER_MOTION column from the SOURCE table.</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get the values of the DIRECTION column from the SOURCE table. Returns a dictionary in which the
+                keys are the associated zero-based row numbers, represented as strings, in the SOURCE table. The
+                associated values are two element dictionaries, with keys "longitude" and "latitude", containing
+                the longitudinal and latidinal components of the proper motion, which are valid quantity dictionaries.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get PROPER_MOTION column values from the SOURCE table
+    mu = msmd.propermotions()
+    msmd.done()
+    # the direction associated with zero-based row number 10
+    mu10 = mu["10"]
+            </example>
+        </method>
+        
+        <method type="function" name="reffreq">
+            <shortdescription>Get the reference frequency of the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spectral window ID.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the reference frequency of the specified spectral window. The returned frequency is in
+                the form of a valid measures dictionary.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the reference frequency for spw ID 20
+    reffreq = msmd.reffreq(20)
+    msmd.done()
             </example>
         </method>
         
@@ -1312,6 +1534,26 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="schedule">
+            <shortdescription>Get the schedule information for the specified observation ID.</shortdescription>
+            <input>
+                <param type="int" name="obsid">
+                    <description>Observation ID.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="stringArray"/>
+            <description>
+                Get the schedule information for the specified observation ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the schdule information for observation ID = 2
+    schedule = msmd.schedule()[2]
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="sideband">
             <shortdescription>Get the sideband for the specified spectral window.</shortdescription>
             <input>
@@ -1327,6 +1569,76 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get sideband for spectral window 2.
     sideband = msmd.sideband(2)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="sourcedirs">
+            <shortdescription>Get the values of the DIRECTION column from the SOURCE table.</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get the values of the DIRECTION column from the SOURCE table. Returns a dictionary in which the
+                keys are the associated row numbers, represented as strings, in the SOURCE table. Each value
+                in the returned dictionary is a valid direction measure.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get DIRECTION column values from the SOURCE table
+    sourcedirs = msmd.sourcedirs()
+    msmd.done()
+    # the direction associated with zero-based row number 10
+    dir10 = sourcedirs["10"]
+    # convert it to B1950, using the measure interface
+    dir10_B1950 = me.convert(dir10, "B1950")
+            </example>
+        </method>
+        
+        <method type="function" name="sourceidforfield">
+            <shortdescription>Get the source ID from the field table for the specified field ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="field">
+                    <description>Zero-based field ID for which to return the source ID from the field table.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="int"/>
+            <description>
+                Get the source ID from the field table for the specified field ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get source ID associated with field ID 2
+    sourceid = msmd.sourceidforfield(2)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="sourceidsfromsourcetable">
+            <shortdescription>Get the values of the SOURCE_ID column from the SOURCE table.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                Get the values of the SOURCE_ID column from the SOURCE table. It is unfortunate that the SOURCE
+                table has a column named SOURCE_ID, because implicitly the "ID" of a row in an MS subtable is
+                generally meant to reflect a row number in that table, but that is not the case for the SOURCE table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get SOURCE_ID column values from the SOURCE table
+    sourceids = msmd.sourceidsfromsourcetable()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="sourcenames">
+            <shortdescription>Get the values of the SOURCE_NAME column from the SOURCE table.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get the values of the SOURCE_NAME column from the SOURCE table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get SOURCE_NAME column values from the SOURCE table
+    sourcenames = msmd.sourcenames()
     msmd.done()
             </example>
         </method>
@@ -1356,6 +1668,30 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+        
+        <method type="function" name="spwfordatadesc">
+            <shortdescription>Get the spectral window ID associated with the specified data description ID.</shortdescription>
+             <input>
+                <param type="int" name="ddid">
+                    <description>Zero-based data description ID. A negative number will cause all the spectral window IDs to be returned.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="variant"/>
+            <description>
+                Get the spectral window ID associated with the specified data description ID. If the specified data description ID
+                is negative, an array of spectral window IDs is returned. The indices of that array represent data description IDs.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window ID associated with data description ID 3
+    spw = msmd.spwfordatadesc(3)
+    # get the array of spectral window IDs in the order they appear in the DATA_DESCRIPTION table
+    spws = msmd.spwfordatadesc(-1)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="spwsforfield">
             <shortdescription>Get an array of the unique spectral window IDs for the specified field.</shortdescription>
              <input>
@@ -1487,6 +1823,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="timerangeforobs">
+            <shortdescription>Get the time range for the specified observation ID</shortdescription>
+             <input>
+                <param type="int" direction="in" name="obsid">
+                    <description>Zero-based observation ID for which to get the time range.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the time range for the specified observation ID. The return value is a dictionary containing
+                keys "begin" and "end". Each of the associated value are dictionaries representing epochs which
+                are valid measure records. The values are taken directly from the OBSERVATION subtable; no
+                half-intervals are added or subtracted.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the time range associated with observation ID 3
+    timerange = msmd.timerangeforobs(3)
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="timesforfield">
             <shortdescription>Get an array of the unique times for the specified field.</shortdescription>
              <input>
@@ -1528,7 +1887,7 @@ windows in the dataset and close the tool.
         </method>
         
         <method type="function" name="timesforscan">
-            <shortdescription>Get an array of the unique times for the specified scan number, observation ID, and array ID.</shortdescription>
+            <shortdescription>Get the unique times for the specified scan number, observation ID, and array ID.</shortdescription>
              <input>
                 <param type="int" direction="in" name="scan">
                     <description>Scan number for which to return the times.</description>
@@ -1542,10 +1901,17 @@ windows in the dataset and close the tool.
                     <description>Array ID.</description>
                     <value>0</value>
                 </param>
+                <param type="bool" name="perspw">
+                    <description>Return output dictionary with keys representing spectral window IDs (True), or an array of all times (False).</description>
+                    <value>false</value>
+                </param>
             </input>
-            <returns type="doubleArray"/>
+            <returns type="any"><any type="variant"/></returns>
             <description>
-                Get an array of the unique times for the specified scan number, observation ID, and array ID.
+                Get the unique times for the specified scan number, observation ID, and array ID. If perspw=True, the returned data structure is
+                a dictionary that has keys representing zero-based spectral window IDs and values representing the unique values of the TIME column
+                corrsponding to the specified scan and that corresponding spectral window ID. If False, an array of unique values from the TIME
+                column for the specified scan is returned; there is no separation into spectral window IDs.
             </description>
             <example>
     msmd.open("my.ms")
