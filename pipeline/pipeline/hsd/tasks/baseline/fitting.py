@@ -157,15 +157,6 @@ class FittingBase(common.SingleDishTaskTemplate):
         else:
             timetable_index = 0
             
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-        
-        rows_to_process = numpy.where(numpy.logical_and(antennas == antennaid, 
-                                                   numpy.logical_and(ifnos == spwid, srctypes==srctype)))[0]
-        
-        _polnos = polnos.take(rows_to_process)
         index_list_total = []
         row_list_total = []
         blinfo = []
@@ -174,16 +165,12 @@ class FittingBase(common.SingleDishTaskTemplate):
             time_table = datatable.get_timetable(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
 
-            index_list_per_pol = rows_to_process.take(numpy.where(_polnos==pol)[0])
-
             # working with spectral data in scantable
-            nrow_total = len(index_list_per_pol)
-            #nrow_total2 = sum([len(x[0]) for x in member_list])
+            nrow_total = sum([len(x[0]) for x in member_list])
                 
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
             LOG.info('Processing %d spectra...'%(nrow_total))
-            #LOG.debug('ntor_total2 = %s'%(nrow_total2))
     
             mask_array = numpy.ones(nchan, dtype=int)
             mask_array[:edge[0]] = 0
