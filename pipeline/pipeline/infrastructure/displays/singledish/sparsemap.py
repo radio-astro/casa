@@ -224,6 +224,10 @@ class SDSparseMapPlotter(object):
         plot_helper.clear()
 
         return True
+    
+    def done(self):
+        pl.close()
+        del self.axes
 
         
 class SDSparseMapDisplay(SDImageDisplay):
