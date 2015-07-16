@@ -1751,7 +1751,7 @@ void MSTransformManager::initDataSelectionParams()
 
 		// Take into account the polarization selections
 		if (!polarizationSelection_p.empty()){
-			mssel.setPolnExpr(polarizationSelection_p);
+			mssel.setPolnExpr(polarizationSelection_p.c_str());
 			Vector<Int> polddi = mssel.getDDIDList(inputMs_p);
 			if (polddi.size() > 0){
 				// make an intersection
@@ -1916,7 +1916,7 @@ void MSTransformManager::initDataSelectionParams()
 
 	if (!polarizationSelection_p.empty())
 	{
-		mssel.setPolnExpr(polarizationSelection_p);
+		mssel.setPolnExpr(polarizationSelection_p.c_str());
 		Vector <Vector <Slice> > correlationSlices;
 		mssel.getCorrSlices(correlationSlices,inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)

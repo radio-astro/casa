@@ -691,14 +691,20 @@ Bool MSTransformDataHandler::selectCorrelations(const String& corrstr)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
-	MSSelection mssel;
+	corrString_p = corrstr;
 	const Bool areSelecting = corrstr != "" && corrstr != "*";
 
-	if (areSelecting) mssel.setPolnExpr(corrstr);
+	// Get correlation slices
+	MSSelection mssel1;
+	if (areSelecting) mssel1.setPolnExpr(corrstr.c_str());
+	mssel1.getCorrSlices(corrSlices_p, &ms_p);
 
-	corrString_p = corrstr;
-	mssel.getCorrSlices(corrSlices_p, &ms_p);
-	return MSTransformDataHandler::getCorrMaps(mssel, ms_p, inPolOutCorrToInCorrMap_p, areSelecting);
+	// Get correlation map
+	// jagonzal (CAS-6951): We have to use another MSSelection becuase the first one corrupts the correlation
+	//                      expression for instance "XX;YY" is turned into "XX" after calling getCorrSlices
+	MSSelection mssel2;
+	if (areSelecting) mssel2.setPolnExpr(corrstr.c_str());
+	return MSTransformDataHandler::getCorrMaps(mssel2, ms_p, inPolOutCorrToInCorrMap_p, areSelecting);
 }
 
 // -----------------------------------------------------------------------
@@ -973,7 +979,7 @@ Bool MSTransformDataHandler::makeSelection()
 
 	if (corrString_p != "")
 	{
-		thisSelection.setPolnExpr(corrString_p);
+		thisSelection.setPolnExpr(corrString_p.c_str());
 	}
 
 	thisSelection.setTaQLExpr(taqlString_p);
@@ -1093,7 +1099,7 @@ Bool MSTransformDataHandler::makeSelection()
 			antNewIndex_p[selAnts[k]] = k;
 		}
 		// It is possible to exclude baselines without excluding any antennas.
-		antennaSel_p = !trivial;
+		// antennaSel_p = !trivial;
 	}
 	// This still gets tripped up by VLA:OUT.
 	else

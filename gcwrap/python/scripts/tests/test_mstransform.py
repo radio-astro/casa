@@ -232,6 +232,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform) 
+        
+    def setUp_CAS_6951(self):
+
+        self.vis = 'CAS-6951.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)         
           
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
@@ -2282,6 +2291,33 @@ class test_alma_wvr_correlation_products(test_base):
         # Check that flagdata can run properly with output MS
         summary = flagdata(vis=self.outputms,mode='summary')
         self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')         
+        
+        
+class test_alma_autocorr_selection_with_wvr(test_base):
+    '''Test behaviour of mstransform selecting correlation products that include WVR XX'''
+    
+    def setUp(self):
+                
+        self.setUp_CAS_6951()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_alma_autocorr_selection_with_wvr_1(self):
+        
+        self.outputms = 'test_alma_autocorr_selection_with_wvr_1.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outputms,correlation='XX;YY',datacolumn='DATA')
+        
+        # Check that POLARIZATION sub-table is properly sorted
+        mytb = tbtool()
+        mytb.open(self.outputms + '/POLARIZATION')
+        numCorr = mytb.getcol('NUM_CORR')
+        mytb.close()    
+        
+        self.assertEqual(numCorr[0],2,'Incorrect number of correlations')         
+        self.assertEqual(numCorr[1],1, 'Incorrect number of correlations')
         
         
 class test_spectrum_transformations_mean(test_base):
@@ -5259,6 +5295,7 @@ def suite():
             test_radial_velocity_correction,
             test_vla_mixed_polarizations,
             test_alma_wvr_correlation_products,
+            test_alma_autocorr_selection_with_wvr,
             test_spectrum_transformations_sigma_from_weight,
             test_spectrum_transformations_2_steps_vs_1_step,
             test_spectrum_transformations_useWeightSpectrum_false_vs_true,
