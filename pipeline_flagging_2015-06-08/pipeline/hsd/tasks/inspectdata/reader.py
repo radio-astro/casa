@@ -163,8 +163,6 @@ class DataTableReader(object):
         intArr[:] = -1
         self.datatable.putcol('NOCHANGE',intArr,startrow=ID)
         self.datatable.putcol('POSGRP',intArr,startrow=ID)
-        self.datatable.putcol('TIMEGRP_S',intArr,startrow=ID)
-        self.datatable.putcol('TIMEGRP_L',intArr,startrow=ID)
         intArr[:] = self.vAnt
         self.datatable.putcol('ANTENNA',intArr,startrow=ID)
         self.datatable.putcol('SRCTYPE',Tsrctype,startrow=ID)

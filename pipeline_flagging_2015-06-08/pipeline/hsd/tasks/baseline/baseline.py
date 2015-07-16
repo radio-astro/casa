@@ -5,18 +5,14 @@ import shutil
 import glob
 import numpy
 
+import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.renderer.logger as logger
-from pipeline.infrastructure.displays.singledish.utils import sd_polmap
 
 from .. import common
 from . import maskline
-#from .fitting import FittingFactory
 from . import fitting
-from . import plotter
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -118,11 +114,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
         
         baselined = []
 
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-
         # generate storage for baselined data
         self._generate_storage_for_baselined(context, reduction_group)
 
@@ -167,9 +158,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             member_list.sort()
             antenna_list = [group_desc[i].antenna for i in member_list]
             spwid_list = [group_desc[i].spw for i in member_list]
-            pols_tmp = [None if pols_list[i] == group_desc[i].pols else pols_list[i] \
-                        for i in member_list]
-            LOG.debug('pols_tmp=%s'%(pols_tmp))
             pols_list = [pols_list[i] for i in member_list]
             LOG.debug('pols_list=%s'%(pols_list))
             
@@ -178,7 +166,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
             
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
-                                                       pols_tmp, window, edge, broadline)
+                                                       pols_list, window, edge, broadline)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
             grid_table = maskline_result.outcome['grid_table']
@@ -193,6 +181,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
             fitter_cls = fitting.FittingFactory.get_fitting_class(fitfunc)
 
             # loop over file
+            job_list = []
+            if mpihelpers.is_mpi_ready():
+                context_path = os.path.join(context.output_dir, context.name + '.context')
+                context.save(context_path)
+                job_generator = common.create_parallel_job
+            else:
+                job_generator = common.create_serial_job
+            # create job 
             for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
                 if len(pols) == 0:
                     LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
@@ -203,27 +199,36 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 _iteration = group_desc.get_iteration(ant, spwid)
                 outfile = self._get_dummy_name(context, ant)
                 LOG.debug('pols=%s'%(pols))
-                fitter_inputs = fitter_cls.Inputs(context, ant, spwid, pols, _iteration, 
-                                                  fitorder, edge, outfile)
-                fitter = fitter_cls(fitter_inputs)
-                fitter_result = self._executor.execute(fitter, merge=True)
-                # store temporal scantable name
+                fitter_args = {"antennaid": ant,
+                             "spwid": spwid,
+                             "pollist": pols,
+                             "iteration": _iteration,
+                             "fit_order": fitorder,
+                             "edge": edge,
+                             "outfile": outfile,
+                             "grid_table": grid_table,
+                             "channelmap_range": channelmap_range}
+                        
+                job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
+                                 'meta': (ant, spwid, pols, outfile)})
+
+            # execute job, get result, and generate plots before/after baseline subtraction
+            for job_entry in job_list:
+                job = job_entry['job']
+                ant, spwid, pols, outfile = job_entry['meta']
+                fitter_result = job.get_result()
+                if isinstance(fitter_result, basetask.ResultsList):
+                    temp_name = fitter_result[0].outcome.pop('outtable')
+                    for r in fitter_result:
+                        r.accept(context)
+                        plot_list.extend(r.outcome.pop('plot_list'))
+                else:
+                    temp_name = fitter_result.outcome.pop('outtable')
+                    fitter_result.accept(context)
+                    plot_list.extend(fitter_result.outcome.pop('plot_list'))
                 if not files_temp.has_key(ant):
-                    files_temp[ant] = fitter_result.outcome.pop('outtable')
+                    files_temp[ant] = temp_name
                     
-                # generate plot for weblog
-                # prefix for spectral plot before baseline subtraction
-                st = context.observing_run[ant]
-                # TODO: use proper source name when we can handle multiple source 
-                source_name = ''
-                for (source_id,source) in st.source.items():
-                    if 'TARGET' in source.intents:
-                        source_name = source.name.replace(' ', '_').replace('/','_')
-                prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,ant,spwid)
-                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, 
-                                                   context.observing_run[ant].name, stage_dir, prefix, channelmap_range))
-                prefix = prefix.replace('before', 'after')
-                plot_list.extend(self.plot_spectra(source_name, ant, spwid, pols, grid_table, outfile, stage_dir, prefix, channelmap_range))
                 
             name_list = [context.observing_run[f].baselined_name
                          for f in antenna_list]
@@ -299,34 +304,3 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug("Removing old temprary file '%s'" % dummy)
             shutil.rmtree(dummy)
         del remove_list
-
-    def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix, channelmap_range):
-        #plot_list = []
-        st = self.inputs.context.observing_run[ant]
-        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
-        if len(line_range) == 0:
-            line_range = None
-        for pol in pols:
-            outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
-            status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile, line_range)
-            if status and os.path.exists(outfile):
-                #plot_list.append(outfile)
-                if outprefix.find('spectral_plot_before_subtraction') == -1:
-                    plottype = 'sd_sparse_map_after_subtraction'
-                else:
-                    plottype = 'sd_sparse_map_before_subtraction'
-                parameters = {'intent': 'TARGET',
-                              'spw': spwid,
-                              'pol': sd_polmap[pol],
-                              'ant': st.antenna.name,
-                              'vis': st.ms.basename,
-                              'type': plottype,
-                              'file': infile}
-                plot = logger.Plot(outfile,
-                                   x_axis='Frequency',
-                                   y_axis='Intensity',
-                                   field=source,
-                                   parameters=parameters)
-                #plot_list.append(plot)
-                yield plot
-        #return plot_list

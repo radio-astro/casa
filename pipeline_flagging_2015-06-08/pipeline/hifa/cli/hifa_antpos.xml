@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_antpos" category="pipeline">
+<task type="function" name="hifa_antpos" category="pipeline">
 <shortdescription>Derive an antenna position calibration table</shortdescription>
 <description>
 Derive the antenna position calibration for list of measurement sets
@@ -23,10 +23,10 @@ Derive the antenna position calibration for list of measurement sets
 
     <param type="string" name="hm_antpos">
         <description>The antenna position determination method</description>
-        <value>manual</value>
+        <value>file</value>
         <allowed kind="enum">
-            <value>manual</value>
             <value>file</value>
+            <value>manual</value>
             <value>online</value>
         </allowed>
     </param>
@@ -68,12 +68,12 @@ Derive the antenna position calibration for list of measurement sets
 
     <constraints>
         <when param="hm_antpos">
+            <equals type="string" value="file">
+                <default param="antposfile"><value type="string"></value></default>
+            </equals>
             <equals type="string" value="manual">
                 <default param="antenna"><value type="string"></value></default>
                 <default param="offsets"><value type="string"></value></default>
-            </equals>
-            <equals type="string" value="file">
-                <default param="antposfile"><value type="string"></value></default>
             </equals>
             <equals type="string" value="online">
             </equals>
@@ -121,8 +121,8 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 hm_antpos -- Heuristics method for retrieving the antenna position
     corrections. The options are 'online' (not yet implemented), 'manual',
     and 'file'.
-    default: 'manual'
-    example: hm_antpos='file'
+    default: 'file'
+    example: hm_antpos='manual'
 
 antenna -- The list of antennas for which the positions are to be corrected
     if hm_antpos is 'manual'
@@ -167,7 +167,7 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-The hif_antpos task corrects the antenna positions recorded in the ASDMs using
+The hifa_antpos task corrects the antenna positions recorded in the ASDMs using
 updated antenna position calibration information determined after the
 observation was taken.
 
@@ -200,14 +200,14 @@ Example
 1. Correct the position of antenna 5 for all the visibility files in a single
 pipeline run.  
 
-    hif_antpos (antenna='DV05', offsets=[0.01, 0.02, 0.03])
+    hifa_antpos (antenna='DV05', offsets=[0.01, 0.02, 0.03])
 
 2. Correct the position of antennas for all the visibility files in a single
 pipeline run using antenna positions files on disk. These files are assumed
 to conform to a default naming scheme if 'antposfile' is unspecified by the
 user.
 
-    hif_antpos (hm_antpos='myantposfile.csv')
+    hifa_antpos (hm_antpos='myantposfile.csv')
 
 </example> 
 

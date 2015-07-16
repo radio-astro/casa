@@ -42,7 +42,7 @@ class MakeImagesInputs(basetask.StandardInputs):
 
     @target_list.setter
     def target_list(self, value):
-        if value is None:
+        if not value:
             value = self.context.clean_list_pending
         self._target_list = value
 
@@ -52,9 +52,9 @@ class MakeImagesInputs(basetask.StandardInputs):
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
     npixels = basetask.property_with_default('npixels', 0)
-    robust = basetask.property_with_default('robust', 0.0)
+    robust = basetask.property_with_default('robust', -999.0)
     tlimit = basetask.property_with_default('tlimit', 1.0)
-    weighting = basetask.property_with_default('weighting', 'natural')
+    weighting = basetask.property_with_default('weighting', 'briggs')
 
 
 class MakeImages(basetask.StandardTaskTemplate):
@@ -137,7 +137,10 @@ class CleanTaskFactory(object):
         is_tier0_job = is_mpi_ready and is_cal_image
 
         if is_tier0_job and self.__inputs.parallel:
-            return mpihelpers.AsyncTask(Tclean, task_args, self.__context_path)
+            executable = mpihelpers.Tier0PipelineTask(Tclean,
+                                                      task_args,
+                                                      self.__context_path)
+            return mpihelpers.AsyncTask(executable)
         else:
             inputs = Tclean.Inputs(self.__context, **task_args)
             task = Tclean(inputs)
@@ -173,8 +176,9 @@ class CleanTaskFactory(object):
                 spw=task_args['spw'])
         task_args['gridder'] = clheuristics.gridder(
                 task_args['intent'], task_args['field'])
-        task_args['deconvolver'] = clheuristics.deconvolver(
-                task_args['intent'], task_args['field'])
+        # Let the Tclean heuristics determine the deconvolver
+        #task_args['deconvolver'] = clheuristics.deconvolver(
+        #        task_args['intent'], task_args['field'])
 
         if inputs.hm_masking == '':
             if 'TARGET' in task_args['intent']:

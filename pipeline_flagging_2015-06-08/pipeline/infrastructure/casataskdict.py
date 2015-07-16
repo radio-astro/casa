@@ -42,6 +42,7 @@ CasaTaskDict = {
                    'hsd_flagdata'          : 'FlagDeterALMASingleDish',
                    'hsd_simplescale'       : 'SDSimpleScale',
                    'hifa_importdata'       : 'ALMAImportData',
+                   'hifa_antpos'           : 'ALMAAntpos',
                    'hifa_bandpass'         : 'ALMAPhcorBandpass',
                    'hifa_bpsolint'         : 'BpSolint',
                    'hifa_flagdata'         : 'FlagDeterALMA',
@@ -84,6 +85,7 @@ classToCASATask = {
     # ALMA interferometry tasks ---------------------------------------------
     hifa_tasks.ALMAImportData         : 'hifa_importdata',
     hifa_tasks.ALMAPhcorBandpass      : 'hifa_bandpass',
+    hifa_tasks.ALMAAntpos             : 'hifa_antpos',
     hifa_tasks.BpSolint               : 'hifa_bpsolint',
     hifa_tasks.FlagDeterALMA          : 'hifa_flagdata',
     hifa_tasks.FluxcalFlag            : 'hifa_fluxcalflag',

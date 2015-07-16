@@ -24,11 +24,11 @@ Compute clean results from a list of specified targets.
 
   <param type="string" name="weighting">
     <description>Weighting of uv (natural, uniform, briggs, ...)</description>
-    <value>natural</value>
+    <value>briggs</value>
     <allowed kind="enum">
+      <value>briggs</value>
       <value>natural</value>
       <value>uniform</value>
-      <value>briggs</value>
       <value>superuniform</value>
       <value>briggsabs</value>
     </allowed>
@@ -36,7 +36,7 @@ Compute clean results from a list of specified targets.
 
   <param type="double" name="robust" subparam="true">
     <description>Briggs robustness parameter</description>
-    <value>0.0</value>
+    <value>-999.0</value>
   </param>
 
   <param type="any" name="noise"  subparam="true">
@@ -75,7 +75,7 @@ Compute clean results from a list of specified targets.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>1.0</value>
+       <value>4.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -153,10 +153,10 @@ Compute clean results from a list of specified targets.
       <equals value="">
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="tlimit"><value type="double">4.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="tlimit"><value type="double">4.0</value></default>
       </equals>
       <equals value="timesmask">
         <default param="masklimit"><value type="int">4</value></default>
@@ -164,14 +164,14 @@ Compute clean results from a list of specified targets.
     </when>
 
     <when param="weighting">
-      <equals value="natural"/>
-      <equals value="uniform"/>
       <equals value="briggs">
-         <default param="robust"><value>0.0</value></default>
+         <default param="robust"><value>-999.0</value></default>
          <default param="npixels"><value>0</value></default>
       </equals>
+      <equals value="natural"/>
+      <equals value="uniform"/>
       <equals value="briggsabs">
-        <default param="robust"><value>0.0</value></default>
+        <default param="robust"><value>-999.0</value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
         <default param="npixels"><value>0</value></default>
       </equals>
@@ -222,12 +222,12 @@ vis -- The list of input measurement sets. Defaults to the list of measurment
     default: use all measurement sets in the context 
 
 weighting -- Weighting to apply to visibilities:
-             default='natural'; example: weighting='uniform';
+             default='briggs'; example: weighting='uniform';
              Options: 'natural','uniform','briggs', 
                 'superuniform','briggsabs','radial'
 
 weighting_robust -- For weighting='briggs' and 'briggsabs'
-                       default=0.0; example: robust=0.5;
+                       default=-999.0; example: robust=0.7;
                        Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
                  
 weighting_noise -- For weighting='briggsabs'

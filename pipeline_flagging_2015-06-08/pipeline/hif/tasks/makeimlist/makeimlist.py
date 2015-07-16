@@ -7,6 +7,7 @@ import pipeline.infrastructure.basetask as basetask
 from .resultobjects import MakeImListResult
 from pipeline.hif.heuristics import makeimlist 
 #from pipeline.hif.heuristics import clean
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -195,6 +196,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         # this python class will produce a list of images to be calculated.
         inputs = self.inputs
 
+        qaTool = casatools.quanta
+
         # make sure inputs.vis is a list, even it is one that contains a
         # single measurement set
         if type(inputs.vis) is not types.ListType:
@@ -241,12 +244,20 @@ class MakeImList(basetask.StandardTaskTemplate):
         cells = {}
         valid_data = {}
         if cell == []:
+            min_cell = ['3600arcsec']
             for spwspec in spwlist:
                 # the heuristic cell is always the same for x and y as
                 # the value derives from the single value returned by
                 # imager.advise
                 cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
                   field_intent_list=field_intent_list, spwspec=spwspec)
+                if (cells[spwspec] != ['invalid']):
+                    min_cell = cells[spwspec] if (qaTool.convert(cells[spwspec][0], 'arcsec')['value'] < qaTool.convert(min_cell[0], 'arcsec')['value']) else min_cell
+            min_cell = ['%s%s' % (round(qaTool.getvalue(min_cell[0]), 2), qaTool.getunit(min_cell[0]))]
+            # Use same cell size for all spws (in a band (TODO))
+            for spwspec in spwlist:
+                if (cells[spwspec] != ['invalid']):
+                    cells[spwspec] = min_cell
         else:
             for spwspec in spwlist:
                 cells[spwspec] = cell
@@ -275,6 +286,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         imsizes = {}
         if imsize == []:
             for field_intent in field_intent_list:
+                max_x_size = 1
+                max_y_size = 1
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:
                         continue
@@ -287,10 +300,19 @@ class MakeImList(basetask.StandardTaskTemplate):
                         if field_intent[1] in ['PHASE', 'BANDPASS', 'AMPLITUDE', 'FLUX']:
                             himsize = [min(npix, inputs.calmaxpix) for npix in himsize]
                         imsizes[(field_intent[0],spwspec)] = himsize
+                        if (imsizes[(field_intent[0],spwspec)][0] > max_x_size):
+                            max_x_size = imsizes[(field_intent[0],spwspec)][0]
+                        if (imsizes[(field_intent[0],spwspec)][1] > max_y_size):
+                            max_y_size = imsizes[(field_intent[0],spwspec)][1]
                     except Exception, e:
                         # problem defining imsize
                         LOG.warn(e)
                         pass
+
+                # Use same size for all spws (in a band (TODO))
+                for spwspec in spwlist:
+                    if valid_data[spwspec][field_intent]:
+                        imsizes[(field_intent[0],spwspec)] = [max_x_size, max_y_size]
  
         else:
             for field_intent in field_intent_list:

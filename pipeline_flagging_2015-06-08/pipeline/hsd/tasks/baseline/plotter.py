@@ -89,6 +89,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
     plotter.setup_lines(line_range, lines_map)
     plotter.setup_reference_level(0.0)
     plotter.plot(map_data, integrated_data, frequency, outfile)
+    plotter.done()
     return integrated_data, map_data
 
 def median_index(arr):

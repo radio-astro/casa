@@ -45,8 +45,10 @@ from hifv_finalcals_cli import hifv_finalcals_cli as hifv_finalcals
 from hifv_applycals_cli import hifv_applycals_cli as hifv_applycals
 from hifv_targetflag_cli import hifv_targetflag_cli as hifv_targetflag
 from hifv_statwt_cli import hifv_statwt_cli as hifv_statwt
-from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
-from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+#from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
+from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
+#from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
 from h_save_cli import h_save_cli as h_save
 

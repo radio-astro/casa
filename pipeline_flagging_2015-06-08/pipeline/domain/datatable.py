@@ -83,9 +83,7 @@ TD_DESC_RW = [
     __coldesc('integer', 0, 0, -1, 'Number of mask regions'),
     __coldesc('integer', 0, 0,  2, 'List of mask ranges'),
     __coldesc('integer', 0, 0, -1, 'Unchanged row or not'),
-    __coldesc('integer', 0, 0, -1, 'Position group id'),
-    __coldesc('integer', 0, 0, -1, 'Time group id for large gap'),
-    __coldesc('integer', 0, 0, -1, 'Time group id for small gap')
+    __coldesc('integer', 0, 0, -1, 'Position group id')#,
     ]
 
 def __tabledescro():
@@ -101,8 +99,7 @@ def __tabledescrw():
     name = [
         'STATISTICS', 'FLAG', 'FLAG_PERMANENT',
         'FLAG_SUMMARY', 'NMASK', 'MASKLIST', 'NOCHANGE',
-        'POSGRP', 'TIMEGRP_S', 'TIMEGRP_L'
-        ]
+        'POSGRP']
     return dict( zip(name,TD_DESC_RW) )
 
 TABLEDESC_RO = __tabledescro()
@@ -117,7 +114,9 @@ OnlineFlagIndex = 3
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-
+def timetable_key(table_type, antenna, spw, polarization):
+    return 'TIMETABLE_%s_ANT%s_SPW%s_POL%s'%(table_type,antenna,spw,polarization)    
+    
 class DataTableImpl( object ):
     """
     DataTable is an object to hold meta data of scantable on memory. 
@@ -380,49 +379,62 @@ class DataTableImpl( object ):
                 posdict[row] = [[-1,key],[rep]]
 
         return posdict
+    
+    def set_timetable(self, ant, spw, pol, mygrp, timegrp_s, timegrp_l):
+        # time table format
+        # TimeTable: [TimeTableSmallGap, TimeTableLargeGap]
+        # TimeTableXXXGap: [[[row0, row1, ...], [idx0, idx1, ...]], ...]
+        LOG.info('set_timetable start')
+        start_time = time.time()
 
-    def get_timetable(self, ant, spw, pol):
-        timegrp_list = self.getkeyword('TIMEGRP_LIST')
-        try:
-            mygrp = timegrp_list[str(ant)][str(spw)][str(pol)]
-        except KeyError, e:
-            raise KeyError('ant %s spw %s pol %s not in reduction group list'%(ant,spw,pol))
-        except Exception, e:
-            raise e
-
-        mygrp_s = mygrp['small']
-        mygrp_l = mygrp['large']
-        timegrp_s = self.getcol('TIMEGRP_S')
-        timegrp_l = self.getcol('TIMEGRP_L')
+        mygrp_s = numpy.array(mygrp['small'])
+        mygrp_l = numpy.array(mygrp['large'])
         rows = self.getcol('ROW')
 
-        timetable = [[],[]]
-        timedic_s = {}
-        timedic_l = {}
-        for idx in xrange(len(rows)):
-            grp_s = timegrp_s[idx]
-            if grp_s not in mygrp_s:
-                continue
-            if not timedic_s.has_key(grp_s):
-                timedic_s[grp_s] = [[],[]]
-            timedic_s[grp_s][0].append(rows[idx])
-            timedic_s[grp_s][1].append(idx)
-        for idx in xrange(len(rows)):
-            grp_l = timegrp_l[idx]
-            if grp_l not in mygrp_l:
-                continue
-            if not timedic_l.has_key(grp_l):
-                timedic_l[grp_l] = [[],[]]
-            timedic_l[grp_l][0].append(rows[idx])
-            timedic_l[grp_l][1].append(idx)
-        for idx in xrange(len(mygrp_s)):
-            grp = timedic_s[mygrp_s[idx]]
-            timetable[0].append(grp)
-        for idx in xrange(len(mygrp_l)):
-            grp = timedic_l[mygrp_l[idx]]
-            timetable[1].append(grp)
+        timedic_s = construct_timegroup(rows, mygrp_s, timegrp_s)
+        timedic_l = construct_timegroup(rows, mygrp_l, timegrp_l)
+        timetable_s = [timedic_s[idx] for idx in mygrp_s]
+        timetable_l = [timedic_l[idx] for idx in mygrp_l]
+        timetable = [timetable_s, timetable_l]
+        end_time = time.time()
+        LOG.info('construct timetable: Elapsed time %s sec'%(end_time - start_time))
+        
+        LOG.debug('timetable=%s'%(timetable))
+        
+        # put time table to table keyword
+        start_time2 = time.time()
+        key_small = timetable_key('SMALL', ant, spw, pol)
+        key_large = timetable_key('LARGE', ant, spw, pol)
+        keys = self.tb2.keywordnames()
+        dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
+        if key_small not in keys or key_large not in keys:
+            self.putkeyword(key_small, dictify(timetable[0]))
+            self.putkeyword(key_large, dictify(timetable[1]))
+            
+        end_time = time.time()
+        LOG.info('put timetable: Elapsed time %s sec'%(end_time - start_time2))
+        LOG.info('set get_timetable end: Elapsed time %s sec'%(end_time - start_time))
 
+    def get_timetable(self, ant, spw, pol):
+        LOG.info('new get_timetable start')
+        start_time = time.time()
+        key_small = timetable_key('SMALL', ant, spw, pol)
+        key_large = timetable_key('LARGE', ant, spw, pol)
+        keys = self.tb2.keywordnames()
+        if key_small in keys and key_large in keys:
+            ttdict_small = self.getkeyword(key_small)
+            ttdict_large = self.getkeyword(key_large)
+            timetable_small = [ttdict_small[str(i)].tolist() for i in xrange(len(ttdict_small))]
+            timetable_large = [ttdict_large[str(i)].tolist() for i in xrange(len(ttdict_large))]
+            timetable = [timetable_small, timetable_large]
+        else:
+            #timetable = self.get_timetable(ant, spw, pol)
+            raise RuntimeError('time table for Antenna %s spw %s pol %s is not configured properly'%(ant,spw,pol))
+        end_time = time.time()
+        LOG.info('new get_timetable end: Elapsed time %s sec'%(end_time - start_time))
+            
         return timetable
+        
             
     def get_timegap(self, ant, spw, pol, asrow=True):
         timegap_s = self.getkeyword('TIMEGAP_S')
@@ -714,3 +726,12 @@ def _interpolate(v, t, tref):
         t0 = tref - t[idx]
         return (v[idx+1] * t0 + v[idx] * t1) / (t[idx+1] - t[idx]) 
 
+def construct_timegroup(rows, group_id_list, group_association_list):
+    timetable_dict = dict(map(lambda x: (x, [[],[]]), group_id_list))
+    for idx in xrange(len(rows)):
+        group_id = group_association_list[idx]
+        if group_id not in group_id_list:
+            continue
+        timetable_dict[group_id][0].append(rows[idx])
+        timetable_dict[group_id][1].append(idx)
+    return timetable_dict  

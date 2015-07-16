@@ -1,3 +1,4 @@
+import abc
 import os
 try:
     import cPickle as pickle
@@ -17,11 +18,17 @@ LOG = logging.get_logger(__name__)
 
 
 class PipelineError(Exception):
+    """
+    Warning! This class is here temporarily and could disappear at any time!
+
+    References to this class should be replaced with references to the real
+    Pipeline exception classes, once that module has been created.
+    """
     pass
 
 
 class AsyncTask(object):
-    def __init__(self, task_cls, task_args, context_path=None):
+    def __init__(self, executable):
         """
         Create a new AsyncTask.
 
@@ -33,14 +40,10 @@ class AsyncTask(object):
         :param context_path: the path to the pickled context
         :return: an AsyncTask object
         """
-        job_args = {'task_cls': task_cls,
-                    'task_args': task_args,
-                    'context_path': context_path}
-
         self.__pid = mpiclient.push_command_request(
-                'pipeline.infrastructure.mpihelpers.mpiexec(task_cls, task_args, context_path)',
-                block=False,
-                parameters=job_args)
+            'pipeline.infrastructure.mpihelpers.mpiexec(tier0_executable)',
+            block=False,
+            parameters={'tier0_executable': executable})
 
     def get_result(self):
         """
@@ -100,31 +103,80 @@ class SyncTask(object):
             # TODO add exception to error
             raise PipelineError('Failure executing job')
 
-def mpiexec(task_cls=None, task_args=None, context_path=None):
+
+class Tier1Executable(object):
+    @abc.abstractmethod
+    def get_executable(self):
+        """
+        Recreate and return the executable object. The executable object
+        should have an .execute() function.
+        """
+        raise NotImplementedError
+
+
+class Tier0PipelineTask(Tier1Executable):
+    def __init__(self, task_cls, task_args, context_path):
+        """
+        Create a new Tier0PipelineTask representing a pipeline task to be
+        executed on an MPI server.
+
+        :param task_cls: the class of the pipeline task to execute
+        :param task_args: any arguments to passed to the task Inputs
+        :param context_path: the filesystem path to the pickled Context
+        """
+        self.__task_cls = task_cls
+        self.__task_args = task_args
+        self.__context_path = context_path
+
+    def get_executable(self):
+        with open(self.__context_path, 'rb') as context_file:
+            context = pickle.load(context_file)
+        inputs = self.__task_cls.Inputs(context, **self.__task_args)
+        task = self.__task_cls(inputs)
+        return task
+
+    def __str__(self):
+        return 'Tier0PipelineTask(%s, %s, %s)' % (self.__task_cls,
+                                                  self.__task_args,
+                                                  self.__context_path)
+
+
+class Tier0CASATask(Tier1Executable):
+    def __init__(self, task_cls, task_args):
+        """
+        Create a new Tier0CASATask representing a JobRequest CASA task to be
+        executed on an MPI server.
+
+        :param task_cls: the class of the CASA task to execute
+        :param task_args: any arguments to passed to the task Inputs
+        """
+        self.__task_cls = task_cls
+        self.__task_args = task_args
+
+    def get_executable(self):
+        return self.__task_cls(**self.__task_args)
+
+    def __str__(self):
+        return 'Tier0CASATask(%s, %s)' % (self.__task_cls, self.__task_args)
+
+
+def mpiexec(tier0_executable):
     """
-    Create and execute a pipeline task.
+    Execute a pipeline task.
 
-    This function is used to recreate and execute pipeline tasks on cluster
-    nodes.
+    This function is used to recreate and execute tasks on cluster nodes.
 
-    :param task_cls: the class of the pipeline task to execute
-    :param task_args: any arguments to passed to the task Inputs
-    :param context_path: the filesystem path to the pickled Context
+    :param executable: the Tier0Executable task to execute
     :return: the Result returned by executing the task
     """
-    LOG.debug('%s@%s: mpiexec(%s, %s, %r)', MPIEnvironment.mpi_processor_rank,
-              MPIEnvironment.hostname, task_cls, task_args, context_path)
-    if issubclass(task_cls, api.Task):
-        with open(context_path, 'rb') as context_file:
-            context = pickle.load(context_file)
-        inputs = task_cls.Inputs(context, **task_args)
-        task = task_cls(inputs)
-    else:
-        # assuming this is a CASA task call, which is created without any
-        # reference to the context
-        task = task_cls(**task_args)
+    LOG.trace('rank%s@%s: mpiexec(%s)', MPIEnvironment.mpi_processor_rank,
+              MPIEnvironment.hostname, tier0_executable)
 
-    return task.execute(dry_run=False)
+    executable = tier0_executable.get_executable()
+    LOG.info('Executing %s on rank%s@%s', executable,
+             MPIEnvironment.mpi_processor_rank, MPIEnvironment.hostname)
+    return executable.execute(dry_run=False)
+
 
 def is_mpi_ready():
     # to allow MPI jobs, the executing pipeline code must be running as the
@@ -163,6 +215,9 @@ if MPIEnvironment.is_mpi_enabled:
             __client.push_command_request('import sys', block=True, target_server=mpi_server_list)
             __codepath = os.path.join(*_splitall(__file__)[0:-3])
             __client.push_command_request('sys.path.insert(0, %r)' % __codepath, block=True, target_server=mpi_server_list)
+
+            # LOG.warning('Executing tclean_pg import on MPI servers to work around import bug in CASA stable')
+            # __client.push_command_request('from tclean_pg import tclean_pg as tclean', block=True, target_server=mpi_server_list)
 
             __client.push_command_request('import pipeline', block=True, target_server=mpi_server_list)
             # __client.push_command_request('pipeline.infrastructure.logging.set_logging_level(level="trace")', block=True, target_server=mpi_server_list)

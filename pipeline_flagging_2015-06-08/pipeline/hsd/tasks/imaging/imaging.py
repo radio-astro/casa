@@ -135,7 +135,8 @@ class SDImaging(common.SingleDishTaskTemplate):
         LOG.info('Step 3. Intensity scaling')
         scaling_inputs = scaling.IntensityScaling.Inputs(context, 
                                                          infiles=infiles, 
-                                                         reffile=reffile)
+                                                         reffile=reffile,
+                                                         imagemode=imagemode)
         scaling_task = scaling.IntensityScaling(scaling_inputs)
         scaling_results = self._executor.execute(scaling_task, merge=True)
         logrecords.extend(scaling_results.logrecords)

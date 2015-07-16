@@ -134,8 +134,25 @@ class TcleanHeuristics(object):
         else:
             return 'standard'
 
-    def deconvolver(self, intent, field):
-        return 'clark'
+    def deconvolver(self, specmode, spwspec):
+        if (specmode == 'cont'):
+            abs_min_frequency = 1.0e15
+            abs_max_frequency = 0.0
+            ms = self.context.observing_run.get_ms(name=self.vislist[0])
+            for spwid in spwspec.split(','):
+                spw = ms.get_spectral_window(spwid)
+                min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.HERTZ))
+                if (min_frequency < abs_min_frequency):
+                    abs_min_frequency = min_frequency
+                max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.HERTZ))
+                if (max_frequency > abs_max_frequency):
+                    abs_max_frequency = max_frequency
+            if (2.0 * (abs_max_frequency - abs_min_frequency) / (abs_min_frequency + abs_max_frequency) > 0.1):
+                return 'mtmfs'
+            else:
+                return 'clark'
+        else:
+            return 'clark'
 
     def imsize(self, fields, cell, max_pixels=None):
         # get spread of beams
@@ -274,4 +291,41 @@ class TcleanHeuristics(object):
         width = str(width)
         return width
 
+    def robust(self, spw):
+        # Check if there is a non-zero desired angular resolution
+        cqa = casatools.quanta
+        desired_angular_resolution = cqa.convert(self.context.project_performance_parameters.desired_angular_resolution, '')['value']
+        if (desired_angular_resolution == 0.0):
+            LOG.warning('No value for desired angular resolution. Setting "robust" parameter to 0.5.')
+            return 0.5
 
+        # Get maximum baseline length in metres
+        bmax = 0.0
+        for ms in self.context.observing_run.get_measurement_sets():
+            if (ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE) > bmax):
+                bmax = float(ms.antenna_array.max_baseline.length.to_units(measures.DistanceUnits.METRE))
+
+        if (bmax == 0.0):
+            LOG.warning('Bmax is zero. Setting "robust" parameter to 0.5.')
+            return 0.5
+
+        # Get spw center wavelength
+
+        # get the spw from the first vis set, assume all others the same for now
+        ms = self.context.observing_run.get_ms(name=self.vislist[0])
+        spw = ms.get_spectral_window(spw)
+
+        centre_frequency = float(spw.centre_frequency.to_units(measures.FrequencyUnits.HERTZ))
+        centre_lambda = cqa.constants('c')['value'] / centre_frequency
+
+        # Smallest spatial scale
+        smallest_spatial_scale = 1.2 * centre_lambda / bmax
+
+        if (desired_angular_resolution > 1.2 * smallest_spatial_scale):
+            robust = 1.0
+        elif (desired_angular_resolution < 0.8 * smallest_spatial_scale):
+            robust = 0.0
+        else:
+            robust = 0.5
+
+        return robust

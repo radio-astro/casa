@@ -22,6 +22,8 @@ from .utils import polstring
 from .utils import TableSelector
 from .utils import science_spw, nonscience_spw
 from .utils import asap_force_storage
+from .utils import create_parallel_job
+from .utils import create_serial_job
 
 # constants 
 NoData = -32767.0

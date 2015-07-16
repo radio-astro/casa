@@ -118,6 +118,7 @@ class Context(object):
         self.sciimlist = imagelibrary.ImageLibrary()
         self.project_summary = project.ProjectSummary()
         self.project_structure = project.ProjectStructure()
+        self.project_performance_parameters = project.PerformanceParameters()
         self.output_dir = output_dir 
         self.products_dir = None
         self.task_counter = 0

@@ -110,6 +110,9 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
         casatools.post_to_log ("    " + item[1][0] + item[1][1], 
             echo_to_screen=echo_to_screen)
 
+    # Create performance parameters object
+    context.project_performance_parameters = project.PerformanceParameters()
+
     # Print the relative path
     casatools.post_to_log ("Directory structure", 
         echo_to_screen=echo_to_screen)

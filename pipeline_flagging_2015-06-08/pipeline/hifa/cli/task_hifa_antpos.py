@@ -5,15 +5,16 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_restoredata(vis=None, session=None, products_dir=None, copytoraw=None,
-    rawdata_dir=None, lazy=None, bdfflags=None, pipelinemode=None, dryrun=None, acceptresults=None):
+def hifa_antpos(vis=None, caltable=None, hm_antpos=None, antenna=None,
+    offsets=None, antposfile=None, pipelinemode=None, dryrun=None,
+    acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'RestoreData'
-    
+    task_name = 'ALMAAntpos'
+
     ##########################################################################
     #                                                                        #
     #  CASA task interface boilerplate code starts here. No edits should be  #
@@ -21,7 +22,7 @@ def hif_restoredata(vis=None, session=None, products_dir=None, copytoraw=None,
     #                                                                        #
     ##########################################################################
     
-    # get the name of this function for the weblog, eg. 'hif_restoredata'
+    # get the name of this function for the weblog, eg. 'hif_flagdata'
     fn_name = sys._getframe().f_code.co_name
 
     # get the context on which this task operates

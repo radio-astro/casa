@@ -16,7 +16,7 @@ class BasebandComposite(applycal.BasebandComposite):
     Create a PlotLeaf for each baseband in the applied calibration.
     """
     def __init__(self, context, result, xaxis, yaxis, ant='', field='',
-                 intent='', **kwargs):
+                 intent='', uvrange='', **kwargs):
         spws=[]
         for fieldname in result.measurements.keys():
             for fluxm in result.measurements[fieldname]:
@@ -28,7 +28,7 @@ class BasebandComposite(applycal.BasebandComposite):
         calto = callibrary.CalTo(result.inputs['vis'], spw=spwlist)
 
         super(BasebandComposite, self).__init__(context, result, calto, xaxis, 
-                yaxis, ant=ant, field=field, intent=intent, **kwargs)
+                yaxis, ant=ant, field=field, intent=intent, uvrange=uvrange, **kwargs)
         
 
 class PlotmsBasebandComposite(BasebandComposite):

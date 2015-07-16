@@ -47,14 +47,14 @@ class CleanBaseInputs(basetask.StandardInputs):
     outframe = basetask.property_with_default('outframe', 'LSRK')
     phasecenter = basetask.property_with_default('phasecenter', '')
     restoringbeam = basetask.property_with_default('restoringbeam', '')
-    robust = basetask.property_with_default('robust', 0.0)
+    robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
     spwsel = basetask.property_with_default('spwsel', '')
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
     threshold = basetask.property_with_default('threshold', '0.0mJy')
     uvrange = basetask.property_with_default('uvrange', '')
-    weighting = basetask.property_with_default('weighting', 'natural')
+    weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
 
     @property
@@ -267,6 +267,11 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
+        if (inputs.deconvolver == 'mtmfs'):
+            mt_name = '.tt0'
+        else:
+            mt_name = ''
+
         #        LOG.info('Stokes %s' % (inputs.stokes))
         #        LOG.info('Iteration %s threshold %s niter %s' % (iter,
         #          inputs.threshold, inputs.niter))
@@ -274,21 +279,21 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Derive names of clean products for this iteration, remove
         # old clean products with the name name,
         old_model_name = result.model
-        model_name = '%s.%s.iter%s.model' % (
-            inputs.imagename, inputs.stokes, iter)
+        model_name = '%s.%s.iter%s.model%s' % (
+            inputs.imagename, inputs.stokes, iter, mt_name)
         rename_image(old_name=old_model_name, new_name=model_name)
         if (inputs.niter == 0):
             image_name = ''
         else:
-            image_name = '%s.%s.iter%s.image' % (
-                inputs.imagename, inputs.stokes, iter)
-        residual_name = '%s.%s.iter%s.residual' % (
-            inputs.imagename, inputs.stokes, iter)
-        psf_name = '%s.%s.iter%s.psf' % (
-          inputs.imagename, inputs.stokes, iter)
+            image_name = '%s.%s.iter%s.image%s' % (
+                inputs.imagename, inputs.stokes, iter, mt_name)
+        residual_name = '%s.%s.iter%s.residual%s' % (
+            inputs.imagename, inputs.stokes, iter, mt_name)
+        psf_name = '%s.%s.iter%s.psf%s' % (
+          inputs.imagename, inputs.stokes, iter, mt_name)
         if inputs.gridder == 'mosaic':
-            flux_name = '%s.%s.iter%s.weight' % (
-                inputs.imagename, inputs.stokes, iter)
+            flux_name = '%s.%s.iter%s.weight%s' % (
+                inputs.imagename, inputs.stokes, iter, mt_name)
         else:
             flux_name = ''
 
@@ -313,7 +318,8 @@ class CleanBase(basetask.StandardTaskTemplate):
             weighting=inputs.weighting, robust=inputs.robust,
             npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, savemodel='none', parallel=inputs.parallel)
+            mask=inputs.mask, savemodel='none', ntaylorterms=2,
+            parallel=inputs.parallel)
         self._executor.execute(job)
 
         # Store the model.

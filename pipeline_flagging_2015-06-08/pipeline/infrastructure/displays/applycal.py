@@ -21,7 +21,7 @@ class PlotmsLeaf(object):
     exactly one plot. 
     """
     def __init__(self, context, result, calto, xaxis, yaxis,  
-                 spw='', ant='', field='', scan='', intent='', **plot_args):
+                 spw='', ant='', field='', scan='', intent='', uvrange='', **plot_args):
         self._context = context
         self._result = result
 
@@ -33,6 +33,7 @@ class PlotmsLeaf(object):
 
         self._spw = spw
         self._intent = intent
+        self._uvrange = uvrange
         
         # convert intent to scan selection
         if intent != '':
@@ -105,7 +106,8 @@ class PlotmsLeaf(object):
             'y'        : self._yaxis,
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
             'field'    : '' if self._field_label == '' else '-%s' % filenamer.sanitize(self._field_label.replace(',','_')),
-            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_')
+            'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_'),
+            'uvrange'  : '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',','_')
         }
 
         if self._spw == '':
@@ -118,7 +120,10 @@ class PlotmsLeaf(object):
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
 
-        png = '{vis}{field}-{spw}{ant}{intent}{y}_vs_{x}.png'.format(**fileparts)
+        png = '{vis}{field}-{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
+        
+        #LOG.info("UVRANGE APPLYCAL DISPLAY: "+self._uvrange)
+        #LOG.info("PNG FILENAME: "+png)
 
         # Maximum filename size for Lustre filesystems is 255 bytes. Mosaics
         # can exceed this limit due to including the names of all the field.
@@ -167,6 +172,7 @@ class PlotmsLeaf(object):
                      'spw'             : str(self._spw),
                      'scan'            : str(self._scan),
                      'antenna'         : self._ant,
+                     'uvrange'         : self._uvrange,
                      'plotfile'        : self._plotfile,
                      'clearplots'      : True,
                      'showgui'         : False}

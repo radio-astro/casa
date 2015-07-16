@@ -12,10 +12,12 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
-from . import utils
 from pipeline.hsd.tasks.common import utils as sdutils
-from .baselinetable import SplineBaselineTableGenerator
-from .baselinetable import PolynomialBaselineTableGenerator
+
+# for plot routine
+from . import plotter
+from pipeline.infrastructure.displays.singledish.utils import sd_polmap
+import pipeline.infrastructure.renderer.logger as logger
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -31,7 +33,8 @@ class FittingFactory(object):
         
 class FittingInputs(common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
-                 fit_order=None, edge=None, outfile=None):
+                 fit_order=None, edge=None, outfile=None, 
+                 grid_table=None, channelmap_range=None):
         self._init_properties(vars())
         self._bltable = None
         LOG.debug('pollist=%s'%(pollist))
@@ -154,15 +157,6 @@ class FittingBase(common.SingleDishTaskTemplate):
         else:
             timetable_index = 0
             
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-        
-        rows_to_process = numpy.where(numpy.logical_and(antennas == antennaid, 
-                                                   numpy.logical_and(ifnos == spwid, srctypes==srctype)))[0]
-        
-        _polnos = polnos.take(rows_to_process)
         index_list_total = []
         row_list_total = []
         blinfo = []
@@ -171,10 +165,8 @@ class FittingBase(common.SingleDishTaskTemplate):
             time_table = datatable.get_timetable(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
 
-            index_list_per_pol = rows_to_process.take(numpy.where(_polnos==pol)[0])
-
             # working with spectral data in scantable
-            nrow_total = len(index_list_per_pol)
+            nrow_total = sum([len(x[0]) for x in member_list])
                 
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
@@ -279,9 +271,34 @@ class FittingBase(common.SingleDishTaskTemplate):
         
         sd.rcParams['scantable.storage'] = storage_save
         
+        # plotting
+        grid_table = self.inputs.grid_table
+        channelmap_range = self.inputs.channelmap_range
+        plot_list = []
+        if grid_table is not None:
+            # mkdir stage_dir if it doesn't exist
+            stage_number = self.inputs.context.task_counter
+            stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
+            if not os.path.exists(stage_dir):
+                os.makedirs(stage_dir)
+                
+            st = self.inputs.context.observing_run[antennaid]
+            # TODO: use proper source name when we can handle multiple source 
+            source_name = ''
+            for (source_id,source) in st.source.items():
+                if 'TARGET' in source.intents:
+                    source_name = source.name.replace(' ', '_').replace('/','_')
+            prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
+            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
+                                               filename_in, stage_dir, prefix, channelmap_range))
+            prefix = prefix.replace('before', 'after')
+            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
+        
+        
         outcome = {'bltable': bltable_name,
                    'index_list': index_list_total,
-                   'outtable': filename_out}
+                   'outtable': filename_out,
+                   'plot_list': plot_list}
         result = FittingResults(task=self.__class__,
                                 success=True,
                                 outcome=outcome)
@@ -356,6 +373,33 @@ class FittingBase(common.SingleDishTaskTemplate):
                 raise RuntimeError, "Failed to get mask ranges. A start channel index is larger than end channel."
             masklist.append([istart[irange], iend[irange]])
         return masklist
+
+    def plot_spectra(self, source, ant, spwid, pols, grid_table, infile, outdir, outprefix, channelmap_range):
+        st = self.inputs.context.observing_run[ant]
+        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
+        if len(line_range) == 0:
+            line_range = None
+        for pol in pols:
+            outfile = os.path.join(outdir, outprefix+'_pol%s.png'%(pol))
+            status = plotter.plot_profile_map(self.inputs.context, ant, spwid, pol, grid_table, infile, outfile, line_range)
+            if status and os.path.exists(outfile):
+                if outprefix.find('spectral_plot_before_subtraction') == -1:
+                    plottype = 'sd_sparse_map_after_subtraction'
+                else:
+                    plottype = 'sd_sparse_map_before_subtraction'
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': plottype,
+                              'file': infile}
+                plot = logger.Plot(outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                yield plot
 
 class CubicSplineFitting(FittingBase):
     def _get_param(self, idx, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):

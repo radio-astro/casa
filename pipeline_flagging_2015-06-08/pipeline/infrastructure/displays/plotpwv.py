@@ -118,8 +118,13 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
     watertime = newtime
     water = newwater
     regularTime = np.linspace(watertime[0], watertime[-1], len(watertime))
-    ius = splrep(watertime, water,s=len(watertime)-math.sqrt(2*len(watertime)))
-    water = splev(regularTime, ius, der=0)
+    #ius = splrep(watertime, water,s=len(watertime)-math.sqrt(2*len(watertime)))
+    order = 3
+    if len(water) <= 3:
+        order = 1
+    if len(water) > 1:
+        ius = splrep(watertime, water, s=len(watertime)-math.sqrt(2*len(watertime)), k=order)
+        water = splev(regularTime, ius, der=0)
     list_of_date_times = mjdSecondsListToDateTime(regularTime)
     timeplot = pb.date2num(list_of_date_times)
     pb.plot_date(timeplot,water,'k-')
@@ -143,11 +148,12 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
     adesc.yaxis.grid(True,which='major')
 
     pb.title(ms)
-    adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,30)))
-    adesc.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,10)))
-    adesc.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
-    adesc.fmt_xdata = matplotlib.dates.DateFormatter('%H:%M')
-    RescaleXAxisTimeTicks(pb.xlim(), adesc)
+    if len(water) > 1:
+        adesc.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,30)))
+        adesc.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator(byminute=range(0,60,10)))
+        adesc.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
+        adesc.fmt_xdata = matplotlib.dates.DateFormatter('%H:%M')
+        RescaleXAxisTimeTicks(pb.xlim(), adesc)
     autoFigureName = "%s.pwv.png" % (ms)
     pb.draw()
 
@@ -158,6 +164,7 @@ def plotPWV(ms, figfile='', plotrange=[0,0,0,0], clip=True):
         pb.savefig(figfile)
     else:
         LOG.warn("Failed to create PWV plot")
+    pb.close()
 
 
 def readPWVFromMS(vis):

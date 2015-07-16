@@ -68,12 +68,13 @@ Compute a clean map.
   </param>
 
   <param type="string" name="deconvolver" subparam="true">
-     <description>Minor cycle algorithm (clark, hogbom, \'\' for default)</description>
+     <description>Minor cycle algorithm (clark, hogbom, mtmfs, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
          <value>clark</value>
          <value>hogbom</value>
+         <value>mtmfs</value>
        </allowed>
   </param>
 
@@ -121,11 +122,11 @@ Compute a clean map.
 
   <param type="string" name="weighting">
      <description>Type of weighting</description>
-     <value>natural</value>
+     <value>briggs</value>
        <allowed kind="enum">
+         <value>briggs</value>
          <value>natural</value>
          <value>uniform</value>
-         <value>briggs</value>
          <value>superuniform</value>
          <value>briggsabs</value>
        </allowed>
@@ -133,7 +134,7 @@ Compute a clean map.
 
   <param type="double" name="robust" subparam="true">
      <description>Briggs weighting robustness parameter</description>
-     <value>0.0</value>
+     <value>-999.0</value>
   </param>
 
   <param type="any" name="noise" subparam="true">
@@ -194,7 +195,7 @@ Compute a clean map.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>1.0</value>
+       <value>4.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -303,11 +304,11 @@ Compute a clean map.
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="tlimit"><value type="double">4.0</value></default>
         <default param="niter"><value type="int">500</value></default>
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="tlimit"><value type="double">4.0</value></default>
         <default param="niter"><value type="int">500</value></default>
       </equals>
       <equals value="mask">
@@ -329,14 +330,14 @@ Compute a clean map.
     </when>
 
     <when param="weighting">
-      <equals value="natural"/>
-      <equals value="uniform"/>
       <equals value="briggs">
-         <default param="robust"><value>0.0</value></default>
+         <default param="robust"><value>-999.0</value></default>
          <default param="npixels"><value>0</value></default>
       </equals>
+      <equals value="natural"/>
+      <equals value="uniform"/>
       <equals value="briggsabs">
-        <default param="robust"><value>0.0</value></default>
+        <default param="robust"><value>-999.0</value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
         <default param="npixels"><value>0</value></default>
       </equals>
@@ -436,7 +437,7 @@ gridder -- Gridding options, 'standard', 'mosaic'.
     'standard'
 
 deconvolver -- Minor cycle algorithm e.g. clark or hogbom clean. \'\' defaults to
-    'clark'
+    ''
 
 outframe -- The reference frame of the output image. The only supported option
     is 'LSRK'
@@ -475,13 +476,13 @@ width -- Width of spectral dimension in frequency, \'\' for default.
 
 weighting -- Weighting to apply to visibilities. Options are: 'natural',
     'uniform','briggs', 'superuniform','briggsabs','radial'
-     default='natural'
+     default='briggs'
      example: weighting='uniform'
 
 robust -- Parameter for  'briggs' and 'briggsabs' weighting. Ranges from -2.0 to
     2.0. -2 for uniform +2 for natural.
-    default=0.0
-    example: 0.5
+    default=-999.0
+    example: 0.7
 
 noise -- Parameter for 'briggsabs' weighting
     default: '1.0Jy'

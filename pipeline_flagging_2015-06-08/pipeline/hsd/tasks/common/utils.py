@@ -5,6 +5,7 @@ import os
 import numpy
 import contextlib
 import re
+import time
 
 from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
@@ -24,6 +25,7 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
                 'todo': NOTSET,       # 0
                 'trace': NOTSET }     # 0
 
+import pipeline.infrastructure.mpihelpers as mpihelpers
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import OnlineFlagIndex
@@ -182,7 +184,9 @@ def temporary_filename(name='_heuristics.temporary.table', removesubfiles=False)
             command += '*'
         os.system(command)
 
-def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
+def _get_index_list(datatable, antenna, spw, pols=None, srctype=None):
+    LOG.info('get_index_list_org start')
+    start_time = time.time()
     assert len(antenna) == len(spw)
     table1 = datatable.tb1
     table2 = datatable.tb2
@@ -210,6 +214,36 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
         for ival in xrange(nval):
             if sel(irow, ival):
                 yield irow
+    end_time = time.time()
+    LOG.info('get_index_list_org end: Elapsed time %s sec'%(end_time - start_time))
+    
+def _get_index_list2(datatable, antenna, spw, pols):
+    assert pols is not None
+    online_flag = datatable.tb2.getcolslice('FLAG_PERMANENT', [OnlineFlagIndex], [OnlineFlagIndex], 1)[0]
+    for (_ant, _spw, _pols) in zip(antenna, spw, pols):
+        for _pol in _pols:
+            time_table = datatable.get_timetable(_ant, _spw, _pol)
+            # time table separated by large time gap
+            the_table = time_table[1]
+            for group in the_table:
+                for row in group[1]:
+                    if online_flag[row] == 1:
+                        yield row
+
+def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
+    LOG.info('new get_index_list start')
+    start_time = time.time()
+    
+    if pols is None or pols.count(None) > 0 or srctype is None:
+        index_list = list(_get_index_list(datatable, antenna, spw, pols, srctype))
+    else:
+        index_list = list(_get_index_list2(datatable, antenna, spw, pols))
+    index_list.sort()
+    
+    end_time = time.time()
+    LOG.info('new get_index_list end: Elapsed time %s sec'%(end_time - start_time))
+    
+    return index_list
 
 def get_valid_members(group_desc, antenna_filter, spwid_filter):
     for i in xrange(len(group_desc)):
@@ -375,3 +409,20 @@ def asap_force_storage(storage='disk'):
     sd.rcParams[key] = storage  
     yield None
     sd.rcParams[key] = storage_org
+    
+# helper functions for parallel execution
+def create_serial_job(task_cls, task_args, context):
+    inputs = task_cls.Inputs(context, **task_args)
+    task = task_cls(inputs)
+    job = mpihelpers.SyncTask(task)
+    LOG.debug('Serial Job: %s'%(task))
+    return job
+
+def create_parallel_job(task_cls, task_args, context):
+    context_path = os.path.join(context.output_dir, context.name + '.context')
+    if not os.path.exists(context_path):
+        context.save(context_path)
+    task = mpihelpers.Tier0PipelineTask(task_cls, task_args, context_path)
+    job = mpihelpers.AsyncTask(task)
+    LOG.debug('Parallel Job: %s'%(task))
+    return job
