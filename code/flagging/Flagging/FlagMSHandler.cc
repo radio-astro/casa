@@ -40,6 +40,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
 	processorTableExist_p = false;
+
 }
 
 
@@ -439,13 +440,27 @@ FlagMSHandler::generateIterator()
 			                                                   vi::SortColumns (sortOrder_p, true),
 			                                                   true,prefetchColumns_p,timeInterval_p);
 		}
-		else if (!mapScanStartStop_p)
+        else if (enableTimeAvg_p)
+        {
+            // Time averaging in clip mode uses the Time Averaging Iterator
+            cout << "Using timeavg ITERATOR"<< endl;
+            // TODO: should match the AveragingOptions with the datacolumn requested in clip!!!
+
+            vi::AveragingParameters parameters(timeAverageBin_p, 0,vi::SortColumns(sortOrder_p, false),
+                    timeAvgOptions_p,0.0,NULL,true);
+
+            visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedMeasurementSet_p));
+
+        }
+		else if (!mapScanStartStop_p and !enableTimeAvg_p)
 		{
+            cout << "Using normal ITERATOR"<< endl;
 			if (visibilityIterator_p) delete visibilityIterator_p;
 			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
 			                                                   vi::SortColumns (sortOrder_p, true),
 			                                                   true,NULL,timeInterval_p);
 		}
+
 
 		// Set the table data manager (ISM and SSM) cache size to the full column size, for
 		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW

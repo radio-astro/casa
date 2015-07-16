@@ -67,6 +67,8 @@ private:
 	Float clipmax_p;
 	Float original_clipmin_p;
 	Float original_clipmax_p;
+	Bool timeavg_p;
+	Double timebin_p;
 
 	// Specialization for the clipping case
 	bool (casa::FlagAgentClipping::*checkVis_p)(Float);

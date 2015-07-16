@@ -353,6 +353,8 @@ agentflagger::parseclipparameters(
 		const std::vector<double>& clipminmax,
 		const bool clipoutside,
 		const bool channelavg,
+		const bool timeavg,
+		const std::string& timebin,
 		const bool clipzeros,
 		const bool apply)
 {
@@ -368,7 +370,8 @@ agentflagger::parseclipparameters(
 					String(uvrange),String(timerange),String(correlation),
 					String(intent), String(observation),
 					String(datacolumn), clipminmax, Bool(clipoutside),
-					Bool(channelavg), Bool(clipzeros), Bool(apply));
+					Bool(channelavg), Bool(timeavg), String(timebin),
+					Bool(clipzeros), Bool(apply));
 
 		}
 

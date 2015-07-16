@@ -159,6 +159,10 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	flushFlagRow_p = false;
 	loadProcessorTable_p = false;
 
+	// Initialize time averaging options
+    timeAvgOptions_p = vi::AveragingOptions(vi::AveragingOptions::Nothing);
+    enableTimeAvg_p = false;
+
 	return;
 }
 
@@ -1606,6 +1610,42 @@ FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
 	// Pre-Load scan and time
 	preLoadColumn(vi::Scan);
 	preLoadColumn(vi::Time);
+}
+
+void
+FlagDataHandler::setTimeAverageIter(bool activated)
+{
+    enableTimeAvg_p = activated;
+    cout <<"setTimeAVerageIter: dataColumnType_p="<<dataColumnType_p<<endl;
+
+    // Setup the time averaging options
+    if (dataColumnType_p.compare("DATA") == 0)
+    {
+        timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+        timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
+    }
+    else if (dataColumnType_p.compare("CORRECTED") == 0)
+    {
+        timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
+        timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
+    }
+    else if (dataColumnType_p.compare("MODEL") == 0)
+    {
+        timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+        timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
+    }
+    else if (dataColumnType_p.compare("FLOAT_DATA") == 0)
+    {
+        timeAvgOptions_p |= vi::AveragingOptions::AverageFloat;
+    }
+/*    else if (dataColumnType_p.compare("RESIDUAL") == 0)
+    {
+        timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
+        timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+        timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
+        timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT
+    }*/
+
 }
 
 // -----------------------------------------------------------------------

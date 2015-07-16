@@ -198,6 +198,16 @@
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
+            <!-- TEMPORARILY HIDDEN -->
+            <param type="any" name="timeavg" subparam="true" visibility="hidden" >
+                <description>Average over time ranges</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+                <param type="string" name="timebin" subparam="true" visibility="hidden" >
+                    <description>Bin width for time averaging.</description>     
+                    <value type="string">0s</value>
+                </param>            
             <param type="bool" name="clipzeros" subparam="true">
                 <description>Clip zero-value data</description>
                 <value type="bool">False</value>

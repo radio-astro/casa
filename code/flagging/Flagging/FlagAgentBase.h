@@ -30,6 +30,9 @@
 #include <measures/Measures/Stokes.h>
 #include <msvis/MSVis/AsynchronousTools.h>
 
+// To handle variant parameters
+#include <stdcasa/StdCasa/CasacSupport.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
@@ -389,7 +392,6 @@ private:
 
 	// Data source configuration
 	String expression_p;
-	String dataColumn_p;
 	uShort dataReference_p;
 
 	// Debugging configuration
@@ -409,6 +411,10 @@ protected:
 	vector<uInt> rowsIndex_p;
 	vector<uInt> channelIndex_p;
 	vector<uInt> polarizationIndex_p;
+
+	// Needed to be protected for timeavg in clip
+    String dataColumn_p;
+
 
 };
 

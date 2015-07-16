@@ -1152,7 +1152,8 @@ bool
 AgentFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
 		String antenna, String uvrange, String timerange, String correlation,
 		String intent, String observation, String datacolumn,
-		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
+		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool timeavg,
+		String timebin, Bool clipzeros, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1183,6 +1184,8 @@ AgentFlagger::parseClipParameters(String field, String spw, String array, String
 	agent_record.define("clipminmax", clipminmax);
 	agent_record.define("clipoutside", clipoutside);
 	agent_record.define("channelavg", channelavg);
+    agent_record.define("timeavg", timeavg);
+    agent_record.define("timebin", timebin);
 	agent_record.define("clipzeros", clipzeros);
 
 

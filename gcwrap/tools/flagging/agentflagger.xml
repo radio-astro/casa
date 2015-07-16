@@ -684,7 +684,18 @@ for the clip mode.
      <value>false</value>
      </param>
 
-          <param type="bool" name="clipzeros">
+     <param type="bool" name="timeavg">
+     <description>Average data over time ranges. [True/False]. Default:
+     </description>
+     <value>false</value>
+     </param>
+
+     <param type="string" name="timebin">
+     <description>Bin width for time average. Example: '2s' </description>
+     <value></value>
+     </param>
+          
+     <param type="bool" name="clipzeros">
      <description>Clip zero-value data. [True/False]. Default:
      </description>
      <value>false</value>

@@ -303,8 +303,8 @@ public:
 	bool parseClipParameters(String field, String spw, String array, String feed, String scan,
        	    String antenna, String uvrange, String timerange,String correlation,
        	    String intent, String observation, String datacolumn,
-       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg,
-       	    Bool clipzeros, Bool apply);
+       	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool timeavg,
+       	    String timebin, Bool clipzeros, Bool apply);
 
 	// Parse parameters for quack
 	bool parseQuackParameters(String field, String spw, String array, String feed, String scan,

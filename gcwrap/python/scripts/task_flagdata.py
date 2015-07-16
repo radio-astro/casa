@@ -92,6 +92,8 @@ def flagdata(vis,
              datacolumn,
              clipoutside,
              channelavg,
+             timeavg,
+             timebin,
              clipzeros,
              quackinterval, # mode quack parameters
              quackmode,
@@ -403,6 +405,8 @@ def flagdata(vis,
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
+            agent_pars['timeavg'] = timeavg
+            agent_pars['timebin'] = timebin
             agent_pars['clipzeros'] = clipzeros
             
 
@@ -619,29 +623,6 @@ def flagdata(vis,
                 raise Exception, 'There are no valid commands in list'
             
             unionpars = {}
-            # Do not create union for a cal table
-#             if iscal:
-#                 if vrows.__len__() == 1:
-#                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
-#                     casalog.post('The selected subset of the cal table will be: ');
-#                     casalog.post('%s'%unionpars);
-#                      
-#             else:
-#                 if vrows.__len__() > 1:
-#                    unionpars = fh.parseUnion(vis, flagcmd)
-#                      
-#                    if( len( unionpars.keys() ) > 0 ):
-#                         casalog.post('Pre-selecting a subset of the MS : ');
-#                         casalog.post('%s'%unionpars)
-#                           
-#                    else:
-#                         casalog.post('Iterating through the entire MS');
-#                                                  
-#                 # Get all the selection parameters, but set correlation to ''
-#                 if vrows.__len__() == 1:
-#                     unionpars = fh.parseSelectionPars(flagcmd[0]['command'])
-#                     casalog.post('The selected subset of the MS will be: ');
-#                     casalog.post('%s'%unionpars);
                 
             if vrows.__len__() == 1:
                 unionpars = fh.parseSelectionPars(flagcmd[0]['command'])

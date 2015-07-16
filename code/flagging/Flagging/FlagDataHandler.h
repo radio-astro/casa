@@ -37,6 +37,10 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 
+// TVI framework
+#include <msvis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/AveragingTvi2.h>
+
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
 
@@ -879,6 +883,7 @@ public:
 	void setMapAntennaPointing(bool activated);
 	void setScanStartStopMap(bool activated);
 	void setScanStartStopFlaggedMap(bool activated);
+    void setTimeAverageIter(bool activated);
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -943,6 +948,11 @@ public:
 	bool groupTimeSteps_p;
 	Block<int> sortOrder_p;
 
+    // Time average iterator parameters
+    Bool enableTimeAvg_p;
+    Double timeAverageBin_p;
+    String dataColumnType_p;
+    vi::AveragingOptions timeAvgOptions_p;
 
 protected:
 
@@ -1016,6 +1026,8 @@ protected:
 
 	// Profiling
 	bool profiling_p;
+
+
 
 };
 
