@@ -2211,6 +2211,12 @@ class test_radial_velocity_correction(test_base_compare):
         self.tolerance['WEIGHT'] = 1
                 
         self.post_process()     
+
+    def test_too_low_width(self):
+        # test for no crash
+        r = mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='DATA',outframe='SOURCE',
+                        mode = 'velocity', width = '0.001km/s',restfreq = '354.50547GHz')
+        self.assertFalse(r)
         
 class test_vla_mixed_polarizations(test_base):
     '''Test behaviour of mstransform in split mode when the input MS contains mixed VLA correlations XY/LR'''

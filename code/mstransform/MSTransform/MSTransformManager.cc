@@ -2372,7 +2372,7 @@ void MSTransformManager::regridSpwAux(	Int spwId,
     					<< "Calculate frequencies in output reference frame " << LogIO::POST;
 
 	Double weightScale;
-	MSTransformRegridder::calcChanFreqs(	logger_p,
+	Bool ret = MSTransformRegridder::calcChanFreqs(	logger_p,
 											regriddedCHAN_FREQ,
 											regriddedCHAN_WIDTH,
 											weightScale,
@@ -2392,6 +2392,12 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 											True, // verbose
 											radialVelocity_p
 											);
+
+	if (!ret) {
+		logger_p << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
+				 << LogIO::EXCEPTION;
+	}
+
 	/*
 	ostringstream oss_debug;
     oss_debug 	<< " phaseCenter_p=" << phaseCenter_p << endl
