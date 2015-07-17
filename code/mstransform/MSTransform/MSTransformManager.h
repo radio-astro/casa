@@ -1210,6 +1210,7 @@ protected:
 	String restFrequency_p;
 	String outputReferenceFramePar_p;
 	Bool radialVelocityCorrection_p;
+	Bool regridding_p;
 
 	// Frequency specification parameters
 	String mode_p;

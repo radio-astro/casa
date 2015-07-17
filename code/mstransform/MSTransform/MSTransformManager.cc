@@ -142,6 +142,7 @@ void MSTransformManager::initialize()
 	combinespws_p = False;
 	channelAverage_p = False;
 	hanningSmooth_p = False;
+	regridding_p = False;
 	refFrameTransformation_p = False;
 	freqbin_p = Vector<Int>(1,-1);
 	useweights_p = "flags";
@@ -703,9 +704,9 @@ void MSTransformManager::parseRefFrameTransParams(Record &configuration)
 	exists = configuration.fieldNumber ("regridms");
 	if (exists >= 0)
 	{
-		configuration.get (exists, refFrameTransformation_p);
+		configuration.get (exists, regridding_p);
 
-		if (refFrameTransformation_p)
+		if (regridding_p)
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Regrid MS is activated"<< LogIO::POST;
@@ -1078,7 +1079,7 @@ void MSTransformManager::open()
 
 	// Determine channel specification for output MS
 	Vector<Int> chanSpec;
-	Bool spectralRegridding = combinespws_p or refFrameTransformation_p;
+	Bool spectralRegridding = combinespws_p or regridding_p;
 	if (channelAverage_p and !spectralRegridding)
 	{
 		chanSpec =  freqbin_p;
@@ -1242,7 +1243,7 @@ void MSTransformManager::setup()
 		reindexGenericTimeDependentSubTable("CALDEVICE");
 		reindexGenericTimeDependentSubTable("SYSPOWER");
 	}
-	else if (refFrameTransformation_p)
+	else if (regridding_p)
 	{
 		initRefFrameTransParams();
 		regridSpwSubTable();
@@ -1261,7 +1262,7 @@ void MSTransformManager::setup()
 		spectrumReshape_p = True;
 		cubeTransformation_p = True;
 	}
-	else if (refFrameTransformation_p)
+	else if (regridding_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::regridCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::regridCubeOfData;
@@ -1299,7 +1300,7 @@ void MSTransformManager::setup()
 		transformCubeOfDataFloat_p = &MSTransformManager::copyCubeOfData;
 	}
 
-	Bool spectralRegridding = combinespws_p or refFrameTransformation_p;
+	Bool spectralRegridding = combinespws_p or regridding_p;
 
 	// Vector level
 	if (channelAverage_p and !hanningSmooth_p and !spectralRegridding)
@@ -1392,7 +1393,7 @@ void MSTransformManager::setup()
 	//// Determine the frequency transformation methods to use ////
 
 	// Drop channels with non-uniform width when doing only channel average
-	if (channelAverage_p and !refFrameTransformation_p and !combinespws_p )
+	if (channelAverage_p and !regridding_p and !combinespws_p )
 	{
 		dropNonUniformWidthChannels();
 	}
@@ -1404,7 +1405,7 @@ void MSTransformManager::setup()
 	}
 
 	// Determine weight and sigma factors when either auto or user channel average is set
-	if (channelAverage_p or combinespws_p or refFrameTransformation_p)
+	if (channelAverage_p or combinespws_p or regridding_p)
 	{
 		calculateNewWeightAndSigmaFactors();
 	}
@@ -1518,7 +1519,7 @@ IPosition MSTransformManager::getTransformedShape(vi::VisBuffer2 *visBuffer)
 	{
 		outputCubeShape(1) = inputOutputSpwMap_p[0].second.NUM_CHAN;
 	}
-	else if (refFrameTransformation_p)
+	else if (regridding_p)
 	{
 		Int inputSpw = visBuffer->spectralWindows()(0);
 		outputCubeShape(1) = inputOutputSpwMap_p[inputSpw].second.NUM_CHAN;
@@ -1959,10 +1960,15 @@ void MSTransformManager::initRefFrameTransParams()
     inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
 
     // Parse output reference frame
+    refFrameTransformation_p = True;
     radialVelocityCorrection_p = False;
     if(outputReferenceFramePar_p.empty())
     {
     	outputReferenceFrame_p = inputReferenceFrame_p;
+    	refFrameTransformation_p = False;
+    }
+    else if (outputReferenceFrame_p == inputReferenceFrame_p) {
+    	refFrameTransformation_p = False;
     }
     // CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
     else if (outputReferenceFramePar_p == "SOURCE")
@@ -4041,7 +4047,7 @@ void MSTransformManager::dropNonUniformWidthChannels()
 // -----------------------------------------------------------------------
 void MSTransformManager::getOutputNumberOfChannels()
 {
-	if (refFrameTransformation_p or combinespws_p)
+	if (regridding_p or combinespws_p)
 	{
 		map<uInt,uInt>::iterator iter;
 		for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
