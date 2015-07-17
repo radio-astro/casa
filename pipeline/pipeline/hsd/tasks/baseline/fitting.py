@@ -34,7 +34,7 @@ class FittingFactory(object):
 class FittingInputs(common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
                  fit_order=None, edge=None, outfile=None, 
-                 grid_table=None, channelmap_range=None):
+                 grid_table=None, channelmap_range=None, stage_dir=None):
         self._init_properties(vars())
         self._bltable = None
         LOG.debug('pollist=%s'%(pollist))
@@ -211,8 +211,8 @@ class FittingBase(common.SingleDishTaskTemplate):
                 LOG.debug('nrow = %s'%(nrow))
                 LOG.debug('len(idxs) = %s'%(len(idxs)))
                 
-                index_list = []
-                row_list = []
+                #index_list = []
+                #row_list = []
 
                 for i in xrange(nrow):
                     row = rows[i]
@@ -239,16 +239,23 @@ class FittingBase(common.SingleDishTaskTemplate):
                     # fitting
                     polyorder = min(polyorder, max_polyorder)
                     mask_array[edge[0]:nchan-edge[1]] = 1
-                    irow = len(row_list_total)+len(row_list)
+                    #irow = len(row_list_total)+len(row_list)
+                    irow = len(row_list_total) + i
                     param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
                     # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
                     param['masklist'] = [ [start, end-1] for [start, end] in param['masklist'] ]
                     blinfo.append(param)
-                    index_list.append(idx)
-                    row_list.append(row)
+                    #index_list.append(idx)
+                    #row_list.append(row)
 
-                index_list_total.extend(index_list)
-                row_list_total.extend(row_list)
+                # 2015/07/17 TN
+                # In the current implementation, all the rows in timetable are processed regardless of 
+                # the value of NOCHANGE column in DataTable. Thus, we don't need to construct index_list 
+                # nor row_list since they should be equivalent to idxs and rows
+                #index_list_total.extend(index_list)
+                #row_list_total.extend(row_list)
+                index_list_total.extend(idxs)
+                row_list_total.extend(rows)
 
 #         f = open(bltable_name+'.in.txt', 'w')
 #         f.write("row_idx = %s\n" % str(row_list_total))
@@ -277,10 +284,12 @@ class FittingBase(common.SingleDishTaskTemplate):
         plot_list = []
         if grid_table is not None:
             # mkdir stage_dir if it doesn't exist
-            stage_number = self.inputs.context.task_counter
-            stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
-            if not os.path.exists(stage_dir):
-                os.makedirs(stage_dir)
+            stage_dir = self.inputs.stage_dir
+            if stage_dir is None:
+                stage_number = self.inputs.context.task_counter
+                stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
+                if not os.path.exists(stage_dir):
+                    os.makedirs(stage_dir)
                 
             st = self.inputs.context.observing_run[antennaid]
             # TODO: use proper source name when we can handle multiple source 
@@ -293,7 +302,6 @@ class FittingBase(common.SingleDishTaskTemplate):
                                                filename_in, stage_dir, prefix, channelmap_range))
             prefix = prefix.replace('before', 'after')
             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
-        
         
         outcome = {'bltable': bltable_name,
                    'index_list': index_list_total,
@@ -313,7 +321,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                 
     def analyse(self, result):
         bltable = result.outcome['bltable']
-        index_list = result.outcome['index_list']
+        index_list = result.outcome.pop('index_list')
         stname = self.inputs.infile
 #         stname = self.inputs.data_object.name
         spwid = self.inputs.spwid

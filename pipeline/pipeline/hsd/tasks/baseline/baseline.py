@@ -199,6 +199,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 _iteration = group_desc.get_iteration(ant, spwid)
                 outfile = self._get_dummy_name(context, ant)
                 LOG.debug('pols=%s'%(pols))
+                #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
+                #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
+                per_antenna_table = per_antenna_grid_table(ant, grid_table)
+                #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
                 fitter_args = {"antennaid": ant,
                              "spwid": spwid,
                              "pollist": pols,
@@ -206,8 +210,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
                              "fit_order": fitorder,
                              "edge": edge,
                              "outfile": outfile,
-                             "grid_table": grid_table,
-                             "channelmap_range": channelmap_range}
+                             "grid_table": per_antenna_table,
+                             "channelmap_range": channelmap_range,
+                             "stage_dir": stage_dir}
                         
                 job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
                                  'meta': (ant, spwid, pols, outfile)})
@@ -217,13 +222,26 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 job = job_entry['job']
                 ant, spwid, pols, outfile = job_entry['meta']
                 fitter_result = job.get_result()
+                #LOG.info('asizeof(fitter_result type %s)=%s'%(type(fitter_result), asizeof.asizeof(fitter_result)))
+                #LOG.info('asizeof(fitter_result.inputs=%s'%(asizeof.asizeof(fitter_result.inputs)))
+                #LOG.info('asizeof(fitter_result.casalog=%s'%(asizeof.asizeof(fitter_result.casalog)))
                 if isinstance(fitter_result, basetask.ResultsList):
                     temp_name = fitter_result[0].outcome.pop('outtable')
                     for r in fitter_result:
                         r.accept(context)
+                        #if hasattr(r, 'index_list'):
+                        #    LOG.info('asizeof(index_list)=%s'%(asizeof.asizeof(r.outcome['index_list'])))
+                        #if hasattr(r, 'inputs'):
+                        #    LOG.info('asizeof(inputs)=%s'%(asizeof.asizeof(r.inputs)))
+                        #    for (k,v) in r.inputs.items():
+                        #        LOG.info('asizeof(r.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
                         plot_list.extend(r.outcome.pop('plot_list'))
                 else:
                     temp_name = fitter_result.outcome.pop('outtable')
+                    #if hasattr(fitter_result, 'index_list'):
+                    #    LOG.debug('asizeof(index_list)=%s'%(asizeof.asizeof(fitter_result.outcome['index_list'])))
+                    #    for (k,v) in fitter_result.inputs.items():
+                    #        LOG.info('asizeof(fitter_result.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
                     fitter_result.accept(context)
                     plot_list.extend(fitter_result.outcome.pop('plot_list'))
                 if not files_temp.has_key(ant):
@@ -304,3 +322,11 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug("Removing old temprary file '%s'" % dummy)
             shutil.rmtree(dummy)
         del remove_list
+
+def per_antenna_grid_table(antenna_id, grid_table):
+    def filter(ant, table):
+        for row in table:
+            new_row_entry = row[:6] + [[r for r in row[6] if r[-1] == antenna_id]]
+            yield new_row_entry
+    new_table = list(filter(antenna_id, grid_table))
+    return new_table
