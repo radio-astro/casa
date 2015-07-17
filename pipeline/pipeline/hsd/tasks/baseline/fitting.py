@@ -55,14 +55,14 @@ class FittingInputs(common.SingleDishInputs):
     def fit_order(self, value):
         self._fit_order = value
         
-    @property
+    #@property
     def data_object(self):
         return self.context.observing_run[self.antennaid]
         
     @property
     def infile(self):
         #return self.data_object.name
-        return self.data_object.baseline_source
+        return self.data_object().baseline_source
     
     @property
     def outfile(self):
@@ -77,7 +77,7 @@ class FittingInputs(common.SingleDishInputs):
         if self._bltable is None:
             namer = filenamer.BaselineSubtractedTable()
             namer.spectral_window(self.spwid)
-            st = self.data_object
+            st = self.data_object()
             asdm = common.asdm_name(st)
             namer.asdm(asdm)
             namer.antenna_name(st.antenna.name)
@@ -86,11 +86,11 @@ class FittingInputs(common.SingleDishInputs):
     
     @property
     def srctype(self):
-        return self.data_object.calibration_strategy['srctype']
+        return self.data_object().calibration_strategy['srctype']
     
     @property
     def nchan(self):
-        return self.data_object.spectral_window[self.spwid].nchan
+        return self.data_object().spectral_window[self.spwid].nchan
                 
 class FittingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -137,7 +137,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         bltable_name = self.inputs.bltable
             
         if not filename_out or len(filename_out) == 0:
-            self.outfile = self.data_object.baselined_name
+            self.outfile = self.data_object().baselined_name
             LOG.debug("Using default output scantable name, %s" % self.outfile)
         
         if not os.path.exists(filename_out):
