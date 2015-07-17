@@ -177,6 +177,8 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         # Don't convert results to ResultsList if it is not
         # the top-level task.
         if self.inputs.context.subtask_counter > 0:
+            if hasattr(aresult, 'casalog'):
+                del aresult.casalog
             return aresult
         
         if type(aresult) is basetask.ResultsList:
