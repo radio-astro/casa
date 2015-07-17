@@ -133,7 +133,7 @@ Multipy a scaling factor to selected spectra.
     </param>
     
     <param type="string" name="timespan" subparam="true">
-       <description>Span the timebin across \'scan\', \'state\', or \'scan,state\'.</description>
+       <description>Span the timebin across \'scan\', \'state\', \'field\', or a combination of them (e.g., \'scan,state\').</description>
        <value type="string"></value>
     </param>
 
