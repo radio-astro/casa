@@ -1442,18 +1442,18 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 bool MSCache::isEphemeris(){
 	if ( !ephemerisInitialized ){
 		Table::TableOption tabopt(Table::Old);
-
 		MeasurementSet ms(filename_,TableLock(TableLock::AutoLocking), tabopt);
 		ROMSColumns msc(ms);
+
+        // Check the field subtable for ephemeris fields
 		const ROMSFieldColumns& fieldColumns = msc.field();
+        uInt nrow = fieldColumns.nrow();
 
-		const ROMSMainColumns& mainColumns(ms);
-		const ROScalarColumn<int> scalerColumn = mainColumns.fieldId();
-
-		String ephemerisExists = fieldColumns.ephemPath( scalerColumn.asInt( MS::FIELD_ID) );
 		ephemerisAvailable = true;
-		if ( ephemerisExists.empty()){
-			ephemerisAvailable = false;
+        String ephemPath;
+        for (uInt i=0; i<nrow; ++i) {
+            ephemPath = fieldColumns.ephemPath(i);
+		    if ( ephemPath.empty()) ephemerisAvailable = false;
 		}
 		ephemerisInitialized = true;
 	}
