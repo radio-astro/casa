@@ -37,6 +37,7 @@ Example #5: process uid123.tar.gz with a log level of TRACE
 
 """
 import ast
+import collections
 import os
 import traceback
 import xml.etree.ElementTree as ElementTree
@@ -48,6 +49,8 @@ import pipeline.infrastructure.launcher as launcher
 LOG = logging.get_logger(__name__)
 
 recipes_dir = os.path.join(os.path.dirname(__file__), 'recipes')
+
+TaskArgs = collections.namedtuple('TaskArgs', 'vis infiles session')
 
 def _create_context(loglevel, plotlevel, name):
     return launcher.Pipeline(loglevel=loglevel, plotlevel=plotlevel, 
@@ -61,9 +64,9 @@ def _get_task_class(cli_command):
     for k, v in casataskdict.classToCASATask.items():
         if v == cli_command:
             return k
-    raise KeyError, '%s not registered in casataskdict' % cli_command
+    raise KeyError('%s not registered in casataskdict' % cli_command)
 
-def _get_tasks(context, vis, infiles, procedure='procedure_hifacal.xml'):
+def _get_tasks(context, args, procedure='procedure_hifa.xml'):
     # find the procedure file on disk, then fall back to the standard recipes
     if os.path.exists(procedure):
         procedure_file = os.path.abspath(procedure)
@@ -87,9 +90,12 @@ def _get_tasks(context, vis, infiles, procedure='procedure_hifacal.xml'):
                            'hifa_importdata',
                            'hif_restoredata',
                            'hsd_importdata']:
-            task_args['vis'] = vis 
+            task_args['vis'] = args.vis
+            # we might override this later with the procedure definition
+            task_args['session'] = args.session
+
         elif cli_command in ['hsd_importdataold', 'hsd_restoredata']:
-            task_args['infiles'] = infiles
+            task_args['infiles'] = args.infiles
 
         for parameterset in processingcommand.findall('ParameterSet'):
             for parameter in parameterset.findall('Parameter'):
@@ -111,8 +117,8 @@ def string_to_val(s):
     try:
         pyobj = ast.literal_eval(s)
         # seems Tsys wants its groupintent as a string
-        if type(pyobj) in (list, tuple):
-            pyobj = s
+        # if type(pyobj) in (list, tuple):
+        #     pyobj = s
         return pyobj
     except ValueError:
         return s
@@ -124,14 +130,22 @@ def _format_arg_value(arg_val):
 def _as_task_call(task_class, task_args):
     kw_args = map(_format_arg_value, task_args.items())
     return '%s(%s)' % (task_class.__name__, ', '.join(kw_args))
-            
-def reduce(vis=[], infiles=[], procedure='procedure_hifacal.xml',
-           context=None, name=None, loglevel='info', plotlevel='default'):
+
+def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
+           context=None, name=None, loglevel='info', plotlevel='default',
+           session=None):
+    if vis is None:
+        vis = []
+    if infiles is None:
+        infiles = []
     if context is None:
         name = name if name else _get_context_name(procedure)
         context = _create_context(loglevel, plotlevel, name)
+    if session is None:
+        session = ['default'] * len(vis)
 
-    task_generator = _get_tasks(context, vis, infiles, procedure)    
+    task_args = TaskArgs(vis, infiles, session)
+    task_generator = _get_tasks(context, task_args, procedure)
     try:
         while True:
             task = next(task_generator)

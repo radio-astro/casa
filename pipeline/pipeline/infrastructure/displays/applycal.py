@@ -725,11 +725,12 @@ class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
                 **plot_args)
 
 
-class AmpVsUVDetailChart(SpwAntDetailChart):
+class AmpVsUVDetailChart(FieldSpwAntDetailChart):
     """
-    Create an amplitude vs UV distance plot for each spw and antenna
+    Create an amplitude vs UV distance plot for each field, spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected',
+                 **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,

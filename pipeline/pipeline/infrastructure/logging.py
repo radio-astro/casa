@@ -213,7 +213,14 @@ def set_logging_level(logger=None, level='info'):
     
         for logger in _loggers:
             logger.setLevel(level_no)
-            
+
+    import pipeline.infrastructure.mpihelpers as mpihelpers
+    if mpihelpers.is_mpi_ready():
+        cmd = 'pipeline.infrastructure.logging.set_logging_level(level=%r)' % level
+        mpihelpers.mpiclient.push_command_request(cmd,
+                                                  block=True,
+                                                  target_server=mpihelpers.mpi_server_list)
+
     #     casa_level = CASALogHandler.get_casa_priority(level_no)
     #     casatools.log.filter(casa_level)
     

@@ -694,7 +694,12 @@ UTILS = (function () {
 
             var callbackFn = $(this).data("callback");
             if (callbackFn) {
-            	onSuccess.push(callbackFn);
+				if (callbackFn instanceof Array) {
+                    // hacky js version of list.extend()
+					onSuccess.push.apply(onSuccess, callbackFn);
+				} else {
+	            	onSuccess.push(callbackFn);
+				}
             }
 
             pipeline.detailsframe.load(this.href, onSuccess);

@@ -77,6 +77,7 @@ def context_manager_factory(tool):
 # context managers for frequently used CASA tools
 CalAnalysis = context_manager_factory(calanalysis)
 ImageReader = context_manager_factory(image)
+ImagerReader = context_manager_factory(imager)
 MSReader = context_manager_factory(ms)
 TableReader = context_manager_factory(table)
 MSMDReader = context_manager_factory(msmd)

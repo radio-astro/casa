@@ -288,26 +288,24 @@ class Tclean(cleanbase.CleanBase):
             specmode = 'cube'
         else:
             raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
-        imTool = casatools.imager
-        for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
-            for intSpw in map(int, spw.split(',')):
-                imTool.open(msName)
-                imTool.selectvis(spw=intSpw, field=field)
-                imTool.defineimage(mode=specmode, spw=intSpw,
-                                   cellx=inputs.cell[0], celly=inputs.cell[0],
-                                   nx=inputs.imsize[0], ny=inputs.imsize[1])
-                # TODO: Mosaic switch needed ?
-                imTool.weight(type=inputs.weighting, robust=inputs.robust)
+        for ms in context.observing_run.measurement_sets:
+            for intSpw in [int(s) for s in spw.split(',')]:
+                with casatools.ImagerReader(ms.name) as imTool:
+                    imTool.selectvis(spw=intSpw, field=field)
+                    imTool.defineimage(mode=specmode, spw=intSpw,
+                                       cellx=inputs.cell[0], celly=inputs.cell[0],
+                                       nx=inputs.imsize[0], ny=inputs.imsize[1])
+                    # TODO: Mosaic switch needed ?
+                    imTool.weight(type=inputs.weighting, robust=inputs.robust)
 
-                try:
-                    result = imTool.apparentsens()
-                    sensitivities.append(result[1])
-                except Exception as e:
-                    sensitivities.append(0.01)
-                    LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
-                imTool.close()
+                    try:
+                        result = imTool.apparentsens()
+                        sensitivities.append(result[1])
+                    except Exception as e:
+                        sensitivities.append(0.01)
+                        LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
 
-        sensitivity = 1.0/numpy.sqrt(numpy.sum(1.0/numpy.array(sensitivities)**2))
+        sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
 
         if inputs.specmode == 'cube':
             if inputs.nchan != -1:
@@ -384,8 +382,8 @@ class Tclean(cleanbase.CleanBase):
         # will corrupt the table cache, so do things using only the
         # table tool.
         for vis in self.inputs.vis:
-            with casatools.TableReader(
-                            '%s/POINTING' % vis, nomodify=False) as table:
+            with casatools.TableReader('%s/POINTING' % vis,
+                                       nomodify=False) as table:
                 # make a copy of the table
                 LOG.debug('Making copy of POINTING table')
                 copy = table.copy('%s/POINTING_COPY' % vis, valuecopy=True)
@@ -397,9 +395,8 @@ class Tclean(cleanbase.CleanBase):
     def _restore_pointing_table(self):
         for vis in self.inputs.vis:
             # restore the copy of the POINTING table
-            with casatools.TableReader(
-                            '%s/POINTING_COPY' % vis, nomodify=False) as table:
+            with casatools.TableReader('%s/POINTING_COPY' % vis,
+                                       nomodify=False) as table:
                 LOG.debug('Copying back into POINTING table')
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
-
