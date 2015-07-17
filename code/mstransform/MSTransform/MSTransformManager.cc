@@ -4939,7 +4939,7 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 
 	MFrequency::Ref outputFrameRef;
 	outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-			MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
+			MeasFrame(phaseCenter_p, observatoryPosition_p, referenceTime_p));
 
 	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
 
