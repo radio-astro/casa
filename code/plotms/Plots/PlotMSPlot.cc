@@ -886,6 +886,7 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	}
 
     	String itersInclude;
+        size_t amp;
     	if (isIteration()){
     		int iterStart = this->iter_;
     		int iterEnd = getPageIterationCount( pages[i]);
@@ -896,13 +897,15 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     			String iterId;
     			if ( index == iterStart ){
     				iterId = itsCache_->indexer(0,index).fileLabel();
-                    size_t amp = iterId.find(" & ");
-                    if (amp != string::npos) {
+                    amp = iterId.find(" & ");
+                    if (amp != string::npos)
                         iterId.replace(amp, 3, "_with_");
-                    }
     			}
     			else {
     				iterId = itsCache_->indexer(0,index).iterValue();
+                    amp = iterId.find(" & ");
+                    if (amp != string::npos)
+                        iterId.replace(amp, 3, "_with_");
     			}
     			if ( index < lastIndex - 1 ){
     				iterId = iterId + ",";
