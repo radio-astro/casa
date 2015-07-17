@@ -84,6 +84,27 @@ singledishms::assert_valid_ms()
     throw(AipsError("No MeasurementSet has been assigned, please run open."));
 }
 
+Record 
+singledishms::get_time_averaging_record(const bool& timeaverage,
+					const string& timebin,
+					const string& timespan)
+{
+      Record average_param;
+      average_param.define("timeaverage", timeaverage);
+      if (timeaverage) {
+	String average_string;
+	average_string = toCasaString(timebin);
+	if (average_string != "") {
+	  average_param.define("timebin", average_string);
+	}
+	average_string = toCasaString(timespan);
+	if (average_string != "") {
+	  average_param.define("timespan", average_string);
+	}
+      }
+      return average_param;
+}
+
 string
 singledishms::name()
 {
@@ -99,12 +120,18 @@ singledishms::name()
 }
 
 bool
-singledishms::scale(float const factor, string const& datacolumn, string const& outfile)
+singledishms::_scale(float const factor, string const& datacolumn, string const& outfile, bool const timeaverage, string const& timebin, string const& timespan)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
+    if (timeaverage) {
+      Record average_param = get_time_averaging_record(timeaverage,timebin,
+						       timespan);
+      itsSd->setAverage(average_param);
+    }
+
     itsSd->scale(factor, datacolumn, outfile);
     rstat = true;
   } catch  (AipsError x) {

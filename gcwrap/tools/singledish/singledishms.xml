@@ -94,7 +94,7 @@ sdms.name()
   </example>
 </method>
 
-<method type="function" name="scale">
+<method type="function" name="_scale">
   <shortdescription>Multiply a scaling factor to spectra
   </shortdescription>
   <description>
@@ -120,6 +120,21 @@ Multipy a scaling factor to selected spectra.
     <param type="string" name="outfile">
       <description>The name of output MeasurementSet</description>
       <value></value>
+    </param>
+
+    <param type="bool" name="timeaverage">
+      <description>Average data in time.</description>
+      <value>false</value>
+    </param>
+
+    <param type="string" name="timebin">
+       <description>Bin width for time averaging.</description>     
+       <value type="string">0s</value>
+    </param>
+    
+    <param type="string" name="timespan" subparam="true">
+       <description>Span the timebin across \'scan\', \'state\', or \'scan,state\'.</description>
+       <value type="string"></value>
     </param>
 
   </input>
