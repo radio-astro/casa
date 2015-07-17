@@ -111,12 +111,24 @@ public:
     // Rotate visibility phase for phase center offsets (arcsecs)
     void phaseCenterShift(Double dx, Double dy);
 
+    const MDirection& phaseCenter () const;
+    const MFrequency::Types & freqRefFrameType () const;
+
+protected:
+
+    MFrequency::Convert generateFreqRefTranEngine (Double time,Int outputRefFrame,Bool toObservedFrame) const;
+
 private:
 
 	MSTransformManager *manager_p;
 	ArrayColumn<Double> spwFrequencies_p;
 	map<uInt,uInt> inputOutputSPWIndexMap_p;
 	uInt rowIdOffset_p;
+
+	// OTF frequency transformation
+	MDirection phaseCenter_p;
+	MPosition observatoryPosition_p;
+	ArrayMeasColumn<MFrequency> spwRefRame_p;
 
 	mutable Vector<Int> observationId_p;
 	mutable Vector<Int> arrayId_p;
@@ -157,6 +169,7 @@ private:
 	mutable uInt nChannels_p;
 	mutable uInt nCorrelations_p;
 	mutable uInt nAntennas_p;
+	mutable MFrequency::Types freqRefFrameType_p;
 
 	mutable Bool observationIdOk_p;
 	mutable Bool arrayIdOk_p;
@@ -197,6 +210,7 @@ private:
 	mutable Bool nChannelsOk_p;
 	mutable Bool nCorrelationsOk_p;
 	mutable Bool nAntennasOk_p;
+	mutable Bool freqRefFrameTypeOk_p;
 
 	mutable Bool observationIdTransformed_p;
 	mutable Bool arrayIdTransformed_p;

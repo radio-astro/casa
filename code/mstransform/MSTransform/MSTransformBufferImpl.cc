@@ -37,7 +37,14 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 	MSSpectralWindow spwTable = manager_p->outputMs_p->spectralWindow();
 	MSSpWindowColumns spwCols(spwTable);
 	spwFrequencies_p.reference(spwCols.chanFreq());
+	spwRefRame_p.reference(spwCols.chanFreqMeas());
 	inputOutputSPWIndexMap_p = manager_p->inputOutputSPWIndexMap_p;
+
+	// Store observatory position
+    MSObservation observationTable = manager_p->selectedInputMs_p->observation();
+    MSObservationColumns observationCols(observationTable);
+    String observatoryName = observationCols.telescopeName()(0);
+    MeasTable::Observatory(observatoryPosition_p,observatoryName);
 
 	if (not manager_p->reindex_p)
 	{
@@ -98,6 +105,7 @@ void MSTransformBufferImpl::resetState()
 	nChannelsOk_p = False;
 	nCorrelationsOk_p = False;
 	nAntennasOk_p = False;
+	freqRefFrameTypeOk_p = False;
 
 	observationIdTransformed_p = False;
 	arrayIdTransformed_p = False;
@@ -1158,6 +1166,16 @@ Double MSTransformBufferImpl::getFrequency (Int rowInBuffer, Int frequencyIndex,
 // -----------------------------------------------------------------------
 const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,Int frame) const
 {
+	// CAS-7699: Check if frequencies have to be transformed to a new ref. frame
+	Bool freqRefFrameTransRequested  = False;
+	MFrequency::Types requestedFreqRefFrame = static_cast<MFrequency::Types> (frame);
+	if (requestedFreqRefFrame != freqRefFrameType())
+	{
+		frequenciesOk_p = False;
+		freqRefFrameTransRequested = True;
+		freqRefFrameType_p = requestedFreqRefFrame;
+	}
+
 	if (not frequenciesOk_p)
 	{
 		Bool newFrequencies = 	manager_p->combinespws_p ||
@@ -1186,6 +1204,16 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 				frequencies_p = spwFrequencies_p(outputSPWIndex);
 			}
 
+			if (freqRefFrameTransRequested)
+			{
+
+				MFrequency::Convert freqRefTranEngine = generateFreqRefTranEngine(time()(rowInBuffer),frame,False);
+				for (uInt chan_i=0;chan_i<frequencies_p.size();chan_i++)
+				{
+					frequencies_p(chan_i) = freqRefTranEngine (Quantity (frequencies_p(chan_i), "Hz")).get ("Hz").getValue();
+				}
+			}
+
 			frequenciesTransformed_p = True;
 		}
 
@@ -1199,6 +1227,73 @@ const Vector<Double> & MSTransformBufferImpl::getFrequencies (Int rowInBuffer,In
 
 	return frequencies_p;
 
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const MDirection & MSTransformBufferImpl::phaseCenter () const
+{
+	return manager_p->getVisBuffer()->phaseCenter();
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+const MFrequency::Types & MSTransformBufferImpl::freqRefFrameType () const
+{
+	if ( not freqRefFrameTypeOk_p)
+	{
+		spectralWindows();
+
+		uInt inputSPWIndex;
+		if ( (manager_p->reindex_p) or inputOutputSPWIndexMap_p.size() == 0)
+		{
+			inputSPWIndex = spectralWindows_p(0);
+		}
+		else
+		{
+			inputSPWIndex = inputOutputSPWIndexMap_p.find(spectralWindows_p(0))->second;
+		}
+
+		MFrequency refFrame = Vector<MFrequency>(spwRefRame_p(inputSPWIndex))(0);
+		freqRefFrameType_p = MFrequency::castType (refFrame.type());
+	}
+
+	return freqRefFrameType_p;
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+MFrequency::Convert MSTransformBufferImpl::generateFreqRefTranEngine (	Double time,
+																	Int outputRefFrame,
+																	Bool toObservedFrame) const
+{
+    // Construct input (observed) ref. frame object
+    MDirection direction = phaseCenter();
+    MEpoch epoch (MVEpoch (Quantity (time, "s")));
+    MPosition position = observatoryPosition_p;
+    MFrequency::Types refFrameType = freqRefFrameType();
+    MeasFrame inputRefFrame (epoch, position, direction);
+    MFrequency::Ref inputFreqRefFrame (refFrameType, inputRefFrame);
+
+    // Construct output ref. frame
+    MFrequency::Types outputFreqRefFrame = static_cast<MFrequency::Types> (outputRefFrame);
+
+    // Generate freq. trans engine
+    MFrequency::Convert result;
+    if (toObservedFrame)
+    {
+        result = MFrequency::Convert (outputFreqRefFrame, inputFreqRefFrame);
+    }
+    else
+    {
+        result = MFrequency::Convert (inputFreqRefFrame, outputFreqRefFrame);
+    }
+
+    return result;
 }
 
 // -----------------------------------------------------------------------
