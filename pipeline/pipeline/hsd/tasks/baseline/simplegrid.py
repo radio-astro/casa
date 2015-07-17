@@ -31,7 +31,7 @@ class SimpleGriddingResults(common.SingleDishResults):
         super(SimpleGriddingResults, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        pass
+        super(SimpleGriddingResults, self).merge_with_context(context)
     
     def _outcome_name(self):
         return ''
