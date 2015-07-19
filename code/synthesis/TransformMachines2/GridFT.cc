@@ -400,7 +400,7 @@ void GridFT::finalizeToVis()
 
 
 template<class T>  struct leaker {
-  void operator()(T *p) { std::cout << p << std::endl; }
+  void operator()(T *p) { }
 };
 
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
