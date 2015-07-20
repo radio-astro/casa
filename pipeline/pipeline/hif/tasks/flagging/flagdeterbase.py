@@ -345,7 +345,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
  
-        ordered_agents = ['before', 'anos', 'online', 'template', 'autocorr',
+        ordered_agents = ['before', 'anos', 'online', 'qa0', 'template', 'autocorr',
                           'shadow', 'intents', 'edgespw', 'clip', 'quack', 
                           'baseband']
 
@@ -388,6 +388,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         flag_cmds = []        
         
         # flag online?
+        '''
         if inputs.online:
             if not os.path.exists(inputs.fileonline):
                 LOG.warning('Online flag file \'%s\' was not found. Online '
@@ -396,6 +397,27 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             else:
                 flag_cmds.extend(self._read_flagfile(inputs.fileonline))
                 flag_cmds.append("mode='summary' name='online'")
+        '''
+        if inputs.online:
+            if not os.path.exists(inputs.fileonline):
+                LOG.warning('Online flag file \'%s\' was not found. Online '
+                            'flagging for %s disabled.' % (inputs.fileonline, 
+                                                           inputs.ms.basename))
+            else:
+                #QA0 flag
+                if inputs.qa0:
+                    cmdlist = self._read_flagfile(inputs.fileonline)
+                    flag_cmds.extend([cmd for cmd in cmdlist if ('QA0' in cmd)])
+                    flag_cmds.append("mode='summary' name='qa0'")
+                    
+                    #All other online flags
+                    flag_cmds.extend([cmd for cmd in cmdlist if not ('QA0' in cmd)])
+                    flag_cmds.append("mode='summary' name='online'")
+            
+                else:
+                    flag_cmds.extend(self._read_flagfile(inputs.fileonline))
+                    flag_cmds.append("mode='summary' name='online'")
+        
         
         # flag template?
         if inputs.template:
