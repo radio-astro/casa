@@ -1,53 +1,63 @@
 import os
-from taskinit import *
+from taskinit import cbtool, tbtool, mstool, casalog, write_history
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-def clearcal(vis=None,field=None,spw=None,intent=None, addmodel=None):
 
-        casalog.origin('clearcal')
+def clearcal(
+    vis=None,
+    field=None,
+    spw=None,
+    intent=None,
+    addmodel=None,
+    ):
 
-        # Do the trivial parallelization
-        if ParallelTaskHelper.isParallelMS(vis):
-                helper = ParallelTaskHelper('clearcal', locals())
-                helper.go()
-                return
+    casalog.origin('clearcal')
 
+    # Do the trivial parallelization
+    if ParallelTaskHelper.isParallelMS(vis):
+        helper = ParallelTaskHelper('clearcal', locals())
+        helper.go()
+        return
 
-	#Python script
-	try:
+    # Local versions of the tools
+    tblocal = tbtool()
+    cblocal = cbtool()
+    mslocal = mstool()
 
-		# we will initialize scr cols only if we don't create them
-		doinit=False;
+    try:
 
-                if ((type(vis)==str) & (os.path.exists(vis))):
-			tb.open(vis)
-			doinit = (tb.colnames().count('CORRECTED_DATA')>0)
-			tb.close()
+        # we will initialize scr cols only if we don't create them
+        doinit = False
 
-			# We ignore selection if creating the scratch columns
-			if (not(doinit)):
-				casalog.post('Need to create scratch columns; ignoring selection.')
+        if (type(vis) == str) & os.path.exists(vis):
+            tblocal.open(vis)
+            doinit = tblocal.colnames().count('CORRECTED_DATA') > 0
+            tblocal.close()
 
-                        cb.open(vis, addmodel=addmodel)
-                else:
-                        raise Exception, 'Visibility data set not found - please verify the name'
+            # We ignore selection if creating the scratch columns
+            if not doinit:
+                casalog.post('Need to create scratch columns; ignoring selection.'
+                             )
 
-		# If necessary (scr col not just created), initialize scr cols
-		if doinit:
-			cb.selectvis(field=field,spw=spw,intent=intent)
-			cb.initcalset(1)
-		cb.close()
+            cblocal.open(vis, addmodel=addmodel)
+        else:
+            raise Exception, \
+                'Visibility data set not found - please verify the name'
 
+        # If necessary (scr col not just created), initialize scr cols
+        if doinit:
+            cblocal.selectvis(field=field, spw=spw, intent=intent)
+            cblocal.initcalset(1)
+        cblocal.close()
 
-        	#write history
-        	ms.open(vis,nomodify=False)
-        	ms.writehistory(message='taskname = clearcal',origin='clearcal')
-		if (doinit):
-			ms.writehistory(message='field       = "'+str(field)+'"',origin='clearcal')
-			ms.writehistory(message='spw         = "'+str(spw)+'"',origin='clearcal')
-			ms.writehistory(message='intent      = "'+str(intent)+'"',origin='clearcal')
-        	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='clearcal')
-		ms.close()
+        # Write history to the MS
+        param_names = clearcal.func_code.co_varnames[:clearcal.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        casalog.post('Updating the history in the output', 'DEBUG1')
+        write_history(mslocal, vis, 'clearcal', param_names,
+                      param_vals, casalog)
+        
+    except Exception, instance:
 
-	except Exception, instance:
-		print '*** Error ***',instance
+        print '*** Error ***', instance
+
