@@ -2384,8 +2384,6 @@ AveragingTvi2::produceSubchunk ()
 
     while (getVii()->more()){
 
-    	endBuffer_p += 1;
-
         const VisBuffer2 * vb = getVii()->getVisBuffer();
 
         vbAvg_p->accumulate (vb, subchunk_p);
@@ -2398,6 +2396,7 @@ AveragingTvi2::produceSubchunk ()
         }
         else if (vbToFill->appendSize() < nBaselines * nWindows){
             getVii()->next();
+            endBuffer_p += 1;
         }
         else{
             break;
