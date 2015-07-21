@@ -63,7 +63,7 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 #         agents = [s for s in order if s in agent_names]
 
         # return all agents so we get ticks and crosses against each one
-        agents = ['before', 'online', 'template', 'autocorr', 'shadow', 
+        agents = ['before', 'online', 'qa0', 'template', 'autocorr', 'shadow', 
                   'intents', 'edgespw']
 
         flagplots = [self.flagplot(r, pipeline_context) for r in result]
