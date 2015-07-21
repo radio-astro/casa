@@ -118,7 +118,7 @@ template<class T> SPIIT ImageDecimator<T>::decimate() const {
 			subImage, IPosition(1, _axis), False,
 			ImageCollapserData::MEAN, "", False
 		);
-		std::auto_ptr<Record> reg;
+		std::unique_ptr<Record> reg;
 
 		Vector<Double> start(ndim);
 		Vector<Int> lattShape(ndim);

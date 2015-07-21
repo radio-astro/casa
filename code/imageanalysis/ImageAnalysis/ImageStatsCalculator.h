@@ -145,7 +145,7 @@ protected:
     inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
-    std::auto_ptr<ImageStatistics<Float> > _statistics;
+    std::unique_ptr<ImageStatistics<Float> > _statistics;
     CountedPtr<ImageRegion> _oldStatsRegion, _oldStatsMask;
     Vector<Int> _axes;
     Vector<Float> _includepix, _excludepix;

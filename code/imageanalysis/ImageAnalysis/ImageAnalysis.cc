@@ -578,7 +578,7 @@ ImageAnalysis::convolve(
 
 	// Create output image
 	IPosition outShape = subImage->shape();
-	std::auto_ptr<ImageInterface<Float> > imOut;
+	std::unique_ptr<ImageInterface<Float> > imOut;
 	if (outFile.empty()) {
 		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
@@ -650,7 +650,7 @@ Record* ImageAnalysis::boundingbox(
 	IPosition trc(sl.end());
 	IPosition inc(sl.stride());
 	IPosition length(sl.length());
-	std::auto_ptr<Record> outRec(new Record());
+	std::unique_ptr<Record> outRec(new Record());
 	outRec->define("blc", blc.asVector());
 	outRec->define("trc", trc.asVector());
 	outRec->define("inc", inc.asVector());
@@ -1339,9 +1339,9 @@ Bool ImageAnalysis::insert(
 
 	ImageInterface<Float>* pInImage = 0;
 	ImageUtilities::openImage(pInImage, infile);
-	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
+	std::unique_ptr<ImageInterface<Float> > inImage(pInImage);
 	// Create region and subImage for image to be inserted
-	std::auto_ptr<const ImageRegion> pRegion(
+	std::unique_ptr<const ImageRegion> pRegion(
 		ImageRegion::fromRecord(
 			verbose ? _log.get() : 0, pInImage->coordinates(),
 			pInImage->shape(), Region
@@ -1705,7 +1705,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// give the default value as a blank string rather than a null vector.
 	String tmpImageName;
 	Record r;
-	std::auto_ptr<ImageInterface<Float> > pIm;
+	std::unique_ptr<ImageInterface<Float> > pIm;
 	try {
         SPCIIF x;
 		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
@@ -2269,7 +2269,7 @@ SPIIF ImageAnalysis::rotate(
 
 	// Apply new linear transform matrix to coordinate
 	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
-		std::auto_ptr<DirectionCoordinate> c(
+		std::unique_ptr<DirectionCoordinate> c(
 			dynamic_cast<DirectionCoordinate *>(
 				cSysTo.directionCoordinate(coordInd).rotate(pa)
 			)
@@ -2277,7 +2277,7 @@ SPIIF ImageAnalysis::rotate(
 		cSysTo.replaceCoordinate(*c, coordInd);
 	}
 	else {
-		std::auto_ptr<LinearCoordinate> c(
+		std::unique_ptr<LinearCoordinate> c(
 			dynamic_cast<LinearCoordinate *>(
 				cSysTo.linearCoordinate(coordInd).rotate(pa)
 			)
@@ -3027,7 +3027,7 @@ ImageInterface<Float> *
 ImageAnalysis::newimagefromarray(const String& outfile,
 		Array<Float> & pixelsArray, const Record& csys, const Bool linear,
 		const Bool overwrite, const Bool log) {
-	std::auto_ptr<ImageInterface<Float> > outImage(0);
+	std::unique_ptr<ImageInterface<Float> > outImage;
 
 	try {
 		*_log << LogOrigin("ImageAnalysis", "newimagefromarray");

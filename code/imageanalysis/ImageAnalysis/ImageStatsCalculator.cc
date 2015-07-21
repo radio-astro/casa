@@ -49,7 +49,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 ) : ImageTask<Float>(
 		image, "", regionPtr, "", "",
 		"", maskInp, "", False
-	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
+	), _statistics(), _oldStatsRegion(0), _oldStatsMask(0),
 	_axes(), _includepix(), _excludepix(), _list(False),
 	_disk(False), _robust(False), _verbose(False), _algConf(),
 	_subImage(), _prefClassStatsAlg(AUTO) {
