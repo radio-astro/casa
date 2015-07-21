@@ -342,7 +342,7 @@ public:
     SPIIF _imageFloat;
     SPIIC _imageComplex;
 
-    std::auto_ptr<LogIO> _log;
+    std::unique_ptr<LogIO> _log;
 
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to

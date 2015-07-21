@@ -220,7 +220,7 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
     _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __func__);
     *_getLog() << logOrigin;
-    std::auto_ptr<ImageInterface<Float> > originalSigma(0);
+    std::unique_ptr<ImageInterface<Float> > originalSigma;
     {
     	_subImage = SubImageFactory<Float>::createSubImageRO(
     	    *_getImage(), *_getRegion(), _getMask(), 0,
@@ -434,7 +434,7 @@ void ImageProfileFitter::setGoodFWHMRange(const Double minv, const Double maxv) 
 }
 
 void ImageProfileFitter::setSigma(const Array<Float>& sigma) {
-	std::auto_ptr<TempImage<Float> > temp(0);
+	std::unique_ptr<TempImage<Float> > temp;
 	if (sigma.ndim() == _getImage()->ndim()) {
 		temp.reset(new TempImage<Float>(
 			sigma.shape(), _getImage()->coordinates())
