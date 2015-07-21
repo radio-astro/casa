@@ -212,7 +212,7 @@ image::torecord() {
 bool image::fromrecord(const record& imrecord, const string& outfile) {
 	try {
 		_log << _ORIGIN;
-		auto_ptr<Record> tmpRecord(toRecord(imrecord));
+		std::unique_ptr<Record> tmpRecord(toRecord(imrecord));
 		if (_image.get() == 0) {
 			_image.reset(new ImageAnalysis());
 		}
@@ -223,7 +223,7 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 					<< LogIO::EXCEPTION;
 		}
 		return True;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		RETHROW(x);
 	}
 }
@@ -459,7 +459,7 @@ bool image::fromarray(const std::string& outfile,
 		LogOrigin lor("image", __func__);
 		_log << lor;
 		_reset();
-		auto_ptr<Record> coordinates(toRecord(csys));
+		std::unique_ptr<Record> coordinates(toRecord(csys));
 		vector<std::pair<LogOrigin, String> > msgs;
 		{
 			ostringstream os;
@@ -522,7 +522,7 @@ bool image::fromascii(const string& outfile, const string& infile,
 		}
 
 		_reset();
-		auto_ptr<Record> coordsys(toRecord(csys));
+		std::unique_ptr<Record> coordsys(toRecord(csys));
 		if (
 			_image->imagefromascii(
 				outfile, infile, Vector<Int> (shape),
@@ -579,7 +579,6 @@ bool image::fromimage(const string& outfile, const string& infile,
 			return False;
 		}
 
-		//auto_ptr<Record> regionPtr(toRecord(region));
 		SHARED_PTR<Record> regionPtr(_getRegion(region, False));
 		return _image->imagefromimage(outfile, infile, *regionPtr, theMask,
 				dropdeg, overwrite);
@@ -599,7 +598,7 @@ bool image::fromshape(
 		LogOrigin lor("image", __func__);
 		_log << lor;
 		_reset();
-		auto_ptr<Record> coordinates(toRecord(csys));
+		std::unique_ptr<Record> coordinates(toRecord(csys));
         String mytype = type;
         mytype.downcase();
         ThrowIf(
@@ -706,21 +705,20 @@ template<class T> image* image::_adddegaxes(
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return 0;
+			return nullptr;
 		}
-
 		Array<Float> kernelArray;
-		String kernelFileName = "";
+		casa::String kernelFileName = "";
 		if (kernel.type() == variant::DOUBLEVEC) {
-			vector<double> kernelVector = kernel.toDoubleVec();
-			Vector<Int> shape = kernel.arrayshape();
+			const auto kernelVector = kernel.toDoubleVec();
+			const auto shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Double> localkern(kernelVector);
 			convertArray(kernelArray, localkern.reform(IPosition(shape)));
 		}
 		else if (kernel.type() == variant::INTVEC) {
-			vector<int> kernelVector = kernel.toIntVec();
-			Vector<Int> shape = kernel.arrayshape();
+			const auto kernelVector = kernel.toIntVec();
+			const auto shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Int> localkern(kernelVector);
 			convertArray(kernelArray, localkern.reform(IPosition(shape)));
@@ -736,7 +734,7 @@ template<class T> image* image::_adddegaxes(
 		}
 
 		String theMask;
-		Record *theMaskRegion;
+		//Record *theMaskRegion;
 		if (vmask.type() == variant::BOOLVEC) {
 			theMask = "";
 		}
@@ -747,10 +745,11 @@ template<class T> image* image::_adddegaxes(
 			theMask = vmask.toString();
 		}
 		else if (vmask.type() == variant::RECORD) {
+			/*
 			variant localvar(vmask);
 			theMaskRegion = toRecord(localvar.asRecord());
-			_log << "Don't support region masking yet, only valid LEL "
-				<< LogIO::EXCEPTION;
+			*/
+			ThrowCc("Don't support region masking yet, only valid LEL");
 		}
 		else {
 			_log << "Mask is not understood, try a valid LEL string "
@@ -765,19 +764,19 @@ template<class T> image* image::_adddegaxes(
 				theMask, overwrite, async, stretch
 			)
 		);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
-::casac::record*
-image::boundingbox(const variant& region) {
+::casac::record* image::boundingbox(const variant& region) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
-			return 0;
+			return nullptr;
 		}
 		SHARED_PTR<Record> Region(_getRegion(region, False));
 		return fromRecord(*_image->boundingbox(*Region));
@@ -787,6 +786,7 @@ image::boundingbox(const variant& region) {
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 image* image::boxcar(
@@ -1142,7 +1142,7 @@ image* image::convolve2d(
 				&& beam.find("pa") == beam.end()) {
 				_log << "Beam must have a 'positionangle' or 'pa' field" << LogIO::EXCEPTION;
 			}
-			std::auto_ptr<Record> nbeam(toRecord(beam));
+			std::unique_ptr<Record> nbeam(toRecord(beam));
 
 			for (uInt i=0; i<3; i++) {
 				String key = i == 0
@@ -1225,7 +1225,7 @@ image::coordsys(const std::vector<int>& pixelAxes) {
 		if (detached()) {
 			return 0;
 		}
-		std::auto_ptr<casac::coordsys> rstat;
+		std::unique_ptr<casac::coordsys> rstat;
 		// Return coordsys object
 		rstat.reset(new ::casac::coordsys());
 		CoordinateSystem csys = _image->coordsys(Vector<Int> (pixelAxes));
@@ -1437,7 +1437,7 @@ record* image::deconvolvecomponentlist(
 		return 0;
 	}
 	try {
-		std::auto_ptr<Record> compList(toRecord(complist));
+		std::unique_ptr<Record> compList(toRecord(complist));
 		return fromRecord(
 			_image->deconvolvecomponentlist(
 				*compList, channel, polarization
@@ -1852,8 +1852,8 @@ record* image::fitprofile(const string& box, const variant& region,
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::auto_ptr<Array<Float> > sigmaArray(0);
-		std::auto_ptr<PagedImage<Float> > sigmaImage(0);
+		std::unique_ptr<Array<Float> > sigmaArray;
+		std::unique_ptr<PagedImage<Float> > sigmaImage;
 		if (sigma.type() == variant::STRING) {
 			String sigmaName = sigma.toString();
 			if (! sigmaName.empty()) {
@@ -2037,7 +2037,7 @@ image* image::transpose(
 			! _image->isFloat(),
 			"This method only supports Float valued images"
 		);
-		std::auto_ptr<ImageTransposer> transposer(0);
+		std::unique_ptr<ImageTransposer> transposer;
 		switch(order.type()) {
 		case variant::INT:
 			transposer.reset(
@@ -2411,7 +2411,7 @@ image* image::pbcor(
 		}
 
 		String regionString = "";
-		auto_ptr<Record> regionRecord(0);
+		std::unique_ptr<Record> regionRecord;
 		if (region.type() == variant::STRING || region.size() == 0) {
 			regionString = (region.size() == 0) ? "" : region.toString();
 		}
@@ -2433,7 +2433,7 @@ image* image::pbcor(
 			: ImagePrimaryBeamCorrector::MULTIPLY;
 		Bool useCutoff = cutoff >= 0.0;
         SPCIIF shImage = _image->getImage();
-        std::auto_ptr<ImagePrimaryBeamCorrector> pbcor(
+        std::unique_ptr<ImagePrimaryBeamCorrector> pbcor(
 			(!pb_ptr)
 			? new ImagePrimaryBeamCorrector(
 				shImage, pbPixels, regionRecord.get(),
@@ -2980,7 +2980,7 @@ bool image::modify(
 	}
 	try {
 		String error;
-		std::auto_ptr<Record> Model(toRecord(model));
+		std::unique_ptr<Record> Model(toRecord(model));
 		SHARED_PTR<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -3697,8 +3697,8 @@ image* image::regrid(
 		        throw AipsError("Unable to create image");
 			return 0;
 		}
-		auto_ptr<Record> csysRec(toRecord(csys));
-		auto_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
+		unique_ptr<Record> csysRec(toRecord(csys));
+		unique_ptr<CoordinateSystem> coordinates(CoordinateSystem::restore(*csysRec, ""));
 		ThrowIf (
 			! coordinates.get(),
 			"Invalid specified coordinate system record."
@@ -4162,7 +4162,7 @@ bool image::setmiscinfo(const ::casac::record& info) {
 		if (detached()) {
 			return false;
 		}
-		std::auto_ptr<Record> tmp(toRecord(info));
+		std::unique_ptr<Record> tmp(toRecord(info));
 		Bool res = _image->isFloat()
 			? _image->getImage()->setMiscInfo(*tmp)
 			: _image->getComplexImage()->setMiscInfo(*tmp);
@@ -4206,7 +4206,7 @@ bool image::setrestoringbeam(
 		if (detached()) {
 			return false;
 		}
-		std::auto_ptr<Record> rec(toRecord(beam));
+		std::unique_ptr<Record> rec(toRecord(beam));
 		ImageBeamSet bs;
 		if (! imagename.empty()) {
 			ThrowIf(
@@ -4517,6 +4517,8 @@ bool image::twopointcorrelation(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	// so eclipse doesn't complain
+	return nullptr;
 }
 
 template<class T> SPIIT image::_subimage(
@@ -4764,7 +4766,7 @@ image* image::newimagefromimage(
 ) {
 	try {
 		image *rstat(0);
-		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
+		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		String mask;
 
@@ -4818,7 +4820,7 @@ image* image::newimagefromimage(
 image* image::newimagefromfile(const std::string& fileName) {
 	try {
 		image *rstat(0);
-		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
+		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		SHARED_PTR<ImageInterface<Float> > outIm(
 			newImage->newimagefromfile(fileName)
@@ -4851,7 +4853,7 @@ image* image::newimagefromarray(
 	const bool overwrite, const bool log
 ) {
 	try {
-		auto_ptr<ImageAnalysis> newImage(
+		unique_ptr<ImageAnalysis> newImage(
 			new ImageAnalysis()
 		);
 		_log << _ORIGIN;
@@ -4889,7 +4891,7 @@ image* image::newimagefromarray(
 					<< LogIO::POST;
 			return new image();
 		}
-		auto_ptr<Record> coordinates(toRecord(csys));
+		unique_ptr<Record> coordinates(toRecord(csys));
         SHARED_PTR<ImageInterface<Float> > outIm(
 			newImage->newimagefromarray(
 				outfile, pixelsArray, *coordinates,
@@ -4917,7 +4919,7 @@ image* image::newimagefromshape(
 	try {
         LogOrigin lor("image", __func__);
 		_log << lor;
-		auto_ptr<Record> coordinates(toRecord(csys));
+		unique_ptr<Record> coordinates(toRecord(csys));
         String mytype = type;
         mytype.downcase();
         ThrowIf(
@@ -4955,25 +4957,6 @@ image* image::newimagefromshape(
             );
             return new image(mycomplex);
         }
-
-/*
-
-		image *rstat(0);
-		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
-		_log << _ORIGIN;
-		auto_ptr<Record> coordinates(toRecord(csys));
-        SHARED_PTR<ImageInterface<Float> > outIm(
-			newImage->newimagefromshape(
-				outfile, Vector<Int>(shape), *coordinates,
-				linear, overwrite, log
-			)
-		);
-        rstat = outIm.get() ? new image(outIm) : new image(outIm);
-		ThrowIf(
-			rstat == 0, "Unable to create image"
-		);
-		return rstat;
-*/
     }
     catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -4989,7 +4972,7 @@ image* image::newimagefromfits(
 ) {
 	try {
 		image *rstat(0);
-		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
+		unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
         SHARED_PTR<ImageInterface<Float> > outIm(
 			newImage->newimagefromfits(
@@ -5083,7 +5066,7 @@ casa::Quantity image::_casaQuantityFromVar(const ::casac::variant& theVar) {
 		else if (theVar.type() == ::casac::variant::RECORD) {
 			//NOW the record has to be compatible with QuantumHolder::toRecord
 			::casac::variant localvar(theVar); //cause its const
-			auto_ptr<Record> ptrRec(toRecord(localvar.asRecord()));
+			unique_ptr<Record> ptrRec(toRecord(localvar.asRecord()));
 			ThrowIf(
 				!qh.fromRecord(error, *ptrRec),
 				"Error " + error + " in converting quantity "
@@ -5118,7 +5101,7 @@ bool image::isconform(const string& other) {
 		if (oth == 0) {
 			throw AipsError("Unable to open image " + other);
 		}
-		std::auto_ptr<ImageInterface<Float> > x(oth);
+		std::unique_ptr<ImageInterface<Float> > x(oth);
         SHARED_PTR<const ImageInterface<Float> > mine = _image->getImage();
 		if (mine->shape().isEqual(x->shape()) && mine->coordinates().near(
 				x->coordinates())) {
