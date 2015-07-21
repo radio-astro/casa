@@ -24,6 +24,9 @@ import uuid
 
 import cachetools
 
+# for is_top_level_task
+from mpi4casa.MPIEnvironment import MPIEnvironment
+
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
 from . import casatools
@@ -496,7 +499,15 @@ def is_top_level_task():
     """
     Return True if the callee if executing as part of a top-level task.
     """
-    return task_depth() is 1
+    # If this code is executed on an MPI server, it must have been invoked
+    # from a sub-task running on an MPI server, which itself must have been
+    # called from a pipeline task running on the MPI client. In this case, we
+    # know this is not a top-level task without examining the stack.
+    if all((MPIEnvironment.is_mpi_enabled,       # running on MPI cluster
+           not MPIEnvironment.is_mpi_client)):   # running as MPI server
+        return False
+
+    return task_depth() is  1
 
 def get_logrecords(result, loglevel):
     """
