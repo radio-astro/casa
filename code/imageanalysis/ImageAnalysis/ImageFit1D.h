@@ -33,7 +33,6 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <scimath/Mathematics/NumericTraits.h>
-
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDoppler.h>
@@ -114,11 +113,11 @@ template<class T> class ImageInterface;
 //   <li> Add constraints
 // </todo>
 
-template <class T> class ImageFit1D 
-{
+
+template <class T> class ImageFit1D {
 public:
 
-	typedef typename NumericTraits<T>::PrecisionType FitterType;
+using FitterType = typename NumericTraits<T>::PrecisionType;
 
     enum AbcissaType {
        PIXEL = 0,

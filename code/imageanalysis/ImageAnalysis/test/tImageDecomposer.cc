@@ -44,7 +44,8 @@
 #include <casa/OS/Timer.h>
 
 #include <casa/namespace.h>
-typedef Double imagetype;
+
+using imagetype = Double;
 
 TempImage<imagetype> createtestimage(const Matrix<imagetype>& components,
 				     const Vector<imagetype>& originworldcoord,

@@ -126,7 +126,7 @@ void MomentCalcBase<T>::costlyMoments(MomentsBase<T>& iMom,
    doMedianI = False;
    doMedianV = False;
    doAbsDev = False;
-   typedef MomentsBase<Float> IM;
+   using IM = MomentsBase<Float>;
 //
    for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
       if (iMom.moments_p(i) == IM::MEDIAN) doMedianI = True;
@@ -175,7 +175,7 @@ void MomentCalcBase<T>::doCoordCalc(Bool& doCoordProfile,
 
    doCoordProfile = False;
    doCoordRandom  = False;
-   typedef MomentsBase<Float> IM;
+   using IM = MomentsBase<Float>;
 //
    for (uInt i=0; i<iMom.moments_p.nelements(); i++) {
       if (iMom.moments_p(i) == IM::WEIGHTED_MEAN_COORDINATE ||
@@ -1133,7 +1133,7 @@ Vector<Int> MomentCalcBase<T>::selectMoments(MomentsBase<T>& iMom) const
 // Fill the moment selection vector according to what the user requests
 //
 {
-   typedef MomentsBase<Float> IM;
+   using IM = MomentsBase<Float>;
    Vector<Int> sel(IM::NMOMENTS);
 
    uInt j = 0;
@@ -1479,7 +1479,7 @@ void MomentCalcBase<T>::setCalcMoments
 // Despite being our friend, we cannot refer to the
 // enum values as just, say, "AVERAGE"
      
-   typedef MomentsBase<Float> IM;
+   using IM = MomentsBase<Float>;
            
 // Normalize and fill moments
 

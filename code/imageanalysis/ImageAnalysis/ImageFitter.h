@@ -171,7 +171,7 @@ protected:
 
 private:
 
-    typedef GaussianBeam Angular2DGaussian;
+    using Angular2DGaussian = GaussianBeam;
 
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;

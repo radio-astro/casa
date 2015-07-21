@@ -62,8 +62,9 @@ class PeakIntensityFluxDensityConverter : public ImageTask<Float> {
 	// </example>
 
 public:
-    typedef GaussianBeam Angular2DGaussian;
-	// Specify image to get beam and coordinate info from
+    using Angular2DGaussian = GaussianBeam;
+
+    // Specify image to get beam and coordinate info from
 	PeakIntensityFluxDensityConverter(
 		const SPCIIF image
 	);

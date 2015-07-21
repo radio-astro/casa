@@ -56,10 +56,10 @@ namespace casa {
 class AnnotationBase {
 public:
 
-	typedef vector<float> RGB;
-
+	using RGB = vector<float>;
+    
 	// The pairs have longitude as the first member and latitude as the second
-	typedef Vector<std::pair<Quantity,Quantity> > Direction;
+	using Direction = Vector<std::pair<Quantity,Quantity> >;
 
 	enum Type {
 		// annotations only
