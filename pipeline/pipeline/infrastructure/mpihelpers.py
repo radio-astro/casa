@@ -203,13 +203,14 @@ def _splitall(path):
     return allparts
 
 mpiclient = None
+mpi_server_list = None
+
 if MPIEnvironment.is_mpi_enabled:
     try:
         if MPIEnvironment.is_mpi_client:
             __client = MPICommandClient()
             __client.start_services()
 
-            global mpi_server_list
             mpi_server_list = MPIEnvironment.mpi_server_rank_list()
 
             # get path to pipeline code and import it on the cluster nodes
@@ -223,7 +224,6 @@ if MPIEnvironment.is_mpi_enabled:
             __client.push_command_request('import pipeline', block=True, target_server=mpi_server_list)
             # __client.push_command_request('pipeline.infrastructure.logging.set_logging_level(level="trace")', block=True, target_server=mpi_server_list)
 
-            global mpiclient
             mpiclient = __client
             LOG.info('MPI environment detected. Pipeline operating in cluster'
                      ' mode.')
