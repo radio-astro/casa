@@ -440,10 +440,10 @@ class MakeImListHeuristics(object):
         # convert to strings (CASA 4.0 returns as list for some reason
         # hence 0 index)
         if ref=='ICRS' or ref=='J2000' or ref=='B1950':
-            m0 = cqa.time(m0, prec=9)[0]
+            m0 = cqa.time(m0, prec=10)[0]
         else:
-            m0 = cqa.angle(m0, prec=8)[0]
-        m1 = cqa.angle(m1, prec=8)[0]
+            m0 = cqa.angle(m0, prec=9)[0]
+        m1 = cqa.angle(m1, prec=9)[0]
 
         if centreonly:
             return '%s %s %s' % (ref, m0, m1)
