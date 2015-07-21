@@ -86,7 +86,7 @@ private:
     String _filename;
     Bool _append;
     Int _fileHandle;
-    std::auto_ptr<FiledesIO> _fileIO;
+    std::unique_ptr<FiledesIO> _fileIO;
 
 };
 }

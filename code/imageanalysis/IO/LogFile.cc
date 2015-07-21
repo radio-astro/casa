@@ -39,7 +39,7 @@ namespace casa {
 
 LogFile::LogFile(const String& filename) :
 	_filename(filename), _append(False), _fileHandle(-1),
-	_fileIO(0) {
+	_fileIO() {
 	ThrowIf(
 		filename.empty(),
 		"LogFile::LogFile(): file name cannot be empty"

@@ -407,7 +407,7 @@ void CasacRegionManager::_setRegion(
 				<< LogIO::EXCEPTION;
 		}
 		try {
-			std::auto_ptr<Record> rec(readImageFile(regionName, ""));
+			std::unique_ptr<Record> rec(readImageFile(regionName, ""));
 			regionRecord = *rec;
 			diagnostics = "Region read from binary region file " + regionName;
 			return;
