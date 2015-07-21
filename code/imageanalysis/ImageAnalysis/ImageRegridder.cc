@@ -279,7 +279,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 		"so cannot regrid by velocity."
 	);
 
-	std::auto_ptr<CoordinateSystem> csys(
+	std::unique_ptr<CoordinateSystem> csys(
 		dynamic_cast<CoordinateSystem *>(csysTo.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
@@ -287,7 +287,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
  		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
  		False, False, False, this->_getStretch()
  	);
-	std::auto_ptr<CoordinateSystem> coordClone(
+	std::unique_ptr<CoordinateSystem> coordClone(
 		dynamic_cast<CoordinateSystem *>(maskedClone->coordinates().clone())
 	);
 
@@ -374,7 +374,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 	SPIIF outImage = regridder._regrid();
 
 	// replace the temporary linear coordinate with the saved spectral coordinate
-	std::auto_ptr<CoordinateSystem> newCoords(
+	std::unique_ptr<CoordinateSystem> newCoords(
 		dynamic_cast<CoordinateSystem *>(outImage->coordinates().clone())
 	);
 

@@ -195,7 +195,7 @@ private:
 
     String _getTag(const uInt i) const;
 
-    std::auto_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
+    std::unique_ptr<vector<vector<Array<Double> > > > _createPCFArrays() const;
 
     String _elementToString(
     	const Double value, const Double error,
@@ -233,7 +233,7 @@ private:
     	Array<Bool>& attemptedArr, Array<Bool>& successArr,
         Array<Bool>& convergedArr, Array<Bool>& validArr,
         Array<String>& typeMat, Array<Int>& niterArr,
-        Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+        Array<Int>& nCompArr, std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
         vector<Array<Double> >& plpArrayss, vector<Array<Double> >& ltpArrays, Bool returnDirection,
         Array<String>& directionInfo /*, Array<Bool>& mask */
     ); 
@@ -284,7 +284,7 @@ private:
     	Array<Int>& nCompArr, const IPosition& pixel,
     	SHARED_PTR<const ProfileFitResults> fitter,
     	/* const RO_MaskedLatticeIterator<Float>& inIter, */
-    	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+    	std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
     	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
     	Double increment
     );

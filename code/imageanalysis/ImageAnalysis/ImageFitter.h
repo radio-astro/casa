@@ -198,7 +198,7 @@ private:
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 	Int _stokesPixNumber, _chanPixNumber;
 	ImageFitterResults _results;
-	std::auto_ptr<Quantity> _noiseFWHM;
+	std::unique_ptr<Quantity> _noiseFWHM;
 	Quantity _pixWidth;
 
 	const static String _class;

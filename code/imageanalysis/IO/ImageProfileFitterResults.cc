@@ -76,8 +76,8 @@ void ImageProfileFitterResults::createResults() {
 	_resultsToLog();
 }
 
-std::auto_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_createPCFArrays() const {
-	std::auto_ptr<vector<vector<Array<Double> > > > pcfArrays(
+std::unique_ptr<vector<vector<Array<Double> > > > ImageProfileFitterResults::_createPCFArrays() const {
+	std::unique_ptr<vector<vector<Array<Double> > > > pcfArrays(
 		new vector<vector<Array<Double> > >(
 			NGSOLMATRICES, vector<Array<Double> >(_nGaussMultiplets+_nOthers)
 		)
@@ -209,7 +209,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Array<Bool>& attemptedArr, Array<Bool>& successArr,
 	Array<Bool>& convergedArr, Array<Bool>& validArr,
 	Array<String>& typeMat, Array<Int>& niterArr,
-	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+	Array<Int>& nCompArr, std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
 	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
 	Bool returnDirection, Array<String>& directionInfo
 ) {
@@ -256,7 +256,7 @@ void ImageProfileFitterResults::_processSolutions(
 	Array<String>& typeMat, Array<Int>& niterArr,
 	Array<Int>& nCompArr, const IPosition& pixel,
 	SHARED_PTR<const ProfileFitResults> fitter,
-	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+	std::unique_ptr<vector<vector<Array<Double> > > >& pcfArrays,
 	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
 	Double increment
 ) {
@@ -437,7 +437,7 @@ void ImageProfileFitterResults::_setResults() {
     // correspond location in the _fitters array. Final structure index
     // corresponds to the sub component number (eg for multiple singlets or
     // for gaussian multiplet components
-	std::auto_ptr<vector<vector<Array<Double> > > > pcfArrays = _createPCFArrays();
+	std::unique_ptr<vector<vector<Array<Double> > > > pcfArrays = _createPCFArrays();
     IPosition bShape(1, max(_nPLPCoeffs, _nLTPCoeffs));
     bShape.prepend(fitterShape);
 	Array<Double> blank(bShape, fNAN);
