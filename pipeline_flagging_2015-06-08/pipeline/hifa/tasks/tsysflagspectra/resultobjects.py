@@ -1,8 +1,5 @@
 from __future__ import absolute_import
 
-import collections
-import copy
-
 from pipeline.hifa.tasks.tsyscal import resultobjects 
 from pipeline.hif.tasks.common import flaggableviewresults
 

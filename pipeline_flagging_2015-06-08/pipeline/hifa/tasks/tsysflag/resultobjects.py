@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
 import collections
-import copy
 
 from pipeline.hifa.tasks.tsyscal import resultobjects 
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.basetask as basetask
 
 LOG = infrastructure.get_logger(__name__)
 

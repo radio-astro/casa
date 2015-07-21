@@ -255,7 +255,6 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_hi=False,
               prepend='flag fieldshape - ')
 
-
             flagtask = Tsysflagspectra(flaginputs)
             result.add('fieldshape', self._executor.execute(flagtask))
 
