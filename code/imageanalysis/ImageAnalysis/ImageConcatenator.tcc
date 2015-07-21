@@ -162,7 +162,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 			<< imageList[0] << " will be used as the reference"
 			<< LogIO::POST;
 	}
-	std::auto_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
+	std::unique_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
 	ThrowIf(
 		! pConcat.get(), "Failed to create ImageConcat object"
 	);
@@ -173,7 +173,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 }
 
 template <class T> void ImageConcatenator<T>::_addImage(
-	std::auto_ptr<ImageConcat<T> >& pConcat, const String& name
+	std::unique_ptr<ImageConcat<T> >& pConcat, const String& name
 ) const {
 	if (name == this->_getImage()->name()) {
 		SPIIT mycopy = SubImageFactory<T>::createImage(

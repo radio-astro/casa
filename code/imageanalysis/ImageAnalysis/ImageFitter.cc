@@ -498,10 +498,10 @@ void ImageFitter::_doConverged(
 		fittedResid = tImage;
 		fittedResid->put(curResidPixels);
 	}
-	Lattice<Bool> *fittedResidPixelMask = &(fittedResid->pixelMask());
+	//Lattice<Bool> *fittedResidPixelMask = &(fittedResid->pixelMask());
 	LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
-	fittedResidPixelMask = &lcResidMask;
-	std::auto_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
+	//fittedResidPixelMask = &lcResidMask;
+	std::unique_ptr<MaskedLattice<Float> > maskedLattice(fittedResid->cloneML());
 	LatticeStatistics<Float> lStats(*maskedLattice, False);
 	Array<Double> stat;
 	lStats.getStatistic(stat, LatticeStatistics<Float>::RMS, True);
@@ -714,7 +714,7 @@ void ImageFitter::_calculateErrors() {
 			: C::sqrt2/_correlatedOverallSNR(
 				i, 0.5, 2.5, signalToNoise
 			);
-		std::auto_ptr<GaussianShape> newShape(
+		std::unique_ptr<GaussianShape> newShape(
 			dynamic_cast<GaussianShape *>(gShape->clone())
 		);
 		{
@@ -1109,13 +1109,13 @@ void ImageFitter::_setDeconvolvedSizes() {
 					pa - epa
 				);
 				Bool isPointSource1 = True;
-				Bool fitSuccess1 = False;
+				//Bool fitSuccess1 = False;
 				try {
 					isPointSource1 = GaussianDeconvolver::deconvolve(decon, largest, beam);
 					fitSuccess = True;
 				}
 				catch (const AipsError& x) {
-					fitSuccess1 = False;
+					//fitSuccess1 = False;
 					isPointSource1 = True;
 				}
 				// note that the code is purposefully written in such a way that
@@ -1127,13 +1127,13 @@ void ImageFitter::_setDeconvolvedSizes() {
 	            }
 				largest.setPA(pa + epa);
 				Bool isPointSource2 = True;
-				Bool fitSuccess2 = False;
+				//Bool fitSuccess2 = False;
 				try {
 					isPointSource2 = GaussianDeconvolver::deconvolve(decon, largest, beam);
-					fitSuccess2 = True;
+					//fitSuccess2 = True;
 	            }
 				catch (const AipsError& x) {
-					fitSuccess2 = False;
+					//fitSuccess2 = False;
 					isPointSource2 = True;
 	            }
 				if (isPointSource2) {
