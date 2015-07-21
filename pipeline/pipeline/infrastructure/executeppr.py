@@ -123,9 +123,6 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     # Create performance parameters object
     #context.project_performance_parameters = project.PerformanceParameters()
     context.project_performance_parameters = _getPerformanceParameters(intentsDict)
-    attrs = dir(context.project_performance_parameters) 
-    for attr in attrs:
-        print attr, getattr (context.project_performance_parameters, attr) 
 
     # Get the session info from the intents dictionary
     if len(intentsDict) > 0:
