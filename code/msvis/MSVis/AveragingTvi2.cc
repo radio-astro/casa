@@ -2380,6 +2380,7 @@ AveragingTvi2::produceSubchunk ()
     if (getVii()->more())
     {
         startBuffer_p = endBuffer_p + 1;
+        endBuffer_p = startBuffer_p - 1;
     }
 
     while (getVii()->more()){
@@ -2396,15 +2397,17 @@ AveragingTvi2::produceSubchunk ()
         }
         else if (vbToFill->appendSize() < nBaselines * nWindows){
             getVii()->next();
-            endBuffer_p += 1;
+
         }
         else{
             break;
         }
+
+        endBuffer_p += 1;
     };
 
     if (! getVii()->more()){
-
+    	endBuffer_p += 1;
         vbAvg_p->finalizeAverages ();
     }
 
@@ -2535,15 +2538,8 @@ void AveragingTvi2::writeFlag (const Cube<Bool> & flag)
 		}
 
 		currentBuffer += 1;
-
-		if (currentBuffer > endBuffer_p)
-		{
-			break;
-		}
-		else
-		{
-			getVii()->next();
-		}
+		getVii()->next();
+		if (currentBuffer > endBuffer_p) break;
 	}
 
 	return;
@@ -2564,15 +2560,8 @@ void AveragingTvi2::writeFlagRow (const Vector<Bool> & rowflags)
 		}
 
 		currentBuffer += 1;
-
-		if (currentBuffer > endBuffer_p)
-		{
-			break;
-		}
-		else
-		{
-			getVii()->next();
-		}
+		getVii()->next();
+		if (currentBuffer > endBuffer_p) break;
 	}
 
 	return;

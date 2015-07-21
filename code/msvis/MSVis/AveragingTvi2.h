@@ -103,8 +103,8 @@ private:
     Bool subchunkExists_p;
     avg::VbAvg * vbAvg_p;
     WeightScaling * weightScaling_p;
-    uInt startBuffer_p;
-    uInt endBuffer_p;
+    Int startBuffer_p;
+    Int endBuffer_p;
 };
 
 } // end namespace vi
