@@ -154,7 +154,7 @@ protected:
 
 
 private:
-	std::auto_ptr<vector<Double> > _start, _end;
+	std::unique_ptr<vector<Double> > _start, _end;
 	uInt _width;
 	String _unit;
 	static const String _class;

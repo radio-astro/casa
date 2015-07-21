@@ -84,7 +84,6 @@ SHARED_PTR<ImageInterface<T> > ImageCropper<T>::crop(
 ) const {
 	*this->_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 
-	//std::auto_ptr<ImageInterface<T> > myClone(this->_getImage()->cloneII());
 	SHARED_PTR<const SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(),
 		this->_getLog().get(), AxesSpecifier(), this->_getStretch(), True

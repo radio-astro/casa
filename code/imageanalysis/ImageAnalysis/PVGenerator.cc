@@ -51,7 +51,7 @@ PVGenerator::PVGenerator(
 ) : ImageTask<Float>(
 		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
-	), _start(0), _end(0), _width(1), _unit("arcsec") {
+	), _start(), _end(), _width(1), _unit("arcsec") {
 	_construct();
 }
 
@@ -315,7 +315,7 @@ SPIIF PVGenerator::generate() const {
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
 	dc1.toWorld(worldEnd, Vector<Double>(end));
-	std::auto_ptr<DirectionCoordinate> rotCoord(
+	std::unique_ptr<DirectionCoordinate> rotCoord(
 		dynamic_cast<DirectionCoordinate *>(
 			dc1.rotate(Quantity(paInRad, "rad"))
 		)
@@ -499,7 +499,7 @@ SPIIF PVGenerator::generate() const {
 	SHARED_PTR<const SubImage<Float> > cDropped = SubImageFactory<Float>::createSubImageRO(
 		*collapsed, Record(), "", 0, AxesSpecifier(keep, axisPath),	False, True
 	);
-	std::auto_ptr<ArrayLattice<Bool> > newMask;
+	std::unique_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
 		// because the mask doesn't lose its degenerate axis when subimaging.
 		Array<Bool> newArray = collapsed->pixelMask().get().reform(cDropped->shape());

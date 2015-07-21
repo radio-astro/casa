@@ -61,7 +61,7 @@ SpectralCollapser::~SpectralCollapser(){delete _log;}
 Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float startVal, const Float endVal,
 		const String &unit, const SpectralCollapser::CollapseType &collType, const SpectralCollapser::CollapseError &collError, String &outname, String &msg){
 
-	Bool ok;
+	//Bool ok;
 	String unit_(unit);
 	String outnameData;
 	String outnameError;
@@ -159,34 +159,43 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		{
 		case SpectralCollapser::PNOERROR:
 			// collapse the data
-			ok = _collapse(subData, dataAggStr, chanInp, outname);
+			//ok = _collapse(subData, dataAggStr, chanInp, outname);
+			_collapse(subData, dataAggStr, chanInp, outname);
 			break;
 		case SpectralCollapser::PERMSE:
 			// collapse the data
-			ok = _collapse(subData, dataAggStr, chanInp, outnameData);
+			//ok = _collapse(subData, dataAggStr, chanInp, outnameData);
+			_collapse(subData, dataAggStr, chanInp, outnameData);
 
 			// collapse the error
-			ok = _collapse(subData, errorAggStr, chanInp, outnameError);
+			//ok = _collapse(subData, errorAggStr, chanInp, outnameError);
+			_collapse(subData, errorAggStr, chanInp, outnameError);
 
 			// merge the data and the error
-			ok = _mergeDataError(outname, outnameData, outnameError);
+			//ok = _mergeDataError(outname, outnameData, outnameError);
+			_mergeDataError(outname, outnameData, outnameError);
 
 			// merge the data and the error
-			ok = _cleanTmpData(outnameData, outnameError);
+			//ok = _cleanTmpData(outnameData, outnameError);
+			_cleanTmpData(outnameData, outnameError);
 
 			break;
 		case SpectralCollapser::PPROPAG:
 			// collapse the data
-			ok = _collapse(subData, dataAggStr, chanInp, outnameData);
+			//ok = _collapse(subData, dataAggStr, chanInp, outnameData);
+			_collapse(subData, dataAggStr, chanInp, outnameData);
 
 			// collapse the error
-			ok = _collapse(subError, errorAggStr, chanInp, outnameError);
+			//ok = _collapse(subError, errorAggStr, chanInp, outnameError);
+			_collapse(subError, errorAggStr, chanInp, outnameError);
 
 			// merge the data and the error
-			ok = _mergeDataError(outname, outnameData, outnameError, Float(endIndex-startIndex));
+			//ok = _mergeDataError(outname, outnameData, outnameError, Float(endIndex-startIndex));
+			_mergeDataError(outname, outnameData, outnameError, Float(endIndex-startIndex));
 
 			// remove the tmp-images
-			ok = _cleanTmpData(outnameData, outnameError);
+			//ok = _cleanTmpData(outnameData, outnameError);
+			_cleanTmpData(outnameData, outnameError);
 
 			break;
 		default:
@@ -203,20 +212,25 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		{
 		case SpectralCollapser::PNOERROR:
 			// collapse the data
-			ok = _collapse(_image, dataAggStr, chanInp, outname);
+			//ok = _collapse(_image, dataAggStr, chanInp, outname);
+			_collapse(_image, dataAggStr, chanInp, outname);
 			break;
 		case SpectralCollapser::PERMSE:
 			// collapse the data
-			ok = _collapse(_image, dataAggStr, chanInp, outnameData);
+			//ok = _collapse(_image, dataAggStr, chanInp, outnameData);
+			_collapse(_image, dataAggStr, chanInp, outnameData);
 
 			// collapse the error
-			ok = _collapse(_image, errorAggStr, chanInp, outnameError);
+			//ok = _collapse(_image, errorAggStr, chanInp, outnameError);
+			_collapse(_image, errorAggStr, chanInp, outnameError);
 
 			// merge the data and the error
-			ok = _mergeDataError(outname, outnameData, outnameError);
+			//ok = _mergeDataError(outname, outnameData, outnameError);
+			_mergeDataError(outname, outnameData, outnameError);
 
 			// merge the data and the error
-			ok = _cleanTmpData(outnameData, outnameError);
+			//ok = _cleanTmpData(outnameData, outnameError);
+			_cleanTmpData(outnameData, outnameError);
 			break;
 		default:
 			// this should not happen

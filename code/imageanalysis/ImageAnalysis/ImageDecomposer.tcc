@@ -2154,13 +2154,13 @@ Matrix<T> ImageDecomposer<T>::fitGauss(const Matrix<T>& positions,
 // Fits the specified number of 3D gaussians to the data, and returns 
 // solution in image (world) coordinates.
   
-  uInt ngpar = 0;
+  //uInt ngpar = 0;
   uInt ngaussians = initestimate.nrow();
-  if (itsDim == 2) ngpar = 6; 
-  if (itsDim == 3) ngpar = 9;
+  //if (itsDim == 2) ngpar = 6; 
+  //if (itsDim == 3) ngpar = 9;
 
   Matrix<T> solution;
-  T chisquare;
+  //T chisquare;
 
 // Might be useful to send to screen in AIPS++
   //cout << "Primary estimation matrix:" << endl;
@@ -2183,17 +2183,17 @@ Matrix<T> ImageDecomposer<T>::fitGauss(const Matrix<T>& positions,
     cout << fiterr.getMesg() << endl;
     cout << "Fitting failed." << endl;
     solution = 0;
-    chisquare = -1.0;
+    //chisquare = -1.0;
     return solution;
   }
 
   if (fitter.converged()) {  
-    chisquare = fitter.chisquared();
+    //chisquare = fitter.chisquared();
   } else {
     cout << "Fitting did not converge to a reasonable result - using estimate."
          << endl;  
     solution = initestimate;
-    chisquare = -1.0;
+    //chisquare = -1.0;
     return solution;
   }
 

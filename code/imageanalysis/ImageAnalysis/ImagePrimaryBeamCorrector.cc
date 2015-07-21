@@ -99,7 +99,6 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 			boxShape[dirAxes[0]] = imShape[dirAxes[0]];
 			boxShape[dirAxes[1]] = imShape[dirAxes[1]];
 			LCBox x(IPosition(imShape.size(), 0), boxShape - 1, imShape);
-			//std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 			SHARED_PTR<const SubImage<Float> > sub = SubImageFactory<Float>::createSubImageRO(
 				*_getImage(), x.toRecord(""), "", _getLog().get(), AxesSpecifier(False)
 			);
@@ -204,7 +203,7 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-    std::auto_ptr<ImageInterface<Float> > tmpStore(0);
+    std::unique_ptr<ImageInterface<Float> > tmpStore;
     ImageInterface<Float> *pbTemplate = _pbImage.get();
 	if (! _getImage()->shape().isEqual(_pbImage->shape())) {
 		pbTemplate = new ExtendImage<Float>(
@@ -228,7 +227,7 @@ SPIIF ImagePrimaryBeamCorrector::correct(
 		);
 	}
 	else {
-		std::auto_ptr<ImageInterface<Float> > tmp(
+		std::unique_ptr<ImageInterface<Float> > tmp(
 			pbTemplate->hasPixelMask()
 			? new SubImage<Float>(
 				*_getImage(),

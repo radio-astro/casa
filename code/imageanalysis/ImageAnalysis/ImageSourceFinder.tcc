@@ -277,11 +277,13 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
    IPosition start(inShape);
    start = 0;  
    IPosition pos(1,0);
-   Bool isRef, isMaskRef;   
+   //Bool /*isRef, */ isMaskRef;   
 //
    for (Int j=0; j<(w-1); j++) {
-      isRef = image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
-      isMaskRef = image.getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
+      //isRef = image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
+      image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
+      //isMaskRef = image.getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
+      image.getMaskSlice(inMaskPtr[inp+j], Slicer(start, inSliceShape), True);
       for (Int i=0; i<nx; i++) {
          pos(0) = i;
          inDone(inp+j, i) = inMaskPtr[inp+j].ref()(pos);
@@ -295,8 +297,10 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
    for (Int j=(w-1); j<ny; j++) {
       inp++;
       inp %= w;
-      isRef = image.getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
-      isMaskRef = image.getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+      //isRef = image.getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+      image.getSlice(inPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+      //isMaskRef = image.getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
+      image.getMaskSlice(inMaskPtr[(inp+1)%w], Slicer(start, inSliceShape), True);
       for (Int i=0; i<nx; i++) {
          pos(0) = i;
          inDone((inp+1)%w, i) = !(inMaskPtr[(inp+1)%w].ref()(pos));
