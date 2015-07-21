@@ -29,7 +29,6 @@ template<class T> void ImageFFTer<T>::fft() const {
 	_checkExists(_amp);
 	_checkExists(_phase);
 	_checkExists(_complex);
-	//std::auto_ptr<ImageInterface<T> > clone(this->_getImage()->cloneII());
 	SHARED_PTR<const SubImage<T> > subImage = SubImageFactory<T>::createSubImageRO(
 		*this->_getImage(), *this->_getRegion(), this->_getMask(), this->_getLog().get(),
 		AxesSpecifier(), this->_getStretch()

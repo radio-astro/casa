@@ -203,7 +203,7 @@ private:
     String _region, _box, _chan, _stokesString, _mask, _outname;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
     	_suppressHistory, _dropDegen;
-	std::auto_ptr<FiledesIO> _logFileIO;
+	std::unique_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	SHARED_PTR<LogFile> _logfile;
 	mutable vector<std::pair<String, String> > _newHistory;

@@ -310,7 +310,7 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 			TiledShape(oShape), csys
 		)
 	);
-	std::auto_ptr<ArrayLattice<Bool> > mymask;
+	std::unique_ptr<ArrayLattice<Bool> > mymask;
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}

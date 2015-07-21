@@ -117,7 +117,7 @@ protected:
 
 
 private:
-	std::auto_ptr<ImageInterface<Float> > _pbImage;
+	std::unique_ptr<ImageInterface<Float> > _pbImage;
 
 	Float _cutoff;
 	Mode _mode;
