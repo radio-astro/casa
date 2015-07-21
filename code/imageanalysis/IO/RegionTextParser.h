@@ -80,7 +80,7 @@ public:
 		vector<Int> intVec;
 	};
 
-	typedef std::map<AnnotationBase::Keyword, ParamValue> ParamSet;
+	using ParamSet = std::map<AnnotationBase::Keyword, ParamValue>;
 
 	// <group>
 	// differentiating between the filename and simple text constructors

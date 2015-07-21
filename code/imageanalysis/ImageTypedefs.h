@@ -40,10 +40,10 @@
 namespace casa {
 	template<class T> class ImageInterface;
 
-	typedef SHARED_PTR<const ImageInterface<Float> > SPCIIF;
-	typedef SHARED_PTR<ImageInterface<Float> > SPIIF;
-	typedef SHARED_PTR<const ImageInterface<Complex> > SPCIIC;
-	typedef SHARED_PTR<ImageInterface<Complex> > SPIIC;
+    using SPCIIF = SHARED_PTR<const ImageInterface<Float> >;
+	using SPIIF = SHARED_PTR<ImageInterface<Float> >;
+	using SPCIIC = SHARED_PTR<const ImageInterface<Complex> >;
+	using SPIIC = SHARED_PTR<ImageInterface<Complex> >;
 }
 
 #endif
