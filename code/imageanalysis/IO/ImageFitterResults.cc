@@ -271,7 +271,7 @@ String ImageFitterResults::fluxToString(
 
 vector<String> ImageFitterResults::unitPrefixes(Bool includeCenti) {
 	if (_prefixes.empty()) {
-#if defined(CXX11)
+#if __cplusplus >= 201103L
 		_prefixesWithCenti = std::vector<String> {"T","G","M","k","","c","m","u","n"};
 		_prefixes = std::vector<String> {"T","G","M","k","","m","u","n"};
 #else
