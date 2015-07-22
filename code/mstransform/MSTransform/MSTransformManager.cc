@@ -1797,21 +1797,33 @@ void MSTransformManager::initDataSelectionParams()
 		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
 
 		// Do the spw mapping between input and output
+		uInt outputSpwIndex = 0;
 		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
 		{
 			// Get spw id and set the input-output spw map
 			spw = spwchan(selection_i,0);
-			inputOutputSPWIndexMap_p[spw] = selection_i + ddiStart_p;
-
-			outputInputSPWIndexMap_p[selection_i] = spw;
 
 			// Set the channel selection ()
 			channelStart = spwchan(selection_i,1);
 			channelStop = spwchan(selection_i,2);
 			channelStep = spwchan(selection_i,3);
 			channelWidth = channelStop-channelStart+1;
-			numOfSelChanMap_p[spw] = channelWidth;
 			channelSelector_p->add (spw, channelStart, channelWidth,channelStep);
+
+			if (inputOutputSPWIndexMap_p.find(spw) == inputOutputSPWIndexMap_p.end())
+			{
+				inputOutputSPWIndexMap_p[spw] = outputSpwIndex + ddiStart_p;
+
+				outputInputSPWIndexMap_p[outputSpwIndex] = spw;
+
+				numOfSelChanMap_p[spw] = channelWidth;
+
+				outputSpwIndex ++;
+			}
+			else
+			{
+				numOfSelChanMap_p[spw] += channelWidth;
+			}
 		}
 	}
 
