@@ -645,6 +645,14 @@ vector<int> msmetadata::fdmspws() {
 	return vector<int>();
 }
 
+
+vector<string> msmetadata::fieldnames() {
+	_FUNC(
+		return _vectorStringToStdVectorString(_msmd->getFieldNames());
+	)
+	return vector<string>();
+}
+
 variant* msmetadata::fieldsforintent(
 	const string& intent, const bool asnames
 ) {

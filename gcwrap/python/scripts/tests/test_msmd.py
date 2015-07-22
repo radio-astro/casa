@@ -1244,6 +1244,12 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((md.chanwidths(0, "GHz") == [1.5, 2.5, 2, 1.5]).all())
         self.assertRaises(Exception, md.chanwidths, 0, "km/s")
         
+    def test_fieldnames(self):
+        md = self.md
+        got = md.fieldnames()
+        expec = ['3C279', 'J1337-129', 'Titan', 'J1625-254', 'V866 Sco', 'RNO 90']
+        self.assertTrue(got == expec)
+        
     def test_projects(self):
         """Test msmd.projects()"""
         md = self.md

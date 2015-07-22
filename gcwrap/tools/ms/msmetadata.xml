@@ -611,6 +611,20 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="fieldnames">
+            <shortdescription>Get an array of field names as they appear in the FIELD table.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of field names as they appear in the FIELD table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get list of field names in the ms
+    fieldnames = msmd.fieldnames()
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="fieldsforintent">
             <shortdescription>Get an array of the unique fields for the specified intent.</shortdescription>
              <input>

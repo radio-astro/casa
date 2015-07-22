@@ -84,6 +84,9 @@
 #include <casa/namespace.h>
 #include <cassert>
 
+//debug only
+#include <ms/MSOper/MSMetaData.h>
+
 using namespace std;
 
 namespace casac {
@@ -477,118 +480,140 @@ ms::command(const std::string& msfile, const std::string& command, const bool no
 }
 */
 
-bool
-ms::tofits(const std::string& fitsfile, const std::string& column,
-           const ::casac::variant& field, const ::casac::variant& spw,
-           const int width,
-           const ::casac::variant& baseline, const std::string& time,
-           const ::casac::variant& scan, const ::casac::variant& uvrange,
-           const std::string& taql, const bool writesyscal,
-           const bool multisource, const bool combinespw,
-           const bool writestation, const bool padwithflags)
-{
-  Bool rstat(True);
-  try{
-     if(!detached()){
-
-         MeasurementSet *mssel= new MeasurementSet();
-         Bool subselect=False;
-	 String fieldS(m1toBlankCStr_(field));
-	 String spwS(m1toBlankCStr_(spw));
-	 String baselineS=toCasaString(baseline);
-	 String timeS=toCasaString(time);
-	 String scanS=toCasaString(scan);
-	 String uvrangeS=toCasaString(uvrange);
-	 String taqlS=toCasaString(taql);
-	 Int inchan=1;
-	 Int istart=0;
-         Int istep=1;
-         Int iwidth=width;
-         if (spwS==String(""))
-             spwS="*";
-	 Record selrec;
-         try {
-             selrec=itsMS->msseltoindex(spwS, fieldS);
-         }
-         catch (AipsError x) {
-             Table::relinquishAutoLocks(True);
-             *itsLog << LogOrigin("ms", "tofits") 
-                     << LogIO::SEVERE << x.getMesg() << LogIO::POST;
-             RETHROW(x);
-         }
-	 Vector<Int>fldids=selrec.asArrayInt("field");
-	 Vector<Int>spwids=selrec.asArrayInt("spw");
+bool ms::tofits(
+	const std::string& fitsfile, const std::string& column,
+	const casac::variant& field, const casac::variant& spw,
+	const int width,
+	const ::casac::variant& baseline, const std::string& time,
+	const ::casac::variant& scan, const ::casac::variant& uvrange,
+	const std::string& taql, const bool writesyscal,
+	const bool multisource, const bool combinespw,
+	const bool writestation, const bool padwithflags
+) {
+	Bool rstat(True);
+	try {
+		if(!detached()) {
+			MeasurementSet *mssel= new MeasurementSet();
+			Bool subselect=False;
+			String fieldS(m1toBlankCStr_(field));
+			String spwS(m1toBlankCStr_(spw));
+			String baselineS=toCasaString(baseline);
+			String timeS=toCasaString(time);
+			String scanS=toCasaString(scan);
+			String uvrangeS=toCasaString(uvrange);
+			String taqlS=toCasaString(taql);
+			Int inchan=1;
+			Int istart=0;
+			Int istep=1;
+			Int iwidth=width;
+			if (spwS==String("")) {
+				spwS="*";
+			}
+			Record selrec;
+			try {
+				selrec=itsMS->msseltoindex(spwS, fieldS);
+			}
+			catch (const AipsError& x) {
+				Table::relinquishAutoLocks(True);
+				*itsLog << LogOrigin("ms", "tofits")
+            		  << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+				RETHROW(x);
+			}
+			Vector<Int> fldids = selrec.asArrayInt("field");
+			ThrowIf(
+				! multisource && fldids.size() > 1,
+				"If multisource is false, no more than one field should be specified"
+			);
+			Int fieldID = 0;
+			if (! multisource && fldids.size() == 1) {
+				fieldID = fldids[0];
+			}
+			Vector<Int> spwids = selrec.asArrayInt("spw");
 	 
-	 Matrix<Int> chansel=selrec.asArrayInt("channel");
-         //cout << "chansel=" << chansel << endl;
-         //cout << "chansel.nelements()=" << chansel.nelements() << endl;
-	 if(chansel.nelements() !=0){
-	    istep=chansel.row(0)(3);
-	    if(istep < 1)
-	      istep=1;
-	    istart=chansel.row(0)(1);
-	    inchan=(chansel.row(0)(2)-istart+1)/istep;
-	    if(inchan<1) {
-	      inchan=1;	  
-              istep=1;
-            }
-	 } 
-         if (iwidth < 1)
-            iwidth = 1;
-         if (iwidth > inchan)
-            iwidth = inchan;
+			Matrix<Int> chansel=selrec.asArrayInt("channel");
+			//cout << "chansel=" << chansel << endl;
+			//cout << "chansel.nelements()=" << chansel.nelements() << endl;
+			if (chansel.nelements() !=0) {
+				istep=chansel.row(0)(3);
+				if(istep < 1) {
+					istep=1;
+				}
+				istart=chansel.row(0)(1);
+				inchan=(chansel.row(0)(2)-istart+1)/istep;
+				if (inchan<1) {
+					inchan=1;
+					istep=1;
+				}
+			}
+			if (iwidth < 1) {
+				iwidth = 1;
+			}
+			if (iwidth > inchan) {
+				iwidth = inchan;
+			}
+			subselect = mssSetData(
+				*itsMS, *mssel, "", timeS, baselineS, fieldS,
+				spwS, uvrangeS, taqlS, "", scanS
+			);
 
-	 subselect = mssSetData(*itsMS, *mssel, "", timeS, baselineS, fieldS,
-				  spwS, uvrangeS, taqlS, "", scanS);
-
-         if(subselect && mssel->nrow() < itsMS->nrow()){
-	   if(mssel->nrow()==0){
-	     if(!mssel)
-	       delete mssel; 
-	     mssel=0;
-	     *itsLog << LogIO::WARN << LogOrigin("ms", "tofits")
-		     << "No data for selection: will convert full MeasurementSet"
-		     << LogIO::POST;
-	     mssel=new MeasurementSet(*itsMS);
-	   } 
-	   else{
-           *itsLog << LogOrigin("ms", "summary")
-                   << "By selection " << itsMS->nrow()
-                  <<  " rows to be converted are reduced to "
-                  << mssel->nrow() << LogIO::POST;
-	   }
-   
-         }
-         else{
-	   if(!mssel)
-	     delete mssel; 
-           mssel = new MeasurementSet(*itsMS);
-         }
-         MeasurementSet selms(*mssel);
-         //cout << "inchan=" << inchan << " istart=" << istart 
-         //       << " istep=" << istep << endl; 
-         if (!MSFitsOutput::writeFitsFile(fitsfile, selms, column, istart,
-                                       inchan, istep, writesyscal,
-                                       multisource, combinespw,
-                                       writestation, 1.0, padwithflags, iwidth)) {
-           *itsLog << LogOrigin("ms", "tofits") 
+			if(subselect && mssel->nrow() < itsMS->nrow()) {
+				cout << "in if" << endl;
+				if(mssel->nrow() == 0) {
+					if(!mssel) {
+						delete mssel;
+					}
+					mssel = 0;
+					*itsLog << LogIO::WARN << LogOrigin("ms", __func__)
+		    			<< "No data for selection: will convert full MeasurementSet"
+		    			<< LogIO::POST;
+					mssel=new MeasurementSet(*itsMS);
+				}
+				else {
+					*itsLog << LogOrigin("ms", __func__)
+                		<< "By selection " << itsMS->nrow()
+                		<<  " rows to be converted are reduced to "
+                		<< mssel->nrow() << LogIO::POST;
+				}
+			}
+			else {
+				cout << "in else" << endl;
+				if(! mssel) {
+					delete mssel;
+				}
+				mssel = new MeasurementSet(*itsMS);
+			}
+			MeasurementSet selms(*mssel);
+			MSMetaData md(&selms, 1000);
+			cout << "nfields " << md.nFields() << endl;
+			cout << "fieldid " << fieldID << endl;
+			if (
+				! MSFitsOutput::writeFitsFile(
+					fitsfile, selms, column, istart, inchan,
+					istep, writesyscal, multisource, combinespw,
+					writestation, 1.0, padwithflags, iwidth,
+					fieldID
+				)
+			) {
+				*itsLog << LogOrigin("ms", "tofits")
                    << LogIO::SEVERE << "Conversion to FITS failed"<< LogIO::POST;
-           rstat = False;
-         }
+				rstat = False;
+			}
 
-	 //Done...clear off the mssel
-	 if(mssel)
-	   delete mssel;
-     }
-   } catch (AipsError x) {
-       *itsLog << LogOrigin("ms", "tofits") 
-               << LogIO::SEVERE << "Exception Reported: " 
-               << x.getMesg() << LogIO::POST;
+			//Done...clear off the mssel
+			if(mssel) {
+				delete mssel;
+			}
+		}
+	}
+	catch (const AipsError& x) {
+       *itsLog << LogOrigin("ms", __func__)
+            << LogIO::SEVERE << "Exception Reported: "
+            << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
        RETHROW(x);
-   }
-   Table::relinquishAutoLocks(True);
-   return rstat;
+	}
+	Table::relinquishAutoLocks(True);
+	return rstat;
 }
 
 msmetadata* ms::metadata(const float cachesize) {
