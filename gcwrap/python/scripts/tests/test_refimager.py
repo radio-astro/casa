@@ -62,7 +62,7 @@ import inspect
 ## List to be run
 def suite():
      return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
-#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis]
+#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
 #refdatapath = "/export/home/riya/rurvashi/Work/ImagerRefactor/Runs/UnitData/"
@@ -366,18 +366,25 @@ class testref_base(unittest.TestCase):
      def resetmodelcol(self,msname=""):
           tb.open( msname, nomodify=False )
           hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
+          if not hasmodcol:
+               cb.open(msname)
+               cb.close()
+          hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
           if hasmodcol:
                dat = tb.getcol('MODEL_DATA')
-               dat.fill( complex(1.0,0.0) )
+               dat.fill( complex(0.0,0.0) )
                tb.putcol('MODEL_DATA', dat)
           tb.close();
 
      def delmodels(self,msname="",dmodcol=False):
-          if dmodcol:
-               self.delmodelcol(msname) ## Delete model column
-          else:
-               self.resetmodelcol(msname)  ## Set model column to one
-          delmod(msname)  ## Get rid of OTF model
+          delmod(msname,scr=True)  ## Get rid of OTF model and model column
+#          if dmodcol:
+#               self.delmodelcol(msname) ## Delete model column
+#          else:
+#               self.resetmodelcol(msname)  ## Set model column to one
+          cb.open(msname)
+          cb.close()
+          self.resetmodelcol(msname)  ## Set model column to zero
           self.delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
 
      def delmodelcol(self,msname=""):
@@ -441,8 +448,10 @@ class test_onefield(testref_base):
      def test_onefield_clark(self):
           """ [onefield] Test_Onefield_clark : mfs with clark minor cycle """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=100,interactive=0)#,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
-          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[50,50,0,0])])
+##          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=100,interactive=0) #,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=1000,interactive=0,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+          clean(vis=self.msfile,imagename=self.img+'.old',imsize=200,cell='8.0arcsec',niter=1000,psfmode='clark',phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+#          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[50,50,0,0])])
 
      def test_onefield_hogbom(self):
           """ [onefield] Test_Onefield_hogbom : mfs with hogbom minor cycle """
@@ -975,11 +984,31 @@ class test_cube(testref_base):
 
      def test_cube_continuum_subtract_uvsub(self):
           """ [cube] Test_Cube_continuum_subtract :  Using uvsub """
-          self.prepData('refim_pointline.ms')
+          self.prepData('refim_point_withline.ms')
+          self.delmodels(msname=self.msfile)
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='data',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step0data.png',title="original data")
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step0model.png',title="empty model")
+
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec', spw='0:12~19',niter=50,gain=0.2,savemodel='modelcolumn',deconvolver='mtmfs')
+#          self.assertTrue(self.exists(self.img+'.model') )
+#          self.assertTrue( self.checkmodelchan(self.msfile,10) == 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 )
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step1.png',title="model after partial mtmfs on some channels")
+
+          self.delmodels(msname=self.msfile)
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='modelcolumn',deconvolver='mtmfs')
+#          self.assertTrue( self.checkmodelchan(self.msfile,10) > 0.0 and self.checkmodelchan(self.msfile,3) > 0.0 
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step2.png',title="model after mtmfs predict on full spw" )
+
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='data-model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step3data.png',title="data-model")
+          
 
      def test_cube_continuum_subtract_otf(self):
           """ [cube] Test_Cube_continuum_subtract :  On-The-Fly using multifield """
           self.prepData('refim_pointline.ms')
+
+     def test_cube_badchannel_restoringbeam(self):
+          """ [cube] Test auto restoring beam with a bad edge channel """
+          self.prepData('refim_point.ms')
 
 ##############################################
 ##############################################
@@ -1045,7 +1074,7 @@ class test_widefield(testref_base):
           """ [widefield] Test_Widefield_aproj : MFS with narrowband AWProjection (wbawp=F, 1spw)  stokes I """
           self.prepData("refim_mawproject.ms")
 ##          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
-          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
+          ret = tclean(vis=self.msfile,spw='2',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
           ## weight is pbsq which is 0.7^2 = 0.49 (approx).
 
@@ -1053,7 +1082,7 @@ class test_widefield(testref_base):
      def test_widefield_aproj_cube(self):
           """ [widefield] Test_Widefield_mosaic_cube_aproj : Cube with AW-Projection  and rotation off """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=False,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
+          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=1,gain=1.0,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
           self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
 
      ## Test normtype too somewhere..
@@ -1090,11 +1119,10 @@ class test_widefield(testref_base):
      def test_widefield_mosaicft_cube(self):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=30,gridder='mosaicft',deconvolver='hogbom')
+          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1)
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9743,[256,256,0,0]),(self.img+'.weight',0.46,[256,256,0,0]) ] )
 
           #do stokes V too..
-
 
 class test_widefield_failing(testref_base):
 
@@ -1114,9 +1142,10 @@ class test_widefield_failing(testref_base):
      def test_widefield_wbaproj_mtmfs(self):
           """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs')
-          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',1.0,[256,256,0,0]),(self.img+'.weight.tt0',0.49,[256,256,0,0]),(self.img+'.alpha',0.063,[256,256,0,0]) ] )
+          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
+          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.95,[256,256,0,0]),(self.img+'.weight.tt0',0.49,[256,256,0,0]),(self.img+'.alpha',0.0009,[256,256,0,0]) ] )
           ## alpha should be ZERO as the pb spectrum has been taken out.
+
 
      def test_widefield_mosaic_outlier(self):
           """ [multifield] Test_widefield_mosaic_outlier : Mosaic with an outlier field """
@@ -1276,7 +1305,6 @@ class test_modelvis(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
-class test_modelvis_failing(testref_base):
      def test_modelvis_11(self):
           """ [modelpredict] Test_modelvis_11 : Predict model image over channel gaps not included in imaging """
           self.prepData("refim_point.ms")
@@ -1293,6 +1321,7 @@ class test_modelvis_failing(testref_base):
           ret = tclean(vis=self.msfile,imagename=self.img+'2',imsize=100,cell='8.0arcsec',startmodel=self.img, spw='0',niter=0,savemodel='virtual')
           ## cannot check anything here....  just that it runs without error
 
+class test_modelvis_failing(testref_base):
      def test_modelvis_12(self):
           """ [modelpredict] Test_modelvis_12 : Regrid input model onto new image grid : mfs (ra/dec) """
 
@@ -1301,5 +1330,8 @@ class test_modelvis_failing(testref_base):
 
      def test_modelvis_14(self):
           """ [modelpredict] Test_modelvis_14 : Regrid input model onto new image grid : mtmfs (ra/dec/terms)"""
+
+     def test_modelvis_startmodel_mfs(self):
+          """ [modelvis] test_modelvis_startmodel_mfs : Restart a run with existing 'startmodel'."""
 
 ##############################################

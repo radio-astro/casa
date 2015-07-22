@@ -106,6 +106,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmClarkClean("clarkstokes")); 
 	  } 
+	else if(decpars.algorithm==String("clark2"))
+	  {
+	    itsDeconvolver.reset(new SDAlgorithmClarkClean2("clark")); 
+	  } 
+	else if(decpars.algorithm==String("clarkstokes2"))
+	  {
+	    itsDeconvolver.reset(new SDAlgorithmClarkClean2("clarkstokes")); 
+	  } 
 	else if(decpars.algorithm==String("multiscale"))
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmMSClean( decpars.scales )); 

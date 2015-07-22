@@ -19,68 +19,78 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="any" name="vis" kind="ms" mustexist="true">
-    <description>Name of input visibility file(s)</description>
+   <shortdescription>Name of input visibility file(s)</shortdescription>
+<description>Name of input visibility file(s)</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
-<!--
-    <param type="bool" name="selectdata" subparam="true" visibility="hidden">
-      <description>To select or not</description>
+
+    <param type="bool" name="selectdata" visibility="hidden">
+     <shortdescription>Show data selection parameters</shortdescription>
+<description>Show data selection parameters in the task interface.</description>
       <value type="bool">True</value>
     </param>
--->
 
     <param type="any" name="field" subparam="true">
-      <description>field(s) to select</description>
+     <shortdescription>field(s) to select</shortdescription>
+<description>field(s) to select</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="spw" subparam="true">
-      <description>spw(s) to select</description>
+     <shortdescription>spw(s) to select</shortdescription>
+<description>spw(s) to select</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="timerange" subparam="true">
-      <description>Range of time to select from data</description>
+     <shortdescription>Range of time to select from data</shortdescription>
+<description>Range of time to select from data</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="uvrange" subparam="true">
-      <description>Select data within uvrange </description>
+     <shortdescription>Select data within uvrange</shortdescription>
+<description>Select data within uvrange </description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="antenna" subparam="true">
-      <description>Select data based on antenna/baseline</description>
+     <shortdescription>Select data based on antenna/baseline</shortdescription>
+<description>Select data based on antenna/baseline</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="scan" subparam="true">
-      <description>Scan number range</description>
+     <shortdescription>Scan number range</shortdescription>
+<description>Scan number range</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
     
     <param type="any" name="observation" subparam="true">
-      <description>Observation ID range</description>
+     <shortdescription>Observation ID range</shortdescription>
+<description>Observation ID range</description>
       <any type="variant" limittypes="string int"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="intent" subparam="true">
-      <description>Scan Intent(s)</description>
+     <shortdescription>Scan Intent(s)</shortdescription>
+<description>Scan Intent(s)</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="string" name="datacolumn" subparam="true">
-      <description>data or observed, corrected</description>
+     <shortdescription>data or observed, corrected</shortdescription>
+<description>data or observed, corrected</description>
       <value type="string">corrected</value>
     </param>
 
@@ -90,113 +100,120 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="any" name="imagename" required="true">
-      <description>Pre-name of output images</description>
+     <shortdescription>Pre-name of output images</shortdescription>
+<description>Pre-name of output images</description>
       <any type="variant" limittypes="int string stringArray"/>
       <value type="string"></value>
     </param>
 
-    <param type="any" name="imsize" subparam="true">
-      <description>Number of pixels</description>
+    <param type="any" name="imsize" > <!-- subparam="true"> -->
+     <shortdescription>Number of pixels</shortdescription>
+<description>Number of pixels</description>
       <any type="variant" limittypes="int intArray"/>
       <value type="intArray">100</value>
     </param>
 
-    <param type="any" name="cell" subparam="true">
-      <description>Cell size</description>
+    <param type="any" name="cell" > <!-- subparam="true"> -->
+     <shortdescription>Cell size</shortdescription>
+<description>Cell size</description>
       <any type="variant" limittypes="int double intArray doubleArray string stringArray"/>
       <value type="stringArray">"1arcsec"</value>
     </param>
 
-    <param type="any" name="phasecenter" subparam="true">
-      <description>Phase center of the image</description>
+    <param type="any" name="phasecenter" > <!-- subparam="true"> -->
+     <shortdescription>>Phase center of the image</shortdescription>
+<description>Phase center of the image</description>
       <any type="variant" limittypes="int string"/>
       <value type="string"></value>
     </param>
 
-    <param type="string" name="stokes" subparam="true">
-      <description>Stokes Planes to make</description>
+    <param type="string" name="stokes" > <!-- subparam="true"> -->
+     <shortdescription>Stokes Planes to make</shortdescription>
+<description>Stokes Planes to make</description>
       <value type="string">I</value>
     </param>
 
-    <param type="string" name="projection" subparam="true">
-      <description>Coordinate projection (SIN, HPX) </description>
+    <param type="string" name="projection" > <!-- subparam="true"> -->
+     <shortdescription>Coordinate projection (SIN, HPX)</shortdescription>
+<description>Coordinate projection (SIN, HPX) </description>
       <value type="string">SIN</value>
     </param>
 
-    <param type="string" name="startmodel" subparam="true">
-      <description>Name of starting model image </description>
+    <param type="string" name="startmodel" > <!-- subparam="true"> -->
+     <shortdescription>Name of starting model image</shortdescription>
+<description>Name of starting model image </description>
       <value type="string"></value>
     </param>
 
 <!--============================================== -->
-
-    <param type="string" name="outlierfile">
-      <description>Name of outlier-field image definitions</description>
-      <value type="string"></value>
-    </param>
-
-    <param type="bool" name="overwrite">
-      <description>True : Re-use existing images. False : Increment imagename</description>
-      <value type="bool">True</value>
-    </param>
-
 
 <!--============================================== -->
 <!--                            Spectral Parameters                                                     -->
 <!--============================================== -->
 
     <param type="any" name="specmode" required="true">
-      <description>Spectral definition mode (mfs,cube,cubesrc,cubedata)</description>
+     <shortdescription>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</shortdescription>
+<description>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</description>
       <value type="string">mfs</value>
     </param>
 
     <param type="any" name="reffreq" subparam="true">
-      <description>Reference frequency</description>
+     <shortdescription>Reference frequency</shortdescription>
+<description>Reference frequency</description>
       <value type="string"></value>
     </param>
 
     <param type="int" name="nchan" subparam="true">
-      <description>Number of channels in the output image</description>
+     <shortdescription>Number of channels in the output image</shortdescription>
+<description>Number of channels in the output image</description>
       <value type="int">-1</value>
     </param>
 
     <param type="any" name="start" subparam="true">
-      <description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</description>
+     <shortdescription>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</shortdescription>
+<description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</description>
       <value type="string"></value>
     </param>
 
     <param type="any" name="width" subparam="true">
-      <description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</description>
+     <shortdescription>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</shortdescription>
+<description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="outframe" subparam="true">
-      <description>Spectral reference frame in which to interpret \'start\' and \'width\'</description>
+     <shortdescription>Spectral reference frame in which to interpret \'start\' and \'width\'</shortdescription>
+<description>Spectral reference frame in which to interpret \'start\' and \'width\'</description>
       <value type="string">LSRK</value>
     </param>
 
     <param type="string" name="veltype" subparam="true">
-      <description>Velocity type (radio, z, ratio, beta, gamma, optical)</description>
+     <shortdescription>Velocity type (radio, z, ratio, beta, gamma, optical)</shortdescription>
+<description>Velocity type (radio, z, ratio, beta, gamma, optical)</description>
       <value type="string">radio</value>
     </param>
 
     <param type="any" name="restfreq" subparam="true">
-      <description>List of rest frequencies</description>
+     <shortdescription>List of rest frequencies</shortdescription>
+<description>List of rest frequencies</description>
       <value type="stringArray"></value>
     </param>
 
     <param type="any" name="sysvel" subparam="true">
-      <description>Systemic velocity (for mode=cubesrc) </description>
+     <shortdescription>Systemic velocity (for mode=cubesrc)</shortdescription>
+<description>Systemic velocity (for mode=cubesrc) </description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="sysvelframe" subparam="true">
-      <description>Spectral frame in which sysvel is specified (for mode=cubesrc only)</description>
+     <shortdescription>Spectral frame in which sysvel is specified (for mode=cubesrc only)</shortdescription>
+<description>Spectral frame in which sysvel is specified (for mode=cubesrc only)</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="interpolation" subparam="true">
-      <description>Spectral interpolation (nearest,linear,cubic)</description>
+     <shortdescription>Spectral interpolation (nearest,linear,cubic)</shortdescription>
+<description>Spectral interpolation (nearest,linear,cubic)</description>
       <value type="string">linear</value>
 	    <allowed kind="enum">
 	      <value>nearest</value>
@@ -211,7 +228,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="string" name="gridder">
-            <description>Gridding options (standard, widefield, mosaic, imagemosaic, awproject)</description>
+           <shortdescription>Gridding options (standard, widefield, ftmosaic, imagemosaic, awproject)</shortdescription>
+<description>Gridding options (standard, widefield, ftmosaic, imagemosaic, awproject)</description>
 	    <value type="string">standard</value>
 	    <allowed kind="enum">
 	      <value>standard</value>
@@ -230,113 +248,138 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="int" name="facets" subparam="true">
-      <description>Number of facets on a side</description>
+     <shortdescription>Number of facets on a side</shortdescription>
+<description>Number of facets on a side</description>
       <value type="int">1</value>
     </param>
 
     <param type="int" name="wprojplanes" subparam="true">
-      <description>Number of w-planes for convolution function calculation</description>
+     <shortdescription>Number of w-planes for convolution function calculation</shortdescription>
+<description>Number of w-planes for convolution function calculation</description>
       <value type="int">1</value>
     </param>
 
     <param type="bool" name="aterm" subparam="true">
-            <description>Use aperture illumination function during gridding</description>
+           <shortdescription>Use aperture illumination function during gridding</shortdescription>
+<description>Use aperture illumination function during gridding</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="psterm" subparam="true">
-            <description>Use prolate spheroidal during gridding</description>
+           <shortdescription>Use prolate spheroidal during gridding</shortdescription>
+<description>Use prolate spheroidal during gridding</description>
 	    <value type="bool">False</value>
     </param>
 
     <param type="bool" name="wbawp" subparam="true">
-            <description>Use wideband A-terms</description>
+           <shortdescription>Use wideband A-terms</shortdescription>
+<description>Use wideband A-terms</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="conjbeams" subparam="true">
-            <description>Use conjugate frequency for wideband A-terms </description>
+           <shortdescription>Use conjugate frequency for wideband A-terms</shortdescription>
+<description>Use conjugate frequency for wideband A-terms </description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="string" name="cfcache" subparam="true">
-            <description>Convolution function cache directory name</description>
+           <shortdescription>>Convolution function cache directory name</shortdescription>
+<description>Convolution function cache directory name</description>
 	    <value type="string"></value>
     </param>
 
     <param type="double" name="computepastep" subparam="true">
-      <description>At what parallactic angle interval to recompute AIFs (deg) </description>
+     <shortdescription>At what parallactic angle interval to recompute AIFs (deg)</shortdescription>
+<description>At what parallactic angle interval to recompute AIFs (deg) </description>
       <value type="double">360.0</value>
     </param>
 
     <param type="double" name="rotatepastep" subparam="true">
-      <description>At what parallactic angle interval to rotate nearest AIF (deg) </description>
+     <shortdescription>At what parallactic angle interval to rotate nearest AIF (deg) </shortdescription>
+<description>At what parallactic angle interval to rotate nearest AIF (deg) </description>
       <value type="double">360.0</value>
     </param>
 
     <param type="double" name="pblimit" subparam="true">
-      <description>PB gain level at which to cut off image calculations  </description>
+     <shortdescription>>PB gain level at which to cut off image calculations </shortdescription>
+<description>PB gain level at which to cut off image calculations  </description>
       <value type="double">0.01</value>
     </param>
 
     <param type="string" name="normtype" subparam="true">
-      <description>Normalization type (flatnoise, flatsky) </description>
+     <shortdescription>Normalization type (flatnoise, flatsky)</shortdescription>
+<description>Normalization type (flatnoise, flatsky) </description>
       <value type="string">flatnoise</value>
     </param>
 
 
-
-<!--============================================== -->
-<!--                            Weighting Parameters                                            -->
-<!--============================================== -->
-
-    <param type="string" name="weighting">
-            <description>Weighting scheme (natural,uniform,briggs)</description>
-	    <value type="string">natural</value>
-    </param>
-
-    <param type="double" name="robust" subparam="true">
-            <description>Robustness parameter</description>
-	    <value type="double">0.5</value>
-    </param>
-
-    <param type="int" name="npixels" subparam="true">
-            <description>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</description>
-	    <value type="int">0</value>
-    </param>
-
-<!--
-    <param type="bool" name="uvtaper">
-            <description>Apply additional uv tapering of visibilities</description>
-	    <value type="bool">False</value>
-    </param>
--->
-
-    <param type="stringArray" name="uvtaper" subparam="true">
-	    <description>uv-taper on outer baselines in uv-plane</description>
-	    <value type="vector">
-	      <value></value>
-	    </value>
-    </param>
-
-<!--
-    <param type="stringArray" name="innertaper" subparam="true">
-	    <description>uv-taper in center of uv-plane (not implemented)</description>
-	    <value>1.0</value>
-    </param>
--->
 <!--============================================== -->
 <!--                            Deconvolution Parameters                                            -->
 <!--============================================== -->
 
 
     <param type="string" name="deconvolver">
-            <description>Name of minor cycle algorithm</description>
+      <shortdescription>Minor cycle algorithm (clark,hogbom,multiscale,mtmfs,mem,clarkstokes)</shortdescription>
+<description>Name of minor cycle algorithm (clark,hogbom,multiscale,mtmfs,mem,clarkstokes)
+                       
+                       Each of the following algorithms operate on residual images and psfs 
+                       from the gridder and produce output model and restored images.
+                       Minor cycles stop and a major cycle is triggered when cyclethreshold 
+                       or cycleniter are reached. For all methods, components are picked from
+                       the entire extent of the image or (if specified) within a mask.
+
+                       hogbom : An adapted version of Hogbom Clean (ref)
+                                       - Find the location of the peak residual
+                                       - Add this delta function component to the model image
+                                       - Subtract a scaled and shifted PSF of the same size as the image
+                                         from regions of the residual image where the two overlap.
+                                       - Repeat
+
+                       clark : An adapted version of Clark Clean (ref)
+                                       - Find the location of max(I^2+Q^2+U^2+V^2) 
+                                       - Add delta functions to each stokes plane of the model image
+                                       - Subtract a scaled and shifted PSF within a small patch size
+                                         from regions of the residual image where the two overlap.
+                                       - After several iterations trigger a Clark major cycle to subtract
+                                         components from the visibility domain, but without de-gridding.
+                                       - Repeat
+
+                       clarkstokes : Clark Clean operating separately per Stokes plane
+
+                       multiscale : MultiScale Clean (ref)
+                                       - Smooth the residual image to multiple scale sizes
+                                       - Find the location and scale at which the peak occurs
+                                       - Add this multiscale component to the model image
+                                       - Subtract a scaled,smoothed,shifted PSF from all residual images
+                                       - Repeat from step 2
+
+                       mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis (ref)
+                                       - Smooth each Taylor residual image to multiple scale sizes
+                                       - Solve a NTxNT system of equations per scale size to compute
+                                         Taylor coefficients for components at all locations
+                                       - Compute gradient chi-square and pick the Taylor coefficients
+                                          and scale size at the location with maximum reduction in chi-square
+                                       - Add multi-scale components to each Taylor-coefficient model image
+                                       - Subtract scaled,smoothed,shifted PSF patchs from all 
+                                          smoothed Taylor residual images
+                                       - Repeat from step 2
+
+                       mem : Maximum Entropy Method (ref)
+                                       - Iteratively solve for values at all individual pixels via the
+                                         MEM method. It minimizes an objective function of
+                                         chi-square plus entropy (here, a measure of difference 
+                                         between the current model and a flat prior model).
+
+
+</description>
 	    <value type="string">clark</value>
 	    <allowed kind="enum">
 	      <value>hogbom</value>
               <value>clark</value>
 	      <value>clarkstokes</value>
+              <value>clark2</value>
+	      <value>clarkstokes2</value>
 	      <value>multiscale</value>
 	      <value>mtmfs</value>
 	      <value>mem</value>
@@ -345,28 +388,149 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="scales" subparam="true">
-            <description>List of scale sizes (in pixels) for multi-scale cleaning</description>
+           <shortdescription>List of scale sizes (in pixels) for multi-scale algorithms</shortdescription>
+	   <description>List of scale sizes (in pixels) for multi-scale and mtmfs algorithms.
+                                  -->  scales=[0,6,20] 
+                                  This set of scale sizes should represent the sizes 
+                                  (diameters in units of number of pixels) 
+                                  of dominant features in the image being reconstructed.
+                                  
+                                  The smallest scale size is recommended to be 0 (point source),
+                                  the second the size of the synthesized beam and the third 3-5
+                                  times the synthesized beam, etc. For example, if the synthesized 
+                                  beam is 10" FWHM and cell=2",try scales = [0,5,15].
+               
+                                  For numerical stability, the largest scale must be
+                                  smaller than the image (or mask) size and smaller than or
+                                  comparable to the scale corresponding to the lowest measured 
+                                  spatial frequency (as a scale size much larger than what the 
+                                  instrument is sensitive to is unconstrained by the data making
+                                  it harder to recovery from errors during the minor cycle).
+	   </description>
 	    <any type="variant" limittypes="intArray floatArray"/>
 	    <value type="intArray"></value>
     </param>
 
     <param type="int" name="ntaylorterms" subparam="true">
-      <description>Number of Taylor coefficients in the spectral model</description>
+     <shortdescription>Number of Taylor coefficients in the spectral model</shortdescription>
+<description>Number of Taylor coefficients in the spectral model
+
+                       - ntaylorterms=1 : Assume flat spectrum source
+                       - ntaylorterms=2 : Spectrum is a straight line with a slope
+                       - ntaylorterms>2 : A polynomial of order n-1
+
+                       From a Taylor expansion of the expression of a power law, the 
+                       spectral index is derived as alpha = taylorcoeff_1 / taylorcoeff_0
+                       
+                       Spectral curvature is similarly derived when possible.
+
+                       The optimal number of Taylor terms depends on the available 
+                       signal to noise ratio, bandwidth ratio, and spectral shape of the 
+                       source as seen by the telescope (sky spectrum x PB spectrum).
+
+                       ntaylorterms=2 is a good starting point for wideband EVLA imaging 
+                       if there is at least one bright source for which a dynamic range of
+                       greater than few 100 is desired.
+
+                       Spectral artifacts for the VLA often look like spokes radiating out from
+                       a bright source (i.e. in the image made with standard mfs imaging).
+                       If increasing the number of terms does not eliminate these artifacts,
+                       check the data for inadequate bandpass calibration. If the source is away 
+                       from the pointing center, consider including wide-field corrections too.
+
+</description>
       <value type="int">2</value>
     </param>
 
     <param type="any" name="restoringbeam" subparam="true">
-            <description>Restoring beam shape to use. Default is the PSF main lobe width. </description>
+           <shortdescription>Restoring beam shape to use. Default is the PSF main lobe</shortdescription>
+<description> Restoring beam shape/size to use.
+ 
+                       - restoringbeam='' or ['']
+                         A Guassian fitted to the PSF main lobe (separately per image plane). 
+                          
+                       - restoringbeam='10.0arcsec'
+                         Use a circular Gaussian of this width for all planes
+
+                       - restoringbeam=['8.0arcsec','10.0arcsec','45deg']
+                         Use this elliptical Gaussisn for all planes
+
+                       - restoringbeam='common'
+                         Automatically estimate a common beam shape/size appropriate for
+                         all planes. PSF main lobes from all planes are examined,
+                         bad or outlier beams identified based on their area and axial ratio, 
+                         and the largest beam from the remaining 'good' planes is
+                         picked as the common beam. 
+
+</description>
 	    <any type="variant" limittypes="string stringArray"/>
 	    <value type="stringArray"></value>
     </param>
 
 <!--
     <param type="any" name="specthreshold" subparam="true">
-      <description>Intensity threshold above which spectral index is computed</description>
+     <shortdescription>xxx</shortdescription>
+<description>Intensity threshold above which spectral index is computed</description>
       <value type="string">'0.0Jy'</value>
     </param>
 -->
+
+<!--============================================== -->
+<!--                            Outlier Parameters  (files with any of the above)               -->
+<!--============================================== -->
+    <param type="string" name="outlierfile">
+     <shortdescription>Name of outlier-field image definitions</shortdescription>
+<description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Weighting Parameters                                            -->
+<!--============================================== -->
+
+    <param type="string" name="weighting">
+           <shortdescription>Weighting scheme (natural,uniform,briggs)</shortdescription>
+<description>Weighting scheme (natural,uniform,briggs)</description>
+	    <value type="string">natural</value>
+    </param>
+
+    <param type="double" name="robust" subparam="true">
+           <shortdescription>Robustness parameter</shortdescription>
+<description>Robustness parameter</description>
+	    <value type="double">0.5</value>
+    </param>
+
+    <param type="int" name="npixels" subparam="true">
+           <shortdescription>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</shortdescription>
+<description>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</description>
+	    <value type="int">0</value>
+    </param>
+
+<!--
+    <param type="bool" name="uvtaper">
+           <shortdescription>xxx</shortdescription>
+<description>Apply additional uv tapering of visibilities</description>
+	    <value type="bool">False</value>
+    </param>
+-->
+
+    <param type="stringArray" name="uvtaper" subparam="true">
+	   <shortdescription>uv-taper on outer baselines in uv-plane</shortdescription>
+<description>uv-taper on outer baselines in uv-plane</description>
+	    <value type="vector">
+	      <value></value>
+	    </value>
+    </param>
+
+<!--
+    <param type="stringArray" name="innertaper" subparam="true">
+	   <shortdescription>xxx</shortdescription>
+<description>uv-taper in center of uv-plane (not implemented)</description>
+	    <value>1.0</value>
+    </param>
+-->
+
 
 <!--============================================== -->
 <!--                            Iteration Control Parameters                                         -->
@@ -374,52 +538,71 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="int" name="niter">
-      <description>Maximum number of iterations</description>
+     <shortdescription>Maximum number of iterations</shortdescription>
+<description>Maximum number of iterations
+  
+  Iterations are counted across all channels...
+
+  Major Cycle Triggers
+    - cyclethreshold
+    - cycleniter
+
+  
+</description>
       <value type="int">0</value>
     </param>
 
     <param type="double" name="gain" subparam="true">
-      <description>Loop gain</description>
+     <shortdescription>Loop gain</shortdescription>
+<description>Loop gain</description>
       <value type="double">0.1</value>
     </param>
 
     <param type="any" name="threshold" subparam="true">
-      <description>Stopping threshold (number, in units of Jy)</description>
+     <shortdescription>Stopping threshold (number, in units of Jy)</shortdescription>
+<description>Stopping threshold (number, in units of Jy)</description>
       <value type="double">0.0</value>
     </param>
 
     <param type="int" name="cycleniter" subparam="true">
-      <description>Maximum number of minor-cycle iterations before triggering a major cycle</description>
+     <shortdescription>Maximum number of minor-cycle iterations before triggering a major cycle</shortdescription>
+<description>Maximum number of minor-cycle iterations (per plane) before triggering a major cycle</description>
       <value type="int">-1</value>
     </param>
 
     <param type="double" name="cyclefactor" subparam="true">
-      <description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
+     <shortdescription>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</shortdescription>
+<description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
       <value type="double">1.0</value>
     </param>
 
     <param type="double" name="minpsffraction" subparam="true">
-      <description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+     <shortdescription>PSF fraction that marks the max depth of cleaning in the minor cycle</shortdescription>
+<description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
       <value type="double">0.05</value>
     </param>
 
     <param type="double" name="maxpsffraction" subparam="true">
-      <description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+     <shortdescription>>PSF fraction that marks the minimum depth of cleaning in the minor cycle </shortdescription>
+<description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
       <value type="double">0.8</value>
     </param>
 
 <!--    <param type="bool" name="interactive" subparam="true">
-	    <description>True to be able to modify masks and parameters at runtime</description>
+	   <shortdescription>xxx</shortdescription>
+<description>True to be able to modify masks and parameters at runtime</description>
 	    <value type="bool">False</value>
     </param> -->
     <param type="any" name="interactive" subparam="true">
-      <description>True to be able to modify masks and parameters at runtime</description>
+     <shortdescription>True to be able to modify masks and parameters at runtime</shortdescription>
+<description>True to be able to modify masks and parameters at runtime</description>
       <any type="variant" limittypes="bool int"/>
       <value type="bool">False</value>
     </param>
 
     <param type="string" name="mask" subparam="true">
-	    <description>Mask string (image name or region file or region string)</description>
+	   <shortdescription>Mask string (image name or region file or region string)</shortdescription>
+<description>Mask string (image name or region file or region string)</description>
 	    <value type="string"></value>
     </param>
 
@@ -428,9 +611,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
 
+    <param type="bool" name="overwrite">
+     <shortdescription>True : Re-use existing images. False : Increment imagename</shortdescription>
+<description>True : Re-use existing images. False : Increment imagename</description>
+      <value type="bool">True</value>
+    </param>
+
 
     <param type="string" name="savemodel"> 
-	    <description>Options to save model at the end (none, virtual, modelcolumn)</description>
+	   <shortdescription>Options to save model at the end (none, virtual, modelcolumn)</shortdescription>
+<description>Options to save model at the end (none, virtual, modelcolumn)
+                      ...some info on when to use what....and relative runtime
+</description>
 	    <value type="string">none</value>
 <!--	    <allowed kind="enum">
 	      <value>none</value>
@@ -440,30 +632,68 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="calcres">
-	    <description>(Re)calculate residual image</description>
+	   <shortdescription>Calculate residual image</shortdescription>
+<description>Calculate residual image</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="calcpsf">
-	    <description>Calculate PSF</description>
+	   <shortdescription>Calculate PSF</shortdescription>
+<description>Calculate PSF</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="parallel">
-	    <description>Run major cycles in parallel</description>
+	   <shortdescription>Run major cycles in parallel</shortdescription>
+<description>Run major cycles in parallel
+                       
+                       Parallel tclean will run only if casapy has already been started using mpirun.
+                       Please refer to HPC documentation for details on how to start this on your system.
+                       
+                       Example :  mpirun -n 3 -xterm 0 `which casapy`
+
+                       Continuum Imaging :
+                          -  Data are partitioned (in time) into NProc pieces
+                          -  Gridding/iFT is done separately per partition
+                          -  Images (and weights) are gathered and then normalized
+                          - One non-parallel minor cycle is run
+                          - Model image is scattered to all processes
+                          - Major cycle is done in parallel per partition
+
+                      Cube Imaging :
+                          - Data and Image coordinates are partitioned (in freq) into NProc pieces
+                          - Each partition is processed independently (major and minor cycles)
+                          - All processes are synchronized at major cycle boundaries for convergence checks
+                          - At the end, cubes from all partitions are concatenated along the spectral axis
+
+                      Note 1 :  Iteration control for cube imaging is independent per partition. 
+                                    - There is currently no communication between them to synchronize
+                                       information such as peak residual and cyclethreshold. Therefore, 
+                                       different chunks may trigger major cycles at different levels.
+                                    - For cube imaging in parallel, there is currently no interactive masking.
+                                   (Proper synchronization of iteration control is work in progress.)
+
+                      Note 2 :  Use savemodel='none' with parallel runs.
+                                     If you need to save model visibilities for a future uvsub or self-calibration
+                                     please run a separate niter=0 run with parallel=False.
+                                     (Proper parallel writing of the model is work in progress).
+
+</description>
 	    <value type="bool">False</value>
     </param>
 
 
 
 <!--    <param type="string" name="clusterdef" subparam="true">
-            <description>Name of a file that contains the cluster definition</description>
+           <shortdescription>xxx</shortdescription>
+<description>Name of a file that contains the cluster definition</description>
 	    <value type="string"></value>
     </param>
 -->
 <!--
     <param type="string" name="workdir" subparam="true">
-            <description>Directory name for per-node products (default=imagename.workdir)</description>
+           <shortdescription>xxx</shortdescription>
+<description>Directory name for per-node products (default=imagename.workdir)</description>
 	    <value type="string"></value>
     </param>
 -->
@@ -473,7 +703,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
    <constraints>
 
-
+<!--
      <when param="vis">
       <notequals type="string" value=""> 
 	 <default param="field"><value>""</value></default>
@@ -487,9 +717,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="datacolumn"><value>"corrected"</value></default>
        </notequals>
       </when> 
+-->
 
-<!--
-     <when subparam="selectdata">
+     <when param="selectdata">
       <equals type="bool" value="True"> 
 	 <default param="field"><value>""</value></default>
 	 <default param="spw"><value>""</value></default>
@@ -499,11 +729,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="scan"><value>""</value></default>
 	 <default param="observation"><value>""</value></default>
 	 <default param="intent"><value>""</value></default>
+	 <default param="datacolumn"><value>"corrected"</value></default>
        </equals>
       </when> 
--->
 
-
+<!--
      <when param="imagename">
        <notequals type="string" value=""> 
 	 <default param="imsize"><value>100</value></default>
@@ -514,8 +744,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="startmodel"><value>""</value></default>
        </notequals>
       </when> 
-
-
+-->
      <when param="specmode">
        <equals type="string" value="mfs">
 	 <default param="reffreq"><value>""</value></default>
@@ -688,9 +917,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-      (Refactored) Imaging task.  Documentation to come.... 
+     Usage Examples :
 
-      Missing parameters and functions : post-deconvolution pbcor.
+     https://svn.cv.nrao.edu/svn/casa/trunk/gcwrap/python/scripts/tests/test_refimager.py
 
   </example>
 

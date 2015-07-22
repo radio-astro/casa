@@ -1,4 +1,4 @@
-//# SDAlgorithmClarkClean.cc: Implementation of SDAlgorithmClarkClean classes
+//# SDAlgorithmClarkClean2.cc: Implementation of SDAlgorithmClarkClean2 classes
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -57,31 +57,29 @@
 #include <casa/System/Choice.h>
 #include <msvis/MSVis/StokesVector.h>
 
-#include <synthesis/ImagerObjects/SDAlgorithmClarkClean.h>
-//#include <synthesis/MeasurementEquations/ClarkCleanLatModel.h>
-//#include <synthesis/MeasurementEquations/LatConvEquation.h>
+#include <synthesis/ImagerObjects/SDAlgorithmClarkClean2.h>
+#include <synthesis/MeasurementEquations/ClarkCleanLatModel.h>
+#include <synthesis/MeasurementEquations/LatConvEquation.h>
 
-#include <synthesis/MeasurementEquations/ClarkCleanModel.h>
-#include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  SDAlgorithmClarkClean::SDAlgorithmClarkClean(String clarktype):
+  SDAlgorithmClarkClean2::SDAlgorithmClarkClean2(String clarktype):
     SDAlgorithmBase()
  {
    itsAlgorithmName=String(clarktype);
    itsMatDeltaModel.resize();
  }
 
-  SDAlgorithmClarkClean::~SDAlgorithmClarkClean()
+  SDAlgorithmClarkClean2::~SDAlgorithmClarkClean2()
  {
    
  }
 
-  //  void SDAlgorithmClarkClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
-  void SDAlgorithmClarkClean::initializeDeconvolver()
+  //  void SDAlgorithmClarkClean2::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  void SDAlgorithmClarkClean2::initializeDeconvolver()
   {
-    LogIO os( LogOrigin("SDAlgorithmClarkClean","initializeDeconvolver",WHERE) );
+    LogIO os( LogOrigin("SDAlgorithmClarkClean2","initializeDeconvolver",WHERE) );
 
     itsImages->residual()->get( itsMatResidual, True );
     itsImages->model()->get( itsMatModel, True );
@@ -149,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SDAlgorithmClarkClean::takeOneStep( Float loopgain, 
+  void SDAlgorithmClarkClean2::takeOneStep( Float loopgain, 
 					    Int cycleNiter, 
 					    Float cycleThreshold, 
 					    Float &peakresidual, 
@@ -174,21 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SubImage<Float> oneplane( *(itsImages->mask()), oneslice )  ;
 
     //// Set up the cleaner
-    ClarkCleanModel cleaner(itsMatDeltaModel);
-    cleaner.setMask(oneplane.get());
-    cleaner.setGain(loopgain);
-    cleaner.setNumberIterations(cycleNiter);
-    cleaner.setInitialNumberIterations(0);
-    cleaner.setThreshold(cycleThreshold);
-    cleaner.setPsfPatchSize(IPosition(2,psfpatch_p)); 
-    cleaner.setMaxNumberMajorCycles(10);
-    cleaner.setHistLength(1024);
-    cleaner.setMaxNumPix(32*1024);
-    cleaner.setChoose(False);
-    cleaner.setCycleSpeedup(-1.0);
-    cleaner.setSpeedup(0.0);
-
-		  /*
+    ClarkCleanLatModel cleaner(*(itsImages->model()));
     cleaner.setMask( oneplane );
     cleaner.setNumberIterations(cycleNiter);
     cleaner.setMaxNumberMajorCycles(10);
@@ -200,7 +184,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cleaner.setMaxExtPsf(..)
     cleaner.setSpeedup(-1.0);
     cleaner.setMaxNumPix(32*1024);
-		  */
 
     //// Prepare a single plane PSF
     IPosition shp2 = itsImages->psf()->shape();
@@ -208,41 +191,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition stopp2( shp2.nelements(),1);
     stopp2[0]=shp2[0]; stopp2[1]=shp2[1];
     Slicer oneslice2(startp2, stopp2);
-    //cout << "Making psf slice of : " << oneslice2.start() << " : " << oneslice2.end() << endl;
+    //    cout << "Making psf slice of : " << oneslice2.start() << " : " << oneslice2.end() << endl;
     SubImage<Float> oneplane2( *(itsImages->psf()), oneslice2 )  ;
 
     //// Make the convolution equation with a single plane PSF and possibly multiplane residual
-    Array<Float> psfplane;
-    oneplane2.get( psfplane, True );
-    ConvolutionEquation eqn( psfplane , itsMatResidual );
+    LatConvEquation eqn( oneplane2 , *(itsImages->residual()) );
    
     //Bool result = 
-    cleaner.singleSolve( eqn, itsMatResidual );
+    cleaner.solve( eqn );
     //    cout << result << endl;
 
-    iterdone = cleaner.numberIterations();
+    iterdone = cleaner.getNumberIterations();
 
     // Retrieve residual before major cycle
-    //    itsImages->residual()->copyData( cleaner.getResidual() );
-    // (itsImages->residual())->put( itsMatResidual );
-
-    cleaner.getModel( itsMatDeltaModel );
+    itsImages->residual()->copyData( cleaner.getResidual() );
 
     // Add delta model to old model
     //Bool ret2 = 
-      //    itsImages->model()->get( itsMatDeltaModel, True );
-    //    itsMatModel += itsMatDeltaModel;
-
-    itsMatModel = itsMatDeltaModel;
+    itsImages->model()->get( itsMatDeltaModel, True );
+    itsMatModel += itsMatDeltaModel;
 
     //--------------------------------- DECIDE WHICH PEAK RESIDUAL TO USE HERE.....
 
     //////  Find Peak Residual across the whole image
-    
-    //itsImages->residual()->get( itsMatResidual, True );
-    //    itsImages->mask()->get( itsMatMask, True );
-    //   findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
-    
+    /*
+    itsImages->residual()->get( itsMatResidual, True );
+    itsImages->mask()->get( itsMatMask, True );
+    findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
+    */
 
     ////// Find Peak Residual from the Clark Clean method (within current active pixels only).
     itsPeakResidual = cleaner.getMaxResidual();
@@ -254,14 +230,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     (itsImages->model())->put( itsMatModel );
   }	    
 
-  void SDAlgorithmClarkClean::finalizeDeconvolver()
+  void SDAlgorithmClarkClean2::finalizeDeconvolver()
   {
     (itsImages->residual())->put( itsMatResidual );
     (itsImages->model())->put( itsMatModel );
   }
 
 
-  void SDAlgorithmClarkClean::queryDesiredShape(Int &nchanchunks, 
+  void SDAlgorithmClarkClean2::queryDesiredShape(Int &nchanchunks, 
 						Int &npolchunks, 
 						IPosition imshape) // , nImageFacets.
   {  

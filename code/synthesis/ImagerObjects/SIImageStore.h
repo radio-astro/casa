@@ -219,6 +219,10 @@ protected:
 					       const Int nfacetsperside=1);
 
   Double getPbMax();
+  Double getPbMax(Int pol, Int chan);
+
+  Bool createMask(LatticeExpr<Bool> &lemask, CountedPtr<ImageInterface<Float> >outimage);
+  Bool copyMask(CountedPtr<ImageInterface<Float> >inimage, CountedPtr<ImageInterface<Float> >outimage);
 
   ///////////////////// Member Objects
 

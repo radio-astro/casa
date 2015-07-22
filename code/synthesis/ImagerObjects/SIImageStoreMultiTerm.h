@@ -163,8 +163,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 protected:
 
-  Bool createMask(LatticeExpr<Bool> &lemask, SHARED_PTR<ImageInterface<Float> >outimage);
-
   virtual void printImageStats();
 
 private:

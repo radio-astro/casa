@@ -38,6 +38,7 @@
 #include<synthesis/ImagerObjects/SDAlgorithmBase.h>
 #include<synthesis/ImagerObjects/SDAlgorithmHogbomClean.h>
 #include<synthesis/ImagerObjects/SDAlgorithmClarkClean.h>
+#include<synthesis/ImagerObjects/SDAlgorithmClarkClean2.h>
 #include<synthesis/ImagerObjects/SDAlgorithmMSMFS.h>
 #include<synthesis/ImagerObjects/SDAlgorithmMSClean.h>
 #include<synthesis/ImagerObjects/SDAlgorithmMEM.h>

@@ -880,18 +880,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
   }
 
-  Bool SIImageStoreMultiTerm::createMask(LatticeExpr<Bool> &lemask, 
-					 SHARED_PTR<ImageInterface<Float> > outimage)
-{
-  if( (outimage->getDefaultMask()).matches("mask0") ) { outimage->removeRegion("mask0");}
-  ImageRegion outreg = outimage->makeMask("mask0",False,True);
-  LCRegion& outmask=outreg.asMask();
-  outmask.copyData(lemask);
-  outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
-  outimage->setDefaultMask("mask0");
-  return True;
-}
-
   void SIImageStoreMultiTerm::pbcorPlane()
   {
 

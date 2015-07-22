@@ -820,25 +820,93 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
     //// Normalize PB to 1 at the center of the image OF CHANNEL ZERO
     
-        IPosition shp = weight(0)->shape();
-        IPosition center(4, shp[0]/2, shp[1]/2,0,0);
-        return sqrt(   weight(0)->getAt( center )   );
+    //        IPosition shp = weight(0)->shape();
+    //     IPosition center(4, shp[0]/2, shp[1]/2,0,0);
+    //    return sqrt(   weight(0)->getAt( center )   );
     
 
-    //// Normalize PB to 1 at the location of the maximum
-    /*
+    //// Normalize PB to 1 at the location of the maximum (across all chans..)
+    
     LatticeExprNode le( sqrt(max( *(weight(0)) )) );
     return le.getFloat();
-    */
+    
+  }
+
+
+  Double SIImageStore::getPbMax(Int pol,Int chan)
+  {
+
+    //// Normalize PB to 1 at the location of the maximum (per pol,chan)
+    
+    CountedPtr<ImageInterface<Float> > subim=makeSubImage(0,1, 
+							  chan, itsImageShape[3],
+							  pol, itsImageShape[2], 
+							  *weight(0) );
+
+    LatticeExprNode le( sqrt(max( *subim )) );
+    return le.getFloat();
   }
 
   void  SIImageStore::makePBFromWeight(const Float pblimit)
   {
 
-    LatticeExpr<Float> normed( sqrt(*(weight())) / getPbMax()   );
-    LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
-    pb()->copyData( limited );
+    	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	       for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+
+		CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *weight() );
+		CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *pb() );
+
+		LatticeExpr<Float> normed( sqrt(abs(*wtsubim)) / getPbMax(pol,chan)   );
+		LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		pbsubim->copyData( limited );
+	      }
+	  }
+	
+	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	createMask( pbmask, pb() );
   }
+
+  Bool SIImageStore::createMask(LatticeExpr<Bool> &lemask, 
+				CountedPtr<ImageInterface<Float> > outimage)
+  {
+    if( (outimage->getDefaultMask()).matches("mask0") ) 
+      { outimage->removeRegion("mask0");}
+    ImageRegion outreg = outimage->makeMask("mask0",False,True);
+    LCRegion& outmask=outreg.asMask();
+    outmask.copyData(lemask);
+    outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
+    outimage->setDefaultMask("mask0");
+    return True;
+  }
+
+  Bool SIImageStore::copyMask(CountedPtr<ImageInterface<Float> > inimage,
+				CountedPtr<ImageInterface<Float> > outimage)
+  {
+    if( (inimage->getDefaultMask()).matches("mask0") ) // input mask exists.
+      {
+
+	// clear output image mask
+		if( (outimage->getDefaultMask()).matches("mask0") ) 
+		  { outimage->removeRegion("mask0");}
+
+	// get mask from input image
+
+	ImageRegion* outreg = inimage->getImageRegionPtr("mask0");
+	outimage->defineRegion("mask0",*outreg, RegionHandler::Masks,True);
+	outimage->setDefaultMask("mask0");
+      }
+
+    return True;
+  }
+  
 
   void SIImageStore::dividePSFByWeight(const Float pblimit)
   {
@@ -852,7 +920,13 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	
 	divideImageByWeightVal( *weight() ); 
 
-	os << "Scale factor to keep the model image w.r.to a PB of max=1 is " << getPbMax() << LogIO::POST;
+	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	    for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+		os << "Scale factor for [C" +String::toString(chan) + ":P" + String::toString(pol) + "] to keep the model image w.r.to a PB of max=1 is " << getPbMax(pol,chan) << LogIO::POST;
+	      }//chan
+	  }//pol
 
 	makePBFromWeight(pblimit);
 	
@@ -870,30 +944,58 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
     if( itsUseWeight )
       {
-
-	itsPBScaleFactor = getPbMax();
-	//	cout << " pbscale : " << itsPBScaleFactor << endl;
-
-	LatticeExpr<Float> deno;
-	if( normtype=="flatnoise"){
-	  deno = LatticeExpr<Float> ( sqrt( abs(*(weight())) ) * itsPBScaleFactor );
-	  os << LogIO::NORMAL1 <<  "Dividing " << itsImageName+String(".residual") ;
-	  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
-	  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
-	  
-	  }
-	if( normtype=="flatsky") {
-	  deno = LatticeExpr<Float> ( *(weight()) );
-	  os << LogIO::NORMAL1 << "Dividing " << itsImageName+String(".residual") ;
-	  os << " by [ weight ] to get flat sky"<< LogIO::POST;
-	}
 	
-	Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
-	LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
-	LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
-	LatticeExpr<Float> ratio( ( (*(residual())) * mask ) / ( deno + maskinv ) );
+	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	    for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+		
+		itsPBScaleFactor = getPbMax(pol,chan);
+		//	cout << " pbscale : " << itsPBScaleFactor << endl;
+
+		CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *weight() );
+		CountedPtr<ImageInterface<Float> > ressubim=makeSubImage(0,1, 
+								      chan, itsImageShape[3],
+								      pol, itsImageShape[2], 
+								      *residual() );
+
+		
+		LatticeExpr<Float> deno;
+		if( normtype=="flatnoise"){
+		  deno = LatticeExpr<Float> ( sqrt( abs(*(wtsubim)) ) * itsPBScaleFactor );
+		  os << LogIO::NORMAL1 ;
+		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
+		  os << "Dividing " << itsImageName+String(".residual") ;
+		  os << " by [ sqrt(weightimage) * " << itsPBScaleFactor ;
+		  os << " ] to get flat noise with unit pb peak."<< LogIO::POST;
+		  
+		}
+		if( normtype=="flatsky") {
+		  deno = LatticeExpr<Float> ( *(wtsubim) );
+		  os << LogIO::NORMAL1 ;
+		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
+		  os << "Dividing " << itsImageName+String(".residual") ;
+		  os << " by [ weight ] to get flat sky"<< LogIO::POST;
+		}
+
+		//		IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
+		//Float resval = ressubim->getAt(ip);
+
+		Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+		LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
+		LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
+		LatticeExpr<Float> ratio( ( (*(ressubim)) * mask ) / ( deno + maskinv ) );
+		
+		ressubim->copyData(ratio);
+
+		//cout << "Val of residual before|after normalizing at center for pol " << pol << " chan " << chan << " : " << resval << "|" << ressubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
+
+	      }//chan
+	  }//pol
 	
-	residual()->copyData(ratio);
       }
     
     // If no normalization happened, print a warning. The user must check if it's right or not.
@@ -902,6 +1004,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
 
     // createMask
+    if(hasPB()){copyMask(pb(),residual());}
   }
   
 
@@ -924,20 +1027,50 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  }
 	else if( normtype=="flatnoise"){
 
-	  itsPBScaleFactor = getPbMax();
-	  //	  cout << " pbscale : " << itsPBScaleFactor << endl;
+	  for(Int pol=0; pol<itsImageShape[2]; pol++)
+	    {
+	      for(Int chan=0; chan<itsImageShape[3]; chan++)
+		{
+		  
+		  itsPBScaleFactor = getPbMax(pol,chan);
+		  //	cout << " pbscale : " << itsPBScaleFactor << endl;
+		  
+		  CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *weight() );
+		  CountedPtr<ImageInterface<Float> > modsubim=makeSubImage(0,1, 
+									   chan, itsImageShape[3],
+									   pol, itsImageShape[2], 
+									   *model() );
+		  os << LogIO::NORMAL1 ;
+		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
+		  os << "Dividing " << itsImageName+String(".model") ;
+		  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
+		  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
+		  
+		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
+		  
+		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) / ( deno + maskinv ) );
+		  
+		  IPosition ip(4,itsImageShape[0]/2,itsImageShape[1]/2,0,0);
+		  Float modval = modsubim->getAt(ip);
+		  //LatticeExprNode aminval( min(*modsubim) );
+		  //LatticeExprNode amaxval( max(*modsubim) );
+		  //cout << "Before ---- min : " << aminval.getFloat() << " max : " << amaxval.getFloat() << endl;
 
-	  os << LogIO::NORMAL1 << "Dividing " << itsImageName+String(".model") ;
-	  os << " by [ sqrt(weight) / " << itsPBScaleFactor ;
-	  os <<" ] to get to flat sky model before prediction" << LogIO::POST;
-	  
-	  LatticeExpr<Float> deno( sqrt( abs(*(weight())) ) / itsPBScaleFactor );
+		  modsubim->copyData(ratio);
+		  
+		  cout << "Val of model before|after flattening at center for pol " << pol << " chan " << chan << " : " << modval << "|" << modsubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
+		  //LatticeExprNode minval( min(*modsubim) );
+		  //LatticeExprNode maxval( max(*modsubim) );
+		  //cout << "After ---- min : " << minval.getFloat() << " max : " << maxval.getFloat() << endl;
 
-	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
-	  LatticeExpr<Float> ratio( ( (*(model())) * mask ) / ( deno + maskinv ) );
-	  
-	  model()->copyData(ratio);
+		}//chan
+	    }//pol
+
 	}
 	
       }
@@ -957,24 +1090,41 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  }
 	else if( normtype=="flatnoise"){
 
-	  itsPBScaleFactor = getPbMax();
-	  cout << " pbscale : " << itsPBScaleFactor << endl;
-
-	  os << LogIO::NORMAL1 << "Multiplying " << itsImageName+String(".model") ;
-	  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
-	  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
-	  
-	  LatticeExpr<Float> deno( sqrt( abs(*(weight())) ) / itsPBScaleFactor );
-
-	  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
-	  LatticeExpr<Float> ratio( ( (*(model())) * mask ) * ( deno + maskinv ) );
-	  
-	  model()->copyData(ratio);
+	  for(Int pol=0; pol<itsImageShape[2]; pol++)
+	    {
+	      for(Int chan=0; chan<itsImageShape[3]; chan++)
+		{
+		  
+		  itsPBScaleFactor = getPbMax(pol,chan);
+		  //	cout << " pbscale : " << itsPBScaleFactor << endl;
+		  
+		  CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *weight() );
+		  CountedPtr<ImageInterface<Float> > modsubim=makeSubImage(0,1, 
+									   chan, itsImageShape[3],
+									   pol, itsImageShape[2], 
+									   *model() );
+		  os << LogIO::NORMAL1 ;
+		  os <<  "[C" +String::toString(chan) + ":P" + String::toString(pol) + "] ";
+		  os << "Multiplying " << itsImageName+String(".model") ;
+		  os << " by [ sqrt(weight) / " << itsPBScaleFactor;
+		  os <<  " ] to take model back to flat noise with unit pb peak." << LogIO::POST;
+		  
+		  LatticeExpr<Float> deno( sqrt( abs(*(wtsubim)) ) / itsPBScaleFactor );
+		  
+		  LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
+		  LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) * ( deno + maskinv ) );
+		  
+		  modsubim->copyData(ratio);
+		}//chan
+	    }//pol
 	}
-
+	
       }
-    // createMask
+	// createMask
   }
   
   GaussianBeam SIImageStore::getPSFGaussian()
@@ -1225,7 +1375,15 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       }// end of pol loop
     }// end of chan loop
     
-    
+    try
+      {
+	if(hasPB()){copyMask(pb(),image());}
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Restoration Error (setting mask) : "  + x.getMesg() ) );
+      }
+	
   }// end of restore()
 
   GaussianBeam SIImageStore::findGoodBeam()

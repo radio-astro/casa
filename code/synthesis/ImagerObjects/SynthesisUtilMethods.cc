@@ -1284,12 +1284,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        err += readVal( inrec, String("restfreq"), rfreqs );
                 // case no restfreq is given: set to
               }
-       	    restFreq.resize( rfreqs.nelements() );
+	    else if( inrec.dataType("restfreq")==TpString ) 
+              {
+	        rfreqs.resize(1);
+	        err += readVal( inrec, String("restfreq"), rfreqs[0] );
+                // case no restfreq is given: set to
+              }
+	    restFreq.resize( rfreqs.nelements() );
 	    for( uInt fr=0; fr<rfreqs.nelements(); fr++)
 	      {
-	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
+		err += stringToQuantity( rfreqs[fr], restFreq[fr] );
 	      }
-            } 
+	  } // if def restfreq
 
         // optional - coordsys, imshape
         // if exist use them. May need a consistency check with the rest of impars?

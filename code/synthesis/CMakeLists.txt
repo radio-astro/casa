@@ -313,6 +313,7 @@ casa_add_library( synthesis
  ImagerObjects/SDAlgorithmMSMFS.cc
  ImagerObjects/SDAlgorithmMSClean.cc
  ImagerObjects/SDAlgorithmClarkClean.cc
+ ImagerObjects/SDAlgorithmClarkClean2.cc
  ImagerObjects/SDAlgorithmMEM.cc
  ImagerObjects/SDAlgorithmAAspClean.cc
  ImagerObjects/SDMaskHandler.cc
@@ -569,6 +570,7 @@ install (FILES
 	ImagerObjects/SDAlgorithmMSMFS.h
 	ImagerObjects/SDAlgorithmMSClean.h
 	ImagerObjects/SDAlgorithmClarkClean.h
+	ImagerObjects/SDAlgorithmClarkClean2.h
 	ImagerObjects/SDAlgorithmMEM.h
 	ImagerObjects/SDAlgorithmAAspClean.h
 	ImagerObjects/InteractiveMasking.h

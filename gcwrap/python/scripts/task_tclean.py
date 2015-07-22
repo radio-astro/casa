@@ -21,6 +21,7 @@ from refimagerhelper import ImagerParameters
 def tclean(
     ####### Data Selection
     vis,#='', 
+    selectdata,
     field,#='', 
     spw,#='',
     timerange,#='',
@@ -39,9 +40,6 @@ def tclean(
     stokes,#='I',
     projection,#='SIN',
     startmodel,#='',
-
-    outlierfile,#='',
-    overwrite,#=True,
 
     ## Spectral parameters
     specmode,#='mfs',
@@ -73,21 +71,22 @@ def tclean(
     pblimit,#=0.01,
     normtype,#='flatnoise',
 
-    #### Weighting
-    weighting,#='natural',
-    robust,#=0.5,
-    npixels,#=0,
-#    uvtaper,#=False,
-    uvtaper,#=[],
-
     ####### Deconvolution parameters
     deconvolver,#='hogbom',
     scales,#=[],
     ntaylorterms,#=1,
     restoringbeam,#=[],
 
-    ##### Action control
-#    action,#="csclean",
+    ##### Outliers
+    outlierfile,#='',
+
+    ##### Weighting
+    weighting,#='natural',
+    robust,#=0.5,
+    npixels,#=0,
+#    uvtaper,#=False,
+    uvtaper,#=[],
+
 
     ##### Iteration control
     niter,#=0, 
@@ -99,6 +98,9 @@ def tclean(
     maxpsffraction,#=0.8,
     interactive,#=False, 
     mask,#='',
+
+    overwrite,#=True,
+
     savemodel,#="none",
     calcres,#=True,
     calcpsf,#=True,
