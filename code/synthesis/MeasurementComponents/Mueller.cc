@@ -250,17 +250,17 @@ void MuellerDiag::flag(VisVector& v) {
   switch (v.type()) {
   case VisVector::Four: {
     // element-by-element flag of Mueller diagonal to VisVector 4-vector
-    for (Int i=0;i<4;++i,++oki_,++fi) (*fi)=!(*oki_);
+    for (Int i=0;i<4;++i,++oki_,++fi) (*fi)|=(!(*oki_));
     break;
   }
   case VisVector::Two: {
     // Mueller corner elements apply to VisVector 2-vector
-    for (Int i=0;i<2;++i,++fi,oki_+=3) (*fi)=!(*oki_);
+    for (Int i=0;i<2;++i,++fi,oki_+=3) (*fi)|=(!(*oki_));
     break;
   }
   case VisVector::One: {
     // Mueller corner element used as scalar (pol-sensitivity TBD)
-    (*fi)=!(*oki_);
+    (*fi)|=(!(*oki_));
     break;
   }
   }
@@ -371,16 +371,16 @@ void MuellerDiag2::flag(VisVector& v) {
   switch (v.type()) {
   case VisVector::Four: 
     // Apply of "corners-only" Mueller to VisVector 4-vector
-    v.f_[0]=(!ok_[0]);
-    v.v_[3]=(!ok_[1]);
+    v.f_[0]|=(!ok_[0]);
+    v.f_[3]|=(!ok_[1]);
     break;
   case VisVector::Two: 
     // Element-by-element apply of "corners-only" Mueller to VisVector 2-vector
-    for (Int i=0;i<2;++i) v.f_[i]=(!ok_[i]);
+    for (Int i=0;i<2;++i) v.f_[i]|=(!ok_[i]);
     break;
   case VisVector::One: {
     // Mueller corner element used as scalar (pol-sensitivity TBD)
-    v.f_[0]=(!ok_[0]);
+    v.f_[0]|=(!ok_[0]);
     break;
   }
   }
@@ -435,6 +435,10 @@ void MuellerScal::setMatByOk() {
 
 // In-place multiply onto a VisVector: optimized Scalar version
 void MuellerScal::apply(VisVector& v) {
+
+  // Flag
+  if (v.f_) flag(v);
+
   // Apply single value to all vector elements
   for (Int i=0;i<v.vistype_;i++) v.v_[i]*=(*m_);
 }
@@ -458,7 +462,8 @@ void MuellerScal::applyFlag(Bool& vflag) {
 // Flag a VisVector: optimized Scalar version
 void MuellerScal::flag(VisVector& v) {
   // Apply single value to all vector elements
-  for (Int i=0;i<v.vistype_;i++) v.f_[i]=(!ok_[0]);
+  Bool f=(!ok_[0]);
+  for (Int i=0;i<v.vistype_;i++) v.f_[i]|=f;
 }
 
 
@@ -502,6 +507,9 @@ void AddMuellerDiag2::setMatByOk() {
 
 // In-place multiply onto a VisVector: optimized Diag2 version
 void AddMuellerDiag2::apply(VisVector& v) {
+
+  // Flag
+  if (v.f_) flag(v);
 
   // "apply" means "add" for additive term
 
@@ -564,6 +572,9 @@ void AddMuellerDiag::setMatByOk() {
 
 // In-place add onto a VisVector: optimized Diag2 version
 void AddMuellerDiag::apply(VisVector& v) {
+
+  // Flag
+  if (v.f_) flag(v);
 
   // "apply" means "add" for additive term
 
