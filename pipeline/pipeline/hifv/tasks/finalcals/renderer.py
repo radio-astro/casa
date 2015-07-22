@@ -6,7 +6,6 @@ import contextlib
 import pipeline.infrastructure.renderer.weblog as weblog
 
 import pipeline.infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
 import pipeline.infrastructure.logging as logging
@@ -14,14 +13,6 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.applycal as applycal
-
-
-
-
-
-
-
-#import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 LOG = logging.get_logger(__name__)
 
@@ -77,9 +68,6 @@ class VLASubPlotRenderer(object):
         display_context = self._get_display_context()
         t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
-        
-        
-        
 
 
 class T2_4MDetailsfinalcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -213,20 +201,8 @@ class T2_4MDetailsfinalcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'dirname'         : weblog_dir})
                 
         return ctx
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
 class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='applycal.mako', 
                  description='Apply calibrations from context',
@@ -371,7 +347,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsTimeDetailChart, 
-                              ['AMPLITUDE', 'PHASE', 'BANDPASS', TARGET'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
                               ApplycalAmpVsTimePlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
@@ -391,7 +367,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max' : uv_max})
         
-    def create_science_plots(self, context, results, correlation=''):
+    def create_science_plots(self, context, results, correlation):
         """
         Create plots for the science targets, returning two dictionaries of 
         vis:[Plots].
