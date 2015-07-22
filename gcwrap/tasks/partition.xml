@@ -104,8 +104,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="datacolumn" ignorecase="True">
         <description>Which data column(s) to process.</description>
-        <value>data</value>
+        <value>all</value>
         <allowed kind="enum" ignorecase="True">
+            <value>all</value>
             <value>data</value>
             <value>corrected</value>
             <value>model</value>
@@ -114,7 +115,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>lag_data</value>
             <value>float_data,data</value>
             <value>lag_data,data</value>
-            <value>all</value>
         </allowed>
     </param>
 
@@ -256,14 +256,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                       MS at the time the MMS is created.
             default: True
 
-    datacolumn -- Which data column to use when partitioning.
-        default='data'; example: datacolumn='data'
+    datacolumn -- Which data column to use when partitioning the MS.
+        default='all'; example: datacolumn='data'
         Options: 'data', 'model', 'corrected', 'all',
                 'float_data', 'lag_data', 'float_data,data', and
                 'lag_data,data'.
             N.B.: 'all' = whichever of the above that are present.
-            Otherwise the selected column will go to DATA (or
-            FLOAT_DATA) in the output.
 
 ---- Data selection parameters (see help par.selectdata for more detailed
     information)

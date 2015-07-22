@@ -47,8 +47,8 @@ def partition(vis,
         flagbackup -- Backup the FLAG column of the output MMS
                    default: True
                    
-    datacolumn -- Which data column to split out
-                  default='corrected'; example: datacolumn='data'
+    datacolumn -- Which data column to use to create the output
+                  default='data'; example: datacolumn='data'
                   Options: 'data', 'corrected', 'model', 'all',
                   'float_data', 'lag_data', 'float_data,data', and
                   'lag_data,data'.

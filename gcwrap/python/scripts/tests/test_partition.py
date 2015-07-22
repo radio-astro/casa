@@ -478,7 +478,7 @@ class partition_test2(test_base):
     def test_sepaxis(self):
         '''Partition: separationaxis=auto'''        
         partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='auto',
-                  flagbackup=False, disableparallel=True)
+                  flagbackup=False, disableparallel=True, datacolumn='data')
 #        partition(vis=self.msfile, outputvis=self.mmsfile,separationaxis='auto')
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -540,7 +540,7 @@ class partition_test2(test_base):
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
-                  spw='1~4,10,11', flagbackup=False)
+                  spw='1~4,10,11', flagbackup=False, datacolumn='data')
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         self.assertTrue(os.path.exists(self.msfile),'Make sure the input MS is not deleted inside the task')
@@ -576,7 +576,7 @@ class partition_test2(test_base):
         '''Partition: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
-                  numsubms=6, flagbackup=False, disableparallel=True)
+                  numsubms=6, flagbackup=False, disableparallel=True, datacolumn='corrected')
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -614,7 +614,7 @@ class partition_test2(test_base):
                 
         # Run partition and create the .flagversions
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  disableparallel=True)
+                  disableparallel=True, datacolumn='data')
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
  
          # Check that the number of backups in MMS is correct
@@ -645,7 +645,7 @@ class partition_test2(test_base):
         
         # Run partition and create the .flagversions
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  disableparallel=True)
+                  disableparallel=True, datacolumn='data')
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
         
         # Flag spw=9 and then spw=7 in the MMS
@@ -676,7 +676,7 @@ class partition_test2(test_base):
     def test_channels2(self):
         '''partition: create MMS with spw/scan separation and channel selections'''
         partition(vis=self.msfile, outputvis=self.mmsfile, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='auto', disableparallel=True, flagbackup=False)
+                    separationaxis='auto', disableparallel=True, flagbackup=False, datacolumn='data')
                             
         self.assertTrue(os.path.exists(self.mmsfile))
         
@@ -690,7 +690,7 @@ class partition_test2(test_base):
     def test_channels3(self):
         '''partition: verify spw sub-table consolidation'''
         partition(vis=self.msfile, outputvis=self.mmsfile, spw='3,5:10~19,7,9,11,13,15',
-                    createmms=True,separationaxis='spw', flagbackup=False)       
+                    createmms=True,separationaxis='spw', flagbackup=False, datacolumn='data')       
                              
         self.assertTrue(os.path.exists(self.mmsfile))
         
