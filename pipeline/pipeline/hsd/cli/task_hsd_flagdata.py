@@ -5,7 +5,7 @@ import pipeline.h.cli.utils as utils
 def hsd_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
                  scannumber=None, intents=None, edgespw=None, fracspw=None,
                  fracspwfps=None, online=None, fileonline=None, template=None,
-                 filetemplate=None, hm_tbuff=None, tbuff=None, pipelinemode=None,
+                 filetemplate=None, hm_tbuff=None, tbuff=None, qa0=None, pipelinemode=None,
 		 flagbackup=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

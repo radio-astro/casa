@@ -31,11 +31,15 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
     fracspw = basetask.property_with_default('fracspw', 0.0625)
     template = basetask.property_with_default('template', True)
 
+    #New property for QA0 flags
+    qa0 = basetask.property_with_default('qa0', True)
+
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  autocorr=None, shadow=None, scan=None, scannumber=None,
                  intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None):
+                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None, 
+                 qa0=None):
 
         # Initialize the public member variables of the inherited class
         # FlagDeterBaseInputs()
@@ -48,6 +52,7 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
 		    hm_tbuff=hm_tbuff, tbuff=tbuff)
 
         self.fracspwfps = fracspwfps
+        self.qa0 = qa0
 
     # autocorr parameter must be overridden since its default 
     # value must be False
