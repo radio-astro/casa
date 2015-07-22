@@ -493,6 +493,7 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
   setNumberIterations(numIterations);
   theMaxNumPix = maxNumPix;
   theMaxNumberMinorIterations = maxNumberMinorIterations;
+
   return True;
 };
 //----------------------------------------------------------------------
@@ -678,6 +679,7 @@ void ClarkCleanModel::doMinorIterations(Array<Float> & model,
   // Data returned to the main routine
   numberIterations = curIter;
   fluxLimit = absRes;
+  itsMaxRes = maxRes(0);
 };
 //----------------------------------------------------------------------
 Int ClarkCleanModel::

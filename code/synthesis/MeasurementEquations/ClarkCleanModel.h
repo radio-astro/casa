@@ -240,6 +240,7 @@ public:
   virtual void setChoose(const Bool askForChoice);
   virtual Bool getChoose();
   // </group>
+  Float getMaxResidual() { return itsMaxRes;};
 
 private:
 // Do all the minor iterations for one major cycle. Cleaning stops
@@ -301,6 +302,8 @@ private:
   Int theIterCounter; 
   ClarkCleanProgress* itsProgressPtr;
   Bool itsJustStarting;
+
+  Float itsMaxRes;
 };
 
 
