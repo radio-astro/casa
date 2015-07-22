@@ -75,6 +75,10 @@ def split2(vis,
         else:
             taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
         
+        if type(correlation) == list:
+            correlation = ', '.join(correlation)
+            correlation = correlation.upper()
+
         config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=str(field), 
                     spw=str(spw), array=str(array), scan=str(scan), antenna=str(antenna), correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
