@@ -160,14 +160,13 @@ set( DEFAULT_C_FLAGS
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
      )
 
-# Detect if the compiler supports C++11 if we want to use it.
-if (CXX11)
-    if ((CMAKE_COMPILER_IS_GNUCXX AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.6) OR
-       (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 4.3))
-        set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -std=c++11 -DCXX11")
-    else()
-        option(CXX11 "" NO)
-    endif()
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+check_cxx_compiler_flag(-std=c++11 HAS_CXX11)
+if (HAS_CXX11)
+    set(DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -std=c++11")
+else()
+    message( FATAL_ERROR "Building requires a c++11 compatible compiler" )
 endif()
 
 # OpenMP
@@ -177,8 +176,6 @@ if( OPENMP_FOUND )
   set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
 endif()
 
-include(CheckCXXCompilerFlag)
-include(CheckCCompilerFlag)
 # use faster fortran rules for complex operations, removes restoring complex
 # infinities if naive computation results in NAN + NAN * I
 check_cxx_compiler_flag(-fcx-fortran-rules HAS_GXX_FORTRAN_RULES)
