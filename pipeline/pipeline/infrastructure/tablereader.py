@@ -16,8 +16,11 @@ import pipeline.domain.measures as measures
 
 LOG = logging.get_logger(__name__)
 
-def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
+def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
     """identify VLA band"""
+    if bandlimits is None:
+        bandlimits = [0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9,
+                      18.0e9, 26.5e9, 40.0e9, 56.0e9]
     i = bisect_left(bandlimits, frequency)
 
     return BBAND[i]
@@ -152,8 +155,6 @@ class MeasurementSetReader(object):
             
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
-            
-            #LOG.info('************************(1) '+spw.band+'********************')
             
             #Used EVLA band name from spw instead of frequency range
             observatory = string.upper(ms.antenna_array.name)
@@ -477,38 +478,8 @@ class AntennaTable(object):
         if flag is True:
             return
 
-#         # get the x, y, z values from the positions tuple
-#         x = position['m0']
-#         y = position['m1']
-#         z = position['m2']
-# 
-#         # find out what units these values are in
-#         ref_keyword = keywords['MEASINFO']['Ref']
-#         x_units = keywords['QuantumUnits'][0]
-#         y_units = keywords['QuantumUnits'][1]
-#         z_units = keywords['QuantumUnits'][2]
-# 
-#         # save these as we'll need them to work round a CASA bug which converts
-#         # all positions to radians
-#         qt = casatools.quanta
-#         v0=qt.quantity(x, x_units)
-#         v1=qt.quantity(y, y_units)
-#         v2=qt.quantity(z, z_units)
-# 
-#         # so we can create a CASA position..
-#         mt = casatools.measures   
-#         rad_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-# 
-#         # and now for our workaround..
-#         m_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-#         m_position['m0'] = v0
-#         m_position['m1'] = v1
-#         m_position['m2'] = v2
-    
-        # .. with which we can create an Antenna
-        antenna = domain.Antenna(antenna_id, name, station, position, offset, 
-                                 diameter)
-        return antenna
+        return domain.Antenna(antenna_id, name, station, position, offset,
+                              diameter)
 
 
 class DataDescriptionTable(object):
@@ -700,54 +671,37 @@ class FieldTable(object):
         field_ids = range(num_fields)
         field_names = msmd.namesforfields()
         times = [msmd.timesforfield(i) for i in field_ids]
-            
-        LOG.trace('Opening FIELD table to read FIELD.PHASE_DIR, '
-                  'FIELD.SOURCE_ID and FIELD.SOURCE_TYPE')
+        phase_centres = [msmd.phasecenter(i) for i in field_ids]
+
+        source_table = os.path.join(msmd.name(), 'SOURCE')
+        with casatools.TableReader(source_table) as table:
+            source_ids = frozenset(table.getcol('SOURCE_ID'))
+
+        source_id_field_ids = [(i, msmd.fieldsforsource(i))
+                               for i in source_ids]
+
+        # assume that a field maps to a maximum of one source
+        field_id_to_source_id = {}
+        for source_id, field_ids_for_source in source_id_field_ids:
+            for field_id in field_ids_for_source:
+                field_id_to_source_id[field_id] = source_id
+
+        source_ids = field_id_to_source_id.values()
+
+        LOG.trace('Opening FIELD table to read FIELD.SOURCE_TYPE')
         field_table = os.path.join(msmd.name(), 'FIELD')
         with casatools.TableReader(field_table) as table:
-            # we need msmd.sourcesforfield() to eliminate this read
-            source_ids = table.getcol('SOURCE_ID')
-
-            phase_dir = table.getcol('PHASE_DIR')
-            phase_dir_keywords = table.getcolkeywords('PHASE_DIR')
-            phase_dir_quanta = []
-            for field_id in field_ids:
-                field_dir_quanta = [
-                        '%s%s' % (phase_dir[0,0,field_id],
-                                  phase_dir_keywords['QuantumUnits'][0]),
-                        '%s%s' % (phase_dir[1,0,field_id],
-                                  phase_dir_keywords['QuantumUnits'][1])]
-                phase_dir_quanta.append(field_dir_quanta)
-
-            # get array of phase dir ref types
-            meas_info = phase_dir_keywords['MEASINFO']
-            if 'VarRefCol' in meas_info:
-                # ref varies with row
-                phase_dir_ref = table.getcol(meas_info['VarRefCol'])
-                phase_dir_ref_types = meas_info['TabRefTypes']
-                phase_dir_ref_codes = meas_info['TabRefCodes']
-            else:
-                # ref fixed for all rows,
-                # construct as though variable reference with all refs
-                # the same
-                phase_dir_ref = numpy.zeros([numpy.shape(phase_dir)[2]], 
-                                            numpy.int)
-                phase_dir_ref_types = numpy.array([meas_info['Ref']])
-                phase_dir_ref_codes = numpy.array([0])
-            phase_dir_ref_type = []
-            for field_id in field_ids:
-                field_dir_ref_type = phase_dir_ref_types[
-                        phase_dir_ref[field_id]==phase_dir_ref_codes][0]
-                phase_dir_ref_type.append(field_dir_ref_type)
-
+            # TODO can this old code be removed? We've not handled non-APDMs
+            # for a *long* time!
+            #
             # FIELD.SOURCE_TYPE contains the intents in non-APDM MS
             if 'SOURCE_TYPE' in table.colnames():
                 source_types = table.getcol('SOURCE_TYPE')
             else:
                 source_types = [None] * num_fields
 
-            return zip(field_ids, field_names, source_ids, times, 
-                       source_types, phase_dir_ref_type, phase_dir_quanta)
+            return zip(field_ids, field_names, source_ids, times,
+                       source_types, phase_centres)
     
     @staticmethod
     def get_fields(msmd):
@@ -755,14 +709,13 @@ class FieldTable(object):
                 for row in FieldTable._read_table(msmd)]
     
     @staticmethod
-    def _create_field(field_id, name, source_id, time, source_type,
-                      phase_dir_ref_type, phase_dir_quanta):
-        # .. with which we can create an Antenna
-        field = domain.Field(field_id, name, source_id, time,
-                             phase_dir_ref_type, phase_dir_quanta)
+    def _create_field(field_id, name, source_id, time, source_type, phase_centre):
+        field = domain.Field(field_id, name, source_id, time, phase_centre)
+
         if source_type:
             field.set_source_type(source_type)
-        return field    
+
+        return field
 
 
 def _make_range(f_min, f_max):
