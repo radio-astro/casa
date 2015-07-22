@@ -154,7 +154,7 @@ class SDApplyCal(common.SingleDishTaskTemplate):
 
         # In the following, inputs.infiles should be a string,
         # not a list of string
-        args = inputs.to_casa_args()
+        original_args = inputs.to_casa_args()
 
         # calstate
         calstate = inputs.calstate
@@ -173,7 +173,7 @@ class SDApplyCal(common.SingleDishTaskTemplate):
                 
                 #(calto, calfroms) = to_froms.items()[0]
                 
-
+                args = original_args.copy()
 
                 # antenna_name
                 basename = os.path.basename(args['infile'].rstrip('/'))
@@ -192,10 +192,14 @@ class SDApplyCal(common.SingleDishTaskTemplate):
 
                 # take arguments from SDCalApplication object
                 calapp = callibrary.SDCalApplication(calto, calfroms)
+                
+                LOG.debug('original args: spw=%s, scan=%s, pol=%s'%(original_args['spw'], original_args['scan'], original_args['pol']))
 
-                args['spw'] = common.intersection(calapp.spw, args['spw'])
-                args['scan'] = common.intersection(calapp.scan, args['scan'])
-                args['pol'] = common.intersection(calapp.pol, args['pol'])
+                args['spw'] = common.intersection(calapp.spw, original_args['spw'])
+                args['scan'] = common.intersection(calapp.scan, original_args['scan'])
+                args['pol'] = common.intersection(calapp.pol, original_args['pol'])
+
+                LOG.debug('filtered args: spw=%s, scan=%s, pol=%s'%(args['spw'], args['scan'], args['pol']))
 
                 if args['spw'] is None or args['scan'] is None or args['pol'] is None:
                     # no data in this selection, skip

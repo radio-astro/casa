@@ -481,9 +481,12 @@ class DataTableImpl( object ):
                     continue
                 
                 for ifno_to in ifmap[ifno_from]:
-                    start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
-                                                        spectral_windows[ifno_to])
-                    atsys = [numpy.mean(tsys[i][start_chan:end_chan])
+                    # 2015/07/22 TN
+                    # Averaged Tsys is always applied due to change in CAS-7653
+                    #start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
+                    #                                    spectral_windows[ifno_to])
+                    #atsys = [numpy.mean(tsys[i][start_chan:end_chan])
+                    atsys = [tsys[i][0]
                              for i in indices]
                     LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)

@@ -4,6 +4,11 @@ import numpy
 
 from taskinit import gentools
 
+import pipeline.infrastructure as infrastructure
+from pipeline.domain.datatable import map_spwchans
+
+LOG = infrastructure.get_logger(__name__)
+
 def __coldesc( vtype, option, maxlen,
              ndim, comment, unit=None, measinfo=None ):
     d={'dataManagerGroup': 'StandardStMan',
@@ -77,6 +82,35 @@ def map(prefix, caltable, reftable):
             tb.close()
     return names
 
+def map_with_average(prefix, caltable, reftable, atm_spw, science_spw):
+    # initial check
+    check(caltable)
+    
+    tb = tbobj()
+    antenna = antennanames(caltable)
+    names = {}
+    for (antenna_id, antenna_name) in enumerate(antenna):
+        name = '.'.join([prefix, antenna_name, 'spw%s'%(science_spw.id), 'tsyscal.tbl'])
+        names[antenna_name] = name
+        ret = tb.create(name, TABLE_DESC, memtype='plain', nrow=0)
+        try:
+            fill_with_average(tb, caltable, antenna_id, atm_spw, science_spw)
+            keywords = TABLE_KEYWORD.copy()
+            if reftable is not None:
+                src = os.path.join(reftable, 'FREQUENCIES')
+                dst = os.path.join(name, 'FREQUENCIES')
+                if os.path.exists(src):
+                    if os.path.exists(dst):
+                        shutil.rmtree(dst)
+                    shutil.copytree(src, dst)
+            scntable = '.'.join([prefix, antenna_name, 'asap'])
+            keywords['ScantableName'] = os.path.abspath(scntable)
+            keywords['FREQUENCIES'] = 'Table: %s'%(os.path.abspath(dst))
+            putkeyword(tb, keywords)
+        finally:
+            tb.close()
+    return {science_spw.id: names}
+
 def check(caltable):
     # Make sure caltable type is B TSYS
     tb = tbobj()
@@ -114,6 +148,40 @@ def fill(table, caltable, antenna_id):
                 table.putcell('SCANNO', idx, scan)
                 table.putcell('CYCLENO', idx, 0)
                 table.putcell('POLNO', idx, ipol)
+                table.putcell('TSYS', idx, tsys[ipol])
+                table.putcell('FLAGTRA', idx, flagtra[ipol])
+                table.putcell('ELEVATION', idx, 0.0)
+    finally:
+        tb.close()
+
+def fill_with_average(table, caltable, antenna_id, atm_spw, science_spw):
+    tb = tbobj()
+    tb.open(caltable)
+    try:
+        tsel = tb.query('ANTENNA1==%s && SPECTRAL_WINDOW_ID==%s'%(antenna_id,atm_spw.id))
+        rows = tsel.rownumbers()
+        tsel.close()
+        for row in rows:
+            t = tb.getcell('TIME', row)
+            spw = tb.getcell('SPECTRAL_WINDOW_ID', row)
+            scan = tb.getcell('SCAN_NUMBER', row)
+            tsys = tb.getcell('FPARAM', row)
+            flag = tb.getcell('FLAG', row)
+            npol = tsys.shape[0]
+            flagtra = flag * 128
+            start_chan, end_chan = map_spwchans(atm_spw, science_spw)
+            LOG.info('atm_spw %s science_spw %s: start_chan=%s, end_chan=%s'%(atm_spw.id, science_spw.id, start_chan, end_chan))
+            for ipol in xrange(npol):
+                idx = table.nrows()
+                table.addrows()
+                table.putcell('TIME', idx, t / 86400.0)
+                table.putcell('IFNO', idx, spw)
+                table.putcell('FREQ_ID', idx, spw)
+                table.putcell('SCANNO', idx, scan)
+                table.putcell('CYCLENO', idx, 0)
+                table.putcell('POLNO', idx, ipol)
+                mean_tsys = numpy.mean(tsys[ipol][start_chan:end_chan])
+                tsys[ipol][:] = mean_tsys
                 table.putcell('TSYS', idx, tsys[ipol])
                 table.putcell('FLAGTRA', idx, flagtra[ipol])
                 table.putcell('ELEVATION', idx, 0.0)

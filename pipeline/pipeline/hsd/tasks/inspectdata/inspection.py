@@ -62,8 +62,8 @@ class SDInspectDataResults(common.SingleDishResults):
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
         
         # update callibrary
-        if isinstance(context.observing_run, domain.ScantableList):
-            self.update_callibrary(context)
+        #if isinstance(context.observing_run, domain.ScantableList):
+        #    self.update_callibrary(context)
 
     def update_callibrary(self, context):
         callib = context.callibrary
