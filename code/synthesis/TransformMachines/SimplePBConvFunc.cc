@@ -310,7 +310,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
     if(!(doneMainConv_p[actualConvIndex_p])){
 
       //convSize_p=4*(sj_p->support(vb, coords));
-      convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSamp;
+      convSize_p=Int(max(nx_p, ny_p)/2)*2*convSamp;
       // Make this a nice composite number, to speed up FFTs
       //cerr << "convSize_p 0 " <<  convSize_p << " convSamp " << convSamp<< endl;
       CompositeNumber cn(uInt(convSize_p*2.0));  
@@ -379,7 +379,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
 
       //  coords.list(logIO(), MDoppler::RADIO, IPosition(), IPosition());
       
-      Int tempConvSize=convSize_p/4/(convSamp/convSampling);
+      Int tempConvSize=((convSize_p/4/(convSamp/convSampling))/2)*2;
       IPosition pbShape(4, tempConvSize, tempConvSize, 1, nBeamChans);
       Int memtobeused=0;
       Long memtot=HostInfo::memoryFree();
@@ -461,14 +461,13 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       IPosition blcout(4, 0, 0, 0, nBeamChans-1);
       IPosition trcout(4, pbShape(0)-1, pbShape(1)-1, 0,nBeamChans-1);
       Slicer outsl(blcout, trcout, Slicer::endIsLast);
+      
       IPosition blcin(4, convSize_p/2-pbShape(0)/2, convSize_p/2-pbShape(1)/2, 0, 0);
       IPosition trcin(4, convSize_p/2+pbShape(0)/2-1, convSize_p/2+pbShape(1)/2-1, 0, 0);
       Slicer insl(blcin, trcin, Slicer::endIsLast);
       {
 	SubImage<Complex> subtwoDPB(twoDPB, outsl, True);
 	SubImage<Complex> intwoDPB(subim, insl, False);
-	//cerr << "inImage shape " << subim.shape() << " outIm " << intwoDPB.shape() 
-	//  << endl;
 	subtwoDPB.copyData(intwoDPB);
       }
       {
