@@ -119,10 +119,21 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     // MeasurementSet
     selMS = ms;
     MSSelection mss;
-    mssSetData(ms, selMS, chansel,corrsel, "", 
-	       timerange(), antenna(), field(), spw(),
-	       uvrange(), msselect(), corr(), scan(), array(),
-	       intent(), observation(), 1, &mss );
+    String spwstr = spw();
+    try {
+        mssSetData(ms, selMS, chansel,corrsel, "", 
+           timerange(), antenna(), field(), spwstr,
+           uvrange(), msselect(), corr(), scan(), array(),
+           intent(), observation(), 1, &mss );
+    } catch(AipsError x) {
+        String errormsg = x.getMesg();
+        if (errormsg.startsWith("Spw Expression: No match found") && (spwstr[0] != '"') && (spwstr.find('-') != std::string::npos)) {
+            errormsg += "\nTIP: For a name match (particularly names with a hyphen), add double quotes around the name in the spw string."; 
+            throw(AipsError(errormsg));
+        }
+    }
+
+
     selAnts.resize(0);
     selAnts2.resize(0);
     String antennaSel = antenna();
