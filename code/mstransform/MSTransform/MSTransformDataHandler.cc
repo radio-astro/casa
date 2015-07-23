@@ -1801,6 +1801,8 @@ Bool MSTransformDataHandler::fillDDTables()
 		spw_uniq_p[k] = spw_p[spwuniqinds[k]];
 		spwRelabel_p[spw_uniq_p[k]] = k;
 	}
+
+	/*
 	if (nuniqSpws < spw_p.nelements())
 	{
 		os 	<< LogIO::WARN
@@ -1809,6 +1811,7 @@ Bool MSTransformDataHandler::fillDDTables()
 			<< "\nEven then, expect problems if exporting to uvfits."
 			<< LogIO::POST;
 	}
+	*/
 
 	// Make map from input to output spws.
 	// SPW_ID must NOT be unique, as it can repeat sometimes
