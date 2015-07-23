@@ -58,7 +58,38 @@ def ifmap_to_spwmap(num_spw, ifmap):
     return spwmap
 %>
 
+
 <%block name="title">Apply calibration tables</%block>
+
+<%
+from pipeline.infrastructure.casatools import TableReader, quanta
+tsysdict = {}
+for st in pcontext.observing_run:
+    prefix = st.basename.replace('.asap','')
+    science_spws = [m[1] for m in st.calibration_strategy['tsys_strategy']]
+    tsysdict[st.basename] = {}
+    for spwid in science_spws:
+        tsystable = '.'.join([prefix, 'spw%s'%(spwid), 'tsyscal.tbl'])
+        tsysdict[st.basename][spwid] = {}
+        pol = st.spectral_window[spwid].pol_association[0]
+        for (polid, corr) in zip(st.polarization[pol].polno, st.polarization[pol].corr_string):
+            with TableReader(tsystable) as tb:
+                tsel = None
+                try:
+                    tsel = tb.query('POLNO==%s'%(polid), sortlist='TIME')
+                    tsys = tsel.getcol('TSYS')
+                    time = tsel.getcol('TIME')
+                    if len(time) > 0:
+                        tsys_list = tsys[0]
+                        time_list = map(lambda t: quanta.time(quanta.quantity(t,'d'), form=['fits'])[0], time)
+                    else:
+                        tsys_list = ['N/A']
+                        time_list = ['-']
+                    tsysdict[st.basename][spwid][corr] = dict(zip(time_list, tsys_list))
+                finally:
+                    if tsel is not None:
+                        tsel.close()
+%>
 
 <p>This task applies all calibrations registered with the pipeline to their target scantables.<p>
 
@@ -106,3 +137,43 @@ def ifmap_to_spwmap(num_spw, ifmap):
 	</tbody>
 </table>
 
+<h2>Applied Mean Tsys Values</h2>
+
+<p>Applied Tsys value is averaged within science spectral window. The table below lists mean Tsys value for each measurement. 
+The value actually applied is interpolated in time.</p>
+
+<table class="table table-bordered table-striped table-condensed">
+    <caption>Applied Mean Tsys Values</caption>
+    <thread>
+        <tr>
+            <th>MS</th>
+            <th>Spw</th>
+            <th>Antenna</th>
+            <th>Polarization</th>
+            <th>Time</th>
+            <th>Tsys [K]</th>
+        </tr>
+    </thread>
+    <tbody>
+    % for st in pcontext.observing_run:
+        % for (spwid, d) in tsysdict[st.basename].items():
+            % for (corr, dd) in d.items():
+                <% is_first_entry = True %>
+                % for (t, v) in dd.items():
+                    <tr>
+                        % if is_first_entry:
+                            <td rowspan="${len(dd)}">${st.ms.basename}</td>
+                            <td rowspan="${len(dd)}">${spwid}</td>
+                            <td rowspan="${len(dd)}">${st.antenna.name}</td>
+                            <td rowspan="${len(dd)}">${corr}</td>
+                            <% is_first_entry = False %>
+                        % endif
+                        <td>${t}</td>
+                        <td>${v}</td>
+                    </tr>
+                % endfor
+            % endfor
+        % endfor
+    % endfor
+    </tbody>
+</table>
