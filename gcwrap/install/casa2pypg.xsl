@@ -46,12 +46,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 
 </xsl:text>
     def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input"/>
-<xsl:text>
-        """</xsl:text>
-<xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
-<xsl:apply-templates select="aps:example"/>
-<xsl:text>
-        """</xsl:text>
+
 <xsl:text disable-output-escaping="yes">
         a=inspect.stack()
         stacklevel=0
@@ -279,27 +274,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 
 #
 #
-    def description(self, key=&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;, subkey=None):
-        desc={&apos;</xsl:text><xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">&apos;: &apos;</xsl:text><xsl:value-of select="$taskdescription"/><xsl:text disable-output-escaping="yes">&apos;,
-</xsl:text>
-<xsl:for-each select="aps:input">
-	<xsl:call-template name="oneliners"/><xsl:text disable-output-escaping="yes">
-              }
-</xsl:text>
-<xsl:for-each select="aps:constraints">
-<xsl:text disable-output-escaping="yes">
-#
-# Set subfields defaults if needed
-#
-</xsl:text>
-<xsl:call-template name="oneliners2"></xsl:call-template>
-</xsl:for-each>
-<xsl:text disable-output-escaping="yes">
-        if(desc.has_key(key)) :
-           return desc[key]
-</xsl:text>
-</xsl:for-each>
-<xsl:text>
     def itsdefault(self, paramname) :
         a = {}
 </xsl:text>
