@@ -330,7 +330,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  chanStart = chanlist(k,1);
     		  chanEnd = chanlist(k,2);
     		  chanStep = chanlist(k,3);
-    		  nchan = chanEnd-chanStart+1;
+    		  //nchan = chanEnd-chanStart+1;
+    		  nchan = Int(ceil(Double(chanEnd-chanStart+1)/Double(chanStep)));
 
                   // find lowest selected channel for each spw
                   if(loChans(spw) == -1) { 
@@ -367,6 +368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                   }
                   for (uInt k=relStart;k<(uInt)(chanEnd-loChans(spw)+1);k+=chanStep) {
                     chanSel_p(msin,spw,k)=1;
+                    //cerr<<"chanselflag spw="<<spw<<" chan="<<k<<endl;
                   }
     		  /////////////////////////////////////////
 
@@ -375,7 +377,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
     	  Quantity freq;
-          //cerr<<"selfpars.freqbeg="<<selpars.freqbeg<<endl;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
@@ -383,13 +384,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  //////////OLD VI/VB
     	  //ImagerMultiMS im;
     	  Vector<Int> elspw, elstart, elnchan;
+          // Intent can be used to select a field id so check
+          // field ids actually present in the selection-applied MS
     	  Vector<Int>fields=thisSelection.getFieldList( & mss4vi_p[msin]);
+          ROMSColumns tmpmsc(mss4vi_p[msin]);
+          Vector<Int> fldidv=tmpmsc.fieldId().getColumn();
+          std::set<Int> ufldids(fldidv.begin(),fldidv.end());
+          std::vector<Int> tmpv(ufldids.begin(), ufldids.end());
+          fields.resize(tmpv.size());
+          uInt count=0;
+          for (std::vector<int>::const_iterator it=tmpv.begin();it != tmpv.end(); it++)
+            {
+               fields(count) = *it;
+               count++;
+            }
+
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
+          Vector<Int> chanSteps = chanlist.column(3); 
+          Vector<Int> spws = chanlist.column(0);
+          Int nspw = genSort( spws, Sort::Ascending, (Sort::QuickSort | Sort::NoDuplicates ));
+          Vector<Int> chanStepPerSpw(nspw);
+          uInt icount = 0; 
+          Int prevspw = -1;
+          for (uInt j=0; j < spws.nelements(); j++ ) {
+            if (spws[j] != prevspw) {
+              chanStepPerSpw[icount] =  chanSteps[j];
+              prevspw = spws[j];
+              icount++;
+            }
+          }
     	  //getSpwInFreqRange seems to assume the freqs to be the center of a channel while freqbeg and freqend appear to be
     	  //frequencies at the channel range edges. So set freqStep = 0.0 .
     	  //MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,1.0, selpars.freqframe, fieldid);
     	  MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,0.0, selpars.freqframe, fieldid);
     	  //im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
+    	  // Refine elspw if there is spw selection
+    	  if ( elspw.nelements()==0 || elstart.nelements()==0 || elnchan.nelements()==0 )
+            throw(AipsError("Failed to select vis. data by frequency range"));
+          Vector<Int> tempspwlist, tempnchanlist, tempstartlist;
+          uInt nselspw=0;
+    	  if (selpars.spw != "") {
+            Vector<Int> spwids = thisSelection.getSpwList( & mss4vi_p[msin]);
+            for (uInt k=0; k < elspw.nelements(); k++ ) {
+              if (std::find(spwids.begin(), spwids.end(), elspw[k]) != spwids.end()) {
+                tempspwlist.resize(tempspwlist.nelements()+1,True);
+                tempnchanlist.resize(tempnchanlist.nelements()+1,True);
+                tempstartlist.resize(tempstartlist.nelements()+1,True);
+                tempspwlist[nselspw] = elspw[k];
+                tempnchanlist[nselspw] = elnchan[k];
+                tempstartlist[nselspw] = elstart[k];
+                nselspw++;
+              }
+            }
+            elspw.resize(tempspwlist.nelements());
+            elnchan.resize(tempnchanlist.nelements());
+            elstart.resize(tempstartlist.nelements());
+            elspw = tempspwlist;
+            elnchan = tempnchanlist;
+            elstart = tempstartlist;
+          }
     	  blockNChan_p[msin].resize(elspw.nelements());
     	  blockStart_p[msin].resize(elspw.nelements());
     	  blockStep_p[msin].resize(elspw.nelements());

@@ -1621,6 +1621,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ROMSColumns msc(msobj);
     MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
     rvi->getFreqInSpwRange(datafstart, datafend, dataFrame );
+    //cerr<<"freqmin="<<freqmin<<" datafstart="<<datafstart<<" freqmax="<<freqmax<<" datafend="<<datafend<<endl;
     return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax, datafstart, datafend );
   }
 
