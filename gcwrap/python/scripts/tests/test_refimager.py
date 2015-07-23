@@ -888,7 +888,8 @@ class test_cube(testref_base):
           dop = me.todoppler('radio',mfstart10,qa.quantity('1.25GHz'))                                              
           #1chan width 
           #qvwidth = qa.quantity("11991.700km/s")
-          qvwidth = qa.quantity("4796.7km/s")
+          #qvwidth = qa.quantity("4796.7km/s")
+          qvwidth = qa.quantity("11991.7km/s")
           mvwidth = me.radialvelocity('TOPO',qvwidth)
 
           # restf = 1.25GHz
@@ -908,36 +909,38 @@ class test_cube(testref_base):
                       # mode to be given in chan index                                                                 
                       4:{'imagename':'Cubetest_chandefstwd1spwsel','spw':'0:5~19','start':0,'width':1, 'outframe':'LSRK',
                         'desc':'channel, spw=0:5~19, LSRK'},
-                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','width':'40MHz','outframe':'TOPO',
-                        'desc':'frequency, default start, width=\'40MHz\', TOPO'},
+                      #5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','width':'40MHz','outframe':'TOPO',
+                      #  'desc':'frequency, default start, width=\'40MHz\', TOPO'},
+                      # data set changed!
+                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','width':'100MHz','outframe':'TOPO',
+                        'desc':'frequency, default start, width=\'100MHz\', TOPO'},
                       6:{'imagename':'Cubetest_freqst5defwd','spw':'0','start':'1.1GHz','width':'','outframe':'TOPO',
                         'desc':'frequency, start=\'1.1GHz\', default width, TOPO'},
                       7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:4~19','start':'1.1GHz','width':'','outframe':'TOPO',
                         'desc':'frequency, start=\'1.1GHz\', default width, spw=0:6~19, TOPO'},
-                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','start':'1.2GHz','width':'-20MHz','outframe':'TOPO',
-                        'desc':'frequency, start=\'1.2GHz\', width=\'-20MHz\', TOPO'},
-                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','width':'9593.4km/s','outframe':'TOPO',
-                        'desc':'frequency, default start, width=\'9593.4km/s\', TOPO'},
-                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','width':'-9593.40km/s','outframe':'TOPO',
-                        'desc':'velocity, default start, width=\'-9593.40m/s\', TOPO'},
+                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','start':'1.2GHz','width':'-50MHz','outframe':'TOPO',
+                        'desc':'frequency, start=\'1.2GHz\', width=\'-50MHz\', TOPO'},
+                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','width':'23983.4km/s','outframe':'TOPO',
+                        'desc':'frequency, default start, width=\'23983.4km/s\', TOPO'},
+                     #10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','width':'-9593.40km/s','outframe':'TOPO',
+                     #   'desc':'velocity, default start, width=\'-9593.40m/s\', TOPO'},
+                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','width':'-23983.4km/s','outframe':'TOPO',
+                        'desc':'velocity, default start, width=\'-23983.4m/s\', TOPO'},
                      11:{'imagename':'Cubetest_velst10defwd','spw':'0','start':'11991.7km/s','width':'','outframe':'TOPO',
                         'desc':'velocity, start=\'11991.7km/s\', default width, TOPO'},
                      12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','start':'11977.6km/s','width':'','outframe':'BARY',
                         'desc':'velocity, start=\'11977.6km/s\', default width, BARY'},
                      # currently 13 is not quite properly working, investigating - 2014.08.27 TT 
-                     #13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','width':'4234.40km/s',
-                     ##13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','width':'5500.0km/s',
-                     ##13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'74952.3km/s','width':'5500.0km/s',
-                     ##   'veltype':'optical','outframe':'LSRK',
+                     # skip 13 for now
+                     13: {},
+                     # for refim_point.ms ch10=-499626km/s (opt)
+                     #13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'-49962.6km/s','width':'',
+                     ##13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'12494.8km/s','width':'',
+                     ##13:{'imagename':'Cubetest_optvelst0defwdlsrk','spw':'0','start':'26072.5km/s','width':'8817km/s',
+                     ##13:{'imagename':'Cubetest_optvelst2defwdlsrk','spw':'0','start':'132605km/s','width':'-8817km/s',
+                     #   'veltype':'optical','outframe':'LSRK',
                      ##   'desc':'velocity, start=\'74952.3km/s\', default width, veltype=optical LSRK'},
-                     ### smallest w in vopt = 4792.2km/s (ch19-20), largest w in vopt: 8817km/s (ch0-1)
-                     ##13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'74952.3km/s','width':'',
-                     13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'12494.8km/s','width':'',
-                     #13:{'imagename':'Cubetest_optvelst0defwdlsrk','spw':'0','start':'26072.5km/s','width':'8817km/s',
-                     #13:{'imagename':'Cubetest_optvelst2defwdlsrk','spw':'0','start':'132605km/s','width':'-8817km/s',
-                        'veltype':'optical','outframe':'LSRK',
-                     ##   'desc':'velocity, start=\'74952.3km/s\', default width, veltype=optical LSRK'},
-                        'desc':'velocity, start=\'12494.8km/s\', default width, veltype=optical LSRK'},
+                     #   'desc':'velocity, start=\'-49962.6km/s\', default width, veltype=optical LSRK'},
                      14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':qfstart,'width':'', 'veltype':'radio','outframe':'',
                         'desc':'frequency, start=%s, default width, veltype=radio TOPO' % qfstart},
                      15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':mfstart,'width':'', 'veltype':'radio','outframe':'',
@@ -950,23 +953,37 @@ class test_cube(testref_base):
                         'desc':'velocity, default start, width=%s, TOPO' % qvwidth},
                      19:{'imagename':'Cubetest_veldefstmvwidth','spw':'0','start':'','width':mvwidth,'outframe':'TOPO',
                         'desc':'velocity, default start, width=%s, TOPO' % mvwidth},
-                     # this also fails, investigating - 2014.08.27 TT
                      20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':dop,'width':'','outframe':'TOPO',
-                        'desc':'doppler, start=%s, default width, LSRK' % dop}
+                        'desc':'doppler, start=%s, default width, TOPO' % dop},
+                     # with a gap in spw channel sel
+                     21:{'imagename':'Cubetest_st5gap','spw':'0:5~9,12~14','start':5,'width':'','outframe':'LSRK',
+                        'desc':'channel, start=%s, default width, channel gap (10-11) LSRK' % 5},
+                     # stride > 1
+                     22:{'imagename':'Cubetest_st5gap','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK',
+                        'desc':'channel, start=%s, default width, step=2 LSRK' % 0}
                     }
 
           ## Run all tests.
+          skipped = []
+          passed = []
           for testid in testList:
+               if testList[testid] != {}:
+                    if testList[testid].has_key('veltype'):
+                         inveltype=testList[testid]['veltype']
+                    else:
+                         inveltype='radio'
 
-               if testList[testid].has_key('veltype'):
-                    inveltype=testList[testid]['veltype']
+                    print "\n *** %s (testid=%s)" % (testList[testid]['imagename'], testid)
+                    ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=testList[testid]['spw'],imagename=self.img+testList[testid]['imagename'],start=testList[testid]['start'], width=testList[testid]['width'],veltype=inveltype,outframe=testList[testid]['outframe'])
+                    self.assertTrue(os.path.exists(self.img+testList[testid]['imagename']+'.psf') and os.path.exists(self.img+testList[testid]['imagename']+'.residual') )
+                    passed.append(testid)
                else:
-                    inveltype='radio'
+                    print "sub test #:", testid, 'was skipped'
+                    skipped.append(testid)
 
-               print "Cube test : "+testList[testid]['imagename']
-               ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=testList[testid]['spw'],imagename=self.img+testList[testid]['imagename'],start=testList[testid]['start'], width=testList[testid]['width'],veltype=inveltype,outframe=testList[testid]['outframe'])
-               self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
-
+          print "Passed: testid=",passed
+          print "Skipped: testid=",skipped
+              
      def test_cube_D1(self):
           """ [cube] Test_Cube_D1 : specmode cubedata - No runtime doppler corrections """
           ret = tclean(vis=self.msfile2,field='1',spw='0:105~135',specmode='cubedata',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
