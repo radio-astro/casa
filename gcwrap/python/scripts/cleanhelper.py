@@ -914,6 +914,14 @@ class cleanhelper:
 
         if(len(maskimage) > 0):
             for ima in maskimage :
+                ia.open(ima)
+                maskshape = ia.shape()
+                ia.close()
+                if shp[3]>1 and maskshape[3]==1: 
+                    self._casalog.post("Input mask,"+ima+" appears to be a continuum,"+
+                                       " it may not map to a cube correctly and will be"+
+                                       " ignored."+"  Please use "+
+                                       "makemask to generate a proper mask.","WARN")
                 if slice>-1:
                     self.getchanimage(ima, ima+'chanim',slice)
                     self.copymaskimage(ima+'chanim',shp,'__temp_mask')
