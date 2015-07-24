@@ -27,14 +27,17 @@
 
 
 namespace {
-  casa::vi::CalibratingVi2FactoryI* generateCViFac(casa::MeasurementSet* ms, 
-						   const casa::Record& calrec,
-						   const casa::vi::IteratingParameters& iterpar) {
+  casa::vi::CalibratingVi2FactoryI* generateCViFac() {
+    return new casa::vi::CalibratingVi2Factory();  // A concrete one from the synthesis side
+  }
+  casa::vi::CalibratingVi2FactoryI* generateCViFac_byRec(casa::MeasurementSet* ms, 
+							 const casa::Record& calrec,
+							 const casa::vi::IteratingParameters& iterpar) {
     return new casa::vi::CalibratingVi2Factory(ms,calrec,iterpar);  // A concrete one from the synthesis side
   }
 
   bool initCViFacGenerator = casa::vi::CalibratingVi2FactoryI::setGenerator(generateCViFac);
-
+  bool initCViFac_byRec_Generator = casa::vi::CalibratingVi2FactoryI::set_byRec_Generator(generateCViFac_byRec);
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -45,6 +48,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const CalibratingParameters& calpar, 
 					     const IteratingParameters& iterpar) :
+  valid_p(True),
   ms_p(ms),
   calpar_p(calpar),
   iterpar_p(iterpar)
@@ -52,11 +56,30 @@ CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 
 
 // -----------------------------------------------------------------------
+CalibratingVi2Factory::CalibratingVi2Factory() :
+  valid_p(False),
+  ms_p(0),
+  calpar_p(),
+  iterpar_p(IteratingParameters())
+{}
+
+// -----------------------------------------------------------------------
 CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 					     const Record& calrec,
 					     const IteratingParameters& iterpar) :
+  valid_p(True),
   ms_p(ms),
   calpar_p(calrec),
+  iterpar_p(iterpar)
+{}
+
+// -----------------------------------------------------------------------
+CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
+					     const String& callib,
+					     const IteratingParameters& iterpar) :
+  valid_p(True),
+  ms_p(ms),
+  calpar_p(callib),
   iterpar_p(iterpar)
 {}
 
@@ -65,10 +88,41 @@ CalibratingVi2Factory::CalibratingVi2Factory(MeasurementSet* ms,
 CalibratingVi2Factory::~CalibratingVi2Factory()
 {}
 
+// -----------------------------------------------------------------------
+void CalibratingVi2Factory::initialize(MeasurementSet* ms,
+				       const Record& callibrec,
+				       const IteratingParameters& iterpar) {
+
+  if (valid_p)
+    throw(AipsError("Cannot initialize already-initialized CalibratingVi2Factory"));
+
+  ms_p=ms;
+  calpar_p=CalibratingParameters(callibrec);
+  iterpar_p=iterpar;
+  valid_p=True;
+}
+
+// -----------------------------------------------------------------------
+void CalibratingVi2Factory::initialize(MeasurementSet* ms,
+				       const String& callib,
+				       const IteratingParameters& iterpar) {
+
+  if (valid_p)
+    throw(AipsError("Cannot initialize already-initialized CalibratingVi2Factory"));
+
+  ms_p=ms;
+  calpar_p=CalibratingParameters(callib);
+  iterpar_p=iterpar;
+  valid_p=True;
+}
+
 
 // -----------------------------------------------------------------------
 vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2 * vi2) const
 {
+
+  if (!valid_p)
+    throw(AipsError("CalibratingVi2Factor not initialized!"));
 
   //cout << "Making plain ViImpl2 for the user." << endl;
   vi::ViImplementation2 * plainViI(NULL);  // generic
@@ -91,6 +145,8 @@ vi::ViImplementation2 * CalibratingVi2Factory::createVi (vi::VisibilityIterator2
 							 vi::ViImplementation2 * vii) const
 {
 
+  if (!valid_p)
+    throw(AipsError("CalibratingVi2Factor not initialized!"));
 
 
   vi::ViImplementation2 * vii2(NULL);  // generic

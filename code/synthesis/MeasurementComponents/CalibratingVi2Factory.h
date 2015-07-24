@@ -130,11 +130,27 @@ public:
 			const CalibratingParameters& calpar, 
 			const IteratingParameters& iterpar=IteratingParameters());
 
+  CalibratingVi2Factory();
+			
   CalibratingVi2Factory(MeasurementSet* ms,
 			const Record& calrec,
 			const IteratingParameters& iterpar=IteratingParameters());
 			
+  CalibratingVi2Factory(MeasurementSet* ms,
+			const String& callib,
+			const IteratingParameters& iterpar=IteratingParameters());
+			
   virtual ~CalibratingVi2Factory();
+
+  // Public functions to initialize a generic CVi2F
+  virtual void initialize(MeasurementSet* ms,
+			  const Record& calrec,
+			  const IteratingParameters& iterpar);
+  virtual void initialize(MeasurementSet* ms,
+			  const String& callib,
+			  const IteratingParameters& iterpar);
+
+
 
 protected:
 
@@ -146,6 +162,7 @@ protected:
 
 private:
 
+  Bool valid_p;
   MeasurementSet* ms_p;
   CalibratingParameters calpar_p;
   IteratingParameters iterpar_p;

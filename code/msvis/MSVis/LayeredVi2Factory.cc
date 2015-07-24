@@ -31,7 +31,7 @@
 #include <msvis/MSVis/AveragingVi2Factory.h>
 #include <msvis/MSVis/CalibratingVi2FactoryI.h>
 #include <msvis/MSVis/UtilJ.h>
-
+#include <casa/BasicSL/String.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
@@ -39,25 +39,90 @@ namespace vi { //# NAMESPACE VI - BEGIN
 
 // -----------------------------------------------------------------------
 LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
-				   IteratingParameters* iterpar,
-				   const Record& calrec,
-				   AveragingParameters* avepar) :
+				     IteratingParameters* iterpar,
+				     AveragingParameters* avepar) :
   ms_p(ms),
   iterpar_p(iterpar),
   avepar_p(avepar),
-  calrec_p(calrec),
-  nlayer_p(1)
+  doCal_p(False),
+  callib_p(""),
+  calrec_p(),  
+  nlayer_p(1),
+  calvi2factory_p(0)
 {
 
   // Count requested layers
-  if (calrec_p.nfields()>0) ++nlayer_p;
   if (avepar_p) ++nlayer_p;
+
+}
+// -----------------------------------------------------------------------
+LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
+				     IteratingParameters* iterpar,
+				     const Record& calrec,
+				     AveragingParameters* avepar) :
+  ms_p(ms),
+  iterpar_p(iterpar),
+  avepar_p(avepar),
+  doCal_p(False),
+  callib_p(""),
+  calrec_p(calrec),  // This ctor, by Record _only_
+  nlayer_p(1),
+  calvi2factory_p(0)
+{
+
+  // Count requested layers
+  if (avepar_p) ++nlayer_p;
+
+  // ...and arrange for calibration, if necessary
+  if (calrec_p.nfields()>0) {
+    ++nlayer_p;  
+    doCal_p=True;
+
+    // Set up the CalibratingVi2Factory (via Record)
+    calvi2factory_p = CalibratingVi2FactoryI::generate();
+    calvi2factory_p->initialize(ms,calrec);
+  }
 
 }
 
 // -----------------------------------------------------------------------
-LayeredVi2Factory::~LayeredVi2Factory()
-{}
+LayeredVi2Factory::LayeredVi2Factory(MeasurementSet* ms,
+				     IteratingParameters* iterpar,
+				     const String& callib,
+				     AveragingParameters* avepar) :
+  ms_p(ms),
+  iterpar_p(iterpar),
+  avepar_p(avepar),
+  doCal_p(False),
+  callib_p(callib),    // This ctor, by String _only_
+  calrec_p(),
+  nlayer_p(1),
+  calvi2factory_p(0)
+{
+
+  // Count requested layers
+  if (avepar_p) ++nlayer_p;
+
+
+  if (callib_p.length()>0) {
+    ++nlayer_p;  
+    doCal_p=True;  // Calibration is turned on
+
+    // Set up the CalibratingVi2Factory (via String)
+    calvi2factory_p = CalibratingVi2FactoryI::generate();
+    calvi2factory_p->initialize(ms,callib_p);
+  }
+
+}
+
+// -----------------------------------------------------------------------
+LayeredVi2Factory::~LayeredVi2Factory() {
+
+  // Delete the CalibratingVi2FactorI*, if present
+  if (calvi2factory_p)
+    delete calvi2factory_p;
+
+}
 
 
 // -----------------------------------------------------------------------
@@ -83,17 +148,18 @@ vi::ViImplementation2 * LayeredVi2Factory::createVi (vi::VisibilityIterator2 * v
   viis[ilayer]->setWeightScaling(iterpar_p->getWeightScaling());
 
   // If calibration requested
-  if (calrec_p.nfields()>0) {
+  if (doCal_p) {
     ++ilayer;
     Assert(ilayer<nlayer_p);
-    CalibratingVi2FactoryI* CViFI = CalibratingVi2FactoryI::generate(ms_p,calrec_p,IteratingParameters());
-    viis[ilayer] = CViFI->createVi(vi2,viis[ilayer-1]);
+    // Call the factory
+    viis[ilayer] = calvi2factory_p->createVi(vi2,viis[ilayer-1]);
   }
 
   // If (time) averaging requested
   if (avepar_p) {
     ++ilayer;
     Assert(ilayer<nlayer_p);
+    // TBD: update the AveragingVi2Factory to permit layered createVi...
     viis[ilayer] = new AveragingTvi2(vi2,viis[ilayer-1],*avepar_p);
   }
 

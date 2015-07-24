@@ -1229,7 +1229,8 @@ protected:
 
 	// Calibration parameters
 	Bool calibrate_p;
-	Record callib_p;
+	String callib_p;
+	Record callibRec_p;
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;

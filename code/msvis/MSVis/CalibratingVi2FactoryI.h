@@ -38,18 +38,32 @@ friend class LayeredVi2Factory;
 
 public:
 
-  typedef CalibratingVi2FactoryI* (*CalViFacGenerator)(MeasurementSet*,
-						       const Record&,
-						       const IteratingParameters&);
+  typedef CalibratingVi2FactoryI* (*CalViFacGenerator)();
+
+  typedef CalibratingVi2FactoryI* (*CalViFac_byRec_Generator)(MeasurementSet*,
+							      const Record&,
+							      const IteratingParameters&);
   static Bool setGenerator(CalViFacGenerator);
+  static Bool set_byRec_Generator(CalViFac_byRec_Generator);
 
   CalibratingVi2FactoryI() {}
   virtual ~CalibratingVi2FactoryI() {}
 
-  // Public function to generate myself via static generator_p
+  // Public function to generate myself via static generator_p implemented in synthesis
+  static CalibratingVi2FactoryI* generate();
+
+  // Public function to generate myself via static byRec_generator_p
   static CalibratingVi2FactoryI* generate(MeasurementSet* ms,
 					  const Record& calrec,
 					  const IteratingParameters& iterpar);
+
+  // Public functions to initialize a generic CVi2F (pure virtual)
+  virtual void initialize(MeasurementSet* ms,
+			  const Record& calrec,
+			  const IteratingParameters& iterpar=IteratingParameters())=0;
+  virtual void initialize(MeasurementSet* ms,
+			  const String& callib,
+			  const IteratingParameters& iterpar=IteratingParameters())=0;
 
 protected:
 
@@ -63,7 +77,7 @@ protected:
 private:
 
   static CalViFacGenerator generator_p;
-
+  static CalViFac_byRec_Generator byRec_generator_p;
 };
 
 

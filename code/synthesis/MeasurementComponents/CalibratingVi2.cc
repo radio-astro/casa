@@ -22,6 +22,7 @@
 
 #include <synthesis/MeasurementComponents/CalibratingVi2.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
+#include <synthesis/CalLibrary/CalLibraryTools.h>
 #include <casa/Arrays/ArrayPartMath.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -59,6 +60,15 @@ CalibratingParameters::CalibratingParameters(const Record& calLibRecord) :
   }
   else
     throw(AipsError("Invalid use of callib Record"));
+  validate();
+}
+
+// Construct using callib parser
+CalibratingParameters::CalibratingParameters(const String& callib) :
+  byCalLib_p(True),
+  calLibRecord_p(callibSetParams(callib)),
+  corrFactor_p(1.0)  
+{
   validate();
 }
 

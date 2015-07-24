@@ -27,19 +27,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi { //# NAMESPACE VI - BEGIN
 
 CalibratingVi2FactoryI::CalViFacGenerator CalibratingVi2FactoryI::generator_p=0;
+CalibratingVi2FactoryI::CalViFac_byRec_Generator CalibratingVi2FactoryI::byRec_generator_p=0;
 
 
+// -----------------------------------------------------------------------
+CalibratingVi2FactoryI* 
+CalibratingVi2FactoryI::generate() {
+
+  ThrowIf (generator_p==0, "No CalibratingVi2FactoryI::generator (generic) available!");
+
+  //cout << "CVFI::generate()" << endl;
+
+  return generator_p();
+
+}
 // -----------------------------------------------------------------------
 CalibratingVi2FactoryI* 
 CalibratingVi2FactoryI::generate(MeasurementSet* ms, 
 				 const Record& calrec,
 				 const IteratingParameters& iterpar) {
 
-  ThrowIf (generator_p==0, "No CalibratingVi2FactoryI::generator available!");
+  ThrowIf (byRec_generator_p==0, "No CalibratingVi2FactoryI::generator (by Record) available!");
 
   //cout << "CVFI::generate(ms,calrec,iterpar)" << endl;
 
-  return generator_p(ms,calrec,iterpar);
+  return byRec_generator_p(ms,calrec,iterpar);
 
 }
 
@@ -48,6 +60,15 @@ Bool
 CalibratingVi2FactoryI::setGenerator(CalViFacGenerator cvfg) {
 
   generator_p=cvfg;
+
+  return True;
+
+}
+// -----------------------------------------------------------------------
+Bool
+CalibratingVi2FactoryI::set_byRec_Generator(CalViFac_byRec_Generator cvfg) {
+
+  byRec_generator_p=cvfg;
 
   return True;
 

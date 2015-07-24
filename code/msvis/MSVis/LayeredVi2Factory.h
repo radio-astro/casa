@@ -33,6 +33,7 @@ namespace vi { //# NAMESPACE VI - BEGIN
 
 class IteratingParameters;
 class AveragingParameters;
+class CalibratingVi2FactoryI;
 
 // <summary>
 // A factory for generating ViImplementation2 layers that optionally include calibration
@@ -134,24 +135,37 @@ class LayeredVi2Factory : public vi::ViFactory
 
 public:
 
+  // Non-calibrating version
   LayeredVi2Factory(MeasurementSet* ms,
 		    IteratingParameters* iterpar,
-		    const Record& calrec=Record(),
+		    AveragingParameters* avepar=0);
+  // Calibrating version, via CalLib Record
+  LayeredVi2Factory(MeasurementSet* ms,
+		    IteratingParameters* iterpar,
+		    const Record& calrec,
+		    AveragingParameters* avepar=0);
+  // Calibrating version, vis CalLib String (filename or String)
+  LayeredVi2Factory(MeasurementSet* ms,
+		    IteratingParameters* iterpar,
+		    const String& callib,
 		    AveragingParameters* avepar=0);
   ~LayeredVi2Factory();
 
-protected:
-
   vi::ViImplementation2 * createVi (vi::VisibilityIterator2 * vi) const;
+  vi::ViImplementation2 * createVi (vi::VisibilityIterator2 *,
+				    vi::ViImplementation2 *) const {throw(AipsError("NYI!"));};  // NYI
 
 private:
+
   MeasurementSet* ms_p;
 
   vi::IteratingParameters* iterpar_p;
   vi::AveragingParameters* avepar_p;
+  Bool doCal_p;
+  String callib_p;
   Record calrec_p;
-  
   Int nlayer_p;
+  CalibratingVi2FactoryI* calvi2factory_p;
 
 };
 

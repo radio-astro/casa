@@ -170,7 +170,8 @@ void MSTransformManager::initialize()
 
 	// Cal parameters
 	calibrate_p = False;
-	callib_p = Record();
+	callib_p = "";
+	callibRec_p = Record();
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
@@ -1023,11 +1024,26 @@ void MSTransformManager::parseCalParams(Record &configuration)
 	exists = configuration.fieldNumber("callib");
 	if (exists >= 0)
 	{
-		// Extract the callib Record
-		callib_p = configuration.subRecord(exists);
 
-		// If the Record is non-trivial, calibration is turned on
-		calibrate_p = callib_p.nfields() > 0;
+		if (configuration.type(exists) == TpRecord)
+		{
+		        // Extract the callib Record
+		        callibRec_p = configuration.subRecord(exists);
+			callib_p="";
+
+			// If the Record is non-trivial, calibration is turned on
+			calibrate_p = callibRec_p.nfields() > 0;
+		}
+		else if (configuration.type(exists) == TpString)
+		{
+		        // Extract the callib String
+		        callib_p = configuration.asString(exists);
+			callibRec_p = Record();
+
+			// If the callib_p String has non-trivial content, calibration in turned on
+			calibrate_p = callib_p.length() > 0;
+
+		}
 
 		if (calibrate_p)
 		{
@@ -4806,7 +4822,31 @@ void MSTransformManager::generateIterator()
 		}
 
 		// Construct the vi via the LayeredVi2Factory
-		visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar, callib_p,tavgpar));
+                if (callib_p.length()>0) 
+		  {
+		    // By callib String
+		    visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, 
+											     &iterpar, 
+											     callib_p,
+											     tavgpar));
+		  }
+                else if (callibRec_p.nfields()>0)
+		  {
+		    // By callib Record
+		    visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, 
+											     &iterpar, 
+											     callibRec_p,
+											     tavgpar));
+		  }
+                else
+		  {
+		    logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+			     << " Error forming Calibration-capable VisibilityIterator2"
+			     << LogIO::POST;
+		  }
+
+
+
 		visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
 	}
 	else if (timeAverage_p)

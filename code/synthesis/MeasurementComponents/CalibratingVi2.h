@@ -42,6 +42,7 @@ public:
   CalibratingParameters();
 
   CalibratingParameters(const Record& calLibRecord);
+  CalibratingParameters(const String& callib);
   CalibratingParameters(Float corrFactor); // temporary, for initial testing
 
   CalibratingParameters(const CalibratingParameters& other);
