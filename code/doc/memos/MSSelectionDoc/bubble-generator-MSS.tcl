@@ -57,7 +57,7 @@ set all_graphs {
 
     ANT-STATION-SPEC
     {
-	line {or INTEGER {line INTEGER ~ INTEGER} STRING REGEX}
+	line {or {line INTEGER {or nil  {line ~ INTEGER}}} STRING REGEX}
     }
 
     ANT-EXPR
