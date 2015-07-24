@@ -1060,7 +1060,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		for (Int irow = 0; irow < vb->nRows(); ++irow) {
 			uvrow.reference(uvdistL_[vbnum]->column(irow));
 			uvrow.set(uvdistM(irow));
-			uvrow *= vb->getFrequencies(irow);
+			uvrow *= vb->getFrequencies(irow, freqFrame_);
 		}
 		break;
 	}
@@ -1073,7 +1073,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		for (Int irow = 0; irow < vb->nRows(); ++irow) {
 			urow.reference(uwave_[vbnum]->column(irow));
 			urow.set(uM(irow));
-			urow *= vb->getFrequencies(irow);
+			urow *= vb->getFrequencies(irow, freqFrame_);
 		}
 		break;
 	}
@@ -1085,7 +1085,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		for (Int irow = 0; irow < vb->nRows(); ++irow) {
 			vrow.reference(vwave_[vbnum]->column(irow));
 			vrow.set(vM(irow));
-			vrow *= vb->getFrequencies(irow);
+			vrow *= vb->getFrequencies(irow, freqFrame_);
 		}
 		break;
 	}
@@ -1097,7 +1097,7 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 		for (Int irow = 0; irow < vb->nRows(); ++irow) {
 			wrow.reference(wwave_[vbnum]->column(irow));
 			wrow.set(wM(irow));
-			wrow *= vb->getFrequencies(irow);
+			wrow *= vb->getFrequencies(irow, freqFrame_);
 		}
 		break;
 	}
