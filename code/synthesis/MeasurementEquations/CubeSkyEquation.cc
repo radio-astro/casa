@@ -478,7 +478,8 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   StokesImageUtil::locatePeakPSF(*(psfs[0]), xpos, ypos, peak, psfplane);
   Int nx=psfplane.shape()(0);
   Int ny=psfplane.shape()(1);
- 
+
+  //cerr << "xpos " << xpos << "  " << ypos << " " << peak << endl; 
   // lets ignore  misers who made 10x10 pixel images
   centered=centered && (abs(xpos-nx/2) <=5) && (abs(ypos-ny/2) <=5);
 
@@ -517,6 +518,9 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs){
   iftm_p[0]=new GridFT(1000000, 16, "SF", loc, 1.0, False);
   ft_=&(*ftm_p[0]);
   ift_=&(*iftm_p[0]);
+  
+  ft_->setBasePrivates(*ft_back);
+  ift_->setBasePrivates(*ift_back);
   // try again with simple ftmachines
   makeSimplePSF(psfs);
   //that 's the best psf you'd get
@@ -1776,6 +1780,8 @@ void CubeSkyEquation::fixImageScale()
   
     ggSMin1 = ggSMax * constPB_p * constPB_p;
     ggSMin2 = ggSMax * minPB_p * minPB_p;
+
+    cerr << "ggSMax " << ggSMax << endl;
 
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
       
