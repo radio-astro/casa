@@ -47,12 +47,12 @@ set all_graphs {
 
     FREQ 
     {
-	line {or NUMBER RANGESPEC} {or K M G T} Hz
+	line RANGESPEC {or nil K M G T} Hz
     }
 
     RANGE
     {
-	line NUMBER ~ NUMBER
+	line NUMBER {or nil {line ~ NUMBER}}
     }
 
     ANT-STATION-SPEC
@@ -82,14 +82,17 @@ set all_graphs {
     {
 	loop {
 	    line {or 
-		{line T0}
-		{line T0+dT}
+		{line {line T0 {or nil {line + dT}}}}
 		{line {or < >} T0}
-		{line T0 ~ T1} 
-		{line ( {line T0 ~ T1} ) } 
-		{line {or nil FLOAT} [ {line T0 ~ T1} ] } 
+		{line TIME-RANGE}
+		{line ( TIME-RANGE ) } 
+		{line {or nil FLOAT} [ TIME-RANGE ] } 
 	    }
 	} ,
+    }
+   TIME-RANGE
+    {
+      line {line T0 { or nil {line ~ T1}}}
     }
 
 }

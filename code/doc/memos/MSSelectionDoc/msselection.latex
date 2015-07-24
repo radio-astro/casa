@@ -249,7 +249,9 @@ be replaced by context sensitive defaults as explained below.
 \hline
 \small {Syntax of}              & \small{Railroad Diagram}\\
 \hline
-   TIME/TIME-RANGE Expression     &  \includegraphics[width=8cm]{TIME-EXPR.png}\\
+   TIME Expression     &  \includegraphics[width=8cm]{TIME-EXPR.png}\\
+\hline
+   TIME-RANGE          &  \includegraphics[width=8cm]{TIME-RANGE.png}\\
 \hline
 \end{tabular}
 \label{Tab:RAILROAD_TIME}
@@ -354,7 +356,7 @@ explained in the following sections.
 
 \begin{table}[h]
   \caption{Railroad diagrams for the syntax of full baseline selection expression.
-    Note that this is often referred to as ``antenna selection'' as well.}
+    Note that this is also referred to as ``antenna selection'' expression.}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
