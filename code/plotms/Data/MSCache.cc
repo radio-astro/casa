@@ -321,7 +321,7 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 
 	// Add calibration library if set
 	if (calibration.useCallib()) {
-		configuration.defineRecord("callib", calibration.callibRec());
+		configuration.define("callib", calibration.calLibrary());
 	}	
 
 	// Apply time and channel averaging

@@ -71,20 +71,11 @@ void PlotMSCalibrationTab::getValue(PlotMSPlotParameters& params) const {
         d = params.typedGroup<PMS_PP_MSData>();
     }
     PlotMSCalibration calibparams = d->calibration();
-    calibparams.setCalLibrary(getCallibFile());
-
     PlotMSCalibration guiCalib = itsCalibrationWidget_->getValue();
-    // check if calibration library record is set, else can't use it!
-    if ((guiCalib.useCallib()) && (d->calibration().callibRec().nfields()==0)) {
-        String message("Calibration library file parsing failed.");
-        this->itsPlotter_->showError( message, "callib parsing failed", true);
-        calibparams.setUseCallib(false);
-        d->setCalibration(calibparams);
-    }
-    else {
-        calibparams.setUseCallib(guiCalib.useCallib());
-        d->setCalibration(calibparams);
-    }
+
+    calibparams.setCalLibrary(getCallibFile());
+    calibparams.setUseCallib(guiCalib.useCallib());
+    d->setCalibration(calibparams);
 }
 
 void PlotMSCalibrationTab::setValue(const PlotMSPlotParameters& params) {

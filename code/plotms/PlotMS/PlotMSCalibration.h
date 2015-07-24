@@ -60,8 +60,10 @@ public:
   Bool useCallib() const { return itsCallibUse_; };
   String calLibrary() const  { return itsCalLibrary_; }
 
+  /*
   // Returns parsed cal library as a Record
   Record callibRec() const;
+  */
   // </group>
   
   
@@ -87,7 +89,7 @@ public:
 private:
   Bool itsCallibUse_;
   String itsCalLibrary_;
-  Record itsCallibRec_;
+  //Record itsCallibRec_;
 
   // Sets the default values.
   void setDefaults();

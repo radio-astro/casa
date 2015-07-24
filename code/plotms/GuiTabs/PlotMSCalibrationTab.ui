@@ -23,7 +23,7 @@
    <item>
     <widget class="QLabel" name="calibLabel">
      <property name="text">
-      <string>Calibration File</string>
+      <string>Calibration Library</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>

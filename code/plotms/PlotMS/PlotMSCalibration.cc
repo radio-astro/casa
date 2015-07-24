@@ -78,6 +78,7 @@ void PlotMSCalibration::setDefaults() {
   setCalLibrary("");
 }
 
+/*
 Record PlotMSCalibration::callibRec() const {
     // Parse the cal library file/string
     Record callibRec = Record();
@@ -86,6 +87,7 @@ Record PlotMSCalibration::callibRec() const {
     }
     return callibRec;
 }
+*/
 
 String PlotMSCalibration::summary() const {
 
@@ -95,7 +97,7 @@ String PlotMSCalibration::summary() const {
   ss << "Plot Data Calibration:" << endl;
   ss << " Use Calibration    = " << useCallib() << endl;
   ss << " Calibration Library   = " << calLibrary() << endl;
-  ss << " Calibration Record = " << callibRec() << endl;
+  //ss << " Calibration Record = " << callibRec() << endl;
   return ss.str();
 }
 
