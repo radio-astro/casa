@@ -88,7 +88,7 @@ $(document).ready(function() {
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
-				  url_fn="${lambda x: 'phase_vs_time_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'phase_vs_time-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -152,7 +152,7 @@ $(document).ready(function() {
 
 
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
-				  url_fn="${lambda x: 'amp_vs_time_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'amp_vs_time-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -189,7 +189,7 @@ $(document).ready(function() {
 <h2>Diagnostic plots</h2>
 
 <%self:plot_group plot_dict="${diagnostic_phase_vs_time_plots}"
-				  url_fn="${lambda x: 'diagnostic_phase_vs_time_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'diagnostic_phase_vs_time-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -223,7 +223,7 @@ $(document).ready(function() {
 
 
 <%self:plot_group plot_dict="${diagnostic_amp_vs_time_plots}"
-				  url_fn="${lambda x: 'diagnostic_amp_vs_time_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'diagnostic_amp_vs_time-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">

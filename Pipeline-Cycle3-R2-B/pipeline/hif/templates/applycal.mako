@@ -268,7 +268,7 @@ def space_comma(s):
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${amp_vs_freq_plots}"
-				  url_fn="${lambda x: 'amp_vs_freq_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'amp_vs_freq-%s.html' % sanitise(x)}"
 				  data_field="${True}"
 				  data_spw="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
@@ -309,7 +309,7 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'phase_vs_freq_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'phase_vs_freq-%s.html' % sanitise(x)}"
 				  data_field="${True}"
 				  data_spw="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
@@ -351,7 +351,7 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${amp_vs_uv_plots}"
-				  url_fn="${lambda x: 'amp_vs_uv_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'amp_vs_uv-%s.html' % sanitise(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -389,7 +389,7 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${amp_vs_time_plots}"
-				  url_fn="${lambda x: 'amp_vs_time_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'amp_vs_time-%s.html' % sanitise(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -422,7 +422,7 @@ def space_comma(s):
 
 
 <%self:plot_group plot_dict="${phase_vs_time_plots}"
-				  url_fn="${lambda x: 'phase_vs_time_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'phase_vs_time-%s.html' % sanitise(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -454,7 +454,7 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_amp_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_freq_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'science_amp_vs_freq-%s.html' % sanitise(x)}"
 				  data_spw="${True}"
 				  data_field="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
@@ -508,7 +508,7 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
-				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'science_phase_vs_freq-%s.html' % sanitise(x)}"
 				  data_baseband="${True}"
 				  data_field="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
@@ -561,7 +561,7 @@ def space_comma(s):
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${science_amp_vs_uv_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}"
+				  url_fn="${lambda x: 'science_amp_vs_uv-%s.html' % sanitise(x)}"
 				  data_baseband="${True}"
 				  data_field="${True}"
 				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
