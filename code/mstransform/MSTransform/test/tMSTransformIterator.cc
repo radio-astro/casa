@@ -253,7 +253,7 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("datacolumn", string("ALL"));
 				configuration.define ("reindex", False);
 				configuration.define ("spw", "1");
-				configuration.define ("correlation", "RR,LL");
+				//configuration.define ("correlation", "RR,LL");
 			}
 			else
 			{
@@ -1083,7 +1083,35 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>sigma match" << endl;
 			}
 
-			// CAS-7601: Get correlation types
+
+			// Correlation types
+			Vector<Stokes::StokesTypes> corrTypes = visBuffer->getCorrelationTypesSelected();
+			Vector<Stokes::StokesTypes> refCorrTypes = visBufferRef->getCorrelationTypesDefined();
+			for (uInt idx=0;idx<corrTypes.size();idx++)
+			{
+				if (corrTypes[idx] != refCorrTypes[idx])
+				{
+					cout << RED;
+					cout 	<< " correlation types don't match "
+							<< " transformBuffer=" << Stokes::name(corrTypes[idx])
+							<< " transformFile=" << Stokes::name(refCorrTypes[idx]) << endl;
+					keepIterating = False;
+					break;
+				}
+			}
+
+			if (keepIterating)
+			{
+				cout << GREEN;
+				cout 	<< "=>correlation types match" << endl;
+			}
+
+			// CAS-7315: Phase shifting
+			visBuffer->phaseCenterShift(0.1,0.1);
+			visBufferRef->phaseCenterShift(0.1,0.1);
+
+			// CAS-7601: Get correlation types //////////////////////////////////////////////////////////////
+			/*
 			for (uInt idx=0;idx<visBuffer->getCorrelationTypes().size();idx++)
 			{
 				uInt corrIdx = visBuffer->getCorrelationTypes()[idx];
@@ -1107,14 +1135,10 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				String corrTypeStr = Stokes::name(corrType);
 				cout << "getCorrelationTypesSelected product selected: " << corrTypeStr << endl;
 			}
-
-
-			// CAS-7315: Phase shifting
-			visBuffer->phaseCenterShift(0.1,0.1);
-			visBufferRef->phaseCenterShift(0.1,0.1);
+			*/
 
 			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
-
+			/*
 			IPosition shape = visBuffer->getShape();
 			Cube<Bool> flagCube(visBuffer->getShape(),False);
 			Vector<Bool> flagCubeRow(visBuffer->getShape()(2),False);
@@ -1166,6 +1190,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 			// Not needed according to the flag cube - flag row convention agreement
 			visIter->writeFlag(flagCube);
+
+			*/
 
 			visIter->next();
 			visIterRef.next();

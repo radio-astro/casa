@@ -1476,70 +1476,13 @@ Int MSTransformBufferImpl::nAntennas () const
 // -----------------------------------------------------------------------
 void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 {
-	getShape();
-	if (phase.nelements() != nRows_p)
-	{
-		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
-				<< "Phase vector does not have the same number of elements as rows in the current buffer" << LogIO::POST;
-	}
+	// Trigger phase center shift in the inner buffer as it always has to happen before any averaging
+	manager_p->getVisBuffer()->phaseCenterShift(phase);
 
-	// Use the frequencies corresponding to the SPW of the first row in the buffer
-	Vector<Double> freq(getFrequencies(0));
-
-	// Set vis cube references
-	Cube<Complex> visCubeRef;
-	Cube<Complex> visCubeModelRef;
-	Cube<Complex> visCubeCorrectedRef;
-	if (visCubeOk_p)
-	{
-		visCubeRef.reference(visCube());
-	}
-	if (visCubeModelOk_p)
-	{
-		visCubeModelRef.reference(visCubeModel());
-	}
-	if (visCubeCorrectedOk_p)
-	{
-		visCubeCorrectedRef.reference(visCubeCorrected());
-	}
-
-
-	Complex cph;
-	Double ph, udx;
-	for (uInt row_idx = 0; row_idx < nRows_p; ++row_idx)
-	{
-		udx = phase(row_idx) * -2.0 * C::pi / C::c; // in radian/Hz
-
-		for (uInt chan_idx = 0; chan_idx < nChannels_p; ++chan_idx)
-		{
-			// Calculate the Complex factor for this row and channel
-			ph = udx * freq(chan_idx);
-
-			if (ph != 0.)
-			{
-				cph = Complex(cos(ph), sin(ph));
-
-				// Shift each correlation:
-				for (uInt corr_idx = 0; corr_idx < nCorrelations_p; ++corr_idx)
-				{
-					if (visCubeOk_p)
-					{
-						visCubeRef(corr_idx, chan_idx, row_idx) *= cph;
-					}
-
-					if (visCubeModelOk_p)
-					{
-						visCubeModelRef(corr_idx, chan_idx, row_idx) *= cph;
-					}
-
-					if (visCubeCorrectedOk_p)
-					{
-						visCubeCorrectedRef(corr_idx, chan_idx, row_idx) *= cph;
-					}
-				}
-			}
-		}
-	}
+	// Clear vis cube state so that they are re-filled and re-averaged with the shifted visibilities
+	visCubeOk_p = False;
+	visCubeCorrectedOk_p = False;
+	visCubeModelOk_p = False;
 
 	return;
 }
@@ -1549,23 +1492,15 @@ void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
 // -----------------------------------------------------------------------
 void MSTransformBufferImpl::phaseCenterShift(Double dx, Double dy)
 {
+	// Trigger phase center shift in the inner buffer as it always has to happen before any averaging
+	manager_p->getVisBuffer()->phaseCenterShift(dx,dy);
 
-	// Offsets in radians (input is arcsec)
-	dx *= (C::pi / 180.0 / 3600.0);
-	dy *= (C::pi / 180.0 / 3600.0);
+	// Clear vis cube state so that they are re-filled and re-averaged with the shifted visibilities
+	visCubeOk_p = False;
+	visCubeCorrectedOk_p = False;
+	visCubeModelOk_p = False;
 
-	// Extra path as fraction of U and V
-	Vector<Double> udx;
-	udx = uvw().row(0);
-	Vector<Double> vdy;
-	vdy = uvw().row(1);
-	udx *= dx; // in m
-	vdy *= dy;
-
-	// Combine axes
-	udx += vdy;
-
-	phaseCenterShift(udx);
+	return;
 }
 
 
