@@ -443,9 +443,6 @@ FlagMSHandler::generateIterator()
         else if (enableTimeAvg_p)
         {
             // Time averaging in clip mode uses the Time Averaging Iterator
-            cout << "Using timeavg ITERATOR"<< endl;
-            // TODO: should match the AveragingOptions with the datacolumn requested in clip!!!
-
             vi::AveragingParameters parameters(timeAverageBin_p, 0,vi::SortColumns(sortOrder_p, false),
                     timeAvgOptions_p,0.0,NULL,true);
 
@@ -454,7 +451,6 @@ FlagMSHandler::generateIterator()
         }
 		else if (!mapScanStartStop_p and !enableTimeAvg_p)
 		{
-            cout << "Using normal ITERATOR"<< endl;
 			if (visibilityIterator_p) delete visibilityIterator_p;
 			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
 			                                                   vi::SortColumns (sortOrder_p, true),

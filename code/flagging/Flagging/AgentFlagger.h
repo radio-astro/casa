@@ -366,6 +366,9 @@ private:
 	Bool timeset_p;
 	Bool iterset_p;
 
+	// Time average parameter in clip mode
+	Bool timeAvg_p;
+
 };
 
 

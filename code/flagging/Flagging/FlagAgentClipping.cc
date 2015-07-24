@@ -35,7 +35,6 @@ FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool wr
 	// Setup the time average iterator parameters
 	if (timeavg_p)
 	{
-	    cout <<"CNTR: time average is set to True"<<endl;
 	    flagDataHandler_p->timeAverageBin_p = timebin_p;
 	    flagDataHandler_p->dataColumnType_p = dataColumn_p;
         flagDataHandler_p->setTimeAverageIter(true);

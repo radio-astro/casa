@@ -198,13 +198,12 @@
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
-            <!-- TEMPORARILY HIDDEN -->
-            <param type="any" name="timeavg" subparam="true" visibility="hidden" >
+            <param type="any" name="timeavg" subparam="true">
                 <description>Average over time ranges</description>
                 <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
-                <param type="string" name="timebin" subparam="true" visibility="hidden" >
+                <param type="string" name="timebin" subparam="true">
                     <description>Bin width for time averaging.</description>     
                     <value type="string">0s</value>
                 </param>            
@@ -483,6 +482,8 @@
                         <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
+                        <default param="timeavg"> <value type="bool">False</value></default>
+                        <default param="timebin"> <value type="string"></value></default>
                         <default param="clipzeros"> <value type="bool">False</value></default>
                     </equals>
                     <equals value="quack">
@@ -763,6 +764,9 @@
                  'unflag', 'summary'
         default: 'manual'
 
+        
+    ------------------------------------- LIST MODE -----------------------------------------------
+    
         list -- Flag according to the data selection and flag commands specified in the input list.
                 The input list may come from a text file, a list of text files or from a Python list 
                 of strings. Each input line may contain data selection parameters and any parameter 
@@ -861,8 +865,10 @@
                        NOTE: The most common use-case for tbuff is to apply the online flags
                             that are created by importasdm when savecmds=True. The value of
                             a regular time buffer should be tbuff=0.5*max(integration time).
-                      
 
+                          
+    ------------------------------------- MANUAL MODE -----------------------------------------------   
+     
         manual -- Flag according to the data selection specified.
                   This is the default mode (used when the mode is not specified).
                   
@@ -872,23 +878,13 @@
                             data from a processor of type CORRELATOR. 
                     default: False
                     options: True,False
-                  
+
+    
+    ------------------------------------- CLIP MODE -----------------------------------------------  
+                        
         clip -- Clip data according to values of the following subparameters. The polarization
                 expression is given by the correlation parameter. For calibration tables, the
                 solutions are also given by the correlation parameter.
-                    
-               channelavg -- Average data over the selected channels or not.
-                             Pre-flagged channels are excluded from the average. 
-                             The average is done after applying the expression
-                             given in the correlation parameter. This will do a scalar 
-                             averaging on the channels.
-                    default: False
-                    options: True,False
-                    
-               clipminmax -- Range of data (Jy) that will NOT be flagged.
-                    default: []; it will flag only NaN and Infs.
-                    example: [0.0,1.5]
-                    It will always flag the NaN/Inf data, even when a range is specified.
                     
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
@@ -901,16 +897,47 @@
                    
                     NOTE2: when datacolumn is WEIGHT, the task will internally use WEIGHT_SPECTRUM.
                            If WEIGHT_SPECTRUM does not exist, it will create one on-the-fly
-                           based on the values of WEIGHT. The clipminmax values will be divided
-                           by the number of channels and used to flag the data.
-
+                           based on the values of WEIGHT. 
+                    
+               clipminmax -- Range of data (Jy) that will NOT be flagged.
+                    default: []; it will flag only NaN and Infs.
+                    example: [0.0,1.5]
+                    It will always flag the NaN/Inf data, even when a range is specified.                    
+    
                clipoutside -- Clip OUTSIDE the range?
                     default: True
                     example: False; flag data WITHIN the clipminmax range.
 
+               channelavg -- Average data over the selected channels or not.
+                             Pre-flagged channels are excluded from the average. 
+                             The average is done after applying the expression
+                             given in the correlation parameter. This will do a scalar 
+                             averaging on the channels.
+                    default: False
+                    options: True/False
+    
+               timeavg -- Average data in time. Partially flagged data will not be included in the average
+                          calculation, unless all the data for a given channel is flagged. If present, 
+                          WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used to compute a weighted average. Otherwise, 
+                          if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present, flagdata will use WEIGH/SIGMA instead.
+                    default: False
+                    options: True/False
+    
+                          NOTE1: Time averaging in clip mode do not support calibration tables.
+                          NOTE2: It is not possible to use the clip mode with time averaging in a list mode.
+                                 The framework used to iterate through a time averaged chunk of data is different
+                                 from a normal iterator, therefore mixing time averaging with other flagging modes
+                                 is incompatible in list mode.
+    
+               timebin -- Bin width for time averaging in seconds.
+                    default: '0s'                    
+    
                clipzeros -- Clip zero-value data.
                     default: False
 
+    
+    ------------------------------------- QUACK MODE -----------------------------------------------    
+    
         quack -- Option to remove specified part of scan beginning/end.
 
                quackinterval -- Time in seconds from scan beginning/end to flag. Make time slightly 
@@ -961,8 +988,10 @@
                     name=VLA02
                     diameter=25.0
                     position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]
-                  
 
+                      
+    ------------------------------------- ELEVATION MODE ----------------------------------------------- 
+       
         elevation -- Option to flag based on antenna elevation. This mode is not available
                       for cal tables.
                  
@@ -976,6 +1005,9 @@
                              (as function of time), will be flagged.
                    default: 90.0
 
+    
+    ------------------------------------- TFCROP MODE -----------------------------------------------    
+    
         tfcrop -- Flag using the TFCrop autoflag algorithm. 
 
                  For each field, spw, timerange (specified by ntime), and baseline, 
@@ -1110,7 +1142,8 @@
                      
                        flagdata(vis, mode='list', inpfile=cmd)                    
 
-
+    ------------------------------------- RFLAG MODE -----------------------------------------------   
+     
         rflag -- Detect outliers based on the RFlag algorithm (ref. E.Greisen, AIPS, 2011).
                  The polarization expression is given by the correlation parameter.
 
@@ -1253,7 +1286,8 @@
                      
                        flagdata(vis, mode='list', inpfile=cmd)                    
 
-
+    ------------------------------------- EXTEND MODE -----------------------------------------------   
+     
         extend -- Extend and/or grow flags beyond what the basic algorithms detect.
                   This mode will extend the accumulated flags available in the MS,
                   regardless of which algorithm created them.
@@ -1321,13 +1355,15 @@
                     default: False
                     options: True/False
                     This option allows flagging of wings in the spectral response of strong RFI.
-                    Note: This can result in excessi                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.                                                
-    ve flagging.
+                    Note: This can result in excessive flagging                    
 
-
+    ------------------------------------- UNFLAG MODE -----------------------------------------------  
+                                                               
         unflag -- Unflag according to the data selection specified.
 
+    
+    ------------------------------------- SUMMARY MODE ----------------------------------------------- 
+           
         summary -- List the number of rows and flagged data points for the MS's meta-data.
 	               The resulting summary will be returned as a Python dictionary.
                   
@@ -1385,7 +1421,9 @@
                     s['report0']['name'] : 'InitFlags'
                     s['report1']['name'] : 'Autocorr'
 			                            
-
+    
+    ------------------------------------- ACTIONS -----------------------------------------------    
+        
     action -- Action to perform in MS/cal table or in the input list of parameters. 
         options: 'none', 'apply','calculate'
         default: 'apply'

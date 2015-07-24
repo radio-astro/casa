@@ -1819,6 +1819,74 @@ class test_clip(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 137472)
 
+    def test_timeavg1(self):
+        '''flagdata: clip with time average and compare with mstransform'''
+        # Create an output with 4 rows
+        from tasks import split2
+        split2('Four_ants_3C286.ms',outputvis='timeavg.ms',datacolumn='data',spw='9',scan='30',antenna='1&2',
+               timerange='2010/10/16/14:45:08.50~2010/10/16/14:45:11.50')
+        
+        # STEP 1
+        # Create time averaged output in mstransform
+        mstransform('timeavg.ms',outputvis='step1_timeavg.ms',datacolumn='data',timeaverage=True,timebin='2s')
+        
+        # clip it
+        flagdata('step1_timeavg.ms',flagbackup=False, mode='clip',clipminmax=[0.0,0.08])
+        res1 = flagdata(vis='step1_timeavg.ms', mode='summary', spwchan=True)
+
+        # STEP 2
+        # Clip with time averaging.
+        flagdata('timeavg.ms', flagbackup=False, mode='unflag')
+        flagdata(vis='timeavg.ms', flagbackup=False, mode='clip', datacolumn='DATA', 
+                 timeavg=True, timebin='2s', clipminmax=[0.0,0.08])
+        
+        # Do another time average in mstransform to have the corrected averaged visibilities
+        mstransform('timeavg.ms',outputvis='step2_timeavg.ms',datacolumn='data',timeaverage=True,timebin='2s')
+        
+        res2 = flagdata(vis='step2_timeavg.ms', mode='summary', spwchan=True)
+
+        self.assertEqual(res1['flagged'], res2['flagged'])
+        self.assertEqual(res2['spw:channel']['0:21']['flagged'], 1)
+        self.assertEqual(res2['spw:channel']['0:51']['flagged'], 8)
+        self.assertEqual(res2['spw:channel']['0:60']['flagged'], 7)
+
+    def test_timeavg2(self):        
+        '''flagdata: clip with time averaging in spw 9'''
+        
+        flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='DATA', spw='9',
+                 timeavg=True, timebin='2s', clipminmax=[0.0,0.08])
+        
+        res = flagdata(vis=self.vis, mode='summary', spw='9')
+        self.assertEqual(res['spw']['9']['flagged'], 42370)
+        self.assertEqual(res['flagged'], 42370)
+
+        
+    def test_timeavg_list_mode1(self):
+        '''flagdata: timeavg=True should not be accepted in list mode'''
+        
+        inplist = ["mode='manual' spw='7'",
+                   "mode='clip' spw='9' timeavg=True timebin='2s' clipminmax=[0.0, 0.8]"]
+        
+        flagdata(vis=self.vis, mode='list', inpfile=inplist)
+        res = flagdata(vis=self.vis, mode='summary', spw='7,9')
+        self.assertEqual(res['spw']['7']['flagged'], 274944)
+        self.assertEqual(res['spw']['9']['flagged'], 0)
+        self.assertEqual(res['flagged'], 274944)
+
+    def test_timeavg_list_mode2(self):
+        '''flagdata: timeavg=True should not be accepted in list mode'''
+        
+        inplist = ["mode='manual' spw='7'",
+                   "mode='clip' spw='9' timeavg=True timebin='2s' clipminmax=[0.0, 0.8]",
+                   "mode='clip' spw='8' clipzeros=True"]
+        
+        flagdata(vis=self.vis, mode='list', inpfile=inplist)
+        res = flagdata(vis=self.vis, mode='summary', spw='7,8,9')
+        self.assertEqual(res['spw']['7']['flagged'], 274944)
+        self.assertEqual(res['spw']['8']['flagged'], 274944)
+        self.assertEqual(res['spw']['9']['flagged'], 0)
+        self.assertEqual(res['flagged'], 274944*2)
+
 
 class test_CASA_4_0_bug_fix(test_base):
     """flagdata:: Regression test for the fixes introduced during the CASA 4.0 bug fix season"""

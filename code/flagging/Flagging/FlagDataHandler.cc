@@ -1612,11 +1612,13 @@ FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
 	preLoadColumn(vi::Time);
 }
 
+// ----------------------------------------------------------------------------
+//  Set the time averaging iterator options for the clip agent
+// ----------------------------------------------------------------------------
 void
 FlagDataHandler::setTimeAverageIter(bool activated)
 {
     enableTimeAvg_p = activated;
-    cout <<"setTimeAVerageIter: dataColumnType_p="<<dataColumnType_p<<endl;
 
     // Setup the time averaging options
     if (dataColumnType_p.compare("DATA") == 0)

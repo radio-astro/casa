@@ -684,14 +684,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 	
 --- Time averaging parameters ---
-    timeaverage -- Average data in time. Flagged data will be included in the average
-                   calculation, unless the parameter keepflags is set to False. In this
-                   case only partially flagged rows will be used in the average.
-                   WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used (if present) in
-                   addition to the flags to compute a weighted average. The calculation is done
-                   in the same way as for the channel average case but across the time axis.
-                   Otherwise (if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present)
-                   mstransform will use WEIGH/SIGMA instead, as in split.
+    timeaverage -- Average data in time. Partially flagged data will not be included in the average
+                   calculation, unless all the data for a given channel is flagged. When all data for a
+                   channel is flagged, mstransform will calculate the average, write it to the output MS and
+                   will set all the flags to True. If keepflags=False, the fully flagged data
+                   will not be written to the output MS. If present, WEIGHT_SPECTRUM/SIGMA_SPECTRUM
+                   will be used together with the flags, to compute a weighted average.
+                   The calculation is done in the same way as for the channel average case but 
+                   across the time axis. Otherwise (if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present)
+                   mstransform will use WEIGH/SIGMA instead, as in split.    
+
         default: False
 
         timebin -- Bin width for time averaging.
