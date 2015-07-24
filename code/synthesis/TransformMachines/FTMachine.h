@@ -344,6 +344,7 @@ public:
   virtual String getPointingDirColumnInUse();
 
   virtual void setSpwChanSelection(const Cube<Int>& spwchansels);
+  virtual Cube<Int> getSpwChanSelection(){return spwChanSelFlag_p;};
   virtual void setSpwFreqSelection(const Matrix<Double>& spwfreqs);
   virtual Matrix<Double> getSpwFreqSelection() {return spwFreqSel_p;};
 

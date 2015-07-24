@@ -191,6 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       pop_p = other.pop_p;
       toVis_p = other.toVis_p;
+      spwFreqSel_p.resize();
       spwFreqSel_p = other.spwFreqSel_p;
       expandedSpwFreqSel_p = other.expandedSpwFreqSel_p;
       expandedSpwConjFreqSel_p = other.expandedSpwConjFreqSel_p;
@@ -1366,6 +1367,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool FTMachine::matchAllSpwChans(const VisBuffer& vb){
     
     vb.allSelectedSpectralWindows(selectedSpw_p, nVisChan_p);
+ 
     
     doConversion_p.resize(max(selectedSpw_p)+1);
     doConversion_p.set(False);
