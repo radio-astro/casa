@@ -15,6 +15,7 @@
 #include <complex>
 #include <stdcasa/record.h>
 #include <tools/swigconvert_python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 using casac::record;
@@ -113,8 +114,8 @@ if($1){
 %typemap(in) StringVec {
   /* Check if is a list */
   if (PyList_Check($input)) {
-    int size = PyList_Size($input);
-    for (int i = 0; i < size; i++) {
+    Py_ssize_t size = PyList_Size($input);
+    for (Py_ssize_t i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyString_Check(o))
         $1.value.push_back(PyString_AsString(PyList_GetItem($input,i)));
@@ -136,13 +137,13 @@ if($1){
 %typemap(in) std::vector<std::string> & {
   /* Check if is a list */
   if (PyList_Check($input)) {
-    int size = PyList_Size($input);
+    Py_ssize_t size = PyList_Size($input);
     if(!$1)
        $1 = new std::vector<std::string>(size);
-    for (int i = 0; i < size; i++) {
+    for (Py_ssize_t i = 0; i < size; i++) {
       PyObject *o = PyList_GetItem($input,i);
       if (PyString_Check(o))
-        if(i < $1->size())
+        if(i < (Py_ssize_t)($1->size()))
           (*$1)[i] = PyString_AsString(PyList_GetItem($input,i));
         else
           $1->push_back(PyString_AsString(PyList_GetItem($input,i)));
@@ -664,13 +665,13 @@ if($1){
 
 %typemap(out) StringVec {
    $result = PyList_New($1.size());
-   for(int i=0;i<$1.size();i++)
+   for(StringVec::size_type i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
 %typemap(out) std::vector<std::string> {
    $result = PyList_New($1.size());
-   for(int i=0;i<$1.size();i++)
+   for(std::vector<std::string>::size_type i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
@@ -708,7 +709,7 @@ if($1){
 
 %typemap(out) RecordVec {
    $result = PyList_New($1.size());
-   for(int i=0;i<$1.size();i++){
+   for(RecordVec::size_type i=0;i<$1.size();i++){
       const record &val = $1[i];
       PyObject *r = record2pydict(val);
       PyList_SetItem($result, i, r);
@@ -830,7 +831,7 @@ if($1){
 
 %typemap(argout) std::vector<std::string>& OUTARGVEC{
    PyObject *o = PyList_New($1.size());
-   for(int i=0;i<$1.size();i++)
+   for(std::vector<std::string>::size_type i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
    if((!$result) || ($result == Py_None)){
       $result = o;
