@@ -291,23 +291,53 @@ class Applycal(basetask.StandardTaskTemplate):
 	    flagkwargs = []        
 	    
 	    for field in fields:
-		for spwid in spwids:
-		    flagline = "field='" + str(field.id) + "' spw='" + str(spwid) + "' mode='summary' name='AntSpw" + str(spwid).zfill(3) + "Field" + str(field.id) + "'"
-		    flagkwargs.append(flagline)
-		
-		flagsummary[field.name.strip('"')] = {}
-		
+	        flagsummary[field.name.strip('"')] = {}
+	    
+	    
+	    for spwid in spwids:
+		flagline = "spw='" + str(spwid) + "' fieldcnt=True mode='summary' name='AntSpw" + str(spwid).zfill(3)
+		flagkwargs.append(flagline)
+	
+	    #print "flagkwargs: ", flagkwargs
+	    
+	
+	
+	    #BRK note - Added kwarg fieldcnt based on Justo's changes, July 2015
+	    # Need to have fieldcnt in the flagline above
 	    flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='list', inpfile=flagkwargs)
+	    #flaggingjob = casa_tasks.flagdata(vis=inputs.vis, mode='summary', fieldcnt=True)
 	    flagdicts = self._executor.execute(flaggingjob)
 	    
-	    for key in flagdicts.keys():
-		try:
-		    fieldname = flagdicts[key]['field'].keys()[0]
-		    flagsummary[fieldname][key] = flagdicts[key]
-		except:
-		    LOG.debug("No flags to report for "+str(key))
+	    #print "flagdicts keys: ", flagdicts.keys()
+	    #print flagdicts
+	    
+	    #BRK note - for Justo's new flagging scheme, need to rearrrange
+	    # the dictionary keys in the order of field, spw report, antenna, with added name and type keys
+	    #   on the third dictionary level.
+	    
+	    #Set into single dictionary report (single spw) if only one dict returned
+	    if len(flagkwargs) == 1 :
+	        flagdictssingle = flagdicts
+	        flagdicts = {}
+	        flagdicts['report0'] = flagdictssingle
+	    
+	    for key in flagdicts.keys():  #report level
+	        #print 'FIELDNAMES: ', flagdicts[key]
+	        fieldnames = flagdicts[key].keys()
+	        fieldnames.remove('name')
+	        fieldnames.remove('type')
+	        for fieldname in fieldnames:
+		    try:
+		        flagsummary[fieldname][key] = flagdicts[key][fieldname]
+		        spwid = flagdicts[key][fieldname]['spw'].keys()[0]
+		        flagsummary[fieldname][key]['name'] = 'AntSpw'+str(spwid).zfill(3)+'Field_'+str(fieldname)
+		        flagsummary[fieldname][key]['type'] = 'summary'
+		        
+		    except:
+		        LOG.debug("No flags to report for "+str(key))
 		
 	    result.flagsummary = flagsummary
+	    #result.flagdicts = flagdicts
 
         return result
 
