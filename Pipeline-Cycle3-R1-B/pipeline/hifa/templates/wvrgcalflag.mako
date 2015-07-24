@@ -163,7 +163,7 @@ measurement set.</p>
 <ul>
 % for ms, plot in metric_plots.items():
     <li>
-        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric_%s.html' % ms), pcontext.report_dir)}"
+        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric-%s.html' % ms), pcontext.report_dir)}"
           class="replace">${ms}</a>
     </li>
 % endfor        
@@ -182,7 +182,7 @@ measurement set.</p>
 
 	% for ms in phase_offset_summary_plots:
 	    <h4><a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_%s.html' % ms), pcontext.report_dir)}">${ms}</a>
+	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets-%s.html' % ms), pcontext.report_dir)}">${ms}</a>
 	    </h4>
 	    <ul class="thumbnails">
 	        % for plot in phase_offset_summary_plots[ms]:
@@ -200,7 +200,7 @@ measurement set.</p>
 	
 	                    <div class="caption">
 		                    <h4>
-			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_%s.html' % ms), pcontext.report_dir)}"
+			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets-%s.html' % ms), pcontext.report_dir)}"
 		    	                   class="replace"
 		        	               data-spw="${plot.parameters['spw']}">
 			                        Spectral Window ${plot.parameters['spw']}
@@ -238,7 +238,7 @@ measurement set.</p>
 
 	% for ms in baseline_summary_plots:
 	    <h4><a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline_%s.html' % ms), pcontext.report_dir)}">${ms}</a>
+	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline-%s.html' % ms), pcontext.report_dir)}">${ms}</a>
 	    </h4>
 	    <ul class="thumbnails">
 	        % for plot in baseline_summary_plots[ms]:
@@ -256,7 +256,7 @@ measurement set.</p>
 	
 	                    <div class="caption">
 							<h4>
-			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline_%s.html' % ms), pcontext.report_dir)}"
+			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline-%s.html' % ms), pcontext.report_dir)}"
 			                       class="replace"
 			                       data-spw="${plot.parameters['spw']}">
 				                   Spectral Window ${plot.parameters['spw']}
