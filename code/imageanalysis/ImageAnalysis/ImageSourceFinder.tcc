@@ -126,7 +126,6 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
 {
 
 // Find sky
-   
    Int dC;
    String errorMessage;
    Vector<Int> pixelAxes, worldAxes;
@@ -135,7 +134,6 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
                                 worldAxes, cSys)) {
      os << errorMessage << LogIO::EXCEPTION;
    } 
-
 // Find maximum/minimum
    
    LatticeStatistics<T> stats(*pImage_p, os, True);
@@ -143,7 +141,6 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
    if (!stats.getMinMaxPos(minPos, maxPos)) {
       os << stats.errorMessage() << LogIO::EXCEPTION;
    }
-      
 // Make SubImage of plane of sky holding maximum or minimum
          
    IPosition shape = pImage_p->shape();
@@ -153,14 +150,12 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
    IPosition blc;
    IPosition trc;
    if (absFind) {
-
 // Find positive only
 
       blc = maxPos;
       trc = maxPos;
       for (uInt i=0; i<nDim; i++) absPixel(i) = maxPos(i);
    } else {
-
 // Find positive or negative only
    
       Float valueMin = pImage_p->getAt(minPos);
@@ -176,41 +171,31 @@ SkyComponent ImageSourceFinder<T>::findSourceInSky (LogIO& os, Vector<Double>& a
          for (uInt i=0; i<nDim; i++) absPixel(i) = maxPos(i);
       }
    }
-// 
    blc(pixelAxes(0)) = 0;
    blc(pixelAxes(1)) = 0;
    trc(pixelAxes(0)) = shape(pixelAxes(0))-1;
    trc(pixelAxes(1)) = shape(pixelAxes(1))-1;
-//
    IPosition inc(nDim,1);
    LCBox::verify (blc, trc, inc, shape);
    Slicer slicer(blc, trc, inc, Slicer::endIsLast);
    AxesSpecifier axesSpec(False);   // drop degenerate
    const SubImage<T> subImage(*pImage_p, slicer, axesSpec);
-   
 // Find one source
 
    const uInt nMax = 1;
    ComponentList list = findSources (os, subImage, nMax, cutoff, absFind, 
                                      doPoint, width);
-//
    SkyComponent sky = list.component(0);
-//
    DirectionCoordinate dCoord = cSys.directionCoordinate(dC);
    MDirection mDir = sky.shape().refDirection();
    Vector<Double> dirPixel(2);
    if (!dCoord.toPixel(dirPixel, mDir)) {
      os << dCoord.errorMessage() << LogIO::EXCEPTION;
    }
-//
    absPixel(pixelAxes(0)) = dirPixel(0);
    absPixel(pixelAxes(1)) = dirPixel(1);
-//
    return sky;
 }
-
-
-
 
 template <class T>
 ComponentList ImageSourceFinder<T>::findSources (LogIO& os, 
@@ -220,7 +205,6 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
                                                  Bool doPoint, Int width)
 {
 // Output
-
    ComponentList listOut;
 
 // Make sure the Image is 2D and that it holds the sky.  Exception if not.
@@ -257,10 +241,11 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
    IPosition inShape = image.shape();
    Int nx = inShape(0);
    Int ny = inShape(1);
-   if (ny <= w) {
-     os << "Need at least " << w << " rows in image" << LogIO::EXCEPTION;
-   }  
-//
+   ThrowIf(
+		   ny <= w,
+		   "Need at least " + String::toString(w+1)
+   	   +" rows in image. Found only " + String::toString(ny)
+   );
    IPosition inSliceShape(2, nx, 1);
    Block<COWPtr<Array<T> > > inPtr(w);
    Block<COWPtr<Array<Bool> > > inMaskPtr(w);
@@ -270,15 +255,13 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
      inPtr[j] = COWPtr<Array<T> >(new Array<T>(inSliceShape));
      inMaskPtr[j] = COWPtr<Array<Bool> >(new Array<Bool>(inSliceShape));
    }
-      
 // Read first w-1 lines 
 
    Int inp = 0;
    IPosition start(inShape);
    start = 0;  
    IPosition pos(1,0);
-   //Bool /*isRef, */ isMaskRef;   
-//
+
    for (Int j=0; j<(w-1); j++) {
       //isRef = image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
       image.getSlice(inPtr[inp+j], Slicer(start, inSliceShape), True);
@@ -290,7 +273,6 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
       }
       start(1) += 1;
    }
-   
    
 // Loop through remaining lines  
                
@@ -408,14 +390,13 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
    }
                        
 // Find the number filled
-                       
    Int nFound = 0;
    typename NumericTraits<T>::PrecisionType x = cutoff*abs(rs(0,0));
    for (Int k=0; k<nMax; k++) {
      if (abs(rs(k,0)) < x || rs(k,0) == 0) break;
      nFound++;   
    }      
-//
+
    if (nFound==0) {
       os << LogIO::WARN << "No sources were found" << LogIO::POST;
       return listOut;
@@ -441,7 +422,6 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
          } else {
 
 // See if we can do this source
-
             Int iCen = Int(rs(k,1));
             Int jCen = Int(rs(k,2));
             IPosition blc0(image.ndim(),0);
@@ -499,7 +479,6 @@ ComponentList ImageSourceFinder<T>::findSources (LogIO& os,
    }
 
 // Fill SkyComponents
-
    os << LogIO::NORMAL << "Found " << nFound << " sources" << LogIO::POST;
    const Unit& bU = image.units();
    Double rat;

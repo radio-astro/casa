@@ -1612,42 +1612,33 @@ Bool ImageAnalysis::modify(
 	return True;
 }
 
-Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
-		const Int width, const Bool absFind, const Bool list) {
+Record ImageAnalysis::maxfit(
+	Record& Region, const Bool doPoint,
+	const Int width, const Bool absFind, const Bool list
+) {
 	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "maxfit");
-
-	SkyComponent sky; // Output
+	*_log << LogOrigin("ImageAnalysis", __func__);
+	//SkyComponent sky; // Output
 	Vector<Double> absPixel; // Output
-
-	// Make subimage
 	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
-	//ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False); // drop degenerate
 	String mask;
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
+	/*SHARED_PTR<const SubImage<Float> >*/ auto subImage = SubImageFactory<Float>::createSubImageRO(
 		pRegionRegion, pMaskRegion, *_imageFloat, Region, mask, _log.get(), axesSpec
 	);
-	Vector<Float> blc;
-	if (pRegionRegion) {
-		blc = pRegionRegion->asLCSlicer().blc();
-	} else {
-		blc.resize(subImage->ndim());
-		blc = 0.0;
-	}
-    pRegionRegion = NULL;
-    pMaskRegion = NULL;
+	*_log << LogOrigin("ImageAnalysis", __func__);
+
+    pRegionRegion = nullptr;
+    pMaskRegion = nullptr;
 	// Find it
 	ImageSourceFinder<Float> sf(*subImage);
 	Double cutoff = 0.1;
-	sky = sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint, width);
-	//absPixel += 1.0;
-
+	auto sky = sf.findSourceInSky(*_log, absPixel, cutoff, absFind, doPoint, width);
 	// modify to show dropped degenerate axes values???
 	if (list) {
 		*_log << LogIO::NORMAL << "Brightness     = " << sky.flux().value()
 				<< " " << sky.flux().unit().getName() << LogIO::POST;
-		CoordinateSystem cSys = subImage->coordinates();
+		/*CoordinateSystem*/ const auto& cSys = subImage->coordinates();
 		*_log << "World Axis Units: " << cSys.worldAxisUnits() << LogIO::POST;
 		Vector<Double> wPix;
 		if (!cSys.toWorld(wPix, absPixel)) {
@@ -1665,7 +1656,6 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 		cSys.makePixelRelative(pRel);
 		*_log << "Relative pixel = " << pRel << LogIO::POST;
 	}
-
 	ComponentList mycomp;
 	mycomp.add(sky);
 
