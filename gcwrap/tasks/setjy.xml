@@ -90,10 +90,10 @@
 
 		<param type="string" name="standard">
 			<description>Flux density standard</description>
-			<value>Perley-Butler 2010</value>
-			<allowed kind="enum">
-			<value>Perley-Butler 2010</value>
 			<value>Perley-Butler 2013</value>
+			<allowed kind="enum">
+			<value>Perley-Butler 2013</value>
+			<value>Perley-Butler 2010</value>
 			<value>Perley-Taylor 99</value>
 			<value>Baars</value>
 			<value>Perley 90</value>
@@ -206,14 +206,6 @@
                     </notequals>
                   </when>-->
                   <when param="standard">
-                  <equals type="string" value="Perley-Butler 2010">
-                   <default param="model"><value type="string"></value>
-                   </default>
-                   <!--<default param="modimage"><value type="string"></value>
-                   </default>-->
-                   <default param="listmodels"><value type="bool">False</value>
-                   </default>
-                  </equals>
                   <equals type="string" value="Perley-Butler 2013">
                    <default param="model"><value type="string"></value>
                    </default>
@@ -222,6 +214,14 @@
                    <default param="listmodels"><value type="bool">False</value>
                    </default>
                    <default param="interpolation"><value type="string">nearest</value>
+                   </default>
+                  </equals>
+                  <equals type="string" value="Perley-Butler 2010">
+                   <default param="model"><value type="string"></value>
+                   </default>
+                   <!--<default param="modimage"><value type="string"></value>
+                   </default>-->
+                   <default param="listmodels"><value type="bool">False</value>
                    </default>
                   </equals>
 		  <equals type="string" value="Perley-Taylor 99"/>
@@ -403,7 +403,7 @@
 
 
     standard -- Flux density standard, used if fluxdensity[0] &lt; 0.0
-            default: 'Perley-Butler 2010'; example: standard='Baars'
+            default: 'Perley-Butler 2013'; example: standard='Baars'
             Options: 'Baars',
                      'Perley 90',
                      'Perley-Taylor 95',
