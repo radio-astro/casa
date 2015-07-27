@@ -26,8 +26,7 @@
 //# $Id: ImageAnalysis.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 //   
 
-// PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
-
+// PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLAS
 
 #include <casa/aips.h>
 #include <casa/iostream.h>
@@ -280,34 +279,28 @@ Bool ImageAnalysis::detached() {
 	return _imageFloat.get() == 0 && _imageComplex.get() == 0;
 }
 
-Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
-		Record& region, const Bool zeroIt) {
+void ImageAnalysis::addnoise(
+	const String& type, const Vector<Double>& pars,
+	const Record& region, const Bool zeroIt,
+	const std::pair<Int, Int> *const &seeds
+) {
 	_onlyFloat(__func__);
-	bool rstat(False);
 	*_log << LogOrigin(className(), __func__);
-
-	Record *pRegion = &region;
-
-	// Make SubImage
 	String mask;
 	SHARED_PTR<SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRW(
-		*_imageFloat, *pRegion,
-		mask, _log.get()
+		*_imageFloat, region, mask, _log.get()
 	);
-
-	// Zero subimage if requested
-	if (zeroIt)
+	if (zeroIt) {
 		subImage->set(0.0);
-
-	// Do it
+	}
 	Random::Types typeNoise = Random::asType(type);
-	LatticeAddNoise lan(typeNoise, pars);
-	lan.add(*subImage);
-	//
+	SHARED_PTR<LatticeAddNoise> lan(
+		seeds
+		? new LatticeAddNoise(typeNoise, pars, seeds->first, seeds->second)
+		: new LatticeAddNoise(typeNoise, pars)
+	);
+	lan->add(*subImage);
 	deleteHist();
-	rstat = true;
-
-	return rstat;
 }
 
 void ImageAnalysis::imagecalc(

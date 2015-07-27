@@ -68,8 +68,11 @@ public:
 
     virtual ~ImageAnalysis();
 
-    Bool addnoise(const String& type, const Vector<Double>& pars,
-                  Record& region, const Bool zero = False);
+    void addnoise(
+    	const String& type, const Vector<Double>& pars,
+    	const Record& region, const Bool zero,
+    	const std::pair<Int, Int> *const &seeds
+    );
 
     // The current object is replaced by the result of the calculation
     void imagecalc(
