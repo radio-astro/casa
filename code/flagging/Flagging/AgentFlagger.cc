@@ -584,10 +584,14 @@ AgentFlagger::initAgents()
 		agent_rec.get("mode", mode);
 
         // If clip agent is mixed with other agents and time average is True, skip it
-        if (mode.compare("clip") == 0 and list_size > 1 and agent_rec.isDefined("timeavg") == true) {
-		    os << LogIO::WARN << "Cannot have clip mode with timeavg=True in list mode" << LogIO::POST;
-		    continue;
-		}
+        if (mode.compare("clip") == 0 and list_size > 1 and agent_rec.isDefined("timeavg") == true){
+            Bool tavg;
+            agent_rec.get("timeavg", tavg);
+            if (tavg){
+                os << LogIO::WARN << "Cannot have clip mode with timeavg=True in list mode" << LogIO::POST;
+                continue;
+            }
+        }
 
 		// Set the new time interval only once
 		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or
