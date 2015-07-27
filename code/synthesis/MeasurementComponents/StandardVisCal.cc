@@ -1625,21 +1625,16 @@ void TOpac::setApply(const Record& applypar) {
 
 String TOpac::applyinfo() {
 
-  ostringstream o;
-  o << typeName();
-
-  if (ci_)
-    o << ": table=" << calTableName();
-  else
+  if (opacity_.nelements()==0)
+    return TJones::applyinfo();
+  else {
+    ostringstream o;
+    o << typeName();
     o << ": opacity=" << opacity_;
-
-  o << boolalpha
+    o << boolalpha
     << " calWt=" << calWt();
-
-  //    << " t="      << interval();
-
-  return String(o);
-
+    return String(o);
+  }
 }
 
 // TOpac needs zenith angle (old VB version)
@@ -1676,13 +1671,12 @@ void TOpac::syncMeta2(const vi::VisBuffer2& vb) {
 void TOpac::calcPar() {
 
   if (prtlev()>6) cout << "      TOpac::calcPar()" << endl;
-
-
-
   
   // If we are interpolating from a table, get opacity(time)
-  if (ci_)
+  if (ci_ || cpp_)
     SolvableVisCal::calcPar();
+  else
+    throw(AipsError("Error in TOpac::calcPar()"));
 
   // Pars now valid, matrices not yet
   validateP();

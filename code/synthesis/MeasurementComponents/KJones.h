@@ -100,6 +100,8 @@ public:
   // Local setApply to enforce calWt=F for delays
   virtual void setApply(const Record& apply);
   using GJones::setApply;
+  virtual void setCallib(const Record& callib,
+			 const MeasurementSet& selms);
 
   // Local setSolve (traps lack of refant)
   virtual void setSolve(const Record& solve);
@@ -272,6 +274,7 @@ public:
   // Local setApply to enforce spwmap=0 for all spw
   virtual void setApply(const Record& apply);
   using KJones::setApply;
+  virtual void setCallib(const Record& callib,const MeasurementSet& selms);
 
   // Type-specific specify
   virtual void specify(const Record& specify);

@@ -68,6 +68,9 @@ public:
   // Local specialization of setApply to extract gain curves from table
   void setApply(const Record& applypar);
 
+  // Cal Library version
+  void setCallib(const Record& applypar,const MeasurementSet& selms);
+
   // Generate gain curves caltable via specify
   void setSpecify(const Record& specify);
   void specify(const Record& specify);

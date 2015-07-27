@@ -263,6 +263,9 @@ public:
 		  Int obs, Int fld, Int ent, Int spw);
 
 
+  // Access to CalTable's freq info
+  //Vector<Double> freqIn(Int spw);  // NYI
+  const Vector<Double>& refFreqIn() { return refFreqIn_; };  // indexed by spw
 
   // Report state
   void listmappings();
@@ -316,6 +319,7 @@ private:
   InterpolateArray1D<Double,Float>::InterpolationMethod ftype(String& strtype);
 
 
+
   // PRIVATE DATA:
   
   // The Caltable
@@ -338,6 +342,7 @@ private:
   // CalTable freq axis info
   Vector<Int> nChanIn_;
   Vector<Vector<Double> > freqIn_;
+  Vector<Double> refFreqIn_;
 
   // Obs, Field, Spw, Ant _output_ (MS) sizes 
   //   calibration required for up to this many

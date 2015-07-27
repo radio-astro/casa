@@ -460,6 +460,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
 
   nChanIn_(),
   freqIn_(),
+  refFreqIn_(),
 
   nMSObs_(ct_.observation().nrow()),
   nMSFld_(ct_.field().nrow()),
@@ -504,7 +505,8 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   }
 
   // How many _Float_ parameters?
-  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+  isCmplx_=(ct_.keywordSet().asString("ParType")=="Complex");
+  if (isCmplx_) // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
 
   // Set CT channel/freq info
@@ -513,7 +515,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
     ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
-
+  ctspw.refFrequency().getColumn(refFreqIn_);
  
   // Initialize maps
   //  (ctids, msids, result arrays)
@@ -725,6 +727,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
 
   nChanIn_(),
   freqIn_(),
+  refFreqIn_(),
 
   nMSObs_(ms_.observation().nrow()),
   nMSFld_(ms_.field().nrow()),
@@ -769,7 +772,8 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   }
 
   // How many _Float_ parameters?
-  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+  isCmplx_=(ct_.keywordSet().asString("ParType")=="Complex");
+  if (isCmplx_) // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
 
   // Set CT channel/freq info
@@ -778,7 +782,7 @@ CLPatchPanel::CLPatchPanel(const String& ctname,
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
     ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
-
+  ctspw.refFrequency().getColumn(refFreqIn_);
  
   // Initialize maps
   //  (ctids, msids, result arrays)

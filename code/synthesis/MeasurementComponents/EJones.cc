@@ -139,6 +139,18 @@ void EGainCurve::setApply(const Record& applypar) {
 
 }
 
+void EGainCurve::setCallib(const Record& applypar,const MeasurementSet& selms) {
+
+  LogMessage message;
+
+  // Standard setCallib
+  SolvableVisCal::setCallib(applypar,selms);
+
+  // Resize za()
+  za().resize(nAnt());
+
+}
+
 void EGainCurve::setSpecify(const Record& specify) {
 
   // Get some information from the MS to help us find
@@ -443,7 +455,7 @@ void EGainCurve::calcPar() {
   if (prtlev()>6) cout << "      EGainCurve::calcPar()" << endl;
 
   // Could do the following in setApply, so it only happens once?
-  if (ci_)
+  if (ci_ || cpp_)
     SolvableVisCal::calcPar();
   else
     throw(AipsError("Problem in EGainCurve::calcPar()"));

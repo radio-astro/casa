@@ -345,8 +345,8 @@ KJones::KJones(VisSet& vs) :
 {
   if (prtlev()>2) cout << "K::K(vs)" << endl;
 
-  // Extract per-spw ref Freq for phase(delay) calculation
-  //  TBD: these should be in the caltable!!
+  // Extract per-spw ref Freq for phase(delay) calculation                                                                                                      
+  //  TBD: these should be in the caltable!!                                                                                                                    
   MSSpectralWindow msSpw(vs.spectralWindowTableName());
   ROMSSpWindowColumns msCol(msSpw);
   msCol.refFrequency().getColumn(KrefFreqs_,True);
@@ -373,6 +373,7 @@ KJones::KJones(String msname,Int MSnAnt,Int MSnSpw) :
   msCol.refFrequency().getColumn(KrefFreqs_,True);
   KrefFreqs_/=1.0e9;  // in GHz
   */
+
 
 }
 
@@ -407,6 +408,35 @@ void KJones::setApply(const Record& apply) {
   KrefFreqs_/=1.0e9;  // in GHz
 
   /// Re-assign KrefFreq_ according spwmap (if any)
+  if (spwMap().nelements()>0) {
+    Vector<Double> tmpfreqs;
+    tmpfreqs.assign(KrefFreqs_);
+    for (uInt ispw=0;ispw<spwMap().nelements();++ispw)
+      if (spwMap()(ispw)>-1)
+	KrefFreqs_(ispw)=tmpfreqs(spwMap()(ispw));
+  }
+
+    
+}
+
+void KJones::setCallib(const Record& callib,
+		       const MeasurementSet& selms) {
+
+  // Call parent to do conventional things
+  SolvableVisCal::setCallib(callib,selms);
+
+  if (calWt()) 
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+
+  // Enforce calWt() = False for delays
+  calWt()=False;
+
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  from the CalTable
+  KrefFreqs_.assign(cpp_->refFreqIn());
+  KrefFreqs_/=1.0e9;  // in GHz
+
+  // Re-assign KrefFreq_ according spwmap (if any)
   if (spwMap().nelements()>0) {
     Vector<Double> tmpfreqs;
     tmpfreqs.assign(KrefFreqs_);
@@ -968,6 +998,48 @@ void KAntPosJones::setApply(const Record& apply) {
 
 }
 
+
+
+void KAntPosJones::setCallib(const Record& callib,
+			     const MeasurementSet& selms) 
+{
+
+  //  cout << "KAntPosJones::setCallib()" << endl;
+
+  // Call generic to do conventional things
+  SolvableVisCal::setCallib(callib,selms);
+
+  if (calWt()) 
+    logSink() << " (" << this->typeName() << ": Enforcing calWt()=False for phase/delay-like terms)" << LogIO::POST;
+
+  // Enforce calWt() = False for delays
+  calWt()=False;
+
+
+  // Force spwmap to all 0  (antpos is not spw-dep)
+  //  NB: this is required before calling parents, because
+  //   SVC::setApply sets up the CTPatchedInterp with spwMap()
+  logSink() << " (" << this->typeName() 
+	    << ": Overriding with spwmap=[0] since " << this->typeName() 
+	    << " is not spw-dependent)"
+	    << LogIO::POST;
+  spwMap().assign(Vector<Int>(1,0));
+
+  // Extract per-spw ref Freq for phase(delay) calculation
+  //  from the CalTable
+  KrefFreqs_.assign(cpp_->refFreqIn());
+  KrefFreqs_/=1.0e9;  // in GHz
+
+  // Re-assign KrefFreq_ according spwmap (if any)
+  if (spwMap().nelements()>0) {
+    Vector<Double> tmpfreqs;
+    tmpfreqs.assign(KrefFreqs_);
+    for (uInt ispw=0;ispw<spwMap().nelements();++ispw)
+      if (spwMap()(ispw)>-1)
+	KrefFreqs_(ispw)=tmpfreqs(spwMap()(ispw));
+  }
+    
+}
 
 void KAntPosJones::specify(const Record& specify) {
 
