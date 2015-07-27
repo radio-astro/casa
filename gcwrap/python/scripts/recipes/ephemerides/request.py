@@ -281,9 +281,19 @@ def request_from_JPL(objnam, enddate,
     elif lobjnam in planets_and_moons:
         objnum = str(planets_and_moons[lobjnam])
     else:
-        print "The JPL object number for", objnam, "is not known.  Try looking it up at"
-        print 'http://ssd.jpl.nasa.gov/horizons.cgi?s_body=1#top and adding it.'
-        return False
+        #print "The JPL object number for", objnam, "is not known.  Try looking it up at"
+        #print 'http://ssd.jpl.nasa.gov/horizons.cgi?s_body=1#top and adding it.'
+        print " request_from_JPL() does not recognize the input object name, %s." % objnam
+        print " The request will be sent as is without a check if it complies with the JPL-Horizons convention."
+        print " Please refer http://ssd.jpl.nasa.gov/horizons.cgi?s_body=1#top when you get \"no matches found\""
+        print " mail from the JPL-Horizons Systrem." 
+        objnum=objnam
+        try:
+            isnum=int(objnum)
+        except:
+            objnum="DES="+objnam
+        
+        #return False
 
     if obsloc and obsloc.lower() != 'geocentric':
         print "Topocentric coordinates are not yet supported by this script."
