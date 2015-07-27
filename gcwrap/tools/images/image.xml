@@ -2166,14 +2166,17 @@ In this example, all the images are virtual (temporary images).
      </param>
   
      <param type="any"  name="region">
-     <any type="variant" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details.  Default is whole image.</description>
-     <value></value>
+        <any type="variant" limittypes="record string"/>
+        <description>Region of interest. See help par.region for details.  Default is whole image.</description>
+        <value/>
      </param>
-  
      <param type="bool"  name="zero">
-     <description>Zero image first?</description>
-     <value>false</value>
+        <description>Zero image first?</description>
+        <value>false</value>
+     </param>
+     <param type="intArray" name="seeds">
+        <description>Seeds to use for the random number generator. If not specified, seeds are created based on the current time.</description>
+        <value/>
      </param>
 </input>
 <returns type="bool">T or fail</returns>
@@ -2234,6 +2237,10 @@ never be returned. It is required that $low \&lt; high$.
 
 \item {weibull} -- Specify two parameters, alpha and beta.
 It is required that the alpha parameter is not zero.
+
+The random number generator seeds may be specified as an array of integers. Only the first
+two values are used. If no or a single value is provided, the necessary remaining values
+are generated based on the current time.
 
 \end{itemize}
 

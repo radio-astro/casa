@@ -39,7 +39,7 @@
 #include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
-#include <lattices/LatticeMath/LatticeAddNoise.h>
+// #include <lattices/LatticeMath/LatticeAddNoise.h>
 #include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
@@ -228,16 +228,31 @@ bool image::fromrecord(const record& imrecord, const string& outfile) {
 	}
 }
 
-bool image::addnoise(const std::string& type, const std::vector<double>& pars,
-		const variant& region, const bool zeroIt) {
+bool image::addnoise(
+	const std::string& type, const std::vector<double>& pars,
+	const variant& region, const bool zeroIt, const vector<int>& seeds
+) {
 	try {
 		_log << LogOrigin("image", __func__);
 		if (detached()) {
 			return False;
 		}
-
 		SHARED_PTR<Record> pRegion = _getRegion(region, False);
-		_image->addnoise(type, pars, *pRegion, zeroIt);
+		SHARED_PTR<std::pair<Int, Int> > seedPair(new std::pair<Int, Int>(0, 0));
+		//Int seed1, seed2;
+		if (seeds.size() >= 2) {
+			seedPair->first = seeds[0];
+			seedPair->second = seeds[1];
+		}
+		else {
+			Time now;
+			Double seedBase = 1e7*now.modifiedJulianDay();
+			seedPair->second = (Int)((uInt)seedBase);
+			seedPair->first = seeds.size() == 1
+				? seeds[0]
+				: (Int)((uInt)(1e7*(seedBase - seedPair->second)));
+		}
+		_image->addnoise(type, pars, *pRegion, zeroIt, seedPair.get());
 
 		_stats.reset(0);
 		return True;
