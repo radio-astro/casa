@@ -2387,6 +2387,27 @@ AveragingTvi2::produceSubchunk ()
 
         const VisBuffer2 * vb = getVii()->getVisBuffer();
 
+        if (averagingOptions_p.contains (AveragingOptions::phaseShifting))
+        {
+        	if (averagingOptions_p.contains (AveragingOptions::AverageObserved))
+        	{
+        		vb->visCube();
+        	}
+
+        	if (averagingOptions_p.contains (AveragingOptions::AverageModel))
+        	{
+        		vb->visCubeCorrected();
+        	}
+
+        	if (averagingOptions_p.contains (AveragingOptions::AverageCorrected))
+        	{
+        		vb->visCubeModel();
+        	}
+
+        	getVii()->getVisBuffer()->phaseCenterShift(averagingParameters_p.getXpcOffset(),averagingParameters_p.getYpcOffset());
+        }
+
+
         vbAvg_p->accumulate (vb, subchunk_p);
         Int nWindows = vbAvg_p->nSpectralWindowsInBuffer ();
 

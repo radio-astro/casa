@@ -59,6 +59,20 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 		manager_p->outputInputSPWIndexMap_p.clear();
 	}
 
+	// Check if phase shifting has to be applied
+	if ( manager_p->phaseShifting_p and not manager_p->timeAverage_p)
+	{
+		applyPhaseShifting_p = True;
+		dx_p = manager_p->dx_p;
+		dy_p = manager_p->dy_p;
+	}
+	else
+	{
+		applyPhaseShifting_p = False;
+		dx_p = 0;
+		dy_p = 0;
+	}
+
 	return;
 }
 
@@ -839,8 +853,16 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
 	}
 
+	if (applyPhaseShifting_p and not visCubeOk_p)
+	{
+		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeObserved);
+		manager_p->getVisBuffer()->visCube();
+		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
+	}
+
 	if (not manager_p->cubeTransformation_p)
 	{
+		visCubeOk_p = True;
 		return manager_p->getVisBuffer()->visCube();
 	}
 	else if (not visCubeOk_p)
@@ -881,8 +903,16 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 				<< "visCubeCorrected requested but CORRECTED_DATA column not present in input MS" << LogIO::POST;
 	}
 
+	if (applyPhaseShifting_p and not visCubeCorrectedOk_p)
+	{
+		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeCorrected);
+		manager_p->getVisBuffer()->visCubeCorrected();
+		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
+	}
+
 	if (not manager_p->cubeTransformation_p)
 	{
+		visCubeCorrectedOk_p = True;
 		return manager_p->getVisBuffer()->visCubeCorrected();
 	}
 	else if (not visCubeCorrectedOk_p)
@@ -924,8 +954,16 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 				<< "visCubeModel requested but MODEL_DATA column not present in input MS" << LogIO::POST;
 	}
 
+	if (applyPhaseShifting_p and not visCubeModelOk_p)
+	{
+		manager_p->getVisBuffer()->dirtyComponentsAdd(vi::VisibilityCubeModel);
+		manager_p->getVisBuffer()->visCubeModel();
+		manager_p->getVisBuffer()->phaseCenterShift(dx_p,dy_p);
+	}
+
 	if (not manager_p->cubeTransformation_p)
 	{
+		visCubeModelOk_p = True;
 		return manager_p->getVisBuffer()->visCubeModel();
 	}
 	else if (not visCubeModelOk_p)

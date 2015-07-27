@@ -33,14 +33,18 @@ AveragingParameters::AveragingParameters (Double averagingInterval,
                                           const AveragingOptions & options,
                                           Double maxUvwDistance,
                                           WeightScaling * weightScalingForAveraging,
-                                          Bool isWriteable)
+                                          Bool isWriteable,
+                                          Double dx,
+                                          Double dy)
 : averagingInterval_p (averagingInterval),
   averagingOptions_p (options),
   chunkInterval_p (chunkInterval),
   maxUvwDistance_p (maxUvwDistance),
   sortColumns_p (sortColumns),
   weightScaling_p (weightScalingForAveraging),
-  isWritable_p(isWriteable)
+  isWritable_p(isWriteable),
+  XpcOffset_p(dx),
+  YpcOffset_p(dy)
 {
     Assert (averagingInterval > 0);
     Assert (chunkInterval >= 0);
@@ -124,6 +128,18 @@ AveragingParameters::getWeightScaling () const
     return weightScaling_p;
 }
 
+Double
+AveragingParameters::getXpcOffset () const
+{
+    return XpcOffset_p;
+}
+
+Double
+AveragingParameters::getYpcOffset () const
+{
+    return YpcOffset_p;
+}
+
 Bool
 AveragingParameters::isWriteable () const
 {
@@ -179,6 +195,13 @@ void
 AveragingParameters::setWritable (Bool isWritable)
 {
     isWritable_p = isWritable;
+}
+
+void
+AveragingParameters::setPhaseShift (Double dx, Double dy)
+{
+	XpcOffset_p = dx;
+	YpcOffset_p = dy;
 }
 
 void

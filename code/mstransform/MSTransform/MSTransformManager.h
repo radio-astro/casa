@@ -368,6 +368,7 @@ protected:
 	void parseChanAvgParams(Record &configuration);
 	void parseRefFrameTransParams(Record &configuration);
 	void parseFreqSpecParams(Record &configuration);
+	void parsePhaseShiftParams(Record &configuration);
 	void parseTimeAvgParams(Record &configuration);
 	void parseCalParams(Record &configuration);
 
@@ -1218,6 +1219,10 @@ protected:
 	String width_p;
 	int nChan_p;
 	String velocityType_p;
+
+	// Phase shifting parameters
+	Bool phaseShifting_p;
+	Double dx_p, dy_p;
 
 	// Time transformation parameters
 	Bool timeAverage_p;

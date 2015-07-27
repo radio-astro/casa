@@ -160,6 +160,11 @@ void MSTransformManager::initialize()
 	nChan_p = -1;									// -1 means use all the input channels
 	velocityType_p = String("radio");				// When mode is velocity options are: optical, radio
 
+	// Phase shifting paramters
+	phaseShifting_p = False;
+	dx_p = 0;
+	dy_p = 0;
+
 	// Time transformation parameters
 	timeAverage_p = False;
 	timeBin_p = 0.0;
@@ -295,6 +300,7 @@ void MSTransformManager::configure(Record &configuration)
 	parseFreqTransParams(configuration);
 	parseChanAvgParams(configuration);
 	parseRefFrameTransParams(configuration);
+	parsePhaseShiftParams(configuration);
 	parseTimeAvgParams(configuration);
 	parseCalParams(configuration);
 
@@ -889,6 +895,38 @@ void MSTransformManager::parseFreqSpecParams(Record &configuration)
 	return;
 }
 
+// -----------------------------------------------------------------------
+// Method to parse the phase shifting specification
+// -----------------------------------------------------------------------
+void MSTransformManager::parsePhaseShiftParams(Record &configuration)
+{
+	int exists = 0;
+
+	exists = configuration.fieldNumber ("XpcOffset");
+	if (exists >= 0)
+	{
+		configuration.get (exists, dx_p);
+	}
+
+	exists = configuration.fieldNumber ("YpcOffset");
+	if (exists >= 0)
+	{
+		configuration.get (exists, dy_p);
+	}
+
+	if (dx_p > 0 or dy_p > 0)
+	{
+		phaseShifting_p = True;
+		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Phase shifting is activated: dx="<< dx_p << " dy=" << dy_p << LogIO::POST;
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Method to parse the time average specification
+// -----------------------------------------------------------------------
 void MSTransformManager::parseTimeAvgParams(Record &configuration)
 {
 	int exists = 0;
@@ -1027,8 +1065,8 @@ void MSTransformManager::parseCalParams(Record &configuration)
 
 		if (configuration.type(exists) == TpRecord)
 		{
-		        // Extract the callib Record
-		        callibRec_p = configuration.subRecord(exists);
+			// Extract the callib Record
+			callibRec_p = configuration.subRecord(exists);
 			callib_p="";
 
 			// If the Record is non-trivial, calibration is turned on
@@ -4798,6 +4836,25 @@ void MSTransformManager::generateIterator()
 	Bool isWritable = False;
 	if (interactive_p) isWritable = True;
 
+	// Prepare time average parameters (common for all cases)
+	vi::AveragingParameters *timeavgParams = NULL;
+	if (timeAverage_p)
+	{
+		if (maxuvwdistance_p > 0)
+		{
+			timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
+		}
+
+		if (phaseShifting_p)
+		{
+			timeAvgOptions_p |= vi::AveragingOptions::phaseShifting;
+		}
+
+		timeavgParams = new vi::AveragingParameters(timeBin_p, 0, vi::SortColumns(sortColumns_p, false),
+													timeAvgOptions_p, maxuvwdistance_p,NULL,isWritable,dx_p,dy_p);
+	}
+
+	// Calibrating VI
 	if (calibrate_p)
 	{
 
@@ -4808,69 +4865,40 @@ void MSTransformManager::generateIterator()
 		// Isolate iteration parametes
 		vi::IteratingParameters iterpar(0,vi::SortColumns(sortColumns_p, false));
 
-		// Package the time averaging parameters (if any)
-		vi::AveragingParameters *tavgpar(NULL);
-		if (timeAverage_p)
-		{
-			if (maxuvwdistance_p > 0)
-			{
-				timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
-			}
-
-			// NB: the iteration parameters will not be used in here (see iterpar above)
-			tavgpar = new vi::AveragingParameters(timeBin_p, 0, vi::SortColumns(), timeAvgOptions_p, maxuvwdistance_p);
+        if (callib_p.length() > 0)
+        {
+			// By callib String
+			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callib_p, timeavgParams));
+		}
+        else if (callibRec_p.nfields() > 0)
+        {
+			// By callib Record
+			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callibRec_p, timeavgParams));
+		}
+        else
+        {
+			logger_p	<< LogIO::SEVERE << LogOrigin("MSTransformManager",__FUNCTION__)
+						<< " Error forming Calibration-capable VisibilityIterator2"
+						<< LogIO::POST;
 		}
 
 		// Construct the vi via the LayeredVi2Factory
-                if (callib_p.length()>0) 
-		  {
-		    // By callib String
-		    visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, 
-											     &iterpar, 
-											     callib_p,
-											     tavgpar));
-		  }
-                else if (callibRec_p.nfields()>0)
-		  {
-		    // By callib Record
-		    visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, 
-											     &iterpar, 
-											     callibRec_p,
-											     tavgpar));
-		  }
-                else
-		  {
-		    logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
-			     << " Error forming Calibration-capable VisibilityIterator2"
-			     << LogIO::POST;
-		  }
-
-
-
-		visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
+		visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar, callib_p,timeavgParams));
 	}
+	// Averaging VI
 	else if (timeAverage_p)
 	{
-		if (maxuvwdistance_p > 0)
-		{
-			timeAvgOptions_p |= vi::AveragingOptions::BaselineDependentAveraging;
-		}
-
-		vi::AveragingParameters parameters(timeBin_p, 0,vi::SortColumns(sortColumns_p, false), timeAvgOptions_p,maxuvwdistance_p,NULL,isWritable);
-
-		visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(parameters, selectedInputMs_p));
-
-		visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
+		visibilityIterator_p = new vi::VisibilityIterator2(vi::AveragingVi2Factory(*timeavgParams, selectedInputMs_p));
 	}
+	// Plain VI
 	else
 	{
-		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false), isWritable, NULL, timeBin_p);
+		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns(sortColumns_p, false),
+															isWritable, NULL, timeBin_p);
 	}
 
-	if (channelSelector_p != NULL)
-	{
-		visibilityIterator_p->setFrequencySelection(*channelSelector_p);
-	}
+	if (timeAverage_p) visibilityIterator_p->setWeightScaling(vi::WeightScaling::generateUnityWeightScaling());
+	if (channelSelector_p != NULL) visibilityIterator_p->setFrequencySelection(*channelSelector_p);
 
 	return;
 }
@@ -5524,6 +5552,32 @@ template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &
 // ----------------------------------------------------------------------------------------
 void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
+	// If phase Shifting is enabled and time avg. is not involved fill visCubes and then apply phaseShift
+	if (phaseShifting_p and not timeAverage_p)
+	{
+		for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
+		{
+			switch (iter->first)
+			{
+				case MS::DATA:
+				{
+					vb->visCube();
+				}
+				case MS::CORRECTED_DATA:
+				{
+					vb->visCubeCorrected();
+				}
+				case MS::MODEL_DATA:
+				{
+					vb->visCubeModel();
+				}
+			}
+
+		}
+
+		vb->phaseCenterShift(dx_p,dy_p);
+	}
+
 	ArrayColumn<Bool> *outputFlagCol=NULL;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
 	{

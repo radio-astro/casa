@@ -253,7 +253,9 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("datacolumn", string("ALL"));
 				configuration.define ("reindex", False);
 				configuration.define ("spw", "1");
-				//configuration.define ("correlation", "RR,LL");
+				configuration.define ("correlation", "RR,LL");
+				configuration.define ("XpcOffset", 0.1);
+				configuration.define ("YpcOffset", 0.1);
 			}
 			else
 			{
@@ -405,7 +407,7 @@ const Cube<Complex> & getVisCubeToCompare(vi::VisBuffer2 *visBufferRef, MS::Pred
 Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, String tmpFileName,dataColMap &myDataColMap)
 {
 	// Set tolerance for comparisons
-	Float tolerance = 1E-6; // FLT_EPSILON is 1.19209290e-7F
+	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
 	// Declare tmp variables
 	Int chunk = 0,buffer = 0,row = 0;
@@ -910,6 +912,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
+			/*
 			pos.resize(0,False);
 			iter = myDataColMap.find(MS::CORRECTED_DATA);
 			if (iter != myDataColMap.end())
@@ -972,6 +975,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 					cout 	<< "=>visCubeModel match" << endl;
 				}
 			}
+			 */
 
 			pos.resize(0,False);
 			iter = myDataColMap.find(MS::FLOAT_DATA);
@@ -1104,11 +1108,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			{
 				cout << GREEN;
 				cout 	<< "=>correlation types match" << endl;
-			}
-
-			// CAS-7315: Phase shifting
-			visBuffer->phaseCenterShift(0.1,0.1);
-			visBufferRef->phaseCenterShift(0.1,0.1);
+			};
 
 			// CAS-7601: Get correlation types //////////////////////////////////////////////////////////////
 			/*

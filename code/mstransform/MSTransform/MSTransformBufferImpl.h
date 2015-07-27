@@ -130,6 +130,10 @@ private:
 	MPosition observatoryPosition_p;
 	ArrayMeasColumn<MFrequency> spwRefRame_p;
 
+	// Phase shifting
+	Bool applyPhaseShifting_p;
+	Double dx_p, dy_p;
+
 	mutable Vector<Int> observationId_p;
 	mutable Vector<Int> arrayId_p;
 	mutable Vector<Int> scan_p;

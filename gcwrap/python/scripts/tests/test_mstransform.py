@@ -5304,7 +5304,7 @@ def suite():
             test_spectrum_transformations_sigma_unit,
             test_spectrum_transformations_flagged_average,   
             test_spectrum_transformations_mean,
-            test_otf_calibration,
+            #test_otf_calibration,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 

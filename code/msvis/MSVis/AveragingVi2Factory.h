@@ -50,6 +50,7 @@ public:
                   CorrectedFlagWeightAvgFromWEIGHT = 1 << 17,
                   BaselineDependentAveraging = 1 << 18, // Do averaging with lengths dependent on baselines
                                                         // Requires specifying a max uvw distance parameter
+                  phaseShifting = 1 << 19,
                   MarksLast
     };
 
@@ -121,7 +122,9 @@ public:
                          const AveragingOptions & options = AveragingOptions (),
                          Double maxUvwDistance = 0,
                          WeightScaling * weightScalingForAveraging = 0,
-                         Bool isWriteable = False);
+                         Bool isWriteable = False,
+                         Double dx = 0,
+                         Double dy = 0);
 
     AveragingParameters (const AveragingParameters & other);
 
@@ -133,6 +136,8 @@ public:
     const AveragingOptions & getOptions() const;
     const SortColumns & getSortColumns () const;
     WeightScaling * getWeightScaling () const;
+    Double getXpcOffset () const;
+    Double getYpcOffset () const;
     Bool isWriteable () const;
 
     void setAveragingInterval (Double);
@@ -142,6 +147,7 @@ public:
     void setMaxUvwDistance (Double);
     void setWeightScaling (WeightScaling *);
     void setWritable (Bool isWritable);
+    void setPhaseShift (Double dx, Double dy);
 
 private:
 
@@ -155,6 +161,8 @@ private:
     SortColumns sortColumns_p;
     WeightScaling * weightScaling_p;
     Bool isWritable_p;
+    Double XpcOffset_p;
+    Double YpcOffset_p;
 
     VisBufferComponents2 allDataColumns () const;
 
