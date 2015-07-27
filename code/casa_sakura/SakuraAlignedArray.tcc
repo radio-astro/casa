@@ -39,20 +39,20 @@ inline SakuraAlignedArray<T>::SakuraAlignedArray(Vector<T> const &in_vector) :
 
 template<typename T>
 inline void SakuraAlignedArray<T>::initialize() {
-  storage_ = NULL;
-  data = NULL;
-  casaVector = NULL;
+  storage_ = nullptr;
+  data = nullptr;
+  casaVector = nullptr;
 
   size_t size_required = sizeof(T) * num_data_;
   size_t size_of_arena = size_required + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
   storage_ = malloc(size_of_arena);
-  if (storage_ == NULL) {
-    data = NULL;
+  if (storage_ == nullptr) {
+    data = nullptr;
     throw std::bad_alloc();
   }
   data = reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(
 				size_of_arena, storage_, size_required));
-  assert(data != NULL);
+  assert(data != nullptr);
   assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 
   Vector<T> alignedCasaVector = Vector<T>(IPosition(1, num_data_), data, SHARE);
