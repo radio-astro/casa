@@ -96,6 +96,7 @@ public:
 	void setDebug(Int debug) { _debug = debug; }
 
 private:
+	mutable SPIIF _subimage;
 	Int _debug;
 	static const String _class;
 

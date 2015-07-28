@@ -66,6 +66,10 @@ ImageRegridder::ImageRegridder(
 ImageRegridder::~ImageRegridder() {}
 
 SPIIF ImageRegridder::regrid() const {
+	_subimage = SubImageFactory<Float>::createImage(
+		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+		this->_getDropDegen(), False, False, this->_getStretch()
+	);
 	auto regridByVel = False;
 	const auto axes = _getAxes();
 	auto hasMultipleBeams = _getImage()->imageInfo().hasMultipleBeams();
@@ -74,18 +78,20 @@ SPIIF ImageRegridder::regrid() const {
 		&& _getImage()->coordinates().hasSpectralAxis()
 		&& _getTemplateCoords().hasSpectralAxis()
 	) {
+		auto inputSpecAxis = _getImage()->coordinates().spectralAxisNumber(False);
+		auto isInputSpecDegen = _subimage->shape()[inputSpecAxis] == 1;
 		if (axes.empty()) {
 			ThrowIf(
 				hasMultipleBeams,
 				"An image with multiple beams cannot be regridded along the spectral axis. "
 				"You may wish to convolve all channels to a common resolution and retry"
 			);
-			if (_getSpecAsVelocity()) {
+			if (! isInputSpecDegen && _getSpecAsVelocity()) {
 				regridByVel = True;
 			}
 		}
 		else {
-			Int specAxis = this->_getImage()->coordinates().spectralAxisNumber();
+			auto specAxis = this->_getImage()->coordinates().spectralAxisNumber();
 			for (uInt i=0; i<axes.size(); i++) {
 				if (axes[i] == specAxis) {
 					ThrowIf(
@@ -93,7 +99,7 @@ SPIIF ImageRegridder::regrid() const {
 						"An image with multiple beams cannot be regridded along the spectral axis. "
 						"You may wish to convolve all channels to a common resolution and retry"
 					);
-					if (_getSpecAsVelocity()) {
+					if (! isInputSpecDegen && _getSpecAsVelocity()) {
 						regridByVel = True;
 					}
 					break;
@@ -108,36 +114,44 @@ SPIIF ImageRegridder::regrid() const {
 }
 
 SPIIF ImageRegridder::_regrid() const {
+	/*
 	SPIIF subImage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		this->_getDropDegen(), False, False, this->_getStretch()
 	);
+	*/
+	if (! _subimage) {
+		// for when this method is called directly by regridByVelocity
+		_subimage = SubImageFactory<Float>::createImage(
+			*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+			this->_getDropDegen(), False, False, this->_getStretch()
+		);
+	}
 	*this->_getLog() << LogOrigin(_class, __func__);
 	ThrowIf(
-		! anyTrue(subImage->getMask()),
+		! anyTrue(_subimage->getMask()),
 		"All selected pixels are masked"
 	);
-	//clone.reset(0);
-	const CoordinateSystem csysFrom = subImage->coordinates();
+	const CoordinateSystem csysFrom = _subimage->coordinates();
 	CoordinateSystem csysTo = _getTemplateCoords();
 	csysTo.setObsInfo(csysFrom.obsInfo());
 	std::set<Coordinate::Type> coordsToRegrid;
 	CoordinateSystem csys = ImageRegrid<Float>::makeCoordinateSystem(
 		*this->_getLog(), coordsToRegrid, csysTo, csysFrom, _getAxes(),
-		subImage->shape(), False
+		_subimage->shape(), False
 	);
 	ThrowIf(
 		csys.nPixelAxes() != _getShape().nelements(),
 		"The number of pixel axes in the output shape and Coordinate System must be the same"
 	);
-	_checkOutputShape(*subImage, coordsToRegrid);
+	_checkOutputShape(*_subimage, coordsToRegrid);
 	SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));
 	workIm->set(0.0);
-	ImageUtilities::copyMiscellaneous(*workIm, *subImage);
+	ImageUtilities::copyMiscellaneous(*workIm, *_subimage);
 	String maskName("");
 	ImageMaskAttacher::makeMask(*workIm, maskName, True, True, *this->_getLog(), True);
 	ThrowIf (
-		! _doImagesOverlap(subImage, workIm),
+		! _doImagesOverlap(_subimage, workIm),
 		"There is no overlap between the (region chosen in) the input image"
 		" and the output image with respect to the axes being regridded."
 	);
@@ -145,7 +159,7 @@ SPIIF ImageRegridder::_regrid() const {
 	ir.showDebugInfo(_debug);
 	ir.disableReferenceConversions(! _getDoRefChange());
 	ir.regrid(
-		*workIm, _getMethod(), _getAxes(), *subImage,
+		*workIm, _getMethod(), _getAxes(), *_subimage,
 		_getReplicate(), _getDecimate(), True,
 		_getForceRegrid()
 	);
@@ -241,12 +255,12 @@ void ImageRegridder::_checkOutputShape(
 	const SubImage<Float>& subImage,
 	const std::set<Coordinate::Type>& coordsToRegrid
 ) const {
-	const CoordinateSystem csysFrom = subImage.coordinates();
+	const auto& csysFrom = subImage.coordinates();
 	std::set<Coordinate::Type> coordsNotToRegrid;
-	uInt nCoordinates = csysFrom.nCoordinates();
-	IPosition inputShape = subImage.shape();
-	IPosition axes = _getAxes();
-	IPosition outputAxisOrder = axes;
+	auto nCoordinates = csysFrom.nCoordinates();
+	auto inputShape = subImage.shape();
+	auto axes = _getAxes();
+	auto outputAxisOrder = axes;
 	for (uInt i=axes.size(); i<_getKludgedShape().size(); i++) {
 		outputAxisOrder.append(IPosition(1, i));
 	}
@@ -299,18 +313,23 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 		dynamic_cast<CoordinateSystem *>(csysTo.clone())
 	);
 	SpectralCoordinate templateSpecCoord = csys->spectralCoordinate();
+	/*
  	SPIIF maskedClone = SubImageFactory<Float>::createImage(
  		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
  		False, False, False, this->_getStretch()
  	);
+ 	*/
 	std::unique_ptr<CoordinateSystem> coordClone(
-		dynamic_cast<CoordinateSystem *>(maskedClone->coordinates().clone())
+		dynamic_cast<CoordinateSystem *>(_subimage->coordinates().clone())
 	);
 
 	SpectralCoordinate newSpecCoord = coordClone->spectralCoordinate();
 	Double newVelRefVal = 0;
 	Double newVelInc = 0;
+	std::pair<Double, Double> toVelLimits;
+	auto inSpecAxis = coordClone->spectralAxisNumber(False);
 	for (uInt i=0; i<2; i++) {
+		// i == 0 => csysTo, i == 1 => csysFrom
 		CoordinateSystem *cs = i == 0 ? csys.get() : coordClone.get();
 		// create and replace the coordinate system's spectral coordinate with
 		// a linear coordinate which describes the velocity axis. In this way
@@ -324,7 +343,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			// is pretty confusing. We want the underlying one also be the overlying one before
 			// we regrid.
 			Vector<Double> newRefVal;
-			Double newRefPix = specCoord.referencePixel()[0];
+			auto newRefPix = specCoord.referencePixel()[0];
 			specCoord.toWorld(newRefVal, Vector<Double>(1, newRefPix));
 			Vector<Double> newVal;
 			specCoord.toWorld(newVal, Vector<Double>(1, newRefPix+1));
@@ -349,6 +368,32 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			|| ! specCoord.pixelToVelocity(vel1, 1.0),
 			"Unable to determine velocity increment"
 		);
+		if (i == 0) {
+			toVelLimits.first = vel0;
+			specCoord.pixelToVelocity(
+				toVelLimits.second, _getShape()[inSpecAxis] - 1
+			);
+			if (toVelLimits.first > toVelLimits.second) {
+				std::swap(toVelLimits.first, toVelLimits.second);
+			}
+		}
+		if (i == 1) {
+			std::pair<Double, Double> fromVelLimits;
+			specCoord.pixelToVelocity(
+				fromVelLimits.first, 0
+			);
+			specCoord.pixelToVelocity(
+				fromVelLimits.second, _subimage->shape()[inSpecAxis] - 1
+			);
+			if (fromVelLimits.first > fromVelLimits.second) {
+				std::swap(fromVelLimits.first, fromVelLimits.second);
+			}
+			ThrowIf(
+				fromVelLimits.first > toVelLimits.second
+				|| fromVelLimits.second < toVelLimits.first,
+				"Request to regrid by velocity, but input and output velocity coordinates do not overlap"
+			);
+		}
 		Matrix<Double> pc(1, 1, 0);
 		pc.diagonal() = 1.0;
 		LinearCoordinate lin(
@@ -376,13 +421,13 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			newVelInc = vel1 - vel0;
 		}
 		else {
-			maskedClone->setCoordinateInfo(*cs);
+			_subimage->setCoordinateInfo(*cs);
 		}
 	}
 	// do not pass the region or the mask, the maskedClone has already had the region and
 	// mask applied
 	ImageRegridder regridder(
-		maskedClone, 0, "", this->_getOutname(),
+		_subimage, 0, "", this->_getOutname(),
 		this->_getOverwrite(), *csys, _getAxes(), _getShape()
 	);
 	regridder.setConfiguration(*this);
@@ -426,7 +471,7 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 	ThrowIf(
 		! newCoords->replaceCoordinate(
 			newSpecCoord,
-			maskedClone->coordinates().linearCoordinateNumber())
+			_subimage->coordinates().linearCoordinateNumber())
 		&& ! newSpecCoord.near(newCoords->spectralCoordinate()),
 		"Unable to replace coordinate for velocity regridding"
 	);
@@ -525,7 +570,6 @@ Vector<std::pair<Double, Double> > ImageRegridder::_getDirectionCorners(
 	const DirectionCoordinate& dc,
 	const IPosition& directionShape
 ) {
-
 	Vector<Double> world;
 	Vector<Double> pixel(2, 0);
 	Vector<String> units = dc.worldAxisUnits();
