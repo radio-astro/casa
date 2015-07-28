@@ -1,8 +1,8 @@
 import numpy
 import os
-from taskinit import *
+from taskinit import gentools, casalog
 import sdutil
-ms,sdms,tb = gentools(['ms','sdms','tb'])
+ms, sdms, tb = gentools(['ms','sdms','tb'])
 
 def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
