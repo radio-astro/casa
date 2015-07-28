@@ -66,20 +66,36 @@ ImageRegridder::ImageRegridder(
 ImageRegridder::~ImageRegridder() {}
 
 SPIIF ImageRegridder::regrid() const {
-	Bool regridByVel = False;
-	const IPosition axes = _getAxes();
+	auto regridByVel = False;
+	const auto axes = _getAxes();
+	auto hasMultipleBeams = _getImage()->imageInfo().hasMultipleBeams();
 	if (
-		_getSpecAsVelocity() && this->_getImage()->coordinates().hasSpectralAxis()
+		(_getSpecAsVelocity() || hasMultipleBeams)
+		&& _getImage()->coordinates().hasSpectralAxis()
 		&& _getTemplateCoords().hasSpectralAxis()
 	) {
-		if (axes.size() == 0) {
-			regridByVel = True;
+		if (axes.empty()) {
+			ThrowIf(
+				hasMultipleBeams,
+				"An image with multiple beams cannot be regridded along the spectral axis. "
+				"You may wish to convolve all channels to a common resolution and retry"
+			);
+			if (_getSpecAsVelocity()) {
+				regridByVel = True;
+			}
 		}
 		else {
 			Int specAxis = this->_getImage()->coordinates().spectralAxisNumber();
 			for (uInt i=0; i<axes.size(); i++) {
 				if (axes[i] == specAxis) {
-					regridByVel = True;
+					ThrowIf(
+						hasMultipleBeams,
+						"An image with multiple beams cannot be regridded along the spectral axis. "
+						"You may wish to convolve all channels to a common resolution and retry"
+					);
+					if (_getSpecAsVelocity()) {
+						regridByVel = True;
+					}
 					break;
 				}
 			}

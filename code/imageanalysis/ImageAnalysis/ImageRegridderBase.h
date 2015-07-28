@@ -55,8 +55,10 @@ template <class T> class ImageRegridderBase : public ImageTask<T> {
 
 public:
 
+	ImageRegridderBase() = delete;
+
 	// destructor
-	~ImageRegridderBase();
+	virtual ~ImageRegridderBase();
 
 	// regrid the spectral axis in velocity space rather than frequency space?
 	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
@@ -99,7 +101,7 @@ protected:
 
 	Bool _getForceRegrid() const { return _forceRegrid; }
 
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+	inline CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
@@ -108,7 +110,6 @@ protected:
 	}
 
 	Bool _getSpecAsVelocity() const { return _specAsVelocity; }
-
 
 	IPosition _getShape() const {return _shape;}
 
@@ -124,7 +125,6 @@ protected:
 
 	Bool _regriddingDirectionAxes() const;
 
-
 private:
 	const CoordinateSystem _csysTo;
 	IPosition _axes, _shape, _kludgedShape;
@@ -135,8 +135,6 @@ private:
 	uInt _nReplicatedChans;
 
 	void _finishConstruction();
-
-	ImageRegridderBase() {};
 
 };
 }

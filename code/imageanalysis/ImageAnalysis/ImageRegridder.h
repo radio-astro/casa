@@ -60,6 +60,8 @@ class ImageRegridder : public ImageRegridderBase<Float> {
 
 public:
 
+	ImageRegridder() = delete;
+
 	// if <src>outname</src> is empty, no image will be written
 	// if <src>overwrite</src> is True, if image already exists it will be removed
 	// if <src>overwrite</src> is False, if image already exists exception will be thrown
@@ -96,9 +98,6 @@ public:
 private:
 	Int _debug;
 	static const String _class;
-
-	// disallow default constructor
-	ImageRegridder();
 
 	SPIIF _regrid() const;
 
