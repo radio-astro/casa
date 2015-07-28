@@ -486,7 +486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
-    dataSel_p.resize(dataSel_p.nelements()+1);
+    dataSel_p.resize(dataSel_p.nelements()+1, True);
 
     dataSel_p[dataSel_p.nelements()-1]=selpars;
 
