@@ -1080,6 +1080,27 @@ class imregrid_test(unittest.TestCase):
         myia.done()
         self.assertTrue((crgpart == rrgpart + irgpart*1j).all())        
         
+    def test_multibeam(self):
+        """test multibeams cannot be regridded"""
+        myia = self._myia
+        myia.fromshape("",[100,100,20])
+        myia.setrestoringbeam("20arcsec", "20arcsec", "0deg", channel=0)
+        myia.setrestoringbeam("30arcsec", "30arcsec", "0deg", channel=1)
+        self.assertRaises(
+            Exception, myia.regrid, "", shape=[10, 10, 10],
+            csys=myia.coordsys().torecord()
+        )
+        self.assertRaises(
+            Exception, myia.regrid, "", shape=[10, 10, 10],
+            csys=myia.coordsys().torecord(), axes=2
+        )
+        bb = myia.regrid(
+            "", shape=[50, 50, 20],
+            csys=myia.coordsys().torecord(), axes=[0, 1]
+        )
+        bb.done()
+        myia.done()
+        
 def suite():
     return [imregrid_test]
     
