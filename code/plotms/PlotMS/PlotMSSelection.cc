@@ -129,8 +129,8 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
         String errormsg = x.getMesg();
         if (errormsg.startsWith("Spw Expression: No match found") && (spwstr[0] != '"') && (spwstr.find('-') != std::string::npos)) {
             errormsg += "\nTIP: For a name match (particularly names with a hyphen), add double quotes around the name in the spw string."; 
-            throw(AipsError(errormsg));
         }
+        throw(AipsError(errormsg));
     }
 
 
