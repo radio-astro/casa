@@ -73,6 +73,16 @@ MSTransformBufferImpl::MSTransformBufferImpl(MSTransformManager *manager)
 		dy_p = 0;
 	}
 
+	// NONE datacol handling
+	if (manager_p->datacolumn_p.contains("NONE"))
+	{
+		noneDataCol_p = True;
+	}
+	else
+	{
+		noneDataCol_p = False;
+	}
+
 	return;
 }
 
@@ -813,7 +823,32 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 	}
 	else if (not flagCubeOk_p)
 	{
-		if (manager_p->dataColumnAvailable_p)
+		if (noneDataCol_p)
+		{
+			// Setup input data map
+			DataCubeMap inputDataCubeMap;
+			Cube<Bool> inputFlagCube = manager_p->getVisBuffer()->flagCube();
+			DataCubeHolder<Bool> inputFlagDataHolder(inputFlagCube);
+			inputDataCubeMap.add(MS::FLAG,static_cast<DataCubeHolderBase*>(&inputFlagDataHolder));
+
+			// Setup output data map
+			DataCubeMap outputDataCubeMap;
+			flagCube_p.resize(getShape(),False);
+			DataCubeHolder<Bool> outputFlagDataHolder(flagCube_p);
+			outputDataCubeMap.add(MS::FLAG,static_cast<DataCubeHolderBase*>(&outputFlagDataHolder));
+
+			// Setup transformation
+			Int inputSpw = manager_p->getVisBuffer()->spectralWindows()(0);
+			uInt chanbin = manager_p->freqbinMap_p[inputSpw];
+			inputDataCubeMap.setWindowShape(IPosition(1,chanbin));
+
+			// Transform data
+			transformDataCube(	manager_p->getVisBuffer(),
+								inputDataCubeMap,
+								outputDataCubeMap,
+								&MSTransformBufferImpl::channelAverage);
+		}
+		else if (manager_p->dataColumnAvailable_p)
 		{
 			visCube();
 		}
@@ -828,11 +863,6 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 		else if (manager_p->floatDataColumnAvailable_p)
 		{
 			visCubeFloat();
-		}
-		else
-		{
-			manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
-					<< "No data columns available to provide a transformed FlagCube" << LogIO::POST;
 		}
 
 		flagCubeOk_p = True;
@@ -1537,6 +1567,119 @@ void MSTransformBufferImpl::phaseCenterShift(Double dx, Double dy)
 	visCubeOk_p = False;
 	visCubeCorrectedOk_p = False;
 	visCubeModelOk_p = False;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::transformDataCube(	vi::VisBuffer2 *vb,
+												DataCubeMap &inputDataCubeMap,
+												DataCubeMap &outputDataCubeMap,
+												TransformFunction funcPointer) const
+{
+	uInt nRows = vb->nRows();
+	uInt nCorrs = vb->nCorrelations();
+
+	for (uInt rowIndex=0; rowIndex < nRows; rowIndex++)
+	{
+		// Switch input data to current row
+		inputDataCubeMap.setMatrixIndex(rowIndex);
+		outputDataCubeMap.setMatrixIndex(rowIndex);
+
+		for (uInt corrIndex=0; corrIndex < nCorrs; corrIndex++)
+		{
+			// Switch input data to current row
+			inputDataCubeMap.setVectorIndex(corrIndex);
+			outputDataCubeMap.setVectorIndex(corrIndex);
+
+			// Process data
+			(*this.*funcPointer)(vb,inputDataCubeMap,outputDataCubeMap);
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::decimationWindow(	vi::VisBuffer2 *vb,
+												DataCubeMap &inputDataCubeMap,
+												DataCubeMap &outputDataCubeMap,
+												TransformKernel1D kernelPointer) const
+{
+	uInt width = inputDataCubeMap.getWindowShape()(0);
+	uInt inputSize = inputDataCubeMap.getVectorShape()(0);
+	uInt outputSize = outputDataCubeMap.getVectorShape()(0);
+
+	uInt outputIndex = 0;
+	uInt inputStartIndex = 0;
+	uInt tail = inputSize % width;
+	uInt limit = inputSize - tail;
+
+	while (inputStartIndex < limit)
+	{
+		(*this.*kernelPointer)(	vb,
+								inputDataCubeMap,
+								outputDataCubeMap,
+								inputStartIndex,
+								outputIndex,
+								width);
+		outputIndex += 1;
+		inputStartIndex += width;
+	}
+
+	if (tail > 0  and outputIndex < outputSize )
+	{
+		(*this.*kernelPointer)(	vb,
+								inputDataCubeMap,
+								outputDataCubeMap,
+								inputStartIndex,
+								outputIndex,
+								tail);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::channelAverage(	vi::VisBuffer2 *vb,
+											DataCubeMap &inputDataCubeMap,
+											DataCubeMap &outputDataCubeMap) const
+{
+	decimationWindow(vb,inputDataCubeMap,outputDataCubeMap,&MSTransformBufferImpl::flagAverageKernel);
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::flagAverageKernel(	vi::VisBuffer2 *vb,
+												DataCubeMap &inputDataCubeMap,
+												DataCubeMap &outputDataCubeMap,
+												uInt &inputPos,
+												uInt &outputPos,
+												uInt &kernelSize) const
+{
+	Vector<Bool> inputFlags =  inputDataCubeMap.getVector<Bool>(MS::FLAG);
+	Vector<Bool> outputFlags =  outputDataCubeMap.getVector<Bool>(MS::FLAG);
+
+	Bool outputFlag = True;
+	for (uInt deltaPos=0;deltaPos<kernelSize;deltaPos++)
+	{
+		if (not inputFlags(inputPos+deltaPos))
+		{
+			outputFlag = False;
+			break;
+		}
+	}
+
+	outputFlags(outputPos) = outputFlag;
 
 	return;
 }

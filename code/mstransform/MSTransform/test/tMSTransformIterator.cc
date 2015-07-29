@@ -248,7 +248,7 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("inputms", String("Four_ants_3C286.ms"));
 				configuration.define ("timeaverage", True);
 				configuration.define ("timebin", "4s");
-				configuration.define ("chanaverage", False);
+				configuration.define ("chanaverage", True);
 				configuration.define ("chanbin", 8);
 				configuration.define ("datacolumn", string("ALL"));
 				configuration.define ("reindex", False);
@@ -409,6 +409,13 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	// Set tolerance for comparisons
 	Float tolerance = 1E-5; // FLT_EPSILON is 1.19209290e-7F
 
+	// Check if this is a flag-only test
+	String datacol;
+	Bool onlyFlags = False;
+	//configuration.define ("datacolumn", string("NONE"));
+	configuration.get (configuration.fieldNumber ("datacolumn"), datacol);
+	if (datacol.contains("NONE")) onlyFlags = True;
+
 	// Declare tmp variables
 	Int chunk = 0,buffer = 0,row = 0;
 	size_t totalBuffers = 0;
@@ -462,6 +469,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			cout << BLUE;
 			cout << " COMPARING CHUNK " << chunk << " BUFFER " << buffer << endl;
 
+
 			// Number of Correlations
 			if (visBuffer->nCorrelations() != visBufferRef->nCorrelations())
 			{
@@ -476,6 +484,30 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout << "=>nCorrelations match" << endl;
 			}
+
+
+			// Correlation types
+			Vector<Stokes::StokesTypes> corrTypes = visBuffer->getCorrelationTypesSelected();
+			Vector<Stokes::StokesTypes> refCorrTypes = visBufferRef->getCorrelationTypesDefined();
+			for (uInt idx=0;idx<corrTypes.size();idx++)
+			{
+				if (corrTypes[idx] != refCorrTypes[idx])
+				{
+					cout << RED;
+					cout 	<< " correlation types don't match "
+							<< " transformBuffer=" << Stokes::name(corrTypes[idx])
+							<< " transformFile=" << Stokes::name(refCorrTypes[idx]) << endl;
+					keepIterating = False;
+					break;
+				}
+			}
+
+			if (keepIterating)
+			{
+				cout << GREEN;
+				cout 	<< "=>correlation types match" << endl;
+			}
+
 
 			// Number of Channels
 			if (visBuffer->nChannels() != visBufferRef->nChannels())
@@ -492,6 +524,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << "=>nChannels match" << endl;
 			}
 
+
 			// Number of rows
 			if (visBuffer->nRows() != visBufferRef->nRows())
 			{
@@ -506,6 +539,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout << "=>nRows match" << endl;
 			}
+
 
 			// Re-indexable Vectors
 
@@ -637,7 +671,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>antenna2 match" << endl;
 			}
 
-			// Not-Re-indexable Vectors
+			// Not re-indexed vectors
 
 			row = compareVector(visBuffer->scan(),visBufferRef->scan(),0);
 			if (row >= 0)
@@ -703,7 +737,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			// Non re-indexable Vectors
+			// Not index Vectors
 			row = compareVector(visBuffer->time(),visBufferRef->time(),tolerance);
 			if (row >= 0)
 			{
@@ -719,20 +753,24 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>time match" << endl;
 			}
 
-			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),tolerance);
-			if (row >= 0)
+			if (not onlyFlags)
 			{
-				cout << RED;
-				cout << " timeCentroid does not match in row " << row
-						<< " transformBuffer=" << visBuffer->timeCentroid()(row)
-						<< " transformFile=" << visBufferRef->timeCentroid()(row) << endl;
-				keepIterating = False;
+				row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),tolerance);
+				if (row >= 0)
+				{
+					cout << RED;
+					cout << " timeCentroid does not match in row " << row
+							<< " transformBuffer=" << visBuffer->timeCentroid()(row)
+							<< " transformFile=" << visBufferRef->timeCentroid()(row) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>timeCentroid match" << endl;
+				}
 			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>timeCentroid match" << endl;
-			}
+
 
 
 			row = compareVector(visBuffer->timeInterval(),visBufferRef->timeInterval(),tolerance);
@@ -793,6 +831,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			visBuffer->hourang(time0);
 			///////////////////////////////////////////////////////////////////////////////
 
+			/*
 			if (abs(visBuffer->getFrequency(0,0)-visBufferRef->getFrequency(0,0)) > 1E-3)
 			{
 				cout << RED;
@@ -806,7 +845,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout 	<< "=>getFrequency match" << endl;
 			}
+			*/
 
+			/*
 			row = compareVector(visBuffer->getFrequencies(0),visBufferRef->getFrequencies(0));
 			if (row >= 0)
 			{
@@ -821,6 +862,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout << "=>getFrequencies match" << endl;
 			}
+			*/
 
 			if (abs(visBuffer->getChannelNumber(0,0)-visBufferRef->getChannelNumber(0,0)) > 0)
 			{
@@ -835,6 +877,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout 	<< "=>getChannelNumber match" << endl;
 			}
+
 
 			row = compareVector(visBuffer->getChannelNumbers(0),visBufferRef->getChannelNumbers(0),0);
 			if (row >= 0)
@@ -851,6 +894,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>getChannelNumbers match" << endl;
 			}
 
+
 			row = compareVector(visBuffer->rowIds(),visBufferRef->rowIds(),0);
 			if (row >= 0)
 			{
@@ -866,9 +910,29 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>rowIds match" << endl;
 			}
 
-			// Vis cubes
-			dataColMap::iterator iter;
 
+			if (not onlyFlags)
+			{
+				pos.resize(0,False);
+				pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),tolerance);
+				if (pos.size() == 2)
+				{
+					cout << RED;
+					cout << " uvw does not match in position (row,col)="
+							<< "("<< pos(1) << "," << pos(0) <<  ")"
+							<< " transformBuffer=" << visBuffer->uvw()(pos)
+							<< " transformFile=" << visBufferRef->uvw()(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>uvw match" << endl;
+				}
+			}
+
+
+			// Flag cube
 			pos.resize(0,False);
 			pos = compareCube(visBuffer->flagCube(),visBufferRef->flagCube(),0);
 			if (pos.size() == 3)
@@ -886,256 +950,187 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>flagCube match" << endl;
 			}
 
-			pos.resize(0,False);
-			iter = myDataColMap.find(MS::DATA);
-			if (iter != myDataColMap.end())
-			{
-				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::DATA,myDataColMap);
-				pos = compareCube(	visBuffer->visCube(),
-									visCubeRef,
-									tolerance);
 
+			// Data/Weight cols
+			if (not onlyFlags)
+			{
+				dataColMap::iterator iter;
+
+				pos.resize(0,False);
+				iter = myDataColMap.find(MS::DATA);
+				if (iter != myDataColMap.end())
+				{
+					const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::DATA,myDataColMap);
+					pos = compareCube(	visBuffer->visCube(),
+										visCubeRef,
+										tolerance);
+
+					if (pos.size() == 3)
+					{
+						cout << RED;
+						cout << " visCube does not match in position (row,chan,corr)="
+								<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+								<< " transformBuffer=" << visBuffer->visCube()(pos)
+								<< " transformFile=" << visCubeRef(pos) << endl;
+						keepIterating = False;
+					}
+					else
+					{
+						cout << GREEN;
+						cout 	<< "=>visCube match" << endl;
+					}
+				}
+
+
+				pos.resize(0,False);
+				iter = myDataColMap.find(MS::CORRECTED_DATA);
+				if (iter != myDataColMap.end())
+				{
+					const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::CORRECTED_DATA,myDataColMap);
+					pos = compareCube(	visBuffer->visCubeCorrected(),
+										visCubeRef,
+										tolerance);
+
+					if (pos.size() == 3)
+					{
+						cout << RED;
+						cout << " visCubeCorrected does not match in position (row,chan,corr)="
+								<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+								<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
+								<< " transformFile=" << visCubeRef(pos) << endl;
+						keepIterating = False;
+					}
+					else
+					{
+						cout << GREEN;
+						cout 	<< "=>visCubeCorrected match" << endl;
+					}
+				}
+
+
+				pos.resize(0,False);
+				iter = myDataColMap.find(MS::MODEL_DATA);
+				if (True)
+				{
+					const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::MODEL_DATA,myDataColMap);
+					pos = compareCube(	visBuffer->visCubeModel(),
+										visCubeRef,
+										tolerance);
+
+					if (pos.size() == 3)
+					{
+						cout << RED;
+						cout << " visCubeModel does not match in position (row,chan,corr)="
+								<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+								<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
+								<< " transformFile=" << visCubeRef(pos) << endl;
+						keepIterating = False;
+					}
+					else
+					{
+						cout << GREEN;
+						cout 	<< "=>visCubeModel match" << endl;
+					}
+				}
+
+
+				pos.resize(0,False);
+				iter = myDataColMap.find(MS::FLOAT_DATA);
+				if (iter != myDataColMap.end() and not onlyFlags)
+				{
+					pos = compareCube(	visBuffer->visCubeFloat(),
+										visBufferRef->visCubeFloat(),
+										tolerance);
+
+					if (pos.size() == 3)
+					{
+						cout << RED;
+						cout << " visCubeFloat does not match in position (row,chan,corr)="
+								<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+								<< " transformBuffer=" << visBuffer->visCubeFloat()(pos)
+								<< " transformFile=" << visBufferRef->visCubeFloat()(pos) << endl;
+						keepIterating = False;
+					}
+					else
+					{
+						cout << GREEN;
+						cout 	<< "=>visCubeFloat match" << endl;
+					}
+				}
+
+
+				pos.resize(0,False);
+				pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),tolerance);
 				if (pos.size() == 3)
 				{
 					cout << RED;
-					cout << " visCube does not match in position (row,chan,corr)="
+					cout << " weightSpectrum does not match in position (row,chan,corr)="
 							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-							<< " transformBuffer=" << visBuffer->visCube()(pos)
-							<< " transformFile=" << visCubeRef(pos) << endl;
+							<< " transformBuffer=" << visBuffer->weightSpectrum()(pos)
+							<< " transformFile=" << visBufferRef->weightSpectrum()(pos) << endl;
 					keepIterating = False;
 				}
 				else
 				{
 					cout << GREEN;
-					cout 	<< "=>visCube match" << endl;
+					cout 	<< "=>weightSpectrum match" << endl;
 				}
-			}
 
 
-			/*
-			pos.resize(0,False);
-			iter = myDataColMap.find(MS::CORRECTED_DATA);
-			if (iter != myDataColMap.end())
-			{
-				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::CORRECTED_DATA,myDataColMap);
-				pos = compareCube(	visBuffer->visCubeCorrected(),
-									visCubeRef,
-									tolerance);
-
+				pos.resize(0,False);
+				pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),tolerance);
 				if (pos.size() == 3)
 				{
 					cout << RED;
-					cout << " visCubeCorrected does not match in position (row,chan,corr)="
+					cout << " sigmaSpectrum does not match in position (row,chan,corr)="
 							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-							<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
-							<< " transformFile=" << visCubeRef(pos) << endl;
+							<< " transformBuffer=" << visBuffer->sigmaSpectrum()(pos)
+							<< " transformFile=" << visBufferRef->sigmaSpectrum()(pos) << endl;
 					keepIterating = False;
 				}
 				else
 				{
 					cout << GREEN;
-					cout 	<< "=>visCubeCorrected match" << endl;
+					cout 	<< "=>sigmaSpectrum match" << endl;
 				}
-			}
 
-			// CAS-7412: Check that visModel is available no matter what
-			if (visBuffer->visCubeModel().shape() == visBufferRef->flagCube().shape())
-			{
-				cout << GREEN;
-				cout 	<< "=>visCubeModel available" << endl;
-			}
-			else
-			{
-				cout << RED;
-				cout 	<< "=>visCubeModel not available" << endl;
-				keepIterating = False;
-			}
 
-			pos.resize(0,False);
-			iter = myDataColMap.find(MS::MODEL_DATA);
-			if (True)
-			{
-				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::MODEL_DATA,myDataColMap);
-				pos = compareCube(	visBuffer->visCubeModel(),
-									visCubeRef,
-									tolerance);
-
-				if (pos.size() == 3)
+				pos.resize(0,False);
+				pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),tolerance);
+				if (pos.size() == 2)
 				{
 					cout << RED;
-					cout << " visCubeModel does not match in position (row,chan,corr)="
-							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-							<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
-							<< " transformFile=" << visCubeRef(pos) << endl;
+					cout << " weight does not match in position (row,pol)="
+							<< "("<< pos(1) << "," << pos(0) <<  ")"
+							<< " transformBuffer=" << visBuffer->weight()(pos)
+							<< " transformFile=" << visBufferRef->weight()(pos) << endl;
 					keepIterating = False;
 				}
 				else
 				{
 					cout << GREEN;
-					cout 	<< "=>visCubeModel match" << endl;
+					cout 	<< "=>weight match" << endl;
 				}
-			}
-			 */
 
-			pos.resize(0,False);
-			iter = myDataColMap.find(MS::FLOAT_DATA);
-			if (iter != myDataColMap.end())
-			{
-				pos = compareCube(	visBuffer->visCubeFloat(),
-									visBufferRef->visCubeFloat(),
-									tolerance);
 
-				if (pos.size() == 3)
+				pos.resize(0,False);
+				pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),tolerance);
+				if (pos.size() == 2)
 				{
 					cout << RED;
-					cout << " visCubeFloat does not match in position (row,chan,corr)="
-							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-							<< " transformBuffer=" << visBuffer->visCubeFloat()(pos)
-							<< " transformFile=" << visBufferRef->visCubeFloat()(pos) << endl;
+					cout << " sigma not match in position (row,pol)="
+							<< "("<< pos(1) << "," << pos(0) <<  ")"
+							<< " transformBuffer=" << visBuffer->sigma()(pos)
+							<< " transformFile=" << visBufferRef->sigma()(pos) << endl;
 					keepIterating = False;
 				}
 				else
 				{
 					cout << GREEN;
-					cout 	<< "=>visCubeFloat match" << endl;
+					cout 	<< "=>sigma match" << endl;
 				}
 			}
 
-			pos.resize(0,False);
-			pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),tolerance);
-			if (pos.size() == 3)
-			{
-				cout << RED;
-				cout << " weightSpectrum does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->weightSpectrum()(pos)
-						<< " transformFile=" << visBufferRef->weightSpectrum()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>weightSpectrum match" << endl;
-			}
-
-			pos.resize(0,False);
-			pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),tolerance);
-			if (pos.size() == 3)
-			{
-				cout << RED;
-				cout << " sigmaSpectrum does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->sigmaSpectrum()(pos)
-						<< " transformFile=" << visBufferRef->sigmaSpectrum()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>sigmaSpectrum match" << endl;
-			}
-
-			// Matrix cols
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " uvw does not match in position (row,col)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->uvw()(pos)
-						<< " transformFile=" << visBufferRef->uvw()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>uvw match" << endl;
-			}
-
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " weight does not match in position (row,pol)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->weight()(pos)
-						<< " transformFile=" << visBufferRef->weight()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>weight match" << endl;
-			}
-
-			pos.resize(0,False);
-			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),tolerance);
-			if (pos.size() == 2)
-			{
-				cout << RED;
-				cout << " sigma not match in position (row,pol)="
-						<< "("<< pos(1) << "," << pos(0) <<  ")"
-						<< " transformBuffer=" << visBuffer->sigma()(pos)
-						<< " transformFile=" << visBufferRef->sigma()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>sigma match" << endl;
-			}
-
-
-			// Correlation types
-			Vector<Stokes::StokesTypes> corrTypes = visBuffer->getCorrelationTypesSelected();
-			Vector<Stokes::StokesTypes> refCorrTypes = visBufferRef->getCorrelationTypesDefined();
-			for (uInt idx=0;idx<corrTypes.size();idx++)
-			{
-				if (corrTypes[idx] != refCorrTypes[idx])
-				{
-					cout << RED;
-					cout 	<< " correlation types don't match "
-							<< " transformBuffer=" << Stokes::name(corrTypes[idx])
-							<< " transformFile=" << Stokes::name(refCorrTypes[idx]) << endl;
-					keepIterating = False;
-					break;
-				}
-			}
-
-			if (keepIterating)
-			{
-				cout << GREEN;
-				cout 	<< "=>correlation types match" << endl;
-			};
-
-			// CAS-7601: Get correlation types //////////////////////////////////////////////////////////////
-			/*
-			for (uInt idx=0;idx<visBuffer->getCorrelationTypes().size();idx++)
-			{
-				uInt corrIdx = visBuffer->getCorrelationTypes()[idx];
-				Stokes::StokesTypes corrType = (Stokes::StokesTypes)visBuffer->correlationTypes()[corrIdx];
-				String corrTypeStr = Stokes::name(corrType);
-				cout << "Correlation product selected: " << corrTypeStr << endl;
-			}
-
-			// CAS-7601: New methods to access correlation types
-			for (uInt idx=0;idx<visBuffer->getCorrelationTypesDefined().size();idx++)
-			{
-				Stokes::StokesTypes corrType = visBuffer->getCorrelationTypesDefined()[idx];
-				String corrTypeStr = Stokes::name(corrType);
-				cout << "getCorrelationTypesDefined product selected: " << corrTypeStr << endl;
-			}
-
-			// CAS-7601: New methods to access correlation types
-			for (uInt idx=0;idx<visBuffer->getCorrelationTypesSelected().size();idx++)
-			{
-				Stokes::StokesTypes corrType = visBuffer->getCorrelationTypesSelected()[idx];
-				String corrTypeStr = Stokes::name(corrType);
-				cout << "getCorrelationTypesSelected product selected: " << corrTypeStr << endl;
-			}
-			*/
 
 			// CAS-7393: Propagate flags to the input VI //////////////////////////////////////////////////////////////
 			/*

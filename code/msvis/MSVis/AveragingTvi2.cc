@@ -399,6 +399,7 @@ protected:
           modelData_p (False),
           observedData_p (False),
           floatData_p(False),
+          onlymetadata_p(True),
           weightSpectrumIn_p (False),
           sigmaSpectrumIn_p (False),
           weightSpectrumOut_p (False),
@@ -409,6 +410,7 @@ protected:
         Bool modelData_p;
         Bool observedData_p;
         Bool floatData_p;
+        Bool onlymetadata_p;
         Bool weightSpectrumIn_p;
         Bool sigmaSpectrumIn_p;
         Bool weightSpectrumOut_p;
@@ -1533,7 +1535,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     	arrayTransformInPlace (sigmaSpectrun, AveragingTvi2::weightToSigma);
     }
     // Otherwise (doing only DATA/FLOAT_DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
-    else
+    else if ( not doing_p.onlymetadata_p)
     {
     	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM
     	// but from WEIGHT turned into SIGMA by using 1/pow(weight,2)
@@ -1991,6 +1993,11 @@ VbAvg::startChunk (ViImplementation2 * vi)
     doing_p.sigmaSpectrumIn_p = doing_p.observedData_p || doing_p.floatData_p;
     doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
     doing_p.sigmaSpectrumOut_p = True; // We always use the output SigmaSpectrum
+
+    if (doing_p.observedData_p or doing_p.correctedData_p or doing_p.modelData_p or doing_p.floatData_p)
+    {
+    	doing_p.onlymetadata_p = False;
+    }
 
     // Set up the flags for row copying
 

@@ -31,6 +31,139 @@
 
 namespace casa {
 
+class DataCubeHolderBase
+{
+
+public:
+
+	DataCubeHolderBase() {}
+	virtual ~DataCubeHolderBase() {}
+	virtual void setMatrixIndex(uInt matrixIndex) = 0;
+	virtual void setVectorIndex(uInt vectorIndex) = 0;
+	uInt getMatrixIndex() {return matrixIndex_p;}
+	uInt getVectorIndex() {return vectorIndex_p;}
+	IPosition & getMatrixShape() {return matrixShape_p;}
+	IPosition & getVectorShape() {return vectorShape_p;}
+
+protected:
+
+	uInt matrixIndex_p;
+	uInt vectorIndex_p;
+	IPosition matrixShape_p;
+	IPosition vectorShape_p;
+};
+
+template <class T> class DataCubeHolder : public DataCubeHolderBase
+{
+
+public:
+
+	DataCubeHolder(Cube<T> &dataCube) {cube_p.reference(dataCube);}
+	~DataCubeHolder() {}
+
+	Matrix<T> & getMatrix() {return matrix_p;}
+	Vector<T> & getVector() {return vector_p;}
+
+	void setMatrixIndex(uInt matrixIndex)
+	{
+		matrix_p.resize(); // Resize to 0 to avoid shape conformance problems
+		matrixIndex_p = matrixIndex;
+		matrix_p.reference(cube_p.xyPlane(matrixIndex));
+		matrixShape_p = matrix_p.shape();
+	}
+
+	void setVectorIndex(uInt vectorIndex)
+	{
+		vector_p.resize(); // Resize to 0 to avoid shape conformance problems
+		vectorIndex_p = vectorIndex;
+		vector_p.reference(matrix_p.row(vectorIndex));
+		vectorShape_p = vector_p.shape();
+	}
+
+protected:
+
+	Cube<T> cube_p;
+	Matrix<T> matrix_p;
+	Vector<T> vector_p;
+};
+
+class DataCubeMap
+{
+
+public:
+
+	DataCubeMap() {dataCubeMap_p.clear();}
+	~DataCubeMap() {dataCubeMap_p.clear();}
+
+	void add(MS::PredefinedColumns key,DataCubeHolderBase* dataCubeHolder){dataCubeMap_p[key] = dataCubeHolder;}
+
+	void setWindowShape(IPosition windowShape) {windowShape_p = windowShape;}
+	IPosition & getWindowShape() {return windowShape_p;}
+
+	template <class T> Vector<T> & getVector(MS::PredefinedColumns key)
+	{
+		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return flagCubeHolder->getVector();
+	}
+
+	template <class T> Matrix<T> & getMatrix(MS::PredefinedColumns key)
+	{
+		DataCubeHolder<T> *flagCubeHolder = static_cast< DataCubeHolder<T>* >(dataCubeMap_p[key]);
+		return flagCubeHolder->getVector();
+	}
+
+	void setMatrixIndex(uInt rowIndex)
+	{
+		for (dataCubeMapIter_p = dataCubeMap_p.begin();dataCubeMapIter_p!= dataCubeMap_p.end();dataCubeMapIter_p++)
+		{
+			dataCubeMapIter_p->second->setMatrixIndex(rowIndex);
+		}
+	}
+
+	void setVectorIndex(uInt vectorIndex)
+	{
+		for (dataCubeMapIter_p = dataCubeMap_p.begin();dataCubeMapIter_p!= dataCubeMap_p.end();dataCubeMapIter_p++)
+		{
+			dataCubeMapIter_p->second->setVectorIndex(vectorIndex);
+		}
+	}
+
+	IPosition & getMatrixShape()
+	{
+		return dataCubeMap_p.begin()->second->getMatrixShape();
+	}
+
+	IPosition & getVectorShape()
+	{
+		return dataCubeMap_p.begin()->second->getVectorShape();
+	}
+
+
+protected:
+
+	IPosition windowShape_p;
+	std::map<MS::PredefinedColumns, DataCubeHolderBase*> dataCubeMap_p;
+	std::map<MS::PredefinedColumns, DataCubeHolderBase*>::iterator dataCubeMapIter_p;
+};
+
+typedef void (casa::MSTransformBufferImpl::*TransformFunction)(	vi::VisBuffer2 *vb,
+																DataCubeMap &inputDataMap,
+																DataCubeMap &outputDataMap) const;
+
+typedef void (casa::MSTransformBufferImpl::*TransformKernel)(	vi::VisBuffer2 *vb,
+																DataCubeMap &inputDataMap,
+																DataCubeMap &outputDataMap,
+																IPosition &inputPos,
+																IPosition &outputPos,
+																IPosition &kernelShape) const;
+
+typedef void (casa::MSTransformBufferImpl::*TransformKernel1D)(	vi::VisBuffer2 *vb,
+																DataCubeMap &inputDataMap,
+																DataCubeMap &outputDataMap,
+																uInt &inputPos,
+																uInt &outputPos,
+																uInt &kernelSize) const;
+
 class MSTransformBufferImpl : public vi::VisBufferImpl2
 {
 
@@ -118,6 +251,27 @@ protected:
 
     MFrequency::Convert generateFreqRefTranEngine (Double time,Int outputRefFrame,Bool toObservedFrame) const;
 
+    void transformDataCube(	vi::VisBuffer2 *vb,
+    						DataCubeMap &inputDataCubeMap,
+    						DataCubeMap &outputDataCubeMap,
+    						TransformFunction funcPointer) const;
+
+    void channelAverage(	vi::VisBuffer2 *vb,
+    						DataCubeMap &inputDataCubeMap,
+    						DataCubeMap &outputDataCubeMap) const;
+
+    void decimationWindow(	vi::VisBuffer2 *vb,
+    						DataCubeMap &inputDataCubeMap,
+    						DataCubeMap &outputDataCubeMap,
+    						TransformKernel1D kernelPointer) const;
+
+    void flagAverageKernel(	vi::VisBuffer2 *vb,
+    						DataCubeMap &inputDataCubeMap,
+    						DataCubeMap &outputDataCubeMap,
+    						uInt &inputPos,
+    						uInt &outputPos,
+    						uInt &kernelSize) const;
+
 private:
 
 	MSTransformManager *manager_p;
@@ -133,6 +287,9 @@ private:
 	// Phase shifting
 	Bool applyPhaseShifting_p;
 	Double dx_p, dy_p;
+
+	// NONE datacol handling
+	Bool noneDataCol_p;
 
 	mutable Vector<Int> observationId_p;
 	mutable Vector<Int> arrayId_p;

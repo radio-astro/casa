@@ -195,7 +195,7 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(	S
 	// but always checks the given columns because it cannot be certain that msref
 	// refers to the same MS with every call.
 
-	if (col == "None")
+	if (col == "NONE")
 	{
 		my_colNameStr = "";
 		my_colNameVect.resize(0);

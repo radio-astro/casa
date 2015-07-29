@@ -4691,11 +4691,18 @@ void MSTransformManager::checkDataColumnsToFill()
 					"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
+	else if (datacolumn_p.contains("NONE") and userBufferMode_p)
+	{
+		logger_p 	<< LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "No datacolumn selected in buffer mode"
+					<< LogIO::POST;
+	}
 	else
 	{
-		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__) <<
-				"Requested data column " << datacolumn_p <<
-				" is not supported, possible choices are ALL,DATA,CORRECTED,MODEL,FLOAT_DATA,LAG_DATA" << LogIO::POST;
+		logger_p 	<< LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Requested data column " << datacolumn_p
+					<< " is not supported, possible choices are ALL,DATA,CORRECTED,MODEL,FLOAT_DATA,LAG_DATA"
+					<< LogIO::POST;
 	}
 
 	// Add shortcuts to be used in the context of WeightSpectrum related transformations
