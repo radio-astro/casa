@@ -469,18 +469,26 @@ Bool FlagAgentShadow::computeAntUVW(const vi::VisBuffer2 &vb, Int rownr)
 	// read position of first antenna as reference. Does not matter, since uvws are only differences.
 	MPosition obsPos( shadowAntennaPositions_p[0] );
 
+	// Input measure ref. frame
 	MVPosition basePos=obsPos.getValue();
 	MeasFrame measFrame(obsPos);
 	measFrame.set(epoch);
 	measFrame.set(refdir);
+
+    // Convert direction to J2000
+	MDirection::Convert covertionEngine(refdir,MDirection::Ref(MDirection::J2000,measFrame));    // Each visbuf sees only one fieldId
+    MDirection refdirJ2000 =  covertionEngine(refdir);
+
+	// Baseline measure
 	MVBaseline mvbl;
 	MBaseline basMeas;
 	MBaseline::Ref basref(MBaseline::ITRF, measFrame);
 	basMeas.set(mvbl, basref);
 	basMeas.getRefPtr()->set(measFrame);
+
 	// going to convert from ITRF vector to J2000 baseline vector I guess !
-	if(refdir.getRef().getType() != MDirection::J2000)
-		throw(AipsError("Internal FlagAgentShadow restriction : Ref direction must be in  J2000 "));
+	if(refdirJ2000.getRef().getType() != MDirection::J2000)
+		throw(AipsError("Internal FlagAgentShadow restriction : Conversion to J2000 did not work"));
 
 	Int nAnt = shadowAntennaDiameters_p.nelements();
 	if(uvwAnt_p.shape() != IPosition(2,3,nAnt))
@@ -497,7 +505,7 @@ Bool FlagAgentShadow::computeAntUVW(const vi::VisBuffer2 &vb, Int rownr)
 		MVBaseline mvblA(obsPos.getValue(), antpos.getValue());
 		basMeas.set(mvblA, basref);
 		MBaseline bas2000 =  elconv(basMeas);
-		MVuvw uvw2000 (bas2000.getValue(), refdir.getValue());
+		MVuvw uvw2000 (bas2000.getValue(), refdirJ2000.getValue());
 		const Vector<double>& xyz = uvw2000.getValue();
 		uvwAnt_p.column(k)=xyz;
 	}

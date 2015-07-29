@@ -130,6 +130,22 @@ class test_base(unittest.TestCase):
         self.unflag_ms()
         default(flagdata)
 
+    def setUp_shadowdata1(self):
+        '''ALMA ACA observation with one field in APP ref frame'''
+        self.vis = "shadowAPP.ms"
+        if testmms:
+            self.vis = "shadowAPP.mms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        default(flagdata)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+
     def setUp_shadowdata2(self):
         '''CASA simulation data set. scan=0 spw=0, 2 chans, RR,LL'''
         self.vis = "shadowtest_part.ms"
@@ -663,6 +679,13 @@ class test_shadow(test_base):
         self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
         self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
         self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)
+        
+    def test_shadow_APP(self):
+        '''flagdata: flag shadowed antennas with ref frame APP'''
+        self.setUp_shadowdata1()
+        flagdata(vis=self.vis, flagbackup=False, mode='shadow')
+        res = flagdata(self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 2052)
 
 
 class test_msselection(test_base):
@@ -3032,7 +3055,7 @@ class cleanup(test_base):
         os.system('rm -rf multiobs.*ms*')
         os.system('rm -rf uid___A002_X30a93d_X43e_small.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
-        os.system('rm -rf shadowtest_part.*ms*')
+        os.system('rm -rf shadow*.*ms*')
         os.system('rm -rf testmwa.*ms*')
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys* ap314.gcal*')

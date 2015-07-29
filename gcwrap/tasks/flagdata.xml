@@ -919,7 +919,7 @@
                timeavg -- Average data in time. Partially flagged data will not be included in the average
                           calculation, unless all the data for a given channel is flagged. If present, 
                           WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used to compute a weighted average. Otherwise, 
-                          if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present, flagdata will use WEIGH/SIGMA instead.
+                          if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present, flagdata will use WEIGHT/SIGMA instead.
                     default: False
                     options: True/False
     
