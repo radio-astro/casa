@@ -32,6 +32,7 @@
 #include <display/QtViewer/QtApp.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/ImageOpener.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
 #include <display/QtAutoGui/QtXmlRecord.h>
 #include <casa/iomanip.h>
 
@@ -244,11 +245,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				fileInfo = QFileInfo(pathName);
 			}
 		}
-
+		
+	
 		if (fileInfo.isFile()) {
-		  if(ImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR)
-		    return "Image";
-
+		  if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT || ImageOpener::imageType(pathname)==ImageOpener::IMAGEEXPR)
+		     return "Image";
 			QFile file(pathName);
 			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 				char buf[10240];
@@ -273,6 +274,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return "DS9 Region File";
 
 		} else if (fileInfo.isDir()) {	// Directory
+		  if(CasaImageOpener::imageType(pathname)==ImageOpener::IMAGECONCAT)
+		  return "Image";
 
 			QFileInfo tab(pathName + "/table.dat");
 

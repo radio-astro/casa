@@ -50,11 +50,13 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageInfo.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/DisplayEvents/WCMotionEvent.h>
 #include <casa/iostream.h>
 #include <casa/iomanip.h>
+#include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <images/Images/SubImage.h>
@@ -313,7 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					}
 
 					// use the file path name for the opener
-					switch(ImageOpener::imageType(tmp_path)) {
+					switch(CasaImageOpener::imageType(tmp_path)) {
 
 					case ImageOpener::AIPSPP: {
 
@@ -343,18 +345,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						break;
 					}
 					case ImageOpener::IMAGECONCAT:{
-					   AipsIO aio(path, ByteIO::Old);
-					   AlwaysAssert (aio.getstart("CompoundImage-Conc") == 0, AipsError);
-					   Int dtype;
-					   aio >> dtype;
-					   if(dtype==TpFloat)
-					     im_.reset(new ImageConcat<Float> (aio, path));
-					   else if(dtype==TpComplex)
-					     cim_.reset(new ImageConcat<Complex> (aio, path));
-					   else
-					      throw AipsError( "Concatenated CASA images are not Float or Complex.");
+					  LatticeBase* latt =CasaImageOpener::openImage(path);
+					  if(!latt)
+					    throw(AipsError("Error in opening concatenated Image"));
+					  DataType dtype=latt->dataType();
+					  if(dtype==TpFloat)
+					    im_.reset(dynamic_cast<ImageInterface<Float>* >(latt));
+					  else if(dtype==TpComplex)
+					    cim_.reset(dynamic_cast<ImageInterface<Complex>* >(latt));
+					  else
+					    throw AipsError( "Concatenated CASA images are not Float or Complex.");
 					  break;
 					}
+					case ImageOpener::IMAGEEXPR:{
+					  LatticeBase* latt =CasaImageOpener::openImage(path);
+					  if(!latt)
+					    throw(AipsError("Error in opening concatenated Image"));
+					  DataType dtype=latt->dataType();
+					   if(dtype==TpFloat)
+					     im_.reset(dynamic_cast<ImageInterface<Float>* >(latt));
+					   else if(dtype==TpComplex)
+					     cim_.reset(dynamic_cast<ImageInterface<Complex>* >(latt));
+					   else
+					      throw AipsError( "Expression CASA image is not Float or Complex.");
+					  break;
+					} 
 
 					default: {
 						File f(path);
