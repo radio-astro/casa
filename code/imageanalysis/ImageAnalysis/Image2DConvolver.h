@@ -94,15 +94,23 @@ class GaussianBeam;
 template <class T> class Image2DConvolver : public ImageTask<T> {
 public:
 
+	const static String CLASS_NAME;
+
+	Image2DConvolver() = delete;
+
 	Image2DConvolver(
 		const SPCIIT image, const Record *const &regionPtr,
 	    const String& mask, const String& outname, const Bool overwrite
 	);
+	
+    Image2DConvolver(const Image2DConvolver<T> &other) = delete;
 
-	// Destructor
 	~Image2DConvolver() {}
 
-	// Convolve.   If the output image needs a mask and doesn't have one,
+	Image2DConvolver &operator=(const Image2DConvolver<T> &other) = delete;
+
+    // DEPRECATED. Use the object method instead. Convolve.   If the output
+	// image needs a mask and doesn't have one,
 	// it will be given one if possible.  The miscInfo, imageInfo,
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
@@ -110,7 +118,7 @@ public:
 		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
 		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
 		const Vector<Quantity>& parameters, Bool autoScale, Double scale,
-		Bool copyMiscellaneous=True, Bool targetres=False
+		Bool copyMiscellaneous=True, Bool targetres=False, Bool suppressWarnings=False
 	);
 
 	SPIIT convolve();
@@ -126,40 +134,30 @@ public:
 
 	void setTargetRes(Bool b) { _targetres = b; }
 
-	String getClass() const { const static String c = "Image2DConvolver"; return c; }
+	String getClass() const { return CLASS_NAME; }
+
+	// if True, do not log certain warning messages which would normally
+	// be logged during convolution
+	void setSuppressWarnings(Bool b) { _suppressWarnings = b; }
 
 protected:
 
-   	virtual CasacRegionManager::StokesControl _getStokesControl() const {
+   	CasacRegionManager::StokesControl _getStokesControl() const {
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    virtual vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    vector<Coordinate::Type> _getNecessaryCoordinates() const {
     	return vector<Coordinate::Type>();
     }
 
-    virtual inline Bool _supportsMultipleRegions() const {return True;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
     VectorKernel::KernelTypes _type;
     Double _scale;
     Quantity _major, _minor, _pa;
     IPosition _axes;
-    Bool _targetres;
-
-	// This class contains all static methods. Do not allow it to
-	// be instantiated.
-	// Constructor
-	Image2DConvolver ();
-
-	// Copy constructor.  Uses reference semantics.
-	Image2DConvolver(const Image2DConvolver<T> &other);
-
-
-
-	// Assignment operator. Uses reference semantics.
-	Image2DConvolver &operator=(const Image2DConvolver<T> &other);
-
+    Bool _targetres, _suppressWarnings;
 
 	static void _checkKernelParameters(
 		VectorKernel::KernelTypes kernelType,
@@ -174,7 +172,8 @@ private:
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
 		const GaussianBeam& beamIn, const Unit& brightnessUnit,
-		const Bool autoscale, const Double scale, const Bool emitMessage
+		Bool autoscale, Double scale, Bool emitMessage,
+		Bool suppressWarnings
 	);
 
 	static T _fillKernel (
