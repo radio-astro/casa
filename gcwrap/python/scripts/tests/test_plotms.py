@@ -780,7 +780,7 @@ class plotms_test1(test_base):
         
         self.assertFalse(self.res)  
         
-    def test030(self):
+    def xtest030(self):
         '''Plotms 30: The data set here was producing an 'artifact' when the plot was exported.  Test was developed in response to CAS-6662.'''      
         self.plotFiles = [self.outputDir + "testPlot030.jpg",
                        self.outputDir + "testPlot0302.jpg",
@@ -839,7 +839,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(51000, self.plotfile_jpg)
         print 
         
-    def test032(self):
+    def xtest032(self):
         '''Plotms 32: Pipeline no plot scenario.  Test was developed in response to CAS-6662.'''      
         self.plotFile = '/tmp/testPlot032.png'
         self.plotFile2 = '/tmp/testPlot0322.png'
@@ -890,7 +890,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.res)
         self._checkPlotFile(50000, self.plotFiles[1]) '''     
 
-    def test033(self):
+    def xtest033(self):
         print
         '''Plotms 33: CAS-6813, Iteration problem with two spws in a row'''
         plotFile = '/home/groot/casa/trunk/test/Plotms/Maw/maw.ms'
@@ -995,10 +995,10 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         print
         '''Plotms 37: Juergan's cookbook example'''
         self.plotfile_jpg = self.outputDir + "testPlot037.jpg"
-        self.plotfile2_jpg = self.outputDir + "testPlot0372.jpg"
-        self.plotfile3_jpg = self.outputDir + "testPlot0373.jpg"
-        self.plotfile4_jpg = self.outputDir + "testPlot0374.jpg"
-        self.plotfile5_jpg = self.outputDir + "testPlot0375.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot037.2.jpg"
+        self.plotfile3_jpg = self.outputDir + "testPlot037.3.jpg"
+        self.plotfile4_jpg = self.outputDir + "testPlot037.4.jpg"
+        self.plotfile5_jpg = self.outputDir + "testPlot037.5.jpg"
         
         print 'Writing to ', self.plotfile_jpg
         if os.path.exists( self.plotfile_jpg):    
@@ -1016,9 +1016,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         time.sleep(5)
         
         
-        #self.res = plotms(vis=self.ms, gridrows=2, gridcols=2, showgui=False, plotfile=self.plotfile_jpg)
-        #self.assertTrue(self.res)
-        #self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        self.res = plotms(vis=self.ms, gridrows=2, gridcols=2, showgui=False, plotfile=self.plotfile_jpg)
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         
         #Plot in the second column, first row, and define this plot as plotindex=0
         self.res = plotms(vis=self.ms, gridrows=2, gridcols=2,
@@ -1032,7 +1032,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         #Overplot in the same panel.
         print ''
         print 'Test plot 3'
-        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/Maw/maw.ms', 
+        self.res = plotms(vis=self.ms,
                           clearplots=False, 
                           plotindex=1, rowindex=0, colindex=1,
                           gridrows=2, gridcols=2,
@@ -1059,7 +1059,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           showgui=False, 
                           customsymbol=True, symbolshape='diamond', symbolsize=5,
                           symbolcolor='ff0000')
-        self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/Maw/maw.ms', 
+        self.res = plotms(vis=self.ms,
                           clearplots=False, 
                           plotindex=1, rowindex=0, colindex=0,
                           gridrows=2, gridcols=2,
@@ -1074,10 +1074,10 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           customsymbol=False, yaxislocation='')
         self.assertTrue(os.path.exists(self.plotfile5_jpg), 'Plot was not created')
         
-        #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        #self._checkPlotFile(94000, self.plotfile_jpg)
+        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        self._checkPlotFile(94000, self.plotfile5_jpg)
      
-    def test038(self):
+    def xtest038(self):
         '''Plotms 38: Test for CAS-6975 overplotting problem.'''
         self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -1103,7 +1103,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile(48000, self.plotfile_jpg)   
         print
         
-    def test039( self ):
+    def xtest039( self ):
         '''Plotms 39:'Making a plot with a 2x1 grid.'''
         self.plotfile_jpg = self.outputDir + "testPlot039.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -1132,7 +1132,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile(45000, self.plotfile_jpg)   
         print
         
-    def test040( self ):
+    def xtest040( self ):
         '''Plotms 40:  CAS-7043:  Cannot create two adjacent plots using plotms with plotindex'''
         self.plotfile_jpg = self.outputDir + "testPlot040.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -1162,7 +1162,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile(60000, self.plotfile_jpg)   
         print
         
-    def test041( self ):
+    def xtest041( self ):
         '''Plotms 41:  CAS-7046:  With custom flagged symbol=False, should not be able to change shape of points.'''
         self.plotfile_jpg = self.outputDir + "testPlot041.jpg"
         self.plotfile_jpg2 = self.outputDir + "testPlot0412.jpg"
@@ -1190,7 +1190,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile( 50000, self.plotfile_jpg2 ) 
         print   
         
-    def test042( self ):
+    def xtest042( self ):
         '''Plotms 42:  CAS-7050:  (Pipeline) With iteration plots and bad selections you should be able to tell what plots are skipped.'''
         '''The expectation is the plot with the bad spw, 100, will be skipped'''
         plotfile="/home/groot/casa/trunk/test/Plotms/Maw/maw.ms"
@@ -1265,7 +1265,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         print
         
         
-    def test044( self ):
+    def xtest044( self ):
         '''Plotms 44:  CAS-7050:  (Pipeline) Check that if you specify the first 3 antenna and iterate over
            antenna then you only get 3 iteration plots'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1297,7 +1297,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 3 )
         print 
         
-    def test045( self ):
+    def xtest045( self ):
         '''Plotms 45:  CAS-7050:  (Pipeline) Check antenna with a range that includes only one valid antenna and iterate over
            antenna then you only get 1 iteration plot'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1322,7 +1322,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 1 )
         print 
         
-    def test046( self ):
+    def xtest046( self ):
         '''Plotms 46:  CAS-7050:  (Pipeline) Iterate on antenna, but don't select.  
              Make sure there are 22 iteration plots'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1346,7 +1346,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 22 )
         print         
         
-    def test047( self ):
+    def xtest047( self ):
         '''Plotms 47:  CAS-7050:  (Pipeline) Iterate on antenna with an empty selection.  
              Make sure there are NO iteration plots'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1364,7 +1364,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertFalse( self.res )
         print  
         
-    def test048( self ):
+    def xtest048( self ):
         '''Plotms 48:  CAS-7074:  xsharedaxis needs to be a subparameter of global'''
         plotfile="/home/groot/casa/trunk/test/Plotms/Maw/maw.ms"
         self.plotfile_jpg = self.outputDir + "testPlot048.jpg"
@@ -1379,7 +1379,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertFalse( self.res )
         print 
         
-    def test049( self ):
+    def xtest049( self ):
         '''Plotms 49:  CAS-7074:  (Pipeline) Iterate on baseline with a 2x2 grid, check that shared axis works'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot049.jpg"
