@@ -275,9 +275,6 @@ public:
 
             const Slice & aSlice = correlationSlices (correlationSlice);
 
-            start (Correlation) = aSlice.start();
-            length (Correlation) = aSlice.length();
-            increment (Correlation) = aSlice.inc();
 
             uInt channelDestination = 0;
 
@@ -289,6 +286,10 @@ public:
                 length (Channel) = bSlice.length();
                 increment (Channel) = bSlice.inc();
 
+                start (Correlation) = aSlice.start();   // Can't move outside loop because of
+                length (Correlation) = aSlice.length(); // of mutation during destination logic below
+                increment (Correlation) = aSlice.inc();
+
                 dataSlices [outputSlice] = new Slicer (start, length, increment);
 
                 // The destination slicer will always have increment one and the same length
@@ -296,10 +297,12 @@ public:
                 // slices (both axes) it is away from the origin.
 
                 start (Channel) = channelDestination;
-                channelDestination += length (Channel);
                 increment (Channel) = 1;
+                channelDestination += length (Channel);
+
                 start (Correlation) = correlationDestination;
                 increment (Correlation) = 1;
+
                 destinationSlices [outputSlice] = new Slicer (start, length, increment);
 
                 outputSlice ++;
