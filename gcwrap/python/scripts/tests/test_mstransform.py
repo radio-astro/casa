@@ -5,7 +5,7 @@ import numpy
 import math
 import sys
 import exceptions
-from tasks import mstransform, cvel, listpartition, listobs, setjy, flagdata, split, applycal, split2
+from tasks import mstransform, cvel, cvel2, listpartition, listobs, setjy, flagdata, split, applycal, split2
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
@@ -2226,6 +2226,57 @@ class test_radial_velocity_correction(test_base_compare):
         r = mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='DATA',outframe='SOURCE',
                         mode = 'velocity', width = '0.001km/s',restfreq = '354.50547GHz')
         self.assertFalse(r)
+
+class test_radial_velocity_correction_largetimerange(test_base_compare):
+    # CAS-7382, test large timerange spawns that require an additional
+    # correction and exposed wrong reference timestamp usage in mstransform
+    def setUp(self):
+        super(test_radial_velocity_correction_largetimerange, self).setUp()
+        self.vis = 'CAS-7382.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)
+
+        self.outvis = "test-CAS-7382-mst.ms"
+        self.refvis = "test-CAS-7382-cvel.ms"
+        self.outvis_sorted = "test-CAS-7382-mst-sorted.ms"
+        self.refvis_sorted = "test-CAS-7382-cvel-sorted.ms"
+        os.system("rm -rf test-CAS-7382*")
+
+    def test_radial_velocity_correction(self):
+        cvel(vis=self.vis, outputvis=self.refvis, spw='1', field='Titan',
+             mode='velocity', width='0.5km/s', interpolation='linear',
+             restfreq='349.45370GHz', outframe='SOURCE')
+        cvel2(vis=self.vis, outputvis=self.outvis, spw='1', field='Titan',
+             mode='velocity', width='0.5km/s', interpolation='linear',
+             restfreq='349.45370GHz', outframe='SOURCE')
+
+        self.generate_tolerance_map()
+
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1
+        self.tolerance['DATA'] = 1e-5
+
+        self.post_process()
+
+    def test_radial_velocity_correction_neg_order(self):
+        cvel(vis=self.vis, outputvis=self.refvis, spw='0', field='Titan',
+             mode='velocity', width='0.5km/s', interpolation='linear',
+             restfreq='349.45370GHz', outframe='SOURCE')
+        cvel2(vis=self.vis, outputvis=self.outvis, spw='0', field='Titan',
+             mode='velocity', width='0.5km/s', interpolation='linear',
+             restfreq='349.45370GHz', outframe='SOURCE')
+
+        self.generate_tolerance_map()
+
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1
+        self.tolerance['DATA'] = 1e-5
+
+        self.post_process()
+
         
 class test_vla_mixed_polarizations(test_base):
     '''Test behaviour of mstransform in split mode when the input MS contains mixed VLA correlations XY/LR'''
@@ -5293,6 +5344,7 @@ def suite():
             test_subtables_evla,
             test_subtables_alma,
             test_radial_velocity_correction,
+            test_radial_velocity_correction_largetimerange,
             test_vla_mixed_polarizations,
             test_alma_wvr_correlation_products,
             test_alma_autocorr_selection_with_wvr,
