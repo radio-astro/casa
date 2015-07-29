@@ -59,14 +59,16 @@ class listhistory_test(unittest.TestCase):
         
         res = listhistory(self.msfile)
         cmd="sed -n \"/Begin Task/,/End Task/p\" %s > %s " %(logfile,newfile)
+        print cmd
         os.system(cmd)
     
         # Get the number of lines in file
         refnum=13
         if self.itismms:
-            refnum = 35
+            refnum = 36
 
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
+        print cmd
         output=commands.getoutput(cmd)
         num = int(output)
         self.assertEqual(refnum,num)
