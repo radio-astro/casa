@@ -79,6 +79,7 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Regions/WCEllipsoid.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageOpener.h>
@@ -238,7 +239,7 @@ Bool ImageAnalysis::open(const String& infile) {
 		_imageComplex.reset();
 	}
 
-	SPtrHolder<LatticeBase> latt(ImageOpener::openImage(infile));
+	SPtrHolder<LatticeBase> latt(CasaImageOpener::openImage(infile));
 	ThrowIf (! latt.ptr(), "Unable to open image");
 	DataType dataType = latt->dataType();
 	if (isReal(dataType)) {
