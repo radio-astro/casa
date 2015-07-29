@@ -713,7 +713,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity qthresh(0,"");
     Quantity qreso(0,"");
     Quantity::read(qreso,resolution);
-    cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
+    //cerr<<"input resolution : qreso.getValue()="<<qreso.getValue()<<endl;
+    os<<"Input resolution : "<<qreso.getValue()<<" "<<qreso.getUnit()<<LogIO::POST;
     Float sigma;
     // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
     if ( fracofpeak != 0.0 ) {
@@ -723,7 +724,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     else if(Quantity::read(qthresh,threshold) ) {
       // evaluate threshold input 
-      cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
+      //cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
+      os << "Input threshold (qthresh) ="<<qthresh.get().getValue()<<" "<<qthresh.getUnit()<<LogIO::POST;
       if (qthresh.getUnit()!="") {
         // use qthresh and set sigma =0.0 to ignore
         sigma = 0.0;
@@ -753,15 +755,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Double> max, min, rms;
     thestats.get(RecordFieldId("max"), max);
     thestats.get(RecordFieldId("rms"), rms);
-    cerr<<"Stats -- rms.nelements()="<<rms.nelements()<<" rms(0)="<<rms[0]<<endl;
-    cerr<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<endl;
+    os<<"Stats -- rms.nelements()="<<rms.nelements()<<" rms(0)="<<rms[0]<<LogIO::DEBUG1;
+    os<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<LogIO::DEBUG1;
     if (alg==String("")) {
       cerr<<" calling makeAutoMask(), simple 1 cleanbox around the max"<<endl;
       makeAutoMask(imstore);
     }
     else if (alg==String("thresh")) {
       autoMaskByThreshold(*tempmask, *tempres, *temppsf, qreso, qthresh, fracofpeak, thestats, sigma);
-      cerr<<" automaskbyThreshold...."<<endl;
+      //cerr<<" automaskbyThreshold...."<<endl;
       tempmask->get(maskdata);
       imstore->mask()->put(maskdata);
     } 
@@ -816,7 +818,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           throw(AipsError("No restoring beam(s) in the input image/psf or resolution is given"));
        }
      }
-     cerr<<"npix="<<npix<<endl;
+     //cerr<<"npix="<<npix<<endl;
      if (npix==0) {
        os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
        npix=1;
@@ -830,13 +832,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      if (fracofpeak) {
        stats.get(RecordFieldId("max"), max);
        minMax(minval,maxval,max);
-       cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+       //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
        rmsthresh = maxval * fracofpeak; 
      }
      else if (sigma) {
        stats.get(RecordFieldId("rms"), rms);
        minMax(minval,maxval,rms); 
-       cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+       //cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
        rmsthresh = maxval * sigma;
      }      
      else {
@@ -844,7 +846,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        if ( rmsthresh==0.0 ) 
          { throw(AipsError("Threshold for automask is not set"));}
      }
-     cerr<<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<endl;
+     os<<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<LogIO::POST;
 
      thresh = rmsthresh / sqrt(npix);
      //cerr<<" thresh="<<thresh<<endl;
@@ -867,19 +869,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      // convolve to a beam = npix
      TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
+     tempIm3->copyData(tempIm2);
      SHARED_PTR<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
      Vector<Quantity> convbeam(3);
      convbeam[0] = Quantity(npix, "pix");
      convbeam[1] = Quantity(npix, "pix");
      convbeam[2] = Quantity(0.0, "deg");
-     Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
-     PagedImage<Float> tempconvim(TiledShape(tempIm3_ptr->shape()), tempIm3_ptr->coordinates(), String("mytemp_convim"));
-     tempconvim.copyData(*tempIm3_ptr);
+     Record dammyRec=Record();
+     String convimname("temp_convim");
+     Image2DConvolver<Float> convolver(tempIm3_ptr, &dammyRec, String(""), convimname, True); 
+     convolver.setKernel("GAUSSIAN", convbeam[0], convbeam[1], convbeam[2]);
+     convolver.setAxes(std::make_pair(0,1));
+     convolver.setScale(Double(-1.0));
+     convolver.setSuppressWarnings(True);
+     convolver.convolve();
+     // replaced the deprecated static method with object-oriented one
+     //Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
+     //PagedImage<Float> tempconvim(TiledShape(res.shape()), res.coordinates(), String("mytemp_convim"));
+     PagedImage<Float> tempconvim(convimname);
+     //tempconvim.copyData(*tempIm3_ptr);
 
      // fudge factor?  
      Float afactor = 2.0;
-     cerr<<"thresh/afactor="<<thresh/afactor<<endl;
-     LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
+     //cerr<<"thresh/afactor="<<thresh/afactor<<endl;
+     //LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
+     LatticeExpr<Float> themask( iif( tempconvim > thresh/afactor, 1.0, 0.0 ));
      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
   }
   

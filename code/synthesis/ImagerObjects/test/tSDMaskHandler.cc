@@ -85,7 +85,8 @@ void testMakeMask()
         templateImage.putAt(val, loc3);
       }
     } 
-    CountedPtr<ImageInterface<Float> > outmaskimage;
+    //CountedPtr<ImageInterface<Float> > outmaskimage;
+    SHARED_PTR<ImageInterface<Float> > outmaskimage;
     SDMaskHandler maskhandler;
     outmaskimage = maskhandler.makeMask(maskname, threshold, templateImage);
     cerr<<"maskimage.shape()="<< outmaskimage->shape()<<endl;
