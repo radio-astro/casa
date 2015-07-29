@@ -1,9 +1,9 @@
 //# imageconcat  -- a simplistic command line imageconcat
-//# Copyright (C) 2013
+//# Copyright (C) 2013-2015
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU Library General Public License as published by
+//# under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
 //#
@@ -30,38 +30,115 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Block.h>
+#include <casa/OS/Directory.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Logging/LogIO.h>
 #include <lattices/Lattices/LatticeConcat.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
+#include <casa/Inputs/Input.h>
 #include <casa/namespace.h>
+using namespace std;
+using namespace casa;
 
+Bool moveImages(const String& dirname, Vector<String>& images){
+  
+  {
+    File elfil(dirname);
+    if(elfil.exists()){
+      cerr << dirname << " exists; do something about it ! " << endl; 
+      return False;
+    }
+  }
+  Directory eldir(dirname);
+  eldir.create();
+  String rootdir=eldir.path().absoluteName();
+  for (uInt k=0; k< images.nelements(); ++k){
+    Directory elim(images[k]);
+    images[k]=rootdir+"/"+elim.path().baseName();
+    elim.move(Path(images[k]));
+    
+  }
+
+  return True;
+
+}
+Bool copyImages(const String& dirname, Vector<String>& images){
+  
+  {
+    File elfil(dirname);
+    if(elfil.exists()){
+      cerr << dirname << " exists; do something about it ! " << endl; 
+      return False;
+    }
+  }
+  Directory eldir(dirname);
+  eldir.create();
+  String rootdir=eldir.path().absoluteName();
+  for (uInt k=0; k< images.nelements(); ++k){
+    Directory elim(images[k]);
+    images[k]=rootdir+"/"+elim.path().baseName();
+    elim.copyRecursive(images[k]);
+    
+  }
+
+  return True;
+
+}
 int main(int argc, char **argv)
 {
-  using namespace std;
-  using namespace casa;
-
-  if (argc<3) {
+  
+  /*if (argc<3) {
     cout <<String("Usage: imageconcat  \"image0 image1 image2...imageN\"  outimage")<<endl;
     exit(1);
   }
+  */
   try{
+
+    
+    Input inp;
+    inp.version("2015/07/15 by CM (MLLN; CASA-BCST) ");
+    // Title of CM  i.e Code Monkey is
+    //Master Lead Lion Ninja: CASA-Big Cheese Synthesis Team
+    inp.create("outimage", "Out.image", "Output concatenatedimage");
+    inp.create("inimages", "", "List of input images to be concatenated e.g inimages='in0.image in1.image'");
+    inp.create("type", "virtualcopy", "type of image concatenation: virtualmove:virtual concat+ move images, virtualnomove: virtual concat and leave input images as is, virtualcopy: copy the subimages into output subdiretory, real: literal concat");
+    inp.readArguments(argc, argv);
+    String inimages=inp.getString("inimages");
+    String sep=String(" ");
+    if(inimages.contains(','))
+      sep=String(",");
+
+    String conctype=inp.getString("type");
+
 
     Timer tim;
     String res[10000];
-    Int nimages=split(String(argv[1]), res, 10000, String(" "));
-    String outname(argv[2]);
+    Int nimages=split(String(inimages), res, 10000, sep);
+    String outname=inp.getString("outimage");
     //cerr << "Output image will be " << outname << endl;
     Vector<String> images(nimages);
-    Block<CountedPtr<PagedImage<Float> > > vim(nimages);
-    for (Int k=0; k < nimages; ++k){
-      images[k]=res[k];
-      vim[k]=new PagedImage<Float>(images[k]);
-      vim[k]->tempClose();
+    for (Int k=0; k < nimages; ++k)
+       images[k]=res[k];
+    if(conctype=="virtualmove"){
+      if(!moveImages(outname, images))
+	return -1;
+      outname=outname+"/concat.aipsio";
     }
-    //cerr << "images" << images << endl;
+    if(conctype=="virtualcopy"){
+      if(!copyImages(outname, images))
+	return -1;
+      outname=outname+"/concat.aipsio";
+    }
+    Block<SHARED_PTR<PagedImage<Float> > > vim(nimages);
+    for (Int k=0; k < nimages; ++k){
+     
+      vim[k].reset(new PagedImage<Float>(images[k]));
+      (vim[k])->tempClose();
+    }
+    cerr << "images" << images << endl;
     //PagedImage<Float> im1(argv[1]);
     CoordinateSystem cs=vim[0]->coordinates();
     //Int nchan=0;
@@ -77,17 +154,27 @@ int main(int argc, char **argv)
       for (Int k=0; k < nimages; ++k){
 	ic.setImage(*vim[k], True);
       }
-      PagedImage<Float> out2(TiledShape(ic.shape())
-			     //, tileShape)
-			     , cs, outname);
-      //out2.table().markForDelete();
-      //out2.tempClose();
-      out2.copyData(ic);
-      if(ic.isMasked()){
-	out2.makeMask ("mask0", True, True, False, True);
-	out2.pixelMask().put(ic.getMask());
+
+      if(conctype !="real")
+	ic.save(outname);
+
+      else{
+
+	
+	PagedImage<Float> out2(TiledShape(ic.shape())
+			       //, tileShape)
+			       , cs, outname);
+	//out2.table().markForDelete();
+	//out2.tempClose();
+	out2.copyData(ic);
+	if(ic.isMasked()){
+	  out2.makeMask ("mask0", True, True, False, True);
+	  out2.pixelMask().put(ic.getMask());
+	}
       }
-     }
+    }
+
+    cerr << "TYPE " << CasaImageOpener::imageType(outname) << endl;
     //tim.show("Time taken to concatenate via image: ");
     /* for(Int k=0; k < nimages; ++k){
       //vim[k]->tempClose();

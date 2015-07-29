@@ -67,6 +67,7 @@ ImageAnalysis/SpectralFitter.cc
 
 IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
+IO/CasaImageOpener.cc
 IO/FitterEstimatesFileParser.cc
 IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
@@ -103,6 +104,7 @@ install (FILES
 	)
 install (FILES
 	IO/AsciiAnnotationFileLine.h
+	IO/CasaImageOpener.h
 	IO/FitterEstimatesFileParser.h
 	IO/LogFile.h
     IO/OutputDestinationChecker.h
@@ -257,6 +259,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSubImageFactory.cc )
 
 casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
+casa_add_assay( imageanalysis IO/test/tCasaImageOpener.cc )
 casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
