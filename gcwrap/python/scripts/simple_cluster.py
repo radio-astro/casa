@@ -321,7 +321,9 @@ class simple_cluster:
         if (os == "Linux"):
             try:
                 # affinity aware processor count (~= len(sched_getaffinity))
-                cmd_ncores = self.shell(hostname) + " 'nproc' "
+                # ignore thread settings, to avoid unexpected behaviour based
+                # on the users environment
+                cmd_ncores = self.shell(hostname) + " 'OMP_NUM_THREADS= nproc' "
                 ncores = int(commands.getoutput(cmd_ncores))
             except:
                 cmd_ncores = self.shell(hostname) + " 'cat /proc/cpuinfo' "
