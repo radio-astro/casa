@@ -21,6 +21,8 @@
 casa_add_library( singledish
     SingleDish/BaselineTable.cc
     SingleDish/BLParameterParser.cc
+    SingleDish/LineFindingUtils.cc
+    SingleDish/LineFinder.cc
     SingleDish/SDMSManager.cc
     SingleDish/SingleDishMS.cc
 )
@@ -28,9 +30,16 @@ casa_add_library( singledish
 install (FILES
     SingleDish/BaselineTable.h
     SingleDish/BLParameterParser.h
+    SingleDish/LineFindingUtils.h
+    SingleDish/LineFinder.h
     SingleDish/SDMSManager.h
     SingleDish/SingleDishMS.h
     DESTINATION include/casacode/singledish/SingleDish
 )
 
-casa_add_assay( singledish  SingleDish/test/tSingleDishMS.cc )
+casa_add_assay( singledish
+    SingleDish/test/tSingleDishMS.cc
+    )
+casa_add_assay( singledish
+    SingleDish/test/tLineFinder.cc
+    )
