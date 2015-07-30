@@ -756,10 +756,6 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
     # treat all jobs the same
     merged_results.extend([(j, [j]) for j in non_mergeable])
 
-    # generate random filename to make it easier to identify when things go wrong
-    iter_filename = '%s.png' % uuid.uuid4()
-    root, ext = os.path.splitext(iter_filename)
-
     jobs_and_callbacks = []
     for merged_job, component_jobs in merged_results:
         # filename components are only inserted if there is more than one plot
@@ -771,6 +767,10 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             job_to_execute = component_jobs[0]
             src_filenames = [job_to_execute.kw['plotfile']]
         else:
+            # generate random filename to make it easier to identify when things go wrong
+            iter_filename = '%s.png' % uuid.uuid4()
+            root, ext = os.path.splitext(iter_filename)
+
             # activate plotms iteration in the merged job arguments to activate
             merged_job.kw['plotfile'] = iter_filename
             merged_job.kw['clearplots'] = True
@@ -806,7 +806,12 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             else:
                 queued_job = mpihelpers.SyncTask(job_to_execute)
 
-            def callback():
+            # variables within functions and lambdas are late binding, so we
+            # supply them as default arguments to get the values at function
+            # definition time into the closure scope
+            def callback(src_filenames=src_filenames,
+                         dest_filenames=dest_filenames,
+                         component_jobs=component_jobs):
                 # move the plotms output into place, renaming to the expected
                 # filename containing ant, spw, field components.
                 for src, dst, cjob in zip(src_filenames, dest_filenames,
@@ -824,7 +829,7 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             LOG.trace('Skipping unnecessary job: %s' % job_to_execute)
 
     # now execute all the callbacks, which will rename the output files
-    LOG.info('Compressed %s jobs to %s iterated jobs',
+    LOG.info('Compressed %s plots jobs to %s jobs',
              len(jobs_and_wrappers), len(jobs_and_callbacks))
     for (queued_job, callback) in jobs_and_callbacks:
         queued_job.get_result()
