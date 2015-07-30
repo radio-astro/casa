@@ -92,7 +92,7 @@ void LineFinderUtils::calculateMAD(size_t const num_data,
   AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
   AlwaysAssert(num_valid <= num_data, AipsError);
   float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid, local_data.data);
-  //cout << "median value = " << median_value << endl;
+  //cout << "median value for MAD = " << median_value << endl;
   for (size_t i = 0; i < num_data; ++i) {
     mad[i] = in_mask.data[i] ? abs(in_data[i]-median_value) : 0.0;
   }
@@ -106,9 +106,8 @@ void LineFinderUtils::createMaskByAThreshold(size_t const num_data,
 {
   LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(num_data, in_data.data, threshold, out_mask.data);
   AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
-  bool* ptr = out_mask.data;
   for (size_t i = 0; i < num_data; ++i) {
-    ptr[i] = out_mask.data[i] && in_mask.data[i];
+    out_mask.data[i] = out_mask.data[i] && in_mask.data[i];
   }
 }
 
