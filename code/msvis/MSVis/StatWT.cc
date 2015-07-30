@@ -260,7 +260,7 @@ Bool StatWT::update_variances(std::map<uInt, Vector<uInt> >& ns,
       for(uInt corr = 0; corr < nCorr; ++corr){
         if (std::count(selcorrs_p.begin(), selcorrs_p.end(), corr)!=0) {
 	  for(uInt ch = 0; ch < nChan; ++ch){
-	    if(!chanmaskedflags(corr, ch, r)){
+	    if(!chanmaskedflags(corr, ch, r) && !vb.flagCube()(corr,ch,r)){
 	      if(!ns.count(hr)){
 		ns[hr] = Vector<uInt>(nCorr, 0);
 		means[hr] = Vector<Complex>(nCorr, 0);
