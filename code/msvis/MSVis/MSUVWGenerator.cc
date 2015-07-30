@@ -97,11 +97,11 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID,
   MVBaseline mvbl;
   MBaseline  basMeas;
 
-  logSink() << LogIO::DEBUG1
-    //   << "timeCentroid: " << timeCentroid
-	    << "\nfldID: " << fldID
-    //<< "\nphasedir: " << phasedir
-	    << LogIO::POST;
+  //logSink() << LogIO::DEBUG1
+  //   << "timeCentroid: " << timeCentroid
+  //   << "\nfldID: " << fldID
+  //   << "\nphasedir: " << phasedir
+  //   << LogIO::POST;
 
   MBaseline::Ref basref(refposref_p);
   basMeas.set(mvbl, basref);            // in antenna frame
@@ -201,8 +201,8 @@ Bool MSUVWGenerator::make_uvws(const Vector<Int> flds)
           oldWsrtConvention = newWsrtConvention;
         }
 
-        logSink() << LogIO::DEBUG1 << "currTime: " << currTime
-                  << "\ncurrFld: " << currFld << LogIO::POST;
+        //logSink() << LogIO::DEBUG1 << "currTime: " << currTime
+        //          << "\ncurrFld: " << currFld << LogIO::POST;
         uvw_an(timeCentMeas(toir), currFld, newWsrtConvention);
       }
     
