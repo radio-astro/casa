@@ -1074,8 +1074,8 @@ void MSTransformManager::parseCalParams(Record &configuration)
 		}
 		else if (configuration.type(exists) == TpString)
 		{
-		        // Extract the callib String
-		        callib_p = configuration.asString(exists);
+			// Extract the callib String
+			callib_p = configuration.asString(exists);
 			callibRec_p = Record();
 
 			// If the callib_p String has non-trivial content, calibration in turned on
@@ -4864,33 +4864,27 @@ void MSTransformManager::generateIterator()
 	// Calibrating VI
 	if (calibrate_p)
 	{
-
-		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
-					<< "Building LayeredVi2Factory w/ calibration activated."
-					<< LogIO::POST;
-
-		// Isolate iteration parametes
+		// Isolate iteration parameters
 		vi::IteratingParameters iterpar(0,vi::SortColumns(sortColumns_p, false));
 
+		// By callib String
         if (callib_p.length() > 0)
         {
-			// By callib String
+    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+    					<< "OTF calibration activated, using calibration file spec to generate iterator"
+    					<< LogIO::POST;
+
 			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callib_p, timeavgParams));
 		}
+        // By callib Record
         else if (callibRec_p.nfields() > 0)
         {
-			// By callib Record
+    		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager",__FUNCTION__)
+    					<< "OTF calibration activated, using calibration record spec to generate iterator"
+    					<< LogIO::POST;
+
 			visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar,callibRec_p, timeavgParams));
 		}
-        else
-        {
-			logger_p	<< LogIO::SEVERE << LogOrigin("MSTransformManager",__FUNCTION__)
-						<< " Error forming Calibration-capable VisibilityIterator2"
-						<< LogIO::POST;
-		}
-
-		// Construct the vi via the LayeredVi2Factory
-		visibilityIterator_p = new vi::VisibilityIterator2(vi::LayeredVi2Factory(selectedInputMs_p, &iterpar, callib_p,timeavgParams));
 	}
 	// Averaging VI
 	else if (timeAverage_p)
