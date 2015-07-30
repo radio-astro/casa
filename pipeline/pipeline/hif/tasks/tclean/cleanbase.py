@@ -244,7 +244,10 @@ class CleanBase(basetask.StandardTaskTemplate):
             plotdir = os.path.join(inputs.context.report_dir,
                                    'stage%s' % inputs.context.stage.split('_')[0])
             result = TcleanResult(sourcename=inputs.field,
-                                  intent=inputs.intent, spw=inputs.spw, plotdir=plotdir)
+                                  intent=inputs.intent,
+                                  spw=inputs.spw,
+                                  specmode=inputs.specmode,
+                                  plotdir=plotdir)
         else:
             result = inputs.result
 

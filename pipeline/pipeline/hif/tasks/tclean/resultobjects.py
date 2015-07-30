@@ -27,11 +27,12 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, plotdir=None):
+    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, plotdir=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
+        self.specmode = specmode
         self.plotdir = plotdir
         self._psf = None
         self._model = None
@@ -160,6 +161,3 @@ class TcleanResult(basetask.Results):
                 repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
 
         return repr
-
-
-
