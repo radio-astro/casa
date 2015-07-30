@@ -560,9 +560,16 @@ def importasdm(
         else:
             casalog.post('There is no Flag.xml in ASDM', 'WARN')
 
-            
+        import recipes.ephemerides.convertephem as ce
+        
+        theephemfields = ce.findattachedephemfields(myviso,field='*')
+        if len(theephemfields)>0: # temporary fix until asdm2MS does this internally: recalc the UVW coordinates for ephem fields
+            imt = imtool()
+            imt.open(myviso, usescratch=False)
+            imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
+            imt.close()
+
         if convert_ephem2geo:
-            import recipes.ephemerides.convertephem as ce
             for myviso in vistoproc:
                 ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
         

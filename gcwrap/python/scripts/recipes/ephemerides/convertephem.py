@@ -146,6 +146,26 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
 
     return True
 
+def findattachedephemfields(vis='',field='*'):
+    mst = mstool()
+    tbt = tbtool()
+
+    tbt.open(vis+'/FIELD')
+    fields = mst.msseltoindex(vis=vis,field=field)['field']
+    if(len(fields) == 0):
+        casalog.post( "Field selection returned zero results.", 'WARN')
+        return []
+
+    thefields = []
+
+    if ('EPHEMERIS_ID' in tbt.colnames()):
+        for fld in fields:
+            theid = tbt.getcell('EPHEMERIS_ID',fld)
+            if theid>=0: # there is an ephemeris attached
+                thefields.append(fld)
+
+    tbt.close()
+    return thefields
         
 def convert2geo(vis='', field=''):
 
@@ -162,7 +182,6 @@ def convert2geo(vis='', field=''):
 
     try:
         fields = mst.msseltoindex(vis=vis,field=field)['field']
-        numfields = 0 
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
             return True
@@ -171,8 +190,8 @@ def convert2geo(vis='', field=''):
 
         tbt.open(vis+'/FIELD')
 
-        for fld in fields:
-            if ('EPHEMERIS_ID' in tbt.colnames()):
+        if ('EPHEMERIS_ID' in tbt.colnames()):
+            for fld in fields:
                 theid = tbt.getcell('EPHEMERIS_ID',fld)
                 if theid>=0: # there is an ephemeris attached
                     ephemname = glob.glob(vis+'/FIELD/EPHEM'+str(theid)+'_*.tab')[0]
