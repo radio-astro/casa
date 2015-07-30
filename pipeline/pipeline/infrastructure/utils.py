@@ -829,7 +829,7 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             LOG.trace('Skipping unnecessary job: %s' % job_to_execute)
 
     # now execute all the callbacks, which will rename the output files
-    LOG.info('Compressed %s plots jobs to %s jobs',
+    LOG.info('Compressed %s plotms jobs to %s jobs',
              len(jobs_and_wrappers), len(jobs_and_callbacks))
     for (queued_job, callback) in jobs_and_callbacks:
         queued_job.get_result()

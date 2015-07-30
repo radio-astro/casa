@@ -98,7 +98,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 #         self.sort_plots_by_baseband(phase_vs_freq_bandpass_summary_plots)
 
         amp_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'],['BANDPASS']]:
+        for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.AmpVsFrequencySummaryChart, 
@@ -111,7 +111,7 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 amp_vs_freq_summary_plots[vis][key] = vis_plots
 
         phase_vs_freq_summary_plots = utils.OrderedDefaultdict(utils.OrderedDefaultdict)
-        for intents in [['PHASE'],['BANDPASS']]:
+        for intents in [['PHASE'], ['BANDPASS']]:
             plots = self.create_plots(context, 
                                       result, 
                                       applycal.PhaseVsFrequencySummaryChart, 
@@ -415,8 +415,12 @@ class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
-            plots = sorted(plots, 
+            # secondary sort by baseband
+            plots = sorted(plots,
                            key=lambda plot: plot.parameters['baseband'])
+            # primary sort by receiver band
+            plots = sorted(plots,
+                           key=lambda plot: plot.parameters['receiver'])
             d[vis] = plots
 
     def create_plots(self, context, results, plotter_cls, intents, corrstring,

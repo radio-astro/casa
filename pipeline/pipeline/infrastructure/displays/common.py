@@ -46,7 +46,7 @@ class PlotbandpassDetailBase(object):
         caltable_wrapper = CaltableWrapperFactory.from_caltable(self._caltable)
         antenna_ids = set(caltable_wrapper.antenna)
         spw_ids = set(caltable_wrapper.spw)
-        
+
         # use antenna name rather than ID where possible
         antenna_arg = ','.join([str(i) for i in antenna_ids])
         ms = context.observing_run.get_ms(self._vis)
@@ -56,7 +56,6 @@ class PlotbandpassDetailBase(object):
         # the number of polarisations for a spw may not be equal to the number
         # of shape of the column. For example, X403 has XX,YY for some spws 
         # but XX for the science data.
-        num_pols = numpy.ma.shape(caltable_wrapper.data)[0]
         self._pols = {}
         for spw in spw_ids:
             dd = ms.get_data_description(spw=int(spw))
@@ -623,6 +622,7 @@ class CaltableWrapper(object):
 
         # find data for the selection mask 
         data = self.data[:,:,mask]
+        # data = self.data[mask]
         time = self.time[mask]
         antenna = self.antenna[mask]
         spw = self.spw[mask]

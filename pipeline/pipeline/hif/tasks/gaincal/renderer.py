@@ -260,9 +260,13 @@ class GaincalPhaseVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
                 average_score = 0.0
                 num_scores = 0
     
-                phase_field_ids = qa_data['PHASE_FIELDS']            
+                phase_field_ids = set(qa_data['PHASE_FIELDS'])
                 if phase_field_ids:
-                    for field_id in phase_field_ids:
+                    # not all PHASE fields have scores, eg. uid://A002/X6a533e/X834.
+                    # Avoid KeyErrors by only retrieving scores for those
+                    # with scores.
+                    fields_with_scores = set(qa_data['QASCORES']['SCORES'].keys())
+                    for field_id in phase_field_ids.intersection(fields_with_scores):
                         score = qa_data['QASCORES']['SCORES'][field_id][spw_id][ant_id][score_type]
                         if score == 'C/C':
                             average_score += -0.1
