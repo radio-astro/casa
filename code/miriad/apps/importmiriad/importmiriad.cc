@@ -84,6 +84,11 @@
 //      from the wides only by preprocessing in miriad, but conceivably
 //      could be done here as well??  -- except the narrow= keyword seems to write
 //      files that suffer from the Table array conformance error
+//
+//      Todo: to deal with multiple zoom setups (freq changes), we need
+//      to track which spectral windows each source appears to make a proper
+//      source table indexed by source id and spw id
+
 
 //  History:
 //   Spring 1997:   written (cloned off uvfitsfiller)          Peter Teuben
@@ -111,6 +116,8 @@
 //   Mar 2013:      Rename to importmiriad and make it work for ATCA 
 //                  CABB data (more channels, windows and 4 pols)       MHW
 //   May 2014:      Fix some compiler warnings, add TOPO option         MHW
+//   Jul 2015:      Cope with data with changing freq setups,e.g.,
+//                  CABB zoom data with multiple sources                MHW
 
 // a placeholder for the MIRIAD spectral window configuration
 // see also the MIRIAD programmers guide, and its appendix on UV Variables 
@@ -125,7 +132,6 @@ typedef struct window {     // CASA defines everything mid-band mid-interval
   double sfreq[MAXWIN+MAXWIDE];    // frequency of first channel in window (doppler changes)
   double restfreq[MAXWIN+MAXWIDE]; // rest freq, if appropriate
   char   code[MAXWIN+MAXWIDE];     // code to CASA identification (N, W or S; S not used anymore)
-  int    keep[MAXWIN+MAXWIDE];     // keep this window for output to MS (0=false 1=true)
 
   // wide band (for CARMA these are the spectral window averages - i.e. nspect=nwide)
   int    nwide;                    // number of wide band channels
@@ -147,6 +153,12 @@ typedef struct window {     // CASA defines everything mid-band mid-interval
 # define MAXMSG 256
 #endif
 
+//  the maximum number of different frequency setups we can cope with
+//   each setup can have up to 48 spectral windows 
+#ifndef MAXFSET
+# define MAXFSET 100
+#endif
+
 
 // helper functions
 
@@ -155,6 +167,7 @@ void show_version_info()
   cout << "============================================================\n";
   cout << "Importmiriad - last few updates:\n";
   cout << " Mar 2013 - make it process ATCA/CABB data \n";
+  cout << " Jul 2015 - deal with multiple zoom setups \n";
   cout << "           ...\n";
   cout << "============================================================\n";
 }
@@ -212,7 +225,7 @@ class Importmiriad
   // This is an implementation helper class used to store 'local' data
   // during the filling process.
 public:
-  // Create from a miriad (CARMA) dataset (a directory)
+  // Create from a miriad dataset (a directory)
   Importmiriad(String& infile, Int debug=0, 
               Bool Qtsys=False,
               Bool Qarrays=False,
@@ -222,7 +235,7 @@ public:
   ~Importmiriad();
   
   // Check some of the contents of the data and header read
-  void checkInput(Block<Int>& narrow, Block<Int>& window);
+  void checkInput(Block<Int>& spw, Block<Int>& wide);
 
   // Debug output level
   Bool Debug(int level);
@@ -261,8 +274,8 @@ public:
   void fixEpochReferences();
 
   void Tracking(int record);
-  void init_window(Block<Int>& narrow, Block<Int>& window);
-  void update_window();
+  void check_window();
+  Bool compareWindows(WINDOW& w1, WINDOW& w2);
   void Error(char *msg);
   void Warning(char *msg);
   void show();
@@ -274,7 +287,6 @@ private:
   MeasurementSet         ms_p;         // the MS itself
   MSColumns             *msc_p;        // handy pointer to the columns in an MS  
   Int                    debug_p;      // debug level
-  Int                    nIF_p;
   String                 array_p, 
                          project_p, 
                          object_p, 
@@ -305,8 +317,8 @@ private:
   float  dra[MAXFIELD], ddec[MAXFIELD];       // offset in radians
   double ra[MAXFIELD], dec[MAXFIELD];
   int    field[MAXFIELD];                     // source index
-  int    fcount[MAXFIELD], sid_p[MAXFIELD];
-  float  dra_p, ddec_p;
+  int    fcount[MAXFIELD];
+  float  dra_p=0, ddec_p=0;
   int    pol_p[4];
   char   message[MAXMSG];
 
@@ -323,10 +335,13 @@ private:
   Double timeFirst_p;       // First MJD time encountered
 
   // MIRIAD spectral window definition
-  WINDOW win;
+  Int    freqSet_p,nFreqSet_p,ddid_p;
+  WINDOW win[MAXFSET];  // allow for 16 different frequency setups
+  
   Bool   Qtsys_p;    /* tsys weight's */
   Bool   Qarrays_p;  /* write separate arrays */
   Bool   Qlinecal_p; /* do linecal */
+  Bool   keep[MAXWIN+MAXWIDE]; // keep this window for output to MS
 
   // Data buffers.... again in MIRIAD format
   
@@ -416,9 +431,8 @@ Bool Importmiriad::Debug(int level)
 }
 
 // ==============================================================================================
-void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
+void Importmiriad::checkInput(Block<Int>& spw, Block<Int>& wide)
 {
-  Bool ok=True;
   Int i, nread, nwread, vlen, vupd;
   char vtype[10], vdata[256];
   Float epoch;
@@ -437,11 +451,21 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
     uvwread_c(uv_handle_p, wdata, wflags, MAXCHAN, &nwread);
 
     if (nvis == 1) {
+    
       // get the initial correllator setup
-      init_window(narrow,window);
-
+      check_window();
+      // setup the 'keep' array to specify which data we want to keep
+      for (Int i=0; i<win[0].nspect; i++) keep[i]=(spw[0]==-1);
+      for (uInt i=0; i<spw.nelements(); i++) {
+        if (spw[i]>0 && spw[i]<win[0].nspect) keep[spw[i]]=True;
+      }
+      Int n=win[0].nspect;
+      for (Int i=0; i<win[0].nwide; i++) keep[n+i]=(wide[0]==-1);
+      for (uInt i=0; i<wide.nelements(); i++) {
+        if (wide[i]>0 && wide[i]<win[0].nwide) keep[n+wide[i]]=True;
+      }
       //  should store nread + nwread, or handle it as option
-      if (win.nspect > 0) {               // narrow band, with possibly wide band also
+      if (win[freqSet_p].nspect > 0) {               // narrow band, with possibly wide band also
         nchan_p = nread;
         nwide_p = nwread;
       } else {                            // wide band data only: nread=nwread
@@ -464,8 +488,8 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
       }
     
       // remember systemp is stored systemp[nants][nwin] in C notation
-      if (win.nspect > 0) {
-        uvgetvr_c(uv_handle_p,H_REAL,"systemp",(char *)systemp,nants_p*win.nspect);
+      if (win[freqSet_p].nspect > 0) {
+        uvgetvr_c(uv_handle_p,H_REAL,"systemp",(char *)systemp,nants_p*win[freqSet_p].nspect);
         if (Debug(1)) {
           cout << "Found systemps (first scan)" ;
           for (Int i=0; i<nants_p; i++)  cout << systemp[i] << " ";
@@ -480,11 +504,11 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
         }
       }
 
-      if (win.nspect > 0) {
-        uvgetvr_c(uv_handle_p,H_DBLE,"restfreq",(char *)win.restfreq,win.nspect);
+      if (win[freqSet_p].nspect > 0) {
+        uvgetvr_c(uv_handle_p,H_DBLE,"restfreq",(char *)win[freqSet_p].restfreq,win[freqSet_p].nspect);
         if (Debug(1)) {
           cout << "Found restfreq (first scan)" ;
-          for (Int i=0; i<win.nspect; i++)  cout << win.restfreq[i] << " ";
+          for (Int i=0; i<win[freqSet_p].nspect; i++)  cout << win[freqSet_p].restfreq[i] << " ";
           cout << endl;
         }
       }
@@ -553,7 +577,7 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
 
       uvprobvr_c(uv_handle_p,"ifchain",vtype,&vlen,&vupd);
       if(!vupd) {
-        for (i=0; i<MAXWIN+MAXWIDE;i++) win.chain[i]=0;
+        for (i=0; i<MAXWIN+MAXWIDE;i++) win[freqSet_p].chain[i]=0;
       }
      // and initial source position
 
@@ -576,7 +600,6 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
         for (i=1; i<npol_p; i++) {
           uvread_c(uv_handle_p, preamble, data, flags, MAXCHAN, &nread);
           if (nread <= 0) {
-            ok = False;
             break;
           }
           if (Debug(1)) { if (i==1) cout << "POL(" << i << ") = " << pol_p[0] << endl;}
@@ -590,7 +613,6 @@ void Importmiriad::checkInput(Block<Int>& narrow, Block<Int>& window)
   }
   if (nvis == 0) {
     throw(AipsError("Importmiriad: Bad first uvread: no narrow or wide band data present"));
-    ok = False;
     return;
   } else
     //cout << "Importmiriad::checkInput: " << nvis << " records found" << endl;
@@ -645,8 +667,6 @@ void Importmiriad::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   Int nCorr =  (array_p=="CARMA" ? 1 : npol_p); // # stokes (1 for CARMA for now)
   Int nChan = nchan_p;  // we are only exporting the narrow channels to the MS
 
-  nIF_p = win.nspect;   // number of spectral windows (for narrow channels only)
-
   // Make the MS table
   TableDesc td = MS::requiredTableDesc();
 
@@ -689,8 +709,7 @@ void Importmiriad::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   // Set the default Storage Manager to be the Incr one
   IncrementalStMan incrStMan ("ISMData");;
   newtab.bindAll(incrStMan, True);
-  // StManAipsIO aipsStMan;  // don't use this anymore
-  StandardStMan aipsStMan;  // these are more efficient now
+  StandardStMan aipsStMan; 
 
 
 #ifdef OLD_CODE
@@ -756,13 +775,13 @@ void Importmiriad::setupMeasurementSet(const String& MSFileName, Bool useTSM)
   ms.createDefaultSubtables(option);
 
   // Add some optional columns to the required tables
-  ms.spectralWindow().addColumn(ArrayColumnDesc<Int>(
-    MSSpectralWindow::columnName(MSSpectralWindow::ASSOC_SPW_ID),
-    MSSpectralWindow::columnStandardComment(MSSpectralWindow::ASSOC_SPW_ID)));
+  //ms.spectralWindow().addColumn(ArrayColumnDesc<Int>(
+  //  MSSpectralWindow::columnName(MSSpectralWindow::ASSOC_SPW_ID),
+  //  MSSpectralWindow::columnStandardComment(MSSpectralWindow::ASSOC_SPW_ID)));
 
-  ms.spectralWindow().addColumn(ArrayColumnDesc<String>(
-    MSSpectralWindow::columnName(MSSpectralWindow::ASSOC_NATURE),
-    MSSpectralWindow::columnStandardComment(MSSpectralWindow::ASSOC_NATURE)));
+  //ms.spectralWindow().addColumn(ArrayColumnDesc<String>(
+  //  MSSpectralWindow::columnName(MSSpectralWindow::ASSOC_NATURE),
+  //  MSSpectralWindow::columnStandardComment(MSSpectralWindow::ASSOC_NATURE)));
 
   ms.spectralWindow().addColumn(ScalarColumnDesc<Int>(
     MSSpectralWindow::columnName(MSSpectralWindow::DOPPLER_ID),
@@ -770,9 +789,11 @@ void Importmiriad::setupMeasurementSet(const String& MSFileName, Bool useTSM)
 
   // Now setup some optional columns::
 
-  // the SOURCE table, 1 extra optional column needed
+  // the SOURCE table, 2 extra optional columns needed
   TableDesc sourceDesc = MSSource::requiredTableDesc();
   MSSource::addColumnToDesc(sourceDesc,MSSourceEnums::REST_FREQUENCY,1);
+  MSSource::addColumnToDesc(sourceDesc,MSSourceEnums::SYSVEL,1);
+  MSSource::addColumnToDesc(sourceDesc,MSSourceEnums::TRANSITION,1);
   SetupNewTable sourceSetup(ms.sourceTableName(),sourceDesc,option);
   ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
                                      Table(sourceSetup));
@@ -895,10 +916,8 @@ void Importmiriad::fillMSMainTable()
   Double interval;
   Bool lastRowFlag = False;
 
-  // cout << "Importmiriad::fillMSMainTable(): using " << nIF_p << " spectral windows" << endl;
-  cout << "Found  " << nIF_p << " spectral window" << (nIF_p>1 ? "s":"") << endl;
+  cout << "Found  " << win[0].nspect << " spectral window" << (win[0].nspect>1 ? "s":"") << endl;
 
-  if (Debug(1)) cout << "Writing " << nIF_p << " spectral windows" << endl;
   time_p=0;
   for (group=0; ; group++) {        // loop forever until end-of-file
     int nread, nwread;
@@ -912,7 +931,7 @@ void Importmiriad::fillMSMainTable()
 
     if (Debug(9)) cout << "UVREAD: " << nread << endl;
     if (nread <= 0) break;          // done with reading miriad data
-    if (win.nspect > 0)
+    if (win[freqSet_p].nspect > 0)
         uvwread_c(uv_handle_p, wdata, wflags, MAXCHAN, &nwread);
     else
         nwread=0;
@@ -938,37 +957,6 @@ void Importmiriad::fillMSMainTable()
     }
     time_p = time;
 
-    if (Debug(3)) {                 // timeline monitoring...
-      static Double time0 = -1.0;
-      static Double dt0 = -1.0;
-#if 0
-        // enforce timesteps increasing to test sorting effect 
-      if (time0 > 0)
-        time = time0 + inttime_p;
-      else
-        cout << "Warning: faking timesorted data" << endl;
-#endif
-
-      MVTime mjd_date(time/C::day);
-      mjd_date.setFormat(MVTime::FITS);
-      cout << "DATE=" << mjd_date ;
-      if (time0 > 0) {
-        if (time - time0 < 0) {
-          cout << " BACKWARDS";
-          dt0 = time - time0;
-        }
-      }
-      if (dt0 > 0) {
-        if ( (time-time0) > 5*dt0) {
-          cout << " FORWARDS";
-          dt0 = time - time0;
-        }
-      } else
-        dt0 = time-time0;
-      time0 = time;
-      cout << endl;
-    } // Debug(3) for timeline monitoring
-
     // for MIRIAD, this would always cause a single array dataset,
     // but we need to count the antpos occurences to find out
     // which array configuration we're in.
@@ -987,9 +975,6 @@ void Importmiriad::fillMSMainTable()
       linecal(nread,data,phasem1[ant1-1],phasem1[ant2-1]);
       // linecal(nwread,wdata,phasem1[ant1-1],phasem1[ant2-1]);
     }
-
-    //  nAnt_p.resize(array+1);
-    //  receptorAngle_p.resize(array+1);
 
     nAnt_p[nArray_p-1] = max(nAnt_p[nArray_p-1],ant1);   // for MIRIAD, and also 
     nAnt_p[nArray_p-1] = max(nAnt_p[nArray_p-1],ant2);
@@ -1050,12 +1035,12 @@ void Importmiriad::fillMSMainTable()
       //if (group==0) cout << "vis = "<<vis(pol,500)<<endl;
     } // pol
 
-
-    for (Int ifno=0; ifno < nIF_p; ifno++) {
-      if (win.keep[ifno]==0) continue;    
+    Int ispw=-1;
+    for (Int sno=0; sno < win[freqSet_p].nspect; sno++) {
+      if (not keep[sno]) continue;    
       // IFs go to separate rows in the MS, pol's do not!
       ms_p.addRow(); 
-      row++;
+      row++; ispw++;
 
       // first fill in values for all the unused columns
       if (row==0) {
@@ -1079,12 +1064,12 @@ void Importmiriad::fillMSMainTable()
       msc.interval().put(row,interval);
 #if 1
       // the dumb way: e.g. 3" -> 20" for 3c273
-      Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
+      Matrix<Complex> tvis(nCorr,win[freqSet_p].nschan[sno]);
+      Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,False);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
       
-      Int woffset = win.ischan[ifno]-1;
-      Int wsize   = win.nschan[ifno];
+      Int woffset = win[freqSet_p].ischan[sno]-1;
+      Int wsize   = win[freqSet_p].nschan[sno];
       for (Int j=0; j<nCorr; j++) {
         for (Int i=0; i< wsize; i++) {
           tvis(j,i) = vis(j,i+woffset);
@@ -1094,10 +1079,10 @@ void Importmiriad::fillMSMainTable()
 #else
       // the 'smart' way,  using IPositions (still 20"....)
       IPosition blc(2,0,0);
-      IPosition trc(2,nCorr-1,win.nschan[ifno]-1);
-      IPosition offset(2,0,win.ischan[ifno]-1);
-      Matrix<Complex> tvis(nCorr,win.nschan[ifno]);
-      Cube<Bool> tflagCat(nCorr,win.nschan[ifno],nCat,False);  
+      IPosition trc(2,nCorr-1,win[freqSet_p].nschan[sno]-1);
+      IPosition offset(2,0,win[freqSet_p].ischan[sno]-1);
+      Matrix<Complex> tvis(nCorr,win[freqSet_p].nschan[sno]);
+      Cube<Bool> tflagCat(nCorr,win[freqSet_p].nschan[sno],nCat,False);  
       Matrix<Bool> tflag = tflagCat.xyPlane(0); // references flagCat's storage
       
       tvis(blc,trc) = vis(blc+offset,trc+offset);
@@ -1132,7 +1117,8 @@ void Importmiriad::fillMSMainTable()
       }
       msc.uvw().put(row,uvw);
       msc.arrayId().put(row,nArray_p-1);
-      msc.dataDescId().put(row,ifno);
+      // calc index into table
+      msc.dataDescId().put(row,ddid_p+ispw);
       msc.fieldId().put(row,ifield);
 
 
@@ -1141,7 +1127,7 @@ void Importmiriad::fillMSMainTable()
       ifield_old = ifield;
       msc.scanNumber().put(row,iscan);
 
-    }  // ifNo
+    }  // sno
     fcount[ifield]++;
   } // for(grou) : loop over all visibilities
   show();
@@ -1157,14 +1143,7 @@ void Importmiriad::fillMSMainTable()
   if (Debug(1))
     cout << "nAnt_p contains: " << nAnt_p.nelements() << endl;
 
-#if 0
-  // fill the receptorAngle with defaults, just in case there is no AN table
-  for (Int arr=0; arr<nAnt_p.nelements(); arr++) {
-    Vector<Double> angle(2*nAnt_p[arr]); 
-    angle=0;
-    receptorAngle_p[arr]=angle;
-  }
-#endif
+
 } // fillMSMainTable()
 
 void Importmiriad::fillAntennaTable()
@@ -1377,7 +1356,7 @@ void Importmiriad::fillSyscalTable()
   //   for (Int i=0; i<nants_p; i++)
   //     cout  << "SYSTEMP: " << i << ": " << systemp[i] << endl;
 
-  for (Int j=0; j<win.nspect; j++) {
+  for (Int j=0; j<win[freqSet_p].nspect; j++) {
     for (Int i=0; i<nants_p; i++) {
       ms_p.sysCal().addRow();
       row++;  // should be a static, since this routine will be called again
@@ -1411,7 +1390,7 @@ void Importmiriad::fillSpectralWindowTable(String vel)
   MSDopplerColumns&       msDop(msc_p->doppler());
 
   Int nCorr = ( array_p=="CARMA" ? 1 : npol_p);            // CARMA wants 1 polarization 
-  Int i, j, side;
+  Int i, side;
   Double BW = 0.0;
 
   MDirection::Types dirtype = epochRef_p;    // MDirection::B1950 or MDirection::J2000;
@@ -1449,106 +1428,96 @@ void Importmiriad::fillSpectralWindowTable(String vel)
   msPol.flagRow().put(0,False);
 
   // fill out doppler table (only 1 entry needed, CARMA data only identify 1 line :-(
-  if (Debug(1)) cout << "Importmiriad:: now writing Doppler table " << endl;
-  for (i=0; i<win.nspect; i++) {
-    ms_p.doppler().addRow();
-    msDop.dopplerId().put(i,i);
-    msDop.sourceId().put(i,-1);     // how the heck..... for all i guess
-    msDop.transitionId().put(i,-1);
-    msDop.velDefMeas().put(i,MDoppler(Quantity(0),MDoppler::RADIO));
-  }
-
-  // THIS BUG caused that array conformance error, but fixing it
-  // one also needed to restart casapy!!! go figure.
-  // now only write out spectral windows, not the wides.
-  if (Debug(1)) cout << "Array Conformance error check" << endl;
-#if 0
-  for (i=0; i < win.nspect + win.nwide; i++) 
-#else
-  for (i=0; i < win.nspect; i++) 
-#endif
-    {
-
-    Int n = win.nschan[i];
-    Vector<Double> f(n), w(n);
-    
-    ms_p.spectralWindow().addRow();
-    ms_p.dataDescription().addRow();
-    
-    msDD.spectralWindowId().put(i,i);
-    msDD.polarizationId().put(i,0);
-    msDD.flagRow().put(i,False);
-
-    msSpW.numChan().put(i,win.nschan[i]);
-    BW = 0.0;
-    Double fwin = win.sfreq[i]*1e9;
-    if (convert) {
-      if (Debug(1)) cout << "Fwin: OBS=" << fwin/1e9;
-      fwin = tolsr(fwin).getValue().getValue();
-      if (Debug(1)) cout << " LSR=" << fwin/1e9 << endl;
-    }
-    for (j=0; j < win.nschan[i]; j++) {
-      f(j) = fwin + j * win.sdf[i] * 1e9;
-      w(j) = abs(win.sdf[i]*1e9);
-      BW += w(j);
-    }
-
-    msSpW.chanFreq().put(i,f);
-    if (i<win.nspect) {
-      // I think restfreq should just be in source table,
-      // but leave for now if it makes sense
-      if (win.restfreq[i]>0 && freqsys_p!=MFrequency::TOPO) {
-        msSpW.refFrequency().put(i,win.restfreq[i]*1e9);
-      } else {
-        msSpW.refFrequency().put(i,win.sfreq[i]*1e9);
-      } 
-    } else
-      msSpW.refFrequency().put(i,freq_p);            // no reference for wide band???
-    
-    msSpW.resolution().put(i,w);
-    msSpW.chanWidth().put(i,w);
-    msSpW.effectiveBW().put(i,w);
-    msSpW.totalBandwidth().put(i,BW);
-    Int ifchain = win.chain[i];
-    msSpW.ifConvChain().put(i,ifchain);
-    // can also do it implicitly via Measures you give to the freq's
-    msSpW.measFreqRef().put(i,freqsys_p);
-    if (i<win.nspect)
-      msSpW.dopplerId().put(i,i);    // CARMA has only 1 ref freq line
-    else
-      msSpW.dopplerId().put(i,-1);    // no ref
-
-    if (win.sdf[i] > 0)      side = 1;
-    else if (win.sdf[i] < 0) side = -1;
-    else                     side = 0;
-    
-    switch (win.code[i]) {
-    case 'N':
-      msSpW.netSideband().put(i,side);
-      msSpW.freqGroup().put(i,1);
-      msSpW.freqGroupName().put(i,"MULTI-CHANNEL-DATA");
-      break;
-    case 'W':
-      msSpW.netSideband().put(i,side);
-      msSpW.freqGroup().put(i,3);
-      msSpW.freqGroupName().put(i,"SIDE-BAND-AVERAGE");
-      break;
-    case 'S':
-      msSpW.netSideband().put(i,side);
-      msSpW.freqGroup().put(i,2);
-      msSpW.freqGroupName().put(i,"MULTI-CHANNEL-AVG");
-      break;
-    default:
-      throw(AipsError("Bad code for a spectral window"));
-      break;
+  if (array_p=="CARMA") {
+    if (Debug(1)) cout << "Importmiriad:: now writing Doppler table " << endl;
+    for (i=0; i<win[0].nspect; i++) {
+      ms_p.doppler().addRow();
+      msDop.dopplerId().put(i,i);
+      msDop.sourceId().put(i,-1);     // how the heck..... for all i guess
+      msDop.transitionId().put(i,-1);
+      msDop.velDefMeas().put(i,MDoppler(Quantity(0),MDoppler::RADIO));
     }
   }
+  Int ddid=-1;
+  for (Int k=0; k < nFreqSet_p; k++) {
+    for (Int i=0; i < win[k].nspect; i++) {
+      if(not keep[i]) continue;
+      ddid++;
+      Int n = win[k].nschan[i];
+      Vector<Double> f(n), w(n);
+      
+      ms_p.spectralWindow().addRow();
+      ms_p.dataDescription().addRow();
+      
+      msDD.spectralWindowId().put(ddid,ddid);
+      msDD.polarizationId().put(ddid,0);
+      msDD.flagRow().put(ddid,False);
 
-  // set the reference frames for frequency
-  //msSpW.chanFreq().rwKeywordSet().define("MEASURE_REFERENCE","TOPO");
+      msSpW.numChan().put(ddid,win[k].nschan[i]);
+      BW = 0.0;
+      Double fwin = win[k].sfreq[i]*1e9;
+      if (convert) {
+        if (Debug(1)) cout << "Fwin: OBS=" << fwin/1e9;
+        fwin = tolsr(fwin).getValue().getValue();
+        if (Debug(1)) cout << " LSR=" << fwin/1e9 << endl;
+      }
+      for (Int j=0; j < win[k].nschan[i]; j++) {
+        f(j) = fwin + j * win[k].sdf[i] * 1e9;
+        w(j) = abs(win[k].sdf[i]*1e9);
+        BW += w(j);
+      }
 
-  //PJT msSpW.restFrequency().rwKeywordSet().define("MEASURE_REFERENCE","REST");
-  //msSpW.refFrequency().rwKeywordSet().define("MEASURE_REFERENCE","TOPO");
+      msSpW.chanFreq().put(ddid,f);
+      if (i<win[k].nspect) {
+        // I think restfreq should just be in source table,
+        // but leave for now if it makes sense
+        if (win[k].restfreq[i]>0 && freqsys_p!=MFrequency::TOPO) {
+          msSpW.refFrequency().put(ddid,win[k].restfreq[i]*1e9);
+        } else {
+          msSpW.refFrequency().put(ddid,win[k].sfreq[i]*1e9);
+        } 
+      } else
+        msSpW.refFrequency().put(ddid,freq_p);            // no reference for wide band???
+      
+      msSpW.resolution().put(ddid,w);
+      msSpW.chanWidth().put(ddid,w);
+      msSpW.effectiveBW().put(ddid,w);
+      msSpW.totalBandwidth().put(ddid,BW);
+      Int ifchain = win[k].chain[i];
+      msSpW.ifConvChain().put(ddid,ifchain);
+      // can also do it implicitly via Measures you give to the freq's
+      msSpW.measFreqRef().put(ddid,freqsys_p);
+      if (i<win[k].nspect && array_p=="CARMA")
+        msSpW.dopplerId().put(ddid,i);    // CARMA has only 1 ref freq line
+      else
+        msSpW.dopplerId().put(ddid,-1);    // no ref
+
+      if (win[k].sdf[i] > 0)      side = 1;
+      else if (win[k].sdf[i] < 0) side = -1;
+      else                     side = 0;
+      
+      switch (win[k].code[i]) {
+      case 'N':
+        msSpW.netSideband().put(ddid,side);
+        msSpW.freqGroup().put(ddid,1);
+        msSpW.freqGroupName().put(ddid,"MULTI-CHANNEL-DATA");
+        break;
+      case 'W':
+        msSpW.netSideband().put(ddid,side);
+        msSpW.freqGroup().put(ddid,3);
+        msSpW.freqGroupName().put(ddid,"SIDE-BAND-AVERAGE");
+        break;
+      case 'S':
+        msSpW.netSideband().put(ddid,side);
+        msSpW.freqGroup().put(ddid,2);
+        msSpW.freqGroupName().put(ddid,"MULTI-CHANNEL-AVG");
+        break;
+      default:
+        throw(AipsError("Bad code for a spectral window"));
+        break;
+      }
+    }
+  }
 }
 
 // ==============================================================================================
@@ -1581,34 +1550,20 @@ void Importmiriad::fillFieldTable()
   } 
 
   for (fld = 0; fld < nfield; fld++) {
-    int sid = sid_p[fld];
 
     ms_p.field().addRow();
 
     if (Debug(1))
-      cout << "FLD: " << fld << " " << sid << " " << source_p[field[fld]] << endl;
+      cout << "FLD: " << fld << " " << field[fld] << " " << source_p[field[fld]] << endl;
 
-    if (sid > 0) {
-      msField.sourceId().put(fld,sid-1); 
-      msField.name().put(fld,source_p[field[fld]]);        // this is the source name
-    } else {
-      // a special test where the central source gets _C appended to the source name
-      msField.sourceId().put(fld,-sid-1); 
-#if 0
-      msField.name().put(fld,source_p[field[fld]]+"_C");   // central source: append _C
-#else
-      msField.name().put(fld,source_p[field[fld]]);        // or keep them all same name 
-#endif
-    }
-
+    msField.sourceId().put(fld,field[fld]); 
+    msField.name().put(fld,source_p[field[fld]]);        // this is the source name
     msField.code().put(fld,purpose_p[field[fld]]);
-
     msField.numPoly().put(fld,0);
-
+    
     cosdec = cos(dec[fld]);
     radec(0) = ra[fld]  + dra[fld]/cosdec;           // RA, in radians
     radec(1) = dec[fld] + ddec[fld];                 // DEC, in radians
-
     radecMeas(0).set(MVDirection(radec(0), radec(1)), MDirection::Ref(epochRef_p));
 
     msField.delayDirMeasCol().put(fld,radecMeas);
@@ -1623,14 +1578,29 @@ void Importmiriad::fillFieldTable()
 // ==============================================================================================
 void Importmiriad::fillSourceTable()
 {
+  // According to MS2 specs we should have a source table with
+  // an entry for every source/spectral window combination that occurs.
+  // For the moment we ignore spectral window (and TIME) as an index and 
+  // just use -1. This means there is only a single rest frequency.
+  
   if (Debug(1)) cout << "Importmiriad::fillSourceTable" << endl;
-  Int n = win.nspect;
   Int ns = 0;
   Int skip;
 
   MSSourceColumns& msSource(msc_p->source());
 
   Vector<Double> radec(2);
+  Vector<Double> restFreq(1),sysvel(1);
+  sysvel(0)=0;
+  Int m=win[0].nspect;
+  restFreq(0)=0;
+  // pick first non zero restFreq
+  for (Int i=0; i<m; i++) {
+    if (win[0].restfreq[i]>0) {
+      restFreq(0) = win[0].restfreq[i] * 1e9;    // convert from GHz to Hz
+      break;
+    }
+  }
 
   //String key("MEASURE_REFERENCE");
   //msSource.restFrequency().rwKeywordSet().define(key,"REST");
@@ -1648,7 +1618,7 @@ void Importmiriad::fillSourceTable()
     skip = 0;
     for (uInt i=0; i<src; i++) {               // loop over sources to avoid duplicates
       if (source_p[i] == source_p[src]) {
-        skip=1;
+        skip=1; cerr<<"Found duplicate source name! Fix code!"<<endl;
         break;
       }
     }
@@ -1656,11 +1626,6 @@ void Importmiriad::fillSourceTable()
     if (Debug(1)) cout << "source : " << source_p[src] << " " << skip << endl;
 
     if (skip) continue;    // if seen before, don't add it again
-
-    // the side effect of this long source_p array with duplicate names
-    // is that the source index can be e.g. 0,1,3,4,5 depending on how
-    // this reader encountered them first in the scans.
-
     ms_p.source().addRow();
 
     radec(0) = ras_p[src];
@@ -1668,22 +1633,13 @@ void Importmiriad::fillSourceTable()
 
     msSource.sourceId().put(ns,src);
     msSource.name().put(ns,source_p[src]);
-    msSource.spectralWindowId().put(src,-1);     // really valid for all ??
-    //msSource.spectralWindowId().put(ns,0);     // FIX it due to a bug in MS2 code (6feb2001)
+    msSource.spectralWindowId().put(src,-1);     // set valid for all
     msSource.direction().put(ns,radec);
-    if (n > 0) {
-      Int m=n;
-      // cout << "TESTING numlines=" << m << endl;
-      Vector<Double> restFreq(m);
-      for (Int i=0; i<m; i++)
-        restFreq(i) = win.restfreq[i] * 1e9;    // convert from GHz to Hz
-
-      msSource.numLines().put(ns,win.nspect);
-      msSource.restFrequency().put(ns,restFreq);
-    }
+    msSource.numLines().put(ns,1);
+    msSource.restFrequency().put(ns,restFreq);
     msSource.time().put(ns,0.0);               // valid for all times
     msSource.interval().put(ns,0);             // valid forever
-
+    msSource.sysvel().put(ns,sysvel);
     // TODO?
     // missing position/sysvel/transition in the produced MS/SOURCE sub-table ??
 
@@ -1727,7 +1683,7 @@ void Importmiriad::fillFeedTable()
   if (array_p == "ATCA") {
     ra(0)=C::pi/4;
     // 7mm feed is different; assumes all spectral windows are in same band for now...
-    if (win.sfreq[0]>30. && win.sfreq[0]<50.) ra(0)+=C::pi/2;
+    if (win[freqSet_p].sfreq[0]>30. && win[freqSet_p].sfreq[0]<50.) ra(0)+=C::pi/2;
     ra(1)=ra(0)+C::pi/2;
   }
 
@@ -1835,6 +1791,8 @@ void Importmiriad::Tracking(int record)
   }
 
   // here is all the special tracking code...
+  
+  check_window(); // check if the freq setup has changed
 
   uvprobvr_c(uv_handle_p,"pol",vtype,&vlen,&vupd);
   if (vupd && npol_p==1) {
@@ -1884,10 +1842,10 @@ void Importmiriad::Tracking(int record)
     }
   }
 
-  if (win.nspect > 0) {
+  if (win[freqSet_p].nspect > 0) {
     uvprobvr_c(uv_handle_p,"systemp",vtype,&vlen,&vupd);  
     if (vupd) {
-      uvgetvr_c(uv_handle_p,H_REAL,"systemp",(char *)systemp,nants_p*win.nspect);
+      uvgetvr_c(uv_handle_p,H_REAL,"systemp",(char *)systemp,nants_p*win[freqSet_p].nspect);
       if (Debug(3)) {
         cout << "Found systemps (new scan)" ;
         for (Int i=0; i<nants_p; i++)  cout << systemp[i] << " ";
@@ -1916,15 +1874,17 @@ void Importmiriad::Tracking(int record)
     uvgetvr_c(uv_handle_p,H_BYTE,"source",vdata,16);
     object_p = vdata;  
 
-    cout << "Found source: " << object_p << endl;
     j=-1;
     for (uInt i=0; i<source_p.nelements(); i++) {    // find first matching source name
       if (source_p[i] == object_p) {
               j = i ;
+              cout << "Found old source: " << object_p << endl;
+
               break;
       }
     }
     if (j==-1) {
+      cout << "Found new source: " << object_p << endl;
       source_p.resize(source_p.nelements()+1, True);     // need to copy the old values
       source_p[source_p.nelements()-1] = object_p;
     
@@ -1945,17 +1905,13 @@ void Importmiriad::Tracking(int record)
   uvprobvr_c(uv_handle_p,"dra", vtype,&vlen,&vupd1);
   uvprobvr_c(uv_handle_p,"ddec",vtype,&vlen,&vupd2);
 
-    uvgetvr_c(uv_handle_p,H_DBLE,"ra", (char *)&ra_p, 1);
-    uvgetvr_c(uv_handle_p,H_DBLE,"dec",(char *)&dec_p,1);
+  uvgetvr_c(uv_handle_p,H_DBLE,"ra", (char *)&ra_p, 1);
+  uvgetvr_c(uv_handle_p,H_DBLE,"dec",(char *)&dec_p,1);
 
   if (vupd || vupd1 || vupd2) {    // if either source or offset changed, find FIELD_ID
     npoint++;
-    uvgetvr_c(uv_handle_p,H_DBLE,"ra", (char *)&ra_p, 1);
-    uvgetvr_c(uv_handle_p,H_DBLE,"dec",(char *)&dec_p,1);
     if (vupd1) uvgetvr_c(uv_handle_p,H_REAL,"dra", (char *)&dra_p,  1);
     if (vupd2) uvgetvr_c(uv_handle_p,H_REAL,"ddec",(char *)&ddec_p, 1);
-    uvgetvr_c(uv_handle_p,H_BYTE,"source",vdata,16);
-    object_p = vdata;  // also track object name whenever changed
 
     j=-1;
     for (uInt i=0; i<source_p.nelements(); i++) {    // find first matching source name
@@ -1967,10 +1923,7 @@ void Importmiriad::Tracking(int record)
     // j should always be >= 0 now, and is the source index
     k=-1;
     for (Int i=0; i<nfield; i++) { // check if we had this pointing/source before 
-      if (vupd1 && vupd2 && dra[i] == dra_p && ddec[i] == ddec_p && field[i] == j) {
-        k = i;
-        break;
-      } else if (!vupd1 && !vupd2 && field[i] == j) {
+      if (dra[i] == dra_p && ddec[i] == ddec_p && field[i] == j) {
         k = i;
         break;
       }
@@ -2003,11 +1956,9 @@ void Importmiriad::Tracking(int record)
       dra[ifield]  = dra_p;
       ddec[ifield] = ddec_p;
       field[ifield] = j;
-      sid_p[ifield] = j + 1;
       if (dra_p == 0.0 && ddec_p==0.0) {   // store ra/dec for SOURCE table as well 
         ras_p[j]  = ra_p;
         decs_p[j] = dec_p;
-        sid_p[ifield] = -sid_p[ifield];    // make central one -index for later NAME change 
       }
     } else {
       ifield = k;
@@ -2020,93 +1971,38 @@ void Importmiriad::Tracking(int record)
   }
 } // Tracking()
 
-//
-//  this is also a nasty routine. It makes assumptions on
-//  a relationship between narrow and window averages
-//  which normally exists for CARMA telescope data, but which
-//  in principle can be modified by uvcat/uvaver and possibly
-//  break this routine...
-//  (there has been some talk at the site to write subsets of
-//   the full data, which could break this routine)
+
 
 // ==============================================================================================
-void Importmiriad::init_window(Block<Int>& narrow, Block<Int>& window)
+// Check for changes of the frequency setup and store them all
+void Importmiriad::check_window()
 {
-  if (Debug(1)) cout << "Importmiriad::init_window" << endl;
-
+  int vlen,vupd;
   char vtype[10];
-  Int k, idx, vlen, vupd, nchan, nspect, nwide;
+  Int next = nFreqSet_p;
+  if (Debug(1)) cout << "Importmiriad::check_window" << endl;
+  Int idx, nchan=0, nspect=0, nwide=0;
 
-  uvprobvr_c(uv_handle_p,"nchan",vtype,&vlen,&vupd);
-  if (vupd) {
-    uvrdvr_c(uv_handle_p,H_INT,"nchan",(char *)&nchan, NULL, 1);
-  } else {
-    nchan = 0;
-    if (Debug(1)) cout << "nchan = 0" << endl;
-  }
-
-  uvprobvr_c(uv_handle_p,"nspect",vtype,&vlen,&vupd);
-  if (vupd) {
-    uvrdvr_c(uv_handle_p,H_INT,"nspect",(char *)&nspect, NULL, 1);
-    win.nspect = nspect;
-  } else
-    win.nspect = nspect = 0;
-
-  uvprobvr_c(uv_handle_p,"nwide",vtype,&vlen,&vupd);
-  if (vupd) {
-    uvrdvr_c(uv_handle_p,H_INT,"nwide",(char *)&nwide, NULL, 1);
-    win.nwide = nwide;
-  } else
-    win.nwide = nwide = 0;
+  uvrdvr_c(uv_handle_p,H_INT,"nchan",(char *)&nchan, (char *)&nchan, 1);
+  uvrdvr_c(uv_handle_p,H_INT,"nspect",(char *)&nspect,(char *)&nspect, 1);
+  win[next].nspect = nspect;
+  uvrdvr_c(uv_handle_p,H_INT,"nwide",(char *)&nwide, (char *)&nwide, 1);
+  win[next].nwide = nwide;
 
   if (nspect > 0 && nspect <= MAXWIN) {
 
-    uvprobvr_c(uv_handle_p,"ischan",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_INT,"ischan",(char *)win.ischan, nspect);
-    else if (nspect==1)
-      win.ischan[0] = 1;
-    else
-      throw(AipsError("missing ischan"));
-
-    uvprobvr_c(uv_handle_p,"nschan",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_INT,"nschan",(char *)win.nschan, nspect);
-    else if (nspect==1)
-      win.nschan[0] = nchan_p;
-    else
-      throw(AipsError("missing nschan"));
-
-    uvprobvr_c(uv_handle_p,"restfreq",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_DBLE,"restfreq",(char *)win.restfreq, nspect);
-    else
-      throw(AipsError("missing restfreq"));
-
-    uvprobvr_c(uv_handle_p,"sdf",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_DBLE,"sdf",(char *)win.sdf, nspect);
-    else if (nspect>1)
-      throw(AipsError("missing sdf"));
-
-    uvprobvr_c(uv_handle_p,"sfreq",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_DBLE,"sfreq",(char *)win.sfreq, nspect);
-    else
-      throw(AipsError("missing sfreq"));
-
-    uvprobvr_c(uv_handle_p,"ifchain",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_INT,"ifchain",(char *)win.chain, nspect);
+    uvgetvr_c(uv_handle_p,H_INT,"ischan",(char *)win[next].ischan, nspect);
+    uvgetvr_c(uv_handle_p,H_INT,"nschan",(char *)win[next].nschan, nspect);
+    uvgetvr_c(uv_handle_p,H_DBLE,"restfreq",(char *)win[next].restfreq, nspect);
+    uvgetvr_c(uv_handle_p,H_DBLE,"sdf",(char *)win[next].sdf, nspect);
+    uvgetvr_c(uv_handle_p,H_DBLE,"sfreq",(char *)win[next].sfreq, nspect);
+    uvprobvr_c(uv_handle_p,"ifchain", vtype,&vlen,&vupd);
+    if (vtype[0]=='i')
+      uvgetvr_c(uv_handle_p,H_INT,"ifchain",(char *)win[next].chain, nspect);
   }
-
-  if (nwide > 0 && nwide <= MAXWIDE) {
-    uvprobvr_c(uv_handle_p,"wfreq",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_REAL,"wfreq",(char *)win.wfreq, nwide);
-    uvprobvr_c(uv_handle_p,"wwidth",vtype,&vlen,&vupd);
-    if (vupd)
-      uvgetvr_c(uv_handle_p,H_REAL,"wwidth",(char *)win.wwidth, nwide);
+  if (nwide>0) {
+       uvgetvr_c(uv_handle_p,H_REAL,"wfreq",(char *)win[next].wfreq, nwide);
+       uvgetvr_c(uv_handle_p,H_REAL,"wwidth",(char *)win[next].wwidth, nwide); 
   }
 
   if (nwide >0 && nspect != nwide) {
@@ -2123,77 +2019,77 @@ void Importmiriad::init_window(Block<Int>& narrow, Block<Int>& window)
   }
 
   for (Int i=0; i<nspect; i++) {
-    win.code[i] = 'N';
-    win.keep[i] = 1;
-  }
-  if (nspect > 0 && narrow[0] > 0) {         // fix up the keep[] array from the narrow= keyword
-    for (Int j=0; j<nspect; j++)                 // flag all so we don't keep them
-      win.keep[j] = 0;
-    for (uInt j=0; j<narrow.nelements(); j++) {   // keep the ones listed in the narrow= keyword
-      k = narrow[j]-1;
-      if (k >= 0 || k < nspect)
-        win.keep[k] = 1;
-      else
-        cout << "### Warning: bad narrow spectral window id " << k+1 << endl;
-    }
+    win[next].code[i] = 'N';
   }
 
   idx = (nspect > 0 ? nspect : 0);           // idx points into the combined win.xxx[] elements
   for (Int i=0; i<nwide; i++) {
-    Int side = (win.sdf[i] < 0 ? -1 : 1);
-    win.code[idx]     = 'S';
-    win.keep[idx]     = 1;
-    win.ischan[idx]   = nchan + i + 1;
-    win.nschan[idx]   = 1;
-    win.sfreq[idx]    = win.wfreq[i];
-    win.sdf[idx]      = side * win.wwidth[i];
-    win.restfreq[idx] = -1.0;  // no meaning
+    Int side = (win[next].sdf[i] < 0 ? -1 : 1);
+    win[next].code[idx]     = 'S';
+    win[next].ischan[idx]   = nchan + i + 1;
+    win[next].nschan[idx]   = 1;
+    win[next].sfreq[idx]    = win[next].wfreq[i];
+    win[next].sdf[idx]      = side * win[next].wwidth[i];
+    win[next].restfreq[idx] = -1.0;  // no meaning
     idx++;
   }
-
-  if (nwide > 0) {
-    idx = nspect;
-    if (window[0] > 0) {
-      for (Int j=0; j<nwide; j++)
-        win.keep[idx+j] = 0;
-      for (uInt j=0; j<window.nelements(); j++) {
-        k = window[j]-1;
-        if (k >= 0 || k < nwide-2)
-          win.keep[idx+k] = 1;
-        else
-          cout << "### Warning: bad window band window id " << k+1 << endl;
+  
+  if (nspect>0) {
+    // Got all the window details, now check if we already have this one
+    Bool found=False;
+    for (Int i=0; i<nFreqSet_p; i++) {
+      // compare win[i] and win[next]
+      found=compareWindows(win[i],win[next]);
+      if (found) {
+        freqSet_p=i;
+        break;
       }
     }
-  } // i
 
-  if (Debug(1)) {
-    cout << "Layout of spectral windows (init_window): nspect=" << nspect 
-         << " nwide=" << nwide 
-         << "\n";
-    cout << "(N=narrow    W=wide,   S=spectral window averages)" << endl;
-
-    for (Int i=0; i<nspect+nwide; i++)
-      cout << win.code[i] << ": " << i+1  << " " << win.keep[i] << " "
-           << win.nschan[i] << " " << win.ischan[i] << " " 
-           << win.sfreq[i] <<  " " << win.sdf[i] <<  " " << win.restfreq[i]
+    if (not found && Debug(1)) {
+      cout << "Layout of spectral windows (check_window): nspect=" << nspect 
+           << " nwide=" << nwide 
            << "\n";
+      cout << "(N=narrow    W=wide,   S=spectral window averages)" << endl;
 
-    cout << "narrow: " ;
-    for (uInt i=0; i<narrow.nelements(); i++)
-        cout << narrow[i] << " ";
-    cout << endl;
-    cout << "win: " ;
-    for (uInt i=0; i<window.nelements(); i++)
-        cout << window[i] << " ";
-    cout << endl;
+      for (Int i=0; i<nspect+nwide; i++)
+        cout << win[next].code[i] << ": " << i+1  << " " << keep[i] << " "
+             << win[next].nschan[i] << " " << win[next].ischan[i] << " " 
+             << win[next].sfreq[i] <<  " " << win[next].sdf[i] <<  " " << win[next].restfreq[i]
+             << "\n";
+    }
+
+
+    if (not found) {
+      nFreqSet_p=nFreqSet_p+1;
+      if (nFreqSet_p>=MAXFSET) throw(AipsError("Too many frequency settings"));
+      freqSet_p=next;
+    }
+    // Calculate datadesc_id offset
+    ddid_p=0;
+    for (Int i=0; i<freqSet_p; i++){
+      for (Int j=0; j<win[freqSet_p].nspect+win[freqSet_p].nwide; j++) {
+        if (keep[j]) ddid_p+=1;
+      }
+    }
   }
 }
 
 // ==============================================================================================
-void Importmiriad::update_window()
+Bool Importmiriad::compareWindows(WINDOW& win1,WINDOW& win2)
 {
-  if (Debug(1)) cout << "Importmiriad::update_window" << endl;
-  throw(AipsError("Cannot update window configuration yet"));
+  // Check if two freq/corr windows are the same (within tolerance)
+  if (win1.nspect!= win2.nspect || win1.nwide!=win2.nwide) return False;
+  for (Int i=0; i<win1.nspect; i++){
+    if (win1.nschan[i]!=win2.nschan[i]) return False;
+    Double w = abs(win1.sdf[i]);
+    if (abs(win1.sdf[i]-win2.sdf[i])>0.01*w) return False;
+    if (abs(win1.sfreq[i]-win2.sfreq[i])>0.5*w) return False;
+    if (abs(win1.restfreq[i]-win2.restfreq[i])>0.5*w) return False;
+    if (win1.chain[i]!=win2.chain[i]) return False;
+  }
+  // could check wides, but since they are not written..
+  return True;
 }
 
 // ==============================================================================================
@@ -2223,7 +2119,7 @@ int main(int argc, char **argv)
     
     // Define inputs
     Input inp(1);
-    inp.version("4 - Miriad to MS filler (08-May-2014)");
+    inp.version("5 - Miriad to MS filler (29-Jul-2015)");
     inp.create("mirfile",   "",      "Name of Miriad dataset name",       "string");    
     inp.create("vis",      "",       "Name of MeasurementSet",            "string");    
     inp.create("tsys",    "False",   "Fill WEIGHT from Tsys in data?",    "bool");
@@ -2250,7 +2146,7 @@ int main(int argc, char **argv)
 
     File t(mirfile);                                // only used for sanity checks
     Int i, debug = -1;
-    Block<Int> narrow, win;
+    Block<Int> spw, wide;
 
     for (i=0; i<99; i++)      // hmm, must this be so hard ??
       if  (!inp.debug(i)) {
@@ -2263,20 +2159,20 @@ int main(int argc, char **argv)
       throw(AipsError("Input file does not appear to be miriad dataset"));
 
     if (inp.getString("spw") == "all") {
-      narrow.resize(1);
-      narrow[0] = -1;
+      spw.resize(1);
+      spw[0] = -1;
     } else
-      narrow = inp.getIntArray("spw");
+      spw = inp.getIntArray("spw");
 
     if (inp.getString("wide") == "all") {
-      win.resize(1);
-      win[0] = -1;
+      wide.resize(1);
+      wide[0] = -1;
     } else
-      win = inp.getIntArray("wide");
+      wide = inp.getIntArray("wide");
 
     Importmiriad bf(mirfile,debug,Qtsys,Qarrays,Qlinecal);
 
-    bf.checkInput(narrow,win);
+    bf.checkInput(spw,wide);
     bf.setupMeasurementSet(ms,useTSM);
     bf.fillAntennaTable();    // put first array in place
 
