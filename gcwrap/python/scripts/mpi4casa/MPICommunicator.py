@@ -79,11 +79,16 @@ class MPICommunicator:
         def finalize_server_and_client_mpi_environment(self):
             
             # Default finalization of MPI environment when MPICommandClient has not been instantiated 
+            # Or if MPICommandClient::stop_services crashes
             if self.__finalize_mpi_environment:
                 # Send stop server signal to servers
-                self.control_service_request_broadcast(request={'signal':'exit'})
+                self.control_service_request_broadcast(request={'command':'stop_service_requested = True',
+                                                                'signal':'stop',
+                                                                'force_command_request_interruption':True,
+                                                                'finalize_mpi_environment':False,
+                                                                'send_response':False})
                 # Finalize local MPI environment
-                MPIEnvironment.finalize_mpi_environment()
+                # MPIEnvironment.finalize_mpi_environment()
             
                     
         def command_request_send(self,request,server):

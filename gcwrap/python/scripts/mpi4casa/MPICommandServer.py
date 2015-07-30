@@ -392,7 +392,8 @@ class MPICommandServer:
                 if msg_available:
                     
                     # Receive control service msg
-                    msg_received = False
+                    msg_received = False                    
+                    control_service_request = {}
                     try:
                         control_service_request = self.__communicator.control_service_request_recv()
                         msg_received = True
@@ -404,9 +405,12 @@ class MPICommandServer:
                         continue
                     
                     # Process control service msg
+                    cmd = None
+                    send_response = False
                     if msg_received:
                         try:
                             cmd = control_service_request['command']
+                            send_response = control_service_request['send_response']
                             code = compile(cmd, casalog_call_origin, 'exec')                                                   
                             exec(code)
                             casalog.post("Control signal %s successfully handled by server %s" 
@@ -415,12 +419,12 @@ class MPICommandServer:
                         except:
                             formatted_traceback = traceback.format_exc()
                             casalog.post("Exception handling control signal command %s in server %s: %s" 
-                                         % (str(cmd),str(MPIEnvironment.mpi_processor_rank),str(formatted_traceback)),
+                                         % (str(control_service_request),
+                                            str(MPIEnvironment.mpi_processor_rank),
+                                            str(formatted_traceback)),
                                          "SEVERE",casalog_call_origin)
                             
                     # Notify to MPICommandClient that control signal has been processed
-                    send_response = False
-                    send_response = control_service_request['send_response']
                     if send_response:
                         try:
                             self.__communicator.control_service_response_send(response=self.__monitor_server.get_status())
