@@ -232,6 +232,20 @@ class MakeImList(basetask.StandardTaskTemplate):
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
 
+        # Remove bad spws in cont mode
+        if inputs.specmode == 'cont':
+            filtered_spwlist = []
+            for spw in spwlist[0].split(','):
+                # Can not just use "has_data" as it only sets up
+                # a selection which checks against existance of
+                # a given item (e.g. an spw).
+                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw)
+                # For now we consider the spw for all fields / intents.
+                # May need to handle this individually.
+                if (valid_data[list(field_intent_list)[0]]):
+                    filtered_spwlist.append(spw)
+            spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
+
         # get beams for each spw
         beams = {}
         for spwspec in spwlist:
@@ -261,6 +275,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             for spwspec in spwlist:
                 cells[spwspec] = cell
+                # TODO: "has_data" does not really check the data
                 valid_data[spwspec] = self.heuristics.has_data(
                   field_intent_list=field_intent_list, spwspec=spwspec)
 

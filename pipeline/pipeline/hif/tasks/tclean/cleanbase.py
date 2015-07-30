@@ -174,7 +174,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Adjust the width to get around problems with increasing / decreasing
         # frequency with channel issues.
         if inputs.width == '':
-            if inputs.specmode != 'mfs':
+            if inputs.specmode == 'cube':
                 width = clheuristics.width(int(spw.split(',')[0]))
                 #width = inputs.width
             else:
