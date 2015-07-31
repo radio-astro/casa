@@ -5,13 +5,12 @@ import pipeline.infrastructure.casatools as casatools
 
 
 class Source(object):
-    def __init__(self, source_id, name, direction, pm_x, pm_y):
+    def __init__(self, source_id, name, direction, proper_motion):
         self.id = source_id
         self.name = name
         self.fields = []
         self._direction = direction
-        self._pm_x = pm_x
-        self._pm_y = pm_y
+        self._proper_motion = proper_motion
 
     @property
     def dec(self):
@@ -35,17 +34,11 @@ class Source(object):
 
     @property
     def pm_x(self):
-        qa = casatools.quanta
-        val = qa.getvalue(self._pm_x)
-        units = qa.getunit(self._pm_x)
-        return '' if val == 0 else '%.3e %s' % (val, units)
+        return self.__format_pm('longitude')
 
     @property
     def pm_y(self):
-        qa = casatools.quanta
-        val = qa.getvalue(self._pm_y)
-        units = qa.getunit(self._pm_y)
-        return '' if val == 0 else '%.3e %s' % (val, units)
+        return self.__format_pm('latitude')
 
     @property
     def proper_motion(self):
@@ -57,6 +50,12 @@ class Source(object):
     @property
     def ra(self):        
         return casatools.quanta.formxxx(self.longitude, format='hms', prec=3)
+
+    def __format_pm(self, axis):
+        qa = casatools.quanta
+        val = qa.getvalue(self._proper_motion[axis])
+        units = qa.getunit(self._proper_motion[axis])
+        return '' if val == 0 else '%.3e %s' % (val, units)
 
     def __repr__(self):
         return ('Source({0}:{1}, pos={2} {3} ({4}), pm={5})'
