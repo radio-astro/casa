@@ -2199,6 +2199,7 @@ class test_radial_velocity_correction(test_base_compare):
     def setUp(self):
         super(test_radial_velocity_correction,self).setUp()
         self.setUp_titan()
+        default(cvel)
         self.outvis = "test_radial_velocity_correction-mst.ms"
         self.refvis = "test_radial_velocity_correction-cvel.ms"
         self.outvis_sorted = "test_radial_velocity_correction-mst-sorted.ms"
@@ -2238,6 +2239,7 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
 
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
+        default(cvel)
 
         self.outvis = "test-CAS-7382-mst.ms"
         self.refvis = "test-CAS-7382-cvel.ms"
