@@ -94,7 +94,7 @@ void LineFinderUtils::calculateMAD(size_t const num_data,
   float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid, local_data.data);
   //cout << "median value for MAD = " << median_value << endl;
   for (size_t i = 0; i < num_data; ++i) {
-    mad[i] = in_mask.data[i] ? abs(in_data[i]-median_value) : 0.0;
+    mad[i] = in_mask.data[i] ? std::abs(in_data[i]-median_value) : 0.0;
   }
 }
 
