@@ -65,6 +65,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     float mad[/*num_data*/]);
 
     /*
+      Count the number of True elements in a boolean array
+     */
+    inline static size_t countTrue(size_t num_data, bool data[/*num_data*/])
+    {
+      size_t ntrue = 0;
+      static_assert(static_cast<size_t>(true)==1, "cast of bool failed");
+      static_assert(static_cast<size_t>(false)==0, "cast of bool failed");
+      for (size_t i=0; i<num_data; ++i) {
+	ntrue += static_cast<size_t>(data[i]);
+      }
+      return ntrue;
+    };
+
+    /*
       create mask by a threshold value
       out_mask[i] = in_mask[i] && (in_data[i] >= threshold)
      */
@@ -143,6 +157,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   DataType const data[/*num_data*/]) {
        return (data[num_data/2] + data[num_data/2-((num_data+1)%2)])/static_cast<DataType>(2);
      };
+
+
+    /*
+      Get median of an array with mask.
+      
+     */
+     static float maskedMedian(size_t num_data, float const* data,
+			       SakuraAlignedArray<bool> const& mask, float fraction=1.0);
+
+
     /*
       Convert boolean channel mask to channel index ranges.
      */

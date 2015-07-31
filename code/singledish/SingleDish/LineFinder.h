@@ -40,10 +40,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   namespace linefinder {
     std::list<std::pair<size_t,size_t>> MADLineFinder(size_t const num_data, SakuraAlignedArray<float> const& data, SakuraAlignedArray<bool> const& mask, float const threshold, uint8_t max_iteration, size_t const minwidth, size_t const maxwidth, size_t const avg_limit, std::pair<size_t,size_t> edge);
-    size_t countTrue(size_t num_data, bool data[/*num_data*/]);
-float masked_median(size_t num_data, float const* data,
-		    SakuraAlignedArray<bool> const& mask, float fraction=1.0);
-
   }
 } //# NAMESPACE CASA - END
   

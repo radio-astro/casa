@@ -26,6 +26,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+#include <algorithm>
 #include <cfloat>
 #include <iostream>
 #include <string>
@@ -54,24 +55,25 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   // value check and edge handling
   size_t min_valid_elem = 2;
   AlwaysAssert(edge.first+edge.second<num_data-min_valid_elem, AipsError);
+  AlwaysAssert(minwidth>0, AipsError);
   for (size_t i=0; i<edge.first; ++i){
     mask.data[i] = false;
   }
   for (size_t i=num_data-edge.second; i<num_data; ++i){
     mask.data[i] = false;
   }
-  size_t num_valid_elem=countTrue(num_data,mask.data);
+  size_t num_valid_elem=LineFinderUtils::countTrue(num_data,mask.data);
   AlwaysAssert(num_valid_elem>=min_valid_elem, AipsError);
   // factor for each iteration of binning
   size_t const binfactor = 4;
   size_t average_factor =1;
-  size_t maxgap = num_data;
+  //size_t maxgap = num_data;
   list<pair<size_t,size_t>> line_list;
   SakuraAlignedArray<float> binned_data(num_data);
   SakuraAlignedArray<bool> binned_mask(num_data);
   while (true) {
     // Bin spectrum and mask
-    size_t const maxwidth_bin = maxwidth/average_factor;
+    size_t const maxwidth_bin = std::max(maxwidth/average_factor,static_cast<size_t>(1));
     //size_t const minwidth_bin = minwidth/average_factor;
     size_t const offset = average_factor/2;
     size_t num_binned = \
@@ -98,8 +100,8 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
       LineFinderUtils::calculateMAD(num_binned, binned_data.data,
 				    search_mask, mad_data.data);
       // use lower 80% of mad_array and use median of the array as a criteria.
-      float mad_threshold = threshold*masked_median(num_binned, mad_data.data,
-						    search_mask,0.8);
+      float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data.data,
+								    search_mask,0.8);
 //       cout << "mad_threshold = " << mad_threshold << endl;
       LineFinderUtils::createMaskByAThreshold(num_binned, mad_data,
 					      binned_mask, mad_threshold,
@@ -175,35 +177,6 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   return line_list;
 }
 
-size_t countTrue(size_t num_data, bool* data)
-{
-  size_t ntrue = 0;
-  static_assert(static_cast<size_t>(true)==1, "cast of bool failed");
-  static_assert(static_cast<size_t>(false)==0, "cast of bool failed");
-  for (size_t i=0; i<num_data; ++i) {
-    ntrue += static_cast<size_t>(data[i]);
-  }
-  return ntrue;
-}
-
-float masked_median(size_t num_data,float const* data,
-		    SakuraAlignedArray<bool> const& mask, float fraction)
-{
-  SakuraAlignedArray<float> local_data(num_data);
-  for (size_t i = 0 ; i < num_data; ++i){
-    local_data.data[i] = data[i];
-  }
-  size_t num_valid;
-  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, mask.data, local_data.data, &num_valid);
-  AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
-  AlwaysAssert(num_valid <= num_data, AipsError);
-  if (fraction<1.0)
-    num_valid = static_cast<size_t>(num_valid*fraction);
-  float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid,
-								 local_data.data);
-  return median_value;
-  
-}
 
 
 } //# NAMESPACE LINEFINDER - END

@@ -222,6 +222,26 @@ void LineFinderUtils::mergeGapByFalse(size_t const num_mask, bool const* mask,
   range_list.splice(range_list.end(), temp_list);
 }
 
+float LineFinderUtils::maskedMedian(size_t num_data,float const* data,
+				     SakuraAlignedArray<bool> const& mask, float fraction)
+{
+  
+  SakuraAlignedArray<float> local_data(num_data);
+  for (size_t i = 0 ; i < num_data; ++i){
+    local_data.data[i] = data[i];
+  }
+  size_t num_valid;
+  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, mask.data, local_data.data, &num_valid);
+  AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
+  AlwaysAssert(num_valid <= num_data, AipsError);
+  if (fraction<1.0)
+    num_valid = static_cast<size_t>(num_valid*fraction);
+  float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid,
+								 local_data.data);
+  return median_value;
+  
+}
+
 void LineFinderUtils::mergeOverlappingRanges(list<pair<size_t,size_t>>& range_list)
 {
   if (range_list.size() < 2) return; // nothing to do
