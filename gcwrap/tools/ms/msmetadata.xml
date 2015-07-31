@@ -1241,14 +1241,14 @@ windows in the dataset and close the tool.
         </method>
         
 	<method type="function" name="phasecenter">
-            <shortdescription>Get the phasecenter direction from a field ID and time if necessary</shortdescription>
+            <shortdescription>Get the phasecenter direction from a field ID and time if necessary; default 0</shortdescription>
              <input>
                 <param type="int" direction="in" name="fieldid">
                     <description>Zero-based field ID for which to get the phasecenter</description>
                     <value>0</value>
                 </param>
                 <param type="record" direction="in" name="epoch">
-                    <description>Optional time, expressed as a measures epoch dictionary, if field id has a polynomial in time phasecenter or an ephemerides table attached to the ID</description>
+                    <description>Optional time, expressed as a measures epoch dictionary, if field id has a polynomial in time phasecenter or an ephemerides table attached to the ID. Default value means evaluate at the origin TIME in the FIELD table</description>
                     <value></value>
                 </param>
             </input>
