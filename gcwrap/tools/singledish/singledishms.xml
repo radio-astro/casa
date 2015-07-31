@@ -113,7 +113,7 @@ Multipy a scaling factor to selected spectra.
       <allowed kind="enum">
 	<value>data</value>
 	<value>float_data</value>
-	<value>corrected_data</value>
+	<value>corrected</value>
       </allowed>
     </param>
 
@@ -160,7 +160,7 @@ Fit baseline and subtract it from selected spectra
       <allowed kind="enum">
 	<value>data</value>
 	<value>float_data</value>
-	<value>corrected_data</value>
+	<value>corrected</value>
       </allowed>
     </param>
 
@@ -235,7 +235,7 @@ Fit baseline and subtract it from selected spectra
       <allowed kind="enum">
 	<value>data</value>
 	<value>float_data</value>
-	<value>corrected_data</value>
+	<value>corrected</value>
       </allowed>
     </param>
 
@@ -308,7 +308,7 @@ Fit parameters for each spectrum are obtained from a text file.
       <allowed kind="enum">
 	<value>data</value>
 	<value>float_data</value>
-	<value>corrected_data</value>
+	<value>corrected</value>
       </allowed>
     </param>
 
@@ -375,7 +375,7 @@ in the MS.
       <allowed kind="enum">
 	<value>data</value>
 	<value>float_data</value>
-	<value>corrected_data</value>
+	<value>corrected</value>
       </allowed>
     </param>
 
@@ -500,7 +500,7 @@ sdms.set_selection(field="M100", spw="3,5")
       <allowed kind="enum">
 	    <value>data</value>
 	    <value>float_data</value>
-	    <value>corrected_data</value>
+	    <value>corrected</value>
       </allowed>
     </param>
 

@@ -24,12 +24,12 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="string" name="datacolumn" ignorecase="true">
-        <description>name of data column to be used [\'data\', \'float_data\', or \'corrected_data\']</description>
+        <description>name of data column to be used [\'data\', \'float_data\', or \'corrected\']</description>
         <value>data</value>
         <allowed kind="enum">
             <value>data</value>
             <value>float_data</value>
-            <value>corrected_data</value>
+            <value>corrected</value>
         </allowed>
     </param>
 
@@ -106,7 +106,7 @@ Keyword arguments
 -----------------
 infile -- name of input SD dataset
 datacolumn -- name of data column to be used
-        options: 'data', 'float_data', or 'corrected_data'
+        options: 'data', 'float_data', or 'corrected'
         default: 'data'
 antenna -- select an antenna name or ID
         default: 0
