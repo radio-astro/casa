@@ -1241,10 +1241,10 @@ windows in the dataset and close the tool.
         </method>
         
 	<method type="function" name="phasecenter">
-            <shortdescription>Get the phasecenter direction from a field ID and time if necessary; default 0</shortdescription>
+            <shortdescription>Get the phasecenter direction from a field ID and time if necessary</shortdescription>
              <input>
                 <param type="int" direction="in" name="fieldid">
-                    <description>Zero-based field ID for which to get the phasecenter</description>
+                    <description>Zero-based field ID for which to get the phasecenter; default  fieldid=0</description>
                     <value>0</value>
                 </param>
                 <param type="record" direction="in" name="epoch">
