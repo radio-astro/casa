@@ -190,12 +190,21 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
 			case PMS::CORRMODEL: {
 			    // user asked for corrected data but no corrected column
 			    if (!corcolOk && !calibration_.useCallib()) {
-                    //Exception was removed - see CAS-5214
-                    loadData[i] = PMS::DATA;
-                    logWarn( "load_cache", 
-                         "CORRECTED_DATA column not present and calibration library not set or enabled; will use DATA instead.");
-                    //throw(AipsError("CORRECTED_DATA not present, please use DATA"));
+                    if (datacolOk) {
+                        //Exception was removed - see CAS-5214
+                        loadData[i] = PMS::DATA;
+                        logWarn( "load_cache", 
+                             "CORRECTED_DATA column not present and calibration library not set or enabled; will use DATA instead.");
+                        //throw(AipsError("CORRECTED_DATA not present, please use DATA"));
+                    } else {
+                        // CAS-7761 - if no corrected/data cols use float for SD MS 
+                        if (floatcolOk) {
+                            loadData[i] = PMS::FLOAT_DATA;
+				            logWarn( "load_cache", 
+                             "CORRECTED_DATA column not present and calibration library not set or enabled; will use FLOAT_DATA instead.");
+                        }
                     }
+                }
 			    break;
 			}
 			case PMS::FLOAT_DATA: {
@@ -205,11 +214,10 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
 			    }
 			    break;
 			}
-			case PMS::DATA: {  // CAS-7482
-			    // data requested (could be default) but no DATA column 
+			case PMS::DATA: {
+			    // CAS-7482 data requested (could be default) but no DATA column 
 			    if (!datacolOk && floatcolOk) {
 				    loadData[i] = PMS::FLOAT_DATA;
-			        dataColumn = getDataColumn(loadData[i]);
                     if (loadAxes[i] == PMS::AMP)
 				        logWarn( "load_cache", "DATA column not present; will use FLOAT_DATA instead.");
 			    }
@@ -234,7 +242,6 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
                 break;
 			}
             case PMS::PHASE:
-			case PMS::REAL:
 			case PMS::IMAG: {
                 if (loadData[i] == PMS::FLOAT_DATA) {
 				    // user asked for float data for nonvalid axes
@@ -244,6 +251,7 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
                 }
 				break;
             }
+			case PMS::REAL:
             case PMS::AMP:
             case PMS::WTxAMP: {
                 dataColumn = getDataColumn(loadData[i]);
@@ -253,6 +261,7 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
                 break;
         } // switch
 	} // for
+
 	return dataColumn;
 }
 
@@ -1266,7 +1275,8 @@ void MSCache::loadAxis(vi::VisBuffer2* vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb->visCubeCorrected()) / real(vb->visCubeModel());
 			break;
 		}
-		case PMS::FLOAT_DATA:  // should have caught this already
+		case PMS::FLOAT_DATA:
+            *real_[vbnum] = vb->visCubeFloat();  // float data is real
 			break;
 		}
 		break;
