@@ -83,19 +83,10 @@ void LineFinderUtils::calculateMAD(size_t const num_data,
 				   SakuraAlignedArray<bool> const& in_mask,
 				   float *mad)
 {
-  SakuraAlignedArray<float> local_data(num_data);
-  float* ptr = local_data.data;
-  for (size_t i=0 ; i<num_data ; ++i) {
-    ptr[i] = in_data[i];
-  }
-  size_t num_valid(num_data+1);
-  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, in_mask.data, local_data.data, &num_valid);
-  AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
-  AlwaysAssert(num_valid <= num_data, AipsError);
-  float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid, local_data.data);
+  float median_value = LineFinderUtils::maskedMedian(num_data, in_data, in_mask, 1.0);
   //cout << "median value for MAD = " << median_value << endl;
   for (size_t i = 0; i < num_data; ++i) {
-    mad[i] = in_mask.data[i] ? fabs(in_data[i]-median_value) : 0.0;
+    mad[i] = fabs(in_data[i]-median_value);
   }
 }
 
@@ -111,22 +102,6 @@ void LineFinderUtils::createMaskByAThreshold(size_t const num_data,
     out_mask.data[i] = out_mask.data[i] && in_mask.data[i];
   }
 }
-
-// template <typename DataType>
-// void LineFinderUtils::createSignByAThreshold(size_t const num_data,
-// 					     DataType const* in_data,
-// 					     DataType const threshold,
-// 					     int8_t* sign)
-// {
-//   for (size_t i = 0; i < num_data; ++i) {
-//     if (in_data[i] > threshold)
-//       sign[i] = 1;
-//     else if (in_data[i] < threshold)
-//       sign[i] = -1;
-//     else
-//       sign[i] = 0;
-//   }
-// }
 
 void LineFinderUtils::deBinRanges(size_t const bin_size, size_t const offset,
 			          list<pair<size_t,size_t>>& range_list)
@@ -230,7 +205,7 @@ float LineFinderUtils::maskedMedian(size_t num_data,float const* data,
   for (size_t i = 0 ; i < num_data; ++i){
     local_data.data[i] = data[i];
   }
-  size_t num_valid;
+  size_t num_valid(num_data+1);
   LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, mask.data, local_data.data, &num_valid);
   AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
   AlwaysAssert(num_valid <= num_data, AipsError);
@@ -420,9 +395,5 @@ template size_t LineFinderUtils::binDataAndMask<float>(size_t const num_in,
 						       bool out_mask[],
 						       size_t const offset,
 						       bool const keepsize);
-// template void LineFinderUtils::createSignByAThreshold<float>(size_t const num_data,
-// 							     float const* in_data,
-// 							     float const threshold,
-// 							     int8_t* sign);
 
 } //# NAMESPACE CASA - END

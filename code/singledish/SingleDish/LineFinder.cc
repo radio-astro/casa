@@ -42,6 +42,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace linefinder {//# NAMESPACE LINEFINDER - BEGIN
 
+void getMask(Vector<bool> &mask, list<pair<size_t,size_t>>& ranges,
+	     bool const invert, bool const initialize)
+{
+  size_t const num_mask = mask.nelements();
+  bool const lineval = (!invert);
+  if (initialize)
+    mask = invert;
+  for (list<pair<size_t,size_t>>::iterator iter=ranges.begin();
+       iter!=ranges.end(); ++iter) {
+    AlwaysAssert((*iter).second >= (*iter).first, AipsError);
+    for (size_t i=(*iter).first; i<(*iter).second+1 && i<num_mask; ++i) {
+      mask[i] = lineval;
+    }
+  }
+}
+  
 list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 					SakuraAlignedArray<float> const& data,
 					SakuraAlignedArray<bool> const& mask,
@@ -94,7 +110,6 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
     list<pair<size_t,size_t>> prev_line_list;
     prev_line_list.clear();
     for (size_t iteration=0; iteration < max_iteration; ++iteration) {
-      bool stop_iteration = false;
       list<pair<size_t,size_t>> new_lines; // lines found in this iteration
       // working data array. sorted after median calculation.
       LineFinderUtils::calculateMAD(num_binned, binned_data.data,
@@ -103,10 +118,10 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
       float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data.data,
 								    search_mask,0.8);
 //       cout << "mad_threshold = " << mad_threshold << endl;
+      if (mad_threshold >= prev_mad_threshold) break; // stop iteration
       LineFinderUtils::createMaskByAThreshold(num_binned, mad_data,
 					      binned_mask, mad_threshold,
 					      line_mask);
-      if (mad_threshold > prev_mad_threshold) stop_iteration = true;
       // channel mask -> mask range
       LineFinderUtils::maskToRangesList(num_binned, line_mask.data, new_lines);
       //rejectByRangeWidth(minwidth_bin,maxwidth_bin,new_lines);
@@ -145,20 +160,17 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	     iter!=new_lines.end(); ++iter) {
 	  curr_num_line_chan += ((*iter).second - (*iter).first + 1);
 	}
-	if (curr_num_line_chan < prev_num_line_chan)
-	  stop_iteration = true;
-	if (!stop_iteration) {
-	  prev_num_line_chan = curr_num_line_chan;
-	  prev_mad_threshold = mad_threshold;
-	  prev_line_list.clear();
-	  prev_line_list.splice(prev_line_list.end(), new_lines);
-	}
+	if (curr_num_line_chan <= prev_num_line_chan)
+	  break; // stop iteration
+	// save values of current iteration for next loop
+	prev_num_line_chan = curr_num_line_chan;
+	prev_mad_threshold = mad_threshold;
+	prev_line_list.clear();
+	prev_line_list.splice(prev_line_list.end(), new_lines);
       }
       else { // no lines found
 	break;
       }
-      if (stop_iteration)
-	break;
     } // end of iteration loop
     // merge line list from different bin level
 //     cout << "Final line list for average_factor = " << average_factor << endl;
@@ -176,6 +188,7 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   } // end of bin level loop
   return line_list;
 }
+
 
 
 
