@@ -91,23 +91,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               = 0  (in_data[i] == threshold)
 	      = -1 (in_data[i] < threshold)
      */
-
     template <typename DataType>
-      static void createSignByAThreshold(size_t const num_data,
-					 DataType const in_data[/*num_data*/],
-					 DataType const threshold,
-					 int8_t sign[/*num_data*/]);
+      inline static void createSignByAThreshold(size_t const num_data,
+						DataType const in_data[/*num_data*/],
+						DataType const threshold,
+						int8_t sign[/*num_data*/])
+    {
+      for (size_t i = 0; i < num_data; ++i) {
+	  sign[i] = signCompare(in_data[i], threshold);
+      }
+    };
+
     /*
       create mask by threshold value array
       sign[i] = +1 (in_data[i] > threshold_array[i])
               = 0  (in_data[i] == threshold_array[i])
 	      = -1 (in_data[i] < threshold_array[i])
      */
-/*     template <typename DataType>  */
-/*     static void createSignByThresholds(size_t const num_data, */
-/* 				       DataType const in_data[/\*num_data*\/], */
-/* 				       DataType const threshold_array[/\*num_data*\/], */
-/* 				       int8_t sign[/\*num_data*\/]); */
+    template <typename DataType>
+    inline static void createSignByThresholds(size_t const num_data,
+				       DataType const in_data[/*num_data*/],
+				       DataType const threshold_array[/*num_data*/],
+				       int8_t sign[/*num_data*/])
+    {
+      for (size_t i = 0; i < num_data; ++i) {
+	  sign[i] = signCompare(in_data[i], threshold_array[i]);
+      }
+    };
 
     static void deBinRanges(size_t const bin_size, size_t const offset,
 			    std::list<std::pair<size_t,size_t>>& range_list);
@@ -184,6 +194,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    std::pair<size_t,size_t>& new_range,
 				    size_t const cursor=0);
 
+    template <typename DataType>
+      inline static int8_t  signCompare(DataType const& data, DataType const& threshold){
+	if (data > threshold)
+	  return 1;
+	else if (data < threshold)
+	  return -1;
+	else
+	  return 0;
+    };
 };
 
 } //# NAMESPACE CASA - END

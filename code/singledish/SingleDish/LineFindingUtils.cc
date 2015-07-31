@@ -28,6 +28,7 @@
 //# $Id$
 #include <algorithm>
 #include <casa/Utilities/Assert.h>
+#include <cmath>
 
 #include <libsakura/sakura.h>
 #include <singledish/SingleDish/LineFindingUtils.h>
@@ -94,7 +95,7 @@ void LineFinderUtils::calculateMAD(size_t const num_data,
   float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid, local_data.data);
   //cout << "median value for MAD = " << median_value << endl;
   for (size_t i = 0; i < num_data; ++i) {
-    mad[i] = in_mask.data[i] ? std::abs(in_data[i]-median_value) : 0.0;
+    mad[i] = in_mask.data[i] ? fabs(in_data[i]-median_value) : 0.0;
   }
 }
 
@@ -363,7 +364,8 @@ void LineFinderUtils::rejectWideRange(size_t const maxwidth,
     list<pair<size_t, size_t> >  temp_list;
     for(list<pair<size_t,size_t>>::iterator iter=range_list.begin();
         iter!=range_list.end(); ++iter) {
-      size_t width=std::abs( (*iter).second - (*iter).first );
+      AlwaysAssert((*iter).second >= (*iter).first, AipsError);
+      size_t width = (*iter).second - (*iter).first + 1;
 	if (width <= maxwidth) {
             temp_list.push_back(*iter);
         }
@@ -379,7 +381,8 @@ void LineFinderUtils::rejectNarrowRange(size_t const minwidth,
     list<pair<size_t, size_t> >  temp_list;
     for(list<pair<size_t,size_t>>::iterator iter=range_list.begin();
         iter!=range_list.end(); ++iter) {
-      size_t width=std::abs( (*iter).second - (*iter).first );
+      AlwaysAssert((*iter).second >= (*iter).first, AipsError);
+      size_t width = (*iter).second - (*iter).first + 1;
 	if (width >= minwidth) {
             temp_list.push_back(*iter);
         }
