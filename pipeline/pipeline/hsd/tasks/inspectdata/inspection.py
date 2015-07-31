@@ -53,10 +53,13 @@ class SDInspectDataResults(common.SingleDishResults):
                 spw = member.spw
                 pols = member.pols
                 for pol in pols:
+                    LOG.info('Adding time table for Reduction Group %s (antenna %s spw %s pol %s)'%(group_id,ant,spw,pol))
                     datatable.set_timetable(ant, spw, pol, time_group_list[ant][spw][pol], numpy.array(time_group[0]), numpy.array(time_group[1]))
 
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
+        
+        LOG.info('DataTable keys: %s'%(datatable.tb2.getkeywordnames()))
 
         # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)

@@ -406,6 +406,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
+        LOG.info('add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
         if key_small not in keys or key_large not in keys:
             self.putkeyword(key_small, dictify(timetable[0]))
@@ -428,6 +429,11 @@ class DataTableImpl( object ):
             timetable_large = [ttdict_large[str(i)].tolist() for i in xrange(len(ttdict_large))]
             timetable = [timetable_small, timetable_large]
         else:
+            LOG.info('keys=%s'%(keys))
+            if key_small not in keys:
+                LOG.info('Key \'%s\' doesn\'t exist'%(key_small))
+            if key_large not in keys:
+                LOG.info('Key \'%s\' doesn\'t exist'%(key_large))
             #timetable = self.get_timetable(ant, spw, pol)
             raise RuntimeError('time table for Antenna %s spw %s pol %s is not configured properly'%(ant,spw,pol))
         end_time = time.time()
