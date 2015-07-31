@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.69 2015/05/19 13:42:04 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.71 2015/07/31 02:01:54 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.69 2015/05/19 13:42:04 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.71 2015/07/31 02:01:54 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -168,6 +168,7 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
         plotfilename += '.png'
     if (interactive == False or True):
         casalogPost(debug,"Building %s" % (plotfilename))
+#        print "Building %s" % (plotfilename)
     pb.savefig(plotfilename, format='png', dpi=density)
     return(plotfilename)
 
@@ -2713,6 +2714,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
            if (debug): print "---------------------- B) Setting spwctr=0"
            spwctr = 0
            spwctrFirstToPlot = spwctr
+       firstSpwMatch = -1
        while (spwctr < len(spwsToPlot)):
                 if (debug): print "at top of spwctr loop, spwctr=%d" % (spwctr)
                 allTimesFlaggedOnThisSpw = True # used only by overlay='time'
@@ -2910,6 +2912,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                               if (msFound or tableFormat==34):
                                                   yfrequencies.append(chanFreqGHz[ispw][j])
                   # end 'for i'
+#                  if (not matchFound and newpage==0 and firstTimeMatch==-1): 
+                  if (not matchFound and newpage==0):
+                      if (subplot==11 or (subplot!=11 and firstSpwMatch==-1 and firstTimeMatch==-1)): 
+                          # Fix for CAS-7753   
+                          # the firstTimeMatch part was needed for regression 65: different antennas having different solution times
+                          newpage = 1
+                          pages = pages[:len(pages)-1]
                   myspw = originalSpw[ispw]
                   if (msFound):
                       if debug: 
@@ -3252,6 +3261,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       if (debug):
                           print "Not all the data are flagged.  doneOverlayTime=%s" % (str(doneOverlayTime))
                       
+                  if (firstSpwMatch == -1):
+                      firstSpwMatch = spwctr
                   if (firstTimeMatch == -1):
                       firstTimeMatch = mytime
                       if (debug):
