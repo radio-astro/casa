@@ -32,7 +32,10 @@ class T2_4MDetailsSingleDishMSToScantableRenderer(basetemplates.T2_4MDetailsDefa
         caltablemap = {}
         mappedcaltables = getattr(results[0], 'mappedcaltables', {})
         for (vis, val) in mappedcaltables.items():
-            caltablemap[val['original']] = val['mapped']
+            mapped = []
+            for (_, v) in val['mapped'].items():
+                mapped.extend(v.values())
+            caltablemap[val['original']] = mapped
    
         ctx.update({'vismap': vismap,
                     'caltablemap': caltablemap,

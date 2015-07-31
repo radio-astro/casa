@@ -53,9 +53,9 @@ are converted to single dish specific Tsys caltables.</p>
 	% for (orig,mapped) in caltablemap.items():
 			<tr>
 				<td rowspan="${len(mapped)}">${os.path.basename(orig)}</td>
-				<td>${os.path.basename(mapped.values()[0])}</td>
+				<td>${os.path.basename(mapped[0])}</td>
 			</tr>
-		% for m in mapped.values()[1:]:
+		% for m in mapped[1:]:
 			<tr>
 				<td>${os.path.basename(m)}</td>
 			</tr>
