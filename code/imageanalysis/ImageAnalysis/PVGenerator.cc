@@ -237,11 +237,11 @@ SPIIF PVGenerator::generate() const {
 	);
 	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	CoordinateSystem subCoords = subImage->coordinates();
-	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
+	auto dirAxes = subCoords.directionAxesNumbers();
 	Int xAxis = dirAxes[0];
 	Int yAxis = dirAxes[1];
-	IPosition subShape = subImage->shape();
-	IPosition origShape = _getImage()->shape();
+	auto subShape = subImage->shape();
+	auto origShape = _getImage()->shape();
 	ThrowIf(
 		subShape[xAxis] != origShape[xAxis]
 		|| subShape[yAxis] != origShape[yAxis],
@@ -251,8 +251,8 @@ SPIIF PVGenerator::generate() const {
 	_checkWidth(subShape[xAxis], subShape[yAxis]);
 	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	// get the PA of the end points
-	vector<Double> start = *_start;
-	vector<Double> end = *_end;
+	auto start = *_start;
+	auto end = *_end;
 	Double paInRad = start[1] == end[1] ?
 		start[0] < end[0]
 		    ? 0 : C::pi
@@ -287,12 +287,12 @@ SPIIF PVGenerator::generate() const {
     {
     	// rotation occurs about the reference pixel, so move the reference pixel to be
     	// on the segment, near the midpoint so that the y value is an integer.
-    	vector<Double> midpoint(end.size( ));
+    	vector<Double> midpoint(end.size());
     	// THESE CAN EASILLY BE CHANGED TO ONE PASS WITH C++11 AND LAMBDA FUNCTIONS
     	std::transform( end.begin( ), end.end( ), start.begin( ), midpoint.begin( ), std::plus<double>( ) );
     	std::transform( midpoint.begin( ), midpoint.end( ), midpoint.begin( ), std::bind2nd(std::divides<double>(),2.0) );
     	Double targety = int(midpoint[1]);
-    	Double targetx = targety == midpoint[1]
+    	Double targetx = (near(targety, midpoint[1], 1e-8))
     	    ? midpoint[0]
     	    : (
     	    	start[0]*(end[1] - targety) + end[0]*(targety - start[1])
@@ -312,7 +312,7 @@ SPIIF PVGenerator::generate() const {
     		<< ") to align specified slice with the x axis" << LogIO::POST;
     }
 	Vector<Double> worldStart, worldEnd;
-	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
+	const auto& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
 	dc1.toWorld(worldEnd, Vector<Double>(end));
 	std::unique_ptr<DirectionCoordinate> rotCoord(
@@ -334,7 +334,7 @@ SPIIF PVGenerator::generate() const {
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
 	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
-	SPIIF imageToRotate = subImage;
+	auto imageToRotate = subImage;
 	Int nPixels = 0;
 	if (padNumber > 0) {
 		nPixels = (Int)padNumber + 1;
@@ -344,11 +344,11 @@ SPIIF PVGenerator::generate() const {
 			<< LogIO::POST;
 		ImagePadder padder(subImage);
 		padder.setPaddingPixels(nPixels);
-		SPIIF padded = padder.pad(True);
+		auto padded = padder.pad(True);
 		imageToRotate = padded;
 	}
 	IPosition blc(subImage->ndim(), 0);
-	IPosition trc = subShape - 1;
+	auto trc = subShape - 1;
 
 	// ensure we have enough real estate after the rotation
 	blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - halfwidth, 0.0);
@@ -363,7 +363,7 @@ SPIIF PVGenerator::generate() const {
 	) + nPixels;
 
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	SHARED_PTR<ImageInterface<Float> > rotated;
+	SPIIF rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated = SubImageFactory<Float>::createSubImageRW(
@@ -372,7 +372,7 @@ SPIIF PVGenerator::generate() const {
 		);
 	}
 	else {
-		IPosition outShape = subShape;
+		auto outShape = subShape;
 		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
 		outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
 		ImageAnalysis ia(imageToRotate);
@@ -385,21 +385,21 @@ SPIIF PVGenerator::generate() const {
 	// done with these pointers
 	subImage.reset();
 	imageToRotate.reset();
-	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
+	Vector<Double> origStartPixel(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
 	origStartPixel[yAxis] = start[1];
-	Vector<Double> origEndPixel = Vector<Double>(subShape.size(), 0);
+	Vector<Double> origEndPixel(subShape.size(), 0);
 	origEndPixel[xAxis] = end[0];
 	origEndPixel[yAxis] = end[1];
-	Vector<Double> startWorld = subCoords.toWorld(origStartPixel);
-	Vector<Double> endWorld = subCoords.toWorld(origEndPixel);
-	const CoordinateSystem& rotCoords = rotated->coordinates();
+	auto startWorld = subCoords.toWorld(origStartPixel);
+	auto endWorld = subCoords.toWorld(origEndPixel);
+	const auto& rotCoords = rotated->coordinates();
 
-	Vector<Double> rotPixStart = rotCoords.toPixel(startWorld);
-	Vector<Double> rotPixEnd = rotCoords.toPixel(endWorld);
+	auto rotPixStart = rotCoords.toPixel(startWorld);
+	auto rotPixEnd = rotCoords.toPixel(endWorld);
 	// sanity checks, can be removed when this is well tested and used without issue
 	// The rotated start and end pixels should lie in the image
-	IPosition rotShape = rotated->shape();
+	auto rotShape = rotated->shape();
 	for (uInt i=0; i<2 ;i++) {
 		Int64 shape = i == 0 ? rotShape[xAxis] : rotShape[yAxis];
 		AlwaysAssert(
