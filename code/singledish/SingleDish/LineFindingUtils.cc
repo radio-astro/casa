@@ -111,21 +111,21 @@ void LineFinderUtils::createMaskByAThreshold(size_t const num_data,
   }
 }
 
-template <typename DataType>
-void LineFinderUtils::createSignByAThreshold(size_t const num_data,
-					     DataType const* in_data,
-					     DataType const threshold,
-					     int8_t* sign)
-{
-  for (size_t i = 0; i < num_data; ++i) {
-    if (in_data[i] > threshold)
-      sign[i] = 1;
-    else if (in_data[i] < threshold)
-      sign[i] = -1;
-    else
-      sign[i] = 0;
-  }
-}
+// template <typename DataType>
+// void LineFinderUtils::createSignByAThreshold(size_t const num_data,
+// 					     DataType const* in_data,
+// 					     DataType const threshold,
+// 					     int8_t* sign)
+// {
+//   for (size_t i = 0; i < num_data; ++i) {
+//     if (in_data[i] > threshold)
+//       sign[i] = 1;
+//     else if (in_data[i] < threshold)
+//       sign[i] = -1;
+//     else
+//       sign[i] = 0;
+//   }
+// }
 
 void LineFinderUtils::deBinRanges(size_t const bin_size, size_t const offset,
 			          list<pair<size_t,size_t>>& range_list)
@@ -363,7 +363,7 @@ void LineFinderUtils::rejectWideRange(size_t const maxwidth,
     list<pair<size_t, size_t> >  temp_list;
     for(list<pair<size_t,size_t>>::iterator iter=range_list.begin();
         iter!=range_list.end(); ++iter) {
-      size_t width=abs( (*iter).second - (*iter).first );
+      size_t width=std::abs( (*iter).second - (*iter).first );
 	if (width <= maxwidth) {
             temp_list.push_back(*iter);
         }
@@ -375,10 +375,11 @@ void LineFinderUtils::rejectWideRange(size_t const maxwidth,
 void LineFinderUtils::rejectNarrowRange(size_t const minwidth,
                                         list<pair<size_t,size_t>>& range_list)
 {
+  AlwaysAssert(minwidth>0, AipsError);
     list<pair<size_t, size_t> >  temp_list;
     for(list<pair<size_t,size_t>>::iterator iter=range_list.begin();
         iter!=range_list.end(); ++iter) {
-      size_t width=abs( (*iter).second - (*iter).first );
+      size_t width=std::abs( (*iter).second - (*iter).first );
 	if (width >= minwidth) {
             temp_list.push_back(*iter);
         }
@@ -396,9 +397,9 @@ template size_t LineFinderUtils::binDataAndMask<float>(size_t const num_in,
 						       bool out_mask[],
 						       size_t const offset,
 						       bool const keepsize);
-template void LineFinderUtils::createSignByAThreshold<float>(size_t const num_data,
-							     float const* in_data,
-							     float const threshold,
-							     int8_t* sign);
+// template void LineFinderUtils::createSignByAThreshold<float>(size_t const num_data,
+// 							     float const* in_data,
+// 							     float const threshold,
+// 							     int8_t* sign);
 
 } //# NAMESPACE CASA - END
