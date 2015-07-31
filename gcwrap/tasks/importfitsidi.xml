@@ -19,6 +19,17 @@
 			<description>Name of output visibility file (MS)</description>
 			<value></value>
 		</param>
+
+		<param type="bool" name="constobsid">
+		  <description>If True, give constant obs ID==0 to the data from all input fitsidi files (False = separate obs id for each file)</description>
+		  <value>False</value>
+		</param>
+
+		<param type="double" name="scanreindexgap_s">
+		  <description>min time gap (seconds) between integrations to start a new scan</description>
+		  <value>0.</value>
+		</param>
+
 	</input>
 
 <example>
@@ -31,6 +42,12 @@
 		example=['3C273XC1.IDI1','3C273XC1.IDI2'] 
         vis -- Name of output visibility file (MS)
                 default: none; example: vis='3C273XC1.ms'
+	constobsid -- If True a constant obs id == 0 is given to all input files 
+	        default = False (new obs id for each input file)
+	scanreindexgap_s --  if > 0., a new scan is started whenever the gap between two
+                integrations is > the given value (seconds) or when a new field starts
+                or when the ARRAY_ID changes.
+                default = 0. (no reindexing)
         async --  Run asynchronously
                default = false; do not run asychronously
 

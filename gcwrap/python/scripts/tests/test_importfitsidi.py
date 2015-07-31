@@ -103,7 +103,7 @@ class test_importfitsidi(unittest.TestCase):
         '''fitsidi-import: Test good input'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
-        self.res = importfitsidi(my_dataset_names[0], msname)
+        self.res = importfitsidi(my_dataset_names[0], msname,  scanreindexgap_s=100., constobsid=True)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
 #                            "table.f0",
