@@ -297,7 +297,7 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   if (in_column_name=="float_data") {
     in_column_ = MS::FLOAT_DATA;
   }
-  else if (in_column_name=="corrected_data") {
+  else if (in_column_name=="corrected") {
     in_column_ = MS::CORRECTED_DATA;
   } else if (in_column_name=="data") {
     in_column_ = MS::DATA;
