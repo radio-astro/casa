@@ -172,7 +172,7 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
 {	// Check data column choice and determine which column to pass to VisIter
  
 	Bool corcolOk(false), floatcolOk(false), datacolOk(false), wtspcolOk(false);
-	String dataColumn = "DATA";  // default
+	String dataColumn = "NONE";  // default is none - CAS-7506
 
 	// Check if data, scratch, float, and wtsp cols present
 	Table thisTable(filename_);
