@@ -422,6 +422,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
+        LOG.info('get time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         if key_small in keys and key_large in keys:
             ttdict_small = self.getkeyword(key_small)
             ttdict_large = self.getkeyword(key_large)
