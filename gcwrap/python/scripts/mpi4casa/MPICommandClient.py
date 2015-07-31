@@ -484,11 +484,14 @@ class MPICommandClient:
                         response = self.__communicator.control_service_response_recv()
                         rank = response['rank']
                         # Remove server from list
-                        mpi_server_rank_list.remove(rank)
-                        # Communicate that server response to start service signal has been received
-                        casalog.post("Server with rank %s handled control signal %s" 
-                                     % (str(rank),signal['command']),
-                                     "DEBUG",casalog_call_origin)
+                        # CAS-7721: Control signals are sent to all servers, even if not responsive
+                        # So we may get a response from a server which is not in the initial online servers list                        
+                        if mpi_server_rank_list.count(rank):
+                            mpi_server_rank_list.remove(rank)
+                            # Communicate that server response to start service signal has been received
+                            casalog.post("Server with rank %s handled control signal %s" 
+                                         % (str(rank),signal['command']),
+                                         "DEBUG",casalog_call_origin)
                     else:
                         time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
                 

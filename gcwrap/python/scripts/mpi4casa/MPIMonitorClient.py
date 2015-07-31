@@ -117,13 +117,17 @@ class MPIMonitorClient:
                         try:
                             self.__communicator.ping_status_request_send(server=rank)
                             self.__server_status_list[rank]['ping_time'] = time.time()
-                            self.__server_status_list[rank]['pong_pending'] = True               
+                            self.__server_status_list[rank]['pong_pending'] = True    
+                            self.__server_status_list[rank]['pong_checks'] = 0           
                         except:
                             formatted_traceback = traceback.format_exc()
                             casalog.post("Exception sending ping status request to server %s: %s" % 
                                          (str(rank),str(formatted_traceback)),"SEVERE",casalog_call_origin)
                     else:
-                        elapsed_time = int(round(time.time() - self.__server_status_list[rank]['ping_time']))
+                        self.__server_status_list[rank]['pong_checks'] += 1
+                        elapsed_time = MPIEnvironment.mpi_monitor_status_service_heartbeat
+                        elapsed_time *= self.__server_status_list[rank]['pong_checks']
+                        # elapsed_time = int(round(time.time() - self.__server_status_list[rank]['ping_time']))                        
                         # Notify when a server reaches timeout condition
                         if ((elapsed_time > MPIEnvironment.mpi_monitor_status_service_timeout) and 
                             (not self.__server_status_list[rank]['timeout'])):

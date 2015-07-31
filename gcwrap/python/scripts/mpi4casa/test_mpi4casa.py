@@ -11,6 +11,7 @@ from taskinit import mstool,tbtool,cbtool,casalog,casac,casa
 from tasks import setjy,flagdata,applycal,uvcontsub
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from mpi4casa.MPICommandClient import MPICommandClient
+from mpi4casa.MPIMonitorClient import MPIMonitorClient
 from mpi4casa.MPICommandServer import MPICommandServer
 from mpi4casa.MPIInterface import MPIInterface
 from parallel.parallel_task_helper import ParallelTaskHelper
@@ -877,6 +878,21 @@ class test_MPICommandServer(unittest.TestCase):
             instantiated = False
             
         self.assertEqual(instantiated, False, "It should not be possible to instantiate MPICommandServer in the client")
+        
+        
+    def test_server_fake_timeout_busy_wait(self):
+               
+        # Simulate a client timeout with a greedy operation
+        nloops = len(self.server_list) / 2
+        for iter in range(0,nloops):
+            str(10**1000000) # NOTE: The greedy part is the str conversion
+        
+        # Check if any server turns into timeout condition in 2 loops of the heartbeat service
+        monitorClient = MPIMonitorClient()
+        end_check = time.time() + 2*MPIEnvironment.mpi_monitor_status_service_heartbeat
+        while (time.time() < end_check):
+            onlineServers = list(monitorClient.get_server_rank_online())
+            self.assertEqual(len(self.server_list),len(onlineServers), "There are servers in timeout condition") 
         
         
 class test_MPIInterface(unittest.TestCase):            
