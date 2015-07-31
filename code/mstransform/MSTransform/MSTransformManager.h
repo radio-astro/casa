@@ -71,6 +71,7 @@
 // single dish specific
 #include <map>
 #include <scimath/Mathematics/Convolver.h>
+#include <cmath>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -176,12 +177,12 @@ struct channelInfo {
 
 	Double upperBound() const
 	{
-		return CHAN_FREQ+0.5*CHAN_WIDTH;
+		return CHAN_FREQ + 0.5 * std::abs(CHAN_WIDTH);
 	}
 
 	Double lowerBound() const
 	{
-		return CHAN_FREQ-0.5*CHAN_WIDTH;
+		return CHAN_FREQ - 0.5 * std::abs(CHAN_WIDTH);
 	}
 
 	Double overlap(const channelInfo& other) const
@@ -283,8 +284,15 @@ struct spwInfo {
 
 	void update()
 	{
-		upperBound = CHAN_FREQ(NUM_CHAN-1)+0.5*CHAN_WIDTH(NUM_CHAN-1);
-		lowerBound = CHAN_FREQ(0)-0.5*CHAN_WIDTH(0);
+		if (CHAN_FREQ(NUM_CHAN - 1) > CHAN_FREQ(0)) {
+			upperBound = CHAN_FREQ(NUM_CHAN-1) + 0.5 * std::abs(CHAN_WIDTH(NUM_CHAN-1));
+			lowerBound = CHAN_FREQ(0) - 0.5 * std::abs(CHAN_WIDTH(0));
+		}
+		else {
+			upperBound = CHAN_FREQ(0) + 0.5 * std::abs(CHAN_WIDTH(0));
+			lowerBound = CHAN_FREQ(NUM_CHAN-1) - 0.5 * std::abs(CHAN_WIDTH(NUM_CHAN-1));
+		}
+
 		TOTAL_BANDWIDTH = upperBound - lowerBound;
 		REF_FREQUENCY = CHAN_FREQ(0);
 
