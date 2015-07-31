@@ -2247,7 +2247,7 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.refvis_sorted = "test-CAS-7382-cvel-sorted.ms"
         os.system("rm -rf test-CAS-7382*")
 
-    def test_radial_velocity_correction(self):
+    def test_ascending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='1', field='Titan',
              mode='velocity', width='0.5km/s', interpolation='linear',
              restfreq='349.45370GHz', outframe='SOURCE')
@@ -2263,7 +2263,7 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
 
         self.post_process()
 
-    def test_radial_velocity_correction_neg_order(self):
+    def test_descending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='0', field='Titan',
              mode='velocity', width='0.5km/s', interpolation='linear',
              restfreq='349.45370GHz', outframe='SOURCE')
