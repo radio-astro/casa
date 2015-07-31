@@ -548,6 +548,7 @@ class SDExportData(hif_exportdata.ExportData):
             imageitem = imagelibrary.ImageItem(imagename=image,
                                                sourcename=sourcename,
                                                spwlist=spwlist,
+                                               specmode='cube',
                                                sourcetype='TARGET')
             imlibrary.add_item(imageitem)
         imagelist = copy.deepcopy(imlibrary.get_imlist())
