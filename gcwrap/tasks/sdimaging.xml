@@ -88,6 +88,12 @@ available.
             <any type="variant" limittypes="string stringArray"/>
             <value type="string"></value>
     </param>
+    
+    <param type="any" name="intent">
+            <description>select data by observational intent, e.g. \'ON_SOURCE\' (\'\'=all)</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+    </param>
 
     <param type="string" name="mode">
             <description>spectral gridding type</description>
@@ -365,6 +371,13 @@ scan -- select data by scan numbers
                  scan=['0~100','10~200'] (scan ids 0-100 for the first MS
                  and 10-200 for the second)
                  scan='0~100 (scan ids 0-100 for all input MSes)
+        this selection is in addition to the other selections to data
+intent -- select data by observational intent, also referred to as 'scan intent'
+        default: '' (use all scan intents)
+        example: intent='ON_SOURCE' (any valid scan-intent expression accepted by the MSSelection module can be specified)
+                 For multiple MS input, a list of scan-intent expressions can be used:
+                 intent=['ON_SOURCE','CALIBRATE_BANDPASS'] (scan intent ON_SOURCE for the first MS
+                 and CALIBRATE_BANDPASS for the second)
         this selection is in addition to the other selections to data
 mode -- spectral gridding type
         options: 'channel', 'velocity', 'frequency'

@@ -64,7 +64,7 @@ def merge_dict(d1, d2):
 ###
 # Base class for sdimaging unit test
 ###
-class sdimaging_unittest_base:
+class sdimaging_unittest_base(unittest.TestCase):
     """
     Base class for sdimaging unit test
 
@@ -267,7 +267,7 @@ class sdimaging_unittest_base:
 ###
 # Test on bad parameter settings
 ###
-class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test0(sdimaging_unittest_base):
     """
     Test on bad parameter setting
     """
@@ -449,7 +449,7 @@ class sdimaging_test0(sdimaging_unittest_base,unittest.TestCase):
 ###
 # Test channel imaging
 ###
-class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test1(sdimaging_unittest_base):
     """
     Test channel imaging
 
@@ -771,7 +771,7 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
 ###
 # Test frequency imaging
 ###
-class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test2(sdimaging_unittest_base):
     """
     Test frequency imaging
 
@@ -898,7 +898,7 @@ class sdimaging_test2(sdimaging_unittest_base,unittest.TestCase):
 ###
 # Test velocity imaging
 ###
-class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test3(sdimaging_unittest_base):
     """
     Test velocity imaging
 
@@ -1013,7 +1013,7 @@ class sdimaging_test3(sdimaging_unittest_base,unittest.TestCase):
 ###
 # Test auto-resolution of spatial gridding parameters
 ###
-class sdimaging_autocoord(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_autocoord(sdimaging_unittest_base):
     """
     Test auto-resolution of spatial gridding parameters
 
@@ -1092,8 +1092,7 @@ class sdimaging_autocoord(sdimaging_unittest_base,unittest.TestCase):
 ###
 # Test data selection
 ###
-class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
-                               sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,sdimaging_unittest_base):
     """
     Test selection syntax. Selection parameters to test are:
     field, spw (with selection), scan, stokes, and antenna
@@ -1105,7 +1104,8 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
     miscsel_ms = "selection_misc.ms"
     spwsel_ms = "selection_spw.ms"
     unifreq_ms = "selection_spw_unifreq.ms"
-    rawfiles = [miscsel_ms, spwsel_ms, unifreq_ms]
+    intentsel_ms = "selection_intent.ms"
+    rawfiles = [miscsel_ms, spwsel_ms, unifreq_ms, intentsel_ms]
     # default task parameters
     mode_def = "channel"
     kernel = "BOX"
@@ -1277,6 +1277,48 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
         out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
         # Tests
         self.run_test(task_param,refstats,out_shape,box=region,atol=1.e-5)
+
+    ####################
+    # intent
+    ####################        
+    def test_intent_value_default(self):
+        """test intent selection (intent='')"""
+        intent = ''
+        region =  self.region_all
+        infile = self.intentsel_ms
+        task_param = dict(infiles=infile,intent=intent,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
+        refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
+        out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
+        # Tests
+        self.run_test(task_param, refstats, out_shape,atol=1.e-5)
+        self._checkstats(self.outfile,refstats,atol=1.e-5)
+        
+    def test_intent_value_exact(self):
+        """test intent selection (intent='OBSERVE_TARGET.ON_SOURCE')"""
+        intent = 'OBSERVE_TARGET.ON_SOURCE'
+        region =  self.region_bottomright
+        infile = self.intentsel_ms
+        task_param = dict(infiles=infile,intent=intent,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
+        refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
+        out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
+        # Tests
+        self.run_test(task_param, refstats, out_shape,atol=1.e-5)
+        self._checkstats(self.outfile,refstats,atol=1.e-5)
+
+    def test_intent_value_pattern(self):
+        """test intent selection (intent='*CALIBRATE_PHASE*')"""
+        intent = '*CALIBRATE_PHASE*'
+        region =  self.region_bottomleft
+        infile = self.intentsel_ms
+        task_param = dict(infiles=infile,intent=intent,mode=self.mode_def,gridfunction=self.kernel,outfile=self.outfile,
+                          phasecenter=self.phasecenter_auto,cell=self.cell_auto,imsize=self.imsize_auto)
+        refstats = merge_dict(self.stat_common, construct_refstat_uniform(self.unif_flux, region['blc'], region['trc']) )
+        out_shape = (self.imsize_auto[0],self.imsize_auto[1],1,1)
+        # Tests
+        self.run_test(task_param, refstats, out_shape,atol=1.e-5)
+        self._checkstats(self.outfile,refstats,atol=1.e-5)
 
     ####################
     # field
@@ -1867,7 +1909,7 @@ class sdimaging_test_selection(selection_syntax.SelectionSyntaxTest,
 ###
 # Test to verify if flag information is handled properly
 ###
-class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test_flag(sdimaging_unittest_base):
     """
     Test to verify if flag information is handled properly
        
@@ -2090,7 +2132,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
                     self.assertTrue(diff_value < tol)
 
 
-class sdimaging_test_polflag(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test_polflag(sdimaging_unittest_base):
     """
     Test imaging of an MS one of polarization (XX) is completely flagged.
     """
@@ -2199,7 +2241,7 @@ class sdimaging_test_polflag(sdimaging_unittest_base,unittest.TestCase):
         box = rg.box(blc=refstats['blc'],trc=refstats['trc'])
         self._checkstats(self.outfile,refstats,atol=1.e-5,region=box)
 
-class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
+class sdimaging_test_mslist(sdimaging_unittest_base):
     """
     Test more than one MSes as inputs
     
@@ -2307,7 +2349,7 @@ class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
 # Test ways to define image rest frequency
 #
 ###
-class sdimaging_test_restfreq(unittest.TestCase,sdimaging_unittest_base):
+class sdimaging_test_restfreq(sdimaging_unittest_base):
     """
     Unit test for task sdimaging 
     

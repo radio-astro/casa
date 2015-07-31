@@ -11,7 +11,7 @@ import sdbeamutil
 from cleanhelper import cleanhelper
 
 @sdutil.sdtask_decorator
-def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
+def sdimaging(infiles, outfile, overwrite, field, spw, antenna, scan, intent, mode, nchan, start, width, veltype, outframe, gridfunction, convsupport, truncate, gwidth, jwidth, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, restfreq, stokes, minweight):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -66,6 +66,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         casalog.post("mode='%s': start=%s, width=%s, nchan=%d" % \
                      (self.mode, self.start, self.width, self.nchan))
+        
 
         # check length of selection parameters
         if is_string_type(self.infiles):
@@ -143,6 +144,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             antenna = self.get_selection_param_for_ms(file_idx, self.antenna)
             if antenna == -1: antenna = ''
             scan = self.get_selection_param_for_ms(file_idx, self.scanno)
+            intent = self.get_selection_param_for_ms(file_idx, self.intent) 
             my_ms = gentools(['ms'])[0]
             sel_ids = my_ms.msseltoindex(vis=vis, spw=spw, field=field,
                                          baseline=antenna, scan=scan)
@@ -162,7 +164,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             else:
                 raise RuntimeError("Invalid spw selction, %s ,for MS %d" (str(spw), file_idx))
             
-            return {'field': fieldid, 'spw': spwid, 'baseline': baseline, 'scan': scanid, 'antenna1': sel_ids['antenna1']}
+            return {'field': fieldid, 'spw': spwid, 'baseline': baseline, 'scan': scanid, 'intent': intent, 'antenna1': sel_ids['antenna1']} 
         else:
             raise ValueError, ("Invalid file index, %d" % file_idx)
 
@@ -387,12 +389,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             spwsel = self.get_selection_param_for_ms(0, self.spw)
             if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
             ### TODO: channel selection based on spw
-            self.imager.selectvis(field=selection_ids['field'],\
-                                  #spw=selection_ids['spw'],\
-                                  spw=spwsel,\
-                                  nchan=-1, start=0, step=1,\
-                                  baseline=selection_ids['baseline'],\
-                                  scan=selection_ids['scan'])
+            self.imager.selectvis(field=selection_ids['field'],
+                                  #spw=selection_ids['spw'],
+                                  spw=spwsel,
+                                  nchan=-1, start=0, step=1,
+                                  baseline=selection_ids['baseline'],
+                                  scan=selection_ids['scan'],
+                                  intent=selection_ids['intent']) 
         else:
             self.close_imager()
             self.sorted_idx.reverse()
@@ -403,12 +406,13 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 spwsel = self.get_selection_param_for_ms(idx, self.spw)
                 if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
                 ### TODO: channel selection based on spw
-                self.imager.selectvis(vis=name, field=selection_ids['field'],\
-                                      #spw=selection_ids['spw'],\
-                                      spw = spwsel,\
-                                      nchan=-1, start=0, step=1,\
-                                      baseline=selection_ids['baseline'],\
-                                      scan=selection_ids['scan'])
+                self.imager.selectvis(vis=name, field=selection_ids['field'],
+                                      #spw=selection_ids['spw'],
+                                      spw = spwsel,
+                                      nchan=-1, start=0, step=1,
+                                      baseline=selection_ids['baseline'],
+                                      scan=selection_ids['scan'],
+                                      intent=selection_ids['intent'])
                 # need to do this
                 self.is_imager_opened = True
                 
