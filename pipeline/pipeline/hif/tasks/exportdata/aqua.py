@@ -1,0 +1,290 @@
+from __future__ import absolute_import
+
+import os
+import datetime
+import xml.etree.cElementTree as eltree
+from xml.dom import minidom
+import collections
+
+import casadef
+import pipeline
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
+
+LOG = logging.get_logger(__name__)
+
+'''
+Prototype pipeline AQUA report generator
+
+Definitions
+    Metrics are physical quantities, e.g. phase rms improvement results from
+    WVR calibration.
+
+    Scores are numbers between 0.0 and 1.0 that are derived from metrics.
+    Not all metrics are scored.
+'''
+
+
+def aquaReportFromFile (contextFile, aquaFile):
+
+    '''
+    Create AQUA report from a context file on disk.
+    '''
+
+    # Restore context from file
+    context = pipeline.Pipeline (context=contextFile).context 
+    LOG.info ("Opening context file: %s" % (contextFile))
+
+    # Produce the AQUA report.
+    aquaReportFromContext (context, aquaFile)
+
+
+def aquaReportFromContext (context, aquaFile):
+
+    '''
+    Create AQUA report from a context object.
+    '''
+
+    LOG.info ("Recipe name: %s" % ("Unknown"))
+    LOG.info ("    Number of stages: %d" % (context.task_counter))
+
+    # Initialize
+    aquaReport  = AquaReport (context)
+
+    # Construct the project structure element
+    aquaReport.set_project_structure()
+
+    # Construct the QA summary element
+    aquaReport.set_qa_summary()
+
+    # Construct the pipeline stage elements
+    aquaReport.set_per_stage_qa()
+
+    # Construct the topics elements.
+    # TBD
+
+    LOG.info ("Writing aqua report file: %s" % (aquaFile))
+    aquaReport.write(aquaFile)
+
+class AquaReport(object):
+    """
+    Class for creating the AQUA pipeline report
+    """
+
+    def __init__(self, context):
+
+        '''
+        Create the AQUA document
+        '''
+
+        self.context = context
+
+        # Construct the stage dictionary
+        #   This seems a bit inefficient as it involves actually
+        #   reading all results to reconstruct the list of stages
+        #   Is there an easier way
+
+        self.stagedict = collections.OrderedDict()
+        for i in range(len(context.results)):
+            stage_name, stage_score  = get_pipeline_stage_and_score (context.results[i])
+            if not stage_score:
+                stage_score = 'Undefined'
+            else:
+                stage_score = '%0.3f' % stage_score
+            self.stagedict[i+1] = (stage_name, stage_score)
+
+        # Create the top level AQUA report element
+        self.aquareport = eltree.Element("PipelineAquaReport")
+
+    def set_project_structure (self):
+
+        '''
+        Add the project structure element
+
+        Given the current data flow it is unclear how to
+        acquire the entity id of the processing request
+
+        The processing procedure name is known but not yet
+        passed to the pipeline processing request
+        '''
+
+        ps = eltree.SubElement(self.aquareport, "ProjectStructure")
+        eltree.SubElement (ps, "ProposalCode").text = \
+            self.context.project_summary.proposal_code
+        eltree.SubElement (ps, "OusEntityId").text = \
+            self.context.project_structure.ous_entity_id
+        eltree.SubElement (ps, "OusPartId").text = \
+            self.context.project_structure.ous_part_id
+        eltree.SubElement (ps, "OusStatusEntityId").text = \
+            self.context.project_structure.ousstatus_entity_id
+        eltree.SubElement (ps, "ProcessingRequestEntityId").text = \
+            "Undefined"
+        eltree.SubElement (ps, "ProcessingProcedure").text = \
+            "Undefined"
+
+        return ps
+        
+    def set_qa_summary (self):
+
+        '''
+        Add the QA summary element
+
+        The final pipeline score is not yet available
+        '''
+
+        ps = eltree.SubElement(self.aquareport, "QaSummary")
+        eltree.SubElement (ps, "ReportDate").text = \
+            datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+        exec_start = self.context.results[0].read().timestamps.start
+        exec_end = self.context.results[-1].read().timestamps.end
+        # remove unnecessary precision for execution duration
+        dt = exec_end - exec_start
+        exec_duration = datetime.timedelta(days=dt.days, seconds=dt.seconds)
+        eltree.SubElement (ps, "ProcessingTime").text = str(exec_duration)
+
+        eltree.SubElement (ps, "CasaVersion").text = casadef.casa_version
+        eltree.SubElement (ps, "PipelineVersion").text = pipeline.revision
+
+        eltree.SubElement (ps, "FinalScore").text = "Undefined"
+
+        return ps
+
+    def set_per_stage_qa (self):
+
+        '''
+        Add the per stage elements
+            Stage number, name, and score are attributes
+
+            Note eventually we will need a toAqua method on the task
+            results to pass pipeline metrics back to AQUA
+
+        '''
+
+        # Get the summary element.
+        ppqa = eltree.SubElement(self.aquareport, "QaPerStage")
+
+        # Loop over the stages.
+        for stage in self.stagedict: 
+
+            # Create the generic stage element for now
+            st = eltree.SubElement(ppqa, "Stage", Number=str(stage),
+                Name=self.stagedict[stage][0], Score=self.stagedict[stage][1])
+
+            # Populate the stage elements.
+            #    This must be done on a custom manner for now
+            if self.stagedict[stage][0] == 'hifa_wvrgcalflag':
+                self.add_phase_rms_ratio_metric(st, self.context.results[stage-1])
+            else:
+                pass
+                
+        return ppqa
+
+    def add_phase_rms_ratio_metric (self, stage_element, wvr_result):
+
+        '''
+        hifa_wvrgcalflag currently generates only a single metric which is
+            the ratio of phase rms (with wvr) / phase rms (without wvr).
+            This metric is incorrectly labeled as a score
+            This score in None or a floating point value
+        '''
+
+        # Retrieve the rms improvement metric
+        results = wvr_result.read()
+        if isinstance (results, collections.Iterable):
+
+            # Find the results with the lowest overall metric
+            rlist = [r.qa_wvr.overall_score for r in utils.flatten(results)]
+            metric, idx = min ((metric, idx) for (idx, metric) in enumerate(rlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % results[idx].qa_wvr.overall_score
+
+        else:
+            # By definition this is the result with the lowest score
+            if not results:
+                vis = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                if results.qa_wvr.overall_score is None:
+                    metric = 'Undefined'
+                else:
+                    metric = '%0.3f' % results.qa_wvr.overall_score
+
+        eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
+            Value=metric, Asdm=vis)
+
+    def write (self, filename):
+
+        """
+        Convert the document to a nicely formatted XML string
+        and save it in a file
+        """
+
+        xmlstr = eltree.tostring(self.aquareport, 'utf-8')
+
+        # Reformat it to prettyprint style
+        reparsed = minidom.parseString(xmlstr)
+        reparsed_xmlstr = reparsed.toprettyxml(indent="  ")
+
+        # Save it to a file.
+        with open (filename, "w") as aquafile:
+            aquafile.write(reparsed_xmlstr)
+
+def get_pipeline_task_classes (proxy):
+
+    '''
+    Get the Python task class name
+        Check if result is iterable or not
+        Issue if more than one class in results
+        Not currently used
+    '''
+
+    result = proxy.read()
+    if isinstance (result, collections.Iterable):
+        classes = [r.task for r in utils.flatten(result)]
+        return classes[0] if len(classes) is 1 else classes
+    else:
+        class_name = result.task
+        return class_name
+
+def get_pipeline_pytask_names (proxy):
+
+    '''
+    Get the Python task module and class name
+        Check if result is iterable or not
+        Issue if more than one module / task in results
+        Not currently used
+    '''
+
+    result = proxy.read()
+    if isinstance (result, collections.Iterable):
+        names = ['%s.%s' % (r.task.__module__, r.task.__name__) for r in \
+            utils.flatten(result)]
+        return names[0] if len(names) is 1 else names
+    else:
+        name = result.task
+        return name
+
+def get_pipeline_stage_and_score (proxy):
+
+    '''
+    Get the CASA equivalent task name which is stored by the infrastructure
+    as  <task_name> (<arg1> = <value1>, ...)
+    '''
+
+    result = proxy.read()
+    casa_task_call = result.pipeline_casa_task
+    first_bracket = casa_task_call.index('(')
+    stage_name = casa_task_call[0:first_bracket]
+    if isinstance (result, collections.Iterable):
+        score = min([r.qa.representative.score for r in utils.flatten(result)])
+    else:
+        score = result.qa.representative.score
+    return stage_name, score
+
+
