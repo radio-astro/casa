@@ -419,6 +419,31 @@ class ia_pv_test(unittest.TestCase):
                 got = myia.getchunk()
                 myia.done()
                 self.assertTrue(abs(got/expec - 1).max() < 1e-6)
+                
+    def test_CAS7765(self):
+        """CAS-7765, successful completion is all that is necessary to indicate verification"""
+        myia = self.ia
+        imagename = "CAS7765.im"
+        myia.fromshape(imagename, [30, 30, 30])
+        myia.done()
+        length = "14arcmin"
+        center = [15, 15]
+        outfile = "90deg_" + str(length) + ".im"
+        self.assertTrue(
+            impv(
+                 imagename=imagename, outfile=outfile,
+                 center=center, length=length, pa="90deg",
+                 mode="length"
+            )
+        )
+        outfile = "270deg_" + str(length) + ".im"
+        self.assertTrue(
+            impv(
+                 imagename=imagename, outfile=outfile,
+                 center=center, length=length, pa="270deg",
+                 mode="length"
+            )
+        )
 
 def suite():
     return [ia_pv_test]
