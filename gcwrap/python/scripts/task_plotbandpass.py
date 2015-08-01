@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.71 2015/07/31 02:01:54 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.72 2015/08/01 00:29:12 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.71 2015/07/31 02:01:54 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.72 2015/08/01 00:29:12 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -7294,12 +7294,31 @@ def mjdToJD(MJD):
     JD = MJD + 2400000.5
     return(JD)
 
+def splitListIntoContiguousLists(mylist):
+    """
+    Converts [1,2,3,5,6,7] into [[1,2,3],[5,6,7]], etc.
+    -Todd Hunter
+    """
+    mylists = []
+    newlist = [mylist[0]]
+    for i in range(1,len(mylist)):
+        if (mylist[i-1] != mylist[i]-1):
+            mylists.append(newlist)
+            newlist = [mylist[i]]
+        else:
+            newlist.append(mylist[i])
+    mylists.append(newlist)
+    return(mylists)
+    
 def getScansForTimes(mymsmd, scantimes):
     myscans = []
     myscantimes = []
 #    print "len(scantimes) = ", len(scantimes)
+    scantimes = splitListIntoContiguousLists(scantimes)
     for t in scantimes:
-        scans_t = mymsmd.scansfortimes(t)
+        mean_t = np.mean(t)
+        range_t = (1+np.max(t)-np.min(t))*0.5
+        scans_t = mymsmd.scansfortimes(mean_t, range_t)
         if (len(scans_t) > 0):
             scan = scans_t[0]
             #        print "scansfortime(%f) = " % (t), scan
