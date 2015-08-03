@@ -6,13 +6,15 @@ import sdutil
 from collections import Counter
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
-def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
+def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, minwidth=None, edge=None, blmode=None, dosubtract=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, blparam=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
 
     casalog.origin('tsdbaseline')
     try:
+#         if type(outfile)!=str or len(outfile)==0:
+#             raise ValueError, "outfile name is empty."
         if os.path.exists(outfile) and not overwrite:
             raise Exception(outfile + ' exists.')
-        if (maskmode!='list'):
+        if (maskmode=='interact'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
         if (blfunc=='variable' and not os.path.exists(blparam)):
             raise ValueError, "input file '%s' does not exists" % blparam
@@ -310,7 +312,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                                   npiece=npiece,
                                                   blparam=blparam,
                                                   clip_threshold_sigma=clipthresh,
-                                                  num_fitting_max=clipniter+1)
+                                                  num_fitting_max=clipniter+1,
+                                                  linefinding=(maskmode=='auto'),
+                                                  threshold=thresh,
+                                                  avg_limit=avg_limit,
+                                                  minwidth=minwidth,
+                                                  edge=edge)
             if overwrite and os.path.exists(outfile):
                 os.system('rm -rf %s' % outfile)
             
@@ -402,6 +409,8 @@ def prepare_for_baselining(**keywords):
         funcname += ('_' + blfunc)
     else:
         raise ValueError, "Unsupported blfunc = %s" % blfunc
+    if blfunc!= 'variable':
+        keys += ['linefinding', 'threshold', 'avg_limit', 'minwidth', 'edge']
     for key in keys: params[key] = keywords[key]
 
     baseline_func = getattr(sdms, funcname)

@@ -81,7 +81,7 @@ pipeline processing for huge dataset.
         <description>mode of setting additional channel masks</description>
         <value>list</value>
         <allowed kind="enum">
-<!--            <value>auto</value> -->
+            <value>auto</value>
             <value>list</value>
 <!--            <value>interact</value> -->
         </allowed>
@@ -94,6 +94,11 @@ pipeline processing for huge dataset.
 
     <param type="int" name="avg_limit" subparam="true">
         <description>channel averaging for broad lines</description>
+        <value>4</value>
+    </param>
+
+    <param type="int" name="minwidth" subparam="true">
+        <description>the minimum channel width to detect as a line</description>
         <value>4</value>
     </param>
 
@@ -244,6 +249,7 @@ pipeline processing for huge dataset.
                 <equals value="auto">
                         <default param="thresh"><value>5.0</value></default>
                         <default param="avg_limit"><value>4</value></default>
+                        <default param="minwidth"><value>4</value></default>
                         <default param="edge"><value type='vector'><value>0</value><value>0</value></value></default>
                 </equals>
                 <equals value="interact"/>
@@ -345,11 +351,12 @@ pol -- select data by polarization IDs
 maskmode -- mode of setting additional channel masks. When blmode='apply'
              and/or blfunc='variable', maskmode and its subparameters
              are ignored.
-        options: 'list' ('auto' and 'interact' will be available later)
+        options: 'list' and 'auto' ('interact' will be available later)
         default: 'list'
         example: maskmode='auto' runs linefinder to detect line regions 
                  to be excluded from fitting. this mode requires three 
-                 expandable parameters: thresh, avg_limit, and edge.
+                 expandable parameters: thresh, avg_limit, minwidth, and edge.
+                 NOTE maskmode='auto' is EXPERIMENTAL.
                  USE WITH CARE! May need to tweak the expandable parameters.
                  maskmode='list' uses the given masklist only: no additional 
                  masks applied.
@@ -364,6 +371,10 @@ maskmode -- mode of setting additional channel masks. When blmode='apply'
         avg_limit -- channel averaging for broad lines. a number of
                      consecutive channels not greater than this parameter
                      can be averaged to search for broad lines.
+                default: 4
+        minwidth -- the minimum channel width to detect as a line.
+                     a line with number of consecutive channels less
+                     than this parameter will not be detected as a line.
                 default: 4
         edge -- channels to drop at beginning and end of spectrum
                 default: 0
@@ -480,7 +491,8 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
         blparam -- the name of text file that stores per spectrum fit
                    parameters. See below for details of format.
 verify -- interactively verify the results of operation for each spectrum.
-          When verify = True, for each input spectrum, spectra
+          When verify = True, for each input s                     can be averaged to search for broad lines.
+pectrum, spectra
           before and after the operation are displayed in a plot
           window. At the prompt there are four choices of action:
           'Y' (accept the operation and continue to the next input

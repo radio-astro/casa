@@ -154,7 +154,12 @@ singledishms::subtract_baseline(string const& datacolumn,
 				string const& blfunc,
 				int const order,
 				float const clip_threshold_sigma,
-				int const num_fitting_max)
+				int const num_fitting_max,
+				bool const linefinding,
+				float const threshold,
+				int const avg_limit,
+				int const minwidth,
+				vector<int> const& edge)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -164,9 +169,10 @@ singledishms::subtract_baseline(string const& datacolumn,
                  blformat, 
                  bloutput, 
                  dosubtract,
-			     toCasaString(spw), toCasaString(pol),
-			     blfunc, order, clip_threshold_sigma, 
-			     num_fitting_max);
+			    toCasaString(spw), toCasaString(pol),
+			    blfunc, order, clip_threshold_sigma, 
+			    num_fitting_max, linefinding, threshold,
+			    avg_limit, minwidth, edge);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -188,7 +194,12 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
 				::casac::variant const& pol,
 				int const npiece,
 				float const clip_threshold_sigma,
-				int const num_fitting_max)
+				int const num_fitting_max,
+				bool const linefinding,
+				float const threshold,
+				int const avg_limit,
+				int const minwidth,
+				vector<int> const& edge)
 {
 
 
@@ -199,9 +210,11 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
     itsSd->subtractBaselineCspline(datacolumn, outfile, bltable,
                      blformat, 
                      bloutput, 
-				     dosubtract, toCasaString(spw), 
-				     toCasaString(pol), npiece, 
-				     clip_threshold_sigma, num_fitting_max);
+				   dosubtract, toCasaString(spw), 
+				   toCasaString(pol), npiece, 
+				   clip_threshold_sigma, num_fitting_max, 
+				   linefinding, threshold,
+				   avg_limit, minwidth, edge);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
