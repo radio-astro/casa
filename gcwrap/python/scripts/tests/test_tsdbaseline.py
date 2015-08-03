@@ -1,4 +1,4 @@
-import os
+#import os
 import sys
 import shutil
 import numpy
@@ -589,6 +589,14 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
 
         default(tsdbaseline)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
     def tearDown(self):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
@@ -657,7 +665,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
                      }
 
         self._compareStats(theresult, reference)
-
+    
     def test002(self):
         """Basic Test 002: simple successful case: blfunc = 'chebyshev', maskmode = 'list' and masklist=[] (no mask)"""
         tid = '002'
@@ -693,7 +701,8 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
                      }
 
         self._compareStats(theresult, reference)
-
+    
+    
     def test003(self):
         """Basic Test 003: simple successful case: blfunc = 'cspline', maskmode = 'list' and masklist=[] (no mask)"""
         print ""
@@ -806,7 +815,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
         
         #print '1sigma before cspline (pol0)', variance_orig_pol0**0.5 
         #print '1sigma after cspline (pol0)',  variance_pol0**0.5 
-
+    
     def test050(self):
         """Basic Test 050: failure case: existing file as outfile with overwrite=False"""
         infile = self.infile
@@ -883,6 +892,17 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base, unittest.TestCase):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
+
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+
+
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -970,6 +990,15 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base, unittest.TestCase):
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+
     def tearDown(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -1056,6 +1085,15 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+
     def tearDown(self):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
@@ -1071,41 +1109,42 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                    ]
         rms = [0.162739, 0.182507, 0.140955, 0.159999, 0.132135, 0.381708, 0.128761, 0.146849]
         tb.open(bltable)
-        for i in range(npol*tb.nrows()):
-            irow = i / npol
-            ipol = i % npol
-            is_skipped = (option != '') and (irow == 2) and (ipol == 1)
+        try:
+            for i in range(npol*tb.nrows()):
+                irow = i / npol
+                ipol = i % npol
+                is_skipped = (option != '') and (irow == 2) and (ipol == 1)
 
-            self.assertEqual(not is_skipped, tb.getcell('APPLY', irow)[ipol][0]);
-            self.assertEqual(self.ftype[blparam['btype'][i]], tb.getcell('FUNC_TYPE', irow)[ipol][0]);
-            fparam_key = 'order' if (blparam['btype'][i] != 'cspline') else 'npiec'
-            fparam = blparam[fparam_key][i]
-            if not is_skipped:
-                self.assertEqual(fparam, tb.getcell('FUNC_PARAM', irow)[ipol][0])
-            if (blparam['btype'][i] == 'cspline'):
-                for j in range(blparam['npiec'][i]):
-                    self.assertEqual(0.0, tb.getcell('FUNC_FPARAM', irow)[ipol][j])
-            else:
-                self.assertEqual(0, len(tb.getcell('FUNC_FPARAM', irow)[ipol]))
-            for j in range(len(results[i])):
-                result = 0.0 if is_skipped else results[i][j]
-                self._checkValue(result, tb.getcell('RESULT', irow)[ipol][j], 1.0e-5)
-            if not is_skipped:
-                self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-1)
-                self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
-                self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
-                uself = (blparam['uself'][i] == 'true')
-                self.assertEqual(uself, tb.getcell('USE_LF', irow)[ipol][0])
-                lthre = 5.0 if ((blparam['lthre'][i] == '') or not uself) else float(blparam['lthre'][i])
-                self._checkValue(lthre, tb.getcell('LF_THRESHOLD', irow)[ipol][0], 1.0e-6)
-                chavg = 0 if (blparam['chavg'][i] == '') else int(blparam['chavg'][i])
-                self.assertEqual(chavg, tb.getcell('LF_AVERAGE', irow)[ipol][0])
-                ledge = 0 if ((blparam['ledge'][i] == '') or not uself) else int(blparam['ledge'][i])
-                self.assertEqual(ledge, tb.getcell('LF_EDGE', irow)[ipol][0])
-                redge = 0 if ((blparam['redge'][i] == '') or not uself) else int(blparam['redge'][i])
-                self.assertEqual(redge, tb.getcell('LF_EDGE', irow)[ipol][1])
-
-        tb.close()
+                self.assertEqual(not is_skipped, tb.getcell('APPLY', irow)[ipol][0]);
+                self.assertEqual(self.ftype[blparam['btype'][i]], tb.getcell('FUNC_TYPE', irow)[ipol][0]);
+                fparam_key = 'order' if (blparam['btype'][i] != 'cspline') else 'npiec'
+                fparam = blparam[fparam_key][i]
+                if not is_skipped:
+                    self.assertEqual(fparam, tb.getcell('FUNC_PARAM', irow)[ipol][0])
+                if (blparam['btype'][i] == 'cspline'):
+                    for j in range(blparam['npiec'][i]):
+                        self.assertEqual(0.0, tb.getcell('FUNC_FPARAM', irow)[ipol][j])
+                else:
+                    self.assertEqual(0, len(tb.getcell('FUNC_FPARAM', irow)[ipol]))
+                for j in range(len(results[i])):
+                    result = 0.0 if is_skipped else results[i][j]
+                    self._checkValue(result, tb.getcell('RESULT', irow)[ipol][j], 1.0e-5)
+                if not is_skipped:
+                    self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-1)
+                    self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                    self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
+                    uself = (blparam['uself'][i] == 'true')
+                    self.assertEqual(uself, tb.getcell('USE_LF', irow)[ipol][0])
+                    lthre = 5.0 if ((blparam['lthre'][i] == '') or not uself) else float(blparam['lthre'][i])
+                    self._checkValue(lthre, tb.getcell('LF_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                    chavg = 0 if (blparam['chavg'][i] == '') else int(blparam['chavg'][i])
+                    self.assertEqual(chavg, tb.getcell('LF_AVERAGE', irow)[ipol][0])
+                    ledge = 0 if ((blparam['ledge'][i] == '') or not uself) else int(blparam['ledge'][i])
+                    self.assertEqual(ledge, tb.getcell('LF_EDGE', irow)[ipol][0])
+                    redge = 0 if ((blparam['redge'][i] == '') or not uself) else int(blparam['redge'][i])
+                    self.assertEqual(redge, tb.getcell('LF_EDGE', irow)[ipol][1])
+        finally:
+            tb.close()
     
     def _checkBltable(self, outms, bltable, blfunc, order, mask):
         tb.open(bltable)
@@ -1353,6 +1392,16 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base, unittest.TestCase)
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
         default(tsdbaseline)
+        
+       
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+        
         #create baseline table
         blparam = self.outroot+'.blparam'
         self._createBlparamFile(blparam, self.blparam_order, self.blparam_dic, '')
@@ -1500,6 +1549,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
 
         default(tsdbaseline)
 
+
     def tearDown(self):
         self._remove([self.infile, self.outfile])
 
@@ -1573,6 +1623,14 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
         self._refetch_files([infile, paramfile], self.datapath)
         self._run_test(infile,self.refstat0,blparam=paramfile,datacolumn=self.column)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
     def testVariable01(self):
         """Test blfunc='variable' with skipping rows by comment ('#') (rows should be flagged)"""
         infile='analytic_variable.ms'
@@ -1580,12 +1638,28 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
         self._refetch_files([infile, paramfile], self.datapath)
         self._run_test(infile,self.refstat0,flag_spec=[(0,0)],blparam=paramfile,datacolumn=self.column)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
     def testVariable02(self):
         """Test blfunc='variable' with non-existent lines in blparam file (rows should be flagged)"""
         infile='analytic_variable.ms'
         paramfile='analytic_variable_blparam_2lines.txt'
         self._refetch_files([infile, paramfile], self.datapath)
         self._run_test(infile,self.refstat0,flag_spec=[(0,0),(1,1)],blparam=paramfile,datacolumn=self.column)
+
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
 
     def testVariable03(self):
         """Test blfunc='variable' with mask selection"""
@@ -1595,12 +1669,30 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
         mask = [[[0,4000],[6000,8000]], [[0,5000],[6000,8000]], [[0,3000],[5000,8000]], None]
         self._run_test(infile,self.refstat0,mask=mask,blparam=paramfile,datacolumn=self.column)
 
+    
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+
     def testVariable04(self):
         """Test blfunc='variable' with data selection (spw='1')"""
         infile='analytic_variable.ms'
         paramfile='analytic_variable_blparam_spw1.txt'
         self._refetch_files([infile, paramfile], self.datapath)
         self._run_test(infile,self.refstat0,spw='1',blparam=paramfile,datacolumn=self.column)
+
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
 
     def testVariable05(self):
         """Test blfunc='variable' with clipping"""
@@ -1611,6 +1703,14 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
         self._run_test(infile,self.refstat0,atol=1.e-5,
                        mask=mask,blparam=paramfile,datacolumn=self.column)
 
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
     def testVariable06(self):
         """Test blfunc='variable' with duplicated fitting parameters (the last one is adopted)"""
         infile='analytic_variable.ms'
@@ -1618,10 +1718,486 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
         self._refetch_files([infile, paramfile], self.datapath)
         self._run_test(infile,self.refstat0,blparam=paramfile,datacolumn=self.column)
 
+
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.btable'):
+            shutil.rmtree(self.infile+ '_blparam.btable')
+
+
+
+class tsdbaseline_bloutputTest(tsdbaseline_unittest_base, unittest.TestCase):
+    """
+    Basic unit tests for task tsdbaseline. No interactive testing.
+
+    List of tests:
+    test000 --- default values for all parameters
+    test001 --- polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test002 --- Chebyshev polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test003 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
+    test050 --- existing file as outfile with overwrite=False (raises an exception)
+    test051 --- no data after selection (raises an exception)
+
+    Note: input data is generated from a single dish regression data,
+    'OrionS_rawACSmod', as follows:
+      default(sdcal)
+      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+                calmode='ps',tau=0.09,outfile='temp.asap')
+      default(sdcal)
+      sdcal(infile='temp.asap',timeaverage=True,
+                tweight='tintsys',outfile='temp2.asap')
+      sdsave(infile='temp2.asap',outformat='MS2',
+                outfile='OrionS_rawACSmod_calave.ms')
+    """
+    # Input and output names
+    #infile = 'OrionS_rawACSmod_calTave.asap'
+    infile = 'OrionS_rawACSmod_calave.ms'
+    outroot = tsdbaseline_unittest_base.taskname+'_basictest'
+    blrefroot = tsdbaseline_unittest_base.datapath+'refblparam'
+    tid = None
+    blparam = 'analytic_variable_blparam.txt'
+
+    def setUp(self):
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        shutil.copyfile(self.datapath+self.blparam, self.blparam)
+
+        default(tsdbaseline)
+
+
+        if os.path.exists(self.infile+'_blparam.txt'):
+            os.remove(self.infile+ '_blparam.txt')
+        if os.path.exists(self.infile+'_blparam.csv'):
+            os.remove(self.infile+ '_blparam.csv')
+        if os.path.exists(self.infile+'_blparam.bltable'):
+            shutil.rmtree(self.infile+ '_blparam.bltable')
+
+        if os.path.exists('test.txt'):
+            os.remove('test.txt')
+        if os.path.exists('test.csv'):
+            os.remove('test.csv')
+        if os.path.exists('test.table'):
+            shutil.rmtree('test.table')
+
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system('rm -rf '+self.outroot+'*')
+
+    def test000(self):
+        """Basic Test 000: default values for all parameters"""
+        tid = '000'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['csv','text','table']
+        bloutput=['test.csv','test.txt','test.table']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+    def test001(self):
+        """Basic Test 001: default values for all parameters"""
+        tid = '001'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['text','csv','table']
+        bloutput=['test.txt','test.csv','test.table']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+    def test002(self):
+        """Basic Test 002: default values for all parameters"""
+        tid = '002'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['table','text','csv']
+        bloutput=['test.table','test.txt','test.csv']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+    def test003(self):
+        """Basic Test 003: default values for all parameters"""
+        tid = '003'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['table','text','csv']
+        bloutput=['','test.txt','test.csv']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+    def test004(self):
+        """Basic Test 004: default values for all parameters"""
+        tid = '004'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['table','text','csv']
+        bloutput=['','','']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+    def test005(self):
+        """Basic Test 005: default values for all parameters except blformat=['table','text']"""
+        tid = '005'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['table','text']
+        bloutput=['','']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+    def test006(self):
+        """Basic Test 006: default values for all parameters except blformat=['table']"""
+        tid = '006'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['table']
+        bloutput=['']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+
+    def test007(self):
+        """Basic Test 007: default values for all parameters except blformat=['csv']"""
+        tid = '007'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['csv']
+        bloutput=['']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+
+    def test008(self):
+        """Basic Test 008: default values for all parameters except blformat=['text']"""
+        tid = '008'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['text']
+        bloutput=['']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+
+
+    def test009(self):
+        """Basic Test 009: default values for all parameters except blformat=['']"""
+        tid = '009'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['']
+        bloutput=['']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #for i in bloutput:
+        if(not os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+
+
+    def test010(self):
+        """Basic Test 010: default values for all parameters except blformat=['','csv']"""
+        tid = '010'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=['','csv']
+        bloutput=['','test.csv']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #for i in bloutput:
+        if(not os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+       
+        if(not os.path.exists('test.csv')):
+            print 'test.csv', ' does not exist!  OK' 
+
+
+
+    def test011(self):
+        """Basic Test 011: default values for all parameters except blformat='', bloutput=''"""
+        tid = '011'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=''
+        bloutput=''
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #for i in bloutput:
+        if(not os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+       
+
+
+    def test012(self):
+        """Basic Test 012: default values for all parameters except blformat='', bloutput='test.csv'"""
+        tid = '012'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+
+
+        blformat=''
+        bloutput='test.csv'
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        #for i in bloutput:
+        if(not os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' does not exist!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+       
+        if(not os.path.exists('test.csv')):
+            print 'test.csv', ' does not exist!  OK' 
+
+
+"""
+    def test013(self):
+        #Basic Test 013: default values for all parameters blfunc=variable
+        tid = '013'
+        infile = self.infile
+        #outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+        blfunc ='variable'
+        blparam = 'analytic_variable_blparam.txt'
+        blformat=['csv','text','table']
+        bloutput=['test.csv','test.txt','test.table']
+
+        if(not os.path.exists(blparam)):
+            print blparam + ' not exists!'
+        
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             #outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput,
+                             blparam=blparam)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+"""
+
+
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
             tsdbaseline_outbltableTest,
             tsdbaseline_applybltableTest,
-            tsdbaseline_variableTest
+            tsdbaseline_variableTest,
+            tsdbaseline_bloutputTest
             ]
