@@ -2857,18 +2857,24 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data,
 			      static_cast<size_t>(avg_limit), lf_edge);
   // debug output
   LogIO os(_ORIGIN);
-  os << LogIO::DEBUGGING << line_ranges.size() << " lines found: ";
+  os << LogIO::NORMAL << line_ranges.size() << " lines found: ";
   for (list<pair<size_t,size_t>>::iterator iter=line_ranges.begin();
        iter!=line_ranges.end(); ++iter){
     os << "[" << (*iter).first << ", " << (*iter).second << "] ";
   }
   os << LogIO::POST;
   if (invert) {// eliminate edge channels from output mask
-    if (edge[0] > 0) line_ranges.push_front(pair<size_t, size_t>(0,edge[0]-1));
-    if (edge[1] > 0) line_ranges.push_back(pair<size_t, size_t>(num_data-edge[1],num_data-1));
+    if (lf_edge.first > 0) line_ranges.push_front(pair<size_t, size_t>(0,lf_edge.first-1));
+    if (lf_edge.second > 0) line_ranges.push_back(pair<size_t, size_t>(num_data-lf_edge.second,
+								       num_data-1));
   }
   // line mask creation
   linefinder::getMask(num_data, out_mask, line_ranges, invert);
+  if (invert) {
+    for (size_t i = 0; i<num_data; ++i) {
+      out_mask[i] = out_mask[i] && in_mask[i];
+    }
+  }
 }
 
 //<--remove when new API becomes available, ALSO declaration of this function in the header file.
