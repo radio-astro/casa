@@ -26,6 +26,15 @@
 #include <singledish/SingleDish/LineFinder.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 
+#include <casa/Arrays/Vector.h>
+#include <casa/Containers/Block.h>
+#include <scimath/Fitting/GenericL2Fit.h>
+#include <scimath/Fitting/NonLinearFitLM.h>
+#include <scimath/Functionals/Function.h>
+#include <scimath/Functionals/CompiledFunction.h>
+#include <scimath/Functionals/CompoundFunction.h>
+#include <scimath/Functionals/Gaussian1D.h>
+
 #include <tables/Tables/ScalarColumn.h>
 
 
@@ -437,6 +446,14 @@ std::vector<string> SingleDishMS::split_string(string const &s,
   return elems;
 }
 
+bool SingleDishMS::file_exists(string const &filename)
+{
+  FILE *fp;
+  if ((fp = fopen(filename.c_str(), "r")) == NULL) return false;
+  fclose(fp);
+  return true;
+}
+
 void SingleDishMS::parse_spw(string const &in_spw, 
 			     Vector<Int> &rec_spw,
 			     Matrix<Int> &rec_chan,
@@ -485,25 +502,7 @@ void SingleDishMS::get_nchan_and_mask(Vector<Int> const &rec_spw,
     if (!nchan_set(i)) continue;
     mask(i).resize(nchan(i));
     // generate mask
-    get_mask_from_rec(rec_spw(i), rec_chan, mask(i),true);
-//     for (size_t j = 0; j < mask(i).nelements(); ++j) {
-//       mask(i)(j) = False;
-//     }
-//     std::vector<uInt> edge; // start,end,stride,start,...
-//     edge.clear();
-//     for (size_t j = 0; j < rec_chan.nrow(); ++j) {
-//       if (rec_chan.row(j)(0) == rec_spw(i)) {
-// 	edge.push_back(rec_chan.row(j)(1));
-// 	edge.push_back(rec_chan.row(j)(2));
-// 	edge.push_back(rec_chan.row(j)(3))
-//       }
-//     }
-//     //generate mask
-//     for (size_t j = 0; j < edge.size(); j+=3) {
-//       for (size_t k = edge[j]; k <= edge[j+1]; k+=edge[j+2]) {
-// 	mask(i)(k) = True;
-//       }
-//     }
+    get_mask_from_rec(rec_spw(i), rec_chan, mask(i), true);
   }
 }
 
@@ -2076,6 +2075,303 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
     destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
     ++ctxiter;
   }
+}
+
+// Fit line profile
+void SingleDishMS::fitLine(string const& in_column_name,
+			   string const& in_spw, 
+			   string const& in_pol,
+			   string const& fitfunc,
+			   string const& in_nfit,
+			   string const& tempfile_name,
+			   string const& temp_out_ms_name)
+{
+  /*
+  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::flush << std::endl;
+  std::cout << "datacolumn :  " << in_column_name << std::flush << std::endl;
+  std::cout << "spw :         " << in_spw << std::flush << std::endl;
+  std::cout << "pol :         " << in_pol << std::flush << std::endl;
+  std::cout << "fitfunc :     " << fitfunc << std::flush << std::endl;
+  std::cout << "nfit :        " << in_nfit << std::flush << std::endl;
+  std::cout << "tempfile :    " << tempfile_name << std::flush << std::endl;
+  std::cout << "tempoutfile : " << temp_out_ms_name << std::flush << std::endl;
+  std::cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << std::flush << std::endl;
+  */
+
+  LogIO os(_ORIGIN);
+  os << "Fitting line profile with " << fitfunc << LogIO::POST;
+  // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA]
+  // no iteration is necessary for the processing.
+  // procedure
+  // 1. iterate over MS
+  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+  // 3. fit Gaussian or Lorentzian profile to each spectrum
+  // 4. write fitting results to outfile
+
+  //double tstart = gettimeofday_sec();
+
+  Block<Int> columns(1);
+  columns[0] = MS::DATA_DESC_ID;
+  LIBSAKURA_SYMBOL(Status) status;
+
+  if (file_exists(tempfile_name)) {
+    throw(AipsError("temporary file unexpectedly exists."));
+  }
+  ofstream ofs(tempfile_name);
+
+  //string temp_out_ms_name = tempfile_name + "_temp_output_ms";
+  if (file_exists(temp_out_ms_name)) {
+    throw(AipsError("temporary ms file unexpectedly exists."));
+  }
+  prepare_for_process(in_column_name, temp_out_ms_name, columns, false);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+  Vector<Int> recspw;
+  Matrix<Int> recchan;
+  Vector<size_t> nchan;
+  Vector<Vector<Bool> > in_mask;
+  Vector<bool> nchan_set;
+  parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
+  Vector<bool> pol;
+  bool pol_set = false;
+  std::vector<string> nfit_s = split_string(in_nfit, ',');
+  std::vector<size_t> nfit;
+  nfit.resize(nfit_s.size());
+  for (size_t i = 0; i < nfit_s.size(); ++i) {
+    nfit[i] = std::stoi(nfit_s[i]);
+  }
+
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    for (vi->origin(); vi->more(); vi->next()) {
+      Vector<Int> scans = vb->scan();
+      Vector<Double> times = vb->time();
+      Vector<Int> beams = vb->feed1();
+      Vector<Int> antennas = vb->antenna1();
+
+      Vector<Int> data_spw = vb->spectralWindows();
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<bool> mask(num_chan);
+
+      bool new_nchan = false;
+      get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask, nchan_set, new_nchan);
+
+      // get data/flag cubes (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      get_flag_cube(*vb, flag_chunk);
+
+      if (!pol_set) {
+	get_pol_selection(in_pol, num_pol, pol);
+	pol_set = true;
+      }
+
+      // loop over MS rows
+      for (size_t irow = 0; irow < num_row; ++irow) {
+  	size_t idx = 0;
+  	for (size_t ispw = 0; ispw < recspw.nelements(); ++ispw) {
+  	  if (data_spw[irow] == recspw[ispw]) {
+  	    idx = ispw;
+  	    break;
+  	  }
+  	}
+
+	std::vector<size_t> fitrange_start;
+	fitrange_start.clear();
+	std::vector<size_t> fitrange_end;
+	fitrange_end.clear();
+	for (size_t i = 0; i < recchan.nrow(); ++i) {
+	  if (recchan.row(i)(0) == data_spw[irow]) {
+	    fitrange_start.push_back(recchan.row(i)(1));
+	    fitrange_end.push_back(recchan.row(i)(2));
+	  }
+	}
+	if (nfit.size() != fitrange_start.size()) {
+	  throw(AipsError("the number of elements of nfit and fitranges specified in spw must be identical."));
+	}
+
+  	// loop over polarization
+  	for (size_t ipol = 0; ipol < num_pol; ++ipol) {
+	  // skip spectrum not selected by pol
+	  if (!pol(ipol)) {
+	    continue;
+	  }
+  	  // get a channel mask from data cube
+  	  // (note that the variable 'mask' is flag in the next line 
+	  // actually, then it will be converted to real mask when 
+	  // taking AND with user-given mask info. this is just for 
+	  // saving memory usage...)
+  	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // skip spectrum if all channels flagged
+	  if (allchannels_flagged(num_chan, mask.data)) {
+	    continue;
+	  }
+
+  	  // convert flag to mask by taking logical NOT of flag
+  	  // and then operate logical AND with in_mask
+  	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
+  	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+  	  }
+  	  // get a spectrum from data cube
+  	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+
+	  Vector<Float> x_;
+	  x_.resize(num_chan);
+	  Vector<Float> y_;
+	  y_.resize(num_chan);
+	  Vector<Bool> m_;
+	  m_.resize(num_chan);
+	  for (size_t ichan = 0; ichan < num_chan; ++ichan) {
+	    x_[ichan] = static_cast<Float>(ichan);
+	    y_[ichan] = spec.data[ichan];
+	  }
+	  Vector<Float> parameters_;
+	  Vector<Float> error_;
+
+	  PtrBlock<Function<Float>* > funcs_;
+	  std::vector<std::string> funcnames_;
+	  std::vector<int> funccomponents_;
+	  std::string expr;
+	  if (fitfunc == "gaussian") {
+	    expr = "gauss";
+	  } else if (fitfunc == "lorentzian") {
+	    expr = "lorentz";
+	  }
+
+	  for (size_t ifit = 0; ifit < nfit.size(); ++ifit) {
+	    if (nfit[ifit] == 0) continue;
+
+	    if (0 < ifit) ofs << ":";
+
+	    /*
+	    std::cout << "### [ ifit = " << ifit << "] ###" << std::flush << std::endl;
+	    std::cout << "   start(" << fitrange_start[ifit] << ") - end(" << fitrange_end[ifit] 
+		      << ")" << std::flush << std::endl;
+	    */
+
+	    //extract spec/mask within fitrange
+	    for (size_t ichan = 0; ichan < num_chan; ++ichan) {
+	      if ((fitrange_start[ifit] <= ichan) && (ichan <= fitrange_end[ifit])) {
+		m_[ichan] = mask.data[ichan];
+	      } else {
+		m_[ichan] = False;
+	      }
+	    }
+	    
+	    //initial guesss
+	    Vector<Float> peak;
+	    Vector<Float> cent;
+	    Vector<Float> fwhm;
+	    peak.resize(nfit[ifit]);
+	    cent.resize(nfit[ifit]);
+	    fwhm.resize(nfit[ifit]);
+	    if (nfit[ifit] == 1) {
+	      Float sum = 0.0;
+	      Float max_spec = y_[fitrange_start[ifit]];
+	      Float max_spec_x = x_[fitrange_start[ifit]];
+	      for (size_t ichan = fitrange_start[ifit]; ichan <= fitrange_end[ifit]; ++ichan) {
+		sum += y_[ichan];
+		if (max_spec < y_[ichan]) {
+		  max_spec = y_[ichan];
+		  max_spec_x = x_[ichan];
+		}
+	      }
+	      peak[0] = max_spec;
+	      cent[0] = max_spec_x;
+	      fwhm[0] = sum / max_spec * 0.7;
+	    } else {
+	      size_t x_start = fitrange_start[ifit];
+	      size_t x_width = (fitrange_end[ifit] - fitrange_start[ifit])/nfit[ifit];
+	      size_t x_end = x_start + x_width;
+	      for (size_t icomp = 0; icomp < nfit[ifit]; ++icomp) {
+		if (icomp == nfit[ifit] - 1) {
+		  x_end = fitrange_end[ifit] + 1;
+		}
+
+		Float sum = 0.0;
+		Float max_spec = y_[x_start];
+		Float max_spec_x = x_[x_start];
+		for (size_t ichan = x_start; ichan < x_end; ++ichan) {
+		  sum += y_[ichan];
+		  if (max_spec < y_[ichan]) {
+		    max_spec = y_[ichan];
+		    max_spec_x = x_[ichan];
+		  }
+		}
+		peak[icomp] = max_spec;
+		cent[icomp] = max_spec_x;
+		fwhm[icomp] = sum / max_spec * 0.7;
+		
+		x_start += x_width;
+		x_end += x_width;
+	      }
+	    }
+
+	    //fitter setup
+	    funcs_.resize(nfit[ifit]);
+	    funcnames_.clear();
+	    funccomponents_.clear();
+	    for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
+	      funcs_[icomp] = new Gaussian1D<Float>();
+	      (funcs_[icomp]->parameters())[0] = peak[icomp]; //initial guess (peak)
+	      (funcs_[icomp]->parameters())[1] = cent[icomp]; //initial guess (centre)
+	      (funcs_[icomp]->parameters())[2] = fwhm[icomp]; //initial guess (fwhm)
+	      funcnames_.push_back(expr);
+	      funccomponents_.push_back(3);
+	    }
+
+	    //actual fitting
+	    NonLinearFitLM<Float> fitter;
+	    CompoundFunction<Float> func;
+	    for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
+	      func.addFunction(*funcs_[icomp]);
+	    }
+	    fitter.setFunction(func);
+	    fitter.setMaxIter(50 + 10 * funcs_.nelements());
+	    fitter.setCriteria(0.001);	    // Convergence criterium
+
+	    parameters_.resize();
+	    parameters_ = fitter.fit(x_, y_, &m_);  
+	    if (!fitter.converged()) {
+	      throw(AipsError("Failed in fitting. Fitter did not converged. "));
+	    }
+	    error_.resize();
+	    error_ = fitter.errors();
+	    
+	    //write best-fit parameters to tempfile/outfile
+	    for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
+	      if (0 < icomp) ofs << ":";
+	      size_t offset = 3*icomp;
+	      ofs << parameters_[offset+1] << "," << error_[offset+1] << ","  // cent
+		  << parameters_[offset+0] << "," << error_[offset+0] << ","  // peak
+		  << parameters_[offset+2] << "," << error_[offset+2];        // fwhm
+	    }
+	    /*
+	    for (size_t iparam = 0; iparam < parameters_.nelements(); ++iparam) {
+	      std::cout << "   result[" << iparam << "] = " << parameters_[iparam] << std::flush << std::endl;
+	    }
+	    for (size_t ierr = 0; ierr < error_.nelements(); ++ierr) {
+	      std::cout << "      err[" << ierr << "] = " << error_[ierr] << std::flush << std::endl;
+	    }
+	    std::cout << "###--------------------------###" << std::flush << std::endl;
+	    */
+	  }//end of nfit loop
+
+	  ofs << "\n";
+
+	}//end of polarization loop
+      }// end of MS row loop
+    }//end of vi loop
+  }//end of chunk loop
+
+  finalize_process();
+  ofs.close();
+  //double tend = gettimeofday_sec();
+  //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
 // Baseline subtraction by per spectrum fitting parameters

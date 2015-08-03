@@ -147,6 +147,15 @@ public:
 			  string const& in_spw,
 			  string const& out_ms_name);
 
+  // fit line profile
+  void fitLine(string const& in_column_name,
+	       string const& in_spw, 
+	       string const& in_pol,
+	       string const& fitfunc,
+	       string const& in_nfit,
+	       string const& tempfile_name,
+	       string const& temp_out_ms_name);
+
   // smooth data with arbitrary smoothing kernel
   // currently only gaussian smoothing is supported
   void smooth(string const &kernelType, float const kernelWidth,
@@ -187,6 +196,8 @@ private:
   void convertArrayC2F(Array<Float> &from, Array<Complex> const &to);
   // Split a string with given delimiter
   std::vector<string> split_string(string const &s, char delim);
+  // examine if a file with specified name exists
+  bool file_exists(string const &filename);
   // Parse msseltoindex output
   void parse_spw(string const &in_spw, 
 		 Vector<Int> &spw, 
