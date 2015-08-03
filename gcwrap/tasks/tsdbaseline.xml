@@ -121,6 +121,7 @@ pipeline processing for huge dataset.
             <value>table</value>
             <value>text</value>
             <value>csv</value>
+            <value></value>
         </allowed>
     </param>
 
@@ -144,7 +145,7 @@ pipeline processing for huge dataset.
             <value>poly</value>
             <value>chebyshev</value>
             <value>cspline</value>
-            <!-- <value>sinusoid</value> -->
+          <!--  <value>sinusoid</value> -->
             <value>variable</value>
         </allowed>
     </param>
@@ -421,8 +422,7 @@ blmode -- baselining mode.
                 default: ''
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 
           set, blfunc and its subparameters are ignored.
-        options: 'poly', 'chebyshev', 'cspline' or 'variable'
-                 ('sinusoid' will be available later)
+        options: 'poly', 'chebyshev', 'cspline', 'sinusoid' or 'variable'
         default: 'poly'
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
