@@ -145,6 +145,7 @@ scripts/task_makemask.py
 scripts/task_mosaic.py
 scripts/task_msmoments.py
 scripts/task_mstransform.py
+scripts/task_msuvbin.py
 scripts/task_plotants.py
 scripts/task_plotbandpass.py
 scripts/task_plotcal.py
