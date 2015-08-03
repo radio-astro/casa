@@ -1,4 +1,5 @@
 #import os
+import glob
 import sys
 import shutil
 import numpy
@@ -133,7 +134,7 @@ def parseRms(txt):
     t = txt.lstrip().rstrip('\n')[6:]
     return float(t)
 
-class tsdbaseline_unittest_base:
+class tsdbaseline_unittest_base(unittest.TestCase):
     """
     Base class for tsdbaseline unit test
     """
@@ -552,7 +553,7 @@ class tsdbaseline_unittest_base:
 #                         %(out,reference))
 
 
-class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_basicTest(tsdbaseline_unittest_base):
     """
     Basic unit tests for task tsdbaseline. No interactive testing.
 
@@ -844,7 +845,7 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base, unittest.TestCase):
             self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
 
 
-class tsdbaseline_maskTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_maskTest(tsdbaseline_unittest_base):
     """
     Tests for various mask selections. No interactive testing.
 
@@ -968,7 +969,7 @@ class tsdbaseline_maskTest(tsdbaseline_unittest_base, unittest.TestCase):
             return False
 
 
-class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base):
     """
     Unit tests for task tsdbaseline. No interactive testing.
 
@@ -1040,7 +1041,7 @@ class tsdbaseline_multi_IF_test(tsdbaseline_unittest_base, unittest.TestCase):
             self._compareStats(currstat,reference[ifno])
 
 
-class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_outbltableTest(tsdbaseline_unittest_base):
     """
     Tests for outputting baseline table
 
@@ -1364,7 +1365,7 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                 shutil.rmtree(self.infile)
             os.system('rm -rf '+self.outroot+'*')
     
-class tsdbaseline_applybltableTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_applybltableTest(tsdbaseline_unittest_base):
     """
     Tests for applying baseline table
     (blmode='apply' mode)
@@ -1519,7 +1520,7 @@ class tsdbaseline_applybltableTest(tsdbaseline_unittest_base, unittest.TestCase)
                          msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(outfile, 'r2p1bltinexist')
 
-class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_variableTest(tsdbaseline_unittest_base):
     """
     Tests for blfunc='variable'
 
@@ -1728,7 +1729,7 @@ class tsdbaseline_variableTest(tsdbaseline_unittest_base, unittest.TestCase):
 
 
 
-class tsdbaseline_bloutputTest(tsdbaseline_unittest_base, unittest.TestCase):
+class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
     """
     Basic unit tests for task tsdbaseline. No interactive testing.
 
@@ -2192,11 +2193,180 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base, unittest.TestCase):
 """
 
 
+class tsdbaseline_autoTest(tsdbaseline_unittest_base):
+    """
+    A class that tests maskmode='auto'.
+    
+    testAutoPolyNoMask : polynomial fitting using all channels but edge=(500, 500)
+    testAutoChebNoMask : Chebyshev polynomial fitting using all channels but edge=(500, 500)
+    testAutoCsplNoMask : cspline fitting using all channels but edge=(500, 500)
+    testAutoSinuNoMask : sinusoidal fitting using all channels but edge=(500, 500)
+    testAutoPolyMaskChan : polynomial fitting using 500~7691 channels (no edge mask)
+    testAutoChebMaskChan : Chebyshev polynomial fitting using 500~7691 channels (no edge mask)
+    testAutoCsplMaskChan : cspline fitting using 500~7691 channels (no edge mask)
+    testAutoSinuMaskChan : sinusoidal fitting using 500~7691 channels (no edge mask)
+    testAutoPolyMaskFreq : polynomial fitting using 500~7691 (no edge mask)
+    testAutoChebMaskFreq : Chebyshev polynomial fitting using 500~7691 (no edge mask)
+    testAutoCsplMaskFreq : cspline fitting using 500~7691 (no edge mask)
+    testAutoSinuMaskFreq : sinusoidal fitting using 500~7691 (no edge mask)
+    testAutoPolyChanFlag : polynomial fitting of all channels with channel flag in both edge
+    testAutoChebChanFlag : Chebyshev polynomial fitting of all channels with channel flag in both edge
+    testAutoCsplChanFlag : cspline fitting of all channels with channel flag in both edge
+    testAutoSinuChanFlag : sinusoidal fitting of all channels with channel flag in both edge
+    """
+    infile = 'OrionS_rawACSmod_calave.ms'
+    outroot = tsdbaseline_unittest_base.taskname+'_lftest'
+    outfile = outroot+".ms"
+    bloutput = outroot+"_blout"
+    base_param = dict(infile=infile,
+                      datacolumn='float_data',
+                      pol='0',
+                      maskmode = 'auto',
+                      thresh=5.0,
+                      avg_limit=16,
+                      minwidth=16,
+                      outfile=outfile,
+                      blformat='csv',
+                      bloutput=bloutput)
+    edge = [500,500]
+    spw = '2'
+    spwchan = '2:500~7691'
+    spwfreq = '2:44052978522~44096874062Hz'
+    # in either tests,
+    statrange = [[1000, 7191]]
+    polystat = {'max': 2.0219287872314453, 'min': -0.42777776718139648,
+                'median': 0.0031285285949707031, 'rms': 0.20133523422863878,
+                'stddev': 0.20133523422863878}
+    chebstat = {'max': 2.0219287872314453, 'min': -0.42777776718139648,
+               'median': 0.0031285285949707031, 'rms': 0.20133523422863878,
+               'stddev': 0.20133523422863878}
+    csplstat = {'max': 2.0245308876037598, 'min': -0.42625236511230469,
+               'median': 0.0030908584594726562, 'rms': 0.20162315142703452,
+               'stddev': 0.20162315142703452}
+#     sinustat = {'max': , 'min': , 'median': , 'rms': , 'stddev': }
+
+    def setUp(self):
+        for prevout in glob.glob(self.outroot+'*'):
+            if os.path.isdir(prevout): shutil.rmtree(prevout)
+            else: os.remove(prevout)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
+        default(tsdbaseline)
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        for outname in glob.glob(self.outroot+'*'):
+            if os.path.isdir(outname): shutil.rmtree(outname)
+            else: os.remove(outname)
+
+    def flag(self, infile, edge=None, rowidx=None):
+        rowflag = True if edge is None else False
+        if type(rowidx)==int: rowidx = [rowidx]
+        tb.open(infile, nomodify=False)
+        if rowidx is None: rowidx = range(tb.nrows())
+        try:
+            for idx in rowidx:
+                specs = tb.getcell("FLAG", idx)
+                if rowflag: 
+                    specs = True
+                else:
+                    for ipol in range(len(specs)):
+                        specs[ipol][0:edge[0]] = True
+                        specs[ipol][-edge[1]:] = True
+                tb.putcell('FLAG', idx, specs)
+        finally:
+            tb.close()
+
+    def run_test(self, refstat, **kwargs):
+        task_param = self.base_param.copy()
+        for key, val in kwargs.items():
+            task_param[key] = val
+        tsdbaseline(**task_param)
+        outfile = task_param['outfile']
+        currstat = self._getStats(outfile, spw='0', pol=task_param['pol'],
+                                   colname=task_param['datacolumn'].upper(),
+                                   mask=self.statrange)
+        #print "currstat="+str(currstat)
+        self._compareStats(currstat[0],refstat)
+
+        
+
+    def testAutoPolyNoMask(self):
+        """polynomial fitting using all channels but edge=[500, 500]"""
+        self.run_test(self.polystat, spw=self.spw, edge=self.edge, blfunc='poly')
+        
+    def testAutoChebNoMask(self):
+        """Chebyshev polynomial fitting using all channels but edge=[500, 500]"""
+        self.run_test(self.chebstat, spw=self.spw, edge=self.edge, blfunc='chebyshev')
+
+    def testAutoCsplNoMask(self):
+        """cspline fitting using all channels but edge=[500, 500]"""
+        self.run_test(self.csplstat, spw=self.spw, edge=self.edge, blfunc='cspline')
+
+#     def testAutoSinuNoMask(self):
+#         """sinusoidal fitting using all channels but edge=[500, 500]"""
+#         self.run_test(self.sinustat, spw=self.spw, edge=self.edge, blfunc='sinusoid')
+
+    def testAutoPolyMaskChan(self):
+        """polynomial fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.polystat, spw=self.spwchan, edge=[0,0], blfunc='poly')
+        
+    def testAutoChebMaskChan(self):
+        """Chebyshev polynomial fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.chebstat, spw=self.spwchan, edge=[0,0], blfunc='chebyshev')
+
+    def testAutoCsplMaskChan(self):
+        """cspline fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.csplstat, spw=self.spwchan, edge=[0,0], blfunc='cspline')
+
+#     def testAutoSinuMaskChan(self):
+#         """sinusoidal fitting using 500~7691 channels (no edge mask)"""
+#         self.run_test(self.sinustat, spw=self.spwchan, edge=self.noedge, blfunc='sinusoid')
+
+    def testAutoPolyMaskFreq(self):
+        """polynomial fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.polystat, spw=self.spwfreq, edge=[0,0], blfunc='poly')
+        
+    def testAutoChebMaskFreq(self):
+        """Chebyshev polynomial fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.chebstat, spw=self.spwfreq, edge=[0,0], blfunc='chebyshev')
+
+    def testAutoCsplMaskFreq(self):
+        """cspline fitting using 500~7691 channels (no edge mask)"""
+        self.run_test(self.csplstat, spw=self.spwfreq, edge=[0,0], blfunc='cspline')
+
+#     def testAutoSinuMaskFreq(self):
+#         """sinusoidal fitting using 500~7691 channels (no edge mask)"""
+#         self.run_test(self.sinustat, spw=self.spwfreq, edge=self.noedge, blfunc='sinusoid')
+
+    def testAutoPolyChanFlag(self):
+        """polynomial fitting of all channels with channel flag in both edge"""
+        self.flag(self.infile,edge=self.edge)
+        self.run_test(self.polystat, spw=self.spw, edge=[0,0], blfunc='poly')
+        
+    def testAutoChebChanFlag(self):
+        """Chebyshev polynomial of all channels with channel flag in both edge"""
+        self.flag(self.infile,edge=self.edge)
+        self.run_test(self.chebstat, spw=self.spw, edge=[0,0], blfunc='chebyshev')
+
+    def testAutoCsplChanFlag(self):
+        """cspline fitting of all channels with channel flag in both edge"""
+        self.flag(self.infile,edge=self.edge)
+        self.run_test(self.csplstat, spw=self.spw, edge=[0,0], blfunc='cspline')
+
+#     def testAutoSinuChanFlag(self):
+#         """sinusoidal fitting of all channels with channel flag in both edge"""
+#         self.flag(self.infile,edge=self.edge)
+#         self.run_test(self.sinustat, spw=self.spw, edge=self.noedge, blfunc='sinusoid')
+
+
 def suite():
     return [tsdbaseline_basicTest, 
             tsdbaseline_maskTest,
             tsdbaseline_outbltableTest,
             tsdbaseline_applybltableTest,
             tsdbaseline_variableTest,
-            tsdbaseline_bloutputTest
-            ]
+            tsdbaseline_bloutputTest,
+            tsdbaseline_autoTest]
