@@ -160,7 +160,6 @@ scripts/task_rmtables.py
 scripts/task_sdaverage.py
 scripts/task_sdbaseline.py
 scripts/task_sdbaseline2.py
-scripts/task_tsdbaseline.py
 scripts/task_sdcal.py
 scripts/task_sdcal2.py
 scripts/task_sdcoadd.py
@@ -194,7 +193,9 @@ scripts/task_spxfit.py
 scripts/task_statwt.py
 scripts/task_tclean.py
 scripts/task_testconcat.py
+scripts/task_tsdbaseline.py
 scripts/task_tsdcal.py
+scripts/task_tsdfit.py
 scripts/task_tsdsmooth.py
 scripts/task_uvcontsub.py
 scripts/task_uvcontsub3.py
