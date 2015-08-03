@@ -2868,13 +2868,8 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data,
     if (lf_edge.second > 0) line_ranges.push_back(pair<size_t, size_t>(num_data-lf_edge.second,
 								       num_data-1));
   }
-  // line mask creation
-  linefinder::getMask(num_data, out_mask, line_ranges, invert);
-  if (invert) {
-    for (size_t i = 0; i<num_data; ++i) {
-      out_mask[i] = out_mask[i] && in_mask[i];
-    }
-  }
+  // line mask creation (do not initialize in case of baseline mask)
+  linefinder::getMask(num_data, out_mask, line_ranges, invert, !invert);
 }
 
 //<--remove when new API becomes available, ALSO declaration of this function in the header file.
