@@ -2863,6 +2863,10 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data,
     os << "[" << (*iter).first << ", " << (*iter).second << "] ";
   }
   os << LogIO::POST;
+  if (invert) {// eliminate edge channels from output mask
+    if (edge[0] > 0) line_ranges.push_front(pair<size_t, size_t>(0,edge[0]-1));
+    if (edge[1] > 0) line_ranges.push_back(pair<size_t, size_t>(num_data-edge[1],num_data-1));
+  }
   // line mask creation
   linefinder::getMask(num_data, out_mask, line_ranges, invert);
 }
