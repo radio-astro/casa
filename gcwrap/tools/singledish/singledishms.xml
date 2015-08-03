@@ -174,6 +174,16 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
+    <param type="string" name="blformat">
+      <description>The name(s) of Baseline Format to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bloutput">
+      <description>The name(s) of Baseline to be output</description>
+      <value></value>
+    </param>
+
     <param type="bool" name="dosubtract">
       <description>Execute baseline subtraction from the input data</description>
       <value>true</value>
@@ -249,6 +259,16 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
+    <param type="string" name="blformat">
+      <description>The name(s) of Baseline Format to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bloutput">
+      <description>The name(s) of Baseline to be output</description>
+      <value></value>
+    </param>
+
     <param type="bool" name="dosubtract">
       <description>Execute baseline subtraction from the input data</description>
       <value>true</value>
@@ -290,6 +310,92 @@ sdms.subtract_baseline_cspline(npiece=3,clip_threshold_sigma=5.0,num_fitting_max
   </example>
 </method>
 
+<!--
+<method type="function" name="subtract_baseline_sinusoid">
+  <shortdescription>Invoke baseline subtraction
+  </shortdescription>
+  <description>
+Fit baseline and subtract it from selected spectra
+  </description>
+  <input>
+
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bltable">
+      <description>The name of Baseline Table to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="blformat">
+      <description>The name(s) of Baseline Format to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bloutput">
+      <description>The name(s) of Baseline to be output</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="dosubtract">
+      <description>Execute baseline subtraction from the input data</description>
+      <value>true</value>
+    </param>
+
+    <param type="any" name="spw">
+      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="any" name="pol">
+      <description>Select data by polarization(s).</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="string" name="blfunc">
+      <description>baseline function</description>
+      <value>sinusoid</value>
+    </param>
+
+    <param type="int" name="order">
+      <description>polynomial order</description>
+      <value>5</value>
+    </param>
+
+    <param type="float" name="clip_threshold_sigma">
+      <description>threshold for clipping in unit of sigma</description>
+      <value>3.0</value>
+    </param>
+
+    <param type="int" name="num_fitting_max">
+      <description>maximum number of recursive clipping</description>
+      <value>1</value>
+    </param>
+
+  </input>
+  <returns type="bool"/>
+  <example>
+sdms.open('m100_sd.ms')
+sdms.set_selection(field='M100')
+sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
+  </example>
+</method>
+
+-->
 
 
 
@@ -319,6 +425,16 @@ Fit parameters for each spectrum are obtained from a text file.
 
     <param type="string" name="bltable">
       <description>The name of Baseline Table to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="blformat">
+      <description>The name(s) of Baseline Format to be output</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="bloutput">
+      <description>The name(s) of Baseline to be output</description>
       <value></value>
     </param>
 

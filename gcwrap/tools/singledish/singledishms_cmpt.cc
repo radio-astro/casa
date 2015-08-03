@@ -146,6 +146,8 @@ bool
 singledishms::subtract_baseline(string const& datacolumn,
 				string const& outfile,
 				string const& bltable,
+				string const& blformat,
+				string const& bloutput,
 				bool const dosubtract,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
@@ -158,7 +160,10 @@ singledishms::subtract_baseline(string const& datacolumn,
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaseline(datacolumn, outfile, bltable, dosubtract,
+    itsSd->subtractBaseline(datacolumn, outfile, bltable, 
+                 blformat, 
+                 bloutput, 
+                 dosubtract,
 			     toCasaString(spw), toCasaString(pol),
 			     blfunc, order, clip_threshold_sigma, 
 			     num_fitting_max);
@@ -176,6 +181,8 @@ bool
 singledishms::subtract_baseline_cspline(string const& datacolumn,
 				string const& outfile,
 				string const& bltable,
+				string const& blformat,
+				string const& bloutput,
 				bool const dosubtract,
 				::casac::variant const& spw,
 				::casac::variant const& pol,
@@ -183,11 +190,15 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
 				float const clip_threshold_sigma,
 				int const num_fitting_max)
 {
+
+
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaselineCspline(datacolumn, outfile, bltable, 
+    itsSd->subtractBaselineCspline(datacolumn, outfile, bltable,
+                     blformat, 
+                     bloutput, 
 				     dosubtract, toCasaString(spw), 
 				     toCasaString(pol), npiece, 
 				     clip_threshold_sigma, num_fitting_max);
@@ -201,10 +212,47 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
 }
 
 
+/*
+bool
+singledishms::subtract_baseline_sinusoid(string const& datacolumn,
+				string const& outfile,
+				string const& bltable,
+				string const& blformat,
+				string const& bloutput,
+				bool const dosubtract,
+				::casac::variant const& spw,
+				::casac::variant const& pol,
+				int const npiece,
+				float const clip_threshold_sigma,
+				int const num_fitting_max)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->subtractBaselineSinusoid(datacolumn, outfile, bltable,
+                     blformat, 
+                     bloutput, 
+				     dosubtract, toCasaString(spw), 
+				     toCasaString(pol), npiece, 
+				     clip_threshold_sigma, num_fitting_max);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+*/
+
 bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
 					 string const& outfile,
 					 string const& bltable,
+					 string const& blformat,
+					 string const& bloutput,
 					 bool const dosubtract,
 					 ::casac::variant const& spw,
 					 ::casac::variant const& pol,
@@ -215,6 +263,8 @@ singledishms::subtract_baseline_variable(string const& datacolumn,
   try {
     assert_valid_ms();
     itsSd->subtractBaselineVariable(datacolumn, outfile, bltable, 
+                      blformat, 
+                      bloutput, 
 				      dosubtract, toCasaString(spw),
 				      toCasaString(pol), blparam);
     rstat = true;
