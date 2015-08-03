@@ -148,7 +148,9 @@ from specfit import  specfit
 from split import  split
 from split2 import split2
 from tclean import tclean
+from tsdbaseline import tsdbaseline
 from tsdcal import tsdcal
+from tsdfit import tsdfit
 from uvcontsub import  uvcontsub
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub
@@ -168,7 +170,6 @@ try:
     from sdsmooth import sdsmooth
     from sdbaseline import sdbaseline
     from sdbaseline2 import sdbaseline2
-    from tsdbaseline import tsdbaseline
     from sdreduce import sdreduce
     from sdcoadd import sdcoadd
     from sdsave import sdsave
@@ -192,7 +193,6 @@ except ImportError:
     sdfit = None
     sdbaseline = None
     sdbaseline2 = None
-    tsdbaseline = None
     sdstat = None
     sdsave = None
     sdflag = None

@@ -90,7 +90,6 @@ rmtables.xml
 sdaverage.xml
 sdbaseline.xml
 sdbaseline2.xml
-tsdbaseline.xml
 sdcal.xml
 sdcal2.xml
 sdcoadd.xml
@@ -124,7 +123,9 @@ spxfit.xml
 statwt.xml
 tclean.xml
 testconcat.xml
+tsdbaseline.xml
 tsdcal.xml
+tsdfit.xml
 tsdsmooth.xml
 uvcontsub.xml
 uvcontsub3.xml
