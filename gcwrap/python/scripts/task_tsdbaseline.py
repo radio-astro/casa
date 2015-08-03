@@ -191,8 +191,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                             #    for i in xrange(len(ctitles)):
                             #        info.append([ctitles[i],clip_keys[i]])
                             info.append(['Mask mode', maskmode])
-                            for i in xrange(len(mtitles)):
-                                info.append([mtitles[i],getattr(mkeys[i])])
+                            #for i in xrange(len(mtitles)):
+                            #    info.append([mtitles[i],getattr(mkeys[i])])
 
                             separator = "#"*60 + "\n"
 
@@ -248,8 +248,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                             #    for i in xrange(len(ctitles)):
                             #        info.append([ctitles[i],clip_keys[i]])
                             info.append(['Mask mode', maskmode])
-                            for i in xrange(len(mtitles)):
-                                info.append([mtitles[i],getattr(mkeys[i])])
+                            #for i in xrange(len(mtitles)):
+                            #    info.append([mtitles[i],getattr(mkeys[i])])
 
                             separator = "#"*60 + "\n"
 
