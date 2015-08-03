@@ -79,7 +79,9 @@ public:
   void subtractBaseline(string const& in_column_name,
 			string const& out_ms_name,
 			string const& out_bltable_name,
-			bool const& do_subtract,
+			string const& out_blformat_name,
+            string const& out_bloutput_name,
+            bool const& do_subtract,
 			string const& in_spw, 
 			string const& in_ppp, 
 			string const& blfunc,
@@ -91,17 +93,39 @@ public:
   void subtractBaselineCspline(string const& in_column_name,
 			       string const& out_ms_name,
 			       string const& out_bltable_name,
-			       bool const& do_subtract,
+			       string const& out_blformat_name,
+                   string const& out_bloutput_name,
+                   bool const& do_subtract,
 			       string const& in_spw, 
 			       string const& in_ppp, 
 			       int const npiece, 
 			       float const clip_threshold_sigma=3.0, 
 			       int const num_fitting_max=1);
 
+
+  //Sinusoid  
+/*  void subtractBaselineSinusoid(string const& in_column_name,
+			       string const& out_ms_name,
+			       string const& out_bltable_name,
+			       string const& out_blformat_name,
+                   string const& out_bloutput_name,
+                   bool const& do_subtract,
+			       string const& in_spw, 
+			       string const& in_ppp, 
+			       int const npiece, 
+			       float const clip_threshold_sigma=3.0, 
+			       int const num_fitting_max=1);
+
+*/
+
+
+
   // variable fitting parameters stored in a text file
   void subtractBaselineVariable(string const& in_column_name,
 				string const& out_ms_name,
 				string const& out_bltable_name,
+                string const& out_blformat_name,
+                string const& out_bloutput_name,
 				bool const& do_subtract,
 				string const& in_spw, 
 				string const& in_ppp, 
@@ -292,6 +316,17 @@ private:
   void (*visCubeAccessor_)(vi::VisBuffer2 const &vb, Cube<Float> &cube);
   // smoothing flag
   Bool doSmoothing_;
+
+
+
+
+  string bloutputname_csv;  
+  string bloutputname_text;
+  string bloutputname_table;
+
+  //split the name  
+  void split_bloutputname(string str);
+
 
 }; // class SingleDishMS -END
 
