@@ -86,8 +86,13 @@ public:
 			string const& in_ppp, 
 			string const& blfunc,
 			int const order, 
-			float const clip_threshold_sigma=3.0, 
-			int const num_fitting_max=1);
+			float const clip_threshold_sigma, 
+			int const num_fitting_max,
+			bool const linefinding,
+			float const threshold,
+			int const avg_limit,
+			int const minwidth,
+			vector<int> const& edge);
 
   //Cubicspline  
   void subtractBaselineCspline(string const& in_column_name,
@@ -99,8 +104,13 @@ public:
 			       string const& in_spw, 
 			       string const& in_ppp, 
 			       int const npiece, 
-			       float const clip_threshold_sigma=3.0, 
-			       int const num_fitting_max=1);
+			       float const clip_threshold_sigma, 
+			       int const num_fitting_max,
+			       bool const linefinding,
+			       float const threshold,
+			       int const avg_limit,
+			       int const minwidth,
+			       vector<int> const& edge);
 
 
   //Sinusoid  
@@ -245,6 +255,16 @@ private:
 				    size_t num_pieces, 
 				    double *boundary);
   // *****---------------------------------------------------------------
+
+  void findLineAndGetMask(size_t const num_data,
+			  float const data[/*num_data*/],
+			  bool const in_mask[/*num_data*/],
+			  float const threshold,
+			  int const avg_limit,
+			  int const minwidth,
+			  vector<int> const& edge,
+			  bool const invert,
+			  bool out_mask[/*num_data*/]);
 
   /////////////////////////////
   /// MS handling functions ///

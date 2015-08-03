@@ -23,6 +23,7 @@
 #include <singledish/SingleDish/SingleDishMS.h>
 #include <singledish/SingleDish/BaselineTable.h>
 #include <singledish/SingleDish/BLParameterParser.h>
+#include <singledish/SingleDish/LineFinder.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 
 #include <tables/Tables/ScalarColumn.h>
@@ -812,7 +813,12 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 				     string const& blfunc,
 				     int const order, 
 				     float const clip_threshold_sigma, 
-				     int const num_fitting_max)
+				    int const num_fitting_max,
+				    bool const linefinding,
+				    float const threshold,
+				    int const avg_limit,
+				    int const minwidth,
+				    vector<int> const& edge)
 {
 cout << "out_bloutput_name" << out_bloutput_name << flush << endl;
 split_bloutputname(out_bloutput_name);
@@ -1015,7 +1021,11 @@ LogIO os(_ORIGIN);
   	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
-
+	  // line finding. get baseline mask (invert=true)
+	  if (linefinding) {
+	    findLineAndGetMask(num_chan, spec.data, mask.data, threshold, avg_limit,
+			       minwidth, edge, true, mask.data);
+	  }
   	  // actual execution of single spectrum
 	  //float rms;  //<--comment out until new API becomes available
 	  if (write_baseline_text==true || write_baseline_csv==true || write_baseline_table==true) {
@@ -1334,7 +1344,12 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 				     string const& in_ppp,
 				     int const npiece, 
 				     float const clip_threshold_sigma, 
-				     int const num_fitting_max)
+				     int const num_fitting_max,
+				    bool const linefinding,
+				    float const threshold,
+				    int const avg_limit,
+				    int const minwidth,
+				    vector<int> const& edge)
 {
 split_bloutputname(out_bloutput_name);
 cout << "SingleDishMS.cc 1" << flush << endl;
@@ -1516,6 +1531,11 @@ cout << "SingleDishMS.cc 1" << flush << endl;
   	  }
   	  // get a spectrum from data cube
   	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+	  // line finding. get baseline mask (invert=true)
+	  if (linefinding) {
+	    findLineAndGetMask(num_chan, spec.data, mask.data, threshold, avg_limit,
+			       minwidth, edge, true, mask.data);
+	  }
 
   	  // actual execution of single spectrum
 	  //float rms;  //<--comment out until new API becomes available
@@ -2791,6 +2811,60 @@ LogIO os(_ORIGIN);
     destroy_baseline_contexts(context_reservoir[(*ctxiter).first]);
     ++ctxiter;
   }
+}
+
+void SingleDishMS::findLineAndGetMask(size_t const num_data,
+				      float const* data,
+				      bool const* in_mask,
+				      float const threshold,
+				      int const avg_limit,
+				      int const minwidth,
+				      vector<int> const& edge,
+				      bool const invert,
+				      bool* out_mask)
+{
+  // inpu value check
+  AlwaysAssert(minwidth>0, AipsError);
+  AlwaysAssert(avg_limit>=0, AipsError);
+  size_t max_iteration = 10;
+  size_t maxwidth = num_data;
+  AlwaysAssert(maxwidth>static_cast<size_t>(minwidth), AipsError);
+  // edge handling
+  pair<size_t, size_t> lf_edge;
+  if (edge.size()==0) {
+    lf_edge = pair<size_t, size_t>(0,0);
+  }
+  else if (edge.size()==1) {
+    AlwaysAssert(edge[0]>=0, AipsError);
+    lf_edge = pair<size_t, size_t>(static_cast<size_t>(edge[0]),
+				   static_cast<size_t>(edge[0]));
+  }
+  else {
+    AlwaysAssert(edge[0]>=0 && edge[1]>=0, AipsError);
+    lf_edge = pair<size_t, size_t>(static_cast<size_t>(edge[0]),
+				   static_cast<size_t>(edge[1]));    
+  }
+  // copy input mask to output mask vector if necessary
+  if (&in_mask != &out_mask) {
+    for (size_t i = 0; i<num_data; ++i) {
+      out_mask[i] = in_mask[i];
+    }
+  }
+  // line detection
+  list<pair<size_t, size_t>> line_ranges = \
+    linefinder::MADLineFinder(num_data, data, out_mask, threshold, max_iteration,
+			      static_cast<size_t>(minwidth), maxwidth,
+			      static_cast<size_t>(avg_limit), lf_edge);
+  // debug output
+  LogIO os(_ORIGIN);
+  os << LogIO::DEBUGGING << line_ranges.size() << " lines found: ";
+  for (list<pair<size_t,size_t>>::iterator iter=line_ranges.begin();
+       iter!=line_ranges.end(); ++iter){
+    os << "[" << (*iter).first << ", " << (*iter).second << "] ";
+  }
+  os << LogIO::POST;
+  // line mask creation
+  linefinder::getMask(num_data, out_mask, line_ranges, invert);
 }
 
 //<--remove when new API becomes available, ALSO declaration of this function in the header file.
