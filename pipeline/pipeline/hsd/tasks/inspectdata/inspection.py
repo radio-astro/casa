@@ -59,7 +59,7 @@ class SDInspectDataResults(common.SingleDishResults):
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
         
-        LOG.info('DataTable keys: %s'%(datatable.tb2.getkeywordnames()))
+        LOG.info('DataTable keys: %s'%(datatable.tb2.keywordnames()))
 
         # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
