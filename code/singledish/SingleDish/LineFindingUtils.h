@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /*
       Count the number of True elements in a boolean array
      */
-    inline static size_t countTrue(size_t num_data, bool data[/*num_data*/])
+    inline static size_t countTrue(size_t num_data, bool const data[/*num_data*/])
     {
       size_t ntrue = 0;
       static_assert(static_cast<size_t>(true)==1, "cast of bool failed");

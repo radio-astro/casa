@@ -49,6 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       data : a float vector of data to detect lines. should be aligned.
       mask : a boolean vector which indecates if the corresponding elements
              in data should be used in line detection.
+	     Note mask is modified in the function. Edge channels are masked.
       threshold: a multiplication factor to define threshold.
       max_iteration : the maximum number of iteration to detect line,
                       and eliminate the line channels to redefine MAD array.
@@ -80,8 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 result.
     */
     std::list<std::pair<size_t,size_t>> MADLineFinder(size_t const num_data,
-	    SakuraAlignedArray<float> const& data,
-	    SakuraAlignedArray<bool> const& mask,
+	    float const data[/*num_data*/], bool mask[/*num_data*/],
             float const threshold, uint8_t max_iteration,
             size_t const minwidth, size_t const maxwidth,
             size_t const avg_limit, std::pair<size_t,size_t> edge);
@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   when initilize=false, only elements inbetween ranges
 		   list will be modified.
      */
-    void getMask(Vector<bool> &mask,
+    void getMask(size_t const num_mask, bool mask[/*num_mask*/],
 		 std::list<std::pair<size_t,size_t>>& ranges,
 		 bool invert=false, bool initialize=true);
   }

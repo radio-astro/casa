@@ -42,13 +42,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace linefinder {//# NAMESPACE LINEFINDER - BEGIN
 
-void getMask(Vector<bool> &mask, list<pair<size_t,size_t>>& ranges,
+void getMask(size_t const num_mask, bool *mask,
+	     list<pair<size_t,size_t>>& ranges,
 	     bool const invert, bool const initialize)
 {
-  size_t const num_mask = mask.nelements();
   bool const lineval = (!invert);
-  if (initialize)
-    mask = invert;
+  if (initialize) {
+    for (size_t i = 0; i<num_mask; ++i) {
+      mask[i] = invert;
+    }
+  }
   for (list<pair<size_t,size_t>>::iterator iter=ranges.begin();
        iter!=ranges.end(); ++iter) {
     AlwaysAssert((*iter).second >= (*iter).first, AipsError);
@@ -59,8 +62,8 @@ void getMask(Vector<bool> &mask, list<pair<size_t,size_t>>& ranges,
 }
   
 list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
-					SakuraAlignedArray<float> const& data,
-					SakuraAlignedArray<bool> const& mask,
+					float const* data,
+					bool * mask,
 					float const threshold,
 					uint8_t max_iteration,
 					size_t const minwidth,
@@ -71,15 +74,15 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   // value check and edge handling
   size_t min_valid_elem = 2;
   AlwaysAssert(edge.first+edge.second<num_data-min_valid_elem, AipsError);
-  AlwaysAssert(minwidth>0, AipsError);
+  AlwaysAssert(maxwidth>minwidth, AipsError);
   for (size_t i=0; i<edge.first; ++i){
-    mask.data[i] = false;
+    mask[i] = false;
   }
   for (size_t i=num_data-edge.second; i<num_data; ++i){
-    mask.data[i] = false;
+    mask[i] = false;
   }
-  size_t num_valid_elem=LineFinderUtils::countTrue(num_data,mask.data);
-  AlwaysAssert(num_valid_elem>=min_valid_elem, AipsError);
+  size_t num_valid_elem=LineFinderUtils::countTrue(num_data,mask);
+  AlwaysAssert(num_valid_elem >= min_valid_elem+edge.first+edge.second, AipsError);
   // factor for each iteration of binning
   size_t const binfactor = 4;
   size_t average_factor =1;
@@ -93,7 +96,7 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
     //size_t const minwidth_bin = minwidth/average_factor;
     size_t const offset = average_factor/2;
     size_t num_binned = \
-      LineFinderUtils::binDataAndMask<float>(num_data, data.data, mask.data,
+      LineFinderUtils::binDataAndMask<float>(num_data, data, mask,
 					     average_factor, num_data,
 					     binned_data.data,
 					     binned_mask.data,
