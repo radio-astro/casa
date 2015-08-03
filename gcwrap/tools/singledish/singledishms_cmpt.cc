@@ -182,7 +182,6 @@ singledishms::subtract_baseline(string const& datacolumn,
   return rstat;
 }
 
-
 bool
 singledishms::subtract_baseline_cspline(string const& datacolumn,
 				string const& outfile,
@@ -223,7 +222,6 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
   }
   return rstat;
 }
-
 
 /*
 bool
@@ -300,6 +298,30 @@ singledishms::apply_baseline_table(string const& bltable,
   try {
     assert_valid_ms();
     itsSd->applyBaselineTable(datacolumn, bltable, toCasaString(spw), outfile);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
+singledishms::fit_line(string const& datacolumn,
+		       ::casac::variant const& spw,
+		       ::casac::variant const& pol,
+		       string const& fitfunc,
+		       string const& nfit,
+		       string const& tempfile,
+		       string const& tempoutfile)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->fitLine(datacolumn, toCasaString(spw), toCasaString(pol), 
+		   fitfunc, nfit, tempfile, tempoutfile);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

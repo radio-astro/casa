@@ -254,7 +254,6 @@ sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
   </example>
 </method>
 
-
 <method type="function" name="subtract_baseline_cspline">
   <shortdescription>Invoke baseline subtraction
   </shortdescription>
@@ -518,7 +517,6 @@ sdms.subtract_baseline_variable('m100_fitparam.txt')
   </example>
 </method>
 
-
 <method type="function" name="apply_baseline_table">
   <shortdescription>Apply baseline table to MS.
   </shortdescription>
@@ -564,6 +562,68 @@ sdms.apply_baseline_table('m100_sd.bltable')
   </example>
 </method>
 
+<method type="function" name="fit_line">
+  <shortdescription>Invoke line fitting
+  </shortdescription>
+  <description>
+Fit line profile to selected spectra and obtain the best-fit parameter values
+  </description>
+  <input>
+
+    <param type="string" name="datacolumn">
+      <description>The name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="any" name="spw">
+      <description>Spectral Window Ids (0 relative) to select; -1 interpreted as all</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="any" name="pol">
+      <description>Select data by polarization(s).</description>
+      <any type="variant"/>
+      <value></value>
+    </param>
+
+    <param type="string" name="fitfunc">
+      <description>Function of line profile</description>
+      <value>gaussian</value>
+      <allowed kind="enum">
+	<value>gaussian</value>
+	<value>lorentzian</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="nfit">
+      <description>Comma-separated numbers of gaussian/lorentzian lines to fit in maskline region</description>
+      <value>0</value>
+    </param>
+
+    <param type="string" name="tempfile">
+      <description>The name of temporary file to keep fitting results</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="tempoutfile">
+      <description>The name of temporary ms file</description>
+      <value></value>
+    </param>
+
+  </input>
+  <returns type="bool"/>
+  <example>
+sdms.open('m100_sd.ms')
+sdms.set_selection(field='M100')
+sdms.fit_line(fitfunc='gauss',spw='0:1000~2000;4000~5000',nfit=[1,1])
+  </example>
+</method>
 
 <method type="function" name="set_selection">
   <shortdescription>Select Measurementset to process</shortdescription>
