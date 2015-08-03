@@ -1116,33 +1116,32 @@ class tsdbaseline_outbltableTest(tsdbaseline_unittest_base, unittest.TestCase):
                 is_skipped = (option != '') and (irow == 2) and (ipol == 1)
 
                 self.assertEqual(not is_skipped, tb.getcell('APPLY', irow)[ipol][0]);
+                if is_skipped: continue
+            
                 self.assertEqual(self.ftype[blparam['btype'][i]], tb.getcell('FUNC_TYPE', irow)[ipol][0]);
                 fparam_key = 'order' if (blparam['btype'][i] != 'cspline') else 'npiec'
-                fparam = blparam[fparam_key][i]
-                if not is_skipped:
-                    self.assertEqual(fparam, tb.getcell('FUNC_PARAM', irow)[ipol][0])
+                self.assertEqual(blparam[fparam_key][i], tb.getcell('FUNC_PARAM', irow)[ipol][0])
+            
                 if (blparam['btype'][i] == 'cspline'):
                     for j in range(blparam['npiec'][i]):
                         self.assertEqual(0.0, tb.getcell('FUNC_FPARAM', irow)[ipol][j])
                 else:
                     self.assertEqual(0, len(tb.getcell('FUNC_FPARAM', irow)[ipol]))
                 for j in range(len(results[i])):
-                    result = 0.0 if is_skipped else results[i][j]
-                    self._checkValue(result, tb.getcell('RESULT', irow)[ipol][j], 1.0e-5)
-                if not is_skipped:
-                    self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-1)
-                    self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
-                    self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
-                    uself = (blparam['uself'][i] == 'true')
-                    self.assertEqual(uself, tb.getcell('USE_LF', irow)[ipol][0])
-                    lthre = 5.0 if ((blparam['lthre'][i] == '') or not uself) else float(blparam['lthre'][i])
-                    self._checkValue(lthre, tb.getcell('LF_THRESHOLD', irow)[ipol][0], 1.0e-6)
-                    chavg = 0 if (blparam['chavg'][i] == '') else int(blparam['chavg'][i])
-                    self.assertEqual(chavg, tb.getcell('LF_AVERAGE', irow)[ipol][0])
-                    ledge = 0 if ((blparam['ledge'][i] == '') or not uself) else int(blparam['ledge'][i])
-                    self.assertEqual(ledge, tb.getcell('LF_EDGE', irow)[ipol][0])
-                    redge = 0 if ((blparam['redge'][i] == '') or not uself) else int(blparam['redge'][i])
-                    self.assertEqual(redge, tb.getcell('LF_EDGE', irow)[ipol][1])
+                    self._checkValue(results[i][j], tb.getcell('RESULT', irow)[ipol][j], 1.0e-5)
+                self._checkValue(rms[i], tb.getcell('RMS', irow)[ipol][0], 1.0e-1)
+                self._checkValue(float(blparam['cthre'][i]), tb.getcell('CLIP_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                self.assertEqual(blparam['nclip'][i], tb.getcell('CLIP_ITERATION', irow)[ipol][0])
+                uself = (blparam['uself'][i] == 'true')
+                self.assertEqual(uself, tb.getcell('USE_LF', irow)[ipol][0])
+                lthre = 5.0 if ((blparam['lthre'][i] == '') or not uself) else float(blparam['lthre'][i])
+                self._checkValue(lthre, tb.getcell('LF_THRESHOLD', irow)[ipol][0], 1.0e-6)
+                chavg = 0 if (blparam['chavg'][i] == '') else int(blparam['chavg'][i])
+                self.assertEqual(chavg, tb.getcell('LF_AVERAGE', irow)[ipol][0])
+                ledge = 0 if ((blparam['ledge'][i] == '') or not uself) else int(blparam['ledge'][i])
+                self.assertEqual(ledge, tb.getcell('LF_EDGE', irow)[ipol][0])
+                redge = 0 if ((blparam['redge'][i] == '') or not uself) else int(blparam['redge'][i])
+                self.assertEqual(redge, tb.getcell('LF_EDGE', irow)[ipol][1])
         finally:
             tb.close()
     
