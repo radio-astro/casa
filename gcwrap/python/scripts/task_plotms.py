@@ -257,8 +257,11 @@ def plotms(vis=None,
             if ( gridrows*gridcols - 1 < plotindex):
                 casalog.post("A nonzero plotindex is not valid when resetting the page grid", "SEVERE")
                 return False'''
-    
-    
+        if pm.isDrawing() and clearplots:
+            casalog.post("Plotms is running in GUI mode and cannot be run again until the current drawing completes.")
+            print "ERROR: Plotms is running in GUI mode and cannot be run again until the current drawing completes."
+            return False
+
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
         #the constructor of plotms.
