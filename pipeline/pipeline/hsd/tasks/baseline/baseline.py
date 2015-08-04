@@ -185,6 +185,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             if mpihelpers.is_mpi_ready():
                 context_path = os.path.join(context.output_dir, context.name + '.context')
                 context.save(context_path)
+                datatable.exportdata(minimal=False)
                 job_generator = common.create_parallel_job
             else:
                 job_generator = common.create_serial_job
