@@ -5,11 +5,13 @@ import datetime
 import xml.etree.cElementTree as eltree
 from xml.dom import minidom
 import collections
+import operator
 
 import casadef
 import pipeline
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
+import pipeline.qa.scorecalculator as calcmetrics
 
 LOG = logging.get_logger(__name__)
 
@@ -17,11 +19,11 @@ LOG = logging.get_logger(__name__)
 Prototype pipeline AQUA report generator
 
 Definitions
-    Metrics are physical quantities, e.g. phase rms improvement results from
-    WVR calibration.
+    Metrics are physical quantities, e.g. phase rms improvement resulting from
+    WVR calibration., * data flagged
 
-    Scores are numbers between 0.0 and 1.0 that are derived from metrics.
-    Not all metrics are scored.
+    Scores are numbers between 0.0 and 1.0 derived from metrics.  Not all
+    metrics are scored.
 '''
 
 
@@ -86,7 +88,8 @@ class AquaReport(object):
 
         self.stagedict = collections.OrderedDict()
         for i in range(len(context.results)):
-            stage_name, stage_score  = get_pipeline_stage_and_score (context.results[i])
+            stage_name, stage_score =  \
+                get_pipeline_stage_and_score (context.results[i])
             if not stage_score:
                 stage_score = 'Undefined'
             else:
@@ -156,8 +159,10 @@ class AquaReport(object):
         Add the per stage elements
             Stage number, name, and score are attributes
 
-            Note eventually we will need a toAqua method on the task
-            results to pass pipeline metrics back to AQUA
+            Eventually we will need:
+               A scores class than includes name and metric attributes
+               A toAqua method on the task results class to pass pipeline
+               metrics back to the AQUA report generator
 
         '''
 
@@ -172,29 +177,82 @@ class AquaReport(object):
                 Name=self.stagedict[stage][0], Score=self.stagedict[stage][1])
 
             # Populate the stage elements.
-            #    This must be done on a custom manner for now
-            if self.stagedict[stage][0] == 'hifa_wvrgcalflag':
-                self.add_phase_rms_ratio_metric(st, self.context.results[stage-1])
+            #    This must be done in a custom manner for now
+
+            # Deterministic flagging
+            #     Retrieve the result with the highest online and shadow flagging metric
+
+            if self.stagedict[stage][0] == 'hifa_flagdata':
+                self.add_online_shadow_flagging_metric(st,
+                    self.context.results[stage-1])
+
+            # WVR calibration and flagging
+            #     Retrieve the result with the lowest rms improvement metric
+
+            elif self.stagedict[stage][0] == 'hifa_wvrgcalflag':
+                self.add_phase_rms_ratio_metric(st,
+                    self.context.results[stage-1])
+
+            # Generic empty result
             else:
                 pass
                 
         return ppqa
 
+    def add_online_shadow_flagging_metric (self, stage_element,
+        flagdata_result):
+
+        '''
+        '''
+
+        # Retrieve the flagging summaries
+        results = flagdata_result.read()
+        if isinstance (results, collections.Iterable):
+            mlist = []
+            for i in range(len(results)):
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats if s.name in ['online', 'shadow']], 0))
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                metric = reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats if s.name in ['online', 'shadow']], 0)
+                metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%OnlineShadowFlags",
+            Value=metric, Asdm=vis)
+
     def add_phase_rms_ratio_metric (self, stage_element, wvr_result):
 
         '''
-        hifa_wvrgcalflag currently generates only a single metric which is
-            the ratio of phase rms (with wvr) / phase rms (without wvr).
-            This metric is incorrectly labeled as a score
-            This score in None or a floating point value
+        hifa_wvrgcalflag currently generates only a single metric, the
+            ratio of phase rms (without wvr) / phase rms (with wvr).
+        This metric is incorrectly labeled as a score.
+        This metric is either None or a floating point value.
         '''
 
         # Retrieve the rms improvement metric
         results = wvr_result.read()
         if isinstance (results, collections.Iterable):
 
-            # Find the results with the lowest overall metric
-            rlist = [r.qa_wvr.overall_score for r in utils.flatten(results)]
+            # Find the results with the lowest metric which for this task corresponds to
+            # to the lowest overall score.
+            #rlist = [r.qa_wvr.overall_score for r in utils.flatten(results)]
+            rlist = [r.qa_wvr.overall_score for r in results]
             metric, idx = min ((metric, idx) for (idx, metric) in enumerate(rlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -205,9 +263,10 @@ class AquaReport(object):
                     metric = '%0.3f' % results[idx].qa_wvr.overall_score
 
         else:
-            # By definition this is the result with the lowest score
+            # By definition this is the result with the lowest metric
             if not results:
                 vis = 'Undefined'
+                metric = 'Undefined'
             else:
                 vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
                 if results.qa_wvr.overall_score is None:
