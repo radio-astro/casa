@@ -406,7 +406,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
-        LOG.info('add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
+        LOG.info('CAS-7721: add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
         if key_small not in keys or key_large not in keys:
             self.putkeyword(key_small, dictify(timetable[0]))
@@ -422,7 +422,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
-        LOG.info('get time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
+        LOG.info('CAS-7721: get time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         if key_small in keys and key_large in keys:
             ttdict_small = self.getkeyword(key_small)
             ttdict_large = self.getkeyword(key_large)
@@ -430,11 +430,11 @@ class DataTableImpl( object ):
             timetable_large = [ttdict_large[str(i)].tolist() for i in xrange(len(ttdict_large))]
             timetable = [timetable_small, timetable_large]
         else:
-            LOG.info('keys=%s'%(keys))
+            LOG.info('CAS-7721: keys=%s'%(keys))
             if key_small not in keys:
-                LOG.info('Key \'%s\' doesn\'t exist'%(key_small))
+                LOG.info('CAS-7721: Key \'%s\' doesn\'t exist'%(key_small))
             if key_large not in keys:
-                LOG.info('Key \'%s\' doesn\'t exist'%(key_large))
+                LOG.info('CAS-7721: Key \'%s\' doesn\'t exist'%(key_large))
             #timetable = self.get_timetable(ant, spw, pol)
             raise RuntimeError('time table for Antenna %s spw %s pol %s is not configured properly'%(ant,spw,pol))
         end_time = time.time()

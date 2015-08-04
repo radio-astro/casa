@@ -221,6 +221,8 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             and hasattr(self, '_datatable_instance') \
             and self._datatable_instance is not None:
             datatable = self._datatable_instance
+            LOG.info('CAS-7721: datatable name \'%s\''%(datatable.name))
+            LOG.info('CAS-7721: datatable keys: %s'%(datatable.tb2.keywordnames()))
             if context.observing_run.datatable_instance is None:
                 LOG.trace('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
