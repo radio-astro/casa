@@ -10,14 +10,14 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
     casalog.origin('tsdbaseline')
     try:
-        if type(outfile)!= str or len(outfile)==0:
+        if (outfile == '') or not isinstance(outfile, str):
             print("type=%s, value=%s" % (type(outfile), str(outfile)))
             raise ValueError, "outfile name is empty."
         if os.path.exists(outfile) and not overwrite:
             raise Exception(outfile + ' exists.')
-        if (maskmode=='interact'):
+        if (maskmode == 'interact'):
             raise ValueError, "maskmode='%s' is not supported yet" % maskmode
-        if (blfunc=='variable' and not os.path.exists(blparam)):
+        if (blfunc == 'variable' and not os.path.exists(blparam)):
             raise ValueError, "input file '%s' does not exists" % blparam
         
         if (spw == ''): spw = '*'
@@ -62,7 +62,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                     if os.path.exists(blout):
                         blout_exists = True
                         break
-            if blout_exists:
+            if blout_exists and not overwrite:
                 raise ValueError, "file(s) specified in bloutput exists."
 
             selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
@@ -322,8 +322,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                                   avg_limit=avg_limit,
                                                   minwidth=minwidth,
                                                   edge=edge)
-            if overwrite and os.path.exists(outfile):
-                os.system('rm -rf %s' % outfile)
+            if overwrite:
+                if os.path.exists(outfile):
+                    os.system('rm -rf %s' % outfile)
+                for bloutfile in new_bloutput:
+                    if os.path.exists(bloutfile):
+                    os.system('rm -rf %s' % bloutfile)
             
             #print params
             if(blformat != ',,'):

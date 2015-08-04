@@ -77,9 +77,9 @@ def get_result_dict(tempfile, nfit):
             for icomp in range(ncomp):
                 fit_result = component[icomp].split(',')   # split into each parameter
                 assert(len(fit_result) == 2*(len(res.keys())-1))
-                res['cent'][iline].append([fit_result[0], fit_result[1]])
-                res['peak'][iline].append([fit_result[2], fit_result[3]])
-                res['fwhm'][iline].append([fit_result[4], fit_result[5]])
+                res['cent'][iline].append([float(fit_result[0]), float(fit_result[1])])
+                res['peak'][iline].append([float(fit_result[2]), float(fit_result[3])])
+                res['fwhm'][iline].append([float(fit_result[4]), float(fit_result[5])])
             iline += 1
     
     return res
