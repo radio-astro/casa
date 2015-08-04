@@ -77,7 +77,7 @@ pipeline processing for huge dataset.
 
     <param type="string" name="maskmode" ignorecase="true">
 <!--        <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription> -->
-        <shortdescription>mode of setting additional channel masks. only \'list\' is available now.</shortdescription>
+        <shortdescription>mode of setting additional channel masks. \'list\' and \'auto\' are available now.</shortdescription>
         <description>mode of setting additional channel masks</description>
         <value>list</value>
         <allowed kind="enum">
@@ -218,13 +218,13 @@ pipeline processing for huge dataset.
     <param type="bool" name="verbose">
         <shortdescription>output fitting results to logger [True, False]</shortdescription>
         <description>output fitting results to logger</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="bool" name="showprogress">
         <shortdescription>show progress status for large data [True, False]</shortdescription>
         <description>show progress status for large data</description>
-        <value>True</value>
+        <value>False</value>
     </param>
 
     <param type="int" name="minnrow" subparam="true">
@@ -280,7 +280,7 @@ pipeline processing for huge dataset.
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
                 </equals>
-                <!--equals value="sinusoid">
+<!--            <equals value="sinusoid">
                         <default param="applyfft"><value>True</value></default>
                         <default param="fftmethod"><value type="string">fft</value></default>
                         <default param="fftthresh"><value type="double">3.0</value></default>
@@ -288,12 +288,13 @@ pipeline processing for huge dataset.
                         <default param="rejwn"><value type="vector"><value></value></value></default>
                         <default param="clipthresh"><value>3.0</value></default>
                         <default param="clipniter"><value>0</value></default>
-                </equals-->
+                </equals> -->
                 <equals value="variable">
                         <default param="blparam"><value type="string"></value></default>
                 </equals>
             </when>
             <when param="showprogress">
+                <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
                         <default param="minnrow"><value>1000</value></default>
                 </equals>
@@ -491,8 +492,7 @@ blfunc -- baseline model function. In cases blmode='apply' or blparam is
         blparam -- the name of text file that stores per spectrum fit
                    parameters. See below for details of format.
 verify -- interactively verify the results of operation for each spectrum.
-          When verify = True, for each input s                     can be averaged to search for broad lines.
-pectrum, spectra
+          When verify = True, for each input spectrum, spectra 
           before and after the operation are displayed in a plot
           window. At the prompt there are four choices of action:
           'Y' (accept the operation and continue to the next input
@@ -508,11 +508,11 @@ pectrum, spectra
 verbose -- output fitting results to logger. if False, the fitting results
            including coefficients, residual rms, etc., are not output to
            the CASA logger, while the processing speed gets faster.
-        options: (bool) True, False
-        default: True
+        options: (bool) False
+        default: False (verbose=True is currently unavailable)
 showprogress -- show progress status for large data
-        options: (bool) True, False
-        default: True
+        options: (bool) False (this capability is currently unavailable.)
+        default: False
     &gt;&gt;&gt; showprogress expandable parameter
         minnrow -- minimum number of input spectra to show progress status
                  default: 1000
