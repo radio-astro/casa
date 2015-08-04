@@ -164,7 +164,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                 ftitles = ['Fit order']
                             elif blf == 'cspline':
                                 ftitles = ['nPiece']
-                                print 'task 2'
+                                #print 'task 2'
                             else: # sinusoid
                                 ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
                             if mm == 'auto':
@@ -267,9 +267,9 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
 
                     if('table' in blformat):
-                        print 'blformat->',type(blformat), blformat
-                        print "blformat.index('table')", blformat.index('table')
-                        print "bloutput[blformat.index('table')])", bloutput[blformat.index('table')]
+                        #print 'blformat->',type(blformat), blformat
+                        #print "blformat.index('table')", blformat.index('table')
+                        #print "bloutput[blformat.index('table')])", bloutput[blformat.index('table')]
 
                         if(''!= bloutput[blformat.index('table')]):
                             fname = bloutput[blformat.index('table')]
