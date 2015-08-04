@@ -193,6 +193,13 @@ class AquaReport(object):
                 self.add_phase_rms_ratio_metric(st,
                     self.context.results[stage-1])
 
+            # Applycal flagging
+            #     Retrieve the result with the highest applycal flagging metric
+
+            elif self.stagedict[stage][0] == 'hif_applycal':
+                self.add_applycal_flagging_metric(st,
+                    self.context.results[stage-1])
+
             # Generic empty result
             else:
                 pass
@@ -203,6 +210,10 @@ class AquaReport(object):
         flagdata_result):
 
         '''
+        hifa_flagdata  currently generates only a single metric, the
+            percentage flagged by the online and shadow flagging agents.
+        This method is amost identical to the applycal flagging
+        task metric.
         '''
 
         # Retrieve the flagging summaries
@@ -275,6 +286,48 @@ class AquaReport(object):
                     metric = '%0.3f' % results.qa_wvr.overall_score
 
         eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
+            Value=metric, Asdm=vis)
+
+    def add_applycal_flagging_metric (self, stage_element,
+        applycal_result):
+
+        '''
+        hif_applycal  currently generates only a single metric, the
+            percentage of data flagged by the applycal flagging agent.
+
+        This method is amost identical to the deterministic flagging
+        task metric.
+        '''
+
+        # Retrieve the flagging summaries
+        results = applycal_result.read()
+        if isinstance (results, collections.Iterable):
+            mlist = []
+            for i in range(len(results)):
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats if s.name in ['applycal']], 0))
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                metric = reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats if s.name in ['online', 'shadow']], 0)
+                metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%ApplycalFlags",
             Value=metric, Asdm=vis)
 
     def write (self, filename):
