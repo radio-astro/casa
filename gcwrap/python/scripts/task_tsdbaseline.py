@@ -181,6 +181,9 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                             outfile2=''
                             if(outfile==''): 
                                 outfile2 = infile
+                            else:
+                                outfile2 = outfile
+                            
 
                             info = [['Source Table', infile],
                                     ['Output File', outfile2]]
