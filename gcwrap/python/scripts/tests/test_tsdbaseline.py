@@ -1734,12 +1734,35 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
     Basic unit tests for task tsdbaseline. No interactive testing.
 
     List of tests:
-    test000 --- default values for all parameters
-    test001 --- polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
-    test002 --- Chebyshev polynominal baselining with no mask (maskmode = 'list'). spw and pol specified.
-    test003 --- cubic spline baselining with no mask (maskmode = 'list'). spw and pol specified.
-    test050 --- existing file as outfile with overwrite=False (raises an exception)
-    test051 --- no data after selection (raises an exception)
+#'poly'
+    test000 --- blformat=['csv','text','table'], bloutput=['test.csv','test.txt','test.table']
+    test001 --- blformat=['text','csv','table'], bloutput=['test.txt','test.csv','test.table'] 
+    test002 --- blformat=['table','text','csv'], bloutput=['test.table','test.txt','test.csv']
+    test003 --- blformat=['table','text','csv'], bloutput=['','test.txt','test.csv'] 
+    test004 --- blformat=['table','text'],       bloutput=['','','']
+    test005 --- blformat=['table','text'],       bloutput=['','']
+    test006 --- blformat=['table'],              bloutput=[''] 
+    test007 --- blformat=['csv'],                bloutput=['']
+    test008 --- blformat=['text'],               bloutput=[''] 
+    test009 --- blformat=[''],                   bloutput=['']
+    test010 --- blformat=['','csv'],             bloutput=['','test.csv'] 
+    test011 --- blformat='',                     bloutput='' 
+    test012 --- blformat='',                     bloutput='test.csv'
+    
+    'variable'
+    test013 --- blformat=['csv','text','table'], bloutput=['test.csv','test.txt','test.table'] 
+    test014 ---
+    test015 ---
+    test016 ---
+    test017 ---
+    test018 ---
+    test019 ---
+    test020 ---
+
+
+
+
+
 
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
@@ -2164,9 +2187,9 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
             print 'test.csv', ' does not exist!  OK' 
 
 
-"""
+
     def test013(self):
-        #Basic Test 013: default values for all parameters blfunc=variable
+        """Basic Test 013: default values for all parameters blfunc=variable"""
         tid = '013'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2190,7 +2213,108 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         for i in bloutput:
             if(os.path.exists(i)):
                 print i, 'exists!  OK' 
-"""
+
+
+    def test014(self):
+        """Basic Test 014: default values for all parametersi blformat=['table','text','csv'], bloutput=['test.table','','test.csv']"""
+        tid = '014'
+        infile = self.infile
+        outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['table','text','csv']
+        bloutput=['test.table','','test.csv']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+        if(os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' exists!  OK' 
+
+
+        if(os.path.exists('test.csv')):
+            print 'test.csv', ' exists!  OK' 
+
+    
+        if(os.path.exists('test.table')):
+            print 'test.table', ' exists!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+       
+        if(not os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' does not exist!  OK'
+
+
+
+    def test015(self):
+        """Basic Test 014: default values for all parametersi blformat=['table','text','csv'], bloutput=['test.table','test.txt','']"""
+        tid = '015'
+        infile = self.infile
+        outfile = self.outroot+tid+'.ms'
+        datacolumn = 'float_data'
+
+        blformat=['table','text','csv']
+        bloutput=['test.table','test.txt','']
+
+
+        result = tsdbaseline(infile=infile, datacolumn=datacolumn,
+                             outfile=outfile, 
+                             blformat=blformat, bloutput=bloutput)
+        # tsdbaseline returns None if it runs successfully
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+        
+        for i in bloutput:
+            if(os.path.exists(i)):
+                print i, 'exists!  OK' 
+
+
+        if(os.path.exists(infile + '_blparam.csv')):
+            print infile+'_blparam.csv', ' exists!  OK' 
+
+
+        if(os.path.exists('test.txt')):
+            print 'test.txt', ' exists!  OK' 
+
+    
+        if(os.path.exists('test.table')):
+            print 'test.table', ' exists!  OK' 
+
+
+        if(not os.path.exists(infile + '_blparam.bltable')):
+            print infile+'_blparam.bltable', ' does not exist!  OK' 
+
+       
+        if(not os.path.exists(infile + '_blparam.txt')):
+            print infile+'_blparam.txt', ' does not exist!  OK' 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class tsdbaseline_autoTest(tsdbaseline_unittest_base):
