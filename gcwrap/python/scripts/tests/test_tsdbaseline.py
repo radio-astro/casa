@@ -1734,7 +1734,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
     Basic unit tests for task tsdbaseline. No interactive testing.
 
     List of tests:
-#'poly'
+    #'poly'
     test000 --- blformat=['csv','text','table'], bloutput=['test.csv','test.txt','test.table']
     test001 --- blformat=['text','csv','table'], bloutput=['test.txt','test.csv','test.table'] 
     test002 --- blformat=['table','text','csv'], bloutput=['test.table','test.txt','test.csv']
@@ -1749,10 +1749,10 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
     test011 --- blformat='',                     bloutput='' 
     test012 --- blformat='',                     bloutput='test.csv'
     
-    'variable'
+    #'variable'
     test013 --- blformat=['csv','text','table'], bloutput=['test.csv','test.txt','test.table'] 
-    test014 ---
-    test015 ---
+    test014 --- blformat=['table','text','csv'], bloutput=['test.table','','test.csv'] 
+    test015 --- blformat=['table','text','csv'], bloutput=['test.table','test.txt','']
     test016 ---
     test017 ---
     test018 ---
@@ -1837,7 +1837,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test001(self):
-        """Basic Test 001: default values for all parameters"""
+        """Basic Test 001: default values for all parameters except blformat=['text','csv','table'] and bloutput=['test.txt','test.csv','test.table']"""
         tid = '001'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1862,7 +1862,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test002(self):
-        """Basic Test 002: default values for all parameters"""
+        """Basic Test 002: default values for all parameters except blformat=['table','text','csv'] and bloutput=['test.table','test.txt','test.csv']"""
         tid = '002'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1886,7 +1886,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test003(self):
-        """Basic Test 003: default values for all parameters"""
+        """Basic Test 003: default values for all parameters except blformat=['table','text','csv'] and bloutput=['','test.txt','test.csv']"""
         tid = '003'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1909,7 +1909,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test004(self):
-        """Basic Test 004: default values for all parameters"""
+        """Basic Test 004: default values for all parameters except blformat=['table','text','csv'] and bloutput=['','','']"""
         tid = '004'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1934,7 +1934,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test005(self):
-        """Basic Test 005: default values for all parameters except blformat=['table','text']"""
+        """Basic Test 005: default values for all parameters except blformat=['table','text'] and bloutput=['','']"""
         tid = '005'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1961,7 +1961,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test006(self):
-        """Basic Test 006: default values for all parameters except blformat=['table']"""
+        """Basic Test 006: default values for all parameters except blformat=['table'] and bloutput=['']"""
         tid = '006'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -1989,7 +1989,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test007(self):
-        """Basic Test 007: default values for all parameters except blformat=['csv']"""
+        """Basic Test 007: default values for all parameters except blformat=['csv'] and bloutput=['']"""
         tid = '007'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2017,7 +2017,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test008(self):
-        """Basic Test 008: default values for all parameters except blformat=['text']"""
+        """Basic Test 008: default values for all parameters except blformat=['text'] and bloutput=['']"""
         tid = '008'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2044,7 +2044,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test009(self):
-        """Basic Test 009: default values for all parameters except blformat=['']"""
+        """Basic Test 009: default values for all parameters except blformat=[''] and bloutput=['']"""
         tid = '009'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2078,7 +2078,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test010(self):
-        """Basic Test 010: default values for all parameters except blformat=['','csv']"""
+        """Basic Test 010: default values for all parameters except blformat=['','csv'] and bloutput=['','test.csv']"""
         tid = '010'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2116,7 +2116,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test011(self):
-        """Basic Test 011: default values for all parameters except blformat='', bloutput=''"""
+        """Basic Test 011: default values for all parameters except blformat='' and  bloutput=''"""
         tid = '011'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2151,7 +2151,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test012(self):
-        """Basic Test 012: default values for all parameters except blformat='', bloutput='test.csv'"""
+        """Basic Test 012: default values for all parameters except blformat='' and  bloutput='test.csv'"""
         tid = '012'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2189,7 +2189,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test013(self):
-        """Basic Test 013: default values for all parameters blfunc=variable"""
+        """Basic Test 013: default values for all parameters except blfunc=variable, blparam='analytic_variable_blparam.txt', blformat=['csv','text','table'], and bloutput=['test.csv','test.txt','test.table']"""
         tid = '013'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2216,7 +2216,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test014(self):
-        """Basic Test 014: default values for all parametersi blformat=['table','text','csv'], bloutput=['test.table','','test.csv']"""
+        """Basic Test 014: default values for all parameters except  blformat=['table','text','csv'] and  bloutput=['test.table','','test.csv']"""
         tid = '014'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
@@ -2260,7 +2260,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
     def test015(self):
-        """Basic Test 014: default values for all parametersi blformat=['table','text','csv'], bloutput=['test.table','test.txt','']"""
+        """Basic Test 014: default values for all parameters except blformat=['table','text','csv'] and bloutput=['test.table','test.txt','']"""
         tid = '015'
         infile = self.infile
         outfile = self.outroot+tid+'.ms'
