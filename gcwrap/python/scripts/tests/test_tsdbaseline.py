@@ -1793,7 +1793,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 000: default values for all parameters"""
         tid = '000'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
         blformat=['csv','text','table']
@@ -1801,7 +1801,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1817,7 +1817,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 001: default values for all parameters"""
         tid = '001'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
         blformat=['text','csv','table']
@@ -1825,7 +1825,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1842,7 +1842,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 002: default values for all parameters"""
         tid = '002'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
         blformat=['table','text','csv']
@@ -1850,7 +1850,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1866,7 +1866,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 003: default values for all parameters"""
         tid = '003'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
         blformat=['table','text','csv']
@@ -1874,7 +1874,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1889,7 +1889,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 004: default values for all parameters"""
         tid = '004'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
         blformat=['table','text','csv']
@@ -1897,7 +1897,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1914,7 +1914,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 005: default values for all parameters except blformat=['table','text']"""
         tid = '005'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -1924,7 +1924,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1941,7 +1941,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 006: default values for all parameters except blformat=['table']"""
         tid = '006'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -1951,7 +1951,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1969,7 +1969,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 007: default values for all parameters except blformat=['csv']"""
         tid = '007'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -1979,7 +1979,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -1997,7 +1997,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 008: default values for all parameters except blformat=['text']"""
         tid = '008'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -2007,7 +2007,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -2024,7 +2024,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 009: default values for all parameters except blformat=['']"""
         tid = '009'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -2034,7 +2034,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -2058,7 +2058,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 010: default values for all parameters except blformat=['','csv']"""
         tid = '010'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -2068,7 +2068,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -2096,7 +2096,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 011: default values for all parameters except blformat='', bloutput=''"""
         tid = '011'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -2106,7 +2106,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -2131,7 +2131,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         """Basic Test 012: default values for all parameters except blformat='', bloutput='test.csv'"""
         tid = '012'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
 
 
@@ -2141,7 +2141,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
 
 
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput)
         # tsdbaseline returns None if it runs successfully
         self.assertEqual(result,None,
@@ -2169,7 +2169,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
         #Basic Test 013: default values for all parameters blfunc=variable
         tid = '013'
         infile = self.infile
-        #outfile = self.outroot+tid+'.ms'
+        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
         blfunc ='variable'
         blparam = 'analytic_variable_blparam.txt'
@@ -2180,7 +2180,7 @@ class tsdbaseline_bloutputTest(tsdbaseline_unittest_base):
             print blparam + ' not exists!'
         
         result = tsdbaseline(infile=infile, datacolumn=datacolumn,
-                             #outfile=outfile, 
+                             outfile=outfile, 
                              blformat=blformat, bloutput=bloutput,
                              blparam=blparam)
         # tsdbaseline returns None if it runs successfully

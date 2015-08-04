@@ -10,8 +10,9 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
     casalog.origin('tsdbaseline')
     try:
-#         if type(outfile)!=str or len(outfile)==0:
-#             raise ValueError, "outfile name is empty."
+        if type(outfile)!= str or len(outfile)==0:
+            print("type=%s, value=%s" % (type(outfile), str(outfile)))
+            raise ValueError, "outfile name is empty."
         if os.path.exists(outfile) and not overwrite:
             raise Exception(outfile + ' exists.')
         if (maskmode=='interact'):
