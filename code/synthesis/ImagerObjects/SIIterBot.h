@@ -254,6 +254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int   itsInteractiveIterDone;
 			Int   itsMaxCycleIterDone;
 			Int   itsMajorDone;
+	                Int   itsStopCode;
 
 			/*
 			  A condition variable used when we're waiting for interaction to 

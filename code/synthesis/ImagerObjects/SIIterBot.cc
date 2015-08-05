@@ -84,6 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsInteractiveIterDone(0),
 						itsMaxCycleIterDone(0),
 						itsMajorDone(0),
+                                                itsStopCode(0),
 						itsNSummaryFields(6),
 						itsSummaryMinor(IPosition(2,6,0)),
 						itsSummaryMajor(IPosition(1,0)),
@@ -164,6 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//		return false;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
+		itsStopCode=stopCode;
 		return stopCode;
 	}
 
@@ -461,6 +463,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		returnRecord.define( RecordFieldId("minpsffraction"), itsMinPsfFraction);
 		returnRecord.define( RecordFieldId("interactivemode"), itsInteractiveMode);
 
+		returnRecord.define( RecordFieldId("stopcode"), itsStopCode);
+
 		/* report clean's state */
 		returnRecord.define( RecordFieldId("cleanstate"), itsStopFlag ? "stopped" :
 		                                                  itsPauseFlag ? "paused" : "running" );
@@ -634,6 +638,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 << " itsInteractiveIterDone=" << itsInteractiveIterDone
 				 << " itsMaxCycleIterDone=" << itsMaxCycleIterDone
 				 << " itsMajorDone=" << itsMajorDone
+			         << " itsStopCode=" << itsStopCode 
 				 << endl;
 		} else {
 			cout << prefix << " : " 
