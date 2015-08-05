@@ -134,8 +134,8 @@ class convertToMMS():
             if d.startswith('.'):
                 continue
             
-            if not d.endswith('.ms'):
-                continue
+#            if not d.endswith('.ms'):
+#                continue
             
             # Full path for directory
             dir = os.path.join(topdir,d)
