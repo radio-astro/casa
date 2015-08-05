@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain.datatable import absolute_path
 import pipeline.domain as domain
 from .. import common
 from . import reader
@@ -59,7 +60,7 @@ class SDInspectDataResults(common.SingleDishResults):
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
         
-        LOG.info('CAS-7721: DataTable keys: %s'%(datatable.tb2.keywordnames()))
+        #LOG.info('CAS-7721: DataTable keys: %s'%(datatable.tb2.keywordnames()))
 
         # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
@@ -124,7 +125,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
         inputs = self.inputs
 
         # create DataTable under context directory
-        table_name = os.path.join(inputs.context.name,'DataTable.tbl')
+        table_name = absolute_path(os.path.join(inputs.context.name,'DataTable.tbl'))
 
         if os.path.exists(table_name):
             # if DataTable already exists, remove it
@@ -135,6 +136,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
         # create DataTableReader instance
         worker = reader.DataTableReader(context=inputs.context, table_name=table_name)
         LOG.debug('table_name=%s'%(table_name))
+        LOG.info('CAS-7721: table_name=%s'%(table_name))
 
 
         # loop over infiles

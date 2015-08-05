@@ -222,11 +222,13 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             and self._datatable_instance is not None:
             datatable = self._datatable_instance
             LOG.info('CAS-7721: datatable name \'%s\''%(datatable.name))
-            LOG.info('CAS-7721: datatable keys: %s'%(datatable.tb2.keywordnames()))
+            #LOG.info('CAS-7721: datatable keys: %s'%(datatable.tb2.keywordnames()))
+            LOG.info('CAS-7721: datatable name from context (before): \'%s\''%(context.observing_run.datatable_name))
             if context.observing_run.datatable_instance is None:
                 LOG.trace('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
-                context.observing_run.datatable_name = os.path.relpath(datatable.name, context.output_dir)
+                context.observing_run.datatable_name = datatable.name#os.path.relpath(datatable.name, context.output_dir)
+            LOG.info('CAS-7721: datatable name from context (after): \'%s\''%(context.observing_run.datatable_name))
 
 def datatable_setter(func):
     import functools
