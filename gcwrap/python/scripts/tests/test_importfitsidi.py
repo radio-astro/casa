@@ -125,7 +125,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.dat",
                             "POLARIZATION/table.dat",
                             "PROCESSOR/table.dat",
-                            "SOURCE/table.dat",
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
                             "ANTENNA/table.f0",
@@ -138,7 +137,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.f0",
                             "POLARIZATION/table.f0",
                             "PROCESSOR/table.f0",
-                            "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
                             "STATE/table.f0"
                             ])
@@ -268,7 +266,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.dat",
                             "POLARIZATION/table.dat",
                             "PROCESSOR/table.dat",
-                            "SOURCE/table.dat",
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
                             "ANTENNA/table.f0",
@@ -281,7 +278,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.f0",
                             "POLARIZATION/table.f0",
                             "PROCESSOR/table.f0",
-                            "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
                             "STATE/table.f0"
                             ])
@@ -411,7 +407,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.dat",
                             "POLARIZATION/table.dat",
                             "PROCESSOR/table.dat",
-                            "SOURCE/table.dat",
                             "SPECTRAL_WINDOW/table.dat",
                             "STATE/table.dat",
                             "ANTENNA/table.f0",
@@ -424,7 +419,6 @@ class test_importfitsidi(unittest.TestCase):
                             "POINTING/table.f0",
                             "POLARIZATION/table.f0",
                             "PROCESSOR/table.f0",
-                            "SOURCE/table.f0",
                             "SPECTRAL_WINDOW/table.f0",
                             "STATE/table.f0"
                             ])
@@ -677,6 +671,132 @@ class test_importfitsidi(unittest.TestCase):
                 
         self.assertTrue(retValue['success'])
 
+    def test4(self):
+        '''fitsidi-import: Test good input, list of two input files, constobsid and scanreindexing'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        self.res = importfitsidi([my_dataset_names[1],my_dataset_names[2]], msname, 
+                                 constobsid=True, scanreindexgap_s=1.5)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.dat",
+#                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+    
+            # check main table first
+            name = ""
+            #             col name, row number, expected value, tolerance
+            expected = [
+                         ['UVW',       42, [ 0., 0., 0. ], 1E-8],
+                         ['EXPOSURE',  42, 2.0, 1E-8],
+                         ['DATA',      42,[[ 1.06945515 +7.91624188e-09j,
+                                             0.98315531 +9.31322575e-10j,
+                                             1.05244470 +5.77396486e-09j,
+                                             0.90496856 -0.00000000e+00j,
+                                             0.93005872 -6.71682887e-09j,
+                                             0.80769897 -0.00000000e+00j,
+                                             0.93059886 -6.97121116e-09j,
+                                             0.77081358 -0.00000000e+00j,
+                                             0.93020338 -7.45058060e-09j,
+                                             0.83353537 -0.00000000e+00j,
+                                             0.91982168 -5.54113422e-09j,
+                                             0.88411278 -4.65661287e-10j,
+                                             1.02857709 +5.78550630e-09j,
+                                             0.93398595 -0.00000000e+00j,
+                                             1.13884020 +1.01289768e-08j,
+                                             2.49237108 -0.00000000e+00j ]], 1E-8],
+                         ['OBSERVATION_ID', 42, 0, 0],
+                         ['SCAN_NUMBER', 42, 1, 0]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+    
+            expected = [
+                         ['UVW',       638, [171529.37575288, -786712.70341456, 210321.20978818], 1E-8],
+                         ['EXPOSURE',  638,  2.0, 1E-8],
+                         ['DATA',      638, [[-0.00224198+0.00067056j,
+                                              -0.00475123+0.0024323j,
+                                              -0.00416393+0.00212671j,
+                                              -0.00565350+0.00340364j,
+                                              -0.00527357+0.00011977j,
+                                              -0.00292699+0.00131954j,
+                                              -0.00429945+0.00035823j,
+                                              -0.00545671-0.00033945j,
+                                              -0.00646004+0.00037293j,
+                                              -0.00419376-0.00115011j,
+                                              -0.00508117+0.00045939j,
+                                              -0.00501660-0.00047975j,
+                                              -0.00444734-0.00101535j,
+                                              -0.00384988-0.00102731j,
+                                              -0.00551326+0.00101364j,
+                                              -0.00337701+0.00080481j]], 1E-8],
+                         ['OBSERVATION_ID', 638, 0, 0],
+                         ['SCAN_NUMBER', 638, 14, 0]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+            
+            tb.open(msname+'/OBSERVATION')
+            nr = tb.nrows()
+            tb.close()
+            if not nr==1:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table OBSERVATION failed'
+                
+        self.assertTrue(retValue['success'])
                 
     
 def suite():

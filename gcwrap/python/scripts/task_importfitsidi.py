@@ -80,11 +80,10 @@ def importfitsidi(fitsidifile,vis,constobsid=None,scanreindexgap_s=None):
 				# give the same obs id == 0 to the entire output MS
 				casalog.post('Setting observation ID of all integrations to 0', 'INFO')
 				mytb.open(vis, nomodify=False)
-				for i in range(0,nobs):
+				for i in xrange(0, mytb.nrows()):
 					mytb.putcell('OBSERVATION_ID', i, 0)
 				mytb.close()
 
-			# endif
 
 		else: # don't want constant obs id
 			if(type(fitsidifile)==list and len(fitsidifile)>1):
