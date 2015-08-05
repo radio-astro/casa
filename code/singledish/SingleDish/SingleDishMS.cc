@@ -2346,6 +2346,15 @@ void SingleDishMS::fitLine(string const& in_column_name,
 	    for (size_t icomp = 0; icomp < funcs_.nelements(); ++icomp) {
 	      if (0 < icomp) ofs << ":";
 	      size_t offset = 3*icomp;
+	      ofs.precision(4);
+	      ofs.setf(ios::fixed);
+	      ofs << scans[irow] << ","     // scanID
+		  << times[irow] << ","     // time
+	          << antennas[irow] << ","  // antennaID
+		  << beams[irow] << ","     // beamID
+                  << data_spw[irow] << ","  // spwID
+		  << ipol << ",";           // polID
+	      ofs.precision(8);
 	      ofs << parameters_[offset+1] << "," << error_[offset+1] << ","  // cent
 		  << parameters_[offset+0] << "," << error_[offset+0] << ","  // peak
 		  << parameters_[offset+2] << "," << error_[offset+2];        // fwhm
