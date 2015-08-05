@@ -328,14 +328,13 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 for bloutfile in new_bloutput:
                     if os.path.exists(bloutfile):
                         os.system('rm -rf %s' % bloutfile)
-            
+
             #print params
             if(blformat != ',,'):
                 func(**params)
-
+            
             if (blfunc == 'variable'):
                 restore_sorted_table_keyword(infile, sorttab_info)
-
 
     except Exception, instance:
         raise Exception, instance
