@@ -1407,12 +1407,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( startModel.length()>0 )
       {
 	if( nTaylorTerms<=1 ) {
-	  File fp( imageName+".model" );
-	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model before restarting";
+	  File fp( imageName+String(".model") );
+	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model so that it uses the new model specified in startmodel.";
 	  }
 	else {
-	  File fp( imageName+".model.tt0" ); 
-	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model.tt* before restarting";
+	  File fp( imageName+String(".model.tt0") ); 
+	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' to use what already exists, or delete " + imageName + ".model.tt* so that it uses the new model specified in startmodel";
 	}
       }
     
