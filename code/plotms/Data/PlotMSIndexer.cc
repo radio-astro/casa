@@ -1390,10 +1390,13 @@ String PlotMSIndexer::iterValue() {
 		maskedAt(0);  // sets currChunk_ and irel_ for first point so we can get ant indices
 		Int ant1=Int(plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)));
 		Int ant2=Int(plotmscache_->getAnt2(currChunk_,getIndex0010(currChunk_,irel_)));
-		String lab;
-		lab+=(ant1>-1 ? plotmscache_->antstanames_(ant1) : "*")+" & ";
-		lab+=(ant2>-1 ? plotmscache_->antstanames_(ant2) : "*");
-		return lab;
+		String label;
+		label += (ant1>-1 ? plotmscache_->antstanames_(ant1) : "*")+" & ";
+		label += (ant2>-1 ? plotmscache_->antstanames_(ant2) : "*");
+        // CAS-4239 add baseline length to plot title
+        String bsnLen = String::format("_%.0fm", computeBaselineLength(ant1, ant2));
+        label += bsnLen;
+		return label;
 		break;
 	}
 	case PMS::ANTENNA:
@@ -1408,7 +1411,14 @@ String PlotMSIndexer::iterValue() {
 	return String("");
 }
 
-
+Double PlotMSIndexer::computeBaselineLength(Int ant1, Int ant2) {
+    Vector<Double> ant1pos = plotmscache_->positions_[ant1];
+    Vector<Double> ant2pos = plotmscache_->positions_[ant2];
+    Double length = sqrt(pow((ant1pos[0] - ant2pos[0]), 2) + 
+                         pow((ant1pos[1] - ant2pos[1]), 2) +
+                         pow((ant1pos[2] - ant2pos[2]), 2));
+    return length;
+}
 
 String PlotMSIndexer::iterLabel() {
 	String itername(PMS::axis(iterAxis_));

@@ -406,6 +406,7 @@ protected:
   Vector<String> antstanames_; 	 
   Vector<String> fldnames_;
   Vector<String> intentnames_;
+  Array<Double> positions_;
 
   PMS::Axis iterAxis;
   bool ephemerisInitialized;

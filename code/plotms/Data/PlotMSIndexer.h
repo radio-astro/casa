@@ -196,7 +196,10 @@ private:
   // Computes the X and Y limits for the currently set axes.  In the future we
   // may want to cache ALL ranges for all loaded values to avoid recomputation.
   void computeRanges();
-  
+
+  // Compute baseline's length in meters between ant1 and ant2
+  Double computeBaselineLength(Int ant1, Int ant2);
+
   // Convenience methods that call log() with the given method name and the
   // appropriate event type.
   // <group>

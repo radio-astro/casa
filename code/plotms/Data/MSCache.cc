@@ -294,6 +294,7 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
 	antnames_    = msCol.antenna().name().getColumn();
 	stanames_    = msCol.antenna().station().getColumn();
 	antstanames_ = antnames_+String("@")+stanames_;
+    positions_   = msCol.antenna().position().getColumn();
 
 	fldnames_    = msCol.field().name().getColumn();
 
