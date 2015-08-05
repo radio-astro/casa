@@ -769,29 +769,29 @@ void SingleDishMS::split_bloutputname(string str)
         }
     }
 
-    cout << "comma " << v.size() << endl;
-    cout << "v[1] " << v[1] << endl;
-    cout <<  "v.size()-1 " <<  v.size()-1 << endl;
-    cout << "v[1]+1 " << v[1]+1 << endl;
-    cout << "str.size()-v[1]-1 " << str.size()-v[1]-1 << endl;
-    cout << "str.substr(v[1]+1, str.size()-v[1]-1) " << str.substr(v[1]+1, str.size()-v[1]-1) << endl;
+    //cout << "comma " << v.size() << endl;
+    //cout << "v[1] " << v[1] << endl;
+    //cout <<  "v.size()-1 " <<  v.size()-1 << endl;
+    //cout << "v[1]+1 " << v[1]+1 << endl;
+    //cout << "str.size()-v[1]-1 " << str.size()-v[1]-1 << endl;
+    //cout << "str.substr(v[1]+1, str.size()-v[1]-1) " << str.substr(v[1]+1, str.size()-v[1]-1) << endl;
 
     string ss;
 
     if(0 != v[0]){
         bloutputname_csv = str.substr(0, v[0]);
         ss =  str.substr(0, v[0]);
-        cout << "csv " << bloutputname_csv << endl;
+        //cout << "csv " << bloutputname_csv << endl;
     }
     if(v[0]+1 != v[1]){
         bloutputname_text  = str.substr(v[0]+1, v[1]-v[0]-1);
-        cout << "text " << bloutputname_text << endl;
+        //cout << "text " << bloutputname_text << endl;
     }
     //if(v[1] != v.size()-1 ){
     if(v[1] != str.size()-1 ){//////////////////////////////////////////
         //bloutputname_table  = str.substr(v[1]+1, v.size()-v[1]-1);
         bloutputname_table  = str.substr(v[1]+1, str.size()-v[1]-1);////////////////////////////////
-        cout << "table " << bloutputname_table  << endl;
+        //cout << "table " << bloutputname_table  << endl;
     }
 
 
@@ -819,11 +819,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 				    int const minwidth,
 				    vector<int> const& edge)
 {
-cout << "out_bloutput_name" << out_bloutput_name << flush << endl;
+//cout << "out_bloutput_name" << out_bloutput_name << flush << endl;
 split_bloutputname(out_bloutput_name);
-cout << "bloutputname_text" << bloutputname_text << flush << endl;
-cout << "bloutputname_csv" << bloutputname_csv << flush << endl;
-cout << "bloutputname_table" << bloutputname_table << flush << endl;
+//cout << "bloutputname_text" << bloutputname_text << flush << endl;
+//cout << "bloutputname_csv" << bloutputname_csv << flush << endl;
+//cout << "bloutputname_table" << bloutputname_table << flush << endl;
 
 LogIO os(_ORIGIN);
   os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
@@ -1351,7 +1351,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 				    vector<int> const& edge)
 {
 split_bloutputname(out_bloutput_name);
-cout << "SingleDishMS.cc 1" << flush << endl;
+//cout << "SingleDishMS.cc 1" << flush << endl;
 
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting cubic spline baseline npiece = " << npiece << LogIO::POST;
