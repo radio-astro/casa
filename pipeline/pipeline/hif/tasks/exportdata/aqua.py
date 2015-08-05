@@ -172,7 +172,7 @@ class AquaReport(object):
         # Loop over the stages.
         for stage in self.stagedict: 
 
-            # Create the generic stage element for now
+            # Create the generic stage element
             st = eltree.SubElement(ppqa, "Stage", Number=str(stage),
                 Name=self.stagedict[stage][0], Score=self.stagedict[stage][1])
 
@@ -180,10 +180,18 @@ class AquaReport(object):
             #    This must be done in a custom manner for now
 
             # Deterministic flagging
-            #     Retrieve the result with the highest online and shadow flagging metric
+            #     Retrieve the result with the highest online and shadow
+            #     flagging metric
 
             if self.stagedict[stage][0] == 'hifa_flagdata':
                 self.add_online_shadow_flagging_metric(st,
+                    self.context.results[stage-1])
+
+            # Tsys flagging
+            #     Retrieve the result with the highest flagging percentage
+
+            elif self.stagedict[stage][0] == 'hifa_tsysflag':
+                self.add_tsys_flagging_metric(st,
                     self.context.results[stage-1])
 
             # WVR calibration and flagging
@@ -191,6 +199,13 @@ class AquaReport(object):
 
             elif self.stagedict[stage][0] == 'hifa_wvrgcalflag':
                 self.add_phase_rms_ratio_metric(st,
+                    self.context.results[stage-1])
+
+            # Deviant high / low gain flagging
+            #     Retrieve the result with the highest flagging percentage
+
+            elif self.stagedict[stage][0] == 'hif_lowgainflag':
+                self.add_highlow_gain_flagging_metric(st,
                     self.context.results[stage-1])
 
             # Applycal flagging
@@ -247,6 +262,46 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="%OnlineShadowFlags",
             Value=metric, Asdm=vis)
 
+    def add_tsys_flagging_metric (self, stage_element, tsysflag_result):
+
+        '''
+        hifa_tsysflag currently generates 1 metric based on the percentage of
+        newly flagged data.
+
+        '''
+
+        # Retrieve the flagging summaries
+        results = tsysflag_result.read()
+        if isinstance (results, collections.Iterable):
+            mlist = []
+            for i in range(len(results)):
+                if not results[i]:
+                    continue
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats[1:]], 0))
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+                metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%TsysCaltableFlags",
+            Value=metric, Asdm=vis)
+
     def add_phase_rms_ratio_metric (self, stage_element, wvr_result):
 
         '''
@@ -286,6 +341,53 @@ class AquaReport(object):
                     metric = '%0.3f' % results.qa_wvr.overall_score
 
         eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
+            Value=metric, Asdm=vis)
+
+    def add_highlow_gain_flagging_metric (self, stage_element,
+        gainflag_result):
+
+        '''
+        hif_lowgainflag currently generates 2 metrics, one based on the
+            number of views that can be computed, and the other based on
+            the percentage of newly flagged data.
+
+        This method is amost identical to the deterministic flagging
+        task metric.
+        '''
+
+        # Retrieve the flagging summaries
+        results = gainflag_result.read()
+        if isinstance (results, collections.Iterable):
+            mlist = []
+            for i in range(len(results)):
+                if not results[i].view:
+                    continue
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats[1:]], 0))
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                if not results.view:
+                    metric = 'Undefined'
+                else:
+                    agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                    metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+                    metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%HighLowGainFlags",
             Value=metric, Asdm=vis)
 
     def add_applycal_flagging_metric (self, stage_element,
