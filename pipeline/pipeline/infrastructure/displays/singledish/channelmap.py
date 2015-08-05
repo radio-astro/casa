@@ -180,9 +180,10 @@ class SDChannelMapDisplay(SDImageDisplay):
         with casatools.ImageReader(imagename) as ia:
             maskname = ia.maskhandler('get')[0]
         with casatools.ImageReader(weightname) as ia:
-            ia.maskhandler('delete', [maskname])
-            ia.maskhandler('copy', ['%s:%s' % (imagename, maskname), maskname])
-            ia.maskhandler('set', maskname)
+            if maskname!='T': #'T' is no mask (usually an image from completely flagged MSes)
+                ia.maskhandler('delete', [maskname])
+                ia.maskhandler('copy', ['%s:%s' % (imagename, maskname), maskname])
+                ia.maskhandler('set', maskname)
             # average weight over map area taking the mask into account
             collapsed_ia = ia.collapse(outfile='', function='mean', axes=self.image.id_direction)
         try:
