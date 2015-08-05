@@ -16,12 +16,13 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
     casalog.origin('tsdbaseline')
 
     try:
-        if os.path.exists(outfile) and not overwrite:
-            raise Exception(outfile + ' exists.')
+        if os.path.exists(outfile):
+            if overwrite:
+                os.system('rm -rf %s' % outfile)
+            else:
+                raise ValueError(outfile + ' exists.')
         if (fitmode != 'list'):
             raise ValueError, "fitmode='%s' is not supported yet" % fitmode
-        if overwrite and os.path.exists(outfile):
-            os.system('rm -rf %s' % outfile)
         if (spw == ''): spw = '*'
 
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
@@ -49,23 +50,30 @@ def tsdfit(infile=None, datacolumn=None, antenna=None, field=None, spw=None, tim
                       tempfile=tempfile, tempoutfile=tempoutfile)
 
         if os.path.exists(tempfile):
-            return get_result_dict(tempfile, nfit)
+            return get_results(tempfile, fitfunc, nfit, outfile)
         else:
             raise Exception('temporary file was unexpectedly not created.')
 
     except Exception, instance:
         raise Exception, instance
     finally:
-        if os.path.exists(tempfile):
+        if 'tempfile' in locals() and os.path.exists(tempfile):
             os.system('rm -f %s' % tempfile)
-        if os.path.exists(tempoutfile):
+        if 'tempoutfile' in locals() and os.path.exists(tempoutfile):
             os.system('rm -rf %s' % tempoutfile)
 
-def get_result_dict(tempfile, nfit):
+def get_results(tempfile, fitfunc, nfit, outfile):
     res = {'cent':[], 'peak':[], 'fwhm':[], 'nfit':[]}
+    if (fitfunc == 'gaussian'): func = 'gauss'
     ncomp = sum(nfit)
     iline = 0
     with open(tempfile, 'r') as f:
+        outfile_exists = (outfile != '')
+        if outfile_exists:
+            fout = open(outfile, 'a')
+            s = '#SCAN\tTIME\t\tANT\tBEAM\tSPW\tPOL\tFunction\tP0\t\tP1\t\tP2\n'
+            fout.write(s)
+        
         for line in f:
             component = line.strip().split(':')   # split into each component
             if (0 < ncomp): 
@@ -76,11 +84,28 @@ def get_result_dict(tempfile, nfit):
             res['nfit'].append(ncomp)
             for icomp in range(ncomp):
                 fit_result = component[icomp].split(',')   # split into each parameter
-                assert(len(fit_result) == 2*(len(res.keys())-1))
-                res['cent'][iline].append([float(fit_result[0]), float(fit_result[1])])
-                res['peak'][iline].append([float(fit_result[2]), float(fit_result[3])])
-                res['fwhm'][iline].append([float(fit_result[4]), float(fit_result[5])])
+                num_ids = 6 # scan, time, ant, beam, spw, pol
+                assert(len(fit_result) == 2*(len(res.keys())-1)+num_ids)
+                res['cent'][iline].append([float(fit_result[num_ids+0]), float(fit_result[num_ids+1])])
+                res['peak'][iline].append([float(fit_result[num_ids+2]), float(fit_result[num_ids+3])])
+                res['fwhm'][iline].append([float(fit_result[num_ids+4]), float(fit_result[num_ids+5])])
+
+                if outfile_exists:
+                    s =  fit_result[0] + '\t'       #scanID
+                    s += fit_result[1] + '\t'       #time
+                    s += fit_result[2] + '\t'       #antennaID
+                    s += fit_result[3] + '\t'       #beamID
+                    s += fit_result[4] + '\t'       #spwID
+                    s += fit_result[5] + '\t'       #polID
+                    s += func + str(icomp) + '\t\t' #function
+                    s += fit_result[8] + '\t'       #P0 (peak)
+                    s += fit_result[6] + '\t'       #P1 (cent)
+                    s += fit_result[10] + '\t'      #P2 (fwhm)
+                    s += '\n'
+                    fout.write(s)
             iline += 1
+        
+        if outfile_exists: fout.close()
     
     return res
 
