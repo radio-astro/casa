@@ -332,6 +332,12 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
     String timebin_string;
     configure_param.get(exists, timebin_string);
     timeBin = casaQuantity(timebin_string).get("s").getValue();
+    
+    Int ifield;
+    ifield = configure_param.fieldNumber(String("timeaverage"));
+    Bool average_time = ifield<0 ? False : configure_param.asBool(ifield);
+    if (timeBin < 0 || (average_time && timeBin==0.0))
+      throw(AipsError("time bin should be positive"));
   }
   // set sort column
   sdh_->setSortColumns(sortColumns, addDefaultSortCols, timeBin);
