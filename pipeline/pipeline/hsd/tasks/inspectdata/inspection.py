@@ -60,8 +60,6 @@ class SDInspectDataResults(common.SingleDishResults):
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
         
-        #LOG.info('CAS-7721: DataTable keys: %s'%(datatable.tb2.keywordnames()))
-
         # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
         
@@ -136,7 +134,6 @@ class SDInspectData(common.SingleDishTaskTemplate):
         # create DataTableReader instance
         worker = reader.DataTableReader(context=inputs.context, table_name=table_name)
         LOG.debug('table_name=%s'%(table_name))
-        LOG.info('CAS-7721: table_name=%s'%(table_name))
 
 
         # loop over infiles
