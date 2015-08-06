@@ -220,8 +220,8 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         if hasattr(context.observing_run, 'datatable_instance') \
             and hasattr(self, '_datatable_instance') \
             and self._datatable_instance is not None:
-            LOG.debug('datatable name \'%s\''%(datatable.name))
             datatable = self._datatable_instance
+            LOG.debug('datatable name \'%s\''%(datatable.name))
             if context.observing_run.datatable_instance is None:
                 LOG.trace('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
