@@ -440,7 +440,8 @@ void SDMSManager::initializeSmoothing()
     for (size_t i = 0; i < numChanList.nelements(); ++i) {
         Int numChan = numChanList[i];
         Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
-        convolverPool_[numChan] = Convolver<Float>(theKernel, IPosition(1, numChan));
+        convolverPool_[numChan] = Convolver<Float>();
+        convolverPool_[numChan].setPsf(theKernel, IPosition(1, numChan));
     }
 }
 
