@@ -221,6 +221,7 @@ def tclean(
 
     ## Setup Imager objects, for different parallelization schemes.
     if parallel==False and pcube==False:
+   
          imager = PySynthesisImager(params=paramList)
     elif parallel==True:
          imager = PyParallelContSynthesisImager(params=paramList)
@@ -304,6 +305,10 @@ def tclean(
                 ## Get summary from iterbot
                 if type(interactive) != bool:
                     retrec=imager.getSummary();
+
+        if (pcube):
+            print "running concatImages ..."
+            imager.concatImages(type='virtualnomove')
 
         ## Close tools.
         imager.deleteTools()

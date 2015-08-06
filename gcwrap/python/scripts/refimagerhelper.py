@@ -733,6 +733,7 @@ class PyParallelCubeSynthesisImager():
 
         allselpars = params.getSelPars()
         allimagepars = params.getImagePars()
+        self.allinimagepars = copy.deepcopy(allimagepars)
         self.allgridpars = params.getGridPars()
         self.allnormpars = params.getNormPars()
         self.weightpars = params.getWeightPars()
@@ -742,6 +743,7 @@ class PyParallelCubeSynthesisImager():
          
         self.PH = PyParallelImagerHelper()
         self.NN = self.PH.NN
+        self.NF = len(allimagepars.keys())
         self.listOfNodes = self.PH.getNodeList();
         ## Partition both data and image coords the same way.
         #self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
@@ -906,6 +908,31 @@ class PyParallelCubeSynthesisImager():
         for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
         self.PH.checkJobs( joblist )
+
+    def concatImages(self, type='virtualnomove'):
+        import subprocess
+        #imtypes=['psf']
+        imtypes=['image','psf','model','resdiual','mask','sumwt','pb','weight']
+        for immod in range(0,self.NF):
+            for ext in imtypes:
+                subimliststr="'"
+                concatimname=self.allinimagepars[str(immod)]['imagename']+'.'+ ext
+                distpath = os.getcwd()
+                fullconcatimname = distpath+'/'+concatimname
+                for node in self.listOfNodes:
+                    rootimname=self.allinimagepars[str(immod)]['imagename']+'.n'+str(node)
+                    fullimname =  self.PH.getpath(node) + '/' + rootimname 
+                    if (os.path.exists(fullimname+'.'+ext)):
+                        subimliststr+=fullimname+'.'+ext+' '
+                subimliststr+="'"
+                if subimliststr!="''":
+                    cmd = 'imageconcat inimages='+subimliststr+' outimage='+"'"+fullconcatimname+"'"+' type='+type      
+                    # run virtual concat
+                    ret=os.system(cmd)
+                    if ret!=0:
+                        casalog.post("concatenation of "+concatimname+" failed","WARN")
+             
+
 
     def getSummary(self):
         joblist=[]
