@@ -1,4 +1,5 @@
 import os
+import time
 from taskinit import *
 
 
@@ -29,11 +30,33 @@ def flagmanager(
             if versionname == '':
                 raise IOError, "Illegal empty versionname: ''"
             
-            tmpname = vis+'.flagversions/flags.'+versionname
-            if os.path.exists(tmpname):
-                raise IOError, ("Version name \'%s\' already exist. Please provide another versionname."%tmpname)
+            newdir = vis+'.flagversions/flags.'+versionname
+            if os.path.exists(newdir):
+                tt = int(time.time())
+                tmpname = versionname+'.old.'+str(tt)
+                casalog.post("Version name \'%s\' already exist. Will rename it to %s"%(versionname,tmpname), 'WARN')
+                
+                tmpdir = newdir+'.old.'+str(tt)
+                # Rename existing versionname to old name
+                os.rename(newdir, tmpdir)
+    
+                # Edit entry in .flagversions/FLAG_VERSION_LIST
+                # For realistic usecases, this file is short enough to keep in memory
+                file = vis + '.flagversions/FLAG_VERSION_LIST'
+                fd = open(file)
+                lines = fd.readlines()
+                fd.close()
+    
+                for i in range(len(lines)):
+                    if (lines[i])[:len(versionname) + 3] == versionname + ' : ':
+                        lines[i] = tmpname + ' : ' + comment + '\n'
+                        break
+    
+                fd = open(file, 'w')
+                fd.writelines(lines)
+                fd.close()                                
             
-            casalog.post('Save current flagversion in ' + versionname)
+            casalog.post('Save current flagversions to ' + versionname)
             aflocal.saveflagversion(versionname=versionname,
                                     comment=comment, merge=merge)
         elif mode == 'restore':

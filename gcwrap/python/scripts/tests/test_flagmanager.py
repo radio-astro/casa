@@ -164,8 +164,8 @@ class test_flagmanager1(test_base):
         except IOError, e:
             print 'Expected exception: %s'%e
         
-    def test_save(self):
-        '''flagmanager: CAS-3080, do not overwrite an existing versionname'''
+    def test_rename(self):
+        '''flagmanager: do not overwrite an existing versionname'''
         
         # Create a flagbackup
         flagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
@@ -174,15 +174,15 @@ class test_flagmanager1(test_base):
                         'Flagversions file does not exist: flags.'+fname)
         
         # Rename it
-        newname = 'Do_Not_Overwrite_Me'
+        newname = 'Rename_Me'
         flagmanager(vis=self.vis, mode='rename', oldname=fname, versionname=newname, 
                     comment='CAS-3080')
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
                         'Flagversions file does not exist: flags.'+newname)
         
-        with self.assertRaises(IOError):
-            flagmanager(vis=self.vis, mode='save', versionname=newname)
-
+        self.assertFalse(os.path.exists(self.vis+'.flagversions/flags.'+fname),
+                        'Flagversions file shuold not exist: flags.'+fname)
+       
     def test_caltable_flagbackup(self):
         '''Flagmanager:: cal table mode=list, flagbackup=True/False'''
         # Need a fresh start
@@ -218,6 +218,30 @@ class test_flagmanager1(test_base):
         
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
                         'Flagversion file does not exist: flags.'+newname)        
+
+    def test_save(self):
+        '''flagmanager: CAS-3080, do not overwrite an existing versionname'''
+        
+        # Create a flagbackup
+        flagdata(vis=self.vis, mode='manual', antenna="2", flagbackup=True)
+        fname = 'flagdata_1'
+        self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+fname),
+                        'Flagversions file does not exist: flags.'+fname)
+        
+        # Rename
+        newname = 'Do_Not_Overwrite_Me'
+        print ('Rename versionname to Do_Not_Overwrite_Me')
+        flagmanager(vis=self.vis, mode='save', versionname=newname)
+        self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
+                        'Flagversions file does not exist: flags.'+newname)
+        
+        print 'Move existing versionname to temporary name'
+        flagmanager(vis=self.vis, mode='save', versionname=newname)
+        flagmanager(vis=self.vis, mode='list')
+        lf = os.listdir(self.vis+'.flagversions')
+        self.assertTrue([s for s in lf if '.old.' in s])
+        self.assertEqual(len(lf), 4)
+        
 
 # Cleanup class 
 class cleanup(test_base):
