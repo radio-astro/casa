@@ -311,7 +311,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
             spw=reduce(lambda x,y: x+','+y, ['%s%s%s' % (spwid, ':'*(1 if len(spwsel) > 0 else 0), spwsel) for spwid,spwsel in zip(inputs.spw.split(','), inputs.spwsel.split(','))]),
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode, gridder=inputs.gridder,
+            scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
             pblimit=0.2, niter=inputs.niter,
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
