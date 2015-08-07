@@ -1827,10 +1827,10 @@ class sdreduce_test_baseline_flag(sdreduce_unittest_base, unittest.TestCase):
         """
         mode = "list"
         infile_spk = self.infile_02spk
-        outfile_spk = "sdbaseline_flagFFT_spk.asap"
+        outfile_spk = self.outroot+"_flagFFT_spk.asap"
         result = sdreduce(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
         infile_int = self.infile_02int
-        outfile_int = "sdbaseline_flagFFT_int.asap"
+        outfile_int = self.outroot+"_flagFFT_int.asap"
         result = sdreduce(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3',calmode='none',average=False,kernel='none')
         bsuffix = "_blparam.txt"
         self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
