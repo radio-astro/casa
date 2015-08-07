@@ -317,7 +317,7 @@ sdbalseline, for more information.
 
     <param type="any" name="addwn" subparam="true">
             <description>additional wave numbers to use</description>
-	    <value type='vector'><value></value></value>
+	    <value type='vector'><value>0</value></value>
     </param>
 
     <param type="any" name="rejwn" subparam="true">
