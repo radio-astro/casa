@@ -385,7 +385,11 @@ class MakeImListHeuristics(object):
             for field in visfields:
                 # get field centres as measures
                 fieldobj = ms.get_fields(field_id=field)[0]
-                phase_dir = cme.measure(fieldobj.mdirection, 'ICRS')
+                ref =  cme.getref(fieldobj.mdirection)
+                if ref=='ICRS' or ref=='J2000' or ref=='B1950':
+                    phase_dir = cme.measure(fieldobj.mdirection, 'ICRS')
+                else:
+                    phase_dir = fieldobj.mdirection
                 mdirections.append(phase_dir)
 
         # sanity check - for single field images the field centres from
@@ -429,7 +433,7 @@ class MakeImListHeuristics(object):
 
         # get direction of image centre crudely by adding offset
         # of centre to ref values of first field.
-        ref =  cme.getref(mdirections[0])
+        ref = cme.getref(mdirections[0])
         md = cme.getvalue(mdirections[0])
         m0 = cqa.quantity(md['m0'])
         m1 = cqa.quantity(md['m1'])
