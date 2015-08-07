@@ -18,12 +18,48 @@ LOG = logging.get_logger(__name__)
 '''
 Prototype pipeline AQUA report generator
 
+
 Definitions
     Metrics are physical quantities, e.g. phase rms improvement resulting from
-    WVR calibration., * data flagged
+    WVR calibration., % data flagged, etc
 
     Scores are numbers between 0.0 and 1.0 derived from metrics.  Not all
     metrics are scored.
+
+Structure
+    The report contains
+        A project structure section.
+        A QA summary section.
+        A per stage QA section.
+        A per topic QA section.
+ 
+Issues with the Original Design
+    The per ASDM dimension was ignored.
+    
+    The multiple metrics / scores per stage and / or per ASDM
+    dimension was ignored.
+
+    For stages with single scores / metrics and multiple ASDMs the
+    current implementation selects the MS with the worst metric and
+    reports that value. This metric by definition corresponds to
+    the lowest score.
+
+    Tasks which have multiple scores / metrics and multiple
+    ASDMs are currently dealt with on an ad hoc basis.
+
+
+Future Technical Solutions
+    Add a toAqua method to the base results class which returns a
+    list of metrics
+
+    Extend or modify the score objects to include a name or
+    identifier and the value of the metric used to generate the
+    score.
+
+    Should metrics include a unit, e.g. be a quanta.
+
+    Other ?
+
 '''
 
 
@@ -37,7 +73,7 @@ def aquaReportFromFile (contextFile, aquaFile):
     context = pipeline.Pipeline (context=contextFile).context 
     LOG.info ("Opening context file: %s" % (contextFile))
 
-    # Produce the AQUA report.
+    # Produce the AQUA report
     aquaReportFromContext (context, aquaFile)
 
 
@@ -59,7 +95,7 @@ def aquaReportFromContext (context, aquaFile):
     # Construct the QA summary element
     aquaReport.set_qa_summary()
 
-    # Construct the pipeline stage elements
+    # Construct the per pipeline stage elements
     aquaReport.set_per_stage_qa()
 
     # Construct the topics elements.
@@ -67,6 +103,7 @@ def aquaReportFromContext (context, aquaFile):
 
     LOG.info ("Writing aqua report file: %s" % (aquaFile))
     aquaReport.write(aquaFile)
+
 
 class AquaReport(object):
     """
@@ -82,9 +119,8 @@ class AquaReport(object):
         self.context = context
 
         # Construct the stage dictionary
-        #   This seems a bit inefficient as it involves actually
-        #   reading all results to reconstruct the list of stages
-        #   Is there an easier way
+        #   This seems a bit inefficient as it requires  reading all
+        #   the results to reconstruct the list of stages
 
         self.stagedict = collections.OrderedDict()
         for i in range(len(context.results)):
@@ -105,7 +141,7 @@ class AquaReport(object):
         Add the project structure element
 
         Given the current data flow it is unclear how to
-        acquire the entity id of the processing request
+        acquire the entity id of the original processing request
 
         The processing procedure name is known but not yet
         passed to the pipeline processing request
@@ -185,6 +221,15 @@ class AquaReport(object):
 
             if self.stagedict[stage][0] == 'hifa_flagdata':
                 self.add_online_shadow_flagging_metric(st,
+                    self.context.results[stage-1])
+
+            # Fluxcal flagging
+            #    Retrieve the results with the highest flagging percentage
+            #    Note: The current metric needs works, should be the percentage
+            #    of the flux calibrator flagged, not the perctage of total flagged
+
+            elif self.stagedict[stage][0] == 'hifa_fluxcalflag':
+                self.add_fluxcal_flagging_metric(st,
                     self.context.results[stage-1])
 
             # Tsys flagging
@@ -302,6 +347,46 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="%TsysCaltableFlags",
             Value=metric, Asdm=vis)
 
+    def add_fluxcal_flagging_metric (self, stage_element, fluxcalflag_result):
+
+        '''
+        hifa_fluxcalflag currently generates 1 metric based on the percentage of
+        newly flagged data.
+
+        '''
+
+        # Retrieve the flagging summaries
+        results = fluxcalflag_result.read()
+        if isinstance (results, collections.Iterable):
+            mlist = []
+            for i in range(len(results)):
+                if not results[i]:
+                    continue
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats[1:]], 0))
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+                metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%FluxcalFlags",
+            Value=metric, Asdm=vis)
+
     def add_phase_rms_ratio_metric (self, stage_element, wvr_result):
 
         '''
@@ -351,8 +436,6 @@ class AquaReport(object):
             number of views that can be computed, and the other based on
             the percentage of newly flagged data.
 
-        This method is amost identical to the deterministic flagging
-        task metric.
         '''
 
         # Retrieve the flagging summaries
