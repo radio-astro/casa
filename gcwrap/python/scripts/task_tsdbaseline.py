@@ -128,12 +128,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                     if('csv' in blformat):
                         if(''!= bloutput[blformat.index('csv')]):
                             fname=bloutput[blformat.index('csv')]
-                            if os.path.exists(fname):
+                            if not overwrite and os.path.exists(fname):
                                 raise Exception(fname + ' exists.') 
                             new_bloutput.append(bloutput[blformat.index('csv')])
                         else:
                             fname= infile + '_blparam.csv'
-                            if os.path.exists(fname):
+                            if not overwrite and os.path.exists(fname):
                                 raise Exception(fname + ' exists. ')######################################################
                             new_bloutput.append(infile + '_blparam.csv')
                     else:
@@ -150,7 +150,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                             fname = bloutput[blformat.index('text')]
 
                             
-                            if os.path.exists(fname):
+                            if not overwrite and os.path.exists(fname):
                                 raise Exception(fname + ' exists.')
 
 
@@ -212,7 +212,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                             #new_bloutput.append(infile + '_blparam.txt')
                             new_bloutput.append(infile + '_blparam.txt')
                             fname2  = infile + '_blparam.txt'
-                            if os.path.exists(fname2):
+                            if not overwrite and os.path.exists(fname2):
                                 raise Exception(fname2 + ' exists.')
 
                             f = open(fname2, "w")
@@ -276,14 +276,14 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
                         if(''!= bloutput[blformat.index('table')]):
                             fname = bloutput[blformat.index('table')]
-                            if os.path.exists(fname):
+                            if not overwrite and os.path.exists(fname):
                                 raise Exception(fname + ' exists.')#############################################
 
                             new_bloutput.append(bloutput[blformat.index('table')])
                        
                         else:
                             fname = infile + '_blparam.bltable'
-                            if os.path.exists(fname):
+                            if not overwrite and os.path.exists(fname):
                                 raise Exception(fname + ' exists.')#############################################
                                 print ''
                             new_bloutput.append(fname)
