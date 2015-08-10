@@ -1238,6 +1238,7 @@ class asdm_import7(test_base):
                      "FIELD/EPHEM1_Titania_57034.934999999998.tab"]:
             tblocal.open(themsname+"/"+name)
             kw = tblocal.getkeywords()
+            tblocal.close()
             geodist = kw['GeoDist'] # (km above reference ellipsoid)
             geolat = kw['GeoLat'] # (deg)
             geolong = kw['GeoLong'] # (deg)
@@ -1245,10 +1246,18 @@ class asdm_import7(test_base):
             if not (geodist==geolat==geolong==0.):
                 print myname, ": ERROR."
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+'Ephemeris was not converted to GEO for '+themsname+'\n'
+                retValue['error_msgs']=retValue['error_msgs']+' Ephemeris was not converted to GEO for '+themsname+'\n'
             else:
                 print myname, ": OK."
-            tblocal.close()
+            prsys = kw['posrefsys']
+            print myname, ": Testing if posrefsys was set correctly ..."
+            if not (prsys=="ICRF/J2000.0"):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/J2000.0 '+themsname+'\n'
+            else:
+                print myname, ": OK."
+ 
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
