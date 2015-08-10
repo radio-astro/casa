@@ -1375,8 +1375,14 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       double dmjd = interpolate_ephemeris ? 0.001 : v[0]->getTimeInterval().getDuration().get() / 1000000000LL / 86400.0; // Grid time step == 0.001 if ephemeris interpolation requested
                                                                                                  // otherwise == the interval of time of the first element of ephemeris converted in days.
                                                                                                  // *SUPPOSEDLY* constant over all the ephemeris. 
+ 
+      // determine the position reference system
+      double equator =  v[0]->getEquinoxEquator();
+      string posref = "unknown";
+      if (equator == 2000.) { // the Ephemeris table presently only stores the equator
+	posref = "ICRF/J2000.0";
+      }
 
-      
       // Prepare the table keywords with the values computed above.
       TableDesc tableDesc;
     
@@ -1405,6 +1411,8 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       else
 	tableDesc.rwKeywordSet().define("obsloc", telescopeName);
     
+      tableDesc.rwKeywordSet().define("posrefsys", posref);
+
       // Then the fields definitions and keywords.
       ScalarColumnDesc<casa::Double> mjdColumn("MJD");
       mjdColumn.rwKeywordSet().define("UNIT", "d");
