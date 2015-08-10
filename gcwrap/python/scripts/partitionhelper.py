@@ -778,6 +778,7 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
         # Check if firtst subMS has POINTING and SYSCAL
         hasPointing = os.path.exists('POINTING')
         hasSyscal = os.path.exists('SYSCAL')
+        hasSyspower = os.path.exists('SYSPOWER')
 
         for i in xrange(1,len(submslist)):
             thesubms = os.path.basename(submslist[i].rstrip('/'))
@@ -786,6 +787,8 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
                 if s == 'POINTING' and hasPointing == False:
                     continue
                 if s == 'SYSCAL' and hasSyscal == False:
+                    continue
+                if s == 'SYSPOWER' and hasSyspower == False:
                     continue
                 os.system('rm -rf '+s) # shutil does not work in the general case
                 os.symlink('../'+mastersubms+'/'+s, s)
