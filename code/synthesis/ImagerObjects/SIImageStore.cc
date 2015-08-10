@@ -51,6 +51,7 @@
 
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <images/Images/ImageRegrid.h>
 
@@ -849,24 +850,31 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
   void  SIImageStore::makePBFromWeight(const Float pblimit)
   {
+   LogIO os( LogOrigin("SIImageStore","makePBFromWeight",WHERE) );
 
     	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	       for(Int chan=0; chan<itsImageShape[3]; chan++)
 	      {
 
-		CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
-								      chan, itsImageShape[3],
-								      pol, itsImageShape[2], 
-								      *weight() );
-		CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
-								      chan, itsImageShape[3],
-								      pol, itsImageShape[2], 
-								      *pb() );
+		itsPBScaleFactor = getPbMax(pol,chan);
+		
+		if(itsPBScaleFactor<=0){os << LogIO::NORMAL1 << "Skipping normalization for C:" << chan << " P:" << pol << " because pb max is zero " << LogIO::POST;}
+		else {
 
-		LatticeExpr<Float> normed( sqrt(abs(*wtsubim)) / getPbMax(pol,chan)   );
-		LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
-		pbsubim->copyData( limited );
+		  CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *weight() );
+		  CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *pb() );
+		  
+		  LatticeExpr<Float> normed( sqrt(abs(*wtsubim)) / itsPBScaleFactor  );
+		  LatticeExpr<Float> limited( iif( normed > pblimit , normed, 0.0 ) );
+		  pbsubim->copyData( limited );
+		}// if not zero
 	      }
 	  }
 	
@@ -924,7 +932,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  {
 	    for(Int chan=0; chan<itsImageShape[3]; chan++)
 	      {
-		os << "Scale factor for [C" +String::toString(chan) + ":P" + String::toString(pol) + "] to keep the model image w.r.to a PB of max=1 is " << getPbMax(pol,chan) << LogIO::POST;
+		os << LogIO::NORMAL1 << "Scale factor for [C" +String::toString(chan) + ":P" + String::toString(pol) + "] to keep the model image w.r.to a PB of max=1 is " << getPbMax(pol,chan) << LogIO::POST;
 	      }//chan
 	  }//pol
 
@@ -952,6 +960,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		
 		itsPBScaleFactor = getPbMax(pol,chan);
 		//	cout << " pbscale : " << itsPBScaleFactor << endl;
+		if(itsPBScaleFactor<=0){os << LogIO::NORMAL1 << "Skipping normalization for C:" << chan << " P:" << pol << " because pb max is zero " << LogIO::POST;}
+		else {
 
 		CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
 								      chan, itsImageShape[3],
@@ -992,7 +1002,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		ressubim->copyData(ratio);
 
 		//cout << "Val of residual before|after normalizing at center for pol " << pol << " chan " << chan << " : " << resval << "|" << ressubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
-
+		}// if not zero
 	      }//chan
 	  }//pol
 	
@@ -1034,6 +1044,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  
 		  itsPBScaleFactor = getPbMax(pol,chan);
 		  //	cout << " pbscale : " << itsPBScaleFactor << endl;
+		if(itsPBScaleFactor<=0){os << LogIO::NORMAL1 << "Skipping normalization for C:" << chan << " P:" << pol << " because pb max is zero " << LogIO::POST;}
+		else {
 		  
 		  CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
 									  chan, itsImageShape[3],
@@ -1067,19 +1079,21 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  //LatticeExprNode minval( min(*modsubim) );
 		  //LatticeExprNode maxval( max(*modsubim) );
 		  //cout << "After ---- min : " << minval.getFloat() << " max : " << maxval.getFloat() << endl;
-
+		}// if not zero
 		}//chan
 	    }//pol
 
 	}
+
+	storeImg(String("flatmodel.im"), *model());
 	
       }
     // createMask
-  }
+    }
   
   void SIImageStore::multiplyModelByWeight(Float pblimit, const String normtype)
   {
-    LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
+   LogIO os( LogOrigin("SIImageStore","multiplyModelByWeight",WHERE) );
 
         if(itsUseWeight // only when needed
     	&& hasSensitivity() )// i.e. only when possible. For an initial starting model, don't need wt anyway.
@@ -1097,6 +1111,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  
 		  itsPBScaleFactor = getPbMax(pol,chan);
 		  //	cout << " pbscale : " << itsPBScaleFactor << endl;
+		if(itsPBScaleFactor<=0){os << LogIO::NORMAL1 << "Skipping normalization for C:" << chan << " P:" << pol << " because pb max is zero " << LogIO::POST;}
+		else {
 		  
 		  CountedPtr<ImageInterface<Float> > wtsubim=makeSubImage(0,1, 
 									  chan, itsImageShape[3],
@@ -1119,6 +1135,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  LatticeExpr<Float> ratio( ( (*(modsubim)) * mask ) * ( deno + maskinv ) );
 		  
 		  modsubim->copyData(ratio);
+		}// if not zero
 		}//chan
 	    }//pol
 	}
