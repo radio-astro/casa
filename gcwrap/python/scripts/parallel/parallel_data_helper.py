@@ -6,7 +6,7 @@ import string
 import copy
 import math
 import time
-import pprint
+import subprocess
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 import simple_cluster
@@ -1489,15 +1489,17 @@ class ParallelDataHelper(ParallelTaskHelper):
             
         # Sanity check on the just created MMS
         # check for broken symlinks
-#        os.system('find '+ self._arg['outputvis'] + ' -type l -xtype l > /tmp/broken_links.txt')
-        os.system('find -L '+ self._arg['outputvis'] + ' -type l > /tmp/broken_links.txt')
-        fd = open('/tmp/broken_links.txt','r')
-        bl = fd.readlines()
-        fd.close()
-        if len(bl) > 0:
-            casalog.post('The new MMS contain broken symlinks. Please verify','SEVERE')
-            pprint.pprint(bl)
-            return False
+        try:
+            with open(os.devnull, 'w') as null:
+                p = subprocess.Popen(['find', '-L', self._arg['outputvis'], '-type', 'l'],
+                                     universal_newlines=True, stdout=subprocess.PIPE, stderr=null)
+                o, e = p.communicate()
+                if o:
+                    casalog.post('The new MMS contain broken symlinks. Please verify', 'SEVERE')
+                    casalog.post(o, 'SEVERE')
+                    return False
+        except:
+            pass
 
         return True
     
