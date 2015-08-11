@@ -37,7 +37,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
-                cm.calc('replace(%s["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
+                cm.calc('replace("%s"["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
                 cm.done()
             else:
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0],
