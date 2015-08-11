@@ -117,10 +117,11 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
                         for t in tpmap_colorbar.ax.get_yticklabels():
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
-                        #tpmap_colorbar.ax.set_title('[K km/s]')
-                        tpmap_colorbar.ax.set_title('[%s]'%(self.image.brightnessunit))
-                        lab = tpmap_colorbar.ax.title
-                        lab.set_fontsize(newfontsize)
+#                         #tpmap_colorbar.ax.set_title('[K km/s]')
+#                         tpmap_colorbar.ax.set_title('[%s]'%(self.image.brightnessunit))
+#                         lab = tpmap_colorbar.ax.title
+#                         lab.set_fontsize(newfontsize)
+                        tpmap_colorbar.ax.set_ylabel('[%s]'%(self.image.brightnessunit), fontsize=newfontsize)
                     else:
                         tpmap_colorbar.set_clim((tmin,tmax))
                         tpmap_colorbar.draw_all()
@@ -247,10 +248,11 @@ class SDIntegratedImageDisplay(SDImageDisplay):
                         for t in tpmap_colorbar.ax.get_yticklabels():
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
-                        #tpmap_colorbar.ax.set_title('[K km/s]')
-                        tpmap_colorbar.ax.set_title('[%s]'%(self.brightnessunit))
-                        lab = tpmap_colorbar.ax.title
-                        lab.set_fontsize(newfontsize)
+#                         #tpmap_colorbar.ax.set_title('[K km/s]')
+#                         tpmap_colorbar.ax.set_title('[%s]'%(self.brightnessunit))
+#                         lab = tpmap_colorbar.ax.title
+#                         lab.set_fontsize(newfontsize)
+                        tpmap_colorbar.ax.set_ylabel('[%s]'%(self.brightnessunit), fontsize=newfontsize)
                     else:
                         tpmap_colorbar.set_clim((tmin,tmax))
                         tpmap_colorbar.draw_all()

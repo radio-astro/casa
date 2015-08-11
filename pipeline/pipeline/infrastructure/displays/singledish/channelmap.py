@@ -107,8 +107,8 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
         for i in xrange(self.nchmap):
             x = i % self.nh
             y = self.nv - int(i / self.nh) - 1
-            left = 1.0 / float(self.nh) * (x + 0.05)
-            width = 1.0 / float(self.nh) * 0.9
+            left = 1.0 / float(self.nh) * x #(x + 0.05)
+            width = 1.0 / float(self.nh) * 0.85 #0.9
             bottom = 1.0 / float((self.nv+2)) * (y + 0.05)
             height = 1.0 / float((self.nv+2)) * 0.85
             a = pl.axes([left, bottom, width, height])
@@ -357,9 +357,10 @@ class SDChannelMapDisplay(SDImageDisplay):
                             for t in integmap_colorbar.ax.get_yticklabels():
                                 newfontsize = t.get_fontsize()*0.5
                                 t.set_fontsize(newfontsize)
-                            integmap_colorbar.ax.set_title('[%s km/s]'%(self.brightnessunit))
-                            lab = integmap_colorbar.ax.title
-                            lab.set_fontsize(newfontsize)
+#                             integmap_colorbar.ax.set_title('[%s km/s]'%(self.brightnessunit))
+#                             lab = integmap_colorbar.ax.title
+#                             lab.set_fontsize(newfontsize)
+                            integmap_colorbar.ax.set_ylabel('[%s km/s]'%(self.brightnessunit), fontsize=newfontsize)
                         else:
                             integmap_colorbar.set_clim((Total.min(),Total.max()))
                             integmap_colorbar.draw_all()
@@ -446,9 +447,10 @@ class SDChannelMapDisplay(SDImageDisplay):
                                 for t in cb.ax.get_yticklabels():
                                     newfontsize = t.get_fontsize()*0.5
                                     t.set_fontsize(newfontsize)
-                                cb.ax.set_title('[%s km/s]'%(self.brightnessunit))
-                                lab=cb.ax.title
-                                lab.set_fontsize(newfontsize)
+#                                 cb.ax.set_title('[%s km/s]'%(self.brightnessunit))
+#                                 lab=cb.ax.title
+#                                 lab.set_fontsize(newfontsize)
+                                cb.ax.set_ylabel('[%s km/s]'%(self.brightnessunit), fontsize=newfontsize)
                                 chmap_colorbar[y] = cb
                             else:
                                 chmap_colorbar[y].set_clim(Vmin,Vmax)
