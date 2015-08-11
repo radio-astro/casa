@@ -271,7 +271,7 @@ All data selection parameters follow the MS Selection syntax.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number : example : '2-3,4-5,132 ????' </description>
+     <description>Baseline number : example : '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -339,8 +339,8 @@ See the example below:
      \n mode-specific parameters such as:\n
      \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
      \n (2) mode (which can be: manual,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
-     \n     For flagging mode=clip, the parameters are: expression, datacolumns, clipminmax, etc.
-     \n     See the documentation of the task tflagger for all the available parameters for each mode.\n
+     \n     For flagging mode=clip, the parameters are: expression, datacolumn, clipminmax, etc.
+     \n     See the documentation of the task flagdata for all the available parameters for each mode.\n
      \n (3) apply: default is true (true for flagging and false for unflagging)
      \n Example:\n\n
 myrecord={}\n
@@ -399,7 +399,7 @@ writeflags controls whether or not to write to the MS.
      </param>
 
      <param type="bool" name="sequential">
-     <description>Run the task in sequential or in parallel.</description>
+     <description>Run the agents in the order they are inserted in the list or not. Default is True to run in the original order.</description>
      <value>true</value>
      </param>
 
@@ -513,7 +513,7 @@ Print out a list of current flag selections.
 
    <method type="function" name="parsemanualparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the manual mode.
+for the manual mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -545,7 +545,7 @@ for the manual mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5,132' </description>
      <value></value>
      </param>
     
@@ -598,7 +598,7 @@ af.parsemanualparameters(autocorr=True)
 
    <method type="function" name="parseclipparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the clip mode.
+for the clip mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -630,7 +630,7 @@ for the clip mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -728,7 +728,7 @@ af.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='Sol1')
 
    <method type="function" name="parsequackparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the quack mode.
+for the quack mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -760,7 +760,7 @@ for the quack mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -823,7 +823,7 @@ af.parsequackparameters(scan='1~3', quackmode='beg', quackinterval=1)
 
    <method type="function" name="parseelevationparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the elevation mode.
+for the elevation mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -855,7 +855,7 @@ for the elevation mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -916,7 +916,7 @@ af.parseelevationparameters(upperlimit=50.,lowerlimit=10.0, apply=False)
 
    <method type="function" name="parsetfcropparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the time and frequency mode.
+for the time and frequency mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -948,7 +948,7 @@ for the time and frequency mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -1059,7 +1059,7 @@ af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='AB
 
    <method type="function" name="parseextendparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the extend mode.
+for the extend mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -1091,7 +1091,7 @@ for the extend mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
@@ -1174,7 +1174,7 @@ af.parseextendparameters(extendpols=True)
 
    <method type="function" name="parsesummaryparameters">
    <shortdescription>Parse data selection parameters and specific parameters
-for the summary mode.
+for the summary mode. Data selection follows the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -1206,7 +1206,7 @@ for the summary mode.
      </param>   
 
      <param type="string" name="antenna">
-     <description>Baseline number. Example: '2-3,4-5,132 ????' </description>
+     <description>Baseline number. Example: '2,3,4,5' </description>
      <value></value>
      </param>
     
