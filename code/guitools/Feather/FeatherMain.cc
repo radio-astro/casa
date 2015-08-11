@@ -295,7 +295,8 @@ void FeatherMain::imageFilesChanged(){
 			resetDishDiameters();
 		}
 		else {
-			QString error = dataManager->getError();
+			//QString error = dataManager->getError();
+			QString error = "There was a problem loading images.";
 			QMessageBox::warning( this, "Warning!", error );
 		}
 	}

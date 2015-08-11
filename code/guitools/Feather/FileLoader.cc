@@ -233,14 +233,14 @@ bool FileLoader::validatePath( QLineEdit* lineEdit, const QString& errorPrefix, 
 
 void FileLoader::filesChanged(){
 	saveOutput = ui.saveOutputCheckBox->isChecked();
-	bool validLowRes = validatePath( ui.lowResolutionLineEdit, "Low resolution image file: ", true, lowResolutionImageFile );
-	bool validHighRes = validatePath( ui.highResolutionLineEdit, "High resolution image file: ", true, highResolutionImageFile  );
+	bool validLowRes = validatePath( ui.lowResolutionLineEdit, "Low resolution image file: ", false, lowResolutionImageFile );
+	bool validHighRes = validatePath( ui.highResolutionLineEdit, "High resolution image file: ", false, highResolutionImageFile  );
 	//The dirty image is optional, we only validate it if there is something
 	//there.
 	bool validDirty = true;
 	QString dirtyPath = ui.dirtyImageLineEdit->text().trimmed();
 	if ( dirtyPath.length() > 0 ){
-		validDirty = validatePath( ui.dirtyImageLineEdit, "Dirty image file: ", true, dirtyImageFile );
+		validDirty = validatePath( ui.dirtyImageLineEdit, "Dirty image file: ", false, dirtyImageFile );
 	}
 	else {
 		dirtyImageFile="";
