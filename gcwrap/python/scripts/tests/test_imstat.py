@@ -629,8 +629,6 @@ class imstat_test(unittest.TestCase):
     
     def test_CAS7472(self):
         """Verify stats of sub regions of temp images produce correct results when using originial (Kileen pointer) method"""
-           
-
         myia = iatool()
         myia.fromshape("", [100,100])
         myia.addnoise()
@@ -656,7 +654,21 @@ class imstat_test(unittest.TestCase):
             resold = myia.statistics(axes=axes, region=reg, clmethod="tiled")
             self._compare(resold, resnew, "axes=" + str(axes))
         myia.done()
- 
         
+    def test_CAS7697(self):
+        """verify fix to CAS-7697, min/max should be zero in masked plane"""
+        myia = iatool()
+        imagename = "CAS7697.im"
+        myia.fromshape(imagename, [100,100, 10])
+        myia.addnoise()
+        bb = myia.getchunk()
+        bb[:,:,9] = 40
+        myia.putchunk(bb)
+        myia.calcmask(imagename + "<30")
+        for clmethod in ["framework", "tiled"]:
+            stats = myia.statistics(axes=[0,1], clmethod=clmethod)
+            self.assertTrue(stats['max'][9] == 0)
+            self.assertTrue(stats['min'][9] == 0)
+        myia.done()
 def suite():
     return [imstat_test]
