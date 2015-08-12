@@ -963,10 +963,10 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	if (itsTCLParams_.updateCanvas || itsTCLParams_.updateIteration ){
 		updateIndexing();
 	}
-
 	// Reset the iterator (if data are new)
 	resetIter();
 
+	/* resetIter() took care of these already (CAS-7733 seg fault with tarball)
 	// Let the plot know that the data has been changed as needed, unless the
 	// thread was canceled.
 	updatePlots();
@@ -984,8 +984,6 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	}
 
 	// Log number of points as needed.
-	// resetIter() took care of this already
-	/*
 	if(itsTCLParams_.endCacheLog){
 		logPoints();
 	}
