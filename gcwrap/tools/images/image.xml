@@ -2239,8 +2239,15 @@ never be returned. It is required that $low \&lt; high$.
 It is required that the alpha parameter is not zero.
 
 The random number generator seeds may be specified as an array of integers. Only the first
-two values are used. If no or a single value is provided, the necessary remaining values
-are generated based on the current time.
+two values are used. If none or a single value is provided, the necessary remaining value(s)
+are generated based on the current time, using the algorithm
+
+seedBase = 1e7*MJD
+seed[1] = (Int)seedBase;
+# and if seed[0] is also not supplied
+seed[0] = (Int)((1e7*(seedBase - seed[1])))
+
+where MJD is the Modidfied Julian Day.
 
 \end{itemize}
 
@@ -2249,18 +2256,17 @@ are generated based on the current time.
 <example>
 
 """
-#
-print "\t----\t addnoise Ex 1 \t----"
-ia.maketestimage()          # im1 = maketestimage() 
-ia.addnoise(type='normal', pars=[0.5, 1], zero=T)
+ia.maketestimage()
+ia.addnoise(type='normal', pars=[0.5, 1], zero=T, seeds=[1,2]) 
 ia.statistics()
 ia.close()
-#
 """
 
-
 A test image is created, zeroed, and noise of mean 0.5 and variance 1
-from a normal distribution added.
+from a normal distribution added. Specifying the same combination of seeds
+ensures the same random number sequence is created each time addnoise is called.
+To have different sequences created during the same casapy session, use the default
+value (which is an empty list).
 
 </example>
 
