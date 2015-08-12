@@ -383,7 +383,7 @@ maskmode -- mode of setting additional channel masks. When blmode='apply'
                          edge=[1000,500] drops 1000 from beginning and 500
                          from end.
         Note: For bad baselines threshold should be increased,
-        and avg_limit decreased (or even switched off completely by
+        and avg_limit decreased (r even switched off completely by
         setting this parameter to 1) to avoid detecting baseline
         undulations instead of real lines.
 blmode -- baselining mode. 
@@ -418,7 +418,8 @@ blmode -- baselining mode.
                          blformat='csv' outputs a CSV file.
                          blformat='table' outputs a baseline table which 
                          can be used to apply afterwards.
-                         blformat='' doesn't output any parameter file.
+                         blformat='' or a list including '' such as ['csv',''] 
+                         doesn't output any parameter file.
                          blformat=['csv','table'] outputs both a CSV 
                          file and a baseline table.
         bloutput -- name(s) of file(s) in which best-fit parameters are 
@@ -426,7 +427,7 @@ blmode -- baselining mode.
                     parameter file(s) will be set as follows: 
                     &lt;outfile&gt;_blparam.txt for blformat='text', 
                     &lt;outfile&gt;_blparam.csv for blformat='csv', and 
-                    &lt;outfile&gt;_bltable.
+                    &lt;outfile&gt;_blparam.bltable for blformat='table'.
                     In case bloutput is not '', blformat and bloutput 
                     must have the same length.
                 default: ''
