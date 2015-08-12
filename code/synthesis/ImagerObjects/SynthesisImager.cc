@@ -321,21 +321,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           chanSel_p.yzPlane(msin)=0;
           Vector<Int> loChans(nspw, -1);
     	  /////So this gymnastic is needed
+          Int nUsedSpw = 0;
+          Vector<Int> chanStepPerSpw(nspw,-1);
+          Vector<Int> maxChanEnd(nspw,0); 
+          Vector<Int> usedSpw(nspw,-1);
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
 
     		  spw = chanlist(k,0);
-                 
+
     		  // channel selection
     		  chanStart = chanlist(k,1);
     		  chanEnd = chanlist(k,2);
     		  chanStep = chanlist(k,3);
     		  //nchan = chanEnd-chanStart+1;
     		  nchan = Int(ceil(Double(chanEnd-chanStart+1)/Double(chanStep)));
-
+                  maxChanEnd(spw) = max(maxChanEnd(spw), chanEnd);
+                  chanStepPerSpw(spw) = chanStep;
                   // find lowest selected channel for each spw
                   if(loChans(spw) == -1) { 
                     loChans(spw) = chanStart;
+                    nUsedSpw++;
+                    usedSpw.resize(nUsedSpw,True);
+                    usedSpw(nUsedSpw-1) = spw;
                   }
                   else {
                     if ( loChans(spw) > chanStart) loChans(spw) = chanStart;
@@ -343,12 +351,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     		  //channelSelector.add (spw, chanStart, nchan,chanStep);
     		  ///////////////Temporary revert to using Vi/vb
-    		  blockNChan_p[msin][k]=nchan;
-    		  blockStart_p[msin][k]=chanStart;
-    		  blockStep_p[msin][k]=chanStep;
-    		  blockSpw_p[msin][k]=spw;
+    		  // will not work with multi-selections within a spw
+    		  //blockNChan_p[msin][k]=nchan;
+    		  //blockStart_p[msin][k]=chanStart;
+    		  //blockStep_p[msin][k]=chanStep;
+    		  //blockSpw_p[msin][k]=spw;
            }
-           
+
+           // vi.selectChannel() does not handle multiple chan sels within a spw???
+           // So store a single channel sel(range) per spw... + chanflags...
+           blockNChan_p[msin].resize(nUsedSpw);
+           blockStart_p[msin].resize(nUsedSpw);
+           blockStep_p[msin].resize(nUsedSpw);
+           blockSpw_p[msin].resize(nUsedSpw);
+           for(uInt j=0; j < (uInt) nUsedSpw; ++j)
+           {
+                  Int ispw = usedSpw(j);
+                  if(loChans(ispw)!=-1) 
+                  {
+                    blockNChan_p[msin][j] = Int(ceil(Double(maxChanEnd(ispw)-loChans(ispw)+1)/Double(chanStepPerSpw(ispw))));
+                    blockStart_p[msin][j] = loChans(ispw);
+                    blockStep_p[msin][j] = chanStepPerSpw(ispw);
+                    blockSpw_p[msin][j] = ispw; 
+                  }
+           }
+ 
            Int relStart=0;
     	   for(uInt k=0; k < nSelections; ++k)
            {
@@ -1703,7 +1730,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=0; k < msblock.nelements(); ++k){
     	blockGroup[k].resize(blockSpw_p[k].nelements());
     	blockGroup[k].set(1);
-	//    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
+        //    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
     }
 
     rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p,
