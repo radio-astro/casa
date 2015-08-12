@@ -103,7 +103,9 @@ class PySynthesisImager:
         for fld in range(0,self.NF):
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
     
-        self.SItool.tuneselectdata()
+        # For cube imaging:  align the data selections and image setup
+        if self.allimpars['0']['specmode'] != 'mfs': 
+            self.SItool.tuneselectdata()
 
         #self.makeCFCache(exists);
 
