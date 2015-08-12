@@ -36,6 +36,8 @@
 #include <scimath/Functionals/Gaussian1D.h>
 
 #include <tables/Tables/ScalarColumn.h>
+#include <casa/Quanta/MVTime.h>
+
 
 
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
@@ -803,6 +805,36 @@ void SingleDishMS::split_bloutputname(string str)
 
 }
 
+void SingleDishMS::MJDtoYMDhms(int* Y, int* M, int* D, int* h, int* m, double* s){
+    double mjd = 4.64435e+09/86400.0;
+    *Y = int((mjd-15078.2)/365.25);
+    *M   = int((mjd-14956.1- int(*Y * 365.25))/30.6001);
+    double dd=mjd - 14956 -int(*Y * 365.25)-int(*M * 30.6001);
+    int k =0;
+    if(*M==14 || *M==15){
+         k=1;
+    }else{
+        k=0;
+    }
+
+    *Y = *Y + k + 1900;
+    *M=*M-1-k*12;
+    *D = int(dd);
+
+    double hh = (dd - int(dd)) * 24.0;
+    double mm = (hh - int(hh)) * 60.0;
+    double ss = (mm - int(mm)) * 60.0;
+
+    *h = int(hh);
+    *m = int(mm);
+    *s = ss;
+
+
+}
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
@@ -1158,30 +1190,30 @@ LogIO os(_ORIGIN);
     if (write_baseline_text) {
 	    if (num_apply_true > 0) {
 
-           /*
-           string fitting_func;
-           if(bltype_mtx[0][ipol] =="[0]"){
-                fittingfunc = "poly";
-	        }else if(bltype_mtx[0][ipol] =="[1]"){
-                fittingfunc = "chebyshev";
-            }else if(bltype_mtx[0][ipol] =="[2]"){
-                fittingfunc = "cspline";
-            }
-            */
+            int year;
+            int month;
+            int day;
+            int hour;
+            int minute;
+            double second;
             
+            //MJD(second)-> year,month,day,hour,minute,second
+            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	        set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
+            //MVTime mvtime = MVTime(times[irow]);
             for(size_t ipol = 0; ipol < num_pol; ++ipol) {
                     ofs_txt << "Scan" << '[' << (uInt)scans[irow] << ']' << ' '  
                             << "Beam" << '[' << (uInt)beams[irow] << ']' << ' '
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
-                            << "Time" <<'[' <<  times[irow] << ']' << endl;
+                            //<< "Time" <<'[' <<  times[irow] << ']' << endl;
+                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
                 
-                    
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
                         if(imasklist == 0){
                             ofs_txt << '[' << masklist_mtx2(ipol, 2*imasklist) << ';' << masklist_mtx2(ipol, 2*imasklist+1) << ']';
@@ -1191,8 +1223,6 @@ LogIO os(_ORIGIN);
                         }
                     }
 
-
-
                     ofs_txt << ']'<< endl;;
                     ofs_txt << endl;
                     Matrix<uInt> bltype_mtx2= bltype_mtx[0][ipol];
@@ -1201,7 +1231,11 @@ LogIO os(_ORIGIN);
                     string bltype_name;
                     if(bltype_mtx2(0,0) == (uInt)0){
                         bltype_name = "poly";
+                    }else if(bltype_mtx2(0,0) == (uInt)1){
+                        bltype_name = "chebyshev";
                     }
+
+
                     ofs_txt << "Baseline parameters  Function = " << bltype_name.c_str() << ' ' << " order = "<< fpar_mtx2(0,0) <<endl;
                     ofs_txt << endl;
                     ofs_txt << "Results of baseline fit" << endl;
@@ -1670,17 +1704,16 @@ split_bloutputname(out_bloutput_name);
     if (write_baseline_text) {
 	    if (num_apply_true > 0) {
 
-           
-           //string fitting_func;
-           //if(bltype_mtx[0][ipol] =="[0]"){
-           //     fittingfunc = "poly";
-	       //}else if(bltype_mtx[0][ipol] =="[1]"){
-           //    fittingfunc = "chebyshev";
-           // }else if(bltype_mtx[0][ipol] =="[2]"){
-           //     fittingfunc = "cspline";
-           // }
-           
+            int year;
+            int month;
+            int day;
+            int hour;
+            int minute;
+            double second;
             
+            //MJD(second)-> year,month,day,hour,minute,second
+            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	        set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
@@ -1689,7 +1722,8 @@ split_bloutputname(out_bloutput_name);
                             << "Beam" << '[' << (uInt)beams[irow] << ']' << ' '
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
-                            << "Time" <<'[' <<  times[irow] << ']' << endl;
+                            //<< "Time" <<'[' <<  times[irow] << ']' << endl;
+                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           
@@ -2940,7 +2974,20 @@ LogIO os(_ORIGIN);
            // }else if(bltype_mtx[0][ipol] =="[2]"){
            //     fittingfunc = "cspline";
            // }
-           
+        
+
+
+            int year;
+            int month;
+            int day;
+            int hour;
+            int minute;
+            double second;
+            
+            //MJD(second)-> year,month,day,hour,minute,second
+            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+
+
             Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
             set_matrix_for_bltable<double, Float>(num_pol, num_ffpar_max, ffpar_mtx_tmp, ffpar_mtx);
 
@@ -2959,7 +3006,8 @@ LogIO os(_ORIGIN);
                             << "Beam" << '[' << (uInt)beams[irow] << ']' << ' '
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
-                            << "Time" <<'[' <<  times[irow] << ']' << endl;
+                            //<< "Time" <<'[' <<  times[irow] << ']' << endl;
+                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           

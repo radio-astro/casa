@@ -358,6 +358,12 @@ private:
   //split the name  
   void split_bloutputname(string str);
 
+  //MJD->year,month,day,hour,minutes,second
+  void MJDtoYMDhms(int* Y, int* M, int* D, int* h, int* m, double* s);
+
+
+
+
 
 }; // class SingleDishMS -END
 
