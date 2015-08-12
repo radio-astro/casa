@@ -557,7 +557,6 @@ bool ms::tofits(
 			);
 
 			if(subselect && mssel->nrow() < itsMS->nrow()) {
-				cout << "in if" << endl;
 				if(mssel->nrow() == 0) {
 					if(!mssel) {
 						delete mssel;
@@ -576,7 +575,6 @@ bool ms::tofits(
 				}
 			}
 			else {
-				cout << "in else" << endl;
 				if(! mssel) {
 					delete mssel;
 				}
@@ -584,8 +582,6 @@ bool ms::tofits(
 			}
 			MeasurementSet selms(*mssel);
 			MSMetaData md(&selms, 1000);
-			cout << "nfields " << md.nFields() << endl;
-			cout << "fieldid " << fieldID << endl;
 			if (
 				! MSFitsOutput::writeFitsFile(
 					fitsfile, selms, column, istart, inchan,
