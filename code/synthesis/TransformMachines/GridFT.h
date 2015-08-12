@@ -215,7 +215,7 @@ public:
   virtual Bool isFourier() {return True;}
 
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
-
+  virtual void modifyConvFunc(const Vector<Double>& convFunc, Int convSupport, Int convSampling);
   virtual String name() const;
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&/*vb*/, Bool /*useCorrected*/) {};
@@ -288,6 +288,8 @@ protected:
   String machineName_p;
 
   Double timemass_p, timegrid_p, timedegrid_p;
+  Vector<Double> convFunc_p;
+  Int convSampling_p, convSupport_p;
   //  casa::async::SynthesisAsyncPeek *peek;
 };
 

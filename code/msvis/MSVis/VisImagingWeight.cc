@@ -199,6 +199,72 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, Block<Matrix<Float> >& grids, const String& rmode, const Quantity& noise,
+                                     const Double robust, const Quantity& cellx, const Quantity& celly,
+                                     const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
+
+   LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
+
+      VisBufferAutoPtr vb (vi);
+      wgtType_p="uniform";
+      gwt_p.resize(grids.nelements(), True, False);
+      for (uInt k =0; k < gwt_p.nelements(); ++k)
+	gwt_p[k].assign(grids[k]);
+      nx_p=gwt_p[0].shape()[0];
+      ny_p=gwt_p[0].shape()[1];
+      uscale_p=(nx_p*cellx.get("rad").getValue());
+      vscale_p=(ny_p*celly.get("rad").getValue());
+      uorigin_p=nx_p/2;
+      vorigin_p=ny_p/2;
+      
+      multiFieldMap_p.clear();
+      Int fields=0;
+      String mapid;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	for (vi.origin();vi.more();vi++) {
+	  if(vb->newFieldId()){
+	    mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId());
+	    if(multiField){
+	      if(!multiFieldMap_p.isDefined(mapid)){
+		fields+=1;
+                   
+	      }
+	    }
+	    if(!multiFieldMap_p.isDefined(mapid))
+	      multiFieldMap_p.define(mapid, fields);
+	  }
+	}
+      }
+      f2_p.resize(gwt_p.nelements());
+      d2_p.resize(gwt_p.nelements());
+      for(uInt fid=0; fid < gwt_p.nelements(); ++fid){
+	if (rmode_p=="norm") {
+	  os << "Normal robustness, robust = " << robust_p << LogIO::POST;
+	  Double sumlocwt = 0.;
+	  for(Int vgrid=0;vgrid<ny_p;vgrid++) {
+	    for(Int ugrid=0;ugrid<nx_p;ugrid++) {
+	      if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
+	    }
+	  }
+	  Double sumwt_fid=sum(gwt_p[fid]);
+	  f2_p[fid] = square(5.0*pow(10.0,Double(-robust_p))) / (sumlocwt / sumwt_fid);
+	  d2_p[fid] = 1.0;
+
+	}
+          else if (rmode=="abs") {
+              os << "Absolute robustness, robust = " << robust_p << ", noise = "
+                      << noise_p.get("Jy").getValue() << "Jy" << LogIO::POST;
+              f2_p[fid] = square(robust_p);
+              d2_p[fid] = 2.0 * square(noise_p.get("Jy").getValue());
+
+          }
+          else {
+              f2_p[fid] = 1.0;
+              d2_p[fid] = 0.0;
+          }
+      }
+}
+
   VisImagingWeight::VisImagingWeight(vi::VisibilityIterator2& visIter,
 				     const String& rmode, const Quantity& noise,
                                      const Double robust, const Int nx, const Int ny,

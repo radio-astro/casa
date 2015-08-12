@@ -204,6 +204,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     };
     return *this;
   };
+
+  //=================
+
+  /*  template <typename T> void  FTMachine::getGrid(Array<T>& thegrid){
+    thegrid.resize();
+    if(whatType(&thegrid)==TpArrayComplex)
+      thegrid.assign(griddedData);
+    else if((whatType(&thegrid)==TpArrayDComplex))
+      thegrid.assign(griddedData2);
+    else if(((whatType(&thegrid)==TpArrayFloat))){
+      thegrid.resize(griddedData.shape());
+      thegrid=real(griddedData);
+    }
+    else if(((whatType(&thegrid)==TpArrayDouble))){
+      thegrid.resize(griddedData2.shape());
+      thegrid=real(griddedData2);
+    }  
+      
+
+  }
+  */
   
   //----------------------------------------------------------------------
   Bool FTMachine::changed(const VisBuffer&) {
@@ -277,8 +298,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pixelPhaseCenter(0) = Double( image->shape()(0) / 2 );
       pixelPhaseCenter(1) = Double( image->shape()(1) / 2 );
       directionCoord.toWorld(mImage_p, pixelPhaseCenter);
-    }
     
+   }
+
+   
     // Decide if uvwrotation is not necessary, if phasecenter and
     // image center are with in one pixel distance; Save some 
     //  computation time especially for spectral cubes.
@@ -966,11 +989,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     outRecord.define("name", this->name());
     if(withImage){
+      CoordinateSystem cs=image->coordinates();
+      DirectionCoordinate dircoord=cs.directionCoordinate(cs.findCoordinate(Coordinate::DIRECTION));
+      dircoord.setReferenceValue(mImage_p.getAngle().getValue());
       if(diskimage != ""){
 	try{
 	  PagedImage<Complex> imCopy(TiledShape(toVis_p ? griddedData.shape(): image->shape()), image->coordinates(), diskimage);
 	  toVis_p ? imCopy.put(griddedData) : imCopy.copyData(*image);
 	  ImageUtilities::copyMiscellaneous(imCopy, *image);
+	  Vector<Double> pixcen(2);
+	  pixcen(0)=Double(imCopy.shape()(0)/2); pixcen(1)=Double(imCopy.shape()(1)/2);
+	  dircoord.setReferencePixel(pixcen);
+	  cs.replaceCoordinate(dircoord, cs.findCoordinate(Coordinate::DIRECTION));
+	  imCopy.setCoordinateInfo(cs);
+	  
 	}
 	catch(...){
 	  throw(AipsError(String("Failed to save model image "+diskimage+String(" to disk")))); 

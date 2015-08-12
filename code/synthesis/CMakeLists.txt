@@ -616,6 +616,7 @@ install (FILES
 	TransformMachines/PSTerm.h
 	TransformMachines/WTerm.h
 	TransformMachines/FTMachine.h
+	TransformMachines/FTMachine.tcc
 	TransformMachines/GridFT.h
 	TransformMachines/SetJyGridFT.h
 	TransformMachines/HetArrayConvFunc.h
@@ -686,6 +687,7 @@ casa_add_assay( synthesis ImagerObjects/test/tSynthesisImager.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSDMaskHandler.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSynthesisUtils.cc )
 casa_add_assay( synthesis TransformMachines2/test/tVisModelDataRefim.cc )
+casa_add_assay( synthesis TransformMachines/test/dImagingWeightViaGridFT.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCFCache.cc )

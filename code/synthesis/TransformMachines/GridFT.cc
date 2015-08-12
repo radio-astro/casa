@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   GridFT::GridFT() : FTMachine(), padding_p(1.0), imageCache(0), cachesize(1000000), tilesize(1000), gridder(0), isTiled(False), convType("SF"),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(False), noPadding_p(False), usePut2_p(False), 
-		     machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0){
+		     machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) {
 
   }
 GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
@@ -88,7 +88,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType, Float padding,
   gridder(0), isTiled(False), convType(iconvType),
   maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
   usezero_p(usezero), noPadding_p(False), usePut2_p(False), 
-  machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0)
+  machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   useDoubleGrid_p=useDoublePrec;  
   //  peek=NULL;
@@ -99,7 +99,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0)
+  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   mLocation_p=mLocation;
   tangentSpecified_p=False;
@@ -112,7 +112,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0)
+  usePut2_p(False), machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0), convFunc_p(0), convSampling_p(1), convSupport_p(0)
 {
   mTangent_p=mTangent;
   tangentSpecified_p=True;
@@ -126,7 +126,7 @@ GridFT::GridFT(Long icachesize, Int itilesize, String iconvType,
 : FTMachine(), padding_p(padding), imageCache(0), cachesize(icachesize),
   tilesize(itilesize), gridder(0), isTiled(False), convType(iconvType), maxAbsData(0.0), centerLoc(IPosition(4,0)),
   offsetLoc(IPosition(4,0)), usezero_p(usezero), noPadding_p(False), 
-  usePut2_p(False),machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0)
+  usePut2_p(False),machineName_p("GridFT"), timemass_p(0.0), timegrid_p(0.0),  convFunc_p(0), convSampling_p(1), convSupport_p(0) 
 {
   mLocation_p=mLocation;
   mTangent_p=mTangent;
@@ -145,6 +145,7 @@ GridFT::GridFT(const RecordInterface& stateRec)
   };
   timemass_p=0.0;
   timegrid_p=0.0;
+  timedegrid_p=0.0;
   //  peek=NULL;
 }
 
@@ -172,6 +173,10 @@ GridFT& GridFT::operator=(const GridFT& other)
 						     uvScale, uvOffset,
 						     convType);
     }
+    convFunc_p.resize();
+    convSupport_p=other.convSupport_p;
+    convSampling_p=other.convSampling_p;
+    convFunc_p=other.convFunc_p;
     isTiled=other.isTiled;
     //lattice=other.lattice;
     lattice=0;
@@ -257,6 +262,11 @@ void GridFT::init() {
 						 uvScale, uvOffset,
 						 convType);
 
+  
+  convFunc_p.resize();
+  convSupport_p=gridder->cSupport()(0);
+  convSampling_p=gridder->cSampling();
+  convFunc_p=gridder->cFunction();
   // Set up image cache needed for gridding. For BOX-car convolution
   // we can use non-overlapped tiles. Otherwise we need to use
   // overlapped tiles and additive gridding so that only increments
@@ -382,6 +392,8 @@ void GridFT::prepGridForDegrid(){
 void GridFT::finalizeToVis()
 {
 
+  //cerr <<"Time to degrid " << timedegrid_p << endl;
+  timedegrid_p=0.0;
   griddedData.resize();
   if(isTiled) {
 
@@ -660,7 +672,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		 FTMachine::Type type)
 {
 
-  gridOk(gridder->cSupport()(0));
+  gridOk(convSupport_p);
   //  peek->setVBPtr(&vb);
 
   //Check if ms has changed then cache new spw and chan selection
@@ -744,7 +756,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Cube<Int> loc(2, nvischan, nRow);
   Cube<Int> off(2, nvischan, nRow);
   Matrix<Complex> phasor(nvischan, nRow);
-  Int csamp=gridder->cSampling();
+  Int csamp=convSampling_p;
   dphase=0.0;
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
@@ -809,7 +821,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   /////////////Some extra stuff for openmp
 
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
-  Int csupp=gridder->cSupport()(0);
+  Int csupp=convSupport_p;
   
   const Double * convfuncstor=(gridder->cFunction()).getStorage(del);
   
@@ -962,11 +974,18 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  peek->reset();
 }
 
+void GridFT::modifyConvFunc(const Vector<Double>& convFunc, Int convSupport, Int convSampling){
+  convFunc_p.resize();
+  convFunc_p=convFunc;
+  convSupport_p=convSupport;
+  convSampling_p=convSampling;
+
+} 
 
 void GridFT::get(VisBuffer& vb, Int row)
 {
 
-  gridOk(gridder->cSupport()(0));
+  gridOk(convSupport_p);
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row < 0) {
@@ -1040,7 +1059,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Cube<Int> loc(2, nvc, nvisrow);
   Cube<Int> off(2, nvc, nRow);
   Matrix<Complex> phasor(nvc, nRow);
-  Int csamp=gridder->cSampling();
+  Int csamp=convSampling_p;
   Bool delphase;
   Bool del;
   Complex * phasorstor=phasor.getStorage(delphase);
@@ -1102,7 +1121,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   {
     Bool delgrid;
     const Complex* gridstor=griddedData.getStorage(delgrid);
-    const Double * convfuncstor=(gridder->cFunction()).getStorage(del);
+    const Double * convfuncstor=convFunc_p.getStorage(del);;
     
     const Int* pmapstor=polMap.getStorage(del);
     const Int *cmapstor=chanMap.getStorage(del);
@@ -1110,7 +1129,7 @@ void GridFT::get(VisBuffer& vb, Int row)
     Int np=npol;
     Int nxp=nx;
     Int nyp=ny;
-    Int csupp=gridder->cSupport()(0);
+    Int csupp=convSupport_p;
     const Int * flagstor=flags.getStorage(del);
     const Int * rowflagstor=rowFlags.getStorage(del);
 

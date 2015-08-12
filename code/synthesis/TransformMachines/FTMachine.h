@@ -257,7 +257,9 @@ public:
 
   //-------------------------------------------------------------------------------------
 
-  // Get the final image
+  // Get the gridded visibilities or weight 
+  template <typename T> void getGrid(Array<T>& thegrid);
+   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
 
   virtual const CountedPtr<ConvolutionFunction>& getAWConvFunc() {return convFuncCtor_p;};
@@ -529,6 +531,9 @@ protected:
   void convUVW(Double& dphase, Vector<Double>& thisrow);
 
 };
+
+#include <synthesis/TransformMachines/FTMachine.tcc>
+
 
 } //# NAMESPACE CASA - END
 

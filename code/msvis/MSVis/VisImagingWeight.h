@@ -79,6 +79,11 @@ template<class T> class Vector;
                                const Double robust, const Int nx, const Int ny,
                                const Quantity& cellx, const Quantity& celly,
 		      const Int uBox, const Int vBox, const Bool multiField=False);
+     //Constructor for uniform style weighting when the weight density is calculated 
+     //elsewhere
+     VisImagingWeight(ROVisibilityIterator& vi, Block<Matrix<Float> >& grids, const String& rmode, const Quantity& noise,
+                                     const Double robust, const Quantity& cellx, const Quantity& celly,
+		      const Bool multiField=False) ;
      //VisibilityIterator2 version of the above....
      // Note the VisibilityIterator can be readonly...thus recommended if you can
      // as that will prevent unnecessary locks
