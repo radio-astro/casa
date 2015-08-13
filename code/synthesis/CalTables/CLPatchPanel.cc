@@ -318,6 +318,9 @@ CalLibSlice::CalLibSlice(const Record& clslice,
 
   if (clslice.isDefined("tinterp")) {
     tinterp=clslice.asString("tinterp");
+    if (tinterp=="") {
+      tinterp="linear";
+    }
   }
   if (clslice.isDefined("finterp")) {
     finterp=clslice.asString("finterp");
