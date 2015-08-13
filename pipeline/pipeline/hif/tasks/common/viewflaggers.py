@@ -804,6 +804,16 @@ class NewMatrixFlaggerInputs(basetask.StandardInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+    @property
+    def use_antenna_names(self):
+        return self._use_antenna_names
+
+    @use_antenna_names.setter
+    def use_antenna_names(self, value):
+        if value is None:
+            value = True
+        self._use_antenna_names = value
+
 
 class NewMatrixFlaggerResults(basetask.Results,
   flaggableviewresults.FlaggableViewResults):
@@ -1142,10 +1152,23 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # deal with antenna id not name
             antenna = antenna[0]
 
-        # If requested, initialize antenna id to name translation
-        antenna_id_to_name = None
+        # If requested to use antenna names instead of IDs antenna,
+        # create an id-to-name translation and check to make sure this
+        # would result in unique non-empty names for all IDs, otherwise
+        # revert back to flagging by ID
         if self.inputs.use_antenna_names:
-            antenna_id_to_name = {ant.id: ant.name for ant in self.inputs.ms.antennas}
+            
+            # create translation dictionary, reject empty antenna name strings
+            antenna_id_to_name = {ant.id: ant.name for ant in self.inputs.ms.antennas if ant.name.strip()}
+
+            # Check that each antenna ID is represented by a unique non-empty name, by testing that the 
+            # unique set of antenna names is same length as list of IDs. If not, then unset the 
+            # translation dictionary to revert back to flagging by ID
+            if len(set(antenna_id_to_name.values())) != len(self.inputs.ms.antennas):
+                LOG.info('No unique name available for each antenna ID: flagging by antenna ID instead of by name.')
+                antenna_id_to_name = None
+        else:
+            antenna_id_to_name = None
 
         # Initialize flags
         newflags = []

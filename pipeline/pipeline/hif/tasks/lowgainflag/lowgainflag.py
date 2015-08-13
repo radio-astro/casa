@@ -25,8 +25,7 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       intent=None, spw=None, refant=None, flag_nmedian=None,
-      fnm_lo_limit=None, fnm_hi_limit=None, niter=None, 
-      iter_datatask=None, use_antenna_names=None):
+      fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -96,26 +95,6 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
             value = 1
         self._niter = value
 
-    @property
-    def iter_datatask(self):
-        return self._iter_datatask
-
-    @iter_datatask.setter
-    def iter_datatask(self, value):
-        if value is None:
-            value = True
-        self._iter_datatask = value
-
-    @property
-    def use_antenna_names(self):
-        return self._use_antenna_names
-
-    @use_antenna_names.setter
-    def use_antenna_names(self, value):
-        if value is None:
-            value = True
-        self._use_antenna_names = value
-
 
 class Lowgainflag(basetask.StandardTaskTemplate):
     Inputs = LowgainflagInputs
@@ -158,8 +137,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
           flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
-          extendfields=['field', 'timerange'], iter_datatask=inputs.iter_datatask,
-          use_antenna_names=inputs.use_antenna_names)
+          extendfields=['field', 'timerange'], iter_datatask=True)
         flaggertask = viewflaggers.NewMatrixFlagger(matrixflaggerinputs)
 
         # Execute it to flag the data view
