@@ -41,7 +41,8 @@ class DataTableAnalyser(object):
             for (k,v) in spw_list.items():
                 if v.type == 'WVR' or v.nchan == 1:
                     continue
-                if re.match('TARGET',v.intent):
+#                 if re.match('TARGET',v.intent): # match only matches the beginning of string
+                if re.search('TARGET',v.intent):
                     target_spw.append(k)
 
             # update reduction_group 
