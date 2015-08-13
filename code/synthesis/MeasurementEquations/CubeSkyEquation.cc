@@ -1781,7 +1781,6 @@ void CubeSkyEquation::fixImageScale()
     ggSMin1 = ggSMax * constPB_p * constPB_p;
     ggSMin2 = ggSMax * minPB_p * minPB_p;
 
-    cerr << "ggSMax " << ggSMax << endl;
 
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
       
