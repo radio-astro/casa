@@ -171,7 +171,7 @@ class DataTableAnalyser(object):
             thispol = pol[i]
             spw_prop = self.scantablelist[thisant].spectral_window[thisspw]
             if spw_prop.type == 'WVR' or \
-                   re.match('TARGET',spw_prop.intent) is None or \
+                   re.search('TARGET',spw_prop.intent) is None or \
                    srt[i] not in on_source:
                 continue
 
