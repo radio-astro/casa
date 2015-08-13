@@ -122,15 +122,8 @@ class DetectLine(common.SingleDishTaskTemplate):
             LOG.error(message)
             raise RuntimeError(message)
 
-        #2010/6/9 Max FWHM found to be too large!
-        #if rules.LineFinderRule['MaxFWHM'] > ((nchan-Nedge)/2):
-        #    MaxFWHM = int(0.5 * (nchan-Nedge))
-        #    rules.LineFinderRule['MaxFWHM'] = MaxFWHM
-        #else:
-        #    MaxFWHM = int(rules.LineFinderRule['MaxFWHM'])
-        #MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
         #2015/04/23 MaxFWHM < nchan/3.0
-        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
+        MaxFWHM = int(min(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
         #rules.LineFinderRule['MaxFWHM'] = MaxFWHM
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
         Threshold = rules.LineFinderRule['Threshold']        
@@ -139,34 +132,8 @@ class DetectLine(common.SingleDishTaskTemplate):
 
         # 2011/05/17 TN
         # Switch to use either ASAP linefinder or John's linefinder
-        if self.line_finder.__class__.__name__ == 'AsapLineFinder':
-            #LF = heuristics.AsapLineFinder()
-            ### 2011/05/23 for linefinder2
-            Thre = [Threshold, Threshold * sqrt(2)]
-            if broadline: (Start, Binning) = (0, 1)
-            else: (Start, Binning) = (1, 1)
-        elif self.line_finder.__class__.__name__ == 'HeuristicsLineFinder':
-            #LF = heuristics.HeuristicsLineFinder()
-            ### 2011/05/23 for linefinder2
-            #Thre = [Threshold * self.ThresholdFactor, Threshold * math.sqrt(2) * self.ThresholdFactor]
-            ### 2012/02/29 for Broad Line detection by Binning
-            ### Only 'Thre' is effective for Heuristics Linefinder. BoxSize, AvgLimit, and MinFWHM are ignored
-            #Thre = [Threshold * self.ThresholdFactor, Threshold * self.ThresholdFactor]
-            #Thre = [Threshold * self.ThresholdFactor, Threshold * self.ThresholdFactor, Threshold * self.ThresholdFactor]
-            Thre = [Threshold * self.ThresholdFactor for i in xrange(3)]
-            if broadline: (Start, Binning) = (0, 5)
-            else: (Start, Binning) = (1, 3)
-            #2015/04/23 ignore Start, Binning: broadline detection tweak is not done in _detect()
-            Start, Binning = 2, 3
-
-        # try 2010/10/27
-        #BoxSize = [min(2.0*MaxFWHM/(nchan - Nedge), 0.5, (nchan - Nedge)/float(nchan)*0.9), min(max(MaxFWHM/(nchan - Nedge)/4.0, 0.1), (nchan - Nedge)/float(nchan)/2.0)]
-        BoxSize = [min(2.0*MaxFWHM/(nchan - Nedge), 0.5, (nchan - Nedge)/float(nchan)*0.9), min(max(MaxFWHM/(nchan - Nedge)/4.0, 0.1), (nchan - Nedge)/float(nchan)/2.0), min(max(MaxFWHM/(nchan - Nedge)/4.0, 0.1), (nchan - Nedge)/float(nchan)/2.0)]
-        ### 2011/05/23 for linefinder2
-        #Thre = [Threshold, Threshold * math.sqrt(2)]
-        #Thre = [Threshold, Threshold * math.sqrt(2), Threshold * 2]
-        #AvgLimit = [MinFWHM * 16, MinFWHM * 4]
-        AvgLimit = [MinFWHM * 16, MinFWHM * 4, MinFWHM]
+        ### Only 'Thre' is effective for Heuristics Linefinder. BoxSize, AvgLimit, and MinFWHM are ignored
+        Thre = Threshold * self.ThresholdFactor
 
         # Create progress timer
         Timer = common.ProgressTimer(80, nrow, LOG.level)
@@ -186,38 +153,22 @@ class DetectLine(common.SingleDishTaskTemplate):
             if grid_table[row][6] == 0:
                 LOG.debug('Row %d: No spectrum' % row)
                 # No spectrum
-                protected = [[-1, -1]]
+                Protected = [[-1, -1, 1]]
             else:
                 LOG.debug('Start Row %d' % (row))
                 for [BINN, offset]  in BinningRange:
                     MinNchan = (MinFWHM-2) / BINN + 2
-                    #print 'Comment:', len(spectra[row])
                     SP = self.SpBinning(spectra[row], BINN, offset)
-                    #print len(SP)
-                    #print masks[row]
-                    #print len(masks[row])
                     MSK = self.MaskBinning(masks[row], BINN, offset)
-                    #print MSK
-                    #print len(MSK)
-                    #print Thre, MinFWHM, BoxSize, Binning, AvgLimit
     
                     protected = self._detect(spectrum = SP,
                                              mask = MSK,
-                                             start=Start,
-                                             #end=len(Thre),
-                                             end=Start+1,
-                                             binning=Binning,
-                                             #threshold=Thre,
-                                             threshold=Thre[0]+math.sqrt(BINN)-1.0,
-                                             box_size=BoxSize,
-                                             #min_nchan=MinFWHM,
-                                             min_nchan=MinNchan,
-                                             avg_limit=AvgLimit,
+                                             threshold=Thre+math.sqrt(BINN)-1.0,
                                              tweak=True,
                                              edge=(EdgeL,EdgeR))
 
-                    #MaxLineWidth = max(rules.LineFinderRule['MaxFWHM'], int((nchan - Nedge)/3.0))
-                    MaxLineWidth = int((nchan - Nedge)/3.0)
+                    MaxLineWidth = MaxFWHM
+                    #MaxLineWidth = int((nchan - Nedge)/3.0)
                     MinLineWidth = rules.LineFinderRule['MinFWHM']
                     for i in range(len(protected)):
                         if protected[i][0] != -1:
@@ -235,7 +186,6 @@ class DetectLine(common.SingleDishTaskTemplate):
             detect_signal[row] = [grid_table[row][4], # RA
                                   grid_table[row][5], # DEC
                                   Protected]          # Protected Region
-                                  #protected]          # Protected Region
             ProcEndTime = time.time()
             LOG.info('Channel ranges of detected lines for Row %s: %s' % (row, detect_signal[row][2]))
             
@@ -281,135 +231,65 @@ class DetectLine(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def _detect(self, spectrum, mask, start, end, binning, threshold, box_size, min_nchan, avg_limit, tweak, edge):
-        protected = []
 
+    def _detect(self, spectrum, mask, threshold, tweak, edge):
         nchan = len(spectrum)
         (EdgeL, EdgeR) = edge
         Nedge = EdgeR + EdgeL
-        #MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], 0.5 * (nchan - Nedge)))
         #2015/04/23 0.5 -> 1/3.0
-        MaxFWHM = int(max(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
+        MaxFWHM = int(min(rules.LineFinderRule['MaxFWHM'], (nchan - Nedge)/3.0))
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
 
-        # Try to detect broader component and narrow component separately
-        for y in range(start, end):
-        #for y in range(Start, 2):
-            ### 2012/02/29 GK for broad line detection
-            ### y=0: Bin=25,  y=1: Bin=5 or 3,  y=2: Bin=1
-            Bin = binning ** (2-y)
-            if Bin != 1 and nchan/Bin < 50: continue
-            LOG.trace('line detection parameters: ')
-            #LOG.trace('threshold (S/N per channel)=%.1f,' % threshold[y] \
-            LOG.trace('threshold (S/N per channel)=%.1f,' % threshold \
-                           + 'min_nchan for detection=%d, running mean box size (in fraction of spectrum)=%s, ' % (min_nchan, box_size[y]) \
-                           + 'upper limit for averaging=%s channels, edges to be dropped=[%s, %s]' % (avg_limit[y], EdgeL, EdgeR) )
-            line_ranges = self.line_finder(spectrum=spectrum,
-                                           #threshold=threshold[y], 
-                                           threshold=threshold, 
-                                           box_size=box_size[y], 
-                                           min_nchan=min_nchan, 
-                                           avg_limit=avg_limit[y], 
-                                           tweak=True,
-                                           mask=mask,
-                                           edge=(int((EdgeL+Bin-1)/Bin), int((EdgeR+Bin-1)/Bin)))
-            # len(line_ranges) is twice of number of lines detected
-            # since line_ranges is a flat list of left/right edges of 
-            # detected line regions. 
-            # [line0L, line0R, line1L, line1R, ...]
-            nlines = len(line_ranges) 
+        LOG.trace('line detection parameters: ')
+        LOG.trace('threshold (S/N per channel)=%.1f,' % threshold \
+                       + 'channels, edges to be dropped=[%s, %s]' % (EdgeL, EdgeR) )
+        line_ranges = self.line_finder(spectrum=spectrum,
+                                       threshold=threshold, 
+                                       tweak=True,
+                                       mask=mask,
+                                       edge=(int(EdgeL), int(EdgeR)))
+        # line_ranges = [line0L, line0R, line1L, line1R, ...]
+        nlines = len(line_ranges) / 2
 
-            ### Debug TT
-            #LOG.info('NLINES=%s, EdgeL=%s, EdgeR=%s' % (nlines, EdgeL, EdgeR))
-            #LOG.debug('ranges=%s'%(line_ranges))
-            # No-line is detected
-            if (nlines == 0):
-                if len(protected) == 0: protected = [[-1, -1]]
-            # Single line is detected
-            elif (nlines == 2):
-                ### 2014/10/28 not use getWidenLineList
-                #Ranges = line_ranges
-                ### 2014/10/28 getWiden 1,1 -> 0,0
-                Ranges = getWidenLineList(int(nchan/Bin), 0, 0, line_ranges)
-                ### 2012/02/29 GK for broad line detection
-                (Ranges[0], Ranges[1]) = (Ranges[0]*Bin+int(Bin/2), Ranges[1]*Bin+int(Bin/2))
-                Width = Ranges[1] - Ranges[0] + 1
-                ### 2011/05/16 allowance was moved to clustering analysis
-                allowance = int(Width/5)
-                #allowance = int(Width/10)
-                #Debug (TT)
-                LOG.debug('Ranges=%s, Width=%s, allowance=%s' % (Ranges, Width, allowance))
-                ### 2011/05/16 allowance was moved to clustering analysis
-                #if Width >= MinFWHM and Width <= MaxFWHM and \
-                #   Ranges[0] > (EdgeL + allowance + 1) and \
-                #   Ranges[1] < (nchan - 2 - allowance - EdgeR):
-                #    ProtectRegion[2].append([Ranges[0] - allowance, Ranges[1] + allowance])
-                if Width >= MinFWHM and Width <= MaxFWHM and \
-                   Ranges[0] > EdgeL and \
-                   Ranges[1] < (nchan - 1 - EdgeR):
-                    if len(protected) != 0 and protected[0] == [-1, -1]:
-                        protected[0] = [Ranges[0], Ranges[1]]
-                    else: protected.append([Ranges[0], Ranges[1]])
-                elif len(protected) == 0: protected = [[-1, -1]]
-            # Multipule lines (candidates) are detected
-            else:
-                linestat = []
-                ### 2014/10/28 not use getWidenLineList
-                #Ranges = line_ranges
-                ### 2014/10/28 getWiden 1,1 -> 0,0
-                Ranges = getWidenLineList(int(nchan/Bin), 0, 0, line_ranges)
-                # y loops over [0,2,4,...] instead of [0,1,2,...]
-                #for y in range(int(len(Ranges)/2)):
-                for y in xrange(0,len(Ranges),2):
-                    ### 2012/02/29 GK for broad line detection
-                    (Ranges[y], Ranges[y+1]) = (Ranges[y]*Bin+int(Bin/2), Ranges[y+1]*Bin+int(Bin/2))
-                    Width = Ranges[y+1] - Ranges[y] + 1
-                    ### 2011/05/16 allowance was moved to clustering analysis
-                    allowance = int(Width/5)
-                    #allowance = int(Width/10)
-                    #Debug (GK)
-                    LOG.debug('Ranges=%s, Width=%s, allowance=%s' % (Ranges, Width, allowance))
-                    ### 2011/05/16 allowance was moved to clustering analysis
-                    if Width > MinFWHM and Width < MaxFWHM and \
-                            Ranges[y] > EdgeL and \
-                            Ranges[y+1] < (nchan - 1 - EdgeR):
-                        #sp = spectra[Ranges[y]:Ranges[y+1], row]
-                        linestat.append((Ranges[y], Ranges[y+1], spectrum.max() - spectrum.min()))
-                # No candidate lines are left
-                if len(linestat) == 0:
-                    #if len(ProtectRegion[2]) == 0: ProtectRegion[2].append([-1, -1])
-                    if len(protected) == 0: protected = [[-1, -1]]
-                # More than or equal to one line are left
-                else:
-                    if len(protected) == 1 and protected[0] == [-1, -1]:
-                        protected = []
-                    protected.extend([l[0:2] for l in linestat])
-                    # Store line if max intensity exceeds 1/30 of the strongest one
-                    #protected.extend([l[0:2] for l in linestat if l[2] > Threshold])
+        ### Debug TT
+        #LOG.info('NLINES=%s, EdgeL=%s, EdgeR=%s' % (nlines, EdgeL, EdgeR))
+        #LOG.debug('ranges=%s'%(line_ranges))
 
-                    # 2007/09/01 Merge lines into one if two lines are close
-                    flag = True
-                    for y in range(len(linestat) - 1):
-                        current0 = linestat[y][0]
-                        current1 = linestat[y][1]
-                        next0 = linestat[y+1][0]
-                        next1 = linestat[y+1][1]
-                        if (next0 - current1) < (0.25*min((current1-current0),(next1-next0))):
-                            if flag == True:
-                                if current1 < next1 and current0 < next0 and (next1 - current0) < MaxFWHM:
-                                    protected.append([current0, next1])
-                                    Line0 = current0
-                                else: continue
-                            else:
-                                if (next1 - Line0) < MaxFWHM:
-                                    protected.pop()
-                                    protected.append([Line0, next1])
-                                else:
-                                    flag = True
-                                    continue
-                            flag = False
-                        else: flag = True
+        protected = []
+        for y in xrange(nlines):
+            Width = line_ranges[y*2+1] - line_ranges[y*2] + 1
+            ### 2011/05/16 allowance was moved to clustering analysis
+            #allowance = int(Width/5)
+            LOG.debug('Ranges=%s, Width=%s' % (line_ranges[y*2:y*2+2], Width))
+            if Width >= MinFWHM and Width <= MaxFWHM and \
+               line_ranges[y*2] > EdgeL and \
+               line_ranges[y*2+1] < (nchan - 1 - EdgeR):
+                protected.append([line_ranges[y*2], line_ranges[y*2+1]])
+        if len(protected) == 0:
+            protected = [[-1, -1]]
+        elif(len(protected) > 1):
+            # 2007/09/01 add merged lines to the list if two lines are close enough
+            flag = True
+            for y in range(len(protected) - 1):
+                curr0, curr1 = protected[y][0], protected[y][1]
+                next0, next1 = protected[y+1][0], protected[y+1][1]
+                if (next0 - curr1) < (0.25*min((curr1-curr0),(next1-next0))):
+                    if flag == True:
+                        if curr1 < next1 and curr0 < next0 and (next1 - curr0) <= MaxFWHM:
+                            protected.append([curr0, next1])
+                            Line0 = curr0
+                        else: continue
+                    else:
+                        if (next1 - Line0) <= MaxFWHM:
+                            protected.pop()
+                            protected.append([Line0, next1])
+                        else:
+                            flag = True
+                            continue
+                    flag = False
+                else: flag = True
         return protected
+
 
     def _get_predefined_window(self, window):
         if len(window) == 0:
@@ -420,6 +300,7 @@ class DetectLine(common.SingleDishTaskTemplate):
             else:
                 return [self._get_linerange(window)]
             
+
     def _get_linerange(self, window):
         if len(window) == 2:
             # [chmin, chmax] form
@@ -438,22 +319,4 @@ class DetectLine(common.SingleDishTaskTemplate):
         else:
             raise RuntimeError('Invalid linewindow format')
     
-def SpBinning(data, Bin):
-    if Bin == 1: 
-        return data
-    else:
-        return numpy.array([data[i:i+Bin].mean() for i in xrange(0,len(data),Bin)], dtype=numpy.float)
-
-def getWidenLineList(nChan, mChan, pChan, Lines):
-    #print Lines, nChan, mChan, pChan, len(Lines)
-    Tmp = [[Lines[i]-mChan, Lines[i+1]+pChan] for i in xrange(0, len(Lines), 2)]
-    if len(Tmp) > 1:
-        for i in range(len(Tmp)-1, 0, -1):
-            if Tmp[i-1][1] >= Tmp[i][0]-1:
-                Tmp[i-1][1] = Tmp[i][1]
-                Tmp.pop(i)
-    Out = [x for t in Tmp for x in t]
-    if Out[0] < 0: Out[0] = 0
-    if Out[-1] > nChan - 2: Out[-1] = nChan - 1
-    return Out
 
