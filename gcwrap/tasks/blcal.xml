@@ -193,8 +193,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                timerange='&gt;10:24:00' data after this time
         uvrange -- Select data within uvrange (default units kilo-lambda)
                default: '' (all); example:
-               uvrange='0~1000kl'; uvrange from 0-1000 kilo-lamgda
-               uvrange='&gt;4kl';uvranges greater than 4 kilo lambda
+               uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+               uvrange='&gt;4klambda';uvranges greater than 4 kilo lambda
                uvrange='0~1000km'; uvrange in kilometers
        	antenna -- Select data based on antenna/baseline
                default: '' (all)

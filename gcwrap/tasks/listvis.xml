@@ -335,7 +335,7 @@ selectdata  Toggle the following 7 selection parameters.
       
       uvrange     Select baseline lengths to list.
                   default: ''--> all; examples:
-                  uvrange='&lt;5kl'; less than 5 kilo-wavelengths
+                  uvrange='&lt;5klambda'; less than 5 kilo-wavelengths
                   Caution: Input units default to meters.
                   Listed units are always wavelengths.
 
