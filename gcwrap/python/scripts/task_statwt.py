@@ -49,6 +49,10 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
         if ':' in spw:
             casalog.post('The channel selection part of spw will be ignored.', 'WARN')
         
+        if len(correlation)>0:
+            correlation=''
+            casalog.post('Correlation selection in statwt has been disabled as of CASA v4.5', 'WARN')
+
         myms.open(vis, nomodify=False)
         retval = myms.statwt(dorms, byantenna, sepacs, fitspw, fitcorr, combine,
                              timebin, minsamp, field, spw, antenna, timerange, scan, intent,

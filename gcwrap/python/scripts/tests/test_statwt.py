@@ -50,8 +50,10 @@ class statwt_test(unittest.TestCase):
         nchan=len(validSpecData)
         for n in xrange(nchan):
           dev = validSpecData[n] - dmean
-          dev2 += dev*(dev.conjugate())  
-        var = (1./(nchan-1))*dev2
+          # combine real and imag
+          dev2 += (dev.real*dev.real + dev.imag*dev.imag)
+        # use 2*nchan here because we used real and imag
+        var = (1./(2*nchan-1))*dev2
         return var.real
         
     def calcwt(self,selrow,selcorr,datcol,flagcol):

@@ -192,7 +192,7 @@ Bool StatWT::process(VisBuffGroup& vbg)
   for(std::map<uInt, Vector<Double> >::iterator it = variances.begin();
       it != variances.end(); ++it)
     for(Int corr = 0; corr < maxNCorr; ++corr)
-      it->second[corr] /= ns[it->first][corr] - 1;
+      it->second[corr] /= (2.*ns[it->first][corr] - 1);
 
   // TODO
   // if(byantenna_p){
@@ -258,7 +258,6 @@ Bool StatWT::update_variances(std::map<uInt, Vector<uInt> >& ns,
       uInt hr = hashFunction(a1[r], a2[r], maxAnt);
 
       for(uInt corr = 0; corr < nCorr; ++corr){
-        if (std::count(selcorrs_p.begin(), selcorrs_p.end(), corr)!=0) {
 	  for(uInt ch = 0; ch < nChan; ++ch){
 	    if(!chanmaskedflags(corr, ch, r) && !vb.flagCube()(corr,ch,r)){
 	      if(!ns.count(hr)){
@@ -281,7 +280,6 @@ Bool StatWT::update_variances(std::map<uInt, Vector<uInt> >& ns,
 				     vmmean.imag() * vmoldmean.imag();
 	    }
 	  }
-	}//selcorrs_p 
       }
     }
   }
@@ -307,7 +305,6 @@ Bool StatWT::apply_variances(VisBuffer& vb,
     Bool havevar = ns.count(hr) > 0;
 
     for(uInt corr = 0; corr < nCorr; ++corr){
-      if (std::count(selcorrs_p.begin(), selcorrs_p.end(), corr)!=0) {// modify only selected corrs
 	if(havevar &&
 	   (ns[hr][corr] >= minsamp_p) &&
 	   (0.0 < variances[hr][corr])){ // For some reason emacs likes 0 < v,
@@ -327,7 +324,6 @@ Bool StatWT::apply_variances(VisBuffer& vb,
 	}
         if(!unflagged)
           vb.flagRow()[r] = true;
-      }
     }
   }
   

@@ -369,6 +369,15 @@ Bool Reweighter::reweight(String& colname, const String& combine)
 
     // Make sure it is initialized before any copies are made.
     viIn.originChunks();
+
+
+    // NB: The following correlation selection---which doesn't work
+    //  in multi-corrshape datasets---has been rendered meaningless
+    //  within StatWT.  In general, it is probably not desirable to
+    //  make the weight disposition correlation-dependent, in any
+    //  case.  As such, correlation selection has been disabled
+    //  in the user interface, too.   (gmoellen, 2015Aug12)
+
     // Make a list of indices of selected correlations
     vector<uInt> selcorrs;
     uInt nSelCorrs=corrSlices_p[0].nelements();

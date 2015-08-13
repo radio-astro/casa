@@ -94,7 +94,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <value></value>
         </param>
 	<param type="any" name="correlation">
-		<description>Select correlations to reweight</description>
+		<description>Select correlations to reweight (DEPRECATED in CASA v4.5)</description>
 		<any type="variant" limittypes="string stringArray"/>
 		<value type="string"></value>
 	</param>
@@ -278,6 +278,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: ''=all
         correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                        default '' (all).
+                       NB: In CASA v4.5, non-trivial correlation selection has 
+                       been disabled since it was not working correctly, and 
+                       it is likely undesirable to set the weights in a 
+                       correlation-dependent way.
+
         observation -- Select by observation ID(s).
                        default: '' = all
        datacolumn -- Which data column to calculate the scatter from
