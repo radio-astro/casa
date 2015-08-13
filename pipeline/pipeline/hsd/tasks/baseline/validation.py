@@ -5,6 +5,7 @@ import math
 from math import sqrt
 import time
 import scipy.cluster.vq as VQ
+import scipy.cluster.hierarchy as HIERARCHY
 import numpy.linalg as LA
 
 import pipeline.infrastructure as infrastructure
@@ -199,9 +200,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     Valid = rules.ClusterRule['ThresholdValid']
     Marginal = rules.ClusterRule['ThresholdMarginal']
     Questionable = rules.ClusterRule['ThresholdQuestionable']
-    #2010/6/9 Delete global parameter Min/MaxFWHM
     MinFWHM = rules.LineFinderRule['MinFWHM']
     #MaxFWHM = rules.LineFinderRule['MaxFWHM']
+    Clustering_Algorithm = rules.ClusterRule['ClusterAlgorithm']
     
     @property
     def MaxFWHM(self):
@@ -218,11 +219,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         Sigma clipping iterations will be applied if nsigma is positive
         order < 0 : automatic determination of fitting order (max = 5)
 
-         detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
-                                         [LineStartChannel2, LineEndChannel2],
-                                         [LineStartChannelN, LineEndChannelN]]],
-                         IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1],
-                                         [LineStartChannelN, LineEndChannelN]]]}
+         detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannel2, LineEndChannel2, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]],
+                         IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]]}
 
         lines: output parameter
            [LineCenter, LineWidth, Validity]  OK: Validity = True; NG: Validity = False
@@ -258,34 +259,20 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         index_list = self.inputs.index_list
         grid_ra = self.inputs.grid_ra
         grid_dec = self.inputs.grid_dec
-        nsigma = self.inputs.nsigma
         broad_component = self.inputs.broad_component
         xorder = self.inputs.xorder
         yorder = self.inputs.yorder
-        nchan = self.datatable.getcell('NCHAN', index_list[0])
+        self.nchan = self.datatable.getcell('NCHAN', index_list[0])
+        self.nsigma = self.inputs.nsigma
 
-        #Abcissa = self.Abcissa[vIF]
-        
         ProcStartTime = time.time()
         LOG.info('2D fit the line characteristics...')
 
-        #tMASKLIST = None
-        #tNOCHANGE = None
-        #tRA = self.datatable.getcol('RA')
-        #tDEC = self.datatable.getcol('DEC')
         tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
-        
         Totallines = 0
         RMS0 = 0.0
         lines = []
         self.cluster_info = {}
-
-        # First cycle
-        #if len(grid_table) == 0:
-        #    ROWS = index_list
-        # Iteration case
-        #else:
-        #    ROWS = range(len(grid_table))
         ROWS = range(len(grid_table))
 
         # RASTER CASE
@@ -294,47 +281,30 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         dummy = []
         flag = 1
         Npos = 0
-        #Maxlines = 0
-        ### 2011/05/13 Calculate median line width
-        Width = []
 
         for row in ROWS:
-            #if len(detect_signal[row][2]) > Maxlines: Maxlines = len(detect_signal[row][2])
-            #Maxlines = max(Maxlines, len(detect_signal[row][2]))
-            if len(detect_signal[row][2]) != 0 and detect_signal[row][2][0][0] != -1: Npos += 1
-
-            for line in detect_signal[row][2]:
-                # Check statistics flag added by G.K. 2008/1/17
-                # Bug fix 2008/5/29
-                if (line[0] != line[1]) and ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
-                    #Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
-                    #Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
-                    #2014/11/28 add Binning info into Region
-                    Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag, line[2]])
-                    ### 2011/05/17 make cluster insensitive to the line width
-                    dummy.append([float(line[1] - line[0]) / self.CLUSTER_WHITEN, 0.5 * float(line[0] + line[1])])
-                    #dummy.append([float(line[1] - line[0]), (line[0] + line[1]) / 2.0])
-                    ### 2011/05/13 Calculate median line width
-                    #Width.append(float(line[1] - line[0]) / self.CLUSTER_WHITEN)
-        # Region2:[Width, Center]
-        Region2 = numpy.array(dummy)
+            # detect_signal[row][2]: [[LineStartChannelN, LineEndChannelN, Binning],[],,,[]]
+            if len(detect_signal[row][2]) != 0 and detect_signal[row][2][0][0] != -1:
+                Npos += 1
+                for line in detect_signal[row][2]:
+                    # Check statistics flag. tSFLAG[row]==1 => Valid Spectra 2008/1/17
+                    # Bug fix 2008/5/29
+                    #if (line[0] != line[1]) and ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
+                    if line[0] != line[1] and tSFLAG[row] == 1:
+                        #2014/11/28 add Binning info into Region
+                        Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag, line[2]])
+                        ### 2011/05/17 make cluster insensitive to the line width
+                        dummy.append([float(line[1] - line[0]) / self.CLUSTER_WHITEN, 0.5 * float(line[0] + line[1])])
+        Region2 = numpy.array(dummy) # [Width, Center]
         ### 2015/04/22 save Region to file for test
         #fp = open('ClstRegion.%d.txt' % (int(time.time()/60)-23630000), 'w')
         #for i in range(len(Region)):
         #    fp.writelines('%d %f %f %f %f %d %d\n' % (Region[i][0],Region[i][1],Region[i][2],Region[i][3],Region[i][4],Region[i][5],Region[i][6]))
         #fp.close()
-        ### 2011/05/13 Calculate median line width
-        #MedianWidth = numpy.median(numpy.array(Width))
-        ###MedianWidth = numpy.median(Region2[:,0])
-        #LOG.debug('dummy = %s' % dummy)
-        #LOG.debug('Width = %s' % Width)
-        del dummy #, Width
-        #LOG.debug('Maxlines = %s' % Maxlines)
+        del dummy
         LOG.debug('Npos = %s' % Npos)
-        ###LOG.debug('MedianWidth = %s' % MedianWidth)
         # 2010/6/9 for non-detection
         if Npos == 0: 
-            #return lines, {}
             outcome = {'lines': [],
                        'channelmap_range': [],
                        'cluster_info': {},
@@ -355,13 +325,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # 2008/9/20 Dec Effect was corrected
         PosList = numpy.array([numpy.take(self.datatable.getcol('RA'),index_list),
                                numpy.take(self.datatable.getcol('DEC'),index_list)])
-        #DecCorrection = 1.0 / math.cos(tDEC[0] / 180.0 * 3.141592653)
         DecCorrection = 1.0 / math.cos(PosList[1][0] / 180.0 * 3.141592653)
         grid_ra *= DecCorrection
         # Calculate Parameters for Gridding
-        #PosList = numpy.array([numpy.take(tRA,index_list),
-        #                    numpy.take(tDEC,index_list)])
-
         wra = PosList[0].max() - PosList[0].min()
         wdec = PosList[1].max() - PosList[1].min()
         cra = PosList[0].min() + wra/2.0
@@ -382,11 +348,6 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # 2013/03/27 TN
         # Grid2SpectrumID stores index of index_list instead of row numbers 
         # that are held by index_list.
-        #Grid2SpectrumID = []
-        #for x in range(nra):
-        #    Grid2SpectrumID.append([])
-        #    for y in range(ndec):
-        #        Grid2SpectrumID[x].append([])
         Grid2SpectrumID = [[[] for y in xrange(ndec)] for x in xrange(nra)]
         for i in range(len(index_list)):
             Grid2SpectrumID[int((PosList[0][i] - x0)/grid_ra)][int((PosList[1][i] - y0)/grid_dec)].append(i)
@@ -394,35 +355,45 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcEndTime = time.time()
         LOG.info('Clustering: Initialization End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
+
+        ######## Clustering: K-mean Stage ########
         # K-mean Clustering Analysis with LineWidth and LineCenter
         # Max number of protect regions are SDC.SDParam['Cluster']['MaxCluster'] (Max lines)
         ProcStartTime = time.time()
         LOG.info('K-mean Clustering Analaysis Start')
 
-        (Ncluster, Bestlines, BestCategory, Region) = self.clustering_analysis(Region, Region2, nsigma)
+        # Bestlines: [[center, width, T/F],[],,,[]]
+        if self.Clustering_Algorithm == 'kmean':
+            (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
+        else:
+            (Ncluster, Bestlines, BestCategory, Region) = self.clustering_hierarchy(Region, Region2, rules.ClusterRule['ThresholdHierarchy'])
 
         ProcEndTime = time.time()
-        #LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (Ncluster, BestScore, lines))
         LOG.info('K-mean Cluster Analaysis End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
         # Sort lines and Category by LineCenter: lines[][0]
         LineIndex = numpy.argsort([line[0] for line in Bestlines[:Ncluster]])
         lines = [Bestlines[i] for i in LineIndex]
+        print 'Ncluster, lines:', Ncluster, lines
+        print 'LineIndex:', LineIndex
 
-        ### 2011/05/17 Scaling back the line width
+        ### 2011/05/17 anti-scaling of the line width
         Region2[:,0] = Region2[:,0] * self.CLUSTER_WHITEN
         for Nc in range(Ncluster):
             lines[Nc][1] *= self.CLUSTER_WHITEN
 
         LineIndex2 = numpy.argsort(LineIndex)
+        print 'LineIndex2:', LineIndex2
+        print 'BestCategory:', BestCategory
         #for i in range(len(BestCategory)): category[i] = LineIndex2[BestCategory[i]]
         category = [LineIndex2[bc] for bc in BestCategory]
+
 
         ######## Clustering: Detection Stage ########
         ProcStartTime = time.time()
         LOG.info('Clustering: Detection Stage Start')
 
-        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal, nchan)
+        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Detection Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -431,7 +402,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('Clustering: Validation Stage Start')
 
-        (GridCluster, GridMember, lines) = self.validation_stage(GridCluster, GridMember, lines, iteration, nchan)
+        (GridCluster, GridMember, lines) = self.validation_stage(GridCluster, GridMember, lines)
         
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -455,7 +426,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('Clustering: Final Stage Start')
 
-        (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList)
+        (RealSignal, lines, channelmap_range) = self.final_stage(GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -467,7 +438,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         tmp_index = 0
         for row in index_list:
             if RealSignal.has_key(row):
-                signal = self.__merge_lines(RealSignal[row][2], nchan)
+                signal = self.__merge_lines(RealSignal[row][2], self.nchan)
             else:
                 signal = [[-1,-1]]
                 #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
@@ -531,19 +502,15 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
-    def clustering_analysis(self, Region, Region2, nsigma):
+
+    def clustering_kmean(self, Region, Region2):
+        # Region = [[row, chan0, chan1, RA, DEC, flag, Binning],[],[],,,[]]
+        # Region2 = [[Width, Center],[],[],,,[]]
         MedianWidth = numpy.median(Region2[:,0])
         LOG.trace('MedianWidth = %s' % MedianWidth)
 
-        #MaxCluster = int(min(rules.ClusterRule['MaxCluster'], max(Maxlines + 1, (Npos ** 0.5)/2)))
         MaxCluster = int(rules.ClusterRule['MaxCluster'])
         LOG.info('Maximum number of clusters (MaxCluster) = %s' % MaxCluster)
-        # Whiten is no more necessary 2007/2/12
-        # whitened = VQ.whiten(Region2)
-
-        # TN refactoring
-        # TmpList is no more used.
-        #TmpList = []
 
         # Determin the optimum number of clusters
         BestScore = -1.0
@@ -560,112 +527,65 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             numpy.random.seed((1234,567))
             # Try multiple times to supress random selection effect 2007/09/04
             for Multi in xrange(min(Ncluster+1, 10)):
-                #codebook, diff = VQ.kmeans(whitened, Ncluster)
-                #codebook, diff = VQ.kmeans(Region2, Ncluster)
                 codebook, diff = VQ.kmeans(Region2, Ncluster, iter=50)
+                # codebook = [[clstCentX, clstCentY],[clstCentX,clstCentY],,[]] len=Ncluster
+                # diff <= distortion
                 NclusterNew = 0
                 LOG.trace('codebook=%s'%(codebook))
                 # Do iteration until no merging of clusters to be found
                 while(NclusterNew != len(codebook)):
                     category, distance = VQ.vq(Region2, codebook)
+                    # category = [c0, c0, c1, c2, c0,,,] c0,c1,c2,,, are clusters which each element belongs to
+                    # category starts with 0
+                    # distance = [d1, d2, d3,,,,,] distance from belonging cluster center
                     LOG.trace('Cluster Category&Distance %s, distance = %s' % (category, distance))
 
+                    # remove empty line in codebook
                     codebook = codebook.take([x for x in xrange(0,len(codebook)) 
                                               if any(category==x)], axis=0)
                     NclusterNew = len(codebook)
-                    #for x in xrange(NclusterNew - 1, -1, -1):
-                    #    # Remove a cluster without any members
-                    #    #if sum(numpy.equal(category, x) * 1.0) == 0:
-                    #    if all(category != x):
-                    #        NclusterNew -= 1
-                    #        tmp = list(codebook)
-                    #        del tmp[x]
-                    #        codebook = numpy.array(tmp)
 
                     # Clear Flag
                     for i in xrange(len(Region)): Region[i][5] = 1
 
-                    # nsigma clipping/flagging with cluster distance 
-                    # (set flag to 0)
                     Outlier = 0.0
-                    #MaxDistance = []
+                    lines = []
                     for Nc in xrange(NclusterNew):
+                        ### 2011/05/17 Strict the threshold, clean-up each cluster by nsigma clipping/flagging
                         ValueList = distance[(category == Nc).nonzero()[0]]
                         Stddev = ValueList.std()
-                        ### 2011/05/17 Strict the threshold
-                        Threshold = ValueList.mean() + Stddev * nsigma
-                        #Threshold = Stddev * nsigma
-                        LOG.trace('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
-                        ### 2011/05/17 clipping iteration
-                        #ValueList = ValueList.take((ValueList < Threshold).nonzero())[0]
-                        #Stddev = ValueList.std()
-                        #Threshold = Stddev * nsigma
+                        Threshold = ValueList.mean() + Stddev * self.nsigma
                         del ValueList
-                        #LOG.debug('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
+                        LOG.trace('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
                         for i in ((distance * (category == Nc)) > Threshold).nonzero()[0]:
-                            Region[i][5] = 0
+                            Region[i][5] = 0 # set flag to 0
                             Outlier += 1.0
-                        #MaxDistance.append(max(distance * ((distance < Threshold) * (category == Nc))))
-                        LOG.trace('Region = %s' % Region)
-                    MemberRate = (len(Region) - Outlier)/float(len(Region))
-                    LOG.trace('MemberRate = %f' % MemberRate)
-
-                    # Calculate Cluster Characteristics
-                    lines = []
-                    for NN in xrange(NclusterNew):
-#                        LineCenterList = []
-#                        LineWidthList = []
-#                        for x in range(len(category)):
-#                            if category[x] == NN and Region[x][5] != 0:
-#                                LineCenterList.append(Region2[x][1])
-#                                LineWidthList.append(Region2[x][0])
-#                        lines.append([numpy.median(numpy.array(LineCenterList)), numpy.median(numpy.array(LineWidthList)), True, MaxDistance[NN]])
-                        MaxDistance = max(distance * ((distance < Threshold) * (category == NN)))
-                        # Region2: numpy.array
-                        # [[line_center0, line_width0], 
-                        #  [line_center1, line_width1],
-                        #  ...]
+                        # Calculate Cluster Characteristics
+                        MaxDistance = max(distance * ((distance < Threshold) * (category == Nc)))
                         indices = [x for x in xrange(len(category)) 
-                                   if category[x] == NN and Region[x][5] != 0]
+                                   if category[x] == Nc and Region[x][5] != 0]
                         properties = Region2.take(indices, axis=0)
                         median_props = numpy.median(properties, axis=0)
                         lines.append([median_props[1], median_props[0], True, MaxDistance])
-                    LOG.trace('lines = %s' % lines)
+                    MemberRate = (len(Region) - Outlier)/float(len(Region))
+                    LOG.trace('lines = %s, MemberRate = %f' % (lines, MemberRate))
 
-                    # Rating
-                    ### 2011/05/16 modified for line-width variation
-                    #Score = ((distance+MedianWidth/2.0) * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) * (1.1 - MemberRate)
-                    #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
-                    ### 2011/05/12 modified for (distance==0)
-                    Score = ((distance * numpy.transpose(numpy.array(Region))[5]).mean() + MedianWidth/2.0) * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
-                    ### 2014/11/28 further modified for (distance==0)
-                    Score = math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
-                    # 2007/09/10 More sensitive to the number of lines clipped out
-                    #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
-                    #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) / MemberRate**2.0
                     # 2010/6/15 Plot the score along the number of the clusters
                     ListNcluster.append(Ncluster)
+                    Score = self.clustering_kmean_score(Region, MedianWidth, NclusterNew, MemberRate, distance)
                     ListScore.append(Score)
                     LOG.debug('NclusterNew = %d, Score = %f' % (NclusterNew, Score))
-                    if BestScore < 0:
-                        BestNcluster = 1
-                        BestScore = Score
-                        BestCategory = category.copy()
-                        BestCodebook = codebook.copy()
-                        BestRegion = Region[:]
-                        Bestlines = lines[:]
-                    elif Score < BestScore:
+                    if BestScore < 0 or Score < BestScore:
                         BestNcluster = NclusterNew
                         BestScore = Score
                         BestCategory = category.copy()
                         BestCodebook = codebook.copy()
                         BestRegion = Region[:]
                         Bestlines = lines[:]
-                # TN refactoring
-                # TmpList is no more used.
-                #TmpList.append([NclusterNew, Score, codebook])
+
             ListBestScore.append(min(ListScore[index0:]))
             LOG.debug('Ncluster = %d, BestScore = %f' % (NclusterNew, ListBestScore[-1]))
+            # iteration end if Score(N) < Score(N+1),Score(N+2),Score(N+3)
             if len(ListBestScore) > 3 and \
                ListBestScore[-4] <= ListBestScore[-3] and \
                ListBestScore[-4] <= ListBestScore[-2] and \
@@ -674,61 +594,278 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 converged = True
                 break
 
-        #Ncluster = BestNcluster
-        #Region = BestRegion
-        #category = BestCategory[:]
         if converged is False:
             LOG.warn('Clustering analysis not converged. Number of clusters may be greater than upper limit (MaxCluster=%s)'%(MaxCluster))
-        lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
-        LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, lines = %s' % (Ncluster, BestScore, category, BestCodebook, lines))
+
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
         self.cluster_info['detected_lines'] = Region2
-        self.cluster_info['cluster_property'] = Bestlines
+        self.cluster_info['cluster_property'] = Bestlines # [[Center, Width, T/F, ClusterRadius],[],,,[]]
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
         #SDP.ShowClusterInchannelSpace(Region2, Bestlines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
-        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (BestNcluster, BestScore, lines))
+        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (BestNcluster, BestScore, Bestlines))
+        LOG.debug('Category = %s, CodeBook = %s' % (category, BestCodebook))
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
-    def detection_stage(self, Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal, nchan):
+
+    def clustering_hierarchy(self, Region, Region2, nThreshold=3.0, method='ward'):
+    #def calc_clustering(self, nThreshold, method='ward'):
+        """
+        Hierarchical Clustering
+        method = 'ward'    : Ward's linkage method
+                 'single'  : nearest point linkage method
+                 'complete': farthest point linkage method
+                 'average' : average linkage method
+                 'centroid': centroid/UPGMC linkage method
+                 'median'  : median/WPGMC linkage method
+        1st threshold is set to nThreshold x stddev(distance matrix)
+        in:
+            self.Data -> Region2
+            self.Ndata
+ 
+        out:
+            self.Threshold
+            self.Nthreshold
+            self.Category
+            self.Ncluster
+        """
+        Data = self.set_data(Region2, ordering=[0,1])
+        # Calculate LinkMatrix from given data set
+        if method.lower() == 'single': # nearest point linkage method
+            LinkMatrix = HIERARCHY.single(Data)
+        elif method.lower() == 'complete': # farthest point linkage method
+            LinkMatrix = HIERARCHY.complete(Data)
+        elif method.lower() == 'average': # average linkage method
+            LinkMatrix = HIERARCHY.average(Data)
+        elif method.lower() == 'centroid': # centroid/UPGMC linkage method
+            LinkMatrix = HIERARCHY.centroid(Data)
+        elif method.lower() == 'median': # median/WPGMC linkage method
+            LinkMatrix = HIERARCHY.median(Data)
+        else: # Ward's linkage method: default
+            LinkMatrix = HIERARCHY.ward(Data)
+
+        # Divide data set into several clusters
+        # LinkMatrix[n][2]: distance between two data/clusters
+        # 1st classification
+        MedianDistance = numpy.median(LinkMatrix.T[2])
+        Stddev = LinkMatrix.T[2].std()
+        Nthreshold = nThreshold
+        Threshold = MedianDistance + Nthreshold * Stddev
+        Category = HIERARCHY.fcluster(LinkMatrix, Threshold, criterion='distance')
+        Ncluster = Category.max()
+        print 'Init Threshold:', Threshold,
+        print '\tInit Ncluster:', Ncluster
+
+        IDX = numpy.array([x for x in xrange(len(Data))])
+        for k in range(Ncluster):
+            C = Category.max()
+            NewData = Data[Category==(k+1)] # Category starts with 1 (not 0)
+            if(len(NewData) < 2):
+                print 'skip(%d): %d' % (k, len(NewData))
+                continue # LinkMatrix = ()
+            NewIDX = IDX[Category==(k+1)]
+            LinkMatrix = HIERARCHY.ward(NewData) # Ward's linkage method
+            #print LinkMatrix
+            MedianDistance = numpy.median(LinkMatrix.T[2])
+            #print 'MedianD', MedianDistance
+            Stddev = LinkMatrix.T[2].std()
+            NewThreshold = MedianDistance + Nthreshold ** 2. * Stddev # *3. is arbitrary
+            print 'Threshold(%d): %.1f' % (k, NewThreshold),
+            NewCategory = HIERARCHY.fcluster(LinkMatrix, NewThreshold, criterion='distance')
+            NewNcluster = NewCategory.max()
+            print '\tNewNcluster(%d): %d' % (k, NewNcluster),
+            print '\t# of Members(%d): %d: ' % (k, ((Category==k+1)*1).sum()),
+            for kk in range(NewNcluster):
+                print ((NewCategory==kk+1)*1).sum(),
+            print ''
+            if NewNcluster > 1:
+                for i in range(len(NewData)):
+                    if NewCategory[i] > 1:
+                        Category[NewIDX[i]] = C + NewCategory[i] - 1
+        Ncluster = Category.max() # update Ncluster
+        (Region, Range, Stdev) = self.clean_cluster(Data, Category, Region, 3.0, 2) # nThreshold, NumParam
+        for i in range(len(Category)):
+            #if Category[i] > Ncluster: Region[i][5] = 0 # flag out cleaned data
+            Category[i] -= 1 # Category starts with 1 -> starts with 0 (to align kmean)
+        Bestlines = []
+        for j in range(Ncluster):
+            Bestlines.append([Range[j][1], Range[j][0], True, Range[j][4]])
+        LOG.info('Final: Ncluster = %s, lines = %s' % (Ncluster, Bestlines))
+
+        self.cluster_info['cluster_score'] = [[1,2,3,4,5], [1,2,3,4,5]]
+        self.cluster_info['detected_lines'] = Region2
+        self.cluster_info['cluster_property'] = Bestlines # [[Center, Width, T/F, ClusterRadius],[],[],,,[]]
+        self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
+
+        return (Ncluster, Bestlines, Category, Region)
+
+
+    def set_data(self, Observation, ordering='none'):
+        """
+        Observation: numpy.array([[val1, val2, val3,..,valN],
+                                  [val1, val2, val3,..,valN],
+                                   ........................
+                                  [val1, val2, val3,..,valN]], numpy.float)
+        where N is a max dimensions of parameter space
+            ordering: 'none' or list of ordering of columns
+              e.g., ordering=[2,3,1,0] => [col3,col2,col0,col1]
+
+        self.Data: Observation data
+        self.NumParam: Number of dimensions to be used for Clustering Analysis
+        self.Factor: Set default Whitening factor (to be 1.0)
+        """
+        if ordering != 'none':
+            NumParam = len(ordering)
+            OrderList = ordering
+        else:
+            NumParam = len(Observation[0])
+            OrderList = range(NumParam)
+        if type(Observation) == list:
+            Obs = numpy.array(Observation, numpy.float)
+        else: Obs = Observation.copy()
+        if len(Obs.shape) == 2:
+            Data = numpy.zeros((Obs.shape[0], NumParam), numpy.float)
+            for i in range(Obs.shape[0]):
+                for j in range(NumParam):
+                    Data[i][j] = Obs[i][OrderList[j]]
+            Factor = numpy.ones(NumParam, numpy.float)
+            Ndata = len(Data)
+        else:
+            print "Data should be 2-dimensional...exit..."
+            sys.exit(0)
+        del Obs, OrderList
+        return (Data)
+
+
+    def clean_cluster(self, Data, Category, Region, Nthreshold, NumParam):
+        """
+        Clean-up cluster by eliminating outliers
+         Radius = StandardDeviation * nThreshold (circle/sphere)
+        in:
+            self.Data
+            self.Category
+            self.Nthreshold
+            self.Ncluster
+        out:
+            self.Range
+            self.Stdev
+        """
+        IDX = numpy.array([x for x in xrange(len(Data))])
+        Ncluster = Category.max()
+        C = Ncluster + 1
+        Range = numpy.zeros((C, 5), numpy.float)
+        Stdev = numpy.zeros((C, 5), numpy.float)
+        for k in range(Ncluster):
+            NewData = Data[Category == k+1].T
+            NewIDX = IDX[Category == k+1]
+            for i in range(NumParam):
+                Range[k][i] = NewData[i].mean()
+                Stdev[k][i] = NewData[i].std()
+            if(NumParam == 4):
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]],[Range[k][3]]]))**2).sum(axis=0)**0.5
+            elif(NumParam == 3):
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]]]))**2).sum(axis=0)**0.5
+            else: # NumParam == 2
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]]]))**2).sum(axis=0)**0.5
+            Threshold = Tmp.mean() + Tmp.std() * Nthreshold
+            Range[k][4] = Threshold
+            print 'Threshold(%d): %.1f' % (k, Threshold),
+            Out = NewIDX[Tmp > Threshold]
+            print '\tOut Of Cluster (%d): %d' % (k, len(Out))
+            if len(Out > 0):
+                for i in Out:
+                    #Category[i] = C
+                    Region[i][5] = 0
+                NewData = Data[Category == k+1].T
+                #for i in range(NumParam):
+                #    Range[k][i] = NewData[i].mean()
+                #    Stdev[k][i] = NewData[i].std()
+        return (Region, Range, Stdev)
+    
+
+    def Clustering_Hierarchy_Clean(nThreshold, Observation, Category):
+        NumParam = len(Observation[0])
+        IDX = numpy.array([x for x in xrange(len(Observation))])
+        C = Category.max() + 1
+        Range = numpy.zeros((C, 5), numpy.float)
+        Stdev = numpy.zeros((C, 5), numpy.float)
+        for k in range(Category.max()):
+            NewData = Observation[Category == k+1].T
+            NewIDX = IDX[Category == k+1]
+            for i in range(NumParam):
+                Range[k][i] = NewData[i].mean()
+                Stdev[k][i] = NewData[i].std()
+            if(NumParam == 4):
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]],[Range[k][3]]]))**2).sum(axis=0)**0.5
+            elif(NumParam == 3):
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]],[Range[k][2]]]))**2).sum(axis=0)**0.5
+            else: # NumParam == 2
+                Tmp = ((NewData - numpy.array([[Range[k][0]],[Range[k][1]]]))**2).sum(axis=0)**0.5
+            Threshold = Tmp.mean() + Tmp.std() * nThreshold
+            Range[k][4] = Threshold
+            print 'Threshold(%d): %.1f' % (k, Threshold)
+            Out = NewIDX[Tmp > Threshold]
+            print 'Out Of Cluster (%d): %d' % (k, len(Out))
+            if len(Out > 0):
+                for i in Out:
+                    Category[i] = C
+                NewData = Observation[Category == k+1].T
+                for i in range(NumParam):
+                    Range[k][i] = NewData[i].mean()
+                    Stdev[k][i] = NewData[i].std()
+        return (Category, Range, Stdev)
+    
+
+    def clustering_kmean_score(self, Region, MedianWidth, Ncluster, MemberRate, distance):
+        # Rating
+        ### 2011/05/12 modified for (distance==0)
+        ### 2014/11/28 further modified for (distance==0)
+        return(math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (Ncluster+ 1.0/Ncluster) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0))
+
+
+    def detection_stage(self, Ncluster, nra, ndec, ra0, dec0, grid_ra, grid_dec, category, Region, detect_signal):
+        """
+        Region = [[row, chan0, chan1, RA, DEC, flag, Binning],[],[],,,[]]
+        detect_signal = {ID1: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannel2, LineEndChannel2, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]],
+                         IDn: [RA, DEC, [[LineStartChannel1, LineEndChannel1, Binning],
+                                         [LineStartChannelN, LineEndChannelN, Binning]]]}
+        """
         # Create Grid Parameter Space (Ncluster * nra * ndec)
         MinChanBinSp = 50.0
-        BinningVariation = 1 + int(math.ceil(math.log(nchan/MinChanBinSp)/math.log(4)))
+        BinningVariation = 1 + int(math.ceil(math.log(self.nchan/MinChanBinSp)/math.log(4)))
         GridClusterWithBinning = numpy.zeros((Ncluster, BinningVariation, nra, ndec), dtype=numpy.float32)
-        GridCluster = numpy.zeros((Ncluster, nra, ndec), dtype=numpy.float32)
+        #GridCluster = numpy.zeros((Ncluster, nra, ndec), dtype=numpy.float32)
         GridMember = numpy.zeros((nra, ndec))
 
-        # Set Cluster on the Plane
+        # Set the number of spectra belong to each gridding positions
         for row in xrange(len(detect_signal)):
-            # Check statistics flag added by G.K. 2008/1/17
-            # Bug fix 2008/5/29
-            #if DataTable[row][DT_SFLAG] == 1:
-            # grid_table is always created 
-            #if ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
-                #print 'nra, ndec, row', nra, ndec, row
-                #print 'GridMember', int((detect_signal[row][0] - x0)/grid_ra)
-                #print 'GridMember', int((detect_signal[row][1] - y0)/grid_dec)
-            GridMember[int((detect_signal[row][0] - x0)/grid_ra)][int((detect_signal[row][1] - y0)/grid_dec)] += 1
+            GridMember[int((detect_signal[row][0] - ra0)/grid_ra)][int((detect_signal[row][1] - dec0)/grid_dec)] += 1
+
         for i in xrange(len(category)):
-            if Region[i][5] == 1:
+            if Region[i][5] == 1: # valid spectrum
+                # binning = 4**n
                 n = int(math.log(Region[i][6])/math.log(4.) + 0.1)
+                # if binning larger than 1, detection is done twice: m=>0.5
                 if n == 0: m = 1.0
                 else: m = 0.5
                 try:
                     #2014/11/28 Counting is done for each binning separately
-                    GridClusterWithBinning[category[i]][n][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += m
-                    #GridCluster[category[i]][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += 1.0
+                    GridClusterWithBinning[category[i]][n][int((Region[i][3] - ra0)/grid_ra)][int((Region[i][4] - dec0)/grid_dec)] += m
+                    #GridCluster[category[i]][int((Region[i][3] - ra0)/grid_ra)][int((Region[i][4] - dec0)/grid_dec)] += 1.0
                 except IndexError:
                     pass
         #2014/11/28 select the largest value among different Binning
-        for i in xrange(Ncluster):
-            for j in xrange(nra):
-                for k in xrange(ndec):
-                    m = 0
-                    for l in xrange(BinningVariation):
-                        if GridClusterWithBinning[i][l][j][k] > m: m = GridClusterWithBinning[i][l][j][k]
-                    GridCluster[i][j][k] = m
+        GridCluster = GridClusterWithBinning.max(axis=1)
+        #for i in xrange(Ncluster):
+        #    for j in xrange(nra):
+        #        for k in xrange(ndec):
+        #            m = 0
+        #            for l in xrange(BinningVariation):
+        #                if GridClusterWithBinning[i][l][j][k] > m: m = GridClusterWithBinning[i][l][j][k]
+        #            GridCluster[i][j][k] = m
 
         LOG.trace('GridClusterWithBinning = %s' % GridClusterWithBinning)
         LOG.trace('GridCluster = %s' % GridCluster)
@@ -759,12 +896,21 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         
         return (GridCluster, GridMember)
 
-    def validation_stage(self, GridCluster, GridMember, lines, iteration, nchan):
-                # Effective if number of spectrum which contains feature belongs to the cluster is greater or equal to the half number of spectrum in the Grid
+
+    def validation_stage(self, GridCluster, GridMember, lines):
+        # Validated if number of spectrum which contains feature belongs to the cluster is greater or equal to
+        # the half number of spectrum in the Grid
+        # Normally, 3 spectra are created for each grid positions,
+        # therefore, GridMember[ra][dec] = 3 for most of the cases.
+        # Normalized validity can be
+        # 1/3 (0.2<V) -> only one detection -> Qestionable
+        # 2/3 (0.5<V)-> two detections -> Marginal
+        # 3/3 (0.7<V)-> detected for all spectra -> Valid
+        # ThresholdValid should be 0.5 -> 0.7 in the future
 
         (Ncluster,nra,ndec) = GridCluster.shape
         MinChanBinSp = 50.0
-        BinningVariation = 1 + int(math.ceil(math.log(nchan/MinChanBinSp)/math.log(4)))
+        BinningVariation = 1 + int(math.ceil(math.log(self.nchan/MinChanBinSp)/math.log(4)))
 
         for Nc in range(Ncluster):
             LOG.trace('GridCluster[Nc]: %s' % GridCluster[Nc])
@@ -772,27 +918,12 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             for x in range(nra):
                 for y in range(ndec):
                     if GridMember[x][y] == 0: GridCluster[Nc][x][y] = 0.0
-                    # if a single spectrum is inside the grid and has a feature belongs to the cluster, validity is set to 0.5 (for the initial stage) or 1.0 (iteration case).
                     elif GridMember[x][y] == 1 and GridCluster[Nc][x][y] > 0.9:
-                        # 2013/05/20 TN
-                        # Temporal workaround that line validation fails on
-                        # test data if iteration is consistently handled.
-                        #if iteration == 0: GridCluster[Nc][x][y] = 0.5
-                        #else: GridCluster[Nc][x][y] = 1.0
                         GridCluster[Nc][x][y] = 1.0
-                    # if the size of population is enough large, validate it as a special case 2007/09/05
-                    # 2013/05/20 TN
-                    # Temporal workaround that line validation fails on
-                    # test data if iteration is consistently handled.
-                    #elif iteration == 0:
-                    #    GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
-                    ### 2014/10/30 detections were done with various binning: *2: half of the binning setting can detect the feature
-                    #else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) / BinningVariation * 2.0, 3.0)
                     ### 2014/11/28 Binning valiation is taken into account in the previous stage
-                    else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
-                    #else: GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / GridMember[x][y]**0.5 - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     # normarize validity
-                    #else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
+                    else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
+                    #else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
 
             if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: lines[Nc][2] = False
 
@@ -803,6 +934,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         self.GridClusterValidation = GridCluster.copy()
         
         return (GridCluster, GridMember, lines)
+
 
     def smoothing_stage(self, GridCluster, lines):
         # Rating:  [0.0, 0.4, 0.5, 0.4, 0.0]
@@ -868,7 +1000,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         
         return (GridCluster, lines)
 
-    def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList):
+
+    def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, Grid2SpectrumID, index_list, PosList):
                 
         (Ncluster, nra, ndec) = GridCluster.shape
         xorder0 = xorder
@@ -1090,7 +1223,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             LOG.trace('2D Fit Iteration = %d' % iteration)
 
                             ### Commented out three lines 2011/05/15
-                            # FitData format: [Width, Center, RA, DEC]
+                            ### 2015/8/11
+                            # FitData format: [Chan0, Chan1, RA, DEC, flag]
                             #for i in range(len(category)):
                             #    if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
                             #        FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
@@ -1181,14 +1315,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 Fit0 -= Center
                                 Fit1 -= Width
                                 Diff.append(sqrt(Fit0*Fit0 + Fit1*Fit1))
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).mean() + numpy.array(Diff).std() * nsigma
+                            #if len(Diff) > 1: Threshold = numpy.array(Diff).mean() + numpy.array(Diff).std() * self.nsigma
                             #if len(Diff) > 1:
                             if len(effective) > 1:
                                 npdiff = numpy.array(Diff)[effective]
                                 Threshold = npdiff.mean()
                                 #Threshold += npdiff.std()
-                                Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * nsigma
-                            #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * nsigma
+                                Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * self.nsigma
+                            #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * self.nsigma
                             else: Threshold *= 2.0
                             LOG.trace('Diff = %s' % [Diff[i] for i in effective])
                             LOG.trace('2D Fit Threshold = %s' % Threshold)
@@ -1214,12 +1348,13 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
                     LOG.trace('------06------ End of Iteration ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
 
-                    # FitData: [(Width, Center, RA, DEC)]
+                    # FitData: [(Chan0, Cha1, RA, DEC, Flag)]
                     if not SingularMatrix:
                         LOG.trace('------07------ in not SingularMatrix loop')
                         FitData = []
                         for i in range(len(category)):
                             if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
+                                #FitData.append((Region[i][1], Region[i][2], Region[i][3], Region[i][4]))
                                 #FitData.append((Region2[i][0], Region2[i][1], Region[i][3], Region[i][4]))
                                 FitData.append(tuple(Region2[i][:5]))
                         if len(FitData) == 0: continue
@@ -1241,7 +1376,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                         LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
                                         # 2015/04/23 remove MaxFWHM check
                                         if (Fit1 >= self.MinFWHM): # and (Fit1 <= self.MaxFWHM):
-                                            Allowance, Protect = self.calc_allowance(Fit0, Fit1, nchan)
+                                            Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan)
                                             # for Channel map velocity range determination 2014/1/12
                                             MaskCen = (Protect[0] + Protect[1]) / 2.0
                                             if MaskMin > MaskCen: MaskMin = MaskCen
@@ -1289,7 +1424,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
                                     # 2015/04/23 remove MaxFWHM check
                                     if (Fit1 >= self.MinFWHM): # and (Fit1 <= self.MaxFWHM):
-                                        Allowance, Protect = self.calc_allowance(Fit0, Fit1, nchan)
+                                        Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan)
                                         # for Channel map velocity range determination 2014/1/12
                                         # Valid case only: ignore blur case
                                         #if MaskMin > Protect[0]: MaskMin = Protect[0]
@@ -1331,6 +1466,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
         
         return (RealSignal, lines, channelmap_range)
+
 
     def calc_allowance(self, Center, Width, nchan):
         #Allowance = Fit1 / 2.0 * 1.3
