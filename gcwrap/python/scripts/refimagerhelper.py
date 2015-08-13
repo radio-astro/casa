@@ -913,8 +913,8 @@ class PyParallelCubeSynthesisImager():
 
     def concatImages(self, type='virtualnomove'):
         import subprocess
-        #imtypes=['psf']
-        imtypes=['image','psf','model','resdiual','mask','sumwt','pb','weight']
+        imtypes=['image','psf','model','resdiual','mask','pb','weight']
+        # being different 'image coordinates', sumwt need to be handle differently.
         for immod in range(0,self.NF):
             for ext in imtypes:
                 subimliststr="'"
