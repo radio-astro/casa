@@ -112,7 +112,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   }
 
   // How many _Float_ parameters?
-  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+  isCmplx_=(ct_.keywordSet().asString("ParType")=="Complex");
+  if (isCmplx_)  // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
 
   // Set channel/freq info
@@ -282,7 +283,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   }
 
   // How many _Float_ parameters?
-  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+  isCmplx_=(ct_.keywordSet().asString("ParType")=="Complex");  // Complex input
+  if (isCmplx_)
     nFPar_*=2;  // interpolating 2X as many Float values
 
   // Set channel/freq info
@@ -450,7 +452,8 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   }
 
   // How many _Float_ parameters?
-  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+  isCmplx_=(ct_.keywordSet().asString("ParType")=="Complex");
+  if (isCmplx_)  // Complex input
     nFPar_*=2;  // interpolating 2X as many Float values
 
   // Set channel/freq info
@@ -916,11 +919,12 @@ void CTPatchedInterp::setFldMap(const ROMSFieldColumns& fcol) {
      Vector<Double> sep(nAvFlds);
      IPosition ipos(1,0);  // get the first direction stored (no poly yet)
      for (Int iMSFld=0;iMSFld<nMSFlds;++iMSFld) {
-       msdir=fcol.phaseDirMeasCol()(iMSFld)(ipos); // MS fld dir
+       msdir=fcol.phaseDirMeas(iMSFld);
        sep.set(DBL_MAX);
        for (Int iCTFld=0;iCTFld<nAvFlds;++iCTFld) {
 	 // Get cal field direction, converted to ms field frame
-	 ctdir=ctcol.field().phaseDirMeasCol().convert(ctFlds(iCTFld),msdir)(ipos);
+	 ctdir=ctcol.field().phaseDirMeas(ctFlds(iCTFld));
+	 MDirection::Convert(ctdir,msdir.getRef());
 	 sep(iCTFld)=ctdir.getValue().separation(msdir.getValue());
        }
        // Sort separations

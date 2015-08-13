@@ -231,11 +231,12 @@ void FieldCalMap::setNearestFieldMap(const ROMSFieldColumns& msfc, const ROCTCol
     Vector<Double> sep(nAvFlds);
     IPosition ipos(1,0);  // get the first direction stored (no poly yet)
     for (Int iMSFld=0;iMSFld<nMSFlds;++iMSFld) {
-      msdir=msfc.phaseDirMeasCol()(iMSFld)(ipos); // MS fld dir
+      msdir=msfc.phaseDirMeas(iMSFld); // MS fld dir
       sep.set(DBL_MAX);
       for (Int iCTFld=0;iCTFld<nAvFlds;++iCTFld) {
 	// Get cal field direction, converted to ms field frame
-	ctdir=ctc.field().phaseDirMeasCol().convert(ctFlds(iCTFld),msdir)(ipos);
+	ctdir=ctc.field().phaseDirMeas(ctFlds(iCTFld));
+	MDirection::Convert(ctdir,msdir.getRef());
 	sep(iCTFld)=ctdir.getValue().separation(msdir.getValue());
       }
       // Sort separations
