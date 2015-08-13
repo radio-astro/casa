@@ -31,6 +31,7 @@
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <casa/Utilities/GenSort.h>
+#include <casa/OS/Path.h>
 
 #include <ms/MSSel/MSSelectableTable.h>
 #include <ms/MSSel/MSSelection.h>
@@ -76,11 +77,11 @@ MSCalPatchKey::MSCalPatchKey(Int obs,Int fld,Int ent,Int spw,Int ant) :
 
 // text output
 String MSCalPatchKey::print() const {
-  return "o="+(obs_<0 ? "*" : String::toString(obs_))+" "
-    "f="+(fld_<0 ? "*" : String::toString(fld_))+" "
-    "i="+(ent_<0 ? "*" : String::toString(ent_))+" "
-    "s="+(spw_<0 ? "*" : String::toString(spw_))+" "
-    "a="+(ant_<0 ? "*" : String::toString(ant_));
+  return "obs="+(obs_<0 ? "*" : String::toString(obs_))+" "
+    "fld="+(fld_<0 ? "*" : String::toString(fld_))+" "
+    "intent="+(ent_<0 ? "*" : String::toString(ent_))+" "
+    "spw="+(spw_<0 ? "*" : String::toString(spw_))+" "
+    "ant="+(ant_<0 ? "*" : String::toString(ant_));
 }
 
 
@@ -92,10 +93,10 @@ CTCalPatchKey::CTCalPatchKey(Int clsl,Int obs,Int fld,Int spw,Int ant) :
 // text output
 String CTCalPatchKey::print() const {
   return "cl="+(clsl_<0 ? "*" : String::toString(clsl_))+" "
-    "o="+(obs_<0 ? "*" : String::toString(obs_))+" "
-    "f="+(fld_<0 ? "*" : String::toString(fld_))+" "
-    "s="+(spw_<0 ? "*" : String::toString(spw_))+" "
-    "a="+(ant_<0 ? "*" : String::toString(ant_));
+    "obs="+(obs_<0 ? "*" : String::toString(obs_))+" "
+    "fld="+(fld_<0 ? "*" : String::toString(fld_))+" "
+    "spw="+(spw_<0 ? "*" : String::toString(spw_))+" "
+    "ant="+(ant_<0 ? "*" : String::toString(ant_));
 }
 
 
@@ -1163,7 +1164,9 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
 
   // Trap lack of available calibration for requested obs,fld,intent,spw
   if (msTres_.count(ires)==0) {
-    throw(AipsError("No calibration available for "+ires.print()));
+    throw(AipsError("No calibration arranged for "+ires.print()+
+		    " in callib for caltable="+
+		    Path(ct_.tableName()).baseName().before(".tempMemCalTable") ));
   }
 
   // If result_ is at a new address (cf last time, this spw), treat as new
@@ -1210,7 +1213,9 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
 
   // Trap lack of available calibration for requested obs,fld,intent,spw
   if (msTres_.count(ires)==0) {
-    throw(AipsError("No calibration available for "+ires.print()));
+    throw(AipsError("No calibration arranged for "+ires.print()+
+		    " in callib for caltable="+
+		    Path(ct_.tableName()).baseName().before(".tempMemCalTable") ));
   }
 
   // If result_ is at a new address (cf last time, this msspw), treat as new
@@ -1271,8 +1276,10 @@ Bool CLPatchPanel::getTresult(Cube<Float>& resultR, Cube<Bool>& resFlag,
   MSCalPatchKey mskey(obs,fld,ent,spw,-1);
 
   if (msTres_.count(mskey)==0)
-    throw(AipsError("No calibration available for "+mskey.print()));
-
+    throw(AipsError("No calibration arranged for "+mskey.print()+
+		    " in callib for caltable="+
+		    Path(ct_.tableName()).baseName().before(".tempMemCalTable") ));
+  
   // Reference the requested Cube 
   resultR.reference(msTres_[mskey].result_);
   resFlag.reference(msTres_[mskey].resultFlag_);
