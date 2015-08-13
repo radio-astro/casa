@@ -61,10 +61,11 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
         vis = parent_ms.basename
-        target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
-                       if spwobj.is_target and spwobj.nchan != 4]
+        # target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
+        #                if spwobj.is_target and spwobj.nchan != 4]
+        target_spws = self.context.observing_run.get_spw_for_science(st.basename)
         spwid = target_spws[0]
-        beam_size = casatools.quanta.convert(self.context.observing_run[idx].beam_size[spwid], 'deg')
+        beam_size = casatools.quanta.convert(st.beam_size[spwid], 'deg')
         obs_pattern = st.pattern[spwid].values()[0]
         rows = self.datatable.get_row_index(idx, spwid)
         datatable = self.datatable
