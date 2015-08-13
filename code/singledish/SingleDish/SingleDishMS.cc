@@ -1063,6 +1063,16 @@ LogIO os(_ORIGIN);
 	    findLineAndGetMask(num_chan, spec.data, mask.data, threshold, avg_limit,
 			       minwidth, edge, true, mask.data);
 	  }
+	  // Final check of the valid number of channels
+	  if (NValidMask(num_chan, mask.data)<num_coeff) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    apply_mtx[0][ipol] = False;
+	    os << LogIO::WARN << "Too few valid channels to fit. Skipping Antenna "
+	       << antennas[irow] << ", Beam " << beams[irow] 
+	       << ", SPW " << data_spw[irow] << ", Pol " << ipol
+	       << ", Time " << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << LogIO::POST;
+	    continue;
+	  }
   	  // actual execution of single spectrum
 	  float rms;  //<--comment out until new API becomes available
 	  if (write_baseline_text==true || write_baseline_csv==true || write_baseline_table==true) {
@@ -1574,6 +1584,16 @@ split_bloutputname(out_bloutput_name);
 	  if (linefinding) {
 	    findLineAndGetMask(num_chan, spec.data, mask.data, threshold, avg_limit,
 			       minwidth, edge, true, mask.data);
+	  }
+	  // Final check of the valid number of channels
+	  if (NValidMask(num_chan, mask.data)<num_coeff) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    apply_mtx[0][ipol] = False;
+	    os << LogIO::WARN << "Too few valid channels to fit. Skipping Antenna "
+	       << antennas[irow] << ", Beam " << beams[irow] 
+	       << ", SPW " << data_spw[irow] << ", Pol " << ipol
+	       << ", Time " << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << LogIO::POST;
+	    continue;
 	  }
 
   	  // actual execution of single spectrum
@@ -2469,18 +2489,18 @@ LogIO os(_ORIGIN);
 
 
 
-  ofstream ofs_csv;//---------------------------------------------------------------------
-  ofstream ofs_txt;//---------------------------------------------------------------------
-  bool write_baseline_csv   = (bloutputname_csv != "");//---------------------------------------------------------------------
-  bool write_baseline_text  = (bloutputname_text != "");//---------------------------------------------------------------------
-  bool write_baseline_table = (bloutputname_table != "");//---------------------------------------------------------------------
+  ofstream ofs_csv;
+  ofstream ofs_txt;
+  bool write_baseline_csv   = (bloutputname_csv != "");
+  bool write_baseline_text  = (bloutputname_text != "");
+  bool write_baseline_table = (bloutputname_table != "");
   
-  if (write_baseline_csv){//---------------------------------------------------------------------
-    ofs_csv.open(bloutputname_csv.c_str());//---------------------------------------------------------------------
-  }  //---------------------------------------------------------------------
-  if (write_baseline_text){//---------------------------------------------------------------------
-    ofs_txt.open(bloutputname_text.c_str(), std::ios::app);//---------------------------------------------------------------------
-  }  //---------------------------------------------------------------------
+  if (write_baseline_csv){
+    ofs_csv.open(bloutputname_csv.c_str());
+  }
+  if (write_baseline_text){
+    ofs_txt.open(bloutputname_text.c_str(), std::ios::app);
+  }
 
   //bool write_baseline_table = (out_bltable_name != "");
   if (write_baseline_table) bt= new BaselineTable(vi->ms());
@@ -2536,14 +2556,14 @@ LogIO os(_ORIGIN);
       SakuraAlignedArray<bool> mask(num_chan);
       //cout << "New iteration: num_row=" << num_row << ", num_chan=" << num_chan << ", num_pol=" << num_pol << ", spwid=" << data_spw << endl;
 
-      SakuraAlignedArray<bool> mask2(num_chan);  //---------------------------------------------------------------------
-      uInt final_mask[num_pol];//---------------------------------------------------------------------
-      uInt final_mask2[num_pol];  //---------------------------------------------------------------------
+      SakuraAlignedArray<bool> mask2(num_chan);
+      uInt final_mask[num_pol];
+      uInt final_mask2[num_pol];
 
-      final_mask[0] = 0;//-------------------------------------------------
-      final_mask[1] = 0;//------------------------------------------------
-      final_mask2[0] = 0;//------------------------------------------------
-      final_mask2[1] = 0;//------------------------------------------------
+      final_mask[0] = 0;
+      final_mask[1] = 0;
+      final_mask2[0] = 0;
+      final_mask2[1] = 0;
 
 
 
@@ -2676,18 +2696,42 @@ LogIO os(_ORIGIN);
 	  LIBSAKURA_SYMBOL(BaselineContext)* context = (*iter).second[ctx_indices[idx]];
 	  //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
-	  //<--comment out until new API becomes available
-	  //<--***start***
+
+	  // Number of coefficients to fit this spectrum
+	  size_t num_coeff;
+	  switch (fit_param.baseline_type) {
+	  case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	  case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	    status = 
+	    LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, fit_param.order, &num_coeff);
+	    check_sakura_status("sakura_GetNumberOfCoefficients", status);
+	    break;
+	  case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	    num_coeff = 4 * fit_param.npiece;
+	    break;
+	  default:
+	    throw(AipsError("Unsupported baseline type."));
+	  }
+	  // Final check of the valid number of channels
+	  if (NValidMask(num_chan, mask.data)<num_coeff) {
+	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
+	    apply_mtx[0][ipol] = False;
+	    os << LogIO::WARN << "Too few valid channels to fit. Skipping Antenna "
+	       << antennas[irow] << ", Beam " << beams[irow] 
+	       << ", SPW " << data_spw[irow] << ", Pol " << ipol
+	       << ", Time " << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << LogIO::POST;
+	    continue;
+	  }
+	  
+
 	  float rms;
 	  size_t num_boundary = 0;
 	  if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 	    num_boundary = fit_param.npiece;
 	  }
 	  SakuraAlignedArray<double> boundary(num_boundary);
-	  //<--***end***
 	  
-      if(write_baseline_text==true || write_baseline_csv==true || write_baseline_table==true) {//----------------------------
-      //if (write_baseline_table) {
+      if(write_baseline_text==true || write_baseline_csv==true || write_baseline_table==true) {
 	    num_apply_true++;
 	    bltype_mtx[0][ipol] = (uInt)fit_param.baseline_type;
 	    Int fpar_tmp;
@@ -2704,20 +2748,6 @@ LogIO os(_ORIGIN);
 	    }
 	    fpar_mtx[0][ipol] = fpar_tmp;
 
-	    size_t num_coeff;
-	    switch (fit_param.baseline_type) {
-	    case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	    case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-	      status = 
-	      LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, fit_param.order, &num_coeff);
-	      check_sakura_status("sakura_GetNumberOfCoefficients", status);
-	      break;
-	    case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-	      num_coeff = 4 * fit_param.npiece;
-	      break;
-	    default:
-	      throw(AipsError("Unsupported baseline type."));
-	    }
 	    if (num_coeff > num_coeff_max) {
 	      num_coeff_max = num_coeff;
 	    }
@@ -2736,17 +2766,17 @@ LogIO os(_ORIGIN);
 							            num_coeff, 
 							            coeff.data,
 							            mask2.data,
-								    &rms,  //<--comment out until new API becomes available
+								    &rms,
 							            &bl_status);
 
-            for(size_t i= 0; i < num_chan; ++i){//---------------------------------------------------------------------
-                if(mask.data[i] == false){//---------------------------------------------------------------------
-                    final_mask[ipol] += 1;//---------------------------------------------------------------------
-                }//---------------------------------------------------------------------
-                if(mask2.data[i] == false){//---------------------------------------------------------------------
-                    final_mask2[ipol] += 1;//---------------------------------------------------------------------
-                }//---------------------------------------------------------------------
-            }//---------------------------------------------------------------------
+            for(size_t i= 0; i < num_chan; ++i){
+                if(mask.data[i] == false){
+                    final_mask[ipol] += 1;
+                }
+                if(mask2.data[i] == false){
+                    final_mask2[ipol] += 1;
+                }
+            }
 
 
                                         
@@ -2763,18 +2793,18 @@ LogIO os(_ORIGIN);
 									       fit_param.npiece, 
 									       coeff.data,
 									       mask2.data,
-									       &rms, boundary.data,//<--comment out until new API becomes available
+									       &rms, boundary.data,
 									       &bl_status);
 
 
-            for(size_t i= 0; i < num_chan; ++i){//---------------------------------------------------------------------
-                if(mask.data[i] == false){//---------------------------------------------------------------------
-                    final_mask[ipol] += 1;//---------------------------------------------------------------------
-                }//---------------------------------------------------------------------
-                if(mask2.data[i] == false){//---------------------------------------------------------------------
-                    final_mask2[ipol] += 1;//---------------------------------------------------------------------
-                }//---------------------------------------------------------------------
-            }//---------------------------------------------------------------------
+            for(size_t i= 0; i < num_chan; ++i){
+                if(mask.data[i] == false){
+                    final_mask[ipol] += 1;
+                }
+                if(mask2.data[i] == false){
+                    final_mask2[ipol] += 1;
+                }
+            }
 
 
 	      get_coeff_funcname = "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat";
@@ -2787,7 +2817,7 @@ LogIO os(_ORIGIN);
 	      coeff_mtx_tmp[ipol].push_back(coeff.data[icoeff]);
 	    }
 	    Vector<uInt> masklist;
-	    get_masklist_from_mask(num_chan, mask2.data, masklist);//--------------------------------
+	    get_masklist_from_mask(num_chan, mask2.data, masklist);
 	    if (masklist.size() > num_masklist_max) {
 	      num_masklist_max = masklist.size();
 	    }
@@ -2795,18 +2825,6 @@ LogIO os(_ORIGIN);
 	    for (size_t imask = 0; imask < masklist.size(); ++imask) {
 	      masklist_mtx_tmp[ipol].push_back(masklist[imask]);
 	    }
-
-	    //<--remove when new API becomes available
-	    //<--***start***
-	    // size_t num_boundary = 0;
-	    // if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-	    //   num_boundary = fit_param.npiece;
-	    // }
-	    // SakuraAlignedArray<double> boundary(num_boundary);
-	    // if (fit_param.baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-	    //   GetBoundariesOfPiecewiseData(num_chan, mask.data, fit_param.npiece, boundary.data);
-	    // }
-	    //<--***end***
 
 	    string subtract_funcname;
 	    switch (fit_param.baseline_type) {
@@ -2858,21 +2876,7 @@ LogIO os(_ORIGIN);
 	      }
 	    }
 
-	    //<--remove when new API becomes available
-	    //<--***start***
-	    // LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
-	    // status = 
-	    // LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
-	    //     				             spec.data,
- 	    //     					     mask2.data,//------------------------------------------------------------
- 	    //     					     &stat);
-	    // check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
-	    // rms_mtx[0][ipol] = stat.stddev;
-	    //<--***end***
-	    //<--comment out until new API becomes available
-	    //<--***start***
 	    rms_mtx[0][ipol] = rms;
-	    //<--***end***
 
 	    cthres_mtx[0][ipol] = fit_param.clip_threshold_sigma;
 	    citer_mtx[0][ipol] = (uInt)fit_param.num_fitting_max - 1;
@@ -2925,16 +2929,6 @@ LogIO os(_ORIGIN);
 	      throw(AipsError("Unsupported baseline type."));
 	    }
 	    check_sakura_status(subtract_funcname, status);
-	    /*
-	    //cout << "statistics of baselined spetrum" << endl;
-	    float maxval = -1000.;
-	    float minval = 1000.;
-	    for (size_t i = 0; i < num_chan; ++i){
-	      maxval = max(maxval, spec.data[i]);
-	      minval = min(minval, spec.data[i]);
-	    }
-	    //cout << "- max=" << maxval << ", min=" << minval << endl;
-	    */
 	  }
   	  // set back a spectrum to data cube
 	  if (do_subtract) {
@@ -2966,17 +2960,6 @@ LogIO os(_ORIGIN);
 	    if (num_apply_true >0) {
 
            
-           //string fitting_func;
-           //if(bltype_mtx[0][ipol] =="[0]"){
-           //     fittingfunc = "poly";
-	       //}else if(bltype_mtx[0][ipol] =="[1]"){
-           //    fittingfunc = "chebyshev";
-           // }else if(bltype_mtx[0][ipol] =="[2]"){
-           //     fittingfunc = "cspline";
-           // }
-        
-
-
             int year;
             int month;
             int day;
@@ -3064,19 +3047,8 @@ LogIO os(_ORIGIN);
     if (write_baseline_csv) {
 	    if (num_apply_true > 0 ) {
 
-          //
-          // string fitting_func;
-          // if(bltype_mtx[0][ipol] =="[0]"){
-          //      fittingfunc = "poly";
-	      //  }else if(bltype_mtx[0][ipol] =="[1]"){
-          //      fittingfunc = "chebyshev";
-          //  }else if(bltype_mtx[0][ipol] =="[2]"){
-          //      fittingfunc = "cspline";
-          //  }
-           
             Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
             set_matrix_for_bltable<double, Float>(num_pol, num_ffpar_max, ffpar_mtx_tmp, ffpar_mtx);
-
 
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	        set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
@@ -3214,7 +3186,7 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data,
 			      static_cast<size_t>(avg_limit), lf_edge);
   // debug output
   LogIO os(_ORIGIN);
-  os << LogIO::NORMAL << line_ranges.size() << " lines found: ";
+  os << LogIO::DEBUG1 << line_ranges.size() << " lines found: ";
   for (list<pair<size_t,size_t>>::iterator iter=line_ranges.begin();
        iter!=line_ranges.end(); ++iter){
     os << "[" << (*iter).first << ", " << (*iter).second << "] ";
