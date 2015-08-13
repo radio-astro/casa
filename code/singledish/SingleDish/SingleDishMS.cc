@@ -1585,8 +1585,8 @@ split_bloutputname(out_bloutput_name);
 	    findLineAndGetMask(num_chan, spec.data, mask.data, threshold, avg_limit,
 			       minwidth, edge, true, mask.data);
 	  }
-	  // Final check of the valid number of channels
-	  if (NValidMask(num_chan, mask.data)<num_coeff) {
+	  // Final check of the valid number of channels (For cubic spline, degree of freedom is npiece+3)
+	  if (NValidMask(num_chan, mask.data)<npiece+3) {
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    apply_mtx[0][ipol] = False;
 	    os << LogIO::WARN << "Too few valid channels to fit. Skipping Antenna "
@@ -2713,7 +2713,8 @@ LogIO os(_ORIGIN);
 	    throw(AipsError("Unsupported baseline type."));
 	  }
 	  // Final check of the valid number of channels
-	  if (NValidMask(num_chan, mask.data)<num_coeff) {
+	  size_t num_min = fit_param.baseline_type==LIBSAKURA_SYMBOL(BaselineType_kCubicSpline) ? fit_param.npiece+3 : num_coeff;
+	  if (NValidMask(num_chan, mask.data)<num_min) {
 	    flag_spectrum_in_cube(flag_chunk,irow,ipol);
 	    apply_mtx[0][ipol] = False;
 	    os << LogIO::WARN << "Too few valid channels to fit. Skipping Antenna "
