@@ -140,7 +140,9 @@ def flagdata(vis,
              flagbackup,
              savepars,      # save the current parameters to FLAG_CMD  or to a file
              cmdreason,     # reason to save to flag cmd
-             outfile):      # output file to save flag commands
+             outfile,       # output file to save flag commands
+             writeflags    # HIDDEN parameter
+            ):      
 
     
     #

@@ -127,14 +127,14 @@ def main(thislist, axis='auto', numsubms=4):
 
     from tasks import partition,importuvfits
 
-    if 'listvis' in thislist:
-        # NOTE for test_listvis data:
-        # You need to run partition by hand to create an MMS for the single-dish data set
-        SDPATH = DATAPATH + 'unittest/listvis/'
-        SDMMS = './unittest_mms/listvis/'
-    
-        partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', 
-                  datacolumn='float_data', createmms=True, flagbackup=False)
+#    if 'listvis' in thislist:
+#        # NOTE for test_listvis data:
+#        # You need to run partition by hand to create an MMS for the single-dish data set
+#        SDPATH = DATAPATH + 'unittest/listvis/'
+#        SDMMS = './unittest_mms/listvis/'
+#    
+#        partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', 
+#                  datacolumn='float_data', createmms=True, flagbackup=False)
 
     if 'split' in thislist:
         # some additional MMSs
@@ -251,24 +251,7 @@ def main(thislist, axis='auto', numsubms=4):
         os.chdir(MMSPATH)
         os.system('ln -s test.mms test.ms')
         os.chdir(thisdir)
-        
-#     if ('setjy' in thislist):
-#         # Create n1333_1.ms test data set
-#         UVFILE = os.environ.get('CASAPATH').split()[0]+'/data/regression/' + 'ATST2/NGC1333/N1333_1.UVFITS'
-#         tempdir = 'makemmsdirtemp'
-#         if not os.path.exists(tempdir):
-#             os.system('mkdir '+tempdir)
-#         MSNAME = tempdir+'n1333_1.ms'
-#         MMSPATH = './unittest_mms/setjy/'
-#         MMSNAME = MMSPATH+'n1333_1.mms'
-#         importuvfits(fitsfile=UVFILE, vis=MSNAME,antnamescheme="new")
-#         partition(vis=MSNAME, outputvis=MMSNAME, datacolumn='all', separationaxis=axis,numsubms=numsubms,flagbackup=False)
-#         # Create symlink
-#         thisdir = os.getcwd()
-#         os.chdir(MMSPATH)
-#         os.system('ln -s n1333_1.mms n1333_1.ms')
-#         os.chdir(thisdir)
-        
+                
     if ('fixvis' in thislist):
         MSPATH = os.environ.get('CASAPATH').split()[0]+'/data/regression/0420+417/'
         MSNAME = MSPATH + '0420+417.ms'

@@ -430,6 +430,10 @@
                     <description>Name of output file to save current parameters. If empty, save to FLAG_CMD</description>
                     <value></value>
             </param>
+            <param type="bool" name="writeflags" subparam="true" visibility="hidden">
+                <description>Internal hidden parameter. Do not modify.</description>
+                <value type="bool">True</value>
+            </param>
 
             <constraints>                    
                 <when param="mode">

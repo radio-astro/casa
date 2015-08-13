@@ -27,7 +27,7 @@ class convertToMMS():
         self.outdir = mmsdir
         self.axis = axis
         self.numsubms = numsubms
-        self. createmslink = createmslink
+        self.createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
         self.cleanup = cleanup        
         
@@ -944,7 +944,6 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
     # Get list of DDIs and timestamps per scan
     scanSummary = myMsTool.getscansummary()
     ddIspectralWindowInfo = myMsTool.getspectralwindowinfo()
-
 
     # Close ms tool
     myMsTool.close()

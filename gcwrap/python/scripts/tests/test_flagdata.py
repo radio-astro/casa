@@ -75,25 +75,30 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
         self.unflag_ms()
         default(flagdata)
 
-    def setUp_ngc5921(self):
+    def setUp_ngc5921(self, force=False):
         '''VLA data set, scan=1~7, spw=0 63 chans, RR,LL'''
         self.vis = "ngc5921.ms"
         if testmms:
             self.vis = 'ngc5921.mms'
-
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
-
+            
+        if force:
+            # Need a fresh restart. Copy the MS
+            shutil.rmtree(self.vis, True)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+ 
+        elif not os.path.exists(self.vis):
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)            
+            
         os.system('rm -rf ' + self.vis + '.flagversions')
+        
+        print "Unflag the MS"
         flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         default(flagdata)
 
@@ -107,7 +112,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
 #        self.unflag_ms()
@@ -124,7 +129,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -140,7 +145,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
@@ -156,7 +161,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
@@ -171,7 +176,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -187,7 +192,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -203,23 +208,29 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
         default(flagdata)
 
-    def setUp_floatcol(self):
+    def setUp_floatcol(self, force=False):
         # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
         self.vis = "SDFloatColumn.ms"
         if testmms:
             self.vis = 'SDFloatColumn.mms'
 
-        if os.path.exists(self.vis):
-            print "The MS is already around, just unflag"
-        else:
-            print "Moving data..."
-            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+        if force:
+            # Need a fresh restart. Copy the MS
+            shutil.rmtree(self.vis, True)
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+ 
+        elif not os.path.exists(self.vis):
+            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)            
+            
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        
+        print "Unflag the MS"
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -233,7 +244,7 @@ class test_base(unittest.TestCase):
             
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
+            os.system('cp -rL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -248,7 +259,7 @@ class test_base(unittest.TestCase):
             print "The CalTable is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
+            os.system('cp -rL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -264,7 +275,7 @@ class test_base(unittest.TestCase):
             print "The CalTable is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + \
+            os.system('cp -rL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -283,7 +294,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + datapath + inpvis + ' ' + self.vis)
+            os.system('cp -rL ' + datapath + inpvis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
@@ -298,13 +309,13 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -r ' + datapath + self.vis + ' ' + self.vis)
+            os.system('cp -rL ' + datapath + self.vis + ' ' + self.vis)
 
         # Copy the online flags file
         self.online = 'uid___A002_X72c4aa_X8f5_online.txt'
         self.user = 'uid___A002_X72c4aa_X8f5_user.txt'
-        os.system('cp -r ' + datapath + self.online + ' ' + self.online)
-        os.system('cp -r ' + datapath + self.user + ' ' + self.user)
+        os.system('cp -rL ' + datapath + self.online + ' ' + self.online)
+        os.system('cp -rL ' + datapath + self.user + ' ' + self.user)
         
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
@@ -691,7 +702,7 @@ class test_shadow(test_base):
 class test_msselection(test_base):
 
     def setUp(self):
-        self.setUp_ngc5921()
+        self.setUp_ngc5921(True)
 
     def test_simple(self):
         '''flagdata: select only cross-correlations'''
@@ -772,7 +783,7 @@ class test_msselection(test_base):
 class test_statistics_queries(test_base):
 
     def setUp(self):
-        self.setUp_ngc5921()
+        self.setUp_ngc5921(True)
 
     def test_CAS2021(self):
         '''flagdata: test antenna negation selection'''
@@ -933,7 +944,7 @@ class test_selections(test_base):
     """Test various selections"""
 
     def setUp(self):
-        self.setUp_ngc5921()
+        self.setUp_ngc5921(True)
 
     def test_scan(self):
         '''flagdata: scan selection and manualflag compatibility'''
@@ -1036,8 +1047,11 @@ class test_selections(test_base):
     def test_missing_corr_product(self):
         '''CAS-4234: Keep going when one of the corr products is not available but others are present'''
         flagdata(vis=self.vis, correlation='LL,LR', savepars=False, flagbackup=False)
-        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
-        test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
+        self.assertEqual(flagdata(vis=self.vis, mode='summary', antenna='2')['flagged'],98217)
+        self.assertEqual(flagdata(vis=self.vis, mode='summary', correlation='RR')['flagged'], 0)
+
+#        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
+#        test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
 #        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
         self.unflag_ms()
         flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False, flagbackup=False)
@@ -1284,7 +1298,7 @@ class test_list_file(test_base):
     """Test of mode = 'list' using input file"""
     
     def setUp(self):
-        self.setUp_ngc5921()
+        self.setUp_ngc5921(True)
         
     def tearDown(self):
         os.system('rm -rf list*.txt list*.tmp')
@@ -1615,7 +1629,7 @@ class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
     
     def setUp(self):
-        self.setUp_ngc5921()
+        self.setUp_ngc5921(True)
 
     def test_list1(self):
         '''flagdata: apply flags from a Python list and do not save'''
@@ -1811,14 +1825,6 @@ class test_clip(test_base):
         self.assertEqual(res['flagged'], 274944, 'Should clip only spw=8')
         self.assertEqual(res['total'], 274944)
         
-    def test_invalid_antenna(self):
-        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
-        
-        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
-        self.assertEqual(res['flagged'], 2199552)
-        self.assertEqual(res['total'], 2199552)
-
     def test_datacol_corrected(self):
         ''''flagdata: clip CORRECTED data column'''
         flagdata(vis=self.vis, flagbackup=False, mode='clip', datacolumn='CORRECTED',
@@ -1846,7 +1852,7 @@ class test_clip(test_base):
         '''flagdata: clip with time average and compare with mstransform'''
         # Create an output with 4 rows
         from tasks import split2
-        split2('Four_ants_3C286.ms',outputvis='timeavg.ms',datacolumn='data',spw='9',scan='30',antenna='1&2',
+        split2(vis=self.vis,outputvis='timeavg.ms',datacolumn='data',spw='9',scan='30',antenna='1&2',
                timerange='2010/10/16/14:45:08.50~2010/10/16/14:45:11.50')
         
         # STEP 1
@@ -2007,6 +2013,15 @@ class test_CASA_4_0_bug_fix(test_base):
         self.assertEqual(res['spw']['5']['flagged'], 274944)
         self.assertEqual(res['spw']['6']['flagged'], 0)
         self.assertEqual(res['flagged'], 1649664)
+        
+    def test_invalid_antenna(self):
+        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
+        
+        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
+        self.assertEqual(res['flagged'], 2199552)
+        self.assertEqual(res['total'], 2199552)
+
 
 class test_correlations(test_base):
     '''Test combinations of correlation products'''
