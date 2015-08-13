@@ -33,7 +33,6 @@ class test_base(unittest.TestCase):
     outputDir='/tmp/'
     plotfile_jpg = "/tmp/myplot.jpg"
     display = os.environ.get("DISPLAY")
-    plotfile_hash = ""
 
     def _cleanUp(self):
         if os.path.exists(self.ms):
@@ -55,16 +54,8 @@ class test_base(unittest.TestCase):
 
     def _checkPlotFile(self, minSize, plotfileName):
         self.assertTrue(os.path.isfile(plotfileName))
-        print plotfileName, 'file size is ', os.path.getsize(plotfileName)
+        print plotfileName, 'file size is', os.path.getsize(plotfileName)
         self.assertTrue(os.path.getsize(plotfileName) > minSize)
-        #if(self.plotfile_hash):
-        #    self.assertEqual(
-        #        sha.new(open(plotfileName, 'r').read()).hexdigest(),
-        #        self.plotfile_hash
-        #    )
-        #else:
-            # store to check against following test results
-        #    self.plotfile_hash = sha.new(open(plotfileName, 'r').read()).hexdigest()
         
     def _getFileCount(self, dirName, namePattern ):
         nameTarget = namePattern + '*'
@@ -80,12 +71,17 @@ class test_base(unittest.TestCase):
             if fnmatch.fnmatch( file, nameTarget):
                 os.remove( dirName + "/" + file )
             
-    
+    def _checkDisplay(self):
+        displaySet = self.display.startswith(':') or \
+                     self.display.startswith('localhost:')
+        self.assertTrue(displaySet,'DISPLAY not set, cannot run test')
+
         
 class plotms_test1(test_base):
 
     def setUp(self):
         self.setUpdata()
+        self._checkDisplay()
         
     def tearDown(self):
        self.tearDowndata()
@@ -96,7 +92,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot001.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat="jpg", 
                           overwrite=True, showgui=False, gridrows=1, gridcols=1)   
@@ -110,7 +105,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot002.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         #First overwrite is turned on in case the plot file already exists.
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -130,7 +124,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot003.jpg"
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms,  plotfile=self.plotfile_jpg, expformat='jpg', 
                           showgui=False,  overwrite=True, 
@@ -148,7 +141,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot004.jpg"
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                           overwrite=True, showgui=False,
@@ -165,7 +157,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot005.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                           overwrite=True, showgui=False,
@@ -190,7 +181,6 @@ class plotms_test1(test_base):
         if os.path.exists( self.plotfile2_jpg):
             os.remove( self.plotfile2_jpg) 
               
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Make 2 pages of 2x2 iteration plots over scan sharing common axes & scales'''
@@ -217,7 +207,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot007.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Should not succeed because this is an invalid spw'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -237,7 +226,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot008.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Use a grid with 2 rows and 3 columns. Put the plot in the second row, second col'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -252,7 +240,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot009.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Use a grid with 2 rows and 2 columns. Fill all the plots in the grid'''
@@ -281,7 +268,6 @@ class plotms_test1(test_base):
             os.remove( self.plotfile_jpg)
         if os.path.exists( self.plotfile2_jpg):
             os.remove( self.plotfile2_jpg)    
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Use a grid with 2 rows and 3 columns. Fill all the plots in the grid'''
@@ -325,7 +311,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot011.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Place a legend in the upper right corner of the plot'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -341,7 +326,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot012.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Colorize by time.'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -358,7 +342,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot012a.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Colorize by chan.'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -376,7 +359,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot013.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Colorize by averaged time.'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -393,7 +375,6 @@ class plotms_test1(test_base):
         self.writefile_jpg = self.outputDir + "testPlot014_Time09:18:59.9998,09:19:30.0002,09:20:00.000572205,09:20:30.001.jpg"
         if os.path.exists( self.writefile_jpg):
             os.remove( self.writefile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Iterate by time.'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -409,7 +390,6 @@ class plotms_test1(test_base):
         self.writefile_jpg = self.outputDir + "testPlot015_Time09:18:59.9998,09:19:30.0002.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Iterate by averaged time.'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -424,7 +404,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot016.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create a (scan & field)/time plot'''
         self.res = plotms(vis=self.ms, overwrite=True, showgui=False, xaxis='time', yaxis=['scan','field'],
@@ -442,7 +421,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot017.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create a blank plot'''
         self.res = plotms( showgui=False, plotfile=self.plotfile_jpg, expformat='jpg')
@@ -455,7 +433,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot018.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create a (scan & field)/time plot'''
         self.res = plotms(vis=self.ms, overwrite=True, showgui=False, xaxis='time', yaxis=['scan','field'], yaxislocation=['left','right'],
@@ -474,7 +451,6 @@ class plotms_test1(test_base):
         self.writefile_jpg = self.outputDir + "testPlot019_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg"
         if os.path.exists( self.writefile_jpg):
             os.remove( self.writefile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create a (scan & field)/time plot with iteration over antenna'''
         self.res = plotms(vis=self.ms, overwrite=True, showgui=False,  xaxis='time', yaxis=['scan','field'], yaxislocation=['left','right'],
@@ -502,7 +478,6 @@ class plotms_test1(test_base):
             if os.path.exists( self.plotFiles[i]):
                 os.remove( self.plotFiles[i])               
               
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Make iteration plots over scan'''
@@ -522,7 +497,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot021.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Set up the y-axis to use data/model'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -537,7 +511,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot022.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Use a 2x1 grid and plot weight*am vs time on x-axis with one graph and y-axis on other'''
         self.res = plotms(vis=self.ms, gridrows=2, gridcols=1, 
@@ -556,7 +529,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot023.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Use a 2x1 grid and plot amp vs time and vice versa.  Set to corrected/model on amp axis'''
         self.res = plotms(vis=self.ms, gridrows=2, gridcols=1,
@@ -576,7 +548,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot024.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Verify error with antenna'''
@@ -599,7 +570,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot025.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Use a 1x1 grid and plot scan vs time.'''
         self.res = plotms(vis=self.ms, gridrows=1, gridcols=1, 
@@ -631,7 +601,6 @@ class plotms_test1(test_base):
         if os.path.exists( self.plotfile2_jpg):
             os.remove( self.plotfile2_jpg) 
               
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Make 2 pages of 3x2 iteration plots over scan sharing common axes & scales'''
@@ -665,7 +634,6 @@ class plotms_test1(test_base):
             if os.path.exists( self.plotFiles[i]):
                 os.remove( self.plotFiles[i])        
         
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''First put the multiplot in, scan,field vs time'''
@@ -713,7 +681,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot028.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Plot amp vs time and scan vs time. '''
         self.res = plotms(vis=self.ms, gridrows=1, gridcols=1, 
@@ -731,7 +698,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot029.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Plot amp vs time and amp vs time. '''
         self.res = plotms(vis=self.ms, gridrows=1, gridcols=1,
@@ -761,7 +727,6 @@ class plotms_test1(test_base):
         
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''Plot amp vs time and amp vs time. '''
@@ -781,7 +746,6 @@ class plotms_test1(test_base):
         self.plotfile_jpg = self.outputDir + "testPlot031.jpg"
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
                           overwrite=True, showgui=False,
@@ -806,7 +770,6 @@ class plotms_test1(test_base):
             os.remove( self.plotFile2)          
         
         
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
     
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/13A-537.sb24066356.eb24324502.56514.05971091435.ms', 
@@ -855,7 +818,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
             os.remove( self.plotfile1_jpg)
         if os.path.exists( self.plotfile2_jpg):    
             os.remove( self.plotfile2_jpg)    
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         self.res = plotms(vis=plotFile,
                           spw='0', showgui=False,plotfile=self.plotfile1_jpg)  
@@ -876,7 +838,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot034.jpg"
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         self.res = plotms(vis=self.ms, plotindex=1,
@@ -894,7 +855,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)  
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         self.res = plotms(vis=self.ms, plotindex=0, 
@@ -919,7 +879,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         if os.path.exists( self.plotfile_jpg):    
             os.remove( self.plotfile_jpg)
         
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
@@ -951,7 +910,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         if os.path.exists( self.plotfile5_jpg):    
             os.remove( self.plotfile5_jpg)                
         
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         
@@ -1021,7 +979,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X8666c7_X1fa.ms.split.cal',
@@ -1043,7 +1000,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot039.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
@@ -1071,7 +1027,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot040.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot'''
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
@@ -1103,7 +1058,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
             os.remove( self.plotfile_jpg)
         if ( os.path.exists( self.plotfile_jpg2 ) ):
              os.remove( self.plotfile_jpg2 )    
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot check that a custom flagged symbol has been set'''
         self.res = plotms(vis='/home/groot/casa/trunk/test/Plotms/titan.ms',
@@ -1139,7 +1093,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
              os.remove( self.plotfile_jpg3 )
         if ( os.path.exists( self.plotfile_jpg4 ) ):
              os.remove( self.plotfile_jpg4 )                  
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the first plot check that a custom flagged symbol has been set'''
         self.res = plotms(vis=plotfile,
@@ -1163,7 +1116,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         if os.path.exists( self.plotFile):
             os.remove( self.plotFile )        
         
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
         '''First put the multiplot in, scan,field vs time'''
@@ -1206,7 +1158,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         if ( os.path.exists( self.plotfile_jpg3 ) ):
              os.remove( self.plotfile_jpg3 )
                        
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot and check that there are only 3 iterations'''
         self.res = plotms(vis=plotfile,
@@ -1230,7 +1181,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         if os.path.exists( self.plotfile_jpg1):
             os.remove( self.plotfile_jpg1)
          
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot and check that there are only 3 iterations'''
         self.res = plotms(vis=plotfile,
@@ -1247,13 +1197,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         '''Plotms 46:  CAS-7050:  (Pipeline) Iterate on antenna, but don't select. Make sure there are 22 iteration plots'''
         plotfile="/home/groot/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
         self.plotfile_jpg = self.outputDir + "testPlot046.jpg"
-        #self.plotfile_jpg1 = self.outputDir + "testPlot045_AntennaDV24@A08.jpg"
-       
- 
-        #if os.path.exists( self.plotfile_jpg1):
-        #    os.remove( self.plotfile_jpg1)
          
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot and check that there are only 3 iterations'''
         self.res = plotms(vis=plotfile,
@@ -1272,7 +1216,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
        
         print 'Writing NO plots '
          
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot with empty antenna selection and check the result is false'''
         self.res = plotms(vis=plotfile,
@@ -1288,7 +1231,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot048.jpg"
        
          
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot with empty antenna selection and check the result is false'''
         self.res = plotms(vis=plotfile,
@@ -1304,7 +1246,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
        
         self._removeFiles( self.outputDir, "testPlot049_" )
          
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create the plot and check that there are only 3 iterations'''
         self.res = plotms(vis=plotfile,
@@ -1322,7 +1263,6 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.plotfile_jpg = self.outputDir + "testPlot050.jpg"
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
-        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
 
         # Need this ms to be writeable for calibration
