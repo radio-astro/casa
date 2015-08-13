@@ -245,6 +245,7 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
                     reftable = st.basename
                     break
             assert reftable is not None
+            science_window_ids = list(set([spw.id for spw in st.spectral_window.values() if not (spw.nchan==1 or spw.type=='WVR' or 'TARGET' not in spw.intents)]))
             
             vis = ms.basename
             prefix = vis.replace('.ms','')
@@ -268,13 +269,16 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
             spwmap = calapp.spwmap
             sdspwmap = remap_spwmap(spwmap)
             for key in sdspwmap.keys():
-                filtered_value = [spw for spw in sdspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+                # Remove non-science spw from calibration target (key of spwmap).
+#                 filtered_value = [spw for spw in sdspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+                # NOTE: WVR band is also detected as TARGET.
+                filtered_value = [spw for spw in sdspwmap[key] if spw in science_window_ids]
                 sdspwmap[key] = filtered_value
             # names = {spw: {antenna: caltable_name}}
             names = {}
             for (aspwid, science_spwid_list) in sdspwmap.items():
                 atm_spw = st.spectral_window[aspwid]
-                for sspwid in science_spwid_list:
+                for sspwid in science_spwid_list: # nothing will be done if science spw (target) is empty
                     science_spw = st.spectral_window[sspwid]
                     _names = tsystablemapper.map_with_average(prefix, caltable, reftable, atm_spw, science_spw)
                     LOG.info('_names=%s'%(_names))
@@ -342,9 +346,9 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
 def remap_spwmap(spwmap):
     remapped = {}
     for (i,spw) in enumerate(spwmap):
-        if i != spw:
-            if remapped.has_key(spw):
-                remapped[spw].append(i)
-            else:
-                remapped[spw] = [i]
+#         if i != spw: #non-science spw is filtered in the next step
+        if remapped.has_key(spw):
+            remapped[spw].append(i)
+        else:
+            remapped[spw] = [i]
     return remapped
