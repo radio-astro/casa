@@ -284,22 +284,23 @@ String MSCache::getDataColumn(PMS::DataColumn dataCol)
 
 void MSCache::getNamesFromMS(MeasurementSet& ms)
 {
-	ROMSColumns msCol(ms);
-	antnames_.resize();
-	stanames_.resize();
-	antstanames_.resize();
-	fldnames_.resize();
-	intentnames_.resize();
+    ROMSColumns msCol(ms);
+    antnames_.resize();
+    stanames_.resize();
+    antstanames_.resize();
+    fldnames_.resize();
+    intentnames_.resize();
+    positions_.resize();
 
-	antnames_    = msCol.antenna().name().getColumn();
-	stanames_    = msCol.antenna().station().getColumn();
-	antstanames_ = antnames_+String("@")+stanames_;
+    antnames_    = msCol.antenna().name().getColumn();
+    stanames_    = msCol.antenna().station().getColumn();
+    antstanames_ = antnames_+String("@")+stanames_;
     positions_   = msCol.antenna().position().getColumn();
 
-	fldnames_    = msCol.field().name().getColumn();
+    fldnames_    = msCol.field().name().getColumn();
 
-	intentnames_ = msCol.state().obsMode().getColumn();
-	mapIntentNamesToIds();  // eliminate duplicate intent names
+    intentnames_ = msCol.state().obsMode().getColumn();
+    mapIntentNamesToIds();  // eliminate duplicate intent names
 }
 
 void MSCache::setUpVisIter(PlotMSSelection& selection,
