@@ -153,7 +153,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="specmode" required="true">
      <shortdescription>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</shortdescription>
-<description>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</description>
+<description>Spectral definition mode (mfs,cube,cubedata)</description>
       <value type="string">mfs</value>
     </param>
 

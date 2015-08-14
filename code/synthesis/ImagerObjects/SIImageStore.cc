@@ -878,13 +878,17 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      }
 	  }
 	
-	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
-	createMask( pbmask, pb() );
+	//MSK//	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	//MSK// createMask( pbmask, pb() );
   }
 
   Bool SIImageStore::createMask(LatticeExpr<Bool> &lemask, 
 				CountedPtr<ImageInterface<Float> > outimage)
   {
+
+    //   LogIO os( LogOrigin("SIImageStore","createMask",WHERE) );
+    //   os << "Making mask for image : " << outimage->name() << LogIO::POST;
+
     if( (outimage->getDefaultMask()).matches("mask0") ) 
       { outimage->removeRegion("mask0");}
     ImageRegion outreg = outimage->makeMask("mask0",False,True);
@@ -906,12 +910,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		  { outimage->removeRegion("mask0");}
 
 	// get mask from input image
-
-	ImageRegion* outreg = inimage->getImageRegionPtr("mask0");
-	outimage->defineRegion("mask0",*outreg, RegionHandler::Masks,True);
-	outimage->setDefaultMask("mask0");
+		
+		ImageRegion* outreg = inimage->getImageRegionPtr("mask0");
+		outimage->defineRegion("mask0",*outreg, RegionHandler::Masks,True);
+		outimage->setDefaultMask("mask0");
       }
-
+    
     return True;
   }
   
@@ -1014,7 +1018,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
 
     // createMask
-    if(hasPB()){copyMask(pb(),residual());}
+    //MSK//    if(hasPB()){copyMask(pb(),residual());}
   }
   
 
@@ -1394,7 +1398,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     
     try
       {
-	if(hasPB()){copyMask(pb(),image());}
+	//MSK//	if(hasPB()){copyMask(pb(),image());}
       }
     catch(AipsError &x)
       {

@@ -708,8 +708,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  }
       }
-    makePBFromWeight(pblimit);
 
+    if ( itsUseWeight) {
+    makePBFromWeight(pblimit);
+    }
     //    calcSensitivity();
     // createMask
   }

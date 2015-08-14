@@ -241,29 +241,33 @@ namespace casa {
 
 		QLabel *label = new QLabel(frame);
 		label->setObjectName(QString::fromUtf8("label"));
-		label->setGeometry(QRect(10, 0, 120, 20));
+		label->setGeometry(QRect(160, 0, 120, 20));
+		//		label->setGeometry(QRect(10, 0, 120, 20));
 		label->setFont(smallFont);
 		label->setAlignment(Qt::AlignCenter);
 
 		niterED_ = new QLineEdit(frame);
 		niterED_->setObjectName(QString::fromUtf8("niterED_"));
-		niterED_->setGeometry(QRect(10, 20, 120, 22));
+		niterED_->setGeometry(QRect(160, 20, 120, 22));
+		//		niterED_->setGeometry(QRect(10, 20, 120, 22));
 		niterED_->setMinimumSize(QSize(120, 0));
 		niterED_->setMaxLength(128);
-		niterED_->setToolTip("Number of iterations in each interactive loop");
+		niterED_->setToolTip("Number of iterations left (total).");
 
 		QLabel *label_2 = new QLabel(frame);
 		label_2->setObjectName(QString::fromUtf8("label_2"));
-		label_2->setGeometry(QRect(160, 0, 120, 20));
+		label_2->setGeometry(QRect(10, 0, 120, 20));
+		//		label_2->setGeometry(QRect(160, 0, 120, 20));
 		label_2->setFont(smallFont);
 		label_2->setAlignment(Qt::AlignCenter);
 
 		cycleniterED_ = new QLineEdit(frame);
 		cycleniterED_->setObjectName(QString::fromUtf8("cycleniterED_"));
-		cycleniterED_->setGeometry(QRect(160, 20, 120, 22));
+		cycleniterED_->setGeometry(QRect(10, 20, 120, 22));
+		//cycleniterED_->setGeometry(QRect(160, 20, 120, 22));
 		cycleniterED_->setMinimumSize(QSize(120, 0));
 		cycleniterED_->setMaxLength(128);
-		cycleniterED_->setToolTip("Number of interactive loops");
+		cycleniterED_->setToolTip("Maximum number of iterations to do before the next major cycle");
 
 		QLabel *label_3 = new QLabel(frame);
 		label_3->setObjectName(QString::fromUtf8("label_3"));
