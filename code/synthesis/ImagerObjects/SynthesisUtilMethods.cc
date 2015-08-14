@@ -2249,7 +2249,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
 
     refPix=0.0; 
-    Bool descendingfreq(false);
+    Bool descendingfreq(False);
+    Bool descendingoutfreq(False);
 
     if( mode.contains("cube") )
       { 
@@ -2380,7 +2381,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          <<"chanFreq 0="<<chanFreq[0]<<" chanFreq last="<<chanFreq[chanFreq.nelements()-1]
          << LogIO::POST;
 
-      if (descendingfreq) {
+      if (chanFreq[0]>chanFreq[chanFreq.nelements()-1]) {
+        descendingoutfreq = True;
+      }
+      if (descendingfreq && !descendingoutfreq) {
         // reverse the freq vector if necessary so the first element can be
         // used to set spectralCoordinates in all the cases.
         //
