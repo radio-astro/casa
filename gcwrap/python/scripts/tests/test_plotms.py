@@ -72,9 +72,7 @@ class test_base(unittest.TestCase):
                 os.remove( dirName + "/" + file )
             
     def _checkDisplay(self):
-        displaySet = self.display.startswith(':') or \
-                     self.display.startswith('localhost:')
-        self.assertTrue(displaySet,'DISPLAY not set, cannot run test')
+        self.assertGreater(len(self.display), 0, 'DISPLAY not set, cannot run test')
 
         
 class plotms_test1(test_base):
@@ -366,7 +364,7 @@ class plotms_test1(test_base):
                           coloraxis='time', averagedata=True, avgtime='3600',
                           gridrows=1, gridcols=1)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000, self.plotfile_jpg)
+        self._checkPlotFile(50000, self.plotfile_jpg)
         print    
         
     def test014(self):
@@ -396,7 +394,7 @@ class plotms_test1(test_base):
                           overwrite=True, showgui=False, xaxis='elevation', yaxis='amp',
                           iteraxis='time', gridrows=1, gridcols=2)
         self.assertTrue(self.res)
-        self._checkPlotFile(89000, self.writefile_jpg)  
+        self._checkPlotFile(70000, self.writefile_jpg)  
         print    
     
     def test016(self):
@@ -442,7 +440,7 @@ class plotms_test1(test_base):
                           symbolcolor=['ff0000','00ff00'], symbolfill=['mesh3','mesh3'],
                           gridrows=1, gridcols=1)
         self.assertTrue(self.res)
-        self._checkPlotFile(70000, self.plotfile_jpg) 
+        self._checkPlotFile(65000, self.plotfile_jpg) 
         print    
         
     def test019(self):
@@ -460,7 +458,7 @@ class plotms_test1(test_base):
                           customsymbol=[True,True], symbolshape=['diamond','circle'], symbolsize=[5,5],
                           symbolcolor=['ff0000','00ff00'], symbolfill=['mesh3','mesh3'])
         self.assertTrue(self.res)
-        self._checkPlotFile(213500, self.writefile_jpg) 
+        self._checkPlotFile(185000, self.writefile_jpg) 
         print    
         
     def test020(self):
@@ -489,7 +487,7 @@ class plotms_test1(test_base):
         '''Check each page got saved'''
         for  i in range(0, len(self.plotFiles)):
             self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
-            self._checkPlotFile(60000, self.plotFiles[i]) 
+            self._checkPlotFile(50000, self.plotFiles[i]) 
         print  
         
     def test021(self):
@@ -588,7 +586,7 @@ class plotms_test1(test_base):
                           customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
                           symbolcolor=['00FF00'], symbolfill=['mesh3'])   
         self.assertTrue( self.res) 
-        self._checkPlotFile(58000, self.plotfile_jpg)    
+        self._checkPlotFile(55000, self.plotfile_jpg)    
         print    
         
     def test026(self):
@@ -616,11 +614,11 @@ class plotms_test1(test_base):
         
         '''Check the first page got saved'''
         self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot was not created')
-        self._checkPlotFile(100000, self.plotfile1_jpg)
+        self._checkPlotFile(95000, self.plotfile1_jpg)
         
         '''Check the second page got saved'''
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
-        self._checkPlotFile(60000, self.plotfile2_jpg)
+        self._checkPlotFile(55000, self.plotfile2_jpg)
         print    
         
     def test027(self):
@@ -673,7 +671,7 @@ class plotms_test1(test_base):
         '''Check each page got saved'''
         for  i in range(0, len(self.plotFiles)):
             self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
-            self._checkPlotFile(54000, self.plotFiles[i]) 
+            self._checkPlotFile(50000, self.plotFiles[i]) 
         print    
         
     def test028(self):
