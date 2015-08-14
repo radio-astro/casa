@@ -36,8 +36,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>307</width>
-        <height>264</height>
+        <width>305</width>
+        <height>265</height>
        </rect>
       </property>
      </widget>
@@ -77,9 +77,25 @@
         <string>If checked, force a reload of the data when the Plot button is pressed.</string>
        </property>
        <property name="text">
-        <string>Reload</string>
+        <string> Reload</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>10</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <widget class="QPushButton" name="plotButton">
