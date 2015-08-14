@@ -55,7 +55,7 @@ class test_base(unittest.TestCase):
     def _checkPlotFile(self, minSize, plotfileName):
         self.assertTrue(os.path.isfile(plotfileName))
         print plotfileName, 'file size is', os.path.getsize(plotfileName)
-        self.assertTrue(os.path.getsize(plotfileName) > minSize)
+        self.assertGreater(os.path.getsize(plotfileName), minSize)
         
     def _getFileCount(self, dirName, namePattern ):
         nameTarget = namePattern + '*'
@@ -132,8 +132,8 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self.assertTrue(os.path.isfile(self.plotfile_jpg))
         plotSize = os.path.getsize(self.plotfile_jpg)
-        self.assertTrue(plotSize > 84000)
-        self.assertTrue(plotSize < 95000)
+        self.assertGreater(plotSize, 84000)
+        self.assertLess(plotSize, 95000)
         print
     
     def test004(self):
@@ -1169,7 +1169,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile( 125000, self.plotfile_jpg2 )
         self._checkPlotFile( 123000, self.plotfile_jpg3 )
         fileCount = self._getFileCount( self.outputDir, "testPlot044_" )
-        self.assertTrue( fileCount == 3 )
+        self.assertEqual( fileCount, 3 )
         print
         
     def xtest045( self ):
@@ -1190,7 +1190,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( self.res )
         self._checkPlotFile( 69000, self.plotfile_jpg1 )
         fileCount = self._getFileCount( self.outputDir, "testPlot045_" )
-        self.assertTrue( fileCount == 1 )
+        self.assertEqual( fileCount, 1 )
         print
         
     def xtest046( self ):
@@ -1206,7 +1206,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           plotfile = self.plotfile_jpg, exprange='all')
         self.assertTrue( self.res )
         fileCount = self._getFileCount( self.outputDir, "testPlot046_" )
-        self.assertTrue( fileCount == 22 )
+        self.assertEqual( fileCount, 22 )
         print 
         
     def xtest047( self ):
@@ -1255,7 +1255,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           xselfscale=True, yselfscale=True, xsharedaxis=True, ysharedaxis=True)
         self.assertTrue( self.res )
         fileCount = self._getFileCount( self.outputDir, "testPlot049_" )
-        self.assertTrue( fileCount == 42 )
+        self.assertEqual( fileCount, 42 )
         print 
                                             
     def test050(self):
