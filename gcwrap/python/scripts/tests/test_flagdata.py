@@ -75,7 +75,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         
@@ -91,10 +91,10 @@ class test_base(unittest.TestCase):
         if force:
             # Need a fresh restart. Copy the MS
             shutil.rmtree(self.vis, True)
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
  
         elif not os.path.exists(self.vis):
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)            
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)            
             
         os.system('rm -rf ' + self.vis + '.flagversions')
         
@@ -112,7 +112,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
 #        self.unflag_ms()
@@ -129,7 +129,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -145,7 +145,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
@@ -161,7 +161,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
@@ -176,7 +176,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -192,7 +192,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -208,7 +208,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()
@@ -223,10 +223,10 @@ class test_base(unittest.TestCase):
         if force:
             # Need a fresh restart. Copy the MS
             shutil.rmtree(self.vis, True)
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
  
         elif not os.path.exists(self.vis):
-            os.system('cp -rL '+datapath + self.vis +' '+ self.vis)            
+            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)            
             
         os.system('rm -rf ' + self.vis + '.flagversions')
         
@@ -244,7 +244,7 @@ class test_base(unittest.TestCase):
             
         else:
             print "Moving data..."
-            os.system('cp -rL ' + \
+            os.system('cp -RL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -259,7 +259,7 @@ class test_base(unittest.TestCase):
             print "The CalTable is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL ' + \
+            os.system('cp -RL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -275,7 +275,7 @@ class test_base(unittest.TestCase):
             print "The CalTable is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL ' + \
+            os.system('cp -RL ' + \
                         os.environ.get('CASAPATH').split()[0] +
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
@@ -294,7 +294,7 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL ' + datapath + inpvis + ' ' + self.vis)
+            os.system('cp -RL ' + datapath + inpvis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
@@ -309,13 +309,13 @@ class test_base(unittest.TestCase):
             print "The MS is already around, just unflag"
         else:
             print "Moving data..."
-            os.system('cp -rL ' + datapath + self.vis + ' ' + self.vis)
+            os.system('cp -RL ' + datapath + self.vis + ' ' + self.vis)
 
         # Copy the online flags file
         self.online = 'uid___A002_X72c4aa_X8f5_online.txt'
         self.user = 'uid___A002_X72c4aa_X8f5_user.txt'
-        os.system('cp -rL ' + datapath + self.online + ' ' + self.online)
-        os.system('cp -rL ' + datapath + self.user + ' ' + self.user)
+        os.system('cp -RL ' + datapath + self.online + ' ' + self.online)
+        os.system('cp -RL ' + datapath + self.user + ' ' + self.user)
         
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_ms()        
