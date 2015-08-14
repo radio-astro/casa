@@ -320,6 +320,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     itsDeconvolver->restore(itsImages);
+    itsImages->releaseLocks();
 
   }
 
