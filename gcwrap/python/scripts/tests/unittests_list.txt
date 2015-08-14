@@ -6,6 +6,7 @@
 # The second column gives the name of the person responsible for each test
 # Do not include the suffix .py
 
+test_agentflagger		scastro@eso.org
 test_applycal                   scastro@eso.org
 test_bandpass			gmoellen@aoc.nrao.edu
 test_boxit                      dmehring@nrao.edu
@@ -20,6 +21,7 @@ test_conjugatevis               dpetry@eso.org
 test_coordsys                   dmehring@nrao.edu
 test_csvclean                   kgolap@aoc.nrao.edu
 test_cvel                       dpetry@eso.org
+test_cvel2                      jtaylor@partner.eso.org
 test_cvelfreqs                  dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixplanets                 dpetry@nrao.edu
@@ -89,19 +91,19 @@ test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
 test_listobs                    dmehring@nrao.edu
-#test_listvis                    scastro@eso.org
+test_listvis                    scastro@eso.org
 test_listpartition              scastro@eso.org
 test_makemask                   ttsutsum@nrao.edu
 test_me_shift                   dmehring@nrao.edu
 test_measures			jjacobs@nrao.edu
-# commenting out until commits are re-enabled on casacore trunk
-#test_msmd                       dmehring@nrao.edu
+test_msmd                       dmehring@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp
 test_mstransform                jagonzal@eso.org
 test_mstransform_mms            scastro@eso.org
 test_partition                  scastro@eso.org
 test_pcasa                      jkern@nrao.edu
 test_plotants                   jkern@nrao.edu
+test_plotms                     pford@nrao.edu
 test_plotuv                     jkern@nrao.edu
 test_po_complexfraclinpol       dmehring@nrao.edu
 test_po_complexlinpol           dmehring@nrao.edu
@@ -160,7 +162,7 @@ test_tsdfit                     wataru.kawasaki@nao.ac.jp
 test_tsdsmooth                  takeshi.nakazato@nao.ac.jp
 test_uvcontsub			ttsutsum@nrao.edu
 test_uvcontsub3			ttsutsum@nrao.edu
-#test_testconcat                 dpetry@eso.org
+test_testconcat                 dpetry@eso.org
 test_virtualconcat		dpetry@eso.org
 test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
