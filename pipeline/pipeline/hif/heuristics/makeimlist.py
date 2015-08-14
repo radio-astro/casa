@@ -67,6 +67,10 @@ class MakeImListHeuristics(object):
 
         # determine spw selection parameters to exclude lines for mfs and cont images
         self.cont_ranges = {}
+        for source_name in [s.name for s in ms.sources]:
+            self.cont_ranges[source_name] = {}
+            for spwid in spwids:
+                self.cont_ranges[source_name][str(spwid)] = ''
 
         if (contfile is None):
             contfile = ''
@@ -75,6 +79,8 @@ class MakeImListHeuristics(object):
 
         # read and merge continuum regions if contfile exists
         if (os.path.isfile(contfile)):
+            LOG.info('Using continuum frequency ranges from %s to calculate continuum frequency selections.' % (contfile))
+
             p=re.compile('([\d.]*)(~)([\d.]*)(\D*)')
 
             cont_region_data = [item.replace('\n', '') for item in open('cont.dat', 'r').readlines() if item != '\n']
@@ -83,7 +89,6 @@ class MakeImListHeuristics(object):
                 try:
                     if ((item.upper().find('SPW') == -1) and (item.find('~') == -1)):
                         source_name = item
-                        self.cont_ranges[source_name] = {}
                     elif (item.upper().find('SPW') == 0):
                         spw_id = item[3:]
                         self.cont_ranges[source_name][spw_id] = []
@@ -99,15 +104,12 @@ class MakeImListHeuristics(object):
             # merge the ranges
             for source_name in self.cont_ranges.iterkeys():
                 for spw_id in self.cont_ranges[source_name].iterkeys():
-                    if (self.cont_ranges[source_name][spw_id] != []):
-                        self.cont_ranges[source_name][spw_id] = reduce(lambda x,y: '%s;%s' % (x,y), \
-                                                                       ['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for
-                                                                        spw_sel_interval in self.merge_ranges(self.cont_ranges[source_name][spw_id])])
-                    else:
-                        self.cont_ranges[source_name][spw_id] = ''
+                    self.cont_ranges[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in self.merge_ranges(self.cont_ranges[source_name][spw_id])])
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
+            LOG.info('Using line frequency ranges from %s to calculate continuum frequency selections.' % (linesfile))
+
             p=re.compile('([\d.]*)(~)([\d.]*)(\D*)')
             try:
                 line_regions = p.findall(open(linesfile, 'r').read().replace('\n','').replace(';','').replace(' ',''))
@@ -125,20 +127,13 @@ class MakeImListHeuristics(object):
 
             # get source and spw info from first vis set, assume spws uniform
             # across datasets
-            for source_name in [s.name for s in ms.sources]:
-                self.cont_ranges[source_name] = {}
-
             for spwid in spwids:
                 spw = ms.get_spectral_window(spwid)
                 # assemble continuum spw selection
                 min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
                 spw_sel_intervals = self.spw_intersect([min_frequency, max_frequency], merged_line_ranges_GHz)
-                if (spw_sel_intervals != []):
-                    spw_selection = reduce(lambda x,y: '%s;%s' % (x,y), \
-                        ['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in spw_sel_intervals])
-                else:
-                    spw_selection = ''
+                spw_selection = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in spw_sel_intervals])
 
                 # Skip selection syntax completely if the whole spw is selected
                 if (spw_selection == '%s~%sGHz' % (min_frequency, max_frequency)):
@@ -146,6 +141,9 @@ class MakeImListHeuristics(object):
 
                 for source_name in [s.name for s in ms.sources]:
                     self.cont_ranges[source_name][str(spwid)] = spw_selection
+
+        else:
+            LOG.warn('No frequency range information available for continuum frequency selections.')
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')
