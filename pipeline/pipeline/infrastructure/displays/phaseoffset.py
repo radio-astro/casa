@@ -149,25 +149,9 @@ class PhaseOffsetPlot(object):
             scan_intents.update(scan.intents)
         scan_intents.discard('WVR')
         scan_intents = ','.join(scan_intents)
- 
+
         num_scans = len(scans)
 
-        # get the polarisations for the calibration scans, assuming that
-        # all scans with this calibration intent were observed with the
-        # same polarisation setup
-        scan = scans[0]
-        #corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
-                     #if dd.spw.id == spw.id]
-        corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
-                     if dd.spw.id == spw.id]
-        # discard WVR and other strange data descriptions 
-        corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])
-        assert len(corr_axes) is 1, ('Data descriptions have different '
-                                     'corr axes for scan %s. Got %s'
-                                     '' % (scan.id, corr_axes))
-        # go from set(('XX', 'YY')) to the ('XX', 'YY')
-        corr_axes = corr_axes.pop()
-        
         autoscale_yaxis_range = [-200, 200]
 
         fig = pyplot.figure()
@@ -237,7 +221,7 @@ class PhaseOffsetPlot(object):
                                                           mask=True)
  
                         axis.plot_date(dummy_time.time, dummy_data, '.')
-                        p, = axis.plot_date(dummy_time.time, dummy_data)
+                        _, = axis.plot_date(dummy_time.time, dummy_data)
 
                         self._plot_flagged_data(dummy_time, dummy_slice, axis,
                                                 True, annotation='NO DATA')
@@ -246,18 +230,29 @@ class PhaseOffsetPlot(object):
                         axis.set_ylim(autoscale_yaxis_range)
                         
                         continue
-                    
+
+                    # get the polarisations for this scan
+                    corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
+                                 if dd.spw.id == spw.id]
+                    # discard WVR and other strange data descriptions
+                    corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])
+                    assert len(corr_axes) is 1, ('Data descriptions have different '
+                                                 'corr axes for scan %s. Got %s'
+                                                 '' % (scan.id, corr_axes))
+                    # go from set(('XX', 'YY')) to the ('XX', 'YY')
+                    corr_axes = corr_axes.pop()
+
                     for corr_idx, corr_axis in enumerate(corr_axes):
                         if len(data.time) is 0:
                             LOG.info('No data to plot for antenna %s scan %s corr %s' % (antenna.name, scan.id, corr_axis))
                             continue
-                        
-                        phase_for_corr = data.data[corr_idx][0]
+
+                        phase_for_corr = data.data[:, corr_idx]
                         rad_phase = numpy.deg2rad(phase_for_corr)
                         unwrapped_phase = numpy.unwrap(rad_phase)
                         offset_rad = unwrapped_phase - numpy.ma.median(unwrapped_phase)
                         # the operation above removed the mask, so add it back.
-                        offset_rad = numpy.ma.MaskedArray((offset_rad), mask=phase_for_corr.mask)
+                        offset_rad = numpy.ma.MaskedArray(offset_rad, mask=phase_for_corr.mask)
                         offset_deg = numpy.rad2deg(offset_rad)
 
                         for masked_slice in numpy.ma.clump_masked(offset_deg):

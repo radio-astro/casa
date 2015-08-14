@@ -35,6 +35,10 @@ class Field(object):
         return casatools.quanta.formxxx(self.latitude, format='dms', prec=2)
 
     @property
+    def frame(self):
+        return self._mdirection['refer']
+
+    @property
     def identifier(self):
         """
         A human-readable identifier for this Field.

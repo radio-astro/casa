@@ -80,10 +80,31 @@ class PlotbandpassDetailBase(object):
         # plotbandpass injects spw ID and antenna name into every plot filename
         self._figfile = collections.defaultdict(dict)
         root, ext = os.path.splitext(self._figroot)
-        time = '.t00' if 'time' not in overlay else ''
+
+        scan_ids_in_caltable = sorted(list(set(caltable_wrapper.scan)))
+        scan_to_suffix = {scan_id: '.t%02d' % i
+                          for i, scan_id in enumerate(scan_ids_in_caltable)}
+
         for spw_id, ant_id in itertools.product(spw_ids, antenna_ids):
+            if 'time' not in overlay:
+                # filter the caltable down to the data containing the spw and
+                # antenna. From this we can read the scan, and thus derive what
+                # suffix plotbandpass will add to the png.
+                filtered = caltable_wrapper.filter(spw=[spw_id], antenna=[ant_id])
+
+                scan_ids = set(filtered.scan)
+                # TODO this breaks if the spw is present in more than one scan!
+                # We're having to reverse engineer plotbandpass' naming scheme.
+                # Perhaps we should glob for files created somehow?
+                if len(scan_ids) != 1:
+                    time = '.t00'
+                else:
+                    time = scan_to_suffix[scan_ids.pop()]
+            else:
+                time = ''
+
             ant_name = self._antmap[ant_id]
-            real_figfile = '%s.%s.spw%0.2d%s%s' % (root, ant_name, spw_id, 
+            real_figfile = '%s.%s.spw%0.2d%s%s' % (root, ant_name, spw_id,
                                                    time, ext)
             self._figfile[spw_id][ant_id] = real_figfile
 
@@ -515,13 +536,13 @@ class CaltableWrapperFactory(object):
             antenna1 = tb.getcol('ANTENNA1')
             spw = tb.getcol('SPECTRAL_WINDOW_ID')
             scan = tb.getcol('SCAN_NUMBER')
-            flag = tb.getcol('FLAG')
-                
+            flag = tb.getcol('FLAG').swapaxes(0, 2).swapaxes(1, 2).squeeze(2)
+            gain = tb.getcol('CPARAM').swapaxes(0, 2).swapaxes(1, 2).squeeze(2)
+
             # convert MJD times stored in caltable to matplotlib equivalent
             time_unix = utils.mjd_seconds_to_datetime(time_mjd)
             time_matplotlib = matplotlib.dates.date2num(time_unix)
 
-            gain = tb.getcol('CPARAM')            
             phase = numpy.arctan2(numpy.imag(gain),
                                   numpy.real(gain)) * 180.0 / numpy.pi
             data = numpy.ma.MaskedArray(phase, mask=flag)
@@ -541,15 +562,26 @@ class CaltableWrapperFactory(object):
             time_unix = utils.mjd_seconds_to_datetime(time_mjd)
             time_matplotlib = matplotlib.dates.date2num(time_unix)
 
-            gain = tb.getvarcol('CPARAM')
-            temp = [gain['r%s' % (k+1)] for k in range(len(gain))]
-            gain = zip(*itertools.chain(*temp))
+            # results in a list of numpy arrays, one for each row in the
+            # caltable. The shape of each numpy array is number of
+            # correlations, number of channels, number of values for that
+            # correlation/channel combination - which is always 1. Squeeze out
+            # the unnecessary dimension and swap the channel and correlation
+            # axes.
+            data_col = tb.getvarcol('CPARAM')
+            row_data = [data_col['r%s' % (k+1)].swapaxes(0, 1).squeeze(2)
+                       for k in range(len(data_col))]
 
-            flag = tb.getvarcol('FLAG')
-            temp = [flag['r%s' % (k+1)] for k in range(len(flag))]
-            flag = zip(*itertools.chain(*temp))
+            flag_col = tb.getvarcol('FLAG')
+            row_flag = [flag_col['r%s' % (k+1)].swapaxes(0, 1).squeeze(2)
+                        for k in range(len(flag_col))]
 
-            data = numpy.ma.MaskedArray(gain, mask=flag)
+            # there's a bug in numpy.ma which prevents us from creating a
+            # MaskedArray directly. Instead, we need to create a standard array
+            # and subsequently convert to a MaskedArray.
+            std_array = numpy.asarray([numpy.ma.MaskedArray(d, mask=f)
+                                       for (d, f) in zip(row_data, row_flag)])
+            data = numpy.ma.asarray(std_array)
 
             return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
                                    scan)
@@ -568,9 +600,6 @@ class CaltableWrapperFactory(object):
             time_matplotlib = matplotlib.dates.date2num(time_unix)
             
             tsys = tb.getcol('FPARAM')            
-
-            # shape of tsys and flag arrays is number of corrs, number of
-            # channels, number of rows. Remove the middle dimension.
             data = numpy.ma.MaskedArray(tsys, mask=flag)
 
             return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
@@ -605,6 +634,7 @@ class CaltableWrapper(object):
         return mask
 
     def filter(self, spw=None, antenna=None, scan=None):
+        # LOG.trace('filter(spw=%s, antenna=%s, scan=%s)' % (spw, antenna, scan))
         if spw is None:
             spw = self._spws
         if antenna is None:
@@ -618,11 +648,11 @@ class CaltableWrapper(object):
         scan_mask = self._get_mask(scan, self.scan)
         
         # combine masks to create final data selection mask
-        mask = (antenna_mask==1) & (spw_mask==1) & (scan_mask==1)
+        mask = (antenna_mask == 1) & (spw_mask == 1) & (scan_mask == 1)
 
         # find data for the selection mask 
-        data = self.data[:,:,mask]
-        # data = self.data[mask]
+        #data = self.data[:,:,mask]
+        data = self.data[mask]
         time = self.time[mask]
         antenna = self.antenna[mask]
         spw = self.spw[mask]
@@ -649,7 +679,7 @@ class PhaseVsBaselineData(object):
         self.data = data
         self.ms = ms
         self.corr = corr_id
-        self.data_for_corr = self.data.data[corr_id]
+        self.data_for_corr = self.data.data[:, corr_id]
         self.__refant_id = int(refant_id)
 
         self._cache = cachetools.LRUCache(maxsize=100)
@@ -673,7 +703,7 @@ class PhaseVsBaselineData(object):
 
     @property
     def num_corr_axes(self):
-        return len(self.data.data)
+        return len(self.data.data.shape[1])
 
     @property
     def refant(self):
@@ -891,7 +921,7 @@ class DataRatio(object):
     def num_corr_axes(self):
         # having ensured the before/after data are for the same scan and spw,
         # they should have the same number of correlations
-        return len(self.__before.data)
+        return self.__before.data.data.shape[1]
 
     @property
     @cachetools.cachedmethod(operator.attrgetter('_cache'))

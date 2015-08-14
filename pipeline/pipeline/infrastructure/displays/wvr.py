@@ -145,7 +145,7 @@ class WVRPhaseVsBaselineChart(object):
 
         # get the windows this was tested on from the caltable.
         spw_ids = set(data_before.spw).intersection(set(data_after.spw))
-        spws = [spw for spw in self.ms.spectral_windows if spw.id in spw_ids]
+        spws = set([spw for spw in self.ms.spectral_windows if spw.id in spw_ids])
 
         plot_scans = self._get_plot_scans()
 
@@ -155,7 +155,8 @@ class WVRPhaseVsBaselineChart(object):
         # combination we want to plot
         LOG.debug('Finding maximum phase offset over all scans/spws/corrs/antennas')
         for scan in plot_scans:
-            for spw in spws:
+            # scan may not have all spws, so just process those present
+            for spw in scan.spws.intersection(spws):
                 # find the data description for this scan. Just one dd 
                 # expected.
                 dds = [dd for dd in scan.data_descriptions 
@@ -166,11 +167,11 @@ class WVRPhaseVsBaselineChart(object):
                              'got %s.', 
                              self.ms.basename, scan.id, spw.id, len(dds))
                     continue
+
                 dd = dds[0]
                 # we expect the number and identity of the caltable 
                 # correlations for this scan to match those in the MS, so we
                 # can enumerate over the correlations in the MS scan.  
-                #for corr_id, _ in enumerate(dd.corr_axis):
                 for corr_id, _ in enumerate(dd.polarizations):
                     for antenna in self.ms.antennas:
                         # we don't want the phase RMS for the reference antenna as it
@@ -209,19 +210,19 @@ class WVRPhaseVsBaselineChart(object):
                         wrapper = common.DataRatio(baseline_data_before, 
                                                    baseline_data_after)
                         self._wrappers.append(wrapper)
-                        
+
         offsets = [w.before.y for w in self._wrappers]
         offsets.extend([w.after.y for w in self._wrappers])
         # offsets could contain None where data was flagged, but that's ok as 
         # max ignores it.
-        self._max_phase_offset = max(offsets)
+        self._max_phase_offset = numpy.ma.max(offsets)
         LOG.trace('Maximum phase offset for %s = %s' % (self.ms.basename, 
                                                         self._max_phase_offset))
 
         ratios = [w.y for w in self._wrappers]
         ratios = [r for r in ratios if r is not None]
-        self._max_ratio = max(ratios)
-        self._min_ratio = min(ratios)
+        self._max_ratio = numpy.ma.max(ratios)
+        self._min_ratio = numpy.ma.min(ratios)
         self._median_ratio = numpy.ma.median(ratios)
         LOG.trace('Maximum phase ratio for %s = %s' % (self.ms.basename, 
                                                        self._max_ratio))
@@ -229,7 +230,7 @@ class WVRPhaseVsBaselineChart(object):
                                                        self._min_ratio))
 
         distances = [w.x for w in self._wrappers]
-        self._max_distance = max(distances)
+        self._max_distance = numpy.ma.max(distances)
         LOG.trace('Maximum distance for %s = %s' % (self.ms.basename, 
                                                     self._max_distance))
 
@@ -238,8 +239,8 @@ class WVRPhaseVsBaselineChart(object):
             # plot scans individually as plotting multiple scans on one plot 
             # creates an unintelligible mess. 
             for scan in plot_scans:
-#                if spw.id == 17 and scan.id == 4:
-                    plots.append(self.get_plot_wrapper(spw, [scan,], 
+                # if spw.id == 17 and scan.id == 3:
+                    plots.append(self.get_plot_wrapper(spw, [scan,],
                                                        self.ms.antennas))
 
         return [p for p in plots if p is not None]
@@ -265,22 +266,7 @@ class WVRPhaseVsBaselineChart(object):
             scan_fields.update([field.name for field in scan.fields])
         scan_fields = ','.join(scan_fields)
             
-        # get the polarisations for the calibration scans, assuming that
-        # all scans with this calibration intent were observed with the
-        # same polarisation setup
-        #corr_axes = [tuple(dd.corr_axis) for dd in scan.data_descriptions
-        #             if dd.spw.id == spw.id]
-        corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
-                     if dd.spw.id == spw.id]
-        # discard WVR and other strange data descriptions 
-        corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])
-        assert len(corr_axes) is 1, ('Data descriptions have different '
-                                     'corr axes for scan %s. Got %s'
-                                     '' % (scan.id, corr_axes))
-        # go from set(('XX', 'YY')) to the ('XX', 'YY')
-        corr_axes = corr_axes.pop()
-
-        # create the figure: 2 rows x 1 column, sharing the X axis (baseline 
+        # create the figure: 2 rows x 1 column, sharing the X axis (baseline
         # length) 
         fig, ((ax1, ax2)) = common.subplots(2, 1, sharex=True)
         ax1.set_yscale('log')
@@ -299,7 +285,23 @@ class WVRPhaseVsBaselineChart(object):
         # create bottom plot: phase offset vs baseline
         legend = []
         plots = []
-        for _, scan in enumerate(scans):
+        for scan in scans:
+
+            # get the polarisations for the scan
+            corr_axes = [tuple(dd.polarizations) for dd in scan.data_descriptions
+                         if dd.spw.id == spw.id]
+            # the scan may not necessarily contain the spw, as in multi-receiver EBs
+            if not corr_axes:
+                continue
+
+            # discard WVR and other strange data descriptions
+            corr_axes = set([x for x in corr_axes if x not in [(), ('I',)]])
+            assert len(corr_axes) is 1, ('Data descriptions have different '
+                                         'corr axes for scan %s. Got %s'
+                                         '' % (scan.id, corr_axes))
+            # go from set(('XX', 'YY')) to the ('XX', 'YY')
+            corr_axes = corr_axes.pop()
+
             for corr_idx, corr_axis in enumerate(corr_axes):
                 wrappers = [w for w in self._wrappers
                             if scan.id in w.scans 
