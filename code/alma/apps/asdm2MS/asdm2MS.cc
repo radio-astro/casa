@@ -1291,6 +1291,11 @@ double evalPoly (unsigned int		numCoeff,
 
 #define LOG_EPHEM(message) if (getenv("FILLER_LOG_EPHEM")) cout << message;
 
+void deleteEphemeris(map<AtmPhaseCorrection, Table*>& apc2EphemTable_m) {
+  for ( map<AtmPhaseCorrection, Table*>::iterator iter = apc2EphemTable_m.begin(); iter!=apc2EphemTable_m.end(); ++iter)
+    if (apc2EphemTable_m[iter->first] != NULL) delete apc2EphemTable_m[iter->first];
+}
+
 void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_ephemeris, string telescopeName) {
   LOGENTER("fillEphemeris");
   
@@ -1460,7 +1465,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 				 tableDesc,
 				 Table::New);
     
-	Table* table_p = new Table(tableSetup, TableLock(TableLock::PermanentLockingWait));
+	Table * table_p = new Table(tableSetup, TableLock(TableLock::PermanentLockingWait));
 	TableInfo& info = table_p->tableInfo();
 	info.setType("IERS");
 	info.setSubType("Solar System");
@@ -1804,11 +1809,11 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  RadVel.putColumnRange(slicer, RadVel_V);
 	}
       
-	table_p->flush();
 	infostream.str("");
 	infostream << "converted in " << table_p->nrow() << " ephemeris rows in the table '" << table_p->tableName() << "'.";
 	info(infostream.str());
       }
+      deleteEphemeris(apc2EphemTable_m); // Get rid of the ephemeris tables now that we have finished with them.
     }
   }
   catch (IllegalAccessException& e) {
