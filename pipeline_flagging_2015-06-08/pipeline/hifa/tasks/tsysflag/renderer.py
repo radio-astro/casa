@@ -133,8 +133,8 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 # map MS to sanitised filename for link construction.
                 subpages[vis] = renderer.path
 
-        components = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
-
+        components = results[0].metric_order
+        
         ctx.update({'flags'           : flag_totals,
                     'components'      : components,
                     'summary_plots'   : summary_plots,

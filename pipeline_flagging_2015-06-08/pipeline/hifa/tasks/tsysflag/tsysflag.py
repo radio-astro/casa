@@ -25,6 +25,39 @@ class TsysflagInputs(basetask.StandardInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+        # Default order in which flagging metrics are recommended
+        # to be evaluated.
+        #default_metric_order = 'nmedian, derivative, edgechans, fieldshape, birdies'
+        default_metric_order = 'nmedian, derivative, fieldshape, edgechans, birdies'
+        
+        # Initialize order in which flagging metrics will be evaluated,
+        # set to default order if not provided.
+        # TODO: "metric_order" could become an argument available to users.
+        metric_order = None
+        if metric_order is None:
+            metric_order = default_metric_order
+
+        # Convert metric string to list
+        metric_list = [metric.strip() for metric in default_metric_order.split(',')]
+        
+        # Initialize ordered list of metrics to evaluate
+        self.metrics_to_evaluate = []
+        
+        # Convert requested flagging metrics to ordered list
+        # FIXME: if a requested flagging metric is missing from 
+        # the "metric order", it is skipped; raise warning in such case?
+        for metric in metric_list:
+            if metric == 'nmedian' and self.flag_nmedian:
+                self.metrics_to_evaluate.append(metric)
+            if metric == 'derivative' and self.flag_derivative:
+                self.metrics_to_evaluate.append(metric)
+            if metric == 'edgechans' and self.flag_edgechans:
+                self.metrics_to_evaluate.append(metric)
+            if metric == 'fieldshape' and self.flag_fieldshape:
+                self.metrics_to_evaluate.append(metric)
+            if metric == 'birdies' and self.flag_birdies:
+                self.metrics_to_evaluate.append(metric)
+
     @property
     def caltable(self):
         if self._caltable is None:
@@ -174,15 +207,42 @@ class Tsysflag(basetask.StandardTaskTemplate):
     Inputs = TsysflagInputs
 
     def prepare(self):
+        
         inputs = self.inputs
+        
+        # Initialize the final result
         result = TsysflagResults()
 
+        # Create a pre-flagging summary of the flags
         summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
         stats_before = self._executor.execute(summary_job)
 
-        if inputs.flag_nmedian:
-            LOG.info('flag nmedian')
-            # Flag Tsys spectra on basis of 'median' metric.
+        # Run flagger for each metric
+        for metric in inputs.metrics_to_evaluate:
+            result.add(metric, self.run_flagger(metric))
+
+        # Create a post-flagging summary of the flags
+        summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
+        stats_after = self._executor.execute(summary_job)
+        
+        # Add the "before" and "after" flagging summaries to the final result
+        result.summaries = [stats_before, stats_after]
+
+        # Store order of metrics in result
+        result.metric_order = inputs.metrics_to_evaluate
+
+        return result
+
+    def analyse(self, result):
+        return result
+    
+    def run_flagger(self, metric):
+
+        inputs = self.inputs
+        LOG.info('flag '+metric)
+
+        # Flag Tsys spectra on basis of 'median' metric.
+        if metric == 'nmedian':
             flaginputs = TsysflagspectraInputs(
               context=inputs.context,
               output_dir=inputs.output_dir,
@@ -195,14 +255,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_maxabs=False,
               flag_tmf1=False,
               prepend='flag nmedian - ')
-
             flagtask = Tsysflagspectra(flaginputs)
-            # Execute it to flag the data view
-            result.add('nmedian', self._executor.execute(flagtask))
-
-        if inputs.flag_derivative:
-            LOG.info('flag derivative')
-            # Flag Tsys spectra on basis of 'derivative' metric.
+            
+        # Flag Tsys spectra on basis of 'derivative' metric.
+        if metric == 'derivative':
             flaginputs = TsysflagspectraInputs(
               context=inputs.context,
               output_dir=inputs.output_dir,
@@ -215,13 +271,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_hi=False,
               flag_tmf1=False,
               prepend='flag derivative - ')
-
             flagtask = Tsysflagspectra(flaginputs)
-            result.add('derivative', self._executor.execute(flagtask))
 
-        if inputs.flag_edgechans:
-            LOG.info('flag edgechans')
-            # Flag edge channels of Tsys spectra.
+        # Flag edge channels of Tsys spectra.
+        if metric == 'edgechans':
             flaginputs = TsysflagchansInputs(
               context=inputs.context,
               output_dir=inputs.output_dir,
@@ -232,13 +285,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
               edge_limit=inputs.fe_edge_limit,
               flag_sharps=False,
               prepend='flag edgechans - ')
-
             flagtask = Tsysflagchans(flaginputs)
-            result.add('edgechans', self._executor.execute(flagtask))
 
-        if inputs.flag_fieldshape:
-            LOG.info('flag fieldshape')
-            # Flag Tsys spectra on basis of 'fieldshape' metric.
+        # Flag Tsys spectra on basis of 'fieldshape' metric.
+        if metric == 'fieldshape':
             flaginputs = TsysflagspectraInputs(
               context=inputs.context,
               output_dir=inputs.output_dir,
@@ -254,13 +304,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_nmedian=False,
               flag_hi=False,
               prepend='flag fieldshape - ')
-
             flagtask = Tsysflagspectra(flaginputs)
-            result.add('fieldshape', self._executor.execute(flagtask))
 
-        if inputs.flag_birdies:
-            LOG.info('flag birdies')
-            # Flag birdies in Tsys spectra.
+        # Flag birdies in Tsys spectra.
+        if metric == 'birdies':
             flaginputs = TsysflagchansInputs(
               context=inputs.context,
               output_dir=inputs.output_dir,
@@ -271,15 +318,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
               flag_sharps=True,
               sharps_limit=inputs.fb_sharps_limit,
               prepend='flag birdies - ')
-
             flagtask = Tsysflagchans(flaginputs)
-            result.add('birdies', self._executor.execute(flagtask))
-
-        summary_job = casa_tasks.flagdata(vis=inputs.caltable, mode='summary')
-        stats_after = self._executor.execute(summary_job)
         
-        result.summaries = [stats_before, stats_after]
-        return result
-
-    def analyse(self, result):
-        return result
+        # Return the result from the executed flagger task
+        return self._executor.execute(flagtask)

@@ -13,8 +13,6 @@ def percent_flagged(flagsummary):
     else:
         return '%0.1f%%' % (100.0 * flagged / total)
 
-steps = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
-
 comp_descriptions = {'nmedian'    : 'Flag T<sub>sys</sub> spectra with high median values.',
                  	 'derivative' : 'Flag T<sub>sys</sub> spectra with high median derivative (ringing).',
                  	 'fieldshape' : 'Flag T<sub>sys</sub> spectra whose shape differs from those associated with BANDPASS data.',
@@ -108,7 +106,7 @@ $(document).ready(function() {
 	<thead>
 		<tr>
 			<th>Measurement Set</th>
-			% for step in steps:
+			% for step in components:
 			<th>${step}</th>
 			% endfor
 		</tr>                           
@@ -117,7 +115,7 @@ $(document).ready(function() {
 	% for ms in flags.keys():
 		<tr>
 			<td>${ms}</td>
-			% for step in steps:
+			% for step in components:
 			% if flags[ms][step] is None:
 			<td><span class="glyphicon glyphicon-remove"></span></td>
       		% else:
@@ -144,11 +142,11 @@ $(document).ready(function() {
 			<th rowspan="2">Data Selection</th>
 			<!-- flags before task is always first agent -->
 			<th rowspan="2">flagged before</th>
-			<th colspan="${len(steps)}">Flagging Step</th>
+			<th colspan="${len(components)}">Flagging Step</th>
 			<th rowspan="2">flagged after</th>
 		</tr>
 		<tr>
-			% for step in steps:
+			% for step in components:
 			<th>${step}</th>
 			% endfor
 		</tr>
@@ -157,7 +155,7 @@ $(document).ready(function() {
 		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']: 
 		<tr>
 			<th>${k}</th>               
-			% for step in ['before'] + steps + ['after']:
+			% for step in ['before'] + components + ['after']:
 			% if flags[ms][step] is not None:
 				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
 				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
