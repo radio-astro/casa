@@ -24,7 +24,7 @@ Definitions
     WVR calibration., % data flagged, etc
 
     Scores are numbers between 0.0 and 1.0 derived from metrics.  Not all
-    metrics are scored.
+    metrics currently derived in the pipeline are scored.
 
 Structure
     The report contains
@@ -33,32 +33,34 @@ Structure
         A per stage QA section.
         A per topic QA section.
  
-Issues with the Original Design
+Issues with the Original Schema / Current Pipeline Design
     The per ASDM dimension was ignored.
     
     The multiple metrics / scores per stage and / or per ASDM
     dimension was ignored.
 
     For stages with single scores / metrics and multiple ASDMs the
-    current implementation selects the MS with the worst metric and
+    current report generator selects the MS with the worst metric and
     reports that value. This metric by definition corresponds to
     the lowest score.
 
-    Tasks which have multiple scores / metrics and multiple
+    Stages which generate multiple scores / metrics and multiple
     ASDMs are currently dealt with on an ad hoc basis.
 
+    The scores are stored with the stage results, but the metrics
+    are not. For now they must be recomputed.
+
+    Metrics have no units information. They are not CASA quanta.
 
 Future Technical Solutions
     Add a toAqua method to the base results class which returns a
-    list of metrics
+    list of metrics for export. Pass these to the QA classes
+    for scoring. Or add the toAqua method to the QA classes ?
+    Discuss with pipeline
 
     Extend or modify the score objects to include a name or
-    identifier and the value of the metric used to generate the
-    score.
-
-    Should metrics include a unit, e.g. be a quanta.
-
-    Other ?
+    identifier, the value of the metric used to generate the
+    score, and possibly a unit.
 
 '''
 
@@ -119,8 +121,9 @@ class AquaReport(object):
         self.context = context
 
         # Construct the stage dictionary
-        #   This seems a bit inefficient as it requires  reading all
-        #   the results to reconstruct the list of stages
+        #   This is a bit inefficient as it requires  reading all
+        #   the results to reconstruct the list of stages, but
+        #   it does not take very long
 
         self.stagedict = collections.OrderedDict()
         for i in range(len(context.results)):
@@ -140,11 +143,12 @@ class AquaReport(object):
         '''
         Add the project structure element
 
-        Given the current data flow it is unclear how to
-        acquire the entity id of the original processing request
+        Given the current data flow it is unclear how the report
+        generator will acquire the entity id of the original
+        processing request
 
         The processing procedure name is known but not yet
-        passed to the pipeline processing request
+        passed to the pipeline processing request.
         '''
 
         ps = eltree.SubElement(self.aquareport, "ProjectStructure")
@@ -172,9 +176,12 @@ class AquaReport(object):
         '''
 
         ps = eltree.SubElement(self.aquareport, "QaSummary")
+
+        # Generate the report date
         eltree.SubElement (ps, "ReportDate").text = \
             datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
+        # Processing time
         exec_start = self.context.results[0].read().timestamps.start
         exec_end = self.context.results[-1].read().timestamps.end
         # remove unnecessary precision for execution duration
@@ -182,9 +189,11 @@ class AquaReport(object):
         exec_duration = datetime.timedelta(days=dt.days, seconds=dt.seconds)
         eltree.SubElement (ps, "ProcessingTime").text = str(exec_duration)
 
+        # Software versions
         eltree.SubElement (ps, "CasaVersion").text = casadef.casa_version
         eltree.SubElement (ps, "PipelineVersion").text = pipeline.revision
 
+        # Score for the complete pipeline run
         eltree.SubElement (ps, "FinalScore").text = "Undefined"
 
         return ps
@@ -193,7 +202,7 @@ class AquaReport(object):
 
         '''
         Add the per stage elements
-            Stage number, name, and score are attributes
+            Stage number, name, and score are element attributes
 
             Eventually we will need:
                A scores class than includes name and metric attributes
@@ -202,10 +211,12 @@ class AquaReport(object):
 
         '''
 
-        # Get the summary element.
+        # Get the stage summary element.
         ppqa = eltree.SubElement(self.aquareport, "QaPerStage")
 
         # Loop over the stages.
+        #    Stage must for now be identified by name.
+
         for stage in self.stagedict: 
 
             # Create the generic stage element
@@ -213,77 +224,177 @@ class AquaReport(object):
                 Name=self.stagedict[stage][0], Score=self.stagedict[stage][1])
 
             # Populate the stage elements.
-            #    This must be done in a custom manner for now
+            #    This must be done in an ad hoc manner for now
+
+            # Data import
+            #    Recompute the missing intents metric which for this case is
+            #    identical to the score.
+            #    This stage actually implements multiple scores. Most of these
+            #    are not appropriate for AQUA.
+
+            if self.stagedict[stage][0] == 'hifa_importdata':
+                self.add_missing_intents_metric(st,
+                    self.context.results[stage-1])
 
             # Deterministic flagging
             #     Retrieve the result with the highest online and shadow
-            #     flagging metric
+            #     flagging metric.
+            #     TBD: Modify metric in QA class to include BDF flags.
 
-            if self.stagedict[stage][0] == 'hifa_flagdata':
+            elif self.stagedict[stage][0] == 'hifa_flagdata':
                 self.add_online_shadow_flagging_metric(st,
                     self.context.results[stage-1])
 
-            # Fluxcal flagging
-            #    Retrieve the results with the highest flagging percentage
-            #    Note: The current metric needs works, should be the percentage
-            #    of the flux calibrator flagged, not the perctage of total flagged
+            # Flux calibrator flagging
+            #    Retrieve the result with the highest percentage of new
+            #    flags.
+            #    TBD: The current metric needs work. It should measure the
+            #    percentage of new flux calibrator flags, not the percentage
+            #    of new flags for the whole data set.
 
             elif self.stagedict[stage][0] == 'hifa_fluxcalflag':
                 self.add_fluxcal_flagging_metric(st,
                     self.context.results[stage-1])
 
+            # Raw data bad channel flagging
+            #    Retrieve the results with the highest percentage of new
+            #    flags.
+
+            elif self.stagedict[stage][0] == 'hif_rawflagchans':
+                self.add_rawflagchans_flagging_metric(st,
+                    self.context.results[stage-1])
+
             # Tsys flagging
-            #     Retrieve the result with the highest flagging percentage
+            #     Retrieve the result with the highest percentage of new
+            #     flags.
 
             elif self.stagedict[stage][0] == 'hifa_tsysflag':
                 self.add_tsys_flagging_metric(st,
                     self.context.results[stage-1])
 
             # WVR calibration and flagging
-            #     Retrieve the result with the lowest rms improvement metric
+            #     Retrieve the result with the poorest rms improvement.
 
             elif self.stagedict[stage][0] == 'hifa_wvrgcalflag':
                 self.add_phase_rms_ratio_metric(st,
                     self.context.results[stage-1])
 
-            # Deviant high / low gain flagging
-            #     Retrieve the result with the highest flagging percentage
+            # Deviant (high / low) gain flagging
+            #     Retrieve the result with the highest percentage of new
+            #     flags
 
             elif self.stagedict[stage][0] == 'hif_lowgainflag':
                 self.add_highlow_gain_flagging_metric(st,
                     self.context.results[stage-1])
 
             # Applycal flagging
-            #     Retrieve the result with the highest applycal flagging metric
+            #     Retrieve the result with the highest percentage of
+            #     newly flagged data
 
             elif self.stagedict[stage][0] == 'hif_applycal':
                 self.add_applycal_flagging_metric(st,
                     self.context.results[stage-1])
 
-            # Generic empty result
+            # Generic empty result for stages with no supported metrics
+            # Currently these include the calibration and imaging tasks
             else:
                 pass
                 
         return ppqa
 
+    def add_missing_intents_metric (self, stage_element, importdata_result):
+
+        '''
+        Recompute the missing intents metric for ALMA interferomery data.
+        Score map was lifted from scoring code.
+
+        Results are probably always iterable but support a non-iterable
+        option just in case.
+        '''
+
+        # Score map for interferometry
+        score_map = {'PHASE'     : -1.0,
+                     'BANDPASS'  : -0.1,
+                     'AMPLITUDE' : -0.1}
+        required = set(score_map.keys())
+
+        # Retrieve the importdata summaries
+        results = importdata_result.read()
+
+        # Loop over results.
+        if isinstance (results, collections.Iterable):
+            # Construct list pf metrics.
+            mlist = []
+            for r in results:
+                # There is a list of MS objects in each result,
+                # but there seems to be only one MS per result.
+                for ms in r.mses:
+                    # An intent is missing
+                    if not required.issubset(ms.intents):
+                        missing = required.difference(ms.intents)
+                        mvalue = 1.0
+                        for m in missing:
+                            mvalue += score_map[m]
+                        mlist.append(mvalue)
+                    # All intents present
+                    else:
+                        mlist.append(1.0)
+
+            # Determine the smallest metric
+            metric, idx = min ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (metric)
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                for ms in results.mses:
+                    if not required.issubset(ms.intents):
+                        missing = required.difference(ms.intents)
+                        metric = 1.0
+                        for m in missing:
+                            metric += score_map[m]
+                    else:
+                        metric = 1.0
+                    metric = '%0.3f' % (metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="MissingIntentsMark",
+            Value=metric, Asdm=vis)
+
+
     def add_online_shadow_flagging_metric (self, stage_element,
         flagdata_result):
 
         '''
-        hifa_flagdata  currently generates only a single metric, the
-            percentage flagged by the online and shadow flagging agents.
-        This method is amost identical to the applycal flagging
-        task metric.
+        Recompute the metric defining the percentage of online and shadow
+        flagged data.
+
+        Results are probably always iterable but support a non-iterable
+        option just in case.
         '''
 
-        # Retrieve the flagging summaries
+        # Retrieve the flagging results
         results = flagdata_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
+
+            # Construct the list of metrics.
             mlist = []
             for i in range(len(results)):
                 agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
                 mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
                     agent_stats if s.name in ['online', 'shadow']], 0))
+
+            # Find the highest valued metric.
             metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -292,6 +403,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % (100.0 * metric)
+
+        # Single result.
         else:
             # By definition this is the result with the lowest metric
             if not results:
@@ -307,17 +420,24 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="%OnlineShadowFlags",
             Value=metric, Asdm=vis)
 
+
     def add_tsys_flagging_metric (self, stage_element, tsysflag_result):
 
         '''
-        hifa_tsysflag currently generates 1 metric based on the percentage of
-        newly flagged data.
+        Recompute the metric defining the percentage of newly flagged caltable
+        data.
 
+        Results are probably always iterable but support a non-iterable
+        option just in case.
         '''
 
         # Retrieve the flagging summaries
         results = tsysflag_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
+
+            # Construct the list of metrics.
             mlist = []
             for i in range(len(results)):
                 if not results[i]:
@@ -325,6 +445,8 @@ class AquaReport(object):
                 agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
                 mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
                     agent_stats[1:]], 0))
+
+            # Locate the largest metric
             metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -333,6 +455,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % (100.0 * metric)
+
+        # Single result.
         else:
             # By definition this is the result with the lowest metric
             if not results:
@@ -347,17 +471,23 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="%TsysCaltableFlags",
             Value=metric, Asdm=vis)
 
+
     def add_fluxcal_flagging_metric (self, stage_element, fluxcalflag_result):
 
         '''
-        hifa_fluxcalflag currently generates 1 metric based on the percentage of
-        newly flagged data.
+        Recompute the metric defining the percentage of newly flagged data.
 
+        Results are probably always iterable but support a non-iterable
+        option just in case.
         '''
 
         # Retrieve the flagging summaries
         results = fluxcalflag_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
+
+            # Construct the list of metrics.
             mlist = []
             for i in range(len(results)):
                 if not results[i]:
@@ -365,6 +495,8 @@ class AquaReport(object):
                 agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
                 mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
                     agent_stats[1:]], 0))
+
+            # Locate the largest metric
             metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -373,6 +505,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % (100.0 * metric)
+
+        # Single result
         else:
             # By definition this is the result with the lowest metric
             if not results:
@@ -387,23 +521,80 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="%FluxcalFlags",
             Value=metric, Asdm=vis)
 
+    def add_rawflagchans_flagging_metric (self, stage_element, rawflagchans_result):
+
+        '''
+        Recompute the metric defining the percentage of newly flagged data.
+
+        Results are probably always iterable but support a non-iterable
+        option just in case.
+        '''
+
+        # Retrieve the flagging summaries
+        results = rawflagchans_result.read()
+
+        # If results is iterable loop over the results.
+        if isinstance (results, collections.Iterable):
+
+            # Construct the list of metrics.
+            mlist = []
+            for i in range(len(results)):
+                if not results[i].view:
+                    continue
+                agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
+                mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
+                    agent_stats[1:]], 0))
+
+            # Locate the largest metric
+            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+            if idx is None:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
+                if metric is not None:
+                    metric = '%0.3f' % (100.0 * metric)
+
+        # Single result
+        else:
+            # By definition this is the result with the lowest metric
+            if not results:
+                vis = 'Undefined'
+                metric = 'Undefined'
+            else:
+                vis = os.path.splitext(os.path.basename(results.inputs['vis']))[0]
+                if not results.view:
+                    metric = 'Undefined'
+                else:
+                    agent_stats = calcmetrics.calc_flags_per_agent(results.summaries)
+                    metric =  reduce(operator.add, [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+                    metric = '%0.3f' % (100.0 * metric)
+
+        eltree.SubElement(stage_element, "Metric", Name="%RawBadchansFlags",
+            Value=metric, Asdm=vis)
+
+
     def add_phase_rms_ratio_metric (self, stage_element, wvr_result):
 
         '''
-        hifa_wvrgcalflag currently generates only a single metric, the
-            ratio of phase rms (without wvr) / phase rms (with wvr).
-        This metric is incorrectly labeled as a score.
+        Retrieve the ratio of phase rms (without wvr) / phase rms (with wvr)
+        metric.  This metric is incorrectly labeled as a score in the results.
         This metric is either None or a floating point value.
+
+        Results are probably always iterable but support a non-iterable
+        option just in case.
         '''
 
-        # Retrieve the rms improvement metric
+        # Retrieve the results.
         results = wvr_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
 
-            # Find the results with the lowest metric which for this task corresponds to
-            # to the lowest overall score.
-            #rlist = [r.qa_wvr.overall_score for r in utils.flatten(results)]
+            # Construct the list of results.
             rlist = [r.qa_wvr.overall_score for r in results]
+
+            # Evaluate the metrics
             metric, idx = min ((metric, idx) for (idx, metric) in enumerate(rlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -413,6 +604,7 @@ class AquaReport(object):
                 if metric is not None:
                     metric = '%0.3f' % results[idx].qa_wvr.overall_score
 
+        # Single result
         else:
             # By definition this is the result with the lowest metric
             if not results:
@@ -428,19 +620,26 @@ class AquaReport(object):
         eltree.SubElement(stage_element, "Metric", Name="PhaseRmsRatio",
             Value=metric, Asdm=vis)
 
+
     def add_highlow_gain_flagging_metric (self, stage_element,
         gainflag_result):
 
         '''
-        hif_lowgainflag currently generates 2 metrics, one based on the
-            number of views that can be computed, and the other based on
-            the percentage of newly flagged data.
+        Recompute  the metric that defines the percentage of newly
+        flagged data. Account for the metric which defines the
+        existence of flagging views.
 
+        Results are probably always iterable but support a non-iterable
+        option just in case.
         '''
 
-        # Retrieve the flagging summaries
+        # Retrieve the results.
         results = gainflag_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
+
+            # Construct the list of results.
             mlist = []
             for i in range(len(results)):
                 if not results[i].view:
@@ -448,6 +647,8 @@ class AquaReport(object):
                 agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
                 mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
                     agent_stats[1:]], 0))
+
+            # Evaluate the metrics
             metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
             if idx is None:
                 vis = 'Undefined'
@@ -456,6 +657,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % (100.0 * metric)
+
+        # Single result
         else:
             # By definition this is the result with the lowest metric
             if not results:
@@ -477,22 +680,26 @@ class AquaReport(object):
         applycal_result):
 
         '''
-        hif_applycal  currently generates only a single metric, the
-            percentage of data flagged by the applycal flagging agent.
+        Recompute the metric defining the percentage of newly flagged data.
 
         This method is amost identical to the deterministic flagging
         task metric.
         '''
 
-        # Retrieve the flagging summaries
+        # Retrieve the results
         results = applycal_result.read()
+
+        # If results is iterable loop over the results.
         if isinstance (results, collections.Iterable):
+
+            # Construct the list of results.
             mlist = []
             for i in range(len(results)):
                 agent_stats = calcmetrics.calc_flags_per_agent(results[i].summaries)
                 mlist.append (reduce(operator.add, [float(s.flagged) / s.total for s in \
                     agent_stats if s.name in ['applycal']], 0))
-            metric, idx = max ((metric, idx) for (idx, metric) in enumerate(mlist)) 
+
+            # Evaluate the metric
             if idx is None:
                 vis = 'Undefined'
                 metric = 'Undefined'
@@ -500,6 +707,8 @@ class AquaReport(object):
                 vis = os.path.splitext(os.path.basename(results[idx].inputs['vis']))[0]
                 if metric is not None:
                     metric = '%0.3f' % (100.0 * metric)
+
+        # Single result
         else:
             # By definition this is the result with the lowest metric
             if not results:
