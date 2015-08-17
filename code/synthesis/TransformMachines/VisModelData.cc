@@ -783,6 +783,8 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 	    ftholder_p.resize(indexft+1, False, True);
 	    ftholder_p[indexft].resize(1);
 	    ftholder_p[indexft][0]=NEW_FT(ftrec.asRecord("container"));
+	    if(!( ftholder_p[indexft][0]))
+	      throw(AipsError("Unsupported FTMachine found in virtual MODEL_DATA column")); 
 	    ftholder_p[indexft][0]->initMaps(vb);
 	    
 	    for( uInt fi=0; fi < fields.nelements(); ++fi){

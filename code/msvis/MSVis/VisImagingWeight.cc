@@ -140,6 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           v=vb->uvw()(row)(1)*f;
                           Int ucell=Int(uscale_p*u+uorigin_p);
                           Int vcell=Int(vscale_p*v+vorigin_p);
+			 
                           if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                               for (Int iv=-vBox;iv<=vBox;iv++) {
                                   for (Int iu=-uBox;iu<=uBox;iu++) {
@@ -519,14 +520,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       //cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p[0].shape() << endl;
-      //cout << "f2 " << f2_p << " d2 " << d2_p << " uscale " << uscale_p << " vscal " << vscale_p << endl; 
+      //cout << "f2 " << f2_p[0] << " d2 " << d2_p[0] << " uscale " << uscale_p << " vscal " << vscale_p << " origs " << uorigin_p << "  " << vorigin_p << endl; 
       String mapid=String::toString(msId)+String("_")+String::toString(fieldId);
       //cout << "min max gwt " << min(gwt_p[0]) << "    " << max(gwt_p[0]) << " mapid " << mapid <<endl; 
       if(!multiFieldMap_p.isDefined(mapid))
 	throw(AipsError("Imaging weight calculation is requested for a data that was not selected"));
       
       Int fid=multiFieldMap_p(mapid);
-      Int ndrop=0;
+      //Int ndrop=0;
+    
       Double sumwt=0.0;
       Int nRow=imWeight.shape()(1);
       Int nChannel=imWeight.shape()(0);
@@ -541,15 +543,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int ucell=Int(uscale_p*u+uorigin_p);
 	    Int vcell=Int(vscale_p*v+vorigin_p);
 	    imWeight(chn,row)=weight(chn%nChanWt,row);
-	    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p)) {
-	      if(gwt_p[fid](ucell,vcell)>0.0) {
+	    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p) &&gwt_p[fid](ucell,vcell)>0.0) {
 		imWeight(chn,row)/=gwt_p[fid](ucell,vcell)*f2_p[fid]+d2_p[fid];
 		sumwt+=imWeight(chn,row);
-	      }
+	      
 	    }
 	    else {
 	      imWeight(chn,row)=0.0;
-	      ndrop++;
+	      //ndrop++;
 	    }
 	  }
 	  else{
@@ -557,7 +558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	}
       }
-
+      
     }
 
   /*  unused version?

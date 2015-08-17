@@ -139,20 +139,24 @@ main(int argc, char **argv){
     VisImagingWeight vWght(vi, "norm", Quantity(0.0, "Jy"), -1.0,  500, 500,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"),0, 0);
     vi.origin();
     Float sumval=0;
+    Float elmax, elmin;
+    IPosition posmax, posmin;
     vi.useImagingWeight(vWght);
     for (vi.originChunks();vi.moreChunks(); vi.nextChunk()){
       for (vi.origin(); vi.more(); vi++){
 	
 	sumval+=sum(vb.imagingWeight());
 	//vm.getModelVis(vb);
-	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() <<"max " <<  max(vb.imagingWeight()) << "  min " << min(vb.imagingWeight()) << endl;
+
+	minMax(elmin, elmax, posmin, posmax, vb.imagingWeight());
+	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() <<"max " <<  elmax << " " << posmax  << "  min " << elmin << "  " << posmin << endl;
 	//cerr << vb.modelVisCube().xyPlane(40) << endl;
 	//vb.visCube();
       }
     }
     Block<Matrix<Float> > density;
     vWght.getWeightDensity(density);
-    
+    cerr << "sum of grid "<< sum(density[0]) << " shape " << density[0].shape() << endl;
     cerr << "sum of weight "<< sumval << endl;
     VisImagingWeight vWghtNat("natural");
     vi.useImagingWeight(vWghtNat);
@@ -165,6 +169,7 @@ main(int argc, char **argv){
     ///////
 
     Matrix<Float> dummy;
+    // Initialize the ft machine with the backward grid image
     ft.initializeToSky(theImage,dummy,vb);
     Vector<Double> convFunc(2, 1.0);
     ft.modifyConvFunc(convFunc, 0, 1);
@@ -174,7 +179,7 @@ main(int argc, char **argv){
       }
      }
      Array<Float> griddedWght;
-     
+     // get the gridded weights
      ft.getGrid(griddedWght);
      cerr << "sum of grid "<< sum(griddedWght) << " shape " << griddedWght.shape() << endl;
      ////////////////
@@ -183,37 +188,23 @@ main(int argc, char **argv){
     ///////
      Block<Matrix<Float> > grids(1);
      grids[0].assign(griddedWght.reform(IPosition(2, 500, 500)));
-     VisImagingWeight vWght2(vi, grids, "norm", Quantity(0.0, "Jy"), -1,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"));
+     //Setup new VisImaging weight with weight density 
+     VisImagingWeight vWght2(vi, "norm", Quantity(0.0, "Jy"), -1.0,  500, 500,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"),0, 0);
+     //VisImagingWeight vWght2(vi, grids, "abs", Quantity(0.0, "Jy"), -1,  Quantity(1.0, "arcsec"), Quantity(1.0, "arcsec"));
+     vWght2.setWeightDensity(grids);
      vi.origin();
-     Float sumval2=0;
      vi.useImagingWeight(vWght2);
      for (vi.originChunks();vi.moreChunks(); vi.nextChunk()){
       for (vi.origin(); vi.more(); vi++){
-	
 	sumval2+=sum(vb.imagingWeight());
-	//vm.getModelVis(vb);
-	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() <<"max " <<  max(vb.imagingWeight()) << "  min " << min(vb.imagingWeight()) << endl;
-	//cerr << vb.modelVisCube().xyPlane(40) << endl;
-	//vb.visCube();
+	elmax=0;
+	elmin=0;
+	minMax(elmin, elmax, posmin, posmax, vb.imagingWeight());
+	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() <<"max " <<  elmax << " " << posmax  << "  min " << elmin << "  " << posmin << endl;
       }
     }
     cerr << "sum of weight "<< sumval2 << endl;
-    //tm.show("Time to read data");
-    //VisModelData::clearModel(myms);
-    /*
-    meanval=0;
-    for (vi.originChunks();vi.moreChunks(); vi.nextChunk()){
-      for (vi.origin(); vi.more(); vi++){
-	
-	meanval+=mean(vb.correctedVisCube());
-	//vm.getModelVis(vb);
-	//cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() << " stddev " << stddev(vb.modelVisCube()) << "   mean " << mean(vb.modelVisCube()) <<" max " <<  max(amplitude(vb.modelVisCube())) << "  min " << min(vb.modelVisCube()) << endl;
-	//vb.visCube();
-      }
-    }
-    cerr << "meanval of corrected "<< meanval << data
-    tm.show("Time to read corrected");
-    */
+   
 
     } catch (AipsError x) {
     cout << "Caught exception " << endl;
