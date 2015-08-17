@@ -135,7 +135,7 @@ def assignmentFilter(self,line):
 	lineOK = True
 	global _asf_enabled
 	if _asf_enabled:
-		if line.find('(') > -1 or line.find('!') < 3:
+		if line.find('(') > -1 or line.find('!') > -1:
 			debugMsg("ignoring input with parethesis or sh command line ")
 		else:
 			debugMsg("scanning input")
