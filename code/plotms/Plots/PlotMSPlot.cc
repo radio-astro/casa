@@ -1733,7 +1733,10 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			canvas->setAxisRange(cx, axesParams->xRange());
 		} else {
             if ((xmin > -0.5) && (xmin < 1.0) && (xmax > 10.0)) {
-                xmin -= 0.1;
+                if (xmax > 100.0)
+                    xmin -= 1.0; // add larger margin for larger range
+                else
+                    xmin -= 0.1;
                 pair<double, double> xbounds = make_pair(xmin, xmax);
 			    canvas->setAxisRange(cx, xbounds);
             }
@@ -1744,7 +1747,10 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 				canvas->setAxisRange(cy, axesParams->yRange(i));
 			} else {
                 if ((ymin > -0.5) && (ymin < 1.0) && (ymax > 10.0)) {
-                    ymin -= 0.1;
+                    if (ymax > 100.0)
+                        ymin -= 1.0; // add larger margin for larger range
+                    else
+                        ymin -= 0.1;
                     pair<double, double> ybounds = make_pair(ymin, ymax);
                     canvas->setAxisRange(cy, ybounds);
                 }
