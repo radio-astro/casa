@@ -135,8 +135,8 @@ def assignmentFilter(self,line):
 	lineOK = True
 	global _asf_enabled
 	if _asf_enabled:
-		if line.find('(') > -1:
-			debugMsg("ignoring input with parethesis")
+		if line.find('(') > -1 or line.find('!') < 3:
+			debugMsg("ignoring input with parethesis or sh command line ")
 		else:
 			debugMsg("scanning input")
 			req=re.compile('([\.\w]*)\s*=[^=]')
