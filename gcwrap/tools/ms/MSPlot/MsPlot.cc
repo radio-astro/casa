@@ -3613,7 +3613,7 @@ MsPlot::setInputTable( const String& xcolumn, const String& ycolumn )
                //# Why so large you ask?  Well for some reason it needs
                //# to big or else we get lots and lots of tables and we
                //# want as few as possible.
-               MSIter msIter( itsSelectedMS, sort, 7.0e9, False );
+               MSIter msIter( itsSelectedMS, sort, 7.0e9, False, False );
            
                //# Now create the table vector for TablePlot, note
                //# that the table name is the same for all of them.

@@ -549,7 +549,7 @@ void SingleDishSkyCal::traverseMS(MeasurementSet const &ms) {
 		MS::DATA_DESC_ID};
   Int *colsp = cols;
   Block<Int> sortCols(4, colsp, False);
-  MSIter msIter(ms, sortCols, 0.0, False);
+  MSIter msIter(ms, sortCols, 0.0, False, False);
   for (msIter.origin(); msIter.more(); msIter++) {
     Table const current = msIter.table();
     uInt nrow = current.nrow();

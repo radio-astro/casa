@@ -1047,7 +1047,8 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
    msIter_p = new MSIter (measurementSets_p,
                           sortColumns_p.getColumnIds(),
                           timeInterval_p,
-                          sortColumns_p.shouldAddDefaultColumns());
+                          sortColumns_p.shouldAddDefaultColumns(),
+                          False);
 
    subtableColumns_p = new SubtableColumns (msIter_p);
 
@@ -2219,6 +2220,14 @@ VisibilityIteratorImpl2::setTileCache ()
         return;
     }
 
+    bool modifyTileCacheSize = False;
+    if (modifyTileCacheSize){
+        cout << "==============\n==============\n-->Allowing cache size to be modified" << endl;
+    } else{
+        cout << "==============\n==============\n-->Not allowing cache size to be modified" << endl;
+        return;
+    }
+
     const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
 
     uInt startrow = msIter_p->table ().rowNumbers ()(0); // Get the first row number for this DDID.
@@ -2246,15 +2255,31 @@ VisibilityIteratorImpl2::setTileCache ()
             continue;
         }
 
+
         try {
+//	    // Debug: begin
+//
+//	    ROTiledStManAccessor tacc (theMs, columns[k], True);
+//
+//	    cout << String::format ("--> %s.%s: cacheSize=%d, bucketSize=%d, tileShape=%s hypercubeShape=%s",
+//				    theMs.tableName().c_str(), columns[k].c_str(), tacc.cacheSize (startrow),
+//				    tacc.bucketSize (startrow),
+//				    tacc.tileShape (startrow).toString().c_str(),
+//				    tacc.hypercubeShape(startrow).toString().c_str())
+//		 << endl;
+//
+//	    continue; // don't change the caching
+//
+//	    // Debug: end
+
             //////////////////
             //////Temporary fix for virtual ms of multiple real ms's ...miracle of statics
             //////setting the cache size of hypercube at row 0 of each ms.
             ///will not work if each subms of a virtual ms has multi hypecube being
             ///accessed.
             if (theMs.tableInfo ().subType () == "CONCATENATED" &&
-                msIterAtOrigin_p &&
-                ! tileCacheIsSet_p[k]) {
+                    msIterAtOrigin_p &&
+                    ! tileCacheIsSet_p[k]) {
 #warning "*** VII2::setTileCache needs to reexamine the handling of concatenated tables."
                 Block<String> refTables = theMs.getPartNames (True);
 
@@ -2265,7 +2290,7 @@ VisibilityIteratorImpl2::setTileCache ()
                     // Skip existing but empty WEIGHT_SPECTRUM or SIGMA_SPECTRUM column
 
                     if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM) ||
-                        columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
+                            columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
                         TableColumn tc (elms, columns [k]);
                         if (! tc.hasContent()){
                             continue;
@@ -2274,21 +2299,21 @@ VisibilityIteratorImpl2::setTileCache ()
 
                     ROTiledStManAccessor tacc (elms, columns[k], True);
 
-		    const IPosition tileShape(tacc.tileShape(startrow));
-		    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-		    uInt nax=hypercubeShape.size();  // how many axes
+                    const IPosition tileShape(tacc.tileShape(startrow));
+                    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+                    uInt nax=hypercubeShape.size();  // how many axes
 
-		    // Accumulate axis factors up to--but NOT including--the row (last) axis
-		    //  "ceil" catches partially filled tiles...
-		    uInt cacheSize(1);
-		    for (uInt iax=0; iax<nax-1; ++iax)
-		      cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
-		    
-		    cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
+                    // Accumulate axis factors up to--but NOT including--the row (last) axis
+                    //  "ceil" catches partially filled tiles...
+                    uInt cacheSize(1);
+                    for (uInt iax=0; iax<nax-1; ++iax)
+                        cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+
+                    cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
 
 
-		    tacc.clearCaches (); //One tile only for now ...seems to work faster
-		    tacc.setCacheSize (startrow, cacheSize);
+                    tacc.clearCaches (); //One tile only for now ...seems to work faster
+                    tacc.setCacheSize (startrow, cacheSize);
 
                     tileCacheIsSet_p[k] = True;
                 }
@@ -2305,18 +2330,18 @@ VisibilityIteratorImpl2::setTileCache ()
 
                 const IPosition tileShape(tacc.tileShape(startrow));
                 const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
-		uInt nax=hypercubeShape.size();  // how many axes
+                uInt nax=hypercubeShape.size();  // how many axes
 
-		// Accumulate axis factors up to--but NOT including--the row (last) axis
-		//  "ceil" catches partially filled tiles...
-		uInt cacheSize(1);
-		for (uInt iax=0; iax<nax-1; ++iax)
-		  cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
+                // Accumulate axis factors up to--but NOT including--the row (last) axis
+                //  "ceil" catches partially filled tiles...
+                uInt cacheSize(1);
+                for (uInt iax=0; iax<nax-1; ++iax)
+                    cacheSize*= (uInt) ceil(hypercubeShape[iax]/(Float)(tileShape[iax]));
 
-		cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
+                cacheSize*=2; // Doubling to handle case where baselines span tiles in the row direction
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
-		tacc.setCacheSize (startrow, cacheSize);
+                tacc.setCacheSize (startrow, cacheSize);
 
             }
         }

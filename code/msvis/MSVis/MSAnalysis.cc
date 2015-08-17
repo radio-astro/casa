@@ -194,7 +194,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
 //     sortCol[2] = MeasurementSet::FIELD_ID ;
     Block<Int> sortCol( 1 ) ;
     sortCol[0] = MeasurementSet::DATA_DESC_ID ;
-    MSIter iter( *ms_p, sortCol, 0.0, False ) ;
+    MSIter iter( *ms_p, sortCol, 0.0, False, False ) ;
     vector<String> selList ;
 //     *itsLog << LogIO::NORMAL 
 //             << "Split MS by FIELD_ID, DATA_DESC_ID, and ANTENNA1"  
