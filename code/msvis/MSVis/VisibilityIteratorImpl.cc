@@ -88,7 +88,7 @@ VisibilityIteratorReadImpl::VisibilityIteratorReadImpl (ROVisibilityIterator * r
   floatDataFound_p (False),
   initialized_p (False),
   msIterAtOrigin_p (False),
-  msIter_p (mss, sortColumns, timeInterval, addDefaultSort),
+  msIter_p (mss, sortColumns, timeInterval, addDefaultSort, False),
   nChan_p (0),
   nRowBlocking_p (0),
   rovi_p (NULL),
