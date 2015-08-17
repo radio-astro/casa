@@ -89,7 +89,8 @@ void QPScaleDraw::setScale(PlotAxisScale scale) {
 			else {
 				m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
 			}
-			if(m_parent->autoReplot()){
+            // CAS-7733 call to autoReplot causing seg fault here with tarball
+			if((m_parent != NULL) && (m_parent->autoReplot())){
 				m_parent->replot();
 			}
 		}
