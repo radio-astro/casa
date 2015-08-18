@@ -1,0 +1,40 @@
+#           min hour day month day-of-week(sunday=0)
+MAILTO=vsuorant@nrao.edu,darrell@schiebel.us
+MAILFROM=noreply@nrao.edu
+#####
+00 21       * * * /usr/src/rpmbuild/build/scripts/rebuild.casa
+00 20       * * * /usr/src/rpmbuild/build/scripts/rebuild.data -r darrell@schiebel.us el6/x86_64
+30 04       * * * /opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease rel=4.5.0
+###########################################################################################################
+#################### packaging scripts should be moved into the code tree...       ########################
+#################### openmpi changes break prerelease patch packaging (e.g. 4.3.1) ########################
+###########################################################################################################
+#00 22       * * * /usr/bin/svn revert /usr/src/rpmbuild/build/scripts/userdistro
+##########################################################################
+45 21,11,13 * * * /usr/src/rpmbuild/build/scripts/rebuild.obit darrell@schiebel.us bcotton@nrao.edu
+##########################################################################
+00 20       * * * find /var/rpmbuild/RPMS -type f -mtime +10 -exec rm {} \;
+00 20       * * * find /var/rpmbuild/SRPMS -type f -mtime +30 -exec rm {} \;
+00 20       * * * find /var/rpmbuild/BUILD -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \;
+15 20       * * * find $HOME/casa/log -type f -mtime +30 -exec rm {} \;
+15 20       * * * find $HOME/obit/log -type f -mtime +30 -exec rm {} \;
+##########################################################################
+00 15,17,18       * * * /opt/users/rpmbuild/BuildSummaryReport/src/updateReport.sh
+##########################################################################
+##########################################################################
+00 14       * * * /opt/users/rpmbuild/syncAcceptedTests.sh
+##########################################################################
+# Sync packages from hybrid
+00,30 *        * * * rsync -qavz -e ssh rpmbuild@hybrid:/Users/rpmbuild/gradle/workdir/dmgs/test/ /usr/src/rpmbuild/apache/content/casa/osx_distro/test/10.10
+01,31 *        * * * rsync -qavz -e ssh rpmbuild@hybrid:/Users/rpmbuild/gradle/workdir/dmgs/prerelease-pub/ /usr/src/rpmbuild/apache/content/casa/osx_distro/prerelease/10.10
+01,31 *        * * * rsync -qavz -e ssh rpmbuild@hybrid:/Users/rpmbuild/gradle/workdir/dmgs/stable-pub/ /usr/src/rpmbuild/apache/content/casa/osx_distro/stable/10.10
+# Sync packages from razor
+00,30 *        * * * rsync -qavz -e ssh rpmbuild@razor:/Users/rpmbuild/gradle/workdir/dmgs/test/ /usr/src/rpmbuild/apache/content/casa/osx_distro/test/10.9
+01,31 *        * * * rsync -qavz -e ssh rpmbuild@razor:/Users/rpmbuild/gradle/workdir/dmgs/prerelease-pub/ /usr/src/rpmbuild/apache/content/casa/osx_distro/prerelease/10.9
+01,31 *        * * * rsync -qavz -e ssh rpmbuild@razor:/Users/rpmbuild/gradle/workdir/dmgs/stable-pub/ /usr/src/rpmbuild/apache/content/casa/osx_distro/stable/10.9
+# Sync test results from hybrid
+0,15,30,45 * * * * rsync -qavz -e ssh rpmbuild@hybrid:/Users/rpmbuild/gradle/workdir/testlogs/stable-tests/osx10_10/ /usr/src/rpmbuild/apache/spool/stable-tests/osx10_10/
+0,15,30,45 * * * * rsync -qavz -e ssh rpmbuild@hybrid:/Users/rpmbuild/gradle/workdir/testlogs/prerelease-tests/osx10_10/ /usr/src/rpmbuild/apache/spool/prerelease-tests/osx10_10/
+# Sync test results from razor
+0,15,30,45 * * * * rsync -qavz -e ssh rpmbuild@razor:/Users/rpmbuild/gradle/workdir/testlogs/stable-tests/osx10_9/ /usr/src/rpmbuild/apache/spool/stable-tests/osx10_9/
+0,15,30,45 * * * * rsync -qavz -e ssh rpmbuild@razor:/Users/rpmbuild/gradle/workdir/testlogs/prerelease-tests/osx10_9/ /usr/src/rpmbuild/apache/spool/prerelease-tests/osx10_9/
