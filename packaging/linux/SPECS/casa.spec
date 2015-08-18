@@ -12,11 +12,11 @@
 %define relcount      1
 %endif
 
-%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_4
+%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_5
 ###
 ### configure version and revision...
-%define ver           4.4.0
-%define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_4)
+%define ver           4.5.0
+%define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_5)
 %if %{?ver:1}0
 %define CASAVER       %{ver}
 %else
@@ -56,7 +56,7 @@ License:       GNU LESSER GENERAL PUBLIC LICENSE (LGPL)
 Group:         Applications
 Version:       %{CASAVER}
 Autoreqprov:   on
-Summary:       The casa/aips++ public executables (built on RH%{DISTRO_REL}).
+Summary:       The casa public executables (built on RH%{DISTRO_REL}).
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Source1:       grexec.f
 Source2:       asap-2_1.patch
@@ -83,10 +83,10 @@ Conflicts:     casa
 
 
 %description
-CASA/AIPS++ user environment
+CASA user environment
 
 %package bin
-Summary:       The casa/aips++ executable and shared library binaries (built on RH%{DISTRO_REL}).
+Summary:       The casa executable and shared library binaries (built on RH%{DISTRO_REL}).
 Group:         Applications
 Version:       %{CASAVER}
 Autoreqprov:   on
@@ -94,10 +94,10 @@ Requires:      %{name}-shared = %{version}-%{release}
 Requires:      casa01-python >= %{pythondep}
 
 %description bin
-CASA/AIPS++ development environment
+CASA development environment
 
 %package shared
-Summary:      The casa/aips++ shared libraries (built on RH%{DISTRO_REL}).
+Summary:      The casa shared libraries (built on RH%{DISTRO_REL}).
 Group:        Applications
 Version:      %{CASAVER}
 Autoreqprov:  on
@@ -154,30 +154,59 @@ Requires:     aatm >= 0.06-05%{?dist}
 Requires:     boost
 
 %description shared
-CASA/AIPS++ development environment
+CASA development environment
 
-%package devel
-Summary:       The casa/aips++ shared libraries (built on RH%{DISTRO_REL}).
+%package devdep
+Summary:       third-party dependencies for casa development
 Group:         Applications
 Version:       %{CASAVER}
 Autoreqprov:   on
-Requires:      %{name}-bin = %{version}-%{release}
-Requires:      casa01-swig
+
+Requires:      casa01-python-devel
+Requires:      casa01-dbus-devel
+Requires:      casa01-dbus-cpp-devel
+Requires:      casa01-dbus-glib-devel
 Requires:      cfitsio-devel
-Requires:      casa01-qt-devel, casa01-qwt-devel
-Requires:      casa01-dbus-cpp, casa01-dbus-cpp-devel
-Requires:      xerces-c28-devel, rpfits, aatm-devel, blas, lapack
-Requires:      tix-devel, tk-devel
-Requires:      casa01-python-devel >= %{pybasever}.5-05%{?dist}
-Requires:      fftw3-devel
-### this assumes that regular developers will not want to build their own pgplot
-Requires:      pgplot-devel
-###
-Requires:      wcslib-devel >= 4.7-1%{?dist}
+Requires:      wcslib-devel
 Requires:      boost-devel
+Requires:      xerces-c28-devel
+Requires:      fftw3-devel
+Requires:      pgplot-devel
+Requires:      wcslib-devel
+Requires:      boost-devel
+Requires:      devtoolset-3-memstomp
+Requires:      devtoolset-3-elfutils
+Requires:      devtoolset-3-toolchain
+Requires:      devtoolset-3-strace
+Requires:      devtoolset-3-ltrace
+Requires:      devtoolset-3-dwz
+Requires:      devtoolset-3-runtime
+Requires:      devtoolset-3-libstdc++
+Requires:      devtoolset-3-elfutils-libelf
+Requires:      devtoolset-3-gdb
+Requires:      devtoolset-3-elfutils
+Requires:      devtoolset-3-gcc
+Requires:      devtoolset-3-gcc-gfortran
+Requires:      devtoolset-3-libquadmath-devel
+Requires:      devtoolset-3-binutils
+Requires:      devtoolset-3-gcc-c++
+Requires:      scl-utils
+
+%description devdep
+Third-party dependencies for CASA development...
+
+%package devel
+Summary:       The casa shared libraries (built on RH%{DISTRO_REL}).
+Group:         Applications
+Version:       %{CASAVER}
+Autoreqprov:   on
+
+Requires:      %{name}-bin = %{version}-%{release}
+
 
 %description devel
-CASA/AIPS++ development environment
+CASA development environment
+
 
 %prep
 echo "revision:      %{CASAREV}"
@@ -236,25 +265,33 @@ echo "build time:" `date -u`
 export SVNGEN_URL=%{SVNROOT}
 export SVNGEN_REVISION=%{CASAREV}
 
+#Replace casacore from github
+#rm -rf $top/casacore
+#cd $top
+#git clone https://github.com/casacore/casacore
+
+export COMPILERS="-DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran"
+
 cd $top/casacore
 mkdir build && cd build
-cmake -DBUILD_TESTING=OFF '-DCMAKE_INSTALL_PREFIX=../../linux' -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 -DCMAKE_BUILD_TYPE=Release ..
+#Changed -DBUILD_CASA=1 to -DCASA_BUILD=1
+cmake $COMPILERS -DCASA_BUILD=1 -DBUILD_TESTING=OFF '-DCMAKE_INSTALL_PREFIX=../../linux' -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1' install
 
 cd $top/code
 mkdir build
 cd build
-cmake -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1'
 
 cd $top/gcwrap
 mkdir build && cd build
-cmake -Darch=linux -DPYTHONLIBD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -Darch=linux -DPYTHONLIBD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1'
 
 cd $top/asap
 mkdir build && cd build
-cmake -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
+cmake $COMPILERS -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} -DCMAKE_BUILD_TYPE=Release ..
 gmake 'VERBOSE=1'
 
 cd $top
@@ -606,11 +643,6 @@ for i in `find . -type f`; do
     fi
 done
 
-##
-## backup svn tree for possible future developer's rpm
-##
-cd $top
-find code -type f | grep '/\.svn/' | tar --files-from - -zcf $RPM_BUILD_ROOT%{rootdir}/code-tree.tar.gz
 
 ##
 ## stamp out the java plague...
@@ -703,14 +735,13 @@ done
 %{libdir}/libatnf.so
 %{libdir}/libcasa_*.so
 
+%files devdep
+
 %files devel
 %defattr(-,root,root)
 %dir %{rootdir}
 %dir %{libdir}
 %dir %{incdir}
-
-################ source code         ################
-%{rootdir}/code-tree.tar.gz
 
 ################ pgplot header files ################
 %{pgplotdir}/pgplot.inc

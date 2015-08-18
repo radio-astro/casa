@@ -12,11 +12,11 @@
 %define relcount      1
 %endif
 
-%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_4
+%define SVNROOT       https://svn.cv.nrao.edu/svn/casa/branches/release-4_5
 ###
 ### configure version and revision...
-%define ver           4.4.0
-%define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_4)
+%define ver           4.5.0
+%define rev           %(/usr/src/rpmbuild/build/SOURCES/%{name}/svn-revision branch=release-4_5)
 %if %{?ver:1}0
 %define CASAVER       %{ver}
 %else
@@ -251,25 +251,33 @@ echo "build time:" `date -u`
 export SVNGEN_URL=%{SVNROOT}
 export SVNGEN_REVISION=%{CASAREV}
 
+#Replace casacore from github
+#rm -rf $top/casacore
+#cd $top
+#git clone https://github.com/casacore/casacore
+
+export COMPILERS="-DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran"
+
 cd $top/casacore
 mkdir build && cd build
-cmake -DBUILD_TESTING=OFF '-DCMAKE_INSTALL_PREFIX=../../linux' -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 ..
+#Changed -DBUILD_CASA=1 to -DCASA_BUILD=1
+cmake $COMPILERS -DCASA_BUILD=1 -DBUILD_TESTING=OFF '-DCMAKE_INSTALL_PREFIX=../../linux' -DBUILD_PYTHON=1 -DPYTHON_INCLUDE_DIR=/usr/lib64/casa/01/include/python2.7 -DPYTHON_LIBRARY=/usr/lib64/casa/01/lib/libpython2.7.so -DBOOST_ROOT=/usr/lib64/casa/01 ..
 gmake 'VERBOSE=1' install
 
 cd $top/code
 mkdir build
 cd build
-cmake -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} ..
+cmake $COMPILERS -DEXTRA_C_FLAGS="-DPG_PPU -I/usr/include/wcslib-4.3" -Darch=linux -DSKIP_PGPLOT="yes" -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} ..
 gmake 'VERBOSE=1'
 
 cd $top/gcwrap
 mkdir build && cd build
-cmake -Darch=linux -DPYTHONLIBD=%{pylibdir} ..
+cmake $COMPILERS -Darch=linux -DPYTHONLIBD=%{pylibdir} ..
 gmake 'VERBOSE=1'
 
 cd $top/asap
 mkdir build && cd build
-cmake -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} ..
+cmake $COMPILERS -DEXTRA_C_FLAGS="-I/usr/include/wcslib-4.3" -Darch=linux -DPYTHONLIBD=%{pylibdir} -DPYTHONTASKD=%{pylibdir} ..
 gmake 'VERBOSE=1'
 
 cd $top
