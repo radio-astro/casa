@@ -1,0 +1,9 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# Script to test the tTableCopy test program.
+#=============================================================================
+
+$casa_checktool ./tTableCopy
+$casa_checktool ./tTableCopy m
+$casa_checktool ./tTableCopy p n
+$casa_checktool ./tTableCopy m n
