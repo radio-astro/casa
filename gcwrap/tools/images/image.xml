@@ -10290,6 +10290,10 @@ formatted as measures instead.
      'm' (measure), 's' (string).</description>
      <value>n</value>
      </param>
+     <param type="bool" name="dovelocity">
+        <description>Compute corresponding spectral velocities?</description>
+        <value>True</value>
+     </param>
 </input>
 <returns type="record">Vector float, vector quantity, record, string or fail</returns>
 
