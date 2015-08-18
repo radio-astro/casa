@@ -296,7 +296,9 @@ public:
         const Bool extendMask=False
     );
 
-    Record toworld(const Vector<double>& value, const String& format = "n") const;
+    // if doVelocity=True, compute spectral velocities as well as frequencies, if False, only
+    // compute frequencies.
+    Record toworld(const Vector<double>& value, const String& format = "n", Bool doVelocity=True) const;
 
     Bool detached();
 
@@ -386,12 +388,14 @@ public:
 
     // Some helper functions that needs to be in casa namespace coordsys
 
-    Record worldVectorToRecord (const Vector<Double>& world, 
-                                Int c, const String& format, 
-                                Bool isAbsolute, Bool showAsAbsolute) const;
+    Record _worldVectorToRecord(
+        const Vector<Double>& world, Int c, const String& format, 
+        Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+    ) const;
 
-    Record worldVectorToMeasures(const Vector<Double>& world, 
-                                 Int c, Bool abs) const;
+    Record _worldVectorToMeasures(
+        const Vector<Double>& world, Int c, Bool abs, Bool doVelocity
+    ) const;
 
     void _onlyFloat(const String& method) const;
 

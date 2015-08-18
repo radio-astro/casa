@@ -3127,10 +3127,10 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 
 // These should really go in a coordsys inside the casa name space
 
-Record ImageAnalysis::toworld(const Vector<Double>& pixel,
-		const String& format) const {
-
-	*_log << LogOrigin("ImageAnalysis", "toWorldRecord");
+Record ImageAnalysis::toworld(
+    const Vector<Double>& pixel, const String& format, Bool doVelocity
+) const {
+	*_log << LogOrigin(className(), __func__);
 	Vector<Double> pixel2 = pixel.copy();
 	CoordinateSystem itsCSys = _imageFloat->coordinates();
 	{
@@ -3153,7 +3153,7 @@ Record ImageAnalysis::toworld(const Vector<Double>& pixel,
 	Vector<Double> world;
 	Record rec;
 	if (itsCSys.toWorld(world, pixel2)) {
-		rec = worldVectorToRecord(world, -1, format, True, True);
+		rec = _worldVectorToRecord(world, -1, format, True, True, doVelocity);
 	}
 	else {
 		*_log << itsCSys.errorMessage() << LogIO::EXCEPTION;
@@ -3161,14 +3161,15 @@ Record ImageAnalysis::toworld(const Vector<Double>& pixel,
 	return rec;
 }
 
-Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
-		const String& format, Bool isAbsolute, Bool showAsAbsolute) const
+Record ImageAnalysis::_worldVectorToRecord(const Vector<Double>& world, Int c,
+    const String& format, Bool isAbsolute, Bool showAsAbsolute, Bool doVelocity
+) const
 // World vector must be in the native units of cSys
 // c = -1 means world must be length cSys.nWorldAxes
 // c > 0 means world must be length cSys.coordinate(c).nWorldAxes()
 // format from 'n,q,s,m'
 {
-	*_log << LogOrigin("ImageAnalysis", "worldVectorToRecord");
+	*_log << LogOrigin(className(), __func__);
 	String ct = upcase(format);
 	Vector<String> units;
 	CoordinateSystem itsCSys = _imageFloat->coordinates();
@@ -3178,7 +3179,6 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 		units = itsCSys.coordinate(c).worldAxisUnits();
 	}
 	AlwaysAssert(world.nelements()==units.nelements(),AipsError);
-	//
 	Record rec;
 	if (ct.contains(String("N"))) {
 		rec.define("numeric", world);
@@ -3203,7 +3203,6 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 		} else {
 			worldAxes = itsCSys.worldAxes(c);
 		}
-		//
 		Coordinate::formatType fType = Coordinate::SCIENTIFIC;
 		Int prec = 8;
 		String u;
@@ -3217,7 +3216,6 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 			} else {
 				fType = Coordinate::SCIENTIFIC;
 			}
-			//
 			u = "";
 			fs(i) = itsCSys.format(u, fType, world(i), worldAxes(i),
 					isAbsolute, showAsAbsolute, prec);
@@ -3229,17 +3227,18 @@ Record ImageAnalysis::worldVectorToRecord(const Vector<Double>& world, Int c,
 		rec.define("string", fs);
 	}
 	if (ct.contains(String("M"))) {
-		Record recM = worldVectorToMeasures(world, c, isAbsolute);
+		Record recM = _worldVectorToMeasures(world, c, isAbsolute, doVelocity);
 		rec.defineRecord("measure", recM);
 	}
 	return rec;
 }
 
-Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
-		Bool abs) const {
-	LogIO os(LogOrigin("ImageAnalysis", "worldVectorToMeasures(...)"));
+Record ImageAnalysis::_worldVectorToMeasures(
+    const Vector<Double>& world, Int c,
+	Bool abs, Bool doVelocity
+) const {
+	LogIO os(LogOrigin(className(), __func__));
 
-	//
 	uInt directionCount, spectralCount, linearCount, stokesCount, tabularCount;
 	directionCount = spectralCount = linearCount = stokesCount = tabularCount
 			= 0;
@@ -3260,9 +3259,7 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 		s = c;
 		e = c + 1;
 	}
-	//
 	for (uInt i = s; i < e; i++) {
-
 		// Find the world axes in the CoordinateSystem that this coordinate belongs to
 
 		const Vector<Int>& worldAxes = itsCSys.worldAxes(i);
@@ -3287,7 +3284,6 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 			world2 = world;
 			none = False;
 		}
-		//
 		if (itsCSys.type(i) == Coordinate::LINEAR || itsCSys.type(i)
 				== Coordinate::TABULAR) {
 			if (!none) {
@@ -3344,7 +3340,6 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 						<< LogIO::EXCEPTION;
 			}
 			AlwaysAssert(worldAxes.nelements()==1,AipsError);
-			//
 			if (!none) {
 
 				// Make an MFrequency and stick in record
@@ -3353,69 +3348,77 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 				Quantum<Double> t1(world2(0), units(0));
 				const SpectralCoordinate& sc0 = itsCSys.spectralCoordinate(i);
 				MFrequency frequency(t1, sc0.frequencySystem());
-				//
 				MeasureHolder h(frequency);
 				if (!h.toRecord(error, specRec1)) {
 					os << error << LogIO::EXCEPTION;
-				} else {
+				}
+                else {
 					specRec.defineRecord("frequency", specRec1);
 				}
-				//
-				SpectralCoordinate sc(sc0);
+				if (doVelocity) {
+                    SpectralCoordinate sc(sc0);
 
-				// Do velocity conversions and stick in MDOppler
-				// Radio
+				    // Do velocity conversions and stick in MDOppler
+				    // Radio
 
-				sc.setVelocity(String("km/s"), MDoppler::RADIO);
-				Quantum<Double> velocity;
-				if (!sc.frequencyToVelocity(velocity, frequency)) {
-					os << sc.errorMessage() << LogIO::EXCEPTION;
-				} else {
-					MDoppler v(velocity, MDoppler::RADIO);
-					MeasureHolder h(v);
-					if (!h.toRecord(error, specRec1)) {
-						os << error << LogIO::EXCEPTION;
-					} else {
-						specRec.defineRecord("radiovelocity", specRec1);
-					}
-				}
+				    sc.setVelocity(String("km/s"), MDoppler::RADIO);
+				    Quantum<Double> velocity;
+				    if (!sc.frequencyToVelocity(velocity, frequency)) {
+					    os << sc.errorMessage() << LogIO::EXCEPTION;
+				    }
+                    else {
+					    MDoppler v(velocity, MDoppler::RADIO);
+					    MeasureHolder h(v);
+					    if (!h.toRecord(error, specRec1)) {
+						    os << error << LogIO::EXCEPTION;
+					    }
+                        else {
+						    specRec.defineRecord("radiovelocity", specRec1);
+					    }
+				    }
 
-				// Optical
+				    // Optical
 
-				sc.setVelocity(String("km/s"), MDoppler::OPTICAL);
-				if (!sc.frequencyToVelocity(velocity, frequency)) {
-					os << sc.errorMessage() << LogIO::EXCEPTION;
-				} else {
-					MDoppler v(velocity, MDoppler::OPTICAL);
-					MeasureHolder h(v);
-					if (!h.toRecord(error, specRec1)) {
-						os << error << LogIO::EXCEPTION;
-					} else {
-						specRec.defineRecord("opticalvelocity", specRec1);
-					}
-				}
+				    sc.setVelocity(String("km/s"), MDoppler::OPTICAL);
+				    if (!sc.frequencyToVelocity(velocity, frequency)) {
+					    os << sc.errorMessage() << LogIO::EXCEPTION;
+				    }
+                    else {
+					    MDoppler v(velocity, MDoppler::OPTICAL);
+					    MeasureHolder h(v);
+					    if (!h.toRecord(error, specRec1)) {
+						    os << error << LogIO::EXCEPTION;
+					    }
+                        else {
+						    specRec.defineRecord("opticalvelocity", specRec1);
+					    }
+				    }
 
-				// beta (relativistic/true)
+				    // beta (relativistic/true)
 
-				sc.setVelocity(String("km/s"), MDoppler::BETA);
-				if (!sc.frequencyToVelocity(velocity, frequency)) {
-					os << sc.errorMessage() << LogIO::EXCEPTION;
-				} else {
-					MDoppler v(velocity, MDoppler::BETA);
-					MeasureHolder h(v);
-					if (!h.toRecord(error, specRec1)) {
-						os << error << LogIO::EXCEPTION;
-					} else {
-						specRec.defineRecord("betavelocity", specRec1);
-					}
-				}
+				    sc.setVelocity(String("km/s"), MDoppler::BETA);
+				    if (!sc.frequencyToVelocity(velocity, frequency)) {
+					    os << sc.errorMessage() << LogIO::EXCEPTION;
+				    }
+                    else {
+					    MDoppler v(velocity, MDoppler::BETA);
+					    MeasureHolder h(v);
+					    if (!h.toRecord(error, specRec1)) {
+						    os << error << LogIO::EXCEPTION;
+					    }
+                        else {
+						    specRec.defineRecord("betavelocity", specRec1);
+					    }
+				    }
+                }
 
 				// Fill spectral record
 
 				rec.defineRecord("spectral", specRec);
 			}
 			spectralCount++;
-		} else if (itsCSys.type(i) == Coordinate::STOKES) {
+		}
+        else if (itsCSys.type(i) == Coordinate::STOKES) {
 			if (!abs) {
 				os << "It makes no sense to have a relative Stokes measure"
 						<< LogIO::EXCEPTION;
@@ -3431,12 +3434,12 @@ Record ImageAnalysis::worldVectorToMeasures(const Vector<Double>& world, Int c,
 				rec.define("stokes", s);
 			}
 			stokesCount++;
-		} else {
+		}
+        else {
 			os << "Cannot handle Coordinates of type " << itsCSys.showType(i)
 					<< LogIO::EXCEPTION;
 		}
 	}
-	//
 	if (directionCount > 1) {
 		os << LogIO::WARN
 				<< "There was more than one DirectionCoordinate in the "
