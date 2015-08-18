@@ -656,14 +656,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Convert Quantity to String
   String SynthesisParams::QuantityToString(Quantity val) const
   {
-    std::ostringstream ss;
+    //std::ostringstream ss;
     //use digits10 to ensure the conersions involve use full decimal digits guranteed to be 
     //correct plus extra digits to deal with least significant digits (or replace with
     // max_digits10 when it is available)
-    ss.precision(std::numeric_limits<double>::digits10+2);
-    ss << val;
-    return ss.str();
-    //return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
+    //ss.precision(std::numeric_limits<double>::digits10+2);
+    //ss << val;
+    //return ss.str();
+    //TT: change to C++11 to_string which handles double value to string conversion 
+    return String(std::to_string( val.getValue(val.getUnit()) )) + val.getUnit() ;
   }
   
   // Convert Record contains Quantity or Measure quantities to String
@@ -2265,7 +2266,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( mode.contains("cube") )
       { 
-        String restfreq=String::toString(qrestfreq.getValue(qrestfreq.getUnit()))+qrestfreq.getUnit();
+        String restfreq=QuantityToString(qrestfreq);
         // use frame from input start or width in MFreaquency or MRadialVelocity
         freqframe = qmframe!=""? qmframe: MFrequency::showType(freqFrame);
         // emit warning here if qmframe is used 
@@ -2395,6 +2396,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if (chanFreq[0]>chanFreq[chanFreq.nelements()-1]) {
         descendingoutfreq = True;
       }
+
       if (descendingfreq && !descendingoutfreq) {
         // reverse the freq vector if necessary so the first element can be
         // used to set spectralCoordinates in all the cases.
