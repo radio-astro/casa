@@ -1220,7 +1220,18 @@ LogIO os(_ORIGIN);
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
-                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
+                            //<< "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
+                            << "Time" <<'[' << year << '/'
+                            << setfill('0') << setw(2) << month << '/' 
+                            << setfill('0') << setw(2) << day <<  '/'
+                            << setfill('0') << setw(2) << hour << ':'
+                            << setfill('0') << setw(2) << minute  << ':';
+                    ofs_txt.setf(ios::fixed);
+                    ofs_txt << setprecision(3) << second << ']' 
+                            << endl;
+                    
+                    
+                    
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
                 
@@ -1743,7 +1754,16 @@ split_bloutputname(out_bloutput_name);
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
-                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
+                            //<< "Time" << '[' << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << ']' << endl;
+                            << "Time" <<'[' << year << '/'
+                            << setfill('0') << setw(2) << month << '/' 
+                            << setfill('0') << setw(2) << day <<  '/'
+                            << setfill('0') << setw(2) << hour << ':'
+                            << setfill('0') << setw(2) << minute  << ':';
+                    ofs_txt.setf(ios::fixed);
+                    ofs_txt << setprecision(3) << second << ']' 
+                            << endl;
+                    
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           
@@ -2991,7 +3011,16 @@ LogIO os(_ORIGIN);
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
-                            << "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
+                            //<< "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
+                            << "Time" <<'[' << year << '/'
+                            << setfill('0') << setw(2) << month << '/' 
+                            << setfill('0') << setw(2) << day <<  '/'
+                            << setfill('0') << setw(2) << hour << ':'
+                            << setfill('0') << setw(2) << minute  << ':';
+                    ofs_txt.setf(ios::fixed);
+                    ofs_txt << setprecision(3) << second << ']' 
+                            << endl;
+                    
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           
