@@ -256,16 +256,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
 	MeasurementSet thisMSSelected0 = MeasurementSet(thisms(exprNode));
-	MSSelection mss0;
+
 	if(selpars.taql != "")
 	  {
+	    MSSelection mss0;
 	    mss0.setTaQLExpr(selpars.taql);
 	    os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
+
+	    TableExprNode tenWithTaQL=mss0.toTableExprNode(&thisMSSelected0);
+	    MeasurementSet thisMSSelected1 = MeasurementSet(thisMSSelected0(tenWithTaQL));
+	    //mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+	    mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected1;
 	  }
-	TableExprNode tenWithTaQL=mss0.toTableExprNode(&thisMSSelected0);
-	MeasurementSet thisMSSelected1 = MeasurementSet(thisMSSelected0(tenWithTaQL));
-	//mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
-	mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected1;
+	else
+	    mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected0;
+	  
 	os << "  NRows selected : " << (mss4vi_p[mss4vi_p.nelements()-1]).nrow() << LogIO::POST;
       }
     else{
@@ -518,10 +523,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataSel_p[dataSel_p.nelements()-1]=selpars;
 
 
-
+    unlockMSs();
       }
     catch(AipsError &x)
       {
+	unlockMSs();
 	throw( AipsError("Error in selectData() : "+x.getMesg()) );
       }
 
@@ -1775,6 +1781,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
     		{
+		  //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; // No valid rows in this VB
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
     				vb->setModelVisCube(Complex(0.0, 0.0));
@@ -1871,13 +1878,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Step through the MS.  This triggers the logic in the Gridder
       // to determine all the CFs that will be required.  These empty
-      // CFs are written to the CFCache.
+      // CFs are written to the CFCache which can then be filled via
+      // a call to fillCFCache().
       for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
 	{
 	  
 	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	    {
+	      if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
 	      itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
+	      cohDone += vb->nRow();
 	      pm.update(Double(cohDone));
 	    }
 	}
@@ -1989,7 +1999,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
       if (!ftmName.contains("AWProject")) return;
 
-      os << "---------------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
+      os << "-------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
       String path = itsMappers.getFTM(whichFTM)->getCacheDir();
       String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
 
@@ -2035,6 +2045,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	    {
+	      //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
 	      //if !usescratch ...just save
 	      vb->setModelVisCube(Complex(0.0, 0.0));
 	      itsMappers.degrid(*vb, savevirtualmodel);

@@ -58,6 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SynthesisUtilMethods
   {
   public:
+    enum VBSTATES {NOVALIDROWS=-1};
     // Default constructor
 
     SynthesisUtilMethods();
@@ -120,6 +121,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Image cube partitioning rules for CUBE imaging
     Record cubeImagePartition(Record &impars, Int npart);
     
+    // Validate the supplied VB.  This currently only checks for the
+    // existence of at least one non-flagged row and returns the index
+    // of the first non-flagged row found. Otherwise returns
+    // SynthesisUtilMethods::NOVALIDROWS. This static method is called
+    // in the vis-iter loops to block invalid VBs from flowing down
+    // the pipes.
+    static Int validate(const VisBuffer& vb);
+
     
   protected:
     static String mergeSpwSel(const Vector<Int>& fspw, const Vector<Int>& fstart, const Vector<Int>& fnchan, const Matrix<Int>& spwsel);

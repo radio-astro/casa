@@ -80,6 +80,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   }
   
+  Int SynthesisUtilMethods::validate(const VisBuffer& vb)
+  {
+    Int N=vb.nRow(),M=-1;
+    for(Int i=0;i<N;i++)
+      {
+	if ((!vb.flagRow()(i)) && (vb.antenna1()(i) != vb.antenna2()(i)))
+	  {M++;break;}
+      }
+    return M;
+  }
   // Data partitioning rules for CONTINUUM imaging
   //
   //  ALL members of the selection parameters in selpars are strings
@@ -122,7 +132,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	// Make a selected MS and extract the time-column information
 	//
-	MeasurementSet ms(msName), selectedMS(ms);
+	MeasurementSet ms(msName,TableLock(TableLock::AutoNoReadLocking), Table::Old),
+	  selectedMS(ms);
 	MSInterface msI(ms);	MSSelection msSelObj; 
 	msSelObj.reset(msI,MSSelection::PARSE_NOW,
 		       thisMS.asString("timestr"),
