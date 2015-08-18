@@ -710,8 +710,10 @@ coordsys::frequencytovelocity(const std::vector<double>& value,
   sc.setVelocity (velUnit, dopplerType);
   Vector<Double> velocity;
   if (!sc.frequencyToVelocity (velocity, frequency)) {
-    *_log << "Conversion to velocity failed because " << sc.errorMessage()
-	    << endl;
+    *_log << LogIO::SEVERE
+	  << "Conversion to velocity failed: " << sc.errorMessage() << endl
+	  << "Restfrequency is: " << sc.restFrequency() << " Hz" 
+	  << LogIO::POST;
   }
   velocity.tovector(rstat);
   return rstat;
@@ -3231,12 +3233,17 @@ coordsys::velocitytofrequency(const std::vector<double>& value,
     velType = casa::MDoppler::RADIO;
   }
 
+  *_log << LogOrigin("coordsys", __func__);
+
   // Convert to fequency
   sc.setVelocity (velUnit, velType);
   Vector<Double> frequency;
   if (!sc.velocityToFrequency(frequency, velocity)) {
-    *_log << "Conversion to frequency failed because "
-	    << sc.errorMessage() << endl;
+    *_log << LogIO::SEVERE
+	  << "Conversion to frequency failed: "
+	  << sc.errorMessage() << endl
+	  << "Restfrequency is: " << sc.restFrequency() << " Hz"
+	  << LogIO::POST;
   }
   frequency.tovector(rstat);
   return rstat;
@@ -3403,7 +3410,8 @@ coordsys::quantumToRecord (LogIO& os, const Quantum<Double>& value) const
   Record rec;
   QuantumHolder h(value);
   String error;
-  if (!h.toRecord(error, rec)) os << error << LogIO::EXCEPTION;   return rec;
+  if (!h.toRecord(error, rec)) os << error << LogIO::EXCEPTION;   
+  return rec;
 }
 
 Record coordsys::worldVectorToMeasures(const Vector<Double>& world,
