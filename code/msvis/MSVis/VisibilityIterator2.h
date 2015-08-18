@@ -1083,7 +1083,7 @@ protected:
 
   Bool newSpectralWindow() const;
 
-  static String getAipsRcBase () { return "VisibilityIterator2.async";}
+  static String getAipsRcBase () { return "VisibilityIterator2";}
 
 //     +-------------------------------+
 //     |                               |

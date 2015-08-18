@@ -2223,9 +2223,9 @@ VisibilityIteratorImpl2::setTileCache ()
         return;
     }
 
-//    if (autoTileCacheSizing_p){
-//        return; // take the default behavior
-//    }
+    if (autoTileCacheSizing_p){
+        return; // take the default behavior
+    }
 
     const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
 
