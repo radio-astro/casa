@@ -151,7 +151,6 @@ die "override rpm directory ($override_rpmdir) does not exist..." if $override_r
 			    "boost-wave",
 			    "boost-devel",
 			    "boost-program-options",
-			    "libgfortran",
 			    "compat-libf2c-34",
 			    "tcl",
 			    "tk",
@@ -208,7 +207,6 @@ die "override rpm directory ($override_rpmdir) does not exist..." if $override_r
 			    "readline",
 			    "libtermcap",
 			    "libtermcap-devel",
-			    "libgfortran",
 			    "tcl",
 			    "tk",
 			    "xorg-x11-server-Xvfb",
@@ -232,6 +230,8 @@ die "override rpm directory ($override_rpmdir) does not exist..." if $override_r
                             "casa01-openmpi",
                             "numactl",
 			    "libsakura",
+			    "libgfortran",
+			    "libgfortran44",
 			    ]
  );
 
@@ -830,13 +830,15 @@ if ( -l "lib/tcl8.4" ) {
 #       system( "ln -s lib64 lib" );
 #   }
 #}
-mkpath "bin" or die "could not make directory";
-chdir "bin" or die "could not cd to 'bin'";
-foreach $script ( @wrappers ) {
-    system( "ln -s ../$script" );
-}
-system( "ln -s ../casapyinfo" );
-chdir "..";
+
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+###   generate readme
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+$readme = readme( );
+open( NEW, "> README" );
+print NEW $readme;
+close( NEW );
+
 
 ##
 ## retrieve version of data repository which can be updated with SVN
@@ -1033,7 +1035,6 @@ exec \$installpath/lib/casa/bin/buildmytasks "\$@"
 EOF
 close(BUILDTASKS);
 system("chmod 755 buildmytasks");
-system("cd bin && ln -s ../buildmytasks");
 
 $here = `pwd`;
 system( "find . -type f -exec chmod a+r \{\} \\;" );
@@ -1093,6 +1094,44 @@ system( "rm -rf userdistro.$$" );
 print "\n$dumpdir/$basename$tag-$version$release$bit.tar.gz\n";
 
 print "userdistro ran to completion.\n";
+
+sub readme {
+    my $result = <<'__README__';
+CASA Linux Distribution
+---------------------------------------------------------------------------
+To setup your environment to use CASA, add the root directory of the
+unpacked CASA distribution to your PATH environment variable. For
+example, if you unpacked the 4.4.0 casa distribution:
+
+    tar xf casa-release-4.4.0-el6.tar.gz
+
+you could setup your environment to use CASA in bash like:
+
+    cd casa-release-4.4.0-el6
+    PATH=`pwd`:$PATH
+
+or if you use tcsh, you could setup your environment like:
+
+    cd casa-release-4.4.0-el6
+    setenv PATH `pwd`:$PATH
+
+You can use the casa-config script for extra information about this
+distribution and for configuration. For example, to find the version
+number of this distribution:
+
+    casa-config --version
+
+or to install a package into this CASA distribution:
+
+    casa-config --exec python setup.py
+
+If you would like more information about CASA, please visit:
+
+    http://casa.nrao.edu/
+
+__README__
+    return $result;
+}
 
 sub create_symlinks {
     my $result = <<'__CREATE_SYMLINKS_EOF__';
@@ -1161,7 +1200,9 @@ if [ -n "$DISPLAY" ] && [ "$INTERACTIVE" = "yes" ] && command -v xterm >/dev/nul
     XTERM="-xterm 0"
 fi
 
-exec -a casa $ROOT/bin/mpirun $XTERM -x OMP_NUM_THREADS -x CASAPATH --prefix $ROOT "$@"
+EXPCP=${CASAPATH:+"-x CASAPATH"}
+
+exec -a casa $ROOT/bin/mpirun $XTERM -x OMP_NUM_THREADS -x PATH -x LD_LIBRARY_PATH $EXPCP --prefix $ROOT "$@"
 __CASA_MPI_EOF__
     return $result;
 }

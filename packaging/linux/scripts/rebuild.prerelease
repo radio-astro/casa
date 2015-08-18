@@ -139,16 +139,16 @@ if ( ! $rhver ) {
         } elsif ( $rhver =~ m/^Scientific Linux SL release 4.*/ ) {
             $rhver = "el4";
         } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
-	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5_r$version_string.spec";
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5.spec";
             $rhver = "el5";
         } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
-	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5_r$version_string.spec";
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_el5.spec";
             $rhver = "el5";
         } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
-	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_r$version_string.spec";
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa.spec";
             $rhver = "el6";
         } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
-	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa_r$version_string.spec";
+	    $spec_file = "/opt/users/rpmbuild/casa/prerelease/SPECS/casa.spec";
             $rhver = "el6";
         } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
             die "unknown enterprise version: $rhver";
