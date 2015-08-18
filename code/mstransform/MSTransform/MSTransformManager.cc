@@ -7969,6 +7969,9 @@ void MSTransformManager::smoothFourierFloat(Int,
     // execute convolution
     Convolver<Float> *convolver = getConvolver(numChan);
     convolver->linearConv(outputDataStripe, inputDataStripe);
+
+    // copy input flags
+    outputFlagStripe = inputFlagStripe;
 }
 
 // -----------------------------------------------------------------------
