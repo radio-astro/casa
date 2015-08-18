@@ -1,0 +1,13 @@
+--- code/xmlcasa/xml/conversions.xml.orig	2007-04-30 15:05:50.000000000 -0400
++++ code/xmlcasa/xml/conversions.xml	2007-04-30 15:06:23.000000000 -0400
+@@ -1,8 +1,8 @@
+ <setup>
+ 
+-    <!-- this enables output of the defaults & documentation to dbxml
++    <!-- this enables output of the defaults & documentation to dbxml -->
+         <output type="defaults" />
+-    -->
++    <!-- -->
+     <macro name="USING_NUMPY_ARRAYS" value="1" />
+     <substitute  interface="casatable" as="table" in="table" />
+     <substitute  interface="casasdtable" as="sdtable" in="sdtable" />

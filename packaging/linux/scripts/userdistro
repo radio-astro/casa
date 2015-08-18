@@ -1,0 +1,1340 @@
+#!/usr/bin/perl
+use File::Basename;
+use File::Find;
+use File::Path;
+use List::Util 'first';
+use Cwd;
+
+$basename='casa';
+
+$tag = '';
+$lib = '';
+$bit = '';
+$release = '';
+$dumpdir = '';
+$scratchdir = '';
+
+$wrap_binary_script="/opt/users/rpmbuild/casa/prerelease/scripts/wrapbin";
+$per_binary_wrapper='/tmp/userdistro.wrapbin.wrapper';
+
+##
+## set $arch
+##
+$arch_line = `uname -m`;
+if ( $arch_line =~ m/x86_64/ ) {
+    $arch = "x86_64";
+####everything is 64bit now
+#   $bit = '-64b';
+    $lib = '64';
+} else {
+    $arch = "i386";
+}
+
+$rhver = "";
+
+if ( ! $rhver ) {
+
+    if ( -f "/etc/SuSE-release" ) {
+
+        $rhver = "suse";
+
+    } elsif ( -f "/etc/redhat-release" ) {
+
+        open( IN, "</etc/redhat-release" );
+        $rhver = <IN>;
+        close( IN );
+        if ( $rhver =~ m/^Red Hat Enterprise.*release 5/ ) {
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 5.*/ ) {
+            $rhver = "el5";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise.*release 6/ ) {
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Scientific Linux SL release 6.*/ ) {
+            $rhver = "el6";
+        } elsif ( $rhver =~ m/^Red Hat Enterprise/ ) {
+            die "unknown enterprise version: $rhver";
+        } elsif ( $rhver =~ m/^Red Hat Linux release ([0-9.]+)/ ) {
+            die "we no longer support: $rhver";
+        } elsif ( $rhver =~ m/^Mandrake Linux/  ) {
+            die "we don't yet support mandrake";
+        } else {
+            die "cannot understand version string: $rhver";
+        }
+
+    } else {
+
+        die "we're not in linux land";
+
+    }
+}
+
+die "cant build on $rhver" unless $rhver eq "el5" || $rhver eq "el6";
+
+%rpmdir = ( 'el5' => "/usr/src/rpmbuild/apache/content/casa/repo/el5/$arch",
+	    'el6' => "/usr/src/rpmbuild/apache/content/casa/repo/el6/$arch" );
+%pyversion = ( 'el5' => '2.7', 'el6' => '2.7' );
+
+$rpmdir = $rpmdir{$rhver};
+$override_rpmdir = '';
+while ($_ = @ARGV[0], (/^--/)) {
+    shift(@ARGV);
+    last if /^--$/;
+    /^--tag$/i && ($tag = '-' . shift(@ARGV), next);
+    /^--dir$/i && ($dumpdir = shift(@ARGV), next);
+    /^--scratch$/i && ($scratchdir = shift(@ARGV), next);
+    /^--repo$/i && ($rpmdir = shift(@ARGV), next);
+    /^--override-repo$/i && ($override_rpmdir = shift(@ARGV), next);
+    /^--rpmdir$/i && ($rpmdir = shift(@ARGV), next);
+    if ( /^--release$/i ) {
+	my $t = shift(@ARGV);
+	unless( $t =~ m|^\d+$| ) { die "bad argument for --release: $t" }
+	$release = "-$t";
+	next;
+    }
+    die "unknown option: $_\n";
+}
+
+die "scratch directory ($scratchdir) is not a directory..." if $scratchdir && ! -d $scratchdir;
+$scratchdir = "/tmp" unless $scratchdir;
+
+die "output directory ($dumpdir) is not a directory..." if $dumpdir && ! -d $dumpdir;
+$dumpdir = "$scratchdir" unless $dumpdir;
+
+die "rpm directory ($rpmdir) does not exist..." unless -d $rpmdir;
+die "override rpm directory ($override_rpmdir) does not exist..." if $override_rpmdir && ! -d $override_rpmdir;
+
+%versionkey = ( 'el6' => "casa$tag", 'el5' => "casa$tag"  );
+%constituent = ( 'el6' => [ "casa$tag",
+			    "casa$tag-bin",
+			    "casa$tag-shared",
+			    "casa$tag-devel",
+			    "casa01-python-devel",
+			    "casa01-python",			# Python.h
+			    "xerces-c28-libs",
+#			    "aatm",
+			    "wcslib",
+			    "wcslib-devel",
+			    "cfitsio",
+			    "rpfits",
+			    "casa01-qt-devel",
+			    "casa01-qt",
+			    "casa01-qt-sqlite",
+			    "casa01-qt-x11",
+			    "casa01-phonon-backend-gstreamer",
+			    "casa01-qwt",
+			    "casa01-qwt-devel",
+			    "blas",
+			    "lapack",
+			    "casa01-dbus-cpp",
+			    "casa01-dbus-glib",
+			    "casa01-dbus-cpp-devel",
+			    "casa01-dbus",
+			    "casa01-dbus-libs",
+			    "casa01-dbus-devel",
+                            "pgplot",
+			    "xorg-x11-server-Xvfb",
+                            "gsl",
+                            "fftw",
+			    "libgfortran",
+			    "boost-thread",
+			    "boost-filesystem",
+			    "boost-test",
+			    "boost-iostreams",
+			    "boost-system",
+			    "boost",
+			    "boost-graph",
+			    "boost-regex",
+			    "boost-python",
+			    "boost-signals",
+			    "boost-date-time",
+			    "boost-serialization",
+			    "boost-wave",
+			    "boost-devel",
+			    "boost-program-options",
+			    "libgfortran",
+			    "compat-libf2c-34",
+			    "tcl",
+			    "tk",
+			    "libicu",
+			    "libtiff",
+			    "python-libs",
+#			    "tkinter",
+                            "ncurses-libs",
+                            "casa01-mpi4py",
+                            "casa01-openmpi",
+                            "numactl",
+			    "libsakura",
+                          ],
+                 'el5' => [ "casa$tag",
+			    "casa$tag-bin",
+			    "casa$tag-shared",
+			    "casa$tag-devel",
+			    "casa01-python-devel",
+			    "casa01-python",			# Python.h
+			    "antlr-c++-shared",
+			    "casa01-boost-thread",
+			    "casa01-boost-filesystem",
+			    "casa01-boost-test",
+			    "casa01-boost-iostreams",
+			    "casa01-boost-system",
+			    "casa01-boost",
+			    "casa01-boost-graph",
+			    "casa01-boost-regex",
+			    "casa01-boost-python",
+			    "casa01-boost-signals",
+			    "casa01-boost-date-time",
+			    "casa01-boost-serialization",
+			    "casa01-boost-wave",
+			    "casa01-boost-devel",
+			    "casa01-boost-program-options",
+			    "xerces-c28-libs",
+#			    "aatm",
+			    "wcslib",
+			    "wcslib-devel",
+			    "fftw3",
+			    "cfitsio",
+			    "rpfits",
+			    "nas",
+			    "casa01-qt-devel",
+			    "casa01-qt",
+			    "casa01-qt-sqlite",
+			    "casa01-qt-x11",
+			    "casa01-phonon-backend-gstreamer",
+			    "casa01-qwt",
+			    "casa01-qwt-devel",
+			    "tix",
+			    "blas",
+			    "lapack",
+			    "readline",
+			    "libtermcap",
+			    "libtermcap-devel",
+			    "libgfortran",
+			    "tcl",
+			    "tk",
+			    "xorg-x11-server-Xvfb",
+			    "libpng",
+			    "casa01-dbus-cpp",
+			    "casa01-dbus-glib",
+			    "casa01-dbus-cpp-devel",
+			    "casa01-dbus",
+			    "casa01-dbus-libs",
+			    "casa01-dbus-devel",
+			    "libXau",
+			    "libcap",
+			    "libxslt",
+                            "ncurses",
+                            "ncurses-devel",
+                            "pgplot",
+                            "libxml2",
+                            "gsl",
+                            "libicu",
+                            "casa01-mpi4py",
+                            "casa01-openmpi",
+                            "numactl",
+			    "libsakura",
+			    ]
+ );
+
+
+#
+# Before we can set the CASA libraries to preload, we have to find the CASA library version from
+# the contents of the containing library.
+$find_lib_version = sub { if ( -f $_ && m|^$basename$tag-shared-.*\.rpm$| ) {
+                              open( my $content, "rpm -qlp $_ 2>&1 |" );
+			      foreach my $f ( <$content> ) { 
+				  $f =~ m|libstdcasa\.so\.(\d+\.\d+\.\d+)$| && ( $casa_library_version = $1, last );
+			      }
+			      close( $content );
+			  } };
+find( { wanted => $find_lib_version, follow => 1 }, $rpmdir );
+find( { wanted => $find_lib_version, follow => 1 }, $override_rpmdir ) if $override_rpmdir;
+die "could not find library version number" unless defined $casa_library_version;
+
+%preload = ( 'el6' => [ "libpython$pyversion{'el6'}.so", 'libgomp.so.1', 'libQtCore.so.4.8.5', 'libQtGui.so.4.8.5', 
+                        'libQtSvg.so.4.8.5', 'libQtXml.so.4.8.5', 'libQtDBus.so.4.8.5',
+                        'libcasa_casa.so', 'libcasa_components.so', 'libcasa_coordinates.so', 
+                        'libcasa_derivedmscal.so', 'libcasa_fits.so', 'libcasa_images.so', 
+                        'libcasa_lattices.so', 'libcasa_measures.so', 'libcasa_mirlib.so', 
+                        'libcasa_ms.so', 'libcasa_msfits.so', 'libcasa_scimath.so', 
+                        'libcasa_scimath_f.so', 'libcasa_tables.so', 
+                        'libcfitsio.so.1', #'libboost_python-mt.so.5', 'libfftw3_threads.so.3', 
+                        #'libfftw3f_threads.so.3', 'libfftw3f.so.3', 'libfftw3.so.3', 'libxml2.so.2',
+			'libcui18.n.so.42', 'libicuuc.so.42', 
+			"libair_casawvr.so.$casa_library_version", "libguitools.so.$casa_library_version", "libalma.so.$casa_library_version",
+			"libimageanalysis.so.$casa_library_version", "libasdmstman.so.$casa_library_version", "libmiriad.so.$casa_library_version",
+			"libcalanalysis.so.$casa_library_version", "libmstransform.so.$casa_library_version", "libcasadbus.so.$casa_library_version",
+			"libnrao.so.$casa_library_version", "libcasaqt.so.$casa_library_version", "libplotms.so.$casa_library_version",
+			"libcomponents.so.$casa_library_version", "libspectrallines.so.$casa_library_version", "libdish.so.$casa_library_version",
+			"libstdcasa.so.$casa_library_version", "libdisplay.so.$casa_library_version", "libsynthesis.so.$casa_library_version",
+			"libflagging.so.$casa_library_version", "libtools.so.$casa_library_version", "libgraphics.so.$casa_library_version",
+			'libqwt.so.5.2', "libasap.so.$casa_library_version", "libpyrap.so.$casa_library_version", "libatnf.so.$casa_library_version",
+                        "python2.7/asap/_asap.so.$casa_library_version"
+                      ],
+             'el5' => [ "libpython$pyversion{'el5'}.so", 'libQtCore.so.4.8.5', 'libQtGui.so.4.8.5', 
+                        'libQtSvg.so.4.8.5', 'libQtXml.so.4.8.5', 'libQtDBus.so.4.8.5',
+                        'libcasa_casa.so', 'libcasa_components.so', 'libcasa_coordinates.so', 
+                        'libcasa_derivedmscal.so', 'libcasa_fits.so', 'libcasa_images.so', 
+                        'libcasa_lattices.so', 'libcasa_measures.so', 'libcasa_mirlib.so', 
+                        'libcasa_ms.so', 'libcasa_msfits.so', 'libcasa_scimath.so', 
+                        'libcasa_scimath_f.so', 'libcasa_tables.so', 
+                        'libcfitsio.so.0', 'libboost_python-mt.so.5', 'libfftw3_threads.so.3', 
+                        'libfftw3f_threads.so.3', 'libfftw3f.so.3', 'libfftw3.so.3', 'libxml2.so.2',
+			"libair_casawvr.so.$casa_library_version", "libguitools.so.$casa_library_version", "libalma.so.$casa_library_version",
+			"libimageanalysis.so.$casa_library_version", "libasdmstman.so.$casa_library_version", "libmiriad.so.$casa_library_version",
+			"libcalanalysis.so.$casa_library_version", "libmstransform.so.$casa_library_version", "libcasadbus.so.$casa_library_version",
+			"libnrao.so.$casa_library_version", "libcasaqt.so.$casa_library_version", "libplotms.so.$casa_library_version",
+			"libcomponents.so.$casa_library_version", "libspectrallines.so.$casa_library_version", "libdish.so.$casa_library_version",
+			"libstdcasa.so.$casa_library_version", "libdisplay.so.$casa_library_version", "libsynthesis.so.$casa_library_version",
+			"libflagging.so.$casa_library_version", "libtools.so.$casa_library_version", "libgraphics.so.$casa_library_version",
+			'libqwt.so.5.2', "libasap.so.$casa_library_version", "libpyrap.so.$casa_library_version", "libatnf.so.$casa_library_version",
+                        "python2.7/asap/_asap.so.$casa_library_version"
+                      ],
+	   );
+
+%extra_script = ( );
+
+#$extra_script{'casapy'} = 'watchdog( ) {
+#    ppid=$1
+#    while true; do
+#	if ! kill -s 0 $ppid > /dev/null 2>&1; then
+#	    break
+#	fi
+#	sleep 15
+#    done
+#    kill -s TERM -- -$ppid
+#    sleep 15
+#    kill -s KILL -- -$ppid
+#}
+#
+#
+#watchdog $$ &
+#';
+
+
+%mask_python_scripts = ( 'ipengine' => "lib/casa/bin/ipengine",
+			 'ipcontroller' => "lib/casa/bin/ipcontroller" );
+@wrappers = ( 'casa', 'casapy', 'casalogger', 'casaviewer', 'casabrowser', 'casafeather', 'asdm2MS', 'bdflags2MS', 'casaplotms' );
+
+sub move_files {
+    my $fromvec = shift(@_);
+    my $tovec = shift(@_);
+    while ( scalar(@$fromvec) > 0 && scalar(@$tovec) > 0 ) {
+	my $from = shift(@$fromvec);
+	my $to = shift(@$tovec);
+	my $dir = dirname($to);
+
+	die "rogue destination path: $dir" unless $dir =~ m@^$scratchdir/userdistro.$$@ || $dir =~ m@^[^/.]@;
+
+	if ( ! -e $dir ) {
+	    die "could not create $dir" unless mkpath $dir;
+	}
+
+	die "failed to move:\t$from\nto\t$to ($!)" unless rename($from,$to);
+    }
+}
+
+$constituents = $constituent{$rhver};
+%rpms = ( );
+$version = "";
+$find_rpms = sub {  if ( -f && m/\.rpm$/ && ! m/\.src\.rpm$/ ) {
+                        open( my $ARCH, "/bin/rpm -qp --qf \"%{ARCH}\" $_ 2> /dev/null |" );
+                        my $rpm_arch = <$ARCH>;
+                        close($ARCH);
+                        if ( $rpm_arch eq $arch ) {
+                            open( my $NAME, "/bin/rpm -qp --qf \"%{NAME}\" $_ 2> /dev/null |" );
+                            $name = <$NAME>;
+                            close($NAME);
+			    my $cwd = getcwd( );
+                            $rpms{$name} = "$cwd/$_";
+                            print ".";
+                            if ( $name eq $versionkey{$rhver} ) {
+                                open( my $VERSION, "/bin/rpm -qp --qf \"%{VERSION}-%{RELEASE}\" $_ 2> /dev/null |" );
+                                $version = <$VERSION>;
+                                close($VERSION);
+                            }
+                        }
+                    } };
+
+##
+## rpm just can't be kept from writing stuff to stderr...
+## even the redirection below was ineffective...
+##
+close(STDERR);
+find( { wanted => $find_rpms, follow => 1 }, $rpmdir );
+find( { wanted => $find_rpms, follow => 1 }, $override_rpmdir ) if $override_rpmdir;
+
+
+$version =~ s/\.[^.]+$//;
+### strip of rpm revision
+$version =~ s|-\d+$||;
+
+$constituents = $constituent{$rhver};
+
+mkpath "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit";
+chdir "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit";
+system( "/bin/rm -rf *" );
+
+foreach $rpm ( @$constituents ) {
+    print "_";
+    print "*";
+    print "$rpm";
+    print "*";
+    print "_";
+    die "did not find rpm matching $rpm" unless exists $rpms{$rpm};
+    open( EXTRACT, "(rpm2cpio $rpms{$rpm} | cpio -id) 2>&1 1>/dev/null |" );
+    while ( <EXTRACT> ) {
+	if ( m|argument is not an RPM package| ) {
+	    print "\n\nfailure to extract $rpm\n";
+	    exit 1;
+	}
+    }
+    close( EXTRACT );
+}
+
+open STDERR, ">>&STDOUT" or die "Can't redirect STDERR: $!";
+
+##
+## rename qcasabrowser
+##
+sub rename_qcasabrowser {
+    if ( ! -d $_ && $_ eq "qcasabrowser" ) {
+	if ( -e "casabrowser" ) {
+	    system( "rm -rf casabrowser" );
+	}
+	rename( "qcasabrowser", "casabrowser" );
+    }
+}
+find( { wanted => \&rename_qcasabrowser }, "." );
+
+if ( -e "lib" ) {
+    if ( -d "lib" ) {
+	if ( ! -d "usr/lib" ) { mkpath "usr/lib"; }
+	system( "mv lib/* usr/lib" );
+    }
+    system("rm -rf lib");
+}
+
+if ( -e "lib64" ) {
+    if ( -d "lib64" ) {
+	if ( ! -d "usr/lib64" ) { mkpath "usr/lib64"; }
+	system( "mv lib64/* usr/lib64" );
+    }
+    system("rm -rf lib64");
+}
+
+system( "mv usr/* . && rmdir usr" );
+system( "mv lib$lib libsource" );
+
+mkpath "lib/casa";
+###
+### fix by including CASAROOT/etc in the casapy RPM...
+###
+mkpath "etc/dbus/session.d";
+system( "svn export -q https://svn.cv.nrao.edu/svn/casa/trunk/code/casadbus/etc/casa.conf etc/dbus/casa.conf" );
+###
+
+@from = ();
+@to = ();
+sub find_libs {
+    if ( -f $_ || -l $_ ) {
+	if ( m/\.tar\.gz$/ || m/casainit/ || m|\.pc$| ){
+	    return;
+	}
+	my $newdir = $File::Find::dir;
+	$newdir =~ s/libsource/lib/;
+	push( @from, "$File::Find::dir/$_" );
+	if ( $File::Find::dir =~ m@/include/casapy/@ ) {
+	    $newdir =~ s@.*?/include/casapy/@include/casa/@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/share/(openmpi|vampirtrace)@ ) {
+	    push( @to, "lib/mpi/share/$1/$_" );
+	} elsif ( m@^(mpi.mod|(?:libnuma|libo?mpi.*?|libompitrace|libopen-(?:pal|rte|trace-format)|libotfaux|libvt(?:-.*?)?)\.(?:so|la).*)@ ) {
+	    push( @to, "lib/mpi/lib/$1" );
+	} elsif ( $File::Find::dir =~ m@/numpy/core/include@ ||
+		  $File::Find::dir =~ m@/numpy/core/lib@ ) {
+	    $newdir =~ s@.*?/python@lib/python@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/include@ && $File::Find::dir !~ m@/numpy@ ) {
+	    if ( $File::Find::dir =~ m@/(openmpi.*|vampirtrace.*)@ ) {
+		$newdir = "lib/mpi/include/$1";
+	    } elsif ( "$File::Find::dir/$_" =~ m@/include/mpi[^/]*\.h$@ ) {
+		$newdir = "lib/mpi/include";
+	    } else {
+		$newdir =~ s@.*?/include/@include/@;
+	    }
+	    push( @to, "$newdir/$_" );
+	} elsif ( "$File::Find::dir/$_" =~ m@/etc/(dbus/|openmpi|vtsetup)@ ) {
+	    if ( $1 =~ m@dbus@ ) {
+		push( @to, "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit/etc/dbus/$_" );
+	    } else {
+		push( @to, "lib/mpi/etc/$_" );
+	    }
+	} elsif ( $File::Find::dir =~ m@/templates/@ ) {
+	    $newdir =~ s@.*?/templates/@templates/@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/python@ ) {
+	    $newdir =~ s@.*?/python@lib/python@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/bin@ ) {
+	    if ( m@^(?:vampi|ompi|mpi|opal_|opari|orte|otf|vt)@ ) {
+		$newdir = "lib/mpi/bin";
+	    } else {
+		$newdir =~ s@.*?/bin@lib/$basename/bin@;
+	    }
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/java@ ) {
+	    $newdir =~ s@.*?/java@java@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/xml@ ) {
+	    $newdir =~ s@.*?/xml@xml@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/linux$@ ) {
+	    $newdir =~ s@.*?/linux@linux@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $_ eq '.revstate' ) {
+	    push( @to, "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit/$_" );
+	} elsif ( $File::Find::dir =~ m@/pgplot@ ) {
+	    $newdir = "lib/pgplot";
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/share@ ) {
+	    $newdir =~ s@.*?/share@share@;
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/qt-\d+\.\d+\.\d+/plugins@ ) {
+	    ## qt plugins also match the next pattern
+	    push( @to, "$newdir/$_" );
+	} elsif ( m/libTix/ && -f $_ ) {
+	    if ( -l $_ ) {
+		pop( @from );
+	    } else {
+		push( @to, "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit/lib/$_" );
+	    }
+	} elsif ( m/^lib.*\.so.*/ || m/\.jnilib.*/ ) {
+	    push( @to, "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit/lib/$_" );
+	} elsif ( m/\.jar$/ ) {
+	    push( @to, "$scratchdir/userdistro.$$/$basename$tag-$version$release$bit/java/$_" );
+	} elsif ( $File::Find::dir =~ m/plugin/ ) {
+	    push( @to, "$newdir/$_" );
+	} elsif ( $File::Find::dir =~ m@/\d\d\.\d\.\d\d\d\d\-\d\d\d@ ) {
+	    push( @to, "lib/casa/$_" );
+	} else {
+	    push( @to, "$newdir/$_" );
+	}
+    }
+}
+
+find( { wanted => \&find_libs }, "libsource" );
+move_files(\@from,\@to);
+
+system( "rm -rf libsource" );
+###
+### numpy includes static libraries which may be required (libnpymath.a)
+###
+system( "rm -f `find . -type f -name 'lib*.a' | grep -v /numpy/`" );
+#rmdir( "lib/casapy/lib" );
+
+##
+## set up preload state for wrappers...
+##
+$preload="";
+$epreload="";
+$spreload="";
+if ( defined $preload{$rhver} ) {
+    my $pl = $preload{$rhver};
+    foreach $l ( @$pl ) {
+	if ( $spreload ) {
+	    $spreload .= " ";
+	}
+	### e.g. for the current test/stable distros libcasa_components.so
+	###      has been removed because it was moved from casacore to code
+	if ( -e "lib/$l" ) {
+	    $spreload .= "\$installpath/lib/$l";
+	}
+    }
+}
+if ( $spreload ) {
+    $preload .= "LD_PRELOAD=\"\$interpose $spreload\"";
+    $epreload = "export $preload";
+}
+
+##
+## patch wrapper scripts
+##
+foreach $script ( @wrappers ) {
+
+    my $extra = '';
+    if ( defined $extra_script{$script} ) {
+	$extra = $extra_script{$script};
+    }
+
+    unlink( "bin/$script$tag" );
+    open(NEW, "> $script");
+
+    ##
+    ## with casapy we need to specify the path, but not with the rest
+    ##
+    my $path_param = "";
+    my $pythonpath_reset = "";
+    if (( $script eq "casa" ) || ( $script eq "casapy" )) {
+	$pythonpath_reset = "PYTHONPATH=\$installpath/lib/python$pyversion{$rhver}:\$installpath/lib/python$pyversion{$rhver}/heuristics:\$installpath/lib/python$pyversion{$rhver}/site-packages";
+    } else {
+	$pythonpath_reset = "unset PYTHONPATH";
+    }
+    print NEW <<EOF;
+#!/bin/sh
+# Generated by scripts/userdistro.  Do not edit.
+export CASA_INSTALLATION_TYPE="tar-installation"
+
+name="\$0"
+while test -L "\$name"; do
+    newname=`readlink \$name`
+    name=`cd -P -- "\$(dirname -- "\$name")" && cd -P -- "\$(dirname -- "\$newname")" && echo \$(pwd -P)`/\$(basename -- \$name)
+done
+
+path=\$(dirname -- "\$name")
+installpath=`cd -P -- "\$path" && echo \$(pwd -P)`
+
+LD_LIBRARY_PATH=\$installpath/lib:/lib:/usr/lib:\$LD_LIBRARY_PATH
+CASAPATH="\$installpath `uname -s | tr '[:upper:]' '[:lower:]'` local `uname -n`"
+PATH="\$installpath/lib/exec:\$installpath/lib/casa/bin:/usr/bin:/usr/X11R6/bin:\$PATH"
+
+####
+#### setup matplotlib...
+####
+if [ -z "\$MATPLOTLIBRC" ]; then
+    MATPLOTLIBRC="\$installpath/share/matplotlib"
+fi
+#
+#    where fontList.cache...
+#    mixing this with different versions of python causes problems...
+#
+MPLCONFIGDIR="\$HOME/.casa/matplotlib"
+if [ ! -d "\$MPLCONFIGDIR" ]; then
+    mkdir -p "\$MPLCONFIGDIR"
+fi
+if [ ! -d "\$MPLCONFIGDIR" ]; then
+    echo "could not create matplotlib config directory: \$MPLCONFIGDIR"
+    exit 1
+fi
+
+PYTHONHOME=\$installpath
+
+#
+# _PYTHONPATH is appended to the user's path in casapy.py...
+#
+export _PYTHONPATH=\$PYTHONPATH
+$pythonpath_reset
+
+TCL_LIBRARY="\$installpath/share/tcl"
+TK_LIBRARY="\$installpath/share/tk"
+QT_PLUGIN_PATH="\$installpath/lib/qt4/plugins"
+__CASAPY_PYTHONDIR="\$installpath/lib/python$pyversion{$rhver}"
+
+PGPLOT_FONT=\$installpath/lib/pgplot/grfont.dat
+PGPLOT_DIR=\$installpath/lib/pgplot
+PGPLOT_RGB=\$installpath/lib/pgplot/rgb.txt
+export PGPLOT_FONT PGPLOT_DIR PGPLOT_RGB
+
+export QT_PLUGIN_PATH TCL_LIBRARY TK_LIBRARY CASAPATH PATH LD_LIBRARY_PATH MATPLOTLIBRC MPLCONFIGDIR PYTHONHOME __CASAPY_PYTHONDIR
+
+$extra
+
+###                                                                                                       
+### newer versions of fedora have trouble with the older libtermcap that comes with the                   
+### RHEL5 build casa binary distributions... interposing libtinfo resolves the issue...                   
+###
+### displaying task help, when remotely logged into a newer linux system from another linux
+### system causes a segv without also including the ncurses that is linked against libtinfo...
+###                                                                                                       
+interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1`
+if test -n "\$interpose"; then
+    ncurses=`find -H /lib64 -type f -name 'libncurses.so.*' 2> /dev/null | head -1`
+    interpose="\$interpose:\$ncurses:"
+fi
+
+$epreload
+
+#
+# Environment is now set up.
+exec \$installpath/lib/casa/bin/$script "\$@"
+EOF
+
+    close( NEW );
+    system("chmod 755 $script");
+}
+
+###
+### mpi startup script
+###
+$new_script = casa_mpi( );
+open( NEW, "> mpicasa" );
+print NEW $new_script;
+close( NEW );
+system("chmod 755 mpicasa");
+
+%build_values = ( );
+$collect_build_values = sub {  if ( -f $_ && $_ eq 'casa-config' ) {
+                                    open( SRC, "< $_" );
+                                    foreach ( <SRC> ) {
+                                        if ( m@^libversion="(.*)"@ ) {
+                                            $build_values{'libversion'} = $1;
+                                        } elsif ( m@^version="(.*)"@ ) {
+                                            $build_values{'version'} = $1;
+                                        } elsif ( m@^revision="(.*)"@ ) {
+                                            $build_values{'revision'} = $1;
+                                        } elsif ( m@^srcurl="(.*)"@ ) {
+                                            $build_values{'url'} = $1;
+                                        }
+                                    }
+				    close( SRC );
+                             } };
+
+find( { wanted => $collect_build_values }, '.' );
+die "could not find all the casa-config variables" unless scalar(keys %build_values) == 4;
+
+$new_script = casa_config( );
+$new_script =~ s|\@LDDPRELOAD\@|$spreload|g;
+
+$new_script =~ s|\@LIBVERSION\@|$build_values{'libversion'}|g;
+$new_script =~ s|\@VERSION\@|$build_values{'version'}|g;
+$new_script =~ s|\@REVISION\@|$build_values{'revision'}|g;
+$new_script =~ s|\@RCURL\@|$build_values{'url'}|g;
+
+open( NEW, "> casa-config" );
+print NEW $new_script;
+close( NEW );
+system("chmod 755 casa-config");
+
+mkpath "lib/exec";
+$new_script = update_data( );
+open( NEW, "> lib/exec/update-data" );
+print NEW $new_script;
+close( NEW );
+system("chmod 755 lib/exec/update-data");
+
+$new_script = create_symlinks( );
+open( NEW, "> lib/exec/create-symlinks" );
+print NEW $new_script;
+close( NEW );
+system("chmod 755 lib/exec/create-symlinks");
+
+
+##
+## replace RPM startup scripts with Scott's version of the linux startup script
+##
+chdir "lib/$basename/bin" or die "could not cd to hidden binary directory...";
+rename("casa","casa.rpm") or die "could not rename casa script from rpm...";
+rename("casapy","casapy.rpm") or die "could not rename casapy script from rpm...";
+open ( SVN, "svn export https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/linux/casa-tarball/lib/casa/bin/casa 2>&1 |" );
+while ( <SVN> ) { }
+close( SVN );
+open ( SVN, "svn export https://svn.cv.nrao.edu/svn/casa/development_tools/packaging/template/linux/casa-tarball/lib/casa/bin/casa casapy 2>&1 |" );
+while ( <SVN> ) { }
+close( SVN );
+die "failed to create hidden casa/casapy scripts..." unless -f "casa" && -f "casapy";
+chdir "../../..";
+
+##
+## we don't need most of the stuff in bin...
+##
+$top = getcwd( );
+$move_bins = sub { if ( m|xvfb|i ) { move_files( [ $_ ], [ "$top/lib/casa/bin/$_" ] ) } };
+find( { wanted => $move_bins }, "bin" );
+system( "rm -rf bin" );
+
+$shift_share = sub { if ( -d $_ && m/^(tcl|tk)\d+\.\d+$/ ) { rename( "$_", $1 ) } };
+find( { wanted => $shift_share }, "share" );
+
+
+##
+## wrap up required python scripts
+##
+mkpath "lib/exec";
+foreach $script ( keys %mask_python_scripts ) {
+    open( WRAPPER, "> lib/exec/$script" );
+    print WRAPPER <<EOF;
+#!/bin/sh
+# Generated by scripts/userdistro.  Do not edit.
+
+name="\$0"
+while test -L "\$name"; do
+    newname=`readlink \$name`
+    name=`cd -P -- "\$(dirname -- "\$name")" && cd -P -- "\$(dirname -- "\$newname")" && echo \$(pwd -P)`/\$(basename -- \$name)
+done
+
+path=\$(dirname -- "\$name")
+installpath=`cd -P -- "\$path/../.." && echo \$(pwd -P)`
+export LD_LIBRARY_PATH=\$installpath/lib:/lib$lib:/usr/lib$lib:\$LD_LIBRARY_PATH
+export LD_PRELOAD="\$installpath/lib/libpython$pyversion${$rhver}.so"
+exec \$installpath/lib/casa/bin/python \$installpath/$mask_python_scripts{$script} "\$@"
+EOF
+    close( WRAPPER );
+    system("chmod 755 lib/exec/$script");
+}
+
+chdir "lib";
+
+##
+## the libcrypto.so.4 symlink is set outside of the rpms
+##
+if ( $rhver eq "el5" ) {
+    die "can't set up hashlib" if system "cp /lib$lib/libcrypto.so.6 .";
+    die "can't set up hashlib" if system "cp /lib$lib/libssl.so.6 .";
+    die "can't copy libgomp" if system "cp /usr/lib$lib/libgomp.so.1 .";
+} elsif ( $rhver eq "el6" ) {
+    die "can't set up hashlib" if system "cp /usr/lib$lib/libcrypto.so.10 .";
+    die "can't set up hashlib" if system "cp /usr/lib$lib/libssl.so.10 .";
+    die "can't copy libgomp" if system "cp /usr/lib$lib/libgomp.so.1 .";
+} else {
+    die "unsupported hashlib";
+}
+
+if ( -e "libg2c.so.0.0.0" ) {
+    system( "ln -s libg2c.so.0.0.0 libg2c.so" );
+}
+
+
+##
+## something seems to be preloading libpython.so:
+##
+##    CASA <2>: async=T
+##    CASA <3>: vis='ic2233_1.ms'
+##    CASA <4>: listobs
+##    --------> listobs()
+##    2010-10-08 13:25:52	WARN	taskmanager::::casa	ERROR: ld.so: object '/export/data/casa/dschieb/casa/testing/casapy-test-31.0.13058-001-64b/lib64/libpython.so' from LD_PRELOAD cannot be preloaded: ignored.
+##    Use:
+##          tm.retrieve(return_value) # to retrieve the status
+##
+##      Out[4]: 0
+##
+##    CASA <5>:
+##
+if ( -e 'libpython2.7.so' ) {
+    system( "ln -f -s libpython2.7.so libpython.so" );
+} else {
+    die "Failed to find correct version of libpython (2.7)";
+}
+
+##
+## making this look like an casapy-acs
+## tree for possible reuse...
+##
+system( "ln -s python$pyversion{$rhver} python" );
+chdir ".." or die "failed to cd";
+if ( -l "lib/tcl8.4" ) {
+    unlink( "lib/tcl8.4" );
+}
+
+#if ( "$lib" eq "64" ) {
+#   system("rm -rf lib");
+#   if ( -d "lib64" ) {
+#       system( "ln -s lib64 lib" );
+#   }
+#}
+mkpath "bin" or die "could not make directory";
+chdir "bin" or die "could not cd to 'bin'";
+foreach $script ( @wrappers ) {
+    system( "ln -s ../$script" );
+}
+system( "ln -s ../casapyinfo" );
+chdir "..";
+
+##
+## retrieve version of data repository which can be updated with SVN
+##
+open( DATA, "svn co https://svn.cv.nrao.edu/svn/casa-data/distro data 2>&1 |" );
+$count = 0;
+while ( <DATA> ) { print "." if ++$cout % 5 == 0; }
+close( DATA );
+
+system( "rm -rf share/man" );
+
+##
+## write matplotlib rc file which sets the backend
+##
+mkpath "share/matplotlib";
+open( MAT, "> share/matplotlib/matplotlibrc" );
+print MAT "backend: TkAgg\n";
+#.#print MAT "numerix: numpy\n";
+close(MAT);
+
+##
+## get RPM info from old casapyinfo
+##
+$infoVERSION="";
+$infoHOST="";
+$infoSVNROOT="";
+$infoSVNVERSION="";
+$VERSIONfile=`find "lib" -type f -name VERSION`;
+$VERSIONfile =~ s/\n//g;
+$makedefsfile=`find "lib" -type f -name makedefs`;
+$makedefsfile =~ s/\n//g;
+open(INFO,"< lib/casa/bin/casapyinfo");
+while ( <INFO> ) {
+    if ( m|^VERSION=| ) {
+	$infoVERSION=$_;
+    } elsif ( m|^HOST=| ) {
+	$infoHOST=$_;
+    } elsif ( m|^SVNROOT=| ) {
+	$infoSVNROOT=$_;
+    } elsif ( m|^SVNVERSION=| ) {
+	$infoSVNVERSION=$_;
+    }
+
+}
+close(INFO);
+unlink("lib/casa/bin/casapyinfo");
+
+##
+## write out new casapyinfo
+##
+open( INFO, "> casapyinfo" );
+    print INFO <<EOF;
+#!/bin/sh
+# Generated by scripts/userdistro.  Do not edit.
+
+name="\$0"
+while test -L "\$name"; do
+    newname=`readlink \$name`
+    name=`cd -P -- "\$(dirname -- "\$name")" && cd -P -- "\$(dirname -- "\$newname")" && echo \$(pwd -P)`/\$(basename -- \$name)
+done
+
+path=\$(dirname -- "\$name")
+installpath=`cd -P -- "\$path" && echo \$(pwd -P)`
+
+$infoVERSION
+$infoSVNROOT
+$infoSVNVERSION
+$infoHOST
+
+usage() {
+    echo "casapyinfo [--help|--data|--version|--rpmversion|--environ|--makedefs]"
+    echo "    --help:        usage info"
+    echo "    --data:        location of the data repository"
+    echo "    --version:     casa version info"
+    echo "    --rpmversion:  casa version info"
+    echo "    --svnroot:     svn url for source"
+    echo "    --buildhost:   build host info"
+    echo "    --environ:     show support environment (this is automatically"
+    echo "                   set up for standard binaries)"
+    echo "    --makedefs:    dump build makedefs"
+    echo "    --exec STRING: export casa environment and then exec STRING"
+}
+
+if [ "\$#" -eq 0 ]; then
+    usage
+fi
+
+exec_str=""
+
+while [ "\$#" -gt 0 ]; do
+    case \$1 in
+	--data)
+		echo "\$installpath/data"
+		shift;
+		;;
+	--version)
+		cat "\$installpath/$VERSIONfile" | perl -pe 's|^([0-9])([0-9])\.([0-9]+).*|\$1.\$2.\$3|'
+		shift
+		;;
+	--rpmversion)
+		echo "\$VERSION"
+		shift
+		;;
+	--svnroot)
+		echo "\$SVNROOT"
+		shift
+		;;
+	--svnversion)
+		echo "\$SVNVERSION"
+		shift
+		;;
+	--buildhost)
+		echo "\$HOST"
+		shift
+		;;
+	--makedefs)
+		cat "\$installpath/$makedefsfile"
+		shift
+		;;
+	--environ)
+		echo "LD_LIBRARY_PATH=\$installpath/lib:/lib$lib:/usr/lib$lib:\\\$LD_LIBRARY_PATH"
+		echo "CASAPATH=\"\$installpath `uname -s | tr '[:upper:]' '[:lower:]'` local `uname -n`\""
+		echo "PATH=\$installpath/lib/exec:\$installpath/lib/casa/bin:/usr/bin:/usr/X11R6/bin:\\\$PATH"
+		echo "PYTHONHOME=\$installpath"
+		echo "_PYTHONPATH=\\\$PYTHONPATH"
+		echo "unset PYTHONPATH"
+		echo "TCL_LIBRARY=\$installpath/share/tcl"
+		echo "TK_LIBRARY=\$installpath/share/tk"
+		echo "QT_PLUGIN_PATH=\$installpath/lib/qt4/plugins"
+		echo "__CASAPY_PYTHONDIR=\$installpath/lib/python$pyversion{$rhver}"
+		echo "PGPLOT_FONT=\$installpath/lib/pgplot/grfont.dat"
+                echo "PGPLOT_DIR=\$installpath/lib/pgplot"
+                echo "PGPLOT_RGB=\$installpath/lib/pgplot/rgb.txt"
+                echo $preload
+		shift
+		;;
+	--exec)
+ 		shift
+		exec_str=\$1
+		shift
+		;;
+	--help)
+		usage
+		shift
+		;;
+    esac
+done
+
+if [ "\$exec_str" ]; then
+	LD_LIBRARY_PATH=\$installpath/lib:/lib:/usr/lib:\$LD_LIBRARY_PATH
+	CASAPATH="\$installpath `uname -s | tr '[:upper:]' '[:lower:]'` local `uname -n`"
+	PATH="\$installpath/lib/exec:\$installpath/lib/casa/bin:/usr/bin:/usr/X11R6/bin:\$PATH"
+	PYTHONHOME=\$installpath
+	_PYTHONPATH=\$PYTHONPATH
+	unset PYTHONPATH
+	TCL_LIBRARY="\$installpath/share/tcl"
+	TK_LIBRARY="\$installpath/share/tk"
+	QT_PLUGIN_PATH="\$installpath/lib/qt4/plugins"
+	__CASAPY_PYTHONDIR="\$installpath/lib/python$pyversion{$rhver}"
+	PGPLOT_FONT=\$installpath/lib/pgplot/grfont.dat
+        PGPLOT_DIR=\$installpath/lib/pgplot
+        PGPLOT_RGB=\$installpath/lib/pgplot/rgb.txt
+	export PGPLOT_FONT PGPLOT_DIR PGPLOT_RGB
+	export QT_PLUGIN_PATH TCL_LIBRARY TK_LIBRARY CASAPATH PATH LD_LIBRARY_PATH PYTHONHOME __CASAPY_PYTHONDIR
+	$epreload
+	exec /bin/sh -c "\$exec_str"
+fi
+EOF
+close(INFO);
+system("chmod 755 casapyinfo");
+
+##
+## write out new buildmytasts
+##
+open( BUILDTASKS, "> buildmytasks" );
+print BUILDTASKS <<EOF;
+#!/bin/sh
+# Generated by scripts/userdistro.  Do not edit.
+
+name="\$0"
+while test -L "\$name"; do
+   newname=`readlink \$name`
+   name=`cd -P -- "\$(dirname -- "\$name")" && cd -P -- "\$(dirname -- "\$newname")" && echo \$(pwd -P)`/\$(basename -- \$name)
+done
+
+path=\$(dirname -- "\$name")
+installpath=`cd -P -- "\$path" && echo \$(pwd -P)`
+
+LD_LIBRARY_PATH=\$installpath/lib:/lib$lib:/usr/lib$lib:\$LD_LIBRARY_PATH
+export CASAPATH="\$installpath `uname -s | tr '[:upper:]' '[:lower:]'` local `uname -n`"
+PATH="\$installpath/lib/exec:\$installpath/lib/casa/bin:/usr/bin:/usr/X11R6/bin:\$PATH"
+
+exec \$installpath/lib/casa/bin/buildmytasks "\$@"
+EOF
+close(BUILDTASKS);
+system("chmod 755 buildmytasks");
+system("cd bin && ln -s ../buildmytasks");
+
+$here = `pwd`;
+system( "find . -type f -exec chmod a+r \{\} \\;" );
+system( "find . -type d -exec chmod a+rx \{\} \\;" );
+##### remove broken symlinks #####
+system( "rm -f `find . -type l ! -exec test -r \{\} \\; -print`");
+
+
+####
+#### generate wrapper to use with wrapbin script...
+####
+open( WRAP, "> $per_binary_wrapper" );
+print WRAP <<EOF;
+#!/bin/sh
+# Generated by scripts/userdistro.  Do not edit.
+export CASA_INSTALLATION_TYPE="tar-installation"
+
+name="\$0"
+while test -L "\$name"; do
+    newname=`readlink \$name`
+    name=`cd -P -- "\$(dirname -- "\$name")" && cd -P -- "\$(dirname -- "\$newname")" && echo \$(pwd -P)`/\$(basename -- \$name)
+done
+
+base=\$(basename -- "\$name")
+path=\$(dirname -- "\$name")
+path=`cd -P -- "\$path" && echo \$(pwd -P)`
+
+###
+### ...RELATIVE_INSTALLPATH should be filled by wrapbin script..........
+###
+installpath=`cd -P -- "\$path/\$RELATIVE_INSTALLPATH" && echo \$(pwd -P)`
+
+###                                                                                                       
+### newer versions of fedora have trouble with the older libtermcap that comes with the                   
+### RHEL5 build casa binary distributions... interposing libtinfo resolves the issue...                   
+###
+### displaying task help, when remotely logged into a newer linux system from another linux
+### system causes a segv without also including the ncurses that is linked against libtinfo...
+###                                                                                                       
+interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1`
+if test -n "\$interpose"; then
+    ncurses=`find -H /lib64 -type f -name 'libncurses.so.*' 2> /dev/null | head -1`
+    interpose="\$interpose:\$ncurses:"
+fi
+
+$preload exec \$path/\$base.wrapped "\$@"
+EOF
+close( WRAP );
+
+system( "$wrap_binary_script $per_binary_wrapper $scratchdir/userdistro.$$/$basename$tag-$version$release$bit lib/casa" ) == 0 or die "failed to wrap binaries: $wrap_binary_script $per_binary_wrapper $scratchdir/userdistro.$$/$basename$tag-$version$release$bit lib/casa";
+unlink($per_binary_wrapper);
+
+chdir "$scratchdir/userdistro.$$";
+system( "tar -zcf $dumpdir/$basename$tag-$version$release$bit.tar.gz $basename$tag-$version$release$bit" );
+chdir "$scratchdir";
+system( "rm -rf userdistro.$$" );
+print "\n$dumpdir/$basename$tag-$version$release$bit.tar.gz\n";
+
+print "userdistro ran to completion.\n";
+
+sub create_symlinks {
+    my $result = <<'__CREATE_SYMLINKS_EOF__';
+#!/bin/bash
+echo "'!create_symlinks' is only used on OSX..."
+__CREATE_SYMLINKS_EOF__
+    return $result;
+}
+sub update_data {
+    my $result = <<'__UPDATE_DATA_EOF__';
+#!/usr/bin/perl
+use File::Basename;
+use Cwd 'abs_path';
+use File::Path;
+
+abs_path($0) =~ m|^(.*)/lib/exec/.*|;
+unless( -d $1 ) { die "could not find application contents" }
+$prefix = $1;
+
+chdir( "$prefix/data" ) or die "data resources missing: $prefix/data";
+
+open( RSYNC, "rsync -avz rsync://svn.cv.nrao.edu/casa-data . 2>&1 |" ) or die $!;
+@output = ( );
+$limit = 3;
+$msg = '...';
+foreach ( <RSYNC> ) {
+    if ( scalar(@output) < $limit ) {
+        if ( $verbose ) { print "\t$_" }
+    }
+    push( @output, $_ );
+    if ( scalar(@output) > $limit ) {
+        shift(@output);
+    }
+}
+close(RSYNC);
+if ( scalar(@output) > 0 ) { print "\t$msg\n" }
+foreach ( @output ) {
+    print "\t$_";
+}
+__UPDATE_DATA_EOF__
+    return $result;
+}
+
+sub casa_mpi {
+    my $result = <<'__CASA_MPI_EOF__';
+#!/bin/bash
+ROOT="$(readlink -e $(dirname $0))"/lib/mpi
+export LD_LIBRARY_PATH="$ROOT/lib${LD_LIBRARY_PATH:+":$LD_LIBRARY_PATH"}" 
+export OPAL_PREFIX=$ROOT 
+
+# default to 1 thread to avoid accidental oversubscription
+# can be overriden by environment
+export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}
+
+# try to figure out if we need to launch a xterm for interactivity
+INTERACTIVE="yes"
+for arg in "$@"
+do
+    if [ "$arg" = "--pipeline" ] || [ "$arg" = "-c" ]; then
+        INTERACTIVE="no"
+    fi
+done
+
+XTERM=""
+if [ -n "$DISPLAY" ] && [ "$INTERACTIVE" = "yes" ] && command -v xterm >/dev/null 2>&1; then
+    XTERM="-xterm 0"
+fi
+
+exec -a casa $ROOT/bin/mpirun $XTERM -x OMP_NUM_THREADS -x CASAPATH --prefix $ROOT "$@"
+__CASA_MPI_EOF__
+    return $result;
+}
+
+sub casa_config {
+    my $result = <<'__CASA_CONFIG_EOF__';
+#!/usr/bin/perl
+# Generated by scripts/userdistro.  Do not edit.
+use File::Basename;
+use Cwd 'abs_path';
+use File::Path;
+
+$ENV{CASA_INSTALLATION_TYPE} = 'tar-installation';
+
+$installpath = dirname abs_path($0);
+$ENV{PATH} = "$installpath/lib/exec:$installpath/lib/casa/bin:$installpath/bin:/usr/bin:/usr/X11R6/bin:$ENV{PATH}";
+
+$prefix = "$installpath";
+$lddpath="$installpath/lib:/lib64:/usr/lib64:$ENV{LD_LIBRARY_PATH}";
+$lddpreload="@LDDPRELOAD@";
+$libversion="@LIBVERSION@";
+$version="@VERSION@";
+$revision="@REVISION@";
+$srcurl="@RCURL@";
+$arch="linux";
+
+$mplrc="$installpath/share/matplotlib";
+$pythonhome="$installpath";
+$pythonpath="$installpath/lib/python2.7:$installpath/lib/python2.7/heuristics:$installpath/lib/python2.7/site-packages";
+$casapython="$installpath/lib/python2.7";
+$tcltklib="$installpath/share";
+$qtplugin="$installpath/lib/qt4/plugins";
+$pgplot="$installpath/lib/pgplot";
+
+#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#SPLIT#
+#######  code after this point is shared by both developer builds and binary
+#######  releases and should be written to support either using the variables
+#######  above...
+$HOME = $ENV{HOME};
+$os = `uname -s`;
+$exec_with_sh = 0;
+
+sub usage {
+    my $status = shift(@_);
+
+    my $msg = <<'EOF';
+Usage: casa-config [OPTION]
+
+   --help               print this message
+   --version            print CASA version information
+   --prefix             print CASA install root
+   --revision           print CASA source revision information
+   --libversion         print CASA library version number
+   --exec <command>     setup CASA environment and exec a cmd
+   --sh-exec <command>  setup CASA environment and exec a cmd with /bin/sh
+
+EOF
+    print $msg;
+    exit $status;
+}
+
+sub execute {
+    my $cmd = shift(@_);
+
+    ####
+    #### setup matplotlib...
+    ####
+    if ( ! exists $ENV{MATPLOTLIBRC} && $mplrc ) {
+        $ENV{MATPLOTLIBRC} = $mplrc;
+    }
+
+    ####
+    ####    where fontList.cache...
+    ####    mixing this with different versions of python causes problems...
+    ####
+    $ENV{MPLCONFIGDIR} = "$HOME/.casa/matplotlib";
+    if ( ! -d $ENV{MPLCONFIGDIR} ) {
+	mkpath($ENV{MPLCONFIGDIR});
+    }
+    if ( ! -d $ENV{MPLCONFIGDIR} ) {
+        print "could not create matplotlib config directory: $ENV{MPLCONFIGDIR}\n";
+        exit 1;
+    }
+
+    if ( $pythonhome ) {
+        $ENV{PYTHONHOME} = $pythonhome;
+    }
+    if ( "$pythonpath" ) {
+        my $old = (exists $ENV{PYTHONPATH} ? ":$ENV{PYTHONPATH}" : '');
+        $ENV{PYTHONPATH} = "$pythonpath:$old";
+    }
+    if ( $casapython ) {
+        $ENV{__CASAPY_PYTHONDIR} = $casapython;
+    }
+
+    if ( $tcltklib ) {
+        $ENV{TCL_LIBRARY} = "$tcltklib/tcl";
+        $ENV{TK_LIBRARY} = "$tcltklib/tk";
+    }
+    if ( $qtplugin ) {
+        $ENV{QT_PLUGIN_PATH} = $qtplugin;
+    }
+    if ( $pgplot ) {
+        $ENV{PGPLOT_FONT} = "$pgplot/grfont.dat";
+        $ENV{PGPLOT_RGB} = "$pgplot/rgb.txt";
+    }
+
+    $ENV{CASAPATH} = "$prefix $arch";
+
+    if ( $lddpath ) {
+        if ( $^O eq 'linux' ) {
+            $ENV{LD_LIBRARY_PATH} = $lddpath;
+        } elsif ( $^O eq 'darwin' ) {
+            $ENV{DYLD_LIBRARY_PATH} = $lddpath;
+        }
+    }
+
+    if ( $lddpreload ) {
+        ###
+        ### newer versions of fedora have trouble with the older libtermcap
+        ### that comes with the RHEL5 build casa binary distributions...
+        ### interposing libtinfo resolves the issue...
+        ###
+        ### displaying task help, when remotely logged into a newer linux
+        ### system from another linux system causes a segv without also
+        ### including the ncurses that is linked against libtinfo...
+        ###
+        chomp( my $interpose=`find -H /lib64 -type f -name 'libtinfo.*' 2> /dev/null | head -1` );
+        if ( $interpose ) {
+            chomp( my $ncurses = `find -H /lib64 -type f -name 'libncurses.so.*' 2> /dev/null | head -1` );
+            $interpose = "$interpose $ncurses ";
+        }
+
+        $ENV{LD_PRELOAD} = "$interpose$lddpreload";
+    }
+
+    if ( $exec_with_sh ) {
+        my $c = shift(@$cmd);
+        my @quoted = ( );
+        foreach ( <@$cmd> ) {
+            s|([)(*\s?])|\\$1|g;
+            push( @quoted, $_ );
+        }
+        exec '/bin/sh', '-c', join( ' ', $c, @quoted );
+    } else {
+        exec { $$cmd[0] } @$cmd;
+    }
+    exit(0);
+}
+
+if ( scalar(@ARGV) <= 0 ) {
+    usage 1;
+}
+
+while ( scalar(@ARGV) > 0 ) {
+    $_ = shift(@ARGV);
+    if ( m|^--help$| ) { usage 0 }
+    elsif ( m|^--version$| ) { print "$version\n" }
+    elsif ( m|^--prefix$| ) { print "$prefix\n" }
+    elsif ( m|^--revision$| ) { print "$revision\n" }
+    elsif ( m|^--libversion$| ) { print "$libversion\n" }
+    elsif ( m|^--src$| ) { print "$srcurl\n" }
+    elsif ( m|^--exec$| ) { 
+        if ( scalar(@ARGV) < 1 ) { usage 1 }
+        execute \@ARGV;
+    } elsif ( m|^--sh-exec$| ) { 
+        if ( scalar(@ARGV) < 1 ) { usage 1 }
+        $exec_with_sh = 1;
+        execute \@ARGV;
+    }
+}
+
+exit 0;
+__CASA_CONFIG_EOF__
+    return $result;
+}

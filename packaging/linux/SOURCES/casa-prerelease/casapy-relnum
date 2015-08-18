@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+
+##
+## state file is at the same location as this revision file
+##
+$path=$0;
+$name=$0;
+$path =~ s@/[^/]+$@@;
+$name =~ s@^.*/([^/]*$)@$1@;
+$distribution = shift(@ARGV);
+$version = shift(@ARGV);
+%ids = ( );
+
+##
+## set $arch...
+##
+$arch_line = `uname -m`;
+if ( $arch_line =~ m/x86_64/ ) {
+    $arch = "x86_64";
+} else {
+    $arch = "i386";
+}
+
+##
+## process argument "svn" means get subversion release
+##
+$build_type = 'release';
+$doclean = 0;
+if ( scalar(@ARGV) >= 1 ) {
+    if ( $ARGV[0] eq 'test' ) {
+	$build_type = 'test';
+    } elsif ( $ARGV[0] eq 'stable' ) {
+	$build_type = 'stable';
+    } elsif ( $ARGV[0] eq 'clean' ) {
+	$doclean = 1;
+    }
+}
+
+if ( scalar(@ARGV) >= 2 ) {
+    $id = $ARGV[1];
+} else {
+    $id = $$;
+}
+
+##
+## state file name...
+##
+if ( $build_type eq 'test' ) {
+    $state = ".$name.state.$distribution.$arch.test.$version";
+} elsif ( $build_type eq 'stable' ) {
+    $state = ".$name.state.$distribution.$arch.stable.$version";
+} else {
+    $state = ".$name.state.$distribution.$arch.$version";
+}
+
+##
+## check for a pre-existing state file
+##
+$current_release = 0;
+$current_test = 0;
+$current_stable = 0;
+if ( -e "$path/$state" ) {
+    open( STATE, "< $path/$state" );
+    while ( <STATE> ) {
+	if ( m/^release\s+(\d+)/ ) {
+	    $current_release = $1;
+	} elsif ( m/^test\s+(\d+)/ ) {
+	    $current_test = $1;
+	} elsif ( m/^stable\s+(\d+)/ ) {
+	    $current_stable = $1;
+	} elsif ( m/^id\s+(\d+)/ ) {
+	    unless ( $doclean && $1 eq $id ) {
+		$ids{$1} = 1;
+	    }
+	}
+    }
+    close( STATE );
+}
+
+##
+## bump count
+##
+unless ( $doclean ) {
+    if ( $build_type eq 'test' ) {
+	if ( ! defined $ids{$id} ) {
+	    $current_test = $current_test + 1;
+	}
+	$out = sprintf( "%03d", $current_test );
+    } elsif ( $build_type eq 'stable' ) {
+	if ( ! defined $ids{$id} ) {
+	    $current_stable = $current_stable + 1;
+	}
+	$out = sprintf( "%03d", $current_stable );
+    } else {
+	if ( ! defined $ids{$id} ) {
+	    $current_release = $current_release + 1;
+	}
+	$out = sprintf( "%03d", $current_release );
+    }
+}
+
+##
+## save state
+##
+open( STATE, "> $path/$state" );
+print STATE "test $current_test\n";
+print STATE "stable $current_stable\n";
+print STATE "release $current_release\n";
+print STATE "id $id\n";
+foreach $i ( keys %ids ) {
+    print STATE "id $i\n";
+}
+close( STATE );
+
+open(LOG, ">> /tmp/casapy-relnum.out");
+if ( $doclean ) {
+    print LOG "----------- $id -----------\n";
+} else {
+    print LOG "$id: $out\n";
+}
+close(LOG);
+
+unless ( $doclean ) {
+    print "$out\n";
+}

@@ -1,0 +1,5 @@
+make script handle the case where a file, e.g. '.revstate', is supplied
+by multiple RPMs
+--This line, and those below, will be ignored--
+
+M    casa

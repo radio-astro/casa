@@ -1,0 +1,132 @@
+#!/usr/bin/perl
+use File::Find;
+use Text::Balanced qw ( extract_bracketed );
+
+##
+## VERSION (as in replace-version currently)
+## CMakeLists.txt:
+##      set( CASA_MAJOR_VERSION 4 )
+##      set( CASA_MINOR_VERSION 3 )
+##      set( CASA_PATCH_VERSION 0 )
+## casadef.cmake
+##
+
+$version='';
+$revision='';
+$url='';
+$verbose=0;
+
+for ( $_=$ARGV[0]; 1; shift(@ARGV), $_=$ARGV[0] ) {
+    m|^ver(?:sion)?=(.+)| && ( $version = $1, next );
+    m|^rev(?:ision)?=(.+)| && ( $revision = $1, next );
+    m|^url=(.+)| && ( $url = $1, next );
+    m|^-v$| && ( $verbose = 1, next );
+    m|^-help$| && ( usage( ), exit );
+    last;
+}
+
+unless( $version ) { usage("version number required") }
+unless( $version =~ m|(\d+)\.(\d+)\.(\d+)| ) { die "bad version number: $version" }
+$major = $1; $minor = $2; $stable = $3;
+unless( $revision ) { usage("revision number required") }
+unless( $url ) { usage("subversion url required") }
+
+my $subst = sub { m|^VERSION$| && subst_version( $_ );
+                  m|^CMakeLists\.txt$| && subst_cmake( $_ );
+                  m|^casadef\.cmake$| && subst_def( $_ );
+                  m|^version.template$| && subst_stdcasa_template( $_ );
+                  m|^version2.cc$| && subst_version_cc( $_ ) };
+
+foreach $dir ( @ARGV ) {
+    unless( -d $dir ) { die "dir does not exist: $dir" }
+    find( { wanted => $subst }, $dir );
+}
+
+sub subst_cmake {
+    my $file = shift( @_ );
+    if ( $verbose ) { print "v>\tdoing cmake substitution on $File::Find::dir/$file\n" }
+    open my $in, '<', $file;
+    my @VER = map {  s|(\s*set\s*\(\s*CASA_MAJOR_VERSION\s*)\d+(\s*\))|$1$major$2|;
+                     s|(\s*set\s*\(\s*CASA_MINOR_VERSION\s*)\d+(\s*\))|$1$minor$2|;
+                     s|(\s*set\s*\(\s*CASA_PATCH_VERSION\s*)\d+(\s*\))|$1$stable$2|;
+                     s|egrep subversion_revision definitions|echo|;
+                     s|(echo "namespace\s+casa\s*{\s*extern\s+const\s+int\s+aips_patch_version\s*=)|$1$stable|;
+                     $_   } <$in>;
+    close( $in );
+    open my $out, '>', "$file";
+    print $out @VER;
+    close( $out );
+}
+
+sub subst_def {
+    my $file = shift( @_ );
+    if ( $verbose ) { print "v>\tdoing cdef substitution on $File::Find::dir/$file\n" }
+    open my $in, '<', $file;
+    local $/;
+    my $whole_file = <$in>;
+    close($in);
+    my $copy = $whole_file;
+    $copy =~ s|\n|#&&#|smg;
+
+    do {
+        $copy =~ s|^.*?execute_process\s*\(|\(|;
+        my @matches = extract_bracketed( $copy, '()' );
+        if ( $matches[0] =~ m|OUTPUT_VARIABLE\s+SVNREVISION| ) {
+            my $str = $matches[0];
+            $str =~ s|#&&#|\n|g;
+            $whole_file =~ s|execute_process\s*\Q$str\E|set( SVNREVISION $revision )|sm;
+        } elsif ( $matches[0] =~ m|OUTPUT_VARIABLE SVNURL| ) {
+            my $str = $matches[0];
+            $str =~ s|#&&#|\n|g;
+            $whole_file =~ s|execute_process\s*\Q$str\E|set( SVNURL "$url" )|sm;
+        }
+    } while ( $copy =~ m|execute_process| );
+
+    open my $out, '>', "$file";
+    print $out $whole_file;
+    close( $out );
+}
+
+
+sub subst_stdcasa_template {
+    my $file = shift( @_ );
+    if ( $verbose ) { print "v>\tdoing stdcasa template substitution on $File::Find::dir/$file\n" }
+    open my $in, '<', $file;
+    my @VER = map { s|MAJORMINOR|$major|g; s|PATCH|$minor|g; $_ } <$in>;
+    close( $in );
+    open my $out, '>', "$file";
+    print $out @VER;
+    close( $out );
+}
+
+
+sub subst_version_cc {
+    my $file = shift( @_ );
+    if ( $verbose ) { print "v>\tdoing version.cc substitution on $File::Find::dir/$file\n" }
+    open my $in, '<', $file;
+    my @VER = map { s|os\s*<<\s*major1\s*<<\s*"."\s*<<\s*major2\s*<<\s*"."\s*<<\s*minorVersion\(\)\s*;|os << majorVersion( ) << "." << minorVersion( ) << "." << patch( );|;
+                    s|os\s*<<\s*"(?:-REL)?\s*\(\s*(?:REL)?\s*r\s*"\s*<<\s*setfill\s*\(\s*'0'\s*\)\s*<<\s*setw\s*\(\s*2\s*\)\s*<<\s*patch\s*\(\s*\)\s*<<\s*"\)";|os << "-REL (r$revision)";|;
+                    $_ } <$in>;
+    close( $in );
+    open my $out, '>', "$file";
+    print $out @VER;
+    close( $out );
+}
+sub subst_version {
+    my $file = shift( @_ );
+    if ( $verbose ) { print "v>\tdoing version substitution on $File::Find::dir/$file\n" }
+    open my $in, '<', $file;
+    my @VER = map { s|.*?(\S+\s+\S+\s+\S+\s+\S+)$|$version $1|; $_ } <$in>;
+    close( $in );
+    open my $out, '>', "$file";
+    print $out @VER;
+    close( $out );
+}
+sub usage {
+    my $error = shift(@_);
+    print "usage:\n\treplace-version [-help] [-v] ver=<VERSION-NUMBER> rev=<REVISION-NUMBER> url=<SVN-URL> [file01 file02 ...]\n";
+    print "\treplace-version [-help] [-v] version=<VERSION-NUMBER> revision=<REVISION-NUMBER> url=<SVN-URL> [file01 file02 ...]\n";
+    print "\t\t-v\t\tverbose\n";
+    print "\t\t-help\t\tdisplay this message and exit\n";
+    die $error if $error;
+}
