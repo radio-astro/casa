@@ -43,10 +43,11 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
         
     plotter = sparsemap.SDSparseMapPlotter(nh=num_ra, nv=num_dec, step=1, brightnessunit='K')
     refpix_list = [0,0]
-    refval_list = grid_table[0][4:6]
+    #refval_list = grid_table[0][4:6]
+    refval_list = grid_table[num_ra * num_plane -1][4:6]
     increment_ra = grid_table[num_plane][4] - grid_table[0][4]
     increment_dec = grid_table[num_plane * num_ra][5] - grid_table[0][5]
-    increment_list = [increment_ra, increment_dec]
+    increment_list = [-increment_ra, increment_dec]
     LOG.debug('refpix_list=%s'%(refpix_list))
     LOG.debug('refval_list=%s'%(refval_list))
     LOG.debug('increment_list=%s'%(increment_list))
