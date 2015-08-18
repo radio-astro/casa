@@ -8,7 +8,7 @@ use File::Path;
 use File::Copy;
 use Cwd;
 
-$get_revision = "/usr/src/rpmbuild/packaging/scripts/svn-revision";
+$get_revision = "/opt/users/rpmbuild/casa/prerelease/scripts/svn-revision";
 $install_rpms = "/opt/users/rpmbuild/casa/prerelease/scripts/install.rpms";
 $email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
 #$distro_email_list = "ahale\@nrao.edu mrawling\@nrao.edu jkern\@nrao.edu drs\@nrao.edu";
