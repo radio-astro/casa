@@ -646,13 +646,14 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             self.close_table()
         else:
             # may be phasecenter is explicitly specified
-            pattern = '^(-?[0-9.]+([eE]?-?[0-9])?)|(-?[0-9][:h][0-9][:m][0-9.]s?)|(-?[0-9][.d][0-9][.d][0-9.]s?)$'
+            pattern = '^([\-\+]?[0-9.]+([eE]?-?[0-9])?)|([\-\+]?[0-9][:h][0-9][:m][0-9.]s?)|([\-\+]?[0-9][.d][0-9][.d][0-9.]s?)$'
             items = self.phasecenter.split()
             base_mref = 'J2000'
             for i in items:
                 s = i.strip()
                 if re.match(pattern, s) is None:
                     base_mref = s
+                    break
 
         mapextent = self.imager.mapextent(ref=base_mref, movingsource=self.ephemsrcname, 
                                           pointingcolumntouse=colname)
