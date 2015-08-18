@@ -805,6 +805,8 @@ void SingleDishMS::split_bloutputname(string str)
 
 }
 
+
+/*
 void SingleDishMS::MJDtoYMDhms(int* Y, int* M, int* D, int* h, int* m, double* s){
     double mjd = 4.64435e+09/86400.0;
     *Y = int((mjd-15078.2)/365.25);
@@ -831,7 +833,7 @@ void SingleDishMS::MJDtoYMDhms(int* Y, int* M, int* D, int* h, int* m, double* s
 
 
 }
-
+*/
 
 
 
@@ -1199,16 +1201,17 @@ LogIO os(_ORIGIN);
 
     if (write_baseline_text) {
 	    if (num_apply_true > 0) {
-
+            /*
             int year;
             int month;
             int day;
             int hour;
             int minute;
             double second;
-            
+            */
+
             //MJD(second)-> year,month,day,hour,minute,second
-            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+            //MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
 
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	        set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
@@ -1221,7 +1224,8 @@ LogIO os(_ORIGIN);
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
                             //<< "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
-                            << "Time" <<'[' << year << '/'
+                            << "Time" << '[' << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << ']' << endl;
+                    /*        << "Time" <<'[' << year << '/'
                             << setfill('0') << setw(2) << month << '/' 
                             << setfill('0') << setw(2) << day <<  '/'
                             << setfill('0') << setw(2) << hour << ':'
@@ -1229,7 +1233,7 @@ LogIO os(_ORIGIN);
                     ofs_txt.setf(ios::fixed);
                     ofs_txt << setprecision(3) << second << ']' 
                             << endl;
-                    
+                    */
                     
                     
                     ofs_txt << endl;
@@ -1349,6 +1353,9 @@ LogIO os(_ORIGIN);
                     Matrix<Float> rms_mtx2=rms_mtx;
                     //ofs_csv << rms_mtx[0][ipol] << ',';
                     ofs_csv << rms_mtx2(ipol,0) << ',';
+                    //cout << "rms_mtx2(ipol,0) " << rms_mtx2(ipol,0) << endl;
+                    //cout << "rms_mtx2(0,0) " << rms_mtx2(0,0) << endl;
+                    
                     //ofs_csv << (uInt)num_chan ;
                     ofs_csv << final_mask2[ipol] - final_mask[ipol];//------------------------------------------------------------------
                 
@@ -1739,16 +1746,17 @@ split_bloutputname(out_bloutput_name);
 
     if (write_baseline_text) {
 	    if (num_apply_true > 0) {
-
+            /*
             int year;
             int month;
             int day;
             int hour;
             int minute;
             double second;
-            
+            */
+
             //MJD(second)-> year,month,day,hour,minute,second
-            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+            //MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
 
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
 	        set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max, masklist_mtx_tmp, masklist_mtx);
@@ -1759,8 +1767,8 @@ split_bloutputname(out_bloutput_name);
                             << "Spw" << '[' << (uInt)data_spw[irow] << ']' << ' '
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
-                            //<< "Time" << '[' << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << ']' << endl;
-                            << "Time" <<'[' << year << '/'
+                            << "Time" << '[' << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << ']' << endl;
+                   /*         << "Time" <<'[' << year << '/'
                             << setfill('0') << setw(2) << month << '/' 
                             << setfill('0') << setw(2) << day <<  '/'
                             << setfill('0') << setw(2) << hour << ':'
@@ -1768,7 +1776,7 @@ split_bloutputname(out_bloutput_name);
                     ofs_txt.setf(ios::fixed);
                     ofs_txt << setprecision(3) << second << ']' 
                             << endl;
-                    
+                    */
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           
@@ -2991,16 +2999,17 @@ LogIO os(_ORIGIN);
     if (write_baseline_text) {
 	    if (num_apply_true >0) {
 
-           
+            /* 
             int year;
             int month;
             int day;
             int hour;
             int minute;
             double second;
-            
+            */
+
             //MJD(second)-> year,month,day,hour,minute,second
-            MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
+            ///MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
 
 
             Array<Float> ffpar_mtx(IPosition(2, num_pol, num_ffpar_max));
@@ -3023,7 +3032,8 @@ LogIO os(_ORIGIN);
                             << "Pol" << '[' << ipol << ']' << ' '
                             //<< "Time" <<'[' <<  times[irow] << ']' << endl;
                             //<< "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
-                            << "Time" <<'[' << year << '/'
+                            << "Time" << '[' << MVTime(times[irow]/24./3600.).string(MVTime::YMD,8) << ']' << endl;
+                   /*         << "Time" <<'[' << year << '/'
                             << setfill('0') << setw(2) << month << '/' 
                             << setfill('0') << setw(2) << day <<  '/'
                             << setfill('0') << setw(2) << hour << ':'
@@ -3031,7 +3041,8 @@ LogIO os(_ORIGIN);
                     ofs_txt.setf(ios::fixed);
                     ofs_txt << setprecision(3) << second << ']' 
                             << endl;
-                    
+                    */
+
                     ofs_txt << endl;
                     ofs_txt << "Fitter range = " << '[';
           
