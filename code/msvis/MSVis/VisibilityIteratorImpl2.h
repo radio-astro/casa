@@ -909,6 +909,7 @@ protected:
 
     };
 
+    Bool                          autoTileCacheSizing_p;
     std::map <VisBufferComponent2, BackWriter *> backWriters_p;
     mutable Cache                 cache_p; // general copllection of cached values
     const ChannelSelector *       channelSelector_p; // [use] current channel selector for this MS & Spw
