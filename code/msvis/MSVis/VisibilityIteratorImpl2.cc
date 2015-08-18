@@ -31,6 +31,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/System/AipsrcValue.h>
 #include <casa/Utilities.h>
 #include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MSColumns.h>
@@ -1056,6 +1057,8 @@ VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
     // Install default frequency selections.  This will select all
     // channels in all windows.
 
+    casacore::AipsrcValue<Bool>::find (autoTileCacheSizing_p,
+                                       VisibilityIterator2::getAipsRcBase () + ".AutoTileCacheSizing", False);
 }
 
 VisibilityIteratorImpl2::~VisibilityIteratorImpl2 ()
@@ -2220,13 +2223,9 @@ VisibilityIteratorImpl2::setTileCache ()
         return;
     }
 
-    bool modifyTileCacheSize = False;
-    if (modifyTileCacheSize){
-        cout << "==============\n==============\n-->Allowing cache size to be modified" << endl;
-    } else{
-        cout << "==============\n==============\n-->Not allowing cache size to be modified" << endl;
-        return;
-    }
+//    if (autoTileCacheSizing_p){
+//        return; // take the default behavior
+//    }
 
     const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
 
@@ -2257,20 +2256,6 @@ VisibilityIteratorImpl2::setTileCache ()
 
 
         try {
-//	    // Debug: begin
-//
-//	    ROTiledStManAccessor tacc (theMs, columns[k], True);
-//
-//	    cout << String::format ("--> %s.%s: cacheSize=%d, bucketSize=%d, tileShape=%s hypercubeShape=%s",
-//				    theMs.tableName().c_str(), columns[k].c_str(), tacc.cacheSize (startrow),
-//				    tacc.bucketSize (startrow),
-//				    tacc.tileShape (startrow).toString().c_str(),
-//				    tacc.hypercubeShape(startrow).toString().c_str())
-//		 << endl;
-//
-//	    continue; // don't change the caching
-//
-//	    // Debug: end
 
             //////////////////
             //////Temporary fix for virtual ms of multiple real ms's ...miracle of statics
@@ -2280,7 +2265,7 @@ VisibilityIteratorImpl2::setTileCache ()
             if (theMs.tableInfo ().subType () == "CONCATENATED" &&
                     msIterAtOrigin_p &&
                     ! tileCacheIsSet_p[k]) {
-#warning "*** VII2::setTileCache needs to reexamine the handling of concatenated tables."
+
                 Block<String> refTables = theMs.getPartNames (True);
 
                 for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
