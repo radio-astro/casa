@@ -180,7 +180,13 @@ def fill_with_average(table, caltable, antenna_id, atm_spw, science_spw):
                 table.putcell('SCANNO', idx, scan)
                 table.putcell('CYCLENO', idx, 0)
                 table.putcell('POLNO', idx, ipol)
-                mean_tsys = numpy.mean(tsys[ipol][start_chan:end_chan])
+                #mean_tsys = numpy.mean(tsys[ipol][start_chan:end_chan])
+                masked_tsys = numpy.ma.masked_array(tsys[ipol][start_chan:end_chan], flag[ipol][start_chan:end_chan])
+                mean_tsys = masked_tsys.mean()
+                if numpy.ma.is_masked(mean_tsys) or not numpy.isfinite(mean_tsys):
+                    LOG.error('Wrong averaged Tsys is found in antenna %s spw %s polarization %s. Flag row %s'%(antenna_id, atm_spw.id, ipol, row))
+                    flagtra[ipol,:] = 128
+                    mean_tsys = 0.0
                 tsys[ipol][:] = mean_tsys
                 table.putcell('TSYS', idx, tsys[ipol])
                 table.putcell('FLAGTRA', idx, flagtra[ipol])
