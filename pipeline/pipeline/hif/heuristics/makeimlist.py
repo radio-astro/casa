@@ -6,6 +6,7 @@ import re
 import types
 
 import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import cleanhelper
@@ -81,25 +82,10 @@ class MakeImListHeuristics(object):
         if (os.path.isfile(contfile)):
             LOG.info('Using continuum frequency ranges from %s to calculate continuum frequency selections.' % (contfile))
 
-            p=re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+            contfile_handler = contfilehandler.ContFileHandler(contfile)
 
-            cont_region_data = [item.replace('\n', '') for item in open('cont.dat', 'r').readlines() if item != '\n']
-
-            for item in cont_region_data:
-                try:
-                    if ((item.upper().find('SPW') == -1) and (item.find('~') == -1)):
-                        source_name = item
-                    elif (item.upper().find('SPW') == 0):
-                        spw_id = item[3:]
-                        self.cont_ranges[source_name][spw_id] = []
-                    else:
-                        cont_regions = p.findall(item.replace(';','').replace(' ',''))
-                        for cont_region in cont_regions:
-                            fLow = casatools.quanta.convert('%s%s' % (cont_region[0], cont_region[3]), 'GHz')['value']
-                            fHigh = casatools.quanta.convert('%s%s' % (cont_region[2], cont_region[3]), 'GHz')['value']
-                            self.cont_ranges[source_name][spw_id].append((fLow,fHigh))
-                except:
-                    pass
+            # read the ranges
+            self.cont_ranges = contfile_handler.read(skip_none = True)
 
             # merge the ranges
             for source_name in self.cont_ranges.iterkeys():
