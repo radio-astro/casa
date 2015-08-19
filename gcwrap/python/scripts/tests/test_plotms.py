@@ -131,7 +131,7 @@ class plotms_test1(test_base):
         self.assertTrue(os.path.isfile(self.plotfile_jpg))
         plotSize = os.path.getsize(self.plotfile_jpg)
         self.assertGreater(plotSize, 84000)
-        self.assertLess(plotSize, 95000)
+        self.assertLess(plotSize, 97500)
         print
     
     def test004(self):
