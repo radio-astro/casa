@@ -163,8 +163,8 @@ def boxit(imagename, regionfile, threshold, maskname, chanrange, polrange, minsi
                     # note that the toworld() calls are likely very expensive for many boxes. But then 
                     # again, the box-finding algorithm itself seems pretty inefficient, but resource
                     # constraints only permit a band aid fix at this time.
-                    blc = myia.toworld(blccoord, 'm')['measure']
-                    trc = myia.toworld(trccoord, 'm')['measure']
+                    blc = myia.toworld(blccoord, 'm', False)['measure']
+                    trc = myia.toworld(trccoord, 'm', False)['measure']
                     # RA/Dec reference frame
                     outstring = "worldbox " + blc['direction']['refer']
                     # RA blc/trc

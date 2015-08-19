@@ -4684,44 +4684,48 @@ image::topixel(const ::casac::variant& value) {
 }
 
 ::casac::record*
-image::toworld(const ::casac::variant& value, const std::string& format) {
-	::casac::record *rstat = 0;
+image::toworld(const ::casac::variant& value, const std::string& format, bool dovelocity) {
+	record *rstat = 0;
 	try {
 		_log << LogOrigin("image", __func__);
-		if (detached())
+		if (detached()) {
 			return rstat;
-
+        }
 		Vector<Double> pixel;
 		if (isunset(value)) {
 			pixel.resize(0);
-		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
+		}
+        else if (value.type() == ::casac::variant::DOUBLEVEC) {
 			pixel = value.getDoubleVec();
-		} else if (value.type() == ::casac::variant::INTVEC) {
+		}
+        else if (value.type() == ::casac::variant::INTVEC) {
 			variant vcopy = value;
 			Vector<Int> ipixel = vcopy.asIntVec();
 			Int n = ipixel.size();
 			pixel.resize(n);
-			for (int i = 0; i < n; i++)
+			for (int i = 0; i < n; i++) {
 				pixel[i] = ipixel[i];
-		} else if (value.type() == ::casac::variant::RECORD) {
-			::casac::variant localvar(value);
-			Record *tmp = toRecord(localvar.asRecord());
+            }
+		}
+        else if (value.type() == ::casac::variant::RECORD) {
+			variant localvar(value);
+			unique_ptr<Record> tmp(toRecord(localvar.asRecord()));
 			if (tmp->isDefined("numeric")) {
 				pixel = tmp->asArrayDouble("numeric");
-			} else {
+			}
+            else {
 				_log << LogIO::SEVERE << "unsupported record type for value"
 						<< LogIO::EXCEPTION;
 				return rstat;
 			}
-			delete tmp;
-		} else {
+		}
+        else {
 			_log << LogIO::SEVERE << "unsupported data type for value"
 					<< LogIO::EXCEPTION;
 			return rstat;
 		}
-		rstat = fromRecord(_image->toworld(pixel, format));
-
-	} catch (AipsError x) {
+		rstat = fromRecord(_image->toworld(pixel, format, dovelocity));
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
