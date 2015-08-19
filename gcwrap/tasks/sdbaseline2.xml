@@ -79,6 +79,10 @@ Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
     <param type="string" name="blmode">
         <description>baselining mode (\'subtract\' or \'apply\')</description>
         <value type="string">subtract</value>
+            <allowed kind="enum">
+                    <value>subtract</value>
+                    <value>apply</value>
+           </allowed>
     </param>
 
     <param type="any" name="blparam" subparam="true">
@@ -120,6 +124,7 @@ Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
                 <equals value="subtract">
                     <default param="blparam"><value type="dict">{}</value></default>
                 </equals>
+                <equals value="apply"/>
             </when>
     </constraints>
 

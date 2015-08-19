@@ -25,18 +25,23 @@ class sdbaseline2_worker(sdutil.sdtask_template):
 
         if len(self.row.strip()) > 0:
             self.rowlist = sorg.parse_idx_selection('row', self.row)
-        
+
         sel = self.get_selector(sorg)
-        sorg.set_selection(sel)
-        del sel
 
         # Copy scantable when using disk storage not to modify
         # the original table.
         if is_scantable(self.infile) and self.is_disk_storage:
-            self.scan = sorg.copy()
+            if self.keeprows:
+                # copy first to keep rows
+                self.scan = sorg.copy()
+                self.scan.set_selection(sel)
+            else:
+                sorg.set_selection(sel)
+                self.scan = sorg.copy()
         else:
+            sorg.set_selection(sel)
             self.scan = sorg
-        del sorg
+        del sel, sorg
 
     def parameter_check(self):
         if self.blmode.lower().strip() not in ['subtract', 'apply']:
@@ -44,6 +49,9 @@ class sdbaseline2_worker(sdutil.sdtask_template):
             raise Exception(msg)
         if not self.overwrite and self.blmode.lower()=='subtract' and os.path.exists(self.bltable):
             msg = "Output baseline table '" + self.bltable + "' exists."
+            raise Exception(msg)
+        if self.blmode.lower()=='apply' and not os.path.exists(self.bltable):
+            msg = "Baseline table '" + self.bltable + "' does not exists."
             raise Exception(msg)
     
     def execute(self):
