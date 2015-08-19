@@ -4,7 +4,7 @@ import pipeline.h.cli.utils as utils
 
 def hsd_baseline(fitfunc=None, fitorder=None,
                  linewindow=None, edge=None, broadline=None, 
-                 pipelinemode=None, clusteringalgorithm=None,
+                 clusteringalgorithm=None,pipelinemode=None, 
                  infiles=None, spw=None, pol=None,
                  dryrun=None, acceptresults=None):
 

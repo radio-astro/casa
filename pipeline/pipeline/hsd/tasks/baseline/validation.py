@@ -25,7 +25,7 @@ def ValidationFactory(pattern):
 class ValidateLineInputs(common.SingleDishInputs):
     def __init__(self, context, grid_table, detect_signal, spwid, index_list, iteration, 
                  grid_ra, grid_dec,
-                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, broad_component=None):
+                 window=None, edge=None, nsigma=None, xorder=None, yorder=None, broad_component=None, clusteringalgorithm=None):
         self._init_properties(vars())
         
     @property
@@ -75,6 +75,17 @@ class ValidateLineInputs(common.SingleDishInputs):
     @broad_component.setter
     def broad_component(self, value):
         self._broad_component = value
+        
+    @property
+    def clusteringalgorithm(self):
+        if hasattr(self, '_clusteringalgorithm') and self._clusteringalgorithm is not None:
+            return self._clusteringalgorithm
+        else:
+            return rules.ClusterRule['ClusterAlgorithm']
+        
+    @clusteringalgorithm.setter
+    def clusteringalgorithm(self, value):
+        self._clusteringalgorithm = value
 
 class ValidateLineResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -202,7 +213,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
     Questionable = rules.ClusterRule['ThresholdQuestionable']
     MinFWHM = rules.LineFinderRule['MinFWHM']
     #MaxFWHM = rules.LineFinderRule['MaxFWHM']
-    Clustering_Algorithm = rules.ClusterRule['ClusterAlgorithm']
+    #Clustering_Algorithm = rules.ClusterRule['ClusterAlgorithm']
     
     @property
     def MaxFWHM(self):
@@ -363,7 +374,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         LOG.info('K-mean Clustering Analaysis Start')
 
         # Bestlines: [[center, width, T/F],[],,,[]]
-        if self.Clustering_Algorithm == 'kmean':
+        clustering_algorithm = self.inputs.clusteringalgorithm
+        LOG.debug('clustering algorithm is \'%s\''%(clustering_algorithm))
+        if clustering_algorithm == 'kmean':
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_kmean(Region, Region2)
         else:
             (Ncluster, Bestlines, BestCategory, Region) = self.clustering_hierarchy(Region, Region2, rules.ClusterRule['ThresholdHierarchy'])

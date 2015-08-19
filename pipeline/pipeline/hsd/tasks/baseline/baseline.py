@@ -107,6 +107,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         broadline = False if inputs.broadline is None else inputs.broadline
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
+        clusteringalgorithm = inputs.clusteringalgorithm
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
@@ -166,7 +167,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
             
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
-                                                       pols_list, window, edge, broadline)
+                                                       pols_list, window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
             grid_table = maskline_result.outcome['grid_table']
