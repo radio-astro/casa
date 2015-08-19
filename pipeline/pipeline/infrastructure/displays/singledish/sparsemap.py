@@ -309,7 +309,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
 
             status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
-                                  plotfile)
+                                  filfile=plotfile)
             
             if status:
                 parameters = {}
