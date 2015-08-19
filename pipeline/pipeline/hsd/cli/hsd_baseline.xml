@@ -58,6 +58,15 @@
 	</allowed>
     </param>
 
+    <param type="string" name="clusteringalgorithm">
+	<description>Algorithm for line validation clustering algorithm</description>
+	<value>kmean</value>
+	<allowed kind="enum">
+	    <value>kmean</value>
+	    <value>hierarchy</value>
+	</allowed>
+    </param>
+
     <param type="stringArray" name="infiles" subparam="true">
         <description>List of input files to be calibrated (default all)</description>
         <value></value>
@@ -174,6 +183,12 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the
    can check the settings of all pipeline parameters without running
    the task.
    default: 'automatic'.
+
+clusteringalgorithm -- selection of the algorithm used in the clustering
+   analysis to check the validity of detected line features. 'kmean'
+   algorithm and hierarchical clustering algorithm 'hierarchy' are so
+   far implemented.
+   default: 'kmean'.
 
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
