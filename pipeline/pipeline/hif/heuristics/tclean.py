@@ -150,9 +150,9 @@ class TcleanHeuristics(object):
             if (2.0 * (abs_max_frequency - abs_min_frequency) / (abs_min_frequency + abs_max_frequency) > 0.1):
                 return 'mtmfs'
             else:
-                return 'clark2'
+                return 'hogbom'
         else:
-            return 'clark2'
+            return 'hogbom'
 
     def imsize(self, fields, cell, max_pixels=None):
         # get spread of beams
