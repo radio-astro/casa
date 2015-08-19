@@ -146,7 +146,7 @@ class SDSparseMapPlotter(object):
     def setup_reference_level(self, level=0.0):
         self.reference_level = level
         
-    def plot(self, map_data, integrated_data, frequency, figfile):
+    def plot(self, map_data, integrated_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
         spmin = integrated_data.min()
@@ -191,6 +191,7 @@ class SDSparseMapPlotter(object):
                 LOG.debug('plotting line range for integrated spectrum: [%s, %s]'%(chmin,chmax))
                 plot_helper.axvspan(fmin, fmax, color='cyan')
                     
+        is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
 
         for x in xrange(self.nh):
             for y in xrange(self.nv):
@@ -209,7 +210,9 @@ class SDSparseMapPlotter(object):
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
-                    if self.reference_level is not None and ymin < self.reference_level and self.reference_level < ymax:
+                    if is_valid_fit_result:
+                        plot_helper.plot(frequency, fit_result[x][y], color='r', linewidth=0.4)
+                    elif self.reference_level is not None and ymin < self.reference_level and self.reference_level < ymax:
                         plot_helper.axhline(self.reference_level, color='r', linewidth=0.4) 
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
@@ -218,7 +221,8 @@ class SDSparseMapPlotter(object):
 
         if ShowPlot: pl.draw()
 
-        pl.savefig(figfile, format='png', dpi=DPIDetail)
+        if figfile is not None:
+            pl.savefig(figfile, format='png', dpi=DPIDetail)
         LOG.debug('figfile=\'%s\''%(figfile))
         
         plot_helper.clear()

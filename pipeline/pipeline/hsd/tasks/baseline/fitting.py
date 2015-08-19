@@ -297,11 +297,13 @@ class FittingBase(common.SingleDishTaskTemplate):
             for (source_id,source) in st.source.items():
                 if 'TARGET' in source.intents:
                     source_name = source.name.replace(' ', '_').replace('/','_')
-            prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
-            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
-                                               filename_in, stage_dir, prefix, channelmap_range))
-            prefix = prefix.replace('before', 'after')
-            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
+#             prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
+#             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
+#                                                filename_in, stage_dir, prefix, channelmap_range))
+#             prefix = prefix.replace('before', 'after')
+#             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
+        
+            plot_list.extend(list(self.plot_spectra_with_fit(source_name, antennaid, spwid, pollist, grid_table, filename_in, filename_out, stage_dir, channelmap_range)))
         
         outcome = {'bltable': bltable_name,
                    'index_list': index_list_total,
@@ -408,6 +410,46 @@ class FittingBase(common.SingleDishTaskTemplate):
                                    field=source,
                                    parameters=parameters)
                 yield plot
+                
+    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, channelmap_range):
+        st = self.inputs.context.observing_run[ant]
+        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
+        if len(line_range) == 0:
+            line_range = None
+        for pol in pols:
+            outfile_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s_pol%s.png'%(x,'.'.join(st.basename.split('.')[:-1]),source,ant,spwid,pol)
+            prefit_outfile = os.path.join(outdir, outfile_template('before'))
+            postfit_outfile = os.path.join(outdir, outfile_template('after'))
+            status = plotter.plot_profile_map_with_fit(self.inputs.context, ant, spwid, pol, grid_table, prefit_data, postfit_data, prefit_outfile, postfit_outfile, line_range)
+            if os.path.exists(prefit_outfile):
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': 'sd_sparse_map_before_subtraction',
+                              'file': prefit_data}
+                plot = logger.Plot(prefit_outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                yield plot
+            if os.path.exists(postfit_outfile):
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': 'sd_sparse_map_after_subtraction',
+                              'file': postfit_data}
+                plot = logger.Plot(postfit_outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                yield plot
+            
 
 class CubicSplineFitting(FittingBase):
     def _get_param(self, idx, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
