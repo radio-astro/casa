@@ -1322,7 +1322,9 @@ Bool GridFT::toRecord(String& error,
 
   // Save the current GridFT object to an output state record
   Bool retval = True;
-
+  Float elpadd=padding_p;
+  if(toVis_p && withImage)
+    elpadd=1.0;
   //save the base class variables
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
@@ -1344,7 +1346,7 @@ Bool GridFT::toRecord(String& error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("padding", padding_p);
+  outRec.define("padding", elpadd);
   outRec.define("usezero", usezero_p);
   outRec.define("nopadding", noPadding_p);
   return retval;

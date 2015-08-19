@@ -220,7 +220,8 @@ void WProjectFT::init() {
     isTiled=False;
     CompositeNumber cn(uInt(image->shape()(0)*2));    
     nx    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-    ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));   
+    ny    = cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
+    //cerr << "INIT shape " <<  image->shape()(0) << " " << image->shape()(1) << " new " << nx << " "  << ny << endl;
     npol  = image->shape()(2);
     nchan = image->shape()(3);
     //}
@@ -515,7 +516,7 @@ void WProjectFT::finalizeToSky()
   
 
   //cerr <<"Time to massage data " << timemass_p << endl;
-  //cerr <<"Time to grid data " << timegrid_p << endl;
+  // cerr <<"Time to grid data " << timegrid_p << endl;
   timemass_p=0.0;
   timegrid_p=0.0;
   // Now we flush the cache and report statistics
@@ -1516,6 +1517,9 @@ Bool WProjectFT::toRecord(String& error,
   if(wpConvFunc_p->toRecord(wpconvrec))
     outRec.defineRecord("wpconvfunc", wpconvrec);
   */
+  Float elpadd=padding_p;
+  if(toVis_p && withImage)
+    elpadd=1.0;
   if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
     return False;
 
@@ -1532,7 +1536,7 @@ Bool WProjectFT::toRecord(String& error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("padding", padding_p);
+  outRec.define("padding", elpadd);
   outRec.define("nwplanes", nWPlanes_p);
   outRec.define("savedwscale", savedWScale_p);
   outRec.define("usezero", usezero_p);
