@@ -69,6 +69,8 @@ class MakeImListHeuristics(object):
         # determine spw selection parameters to exclude lines for mfs and cont images
         self.cont_ranges = {}
         for source_name in [s.name for s in ms.sources]:
+            if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
+                source_name = '"%s"' % (source_name)
             self.cont_ranges[source_name] = {}
             for spwid in spwids:
                 self.cont_ranges[source_name][str(spwid)] = ''
@@ -126,7 +128,11 @@ class MakeImListHeuristics(object):
                     spw_selection = ''
 
                 for source_name in [s.name for s in ms.sources]:
-                    self.cont_ranges[source_name][str(spwid)] = spw_selection
+                    if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
+                        source_name_key = '"%s"' % (source_name)
+                    else:
+                        source_name_key = source_name
+                    self.cont_ranges[source_name_key][str(spwid)] = spw_selection
 
         else:
             LOG.warn('No frequency range information available for continuum frequency selections.')

@@ -21,12 +21,17 @@ class ContFileHandler(object):
 
         p = re.compile('([\d.]*)(~)([\d.]*)(\D*)')
 
-        cont_region_data = [item.replace('\n', '') for item in open(self.filename, 'r').readlines() if item != '\n']
+        try:
+            cont_region_data = [item.replace('\n', '') for item in open(self.filename, 'r').readlines() if item != '\n']
+        except:
+            cont_region_data = []
 
         for item in cont_region_data:
             try:
                 if ((item.upper().find('SPW') == -1) and (item.find('~') == -1) and (item != 'NONE')):
                     source_name = item
+                    if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
+                        source_name = '"%s"' % (source_name)
                     cont_ranges[source_name] = {}
                 elif (item.upper().find('SPW') == 0):
                     spw_id = item[3:]
