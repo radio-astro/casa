@@ -208,7 +208,8 @@ for info in [ (['dbus-daemon'],'dbus'),
         else:
             casa['helpers'][entry] = None
 
-        for srchdir in [ __casapath__ + '/MacOS', '/usr/lib64/casa/01/bin', '/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
+        ### first look in known locations relative to top (of binary distros) or known casa developer areas
+        for srchdir in [ __casapath__ + '/MacOS', __casapath__ + '/lib/casa/bin', '/usr/lib64/casa/01/bin', '/opt/casa/01/bin' ] :
             dd = srchdir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
                 casa['helpers'][entry] = dd
