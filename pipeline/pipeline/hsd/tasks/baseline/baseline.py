@@ -23,7 +23,7 @@ class SDBaselineInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, spw=None, pol=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None):
+                 fitfunc=None, clusteringalgorithm=None):
         self._init_properties(vars())
         for key in ['spw', 'pol']:
             val = getattr(self, key)
