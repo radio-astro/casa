@@ -1823,18 +1823,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
-    // if (cfList.nelements() == 0) 
-    //   os << "NoOp due to zero-length cfList" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
     (void)cfList;
     // If not an AWProject-class FTM, make this call a NoOp.  Might be
     // useful to extend it to other projection FTMs -- but later.
     String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
 
-    //cerr << "FTM name = " << ftmName << endl;
     if (!((itsMappers.getFTM(whichFTM,True))->isUsingCFCache())) return;
-    // if (!ftmName.contains("AWProject") and
-    // 	!ftmName.contains("MultiTermFTNew")) return;
 
     os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
 
@@ -1851,25 +1846,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",True);
 
       itsMappers.initializeGrid(*vb);
-
-      // AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
-      // tt.setDryRun(True);
-      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
-      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
-
-      // The following code requiring FTM-specific static_cast may (?)
-      // not be required now.  Leaving it here for a few cycles before
-      // getting rid of it.
-    // if (ftmName=="MultiTermFTNew")
-    //   {
-    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
-    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
-    //   }
-    // else
-    //   {
-    // 	(*(itsMappers.getFTM(whichFTM,True))).setDryRun(True);
-    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(True);
-    //   }
     
       // Set the gridder (iFTM) to run in dry-gridding mode
       (itsMappers.getFTM(whichFTM,True))->setDryRun(True);
@@ -1891,22 +1867,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      pm.update(Double(cohDone));
 	    }
 	}
-      //itsMappers.finalizegrid(*vb);
     }
-    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
-    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
-
-    // if (ftmName=="MultiTermFTNew")
-    //   {
-    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
-    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
-    //   }
-    // else
-    //   {
-    // 	(itsMappers.getFTM(whichFTM,True))->setDryRun(False);
-    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(False);
-    //   }
-
     // Unset the dry-gridding mode.
     (itsMappers.getFTM(whichFTM,True))->setDryRun(False);
 
