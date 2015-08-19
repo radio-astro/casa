@@ -289,12 +289,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. If less than 0, all observation IDs are used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. If less than 0, all array IDs are used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -303,7 +303,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the antennas associated with scan 4 (obsid=0, arrayid = 0)
+    # get the antennas associated with scan 4 (all observation IDs, all array IDs)
     antennas = msmd.antennasforscan(4)
     msmd.done()
             </example>
@@ -590,7 +590,7 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     # get the exposure time for scan 1, spwid 2, and polid 3
-    # for arrayID = 0 and obsID = 0
+    # for obsid=0 and arrayid=0
     integration_time = msmd.getexposuretime(scan=1, spwid=2, polid=3)
     msmd.done()
             </example>
@@ -686,12 +686,12 @@ windows in the dataset and close the tool.
                     <value>false</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value means use all observation IDs.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value means use all array IDs.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="any"/>
@@ -700,9 +700,9 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the field names for scan number 5 (arrayid = obsid = 0)
+    # get the field names for scan number 5 (for all array IDs and all observation IDs).
     field_names = msmd.fieldsforscan(5, True)
-    # get the field IDs for scan number 5 (arrayid = obsid = 0)
+    # get the field IDs for scan number 5 (for all array IDs and all observation IDs)
     field_IDs = msmd.fieldsforscan(5, False)
     msmd.done()
             </example>
@@ -720,12 +720,12 @@ windows in the dataset and close the tool.
                     <value>false</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value means use all observation IDs.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value means use all array IDs.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="any"/>
@@ -734,9 +734,9 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the field names for scan numbers 5 and 10 (obsid = 0, arrayid = 0)
+    # get the field names for scan numbers 5 and 10 (all obsids, all arrayids)
     field_names = msmd.fieldsforscan([5, 10], True)
-    # get the field IDs for scan numbers 5 and 10 (obsid = 0, arrayid = 0)
+    # get the field IDs for scan numbers 5 and 10 (all obsids, all arrayids)
     field_IDs = msmd.fieldsforscan([5, 10], False)
     msmd.done()
             </example>
@@ -864,12 +864,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value means use all observation IDs.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value means use all array IDs.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="stringArray"/>
@@ -878,7 +878,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the intents associated with scan 4 (obsid=0, arrayid = 0)
+    # get the intents associated with scan 4 (all obsids, all arrayids)
     intents = msmd.intentsforscan(4)
     msmd.done()
             </example>
@@ -1378,12 +1378,12 @@ windows in the dataset and close the tool.
             <shortdescription>Get an array of the unique scan numbers associated with the MS for the specified observation ID and array ID.</shortdescription>
             <input>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1392,7 +1392,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # scan numbers for obsid=0 and arrayid=0
+    # scan numbers for all obsids and all arrayids
     scan_numbers = msmd.scannumbers()
     msmd.done()
             </example>
@@ -1407,12 +1407,12 @@ windows in the dataset and close the tool.
                     <any type="variant" limittypes="string int"/>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1421,9 +1421,9 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with field "planet Z" (obsid=0, arrayid=0)
+    # get the scan numbers associated with field "planet Z" (all obsids, all arrayids)
     scan_numbers = msmd.scansforfield("planet Z")
-    # get the scan numbers associated with field ID 5 (obsid=0, arrayid=0)
+    # get the scan numbers associated with field ID 5 (all obsids, all arrayids)
     scan_numbers = msmd.scansforfield(5)
     msmd.done()
             </example>
@@ -1434,15 +1434,15 @@ windows in the dataset and close the tool.
              <input>
                 <param type="string" direction="in" name="intent">
                     <description>Intent (case-sensitive) for which to return the scan numbers.</description>
-                    <value>-1</value>
+                    <value/>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1452,9 +1452,9 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with intent "detect planet X" (obsid=0, arrayid=0)
+    # get the scan numbers associated with intent "detect planet X" (all obsids, all arrayids)
     scan_numbers = msmd.scansforintent("detect planet X", regex=False)
-    # got all the scan numbers associated with all intents which contain 'WVR' (obsid=0, arrayid=0)
+    # got all the scan numbers associated with all intents which contain 'WVR' (all obsids, all arrayids)
     scan_numbers = msmd.scansforintent("*WVR*")
     msmd.done()
             </example>
@@ -1468,12 +1468,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1482,7 +1482,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with spectral window ID 14, obsid=0, arrayid=0
+    # get the scan numbers associated with spectral window ID 14, all obsids, all arrayids
     scan_numbers = msmd.scansforspw(14)
     msmd.done()
             </example>
@@ -1496,12 +1496,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1510,7 +1510,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with state 2, obsid=0, arrayid=0
+    # get the scan numbers associated with state 2, all obsids, all arrayids
     scans = msmd.scansforstate(2)
     msmd.done()
             </example>
@@ -1524,16 +1524,16 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="double" direction="in" name="tol">
-                    <description>Time on either side of center for specifying range.</description>
+                    <description>Time difference on either side of center for specifying range.</description>
                     <value>0</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1542,7 +1542,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the scan numbers associated with the specified time range (obsid=0, arrayid=0)
+    # get the scan numbers associated with the specified time range (all obsids, all array ids)
     scans = msmd.scansfortimes(4.84282937e+09, 20)
     msmd.done()
             </example>
@@ -1760,12 +1760,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value means that all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value means that all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1774,7 +1774,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the spectral window IDs associated with scan number 20, obsid=0, arrayid=0.
+    # get the spectral window IDs associated with scan number 20, all obsids, all arrayids.
     spws = msmd.spwsforscan(20)
     msmd.done()
             </example>
@@ -1788,12 +1788,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value means that all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value means that all array IDs should be used.</description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="intArray"/>
@@ -1802,7 +1802,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the state IDs associated with scan number 251, obsid=0, arrayid=0
+    # get the state IDs associated with scan number 251, all obsids, all arrayids
     states = msmd.statesforscan(251)
     msmd.done()
             </example>
@@ -1908,12 +1908,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used. </description>
+                    <value>-1</value>
                 </param>
                 <param type="bool" name="perspw">
                     <description>Return output dictionary with keys representing spectral window IDs (True), or an array of all times (False).</description>
@@ -1929,7 +1929,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the times associated with scan number 10, obsid=0, arrayid=0
+    # get the times associated with scan number 10, all obsids, all arrayids.
     times = msmd.timesforscans(10)
     msmd.done()
             </example>
@@ -1943,12 +1943,12 @@ windows in the dataset and close the tool.
                     <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="obsid">
-                    <description>Observation ID.</description>
-                    <value>0</value>
+                    <description>Observation ID. A negative value indicates all observation IDs should be used.</description>
+                    <value>-1</value>
                 </param>
                 <param type="int" direction="in" name="arrayid">
-                    <description>Array ID.</description>
-                    <value>0</value>
+                    <description>Array ID. A negative value indicates all array IDs should be used. </description>
+                    <value>-1</value>
                 </param>
             </input>
             <returns type="doubleArray"/>
@@ -1957,12 +1957,11 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the times associated with scan numbers 10 and 20, obsid=0, arrayid=0
+    # get the times associated with scan numbers 10 and 20, all obsids, all arrayids
     times = msmd.timesforscans([10,20])
     msmd.done()
             </example>
         </method>
-        
         
         <method type="function" name="wvrspws">
             <shortdescription>Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.</shortdescription>

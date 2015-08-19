@@ -10,4 +10,5 @@ namespace casa {
 	class MeasurementSet;
 	class LogIO;
 	class String;
+	struct ScanKey;
 };

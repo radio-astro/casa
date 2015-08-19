@@ -1,10 +1,26 @@
-std::auto_ptr<casa::MSMetaData> _msmd;
-std::auto_ptr<casa::MeasurementSet> _ms;
-std::auto_ptr<casa::LogIO> _log;
+std::unique_ptr<casa::MSMetaData> _msmd;
+std::unique_ptr<casa::MeasurementSet> _ms;
+std::unique_ptr<casa::LogIO> _log;
+
+msmetadata(const casa::MeasurementSet * const & s, const float maxcache);
+
+void _checkAntennaId(int id, bool throwIfNegative) const;
+
+void _checkArrayId(int id, bool throwIfNegative) const;
+
+void _checkFieldId(int id, bool throwIfNegative) const;
+
+void _checkObsId(int id, bool throwIfNegative) const;
+
+void _checkSpwId(int id, bool throwIfNegative) const;
+
+void _checkPolId(int id, bool throwIfNegative) const;
 
 std::vector<std::string> _fieldNames(const std::set<int>& ids);
 
-msmetadata(const casa::MeasurementSet * const & s, const float maxcache);
+std::set<casa::ScanKey> _getScanKeys(int scan, int obsid, int arrayid) const;
+
+std::set<casa::ScanKey> _getScanKeys(const vector<int>& scan, int obsid, int arrayid) const;
 
 bool _isAttached(const bool throwExceptionIfNotAttached=true) const;
 
@@ -29,16 +45,6 @@ static std::vector<uint> _vectorIntToVectorUInt(const std::vector<casa::Int>& in
 friend msmetadata* ms::metadata(const float maxcache);
 
 void _init(const casa::MeasurementSet *const &ms, const float maxcache);
-
-void _checkAntennaId(int id, bool throwIfNegative) const;
-
-void _checkFieldId(int id, bool throwIfNegative) const;
-
-void _checkObsId(int id, bool throwIfNegative) const;
-
-void _checkSpwId(int id, bool throwIfNegative) const;
-
-void _checkPolId(int id, bool throwIfNegative) const;
 
 template <class T>
 static std::set<T> _idsFromExpansion(
