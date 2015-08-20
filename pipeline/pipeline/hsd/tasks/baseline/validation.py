@@ -1392,8 +1392,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                             Allowance, Protect = self.calc_allowance(Fit0, Fit1, self.nchan)
                                             # for Channel map velocity range determination 2014/1/12
                                             MaskCen = (Protect[0] + Protect[1]) / 2.0
-                                            if MaskMin > MaskCen: MaskMin = MaskCen
-                                            if MaskMax < MaskCen: MaskMax = MaskCen
+                                            if MaskMin > MaskCen: MaskMin = max(0, MaskCen)
+                                            if MaskMax < MaskCen: MaskMax = min(self.nchan - 1, MaskCen)
                                             #if MaskMin > Protect[0]: MaskMin = Protect[0]
                                             #if MaskMax < Protect[1]: MaskMax = Protect[1]
 
