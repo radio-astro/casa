@@ -16,6 +16,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class WvrAxesManager(common.TimeAxesManager):
     Colors = ['r', 'g', 'b', 'c']
+    Markers = ['o', '^', 's', 'D']
     
     def __init__(self):
         super(WvrAxesManager,self).__init__()
@@ -57,10 +58,11 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         spws = self.context.observing_run.get_spw_for_wvr(st.basename)
         plotfile = os.path.join(stage_dir, 'wvr_%s.png'%(st.basename))
         wvr_data = self.get_wvr_data(st.name, spws)
+        wvr_flag = self.get_wvr_flag(st.name, spws) # [Time, FlagRow, FlagChan0, FlagChan1, FlagChan2, FlagChan3]
         wvr_frequency = self.get_wvr_frequency(st, spws)
         if len(wvr_data) == 0:
             return 
-        self.draw_wvr(wvr_data, wvr_frequency, plotfile)
+        self.draw_wvr(wvr_data, wvr_frequency, wvr_flag, plotfile, plotpolicy='ignore')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spws[0]
@@ -75,7 +77,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_wvr(self, wvr_data, wvr_frequency, plotfile):
+    def draw_wvr(self, wvr_data, wvr_frequency, wvr_flag, plotfile=None, plotpolicy='ignore'):
         # Plotting routine
         Fig = pl.gcf()
 
@@ -89,6 +91,8 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         wvr_frequency = wvr_frequency * 1.0e-9
 
         wvr = wvr_data[1:,:]
+        wvr_flagrow = wvr_flag[1,:]
+        wvr_flagchan = wvr_flag[2:,:]
 
         xmin = time_for_plot.min()
         xmax = time_for_plot.max()
@@ -109,6 +113,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         self.axes_manager.init(xmin, xmax)
         Ax1 = self.axes_manager.axes
         colors = self.axes_manager.Colors
+        markers = self.axes_manager.Markers
         lines = Ax1.get_lines()
         if len(wvr_data[0]) == 1:
             for i in xrange(4):
@@ -118,11 +123,36 @@ class SDWvrDisplay(common.SDInspectionDisplay):
                 )
         else:
             for i in xrange(4):
-                plot_objects.extend(
-                    Ax1.plot(time_for_plot, wvr[i], '%so'%(colors[i]),
-                             markersize=3, markeredgecolor=colors[i],
-                             markerfacecolor=colors[i])
-                )
+                
+                if plotpolicy == 'plot':
+                    plot_objects.extend(
+                        Ax1.plot(time_for_plot, wvr[i], '%s%s'%(colors[i],markers[i]),
+                                 markersize=3, markeredgecolor=colors[i],
+                                 markerfacecolor=colors[i])
+                        )
+                elif plotpolicy == 'ignore':
+                    filter = numpy.logical_and(wvr_flagrow == 0, wvr_flagchan[i,:] == 0)
+                    plot_objects.extend(
+                        Ax1.plot(time_for_plot[filter], wvr[i][filter], '%s%s'%(colors[i],markers[i]),
+                                 markersize=3, markeredgecolor=colors[i],
+                                 markerfacecolor=colors[i])
+                        )
+                elif plotpolicy == 'greyed':
+                    filter = numpy.logical_and(wvr_flagrow == 0, wvr_flagchan[i,:] == 0)
+                    plot_objects.extend(
+                        Ax1.plot(time_for_plot[filter], wvr[i][filter], '%s%s'%(colors[i],markers[i]),
+                                 markersize=3, markeredgecolor=colors[i],
+                                 markerfacecolor=colors[i])
+                        )
+                    filter = numpy.logical_or(wvr_flagrow > 0, wvr_flagchan[i,:] > 0)
+                    if numpy.any(filter == True):
+                        plot_objects.extend(
+                            Ax1.plot(time_for_plot[filter], wvr[i][filter], markers[i],
+                                     markersize=3, markeredgecolor='grey',
+                                     markerfacecolor='grey')
+                            )
+                    
+                    
         Ax1.legend(['%.2fGHz'%(f) for f in wvr_frequency],
                    loc=0, numpoints=1, prop={'size': 'smaller'})
         Ax1.set_xlim(xmin, xmax)
@@ -172,4 +202,21 @@ class SDWvrDisplay(common.SDInspectionDisplay):
             timecol = timecol.reshape(1, timecol.shape[0])
             data = numpy.concatenate([timecol,wvrdata])
 
+        return data
+    
+    def get_wvr_flag(self, name, spwids):
+        if len(spwids) == 0:
+            return []
+        
+        with casatools.TableReader(name) as tb:
+            tsel = tb.query('IFNO IN %s'%(list(spwids)))
+            timecol = tsel.getcol('TIME') * 86400.0 # Day -> Sec
+            wvrflagchan = tsel.getcol('FLAGTRA')
+            wvrflagrow= tsel.getcol('FLAGROW')
+            tsel.close()
+            timecol = timecol.reshape(1, timecol.shape[0])
+            wvrflagrow = wvrflagrow.reshape(1, wvrflagrow.shape[0])
+            flag = numpy.concatenate([timecol,wvrflagrow, wvrflagchan])
+
+        return flag
         return data
