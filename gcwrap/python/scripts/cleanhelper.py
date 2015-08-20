@@ -255,7 +255,7 @@ class cleanhelper:
                 if(fieldoo==''):
                     msmd.open(self.vis[self.sortedvisindx[0]])
                     allfields=msmd.fieldsforintent('*')
-                    fieldoo=str(allfields[0])
+                    fieldoo=str(allfields[0]) if(len(allfields) >0) else '0'
                     msmd.done()
                 #phasecenter=int(ms.msseltoindex(self.vis,field=fieldoo)['field'][0])
                 phasecenter=int(ms.msseltoindex(self.vis[self.sortedvisindx[0]],field=fieldoo)['field'][0])
