@@ -31,6 +31,10 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <casa/Utilities/Assert.h>
 namespace casa{
+
+  // Instantiate a commonly used extern template
+  template class casa::Array<casa::CountedPtr<casa::CFBuffer> >;
+
   //
   //---------------------------------------------------------------
   //
@@ -631,6 +635,7 @@ namespace casa{
 	      }
     	}
   }
+
 } // end casa namespace
 
 

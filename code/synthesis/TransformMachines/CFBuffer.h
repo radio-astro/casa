@@ -405,6 +405,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Vector<Int> > freqNdxMap_p, conjFreqNdxMap_p;
     void ASSIGNVVofI(Int** &target,Vector<Vector<Int> >& source, Bool& doAlloc);
   };
+
+  // declare a commonly used template extern
+  extern template class casa::Array<casa::CountedPtr<casa::CFBuffer> >;
   
 } //# NAMESPACE CASA - END
 #endif
