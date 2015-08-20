@@ -390,7 +390,7 @@ int
 ViReadImplAsync::getDefaultNBuffers ()
 {
     int nBuffers;
-    AipsrcValue<Int>::find (nBuffers, ROVisibilityIterator::getAipsRcBase () + ".nBuffers", 2);
+    casa::AipsrcValue<Int>::find (nBuffers, ROVisibilityIterator::getAsyncRcBase () + ".nBuffers", 2);
 
     return nBuffers;
 }

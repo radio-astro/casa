@@ -911,6 +911,7 @@ protected:
 
     Bool                    addDefaultSort_p;
     Bool                    asyncEnabled_p; // Allows lower-level code to make an async "copy" of this VI.
+    Bool                    autoTileCacheSizing_p;
     mutable Cache           cache_p;
     Int                     channelGroupSize_p;
     Channels                channels_p;

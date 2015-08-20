@@ -107,7 +107,7 @@ AsynchronousInterface::initializeLogging ()
 
     String logFilename;
     Bool logFileFound = AipsrcValue<String>::find (logFilename,
-                                                   ROVisibilityIterator::getAipsRcBase () + ".debug.logFile",
+                                                   ROVisibilityIterator::getAsyncRcBase () + ".debug.logFile",
                                                    "");
 
     if (logFileFound &&
@@ -116,7 +116,7 @@ AsynchronousInterface::initializeLogging ()
         downcase (logFilename) != "none"){
 
         Logger::get()->start (logFilename.c_str());
-        AipsrcValue<Int>::find (logLevel_p, ROVisibilityIterator::getAipsRcBase () + ".debug.logLevel", 1);
+        AipsrcValue<Int>::find (logLevel_p, ROVisibilityIterator::getAsyncRcBase () + ".debug.logLevel", 1);
         Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n",
                             logLevel_p,
                             ROVisibilityIterator::isAsynchronousIoEnabled() ? "enabled" : "disabled",
@@ -897,7 +897,7 @@ VlaData::statsEnabled () const
     // expected AipsRc value.  If not found then async i/o is disabled.
 
     Bool doStats;
-    AipsrcValue<Bool>::find (doStats, ROVisibilityIterator::getAipsRcBase () + ".doStats", False);
+    AipsrcValue<Bool>::find (doStats, ROVisibilityIterator::getAsyncRcBase () + ".doStats", False);
 
     return doStats;
 }

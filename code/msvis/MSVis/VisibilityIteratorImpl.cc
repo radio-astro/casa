@@ -41,6 +41,7 @@
 #include <tables/DataMan/StandardStManAccessor.h>
 #include <tables/DataMan/IncrStManAccessor.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/System/AipsrcValue.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Containers/Record.h>
@@ -111,6 +112,8 @@ VisibilityIteratorReadImpl::VisibilityIteratorReadImpl (ROVisibilityIterator * r
 void
 VisibilityIteratorReadImpl::initialize (const Block<MeasurementSet> &mss)
 {
+
+    AipsrcValue<Bool>::find (autoTileCacheSizing_p, VisibilityIterator::getAipsRcBase () + ".AutoTileCacheSizing", False);
 
     asyncEnabled_p = False;
     cache_p.lastazelUT_p = -1;
@@ -740,6 +743,10 @@ VisibilityIteratorReadImpl::setTileCache ()
     // This function sets the tile cache because of a feature in
     // sliced data access that grows memory dramatically in some cases
     //  if (useSlicer_p){
+
+    if (autoTileCacheSizing_p){
+        return; // rest of method does manual sizing so skip it
+    }
 
     if (! (msIter_p.newDataDescriptionId () || msIter_p.newMS ()) ) {
         return;

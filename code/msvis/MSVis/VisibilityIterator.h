@@ -747,7 +747,8 @@ public:
                             const MPosition & obsPos,
                             const MDirection & dir);
 
-  static String getAipsRcBase () { return "VisibilityIterator.async";}
+  static String getAipsRcBase () { return "VisibilityIterator";}
+  static String getAsyncRcBase () { return getAipsRcBase() + ".async";}
 
 protected:
 

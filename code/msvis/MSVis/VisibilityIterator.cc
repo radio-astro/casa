@@ -967,7 +967,7 @@ ROVisibilityIterator::isAsynchronousIoEnabled()
     // expected AipsRc value.  If not found then async i/o is disabled.
 
     Bool isEnabled;
-    AipsrcValue<Bool>::find (isEnabled, getAipsRcBase () + ".enabled", False);
+    AipsrcValue<Bool>::find (isEnabled, getAsyncRcBase () + ".enabled", False);
 
     return isEnabled;
 }
