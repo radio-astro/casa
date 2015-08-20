@@ -109,8 +109,11 @@ FlagMSHandler::open()
 	}
 
 	// Read field names
-	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
-	fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
+	{
+	  ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
+	  fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
+	  delete fieldSubTable;
+	}
 
 	// Read polarizations
 	ROMSPolarizationColumns *polarizationSubTable = new ROMSPolarizationColumns(originalMeasurementSet_p->polarization());
