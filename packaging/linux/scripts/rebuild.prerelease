@@ -10,7 +10,7 @@ use Cwd;
 
 $get_revision = "/opt/users/rpmbuild/casa/prerelease/scripts/svn-revision";
 $install_rpms = "/opt/users/rpmbuild/casa/prerelease/scripts/install.rpms";
-$email_list = "drs\@nrao.edu vsuorant\@nrao.edu";
+$email_list = "darrell\@schiebel.us vsuorant\@nrao.edu";
 #$distro_email_list = "ahale\@nrao.edu mrawling\@nrao.edu jkern\@nrao.edu drs\@nrao.edu";
 $distro_email_list = $email_list;
 
