@@ -45,7 +45,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <measures/Measures/UVWMachine.h>
-#ifdef HAS_OMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -98,7 +98,8 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, SkyComponent& component,
   Vector<Double> invLambda = frequency/C::c;
    
   // Find the offsets in polarization. 
-  Vector<Int> corrType = vb.getCorrelationTypes().copy();
+  Vector<Int> corrType(vb.getCorrelationTypesSelected().nelements());
+  convertArray(corrType, vb.getCorrelationTypesSelected());
   {
     Int startPol = corrType(0);
     if((startPol > 4) && (startPol < 9)) {
@@ -117,7 +118,7 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, SkyComponent& component,
 
 
   uInt npart=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
   npart= numthreads_p <0 ? omp_get_max_threads() : min(numthreads_p, omp_get_max_threads());
 #endif
   if((nRow/npart)==0) npart=1;
@@ -248,16 +249,17 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, const ComponentList& compList
   frequency= vb.getFrequencies(0);
   Vector<Double> invLambda = frequency/C::c;
   // Find the offsets in polarization. 
-  Vector<Int> corrTypeL = vb.getCorrelationTypes().copy();
-  Vector<Int> corrTypeC = vb.getCorrelationTypes().copy();
-  Vector<Int> corrType = vb.getCorrelationTypes().copy();
+  Vector<Int> corrTypeL(vb.getCorrelationTypesSelected().nelements());
+  convertArray(corrTypeL, vb.getCorrelationTypesSelected());
+  Vector<Int> corrTypeC = corrTypeL.copy();
+  Vector<Int> corrType = corrTypeL.copy();
   corrTypeL -= 9;
   corrTypeC -= 5;
   Cube<DComplex> dVis(4, nChan, nRow);
   ComponentType::Polarisation poltype=ComponentType::CIRCULAR;
-  if(anyGT(Int(Stokes::RR), vb.getCorrelationTypes())){
+  if(anyGT(Int(Stokes::RR), corrType)){
     poltype=ComponentType::STOKES;
-    corrType = vb.getCorrelationTypes()-1;
+    corrType = corrType-1;
   }
   else if(vb.polarizationFrame()==MSIter::Linear) {
     poltype=ComponentType::LINEAR;
@@ -268,7 +270,7 @@ void SimpleComponentFTMachine::get(VisBuffer2& vb, const ComponentList& compList
   }
 
  uInt npart=1;
-#ifdef HAS_OMP
+#ifdef _OPENMP
  npart= numthreads_p <0 ? omp_get_max_threads() : min(numthreads_p, omp_get_max_threads());
 #endif
 
