@@ -90,7 +90,7 @@ class FindCont(basetask.StandardTaskTemplate):
                 else:
                     LOG.info('Determining continuum ranges for field %s, spw %s' % (source_name, spwid))
 
-                    findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']))
+                    findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace(target['spw'].replace(',','_'), spwid))
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                         specmode='cube', gridder='mosaic', pblimit=0.2,
