@@ -86,7 +86,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         RA = tRA[full_pointing_index]
         DEC = tDEC[full_pointing_index]
         plotfile = os.path.join(stage_dir, 'pointing_full_%s.png'%(st.basename))
-        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='ignore')
+        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -107,7 +107,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         RA = tRA[onsource_pointing_index]
         DEC = tDEC[onsource_pointing_index]
         plotfile = os.path.join(stage_dir, 'pointing_onsource_%s.png'%(st.basename))
-        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='ignore')
+        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid

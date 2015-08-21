@@ -62,7 +62,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         wvr_frequency = self.get_wvr_frequency(st, spws)
         if len(wvr_data) == 0:
             return 
-        self.draw_wvr(wvr_data, wvr_frequency, wvr_flag, plotfile, plotpolicy='ignore')
+        self.draw_wvr(wvr_data, wvr_frequency, wvr_flag, plotfile, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spws[0]

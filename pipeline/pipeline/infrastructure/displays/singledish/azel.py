@@ -73,7 +73,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         rows = self.datatable.get_row_index(idx, spwid, 0)
         timegap = self.datatable.get_timegap(idx, spwid, 0, asrow=False)
         plotfile = os.path.join(stage_dir, 'azel_%s.png'%(st.basename))
-        self.draw_azel(timegap, rows, plotfile, plotpolicy='ignore')
+        self.draw_azel(timegap, rows, plotfile, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
