@@ -225,7 +225,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="convert_ephem2geo">
-      <description>if True, convert any attached ephemerides to the GEO reference frame</description>
+      <description>if True, convert any attached ephemerides to the GEO reference frame (time-spacing not changed)</description>
       <value>True</value>
     </param>
 
@@ -395,15 +395,18 @@ useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, should
 bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
             default: false
 
-with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written 
-                            in MS::Pointing::direction 
+with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value 
+                            to be written in MS::Pointing::direction 
 
 remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
 	            default: False
            
-convert_ephem2geo -- ALMA uses TOPO ephemerides. For later processing in, e.g. cvel, an ephemeris in
-                     the GEO reference frame is needed. Setting this option to True will perform the 
-                     conversion on all attached ephemerides in the imported MS.
+convert_ephem2geo -- ALMA uses TOPO ephemerides. For later processing of the radial velocity information
+                     in, e.g. cvel, an ephemeris in the GEO reference frame is needed. 
+                     Setting this option to True will perform the conversion of positions and velocities
+		     on all attached ephemerides in the imported MS. 
+                     This will neither change the time-spacing nor the duration of the ephemeris. 
+                     No interpolation in time is done.
 
   </example>
 
