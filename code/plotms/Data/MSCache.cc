@@ -262,6 +262,13 @@ String MSCache::checkDataColumn(vector<PMS::Axis>& loadAxes,
         } // switch
 	} // for
 
+    // If data was already loaded but an axis was changed,
+    // only the new axis is in loadAxes and column will end up NONE.
+    // Check for datacolumn-dependent axis being plotted
+    if (dataColumn == "NONE") {
+        dataColumn = checkAxesDatacolumns();
+    }
+        
 	return dataColumn;
 }
 
@@ -280,6 +287,21 @@ String MSCache::getDataColumn(PMS::DataColumn dataCol)
 		dataColumn.upcase();
 	}
 	return dataColumn;
+}
+
+String MSCache::checkAxesDatacolumns() {
+    // Check data column of plotted axes
+    String dataCol = "NONE";
+    int axesCount = currentX_.size();
+    for (int i=0; i<axesCount; ++i) {
+        if (PMS::axisIsData(currentX_[i])) {
+            dataCol = getDataColumn(loadedAxesData_[currentX_[i]]);
+        }
+        if (PMS::axisIsData(currentY_[i])) {
+            dataCol = getDataColumn(loadedAxesData_[currentY_[i]]);
+        }
+    }
+    return dataCol;
 }
 
 void MSCache::getNamesFromMS(MeasurementSet& ms)
