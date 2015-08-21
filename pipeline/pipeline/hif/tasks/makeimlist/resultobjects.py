@@ -17,6 +17,8 @@ class MakeImListResult(basetask.Results):
 
     def merge_with_context(self, context):
         context.clean_list_pending = copy.deepcopy(self.targets)
+        context.contfile = self.contfile
+        context.linesfile = self.linesfile
 
     @property
     def num_targets(self):

@@ -67,13 +67,13 @@ class MakeImListHeuristics(object):
               (180.0 * 3600.0 / math.pi)
 
         # determine spw selection parameters to exclude lines for mfs and cont images
-        self.cont_ranges = {}
+        self.cont_ranges_spwsel = {}
         for source_name in [s.name for s in ms.sources]:
             if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
                 source_name = '"%s"' % (source_name)
-            self.cont_ranges[source_name] = {}
+            self.cont_ranges_spwsel[source_name] = {}
             for spwid in spwids:
-                self.cont_ranges[source_name][str(spwid)] = ''
+                self.cont_ranges_spwsel[source_name][str(spwid)] = ''
 
         if (contfile is None):
             contfile = ''
@@ -87,12 +87,14 @@ class MakeImListHeuristics(object):
             contfile_handler = contfilehandler.ContFileHandler(contfile)
 
             # read the ranges
-            self.cont_ranges = contfile_handler.read(skip_none = True)
+            cont_ranges = contfile_handler.read(skip_none = True)
 
             # merge the ranges
-            for source_name in self.cont_ranges.iterkeys():
-                for spw_id in self.cont_ranges[source_name].iterkeys():
-                    self.cont_ranges[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in self.merge_ranges(self.cont_ranges[source_name][spw_id])])
+            for source_name in self.cont_ranges_spwsel.iterkeys():
+                for spw_id in self.cont_ranges_spwsel[source_name].iterkeys():
+                    if (cont_ranges.has_key(source_name)):
+                        if (cont_ranges[source_name].has_key(spw_id)):
+                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in self.merge_ranges(cont_ranges[source_name][spw_id])])
 
         # alternatively read and merge line regions and calculate continuum regions
         elif (os.path.isfile(linesfile)):
@@ -132,7 +134,7 @@ class MakeImListHeuristics(object):
                         source_name_key = '"%s"' % (source_name)
                     else:
                         source_name_key = source_name
-                    self.cont_ranges[source_name_key][str(spwid)] = spw_selection
+                    self.cont_ranges_spwsel[source_name_key][str(spwid)] = spw_selection
 
         else:
             LOG.warn('No frequency range information available for continuum frequency selections.')

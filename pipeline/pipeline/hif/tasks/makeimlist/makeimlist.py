@@ -393,7 +393,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 if (specmode in ('mfs', 'cont')):
-                    spwsel = ','.join(self.heuristics.cont_ranges[field_intent[0]][spwid] for spwid in spwspec.split(','))
+                    spwsel = ','.join(self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] for spwid in spwspec.split(','))
                 else:
                     spwsel = ''
 
@@ -420,6 +420,10 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'uvrange':inputs.uvrange}
 
                     result.add_target(target)
+
+        # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
+        result.contfile = inputs.contfile
+        result.linesfile = inputs.linesfile
 
         return result
 

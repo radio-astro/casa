@@ -9,6 +9,7 @@ from .clean import Clean
 #from .myclean import MyClean
 from .cleanlist import CleanList
 from .exportdata import ExportData
+from .findcont import FindCont
 from .flagcorrected import Flagcorrected
 #from .fluxcalflag import FluxcalFlag
 #from .flagging import FlagDeterALMA
