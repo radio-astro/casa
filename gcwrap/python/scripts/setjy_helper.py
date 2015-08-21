@@ -140,6 +140,8 @@ class ss_setjy_helper:
             inparams[fid]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[fid]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
+          usedtime = qa.time(qa.quantity(tc,'s'),form='ymd')[0]
+          self._casalog.post("Time used for the model calculation(=first time stamp of the selected data per field id):"+usedtime)
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
