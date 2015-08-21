@@ -180,13 +180,15 @@ class Tclean(cleanbase.CleanBase):
             # Make dirty cubes, run detection algorithm on each of them
 
         # Check if a matching 'cont' image exists for continuum subtraction.
+        # NOTE: For Cycle 3 we use 'mfs' images due to possible
+        #       inaccuracies in the nterms=2 cont images.
         cont_image_name = ''
         if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
             imlist = self.inputs.context.sciimlist.get_imlist()
             for iminfo in imlist[::-1]:
                 if ((iminfo['sourcetype'] == 'TARGET') and \
                     (iminfo['sourcename'] == inputs.field) and \
-                    (iminfo['specmode'] == 'cont') and \
+                    (iminfo['specmode'] == 'mfs') and \
                     (inputs.spw in iminfo['spwlist'].split(','))):
                     cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
                     break
