@@ -1177,10 +1177,14 @@ class immoment_test2(unittest.TestCase):
         for i in range(shape[3]):
             myia.putchunk(pixels=aa, blc=[0, 0, i])
         myia.setbrightnessunit("Jy/pixel")
-        moments = [0, 1, 2, 3]
+        moments = [0, 3]
         ret = myia.moments(moments=moments, axis=2)
         ret.done()
         myia.done()
+        for im in ["integrated", "median"]:
+            myia.open("exp." + im)
+            self.assertTrue(myia.getchunk(getmask=True).all(), "bad mask for " + myia.name())
+            myia.done()		
         myia.fromshape("", shape)
         myia = myia.subimage("got", dropdeg=True)
         myia.setbrightnessunit("Jy/beam")
@@ -1210,28 +1214,20 @@ class immoment_test2(unittest.TestCase):
                     cc[i,j] = 0
                 else:
                     cc[i,j] = 1
-        for im in [
-            "integrated", "median", "weighted_coord" ,
-            "weighted_dispersion_coord"
-        ]:
-            got.open("Temporary_Image." + im)
-            exp.open("exp." + im)
+        for im in ["integrated", "median"]:
+            self.assertTrue(got.open("Temporary_Image." + im))
+            self.assertTrue(exp.open("exp." + im))
             shape = got.shape()
+            print "*** shape", shape
+            print "*** cc shape", cc.shape
             gotpix = got.getchunk() * cc
             exppix = exp.getchunk() * cc
             got.done()
             exp.done()
-            if (im == "weighted_dispersion_coord"):
-                epsilon = 3e-3
-            else:
-                epsilon = 1e-5
+            epsilon = 1e-5
             
-            if (im == "weighted_coord"):                
-                mymax = abs((gotpix+1e-6)/(exppix+1e-6) - 1).max()
-                self.assertTrue(mymax < epsilon)
-            else:
-                mymax = abs(gotpix - exppix).max()
-                self.assertTrue(mymax < epsilon)
+            mymax = abs(gotpix - exppix).max()
+            self.assertTrue(mymax < epsilon)
         self.assertTrue(len(tb.showcache()) == 0)
 
 
