@@ -1155,10 +1155,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 -->
 
      <when param="deconvolver">
-       <equals type="string" value="clark">
+       <equals type="string" value="hogbom">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
-       <equals type="string" value="hogbom">
+       <equals type="string" value="clark">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="multiscale">
