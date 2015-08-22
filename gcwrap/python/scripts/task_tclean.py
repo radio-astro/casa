@@ -74,7 +74,7 @@ def tclean(
     ####### Deconvolution parameters
     deconvolver,#='hogbom',
     scales,#=[],
-    ntaylorterms,#=1,
+    nterms,#=1,
     restoringbeam,#=[],
 
     ##### Outliers
@@ -114,8 +114,8 @@ def tclean(
     
     ### Move these checks elsewhere ? 
 
-    if specmode=='mfs' and ntaylorterms==1 and deconvolver == "mtmfs":
-        casalog.post( "The MTMFS deconvolution algorithm (deconvolver='mtmfs') needs ntaylorterms>1.Please set ntaylorterms=2 (or more). ", "WARN", "task_tclean" )
+    if specmode=='mfs' and nterms==1 and deconvolver == "mtmfs":
+        casalog.post( "The MTMFS deconvolution algorithm (deconvolver='mtmfs') needs nterms>1.Please set nterms=2 (or more). ", "WARN", "task_tclean" )
         return
 
     if specmode!='mfs' and deconvolver=="mtmfs":
@@ -204,7 +204,7 @@ def tclean(
 
         deconvolver=deconvolver,
         scales=scales,
-        ntaylorterms=ntaylorterms,
+        nterms=nterms,
         restoringbeam=restoringbeam,
         mask=mask,
 

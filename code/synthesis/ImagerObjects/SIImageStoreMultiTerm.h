@@ -79,6 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			SHARED_PTR<ImageInterface<Float> > newmask,
 			SHARED_PTR<ImageInterface<Float> > newalpha,
 			SHARED_PTR<ImageInterface<Float> > newbeta,
+			SHARED_PTR<ImageInterface<Float> > newalphaerror,
 		       CoordinateSystem& csys, 
 		       IPosition imshape, 
 		       String imagename, 
@@ -104,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   virtual SHARED_PTR<ImageInterface<Float> > alpha();
   virtual SHARED_PTR<ImageInterface<Float> > beta();
+  virtual SHARED_PTR<ImageInterface<Float> > alphaerror();
 
   //  virtual SHARED_PTR<ImageInterface<Float> > gridwt(uInt term=0);
 
@@ -171,7 +173,7 @@ private:
 
   Block<SHARED_PTR<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
   Block<SHARED_PTR<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
-  SHARED_PTR<ImageInterface<Float> > itsAlpha, itsBeta;
+  SHARED_PTR<ImageInterface<Float> > itsAlpha, itsBeta, itsAlphaError;
 
   Block<SHARED_PTR<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts;
 

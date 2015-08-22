@@ -1328,7 +1328,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("overwrite"), overwrite );
 	err += readVal( inrec, String("startmodel"), startModel );
 
-	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
+	err += readVal( inrec, String("nterms"), nTaylorTerms );
 
 	// Force nchan=1 for anything other than cube modes...
 	if(mode=="mfs") nchan=1;
@@ -1484,7 +1484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("cell", cells );
     impar.define("stokes", stokes);
     impar.define("nchan", nchan);
-    impar.define("ntaylorterms", nTaylorTerms);
+    impar.define("nterms", nTaylorTerms);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("phasecenterfieldid",phaseCenterFieldId);
     impar.define("projection", (useNCP? "NCP" : projection.name()) );
@@ -2802,7 +2802,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("startmodel"), startModel );
 
 	err += readVal( inrec, String("id"), deconvolverId );
-	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
+	err += readVal( inrec, String("nterms"), nTaylorTerms );
 
 	err += readVal( inrec, String("scales"), scales );
 
@@ -2907,7 +2907,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisParamsDeconv::setDefaults()
   {
     imageName="";
-    algorithm="clark";
+    algorithm="hogbom";
     startModel="";
     deconvolverId=0;
     nTaylorTerms=1;
@@ -2924,7 +2924,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("deconvolver", algorithm);
     decpar.define("startmodel",startModel);
     decpar.define("id",deconvolverId);
-    decpar.define("ntaylorterms",nTaylorTerms);
+    decpar.define("nterms",nTaylorTerms);
     decpar.define("scales",scales);
     decpar.define("mask",maskString);
     decpar.define("interactive",interactive);

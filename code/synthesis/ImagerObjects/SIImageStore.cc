@@ -1079,7 +1079,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 		  modsubim->copyData(ratio);
 		  
-		  cout << "Val of model before|after flattening at center for pol " << pol << " chan " << chan << " : " << modval << "|" << modsubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
+		  //cout << "Val of model before|after flattening at center for pol " << pol << " chan " << chan << " : " << modval << "|" << modsubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
 		  //LatticeExprNode minval( min(*modsubim) );
 		  //LatticeExprNode maxval( max(*modsubim) );
 		  //cout << "After ---- min : " << minval.getFloat() << " max : " << maxval.getFloat() << endl;

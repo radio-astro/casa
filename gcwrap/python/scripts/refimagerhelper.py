@@ -124,7 +124,7 @@ class PySynthesisImager:
             #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
             #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
             #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            #normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
+            #normpars['nterms'] = self.allimpars[str(immod)]['nterms']
             #normpars['facets'] = self.allgridpars[str(immod)]['facets']
             normpars = self.allnormpars[str(immod)]
             self.PStools[immod].setupnormalizer(normpars=normpars)
@@ -1349,7 +1349,7 @@ class ImagerParameters():
 
                  deconvolver='hogbom',
                  scales=[],
-                 ntaylorterms=1, 
+                 nterms=1, 
                  restoringbeam=[],
 #                 mtype='default',
                  mask='',
@@ -1384,7 +1384,7 @@ class ImagerParameters():
         self.allimpars = { self.defaultKey :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cell':cell, 'phasecenter':phasecenter, 'stokes': stokes,
                                  'specmode':specmode, 'start':start, 'width':width, 'veltype':veltype,
-                                 'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
+                                 'nterms':nterms,'restfreq':restfreq, 
                                  'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
                                  'overwrite':overwrite, 'startmodel':startmodel,}    }
@@ -1401,12 +1401,12 @@ class ImagerParameters():
 
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
         self.allnormpars = { self.defaultKey : {#'mtype': mtype,
-                                 'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
+                                 'pblimit': pblimit,'nterms':nterms,'facets':facets,
                                  'normtype':normtype, 'workdir':workdir,
                                  'deconvolver':deconvolver}     }
 
         ######### Deconvolution
-        self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
+        self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'nterms':nterms, 
                                     'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
@@ -1425,12 +1425,12 @@ class ImagerParameters():
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cell','phasecenter','startmodel',
                              'start','width',
-                             'ntaylorterms','reffreq','specmode']
+                             'nterms','reffreq','specmode']
         self.outgridparlist = ['gridder','deconvolver','wprojplanes']
         self.outweightparlist=[]
-        self.outdecparlist=['deconvolver','startmodel','ntaylorterms','mask']
-        self.outnormparlist=['deconvolver','weightlimit','ntaylorterms']
-#        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
+        self.outdecparlist=['deconvolver','startmodel','nterms','mask']
+        self.outnormparlist=['deconvolver','weightlimit','nterms']
+#        self.outnormparlist=['imagename','mtype','weightlimit','nterms']
 
         ret = self.checkParameters()
         if ret==False:
@@ -1654,7 +1654,10 @@ class ImagerParameters():
         if self.iterpars['niter']>0:
             # Make sure cycleniter is less than or equal to niter. 
             if self.iterpars['cycleniter']<=0 or self.iterpars['cycleniter'] > self.iterpars['niter']:
-                self.iterpars['cycleniter'] = self.iterpars['niter']
+                if self.iterpars['interactive']==False:
+                    self.iterpars['cycleniter'] = self.iterpars['niter']
+                else:
+                    self.iterpars['cycleniter'] = min(self.iterpars['niter'] , 100)
 
         return errs
 
@@ -1727,9 +1730,9 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'impars', 'imsize', 'intvec' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'nchan', 'int' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'cell', 'strvec' )
-        returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
-        returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
-        returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'nterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'decpars', 'nterms', 'int' )
+        returnlist = self.evalToTarget( returnlist, 'normpars', 'nterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'gridpars', 'wprojplanes', 'int' )
 #        returnlist = self.evalToTarget( returnlist, 'impars', 'reffreq', 'strvec' )
 
@@ -1763,14 +1766,14 @@ class ImagerParameters():
 #                    returnlist[ fld ]['impars']['cell'] = cell_e
 #        except:
 #            print 'Cannot evaluate outlier field parameter "cell"'
-#        ## ntaylorterms (like nchan)
+#        ## nterms (like nchan)
 #        try:
 #            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('ntaylorterms'):
-#                    nterms_e = eval( returnlist[ fld ]['impars']['ntaylorterms'] )
-#                    returnlist[ fld ]['impars']['ntaylorterms'] = nterms_e
+#                if returnlist[ fld ]['impars'].has_key('nterms'):
+#                    nterms_e = eval( returnlist[ fld ]['impars']['nterms'] )
+#                    returnlist[ fld ]['impars']['nterms'] = nterms_e
 #        except:
-#            print 'Cannot evaluate outlier field parameter "ntaylorterms"'
+#            print 'Cannot evaluate outlier field parameter "nterms"'
 #        ## restfreq (like cell)
 #        try:
 #            for fld in range(0, len( returnlist ) ):
