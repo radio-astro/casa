@@ -98,19 +98,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales )); 
 	  } 
-	else if(decpars.algorithm==String("clark"))
+	else if(decpars.algorithm==String("clark_exp"))
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmClarkClean("clark")); 
 	  } 
-	else if(decpars.algorithm==String("clarkstokes"))
+	else if(decpars.algorithm==String("clarkstokes_exp"))
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmClarkClean("clarkstokes")); 
 	  } 
-	else if(decpars.algorithm==String("clark2"))
+	else if(decpars.algorithm==String("clark"))
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmClarkClean2("clark")); 
 	  } 
-	else if(decpars.algorithm==String("clarkstokes2"))
+	else if(decpars.algorithm==String("clarkstokes"))
 	  {
 	    itsDeconvolver.reset(new SDAlgorithmClarkClean2("clarkstokes")); 
 	  } 

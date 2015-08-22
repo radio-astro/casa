@@ -212,8 +212,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( nSubChans>1 || nSubPols>1 )
       {
 	os << "[" << imagestore->getName() << "] ";
-	os << "Total model flux (over all planes) : " << totalFluxAcrossPlanes << LogIO::POST;
-	//<< "     Peak Residual (over all planes) : " << maxResidualAcrossPlanes << " in C"<<maxResChan << ":P"<<maxResPol << LogIO::POST;
+	os << "Total model flux (over all planes) : " << totalFluxAcrossPlanes; //<< LogIO::POST;
+	os << "     Peak Residual (over all planes) : " << maxResidualAcrossPlanes << " in C"<<maxResChan << ":P"<<maxResPol << LogIO::POST;
       }
 
   }// end of deconvolve

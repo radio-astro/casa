@@ -62,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsPartImages(Vector<SHARED_PTR<SIImageStore> >()),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsPBLimit(0.1),
+				       itsPBLimit(0.2),
 				       itsMapperType("default"),
 				       itsNTaylorTerms(1),
                                        itsNFacets(1)
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  normpars.get( RecordFieldId("pblimit") , itsPBLimit );
 	}
       else
-	{ itsPBLimit = 0.1; }
+	{ itsPBLimit = 0.2; }
 
       if( normpars.isDefined("normtype") )  // A single string
 	{ itsNormType = normpars.asString( RecordFieldId("normtype")); }
@@ -124,8 +124,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsMapperType = "default";}
 
-      if( normpars.isDefined("ntaylorterms") )  // A single int
-	{ itsNTaylorTerms = normpars.asuInt( RecordFieldId("ntaylorterms")); }
+      if( normpars.isDefined("nterms") )  // A single int
+	{ itsNTaylorTerms = normpars.asuInt( RecordFieldId("nterms")); }
       else
 	{ itsNTaylorTerms = 1;}
 

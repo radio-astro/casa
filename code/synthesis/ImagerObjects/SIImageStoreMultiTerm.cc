@@ -309,6 +309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					       SHARED_PTR<ImageInterface<Float> > newmask,
 					       SHARED_PTR<ImageInterface<Float> > newalpha,
 					       SHARED_PTR<ImageInterface<Float> > newbeta,
+					       SHARED_PTR<ImageInterface<Float> > newalphaerror,
 					       CoordinateSystem& csys,
 					       IPosition imshape,
 					       String imagename,
@@ -326,6 +327,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMask = newmask;
     itsAlpha = newalpha;
     itsBeta = newbeta;
+    itsAlphaError = newalphaerror;
 
     itsNTerms = itsResiduals.nelements();
     itsMiscInfo=Record();
@@ -470,6 +472,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsMask ) releaseImage( itsMask );
     if( itsAlpha ) releaseImage( itsAlpha );
     if( itsBeta ) releaseImage( itsBeta );
+    if( itsAlphaError ) releaseImage( itsAlphaError );
     if( itsGridWt ) releaseImage( itsGridWt );
     if( itsPB ) releaseImage( itsPB );
     
@@ -619,9 +622,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( itsBeta && itsBeta->shape() == itsImageShape ) { return itsBeta; }
     //    checkRef( itsBeta , "beta" );
-    itsBeta = openImage( itsImageName+String(".alpha"), False );
+    itsBeta = openImage( itsImageName+String(".beta"), False );
     //    itsBeta->setUnits("Beta");
     return itsBeta;
+  }
+
+  SHARED_PTR<ImageInterface<Float> > SIImageStoreMultiTerm::alphaerror()
+  {
+    if( itsAlphaError && itsAlphaError->shape() == itsImageShape ) { return itsAlphaError; }
+    //    checkRef( itsAlpha , "alpha" );
+    itsAlphaError = openImage( itsImageName+String(".alpha.error"), False );
+    //    itsAlpha->setUnits("Alpha");
+    return itsAlphaError;
   }
 
 
@@ -858,6 +870,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		LatticeExpr<Float> mask1(iif(((*(image(0))))>(specthreshold),1.0,0.0));
 		LatticeExpr<Float> mask0(iif(((*(image(0))))>(specthreshold),0.0,1.0));
 		
+		/////////////////////////////////////////////////////////
 		/////// Calculate alpha
 		LatticeExpr<Float> alphacalc( (((*(image(1))))*mask1)/(((*(image(0))))+(mask0)) );
 		alpha()->copyData(alphacalc);
@@ -872,8 +885,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 		createMask( lemask, (alpha()) );
 
-	      }
-	    
+		/////////////////////////////////////////////////////////
+		/////// Calculate alpha error
+		Bool writeerror=True;
+		if(writeerror)
+		  {
+		    //		    String alphaerrorname( alpha()->name() + ".error" );
+		    //PagedImage<Float> imalphaerror(itsImageShape,itsCoordSys,alphaerrorname); 
+		    alphaerror()->set(0.0);
+		    //	  PagedImage<Float> residual1(residualNames[getModelIndex(field,1)]);
+
+		    LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (*residual(0)*mask1)/(*image(0)+mask0) )*( (*residual(0)*mask1)/(*image(0)+mask0) ) + ( (*residual(1)*mask1)/(*image(1)+mask0) )*( (*residual(1)*mask1)/(*image(1)+mask0) )  ) );
+		    alphaerror()->copyData(alphacalcerror);
+		    alphaerror()->setImageInfo(ii);
+		    createMask(lemask, alphaerror());
+		    //		    alphaerror()->table().unmarkForDelete();      
+		    os << "Written Spectral Index Error Image : " << alphaerror()->name() << LogIO::POST;
+		    
+		  }//if writeerror
+
+		if(itsNTerms>2) // calculate beta too.
+		  {
+		    beta()->set(0.0);
+		    //PagedImage<Float> imtaylor2(restoredNames[getModelIndex(field,2)]);
+		    
+		    LatticeExpr<Float> betacalc( (*image(2)*mask1)/((*image(0))+(mask0))-0.5*(*alpha())*((*alpha())-1.0) );
+		    beta()->copyData(betacalc);
+		    beta()->setImageInfo(ii);
+		    //imbeta.setUnits(Unit("Spectral Curvature"));
+		    createMask(lemask, beta());
+		    //	    beta()->table().unmarkForDelete();
+		    
+		    os << "Written Spectral Curvature Image : " << beta()->name() << LogIO::POST;
+		    
+		  }
+
+	      }//if nterms>1
+
       }
     catch(AipsError &x)
       {
@@ -899,9 +947,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tay1=0;tay1<itsNTerms;tay1++)
       for(uInt tay2=0;tay2<itsNTerms;tay2++)
 	{
-	  uInt taymin = (tay1<=tay2)? tay1 : tay2;
-	  uInt taymax = (tay1>=tay2)? tay1 : tay2;
-	  uInt ind = (taymax*(taymax+1)/2)+taymin;
+	  //uInt taymin = (tay1<=tay2)? tay1 : tay2;
+	  //uInt taymax = (tay1>=tay2)? tay1 : tay2;
+	  //uInt ind = (taymax*(taymax+1)/2)+taymin;
+
+	  uInt ind = tay1+tay2;
 	  AlwaysAssert( ind < 2*itsNTerms-1, AipsError );
 
 	  Array<Float> lsumwt;
@@ -1008,7 +1058,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  const Int chan, const Int nchanchunks, 
 							  const Int pol, const Int npolchunks)
   {
-    return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask, itsAlpha, itsBeta, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
+    return SHARED_PTR<SIImageStore>(new SIImageStoreMultiTerm(itsModels, itsResiduals, itsPsfs, itsWeights, itsImages, itsSumWts, itsMask, itsAlpha, itsBeta, itsAlphaError, itsCoordSys,itsParentImageShape, itsImageName, facet, nfacets,chan,nchanchunks,pol,npolchunks));
   }
 
 

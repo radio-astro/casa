@@ -20,77 +20,186 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="vis" kind="ms" mustexist="true">
    <shortdescription>Name of input visibility file(s)</shortdescription>
-<description>Name of input visibility file(s)</description>
+<description>Name(s) of input visibility file(s)
+               default: none; 
+               example: vis='ngc5921.ms'
+                        vis=['ngc5921a.ms','ngc5921b.ms']; multiple MSes
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
 
     <param type="bool" name="selectdata" visibility="hidden">
-     <shortdescription>Show data selection parameters</shortdescription>
-<description>Show data selection parameters in the task interface.</description>
+     <shortdescription>Enable data selection parameters</shortdescription>
+<description>Enable data selection parameters in the task interface.
+</description>
       <value type="bool">True</value>
     </param>
 
     <param type="any" name="field" subparam="true">
      <shortdescription>field(s) to select</shortdescription>
-<description>field(s) to select</description>
+<description> Select fields to image or mosaic.  Use field id(s) or name(s).
+                  ['go listobs' to obtain the list id's or names]
+               default: ''= all fields
+                 If field string is a non-negative integer, it is assumed to
+                 be a field index otherwise, it is assumed to be a 
+		 field name
+                 field='0~2'; field ids 0,1,2
+                 field='0,4,5~7'; field ids 0,4,5,6,7
+                 field='3C286,3C295'; field named 3C286 and 3C295
+                 field = '3,4C*'; field id 3, all names starting with 4C
+                 For multiple MS input, a list of field strings can be used:
+                 field = ['0~2','0~4']; field ids 0-2 for the first MS and 0-4
+                         for the second 
+                 field = '0~2'; field ids 0-2 for all input MSes
+
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="spw" subparam="true">
-     <shortdescription>spw(s) to select</shortdescription>
-<description>spw(s) to select</description>
+     <shortdescription>spw(s)/channels to select</shortdescription>
+<description> Select spectral window/channels
+               NOTE: channels de-selected here will contain all zeros if
+                         selected by the parameter mode subparameters.    
+               default: ''=all spectral windows and channels
+                 spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                 spw='0:5~61'; spw 0, channels 5 to 61
+                 spw='&lt;2';   spectral windows less than 2 (i.e. 0,1)
+                 spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+				    channels 3 to 45.
+                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                 For multiple MS input, a list of spw strings can be used:
+                 spw=['0','0~3']; spw ids 0 for the first MS and 0-3 for the second
+                 spw='0~3' spw ids 0-3 for all input MS
+                 spw='3:10~20;50~60' for multiple channel ranges within spw id 3
+                 spw='3:10~20;50~60,4:0~30' for different channel ranges for spw ids 3 and 4
+                 spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                      spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+                 spw='1~4;6:15~48' for channels 15 through 48 for spw ids 1,2,3,4 and 6
+
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="timerange" subparam="true">
      <shortdescription>Range of time to select from data</shortdescription>
-<description>Range of time to select from data</description>
+<description>Range of time to select from data
+
+                   default: '' (all); examples,
+                   timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                   Note: if YYYY/MM/DD is missing date defaults to first 
+			 day in data set
+                   timerange='09:14:0~09:54:0' picks 40 min on first day
+                   timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 
+			     30min on NEXT day
+                   timerange='09:44:00' pick data within one integration 
+		             of time
+                   timerange='&gt; 10:24:00' data after this time
+                   For multiple MS input, a list of timerange strings can be
+                   used:
+                   timerange=['09:14:0~09:54:0','&gt; 10:24:00']
+                   timerange='09:14:0~09:54:0''; apply the same timerange for
+                                                 all input MSes 
+
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="uvrange" subparam="true">
      <shortdescription>Select data within uvrange</shortdescription>
-<description>Select data within uvrange </description>
+<description>Select data within uvrange (default unit is meters)
+                   default: '' (all); example:
+                   uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+                   uvrange='&gt; 4klambda';uvranges greater than 4 kilo lambda
+                   For multiple MS input, a list of uvrange strings can be
+                   used:
+                   uvrange=['0~1000klambda','100~1000klamda']
+                   uvrange='0~1000klambda'; apply 0-1000 kilo-lambda for all
+                                            input MSes
+ </description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="antenna" subparam="true">
      <shortdescription>Select data based on antenna/baseline</shortdescription>
-<description>Select data based on antenna/baseline</description>
+<description>Select data based on antenna/baseline
+
+                   default: '' (all)
+                   If antenna string is a non-negative integer, it is 
+ 		   assumed to be an antenna index, otherwise, it is
+ 		   considered an antenna name.
+                   antenna='5&amp;6'; baseline between antenna index 5 and 
+ 				 index 6.
+                   antenna='VA05&amp;VA06'; baseline between VLA antenna 5 
+ 				       and 6.
+                   antenna='5&amp;6;7&amp;8'; baselines 5-6 and 7-8
+                   antenna='5'; all baselines with antenna index 5
+                   antenna='05'; all baselines with antenna number 05 
+ 				(VLA old name)
+                   antenna='5,6,9'; all baselines with antennas 5,6,9 
+ 				   index number
+                   For multiple MS input, a list of antenna strings can be
+                   used:
+                   antenna=['5','5&amp;6'];
+                   antenna='5'; antenna index 5 for all input MSes
+
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="scan" subparam="true">
      <shortdescription>Scan number range</shortdescription>
-<description>Scan number range</description>
+<description>Scan number range
+
+                   default: '' (all)
+                   example: scan='1~5'
+                   For multiple MS input, a list of scan strings can be used:
+                   scan=['0~100','10~200']
+                   scan='0~100; scan ids 0-100 for all input MSes
+                   Check 'go listobs' to insure the scan numbers are in order.
+
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
     
     <param type="any" name="observation" subparam="true">
      <shortdescription>Observation ID range</shortdescription>
-<description>Observation ID range</description>
+<description>Observation ID range
+                   default: '' (all)
+                   example: observation='1~5'
+</description>
       <any type="variant" limittypes="string int"/>
       <value type="string"></value>
     </param>
 
     <param type="any" name="intent" subparam="true">
      <shortdescription>Scan Intent(s)</shortdescription>
-<description>Scan Intent(s)</description>
+<description>Scan Intent(s)
+
+                   default: '' (all)
+                   example: intent='TARGET_SOURCE'  
+                   example: intent='TARGET_SOURCE1,TARGET_SOURCE2'  
+                   example: intent='TARGET_POINTING*'
+</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
     </param>
 
     <param type="string" name="datacolumn" subparam="true">
-     <shortdescription>data or observed, corrected</shortdescription>
-<description>data or observed, corrected</description>
+     <shortdescription>Data column to image(data,corrected)</shortdescription>
+<description>Data column to image (data or observed, corrected)
+                     default:'corrected'
+                     ( If 'corrected' does not exist, it will use 'data' instead )
+                     
+</description>
       <value type="string">corrected</value>
     </param>
 
@@ -101,7 +210,49 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="imagename" required="true">
      <shortdescription>Pre-name of output images</shortdescription>
-<description>Pre-name of output images</description>
+<description>Pre-name of output images
+                     
+                       example : imagename='try'
+
+                       Output images will be (a subset of) :
+
+                       try.psf              - Point spread function
+                       try.residual      - Residual image
+                       try.image         - Restored image
+                       try.model         - Model image (contains only flux components)
+                       try.sumwt        - Single pixel image containing sum-of-weights.
+                                                 (for natural weighting, sensitivity=1/sqrt(sumwt))
+
+                       Widefield projection algorithms (gridder=mosaic,awproject) will
+                       compute the following images too.
+                       try.weight        - FT of gridded weights or the 
+                                                  un-normalized sum of PB-square (for all pointings)
+                       try.pb               -  PB = sqrt(weight) normalized to a maximum of 1.0
+
+                       For multi-term wideband imaging, all relevant images above will 
+                       have additional .tt0,.tt1, etc suffixes to indicate Taylor terms,
+                       plus the following extra output images.
+                       try.alpha            - spectral index
+                       try.alpha.error   - estimate of error on spectral index
+                       try.beta              - spectral curvature (if nterms \> 2)
+                      
+
+                       Tip : Include a directory name in 'imagename' for all 
+                               output images to be sent there instead of the
+                               current working directory : imagename='mydir/try'
+
+                       Tip : Restarting an imaging run without changing 'imagename' 
+                               implies continuation from the existing model image on disk.
+                                - If 'startmodel' was initially specified it needs to be set to "" 
+                                  for the restart run (or tclean will exit with an error message).
+                                - By default, the residual image and psf will be recomputed
+                                  but if no changes were made to relevant parameters between 
+                                  the runs, set calcres=False, calcpsf=False to resume directly from
+                                  the minor cycle without the (unnecessary) first major cycle.
+                                To automatically change 'imagename' with a numerical 
+                                increment, set overwrite=False (see inline docs for 'overwrite').
+
+</description>
       <any type="variant" limittypes="int string stringArray"/>
       <value type="string"></value>
     </param>
@@ -228,8 +379,107 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="string" name="gridder">
-           <shortdescription>Gridding options (standard, widefield, ftmosaic, imagemosaic, awproject)</shortdescription>
-<description>Gridding options (standard, widefield, ftmosaic, imagemosaic, awproject)</description>
+           <shortdescription>Gridding options (standard, wproject, widefield, mosaic, imagemosaic, awproject)</shortdescription>
+<description>Gridding options (standard, wproject, widefield, mosaic, imagemosaic, awproject)
+
+                       The following options choose different gridding convolution
+                       functions for the process of convolutional resampling of the measured
+                       visibilities onto a regular uv-grid prior to an inverse FFT. 
+                       Model prediction (degridding) also uses these same functions.
+                       Several wide-field effects can be accounted for via careful choices of 
+                       convolution functions. Gridding (degridding) runtime will rise in 
+                       proportion to the support size of these convolution functions (in uv-pixels).
+
+                       standard,
+                       ft,
+                       gridft : Prolate Spheroid with 3x3 uv pixel support size (ref)
+
+                       wproject,
+                       wprojectft : W-Projection algorithm to correct for the widefield
+                                           non-coplanar baseline effect.
+
+                                           wprojplanes is the number of distinct w-values at 
+                                           which to compute and use different gridding convolution
+                                           functions (see help for wprojplanes). 
+                                          Convolution function support size can range
+                                           from 5x5 to few 100 x few 100. 
+
+                       widefield : Facetted imaging with or without W-Projection per facet.
+
+                                        A set of facets x facets subregions of the specified image
+                                        are gridded separately using their respective phase centers 
+                                        (to minimize max W). Deconvolution is done on the joint
+                                        full size image, using a PSF from the first subregion.
+
+                                        wprojplanes=1 : standard prolate spheroid gridder per facet.
+                                        wprojplanes &gt; 1 : W-Projection gridder per facet.
+                                        nfacets=1, wprojplanes &gt; 1 : Pure W-Projection and no facetting
+                                        nfacets=1, wprojplanes=1 : Same as standard,ft,gridft
+
+                                        A combination of facetting and W-Projection is relevant only for
+                                        very large fields of view.
+
+                       mosaic,
+                       ftmosaic,
+                       mosaicft : A-Projection with azimuthally symmetric beams without
+                                        sidelobes, beam rotation or squint correction. 
+                                        Gridding convolution functions per visibility are computed
+                                        from FTs of PB models per antenna.
+                                        This gridder can be run on single fields as well as mosaics.
+
+                                       VLA : PB polynomial fit model (Napier and Rots, 1982)
+                                       ALMA : Airy disks for a 10.7m dish (for 12m dishes) and
+                                                   6.25m dish (for 7m dishes) each with 0.75m 
+                                                   blockages (Hunter/Brogan 2011)
+                                       
+                                       Typical gridding convolution function support sizes are 
+                                       between 7 and 50 depending on the desired
+                                       accuracy (given by the uv cell size or image field of view).
+
+                       awproject,
+                       awprojectft : A-Projection with azimuthally asymmetric beams and 
+                                            including beam rotation, squint correction,
+                                            conjugate frequency beams and W-projection.
+                                            Gridding convolution functions are computed from 
+                                            aperture illumination models per antenna and optionally
+                                            combined with W-Projection kernels as well.
+                                            This gridder can be run on single fields as well as mosaics.
+ 
+                                        VLA : Uses ray traced model (VLA and EVLA) including feed 
+                                                 leg and subreflector shadows, off-axis feed location 
+                                                 (for beam squint and other polarization effects), and
+                                                 a Gaussian fit for the feed beams (Ref: Brisken 2009)
+                                        ALMA : Similar ray-traced model as above (but the correctness
+                                                    of its polarization properties remains un-verified).
+
+                                       Typical gridding convolution function support sizes are 
+                                       between 7 and 50 depending on the desired
+                                       accuracy (given by the uv cell size or image field of view). 
+                                       When combined with W-Projection they can be significantly larger.
+
+                       imagemosaic : Grid and iFT each pointing separately and combine the
+                                                images as a linear mosaic (weighted by a PB model) in 
+                                               the image domain before a joint minor cycle. 
+
+                                               VLA/ALMA PB models are same as for gridder='mosaicft'
+
+
+                       Notes on PB models : 
+
+                       (1) Several different sources of PB models are used in the modes 
+                            listed above. This is partly for reasons of algorithmic flexibility 
+                            and partly due to the current  lack of a common beam model 
+                            repository or consensus on what beam models are most appropriate.
+
+                       (2) For ALMA and gridder='mosaicft', ray-traced (TICRA) beams 
+                            are also available via the vpmanager tool. 
+                            For example, call the following before the tclean run.
+                           vp.setpbimage(telescope="ALMA", 
+                           compleximage='/home/casa/data/trunk/alma/responses/ALMA_0_DV__0_0_360_0_45_90_348.5_373_373_GHz_ticra2007_VP.im', 
+                           antnames=['DV'+'%02d'%k for k in range(25)]) 
+                           ( Currently this will work only for non-parallel runs )
+
+</description>
 	    <value type="string">standard</value>
 	    <allowed kind="enum">
 	      <value>standard</value>
@@ -249,13 +499,42 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="facets" subparam="true">
      <shortdescription>Number of facets on a side</shortdescription>
-<description>Number of facets on a side</description>
+<description>Number of facets on a side
+
+                       A set of (facets x facets) subregions of the specified image
+                       are gridded separately using their respective phase centers 
+                       (to minimize max W). Deconvolution is done on the joint
+                       full size image, using a PSF from the first subregion/facet.
+
+</description>
       <value type="int">1</value>
     </param>
 
     <param type="int" name="wprojplanes" subparam="true">
-     <shortdescription>Number of w-planes for convolution function calculation</shortdescription>
-<description>Number of w-planes for convolution function calculation</description>
+     <shortdescription>Number of distinct w-values for convolution functions</shortdescription>
+<description>Number of distinct w-values at which to compute and use different
+                       gridding convolution functions for W-Projection
+
+                       An appropriate value of wprojplanes depends on the presence/absence 
+                       of a bright source far from the phase center, the desired dynamic 
+                       range of an image in the presence of a bright far out source,  
+                       the maximum w-value in the measurements, and the desired trade off
+                       between accuracy and computing cost.
+
+                       As a (rough) guide, VLA L-Band D-config may require a
+                       value of 128 for a source 30arcmin away from the phase 
+                       center. A-config may require 1024 or more. To converge to an
+                       appropriate value, try starting with 128 and then increasing
+                       it if artifacts persist. W-term artifacts (for the VLA) typically look
+                       like arc-shaped smears in a synthesis image or a shift in source 
+                       position between images made at different times. These artifacts
+                       are more pronounced the further the source is from the phase center.
+
+                       There is no harm in simply always choosing a large value (say, 1024) 
+                       but there will be a significant performance cost to doing so, especially
+                       for gridder='awproject' where it is combined with A-Projection.
+
+</description>
       <value type="int">1</value>
     </param>
 
@@ -304,7 +583,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="double" name="pblimit" subparam="true">
      <shortdescription>>PB gain level at which to cut off image calculations </shortdescription>
 <description>PB gain level at which to cut off image calculations  </description>
-      <value type="double">0.01</value>
+      <value type="double">0.2</value>
     </param>
 
     <param type="string" name="normtype" subparam="true">
@@ -320,8 +599,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="string" name="deconvolver">
-      <shortdescription>Minor cycle algorithm (clark,hogbom,multiscale,mtmfs,mem,clarkstokes)</shortdescription>
-<description>Name of minor cycle algorithm (clark,hogbom,multiscale,mtmfs,mem,clarkstokes)
+      <shortdescription>Minor cycle algorithm (hogbom,clark,multiscale,mtmfs,mem,clarkstokes)</shortdescription>
+<description>Name of minor cycle algorithm (hogbom,clark,multiscale,mtmfs,mem,clarkstokes)
                        
                        Each of the following algorithms operate on residual images and psfs 
                        from the gridder and produce output model and restored images.
@@ -351,7 +630,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                        - Smooth the residual image to multiple scale sizes
                                        - Find the location and scale at which the peak occurs
                                        - Add this multiscale component to the model image
-                                       - Subtract a scaled,smoothed,shifted PSF from all residual images
+                                       - Subtract a scaled,smoothed,shifted PSF (within a small
+                                         patch size per scale) from all residual images
                                        - Repeat from step 2
 
                        mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis (ref)
@@ -361,8 +641,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                        - Compute gradient chi-square and pick the Taylor coefficients
                                           and scale size at the location with maximum reduction in chi-square
                                        - Add multi-scale components to each Taylor-coefficient model image
-                                       - Subtract scaled,smoothed,shifted PSF patchs from all 
-                                          smoothed Taylor residual images
+                                       - Subtract scaled,smoothed,shifted PSF (within a small patch size
+                                         per scale) from all smoothed Taylor residual images
                                        - Repeat from step 2
 
                        mem : Maximum Entropy Method (ref)
@@ -371,9 +651,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                          chi-square plus entropy (here, a measure of difference 
                                          between the current model and a flat prior model).
 
+                                         (Note : This MEM implementation is not very robust. 
+                                                      Improvements will be made in the future.)
+
 
 </description>
-	    <value type="string">clark</value>
+	    <value type="string">hogbom</value>
 	    <allowed kind="enum">
 	      <value>hogbom</value>
               <value>clark</value>
@@ -383,14 +666,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      <value>multiscale</value>
 	      <value>mtmfs</value>
 	      <value>mem</value>
-	      <value>aasp</value>
+<!--	      <value>aasp</value> -->
 	    </allowed>
     </param>
 
     <param type="any" name="scales" subparam="true">
            <shortdescription>List of scale sizes (in pixels) for multi-scale algorithms</shortdescription>
 	   <description>List of scale sizes (in pixels) for multi-scale and mtmfs algorithms.
-                                  -->  scales=[0,6,20] 
+                                  --&gt;  scales=[0,6,20] 
                                   This set of scale sizes should represent the sizes 
                                   (diameters in units of number of pixels) 
                                   of dominant features in the image being reconstructed.
@@ -411,13 +694,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="intArray"></value>
     </param>
 
-    <param type="int" name="ntaylorterms" subparam="true">
+    <param type="int" name="nterms" subparam="true">
      <shortdescription>Number of Taylor coefficients in the spectral model</shortdescription>
 <description>Number of Taylor coefficients in the spectral model
 
-                       - ntaylorterms=1 : Assume flat spectrum source
-                       - ntaylorterms=2 : Spectrum is a straight line with a slope
-                       - ntaylorterms>2 : A polynomial of order n-1
+                       - nterms=1 : Assume flat spectrum source
+                       - nterms=2 : Spectrum is a straight line with a slope
+                       - nterms &gt; 2 : A polynomial of order n-1
 
                        From a Taylor expansion of the expression of a power law, the 
                        spectral index is derived as alpha = taylorcoeff_1 / taylorcoeff_0
@@ -428,7 +711,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        signal to noise ratio, bandwidth ratio, and spectral shape of the 
                        source as seen by the telescope (sky spectrum x PB spectrum).
 
-                       ntaylorterms=2 is a good starting point for wideband EVLA imaging 
+                       nterms=2 is a good starting point for wideband EVLA imaging 
                        if there is at least one bright source for which a dynamic range of
                        greater than few 100 is desired.
 
@@ -517,7 +800,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="stringArray" name="uvtaper" subparam="true">
 	   <shortdescription>uv-taper on outer baselines in uv-plane</shortdescription>
-<description>uv-taper on outer baselines in uv-plane</description>
+<description>uv-taper on outer baselines in uv-plane
+
+                   [bmaj, bmin, bpa] taper Gaussian scale in uv or 
+ 		   angular units. NOTE: the on-sky FWHM in arcsec is roughly
+                   the uv taper/200 (klambda).
+                   default: outertaper=[]; no outer taper applied
+ 		   example: outertaper=['5klambda']  circular taper 
+ 				FWHM=5 kilo-lambda
+                            outertaper=['5klambda','3klambda','45.0deg']
+                            outertaper=['10arcsec'] on-sky FWHM 10 arcseconds
+                            outertaper=['300.0'] default units are lambda 
+ 			        in aperture plane
+
+</description>
 	    <value type="vector">
 	      <value></value>
 	    </value>
@@ -748,7 +1044,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <when param="specmode">
        <equals type="string" value="mfs">
 	 <default param="reffreq"><value>""</value></default>
-<!--	 <default param="ntaylorterms"><value>1</value></default> -->
+<!--	 <default param="nterms"><value>1</value></default> -->
        </equals>
        <equals type="string" value="cube">
 	 <default param="nchan"><value>-1</value></default>
@@ -871,7 +1167,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
-	 <default param="ntaylorterms"><value>2</value></default>  
+	 <default param="nterms"><value>2</value></default>  
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="aasp">
