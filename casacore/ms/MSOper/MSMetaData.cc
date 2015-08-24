@@ -982,7 +982,6 @@ std::set<String> MSMetaData::getIntentsForField(Int fieldID) {
 	return fieldToIntentsMap[fieldID];
 }
 
-
 uInt MSMetaData::nFields() const {
 	if (_nFields > 0) {
 		return _nFields;
@@ -1003,6 +1002,20 @@ MDirection MSMetaData::phaseDirFromFieldIDAndTime(const uInt fieldID,  const MEp
 	Double inSeconds= MEpoch::Convert(ep, msType)().get(sec).getValue();
 	return msfc.phaseDirMeas(fieldID, inSeconds);
 } 
+
+MDirection MSMetaData::getReferenceDirection(
+	const uInt fieldID,  const MEpoch& ep
+) const {
+	_hasFieldID(fieldID);
+	ROMSFieldColumns msfc(_ms->field());
+	if(! msfc.needInterTime(fieldID)) {
+		return msfc.referenceDirMeas(fieldID, 0.0);
+	}
+	MEpoch::Types msType = MEpoch::castType(msfc.timeMeas()(fieldID).getRef().getType());
+	Unit sec("s");
+	Double inSeconds = MEpoch::Convert(ep, msType)().get(sec).getValue();
+	return msfc.referenceDirMeas(fieldID, inSeconds);
+}
 
 void MSMetaData::_getFieldsAndSpwMaps(
 	std::map<Int, std::set<uInt> >& fieldToSpwMap,
