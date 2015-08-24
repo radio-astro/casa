@@ -1069,7 +1069,9 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
-::casac::record* msmetadata::phasecenter(const int fieldid, const ::casac::record& epoch){
+::casac::record* msmetadata::phasecenter(
+	const int fieldid, const record& epoch
+) {
 	::casac::record *rval=0;
     _FUNC(   
     	PtrHolder<Record> ep(toRecord(epoch));
@@ -1169,6 +1171,51 @@ record* msmetadata::propermotions() {
 		return fromRecord(rec);
 	)
 	return NULL;
+}
+
+::casac::record* msmetadata::refdir(
+	const variant& field, const record& epoch
+) {
+    _FUNC(
+    	Int id;
+    	switch (field.type()) {
+    	case variant::STRING:
+    		id = *(_msmd->getFieldIDsForField(field.toString()).begin());
+    		break;
+    	case variant::INT:
+    		id = field.toInt();
+    		break;
+    	default:
+    		ThrowCc(
+    			"Unsupported type for field which must be "
+    			"a nonnegative int or string."
+    		);
+    	}
+    	unique_ptr<Record> ep(toRecord(epoch));
+	  	Record outRec;
+	  	MeasureHolder mh;
+	  	String err;
+	  	if (ep->nfields() == 0) {
+	  		mh = MeasureHolder(_msmd->getReferenceDirection(id));
+	  	}
+	  	else {
+	  		MeasureHolder ephold;
+	  		ThrowIf(
+	  			! ephold.fromRecord(err, *ep),
+				"Epoch cannot be converted \n" + err
+			);
+	  		ThrowIf(
+	  			! ephold.isMEpoch(), "Epoch parameter is not an MEpoch  \n"
+			);
+	  		mh = MeasureHolder(_msmd->getReferenceDirection(id, ephold.asMEpoch()));
+	  	}
+	  	ThrowIf(
+	  		! mh.toRecord(err, outRec),
+			"Could not convert reference direction to Record \n" + err
+		);
+	  	return fromRecord(outRec);
+    )
+    return nullptr;
 }
 
 record* msmetadata::reffreq(int spw) {
@@ -1280,26 +1327,6 @@ int msmetadata::sideband(int spw) {
 		return _msmd->getNetSidebands()[spw];
 	)
 	return 0;
-}
-
-record* msmetadata::sourcedirs() {
-	_FUNC(
-		std::vector<casacore::MDirection> mdirs = _msmd->getSourceDirections();
-		uInt i = 0;
-		vector<casacore::MDirection>::const_iterator iter = mdirs.begin();
-		vector<casacore::MDirection>::const_iterator end = mdirs.end();
-		Record r;
-		Record mr;
-		while (iter != end) {
-			MeasureHolder mh(*iter);
-			mh.toRecord(mr);
-			r.defineRecord(casa::String::toString(i), mr);
-			++iter;
-			++i;
-		}
-		return fromRecord(r);
-	)
-	return NULL;
 }
 
 int msmetadata::sourceidforfield(int field) {

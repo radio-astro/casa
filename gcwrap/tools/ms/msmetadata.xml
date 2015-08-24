@@ -1240,7 +1240,7 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
-	<method type="function" name="phasecenter">
+    	<method type="function" name="phasecenter">
             <shortdescription>Get the phasecenter direction from a field ID and time if necessary</shortdescription>
              <input>
                 <param type="int" direction="in" name="fieldid">
@@ -1353,6 +1353,35 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="refdir">
+            <shortdescription>Get the reference direction from a field ID and time if necessary</shortdescription>
+             <input>
+                <param type="any" direction="in" name="field">
+                    <description>Zero-based field ID or field name for which to get the reference direction; default  field=0</description>
+                    <value type="int">0</value>
+                    <any type="variant" limittypes="string int"/>
+                </param>
+                <param type="record" direction="in" name="epoch">
+                    <description>Optional time, expressed as a measures epoch dictionary, if associated field has a polynomial in time reference direction or an ephemerides table attached it. Default value means evaluate at the origin TIME in the FIELD table</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get a direction measure for the reference direction of the field and time specified
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get reference direction for field ID 1
+    mydir = msmd.refdir(1);
+    # if the reference direction is a polynomial or has an ephemerides attached to 
+    # it a time is needed to get the reference direction
+    ep=me.epoch('utc', '2015/03/15/15:30:55')
+    mydir2=msmd.phasecenter(2, ep)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="reffreq">
             <shortdescription>Get the reference frequency of the specified spectral window.</shortdescription>
             <input>
@@ -1403,7 +1432,7 @@ windows in the dataset and close the tool.
              <input>
                 <param type="any" direction="in" name="intent">
                     <description>Field ID or field name (case sensitive) for which to return the scan numbers.</description>
-                     <value type="string"/>
+                    <value type="string"/>
                     <any type="variant" limittypes="string int"/>
                 </param>
                 <param type="int" direction="in" name="obsid">
@@ -1584,26 +1613,6 @@ windows in the dataset and close the tool.
     # get sideband for spectral window 2.
     sideband = msmd.sideband(2)
     msmd.done()
-            </example>
-        </method>
-        
-        <method type="function" name="sourcedirs">
-            <shortdescription>Get the values of the DIRECTION column from the SOURCE table.</shortdescription>
-            <returns type="record"/>
-            <description>
-                Get the values of the DIRECTION column from the SOURCE table. Returns a dictionary in which the
-                keys are the associated row numbers, represented as strings, in the SOURCE table. Each value
-                in the returned dictionary is a valid direction measure.
-            </description>
-            <example>
-    msmd.open("my.ms")
-    # get DIRECTION column values from the SOURCE table
-    sourcedirs = msmd.sourcedirs()
-    msmd.done()
-    # the direction associated with zero-based row number 10
-    dir10 = sourcedirs["10"]
-    # convert it to B1950, using the measure interface
-    dir10_B1950 = me.convert(dir10, "B1950")
             </example>
         </method>
         
