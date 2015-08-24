@@ -128,21 +128,21 @@ class SDWvrDisplay(common.SDInspectionDisplay):
                     plot_objects.extend(
                         Ax1.plot(time_for_plot, wvr[i], '%s%s'%(colors[i],markers[i]),
                                  markersize=3, markeredgecolor=colors[i],
-                                 markerfacecolor=colors[i])
+                                 markerfacecolor=colors[i], label='%.2fGHz'%(wvr_frequency[i]))
                         )
                 elif plotpolicy == 'ignore':
                     filter = numpy.logical_and(wvr_flagrow == 0, wvr_flagchan[i,:] == 0)
                     plot_objects.extend(
                         Ax1.plot(time_for_plot[filter], wvr[i][filter], '%s%s'%(colors[i],markers[i]),
                                  markersize=3, markeredgecolor=colors[i],
-                                 markerfacecolor=colors[i])
+                                 markerfacecolor=colors[i], label='%.2fGHz'%(wvr_frequency[i]))
                         )
                 elif plotpolicy == 'greyed':
                     filter = numpy.logical_and(wvr_flagrow == 0, wvr_flagchan[i,:] == 0)
                     plot_objects.extend(
                         Ax1.plot(time_for_plot[filter], wvr[i][filter], '%s%s'%(colors[i],markers[i]),
                                  markersize=3, markeredgecolor=colors[i],
-                                 markerfacecolor=colors[i])
+                                 markerfacecolor=colors[i], label='%.2fGHz'%(wvr_frequency[i]))
                         )
                     filter = numpy.logical_or(wvr_flagrow > 0, wvr_flagchan[i,:] > 0)
                     if numpy.any(filter == True):
@@ -153,8 +153,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
                             )
                     
                     
-        Ax1.legend(['%.2fGHz'%(f) for f in wvr_frequency],
-                   loc=0, numpoints=1, prop={'size': 'smaller'})
+        Ax1.legend(loc=0, numpoints=1, prop={'size': 'smaller'})
         Ax1.set_xlim(xmin, xmax)
         Ax1.set_ylim(ymin, ymax)
 
