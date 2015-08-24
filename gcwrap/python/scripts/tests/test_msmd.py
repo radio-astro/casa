@@ -74,7 +74,8 @@ from __main__ import *
 import unittest
 import numpy
 
-fixture = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/MSMetaData/MSMetaData.ms'
+datadir = os.environ.get('CASAPATH').split()[0]+'/data/'
+fixture = datadir + 'regression/unittest/MSMetaData/MSMetaData.ms'
 
 def near(a, b, epsilon):
     return abs((a-b)/max(a,b)) <= epsilon
@@ -1517,5 +1518,12 @@ class msmd_test(unittest.TestCase):
                 self.assertTrue(abs(1 - res['m0']['value']/-1.94537525) < epsilon)
                 self.assertTrue(abs(1 - res['m1']['value']/-0.27584353) < epsilon)
             
+    def test_CAS7837(self):
+        """Test corner case with no intents to make sure it doesn't segfault"""
+        md = self.md
+        importuvfits(datadir + 'regression/cvel/input/W3OH_MC.UVFITS', 'lala.ms')
+        md.open('lala.ms')
+        self.assertTrue((md.fieldsforintent('*') == numpy.array([0])).all())
+        
 def suite():
     return [msmd_test]

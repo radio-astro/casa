@@ -658,9 +658,17 @@ variant* msmetadata::fieldsforintent(
 ) {
 	_FUNC(
 		std::set<Int> ids;
-		Bool expand = intent.find('*') != std::string::npos;
-		if (expand) {
-			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
+		auto expand = intent.find('*') != std::string::npos;
+		cout << "intents empty " << _msmd->getIntents().empty() << endl;
+		if (intent == "*" && _msmd->getIntents().empty()) {
+			cout << "in first block" << endl;
+			auto nFields = _msmd->nFields();
+			for (auto i=0; i<nFields; ++i) {
+				ids.insert(i);
+			}
+		}
+		else if (expand) {
+			auto mymap = _msmd->getIntentToFieldsMap();
 			ids = _idsFromExpansion(mymap, intent);
 		}
 		else {
@@ -681,7 +689,7 @@ variant* msmetadata::fieldsforintent(
 		}
 		return x;
 	)
-	return 0;
+	return nullptr;
 }
 
 vector<int> msmetadata::fieldsforname(const string& name) {
