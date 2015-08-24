@@ -59,7 +59,7 @@ def get_plot(plots, field, spw, i, colname):
                             <td>${field}</td>
                             <td>${spw}</td>
                             %if result[0].result_cont_ranges[field][str(spw)]['cont_ranges'] != '':
-                                <td>${';'.join(['%s~%sGHz' % (c[0], c[1]) for c in result[0].result_cont_ranges[field][str(spw)]['cont_ranges']])}</td>
+                                <td>${'</br>'.join(['%s~%sGHz' % (c[0], c[1]) for c in result[0].result_cont_ranges[field][str(spw)]['cont_ranges']])}</td>
                             %else:
                                 <td>-</td>
                             %endif
