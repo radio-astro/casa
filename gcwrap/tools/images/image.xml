@@ -2241,11 +2241,12 @@ It is required that the alpha parameter is not zero.
 The random number generator seeds may be specified as an array of integers. Only the first
 two values are used. If none or a single value is provided, the necessary remaining value(s)
 are generated based on the current time, using the algorithm
-
+\begin{verbatim}
 seedBase = 1e7*MJD
 seed[1] = (Int)seedBase;
 # and if seed[0] is also not supplied
 seed[0] = (Int)((1e7*(seedBase - seed[1])))
+\end{verbatim}
 
 where MJD is the Modidfied Julian Day.
 
