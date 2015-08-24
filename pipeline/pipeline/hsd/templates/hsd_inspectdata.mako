@@ -113,6 +113,9 @@ for st in pcontext.observing_run:
 
 <p>This task inspects registered datasets all together.</p>
 
+<p>In the following summary plots, pointing pattern, Az/El, and WVR reading plots may contain grey symbols. 
+They corresponds to the data flagged by the previous tasks.</p> 
+
 % for ms in summary.keys():
     <h4>Overview plots for ${ms}</h4>
     
