@@ -5,6 +5,7 @@ import sys
 import shutil
 import odict
 import numpy
+import pdb
 
 class ss_setjy_helper:
     def __init__(self,imtool, vis, casalog=None):
@@ -31,7 +32,7 @@ class ss_setjy_helper:
         qa = casac.quanta()
  
 
-	(myms, mytb, mycl, myme, mycb) = gentools(['ms','tb','cl','me', 'cb'])
+	(myms, mytb, mycl, myme, mycb, mymsmd) = gentools(['ms','tb','cl','me', 'cb','msmd'])
 	# prepare parameters need to pass to the Bryan's code
 	# make ms selections
 	# get source name
@@ -85,9 +86,10 @@ class ss_setjy_helper:
 	for fid in fieldids:
 	  #srcnames.append(mytb.getcell('NAME',int(fid)))
 	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
-          fielddirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
+          #fielddirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
           ftimes[fid]=(mytb.getcell('TIME',int(fid)))
 	mytb.close() 
+
 	# need to get a list of time
 	# but for now for test just get a time centroid of the all scans
 	# get time range
@@ -141,7 +143,13 @@ class ss_setjy_helper:
           else:
             inparams[fid]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
           usedtime = qa.time(qa.quantity(tc,'s'),form='ymd')[0]
-          self._casalog.post("Time used for the model calculation(=first time stamp of the selected data per field id):"+usedtime)
+          self._casalog.post("Time used for the model calculation (=first time stamp of the selected data) for field "+str(fid)+":"+usedtime)
+          # get a correct direction measure
+          mymsmd.open(self.vis)
+          dirdic = mymsmd.phasecenter(int(fid))
+          fielddirs[fid]=(numpy.array([[dirdic['m0']['value']],[dirdic['m1']['value']]]))
+          mymsmd.close()
+
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
