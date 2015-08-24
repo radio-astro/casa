@@ -62,7 +62,16 @@ except Exception, e:
 Spectral lines are detected by clustering analysis for each spectral window, 
 and line free channels are used for baseline fitting. </p>
 
+<p>Spectral data before and after baseline subtraction are shown below. 
+The topmost panel in each plot is an integrated spectrum while a set of bottom panels shows a profile map. 
+Each panel in the profile map shows an individual spectrum that is located around panel's position. 
+Cyan regions shows detected line regions. The line regions in the top panel indicates a property of detected 
+cluster while the ones in the profile map are the result of line detection for the corresponding spectra.</p>
+
 <h2>Spectral Data Before Baseline Subtraction</h2>
+
+<p>Red lines indicate the result of baseline fit that is subtracted from the calibrated spectra.</p>
+
 % for field in sparsemap_subpage_before.keys():
     <h4><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage_before[field])}">${field}</a>
@@ -102,6 +111,9 @@ and line free channels are used for baseline fitting. </p>
 
 
 <h2>Spectral Data After Baseline Subtraction</h2>
+
+<p>Red lines show zero-level. Spectra that are properly subtracted should be located around red lines.</p>
+
 % for field in sparsemap_subpage_after.keys():
     <h4><a class="replace"
            href="${os.path.join(dirname, sparsemap_subpage_after[field])}">${field}</a>
