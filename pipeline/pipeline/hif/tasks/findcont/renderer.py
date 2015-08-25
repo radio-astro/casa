@@ -39,20 +39,24 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         rows = []
         for field in sorted(set(ranges_dict.keys())):
-            for spw in sorted(set(ranges_dict[field].keys())):
+            for spw in map(str, sorted(map(int, set(ranges_dict[field].keys())))):
                 plotfile = self._get_plotfile(context, result, field, spw)
 
                 status = ranges_dict[field][spw]['status']
 
                 ranges_for_spw = ranges_dict[field][spw].get('cont_ranges', [])
-                for (range_min, range_max) in ranges_for_spw:
-                    # default units for Frequency is GHz, which matches the
-                    # units of cont_ranges values
-                    min_freq = measures.Frequency(range_min)
-                    max_freq = measures.Frequency(range_max)
-                    rows.append(TR(field=field, spw=spw, min=min_freq,
-                                   max=max_freq, status=status,
-                                   spectrum=plotfile))
+                if (ranges_for_spw in (['NONE'], [''])):
+                    rows.append(TR(field=field, spw=spw, min='None', max='',
+                                   status=status, spectrum=plotfile))
+                else:
+                    for (range_min, range_max) in ranges_for_spw:
+                        # default units for Frequency is GHz, which matches the
+                        # units of cont_ranges values
+                        min_freq = measures.Frequency(range_min)
+                        max_freq = measures.Frequency(range_max)
+                        rows.append(TR(field=field, spw=spw, min=min_freq,
+                                       max=max_freq, status=status,
+                                       spectrum=plotfile))
 
         return utils.merge_td_columns(rows)
 

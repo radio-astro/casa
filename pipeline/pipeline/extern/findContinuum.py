@@ -109,6 +109,7 @@ def plotMeanSpectrum(img='g35.03_KDnh3_11.hline.self.image',
                     cont_freq_ranges.append((f1['value'], f0['value']))
             myia.close()
         else:
+            cont_freq_ranges = ['NONE']
             print 'None'
 
     pl.clf()
