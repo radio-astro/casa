@@ -148,7 +148,7 @@ class FindCont(basetask.StandardTaskTemplate):
 
                     result_cont_ranges[source_name][spwid] = {'cont_ranges': cont_ranges[source_name][spwid], 'plotfile': png, 'status': 'NEW'}
 
-                    if (cont_ranges[source_name][spwid] != ''):
+                    if (cont_ranges[source_name][spwid] not in [['NONE'], ['']]):
                         num_found += 1
 
                 num_total += 1
