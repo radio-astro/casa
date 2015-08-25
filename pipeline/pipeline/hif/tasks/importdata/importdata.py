@@ -28,6 +28,7 @@ from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class ImportDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None,
@@ -52,13 +53,13 @@ class ImportDataInputs(basetask.StandardInputs):
 
     @createmms.setter
     def createmms(self, value):
-        if value in ('true', 'True', 'TRUE', True, 1):
+        if value in ('true', 'True', 'TRUE', 'on', 'On', 'ON', True, 1):
             value = True
-        elif value in ('false', 'False', 'FALSE', False, 0):
+        elif value in ('false', 'False', 'FALSE', 'off', 'Off', 'OFF', False, 0):
             value = False
         else:
-            value = mpihelpers.is_mpi_ready()
-        self._createmms = value
+            value = 'automatic'
+        self._createmms = str(value)
 
     @property
     def session(self):
@@ -340,7 +341,13 @@ class ImportData(basetask.StandardTaskTemplate):
         if inputs.save_flagonline:
             self._make_template_flagfile(asdm)
 
+        if inputs.createmms == 'automatic':
+            createmms = mpihelpers.is_mpi_ready()
+        else:
+            createmms = (inputs.createmms == 'True')
+
         with_pointing_correction = inputs.with_pointing_correction if hasattr(inputs, 'with_pointing_correction') else False
+
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
                                      savecmds=inputs.save_flagonline,
@@ -351,7 +358,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      bdfflags=inputs.bdfflags,
                                      lazy=inputs.lazy,
                                      with_pointing_correction=with_pointing_correction,
-                                     createmms=inputs.createmms)
+                                     createmms=createmms)
 
         self._executor.execute(task)
 
