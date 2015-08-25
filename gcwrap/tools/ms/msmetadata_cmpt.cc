@@ -1285,7 +1285,8 @@ vector<string> msmetadata::schedule(int obsid) {
 int msmetadata::sideband(int spw) {
 	_FUNC (
 		_checkSpwId(spw, True);
-		return _msmd->getNetSidebands()[spw];
+        Int ret = _msmd->getNetSidebands()[spw] == 2 ? 1 : -1;
+        return ret;
 	)
 	return 0;
 }
@@ -1307,7 +1308,7 @@ record* msmetadata::sourcedirs() {
 		}
 		return fromRecord(r);
 	)
-	return NULL;
+	return nullptr;
 }
 
 int msmetadata::sourceidforfield(int field) {

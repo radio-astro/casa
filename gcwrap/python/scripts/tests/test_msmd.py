@@ -1243,6 +1243,20 @@ class msmd_test(unittest.TestCase):
         self.assertTrue((md.chanwidths(0) == [1.5e9, 2.5e9, 2e9, 1.5e9]).all())
         self.assertTrue((md.chanwidths(0, "GHz") == [1.5, 2.5, 2, 1.5]).all())
         self.assertRaises(Exception, md.chanwidths, 0, "km/s")
+
+    def test_sideband(self):
+        md = self.md
+        expec = [
+            -1, -1, -1, -1, -1,  1,  1,  1,  1,  1,  1,  1,  1,
+            -1, -1, -1, -1, 1,  1,  1,  1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+        ]
+        expec = numpy.array(expec)
+        got = []
+        for i in range(md.nspw()):
+            got.append(md.sideband(i))
+        get = numpy.array(got)
+        self.assertTrue((got == expec).all())       
         
     def test_fieldnames(self):
         md = self.md
