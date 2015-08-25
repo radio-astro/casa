@@ -659,11 +659,9 @@ variant* msmetadata::fieldsforintent(
 	_FUNC(
 		std::set<Int> ids;
 		auto expand = intent.find('*') != std::string::npos;
-		cout << "intents empty " << _msmd->getIntents().empty() << endl;
 		if (intent == "*" && _msmd->getIntents().empty()) {
-			cout << "in first block" << endl;
 			auto nFields = _msmd->nFields();
-			for (auto i=0; i<nFields; ++i) {
+			for (uInt i=0; i<nFields; ++i) {
 				ids.insert(i);
 			}
 		}
