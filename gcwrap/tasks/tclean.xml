@@ -129,7 +129,26 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="antenna" subparam="true">
      <shortdescription>Select data based on antenna/baseline</shortdescription>
 <description>Select data based on antenna/baseline
-             See example section for details.
+
+                   default: '' (all)
+                   If antenna string is a non-negative integer, it is 
+ 		   assumed to be an antenna index, otherwise, it is
+ 		   considered an antenna name.
+                   antenna='5\&amp;6'; baseline between antenna index 5 and 
+ 				 index 6.
+                   antenna='VA05\&amp;VA06'; baseline between VLA antenna 5 
+ 				       and 6.
+                   antenna='5\&amp;6;7\&amp;8'; baselines 5-6 and 7-8
+                   antenna='5'; all baselines with antenna index 5
+                   antenna='05'; all baselines with antenna number 05 
+ 				(VLA old name)
+                   antenna='5,6,9'; all baselines with antennas 5,6,9 
+ 				   index number
+                   For multiple MS input, a list of antenna strings can be
+                   used:
+                   antenna=['5','5\&amp;6'];
+                   antenna='5'; antenna index 5 for all input MSes
+
 </description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
@@ -1193,34 +1212,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <returns type="void"/>
 
   <example>
-    
-       Antenna argument details: 
 
-           Select data based on antenna/baseline
-
-           default: '' (all)
-                   If antenna string is a non-negative integer, it is
-           assumed to be an antenna index, otherwise, it is
-           considered an antenna name.
-                   antenna='5&amp;6'; baseline between antenna index 5 and
-                 index 6.
-                   antenna='VA05&amp;VA06'; baseline between VLA antenna 5
-                       and 6.
-                   antenna='5&amp;6;7&amp;8'; baselines 5-6 and 7-8
-                   antenna='5'; all baselines with antenna index 5
-                   antenna='05'; all baselines with antenna number 05
-                (VLA old name)
-                   antenna='5,6,9'; all baselines with antennas 5,6,9
-                   index number
-                   For multiple MS input, a list of antenna strings can be
-                   used:
-                   antenna=['5','5&amp;6'];
-                   antenna='5'; antenna index 5 for all input MSes
-   
-
-
-  
-     Other Usage Examples :
+     Usage Examples :
 
      https://svn.cv.nrao.edu/svn/casa/trunk/gcwrap/python/scripts/tests/test_refimager.py
 
