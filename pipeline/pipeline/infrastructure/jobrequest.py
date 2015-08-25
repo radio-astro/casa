@@ -38,11 +38,7 @@ import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
-casa_version = map(int,casadef.casa_version.split('.'))
-if casa_version[0] < 4 or casa_version[1] < 3:
-    import sdbaseline_cli as sdbaseline2_cli
-else:
-    import sdbaseline2_cli # for CASA >= 4.3
+import sdbaseline2_cli
 import sdcal2_cli
 import sdflag_cli
 import sdimaging_cli
@@ -384,8 +380,7 @@ class CASATaskJobGenerator(object):
     def visstat(self, *v, **k):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
-    # for CASA >= 4.3
-    def sdblcal(self, *v, **k):
+    def sdbaseline2(self, *v, **k):
         return self._get_job(sdbaseline2_cli.sdbaseline2_cli, *v, **k)
 
     def sdcal2(self, *v, **k):

@@ -307,9 +307,9 @@ def selection_to_list(sel, maxid=99):
     l = set(_selection_to_list(sel))
     return list(l)
 
-def list_to_selection(rows):
+def list_to_selection(rows, dosort=True):
     unique_list = numpy.unique(rows)
-    sorted_list = numpy.sort(unique_list)
+    sorted_list = numpy.sort(unique_list) if dosort else unique_list
     if len(sorted_list) == 0:
         sel = ''
     elif len(sorted_list) == 1:

@@ -13,6 +13,7 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
 from pipeline.hsd.tasks.common import utils as sdutils
+from pipeline.infrastructure import casa_tasks
 
 # for plot routine
 from . import plotter
@@ -268,13 +269,17 @@ class FittingBase(common.SingleDishTaskTemplate):
         LOG.info('Baseline Fit: background subtraction...')
         LOG.info('Processing %d spectra...'%(len(row_list_total)))
         LOG.info('rows = %s' % str(row_list_total))
-        st_out = sd.scantable(filename_out, average=False)
-        LOG.info('number of rows in scantable = %d' % st_out.nrow())
-        st_out.set_selection(rows=row_list_total)
-        LOG.info('number of rows in selected = %d' % st_out.nrow())
-        st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
-        st_out.set_selection()
-        st_out.save(filename_out, format='ASAP', overwrite=True)
+        job = casa_tasks.sdbaseline2(infile=filename_out, outfile=filename_out, overwrite=True,
+                                     row=str(',').join(map(str,row_list_total)), blmode='subtract',
+                                     blparam=blinfo, bltable=bltable_name, keeprows=True)
+        self._executor.execute(job)
+#         st_out = sd.scantable(filename_out, average=False)
+#         LOG.info('number of rows in scantable = %d' % st_out.nrow())
+#         st_out.set_selection(rows=row_list_total)
+#         LOG.info('number of rows in selected = %d' % st_out.nrow())
+#         st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
+#         st_out.set_selection()
+#         st_out.save(filename_out, format='ASAP', overwrite=True)
         
         sd.rcParams['scantable.storage'] = storage_save
         
