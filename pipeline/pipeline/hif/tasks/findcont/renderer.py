@@ -5,6 +5,7 @@ Created on 24 Aug 2015
 '''
 import collections
 import os
+import operator
 import shutil
 
 import pipeline.domain.measures as measures
@@ -22,7 +23,7 @@ TR = collections.namedtuple('TR', 'field spw min max status spectrum')
 class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='findcont.mako',
                  description='Detect continuum frequency ranges',
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailsFindContRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
@@ -39,7 +40,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         rows = []
         for field in sorted(set(ranges_dict.keys())):
-            for spw in map(str, sorted(map(int, set(ranges_dict[field].keys())))):
+            for spw in sorted(set(ranges_dict[field].keys())):
                 plotfile = self._get_plotfile(context, result, field, spw)
 
                 status = ranges_dict[field][spw]['status']
@@ -49,7 +50,8 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     rows.append(TR(field=field, spw=spw, min='None', max='',
                                    status=status, spectrum=plotfile))
                 else:
-                    for (range_min, range_max) in ranges_for_spw:
+                    sorted_ranges = sorted(ranges_for_spw, key=operator.itemgetter(0))
+                    for (range_min, range_max) in sorted_ranges:
                         # default units for Frequency is GHz, which matches the
                         # units of cont_ranges values
                         min_freq = measures.Frequency(range_min)
