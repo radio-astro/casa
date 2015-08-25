@@ -55,10 +55,13 @@ class ContFileHandler(object):
             fd.write('%s\n\n' % (source_name))
             for spw_id in cont_ranges[source_name].iterkeys():
                 fd.write('SPW%s\n' % (spw_id))
-                for freq_range in cont_ranges[source_name][spw_id]:
-                    if (freq_range == 'NONE'):
-                        fd.write('NONE\n')
-                    else:
-                        fd.write('%s~%sGHz\n' % (freq_range[0], freq_range[1]))
+                if (cont_ranges[source_name][spw_id] == []):
+                    fd.write('NONE\n')
+                else:
+                    for freq_range in cont_ranges[source_name][spw_id]:
+                        if (freq_range == 'NONE'):
+                            fd.write('NONE\n')
+                        else:
+                            fd.write('%s~%sGHz\n' % (freq_range[0], freq_range[1]))
                 fd.write('\n')
         fd.close()

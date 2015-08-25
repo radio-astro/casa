@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import os
+import re
 import tempfile
 import types
 
@@ -10,6 +11,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.mpihelpers as mpihelpers
 from pipeline.infrastructure import casa_tasks
 from .resultobjects import FindContResult
+from pipeline.hif.heuristics import makeimlist
 from pipeline.hif.heuristics import findcont
 
 LOG = infrastructure.get_logger(__name__)
@@ -61,6 +63,7 @@ class FindCont(basetask.StandardTaskTemplate):
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
 
+
         findcont_heuristics = findcont.FindContHeuristics(context)
 
         contfile_handler = contfilehandler.ContFileHandler(context.contfile)
@@ -91,9 +94,47 @@ class FindCont(basetask.StandardTaskTemplate):
                     LOG.info('Determining continuum ranges for field %s, spw %s' % (source_name, spwid))
 
                     findcont_basename = '%s.I.findcont' % (os.path.basename(target['imagename']).replace('spw%s' % (target['spw'].replace(',','_')), 'spw%s' % (spwid)))
+
+                    # determine the gridder mode here (temporarily ...)
+                    clheuristics = makeimlist.MakeImListHeuristics(context=context,
+                                                                   vislist=inputs.vis,
+                                                                   spw=spwid,
+                                                                   contfile=context.contfile,
+                                                                   linesfile=context.linesfile)
+                    gridder = clheuristics.gridder(target['intent'], target['field'])
+
+                    # need scan id list for multiple target case
+                    # TODO: move this to a heuristics to avoid duplicated code (see tclean)
+
+                    # Construct regex for string matching - escape likely problem
+                    # chars. Simpler way to do this ?
+                    re_field = target['field'].replace('*', '.*')
+                    re_field = re_field.replace('[', '\[')
+                    re_field = re_field.replace(']', '\]')
+                    re_field = re_field.replace('(', '\(')
+                    re_field = re_field.replace(')', '\)')
+                    re_field = re_field.replace('+', '\+')
+
+                    # Use scanids to select data with the specified intent
+                    # Not CASA clean now supports intent selectin but leave
+                    # this logic in place and use it to eliminate vis that
+                    # don't contain the requested data.
+                    scanidlist = []
+                    for vis in inputs.vis:
+                        ms = inputs.context.observing_run.get_ms(name=vis)
+                        scanids = [scan.id for scan in ms.scans if
+                                   target['intent'] in scan.intents and
+                                   re.search(pattern=re_field, string=str(scan.fields))]
+                        if not scanids:
+                            continue
+                        scanids = str(scanids)
+                        scanids = scanids.replace('[', '')
+                        scanids = scanids.replace(']', '')
+                        scanidlist.append(scanids)
+
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
-                        specmode='cube', gridder='mosaic', pblimit=0.2,
+                        scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
                         interactive=False, outframe='LSRK', nchan=-1,
                         width='', imsize=target['imsize'],

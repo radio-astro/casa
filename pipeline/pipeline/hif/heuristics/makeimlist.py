@@ -599,7 +599,7 @@ class MakeImListHeuristics(object):
             p=re.compile(r"[ ,]+(\d+)")
             spwids = p.findall(' %s' % spwspec)
             spwids = list(set(spwids))
-            spwids.sort()
+            spwids = map(str, sorted(map(int, spwids)))
             spw = '_'.join(spwids)
             namer.spectral_window(spw)
         if specmode:

@@ -39,7 +39,10 @@ class FindContResult(basetask.Results):
             repr += ' Source %s\n' % (source_name)
             for spwid in self.result_cont_ranges[source_name].iterkeys():
                 repr += '  SpW %s:\n' % (spwid)
-                repr += '   Ranges: %s\n' % (';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.result_cont_ranges[source_name][spwid]['cont_ranges']]))
+                if (self.result_cont_ranges[source_name][spwid]['cont_ranges'] == ['NONE']):
+                    repr += '   Ranges: None'
+                else:
+                    repr += '   Ranges: %s\n' % (';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.result_cont_ranges[source_name][spwid]['cont_ranges']]))
                 repr += '   Status: %s\n' % (self.result_cont_ranges[source_name][spwid]['status'])
 
         return repr

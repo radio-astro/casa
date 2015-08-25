@@ -231,7 +231,8 @@ class MakeImList(basetask.StandardTaskTemplate):
         spwlist = spwlist[1:-1].split("','")
 
         if inputs.specmode == 'cont':
-            spwlist = [reduce(lambda x,y: x+','+y, spwlist)]
+            # Make sure the spw list is sorted numerically
+            spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
 
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code

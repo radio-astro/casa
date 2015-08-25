@@ -91,22 +91,25 @@ def plotMeanSpectrum(img='g35.03_KDnh3_11.hline.self.image',
                                                          nBaselineChannels, sigmaFindContinuum, nanmin, 
                                                          baselineModeB, trimChannels)
         print 'Continuum frequency ranges:'
-        myia = createCasaTool(iatool)
-        myqa = createCasaTool(qatool)
-        myia.open(img)
-        for crange in selection.split(','):
-            c0, c1 = crange.split('~')
-            m0 = myia.coordmeasures([None, None, None, c0])['measure']['spectral']['frequency']['m0']
-            m1 = myia.coordmeasures([None, None, None, c1])['measure']['spectral']['frequency']['m0']
-            f0 = myqa.convert('%.15e %s' % (m0['value'], m0['unit']), 'GHz')
-            f1 = myqa.convert('%.15e %s' % (m1['value'], m1['unit']), 'GHz')
-            if (qa.lt(f0, f1)):
-                print '%.9f~%.9fGHz' % (f0['value'], f1['value'])
-                cont_freq_ranges.append((f0['value'], f1['value']))
-            else:
-                print '%.9f~%.9fGHz' % (f1['value'], f0['value'])
-                cont_freq_ranges.append((f1['value'], f0['value']))
-        myia.close()
+        if (selection != ''):
+            myia = createCasaTool(iatool)
+            myqa = createCasaTool(qatool)
+            myia.open(img)
+            for crange in selection.split(','):
+                c0, c1 = crange.split('~')
+                m0 = myia.coordmeasures([None, None, None, c0])['measure']['spectral']['frequency']['m0']
+                m1 = myia.coordmeasures([None, None, None, c1])['measure']['spectral']['frequency']['m0']
+                f0 = myqa.convert('%.15e %s' % (m0['value'], m0['unit']), 'GHz')
+                f1 = myqa.convert('%.15e %s' % (m1['value'], m1['unit']), 'GHz')
+                if (qa.lt(f0, f1)):
+                    print '%.9f~%.9fGHz' % (f0['value'], f1['value'])
+                    cont_freq_ranges.append((f0['value'], f1['value']))
+                else:
+                    print '%.9f~%.9fGHz' % (f1['value'], f0['value'])
+                    cont_freq_ranges.append((f1['value'], f0['value']))
+            myia.close()
+        else:
+            print 'None'
 
     pl.clf()
     skipchan = 2
