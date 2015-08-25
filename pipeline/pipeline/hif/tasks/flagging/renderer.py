@@ -25,10 +25,10 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
                                   'stage%s' % result.stage_number)
 
         flag_totals = {}
-        non_science_agents = ['qa0']
+        #non_science_agents = ['qa0']
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
-                                           flagutils.flags_for_result(r, pipeline_context, non_science_agents))
+                                           flagutils.flags_for_result(r, pipeline_context))
 
             # copy template files across to weblog directory
             toggle_to_filenames = {'online'   : 'fileonline',
