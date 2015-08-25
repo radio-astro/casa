@@ -990,7 +990,7 @@ private:
   double doGetRms(const std::vector<bool>& mask, const casa::Vector<casa::Float>& spec);
   std::string packFittingResults(const int irow, const std::vector<float>& params, const float rms);
   void parseBlInfo(const std::string& blInfo, int& whichrow, STBaselineFunc::FuncName& ftype, std::vector<int>& fpar, std::vector<bool>& mask, float& thresClip, int& nIterClip, bool& useLineFinder, float& thresLF, std::vector<int>& edgeLF, int& avgLF);
- std::vector<float> doApplyBaselineTable(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms);
+  std::vector<float> doApplyBaselineTable(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms, int irow);
  std::vector<float> doSubtractBaseline(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms, std::vector<bool>& finalmask, float clipth, int clipn, bool uself, int irow, float lfth, std::vector<int>& lfedge, int lfavg);
 
  // storage of cubic spline model for various number of channels

@@ -2607,7 +2607,7 @@ std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltabl
       std::vector<int> fpar = btin.getFuncParam(whichrow);
       std::vector<float> params;
       float rms;
-      std::vector<float> resfit = doApplyBaselineTable(spec, mask, ftype, fpar, params, rms);
+      std::vector<float> resfit = doApplyBaselineTable(spec, mask, ftype, fpar, params, rms, whichrow);
       setSpectrum(resfit, whichrow);
 
       if (returnfitresult) {
@@ -2742,16 +2742,17 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
   return res;
 }
 
-std::vector<float> Scantable::doApplyBaselineTable(std::vector<float>& spec, 
-						   std::vector<bool>& mask, 
-						   const STBaselineFunc::FuncName ftype, 
+std::vector<float> Scantable::doApplyBaselineTable(std::vector<float>& spec,
+						   std::vector<bool>& mask,
+						   const STBaselineFunc::FuncName ftype,
 						   std::vector<int>& fpar, 
 						   std::vector<float>& params, 
-						   float&rms)
+						   float&rms,
+						   int irow)
 {
   std::vector<bool> finalmask;
   std::vector<int> lfedge;
-  return doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, 0.0, 0, false, 0, 0.0, lfedge, 0);
+  return doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, 0.0, 0, false, irow, 0.0, lfedge, 0);
 }
 
 std::vector<float> Scantable::doSubtractBaseline(std::vector<float>& spec,
