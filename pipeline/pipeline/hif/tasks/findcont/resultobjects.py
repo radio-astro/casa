@@ -30,7 +30,8 @@ class FindContResult(basetask.Results):
                 new_spw_sel = 'NEW' in [self.result_cont_ranges[source_name][spwid]['status'] for spwid in spwids.split(',')]
 
                 if (new_spw_sel):
-                    context.clean_list_pending[i]['spwsel'] = ','.join([';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]]) for spwid in spwids.split(',')])
+                    if (self.cont_ranges[source_name][spwid] not in [['NONE'], ['']]):
+                        context.clean_list_pending[i]['spwsel'] = ','.join([';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]]) for spwid in spwids.split(',')])
 
 
     def __repr__(self):

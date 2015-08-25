@@ -134,6 +134,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         return True
 
     def prepare(self):
+        context = self.inputs.context
         inputs = self.inputs
 
         # Make sure inputs.vis is a list, even it is one that contains a
