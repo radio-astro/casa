@@ -173,6 +173,13 @@ $(document).ready(function() {
 % endfor
 
 <h2>Flag Step Details</h2>
+The following section provides plots showing the flagging metrics that the pipeline
+uses to determine deviant Tsys measurements, and the flagging commands that resulted 
+from each flagging metric. For certain flagging metrics, the pipeline evaluates the 
+metric separately for each polarisation. However, if the Tsys measurement for an 
+antenna is found to be deviant in one polarisation, the pipeline will flag the 
+antenna for both polarisations. 
+
 <ul>
 % for component in components: 
 	<li>
