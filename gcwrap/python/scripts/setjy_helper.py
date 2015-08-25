@@ -66,6 +66,7 @@ class ss_setjy_helper:
         mytb.close()
  
 	mytb.open(self.vis+'/FIELD')
+        colnames = mytb.colnames()
 	if len(fieldids)==0:
 	  fieldids = range(mytb.nrows())
         # frame reference for field position
@@ -83,12 +84,17 @@ class ss_setjy_helper:
 	srcnames={}
         fielddirs={}
         ftimes={}
+        ephemid={}
 	for fid in fieldids:
 	  #srcnames.append(mytb.getcell('NAME',int(fid)))
 	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
           #fielddirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
           ftimes[fid]=(mytb.getcell('TIME',int(fid)))
-	mytb.close() 
+          if colnames.count('EHPHEMERIS_ID'):
+              ephemid[fid]=(mytb.getcell('EPHEMERIS_ID',int(fid))) 
+          else:
+              ephemid[fid]=-1
+	mytb.close() # close FIELD table
 
 	# need to get a list of time
 	# but for now for test just get a time centroid of the all scans
@@ -133,7 +139,13 @@ class ss_setjy_helper:
           # use first timestamp to be consistent with the ALMA Control
           # old setjy (Butler-JPL-Horizons 2010) seems to be using
           # time in FIELD... but here is first selected time in main table
-          tc = trange['time'][0] #in sec.
+          if ephemid[fid]==-1: # keep old behavior
+              tc = trange['time'][0] #in sec.
+              tmsg = "Time used for the model calculation (=first time stamp of the selected data) for field "
+          else: # must have ephem table attached...
+              tc = ftimes[fid]#in sec.
+              tmsg = "Time used for the model calculation for field "
+
 	  #if inparams[srcnames[fid]].has_key('mjd'):
           #  inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           #else:
@@ -143,12 +155,21 @@ class ss_setjy_helper:
           else:
             inparams[fid]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
           usedtime = qa.time(qa.quantity(tc,'s'),form='ymd')[0]
-          self._casalog.post("Time used for the model calculation (=first time stamp of the selected data) for field "+str(fid)+":"+usedtime)
+          self._casalog.post(tmsg+str(fid)+":"+usedtime)
+
           # get a correct direction measure
           mymsmd.open(self.vis)
           dirdic = mymsmd.phasecenter(int(fid))
-          fielddirs[fid]=(numpy.array([[dirdic['m0']['value']],[dirdic['m1']['value']]]))
           mymsmd.close()
+
+          # check if frame is J2000 and if not do the transform
+          if dirdic['refer'] != 'J2000':
+              myme.doframe(myme.observatory(observatory))
+              myme.doframe(myme.epoch('utc', qa.quantity(tc,'s')))
+              azeldir = myme.measure(dirdic,'AZELGEO')
+              dirdic=myme.measure(azeldir,'J2000')
+       
+          fielddirs[fid]=(numpy.array([[dirdic['m0']['value']],[dirdic['m1']['value']]]))
 
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
