@@ -394,7 +394,10 @@ class MakeImList(basetask.StandardTaskTemplate):
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 if (specmode in ('mfs', 'cont')):
-                    spwsel = ','.join(self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] for spwid in spwspec.split(','))
+                    if (self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] not in [['NONE'], ['']]):
+                        spwsel = ','.join(self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] for spwid in spwspec.split(','))
+                    else:
+                        spwsel = ''
                 else:
                     spwsel = ''
 
