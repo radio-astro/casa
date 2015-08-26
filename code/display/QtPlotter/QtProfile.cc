@@ -375,8 +375,12 @@ namespace casa {
 			//Images created with immoments seem to have units of the form
 			//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
 			//to have units recognized by the profiler.
+
+			//However, visual images can have units of "erg/s/cm2/Angstrom"
+			//and we don't wat to strip those out (CAS-7676).
 			int periodIndex = yUnit.indexOf( ".");
-			if ( periodIndex > 0 ){
+			int angIndex = yUnit.indexOf( "Angstrom" );
+			if ( periodIndex > 0 && angIndex < 0 ){
 				yUnit = yUnit.left( periodIndex);
 			}
 		}
@@ -563,16 +567,15 @@ namespace casa {
 			if ( fileNames.size() > 0 ) {
 				QString outputFileName = fileNames[0];
 				QString ext = outputFileName.section('.', -1);
-				bool ok;
 				if (selectedNameFilter == FITS_FILTER){
 					const QString fitsExtension = "fits";
-					ok = exportFITSSpectrum(outputFileName);
+					exportFITSSpectrum(outputFileName);
 				}
 				else {
 					if (ext != "txt"){
 						outputFileName.append( ".txt");
 					}
-					ok = exportASCIISpectrum(outputFileName );
+					exportASCIISpectrum(outputFileName );
 				}
 			}
 		}
@@ -946,50 +949,51 @@ namespace casa {
 
 	void QtProfile::adjustPlotUnits() {
 		//Store the old units so we can try to reset them
-		QString currentYUnits = yAxisCombo->currentText();
+		//Except that we don't need to reset them, and in fact reset them incorrectly on
+		//the canvas if the yAxisCombo is not being used (CAS-7681).
+		if ( yAxisCombo->isVisible() ){
+			QString currentYUnits = yAxisCombo->currentText();
 
-
-		yAxisCombo->clear();
-		QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
+			yAxisCombo->clear();
+			QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
 		                         ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
 		                         ConverterIntensity::FRACTION_OF_PEAK<<ConverterIntensity::KELVIN);
 
-		// remove the "/beam" in case of plotting flux
-		const QString PER_BEAM = "/beam";
-		if( itsPlotType==QtProfile::PFLUX) {
-			Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
-			if(pos>-1) {
-				yUnit.remove(pos,5);
-			}
-			yUnitsList[0] = "Jy";
-		}
-		//Add   in case of sum
-		else if ( itsPlotType==QtProfile::PSUM ) {
-			Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
-			if(pos>-1) {
-				if ( yUnit.indexOf( ConverterIntensity::TIMES_PIXELS) == -1 ) {
-					yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			// remove the "/beam" in case of plotting flux
+			const QString PER_BEAM = "/beam";
+			if( itsPlotType==QtProfile::PFLUX) {
+				Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
+				if(pos>-1) {
+					yUnit.remove(pos,5);
 				}
-				for ( int i = 0; i < yUnitsList.size(); i++ ) {
-					if ( yUnitsList[i] != ConverterIntensity::FRACTION_OF_PEAK ) {
-						yUnitsList[i] = yUnitsList[i] + ConverterIntensity::TIMES_PIXELS;
+				yUnitsList[0] = "Jy";
+			}
+			//Add   in case of sum
+			else if ( itsPlotType==QtProfile::PSUM ) {
+				Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
+				if(pos>-1) {
+					if ( yUnit.indexOf( ConverterIntensity::TIMES_PIXELS) == -1 ) {
+						yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+					}
+					for ( int i = 0; i < yUnitsList.size(); i++ ) {
+						if ( yUnitsList[i] != ConverterIntensity::FRACTION_OF_PEAK ) {
+							yUnitsList[i] = yUnitsList[i] + ConverterIntensity::TIMES_PIXELS;
+						}
 					}
 				}
 			}
-		}
 
-		//Adapt the yAxis combo to display appropriate units/transformations
-		if ( itsPlotType==QtProfile::PFLUX ) {
-			yAxisCombo->addItem( yUnitsList[0] );
-			yAxisCombo->addItem( ConverterIntensity::FRACTION_OF_PEAK );
-		} else {
-			for ( int i = 0; i < yUnitsList.size(); i++ ) {
-				yAxisCombo->addItem( yUnitsList[i]);
+			//Adapt the yAxis combo to display appropriate units/transformations
+			if ( itsPlotType==QtProfile::PFLUX ) {
+				yAxisCombo->addItem( yUnitsList[0] );
+				yAxisCombo->addItem( ConverterIntensity::FRACTION_OF_PEAK );
+			} else {
+				for ( int i = 0; i < yUnitsList.size(); i++ ) {
+					yAxisCombo->addItem( yUnitsList[i]);
+				}
 			}
+			resetYUnits( currentYUnits );
 		}
-
-		resetYUnits( currentYUnits );
-
 	}
 
 	bool QtProfile::isProfileChanged( const String& c, const Vector<Double> & px, const Vector<Double>& py,
