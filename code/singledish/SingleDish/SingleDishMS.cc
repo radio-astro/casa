@@ -55,6 +55,7 @@ using casa::Matrix;
 using casa::Cube;
 using casa::Float;
 using casa::Complex;
+using casa::AipsError;
 
 template<class CUBE_ACCESSOR>
 struct DataAccessorInterface {
@@ -104,6 +105,10 @@ inline void GetCubeFromCorrected(VisBuffer2 const &vb, Cube<Float> &cube) {
 inline void GetCubeFromFloat(VisBuffer2 const &vb, Cube<Float> &cube) {
   FloatDataAccessor::GetCube(vb, cube);
 }
+
+inline void GetCubeDefault(VisBuffer2 const &vb, Cube<Float> &cube) {
+  throw AipsError("Data accessor for VB2 is not properly configured.");
+}
 } // anonymous namespace
 
 namespace casa {
@@ -131,6 +136,7 @@ void SingleDishMS::initialize() {
   in_column_ = MS::UNDEFINED_COLUMN;
   //  out_column_ = MS::UNDEFINED_COLUMN;
   doSmoothing_ = False;
+  visCubeAccessor_ = GetCubeDefault;
 }
 
 bool SingleDishMS::close() {
@@ -284,10 +290,13 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   // define a column to read data from
   if (in_column_name == "float_data") {
     in_column_ = MS::FLOAT_DATA;
+    visCubeAccessor_ = GetCubeFromFloat;
   } else if (in_column_name == "corrected") {
     in_column_ = MS::CORRECTED_DATA;
+    visCubeAccessor_ = GetCubeFromCorrected;
   } else if (in_column_name == "data") {
     in_column_ = MS::DATA;
+    visCubeAccessor_ = GetCubeFromData;
   } else {
     throw(AipsError("Invalid data column name"));
   }
@@ -401,18 +410,19 @@ void SingleDishMS::format_selection(Record &selection) {
 
 void SingleDishMS::get_data_cube_float(vi::VisBuffer2 const &vb,
     Cube<Float> &data_cube) {
-  if (in_column_ == MS::FLOAT_DATA) {
-    data_cube = vb.visCubeFloat();
-  } else { //need to convert Complex cube to Float
-    Cube<Complex> cdata_cube(data_cube.shape());
-    if (in_column_ == MS::DATA) {
-      cdata_cube = vb.visCube();
-    } else { //MS::CORRECTED_DATA
-      cdata_cube = vb.visCubeCorrected();
-    }
-    // convert Complext to Float
-    convertArrayC2F(data_cube, cdata_cube);
-  }
+//  if (in_column_ == MS::FLOAT_DATA) {
+//    data_cube = vb.visCubeFloat();
+//  } else { //need to convert Complex cube to Float
+//    Cube<Complex> cdata_cube(data_cube.shape());
+//    if (in_column_ == MS::DATA) {
+//      cdata_cube = vb.visCube();
+//    } else { //MS::CORRECTED_DATA
+//      cdata_cube = vb.visCubeCorrected();
+//    }
+//    // convert Complext to Float
+//    convertArrayC2F(data_cube, cdata_cube);
+//  }
+  (*visCubeAccessor_)(vb, data_cube);
 }
 
 void SingleDishMS::convertArrayC2F(Array<Float> &to,
