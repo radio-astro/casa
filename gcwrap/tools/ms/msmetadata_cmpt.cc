@@ -655,34 +655,40 @@ vector<string> msmetadata::fieldnames() {
 }
 
 variant* msmetadata::fieldsforintent(
-	const string& intent, const bool asnames
+    const string& intent, const bool asnames
 ) {
-	_FUNC(
-		std::set<Int> ids;
-		Bool expand = intent.find('*') != std::string::npos;
-		if (expand) {
-			std::map<String COMMA std::set<Int> > mymap = _msmd->getIntentToFieldsMap();
-			ids = _idsFromExpansion(mymap, intent);
-		}
-		else {
-			ids = _msmd->getFieldsForIntent(intent);
-		}
-		variant *x;
-		if (ids.size() == 0) {
-			*_log << LogIO::WARN << "No intent " << (expand ? "matching '" : "'")
-				<< intent << "' exists in this dataset." << LogIO::POST;
-			x = asnames
-				? new variant(vector<string>(0))
-				: new variant(vector<int>(0));
-		}
-		else {
-			x = asnames
-				? new variant(_fieldNames(ids))
-				: new variant(_setIntToVectorInt(ids));
-		}
-		return x;
-	)
-	return 0;
+    _FUNC(
+        std::set<Int> ids; 
+        auto expand = intent.find('*') != std::string::npos;
+        if (intent == "*" && _msmd->getIntents().empty()) {
+            auto nFields = _msmd->nFields();
+            for (uInt i=0; i<nFields; ++i) {
+                ids.insert(i);
+            }
+        }
+        else if (expand) {
+            auto mymap = _msmd->getIntentToFieldsMap();
+            ids = _idsFromExpansion(mymap, intent);
+        }
+        else {
+            ids = _msmd->getFieldsForIntent(intent);
+        }
+        variant *x;
+        if (ids.size() == 0) { 
+            *_log << LogIO::WARN << "No intent " << (expand ? "matching '" : "'") 
+                << intent << "' exists in this dataset." << LogIO::POST;
+            x = asnames
+                ? new variant(vector<string>(0))
+                : new variant(vector<int>(0));
+        }
+        else {
+            x = asnames
+                ? new variant(_fieldNames(ids))
+                : new variant(_setIntToVectorInt(ids));
+        }
+        return x;
+    )
+    return nullptr;
 }
 
 vector<int> msmetadata::fieldsforname(const string& name) {
