@@ -27,6 +27,7 @@
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Block.h>
+#include <casa/Containers/Allocator.h>
 #include <scimath/Fitting/GenericL2Fit.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/Function.h>
@@ -876,11 +877,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
-  Vector<size_t> ctx_indices;
-  ctx_indices.resize(nchan.nelements());
-  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
-    ctx_indices(ictx) = 0;
-  }
+  Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
   LIBSAKURA_SYMBOL (BaselineType)
@@ -906,11 +903,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
       }
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
-      Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      Vector<float> spec(num_chan);
-      Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      Vector<bool> mask(num_chan);
-      Vector<bool> mask2(num_chan); //---------------------------------------------------------------------
+      Cube<Float> data_chunk(num_pol, num_chan, num_row, ArrayInitPolicy::NO_INIT);
+      Vector<float> spec(num_chan, ArrayInitPolicy::NO_INIT);
+      Cube<Bool> flag_chunk(num_pol, num_chan, num_row, ArrayInitPolicy::NO_INIT);
+      Vector<bool> mask(num_chan, ArrayInitPolicy::NO_INIT);
+      Vector<bool> mask2(num_chan, ArrayInitPolicy::NO_INIT); //---------------------------------------------------------------------
       // CAUTION!!!
       // data() method must be used with special care!!!
       float *spec_data = spec.data();
@@ -954,11 +951,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
         }
 
         //prepare varables for writing baseline table
-        Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
+        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         size_t num_apply_true = 0;
-        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
-        Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
-        Array<Float> ffpar_mtx(IPosition(2, num_pol, 0));  //1));
+        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Float> ffpar_mtx(IPosition(2, num_pol, 0), ArrayInitPolicy::NO_INIT);  //1));
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
           bltype_mtx[0][ipol] = (uInt) bltype; //LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
           fpar_mtx[0][ipol] = (Int) order;
@@ -969,20 +966,15 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
         status = LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
             bl_contexts[ctx_indices[idx]], order, &num_coeff);
         check_sakura_status("sakura_GetNumberOfCoefficients", status);
-        Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
-        for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-            coeff_mtx[icoeff][ipol] = 0.0;
-          }
-        }
+        Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff), 0.0);
 
-        Array<Float> rms_mtx(IPosition(2, num_pol, 1));
-        Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
-        Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
-        Array<Bool> uself_mtx(IPosition(2, num_pol, 1));
-        Array<Float> lfthres_mtx(IPosition(2, num_pol, 1));
-        Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1));
-        Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2));
+        Array<Float> rms_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Float> cthres_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<uInt> citer_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Bool> uself_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<Float> lfthres_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<uInt> lfavg_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
+        Array<uInt> lfedge_mtx(IPosition(2, num_pol, 2), ArrayInitPolicy::NO_INIT);
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
@@ -1112,7 +1104,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
         if (write_baseline_table) {
           // write to baseline table if there is apply=True spectrum.
           if (num_apply_true > 0) {
-            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max), ArrayInitPolicy::NO_INIT);
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
             bt->appenddata((uInt) scans[irow], (uInt) beams[irow],
@@ -1136,7 +1128,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
             //MJD(second)-> year,month,day,hour,minute,second
             //MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
-            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max), ArrayInitPolicy::NO_INIT);
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
@@ -1241,7 +1233,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
              }
              */
 
-            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
+            Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max), ArrayInitPolicy::NO_INIT);
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
