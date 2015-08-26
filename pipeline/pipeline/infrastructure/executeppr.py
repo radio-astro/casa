@@ -11,6 +11,7 @@ import string
 #import inspect
 import traceback
 import os
+import gc
 
 import pipeline
 import pipeline.extern.XmlObjectifier as XmlObjectifier
@@ -213,6 +214,8 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 		    "Failed to update context for " + taskname,
 		    echo_to_screen=echo_to_screen)
 		raise
+            finally:
+                gc.collect()
 
             if taskname == 'ImportData' and importonly: 
 		casatools.post_to_log(

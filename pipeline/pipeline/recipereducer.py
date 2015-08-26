@@ -38,6 +38,7 @@ Example #5: process uid123.tar.gz with a log level of TRACE
 """
 import ast
 import collections
+import gc
 import os
 import traceback
 import xml.etree.ElementTree as ElementTree
@@ -158,6 +159,8 @@ def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
                 LOG.error('Error executing pipeline task %s.' % task._hif_call)
                 traceback.print_exc()
                 return context
+            finally:
+                gc.collect()
     except StopIteration:
         pass
     finally:
