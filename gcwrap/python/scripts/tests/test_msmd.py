@@ -1607,6 +1607,31 @@ class msmd_test(unittest.TestCase):
         md = self.md
         self.assertTrue(md.nsources() == 6)
 
+    def test_refdir(self):
+        """Test msmd.refdir()"""
+        md = self.md
+        epsilon = 1e-6 
+        for i in range(md.nfields()):
+            res = md.refdir(i)
+            if i == 0:
+                self.assertTrue(abs(1 - res['m0']['value']/-2.8964345) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.10104256) < epsilon)
+            elif i == 1:
+                self.assertTrue(abs(1 - res['m0']['value']/-2.71545722) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.22613985) < epsilon)
+            elif i == 2:
+                self.assertTrue(abs(1 - res['m0']['value']/-2.72554329) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.1219181) < epsilon)
+            elif i == 3:
+                self.assertTrue(abs(1 - res['m0']['value']/-1.98190197) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.44437211) < epsilon)
+            elif i == 4:
+                self.assertTrue(abs(1 - res['m0']['value']/-2.04411602) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.32533384) < epsilon)
+            elif i == 5:
+                self.assertTrue(abs(1 - res['m0']['value']/-1.94537525) < epsilon)
+                self.assertTrue(abs(1 - res['m1']['value']/-0.27584353) < epsilon)
+
     def test_CAS7837(self):
         """Test corner case with no intents to make sure it doesn't segfault"""
         md = self.md

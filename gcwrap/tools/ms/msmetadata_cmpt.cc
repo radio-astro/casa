@@ -1177,6 +1177,51 @@ record* msmetadata::propermotions() {
 	return NULL;
 }
 
+record* msmetadata::refdir(
+    const variant& field, const record& epoch
+) {
+    _FUNC(
+        Int id;
+        switch (field.type()) {
+        case variant::STRING:
+            id = *(_msmd->getFieldIDsForField(field.toString()).begin());
+            break;
+        case variant::INT:
+            id = field.toInt();
+            break;
+        default:
+            ThrowCc(
+                "Unsupported type for field which must be "
+                "a nonnegative int or string."
+            );
+        }
+        unique_ptr<Record> ep(toRecord(epoch));
+        Record outRec;
+        MeasureHolder mh;
+        String err; 
+        if (ep->nfields() == 0) { 
+            mh = MeasureHolder(_msmd->getReferenceDirection(id));
+        }
+        else {
+            MeasureHolder ephold;
+            ThrowIf(
+                ! ephold.fromRecord(err, *ep),
+                "Epoch cannot be converted \n" + err
+            );
+            ThrowIf(
+                ! ephold.isMEpoch(), "Epoch parameter is not an MEpoch  \n"
+            );
+            mh = MeasureHolder(_msmd->getReferenceDirection(id, ephold.asMEpoch()));
+        }
+        ThrowIf(
+            ! mh.toRecord(err, outRec),
+            "Could not convert reference direction to Record \n" + err
+        );
+        return fromRecord(outRec);
+    )    
+    return nullptr;
+}
+
 record* msmetadata::reffreq(int spw) {
 	_FUNC(
 		_checkSpwId(spw, True);
