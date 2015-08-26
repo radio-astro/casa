@@ -1586,11 +1586,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             for (size_t imask = 0; imask < masklist.size(); ++imask) {
               masklist_mtx_tmp[ipol].push_back(masklist[imask]);
             }
-            //<--remove when new API becomes available
-            //<--***start***
-            // SakuraAlignedArray<double> boundary(npiece);
-            // GetBoundariesOfPiecewiseData(num_chan, mask.data, npiece, boundary.data);
-            //<--***end***
             set_array_for_bltable<double, Float>(ipol, npiece, boundary_data,
                 ffpar_mtx);
 
@@ -3139,41 +3134,6 @@ void SingleDishMS::findLineAndGetMask(size_t const num_data, float const* data,
   // line mask creation (do not initialize in case of baseline mask)
   linefinder::getMask(num_data, out_mask, line_ranges, invert, !invert);
 }
-
-//<--remove when new API becomes available, ALSO declaration of this function in the header file.
-//<--***start***
-// --------------------------------------------------------------------
-// this function is temporarily copied from sakura code to get 
-// positions of cubic spline boundaries. (2015/4/6 WK)
-// --------------------------------------------------------------------
-void SingleDishMS::GetBoundariesOfPiecewiseData(size_t num_mask,
-    bool const *mask, size_t num_pieces, double *boundary) {
-  assert(num_pieces > 0);
-
-  size_t num_unmasked_data = 0;
-  for (size_t i = 0; i < num_mask; ++i) {
-    if (mask[i])
-      ++num_unmasked_data;
-  }
-  boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
-  size_t idx = 1;
-  size_t count_unmasked_data = 0;
-  for (size_t i = 0; i < num_mask; ++i) {
-    if (idx == num_pieces)
-      break;
-    if (mask[i]) {
-      if (count_unmasked_data
-          >= static_cast<double>(num_unmasked_data * idx)
-              / static_cast<double>(num_pieces)) {
-        boundary[idx] = static_cast<double>(i);
-        ++idx;
-      }
-      ++count_unmasked_data;
-    }
-  }
-}
-// --------------------------------------------------------------------
-//<--***end***
 
 void SingleDishMS::scale(float const factor, string const& in_column_name,
     string const& out_ms_name) {

@@ -212,16 +212,6 @@ private:
     }
   }
 
-  // *****---------------------------------------------------------------
-  // the following function has temporarily been copied from sakura to 
-  // get positions of cubic spline boundaries. it should be deleted once 
-  // sakura_GetBestFitBaselineCoefficientsCubicSplineFloat is updated so 
-  // that boundary information become available (2015/4/6 WK)
-  // *****---------------------------------------------------------------
-  void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask,
-      size_t num_pieces, double *boundary);
-  // *****---------------------------------------------------------------
-
   void findLineAndGetMask(size_t const num_data, float const data[/*num_data*/],
       bool const in_mask[/*num_data*/], float const threshold,
       int const avg_limit, int const minwidth, vector<int> const& edge,
