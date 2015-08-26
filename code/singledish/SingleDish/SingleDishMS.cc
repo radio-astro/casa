@@ -12,7 +12,6 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <casa_sakura/SakuraUtils.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
@@ -908,10 +907,16 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<float> spec(num_chan);
+      Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<bool> mask(num_chan);
-      SakuraAlignedArray<bool> mask2(num_chan); //---------------------------------------------------------------------
+      Vector<bool> mask(num_chan);
+      Vector<bool> mask2(num_chan); //---------------------------------------------------------------------
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spec_data = spec.data();
+      bool *mask_data = mask.data();
+      bool *mask2_data = mask2.data();
+
       uInt final_mask[num_pol]; //---------------------------------------------------------------------
       uInt final_mask2[num_pol]; //---------------------------------------------------------------------
 
@@ -993,9 +998,9 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
-          if (allchannels_flagged(num_chan, mask.data)) {
+          if (allchannels_flagged(num_chan, mask_data)) {
             apply_mtx[0][ipol] = False;
             continue;
           }
@@ -1003,17 +1008,17 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           // convert flag to mask by taking logical NOT of flag
           // and then operate logical AND with in_mask
           for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-            mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+            mask_data[ichan] = in_mask[idx][ichan] && (!(mask_data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
           // line finding. get baseline mask (invert=true)
           if (linefinding) {
-            findLineAndGetMask(num_chan, spec.data, mask.data, threshold,
-                avg_limit, minwidth, edge, true, mask.data);
+            findLineAndGetMask(num_chan, spec_data, mask_data, threshold,
+                avg_limit, minwidth, edge, true, mask_data);
           }
           // Final check of the valid number of channels
-          if (NValidMask(num_chan, mask.data) < num_coeff) {
+          if (NValidMask(num_chan, mask_data) < num_coeff) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
             os << LogIO::WARN
@@ -1029,20 +1034,23 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
             num_apply_true++;
-            SakuraAlignedArray<double> coeff(num_coeff);
+            Vector<double> coeff(num_coeff);
+            // CAUTION!!!
+            // data() method must be used with special care!!!
+            double *coeff_data = coeff.data();
             status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-                bl_contexts[ctx_indices[idx]], num_chan, spec.data, mask.data,
-                clip_threshold_sigma, num_fitting_max, num_coeff, coeff.data,
-                mask2.data, //----------------------------------------------------
+                bl_contexts[ctx_indices[idx]], num_chan, spec_data, mask_data,
+                clip_threshold_sigma, num_fitting_max, num_coeff, coeff_data,
+                mask2_data, //----------------------------------------------------
                 &rms,
                 &bl_status);
 
             for (size_t i = 0; i < num_chan; ++i) {
-              if (mask.data[i] == false) {
+              if (mask_data[i] == false) {
                 final_mask[ipol] += 1;
               }
 
-              if (mask2.data[i] == false) {
+              if (mask2_data[i] == false) {
                 final_mask2[ipol] += 1;
               }
             }
@@ -1057,11 +1065,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
             check_sakura_status("sakura_GetBestFitBaselineCoefficientsFloat",
                 status);
-            set_array_for_bltable<double, Float>(ipol, num_coeff, coeff.data,
+            set_array_for_bltable<double, Float>(ipol, num_coeff, coeff_data,
                 coeff_mtx);
 
             Vector<uInt> masklist;
-            get_masklist_from_mask(num_chan, mask2.data, masklist); //----------------------------------
+            get_masklist_from_mask(num_chan, mask2_data, masklist); //----------------------------------
             if (masklist.size() > num_masklist_max) {
               num_masklist_max = masklist.size();
             }
@@ -1071,8 +1079,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             }
 
             status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-                bl_contexts[ctx_indices[idx]], num_chan, spec.data, num_coeff,
-                coeff.data, spec.data);
+                bl_contexts[ctx_indices[idx]], num_chan, spec_data, num_coeff,
+                coeff_data, spec_data);
             check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat",
                 status);
             rms_mtx[0][ipol] = rms;
@@ -1089,14 +1097,14 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           } else {
             status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
                 bl_contexts[ctx_indices[idx]], static_cast<uint16_t>(order),
-                num_chan, spec.data, mask.data, clip_threshold_sigma,
-                num_fitting_max, true, mask.data, spec.data, &rms,
+                num_chan, spec_data, mask_data, clip_threshold_sigma,
+                num_fitting_max, true, mask_data, spec_data, &rms,
                 &bl_status);
             check_sakura_status("sakura_SubtractBaselineFloat", status);
           }
           // set back a spectrum to data cube
           if (do_subtract) {
-            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec_data);
           }
 
         } // loop pol
@@ -1409,11 +1417,17 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<float> spec(num_chan);
+      Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<bool> mask(num_chan);
+      Vector<bool> mask(num_chan);
 
-      SakuraAlignedArray<bool> mask2(num_chan); //---------------------------------------------------------------------
+      Vector<bool> mask2(num_chan); //---------------------------------------------------------------------
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spec_data = spec.data();
+      bool *mask_data = mask.data();
+      bool *mask2_data = mask2.data();
+
       uInt final_mask[num_pol]; //---------------------------------------------------------------------
       uInt final_mask2[num_pol]; //---------------------------------------------------------------------
 
@@ -1465,7 +1479,10 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
         size_t num_masklist_max = 0;
         std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
         size_t num_coeff = 4 * npiece;
-        SakuraAlignedArray<double> coeff(num_coeff);
+        Vector<double> coeff(num_coeff);
+        // CAUTION!!!
+        // data() method must be used with special care!!!
+        double *coeff_data = coeff.data();
         Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
           for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
@@ -1494,9 +1511,9 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
-          if (allchannels_flagged(num_chan, mask.data)) {
+          if (allchannels_flagged(num_chan, mask_data)) {
             apply_mtx[0][ipol] = False;
             continue;
           }
@@ -1504,17 +1521,17 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
           // convert flag to mask by taking logical NOT of flag
           // and then operate logical AND with in_mask
           for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-            mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+            mask_data[ichan] = in_mask[idx][ichan] && (!(mask_data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
           // line finding. get baseline mask (invert=true)
           if (linefinding) {
-            findLineAndGetMask(num_chan, spec.data, mask.data, threshold,
-                avg_limit, minwidth, edge, true, mask.data);
+            findLineAndGetMask(num_chan, spec_data, mask_data, threshold,
+                avg_limit, minwidth, edge, true, mask_data);
           }
           // Final check of the valid number of channels (For cubic spline, degree of freedom is npiece+3)
-          if (NValidMask(num_chan, mask.data) < npiece + 3) {
+          if (NValidMask(num_chan, mask_data) < npiece + 3) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
             os << LogIO::WARN
@@ -1528,7 +1545,10 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
           // actual execution of single spectrum
           float rms;
-          SakuraAlignedArray<double> boundary(npiece);
+          Vector<double> boundary(npiece);
+          // CAUTION!!!
+          // data() method must be used with special care!!!
+          double *boundary_data = boundary.data();
 
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
@@ -1536,18 +1556,18 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             num_apply_true++;
             status = LIBSAKURA_SYMBOL(
                 GetBestFitBaselineCoefficientsCubicSplineFloat)(
-                bl_contexts[ctx_indices[idx]], num_chan, spec.data, mask.data,
-                clip_threshold_sigma, num_fitting_max, npiece, coeff.data,
-                mask2.data, //------------------------------------------------------------
-                &rms, boundary.data,
+                bl_contexts[ctx_indices[idx]], num_chan, spec_data, mask_data,
+                clip_threshold_sigma, num_fitting_max, npiece, coeff_data,
+                mask2_data, //------------------------------------------------------------
+                &rms, boundary_data,
                 &bl_status);
 
             for (size_t i = 0; i < num_chan; ++i) {
-              if (mask.data[i] == false) {
+              if (mask_data[i] == false) {
                 final_mask[ipol] += 1;
               }
 
-              if (mask2.data[i] == false) {
+              if (mask2_data[i] == false) {
                 final_mask2[ipol] += 1;
               }
             }
@@ -1555,10 +1575,10 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             check_sakura_status(
                 "sakura_GetBestFitBaselineCoefficientsCubicSplineFloat",
                 status);
-            set_array_for_bltable<double, Float>(ipol, num_coeff, coeff.data,
+            set_array_for_bltable<double, Float>(ipol, num_coeff, coeff_data,
                 coeff_mtx);
             Vector<uInt> masklist;
-            get_masklist_from_mask(num_chan, mask2.data, masklist); //------------------------------------------
+            get_masklist_from_mask(num_chan, mask2_data, masklist); //------------------------------------------
             if (masklist.size() > num_masklist_max) {
               num_masklist_max = masklist.size();
             }
@@ -1571,13 +1591,13 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             // SakuraAlignedArray<double> boundary(npiece);
             // GetBoundariesOfPiecewiseData(num_chan, mask.data, npiece, boundary.data);
             //<--***end***
-            set_array_for_bltable<double, Float>(ipol, npiece, boundary.data,
+            set_array_for_bltable<double, Float>(ipol, npiece, boundary_data,
                 ffpar_mtx);
 
             status = LIBSAKURA_SYMBOL(
                 SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-                bl_contexts[ctx_indices[idx]], num_chan, spec.data, npiece,
-                coeff.data, boundary.data, spec.data);
+                bl_contexts[ctx_indices[idx]], num_chan, spec_data, npiece,
+                coeff_data, boundary_data, spec_data);
             check_sakura_status(
                 "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat",
                 status);
@@ -1595,16 +1615,16 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
           } else {
             status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
                 bl_contexts[ctx_indices[idx]], static_cast<uint16_t>(npiece),
-                num_chan, spec.data, mask.data, clip_threshold_sigma,
-                num_fitting_max, true, mask.data, spec.data, &rms,
-                boundary.data,
+                num_chan, spec_data, mask_data, clip_threshold_sigma,
+                num_fitting_max, true, mask_data, spec_data, &rms,
+                boundary_data,
                 &bl_status);
             check_sakura_status("sakura_SubtractBaselineCubicSplineFloat",
                 status);
           }
           // set back a spectrum to data cube
           if (do_subtract) {
-            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec_data);
           }
         } // end of polarization loop
 
@@ -1905,10 +1925,14 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Vector<uInt> orig_rows = vb->rowIds();
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<float> spec(num_chan);
+      Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<bool> mask(num_chan);
+      Vector<bool> mask(num_chan);
       //cout << "New iteration: num_row=" << num_row << ", num_chan=" << num_chan << ", num_pol=" << num_pol << ", spwid=" << data_spw << endl;
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spec_data = spec.data();
+      bool *mask_data = mask.data();
 
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
@@ -1972,14 +1996,14 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
-          if (allchannels_flagged(num_chan, mask.data)) {
+          if (allchannels_flagged(num_chan, mask_data)) {
             continue;
           }
 
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
 
           // actual execution of single spectrum
           map< const LIBSAKURA_SYMBOL(BaselineType),
@@ -1992,14 +2016,20 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           //cout << "Got context for type " << (*iter).first << ": idx=" << ctx_indices[idx] << endl;
 
           size_t num_coeff = bl_coeff.size();
-          SakuraAlignedArray<double> coeff(num_coeff);
+          Vector<double> coeff(num_coeff);
+          // CAUTION!!!
+          // data() method must be used with special care!!!
+          double *coeff_data = coeff.data();
           for (size_t i = 0; i < num_coeff; ++i) {
-            coeff.data[i] = bl_coeff[i];
+            coeff_data[i] = bl_coeff[i];
           }
           size_t num_boundary = bl_boundary.size();
-          SakuraAlignedArray<double> boundary(num_boundary);
+          Vector<double> boundary(num_boundary);
+          // CAUTION!!!
+          // data() method must be used with special care!!!
+          double *boundary_data = boundary.data();
           for (size_t i = 0; i < num_boundary; ++i) {
-            boundary.data[i] = bl_boundary[i];
+            boundary_data[i] = bl_boundary[i];
           }
 
           string subtract_funcname;
@@ -2008,15 +2038,15 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
             //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
             status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-                context, num_chan, spec.data, num_coeff, coeff.data, spec.data);
+                context, num_chan, spec_data, num_coeff, coeff_data, spec_data);
             subtract_funcname = "sakura_SubtractBaselineUsingCoefficientsFloat";
             break;
           case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
             //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
             status = LIBSAKURA_SYMBOL(
                 SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-                num_chan, spec.data, num_boundary, coeff.data, boundary.data,
-                spec.data);
+                num_chan, spec_data, num_boundary, coeff_data, boundary_data,
+                spec_data);
             subtract_funcname =
                 "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
             break;
@@ -2026,7 +2056,7 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           check_sakura_status(subtract_funcname, status);
 
           // set back a spectrum to data cube
-          set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec_data);
         } // end of polarization loop
 
       } // end of chunk row loop
@@ -2117,9 +2147,13 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<float> spec(num_chan);
+      Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<bool> mask(num_chan);
+      Vector<bool> mask(num_chan);
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spec_data = spec.data();
+      bool *mask_data = mask.data();
 
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
@@ -2170,19 +2204,19 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
-          if (allchannels_flagged(num_chan, mask.data)) {
+          if (allchannels_flagged(num_chan, mask_data)) {
             continue;
           }
 
           // convert flag to mask by taking logical NOT of flag
           // and then operate logical AND with in_mask
           for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-            mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+            mask_data[ichan] = in_mask[idx][ichan] && (!(mask_data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
 
           Vector<Float> x_;
           x_.resize(num_chan);
@@ -2192,7 +2226,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           m_.resize(num_chan);
           for (size_t ichan = 0; ichan < num_chan; ++ichan) {
             x_[ichan] = static_cast<Float>(ichan);
-            y_[ichan] = spec.data[ichan];
+            y_[ichan] = spec_data[ichan];
           }
           Vector<Float> parameters_;
           Vector<Float> error_;
@@ -2224,7 +2258,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             for (size_t ichan = 0; ichan < num_chan; ++ichan) {
               if ((fitrange_start[ifit] <= ichan)
                   && (ichan <= fitrange_end[ifit])) {
-                m_[ichan] = mask.data[ichan];
+                m_[ichan] = mask_data[ichan];
               } else {
                 m_[ichan] = False;
               }
@@ -2460,12 +2494,18 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Vector<uInt> orig_rows = vb->rowIds();
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<float> spec(num_chan);
+      Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
-      SakuraAlignedArray<bool> mask(num_chan);
+      Vector<bool> mask(num_chan);
       //cout << "New iteration: num_row=" << num_row << ", num_chan=" << num_chan << ", num_pol=" << num_pol << ", spwid=" << data_spw << endl;
 
-      SakuraAlignedArray<bool> mask2(num_chan);
+      Vector<bool> mask2(num_chan);
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spec_data = spec.data();
+      bool *mask_data = mask.data();
+      bool *mask2_data = mask2.data();
+
       uInt final_mask[num_pol];
       uInt final_mask2[num_pol];
 
@@ -2539,9 +2579,9 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask_data);
           // skip spectrum if all channels flagged
-          if (allchannels_flagged(num_chan, mask.data)) {
+          if (allchannels_flagged(num_chan, mask_data)) {
             apply_mtx[0][ipol] = False;
             continue;
           }
@@ -2549,7 +2589,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           // convert flag to mask by taking logical NOT of flag
           // and then operate logical AND with in_mask
           for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-            mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+            mask_data[ichan] = in_mask[idx][ichan] && (!(mask_data[ichan]));
           }
           // get fitting parameter
           BLParameterSet fit_param;
@@ -2577,11 +2617,11 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             get_mask_from_rec(data_spw[irow], local_rec_chan, local_mask,
                 false);
             for (size_t ichan = 0; ichan < num_chan; ++ichan) {
-              mask.data[ichan] = mask.data[ichan] && local_mask[ichan];
+              mask_data[ichan] = mask_data[ichan] && local_mask[ichan];
             }
           }
           // check for composit mask and flag if no valid channel to fit
-          if (NValidMask(num_chan, mask.data) == 0) {
+          if (NValidMask(num_chan, mask_data) == 0) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             os << LogIO::DEBUG1 << "Row " << orig_rows[irow] << ", Pol " << ipol
                 << ": No valid channel to fit. Skipping" << LogIO::POST;
@@ -2589,7 +2629,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             continue;
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec_data);
 
           // actual execution of single spectrum
           map< const LIBSAKURA_SYMBOL(BaselineType),
@@ -2621,7 +2661,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               fit_param.baseline_type
                   == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline) ?
                   fit_param.npiece + 3 : num_coeff;
-          if (NValidMask(num_chan, mask.data) < num_min) {
+          if (NValidMask(num_chan, mask_data) < num_min) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
             apply_mtx[0][ipol] = False;
             os << LogIO::WARN
@@ -2639,7 +2679,10 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
             num_boundary = fit_param.npiece;
           }
-          SakuraAlignedArray<double> boundary(num_boundary);
+          Vector<double> boundary(num_boundary);
+          // CAUTION!!!
+          // data() method must be used with special care!!!
+          double *boundary_data = boundary.data();
 
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
@@ -2662,21 +2705,24 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             if (num_coeff > num_coeff_max) {
               num_coeff_max = num_coeff;
             }
-            SakuraAlignedArray<double> coeff(num_coeff);
+            Vector<double> coeff(num_coeff);
+            // CAUTION!!!
+            // data() method must be used with special care!!!
+            double *coeff_data = coeff.data();
             string get_coeff_funcname;
             switch (fit_param.baseline_type) {
             case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
             case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
               status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-                  context, num_chan, spec.data, mask.data,
+                  context, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  num_coeff, coeff.data, mask2.data, &rms, &bl_status);
+                  num_coeff, coeff_data, mask2_data, &rms, &bl_status);
 
               for (size_t i = 0; i < num_chan; ++i) {
-                if (mask.data[i] == false) {
+                if (mask_data[i] == false) {
                   final_mask[ipol] += 1;
                 }
-                if (mask2.data[i] == false) {
+                if (mask2_data[i] == false) {
                   final_mask2[ipol] += 1;
                 }
               }
@@ -2686,16 +2732,16 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
               status = LIBSAKURA_SYMBOL(
                   GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
-                  num_chan, spec.data, mask.data,
+                  num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  fit_param.npiece, coeff.data, mask2.data, &rms, boundary.data,
+                  fit_param.npiece, coeff_data, mask2_data, &rms, boundary_data,
                   &bl_status);
 
               for (size_t i = 0; i < num_chan; ++i) {
-                if (mask.data[i] == false) {
+                if (mask_data[i] == false) {
                   final_mask[ipol] += 1;
                 }
-                if (mask2.data[i] == false) {
+                if (mask2_data[i] == false) {
                   final_mask2[ipol] += 1;
                 }
               }
@@ -2708,10 +2754,10 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             }
             check_sakura_status(get_coeff_funcname, status);
             for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-              coeff_mtx_tmp[ipol].push_back(coeff.data[icoeff]);
+              coeff_mtx_tmp[ipol].push_back(coeff_data[icoeff]);
             }
             Vector<uInt> masklist;
-            get_masklist_from_mask(num_chan, mask2.data, masklist);
+            get_masklist_from_mask(num_chan, mask2_data, masklist);
             if (masklist.size() > num_masklist_max) {
               num_masklist_max = masklist.size();
             }
@@ -2725,16 +2771,16 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
             case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
               status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-                  context, num_chan, spec.data, num_coeff, coeff.data,
-                  spec.data);
+                  context, num_chan, spec_data, num_coeff, coeff_data,
+                  spec_data);
               subtract_funcname =
                   "sakura_SubtractBaselineUsingCoefficientsFloat";
               break;
             case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
               status = LIBSAKURA_SYMBOL(
                   SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-                  num_chan, spec.data, fit_param.npiece, coeff.data,
-                  boundary.data, spec.data);
+                  num_chan, spec_data, fit_param.npiece, coeff_data,
+                  boundary_data, spec_data);
               subtract_funcname =
                   "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat";
               break;
@@ -2761,7 +2807,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             if (fit_param.baseline_type
                 == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
               for (size_t ipiece = 0; ipiece < fit_param.npiece; ++ipiece) {
-                ffpar_mtx_tmp[ipol].push_back(boundary.data[ipiece]);
+                ffpar_mtx_tmp[ipol].push_back(boundary_data[ipiece]);
               }
             }
 
@@ -2781,20 +2827,20 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             switch (fit_param.baseline_type) {
             case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
             case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-              //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+              //cout << (fit_param.baseline_type==0 ? "poly" : "chebyshev") << ": order=" << fit_param.order << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask_data) << endl;
               status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context,
-                  fit_param.order, num_chan, spec.data, mask.data,
+                  fit_param.order, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask.data, spec.data, &rms,
+                  true, mask_data, spec_data, &rms,
                   &bl_status);
               subtract_funcname = "sakura_SubtractBaselineFloat";
               break;
             case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-              //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask.data) << endl;
+              //cout << "cspline: npiece = " << fit_param.npiece << ", row=" << orig_rows[irow] << ", pol=" << ipol << ", num_chan=" << num_chan << ", num_valid_chan = " << NValidMask(num_chan, mask_data) << endl;
               status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-                  context, fit_param.npiece, num_chan, spec.data, mask.data,
+                  context, fit_param.npiece, num_chan, spec_data, mask_data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask.data, spec.data, &rms, boundary.data,
+                  true, mask_data, spec_data, &rms, boundary_data,
                   &bl_status);
               subtract_funcname = "sakura_SubtractBaselineCubicSplineFloat";
               break;
@@ -2805,7 +2851,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           }
           // set back a spectrum to data cube
           if (do_subtract) {
-            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+            set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec_data);
           }
         } // end of polarization loop
 
@@ -3160,7 +3206,11 @@ void SingleDishMS::scale(float const factor, string const& in_column_name,
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol, num_chan, num_row);
       Matrix<Float> data_row(num_pol, num_chan);
-      SakuraAlignedArray<float> spectrum(num_chan);
+      Vector<float> spectrum(num_chan);
+      // CAUTION!!!
+      // data() method must be used with special care!!!
+      float *spectrum_data = spectrum.data();
+
       // get a data cube (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       // loop over MS rows
@@ -3168,13 +3218,13 @@ void SingleDishMS::scale(float const factor, string const& in_column_name,
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum_data);
 
           // actual execution of single spectrum
-          do_scale(factor, num_chan, spectrum.data);
+          do_scale(factor, num_chan, spectrum_data);
 
           // set back a spectrum to data cube
-          set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
+          set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum_data);
         } // end of polarization loop
       } // end of chunk row loop
       // write back data cube to Output MS
