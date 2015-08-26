@@ -3203,8 +3203,7 @@ void SingleDishMS::do_scale(float const factor, size_t const num_data,
 void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
     string const &columnName, string const &outMSName) {
   LogIO os(_ORIGIN);
-  os //<< LogIO::DEBUGGING
-  << "Input parameter summary:" << endl << "   kernelType = " << kernelType
+  os << "Input parameter summary:" << endl << "   kernelType = " << kernelType
       << endl << "   kernelWidth = " << kernelWidth << endl
       << "   columnName = " << columnName << endl << "   outMSName = "
       << outMSName << LogIO::POST;
@@ -3230,7 +3229,8 @@ void SingleDishMS::smooth(string const &kernelType, float const kernelWidth,
   }
 
   double endTime = gettimeofday_sec();
-  os << "Elapsed time for VI/VB loop: " << endTime - startTime << " sec"
+  os << LogIO::DEBUGGING
+      << "Elapsed time for VI/VB loop: " << endTime - startTime << " sec"
       << LogIO::POST;
 
   // Finalization
