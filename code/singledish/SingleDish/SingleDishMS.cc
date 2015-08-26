@@ -654,11 +654,10 @@ void SingleDishMS::check_sakura_status(string const &name,
 
 void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
     size_t const row, size_t const plane, size_t const num_data,
-    SakuraAlignedArray<float> &out_data) {
+    float out_data[]) {
   AlwaysAssert(static_cast<size_t>(data_cube.ncolumn()) == num_data, AipsError);
-  float *ptr = out_data.data;
   for (size_t i = 0; i < num_data; ++i)
-    ptr[i] = static_cast<float>(data_cube(plane, i, row));
+    out_data[i] = static_cast<float>(data_cube(plane, i, row));
 }
 
 void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
@@ -676,11 +675,10 @@ void SingleDishMS::get_flag_cube(vi::VisBuffer2 const &vb,
 
 void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube, size_t const row,
     size_t const plane, size_t const num_flag,
-    SakuraAlignedArray<bool> &out_flag) {
+    bool out_flag[]) {
   AlwaysAssert(static_cast<size_t>(flag_cube.ncolumn()) == num_flag, AipsError);
-  bool *ptr = out_flag.data;
   for (size_t i = 0; i < num_flag; ++i)
-    ptr[i] = static_cast<bool>(flag_cube(plane, i, row));
+    out_flag[i] = static_cast<bool>(flag_cube(plane, i, row));
 }
 
 void SingleDishMS::set_flag_to_cube(Cube<Bool> &flag_cube, size_t const row,
@@ -985,7 +983,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask.data)) {
             apply_mtx[0][ipol] = False;
@@ -998,7 +996,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
           // line finding. get baseline mask (invert=true)
           if (linefinding) {
             findLineAndGetMask(num_chan, spec.data, mask.data, threshold,
@@ -1486,7 +1484,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask.data)) {
             apply_mtx[0][ipol] = False;
@@ -1499,7 +1497,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
           // line finding. get baseline mask (invert=true)
           if (linefinding) {
             findLineAndGetMask(num_chan, spec.data, mask.data, threshold,
@@ -1964,14 +1962,14 @@ void SingleDishMS::applyBaselineTable(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask.data)) {
             continue;
           }
 
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
 
           // actual execution of single spectrum
           map< const LIBSAKURA_SYMBOL(BaselineType),
@@ -2162,7 +2160,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask.data)) {
             continue;
@@ -2174,7 +2172,7 @@ void SingleDishMS::fitLine(string const& in_column_name, string const& in_spw,
             mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
 
           Vector<Float> x_;
           x_.resize(num_chan);
@@ -2531,7 +2529,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
           // actually, then it will be converted to real mask when
           // taking AND with user-given mask info. this is just for
           // saving memory usage...)
-          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+          get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask.data);
           // skip spectrum if all channels flagged
           if (allchannels_flagged(num_chan, mask.data)) {
             apply_mtx[0][ipol] = False;
@@ -2581,7 +2579,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
             continue;
           }
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec.data);
 
           // actual execution of single spectrum
           map< const LIBSAKURA_SYMBOL(BaselineType),
@@ -3160,7 +3158,7 @@ void SingleDishMS::scale(float const factor, string const& in_column_name,
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
           // get a spectrum from data cube
-          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum);
+          get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
 
           // actual execution of single spectrum
           do_scale(factor, num_chan, spectrum.data);

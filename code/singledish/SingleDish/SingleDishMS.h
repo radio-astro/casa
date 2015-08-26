@@ -33,7 +33,6 @@
 
 #include <casa/aipstype.h>
 #include <casa/Containers/Record.h>
-#include <casa_sakura/SakuraAlignedArray.h>
 #include <libsakura/sakura.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
@@ -234,7 +233,7 @@ private:
   // retrieve a spectrum at the row and plane (polarization) from data cube
   void get_spectrum_from_cube(Cube<Float> &data_cube, size_t const row,
       size_t const plane, size_t const num_data,
-      SakuraAlignedArray<float> &out_data);
+      float out_data[/*num_data*/]);
   // set a spectrum at the row and plane (polarization) to data cube
   void set_spectrum_to_cube(Cube<Float> &data_cube, size_t const row,
       size_t const plane, size_t const num_data, float in_data[/*num_data*/]);
@@ -246,7 +245,7 @@ private:
   // retrieve a flag at the row and plane (polarization) from flag cube
   void get_flag_from_cube(Cube<Bool> &flag_cube, size_t const row,
       size_t const plane, size_t const num_flag,
-      SakuraAlignedArray<bool> &out_flag);
+      bool out_flag[/*num_flag*/]);
   // set a flag at the row and plane (polarization) to flag cube
   void set_flag_to_cube(Cube<Bool> &flag_cube, size_t const row,
       size_t const plane, size_t const num_flag, bool in_flag[/*num_data*/]);
