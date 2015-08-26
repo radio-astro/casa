@@ -616,8 +616,8 @@ void SingleDishMS::get_baseline_context(LIBSAKURA_SYMBOL(BaselineType) const bas
     LIBSAKURA_SYMBOL(Status) status;
     status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type,
         static_cast<uint16_t>(order),
-        static_cast<uint16_t>(order), //<--comment out until new API becomes available
-        static_cast<uint16_t>(order),//<--comment out until new API becomes available
+        static_cast<uint16_t>(order),
+        static_cast<uint16_t>(order),
         num_chan, &context);
     check_sakura_status("sakura_CreateBaselineContext", status);
     bl_contexts.push_back(context);
@@ -1017,7 +1017,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             continue;
           }
           // actual execution of single spectrum
-          float rms;  //<--comment out until new API becomes available
+          float rms;
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
             num_apply_true++;
@@ -1026,7 +1026,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                 bl_contexts[ctx_indices[idx]], num_chan, spec.data, mask.data,
                 clip_threshold_sigma, num_fitting_max, num_coeff, coeff.data,
                 mask2.data, //----------------------------------------------------
-                &rms, //<--comment out until new API becomes available
+                &rms,
                 &bl_status);
 
             for (size_t i = 0; i < num_chan; ++i) {
@@ -1067,20 +1067,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                 coeff.data, spec.data);
             check_sakura_status("sakura_SubtractBaselineUsingCoefficientsFloat",
                 status);
-            //<--remove when new API becomes available
-            //<--***start***
-            // LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
-            // status = LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
-            //                    spec.data,
-            //                    mask2.data,//---------------------------------------
-            //                    &stat);
-            // check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
-            // rms_mtx[0][ipol] = stat.stddev;
-            //<--***end***
-            //<--comment out until new API becomes available
-            //<--***start***
             rms_mtx[0][ipol] = rms;
-            //<--***end***
 
             cthres_mtx[0][ipol] = clip_threshold_sigma;
             citer_mtx[0][ipol] = (uInt) num_fitting_max - 1;
@@ -1095,7 +1082,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
                 bl_contexts[ctx_indices[idx]], static_cast<uint16_t>(order),
                 num_chan, spec.data, mask.data, clip_threshold_sigma,
-                num_fitting_max, true, mask.data, spec.data, &rms, //<--comment out until new API becomes available
+                num_fitting_max, true, mask.data, spec.data, &rms,
                 &bl_status);
             check_sakura_status("sakura_SubtractBaselineFloat", status);
           }
@@ -1532,8 +1519,8 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
           }
 
           // actual execution of single spectrum
-          float rms;  //<--comment out until new API becomes available
-          SakuraAlignedArray<double> boundary(npiece); //<--comment out until new API becomes available
+          float rms;
+          SakuraAlignedArray<double> boundary(npiece);
 
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
@@ -1544,7 +1531,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                 bl_contexts[ctx_indices[idx]], num_chan, spec.data, mask.data,
                 clip_threshold_sigma, num_fitting_max, npiece, coeff.data,
                 mask2.data, //------------------------------------------------------------
-                &rms, boundary.data, //<--comment out until new API becomes available
+                &rms, boundary.data,
                 &bl_status);
 
             for (size_t i = 0; i < num_chan; ++i) {
@@ -1586,21 +1573,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             check_sakura_status(
                 "sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat",
                 status);
-            //<--remove when new API becomes available
-            //<--***start***
-            // LIBSAKURA_SYMBOL(StatisticsResultFloat) stat;
-            // status =
-            // LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_chan,
-            //                   spec.data,
-            //                   mask2.data,//------------------------------------------------------------
-            //                   &stat);
-            // check_sakura_status("sakura_ComputeAccurateStatisticsFloat", status);
-            // rms_mtx[0][ipol] = stat.stddev;
-            //<--***end***
-            //<--comment out until new API becomes available
-            //<--***start***
             rms_mtx[0][ipol] = rms;
-            //<--***end***
 
             cthres_mtx[0][ipol] = clip_threshold_sigma;
             citer_mtx[0][ipol] = (uInt) num_fitting_max - 1;
@@ -1616,7 +1589,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                 bl_contexts[ctx_indices[idx]], static_cast<uint16_t>(npiece),
                 num_chan, spec.data, mask.data, clip_threshold_sigma,
                 num_fitting_max, true, mask.data, spec.data, &rms,
-                boundary.data, //<--comment out until new API becomes available
+                boundary.data,
                 &bl_status);
             check_sakura_status("sakura_SubtractBaselineCubicSplineFloat",
                 status);
@@ -2804,7 +2777,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context,
                   fit_param.order, num_chan, spec.data, mask.data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask.data, spec.data, &rms, //<--comment out until new API becomes available
+                  true, mask.data, spec.data, &rms,
                   &bl_status);
               subtract_funcname = "sakura_SubtractBaselineFloat";
               break;
@@ -2813,7 +2786,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               status = LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
                   context, fit_param.npiece, num_chan, spec.data, mask.data,
                   fit_param.clip_threshold_sigma, fit_param.num_fitting_max,
-                  true, mask.data, spec.data, &rms, boundary.data, //<--comment out until new API becomes available
+                  true, mask.data, spec.data, &rms, boundary.data,
                   &bl_status);
               subtract_funcname = "sakura_SubtractBaselineCubicSplineFloat";
               break;
