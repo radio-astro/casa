@@ -298,8 +298,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         psf_name = '%s.%s.iter%s.psf%s' % (
           inputs.imagename, inputs.stokes, iter, mt_name)
         if inputs.gridder == 'mosaic':
-            flux_name = '%s.%s.iter%s.pb%s' % (
-                inputs.imagename, inputs.stokes, iter, mt_name)
+            flux_name = '%s.%s.iter%s.pb' % (
+                inputs.imagename, inputs.stokes, iter)
         else:
             flux_name = ''
 
