@@ -150,7 +150,7 @@ def plotMeanSpectrum(img='g35.03_KDnh3_11.hline.self.image',
             pl.plot(range(nchan-nEdgeChannels,nchan), avgspectrum[-nEdgeChannels:],
                     'm-', lw=3)
     if (findContinuum):
-        if (len(continuumChannels) > 0):
+        if (len(continuumChannels) > 1):
             pl.plot(pl.xlim(), [threshold,threshold], 'k:')
             pl.plot(pl.xlim(), [median,median], 'k--')
             if (baselineModeB == 'edge'):
