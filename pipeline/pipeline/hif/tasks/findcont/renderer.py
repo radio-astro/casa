@@ -40,7 +40,7 @@ class T2_4MDetailsFindContRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         rows = []
         for field in sorted(set(ranges_dict.keys())):
-            for spw in sorted(set(ranges_dict[field].keys())):
+            for spw in map(str, sorted(map(int, set(ranges_dict[field].keys())))):
                 plotfile = self._get_plotfile(context, result, field, spw)
 
                 status = ranges_dict[field][spw]['status']
