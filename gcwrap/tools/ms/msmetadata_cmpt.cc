@@ -1335,6 +1335,26 @@ int msmetadata::sideband(int spw) {
 	return 0;
 }
 
+record* msmetadata::sourcedirs() {
+   _FUNC(
+       std::vector<casacore::MDirection> mdirs = _msmd->getSourceDirections();
+       uInt i = 0;
+       vector<casacore::MDirection>::const_iterator iter = mdirs.begin();
+       vector<casacore::MDirection>::const_iterator end = mdirs.end();
+       Record r;
+       Record mr;
+       while (iter != end) {
+           MeasureHolder mh(*iter);
+           mh.toRecord(mr);
+           r.defineRecord(casa::String::toString(i), mr);
+           ++iter;
+           ++i;
+       }
+       return fromRecord(r);
+   )
+   return NULL;
+}
+
 int msmetadata::sourceidforfield(int field) {
 	_FUNC(
 		_checkFieldId(field, True);
