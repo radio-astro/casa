@@ -208,6 +208,7 @@ protected:
   void normPSF(Int term=0);
 
   void makePBFromWeight(const Float pblimit);
+  void makePBImage(const Float pblimit);
 
   void accessImage( SHARED_PTR<ImageInterface<Float> > &ptr, 
 		    SHARED_PTR<ImageInterface<Float> > &parentptr, 

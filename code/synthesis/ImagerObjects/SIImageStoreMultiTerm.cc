@@ -724,6 +724,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ( itsUseWeight) {
     makePBFromWeight(pblimit);
     }
+    else { makePBImage(pblimit); }
     //    calcSensitivity();
     // createMask
   }
@@ -762,8 +763,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      os << " by [ weight ] to get flat sky"<< LogIO::POST;
 	    }
 	    
-	    LatticeExpr<Float> mask( iif( (deno) > pblimit , 1.0, 0.0 ) );
-	    LatticeExpr<Float> maskinv( iif( (deno) > pblimit , 0.0, 1.0 ) );
+	    Float scalepb = pblimit * itsPBScaleFactor * itsPBScaleFactor ;
+	    LatticeExpr<Float> mask( iif( (deno) > scalepb , 1.0, 0.0 ) );
+	    LatticeExpr<Float> maskinv( iif( (deno) > scalepb , 0.0, 1.0 ) );
 	    LatticeExpr<Float> ratio( ( (*(residual(tix))) * mask ) / ( deno + maskinv ) );
 
 	    residual(tix)->copyData(ratio);

@@ -852,6 +852,13 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
    LogIO os( LogOrigin("SIImageStore","makePBFromWeight",WHERE) );
 
+   ///Remove the old mask as it is no longer valid
+   if (pb()-> getDefaultMask() != String("")){
+     String strung=pb()->getDefaultMask();
+     pb()->setDefaultMask("");
+     pb()->removeRegion(strung);
+   } 
+
     	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	       for(Int chan=0; chan<itsImageShape[3]; chan++)
@@ -878,24 +885,27 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      }
 	  }
 	
-	//MSK//	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
-	//MSK// createMask( pbmask, pb() );
+	//MSK//	
+	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	//MSK// 
+	createMask( pbmask, pb() );
   }
 
   Bool SIImageStore::createMask(LatticeExpr<Bool> &lemask, 
 				CountedPtr<ImageInterface<Float> > outimage)
   {
-
-    //   LogIO os( LogOrigin("SIImageStore","createMask",WHERE) );
-    //   os << "Making mask for image : " << outimage->name() << LogIO::POST;
-
-    if( (outimage->getDefaultMask()).matches("mask0") ) 
-      { outimage->removeRegion("mask0");}
+    //cout << "Calling makeMask for mask0 for " << outimage->name() << endl;
     ImageRegion outreg = outimage->makeMask("mask0",False,True);
     LCRegion& outmask=outreg.asMask();
     outmask.copyData(lemask);
     outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
     outimage->setDefaultMask("mask0");
+
+    outimage->unlock();
+    outimage->tempClose();
+
+    //    outimage->table().unmarkForDelete();      
+
     return True;
   }
 
@@ -917,6 +927,30 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       }
     
     return True;
+  }
+
+  void  SIImageStore::makePBImage(const Float pblimit)
+  {
+   LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
+
+   /*
+    	for(Int pol=0; pol<itsImageShape[2]; pol++)
+	  {
+	       for(Int chan=0; chan<itsImageShape[3]; chan++)
+	      {
+
+		  CountedPtr<ImageInterface<Float> > pbsubim=makeSubImage(0,1, 
+									  chan, itsImageShape[3],
+									  pol, itsImageShape[2], 
+									  *pb() );
+
+		  // Fill in a PB model for this chan/pol.
+
+	      }
+	  }
+   */	
+	//MSK//		LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
+	//MSK// 	createMask( pbmask, pb() );
   }
   
 
@@ -942,7 +976,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 	makePBFromWeight(pblimit);
 	
-    }
+    }//if itsUseWeight
+    else { makePBImage(pblimit); }
     
    }
 
@@ -1079,7 +1114,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 		  modsubim->copyData(ratio);
 		  
-		  cout << "Val of model before|after flattening at center for pol " << pol << " chan " << chan << " : " << modval << "|" << modsubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
+		  //		  cout << "Val of model before|after flattening at center for pol " << pol << " chan " << chan << " : " << modval << "|" << modsubim->getAt(ip) << " weight : " << wtsubim->getAt(ip) << endl;
 		  //LatticeExprNode minval( min(*modsubim) );
 		  //LatticeExprNode maxval( max(*modsubim) );
 		  //cout << "After ---- min : " << minval.getFloat() << " max : " << maxval.getFloat() << endl;
