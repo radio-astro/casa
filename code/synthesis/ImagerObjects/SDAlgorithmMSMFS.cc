@@ -206,8 +206,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SDAlgorithmMSMFS","restore",WHERE) );
 
+
     // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
     //////  Put some image misc info in here, to say if it has been done or not. 
+
+    ///  ----------- do once if trying to 'only restore' without model ----------
+    if( itsMTCsetup == False)
+      {
+
+	itsMatPsfs.resize( 2*itsNTerms-1 );
+	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
+	  {
+	    (itsImages->psf(tix))->get( itsMatPsfs[tix], True );
+	  }
+
+	//cout << "Setting up the MT Cleaner once" << endl;
+	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
+	itsMTCleaner.setscales( itsScaleSizes );
+	itsMTCleaner.setntaylorterms( itsNTerms );
+	itsMTCleaner.initialise( itsImages->getShape()[0], itsImages->getShape()[1] );
+	
+	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
+	  {
+	    Matrix<Float> tempMat;
+	    tempMat.reference( itsMatPsfs[tix] );
+	    itsMTCleaner.setpsf( tix, tempMat );
+	    ///	itsMTCleaner.setpsf( tix, itsMatPsfs[tix] );
+	  }
+	itsMTCsetup=True;
+      }
+    /// -----------------------------------------
+
 
     Vector<TempImage<Float> > tempResOrig(itsNTerms);
 

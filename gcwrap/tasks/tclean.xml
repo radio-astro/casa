@@ -1090,25 +1090,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="wprojplanes"><value>1</value></default>
        </equals>
        <equals type="string" value="mosaic">
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
        <equals type="string" value="mosaicft">
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
        <equals type="string" value="ftmosaic">
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
        <equals type="string" value="imagemosaic">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
        </equals>
        <equals type="string" value="awproject">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
 	 <default param="cfcache"><value>""</value></default>
@@ -1119,7 +1119,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
        <equals type="string" value="awprojectft">
 	 <default param="wprojplanes"><value>1</value></default>
-	 <default param="pblimit"><value>0.01</value></default>
+	 <default param="pblimit"><value>0.2</value></default>
 	 <default param="normtype"><value>"flatnoise"</value></default>
 	 <default param="psterm"><value>False</value></default>
 	 <default param="cfcache"><value>""</value></default>
