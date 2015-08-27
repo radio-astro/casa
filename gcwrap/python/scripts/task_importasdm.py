@@ -5,7 +5,7 @@ import flaghelper as fh
 import testhelper as th
 from casac import casac
 from parallel.parallel_data_helper import ParallelDataHelper
-
+import recipes.ephemerides.convertephem as ce
 
 def importasdm(
     asdm=None,
@@ -412,7 +412,7 @@ def importasdm(
             return
         
         #
-        # Possibly remove the element the name of the measurement set expected to contain the corrected data from the list of of produced measurement
+        # Possibly remove the name of the measurement set expected to contain the corrected data from the list of of produced measurement
         # sets if it appears the filler did not find any corrected data.
         #
         if not os.path.exists(visoc):
@@ -560,14 +560,72 @@ def importasdm(
         else:
             casalog.post('There is no Flag.xml in ASDM', 'WARN')
 
-        import recipes.ephemerides.convertephem as ce
-        
         theephemfields = ce.findattachedephemfields(myviso,field='*')
-        if len(theephemfields)>0: # temporary fix until asdm2MS does this internally: recalc the UVW coordinates for ephem fields
+        if len(theephemfields)>0: 
+            # until asdm2MS does this internally: recalc the UVW coordinates for ephem fields
             imt = imtool()
             imt.open(myviso, usescratch=False)
             imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
             imt.close()
+
+            # also set the direction column in the SOURCE table
+            tblocal.open(myviso+'/FIELD', nomodify=False)
+            sourceids = tblocal.getcol('SOURCE_ID')
+            ftimes = tblocal.getcol('TIME')
+            ftimekw = tblocal.getcolkeywords('TIME')
+            tmpa = tblocal.getcol('PHASE_DIR')
+            origphasedir = tmpa
+
+            affectedsids = []
+            thesamplefields = []
+            for fld in theephemfields: # determine all source ids used by the ephem fields
+                if not (sourceids[fld] in affectedsids): # this source id wasn't handled yet
+                    affectedsids.append(sourceids[fld])
+                    thesamplefields.append(fld)
+                    # need to temporarily change the offset (not all mosaics have an element at (0,0))
+                    tmpa[0][0][fld]=0.
+                    tmpa[1][0][fld]=0.
+                #endif
+            #endfor
+            tblocal.putcol('PHASE_DIR', tmpa)
+            tblocal.close()
+
+            directions = []
+            msmdlocal = casac.msmetadata()
+            msmdlocal.open(myviso)
+            
+            for fld in thesamplefields:
+                thedirmeas = msmdlocal.phasecenter(fld)
+                if thedirmeas['refer']!='J2000':
+                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
+                directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
+                thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
+                casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
+                             +" to ephemeris phase center for time "+str(thetime['m0']['value'])+" "+thetime['m0']['unit']+" "+thetime['refer']) 
+            #endfor
+            msmdlocal.close()
+             
+            # restore original PHASE_DIR
+            tblocal.open(myviso+'/FIELD', nomodify=False)
+            tblocal.putcol('PHASE_DIR', origphasedir)
+            tblocal.close()
+
+            # write source directions
+            tblocal.open(myviso+'/SOURCE', nomodify=False)
+            ssourceids = tblocal.getcol('SOURCE_ID')
+            sdirs = tblocal.getcol('DIRECTION')
+            for row in xrange(0,len(ssourceids)):
+                for i in xrange(0,len(affectedsids)):
+                    if ssourceids[row]==affectedsids[i]:
+                        sdirs[0][row] = directions[i][0]
+                        sdirs[1][row] = directions[i][1]
+                        break
+                #endfor
+            #endfor
+            tblocal.putcol('DIRECTION', sdirs) # write back corrected directions
+            tblocal.close()
+                
+        #end if
 
         if convert_ephem2geo:
             for myviso in vistoproc:
