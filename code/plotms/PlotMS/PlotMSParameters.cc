@@ -73,6 +73,14 @@ PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
 
 PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy)
     : PlotMSWatchedParameters(copy) {
+    itsLogFilename_       = PMS::DEFAULT_LOG_FILENAME;
+    itsLogEvents_         = PMS::DEFAULT_LOG_EVENTS;
+    itsLogPriority_       = PMS::DEFAULT_LOG_PRIORITY;
+    itsClearSelectionsOnAxesChange_ = PMS::DEFAULT_CLEAR_SELECTIONS;
+    itsCachedImageWidth_  = PMS::DEFAULT_CACHED_IMAGE_WIDTH;
+    itsCachedImageHeight_ = PMS::DEFAULT_CACHED_IMAGE_HEIGHT;
+    rowCount              = PMS::DEFAULT_GRID_ROWS;
+    colCount              = PMS::DEFAULT_GRID_COLS; 
     operator=(copy);
 }
 
@@ -192,18 +200,19 @@ bool PlotMSParameters::equals(const PlotMSWatchedParameters& other, int updateFl
     }
     
     if(updateFlags & UPDATE_LOG){
-        if(itsLogFilename_ != o->itsLogFilename_ ||
-           itsLogEvents_ != o->itsLogEvents_ ||
-           itsLogPriority_ != o->itsLogPriority_){
-        	equalParams = false;
+        if((itsLogFilename_ != o->itsLogFilename_) || 
+           (itsLogEvents_ != o->itsLogEvents_) || 
+           (itsLogPriority_ != o->itsLogPriority_)) {
+        	    equalParams = false;
         }
     }
     
     if(updateFlags & UPDATE_PLOTMS_OPTIONS){
-        if(itsClearSelectionsOnAxesChange_!= o->itsClearSelectionsOnAxesChange_
-           || itsCachedImageWidth_ != o->itsCachedImageWidth_ ||
-           itsCachedImageHeight_ != o->itsCachedImageHeight_ ||
-           rowCount != o->rowCount || colCount != o->colCount){
+        if ((itsClearSelectionsOnAxesChange_!= o->itsClearSelectionsOnAxesChange_) ||
+            (itsCachedImageWidth_ != o->itsCachedImageWidth_) ||
+            (itsCachedImageHeight_ != o->itsCachedImageHeight_) ||
+            (rowCount != o->rowCount) || 
+            (colCount != o->colCount)) {
         	equalParams = false;
         }
     }

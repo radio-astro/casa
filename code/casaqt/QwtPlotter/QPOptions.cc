@@ -257,8 +257,8 @@ QPSymbol::QPSymbol(const QwtSymbol& s): QwtSymbol(s),
         m_style(QPOptions::symbol(s.style())), m_char('o'),
         m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) { }
 
-QPSymbol::QPSymbol(const PlotSymbol& copy) : m_heightIsPixel(true),
-        m_drawPen(&pen()), m_drawBrush(&brush()) {
+QPSymbol::QPSymbol(const PlotSymbol& copy) : m_style(QPOptions::symbol(style())),
+        m_heightIsPixel(true), m_drawPen(&pen()), m_drawBrush(&brush()) {
     operator=(copy); }
 
 QPSymbol::QPSymbol(const PlotSymbolPtr copy) : m_style(CIRCLE), m_char('o'),

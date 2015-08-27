@@ -717,6 +717,8 @@ void QPPlotter::initialize() {
     
     m_dateFormat = DEFAULT_DATE_FORMAT;
     m_relativeDateFormat = DEFAULT_RELATIVE_DATE_FORMAT;
+    axisLocationX = X_BOTTOM;
+    axisLocationY = Y_LEFT;
     
     // Add legend positions to chooser
     Vector<String> p = PlotCanvas::allLegendPositionStrings();

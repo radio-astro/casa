@@ -75,7 +75,13 @@ PlotRangeWidget::PlotRangeWidget(bool customOnTwoLines, QWidget* parent) :
     
     doubleFrom->setValidator(new QDoubleValidator(doubleFrom));
     doubleTo->setValidator(new QDoubleValidator(doubleTo));
-    
+
+    stackedWidget->setCurrentIndex(0);
+    doubleFrom->setText(QString("0"));
+    doubleTo->setText(QString("0"));
+    timeFrom->setText(QString("0"));
+    timeTo->setText(QString("0"));
+
     setRange(false, false, 0, 0);
     
     connect(automatic, SIGNAL(toggled(bool)), SLOT(rangeChanged()));
@@ -97,7 +103,7 @@ PlotRangeWidget::~PlotRangeWidget() { }
 
 bool PlotRangeWidget::isDate() const {
 	
-    return stackedWidget->currentIndex() == 1; 
+    return (stackedWidget->currentIndex() == 1); 
 }
     
 
@@ -110,7 +116,7 @@ void PlotRangeWidget::setIsDate(bool isDate) {
 
 
 bool PlotRangeWidget::isCustom() const { 
-	return custom->isChecked(); 
+	return (custom->isChecked()); 
 }
 
 
@@ -152,9 +158,9 @@ bool scandigits(const char *txt, int ndigits,  uInt *val)  {
 static 
 DateTimeStringQuality EvaluateDateTimeText(const char *txt,  double &mjulian_sec)
 {
-	if (!txt || *txt==0) return DATETIME_Incomplete;
-	
-	
+	if (txt == NULL || *txt==0) return DATETIME_Incomplete;
+
+
 	// Simple check of character categories
 	// We expect a fixed format, but
 	// the seconds may be omitted or have integer part only.
@@ -231,11 +237,20 @@ DateTimeStringQuality EvaluateDateTimeText(const char *txt,  double &mjulian_sec
 
 prange_t PlotRangeWidget::getRange() const {
     if (isDate()) {
- 		double from,to;
+ 		double from(0.0),to(0.0);
 		DateTimeStringQuality fquality, tquality;
 		
-		fquality=EvaluateDateTimeText(timeFrom->text().toAscii().constData(), from);
-		tquality=EvaluateDateTimeText(timeTo->text().toAscii().constData(),   to);
+
+        if (timeFrom->text().isEmpty()) {
+           fquality = DATETIME_Incomplete;
+        } else {
+		    fquality=EvaluateDateTimeText(timeFrom->text().toAscii().constData(), from);
+        }
+        if (timeTo->text().isEmpty()) {
+           tquality = DATETIME_Incomplete;
+        } else {
+		    tquality=EvaluateDateTimeText(timeTo->text().toAscii().constData(), to);
+        }
 		
 		if (fquality!=DATETIME_GOOD || tquality!=DATETIME_GOOD)  
 			{ /* so something if string isn't good? 
@@ -259,10 +274,11 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
     stackedWidget->setCurrentIndex(isDate ? 1 : 0);
     custom->setChecked(isCustom);
    
-    bool changed = isDate != this->isDate() || isCustom != this->isCustom();
+    bool changed = (isDate != this->isDate()) || (isCustom != this->isCustom());
     if(!changed) {
         prange_t range = getRange();
-        changed = from != range.first || to != range.second;
+        changed = (from != range.first);
+        changed = changed || (to != range.second);
     }
     
     if(isDate) {
@@ -320,34 +336,38 @@ void PlotRangeWidget::rangeChanged() {
 
 static void ColorizeValidity(QLineEdit*edit)
 {
-    // With every edit of the text, set color to show if it's a valid datetime
-	
-	const char *txt = edit->text().toAscii().constData();
-	double mjsec;
-	DateTimeStringQuality  qual =EvaluateDateTimeText(txt, mjsec);
-	// mjsec is not needed.  
 	QColor color;
-    switch (qual)   {
-		case DATETIME_GOOD:   
-				color = QColor(0,0,0);        /* black */
-				break;
-		
-		case DATETIME_ImproperValue: 
-				color = QColor(180,48,220);   /* violet */  
-				break;
-				
-		case DATETIME_Incomplete:
-				// seen during normal typing in of a date/time
-				color = QColor(40,98,240);   /* turq-blue */  
-				break;
-			
-		case DATETIME_BadSyntax:
-				// when user types in a non-valid char: red for "stop"
-				color = QColor(230,0,0);
-				break;
-		
-	}
-    
+    QString text = edit->text();
+    if (text.isEmpty()) {
+        color = QColor(40,98,240);   /* turq-blue */  
+    } else { 
+        // With every edit of the text, set color to show if it's a valid datetime
+        QByteArray qba = text.toAscii();
+        const char *txt = qba.constData();
+        double mjsec;
+        DateTimeStringQuality  qual =EvaluateDateTimeText(txt, mjsec);
+        // mjsec is not needed.  
+        switch (qual)   {
+            case DATETIME_GOOD:   
+                    color = QColor(0,0,0);        /* black */
+                    break;
+            
+            case DATETIME_ImproperValue: 
+                    color = QColor(180,48,220);   /* violet */  
+                    break;
+                    
+            case DATETIME_Incomplete:
+                    // seen during normal typing in of a date/time
+                    color = QColor(40,98,240);   /* turq-blue */  
+                    break;
+                
+            case DATETIME_BadSyntax:
+                    // when user types in a non-valid char: red for "stop"
+                    color = QColor(230,0,0);
+                    break;
+            
+        }
+    }
     
     QPalette pal = edit->palette();
     pal.setColor(QPalette::Text, color);

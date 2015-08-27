@@ -220,9 +220,16 @@ void PlotMSAxesTab::setValue(const PlotMSPlotParameters& params) {
     const PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
     const PMS_PP_Axes* a = params.typedGroup<PMS_PP_Axes>();
     if(c == NULL || a == NULL) return; // shouldn't happen
-    
-    itsXWidget_->setValue(c->xAxis(), c->xDataColumn(), a->xAxis(),
-            a->xRangeSet(), a->xRange());
+
+    PMS::Axis cacheAxis = c->xAxis();     
+    PlotAxis axesAxis = a->xAxis();
+    PMS::DataColumn cacheColumn =  c->xDataColumn();
+    bool axesXRangeSet = a->xRangeSet();
+    std::pair<double, double> axesXRange = a->xRange();
+    itsXWidget_->setValue(cacheAxis, cacheColumn, axesAxis,
+            axesXRangeSet, axesXRange);
+    //itsXWidget_->setValue(c->xAxis(), c->xDataColumn(), a->xAxis(),
+    //        a->xRangeSet(), a->xRange());
     int yAxisCount = a->numYAxes();
     int yWidgetSize = itsYWidgets_.size();
     int minValue = qMin( yAxisCount, yWidgetSize );

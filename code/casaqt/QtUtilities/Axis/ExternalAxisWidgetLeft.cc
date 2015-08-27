@@ -94,6 +94,7 @@ void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 }
 
 ExternalAxisWidgetLeft::~ExternalAxisWidgetLeft() {
+    delete scaleDraw;
 }
 
 } /* namespace casa */

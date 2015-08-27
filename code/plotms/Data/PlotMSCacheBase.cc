@@ -89,6 +89,10 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		  maxX_(0),
 		  minY_(0),
 		  maxY_(0),
+          xminG_(0),
+          xmaxG_(0),
+          yminG_(0),
+          ymaxG_(0),
 		  time_(),
 		  timeIntr_(),
 		  field_(),
@@ -99,8 +103,8 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 
 	// Make the empty indexer0 object so we have and empty PlotData object
 	int dataCount = 1;
-	currentX_.resize( dataCount );
-	currentY_.resize( dataCount );
+	currentX_.resize(dataCount, PMS::DEFAULT_XAXIS);
+	currentY_.resize(dataCount, PMS::DEFAULT_YAXIS);
 	indexer0_ = new PlotMSIndexer();
 	indexer_.resize(dataCount);
 	netAxesMask_.resize( dataCount );

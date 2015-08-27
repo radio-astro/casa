@@ -40,7 +40,8 @@ namespace casa {
 PlotMSCacheThread::PlotMSCacheThread(QtProgressWidget* progress, PlotMSPlotter* plotter,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject) :
         PlotMSThread( progress, postThreadMethod, postThreadObject ),
-        itsPlotter_( plotter ){
+        itsPlotter_( plotter ),
+        itsLoad_(true) {
 }
 
 
