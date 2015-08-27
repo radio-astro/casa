@@ -385,9 +385,10 @@ def flagcmd(
         casalog.post('%s' % instance, 'ERROR')
         return False
         
+    # Write history only to action='apply' or 'unapply'
     else:
         # write history
-        if not iscal:
+        if not iscal and (action == 'apply' or action == 'unapply'):
             retval = True
             try:
                 param_names = flagcmd.func_code.co_varnames[:flagcmd.func_code.co_argcount]
