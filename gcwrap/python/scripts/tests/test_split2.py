@@ -25,10 +25,11 @@ import re
 import sys
 import shutil
 import exceptions
+import filecmp
 from __main__ import default
 from recipes.listshapes import listshapes
 import testhelper as th
-from tasks import split2, partition, split, listobs, flagdata
+from tasks import split2, partition, split, listobs, flagdata, importasdm, flagcmd
 from taskinit import mstool, msmdtool, tbtool
 import unittest
 from parallel.parallel_task_helper import ParallelTaskHelper
@@ -1859,6 +1860,17 @@ class test_base(unittest.TestCase):
 
         os.system('cp -RL '+self.datapath + self.vis +' '+ self.vis)
         default(split2)
+        
+    def setUp_flags(self):
+        asdmname = 'test_uid___A002_X997a62_X8c-short' # Flag.xml is modified
+        self.vis = asdmname+'.ms'
+        self.flagfile = asdmname+'_cmd.txt'
+
+        asdmpath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
+        os.system('ln -sf '+asdmpath+asdmname)
+        importasdm(asdmname, convert_ephem2geo=False, flagbackup=False, process_syspower=False, lazy=True, 
+                   scans='1', savecmds=True)
+        
 
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -2080,6 +2092,23 @@ class splitSpwPoln(test_base):
         listobs(self.outputms, listfile='list.obs')
         self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
         
+class splitUpdateFlagCmd(test_base):
+    
+    def setUp(self):
+        self.datapath = '.'
+        self.setUp_flags()
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+        os.system('rm -rf list.obs')
+        
+    def test_updateFlagcmd1(self):
+        '''split2: Do not update FLAG_CMD table when spw selection in FLAG_CMD is by name'''
+        self.outputms = 'split_spwName.ms'
+        split2(vis=self.vis, outputvis=self.outputms, spw='1,2', datacolumn='data')
+        flagcmd(self.outputms, action='list', savepars=True, outfile='spwnames.txt', useapplied=True)
+        self.assertTrue(filecmp.cmp(self.flagfile, 'spwnames.txt',1))
         
 
 def suite():
@@ -2102,5 +2131,6 @@ def suite():
 #            split_test_wttosig, 
 #            split_test_fc
             splitTests,
-            splitSpwPoln
+            splitSpwPoln,
+            splitUpdateFlagCmd
             ]
