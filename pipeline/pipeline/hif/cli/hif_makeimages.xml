@@ -88,6 +88,11 @@ Compute clean results from a list of specified targets.
     <value>1</value>
   </param>
 
+  <param type="bool" name="subcontms">
+    <description>Subtract continuum in MS</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Clean images using MPI cluster</description>
     <value>automatic</value>
@@ -233,6 +238,12 @@ weighting_robust -- For weighting='briggs' and 'briggsabs'
 weighting_noise -- For weighting='briggsabs'
                        noise parameter to use for Briggs "abs" weighting
                        example noise='1.0mJy'
+
+subcontms -- Subtract continuum in MS
+             Caveat: if enabled, repeated continuum subtraction will
+             lead to erroneous negative fluxes.
+                default=False
+                Options: False, True
 
 parallel -- use multiple CPU nodes to clean images
     default: \'automatic\'

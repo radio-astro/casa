@@ -208,6 +208,11 @@ Compute a clean map.
     <value>1</value>
   </param>
 
+  <param type="bool" name="subcontms">
+    <description>Subtract continuum in MS</description>
+    <value>False</value>
+  </param>
+
   <param type="string" name="parallel">
     <description>Clean images using MPI cluster</description>
     <value>automatic</value>
@@ -517,6 +522,12 @@ threshold -- Threshold for cleaning
 maxncleans -- Maximum number of clean calls
     default: 1
     example: 10
+
+subcontms -- Subtract continuum in MS
+             Caveat: if enabled, repeated continuum subtraction will
+             lead to erroneous negative fluxes.
+                default=False
+                Options: False, True
 
 parallel -- use MPI cluster to clean images
     default: \'automatic\'

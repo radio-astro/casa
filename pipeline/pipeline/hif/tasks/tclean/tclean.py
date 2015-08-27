@@ -28,7 +28,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, parallel=None):
+                 masklimit=None, maxncleans=None, subcontms=None, parallel=None):
         self._init_properties(vars())
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
@@ -37,6 +37,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
     masklimit = basetask.property_with_default('masklimit', 4.0)
     tlimit = basetask.property_with_default('tlimit', 4.0)
+    subcontms = basetask.property_with_default('subcontms', False)
 
     @property
     def noiseimage(self):
@@ -277,7 +278,10 @@ class Tclean(cleanbase.CleanBase):
 
         # Re-add continuum so that the MS is unchanged afterwards.
         if (cont_image_name != ''):
-            self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
+            if (inputs.subcontms == False):
+                self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
+            else:
+                LOG.warn('Not re-adding continuum model. MS is modified !')
 
         return result
 

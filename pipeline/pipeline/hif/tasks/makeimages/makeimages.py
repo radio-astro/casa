@@ -19,7 +19,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
                  hm_masking=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, parallel=None):
+                 masklimit=None, maxncleans=None, subcontms=None, parallel=None):
         self._init_properties(vars())
 
     @property
@@ -55,6 +55,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     robust = basetask.property_with_default('robust', -999.0)
     tlimit = basetask.property_with_default('tlimit', 1.0)
     weighting = basetask.property_with_default('weighting', 'briggs')
+    subcontms = basetask.property_with_default('subcontms', False)
 
 
 class MakeImages(basetask.StandardTaskTemplate):
@@ -167,6 +168,7 @@ class CleanTaskFactory(object):
             # other vals
             'tlimit': inputs.tlimit,
             'masklimit': inputs.masklimit,
+            'subcontms': inputs.subcontms,
             'parallel': parallel,
         })
 
