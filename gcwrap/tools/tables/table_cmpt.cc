@@ -2260,19 +2260,20 @@ table::showcache(const bool verbose)
  std::vector<std::string> rstat(0);
  try {
      const TableCache& cache = PlainTable::tableCache();
+     const Vector<String> & openTables = cache.getTableNames();
      if(verbose){
-	 if(cache.ntable()==0){
+	 if(openTables.size()==0){
 	     *itsLog << LogIO::NORMAL << "The Table Cache is empty." << LogIO::POST;
 	 }
 	 else{
-	     *itsLog << LogIO::NORMAL << "The Table Cache has the following " << cache.ntable() << " entries:"  << LogIO::POST;
+	     *itsLog << LogIO::NORMAL << "The Table Cache has the following " << openTables.size() << " entries:"  << LogIO::POST;
 	 }	     
      }
-     for (uInt i=0; i<cache.ntable(); ++i) {
+     for (uInt i=0; i<openTables.size(); ++i) {
 	 if(verbose){
-	     *itsLog << LogIO::NORMAL << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << LogIO::POST;
+	     *itsLog << LogIO::NORMAL << "    " << i << ": \"" <<  openTables[i] << "\"" << LogIO::POST;
 	 }
-	 rstat.push_back(cache(i)->tableName());
+	 rstat.push_back(openTables[i]);
      } 
  } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

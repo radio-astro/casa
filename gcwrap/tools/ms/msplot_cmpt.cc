@@ -244,11 +244,12 @@ msplot::done()
   Bool rstat = closeMS();
 
     TableCache &cache = PlainTable::tableCache();
-    Int ntb = cache.ntable();
+    const Vector<String> & openTables = cache.getTableNames();
+    auto ntb = openTables.size();
     if (ntb > 0)
        *itsLog << casa::LogIO::NORMAL << "msplot clear cache: \n";
     for (Int i = ntb - 1; i > -1; i--) {
-       String nm = cache(i)->tableName();
+       const String nm = openTables[i];
        try {
            cache.remove(nm);
            *itsLog << nm << "\n";
