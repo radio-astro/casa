@@ -288,6 +288,8 @@ class CleanBase(basetask.StandardTaskTemplate):
         model_name = '%s.%s.iter%s.model%s' % (
             inputs.imagename, inputs.stokes, iter, mt_name)
         rename_image(old_name=old_model_name, new_name=model_name)
+        if ((inputs.deconvolver == 'mtmfs') and (old_model_name is not None) and (model_name is not None)):
+            rename_image(old_name=old_model_name.replace('.tt0', '.tt1'), new_name=model_name.replace('.tt0', '.tt1'))
         if (inputs.niter == 0):
             image_name = ''
         else:
