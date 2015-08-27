@@ -1788,18 +1788,20 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			doTemp = True;
 		}
 		// Create moments
-		PtrBlock<MaskedLattice<Float>*> images;
-		momentMaker.createMoments(images, doTemp, out, removeAxis);
+		std::vector<std::unique_ptr<MaskedLattice<Float> > > images =
+				momentMaker.createMoments(doTemp, out, removeAxis);
 
 		momentMaker.closePlotting();
 		// Return handle of first image
 		pIm.reset(
-				dynamic_cast<ImageInterface<Float>*> (images[0])
+				dynamic_cast<ImageInterface<Float>*> (images[0].release())
 		);
 		// Clean up pointer block except for the one pointed by pIm
+		/*
 		for (uInt i = 1; i < images.nelements(); i++) {
 			delete images[i];
 		}
+		*/
 	}
 	catch (const AipsError& x) {
 		if (! tmpImageName.empty()) {

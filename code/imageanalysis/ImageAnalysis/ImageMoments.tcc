@@ -369,14 +369,11 @@ Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
 }
 
 template <class T>
-void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
-                                    Bool doTemp, const String& outName,
-                                    Bool removeAxis)
-//
-// This function does all the work
-                                    //
-                                    {
-	LogOrigin myOrigin("ImageMoments", __FUNCTION__);
+std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
+	Bool doTemp, const String& outName,
+	Bool removeAxis
+) {
+	LogOrigin myOrigin("ImageMoments", __func__);
 	os_p << myOrigin;
 
 	if (!goodParameterStatus_p) {
@@ -490,22 +487,28 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 	// Set output images shape and coordinates.
 
 	IPosition outImageShape;
-	CoordinateSystem cSysOut = this->makeOutputCoordinates (outImageShape, cSys,
-			_image->shape(),
-			momentAxis_p, removeAxis);
+	auto cSysOut = this->makeOutputCoordinates(
+			outImageShape, cSys, _image->shape(),
+			momentAxis_p, removeAxis
+	);
 
 	// Resize the vector of pointers for output images
-
+	std::vector<std::unique_ptr<MaskedLattice<T> > > outPt(
+		moments_p.nelements()
+	);
+	/*
 	outPt.resize(moments_p.nelements());
-	for (uInt i=0; i<outPt.nelements(); i++) outPt[i] = 0;
-
+	for (auto myp : outPt) {
+		myp.reset(nullptr);
+	}
+	*/
 	// Loop over desired output moments
 
 	String suffix;
 	Bool goodUnits;
 	Bool giveMessage = True;
-	Unit imageUnits = _image->units();
-	//
+	const auto imageUnits = _image->units();
+
 	for (uInt i=0; i<moments_p.nelements(); i++) {
 
 		// Set moment image units and assign pointer to output moments array
@@ -545,15 +548,12 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 			//
 			imgp = new PagedImage<T>(outImageShape, cSysOut, outFileName);
 			os_p << LogIO::NORMAL << "Created " << outFileName << LogIO::POST;
-		} else {
+		}
+		else {
 			imgp = new TempImage<T>(TiledShape(outImageShape), cSysOut);
 			os_p << LogIO::NORMAL << "Created TempImage" << LogIO::POST;
 		}
-		//
-      if (imgp==0) {
-         for (uInt j=0; j<i; j++) delete outPt[j];
-         os_p << "Failed to create output file" << LogIO::EXCEPTION;        
-      }
+      ThrowIf (! imgp, "Failed to create output file");
       imgp->setMiscInfo(_image->miscInfo());
       imgp->setImageInfo(_image->imageInfo());
       imgp->appendLog(_image->logger());
@@ -563,7 +563,8 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 
       if (goodUnits) {
          imgp->setUnits(momentUnits);
-      } else {
+      }
+      else {
         if (giveMessage) {
            os_p << LogIO::NORMAL 
                 << "Could not determine the units of the moment image(s) so the units " << endl;
@@ -572,15 +573,13 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
         }
       }
 
-// Assign pointer to block
-
-      outPt[i] = imgp;
+      outPt[i].reset(imgp);
    } 
 
 
-// If the user is using the automatic, non-fitting window method, they need
-// a good assement of the noise.  The user can input that value, but if
-// they don't, we work it out here.
+	// If the user is using the automatic, non-fitting window method, they need
+	// a good assement of the noise.  The user can input that value, but if
+	// they don't, we work it out here.
 
    T noise;
    if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
@@ -589,7 +588,8 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          if (!whatIsTheNoise (noise, *pSmoothedImage)) {
         	 throw AipsError(error_p);
          }
-      } else {
+      }
+      else {
          os_p << LogIO::NORMAL << "Evaluating noise level from input image" << LogIO::POST;
          if (!whatIsTheNoise (noise, *_image)) {
         	 throw AipsError(error_p);
@@ -612,26 +612,17 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 // Create appropriate MomentCalculator object 
    os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
    PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
-   try {
       if (clipMethod || smoothClipMethod) {
-         pMomentCalculatorHolder.set(new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.nelements()),
+         pMomentCalculatorHolder.set(new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.size()),
                                      False, False);
       } else if (windowMethod) {
-         pMomentCalculatorHolder.set(new MomentWindow<T>(pSmoothedImage, *this, os_p, outPt.nelements()),
+         pMomentCalculatorHolder.set(new MomentWindow<T>(pSmoothedImage, *this, os_p, outPt.size()),
                                      False, False);
       } else if (fitMethod) {
-         pMomentCalculatorHolder.set(new MomentFit<T>(*this, os_p, outPt.nelements()), False, False);
+         pMomentCalculatorHolder.set(new MomentFit<T>(*this, os_p, outPt.size()), False, False);
       }
-   } catch (AipsError x) {
 
-// Try and clean up so if we are called by DO, images dont get stuck open in cache
-// If an exception is generated.  Can't use PtrHolder here
-
-      for (uInt i=0; i<outPt.nelements(); i++) delete outPt[i];
-   }
-
-
-// Iterate optimally through the image, compute the moments, fill the output lattices
+      // Iterate optimally through the image, compute the moments, fill the output lattices
 
    MomentCalcBase<T>* pMomentCalculator = pMomentCalculatorHolder.ptr();
    ImageMomentsProgress* pProgressMeter = 0;
@@ -641,20 +632,13 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 		   pProgressMeter->setProgressMonitor( progressMonitor );
 	   }
    }
-
-
-   try {
-      LatticeApply<T>::lineMultiApply(outPt, *_image, *pMomentCalculator, momentAxis_p, pProgressMeter);
-   } catch (AipsError x) {
-
-// Try and clean up so if we are called by DO, images dont get stuck open in cache
-// If an exception is generated.  Can't use PtrHolder here
-
-      for (uInt i=0; i<outPt.nelements(); i++) delete outPt[i];
+   uInt n = outPt.size();
+   PtrBlock<MaskedLattice<T>* > ptrBlock(n);
+   for (uInt i=0; i<n; ++i) {
+	   ptrBlock[i] = outPt[i].get();
    }
 
-
-// Clean up
+   LatticeApply<T>::lineMultiApply(ptrBlock, *_image, *pMomentCalculator, momentAxis_p, pProgressMeter);
          
    if (windowMethod || fitMethod) {
       if (pMomentCalculator->nFailedFits() != 0) {
@@ -662,7 +646,7 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
       }
    }
    if (pProgressMeter != 0) delete pProgressMeter;
-//
+
    if (pSmoothedImage) {
        
 // Remove the smoothed image file if they don't want to save it
@@ -673,11 +657,8 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
          dir.removeRecursive();
       }
    }
+   return outPt;
 }
-
-
-
-
 
 // Private member functions
 

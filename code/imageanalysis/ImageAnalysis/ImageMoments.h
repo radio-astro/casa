@@ -39,6 +39,8 @@
 #include <casa/iosfwd.h>
 #include <imageanalysis/ImageAnalysis/MomentsBase.h>
 
+#include <vector>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -321,9 +323,10 @@ public:
 // this will be the actual name of the output file.  If you don't set this
 // variable, the default state of the class is to set the output name root to 
 // the name of the input file.  
-   void createMoments(PtrBlock<MaskedLattice<T>* >& images,
-                      Bool doTemp, const String& outFileName, 
-                      Bool removeAxes=True);
+   std::vector<std::unique_ptr<MaskedLattice<T> > >  createMoments(
+		   Bool doTemp, const String& outFileName,
+		   Bool removeAxes=True
+   );
 
 // Set a new image.  A return value of <src>False</src> indicates the 
 // image had an invalid type (this class only accepts Float or Double images).
