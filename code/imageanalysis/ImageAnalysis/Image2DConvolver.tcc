@@ -63,12 +63,6 @@ namespace casa {
 
 template <class T> const String Image2DConvolver<T>::CLASS_NAME = "Image2DConvolver";
 
-/*
-template <class T> 
-Image2DConvolver<T>::Image2DConvolver ()
-{}
-*/
-
 template <class T> Image2DConvolver<T>::Image2DConvolver(
 	const SPCIIT image, const Record *const &region,
 	const String& mask, const String& outname, const Bool overwrite
@@ -85,7 +79,7 @@ template <class T>
 Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 	const Vector<Quantity>& targetBeamParms,
 	const GaussianBeam& inputBeam
-) {
+) const {
 	GaussianBeam convolvingBeam;
 	Vector<Quantity> kernelParms(3);
 	GaussianBeam targetBeam(
@@ -137,7 +131,6 @@ template <class T> void Image2DConvolver<T>::setKernel(
 	_major = major;
 	_minor = minor;
 	_pa = pa;
-
 }
 
 template <class T> SPIIT Image2DConvolver<T>::convolve() {
@@ -154,7 +147,7 @@ template <class T> SPIIT Image2DConvolver<T>::convolve() {
 	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
 	Image2DConvolver<Float>::_convolve(
 		*this->_getLog(), outImage, *subImage, _type, _axes,
-		parameters, autoScale, scale, True, _targetres, _suppressWarnings
+		parameters, autoScale, scale
 	);
 	return this->_prepareOutputImage(*outImage);
 }
@@ -163,9 +156,8 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	LogIO& os, SPIIT imageOut,
 	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
-	Bool autoScale, Double scale, Bool copyMiscellaneous,
-	Bool targetres, Bool suppressWarnings
-) {
+	Bool autoScale, Double scale
+) const {
 	ThrowIf(
 		parameters.nelements() != 3,
 		"The world parameters vector must be of length 3"
@@ -201,14 +193,14 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	);
 	// Generate Kernel Array (height unity)
 	ThrowIf(
-		targetres && kernelType != VectorKernel::GAUSSIAN,
+		_targetres && kernelType != VectorKernel::GAUSSIAN,
 		"targetres can only be true for a Gaussian convolving kernel"
 	);
 	Array<T> kernel;
 	// initialize to avoid compiler warning, kernelVolume will always be set to something
 	// reasonable below before it is used.
 	T kernelVolume = -1;
-	if (! targetres) {
+	if (! _targetres) {
 		kernelVolume = _makeKernel(
 			kernel, kernelType, parameters, pixelAxes, imageIn
 		);
@@ -246,7 +238,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	    logFactors = bunitUp.contains("/BEAM");
 	    if (logFactors) {
 	    	pixelArea = cSys.directionCoordinate().getPixelArea().getValue("arcsec*arcsec");
-	    	if (! targetres) {
+	    	if (! _targetres) {
 	    		GaussianBeam kernelBeam(kernelParms);
 	    		factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
 	    	}
@@ -271,7 +263,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 		}
 		Int channel = -1;
 		Int polarization = -1;
-		if (targetres) {
+		if (_targetres) {
 			iiOut.removeRestoringBeam();
 			iiOut.setRestoringBeam(GaussianBeam(kernelParms));
 		}
@@ -301,7 +293,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 			}
 			auto inputBeam = imageInfo.restoringBeam(channel, polarization);
 			Bool doConvolve = True;
-			if (targetres) {
+			if (_targetres) {
 				os << LogIO::NORMAL;
 				if (channel >= 0) {
 					os << "Channel " << channel << " of " << nChan;
@@ -339,12 +331,12 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				T scaleFactor = _dealWithRestoringBeam(
 					os, brightnessUnitOut, beamOut, kernel, kernelVolume,
 					kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
-					brightnessUnit, autoScale, scale, i == 0, suppressWarnings
+					brightnessUnit, autoScale, scale, i == 0
 				);
 				{
 					os << LogIO::NORMAL << "Scaling pixel values by ";
 					if (logFactors) {
-						if (targetres) {
+						if (_targetres) {
 							GaussianBeam kernelBeam(kernelParms);
 							factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
 						}
@@ -364,7 +356,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 					}
 					os << LogIO::POST;
 				}
-				if (targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
+				if (_targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
 					// circular beam should have same PA as given by user if
 					// targetres
 					beamOut.setPA(originalParms[2]);
@@ -372,7 +364,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				ImageConvolver<T> aic;
 				aic.convolve(
 					os, subImageOut, subImage, scaleFactor*kernel,
-					ImageConvolver<T>::NONE, 1.0, copyMiscellaneous
+					ImageConvolver<T>::NONE, 1.0, True
 				);
 			}
 			else {
@@ -404,7 +396,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 					outPos = outPos + cursorShape;
 				}
 			}
-			if (! targetres) {
+			if (! _targetres) {
 				iiOut.setBeam(
 					channel, polarization, beamOut
 				);
@@ -413,7 +405,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	}
 	else {
 		GaussianBeam inputBeam = imageInfo.restoringBeam();
-		if (targetres) {
+		if (_targetres) {
             kernelParms = _getConvolvingBeamForTargetResolution(
 				originalParms, inputBeam
 			);
@@ -428,11 +420,11 @@ template <class T> void Image2DConvolver<T>::_convolve(
         T scaleFactor = _dealWithRestoringBeam(
 			os, brightnessUnitOut, beamOut, kernel, kernelVolume,
 			kernelType, kernelParms, pixelAxes, cSys, inputBeam,
-			brightnessUnit, autoScale, scale, True, suppressWarnings
+			brightnessUnit, autoScale, scale, True
 		);
         os << LogIO::NORMAL << "Scaling pixel values by ";
         if (logFactors) {
-        	if (targetres) {
+        	if (_targetres) {
         		GaussianBeam kernelBeam(kernelParms);
         		factor1 = pixelArea/kernelBeam.getArea("arcsec*arcsec");
         	}
@@ -440,7 +432,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
         	os << factor1 << "*" << factor2 << " = ";
         }
         os << scaleFactor << LogIO::POST;
-		if (targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
+		if (_targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
 			// circular beam should have same PA as given by user if
 			// targetres
 			beamOut.setPA(originalParms[2]);
@@ -450,7 +442,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 		ImageConvolver<T> aic;
 		aic.convolve(
 			os, *imageOut, imageIn, scaleFactor*kernel, ImageConvolver<T>::NONE,
-			1.0, copyMiscellaneous
+			1.0, True
 		);
 		// Overwrite some bits and pieces in the output image to do with the
 		// restoring beam  and image units
@@ -481,7 +473,7 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
 	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes,
 	const ImageInterface<T>& imageIn
-) {
+) const {
 
 // Check number of parameters
 
@@ -531,9 +523,8 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes, const CoordinateSystem& cSys,
 	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
-	Bool autoScale, Double scale, Bool emitMessage,
-	Bool suppressWarnings
-) {
+	Bool autoScale, Double scale, Bool emitMessage
+) const {
 	os << LogOrigin(CLASS_NAME, __func__);
 	// Find out if convolution axes hold the sky.  Scaling from
 	// Jy/beam and Jy/pixel only really makes sense if this is True
@@ -553,7 +544,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		}
 		if (minAx < diag) {
 			diag.convert(minAx.getFullUnit());
-			if (! suppressWarnings) {
+			if (! _suppressWarnings) {
 				os << LogIO::WARN << "Convolving kernel has minor axis "
 					<< minAx << " which is less than the pixel diagonal "
 					<< "length of " << diag << ". Thus, the kernel is poorly sampled, "
@@ -564,7 +555,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		}
 		else if (beamIn.getMinor() < diag) {
 			diag.convert(beamIn.getMinor().getFullUnit());
-			if (! suppressWarnings) {
+			if (! _suppressWarnings) {
 				os << LogIO::WARN << "Input beam has minor axis "
 					<< beamIn.getMinor() << " which is less than the pixel diagonal "
 					<< "length of " << diag << ". Thus, the beam is poorly sampled, "
@@ -728,7 +719,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 template <class T> void Image2DConvolver<T>::_checkKernelParameters(
 	VectorKernel::KernelTypes kernelType,
 	const Vector<Quantity >& parameters
-) {
+) const {
 	if (kernelType==VectorKernel::BOXCAR) {
 		ThrowCc("Boxcar kernel not yet implemented");
 		ThrowIf(
@@ -753,7 +744,7 @@ template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 	const VectorKernel::KernelTypes kernelType,
 	const Vector<Double>& parameters,
 	const uInt ndim, const IPosition& axes
-) {
+) const {
 //
 // Work out how big the array holding the kernel should be.
 // Simplest algorithm possible. Shape is presently square.
@@ -787,7 +778,7 @@ template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 template <class T>
 uInt Image2DConvolver<T>::_sizeOfGaussian(
 	const Double width, const Double nSigma
-) {
+) const {
 // +/- 5sigma is a volume error of less than 6e-5%
 
    Double sigma = width / sqrt(Double(8.0) * C::ln2);
@@ -801,7 +792,7 @@ template <class T> T Image2DConvolver<T>::_fillKernel(
 	const IPosition& kernelShape,
 	const IPosition& axes,
 	const Vector<Double>& parameters
-) {
+) const {
 
 // Centre functional in array (shape is odd)
 // Need to think about these T castes for Complex images
@@ -829,7 +820,6 @@ template <class T> T Image2DConvolver<T>::_fillKernel(
    } else {
      throw(AipsError("Unrecognized kernel type"));        // Earlier checking should prevent this
    }
-//
    return volumeKernel;
 }         
 
@@ -837,7 +827,7 @@ template <class T> void Image2DConvolver<T>::_fillGaussian(
 	T& maxVal, T& volume, Matrix<T>& pixels, T height,
 	T xCentre, T yCentre, T majorAxis, T ratio,
 	T positionAngle
-) {
+) const {
 // 
 // pa positive in +x ->+y pixel coordinate frame
 //
@@ -863,5 +853,5 @@ template <class T> void Image2DConvolver<T>::_fillGaussian(
    } 
 }
 
-} //# NAMESPACE CASA - END
+}
 

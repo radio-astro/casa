@@ -147,67 +147,65 @@ private:
     IPosition _axes;
     Bool _targetres, _suppressWarnings;
 
-	static void _checkKernelParameters(
+	void _checkKernelParameters(
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters
-	);
+	) const;
 
-	static void _convolve(
+	void _convolve(
 		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
 		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
-		const Vector<Quantity>& parameters, Bool autoScale, Double scale,
-		Bool copyMiscellaneous, Bool targetres, Bool suppressWarnings
-	);
+		const Vector<Quantity>& parameters, Bool autoScale, Double scale
+	) const;
 
 	// returns the value by which pixel values will be scaled
-	static T _dealWithRestoringBeam (
+	T _dealWithRestoringBeam (
 		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
 		const Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
 		const GaussianBeam& beamIn, const Unit& brightnessUnit,
-		Bool autoscale, Double scale, Bool emitMessage,
-		Bool suppressWarnings
-	);
+		Bool autoscale, Double scale, Bool emitMessage
+	) const;
 
-	static T _fillKernel (
+	T _fillKernel (
 		Matrix<T>& kernelMatrix,
 		VectorKernel::KernelTypes kernelType,
 		const IPosition& kernelShape,
 		const IPosition& axes,
 		const Vector<Double>& parameters
-	);
+	) const;
 
-	static void _fillGaussian(
+	void _fillGaussian(
 		T& maxVal, T& volume, Matrix<T>& pixels,
 		T height, T xCentre, T yCentre,
 		T majorAxis, T ratio, T positionAngle
-	);
+	) const;
 
-	static T _makeKernel(
+	T _makeKernel(
 		Array<T>& kernel,
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes,
 		const ImageInterface<T>& inImage
-	);
+	) const;
 
-	static IPosition _shapeOfKernel(
+	IPosition _shapeOfKernel(
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Double>& parameters,
 		const uInt ndim, const IPosition& axes
-	);
+	) const;
 
-	static uInt _sizeOfGaussian(const Double width, const Double nSigma);
+	uInt _sizeOfGaussian(const Double width, const Double nSigma) const;
 
-	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
+	Vector<Quantity> _getConvolvingBeamForTargetResolution(
 		const Vector<Quantity>& targetBeamParms,
 		const GaussianBeam& inputBeam
-	);
+	) const;
 };
 
-} //# NAMESPACE CASA - END
+}
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.tcc>
