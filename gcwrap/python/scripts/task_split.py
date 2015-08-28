@@ -1,4 +1,5 @@
-import os, re
+import os
+import re
 import string
 import time
 import shutil
@@ -400,6 +401,8 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
                      'WARN')
 
     # Update FLAG_CMD if necessary.
+    # If the spw selection is by name or FLAG_CMD contains spw with names, skip the updating    
+
     if ((spw != '') and (spw != '*')) or do_chan_mod:
         isopen = False
         mytb = tbtool()
@@ -409,65 +412,82 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
             nflgcmds = mytb.nrows()
             
             if nflgcmds > 0:
-                mademod = False
-                cmds = mytb.getcol('COMMAND')
-                widths = {}
-                #print "width =", width
-                if hasattr(width, 'has_key'):
-                    widths = width
+                updateFlagCmd = False
+                # If spw selection is by name in FLAG_CMD, do not update, CAS-7751
+                mycmd = mytb.getcell('COMMAND', 0)
+                cmdlist = mycmd.split()
+                for cmd in cmdlist:
+                    # Match only spw indices, not names
+                    if cmd.__contains__('spw'):
+                        cmd = cmd.strip("spw=")
+                        spwstr = re.search('^[^a-zA-Z]+$', cmd)
+                        if spwstr != None and spwstr.string.__len__() > 0:
+                            updateFlagCmd = True
+                            break                
+                
+                
+                if updateFlagCmd:                
+                    mademod = False
+                    cmds = mytb.getcol('COMMAND')
+                    widths = {}
+                    #print "width =", width
+                    if hasattr(width, 'has_key'):
+                        widths = width
+                    else:
+                        if hasattr(width, '__iter__') and len(width) > 1:
+                            for i in xrange(len(width)):
+                                widths[i] = width[i]
+                        elif width != 1:
+                            #print 'using myms.msseltoindex + a scalar width'
+                            nspw = len(myms.msseltoindex(vis=vis,
+                                                         spw='*')['spw'])
+                            if hasattr(width, '__iter__'):
+                                w = width[0]
+                            else:
+                                w = width
+                            for i in xrange(nspw):
+                                widths[i] = w
+                    #print 'widths =', widths 
+                    for rownum in xrange(nflgcmds):
+                        # Matches a bare number or a string quoted any way.
+                        spwmatch = re.search(r'spw\s*=\s*(\S+)', cmds[rownum])
+                        if spwmatch:
+                            sch1 = spwmatch.groups()[0]
+                            sch1 = re.sub(r"[\'\"]", '', sch1)  # Dequote
+                            # Provide a default in case the split selection excludes
+                            # cmds[rownum].  update_spwchan() will throw an exception
+                            # in that case.
+                            cmd = ''
+                            try:
+                                #print 'sch1 =', sch1
+                                sch2 = update_spwchan(vis, spw, sch1, truncate=True,
+                                                      widths=widths)
+                                #print 'sch2 =', sch2
+                                ##print 'spwmatch.group() =', spwmatch.group()
+                                if sch2:
+                                    repl = ''
+                                    if sch2 != '*':
+                                        repl = "spw='" + sch2 + "'"
+                                    cmd = cmds[rownum].replace(spwmatch.group(), repl)
+                            #except: # cmd[rownum] no longer applies.
+                            except Exception, e:
+                                casalog.post(
+                                    "Error %s updating row %d of FLAG_CMD" % (e,
+                                                                              rownum),
+                                             'WARN')
+                                casalog.post('sch1 = ' + sch1, 'DEBUG1')
+                                casalog.post('cmd = ' + cmd, 'DEBUG1')
+                            if cmd != cmds[rownum]:
+                                mademod = True
+                                cmds[rownum] = cmd
+                    if mademod:
+                        casalog.post('Updating FLAG_CMD', 'INFO')
+                        mytb.putcol('COMMAND', cmds)
+
                 else:
-                    if hasattr(width, '__iter__') and len(width) > 1:
-                        for i in xrange(len(width)):
-                            widths[i] = width[i]
-                    elif width != 1:
-                        #print 'using myms.msseltoindex + a scalar width'
-                        nspw = len(myms.msseltoindex(vis=vis,
-                                                     spw='*')['spw'])
-                        if hasattr(width, '__iter__'):
-                            w = width[0]
-                        else:
-                            w = width
-                        for i in xrange(nspw):
-                            widths[i] = w
-                #print 'widths =', widths 
-                for rownum in xrange(nflgcmds):
-                    # Matches a bare number or a string quoted any way.
-                    spwmatch = re.search(r'spw\s*=\s*(\S+)', cmds[rownum])
-                    if spwmatch:
-                        sch1 = spwmatch.groups()[0]
-                        sch1 = re.sub(r"[\'\"]", '', sch1)  # Dequote
-                        # Provide a default in case the split selection excludes
-                        # cmds[rownum].  update_spwchan() will throw an exception
-                        # in that case.
-                        cmd = ''
-                        try:
-                            #print 'sch1 =', sch1
-                            sch2 = update_spwchan(vis, spw, sch1, truncate=True,
-                                                  widths=widths)
-                            #print 'sch2 =', sch2
-                            ##print 'spwmatch.group() =', spwmatch.group()
-                            if sch2:
-                                repl = ''
-                                if sch2 != '*':
-                                    repl = "spw='" + sch2 + "'"
-                                cmd = cmds[rownum].replace(spwmatch.group(), repl)
-                        #except: # cmd[rownum] no longer applies.
-                        except Exception, e:
-                            casalog.post(
-                                "Error %s updating row %d of FLAG_CMD" % (e,
-                                                                          rownum),
-                                         'WARN')
-                            casalog.post('sch1 = ' + sch1, 'DEBUG1')
-                            casalog.post('cmd = ' + cmd, 'DEBUG1')
-                        if cmd != cmds[rownum]:
-                            mademod = True
-                            cmds[rownum] = cmd
-                if mademod:
-                    casalog.post('Updating FLAG_CMD', 'INFO')
-                    mytb.putcol('COMMAND', cmds)
+                    casalog.post('FLAG_CMD table contains spw selection by name. Will not update it!','DEBUG')
 
             mytb.close()
-
             
         except Exception, instance:
             if isopen:
