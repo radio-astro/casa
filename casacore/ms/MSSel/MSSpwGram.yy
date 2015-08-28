@@ -82,20 +82,16 @@
 %{
   #include <limits.h>
   int MSSpwGramlex (YYSTYPE*);
-  void checkSpwError(Vector<Int>& list, ostringstream& msg, const char *token)
+  void checkSpwError(Vector<Int>& list, ostringstream& msg)
   {
     if (list.nelements() == 0)
       {
-	ostringstream Mesg, tok;
+	String errorMesg;
+	ostringstream Mesg;
 	Mesg << "Spw Expression: " << msg.str().c_str();
 	
-	// String errorMesg;
-	// errorMesg = String(Mesg.str().c_str());
-	// throw(MSSelectionSpwParseError(errorMesg));
-
-	tok << "\"" << token << "\"";
-
-	MSSpwParse::thisMSSpwErrorHandler->reportError(tok.str().c_str(), Mesg.str());
+	errorMesg = String(Mesg.str().c_str());
+	throw(MSSelectionSpwParseError(errorMesg));
       }
   }
 %}
@@ -278,8 +274,8 @@ Spw: IDENTIFIER
 	if (!($$)) delete $$;
 	$$=new Vector<Int>(myMSSI.matchName($1));
 	
-	ostringstream m; m << "No match found for ";
-	checkSpwError(*($$), m, $1);
+	ostringstream m; m << "No match found for \"" << $1 << "\"";
+	checkSpwError(*($$), m);
 	
 	free($1);      
       }
@@ -298,8 +294,8 @@ Spw: IDENTIFIER
 	if (!$$) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchRegexOrPattern($1));
 	
-	ostringstream m; m << "No match found for ";
-	checkSpwError(*($$), m, $1);
+	ostringstream m; m << "No match found for \"" << $1 << "\"";
+	checkSpwError(*($$), m);
 	
 	free($1);
       }
@@ -318,8 +314,8 @@ Spw: IDENTIFIER
 	if (!$$) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchRegexOrPattern($1));
 	
-	ostringstream m; m << "No match found for ";
-	checkSpwError(*($$), m, $1);
+	ostringstream m; m << "No match found for \"" << $1 << "\"";
+	checkSpwError(*($$), m);
 	
 	free($1);
       }
@@ -328,63 +324,57 @@ Spw: IDENTIFIER
 	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
 	if (!($$)) delete $$;
-	ostringstream m,tok; m << "No spw ID found for > ";
+	ostringstream m; m << "No spw ID found > ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchGT((Int)$2[0]));
-	    // m << (Int)$2[0];
-	    tok << (Int)$2[0];
+	    m << (Int)$2[0];
 	  }
 	else
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchGT($2));
-	    // m << (Double)$2[0] << "Hz";
-	    tok << "Hz";
+	    m << (Double)$2[0] << "Hz";
 	  }
 	
-	checkSpwError(*($$), m,tok.str().c_str());
+	checkSpwError(*($$), m);
       }
    | LT OneFreq
       {
 	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
 	if (!($$)) delete $$;
-	ostringstream m, tok; m << "No spw ID found for < ";
+	ostringstream m; m << "No spw ID found < ";
 	if ($2[1] == MSSpwIndex::MSSPW_INDEX)
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchLT((Int)$2[0]));
- 	    // m << (Int)$2[0];
-	    tok << (Int)$2[0];
+	    m << (Int)$2[0];
 	  }
 	else
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchLT($2));
-	    // m << (Double)$2[0] << "Hz";
-	    tok << (Double)$2[0] << "Hz";
+	    m << (Double)$2[0] << "Hz";
 	  }
 	
-	checkSpwError(*($$), m, tok.str().c_str());
+	checkSpwError(*($$), m);
       }
    | OneFreq GTNLT OneFreq
       {
 	//	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->ms()->spectralWindow());
 	MSSpwIndex myMSSI(MSSpwParse::thisMSSParser->subTable());
 	if (!($$)) delete $$;
-	ostringstream m,tok; m << "No spw ID found ";
+	ostringstream m; m << "No spw ID found ";
 	if ($1[1] == MSSpwIndex::MSSPW_INDEX)
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchGTAndLT((Int)$1[0],(Int)$3[0]));
-	    //m << (Int)$1[0] << "<>" << (Int)$3[0];
-	    tok << (Int)$1[0] << "<>" << (Int)$3[0];
+	    m << (Int)$1[0] << "<>" << (Int)$3[0];
 	  }
 	else
 	  {
 	    $$ = new Vector<Int>(myMSSI.matchGTAndLT($1,$3));
-	    //m << (Double)$1[0] << "<>" << (Double)$3[0] << "Hz";
-	    tok << (Double)$1[0] << "<>" << (Double)$3[0] << "Hz";
+	    m << (Double)$1[0] << "<>" << (Double)$3[0] << "Hz";
 	  }
 	
-	checkSpwError(*($$), m, tok.str().c_str());
+	checkSpwError(*($$), m);
       }
    | DASH OneFreq
       {
@@ -393,9 +383,8 @@ Spw: IDENTIFIER
 	if (!($$)) delete $$;
 	$$ = new Vector<Int>(myMSSI.matchFrequencyRange($2[0],$2[0],True));
 	
-	ostringstream m,tok; m << "No spw ID found ~= ";
-	tok << (Int)$2[0];
-	checkSpwError(*($$), m, tok.str().c_str());
+	ostringstream m; m << "No spw ID found ~= " << (Int)$2[0];
+	checkSpwError(*($$), m);
       }
    | FreqList 
       {

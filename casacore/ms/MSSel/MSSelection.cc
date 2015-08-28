@@ -52,13 +52,11 @@
 #include <casacore/casa/Utilities/DataType.h>
 #include <casacore/casa/iostream.h>
 #include <casacore/ms/MSSel/MSSelectionError.h>
-#include <casacore/ms/MSSel/MSSSpwErrorHandler.h>
 #include <casacore/ms/MSSel/MSSelectionTools.h>
 #include <casacore/ms/MSSel/MSSelectableTable.h>
 #include <casacore/ms/MSSel/MSSelectableMainColumn.h>
 #include <casacore/ms/MSSel/MSAntennaParse.h>
 #include <casacore/ms/MSSel/MSStateParse.h>
-#include <casacore/ms/MSSel/MSSpwParse.h>
 #include <casacore/casa/Logging/LogIO.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <casacore/casa/Utilities/GenSort.h>
@@ -368,32 +366,14 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   void MSSelection::deleteErrorHandlers()
   {
-    // if (MSAntennaParse::thisMSAErrorHandler!=NULL)
-    //   {
-    // 	delete MSAntennaParse::thisMSAErrorHandler;
-    // 	MSAntennaParse::thisMSAErrorHandler=NULL;
-    //   }
-    // if (MSStateParse::thisMSSErrorHandler!=NULL)
-    //   {
-    // 	delete MSStateParse::thisMSSErrorHandler;
-    // 	MSStateParse::thisMSSErrorHandler=NULL;
-    //   }
-    // if (MSSpwParse::thisMSSpwErrorHandler!=NULL)
-    //   {
-    // 	delete MSSpwParse::thisMSSpwErrorHandler;
-    // 	MSSpwParse::thisMSSpwErrorHandler=NULL;
-    //   }
-
     if (mssErrHandler_p != NULL) 
       {
-    	delete mssErrHandler_p;
-    	mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
-    	mssErrHandler_p=MSStateParse::thisMSSErrorHandler=NULL;
-    	mssErrHandler_p=MSSpwParse::thisMSSpwErrorHandler=NULL;
+	delete mssErrHandler_p;
+	mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
+	mssErrHandler_p=MSStateParse::thisMSSErrorHandler=NULL;
       }
-    // mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
-    // mssErrHandler_p=MSStateParse::thisMSSErrorHandler=NULL;
-    // mssErrHandler_p=MSSpwParse::thisMSSpwErrorHandler=NULL;
+    mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
+    mssErrHandler_p=MSStateParse::thisMSSErrorHandler=NULL;
     //    mssErrHandler_p=NULL;
   }
   
@@ -456,34 +436,28 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 	      setErrorHandler(ANTENNA_EXPR, mssErrHandler_p);
 	    }
 	  else
-	    MSAntennaParse::thisMSAErrorHandler->reset();
+	    {
+	      //mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
+	      MSAntennaParse::thisMSAErrorHandler->reset();
+	      //	mssErrHandler_p->reset();
+	    }
 	  break;
 	}
       case STATE_EXPR:
 	{
 	  if (MSStateParse::thisMSSErrorHandler == NULL)
 	    {
-	      //if (mssErrHandler_p == NULL) mssErrHandler_p = new MSSelectionErrorHandler();
-	      MSSelectionErrorHandler *tt = new MSSelectionErrorHandler();
-	      setErrorHandler(STATE_EXPR, tt);
+	      if (mssErrHandler_p == NULL) mssErrHandler_p = new MSSelectionErrorHandler();
+	      setErrorHandler(STATE_EXPR, mssErrHandler_p);
 	    }
 	  else
-	    MSStateParse::thisMSSErrorHandler->reset();
-	  break;
-	}
-      case SPW_EXPR:
-	{
-	  if (MSSpwParse::thisMSSpwErrorHandler == NULL)
 	    {
-	      // if (mssErrHandler_p == NULL) mssErrHandler_p = new MSSSpwErrorHandler();
-	      MSSSpwErrorHandler *tt = new MSSSpwErrorHandler();
-	      setErrorHandler(SPW_EXPR, tt, True /*overRide*/);
+	      //mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
+	      MSStateParse::thisMSSErrorHandler->reset();
+	      //	mssErrHandler_p->reset();
 	    }
-	  else
-	    MSSpwParse::thisMSSpwErrorHandler->reset();
 	  break;
 	}
-	
       default:  
 	throw(MSSelectionError(String("Wrong MSExprType in MSSelection::initErrorHandler()")));
 	break;
@@ -515,7 +489,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     
     initErrorHandler(ANTENNA_EXPR);
     initErrorHandler(STATE_EXPR);
-    initErrorHandler(SPW_EXPR);
 
     try
       {
@@ -744,14 +717,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 	    MSStateParse::thisMSSErrorHandler = mssEH;
 	  break;
 	}
-      case SPW_EXPR:
-	{
-	  if (overRide)
-	    MSSpwParse::thisMSSpwErrorHandler = mssEH;
-	  else if (MSSpwParse::thisMSSpwErrorHandler == NULL)
-	    MSSpwParse::thisMSSpwErrorHandler = mssEH;
-	  break;
-	}
       default: throw(MSSelectionError(String("Wrong MSExprType in MSSelection::setErrorHandler()")));
       };
   }
@@ -769,12 +734,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       {
 	MSSelectionStateParseError msStateException(String(""));
 	MSStateParse::thisMSSErrorHandler->handleError(msStateException);
-      }
-
-    if (MSSpwParse::thisMSSpwErrorHandler->nMessages() > 0)
-      {
-	MSSelectionSpwParseError msSpwException(String(""));
-	MSSpwParse::thisMSSpwErrorHandler->handleError(msSpwException);
       }
   }
 

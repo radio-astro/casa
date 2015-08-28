@@ -106,7 +106,6 @@ MSSel/MSSpwGram.cc
 MSSel/MSSpwIndex.cc
 MSSel/MSSpWindowIndex.cc
 MSSel/MSSpwParse.cc
-MSSel/MSSSpwErrorHandler.cc
 MSSel/MSStateGram.cc
 MSSel/MSStateIndex.cc
 MSSel/MSStateParse.cc
@@ -273,7 +272,6 @@ MSSel/MSSpwGram.h
 MSSel/MSSpwIndex.h
 MSSel/MSSpWindowIndex.h
 MSSel/MSSpwParse.h
-MSSel/MSSSpwErrorHandler.h
 MSSel/MSStateGram.h
 MSSel/MSStateIndex.h
 MSSel/MSStateParse.h
