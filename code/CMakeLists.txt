@@ -1087,7 +1087,6 @@ casa_find( LIBSAKURA
   LIBS sakura
   PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
-  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
 )
 
 casa_config_end()
