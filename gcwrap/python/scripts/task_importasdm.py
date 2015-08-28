@@ -568,6 +568,11 @@ def importasdm(
             imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
             imt.close()
 
+        if convert_ephem2geo:
+            for myviso in vistoproc:
+                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
+        
+        if len(theephemfields)>0: 
             # also set the direction column in the SOURCE table
             tblocal.open(myviso+'/FIELD', nomodify=False)
             sourceids = tblocal.getcol('SOURCE_ID')
@@ -627,10 +632,6 @@ def importasdm(
                 
         #end if
 
-        if convert_ephem2geo:
-            for myviso in vistoproc:
-                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
-        
         # CAS-7369 - Create an output Multi-MS (MMS)
         if createmms:
             # Get the default parameters of partition
