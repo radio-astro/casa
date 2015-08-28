@@ -53,7 +53,7 @@ TABLE_KEYWORD = {'VERSION': 1,
                  'ApplyType': 'CALTSYS',
                  'FREQUENCIES': 'Table: {name}'}
 
-def map(prefix, caltable, reftable):
+def map_without_average(prefix, caltable, reftable):
     # initial check
     check(caltable)
     
@@ -161,6 +161,7 @@ def fill_with_average(table, caltable, antenna_id, atm_spw, science_spw):
         tsel = tb.query('ANTENNA1==%s && SPECTRAL_WINDOW_ID==%s'%(antenna_id,atm_spw.id))
         rows = tsel.rownumbers()
         tsel.close()
+        failed_list = []
         for row in rows:
             t = tb.getcell('TIME', row)
             spw = tb.getcell('SPECTRAL_WINDOW_ID', row)
@@ -184,13 +185,20 @@ def fill_with_average(table, caltable, antenna_id, atm_spw, science_spw):
                 masked_tsys = numpy.ma.masked_array(tsys[ipol][start_chan:end_chan], flag[ipol][start_chan:end_chan])
                 mean_tsys = masked_tsys.mean()
                 if numpy.ma.is_masked(mean_tsys) or not numpy.isfinite(mean_tsys):
-                    LOG.error('Wrong averaged Tsys is found in antenna %s spw %s polarization %s. Flag row %s'%(antenna_id, atm_spw.id, ipol, row))
                     flagtra[ipol,:] = 128
                     mean_tsys = 0.0
+                    failed_list.append((row, ipol))
                 tsys[ipol][:] = mean_tsys
                 table.putcell('TSYS', idx, tsys[ipol])
                 table.putcell('FLAGTRA', idx, flagtra[ipol])
                 table.putcell('ELEVATION', idx, 0.0)
+        if len(failed_list) > 0:
+            vis = tb.getkeyword('MSName')
+            tb2 = tbobj()
+            tb2.open(os.path.join(caltable, 'ANTENNA'))
+            antenna_name = tb2.getcell('NAME', antenna_id)
+            LOG.error('Wrong averaged Tsys is found in %s antenna %s spw %s, probably because channels that overlaps with science spw are all flagged. Flagged %s'%(vis, antenna_name, atm_spw.id, ', '.join(map(lambda x: '(row %s, pol %s)'%(x), failed_list))))
+            
     finally:
         tb.close()
 
