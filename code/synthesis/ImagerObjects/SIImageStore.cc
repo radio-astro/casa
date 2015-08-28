@@ -756,7 +756,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIImageStore::resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight )
   {
     if( resetpsf ) psf()->set(0.0);
-    if( resetresidual ) residual()->set(0.0);
+    if( resetresidual ) {
+      if (residual()-> getDefaultMask() != String("")){
+	String strung=residual()->getDefaultMask();
+	residual()->setDefaultMask("");
+	residual()->removeRegion(strung);
+      } 
+      
+      residual()->set(0.0);
+    }
     if( resetweight && itsWeight ) weight()->set(0.0);
     if( resetweight ) sumwt()->set(0.0);
   }
@@ -917,12 +925,16 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 
 	// clear output image mask
 		if( (outimage->getDefaultMask()).matches("mask0") ) 
-		  { outimage->removeRegion("mask0");}
+		  {outimage->setDefaultMask(""); 
+		    outimage->removeRegion("mask0");}
 
 	// get mask from input image
 		
-		ImageRegion* outreg = inimage->getImageRegionPtr("mask0");
-		outimage->defineRegion("mask0",*outreg, RegionHandler::Masks,True);
+	       
+		ImageRegion outreg=outimage->makeMask("mask0", False, True);
+		LCRegion& outmask=outreg.asMask();
+		outmask.copyData(inimage->getRegion("mask0").asLCRegion());
+		outimage->defineRegion("mask0",outreg, RegionHandler::Masks,True);
 		outimage->setDefaultMask("mask0");
       }
     
@@ -985,10 +997,12 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   void SIImageStore::divideResidualByWeight(Float pblimit,String normtype)
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
+   
 
     // Normalize by the sumwt, per plane. 
     Bool didNorm = divideImageByWeightVal( *residual() );
-
+    
+   
     if( itsUseWeight )
       {
 	
@@ -1053,7 +1067,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
 
     // createMask
-    //MSK//    if(hasPB()){copyMask(pb(),residual());}
+    if((residual()->getDefaultMask()=="") && hasPB())
+      {copyMask(pb(),residual());}
   }
   
 
@@ -1433,7 +1448,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     
     try
       {
-	//MSK//	if(hasPB()){copyMask(pb(),image());}
+	if(hasPB()){copyMask(pb(),image());}
       }
     catch(AipsError &x)
       {
