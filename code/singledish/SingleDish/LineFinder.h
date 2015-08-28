@@ -34,8 +34,6 @@
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
 
-#include <casa_sakura/SakuraAlignedArray.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   namespace linefinder {

@@ -36,8 +36,6 @@
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
 
-#include <casa_sakura/SakuraAlignedArray.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   class LineFinderUtils {
@@ -61,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      */
     static void calculateMAD(size_t const num_data,
 			     float const in_data[/*num_data*/],
-			     SakuraAlignedArray<bool> const& in_mask,
+			     bool const in_mask[/*num_data*/],
 			     float mad[/*num_data*/]);
 
     /*
@@ -84,10 +82,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      */
 
     static void createMaskByAThreshold(size_t const num_data,
-				       SakuraAlignedArray<float> const& in_data,
-				       SakuraAlignedArray<bool> const& in_mask,
+				       float const in_data[/*num_data*/],
+				       bool const in_mask[/*num_data*/],
 				       float const threshold,
-				       SakuraAlignedArray<bool>& out_mask);
+				       bool out_mask[/*num_data*/]);
     /*
       create mask by threshold value array
       out_mask[i] = in_mask[i] && (in_data[i] >= threshold_array[i])
@@ -164,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
      */
      static float maskedMedian(size_t num_data, float const* data,
-			       SakuraAlignedArray<bool> const& mask, float fraction=1.0);
+			       bool const mask[/*num_data*/], float fraction=1.0);
 
 
     /*

@@ -88,8 +88,10 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
   size_t average_factor =1;
   //size_t maxgap = num_data;
   list<pair<size_t,size_t>> line_list;
-  SakuraAlignedArray<float> binned_data(num_data);
-  SakuraAlignedArray<bool> binned_mask(num_data);
+  Vector<float> binned_data(num_data);
+  Vector<bool> binned_mask(num_data);
+  float *binned_data_p = binned_data.data();
+  bool *binned_mask_p = binned_mask.data();
   while (true) {
     // Bin spectrum and mask
     size_t const maxwidth_bin = std::max(maxwidth/average_factor,static_cast<size_t>(1));
@@ -98,15 +100,18 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
     size_t num_binned = \
       LineFinderUtils::binDataAndMask<float>(num_data, data, mask,
 					     average_factor, num_data,
-					     binned_data.data,
-					     binned_mask.data,
+					     binned_data_p,
+					     binned_mask_p,
 					     offset,false);
     // caluculate MAD array
-    SakuraAlignedArray<float> mad_data(num_binned);
-    SakuraAlignedArray<bool> line_mask(num_binned);
-    SakuraAlignedArray<bool> search_mask(num_binned);
+    Vector<float> mad_data(num_binned);
+    Vector<bool> line_mask(num_binned);
+    Vector<bool> search_mask(num_binned);
+    float *mad_data_p = mad_data.data();
+    bool *line_mask_p = line_mask.data();
+    bool *search_mask_p = search_mask.data();
     for (size_t i=0; i<num_binned; ++i) {
-	search_mask.data[i] = binned_mask.data[i];
+	search_mask_p[i] = binned_mask_p[i];
     }
     float prev_mad_threshold = FLT_MAX;
     size_t prev_num_line_chan = 0;
@@ -115,29 +120,30 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
     for (size_t iteration=0; iteration < max_iteration; ++iteration) {
       list<pair<size_t,size_t>> new_lines; // lines found in this iteration
       // working data array. sorted after median calculation.
-      LineFinderUtils::calculateMAD(num_binned, binned_data.data,
-				    search_mask, mad_data.data);
+      LineFinderUtils::calculateMAD(num_binned, binned_data_p,
+				    search_mask_p, mad_data_p);
       // use lower 80% of mad_array and use median of the array as a criteria.
-      float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data.data,
-								    search_mask,0.8);
+      float mad_threshold = threshold*LineFinderUtils::maskedMedian(num_binned, mad_data_p,
+								    search_mask_p,0.8);
 //       cout << "mad_threshold = " << mad_threshold << endl;
       if (mad_threshold >= prev_mad_threshold) break; // stop iteration
-      LineFinderUtils::createMaskByAThreshold(num_binned, mad_data,
-					      binned_mask, mad_threshold,
-					      line_mask);
+      LineFinderUtils::createMaskByAThreshold(num_binned, mad_data_p,
+					      binned_mask_p, mad_threshold,
+					      line_mask_p);
       // channel mask -> mask range
-      LineFinderUtils::maskToRangesList(num_binned, line_mask.data, new_lines);
+      LineFinderUtils::maskToRangesList(num_binned, line_mask_p, new_lines);
       //rejectByRangeWidth(minwidth_bin,maxwidth_bin,new_lines);
       if ( new_lines.size()>0 ) {
 	// merge flagged gaps
 	//LineFinderUtils::mergeGapByFalse(num_binned, binned_mask.data,
 	//				 maxgap/average_factor, new_lines);
 	// extend wing
-	SakuraAlignedArray<int8_t> sign(num_binned);
-	LineFinderUtils::createSignByAThreshold(num_binned, mad_data.data,
-					       mad_threshold, sign.data);
-	LineFinderUtils::extendRangeBySign(num_binned, sign.data,
-					   binned_mask.data,
+	Vector<int8_t> sign(num_binned);
+	int8_t *sign_p = sign.data();
+	LineFinderUtils::createSignByAThreshold(num_binned, mad_data_p,
+					       mad_threshold, sign_p);
+	LineFinderUtils::extendRangeBySign(num_binned, sign_p,
+					   binned_mask_p,
 					   new_lines);
 	// merge overlap
 	LineFinderUtils::mergeOverlappingRanges(new_lines);
@@ -154,7 +160,7 @@ list<pair<size_t,size_t>> MADLineFinder(size_t const num_data,
 	for (list<pair<size_t,size_t>>::iterator iter=new_lines.begin();
 	     iter!=new_lines.end(); ++iter) {
 	  for (size_t i=(*iter).first; i<=(*iter).second && i<num_binned; ++i) {
-	    search_mask.data[i] = false;
+	    search_mask_p[i] = false;
 	  }
 	}
 	// culculate the number of line channels

@@ -79,9 +79,9 @@ size_t LineFinderUtils::binDataAndMask(size_t const num_in,
 }
 
 void LineFinderUtils::calculateMAD(size_t const num_data,
-				   float const *in_data,
-				   SakuraAlignedArray<bool> const& in_mask,
-				   float *mad)
+				   float const in_data[],
+				   bool const in_mask[],
+				   float mad[])
 {
   float median_value = LineFinderUtils::maskedMedian(num_data, in_data, in_mask, 1.0);
   //cout << "median value for MAD = " << median_value << endl;
@@ -91,15 +91,15 @@ void LineFinderUtils::calculateMAD(size_t const num_data,
 }
 
 void LineFinderUtils::createMaskByAThreshold(size_t const num_data,
-					     SakuraAlignedArray<float> const& in_data,
-					     SakuraAlignedArray<bool> const& in_mask,
+					     float const in_data[],
+					     bool const in_mask[],
 					     float const threshold,
-					     SakuraAlignedArray<bool>& out_mask)
+					     bool out_mask[])
 {
-  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(num_data, in_data.data, threshold, out_mask.data);
+  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(num_data, in_data, threshold, out_mask);
   AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
   for (size_t i = 0; i < num_data; ++i) {
-    out_mask.data[i] = out_mask.data[i] && in_mask.data[i];
+    out_mask[i] = out_mask[i] && in_mask[i];
   }
 }
 
@@ -197,22 +197,23 @@ void LineFinderUtils::mergeGapByFalse(size_t const num_mask, bool const* mask,
   range_list.splice(range_list.end(), temp_list);
 }
 
-float LineFinderUtils::maskedMedian(size_t num_data,float const* data,
-				     SakuraAlignedArray<bool> const& mask, float fraction)
+float LineFinderUtils::maskedMedian(size_t num_data, float const data[],
+				     bool const mask[], float fraction)
 {
-  
-  SakuraAlignedArray<float> local_data(num_data);
-  for (size_t i = 0 ; i < num_data; ++i){
-    local_data.data[i] = data[i];
-  }
+
+  Vector<float> local_data(IPosition(1, num_data), const_cast<float *>(data), COPY);
+//  for (size_t i = 0 ; i < num_data; ++i){
+//    local_data.data[i] = data[i];
+//  }
+  float *local_data_p = local_data.data();
   size_t num_valid(num_data+1);
-  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, mask.data, local_data.data, &num_valid);
+  LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data, mask, local_data_p, &num_valid);
   AlwaysAssert(status == LIBSAKURA_SYMBOL(Status_kOK), AipsError);
   AlwaysAssert(num_valid <= num_data, AipsError);
   if (fraction<1.0)
     num_valid = static_cast<size_t>(num_valid*fraction);
   float median_value = LineFinderUtils::getMedianOfSorted<float>(num_valid,
-								 local_data.data);
+								 local_data_p);
   return median_value;
   
 }
