@@ -568,32 +568,54 @@ def importasdm(
             imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
             imt.close()
 
+        if convert_ephem2geo:
+            for myviso in vistoproc:
+                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
+        
+        if len(theephemfields)>0: 
             # also set the direction column in the SOURCE table
-            tblocal.open(myviso+'/FIELD')
+            tblocal.open(myviso+'/FIELD', nomodify=False)
             sourceids = tblocal.getcol('SOURCE_ID')
             ftimes = tblocal.getcol('TIME')
             ftimekw = tblocal.getcolkeywords('TIME')
             tmpa = tblocal.getcol('PHASE_DIR')
-            offsets = tmpa.transpose()
-            tblocal.close()
+            origphasedir = tmpa
 
             affectedsids = []
+            thesamplefields = []
+            for fld in theephemfields: # determine all source ids used by the ephem fields
+                if not (sourceids[fld] in affectedsids): # this source id wasn't handled yet
+                    affectedsids.append(sourceids[fld])
+                    thesamplefields.append(fld)
+                    # need to temporarily change the offset (not all mosaics have an element at (0,0))
+                    tmpa[0][0][fld]=0.
+                    tmpa[1][0][fld]=0.
+                #endif
+            #endfor
+            tblocal.putcol('PHASE_DIR', tmpa)
+            tblocal.close()
+
             directions = []
             msmdlocal = casac.msmetadata()
             msmdlocal.open(myviso)
-            for fld in theephemfields:
-                if offsets[fld][0][0]==0. and offsets[fld][0][1]==0.: # this is a center
-                    affectedsids.append(sourceids[fld])
-                    thedirmeas = msmdlocal.phasecenter(fld)
-                    if thedirmeas['refer']!='J2000':
-                        casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
-                    directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
-                    thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
-                    casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
-                                 +" to ephemeris phase center of field "+str(fld)
-                                 +" for time "+str(thetime['m0']['value'])+" "+thetime['m0']['unit']+" "+thetime['refer']) 
+            
+            for fld in thesamplefields:
+                thedirmeas = msmdlocal.phasecenter(fld)
+                if thedirmeas['refer']!='J2000':
+                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
+                directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
+                thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
+                casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
+                             +" to ephemeris phase center for time "+str(thetime['m0']['value'])+" "+thetime['m0']['unit']+" "+thetime['refer']) 
+            #endfor
             msmdlocal.close()
              
+            # restore original PHASE_DIR
+            tblocal.open(myviso+'/FIELD', nomodify=False)
+            tblocal.putcol('PHASE_DIR', origphasedir)
+            tblocal.close()
+
+            # write source directions
             tblocal.open(myviso+'/SOURCE', nomodify=False)
             ssourceids = tblocal.getcol('SOURCE_ID')
             sdirs = tblocal.getcol('DIRECTION')
@@ -602,6 +624,7 @@ def importasdm(
                     if ssourceids[row]==affectedsids[i]:
                         sdirs[0][row] = directions[i][0]
                         sdirs[1][row] = directions[i][1]
+                        break
                 #endfor
             #endfor
             tblocal.putcol('DIRECTION', sdirs) # write back corrected directions
@@ -609,10 +632,6 @@ def importasdm(
                 
         #end if
 
-        if convert_ephem2geo:
-            for myviso in vistoproc:
-                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
-        
         # CAS-7369 - Create an output Multi-MS (MMS)
         if createmms:
             # Get the default parameters of partition
