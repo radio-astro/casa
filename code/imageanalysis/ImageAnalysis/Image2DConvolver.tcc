@@ -76,12 +76,12 @@ template <class T> Image2DConvolver<T>::Image2DConvolver(
 // TODO use GaussianBeams rather than Vector<Quantity>s, this method
 // can probably be eliminated.
 template <class T>
-Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
-	const Vector<Quantity>& targetBeamParms,
+std::vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
+	const std::vector<Quantity>& targetBeamParms,
 	const GaussianBeam& inputBeam
 ) const {
 	GaussianBeam convolvingBeam;
-	Vector<Quantity> kernelParms(3);
+
 	GaussianBeam targetBeam(
 		targetBeamParms[0], targetBeamParms[1],
 		targetBeamParms[2]
@@ -100,9 +100,11 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 			<< "to or larger than the output beam size";
 		ThrowCc(os.str());
 	}
-	kernelParms[0] = convolvingBeam.getMajor();
-	kernelParms[1] = convolvingBeam.getMinor();
-	kernelParms[2] = convolvingBeam.getPA(True);
+	std::vector<Quantity> kernelParms {
+		convolvingBeam.getMajor(),
+		convolvingBeam.getMinor(),
+		convolvingBeam.getPA(True)
+	};
 	return kernelParms;
 }
 
@@ -134,20 +136,20 @@ template <class T> void Image2DConvolver<T>::setKernel(
 }
 
 template <class T> SPIIT Image2DConvolver<T>::convolve() {
-	Bool autoScale = _scale <= 0;
-	auto scale = autoScale ? 1.0 : _scale;
+	//_scale = _scale <= 0 ? 1.0 : _scale;
 	auto subImage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		this->_getDropDegen(), False, False, this->_getStretch()
 	);
+	/*
 	Vector<Quantity> parameters(3);
 	parameters(0) = _major;
 	parameters(1) = _minor;
 	parameters(2) = _pa;
+	*/
 	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
 	Image2DConvolver<Float>::_convolve(
-		*this->_getLog(), outImage, *subImage, _type, _axes,
-		parameters, autoScale, scale
+		*this->_getLog(), outImage, *subImage, _type, _axes
 	);
 	return this->_prepareOutputImage(*outImage);
 }
@@ -155,13 +157,8 @@ template <class T> SPIIT Image2DConvolver<T>::convolve() {
 template <class T> void Image2DConvolver<T>::_convolve(
 	LogIO& os, SPIIT imageOut,
 	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType,
-	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
-	Bool autoScale, Double scale
+	const IPosition& pixelAxes
 ) const {
-	ThrowIf(
-		parameters.nelements() != 3,
-		"The world parameters vector must be of length 3"
-	);
 	ThrowIf(
 		pixelAxes.nelements() != 2,
 		"You must give two pixel axes to convolve"
@@ -200,26 +197,27 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	// initialize to avoid compiler warning, kernelVolume will always be set to something
 	// reasonable below before it is used.
 	T kernelVolume = -1;
+	std::vector<Quantity> originalParms{_major, _minor, _pa};
 	if (! _targetres) {
 		kernelVolume = _makeKernel(
-			kernel, kernelType, parameters, pixelAxes, imageIn
+			kernel, kernelType, pixelAxes, originalParms, imageIn
 		);
 	}
 
-	Vector<Quantity> originalParms = parameters.copy();
+
 	const CoordinateSystem& cSys = imageIn.coordinates();
-	if (originalParms[0].getUnit().startsWith("pix")) {
+	if (_major.getUnit().startsWith("pix")) {
 		auto inc = cSys.increment()[pixelAxes[0]];
 		auto unit = cSys.worldAxisUnits()[pixelAxes[0]];
-		originalParms[0] = originalParms[0].getValue() * Quantity(abs(inc), unit);
+		originalParms[0] = _major.getValue() * Quantity(abs(inc), unit);
 	}
-	if (originalParms[1].getUnit().startsWith("pix")) {
+	if (_minor.getUnit().startsWith("pix")) {
 		auto inc = cSys.increment()[pixelAxes[1]];
 		auto unit = cSys.worldAxisUnits()[pixelAxes[1]];
-		originalParms[1] = originalParms[1].getValue() * Quantity(abs(inc), unit);
+		originalParms[1] = _minor.getValue() * Quantity(abs(inc), unit);
 	}
 
-	Vector<Quantity> kernelParms = originalParms.copy();
+	std::vector<Quantity> kernelParms = originalParms;
 
 	// Figure out output image restoring beam (if any), output units and scale
 	// factor for convolution kernel array
@@ -232,6 +230,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	Bool logFactors = False;
 	Double factor1 = -1;
 	double pixelArea = 0;
+	auto autoScale = _scale <= 0;
 	if (autoScale) {
 		auto bunitUp = brightnessUnit.getName();
 		bunitUp.upcase();
@@ -315,7 +314,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 						originalParms, inputBeam
 					);
 					kernelVolume = _makeKernel(
-						kernel, kernelType, kernelParms, pixelAxes, imageIn
+						kernel, kernelType, pixelAxes, kernelParms, imageIn
 					);
 
 					os << ": Convolving image which has a beam of " << inputBeam
@@ -331,7 +330,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				T scaleFactor = _dealWithRestoringBeam(
 					os, brightnessUnitOut, beamOut, kernel, kernelVolume,
 					kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
-					brightnessUnit, autoScale, scale, i == 0
+					brightnessUnit, i == 0
 				);
 				{
 					os << LogIO::NORMAL << "Scaling pixel values by ";
@@ -414,13 +413,13 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				<< GaussianBeam(kernelParms) << " to reach a target resolution of "
 				<< GaussianBeam(originalParms) << LogIO::POST;
 			kernelVolume = _makeKernel(
-				kernel, kernelType, kernelParms, pixelAxes, imageIn
+				kernel, kernelType, pixelAxes, kernelParms, imageIn
 			);
 		}
         T scaleFactor = _dealWithRestoringBeam(
 			os, brightnessUnitOut, beamOut, kernel, kernelVolume,
 			kernelType, kernelParms, pixelAxes, cSys, inputBeam,
-			brightnessUnit, autoScale, scale, True
+			brightnessUnit, True
 		);
         os << LogIO::NORMAL << "Scaling pixel values by ";
         if (logFactors) {
@@ -465,13 +464,11 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	imageOut->setImageInfo(iiOut);
 }
 
-// Private functions
-
 template <class T> T Image2DConvolver<T>::_makeKernel(
 	Array<T>& kernelArray,
 	VectorKernel::KernelTypes kernelType,
-	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes,
+	const std::vector<Quantity>& parameters,
 	const ImageInterface<T>& imageIn
 ) const {
 
@@ -487,17 +484,17 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
 
 // Use the reference value for the shape conversion direction
 
-   Vector<Quantum<Double> > wParameters(5);
+   Vector<Quantity> wParameters(5);
    for (uInt i=0; i<3; i++) {
-      wParameters(i+2) = parameters(i);
+      wParameters(i+2) = parameters[i];
    }
 //
    const Vector<Double> refVal = cSys.referenceValue();
    const Vector<String> units = cSys.worldAxisUnits();
    Int wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(0));
-   wParameters(0) = Quantum<Double>(refVal(wAxis), units(wAxis));
+   wParameters(0) = Quantity(refVal(wAxis), units(wAxis));
    wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
-   wParameters(1) = Quantum<Double>(refVal(wAxis), units(wAxis));
+   wParameters(1) = Quantity(refVal(wAxis), units(wAxis));
    SkyComponentFactory::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
 
 // Create n-Dim kernel array shape
@@ -523,7 +520,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	const Vector<Quantity>& parameters,
 	const IPosition& pixelAxes, const CoordinateSystem& cSys,
 	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
-	Bool autoScale, Double scale, Bool emitMessage
+	Bool emitMessage
 ) const {
 	os << LogOrigin(CLASS_NAME, __func__);
 	// Find out if convolution axes hold the sky.  Scaling from
@@ -573,6 +570,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	const auto& refPix = cSys.referencePixel();
 	T scaleFactor = 1;
 	brightnessUnitOut = brightnessUnitIn.getName();
+	auto autoScale = _scale <= 0;
 	if (hasSky && bUnitIn.contains("/PIXEL")) {
 		// Easy case.  Peak of convolution kernel must be unity
 		// and output units are Jy/beam.  All other cases require
@@ -599,7 +597,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		beamOut = GaussianBeam(majAx, minAx, parameters(2));
 		// Input p.a. is positive N->E
 		if (! autoScale) {
-			scaleFactor = static_cast<T>(scale);
+			scaleFactor = static_cast<T>(_scale);
 			os << LogIO::WARN << "Autoscaling is recommended for Jy/pixel convolution"
 				<< LogIO::POST;
 		}
@@ -654,7 +652,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			// Scale kernel
 			T maxValOut = max(beamMatrixOut);
 
-			scaleFactor = autoScale ? 1/maxValOut : (T)scale;
+			scaleFactor = autoScale ? 1/maxValOut : (T)_scale;
 			// Fit output beam matrix with a Gaussian, for better or worse
 			// Fit2D is not templated.  So all our templating is useless
 			// other than for Float until I template Fit2D
@@ -695,7 +693,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 				scaleFactor = 1/kernelVolume;
 			}
 			else {
-				scaleFactor = (T)scale;
+				scaleFactor = (T)_scale;
 			}
 		}
 	}

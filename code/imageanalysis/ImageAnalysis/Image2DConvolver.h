@@ -154,8 +154,7 @@ private:
 
 	void _convolve(
 		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
-		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
-		const Vector<Quantity>& parameters, Bool autoScale, Double scale
+		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes
 	) const;
 
 	// returns the value by which pixel values will be scaled
@@ -166,7 +165,7 @@ private:
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
 		const GaussianBeam& beamIn, const Unit& brightnessUnit,
-		Bool autoscale, Double scale, Bool emitMessage
+		Bool emitMessage
 	) const;
 
 	T _fillKernel (
@@ -186,8 +185,8 @@ private:
 	T _makeKernel(
 		Array<T>& kernel,
 		VectorKernel::KernelTypes kernelType,
-		const Vector<Quantity>& parameters,
 		const IPosition& axes,
+		const std::vector<Quantity>& parameters,
 		const ImageInterface<T>& inImage
 	) const;
 
@@ -199,8 +198,8 @@ private:
 
 	uInt _sizeOfGaussian(const Double width, const Double nSigma) const;
 
-	Vector<Quantity> _getConvolvingBeamForTargetResolution(
-		const Vector<Quantity>& targetBeamParms,
+	std::vector<Quantity> _getConvolvingBeamForTargetResolution(
+		const std::vector<Quantity>& targetBeamParms,
 		const GaussianBeam& inputBeam
 	) const;
 };
