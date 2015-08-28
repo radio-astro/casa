@@ -136,52 +136,44 @@ template <class T> void Image2DConvolver<T>::setKernel(
 }
 
 template <class T> SPIIT Image2DConvolver<T>::convolve() {
-	//_scale = _scale <= 0 ? 1.0 : _scale;
+	ThrowIf(
+		_axes.nelements() != 2,
+		"You must give two pixel axes to convolve"
+	);
+	Vector<Double> inc = this->_getImage()->coordinates().increment();
+	Vector<String> units = this->_getImage()->coordinates().worldAxisUnits();
+	ThrowIf(
+		! near (
+			Quantity(fabs(inc[_axes[0]]), units[_axes[0]]),
+			Quantity(fabs(inc[_axes[1]]), units[_axes[1]])
+		),
+		"Pixels must be square, please regrid your image so that they are"
+	);
 	auto subImage = SubImageFactory<Float>::createImage(
 		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
 		this->_getDropDegen(), False, False, this->_getStretch()
 	);
-	/*
-	Vector<Quantity> parameters(3);
-	parameters(0) = _major;
-	parameters(1) = _minor;
-	parameters(2) = _pa;
-	*/
+	const Int nDim = subImage->ndim();
+	ThrowIf(
+		_axes(0) < 0 || _axes(0) >= nDim
+		|| _axes(1) < 0 || _axes(1) >= nDim,
+		"The pixel axes " + String::toString(_axes) + " are illegal"
+	);
+	ThrowIf(
+		nDim < 2,
+		"The image axes must have at least 2 pixel axes"
+	);
 	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
 	Image2DConvolver<Float>::_convolve(
-		*this->_getLog(), outImage, *subImage, _type, _axes
+		*this->_getLog(), outImage, *subImage, _type
 	);
 	return this->_prepareOutputImage(*outImage);
 }
 
 template <class T> void Image2DConvolver<T>::_convolve(
 	LogIO& os, SPIIT imageOut,
-	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType,
-	const IPosition& pixelAxes
+	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType
 ) const {
-	ThrowIf(
-		pixelAxes.nelements() != 2,
-		"You must give two pixel axes to convolve"
-	);
-	const Int nDim = imageIn.ndim();
-	ThrowIf(
-		pixelAxes(0) < 0 || pixelAxes(0) >= nDim
-		|| pixelAxes(1) < 0 || pixelAxes(1) >= nDim,
-		"The pixel axes " + String::toString(pixelAxes) + " are illegal"
-	);
-	ThrowIf(
-		nDim < 2,
-		"The image axes must have at least 2 pixel axes"
-	);
-	Vector<Double> inc = imageIn.coordinates().increment();
-	Vector<String> units = imageIn.coordinates().worldAxisUnits();
-	ThrowIf(
-		! near (
-			Quantity(fabs(inc[pixelAxes[0]]), units[pixelAxes[0]]),
-			Quantity(fabs(inc[pixelAxes[1]]), units[pixelAxes[1]])
-		),
-		"Pixels must be square, please regrid your image so that they are"
-	);
 	const IPosition& inShape = imageIn.shape();
 	const IPosition& outShape = imageOut->shape();
 	ThrowIf(
@@ -200,20 +192,20 @@ template <class T> void Image2DConvolver<T>::_convolve(
 	std::vector<Quantity> originalParms{_major, _minor, _pa};
 	if (! _targetres) {
 		kernelVolume = _makeKernel(
-			kernel, kernelType, pixelAxes, originalParms, imageIn
+			kernel, kernelType, originalParms, imageIn
 		);
 	}
 
 
 	const CoordinateSystem& cSys = imageIn.coordinates();
 	if (_major.getUnit().startsWith("pix")) {
-		auto inc = cSys.increment()[pixelAxes[0]];
-		auto unit = cSys.worldAxisUnits()[pixelAxes[0]];
+		auto inc = cSys.increment()[_axes[0]];
+		auto unit = cSys.worldAxisUnits()[_axes[0]];
 		originalParms[0] = _major.getValue() * Quantity(abs(inc), unit);
 	}
 	if (_minor.getUnit().startsWith("pix")) {
-		auto inc = cSys.increment()[pixelAxes[1]];
-		auto unit = cSys.worldAxisUnits()[pixelAxes[1]];
+		auto inc = cSys.increment()[_axes[1]];
+		auto unit = cSys.worldAxisUnits()[_axes[1]];
 		originalParms[1] = _minor.getValue() * Quantity(abs(inc), unit);
 	}
 
@@ -314,7 +306,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 						originalParms, inputBeam
 					);
 					kernelVolume = _makeKernel(
-						kernel, kernelType, pixelAxes, kernelParms, imageIn
+						kernel, kernelType, kernelParms, imageIn
 					);
 
 					os << ": Convolving image which has a beam of " << inputBeam
@@ -329,7 +321,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 			if (doConvolve) {
 				T scaleFactor = _dealWithRestoringBeam(
 					os, brightnessUnitOut, beamOut, kernel, kernelVolume,
-					kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
+					kernelType, kernelParms, subCsys, inputBeam,
 					brightnessUnit, i == 0
 				);
 				{
@@ -413,12 +405,12 @@ template <class T> void Image2DConvolver<T>::_convolve(
 				<< GaussianBeam(kernelParms) << " to reach a target resolution of "
 				<< GaussianBeam(originalParms) << LogIO::POST;
 			kernelVolume = _makeKernel(
-				kernel, kernelType, pixelAxes, kernelParms, imageIn
+				kernel, kernelType, kernelParms, imageIn
 			);
 		}
         T scaleFactor = _dealWithRestoringBeam(
 			os, brightnessUnitOut, beamOut, kernel, kernelVolume,
-			kernelType, kernelParms, pixelAxes, cSys, inputBeam,
+			kernelType, kernelParms, cSys, inputBeam,
 			brightnessUnit, True
 		);
         os << LogIO::NORMAL << "Scaling pixel values by ";
@@ -446,7 +438,7 @@ template <class T> void Image2DConvolver<T>::_convolve(
 		// Overwrite some bits and pieces in the output image to do with the
 		// restoring beam  and image units
 		Bool holdsOneSkyAxis;
-		Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+		Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, _axes.asVector());
 		if (hasSky && ! beamOut.isNull()) {
 			iiOut.setRestoringBeam(beamOut);
 		}
@@ -467,7 +459,6 @@ template <class T> void Image2DConvolver<T>::_convolve(
 template <class T> T Image2DConvolver<T>::_makeKernel(
 	Array<T>& kernelArray,
 	VectorKernel::KernelTypes kernelType,
-	const IPosition& pixelAxes,
 	const std::vector<Quantity>& parameters,
 	const ImageInterface<T>& imageIn
 ) const {
@@ -491,26 +482,26 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
 //
    const Vector<Double> refVal = cSys.referenceValue();
    const Vector<String> units = cSys.worldAxisUnits();
-   Int wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(0));
+   Int wAxis = cSys.pixelAxisToWorldAxis(_axes(0));
    wParameters(0) = Quantity(refVal(wAxis), units(wAxis));
-   wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
+   wAxis = cSys.pixelAxisToWorldAxis(_axes(1));
    wParameters(1) = Quantity(refVal(wAxis), units(wAxis));
-   SkyComponentFactory::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
+   SkyComponentFactory::worldWidthsToPixel (dParameters, wParameters, cSys, _axes, False);
 
 // Create n-Dim kernel array shape
 
-   IPosition kernelShape = _shapeOfKernel (kernelType, dParameters, imageIn.ndim(), pixelAxes);
+   IPosition kernelShape = _shapeOfKernel (kernelType, dParameters, imageIn.ndim());
 
 // Create kernel array. We will fill the n-Dim array (shape non-unity
 // only for pixelAxes) through its 2D Matrix incarnation. Aren't we clever.
    kernelArray = 0;
    kernelArray.resize(kernelShape);
-   Array<T> kernelArray2 = kernelArray.nonDegenerate (pixelAxes);
+   Array<T> kernelArray2 = kernelArray.nonDegenerate (_axes);
    Matrix<T> kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
 
 // Fill kernel Matrix with functional (height unity)
 
-   return _fillKernel (kernelMatrix, kernelType, kernelShape, pixelAxes, dParameters);
+   return _fillKernel (kernelMatrix, kernelType, kernelShape, dParameters);
 }
 
 template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
@@ -518,7 +509,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	GaussianBeam& beamOut, const Array<T>& kernelArray,
 	const T kernelVolume, const VectorKernel::KernelTypes,
 	const Vector<Quantity>& parameters,
-	const IPosition& pixelAxes, const CoordinateSystem& cSys,
+	const CoordinateSystem& cSys,
 	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
 	Bool emitMessage
 ) const {
@@ -526,7 +517,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	// Find out if convolution axes hold the sky.  Scaling from
 	// Jy/beam and Jy/pixel only really makes sense if this is True
 	Bool holdsOneSkyAxis;
-	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, _axes.asVector());
 	if (hasSky) {
 		const DirectionCoordinate dc = cSys.directionCoordinate();
 		auto inc = dc.increment();
@@ -581,15 +572,15 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		auto minAx = parameters(1);
 		if (majAx.getFullUnit().getName() == "pix") {
 			Vector<Double> pixelParameters(5);
-			pixelParameters(0) = refPix(pixelAxes(0));
-			pixelParameters(1) = refPix(pixelAxes(1));
+			pixelParameters(0) = refPix(_axes(0));
+			pixelParameters(1) = refPix(_axes(1));
 			pixelParameters(2) = parameters(0).getValue();
 			pixelParameters(3) = parameters(1).getValue();
 			pixelParameters(4) = parameters(2).getValue(Unit("rad"));
 			GaussianBeam worldParameters;
 			SkyComponentFactory::pixelWidthsToWorld(
 				worldParameters, pixelParameters,
-				cSys, pixelAxes, False
+				cSys, _axes, False
 			);
 			majAx = worldParameters.getMajor();
 			minAx = worldParameters.getMinor();
@@ -612,22 +603,22 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			Vector<Quantity> wParameters(5);
 			const Vector<Double> refVal = cSys.referenceValue();
 			const Vector<String> units = cSys.worldAxisUnits();
-			auto wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(0));
+			auto wAxis = cSys.pixelAxisToWorldAxis(_axes(0));
 			wParameters(0) = Quantity(refVal(wAxis), units(wAxis));
-			wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
+			wAxis = cSys.pixelAxisToWorldAxis(_axes(1));
 			wParameters(1) = Quantity(refVal(wAxis), units(wAxis));
 			wParameters(2) = beamIn.getMajor();
 			wParameters(3) = beamIn.getMinor();
 			wParameters(4) = beamIn.getPA(True);
 			Vector<Double> dParameters;
 			SkyComponentFactory::worldWidthsToPixel(
-				dParameters, wParameters, cSys, pixelAxes, False
+				dParameters, wParameters, cSys, _axes, False
 			);
 			// Create 2-D beam array shape
-			IPosition dummyAxes(2, 0, 1);
+			// IPosition dummyAxes(2, 0, 1);
 			auto beamShape = _shapeOfKernel(
 				VectorKernel::GAUSSIAN,
-				dParameters, 2, dummyAxes
+				dParameters, 2 /*, dummyAxes */
 			);
 
 			// Create beam Matrix and fill with height unity
@@ -635,13 +626,13 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			Matrix<T> beamMatrixIn(beamShape(0), beamShape(1));
 			_fillKernel(
 				beamMatrixIn, VectorKernel::GAUSSIAN, beamShape,
-                dummyAxes, dParameters
+                /*dummyAxes,*/ dParameters
 			);
 
 			auto shape = beamMatrixIn.shape();
 
 			// Get 2-D version of convolution kenrel
-			auto kernelArray2 = kernelArray.nonDegenerate(pixelAxes);
+			auto kernelArray2 = kernelArray.nonDegenerate(_axes);
 			auto kernelMatrix = static_cast<Matrix<T> >(kernelArray2);
 			// Convolve input restoring beam array by convolution kernel array
 			Matrix<T> beamMatrixOut;
@@ -675,13 +666,13 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			auto bSolution = fitter.availableSolution();
 			// Convert to world units.
 			Vector<Double> pixelParameters(5);
-			pixelParameters(0) = refPix(pixelAxes(0));
-			pixelParameters(1) = refPix(pixelAxes(1));
+			pixelParameters(0) = refPix(_axes(0));
+			pixelParameters(1) = refPix(_axes(1));
 			pixelParameters(2) = bSolution(3);
 			pixelParameters(3) = bSolution(4);
 			pixelParameters(4) = bSolution(5);
 			SkyComponentFactory::pixelWidthsToWorld(
-				beamOut, pixelParameters, cSys, pixelAxes, False
+				beamOut, pixelParameters, cSys, _axes, False
 			);
 			if (brightnessUnitIn.getName().contains("K")) {
 				scaleFactor *= beamIn.getArea("arcsec2")/beamOut.getArea("arcsec2");
@@ -741,7 +732,7 @@ template <class T> void Image2DConvolver<T>::_checkKernelParameters(
 template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 	const VectorKernel::KernelTypes kernelType,
 	const Vector<Double>& parameters,
-	const uInt ndim, const IPosition& axes
+	const uInt ndim
 ) const {
 //
 // Work out how big the array holding the kernel should be.
@@ -767,9 +758,8 @@ template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 // in the correct axis locations
 
    IPosition shape(ndim,1);
-   shape(axes(0)) = n; 
-   shape(axes(1)) = n;
-//
+   shape(_axes(0)) = n;
+   shape(_axes(1)) = n;
    return shape;
 }
    
@@ -788,15 +778,14 @@ template <class T> T Image2DConvolver<T>::_fillKernel(
 	Matrix<T>& kernelMatrix,
 	VectorKernel::KernelTypes kernelType,
 	const IPosition& kernelShape,
-	const IPosition& axes,
 	const Vector<Double>& parameters
 ) const {
 
 // Centre functional in array (shape is odd)
 // Need to think about these T castes for Complex images
 
-   T xCentre = static_cast<T>((kernelShape(axes(0)) - 1) / 2.0);
-   T yCentre = static_cast<T>((kernelShape(axes(1)) - 1) / 2.0);
+   T xCentre = static_cast<T>((kernelShape(_axes(0)) - 1) / 2.0);
+   T yCentre = static_cast<T>((kernelShape(_axes(1)) - 1) / 2.0);
    T height = static_cast<T>(1.0);
 
 // Create functional.  We only have gaussian2d functionals
