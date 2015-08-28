@@ -252,7 +252,7 @@ def split2(vis,
                         mytb.putcol('COMMAND', cmds)
 
                 else:
-                    casalog.post('FLAG_CMD table contains spw selection by name. Will not update it!')
+                    casalog.post('FLAG_CMD table contains spw selection by name. Will not update it!','DEBUG')
                 
             mytb.close()
             

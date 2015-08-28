@@ -485,7 +485,7 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
                         mytb.putcol('COMMAND', cmds)
 
                 else:
-                    casalog.post('FLAG_CMD table contains spw selection by name. Will not update it!')
+                    casalog.post('FLAG_CMD table contains spw selection by name. Will not update it!','DEBUG')
 
             mytb.close()
             
