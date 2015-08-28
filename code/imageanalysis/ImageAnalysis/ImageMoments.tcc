@@ -240,17 +240,31 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
+		/*
 		SHARED_PTR<TempImage<T> > imageCopy(
 			new TempImage<Float>(
 				TiledShape(_image->shape()), _image->coordinates()
 			)
 		);
 		imageCopy->set(0);
+		*/
+		Image2DConvolver<Float> convolver(_image, nullptr, "", "", False);
+		auto dirAxes = _image->coordinates().directionAxesNumbers();
+		convolver.setAxes(std::make_pair(dirAxes[0], dirAxes[1]));
+		convolver.setKernel(
+			"gaussian", maxBeam.getMajor(), maxBeam.getMinor(),
+			maxBeam.getPA(True)
+		);
+		convolver.setScale(-1);
+		convolver.setTargetRes(True);
+		auto imageCopy = convolver.convolve();
+		/*
 		Image2DConvolver<T>::convolve(
 			os_p, imageCopy, *_image, VectorKernel::GAUSSIAN,
 			_image->coordinates().directionAxesNumbers(),
 			maxBeam.toVector(), True, -1.0, True, True
 		);
+		*/
 		// replace the input image pointer with the convolved image pointer
 		// and proceed using the convolved image as if it were the input
 		// image

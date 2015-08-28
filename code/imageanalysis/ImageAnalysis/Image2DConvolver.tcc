@@ -152,14 +152,14 @@ template <class T> SPIIT Image2DConvolver<T>::convolve() {
 	parameters(1) = _minor;
 	parameters(2) = _pa;
 	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
-	Image2DConvolver<Float>::convolve(
+	Image2DConvolver<Float>::_convolve(
 		*this->_getLog(), outImage, *subImage, _type, _axes,
 		parameters, autoScale, scale, True, _targetres, _suppressWarnings
 	);
 	return this->_prepareOutputImage(*outImage);
 }
 
-template <class T> void Image2DConvolver<T>::convolve(
+template <class T> void Image2DConvolver<T>::_convolve(
 	LogIO& os, SPIIT imageOut,
 	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,

@@ -36,9 +36,8 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-//# Forward Declarations
 template <class T> class ImageInterface;
 template <class T> class Matrix;
 template <class T> class Vector;
@@ -48,7 +47,6 @@ class CoordinateSystem;
 class ImageInfo;
 class Unit;
 class GaussianBeam;
-
 
 // <summary>
 // This class does 2D convolution of an image by a functional form
@@ -109,20 +107,10 @@ public:
 
 	Image2DConvolver &operator=(const Image2DConvolver<T> &other) = delete;
 
-    // DEPRECATED. Use the object method instead. Convolve.   If the output
-	// image needs a mask and doesn't have one,
-	// it will be given one if possible.  The miscInfo, imageInfo,
-	// units and logger will be copied from the input to the output
-	// unless you indicate not to (copyMiscellaneous).
-	static void convolve(
-		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
-		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
-		const Vector<Quantity>& parameters, Bool autoScale, Double scale,
-		Bool copyMiscellaneous=True, Bool targetres=False, Bool suppressWarnings=False
-	);
-
 	SPIIT convolve();
 
+	// type is a string that starts with "g" (gaussian), "b" (boxcar), or "h" (hanning),
+	// and is case insensitive
 	void setKernel(
 		const String& type, const Quantity& major, const Quantity& minor,
 		const Quantity& pa
@@ -162,6 +150,13 @@ private:
 	static void _checkKernelParameters(
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters
+	);
+
+	static void _convolve(
+		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
+		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
+		const Vector<Quantity>& parameters, Bool autoScale, Double scale,
+		Bool copyMiscellaneous, Bool targetres, Bool suppressWarnings
 	);
 
 	// returns the value by which pixel values will be scaled
