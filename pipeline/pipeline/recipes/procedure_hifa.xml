@@ -113,6 +113,61 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">cont</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">parallel</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_findcont</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">parallel</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">parallel</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">mfs</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">parallel</Keyword>
+                <Value xmlns="">false</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
