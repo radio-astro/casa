@@ -345,8 +345,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         agent_summaries = dict((v['name'], v) for v in summary_dict.values())
         
-        print "AGENT SUMMARIES: ", agent_summaries
- 
         ordered_agents = ['before', 'anos', 'qa0', 'online',  'template', 'autocorr',
                           'shadow', 'intents', 'edgespw', 'clip', 'quack', 
                           'baseband']
@@ -354,8 +352,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         summary_reps = [agent_summaries[agent] 
                         for agent in ordered_agents 
                         if agent in agent_summaries]
-
-        print "SUMMARY REPS: ", summary_reps
 
         # return the results object, which will be used for the weblog
         return FlagDeterBaseResults(summary_reps, flag_cmds)
