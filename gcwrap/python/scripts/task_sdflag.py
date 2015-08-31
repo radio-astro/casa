@@ -221,7 +221,26 @@ class sdflag_worker(sdutil.sdtask_template):
 
     def save(self):
         self.scan.set_selection(None)
-        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+        #sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+        sdutil.assert_outfile_canoverwrite_or_nonexistent(self.project,
+                                                          self.outform,
+                                                          self.overwrite)
+        outform_local = self.outform.upper()
+        if outform_local == 'MS': outform_local = 'MS2'
+        if outform_local not in ['ASAP','ASCII','MS2','SDFITS']:
+            outform_local = 'ASAP'
+
+        # SHOULD NOT remove infile if disk storage and infile==outfile
+        outfilename = sdutil.get_abspath(self.project)
+        if self.overwrite and os.path.exists(outfilename):
+            if not self.is_disk_storage or \
+                    (outfilename != sdutil.get_abspath(self.infile)):
+                os.system('rm -rf %s' % outfilename)
+
+        self.scan.save(self.project, outform_local, self.overwrite)
+
+        if outform_local!='ASCII':
+            casalog.post('Wrote output %s file %s'%(outform_local,self.project))
 
     def prior_plot(self):
         nr = self.scan.nrow()
