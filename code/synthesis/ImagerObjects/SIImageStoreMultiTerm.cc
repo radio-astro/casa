@@ -655,11 +655,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( resetweight && itsWeights[tix] ) weight(tix)->set(0.0);
 
 	if( tix < itsNTerms ) {
-	    if( resetresidual ) residual(tix)->set(0.0);
-	  }
-      }
+	  if( resetresidual ) {
+	    removeMask( residual(tix) );
+	    residual(tix)->set(0.0);
+	  } 
+	}
+      }//nterms
   }
-
+  
   void SIImageStoreMultiTerm::addImages( SHARED_PTR<SIImageStore> imagestoadd,
 					 Bool addpsf, Bool addresidual, Bool addweight, Bool adddensity)
   {
@@ -770,6 +773,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    residual(tix)->copyData(ratio);
 	  }
+
+	if( (residual(tix)->getDefaultMask()=="") && hasPB())
+	  {copyMask(pb(),residual(tix));}
+
       }
     // createMask
   }
@@ -884,7 +891,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 		// Make a mask for the alpha image
 		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
-		
+		removeMask( alpha() );
 		createMask( lemask, (alpha()) );
 
 		/////////////////////////////////////////////////////////
@@ -900,6 +907,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    LatticeExpr<Float> alphacalcerror( abs(alphacalc) * sqrt( ( (*residual(0)*mask1)/(*image(0)+mask0) )*( (*residual(0)*mask1)/(*image(0)+mask0) ) + ( (*residual(1)*mask1)/(*image(1)+mask0) )*( (*residual(1)*mask1)/(*image(1)+mask0) )  ) );
 		    alphaerror()->copyData(alphacalcerror);
 		    alphaerror()->setImageInfo(ii);
+		    removeMask(alphaerror());
 		    createMask(lemask, alphaerror());
 		    //		    alphaerror()->table().unmarkForDelete();      
 		    os << "Written Spectral Index Error Image : " << alphaerror()->name() << LogIO::POST;
@@ -915,6 +923,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    beta()->copyData(betacalc);
 		    beta()->setImageInfo(ii);
 		    //imbeta.setUnits(Unit("Spectral Curvature"));
+		    removeMask(beta());
 		    createMask(lemask, beta());
 		    //	    beta()->table().unmarkForDelete();
 		    
