@@ -360,7 +360,6 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
 ) {
     LogOrigin myOrigin("ImageMoments", __func__);
     os_p << myOrigin;
-
     if (!goodParameterStatus_p) {
         // FIXME goodness, why are we waiting so long to throw an exception if this
         // is the case?
@@ -381,35 +380,27 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
     }
     os_p << myOrigin;
-
     String momentAxisUnits = cSys.worldAxisUnits()(worldMomentAxis_p);
     os_p << LogIO::NORMAL << endl << "Moment axis type is "
-            << cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
-
+        << cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
     // If the moment axis is a spectral axis, indicate we want to convert to velocity
-
     convertToVelocity_p = momentAxis_p == spectralAxis;
     // Check the user's requests are allowed
-
     if (!checkMethod()) {
         throw AipsError(error_p);
     }
-
     // Check that input and output image names aren't the same.
     // if there is only one output image
-
     if (moments_p.nelements() == 1 && !doTemp) {
         if (!outName.empty() && (outName == _image->name())) {
             throw AipsError("Input image and output image have same name");
         }
     }
-
     auto smoothClipMethod = False;
     auto windowMethod = False;
     auto fitMethod = False;
     auto clipMethod = False;
     auto doPlot = plotter_p.isAttached();
-
     if (doSmooth_p && !doWindow_p) {
         smoothClipMethod = True;
     }
@@ -422,12 +413,10 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     else {
         clipMethod = True;
     }
-
     // We only smooth the image if we are doing the smooth/clip method
     // or possibly the interactive window method.  Note that the convolution
     // routines can only handle convolution when the image fits fully in core
     // at present.
-
     PtrHolder<ImageInterface<T> > pSmoothedImageHolder;
     ImageInterface<T>* pSmoothedImage = 0;
     String smoothName;
@@ -436,10 +425,8 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             throw AipsError(error_p);
         }
         pSmoothedImage = pSmoothedImageHolder.ptr();
-
         // Find the auto Y plot range.   The smooth & clip and the window
         // methods only plot the smoothed data.
-
         if (doPlot && fixedYLimits_p && (smoothClipMethod || windowMethod)) {
             ImageStatistics<T> stats(*pSmoothedImage, False);
             Array<T> data;
@@ -449,10 +436,8 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             yMax_p = data(IPosition(data.nelements(),0));
         }
     }
-
     // Find the auto Y plot range if not smoothing and stretch
     // limits for plotting
-
     if (fixedYLimits_p && doPlot) {
         if (!doSmooth_p && (clipMethod || windowMethod || fitMethod)) {
             ImageStatistics<T> stats(*_image, False);
@@ -467,33 +452,23 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             yMax_p = data(IPosition(data.nelements(),0));
         }
     }
-
     // Set output images shape and coordinates.
-
     IPosition outImageShape;
     const auto cSysOut = this->makeOutputCoordinates(
         outImageShape, cSys, _image->shape(),
         momentAxis_p, removeAxis
     );
-
     auto nMoments = moments_p.nelements();
-
-
-
     // Resize the vector of pointers for output images
     std::vector<std::unique_ptr<MaskedLattice<T> > > outPt(nMoments);
     // Loop over desired output moments
-
     String suffix;
     Bool goodUnits;
     Bool giveMessage = True;
     const auto imageUnits = _image->units();
-
     for (uInt i=0; i<nMoments; ++i) {
-
         // Set moment image units and assign pointer to output moments array
         // Value of goodUnits is the same for each output moment image
-
         Unit momentUnits;
         goodUnits = this->setOutThings(
             suffix, momentUnits, imageUnits, momentAxisUnits,
@@ -507,13 +482,16 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
             if (moments_p.nelements() == 1) {
                 if (outName.empty()) {
                     outFileName = in + suffix;
-                } else {
+                }
+                else {
                     outFileName = outName;
                 }
-            } else {
+            }
+            else {
                 if (outName.empty()) {
                     outFileName = in + suffix;
-                } else {
+                }
+                else {
                     outFileName = outName + suffix;
                 }
             }
@@ -553,12 +531,9 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
 
         outPt[i] = move(imgp);
     }
-
-
     // If the user is using the automatic, non-fitting window method, they need
     // a good assement of the noise.  The user can input that value, but if
     // they don't, we work it out here.
-
     T noise;
     if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
         if (pSmoothedImage) {
@@ -575,33 +550,35 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         }
         stdDeviation_p = noise;
     }
-
-
     // Set up some plotting things
-
     if (doPlot) {
         plotter_p.subp(nxy_p(0), nxy_p(1));
         plotter_p.ask(True);
         plotter_p.sch(1.5);
         plotter_p.vstd();
     }
-
-
     // Create appropriate MomentCalculator object
     os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
     PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
     if (clipMethod || smoothClipMethod) {
-        pMomentCalculatorHolder.set(new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.size()),
-                False, False);
-    } else if (windowMethod) {
-        pMomentCalculatorHolder.set(new MomentWindow<T>(pSmoothedImage, *this, os_p, outPt.size()),
-                False, False);
-    } else if (fitMethod) {
-        pMomentCalculatorHolder.set(new MomentFit<T>(*this, os_p, outPt.size()), False, False);
+        pMomentCalculatorHolder.set(
+            new MomentClip<T>(pSmoothedImage, *this, os_p, outPt.size()),
+            False, False
+        );
     }
-
+    else if (windowMethod) {
+        pMomentCalculatorHolder.set(
+            new MomentWindow<T>(pSmoothedImage, *this, os_p, outPt.size()),
+            False, False
+        );
+    }
+    else if (fitMethod) {
+        pMomentCalculatorHolder.set(
+            new MomentFit<T>(*this, os_p, outPt.size()),
+            False, False
+        );
+    }
     // Iterate optimally through the image, compute the moments, fill the output lattices
-
     MomentCalcBase<T>* pMomentCalculator = pMomentCalculatorHolder.ptr();
     ImageMomentsProgress* pProgressMeter = 0;
     if (showProgress_p){
@@ -615,20 +592,18 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     for (uInt i=0; i<n; ++i) {
         ptrBlock[i] = outPt[i].get();
     }
-
-    LatticeApply<T>::lineMultiApply(ptrBlock, *_image, *pMomentCalculator, momentAxis_p, pProgressMeter);
-
+    LatticeApply<T>::lineMultiApply(
+        ptrBlock, *_image, *pMomentCalculator,
+        momentAxis_p, pProgressMeter
+    );
     if (windowMethod || fitMethod) {
         if (pMomentCalculator->nFailedFits() != 0) {
             os_p << LogIO::NORMAL << "There were " <<  pMomentCalculator->nFailedFits() << " failed fits" << LogIO::POST;
         }
     }
     if (pProgressMeter != 0) delete pProgressMeter;
-
     if (pSmoothedImage) {
-
         // Remove the smoothed image file if they don't want to save it
-
         pSmoothedImageHolder.clear(True);
         if (smoothOut_p.empty()) {
             Directory dir(smoothName);
@@ -638,62 +613,50 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     return outPt;
 }
 
-// Private member functions
-
 template <class T> 
-Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage,
-        String& smoothName)
-        //
-        // Smooth image.   Input masked pixels are zerod before smoothing.
-        // The output smoothed image is masked as well to reflect
-        // the input mask.
-        //
-        // Output
-        //   pSmoothedImage PtrHolder for smoothed Lattice
-        //   smoothName     Name of smoothed image file
-        //   Bool           True for success
-        {
-
+Bool ImageMoments<T>::smoothImage (
+    PtrHolder<ImageInterface<T> >& pSmoothedImage,
+    String& smoothName
+) {
+    // Smooth image.   Input masked pixels are zerod before smoothing.
+    // The output smoothed image is masked as well to reflect
+    // the input mask.
+    // Output
+    //   pSmoothedImage PtrHolder for smoothed Lattice
+    //   smoothName     Name of smoothed image file
+    //   Bool           True for success
     // Check axes
-
     Int axMax = max(smoothAxes_p) + 1;
     if (axMax > Int(_image->ndim())) {
         error_p = "You have specified an illegal smoothing axis";
         return False;
     }
-
-
     // Create smoothed image as a PagedImage.  We delete it later
     // if the user doesn't want to save it
-
     if (smoothOut_p.empty()) {
-        //
         // We overwrite this image if it exists.
-        //
         File inputImageName(_image->name());
         const String path = inputImageName.path().dirName() + "/";
         Path fileName = File::newUniqueName(path, String("ImageMoments_Smooth_"));
         smoothName = fileName.absoluteName();
-    } else {
-        //
+    }
+    else {
         // This image has already been checked in setSmoothOutName
         // to not exist
-        //
         smoothName = smoothOut_p;
     }
-
-    pSmoothedImage.set(new PagedImage<T>(_image->shape(),
-            _image->coordinates(), smoothName),
-            False, False);
-    //
+    pSmoothedImage.set(
+        new PagedImage<T>(
+            _image->shape(),
+            _image->coordinates(), smoothName
+        ), False, False
+    );
     ImageInterface<T>* pSmIm = pSmoothedImage.ptr();
     pSmIm->setMiscInfo(_image->miscInfo());
     if (!smoothOut_p.empty()) {
         os_p << LogIO::NORMAL << "Created " << smoothName << LogIO::POST;
     }
-
     // Do the convolution.  Conserve flux.
-
     Bool autoScale = True;
     Bool useImageShapeExactly = False;
     SepImageConvolver<T> sic(*_image, os_p, True);
@@ -704,36 +667,27 @@ Bool ImageMoments<T>::smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage
     }
     sic.convolve(*pSmIm);
     return True;
-        }
-
+}
 
 template <class T> 
-Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
-        ImageInterface<T>& image)
-        //
-        // Determine the noise level in the image by first making a histogram of
-        // the image, then fitting a Gaussian between the 25% levels to give sigma
-        //
-        {
-
+Bool ImageMoments<T>::whatIsTheNoise (
+    T& sigma, ImageInterface<T>& image
+) {
+    // Determine the noise level in the image by first making a histogram of
+    // the image, then fitting a Gaussian between the 25% levels to give sigma
     // Find a histogram of the image
-
     ImageHistograms<T> histo(image, False);
     const uInt nBins = 100;
     histo.setNBins(nBins);
-
     // It is safe to use Vector rather than Array because
     // we are binning the whole image and ImageHistograms will only resize
     // these Vectors to a 1-D shape
-
     Vector<T> values, counts;
     if (!histo.getHistograms(values, counts)) {
         error_p = "Unable to make histogram of image";
         return False;
     }
-
     // Enter into a plot/fit loop
-
     T binWidth = values(1) - values(0);
     T xMin, xMax, yMin, yMax;
     xMin = values(0) - binWidth;
@@ -741,31 +695,24 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
     Float xMinF = this->convertT(xMin);
     Float xMaxF = this->convertT(xMax);
     LatticeStatsBase::stretchMinMax(xMinF, xMaxF);
-
     IPosition yMinPos(1), yMaxPos(1);
     minMax (yMin, yMax, yMinPos, yMaxPos, counts);
     Float yMinF = 0.0;
     Float yMaxF = this->convertT(yMax);
     yMaxF += yMaxF/20;
-
     if (plotter_p.isAttached()) {
         plotter_p.subp(1,1);
         plotter_p.swin (xMinF, xMaxF, yMinF, yMaxF);
     }
-
-
-    Bool first = True;
-    Bool more = True;
+    auto first = True;
+    auto more = True;
     T x1, x2;
     while (more) {
-
         // Plot histogram
-
         if (plotter_p.isAttached()) {
             plotter_p.page();
             this->drawHistogram (values, counts, plotter_p);
         }
-
         Int iMin = 0;
         Int iMax = 0;
         if (first) {
@@ -785,35 +732,27 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
                     break;
                 }
             }
-
             // Check range is sensible
-
             if (iMax <= iMin || abs(iMax-iMin) < 3) {
                 os_p << LogIO::NORMAL << "The image histogram is strangely shaped, fitting to all bins" << LogIO::POST;
                 iMin = 0;
                 iMax = nBins-1;
             }
-
-
             // Draw on plot
-
             if (plotter_p.isAttached()) {
                 x1 = values(iMin);
                 x2 = values(iMax);
                 this->drawVertical (x1, yMin, yMax, plotter_p);
                 this->drawVertical (x2, yMin, yMax, plotter_p);
             }
-
-        } else if (plotter_p.isAttached()) {
-
+        }
+        else if (plotter_p.isAttached()) {
             // We are redoing the fit so let the user mark where they think
             // the window fit should be done
-
             x1 = (xMin+xMax)/2;
             T y1 = (yMin+yMax)/2;
             Int i1, i2;
             i1 = i2 = 0;
-
             plotter_p.message("Mark the locations for the window");
             while (i1==i2) {
                 while (!this->getLoc(x1, y1, plotter_p)) {};
@@ -833,17 +772,12 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
                     this->drawHistogram (values, counts, plotter_p);
                 }
             }
-
-
             // Set window
-
             iMin = min(i1, i2);
             iMax = max(i1, i2);
         }
-
         // Now generate the distribution we want to fit.  Normalize to
         // peak 1 to help fitter.
-
         const uInt nPts2 = iMax - iMin + 1;
         Vector<T> xx(nPts2);
         Vector<T> yy(nPts2);
@@ -852,30 +786,20 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
             xx(i-iMin) = values(i);
             yy(i-iMin) = counts(i)/yMax;
         }
-
-
         // Create fitter
-
         NonLinearFitLM<T> fitter;
         Gaussian1D<AutoDiff<T> > gauss;
         fitter.setFunction(gauss);
-
-
         // Initial guess
-
         Vector<T> v(3);
         v(0) = 1.0;                          // height
         v(1) = values(yMaxPos(0));           // position
         v(2) = nPts2*binWidth/2;             // width
-
-
         // Fit
-
         fitter.setParameterValues(v);
         fitter.setMaxIter(50);
         T tol = 0.001;
         fitter.setCriteria(tol);
-
         Vector<T> resultSigma(nPts2);
         resultSigma = 1;
         Vector<T> solution;
@@ -887,25 +811,19 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
         }
         //      os_p << LogIO::NORMAL << "Solution=" << solution << LogIO::POST;
 
-
         // Return values of fit
-
         if (!fail && fitter.converged()) {
             sigma = T(abs(solution(2)) / sqrt(2.0));
             os_p << LogIO::NORMAL
                     << "*** The fitted standard deviation of the noise is " << sigma
                     << endl << LogIO::POST;
-
             // Now plot the fit
-
             if (plotter_p.isAttached()) {
                 Int nGPts = 100;
                 T dx = (values(nBins-1) - values(0))/nGPts;
-
                 Gaussian1D<T> gauss(solution(0), solution(1), abs(solution(2)));
                 Vector<T> xG(nGPts);
                 Vector<T> yG(nGPts);
-
                 T xx;
                 for (i=0,xx=values(0); i<nGPts; xx+=dx,i++) {
                     xG(i) = xx;
@@ -915,38 +833,38 @@ Bool ImageMoments<T>::whatIsTheNoise (T& sigma,
                 this->drawLine (xG, yG, plotter_p);
                 plotter_p.sci (1);
             }
-        } else {
+        }
+        else {
             os_p << LogIO::NORMAL << "The fit to determine the noise level failed." << endl;
             os_p << "Try inputting it directly" << endl;
-            if (plotter_p.isAttached()) os_p << "or try a different window " << LogIO::POST;
+            if (plotter_p.isAttached()) {
+                os_p << "or try a different window " << LogIO::POST;
+            }
         }
-
         // Another go
-
         if (plotter_p.isAttached()) {
             plotter_p.message("Accept (click left), redo (click middle), give up (click right)");
-
             Float xx = this->convertT(xMin+xMax)/2;
             Float yy = this->convertT(yMin+yMax)/2;
             String str;
             this->readCursor(plotter_p, xx, yy, str);
             str.upcase();
-
             if (str == "D") {
                 plotter_p.message("Redoing fit");
-            } else if (str == "X") {
+            }
+            else if (str == "X") {
                 return False;
-            } else {
+            }
+            else {
                 more = False;
             }
-        } else {
+        }
+        else {
             more = False;
         }
     }
-
     return True;
-
-        }
+}
 
 template <class T>
 void ImageMoments<T>::setProgressMonitor( ImageMomentsProgressMonitor* monitor ) {
