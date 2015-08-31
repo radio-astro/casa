@@ -245,98 +245,106 @@ class ImageMomentsProgressMonitor;
 // </todo>
  
 
-template <class T> class ImageMoments : public MomentsBase<T>
-{
+template <class T> class ImageMoments : public MomentsBase<T> {
 public:
 
-// Note that if I don't put MomentCalcBase as a forward declaration
-// and use instead  "friend class MomentCalcBase<T>"  The gnu compiler
-// fails with a typedef problem.  But I can't solve it with say
-// <src>typedef MomentCalcBase<T> gpp_type;</src>  because you can only do a 
-// typedef with an actual type, not a <tt>T</tt> !
-   friend class MomentCalcBase<T>;
+    // Note that if I don't put MomentCalcBase as a forward declaration
+    // and use instead  "friend class MomentCalcBase<T>"  The gnu compiler
+    // fails with a typedef problem.  But I can't solve it with say
+    // <src>typedef MomentCalcBase<T> gpp_type;</src>  because you can only do a
+    // typedef with an actual type, not a <tt>T</tt> !
+    friend class MomentCalcBase<T>;
 
-// Constructor takes an image and a <src>LogIO</src> object for logging purposes.
-// You specify whether output images are  automatically overwritten if pre-existing,
-// or whether an intercative choice dialog widget appears (overWriteOutput=F)
-// You may also determine whether a progress meter is displayed or not.
-   ImageMoments (const ImageInterface<T>& image, 
-                 LogIO &os,
-                 Bool overWriteOutput=False,
-                 Bool showProgress=True);
+    ImageMoments() = delete;
 
-// Copy constructor.  Uses copy semantics.
-   ImageMoments(const ImageMoments<T> &other);
+    // Constructor takes an image and a <src>LogIO</src> object for logging purposes.
+    // You specify whether output images are  automatically overwritten if pre-existing,
+    // or whether an intercative choice dialog widget appears (overWriteOutput=F)
+    // You may also determine whether a progress meter is displayed or not.
+    ImageMoments (
+        const ImageInterface<T>& image,
+        LogIO &os,
+        Bool overWriteOutput=False,
+        Bool showProgress=True
+    );
 
-// Copy constructor.  Uses copy semantics.
-   ImageMoments(ImageMoments<T> &other);
+    // Copy constructor.  Uses copy semantics.
+    ImageMoments(const ImageMoments<T> &other);
 
-// Destructor
-  ~ImageMoments();
+    // Copy constructor.  Uses copy semantics.
+    ImageMoments(ImageMoments<T> &other);
 
-// Assignment operator. USes copy semantics.
-   ImageMoments<T> &operator=(const ImageMoments<T> &other);
+    // Destructor
+    ~ImageMoments();
 
-// Set the moment axis (0 relative).  A return value of <src>False</src> 
-// indicates that the axis was not contained in the image. If you don't
-// call this function, the default state of the class is to set the 
-// moment axis to the spectral axis if it can find one.  Otherwise 
-// an error will result.
-   void setMomentAxis (const Int momentAxis);
+    // Assignment operator. USes copy semantics.
+    ImageMoments<T> &operator=(const ImageMoments<T> &other);
 
-// This function invokes smoothing of the input image.  Give <src>Int</src> 
-// arrays for the axes (0 relative) to be smoothed and the smoothing kernel 
-// types (use the <src>enum KernelTypes</src>) for each axis.  Give a
-// <src>Double</src> array for the widths (full width for BOXCAR and full 
-// width at half maximum for GAUSSIAN) in pixels of the smoothing kernels for
-// each axis.  For HANNING smoothing, you always get the quarter-half-quarter
-// kernel (no matter what you might ask for).  A return value of <src>False</src>
-// indicates that you have given an inconsistent or invalid set of smoothing 
-// parameters.  If you don't call this function the default state of the
-// class is to do no smoothing.  The kernel types are specified with
-// the VectorKernel::KernelTypes enum
-   Bool setSmoothMethod(const Vector<Int>& smoothAxes,
-                        const Vector<Int>& kernelTypes,
-                        const Vector<Quantum<Double> >& kernelWidths);
-   Bool setSmoothMethod(const Vector<Int>& smoothAxes,
-			const Vector<Int>& kernelTypes,
-			const Vector<Double>& kernelWidths);
+    // Set the moment axis (0 relative).  A return value of <src>False</src>
+    // indicates that the axis was not contained in the image. If you don't
+    // call this function, the default state of the class is to set the
+    // moment axis to the spectral axis if it can find one.  Otherwise
+    // an error will result.
+    void setMomentAxis (const Int momentAxis);
 
-// This is the function that does all the computational work.  It should be called
-// after the <src>set</src> functions.  A return value of  <src>False</src>
-// indicates that additional checking of the combined methods that you
-// have requested has shown that you have not given consistent state to the class.
-// If the axis being collapsed comes from a coordinate with one axis only,
-// the axis and its coordinate are physically removed from the output image.  Otherwise,
-// if <src>removeAxes=True</src> then the output axis is logically removed from the
-// the output CoordinateSystem.  If <src>removeAxes=False</src> then the axis
-// is retained with shape=1 and with its original coordinate information (which
-// is probably meaningless).
-//
-// The output PtrBlock will hold PagedImages or TempImages (doTemp=True).
-// It is your responsibility to delete the pointers.  
-// If doTemp is True, the outFileName is irrelevant.
-//
-// If you create PagedImages, outFileName is the root name for 
-// the output files.  Suffixes will be made up internally to append 
-// to this root.  If you only ask for one moment,
-// this will be the actual name of the output file.  If you don't set this
-// variable, the default state of the class is to set the output name root to 
-// the name of the input file.  
-   std::vector<std::unique_ptr<MaskedLattice<T> > >  createMoments(
-		   Bool doTemp, const String& outFileName,
-		   Bool removeAxes=True
+    // This function invokes smoothing of the input image.  Give <src>Int</src>
+    // arrays for the axes (0 relative) to be smoothed and the smoothing kernel
+    // types (use the <src>enum KernelTypes</src>) for each axis.  Give a
+    // <src>Double</src> array for the widths (full width for BOXCAR and full
+    // width at half maximum for GAUSSIAN) in pixels of the smoothing kernels for
+    // each axis.  For HANNING smoothing, you always get the quarter-half-quarter
+    // kernel (no matter what you might ask for).  A return value of <src>False</src>
+    // indicates that you have given an inconsistent or invalid set of smoothing
+    // parameters.  If you don't call this function the default state of the
+    // class is to do no smoothing.  The kernel types are specified with
+    // the VectorKernel::KernelTypes enum
+    Bool setSmoothMethod(
+        const Vector<Int>& smoothAxes,
+        const Vector<Int>& kernelTypes,
+        const Vector<Quantum<Double> >& kernelWidths
    );
 
-// Set a new image.  A return value of <src>False</src> indicates the 
-// image had an invalid type (this class only accepts Float or Double images).
+   Bool setSmoothMethod(
+       const Vector<Int>& smoothAxes,
+       const Vector<Int>& kernelTypes,
+       const Vector<Double>& kernelWidths
+   );
+
+   // This is the function that does all the computational work.  It should be called
+   // after the <src>set</src> functions.  A return value of  <src>False</src>
+   // indicates that additional checking of the combined methods that you
+   // have requested has shown that you have not given consistent state to the class.
+   // If the axis being collapsed comes from a coordinate with one axis only,
+   // the axis and its coordinate are physically removed from the output image.  Otherwise,
+   // if <src>removeAxes=True</src> then the output axis is logically removed from the
+   // the output CoordinateSystem.  If <src>removeAxes=False</src> then the axis
+   // is retained with shape=1 and with its original coordinate information (which
+   // is probably meaningless).
+   //
+   // The output PtrBlock will hold PagedImages or TempImages (doTemp=True).
+   // It is your responsibility to delete the pointers.
+   // If doTemp is True, the outFileName is irrelevant.
+   //
+   // If you create PagedImages, outFileName is the root name for
+   // the output files.  Suffixes will be made up internally to append
+   // to this root.  If you only ask for one moment,
+   // this will be the actual name of the output file.  If you don't set this
+   // variable, the default state of the class is to set the output name root to
+   // the name of the input file.
+   std::vector<std::unique_ptr<MaskedLattice<T> > >  createMoments(
+       Bool doTemp, const String& outFileName,
+       Bool removeAxes=True
+   );
+
+   // Set a new image.  A return value of <src>False</src> indicates the
+   // image had an invalid type (this class only accepts Float or Double images).
    Bool setNewImage (const ImageInterface<T>& image);
 
-// Get CoordinateSystem
+   // Get CoordinateSystem
    CoordinateSystem coordinates() {return _image->coordinates();};
 
 
-// Get shape 
+   // Get shape
    IPosition getShape() const { return _image->shape() ; } ;
 
    //Set an ImageMomentsProgressMonitor interested in getting updates on the
@@ -346,55 +354,55 @@ public:
 private:
 
    SHARED_PTR<ImageInterface<T> > _image;
+   ImageMomentsProgressMonitor* _progressMonitor;
 
-// Smooth an image   
-   Bool smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage,
-                     String& smoothName);
+   // Smooth an image
+   Bool smoothImage (
+       PtrHolder<ImageInterface<T> >& pSmoothedImage,
+       String& smoothName
+   );
 
-// Determine the noise by fitting a Gaussian to a histogram 
-// of the entire image above the 25% levels.  If a plotting
-// device is set, the user can interact with this process.
-   Bool whatIsTheNoise (T& noise,
-                        ImageInterface<T>& image);
+   // Determine the noise by fitting a Gaussian to a histogram
+   // of the entire image above the 25% levels.  If a plotting
+   // device is set, the user can interact with this process.
+   Bool whatIsTheNoise (T& noise, ImageInterface<T>& image);
 
-   ImageMomentsProgressMonitor* progressMonitor;
 
 protected:
-  using MomentsBase<T>::os_p;
-  using MomentsBase<T>::showProgress_p;
-  using MomentsBase<T>::momentAxisDefault_p;
-  using MomentsBase<T>::peakSNR_p;
-  using MomentsBase<T>::stdDeviation_p;
-  using MomentsBase<T>::yMin_p;
-  using MomentsBase<T>::yMax_p;
-  using MomentsBase<T>::out_p;
-  using MomentsBase<T>::smoothOut_p;
-  using MomentsBase<T>::goodParameterStatus_p;
-  using MomentsBase<T>::doWindow_p; 
-  using MomentsBase<T>::doFit_p;
-  using MomentsBase<T>::doAuto_p;
-  using MomentsBase<T>::doSmooth_p;
-  using MomentsBase<T>::noInclude_p;
-  using MomentsBase<T>::noExclude_p;
-  using MomentsBase<T>::fixedYLimits_p;
-  using MomentsBase<T>::momentAxis_p;
-  using MomentsBase<T>::worldMomentAxis_p;
-  using MomentsBase<T>::kernelTypes_p;
-  using MomentsBase<T>::kernelWidths_p;   
-  using MomentsBase<T>::nxy_p;
-  using MomentsBase<T>::moments_p;
-  using MomentsBase<T>::selectRange_p;
-  using MomentsBase<T>::smoothAxes_p;
-  using MomentsBase<T>::plotter_p;
-  using MomentsBase<T>::overWriteOutput_p;
-  using MomentsBase<T>::error_p;
-  using MomentsBase<T>::convertToVelocity_p;
-  using MomentsBase<T>::velocityType_p;
-  using MomentsBase<T>::checkMethod;
+   using MomentsBase<T>::os_p;
+   using MomentsBase<T>::showProgress_p;
+   using MomentsBase<T>::momentAxisDefault_p;
+   using MomentsBase<T>::peakSNR_p;
+   using MomentsBase<T>::stdDeviation_p;
+   using MomentsBase<T>::yMin_p;
+   using MomentsBase<T>::yMax_p;
+   using MomentsBase<T>::out_p;
+   using MomentsBase<T>::smoothOut_p;
+   using MomentsBase<T>::goodParameterStatus_p;
+   using MomentsBase<T>::doWindow_p;
+   using MomentsBase<T>::doFit_p;
+   using MomentsBase<T>::doAuto_p;
+   using MomentsBase<T>::doSmooth_p;
+   using MomentsBase<T>::noInclude_p;
+   using MomentsBase<T>::noExclude_p;
+   using MomentsBase<T>::fixedYLimits_p;
+   using MomentsBase<T>::momentAxis_p;
+   using MomentsBase<T>::worldMomentAxis_p;
+   using MomentsBase<T>::kernelTypes_p;
+   using MomentsBase<T>::kernelWidths_p;
+   using MomentsBase<T>::nxy_p;
+   using MomentsBase<T>::moments_p;
+   using MomentsBase<T>::selectRange_p;
+   using MomentsBase<T>::smoothAxes_p;
+   using MomentsBase<T>::plotter_p;
+   using MomentsBase<T>::overWriteOutput_p;
+   using MomentsBase<T>::error_p;
+   using MomentsBase<T>::convertToVelocity_p;
+   using MomentsBase<T>::velocityType_p;
+   using MomentsBase<T>::checkMethod;
 };
 
-
-} //# NAMESPACE CASA - END
+}
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/ImageMoments.tcc>
