@@ -225,6 +225,8 @@ protected:
   Bool createMask(LatticeExpr<Bool> &lemask, CountedPtr<ImageInterface<Float> >outimage);
   Bool copyMask(CountedPtr<ImageInterface<Float> >inimage, CountedPtr<ImageInterface<Float> >outimage);
 
+  void removeMask(CountedPtr<ImageInterface<Float> >im);
+
   ///////////////////// Member Objects
 
   IPosition itsImageShape, itsParentImageShape;

@@ -757,12 +757,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( resetpsf ) psf()->set(0.0);
     if( resetresidual ) {
-      if (residual()-> getDefaultMask() != String("")){
-	String strung=residual()->getDefaultMask();
-	residual()->setDefaultMask("");
-	residual()->removeRegion(strung);
-      } 
-      
+      removeMask( residual() );
       residual()->set(0.0);
     }
     if( resetweight && itsWeight ) weight()->set(0.0);
@@ -860,13 +855,6 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
    LogIO os( LogOrigin("SIImageStore","makePBFromWeight",WHERE) );
 
-   ///Remove the old mask as it is no longer valid
-   if (pb()-> getDefaultMask() != String("")){
-     String strung=pb()->getDefaultMask();
-     pb()->setDefaultMask("");
-     pb()->removeRegion(strung);
-   } 
-
     	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
 	       for(Int chan=0; chan<itsImageShape[3]; chan++)
@@ -892,7 +880,18 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 		}// if not zero
 	      }
 	  }
-	
+
+	/*	
+	///Remove the old mask as it is no longer valid
+	if (pb()-> getDefaultMask() != String("")){
+	  String strung=pb()->getDefaultMask();
+	  pb()->setDefaultMask("");
+	  pb()->removeRegion(strung);
+	} 
+	*/
+
+	removeMask( pb() );
+
 	//MSK//	
 	LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
 	//MSK// 
@@ -922,23 +921,31 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
     if( (inimage->getDefaultMask()).matches("mask0") ) // input mask exists.
       {
+	removeMask(outimage);
 
 	// clear output image mask
 		if( (outimage->getDefaultMask()).matches("mask0") ) 
 		  {outimage->setDefaultMask(""); 
 		    outimage->removeRegion("mask0");}
-
 	// get mask from input image
 		
-	       
 		ImageRegion outreg=outimage->makeMask("mask0", False, True);
 		LCRegion& outmask=outreg.asMask();
 		outmask.copyData(inimage->getRegion("mask0").asLCRegion());
 		outimage->defineRegion("mask0",outreg, RegionHandler::Masks,True);
 		outimage->setDefaultMask("mask0");
       }
-    
     return True;
+  }
+
+  void SIImageStore::removeMask(CountedPtr<ImageInterface<Float> > im)
+  {
+	///Remove the old mask as it is no longer valid
+	if (im-> getDefaultMask() != String("")){
+	  String strung=im->getDefaultMask();
+	  im->setDefaultMask("");
+	  im->removeRegion(strung);
+	} 
   }
 
   void  SIImageStore::makePBImage(const Float pblimit)
@@ -961,6 +968,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      }
 	  }
    */	
+   // removeMask( pb() );
 	//MSK//		LatticeExpr<Bool> pbmask( iif( *pb() > pblimit , True , False ) );
 	//MSK// 	createMask( pbmask, pb() );
   }
@@ -1065,7 +1073,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     // Or... later if we get a gridder that does pre-norms, this warning can go. 
     if( (didNorm | itsUseWeight) != True ) 
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
-
+    
     // createMask
     if((residual()->getDefaultMask()=="") && hasPB())
       {copyMask(pb(),residual());}
@@ -1448,7 +1456,8 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     
     try
       {
-	if(hasPB()){copyMask(pb(),image());}
+	//MSK//	
+	if(hasPB()){copyMask(pb(),image(term));}
       }
     catch(AipsError &x)
       {
