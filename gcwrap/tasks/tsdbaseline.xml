@@ -431,6 +431,9 @@ blmode -- baselining mode.
                     In case bloutput is not '', blformat and bloutput 
                     must have the same length.
                 default: ''
+                example: Output of csv with func='poly' is as below. 
+                #scan, beam, spw, pol, MJD[s], fitrange (i.e. inverse mask), blfunc, order, fitting coefficients, rms, number of clipped channels 
+                4,0,17,0,4.915973292,[[252;3828]],poly,1,767.647,-0.00956208,26.3036,0
         bltable -- name of baseline table to apply
                 default: ''
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 

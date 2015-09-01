@@ -1273,7 +1273,7 @@ LogIO os(_ORIGIN);
                     for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                         ofs_txt << "p" << icoeff << " = ";
                         ofs_txt.setf(ios::scientific);
-                        ofs_txt<< setprecision(6) << coeff_mtx2(ipol,icoeff) << "  ";
+                        ofs_txt<< setprecision(10) << coeff_mtx2(ipol,icoeff) << "  ";
                     }
 
 
@@ -1282,7 +1282,7 @@ LogIO os(_ORIGIN);
                     //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
                     ofs_txt << "rms = ";
                     ofs_txt.setf(ios::fixed);
-                    ofs_txt << setprecision(6) << rms_mtx2(0,0) << endl;
+                    ofs_txt << setprecision(10) << rms_mtx2(0,0) << endl;
                     ofs_txt << endl;
                     //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
                     ofs_txt << "Number of clipped channels = " << final_mask2[ipol] - final_mask[ipol]<< endl;//-----------------------------------
@@ -1319,7 +1319,7 @@ LogIO os(_ORIGIN);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  times[irow] << ',';
+                            <<  setprecision(10) << times[irow] << ',';
                     ofs_csv << '[';
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
                       
@@ -1348,11 +1348,11 @@ LogIO os(_ORIGIN);
                     Matrix<Float> coeff_mtx2 = coeff_mtx;
                     ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol,0) <<',';
                     for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-                        ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                        ofs_csv << setprecision(10) << coeff_mtx2(ipol, icoeff) << ',';
                     }
                     Matrix<Float> rms_mtx2=rms_mtx;
                     //ofs_csv << rms_mtx[0][ipol] << ',';
-                    ofs_csv << rms_mtx2(ipol,0) << ',';
+                    ofs_csv << setprecision(10) << rms_mtx2(ipol,0) << ',';
                     //cout << "rms_mtx2(ipol,0) " << rms_mtx2(ipol,0) << endl;
                     //cout << "rms_mtx2(0,0) " << rms_mtx2(0,0) << endl;
                     
@@ -1820,14 +1820,14 @@ split_bloutputname(out_bloutput_name);
                         //ofs_txt << "p" << icoeff << " = " << coeff_mtx2(ipol,icoeff) << "  ";
                         ofs_txt << "p" << icoeff << " = ";
                         ofs_txt.setf(ios::scientific);
-                        ofs_txt<< setprecision(6) << coeff_mtx2(ipol,icoeff) << "  ";
+                        ofs_txt<< setprecision(10) << coeff_mtx2(ipol,icoeff) << "  ";
                     }
                     ofs_txt << endl;
                     ofs_txt << endl;
                     //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
-                    ofs_txt << "rms = ";
+                    ofs_txt << setprecision(10) << "rms = ";
                     ofs_txt.setf(ios::fixed);
-                    ofs_txt << setprecision(6) << rms_mtx2(0,0) << endl;
+                    ofs_txt << setprecision(10) << rms_mtx2(0,0) << endl;
                     ofs_txt << endl;
                     //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
                     ofs_txt << "Number of clipped channels = " << final_mask2[ipol] - final_mask[ipol] << endl;
@@ -1862,7 +1862,7 @@ split_bloutputname(out_bloutput_name);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  times[irow] << ',';
+                            <<  setprecision(10) << times[irow] << ',';
                     ofs_csv << '[';
     
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
@@ -1895,11 +1895,11 @@ split_bloutputname(out_bloutput_name);
 
                     for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                         //ofs_csv << coeff_mtx[icoeff][ipol] << ',';
-                         ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                         ofs_csv << setprecision(10) << coeff_mtx2(ipol, icoeff) << ',';
                     }
 
                     Matrix<Float> rms_mtx2=rms_mtx;
-                    ofs_csv << rms_mtx2(ipol,0) << ',';    
+                    ofs_csv << setprecision(10) << rms_mtx2(ipol,0) << ',';    
 
                     //ofs_csv << rms_mtx[0][ipol] << ',';
                     //ofs_csv << (uInt)num_chan ;
@@ -3081,13 +3081,13 @@ LogIO os(_ORIGIN);
                         //ofs_txt << "p" << icoeff << " = " << coeff_mtx2(ipol,icoeff) << "  ";
                         ofs_txt << "p" << icoeff << " = ";
                         ofs_txt.setf(ios::scientific);
-                        ofs_txt<< setprecision(6) << coeff_mtx2(ipol,icoeff) << "  ";
+                        ofs_txt<< setprecision(10) << coeff_mtx2(ipol,icoeff) << "  ";
                     }
                     ofs_txt << endl;
                     ofs_txt << endl;
                     ofs_txt << "rms = ";
                     ofs_txt.setf(ios::fixed);
-                    ofs_txt << setprecision(6) << rms_mtx2(0,0) << endl;
+                    ofs_txt << setprecision(10) << rms_mtx2(0,0) << endl;
                     ofs_txt << endl;
                     //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
                     ofs_txt << "Number of clipped channels = " << final_mask2[ipol] - final_mask[ipol] << endl;
@@ -3121,7 +3121,7 @@ LogIO os(_ORIGIN);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  times[irow] << ',';
+                            <<  setprecision(10) << times[irow] << ',';
                     ofs_csv << '[';
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
                         if(imasklist == 0){
@@ -3149,10 +3149,10 @@ LogIO os(_ORIGIN);
 
                     for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
                         //ofs_csv << coeff_mtx[icoeff][ipol] << ',';
-                         ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                         ofs_csv << setprecision(10) << coeff_mtx2(ipol, icoeff) << ',';
                     }
                     Matrix<Float> rms_mtx2=rms_mtx;
-                    ofs_csv << rms_mtx2(ipol,0) << ',';    
+                    ofs_csv << setprecision(10) << rms_mtx2(ipol,0) << ',';    
                     //ofs_csv << rms_mtx[0][ipol] << ',';
                     //ofs_csv << (uInt)num_chan ;
                     ofs_csv << final_mask2[ipol] - final_mask[ipol];
