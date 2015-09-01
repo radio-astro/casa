@@ -256,16 +256,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
 	MeasurementSet thisMSSelected0 = MeasurementSet(thisms(exprNode));
-	MSSelection mss0;
+
 	if(selpars.taql != "")
 	  {
+	    MSSelection mss0;
 	    mss0.setTaQLExpr(selpars.taql);
 	    os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
+
+	    TableExprNode tenWithTaQL=mss0.toTableExprNode(&thisMSSelected0);
+	    MeasurementSet thisMSSelected1 = MeasurementSet(thisMSSelected0(tenWithTaQL));
+	    //mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+	    mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected1;
 	  }
-	TableExprNode tenWithTaQL=mss0.toTableExprNode(&thisMSSelected0);
-	MeasurementSet thisMSSelected1 = MeasurementSet(thisMSSelected0(tenWithTaQL));
-	//mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
-	mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected1;
+	else
+	    mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected0;
+	  
 	os << "  NRows selected : " << (mss4vi_p[mss4vi_p.nelements()-1]).nrow() << LogIO::POST;
       }
     else{
@@ -518,10 +523,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     dataSel_p[dataSel_p.nelements()-1]=selpars;
 
 
-
+    unlockMSs();
       }
     catch(AipsError &x)
       {
+	unlockMSs();
 	throw( AipsError("Error in selectData() : "+x.getMesg()) );
       }
 
@@ -1775,6 +1781,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
     		{
+		  //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; // No valid rows in this VB
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
     				vb->setModelVisCube(Complex(0.0, 0.0));
@@ -1816,18 +1823,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::dryGridding(const Vector<String>& cfList)
   {
     LogIO os( LogOrigin("SynthesisImager","dryGridding",WHERE) );
-    // if (cfList.nelements() == 0) 
-    //   os << "NoOp due to zero-length cfList" << LogIO::POST;
     Int cohDone=0, whichFTM=0;
     (void)cfList;
     // If not an AWProject-class FTM, make this call a NoOp.  Might be
     // useful to extend it to other projection FTMs -- but later.
     String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
 
-    //cerr << "FTM name = " << ftmName << endl;
     if (!((itsMappers.getFTM(whichFTM,True))->isUsingCFCache())) return;
-    // if (!ftmName.contains("AWProject") and
-    // 	!ftmName.contains("MultiTermFTNew")) return;
 
     os << "---------------------------------------------------- Dry Gridding ---------------------------------------------" << LogIO::POST;
 
@@ -1844,25 +1846,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ProgressMeter pm(1.0, Double(vb->numberCoh()), "dryGridding", "","","",True);
 
       itsMappers.initializeGrid(*vb);
-
-      // AWProjectWBFTNew &tt = (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM))));
-      // tt.setDryRun(True);
-      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
-      // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
-
-      // The following code requiring FTM-specific static_cast may (?)
-      // not be required now.  Leaving it here for a few cycles before
-      // getting rid of it.
-    // if (ftmName=="MultiTermFTNew")
-    //   {
-    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(True);
-    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(True);
-    //   }
-    // else
-    //   {
-    // 	(*(itsMappers.getFTM(whichFTM,True))).setDryRun(True);
-    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(True);
-    //   }
     
       // Set the gridder (iFTM) to run in dry-gridding mode
       (itsMappers.getFTM(whichFTM,True))->setDryRun(True);
@@ -1871,32 +1854,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Step through the MS.  This triggers the logic in the Gridder
       // to determine all the CFs that will be required.  These empty
-      // CFs are written to the CFCache.
+      // CFs are written to the CFCache which can then be filled via
+      // a call to fillCFCache().
       for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
 	{
 	  
 	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	    {
+	      if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
 	      itsMappers.grid(*vb, True, FTMachine::OBSERVED, whichFTM);
+	      cohDone += vb->nRow();
 	      pm.update(Double(cohDone));
 	    }
 	}
-      //itsMappers.finalizegrid(*vb);
     }
-    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
-    // (static_cast<AWProjectWBFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
-
-    // if (ftmName=="MultiTermFTNew")
-    //   {
-    // 	(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,True)))).setDryRun(False);
-    // 	//(static_cast<MultiTermFTNew &> (*(itsMappers.getFTM(whichFTM,False)))).setDryRun(False);
-    //   }
-    // else
-    //   {
-    // 	(itsMappers.getFTM(whichFTM,True))->setDryRun(False);
-    // 	//(itsMappers.getFTM(whichFTM,False))->setDryRun(False);
-    //   }
-
     // Unset the dry-gridding mode.
     (itsMappers.getFTM(whichFTM,True))->setDryRun(False);
 
@@ -1989,7 +1960,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       String ftmName = ((*(itsMappers.getFTM(whichFTM)))).name();
       if (!ftmName.contains("AWProject")) return;
 
-      os << "---------------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
+      os << "-------------------------------------------- reloadCFCache ---------------------------------------------" << LogIO::POST;
       String path = itsMappers.getFTM(whichFTM)->getCacheDir();
       String imageNamePrefix=itsMappers.getFTM(whichFTM)->getCFCache()->getWtImagePrefix();
 
@@ -2035,6 +2006,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
 	    {
+	      //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
 	      //if !usescratch ...just save
 	      vb->setModelVisCube(Complex(0.0, 0.0));
 	      itsMappers.degrid(*vb, savevirtualmodel);
