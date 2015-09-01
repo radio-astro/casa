@@ -1113,3 +1113,29 @@ def score_caltables_exist(filedir, sessiondict):
         shortmsg = 'No missing caltables files'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_sd_line_detection(group_id_list, spw_id_list, lines_list):
+    detected_spw = []
+    detected_group = []
+    for group_id, spw_id, lines in zip(group_id_list, spw_id_list, lines_list):
+        if any([l[2] for l in lines]):
+            LOG.trace('detected lines exist at group_id %s spw_id %s'%(group_id, spw_id))
+            unique_spw_id = set(spw_id)
+            if len(unique_spw_id) == 1:
+                detected_spw.append(unique_spw_id.pop())
+            else:
+                detected_spw.append(-1)
+            detected_group.append(group_id)
+    if len(detected_spw) == 0:
+        score = 0.0
+        longmsg = 'No spectral lines are detected'
+        shortmsg = 'No spectral lines are detected'
+    else:
+        score = 1.0
+        if detected_spw.count(-1) == 0:
+            longmsg = 'Spectral lines are detected at Spws %s'%(', '.join(map(str,detected_spw)))
+        else:
+            longmsg = 'Spectral lines are detected at ReductionGroups %s'%(','.join(map(str,detected_group)))
+        shortmsg = 'Spectral lines are detected'
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
