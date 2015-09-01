@@ -1,4 +1,5 @@
 #import os
+import copy
 import glob
 import sys
 import shutil
@@ -590,6 +591,29 @@ class tsdfit_basicTest(tsdfit_unittest_base):
     blrefroot = tsdfit_unittest_base.datapath+'refblparam'
     tid = None
 
+    answer012 = {'cent': [[4000.0], [5000.0], [3000.0], [2000.0], [4500.0], [5500.0]],
+                 'peak': [[10.0], [10.0], [10.0], [10.0], [10.0], [10.0]],
+                 'fwhm': [[500.0], [100.0], [20.0], [4.0], [100.0], [20.0]]
+                 }
+    answer3 = {'cent': [[2000.0, 6000.0], [3900.0, 4100.0]],
+               'peak': [[10.0, 10.0], [10.0, 5.0]],
+               'fwhm': [[100.0, 100.0], [20.0, 100.0]]
+               }
+
+    def _generateMSWithNegativeProfiles(self, negative_file):
+        # negative_file contains data copied from self.infile, but a factor of -1 is multiplied.
+        shutil.copytree(self.infile, negative_file)
+        tb.open(tablename=negative_file, nomodify=False)
+        spec_orig = tb.getcol('FLOAT_DATA')
+        spec = spec_orig * -1.0
+        tb.putcol('FLOAT_DATA', spec)
+        tb.close()
+
+    def _generateAnswerForNegativeProfiles(self, answer):
+        for i in range(len(answer['peak'])):
+            for j in range(len(answer['peak'][i])):
+                answer['peak'][i][j] *= -1.0
+        
     def setUp(self):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -605,7 +629,6 @@ class tsdfit_basicTest(tsdfit_unittest_base):
         """Basic Test 000: default values for all parameters (nfit=[0] : no fitting)"""
         tid = '000'
         infile = self.infile
-        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
         result = tsdfit(infile=infile, datacolumn=datacolumn)
 
@@ -626,19 +649,14 @@ class tsdfit_basicTest(tsdfit_unittest_base):
         """Basic Test 001: fitting with single Gaussian (spw='0,1,2', nfit=[1])"""
         tid = '001'
         infile = self.infile
-        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
         spw = '0,1,2'
         nfit = [1]
         result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
-
         npol = 2
         nrow = len(spw.split(','))
-
-        answer = {'cent': [[4000.0], [5000.0], [3000.0], [2000.0], [4500.0], [5500.0]],
-                  'peak': [[10.0], [10.0], [10.0], [10.0], [10.0], [10.0]],
-                  'fwhm': [[500.0], [100.0], [20.0], [4.0], [100.0], [20.0]]
-                  }
+        answer = self.answer012
+        
         for key in result.keys():
             self.assertEqual(len(result[key]), nrow*npol, 
                              msg="The result data has wrong data length")
@@ -658,19 +676,14 @@ class tsdfit_basicTest(tsdfit_unittest_base):
         """Basic Test 002: fitting with double fitrange (spw='3', nfit=[1,1])"""
         tid = '002'
         infile = self.infile
-        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
         spw = '3:0~4000;4001~8191'
         nfit = [1,1]
         result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
-
         npol = 2
         nrow = 1
+        answer = self.answer3
 
-        answer = {'cent': [[2000.0, 6000.0], [3900.0, 4100.0]],
-                  'peak': [[10.0, 10.0], [10.0, 5.0]],
-                  'fwhm': [[100.0, 100.0], [20.0, 100.0]]
-                  }
         for key in result.keys():
             self.assertEqual(len(result[key]), nrow*npol, 
                              msg="The result data has wrong data length")
@@ -690,19 +703,14 @@ class tsdfit_basicTest(tsdfit_unittest_base):
         """Basic Test 003: fitting with double Gaussian (spw='3', nfit=[2])"""
         tid = '003'
         infile = self.infile
-        outfile = self.outroot+tid+'.ms'
         datacolumn = 'float_data'
         spw = '3'
         nfit = [2]
         result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
-
         npol = 2
         nrow = 1
+        answer = self.answer3
 
-        answer = {'cent': [[2000.0, 6000.0], [3900.0, 4100.0]],
-                  'peak': [[10.0, 10.0], [10.0, 5.0]],
-                  'fwhm': [[100.0, 100.0], [20.0, 100.0]]
-                  }
         for key in result.keys():
             self.assertEqual(len(result[key]), nrow*npol, 
                              msg="The result data has wrong data length")
@@ -717,6 +725,94 @@ class tsdfit_basicTest(tsdfit_unittest_base):
                         #print "lower("+str(result_lower)+") - answer("+str(answer[key][i][j])+") - upper("+str(result_upper) +")"
                         self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
                                         msg="row%s, comp%s result inconsistent with answer"%(i, j))
+
+    def test004(self):
+        """Basic Test 004: fitting negative Gaussian profile with single Gaussian model (spw='0,1,2', nfit=[1])"""
+        tid = '004'
+        infile = self.outroot+tid+'.negative.ms'
+        self._generateMSWithNegativeProfiles(infile)
+        datacolumn = 'float_data'
+        spw = '0,1,2'
+        nfit = [1]
+        result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
+        npol = 2
+        nrow = len(spw.split(','))
+        answer = copy.deepcopy(self.answer012)
+        self._generateAnswerForNegativeProfiles(answer)
+        
+        for key in result.keys():
+            self.assertEqual(len(result[key]), nrow*npol, 
+                             msg="The result data has wrong data length")
+            for i in range(len(result[key])):
+                if (key == "nfit"):
+                    self.assertEqual(result[key][i], nfit[0], msg="%s has wrong value."%(key))
+                else:
+                    self.assertEqual(len(result[key][i]), nfit[0], msg="%s element has wrong length."%(key))
+                    for j in range(len(result[key][i])):
+                        result_lower = result[key][i][j][0] - 3.0 * result[key][i][j][1]
+                        result_upper = result[key][i][j][0] + 3.0 * result[key][i][j][1]
+                        #print "lower("+str(result_lower)+") - answer("+str(answer[key][i][j])+") - upper("+str(result_upper) +")"
+                        self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
+                                        msg="row%s, comp%s result inconsistent with answer"%(i, j))
+
+    def test005(self):
+        """Basic Test 005: fitting with double fitrange (spw='3', nfit=[1,1])"""
+        tid = '005'
+        infile = self.outroot+tid+'.negative.ms'
+        self._generateMSWithNegativeProfiles(infile)
+        datacolumn = 'float_data'
+        spw = '3:0~4000;4001~8191'
+        nfit = [1,1]
+        result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
+        npol = 2
+        nrow = 1
+        answer = copy.deepcopy(self.answer3)
+        self._generateAnswerForNegativeProfiles(answer)
+
+        for key in result.keys():
+            self.assertEqual(len(result[key]), nrow*npol, 
+                             msg="The result data has wrong data length")
+            for i in range(len(result[key])):
+                if (key == "nfit"):
+                    self.assertEqual(result[key][i], sum(nfit), msg="%s has wrong value."%(key))
+                else:
+                    self.assertEqual(len(result[key][i]), sum(nfit), msg="%s element has wrong length."%(key))
+                    for j in range(len(result[key][i])):
+                        result_lower = result[key][i][j][0] - 3.0 * result[key][i][j][1]
+                        result_upper = result[key][i][j][0] + 3.0 * result[key][i][j][1]
+                        #print "lower("+str(result_lower)+") - answer("+str(answer[key][i][j])+") - upper("+str(result_upper) +")"
+                        self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
+                                        msg="row%s, comp%s result inconsistent with answer"%(i, j))
+
+    def test006(self):
+        """Basic Test 006: fitting with double Gaussian (spw='3', nfit=[2])"""
+        tid = '006'
+        infile = self.outroot+tid+'.negative.ms'
+        self._generateMSWithNegativeProfiles(infile)
+        datacolumn = 'float_data'
+        spw = '3'
+        nfit = [2]
+        result = tsdfit(infile=infile, datacolumn=datacolumn, spw=spw, nfit=nfit)
+        npol = 2
+        nrow = 1
+        answer = copy.deepcopy(self.answer3)
+        self._generateAnswerForNegativeProfiles(answer)
+
+        for key in result.keys():
+            self.assertEqual(len(result[key]), nrow*npol, 
+                             msg="The result data has wrong data length")
+            for i in range(len(result[key])):
+                if (key == "nfit"):
+                    self.assertEqual(result[key][i], sum(nfit), msg="%s has wrong value."%(key))
+                else:
+                    self.assertEqual(len(result[key][i]), sum(nfit), msg="%s element has wrong length."%(key))
+                    for j in range(len(result[key][i])):
+                        result_lower = result[key][i][j][0] - 3.0 * result[key][i][j][1]
+                        result_upper = result[key][i][j][0] + 3.0 * result[key][i][j][1]
+                        #print "lower("+str(result_lower)+") - answer("+str(answer[key][i][j])+") - upper("+str(result_upper) +")"
+                        self.assertTrue(((result_lower <= answer[key][i][j]) and (answer[key][i][j] <= result_upper)),
+                                        msg="row%s, comp%s result inconsistent with answer"%(i, j))
+
 
 
 def suite():
