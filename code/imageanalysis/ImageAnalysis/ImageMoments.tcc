@@ -305,7 +305,7 @@ Bool ImageMoments<T>::setSmoothMethod(
     // to not be given as it is always 1/4, 1/2, 1/4
 
     kernelWidths_p.resize(smoothAxes_p.nelements());
-    auto nK = kernelWidthsU.nelements();
+    Int nK = kernelWidthsU.size();
     for (i=0; i<Int(smoothAxes_p.nelements()); i++) {
         if (kernelTypes_p(i) == VectorKernel::HANNING) {
 

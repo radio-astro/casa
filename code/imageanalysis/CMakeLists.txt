@@ -172,6 +172,8 @@ install (FILES
     ImageAnalysis/ImageMetaDataRW.h
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
+	ImageAnalysis/ImageMomentsTask.h
+    ImageAnalysis/ImageMomentsTask.tcc
     ImageAnalysis/ImageMomentsProgress.h
     ImageAnalysis/ImageMomentsProgressMonitor.h
 	ImageAnalysis/ImagePadder.h

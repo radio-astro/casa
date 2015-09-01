@@ -1664,155 +1664,158 @@ Record ImageAnalysis::maxfit(
 }
 
 ImageInterface<Float> * ImageAnalysis::moments(
-	const Vector<Int>& whichmoments, const Int axis,
-	Record& Region, const String& mask, const Vector<String>& method,
-	const Vector<Int>& smoothaxes, const Vector<String>& kernels,
-	const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
-	const Vector<Float>& excludepix, const Double peaksnr,
-	const Double stddev, const String& velocityType, const String& out,
-	const String& smoothout, const Bool overwrite,
-	const Bool removeAxis, const Bool stretchMask
+        const Vector<Int>& whichmoments, const Int axis,
+        Record& Region, const String& mask, const Vector<String>& method,
+        const Vector<Int>& smoothaxes, const Vector<String>& kernels,
+        const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
+        const Vector<Float>& excludepix, const Double peaksnr,
+        const Double stddev, const String& velocityType, const String& out,
+        const String& smoothout, const Bool overwrite,
+        const Bool removeAxis, const Bool stretchMask
 ) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	// check that we can write to smoothout if specified
-	if (!smoothout.empty() and !overwrite) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(smoothout, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-	// Note that the user may give the strings (method & kernels)
-	// as either vectors of strings or one string with separators.
-	// Hence the code below that deals with it.   Also in image.g we therefore
-	// give the default value as a blank string rather than a null vector.
-	String tmpImageName;
-	Record r;
-	std::unique_ptr<ImageInterface<Float> > pIm;
-	try {
+    _onlyFloat(__func__);
+    *_log << LogOrigin(className(), __func__);
+    // check that we can write to smoothout if specified
+    if (! smoothout.empty() and !overwrite) {
+        NewFile validfile;
+        String errmsg;
+        ThrowIf(
+            ! validfile.valueOK(smoothout, errmsg), errmsg
+        );
+    }
+    // Note that the user may give the strings (method & kernels)
+    // as either vectors of strings or one string with separators.
+    // Hence the code below that deals with it.   Also in image.g we therefore
+    // give the default value as a blank string rather than a null vector.
+    String tmpImageName;
+    Record r;
+    std::unique_ptr<ImageInterface<Float> > pIm;
+    try {
         SPCIIF x;
-		if (_imageFloat->imageType() != PagedImage<Float>::className()) {
+        if (_imageFloat->imageType() != PagedImage<Float>::className()) {
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
-			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
-					<< "so converting to a CASA temporary paged image named "
-					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
+            *_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
+                << "so converting to a CASA temporary paged image named "
+                << tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
             x = SubImageFactory<Float>::createImage(
-            	*_imageFloat, tmpImageName, r, "", False,
-            	False, True, False
+                *_imageFloat, tmpImageName, r, "", False,
+                False, True, False
             );
             x = SubImageFactory<Float>::createSubImageRO(
-            	*x, Region, mask, _log.get(),
-            	AxesSpecifier(), stretchMask
-            );
-		}
-		else {
-			x = SubImageFactory<Float>::createSubImageRO(
-			    *_imageFloat, Region, mask, _log.get(),
+                *x, Region, mask, _log.get(),
                 AxesSpecifier(), stretchMask
-			);
-		}
-		// Create ImageMoments object
-		ImageMoments<Float> momentMaker(*x, *_log, overwrite, True);
-		if ( imageMomentsProgressMonitor != NULL ){
-			momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
-		}
-		// Set which moments to output
-		if (!momentMaker.setMoments(whichmoments + 1)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-		// Set moment axis
-		if (axis >= 0) {
-			momentMaker.setMomentAxis(axis);
-		}
-		if (x->imageInfo().hasMultipleBeams()) {
-			const CoordinateSystem& csys = x->coordinates();
-			if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
-				*_log << LogIO::WARN << "This image has multiple beams and you determining "
-						<< " moments along the polarization axis. Interpret your results carefully"
-						<< LogIO::POST;
-			}
-		}
-		// Set moment methods
-		if (method.nelements() > 0 && method(0) != "") {
-			String tmp;
-			for (uInt i = 0; i < method.nelements(); i++) {
-				tmp += method(i) + " ";
-			}
-			Vector<Int> intmethods = momentMaker.toMethodTypes(tmp);
-			if (!momentMaker.setWinFitMethod(intmethods)) {
-				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-			}
-		}
-		// Set smoothing
-		if (kernels.nelements() >= 1 && kernels(0) != "" && smoothaxes.size() >= 1
-				&& kernelwidths.nelements() >= 1) {
-			String tmp;
-			for (uInt i = 0; i < kernels.nelements(); i++) {
-				tmp += kernels(i) + " ";
-			}
-			//
-			Vector<Int> intkernels = VectorKernel::toKernelTypes(kernels);
-			//Vector<Int> intaxes(smoothaxes);
-			if (!momentMaker.setSmoothMethod(smoothaxes, intkernels, kernelwidths)) {
-				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-			}
-		}
-		// Set pixel include/exclude range
-		if (!momentMaker.setInExCludeRange(includepix, excludepix)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-		// Set SNR cutoff
-		if (!momentMaker.setSnr(peaksnr, stddev)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-		// Set velocity type
-		if (!velocityType.empty()) {
-			MDoppler::Types velType;
-			if (!MDoppler::getType(velType, velocityType)) {
-				*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
-						<< LogIO::POST;
-				velType = MDoppler::RADIO;
-			}
-			momentMaker.setVelocityType(velType);
-		}
-		// Set output names
-		if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-		// If no file name given for one moment image, make TempImage.
-		// Else PagedImage results
-		Bool doTemp = False;
-		if (out.empty() && whichmoments.nelements() == 1) {
-			doTemp = True;
-		}
-		// Create moments
-		std::vector<std::unique_ptr<MaskedLattice<Float> > > images =
-				momentMaker.createMoments(doTemp, out, removeAxis);
-
-		momentMaker.closePlotting();
-		// Return handle of first image
-		pIm.reset(
-				dynamic_cast<ImageInterface<Float>*> (images[0].release())
-		);
-	}
-	catch (const AipsError& x) {
-		if (! tmpImageName.empty()) {
-			Directory dir(tmpImageName);
-			if (dir.exists()) {
-				dir.removeRecursive(False);
-			}
-		}
-		RETHROW(x);
-	}
-	if (! tmpImageName.empty()) {
-		Directory dir(tmpImageName);
-		if (dir.exists()) {
-			dir.removeRecursive(False);
-		}
-	}
-	return pIm.release();
+            );
+        }
+        else {
+            x = SubImageFactory<Float>::createSubImageRO(
+                    *_imageFloat, Region, mask, _log.get(),
+                    AxesSpecifier(), stretchMask
+            );
+        }
+        // Create ImageMoments object
+        ImageMoments<Float> momentMaker(*x, *_log, overwrite, True);
+        if ( imageMomentsProgressMonitor != nullptr ){
+            momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
+        }
+        // Set which moments to output
+        if (!momentMaker.setMoments(whichmoments + 1)) {
+            *_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+        }
+        // Set moment axis
+        if (axis >= 0) {
+            momentMaker.setMomentAxis(axis);
+        }
+        if (x->imageInfo().hasMultipleBeams()) {
+            const CoordinateSystem& csys = x->coordinates();
+            if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
+                *_log << LogIO::WARN << "This image has multiple beams and you determining "
+                        << " moments along the polarization axis. Interpret your results carefully"
+                        << LogIO::POST;
+            }
+        }
+        // Set moment methods
+        if (method.nelements() > 0 && method(0) != "") {
+            String tmp;
+            for (uInt i = 0; i < method.nelements(); ++i) {
+                tmp += method(i) + " ";
+            }
+            Vector<Int> intmethods = momentMaker.toMethodTypes(tmp);
+            ThrowIf(
+                ! momentMaker.setWinFitMethod(intmethods),
+                momentMaker.errorMessage()
+            );
+        }
+        // Set smoothing
+        if (
+            kernels.nelements() >= 1 && kernels(0) != "" && smoothaxes.size() >= 1
+            && kernelwidths.nelements() >= 1
+        ) {
+            String tmp;
+            for (uInt i = 0; i < kernels.nelements(); i++) {
+                tmp += kernels(i) + " ";
+            }
+            //
+            Vector<Int> intkernels = VectorKernel::toKernelTypes(kernels);
+            ThrowIf(
+                ! momentMaker.setSmoothMethod(
+                    smoothaxes, intkernels, kernelwidths
+                ), momentMaker.errorMessage()
+            );
+        }
+        // Set pixel include/exclude range
+        ThrowIf(
+                ! momentMaker.setInExCludeRange(includepix, excludepix),
+                momentMaker.errorMessage()
+        );
+        // Set SNR cutoff
+        ThrowIf(
+                ! momentMaker.setSnr(peaksnr, stddev),
+                momentMaker.errorMessage()
+        );
+        // Set velocity type
+        if (!velocityType.empty()) {
+            MDoppler::Types velType;
+            if (!MDoppler::getType(velType, velocityType)) {
+                *_log << LogIO::WARN << "Illegal velocity type, using RADIO"
+                        << LogIO::POST;
+                velType = MDoppler::RADIO;
+            }
+            momentMaker.setVelocityType(velType);
+        }
+        // Set output names
+        ThrowIf(
+            smoothout != "" && ! momentMaker.setSmoothOutName(smoothout),
+            momentMaker.errorMessage()
+        );
+        // If no file name given for one moment image, make TempImage.
+        // Else PagedImage results
+        Bool doTemp = out.empty() && whichmoments.nelements() == 1;
+        // Create moments
+        std::vector<std::unique_ptr<MaskedLattice<Float> > > images =
+            momentMaker.createMoments(doTemp, out, removeAxis);
+        momentMaker.closePlotting();
+        // Return handle of first image
+        pIm.reset(
+            dynamic_cast<ImageInterface<Float>*> (images[0].release())
+        );
+    }
+    catch (const AipsError& x) {
+        if (! tmpImageName.empty()) {
+            Directory dir(tmpImageName);
+            if (dir.exists()) {
+                dir.removeRecursive(False);
+            }
+        }
+        RETHROW(x);
+    }
+    if (! tmpImageName.empty()) {
+        Directory dir(tmpImageName);
+        if (dir.exists()) {
+            dir.removeRecursive(False);
+        }
+    }
+    return pIm.release();
 }
 
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){

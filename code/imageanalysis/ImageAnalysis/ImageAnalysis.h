@@ -205,6 +205,8 @@ public:
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
 
+    // this method is deprecated. Use ImageMomentsTask instead.
+    // instead.
     ImageInterface<Float> * moments(
     	const Vector<Int>& moments, const Int axis, Record& region,
     	const String& mask, const Vector<String>& method,
@@ -220,6 +222,8 @@ public:
         const Bool stretchMask=False
     );
 
+    // this method is deprecated. Use ImageMomentsTask.setMomentsProgressMonitor()
+    // instead.
     void setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor );
 
     Bool open(const String& infile);
