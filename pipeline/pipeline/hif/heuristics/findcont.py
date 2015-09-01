@@ -22,4 +22,6 @@ class FindContHeuristics(object):
         self.context = context
 
     def find_continuum(self, dirty_cube):
-        return(findContinuum(dirty_cube))
+        channel_selection, png_name = findContinuum(dirty_cube)
+        frequency_ranges_GHz = utils.selection_to_frequencies(dirty_cube, channel_selection, 'GHz')
+        return(frequency_ranges_GHz, png_name)

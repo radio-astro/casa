@@ -888,3 +888,32 @@ def merge_td_columns(rows, num_to_merge=None, vertical_align=False):
         new_cols.append(merged)
     
     return zip(*new_cols)
+
+
+def selection_to_frequencies(img, selection, unit='GHz'):
+
+    '''Convert channel selection to frequency tuples.'''
+
+    frequencies = []
+    if (selection != ''):
+        iaTool = casatools.image
+        qaTool = casatools.quanta
+        iaTool.open(img)
+        for crange in selection.split(';'):
+            c0, c1 = crange.split('~')
+            m0 = iaTool.coordmeasures([None, None, None, c0])['measure']['spectral']['frequency']['m0']
+            m1 = iaTool.coordmeasures([None, None, None, c1])['measure']['spectral']['frequency']['m0']
+            f0 = qaTool.convert('%.15e %s' % (m0['value'], m0['unit']), unit)
+            f1 = qaTool.convert('%.15e %s' % (m1['value'], m1['unit']), unit)
+            if (qaTool.lt(f0, f1)):
+                print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
+                frequencies.append((f0['value'], f1['value']))
+            else:
+                print '%.9f~%.9f%s' % (f1['value'], f0['value'], unit)
+                frequencies.append((f1['value'], f0['value']))
+        iaTool.close()
+    else:
+        frequencies = ['NONE']
+        print 'None'
+
+    return frequencies
