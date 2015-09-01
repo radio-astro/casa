@@ -136,8 +136,6 @@ class MakeImListHeuristics(object):
                         source_name_key = source_name
                     self.cont_ranges_spwsel[source_name_key][str(spwid)] = spw_selection
 
-        else:
-            LOG.warn('No frequency range information available for continuum frequency selections.')
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')

@@ -394,7 +394,12 @@ class MakeImList(basetask.StandardTaskTemplate):
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 if (specmode in ('mfs', 'cont')):
-                    spwsel = ','.join(self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] for spwid in spwspec.split(','))
+                    spwsel = []
+                    for spwid in spwspec.split(','):
+                        spwsel.append(self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid])
+                        if (self.heuristics.cont_ranges_spwsel[field_intent[0]][spwid] == ''):
+                            LOG.warn('No continuum frequency range information available for %s, spw %s.' % (field_intent[0], spwid))
+                    spwsel = ','.join(spwsel)
                 else:
                     spwsel = ''
 

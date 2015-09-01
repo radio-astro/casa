@@ -34,6 +34,7 @@ class FindContResult(basetask.Results):
                     for spwid in spwids.split(','):
                         if (self.cont_ranges[source_name][spwid] in [['NONE'], ['']]):
                             spwsel.append('')
+                            LOG.warn('No continuum frequency range information available for %s, spw %s.' % (target, spwid))
                         else:
                             spwsel.append(';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]]))
                     context.clean_list_pending[i]['spwsel'] = ','.join(spwsel)
