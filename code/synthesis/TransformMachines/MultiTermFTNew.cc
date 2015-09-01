@@ -484,7 +484,7 @@ void MultiTermFTNew::finalizeToSkyNew(Bool dopsf,
   //---------------------------------------------------------------------------------------------------
   Bool MultiTermFTNew::fromRecord(String& error, const RecordInterface& inRec)
   {
-    cout << "MTFTNew :: fromRecord "<< endl;
+    //    cout << "MTFTNew :: fromRecord "<< endl;
     Bool retval = True;
     
     inRec.get("nterms",nterms_p);
