@@ -909,15 +909,101 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="overwrite">
      <shortdescription>True : Re-use existing images. False : Increment imagename</shortdescription>
-<description>True : Re-use existing images. False : Increment imagename</description>
+<description> Overwrite existing images (and start from an existing model image) 
+                        or automatically increment the image name and make a new image set.
+
+                        True : Re-use existing images. If imagename.model exists the subsequent
+                                  run will start from this model (i.e. predicting it using current gridder
+                                  settings and starting from the residual image).  Care must be taken
+                                  when combining this option with startmodel. Currently, only one or
+                                  the other can be used. 
+                                  startmodel='', imagename.model exists : 
+                                            - Start from imagename.model
+                                  startmodel='xxx', imagename.model does not exist : 
+                                            - Start from startmodel
+                                  startmodel='xxx', imagename.model exists : 
+                                            - Exit with an error message requesting the user to pick 
+                                              only one model.  This situation can arise when doing one
+                                              run with startmodel='xxx' to produce an output 
+                                              imagename.model that includes the content of startmodel,
+                                              and wanting to restart a second run to continue deconvolution.
+                                              Startmodel should be set to '' before continuing.
+                                              
+              
+                         False : A convenience feature to increment imagename with '_1', '_2', 
+                                    etc as suffixes so that all runs of tclean are fresh starts (without 
+                                    having to change the imagename parameter or delete images).
+
+                                    This mode will search the current directory for all existing
+                                    imagename extensions, pick the maximum, and adds 1.
+                                    For imagename='try' it will make try.psf, try_2.psf, try_3.psf, etc.
+                                    
+                                    This also works if you specify a directory name in the path : 
+                                    imagename='outdir/try'.  If './outdir' does not exist, it will create it. 
+                                    Then it will search for existing filenames inside that directory.
+
+                                    If outlier fields are specified, the incrementing happens for each 
+                                    of them (since each has its own 'imagename').  The counters are 
+                                    synchronized across imagefields, to make it easier to match up sets
+                                    of output images.  It adds 1 to the 'max id' from all outlier names 
+                                    on disk.  So, if you do two runs with only the main field 
+                                   (imagename='try'), and in the third run you add an outlier with 
+                                   imagename='outtry', you will get the following image names 
+                                   for the third run :  'try_3' and 'outtry_3' even though 
+                                   'outry' and 'outtry_2' have not been used. 
+
+
+</description>
       <value type="bool">True</value>
     </param>
 
 
     <param type="string" name="savemodel"> 
-	   <shortdescription>Options to save model at the end (none, virtual, modelcolumn)</shortdescription>
-<description>Options to save model at the end (none, virtual, modelcolumn)
-                      ...some info on when to use what....and relative runtime
+	   <shortdescription>Options to save model visibilities (none, virtual, modelcolumn)</shortdescription>
+<description>Options to save model visibilities (none, virtual, modelcolumn)
+
+                       Often, model visibilities must be created and saved in the MS
+                       to be later used for self-calibration (or to just plot and view them).
+
+                          none : Do not save any model visibilities in the MS. 
+                      
+                                     Model visibilities can always be predicted in a separate step by 
+                                     running tclean with niter=0,savemodel=virtual or modelcolumn
+                                     and with startmodel='xxx.model' or simply not changing any
+                                     image names.
+
+                          virtual : In the last major cycle, save the image model and state of the
+                                       gridder used during imaging within the SOURCE subtable of the
+                                       MS. Images required for de-gridding will also be stored internally.
+                                       All future references to model visibilities will activate the
+                                       (de)gridder to compute them on-the-fly.  This mode is useful
+                                       when the dataset is large enough that an additional model data
+                                       column on disk may be too much extra disk I/O, when the 
+                                       gridder is simple enough that on-the-fly recomputing of the
+                                       model visibilities is quicker than disk I/O.
+
+                          modelcolumn : In the last major cycle, save predicted model visibilities
+                                      in the MODEL_DATA column of the MS. This mode is useful when
+                                      the de-gridding cost to produce the model visibilities is higher 
+                                      than the I/O required to read the model visibilities from disk.
+                                      This mode is currently required for gridder='awproject'.
+                                      This mode is also required for the ability to later pull out
+                                      model visibilities from the MS into a python array for custom
+                                      processing.
+
+                        Note 1 : The imagename.model  image on disk will always be constructed
+                                      if the minor cycle runs. This savemodel parameter applies only to
+                                      model visibilities created by de-gridding the model image.
+                                      
+                        Note 2 : Runs with parallel=True can use only savemodel='none' for now.
+                                      To do self-cal, please do a separate tclean run with niter=0 and
+                                      parallel=False with savemodel=virtual or modelcolumn.   
+
+                        Note 3 :  It is possible for an MS to have both a virtual model
+                                      as well as a model_data column, but under normal operation, 
+                                      the last used mode will get triggered.  Use the delmod task to 
+                                      clear out existing models from an MS if confusion arises. 
+
 </description>
 	    <value type="string">none</value>
 <!--	    <allowed kind="enum">
