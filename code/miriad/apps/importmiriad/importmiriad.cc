@@ -455,7 +455,7 @@ void Importmiriad::checkInput(Block<Int>& spw, Block<Int>& wide)
       // get the initial correllator setup
       check_window();
       // setup the 'keep' array to specify which data we want to keep
-      for (Int i=0; i<win[0].nspect; i++) keep[i]=(spw[0]==-1);
+      for (Int i=0; i<MAXWIN+MAXWIDE; i++) keep[i]=(spw[0]==-1);
       for (uInt i=0; i<spw.nelements(); i++) {
         if (spw[i]>0 && spw[i]<win[0].nspect) keep[spw[i]]=True;
       }
@@ -889,7 +889,7 @@ void Importmiriad::fillMSMainTable()
 
   MSColumns& msc(*msc_p);           // Get access to the MS columns, new way
   Int nCorr = (array_p=="CARMA" ? 1 : npol_p); // # stokes (1 for CARMA for now)
-  Int nChan = nchan_p;              // # channels to be written
+  Int nChan = MAXCHAN;              // max # channels to be written
   if (Debug(1)) cout << "nCorr = "<<nCorr<<", nChan = "<< nChan <<endl;
   Int nCat  = 3;                    // # initial flagging categories (fixed at 3)
   Int iscan = 0;
@@ -916,7 +916,7 @@ void Importmiriad::fillMSMainTable()
   Double interval;
   Bool lastRowFlag = False;
 
-  cout << "Found  " << win[0].nspect << " spectral window" << (win[0].nspect>1 ? "s":"") << endl;
+  //cout << "Found  " << win[0].nspect << " spectral window" << (win[0].nspect>1 ? "s":"") << endl;
 
   time_p=0;
   for (group=0; ; group++) {        // loop forever until end-of-file
@@ -935,18 +935,6 @@ void Importmiriad::fillMSMainTable()
         uvwread_c(uv_handle_p, wdata, wflags, MAXCHAN, &nwread);
     else
         nwread=0;
-
-
-    if (nread != nchan_p) {     // big trouble: data width has changed
-      cout << "### Error: Narrow Channel changing from " << nchan_p <<
-              " to " << nread << endl;
-      break;                    // bail out for now
-    }
-    if (nwread != nwide_p) {     // big trouble: data width has changed
-      cout << "### Error: Wide Channel changing from " << nwide_p <<
-              " to " << nwread << endl;
-      break;                    // bail out for now
-    }
 
     // get time in MJD seconds ; input was in JD
     Double time = (preamble[3] - 2400000.5) * C::day;
@@ -2061,6 +2049,7 @@ void Importmiriad::check_window()
 
 
     if (not found) {
+      cout << "New frequency setting with "<<nspect<<" spectral windows"<<endl;
       nFreqSet_p=nFreqSet_p+1;
       if (nFreqSet_p>=MAXFSET) throw(AipsError("Too many frequency settings"));
       freqSet_p=next;
@@ -2068,7 +2057,7 @@ void Importmiriad::check_window()
     // Calculate datadesc_id offset
     ddid_p=0;
     for (Int i=0; i<freqSet_p; i++){
-      for (Int j=0; j<win[freqSet_p].nspect+win[freqSet_p].nwide; j++) {
+      for (Int j=0; j<win[i].nspect+win[i].nwide; j++) {
         if (keep[j]) ddid_p+=1;
       }
     }
