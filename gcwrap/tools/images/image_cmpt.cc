@@ -39,7 +39,6 @@
 #include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
-// #include <lattices/LatticeMath/LatticeAddNoise.h>
 #include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
@@ -53,7 +52,7 @@
 #include <lattices/LRegions/RegionType.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <measures/Measures/Stokes.h>
-#include <../casacore/measures/Measures/MeasIERS.h>
+#include <measures/Measures/MeasIERS.h>
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/VectorKernel.h>
@@ -79,6 +78,7 @@
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
+#include <imageanalysis/ImageAnalysis/ImageMomentsTask.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageRebinner.h>
@@ -96,6 +96,7 @@
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/assign/std/vector.hpp>
+
 using namespace boost::assign;
 using namespace std;
 
@@ -3040,86 +3041,139 @@ image::maxfit(const variant& region, const bool doPoint,
 	return rstat;
 }
 
-::casac::image *
-image::moments(
-	const std::vector<int>& moments, const int axis,
-	const variant& region, const ::casac::variant& vmask,
-	const std::vector<std::string>& in_method,
-	const std::vector<int>& smoothaxes,
-	const ::casac::variant& smoothtypes,
-	const std::vector<double>& smoothwidths,
-	const std::vector<double>& d_includepix,
-	const std::vector<double>& d_excludepix, const double peaksnr,
-	const double stddev, const std::string& velocityType,
-	const std::string& out, const std::string& smoothout,
-	const bool overwrite, const bool removeAxis,
-	const bool stretch, const bool /* async */
+::casac::image* image::moments(
+        const std::vector<int>& moments, const int axis,
+        const variant& region, const ::casac::variant& vmask,
+        const std::vector<std::string>& in_method,
+        const std::vector<int>& smoothaxes,
+        const ::casac::variant& smoothtypes,
+        const std::vector<double>& smoothwidths,
+        const std::vector<double>& d_includepix,
+        const std::vector<double>& d_excludepix, const double peaksnr,
+        const double stddev, const std::string& velocityType,
+        const std::string& out, const std::string& smoothout,
+        const bool overwrite, const bool removeAxis,
+        const bool stretch, const bool /* async */
 ) {
-	try {
-		_log << _ORIGIN;
-		if (detached()) {
-			return 0;
-		}
-		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
-		Vector<Int> whichmoments(moments);
-		SHARED_PTR<Record> Region(_getRegion(region, False));
-		String mask = vmask.toString();
-		if (mask == "[]") {
-			mask = "";
-		}
-		Vector<String> method = toVectorString(in_method);
-
-		Vector<String> kernels;
-		if (smoothtypes.type() == ::casac::variant::BOOLVEC) {
-			kernels.resize(0); // unset
-		}
-		else if (smoothtypes.type() == ::casac::variant::STRING) {
-			sepCommaEmptyToVectorStrings(kernels, smoothtypes.toString());
-		}
-		else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
-			kernels = toVectorString(smoothtypes.toStringVec());
-		}
-		else {
-			_log << LogIO::WARN << "Unrecognized smoothtypes datatype"
-				<< LogIO::POST;
-		}
-		int num = kernels.size();
-
-		Vector<Quantum<Double> > kernelwidths(num);
-		Unit u("pix");
-		for (int i = 0; i < num; i++) {
-			kernelwidths[i] = casa::Quantity(smoothwidths[i], u);
-		}
-		Vector<Float> includepix;
-		num = d_includepix.size();
-		if (!(num == 1 && d_includepix[0] == -1)) {
-			includepix.resize(num);
-			for (int i = 0; i < num; i++)
-				includepix[i] = d_includepix[i];
-		}
-		Vector<Float> excludepix;
-		num = d_excludepix.size();
-		if (!(num == 1 && d_excludepix[0] == -1)) {
-			excludepix.resize(num);
-			for (int i = 0; i < num; i++)
-				excludepix[i] = d_excludepix[i];
-		}
-		SHARED_PTR<ImageInterface<Float> > outIm(
-			_image->moments(
-				whichmoments, axis,
-				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
-				kernelwidths, includepix, excludepix, peaksnr, stddev,
-				velocityType, out, smoothout,
-				overwrite, removeAxis, stretch
-			)
-		);
-		return new ::casac::image(outIm);
-	}
-	catch (AipsError x) {
-		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+    try {
+        _log << _ORIGIN;
+        if (detached()) {
+            return 0;
+        }
+        UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
+        Vector<Int> whichmoments(moments);
+        SHARED_PTR<Record> Region(_getRegion(region, False));
+        String mask = vmask.toString();
+        if (mask == "[]") {
+            mask = "";
+        }
+        //Vector<String> method = toVectorString(in_method);
+        Vector<String> kernels;
+        if (smoothtypes.type() == ::casac::variant::BOOLVEC) {
+            kernels.resize(0); // unset
+        }
+        else if (smoothtypes.type() == ::casac::variant::STRING) {
+            sepCommaEmptyToVectorStrings(kernels, smoothtypes.toString());
+        }
+        else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
+            kernels = toVectorString(smoothtypes.toStringVec());
+        }
+        else {
+            _log << LogIO::WARN << "Unrecognized smoothtypes datatype"
+                << LogIO::POST;
+        }
+        int num = kernels.size();
+        vector<casa::Quantity> kernelwidths(num);
+        Unit u("pix");
+        for (int i = 0; i < num; ++i) {
+            kernelwidths[i] = casa::Quantity(smoothwidths[i], u);
+        }
+        std::vector<Double> includepix;
+        num = d_includepix.size();
+        if (!(num == 1 && d_includepix[0] == -1)) {
+            // includepix.resize(num);
+            includepix = d_includepix;;
+            /*
+            for (int i = 0; i < num; i++)
+                includepix[i] = d_includepix[i];
+            */
+        }
+        std::vector<Double> excludepix;
+        num = d_excludepix.size();
+        if (!(num == 1 && d_excludepix[0] == -1)) {
+            // excludepix.resize(num);
+            excludepix = d_excludepix;
+            /*
+            for (int i = 0; i < num; i++)
+                excludepix[i] = d_excludepix[i];
+                */
+        }
+        ThrowIf(
+            ! includepix.empty() && ! excludepix.empty(),
+            "Only one of includepix or excludepix may be specified, not both"
+        );
+        /*
+        SHARED_PTR<ImageInterface<Float> > outIm(
+            _image->moments(
+                whichmoments, axis,
+                *Region, mask, method, Vector<Int> (smoothaxes), kernels,
+                kernelwidths, includepix, excludepix, peaksnr, stddev,
+                velocityType, out, smoothout,
+                overwrite, removeAxis, stretch
+            )
+        );
+        */
+        ImageMomentsTask<Float> momentsTask(
+            _image->getImage(), Region.get(), mask,
+            smoothout, overwrite
+        );
+        momentsTask.setMoments(whichmoments);
+        momentsTask.setAxis(axis);
+        auto methods = toVectorString(in_method).tovector();
+        momentsTask.setMethods(methods);
+        if (
+            ! smoothaxes.empty()
+            && ! (smoothaxes.size() == 1 && smoothaxes[0] == -1)
+        ) {
+            ThrowIf (
+                *std::min_element(smoothaxes.begin(), smoothaxes.end()) < 0,
+                "All smoothaxes must be nonnegative"
+            );
+            std::vector<uInt> sa;
+            for (const auto s : smoothaxes) {
+                sa.push_back(s);
+            }
+            momentsTask.setSmoothAxes(sa);
+        }
+        if (! kernels.empty()) {
+            momentsTask.setKernels(kernels.tovector());
+        }
+        if (! kernelwidths.empty()) {
+            momentsTask.setKernelWidths(kernelwidths);
+        }
+        if (! includepix.empty() || ! excludepix.empty()) {
+            auto vrange = ! includepix.empty() ? includepix : excludepix;
+            std::vector<Float> range;
+            for (const auto v : vrange) {
+                range.push_back(v);
+            }
+            auto isInclude = ! includepix.empty();
+            momentsTask.setIncludeExcludeRange(range, isInclude);
+        }
+        momentsTask.setSNR(peaksnr);
+        momentsTask.setStdDev(stddev);
+        momentsTask.setVelocityType(velocityType);
+        momentsTask.setMomentImageName(out);
+        momentsTask.setRemoveAxis(removeAxis);
+        momentsTask.setStretch(stretch);
+        return new ::casac::image(momentsTask.makeMoments());
+    }
+    catch (const AipsError& x) {
+        _log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				        << LogIO::POST;
+        RETHROW(x);
+    }
+    return nullptr;
 }
 
 std::string image::name(const bool strippath) {
