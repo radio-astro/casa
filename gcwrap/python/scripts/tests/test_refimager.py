@@ -61,8 +61,8 @@ import inspect
 
 ## List to be run
 def suite():
-     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
-#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
+#     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
 #refdatapath = "/export/home/riya/rurvashi/Work/ImagerRefactor/Runs/UnitData/"
@@ -377,14 +377,14 @@ class testref_base(unittest.TestCase):
           tb.close();
 
      def delmodels(self,msname="",dmodcol=False):
-          delmod(msname,scr=True)  ## Get rid of OTF model and model column
+          delmod(msname,scr=dmodcol)  ## Get rid of OTF model and model column
 #          if dmodcol:
 #               self.delmodelcol(msname) ## Delete model column
 #          else:
 #               self.resetmodelcol(msname)  ## Set model column to one
-          cb.open(msname)
-          cb.close()
-          self.resetmodelcol(msname)  ## Set model column to zero
+#          cb.open(msname)
+#          cb.close()
+#          self.resetmodelcol(msname)  ## Set model column to zero
           self.delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
 
      def delmodelcol(self,msname=""):
@@ -1136,7 +1136,7 @@ class test_widefield(testref_base):
      def test_widefield_mosaicft_cube(self):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1)
+          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I')
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9743,[256,256,0,0]),(self.img+'.weight',0.46,[256,256,0,0]) ] )
 
           #do stokes V too..
@@ -1238,6 +1238,8 @@ class test_modelvis(testref_base):
           self.prepData("refim_twochan.ms")
           self.delmodels(msname=self.msfile,dmodcol=True)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',savemodel='modelcolumn')
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='data',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.data.png',title="original data")
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.model.png',title="empty model")
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
