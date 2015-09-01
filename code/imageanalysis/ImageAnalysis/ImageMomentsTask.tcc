@@ -34,14 +34,14 @@ template<class T> SPIIT ImageMomentsTask<T>::makeMoments() const {
             *this->_getLog() << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
                 << "so converting to a CASA temporary paged image named "
                 << tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
-            x = SubImageFactory<T>::createImage(
-                *this->_getImage(), tmpImageName, r, "", False,
-                False, True, False
-            );
             x = SubImageFactory<T>::createSubImageRO(
-                *x, *this->_getRegion(), this->_getMask(),
+                *this->_getImage(), *this->_getRegion(), this->_getMask(),
                 this->_getLog().get(), AxesSpecifier(),
                 this->_getStretch()
+            );
+            x = SubImageFactory<T>::createImage(
+                *x, tmpImageName, r, "", False,
+                False, True, False
             );
         }
         else {

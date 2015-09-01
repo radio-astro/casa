@@ -370,7 +370,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // _image will change and hence a reference to its CoordinateSystem will disappear
     // causing a seg fault.
     CoordinateSystem cSys = _image->coordinates();
-    Int spectralAxis = CoordinateUtil::findSpectralAxis(cSys);
+    Int spectralAxis = cSys.spectralAxisNumber(False);
     if (momentAxis_p == momentAxisDefault_p) {
         this->setMomentAxis(spectralAxis);
         if (_image->shape()(momentAxis_p) <= 1) {
@@ -379,12 +379,13 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         }
         worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
     }
+    convertToVelocity_p = (momentAxis_p == spectralAxis)
+        && (cSys.spectralCoordinate().restFrequency() > 0);
     os_p << myOrigin;
     String momentAxisUnits = cSys.worldAxisUnits()(worldMomentAxis_p);
     os_p << LogIO::NORMAL << endl << "Moment axis type is "
         << cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
     // If the moment axis is a spectral axis, indicate we want to convert to velocity
-    convertToVelocity_p = momentAxis_p == spectralAxis;
     // Check the user's requests are allowed
     if (!checkMethod()) {
         throw AipsError(error_p);
@@ -392,7 +393,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // Check that input and output image names aren't the same.
     // if there is only one output image
     if (moments_p.nelements() == 1 && !doTemp) {
-        if (!outName.empty() && (outName == _image->name())) {
+        if(!outName.empty() && (outName == _image->name())) {
             throw AipsError("Input image and output image have same name");
         }
     }
@@ -418,10 +419,10 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
     // routines can only handle convolution when the image fits fully in core
     // at present.
     PtrHolder<ImageInterface<T> > pSmoothedImageHolder;
-    ImageInterface<T>* pSmoothedImage = 0;
+    ImageInterface<T>* pSmoothedImage = nullptr;
     String smoothName;
     if (doSmooth_p) {
-        if (!smoothImage(pSmoothedImageHolder, smoothName)) {
+        if (! smoothImage(pSmoothedImageHolder, smoothName)) {
             throw AipsError(error_p);
         }
         pSmoothedImage = pSmoothedImageHolder.ptr();
@@ -479,7 +480,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         if (!doTemp) {
             const String in = _image->name(False);
             String outFileName;
-            if (moments_p.nelements() == 1) {
+            if (moments_p.size() == 1) {
                 if (outName.empty()) {
                     outFileName = in + suffix;
                 }
@@ -532,7 +533,7 @@ std::vector<std::unique_ptr<MaskedLattice<T> > > ImageMoments<T>::createMoments(
         outPt[i] = move(imgp);
     }
     // If the user is using the automatic, non-fitting window method, they need
-    // a good assement of the noise.  The user can input that value, but if
+    // a good assessment of the noise.  The user can input that value, but if
     // they don't, we work it out here.
     T noise;
     if (stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
