@@ -132,11 +132,14 @@ class FindCont(basetask.StandardTaskTemplate):
                         scanids = scanids.replace(']', '')
                         scanidlist.append(scanids)
 
+                    # Need to make a cube in the spw frequency frame to get
+                    # correct frequency ranges. Assume TOPO for now, read from
+                    # MS later.
                     job = casa_tasks.tclean(vis=inputs.vis, imagename=findcont_basename,
                         spw=spwid, intent=utils.to_CASA_intent(inputs.ms[0], target['intent']),
                         scan=scanidlist, specmode='cube', gridder=gridder, pblimit=0.2,
                         niter=0, threshold='0mJy', deconvolver='hogbom',
-                        interactive=False, outframe='LSRK', nchan=-1,
+                        interactive=False, outframe='TOPO', nchan=-1,
                         width='', imsize=target['imsize'],
                         cell=target['cell'], phasecenter=target['phasecenter'],
                         stokes='I', weighting='briggs', robust=0.5,
