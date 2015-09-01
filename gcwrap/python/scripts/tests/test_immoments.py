@@ -1328,15 +1328,19 @@ class immoment_test2(unittest.TestCase):
         for i in range(11):
             self.assertTrue(abs(bb[i,0] - vels[i]) < 10)
         
-    def test_CAS7677(self):
-        """Verify CASA doesn't crash if image has rest frequency=0"""
+    def test_CAS7850(self):
+        """Verify support for rest frequency=0"""
         myia = iatool()
         myia.fromshape("", [20, 20, 20])
         csys = myia.coordsys()
         csys.setrestfrequency("0Hz")
         myia.setcoordsys(csys.torecord())
         csys.done()
-        self.assertRaises(Exception, myia.moments, moments=0)
+        zz = myia.moments(moments=0)
+        self.assertTrue(zz)
+        zz = myia.moments(moments=1)
+        self.assertTrue(zz)
+        zz.done()
         myia.done()
                 
         
