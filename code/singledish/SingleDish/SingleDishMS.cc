@@ -1171,7 +1171,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               }
 
               ofs_txt << ']' << endl;
-              ;
+              
               ofs_txt << endl;
               Matrix<uInt> bltype_mtx2 = bltype_mtx[0][ipol];
               Matrix<Int> fpar_mtx2 = fpar_mtx[0][ipol];
@@ -1196,16 +1196,16 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               Matrix<Float> coeff_mtx2 = coeff_mtx;
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                 ofs_txt << "p" << icoeff << " = ";
-                ofs_txt.setf(ios::scientific);
-                ofs_txt << setprecision(6) << coeff_mtx2(ipol, icoeff) << "  ";
+                //ofs_txt.setf(ios::fixed);
+                ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
               }
 
               ofs_txt << endl;
               ofs_txt << endl;
               //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
               ofs_txt << "rms = ";
-              ofs_txt.setf(ios::fixed);
-              ofs_txt << setprecision(6) << rms_mtx2(0, 0) << endl;
+              //ofs_txt.setf(ios::fixed);
+              ofs_txt << setprecision(8) << rms_mtx2(0, 0) << endl;
               ofs_txt << endl;
               //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
               ofs_txt << "Number of clipped channels = "
@@ -1239,7 +1239,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
             for (size_t ipol = 0; ipol < num_pol; ++ipol) {
               ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow] << ','
-                  << (uInt) data_spw[irow] << ',' << ipol << ',' << times[irow]
+                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(10) << times[irow]
                   << ',';
               ofs_csv << '[';
               for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
@@ -1274,11 +1274,13 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol, 0)
                   << ',';
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-                ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                //ofs_txt.setf(ios::fixed);
+                ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
               }
               Matrix<Float> rms_mtx2 = rms_mtx;
               //ofs_csv << rms_mtx[0][ipol] << ',';
-              ofs_csv << rms_mtx2(ipol, 0) << ',';
+              //ofs_txt.setf(ios::fixed);
+              ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
               //cout << "rms_mtx2(ipol,0) " << rms_mtx2(ipol,0) << endl;
               //cout << "rms_mtx2(0,0) " << rms_mtx2(0,0) << endl;
 
@@ -1709,15 +1711,15 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                 //ofs_txt << "p" << icoeff << " = " << coeff_mtx2(ipol,icoeff) << "  ";
                 ofs_txt << "p" << icoeff << " = ";
-                ofs_txt.setf(ios::scientific);
-                ofs_txt << setprecision(6) << coeff_mtx2(ipol, icoeff) << "  ";
+                //ofs_txt.setf(ios::scientific);
+                ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
               }
               ofs_txt << endl;
               ofs_txt << endl;
               //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
               ofs_txt << "rms = ";
-              ofs_txt.setf(ios::fixed);
-              ofs_txt << setprecision(6) << rms_mtx2(0, 0) << endl;
+              //ofs_txt.setf(ios::fixed);
+              ofs_txt << setprecision(8) << rms_mtx2(0, 0) << endl;
               ofs_txt << endl;
               //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
               ofs_txt << "Number of clipped channels = "
@@ -1750,7 +1752,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
             for (size_t ipol = 0; ipol < num_pol; ++ipol) {
               ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow] << ','
-                  << (uInt) data_spw[irow] << ',' << ipol << ',' << times[irow]
+                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(8) << times[irow]
                   << ',';
               ofs_csv << '[';
 
@@ -1786,11 +1788,11 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                 //ofs_csv << coeff_mtx[icoeff][ipol] << ',';
-                ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
               }
 
               Matrix<Float> rms_mtx2 = rms_mtx;
-              ofs_csv << rms_mtx2(ipol, 0) << ',';
+              ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
 
               //ofs_csv << rms_mtx[0][ipol] << ',';
               //ofs_csv << (uInt)num_chan ;
@@ -2934,7 +2936,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                 }
 
                 ofs_txt << ']' << endl;
-                ;
+                
                 ofs_txt << endl;
                 Matrix<uInt> bltype_mtx2 = bltype_mtx[0][ipol];
                 Matrix<Int> fpar_mtx2 = fpar_mtx[0][ipol];
@@ -2961,15 +2963,15 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                 for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
                   //ofs_txt << "p" << icoeff << " = " << coeff_mtx2(ipol,icoeff) << "  ";
                   ofs_txt << "p" << icoeff << " = ";
-                  ofs_txt.setf(ios::scientific);
-                  ofs_txt << setprecision(6) << coeff_mtx2(ipol, icoeff)
+                  //ofs_txt.setf(ios::scientific);
+                  ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff)
                       << "  ";
                 }
                 ofs_txt << endl;
                 ofs_txt << endl;
                 ofs_txt << "rms = ";
-                ofs_txt.setf(ios::fixed);
-                ofs_txt << setprecision(6) << rms_mtx2(0, 0) << endl;
+                //ofs_txt.setf(ios::fixed);
+                ofs_txt << setprecision(8) << rms_mtx2(0, 0) << endl;
                 ofs_txt << endl;
                 //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
                 ofs_txt << "Number of clipped channels = "
@@ -3005,7 +3007,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               if (apply_mtx2(0, 0) == True) {
                 ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow]
                     << ',' << (uInt) data_spw[irow] << ',' << ipol << ','
-                    << times[irow] << ',';
+                    << setprecision(10) << times[irow] << ',';
                 ofs_csv << '[';
                 for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
                     ++imasklist) {
@@ -3039,10 +3041,10 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
 
                 for (size_t icoeff = 0; icoeff < num_coeff_max; ++icoeff) {
                   //ofs_csv << coeff_mtx[icoeff][ipol] << ',';
-                  ofs_csv << coeff_mtx2(ipol, icoeff) << ',';
+                  ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
                 }
                 Matrix<Float> rms_mtx2 = rms_mtx;
-                ofs_csv << rms_mtx2(ipol, 0) << ',';
+                ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
                 //ofs_csv << rms_mtx[0][ipol] << ',';
                 //ofs_csv << (uInt)num_chan ;
                 ofs_csv << final_mask2[ipol] - final_mask[ipol];
