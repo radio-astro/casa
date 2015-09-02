@@ -879,6 +879,7 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 	waitOnCanvases();
 	PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 	const String sep( "_");
+    bool shortenName = false;
     for ( int i = 0; i < pageCount; i++ ){
     	String pageStr;
     	if ( i > 0 ){
@@ -922,7 +923,21 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	if ( pageStr.size() > 0 ){
     		fileId = fileId + sep + pageStr;
     	}
-    	exportFormat.location = baseFileName + fileId + suffix;
+
+    	String exportFileName = baseFileName + fileId + suffix;
+        // CAS-7777 - file(s) will not export if filename > 255
+        // Need cushion for sep, pageStr, additional digits, etc.
+        // Hopefully first filename is representative of the rest!
+        if ((exportFileName.length() > 240) || shortenName) {
+            if (pageStr.size() > 0)
+                exportFileName = baseFileName + sep + pageStr + suffix;
+            else
+                exportFileName = baseFileName + suffix;
+            // if shorten one name, shorten them all
+            shortenName = true;
+        }
+
+        exportFormat.location = exportFileName;
     	exportSuccess = itsParent_->exportToFormat( exportFormat );
     	waitOnCanvases();
     	if ( i < pageCount - 1 ){
