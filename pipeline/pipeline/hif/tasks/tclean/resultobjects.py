@@ -160,7 +160,10 @@ class TcleanResult(basetask.Results):
 
         for k,v in self.iterations.items():
             repr += ' iteration %s:\n' % k
-            repr += '   image    : %s\n' % os.path.basename(v['image']+extension)
+            if (os.path.basename(v['image']) == ''):
+                repr += '   image    : None\n'
+            else:
+                repr += '   image    : %s\n' % os.path.basename(v['image']+extension)
             repr += '   residual : %s\n' % os.path.basename(v['residual']+extension)
             repr += '   model    : %s\n' % os.path.basename(v['model']+extension)
             if k > 0:
