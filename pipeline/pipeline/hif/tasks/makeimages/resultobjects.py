@@ -25,6 +25,7 @@ class MakeImagesResult(basetask.Results):
                 imageitem = imagelibrary.ImageItem(
                   imagename=result.image, sourcename=result.sourcename,
                   spwlist=result.spw, specmode=result.specmode,
+                  multiterm=result.multiterm,
                   sourcetype=result.intent, imageplot=result.imageplot)
                 if 'TARGET' in result.intent:
                     context.sciimlist.add_item(imageitem)

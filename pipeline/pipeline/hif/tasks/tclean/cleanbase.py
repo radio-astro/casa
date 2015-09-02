@@ -250,6 +250,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                                   intent=inputs.intent,
                                   spw=inputs.spw,
                                   specmode=inputs.specmode,
+                                  multiterm=2 if inputs.deconvolver=='mtmfs' else None,
                                   plotdir=plotdir)
         else:
             result = inputs.result
@@ -273,11 +274,6 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
-        if (inputs.deconvolver == 'mtmfs'):
-            mt_name = '.tt0'
-        else:
-            mt_name = ''
-
         #        LOG.info('Stokes %s' % (inputs.stokes))
         #        LOG.info('Iteration %s threshold %s niter %s' % (iter,
         #          inputs.threshold, inputs.niter))
@@ -285,20 +281,20 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Derive names of clean products for this iteration, remove
         # old clean products with the name name,
         old_model_name = result.model
-        model_name = '%s.%s.iter%s.model%s' % (
-            inputs.imagename, inputs.stokes, iter, mt_name)
-        rename_image(old_name=old_model_name, new_name=model_name)
-        if ((inputs.deconvolver == 'mtmfs') and (old_model_name is not None) and (model_name is not None)):
-            rename_image(old_name=old_model_name.replace('.tt0', '.tt1'), new_name=model_name.replace('.tt0', '.tt1'))
+        model_name = '%s.%s.iter%s.model' % (inputs.imagename, inputs.stokes, iter)
+        if (result.multiterm):
+            rename_image(old_name=old_model_name, new_name=model_name, extensions=['.tt%d' % (nterm) for nterm in xrange(result.multiterm)])
+        else:
+            rename_image(old_name=old_model_name, new_name=model_name)
         if (inputs.niter == 0):
             image_name = ''
         else:
-            image_name = '%s.%s.iter%s.image%s' % (
-                inputs.imagename, inputs.stokes, iter, mt_name)
-        residual_name = '%s.%s.iter%s.residual%s' % (
-            inputs.imagename, inputs.stokes, iter, mt_name)
-        psf_name = '%s.%s.iter%s.psf%s' % (
-          inputs.imagename, inputs.stokes, iter, mt_name)
+            image_name = '%s.%s.iter%s.image' % (
+                inputs.imagename, inputs.stokes, iter)
+        residual_name = '%s.%s.iter%s.residual' % (
+            inputs.imagename, inputs.stokes, iter)
+        psf_name = '%s.%s.iter%s.psf' % (
+          inputs.imagename, inputs.stokes, iter)
         if inputs.gridder == 'mosaic':
             flux_name = '%s.%s.iter%s.pb' % (
                 inputs.imagename, inputs.stokes, iter)
@@ -332,22 +328,22 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         # Store the model.
         set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-                     type='model', iter=iter)
+                     type='model', iter=iter, multiterm=result.multiterm)
         result.set_model(iter=iter, image=model_name)
 
         # Store the image.
         set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                     type='image', iter=iter)
+                     type='image', iter=iter, multiterm=result.multiterm)
         result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-                     type='residual', iter=iter)
+                     type='residual', iter=iter, multiterm=result.multiterm)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
-                     type='psf', iter=iter)
+                     type='psf', iter=iter, multiterm=result.multiterm)
         result.set_psf(image=psf_name)
 
         # Store the flux image.
@@ -367,20 +363,25 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         return result
 
-def rename_image(old_name, new_name):
+def rename_image(old_name, new_name, extensions=['']):
     """
     Rename an image
     """
     if old_name is not None:
-        with casatools.ImageReader(old_name) as image:
-            image.rename(name=new_name, overwrite=True)
+        for extension in extensions:
+            with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
+                image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None):
     """
     Define miscellaneous image information
     """
     if name != '':
-        with casatools.ImageReader(name) as image:
+        if (multiterm):
+            extension = '.tt0'
+        else:
+            extension = ''
+        with casatools.ImageReader(name+extension) as image:
             info = image.miscinfo()
             if spw:
                 info['spw'] = spw

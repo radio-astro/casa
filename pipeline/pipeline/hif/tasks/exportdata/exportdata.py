@@ -858,12 +858,18 @@ finally:
 	    for image in cleanlist:
 		# Image name probably includes path
 		if image['sourcetype'] in intents:
-	            images_list.append(image['imagename'])
+                    if (image['multiterm']):
+	                for nt in xrange(image['multiterm']):
+                            images_list.append('%s.tt%d' % (image['imagename'], nt))
+                        images_list.append(image['imagename'].replace('.image', '.alpha'))
+                        images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
+                    else:
+	                images_list.append(image['imagename'])
 	else:
 	    # Assume only the root image name was given.
 	    cleanlib = imagelibrary.ImageLibrary()
 	    for image in images:
-		if caliimages:
+		if calimages:
 		    imageitem = imagelibrary.ImageItem(imagename=image,
 		        sourcename='UNKNOWN',
 		        spwlist='UNKNOWN',
@@ -887,6 +893,7 @@ finally:
 	    #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
 	    fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
 	    fitsname = re.sub('\.iter\d+\.image', '', fitsname)
+	    fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
 	    fitsfile = os.path.join (products_dir,
 	        os.path.basename(fitsname) + '.fits')
 	    LOG.info('Saving final image %s to FITS file %s' % \

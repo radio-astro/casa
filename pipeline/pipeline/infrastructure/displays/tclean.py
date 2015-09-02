@@ -33,8 +33,13 @@ class CleanSummary(object):
             if r.empty():
                 continue
 
+            if (r.multiterm):
+                extension = '.tt0'
+            else:
+                extension = ''
+
             # psf map
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf,
+            plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf+extension,
               reportdir=stage_dir, intent=r.intent))
 
             # flux map
@@ -48,18 +53,18 @@ class CleanSummary(object):
                 # image for this iteration
                 if (r.iterations[i]['image'] != ''):
                     plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                      r.iterations[i]['image'], reportdir=stage_dir, intent=r.intent))
+                      r.iterations[i]['image']+extension, reportdir=stage_dir, intent=r.intent))
 
                 # residual for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                  r.iterations[i]['residual'], reportdir=stage_dir, intent=r.intent))
+                  r.iterations[i]['residual']+extension, reportdir=stage_dir, intent=r.intent))
 
                 # model for this iteration (currently only last but
                 # allow for others in future)
                 if r.iterations[i].has_key('model') and \
-                  os.path.exists(r.iterations[i]['model']):
+                  os.path.exists(r.iterations[i]['model']+extension):
                     plot_wrappers.append(displays.SkyDisplay().plot(
-                      self.context, r.iterations[i]['model'],
+                      self.context, r.iterations[i]['model']+extension,
                       reportdir=stage_dir, intent=r.intent))
 
                 # cleanmask for this iteration - not for iter 0

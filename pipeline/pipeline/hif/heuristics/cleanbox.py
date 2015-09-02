@@ -127,7 +127,7 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     return clean_more
 
 def niter_and_mask(psf, residual, new_mask):
-    """Method for calibrators reported bY Eric Villard.
+    """Method for calibrators reported by Eric Villard.
 
     Starting with peak in image, find islands; contiguous pixels above
     threshold. If peak bright enough to cleanbox then adds chosen region
@@ -255,7 +255,7 @@ def niter_and_mask(psf, residual, new_mask):
     return niter
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
-  npeak=30, flux=None):
+  npeak=30, flux=None, multiterm=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
 
     Starting with peak in image, find islands; contiguous pixels above
@@ -276,11 +276,16 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                         to locate edges of map where spikes may occur.
     """
 
+    if (multiterm):
+        extension = '.tt0'
+    else:
+        extension = ''
+
     # Get a searchmask to be used in masking image during processing.
     # An explicitly separate mask is used so as not to risk messing
     # up any mask that arrives with the residual.
     # Set all its values to 1 (=True=good).
-    searchmask = casatools.image.newimagefromimage(infile=residual,
+    searchmask = casatools.image.newimagefromimage(infile=residual+extension,
       outfile='searchmask', overwrite=True)
     searchmask.calc('1', verbose=False) 
 
@@ -302,7 +307,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     searchmask.calc('replace(searchmask[indexin(1,[0:%s])], 0)' % (shape[1]-5),
       verbose=False)
 
-    with casatools.ImageReader(residual) as image:
+    with casatools.ImageReader(residual+extension) as image:
         # find the max pixel value and derive the threshold for the clean mask
         # 'islands'.
 
@@ -471,10 +476,16 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     LOG.debug('%s %s' % (threshold, island_tree_peaks))
     return threshold, island_tree_peaks
 
-def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
+def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1, multiterm=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
     """
-    with casatools.ImageReader(psf) as image:
+
+    if (multiterm):
+        extension = '.tt0'
+    else:
+        extension = ''
+
+    with casatools.ImageReader(psf+extension) as image:
 
         # the psf is a cube. For now assume all planes are identical, 
         # except for the extreme channels which often appear empty.
@@ -487,7 +498,7 @@ def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
         # 'island threshold'.
         # get mask
         searchmask = image.getregion(mask='"%s" > %s' %
-          (psf, island_threshold), getmask=True)[:,:,0,target_chan]
+          (psf+extension, island_threshold), getmask=True)[:,:,0,target_chan]
 
         # get pixels
         pixels = image.getregion()[:,:,0,target_chan]
@@ -680,21 +691,26 @@ def find_island(searchmask, pixels, grid):
 
     return peak, peak_x, peak_y, island_pix
 
-def analyse_clean_result(model, restored, residual, flux, cleanmask):
+def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
 
     if flux == '':
         flux = None
 
+    if (multiterm):
+        extension = '.tt0'
+    else:
+        extension = ''
+
     # get the sum of the model image to find how much flux has been
     # cleaned
     model_sum = None
-    with casatools.ImageReader(model) as image:
+    with casatools.ImageReader(model+extension) as image:
         model_stats = image.statistics(robust=False)
         model_sum = model_stats['sum'][0]
         LOG.debug('Sum of model: %s' % model_sum)
 
     LOG.debug('Fixing coordsys of flux and cleanmask')
-    with casatools.ImageReader(residual) as image:
+    with casatools.ImageReader(residual+extension) as image:
         csys = image.coordsys()
     if flux is not None:
         with casatools.ImageReader(flux) as image:
@@ -703,7 +719,7 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
         with casatools.ImageReader(cleanmask) as image:
             image.setcoordsys(csys.torecord())
 
-    with casatools.ImageReader(residual) as image:
+    with casatools.ImageReader(residual+extension) as image:
         # get the rms of the residual image inside the cleaned area
         LOG.todo('Cannot use dirname in mask')
         clean_rms = None
@@ -758,7 +774,7 @@ def analyse_clean_result(model, restored, residual, flux, cleanmask):
 
     # get max of cleaned result
     if restored != '':
-        with casatools.ImageReader(restored) as image:
+        with casatools.ImageReader(restored+extension) as image:
             clean_stats = image.statistics()
             image_max = clean_stats['max'][0]
             LOG.debug('Clean image max: %s' % image_max)

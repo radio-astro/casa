@@ -45,10 +45,14 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     continue
                 if not r.iterations:
                     continue
+                if (r.multiterm):
+                    extension = '.tt0'
+                else:
+                    extension = ''
 
                 maxiter = max(r.iterations.keys())
 
-                with casatools.ImageReader(r.iterations[maxiter]['image']) as image:
+                with casatools.ImageReader(r.iterations[maxiter]['image']+extension) as image:
                     info = image.miscinfo()
                     spw = pol = field = None
                     if info.has_key('spw'): 
@@ -96,7 +100,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
                     
-                with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
+                with casatools.ImageReader(r.iterations[maxiter]['residual']+extension) as residual:
                     stats = residual.statistics(robust=False)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
 

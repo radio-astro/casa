@@ -9,7 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class BaseCleanSequence:
 
-    def __init__(self):
+    def __init__(self, multiterm=None):
         """Constructor.
         """
         self.iter = None
@@ -28,23 +28,25 @@ class BaseCleanSequence:
         self.non_cleaned_rms_list = []
         self.island_peaks_list = []
         self.thresholds = []
+        self.multiterm = multiterm
 
-    def iteration_result(self, iter, psf, model, restored, residual,
+    def iteration_result(self, iter, multiterm, psf, model, restored, residual,
                          flux, cleanmask, threshold=None):
         """This method sets the iteration counter and returns statistics for
         that iteration.
         """
         self.iter = iter
+        self.multiterm = multiterm
 
         if self.sidelobe_ratio is None:
-            self.sidelobe_ratio = cbheuristic.psf_sidelobe_ratio(psf=psf)
+            self.sidelobe_ratio = cbheuristic.psf_sidelobe_ratio(psf=psf, multiterm=multiterm)
         self.psf = psf
         self.flux = flux
 
         #if cleanmask is not None and os.path.exists(cleanmask):
         model_sum, clean_rms, non_cleaned_rms, residual_max, \
             residual_min, rms2d, image_max = cbheuristic.analyse_clean_result(
-            model, restored, residual, flux, cleanmask)
+            multiterm, model, restored, residual, flux, cleanmask)
 
         # Append the statistics.
         self.iters.append(iter)

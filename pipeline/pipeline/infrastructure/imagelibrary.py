@@ -43,12 +43,13 @@ class ImageLibrary(object):
 # This class contains information for image data product
 
 class ImageItem (object):
-    def __init__(self, imagename, sourcename, spwlist, specmode, sourcetype,
+    def __init__(self, imagename, sourcename, spwlist, specmode, multiterm, sourcetype,
         imageplot ='', metadata={}):
         self.imagename = imagename
         self.sourcename = sourcename
         self.spwlist = spwlist
         self.specmode = specmode
+        self.multiterm = multiterm
         self.sourcetype = sourcetype
         self.imageplot = imageplot
         self._metadata = metadata

@@ -27,12 +27,13 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, plotdir=None):
+    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
         self.specmode = specmode
+        self.multiterm = multiterm
         self.plotdir = plotdir
         self._psf = None
         self._model = None
@@ -142,21 +143,26 @@ class TcleanResult(basetask.Results):
         self._rms = rms
 
     def __repr__(self):
+        if (self.multiterm):
+            extension = '.tt0'
+        else:
+            extension = ''
+
         repr = 'Tclean:\n'
         if self._psf is not None:
-            repr += ' psf: %s\n' % os.path.basename(self._psf)
+            repr += ' psf: %s\n' % os.path.basename(self._psf+extension)
         else:
             repr += ' psf: None'
         if self._flux is not None:
             repr += ' flux: %s\n' % os.path.basename(self._flux)
         else:
             repr += ' flux: None'
-    
+
         for k,v in self.iterations.items():
             repr += ' iteration %s:\n' % k
-            repr += '   image    : %s\n' % os.path.basename(v['image'])
-            repr += '   residual : %s\n' % os.path.basename(v['residual'])
-            repr += '   model    : %s\n' % os.path.basename(v['model'])
+            repr += '   image    : %s\n' % os.path.basename(v['image']+extension)
+            repr += '   residual : %s\n' % os.path.basename(v['residual']+extension)
+            repr += '   model    : %s\n' % os.path.basename(v['model']+extension)
             if k > 0:
                 repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
 

@@ -25,6 +25,11 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
 
     def iteration(self, new_cleanmask):
 
+        if (self.multiterm):
+            extension = '.tt0'
+        else:
+            extension = ''
+
         if self.iter is None:
             raise Exception, 'no data for iteration'
 
@@ -40,7 +45,7 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
                 cm.calc('replace("%s"["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
                 cm.done()
             else:
-                cm = casatools.image.newimagefromimage(infile=self.residuals[0],
+                cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
                   outfile=new_cleanmask, overwrite=True)
                 cm.set(pixels='0')
                 shape = cm.shape()

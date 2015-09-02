@@ -217,7 +217,7 @@ class Tclean(cleanbase.CleanBase):
         # Give the result to the sequence_manager for analysis
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
             rms2d, image_max = sequence_manager.iteration_result(iter=0,
-                    psf=result.psf, model=result.model,
+                    multiterm=result.multiterm, psf=result.psf, model=result.model,
                     restored=result.image, residual=result.residual,
                     flux=result.flux, cleanmask=None, threshold=None)
 
@@ -261,7 +261,7 @@ class Tclean(cleanbase.CleanBase):
 
             # Give the result to the clean 'sequencer'
             model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min, rms2d, image_max = sequence_manager.iteration_result(
-                iter=iter, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
+                iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
                 flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold)
 
             # Keep RMS for QA
@@ -304,7 +304,7 @@ class Tclean(cleanbase.CleanBase):
         sequence_manager = BaseCleanSequence()
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
         residual_min, rms2d, image_max = \
-            sequence_manager.iteration_result(iter=0,
+            sequence_manager.iteration_result(iter=0, multiterm=result.multiterm,
                                               psf=result.psf, model=result.model, restored=result.image,
                                               residual=result.residual, flux=result.flux, cleanmask=None)
 
