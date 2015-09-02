@@ -143,14 +143,9 @@ class TcleanResult(basetask.Results):
         self._rms = rms
 
     def __repr__(self):
-        if (self.multiterm):
-            extension = '.tt0'
-        else:
-            extension = ''
-
         repr = 'Tclean:\n'
         if self._psf is not None:
-            repr += ' psf: %s\n' % os.path.basename(self._psf+extension)
+            repr += ' psf: %s\n' % os.path.basename(self._psf)
         else:
             repr += ' psf: None'
         if self._flux is not None:
@@ -160,12 +155,9 @@ class TcleanResult(basetask.Results):
 
         for k,v in self.iterations.items():
             repr += ' iteration %s:\n' % k
-            if (os.path.basename(v['image']) == ''):
-                repr += '   image    : None\n'
-            else:
-                repr += '   image    : %s\n' % os.path.basename(v['image']+extension)
-            repr += '   residual : %s\n' % os.path.basename(v['residual']+extension)
-            repr += '   model    : %s\n' % os.path.basename(v['model']+extension)
+            repr += '   image    : %s\n' % os.path.basename(v['image'])
+            repr += '   residual : %s\n' % os.path.basename(v['residual'])
+            repr += '   model    : %s\n' % os.path.basename(v['model'])
             if k > 0:
                 repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
 
