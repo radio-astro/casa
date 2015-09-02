@@ -1012,7 +1012,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
 	Record imrec;
-	TempImage<Complex> imCopy(griddedData.shape(), image->coordinates());
+	Vector<Double> pixcen(2);
+	pixcen(0)=Double(griddedData.shape()(0)/2); pixcen(1)=Double(griddedData.shape()(1)/2);
+	dircoord.setReferencePixel(pixcen);
+	cs.replaceCoordinate(dircoord, cs.findCoordinate(Coordinate::DIRECTION));
+	TempImage<Complex> imCopy(griddedData.shape(), cs);
 	imCopy.put(griddedData) ;
 	ImageUtilities::copyMiscellaneous(imCopy, *image);
 	if(imCopy.toRecord(error, imrec))
