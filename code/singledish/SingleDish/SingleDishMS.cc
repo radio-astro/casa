@@ -1,54 +1,48 @@
 #include <cstdlib>
 #include <iostream>
-#include <string>
-#include <vector>
 #include <map>
+#include <string>
+#include <sys/time.h>
+#include <vector>
 
-//#include <libsakura/sakura.h>
-//#include <libsakura/config.h>
-
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Containers/Allocator.h>
+#include <casa/Containers/Block.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
+#include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
-#include <casa/Arrays/ArrayMath.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MSSel/MSSelection.h>
 #include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisSetUtil.h>
+#include <scimath/Fitting/GenericL2Fit.h>
+#include <scimath/Fitting/NonLinearFitLM.h>
+#include <scimath/Functionals/CompiledFunction.h>
+#include <scimath/Functionals/CompoundFunction.h>
+#include <scimath/Functionals/Function.h>
+#include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Mathematics/Convolver.h>
 #include <scimath/Mathematics/VectorKernel.h>
-#include <singledish/SingleDish/SingleDishMS.h>
 #include <singledish/SingleDish/BaselineTable.h>
 #include <singledish/SingleDish/BLParameterParser.h>
 #include <singledish/SingleDish/LineFinder.h>
+#include <singledish/SingleDish/SingleDishMS.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
-
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Allocator.h>
-#include <scimath/Fitting/GenericL2Fit.h>
-#include <scimath/Fitting/NonLinearFitLM.h>
-#include <scimath/Functionals/Function.h>
-#include <scimath/Functionals/CompiledFunction.h>
-#include <scimath/Functionals/CompoundFunction.h>
-#include <scimath/Functionals/Gaussian1D.h>
-
 #include <tables/Tables/ScalarColumn.h>
-#include <casa/Quanta/MVTime.h>
 
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
 
 namespace {
-//---for measuring elapse time------------------------
-#include <sys/time.h>
+
 double gettimeofday_sec() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv.tv_sec + (double) tv.tv_usec * 1.0e-6;
 }
-//----------------------------------------------------
 
 using casa::vi::VisBuffer2;
 using casa::Matrix;
@@ -810,15 +804,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
     string const& blfunc, int const order, float const clip_threshold_sigma,
     int const num_fitting_max, bool const linefinding, float const threshold,
     int const avg_limit, int const minwidth, vector<int> const& edge) {
-//cout << "out_bloutput_name" << out_bloutput_name << flush << endl;
-  split_bloutputname(out_bloutput_name);
-//cout << "bloutputname_text" << bloutputname_text << flush << endl;
-//cout << "bloutputname_csv" << bloutputname_csv << flush << endl;
-//cout << "bloutputname_table" << bloutputname_table << flush << endl;
 
-  LogIO os(_ORIGIN);
-  os << "Fitting and subtracting polynomial baseline order = " << order
-      << LogIO::POST;
   // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
   // no iteration is necessary for the processing.
@@ -828,47 +814,43 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   // 3. fit a polynomial to each spectrum and subtract it
   // 4. put single spectrum (or a block of spectra) to out_column
 
+  split_bloutputname(out_bloutput_name);
+
+  LogIO os(_ORIGIN);
+  os << "Fitting and subtracting polynomial baseline order = " << order
+      << LogIO::POST;
+
   //double tstart = gettimeofday_sec();
 
-  //checking order
   if (order < 0) {
     throw(AipsError("order must be positive or zero."));
   }
 
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
-  LIBSAKURA_SYMBOL (Status)
-  status;
-  LIBSAKURA_SYMBOL (BaselineStatus)
-  bl_status;
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
-
   BaselineTable *bt = 0;
+
   ofstream ofs_csv;
   ofstream ofs_txt;
-
-  //bool write_baseline_csv   = (out_bltable_name != "");
   bool write_baseline_csv = (bloutputname_csv != "");
-
-  //bool write_baseline_text  = (out_bltable_name != "");
   bool write_baseline_text = (bloutputname_text != "");
-
-  //bool write_baseline_table = (out_bltable_name != "");
   bool write_baseline_table = (bloutputname_table != "");
 
   if (write_baseline_csv) {
     ofs_csv.open(bloutputname_csv.c_str());
   }
-
   if (write_baseline_text) {
     ofs_txt.open(bloutputname_text.c_str(), std::ios::app);
   }
-
-  if (write_baseline_table)
+  if (write_baseline_table) {
     bt = new BaselineTable(vi->ms());
+  }
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -880,8 +862,8 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
-  LIBSAKURA_SYMBOL (BaselineType)
-  bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+
+  LIBSAKURA_SYMBOL(BaselineType) bltype = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
   if (blfunc == "chebyshev") {
     bltype = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
   }
@@ -907,29 +889,29 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
       Vector<float> spec(num_chan, ArrayInitPolicy::NO_INIT);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row, ArrayInitPolicy::NO_INIT);
       Vector<bool> mask(num_chan, ArrayInitPolicy::NO_INIT);
-      Vector<bool> mask2(num_chan, ArrayInitPolicy::NO_INIT); //---------------------------------------------------------------------
+      Vector<bool> mask2(num_chan, ArrayInitPolicy::NO_INIT);
       // CAUTION!!!
       // data() method must be used with special care!!!
       float *spec_data = spec.data();
       bool *mask_data = mask.data();
       bool *mask2_data = mask2.data();
 
-      uInt final_mask[num_pol]; //---------------------------------------------------------------------
-      uInt final_mask2[num_pol]; //---------------------------------------------------------------------
+      uInt final_mask[num_pol];
+      uInt final_mask2[num_pol];
 
-      final_mask[0] = 0;  //-------------------------------------------------
-      final_mask[1] = 0;  //------------------------------------------------
-      final_mask2[0] = 0;  //------------------------------------------------
-      final_mask2[1] = 0;  //------------------------------------------------
+      final_mask[0] = 0;
+      final_mask[1] = 0;
+      final_mask2[0] = 0;
+      final_mask2[1] = 0;
 
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
       if (new_nchan) {
         get_baseline_context(
-            bltype,  //LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
-            static_cast<uint16_t>(order), num_chan, nchan, nchan_set,
-            ctx_indices, bl_contexts);
+          bltype,
+          static_cast<uint16_t>(order), num_chan, nchan, nchan_set,
+          ctx_indices, bl_contexts);
       }
 
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
@@ -951,23 +933,23 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
         }
 
         //prepare varables for writing baseline table
-        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         size_t num_apply_true = 0;
-        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
-        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
-        Array<Float> ffpar_mtx(IPosition(2, num_pol, 0), ArrayInitPolicy::NO_INIT);  //1));
-        for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          bltype_mtx[0][ipol] = (uInt) bltype; //LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
-          fpar_mtx[0][ipol] = (Int) order;
-        }
+        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), True);
+        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), (uInt)bltype);
+        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), (Int)order);
+        Array<Float> ffpar_mtx(IPosition(2, num_pol, 0), ArrayInitPolicy::NO_INIT);
+
         size_t num_masklist_max = 0;
         std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
         size_t num_coeff;
         status = LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
             bl_contexts[ctx_indices[idx]], order, &num_coeff);
         check_sakura_status("sakura_GetNumberOfCoefficients", status);
+        Vector<double> coeff(num_coeff);
+        // CAUTION!!!
+        // data() method must be used with special care!!!
+        double *coeff_data = coeff.data();
         Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff), 0.0);
-
         Array<Float> rms_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         Array<Float> cthres_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
         Array<uInt> citer_mtx(IPosition(2, num_pol, 1), ArrayInitPolicy::NO_INIT);
@@ -978,7 +960,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          apply_mtx[0][ipol] = True;
           // skip spectrum not selected by pol
           if (!pol(ipol)) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
@@ -1026,14 +1007,10 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
             num_apply_true++;
-            Vector<double> coeff(num_coeff);
-            // CAUTION!!!
-            // data() method must be used with special care!!!
-            double *coeff_data = coeff.data();
             status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
                 bl_contexts[ctx_indices[idx]], num_chan, spec_data, mask_data,
                 clip_threshold_sigma, num_fitting_max, num_coeff, coeff_data,
-                mask2_data, //----------------------------------------------------
+                mask2_data,
                 &rms,
                 &bl_status);
 
@@ -1041,19 +1018,10 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               if (mask_data[i] == false) {
                 final_mask[ipol] += 1;
               }
-
               if (mask2_data[i] == false) {
                 final_mask2[ipol] += 1;
               }
             }
-
-            /*
-             for(size_t i = 0; num_chan; ++i){//-------------------------------------------------------------------
-             if((mask.data[i] ==1 &&  mask2.data[i]==0) || (mask.data[i] ==0 &&  mask2.data[i]==1)){//-------------
-             final_mask[ipol] += 1;//------------------------------------------------------------------------
-             }//------------------------------------------------------------------------
-             }//------------------------------------------------------------------------
-             */
 
             check_sakura_status("sakura_GetBestFitBaselineCoefficientsFloat",
                 status);
@@ -1061,7 +1029,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                 coeff_mtx);
 
             Vector<uInt> masklist;
-            get_masklist_from_mask(num_chan, mask2_data, masklist); //----------------------------------
+            get_masklist_from_mask(num_chan, mask2_data, masklist);
             if (masklist.size() > num_masklist_max) {
               num_masklist_max = masklist.size();
             }
@@ -1117,47 +1085,21 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
         if (write_baseline_text) {
           if (num_apply_true > 0) {
-            /*
-             int year;
-             int month;
-             int day;
-             int hour;
-             int minute;
-             double second;
-             */
-
-            //MJD(second)-> year,month,day,hour,minute,second
-            //MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max), ArrayInitPolicy::NO_INIT);
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
-            //MVTime mvtime = MVTime(times[irow]);
             for (size_t ipol = 0; ipol < num_pol; ++ipol) {
               ofs_txt << "Scan" << '[' << (uInt) scans[irow] << ']' << ' '
-                  << "Beam" << '[' << (uInt) beams[irow] << ']' << ' ' << "Spw"
-                  << '[' << (uInt) data_spw[irow] << ']' << ' ' << "Pol" << '['
-                  << ipol << ']' << ' '
-                  //<< "Time" <<'[' <<  times[irow] << ']' << endl;
-                  //<< "Time" <<'[' << year << '/' << month << '/' << day << '/' << hour << ':' << minute << ':' << second  << ']' << endl;
-                  << "Time" << '['
-                  << MVTime(times[irow] / 24. / 3600.).string(MVTime::YMD, 8)
-                  << ']' << endl;
-              /*        << "Time" <<'[' << year << '/'
-               << setfill('0') << setw(2) << month << '/'
-               << setfill('0') << setw(2) << day <<  '/'
-               << setfill('0') << setw(2) << hour << ':'
-               << setfill('0') << setw(2) << minute  << ':';
-               ofs_txt.setf(ios::fixed);
-               ofs_txt << setprecision(3) << second << ']'
-               << endl;
-               */
-
+                  << "Beam" << '[' << (uInt) beams[irow] << ']' << ' ' 
+                  << "Spw"  << '[' << (uInt) data_spw[irow] << ']' << ' ' 
+                  << "Pol"  << '[' << ipol << ']' << ' '
+                  << "Time" << '[' << MVTime(times[irow]/ 24./ 3600.).string(MVTime::YMD, 8) << ']' 
+                  << endl;
               ofs_txt << endl;
               ofs_txt << "Fitter range = " << '[';
 
-              for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
-                  ++imasklist) {
+              for (size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist) {
                 if (imasklist == 0) {
                   ofs_txt << '[' << masklist_mtx2(ipol, 2 * imasklist) << ';'
                       << masklist_mtx2(ipol, 2 * imasklist + 1) << ']';
@@ -1171,7 +1113,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               }
 
               ofs_txt << ']' << endl;
-              
               ofs_txt << endl;
               Matrix<uInt> bltype_mtx2 = bltype_mtx[0][ipol];
               Matrix<Int> fpar_mtx2 = fpar_mtx[0][ipol];
@@ -1189,27 +1130,18 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               ofs_txt << endl;
               ofs_txt << "Results of baseline fit" << endl;
               ofs_txt << endl;
-              //for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-              //    ofs_txt << "p" << icoeff << "=" << coeff_mtx[icoeff][ipol] << ' ';
-              //}
-
               Matrix<Float> coeff_mtx2 = coeff_mtx;
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                 ofs_txt << "p" << icoeff << " = ";
-                //ofs_txt.setf(ios::fixed);
                 ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
               }
-
               ofs_txt << endl;
               ofs_txt << endl;
-              //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
               ofs_txt << "rms = ";
-              //ofs_txt.setf(ios::fixed);
               ofs_txt << setprecision(8) << rms_mtx2(0, 0) << endl;
               ofs_txt << endl;
-              //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
               ofs_txt << "Number of clipped channels = "
-                  << final_mask2[ipol] - final_mask[ipol] << endl; //-----------------------------------
+                  << final_mask2[ipol] - final_mask[ipol] << endl;
               ofs_txt << endl;
               ofs_txt
                   << "------------------------------------------------------"
@@ -1221,18 +1153,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
 
         if (write_baseline_csv) {
           if (num_apply_true > 0) {
-
-            /*
-             string fitting_func;
-             if(bltype_mtx[0][ipol] =="[0]"){
-             fittingfunc = "poly";
-             }else if(bltype_mtx[0][ipol] =="[1]"){
-             fittingfunc = "chebyshev";
-             }else if(bltype_mtx[0][ipol] =="[2]"){
-             fittingfunc = "cspline";
-             }
-             */
-
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max), ArrayInitPolicy::NO_INIT);
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
@@ -1242,6 +1162,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
                   << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(10) << times[irow]
                   << ',';
               ofs_csv << '[';
+
               for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
                   ++imasklist) {
 
@@ -1261,7 +1182,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               ofs_csv << ']' << ',';
               Matrix<uInt> bltype_mtx2 = bltype_mtx[0][ipol];
               string bltype_name;
-
               if (bltype_mtx2(0, 0) == (uInt) 0) {
                 bltype_name = "poly";
               }
@@ -1274,19 +1194,11 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol, 0)
                   << ',';
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-                //ofs_txt.setf(ios::fixed);
                 ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
               }
               Matrix<Float> rms_mtx2 = rms_mtx;
-              //ofs_csv << rms_mtx[0][ipol] << ',';
-              //ofs_txt.setf(ios::fixed);
               ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
-              //cout << "rms_mtx2(ipol,0) " << rms_mtx2(ipol,0) << endl;
-              //cout << "rms_mtx2(0,0) " << rms_mtx2(0,0) << endl;
-
-              //ofs_csv << (uInt)num_chan ;
-              ofs_csv << final_mask2[ipol] - final_mask[ipol]; //------------------------------------------------------------------
-
+              ofs_csv << final_mask2[ipol] - final_mask[ipol];
               ofs_csv << endl;
               ofs_csv << endl;
             }
@@ -1312,7 +1224,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
   }
 
   finalize_process();
-  destroy_baseline_contexts (bl_contexts);
+  destroy_baseline_contexts(bl_contexts);
 
   //double tend = gettimeofday_sec();
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
@@ -1326,12 +1238,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
     int const npiece, float const clip_threshold_sigma,
     int const num_fitting_max, bool const linefinding, float const threshold,
     int const avg_limit, int const minwidth, vector<int> const& edge) {
-  split_bloutputname(out_bloutput_name);
-//cout << "SingleDishMS.cc 1" << flush << endl;
 
-  LogIO os(_ORIGIN);
-  os << "Fitting and subtracting cubic spline baseline npiece = " << npiece
-      << LogIO::POST;
   // in_ms = out_ms
   // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
   // no iteration is necessary for the processing.
@@ -1341,19 +1248,22 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   // 3. fit a polynomial to each spectrum and subtract it
   // 4. put single spectrum (or a block of spectra) to out_column
 
+  split_bloutputname(out_bloutput_name);
+
+  LogIO os(_ORIGIN);
+  os << "Fitting and subtracting cubic spline baseline npiece = " << npiece
+      << LogIO::POST;
+
   //double tstart = gettimeofday_sec();
 
-  //checking npiece
   if (npiece <= 0) {
     throw(AipsError("npiece must be positive."));
   }
 
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
-  LIBSAKURA_SYMBOL (Status)
-  status;
-  LIBSAKURA_SYMBOL (BaselineStatus)
-  bl_status;
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
@@ -1364,8 +1274,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   ofstream ofs_txt;
   bool write_baseline_csv = (bloutputname_csv != "");
   bool write_baseline_text = (bloutputname_text != "");
-
-  //bool write_baseline_table = (out_bltable_name != "");
   bool write_baseline_table = (bloutputname_table != "");
 
   if (write_baseline_csv) {
@@ -1374,9 +1282,9 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   if (write_baseline_text) {
     ofs_txt.open(bloutputname_text.c_str(), std::ios::app);
   }
-
-  if (write_baseline_table)
+  if (write_baseline_table) {
     bt = new BaselineTable(vi->ms());
+  }
 
   Vector<Int> recspw;
   Matrix<Int> recchan;
@@ -1385,13 +1293,10 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   Vector<bool> nchan_set;
   parse_spw(in_spw, recspw, recchan, nchan, in_mask, nchan_set);
 
-  Vector<size_t> ctx_indices;
-  ctx_indices.resize(nchan.nelements());
-  for (size_t ictx = 0; ictx < ctx_indices.nelements(); ++ictx) {
-    ctx_indices(ictx) = 0;
-  }
+  Vector<size_t> ctx_indices(nchan.nelements(), 0ul);
   std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   bl_contexts.clear();
+
   Vector<bool> pol;
   bool pol_set = false;
 
@@ -1414,30 +1319,31 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
       Vector<float> spec(num_chan);
       Cube<Bool> flag_chunk(num_pol, num_chan, num_row);
       Vector<bool> mask(num_chan);
-
-      Vector<bool> mask2(num_chan); //---------------------------------------------------------------------
+      Vector<bool> mask2(num_chan);
       // CAUTION!!!
       // data() method must be used with special care!!!
       float *spec_data = spec.data();
       bool *mask_data = mask.data();
       bool *mask2_data = mask2.data();
 
-      uInt final_mask[num_pol]; //---------------------------------------------------------------------
-      uInt final_mask2[num_pol]; //---------------------------------------------------------------------
+      uInt final_mask[num_pol];
+      uInt final_mask2[num_pol];
 
-      final_mask[0] = 0;  //-------------------------------------------------
-      final_mask[1] = 0;  //------------------------------------------------
-      final_mask2[0] = 0;  //------------------------------------------------
-      final_mask2[1] = 0;  //------------------------------------------------
+      final_mask[0] = 0;
+      final_mask[1] = 0;
+      final_mask2[0] = 0;
+      final_mask2[1] = 0;
 
       bool new_nchan = false;
       get_nchan_and_mask(recspw, data_spw, recchan, num_chan, nchan, in_mask,
           nchan_set, new_nchan);
       if (new_nchan) {
-        get_baseline_context(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
-            static_cast<uint16_t>(npiece), num_chan, nchan, nchan_set,
-            ctx_indices, bl_contexts);
+        get_baseline_context(
+          LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
+          static_cast<uint16_t>(npiece), num_chan, nchan, nchan_set,
+          ctx_indices, bl_contexts);
       }
+
       // get data/flag cubes (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       get_flag_cube(*vb, flag_chunk);
@@ -1457,19 +1363,12 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
         }
 
         //prepare varables for writing baseline table
-        Array<Bool> apply_mtx(IPosition(2, num_pol, 1));
         size_t num_apply_true = 0;
-        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1));
-        Array<Int> fpar_mtx(IPosition(2, num_pol, 1));
-        Array<Float> ffpar_mtx(IPosition(2, num_pol, npiece));
-        for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          bltype_mtx[0][ipol] = (uInt) LIBSAKURA_SYMBOL(
-              BaselineType_kCubicSpline);
-          fpar_mtx[0][ipol] = (Int) npiece;
-          for (int ipiece = 0; ipiece < npiece; ++ipiece) {
-            ffpar_mtx[ipiece][ipol] = 0.0;
-          }
-        }
+        Array<Bool> apply_mtx(IPosition(2, num_pol, 1), True);
+        Array<uInt> bltype_mtx(IPosition(2, num_pol, 1), (uInt)LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+        Array<Int> fpar_mtx(IPosition(2, num_pol, 1), (Int)npiece);
+        Array<Float> ffpar_mtx(IPosition(2, num_pol, npiece), 0.0);
+
         size_t num_masklist_max = 0;
         std::vector<std::vector<uInt> > masklist_mtx_tmp(num_pol);
         size_t num_coeff = 4 * npiece;
@@ -1477,12 +1376,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
         // CAUTION!!!
         // data() method must be used with special care!!!
         double *coeff_data = coeff.data();
-        Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff));
-        for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-            coeff_mtx[icoeff][ipol] = 0.0;
-          }
-        }
+        Array<Float> coeff_mtx(IPosition(2, num_pol, num_coeff), 0.0);
         Array<Float> rms_mtx(IPosition(2, num_pol, 1));
         Array<Float> cthres_mtx(IPosition(2, num_pol, 1));
         Array<uInt> citer_mtx(IPosition(2, num_pol, 1));
@@ -1493,7 +1387,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
         // loop over polarization
         for (size_t ipol = 0; ipol < num_pol; ++ipol) {
-          apply_mtx[0][ipol] = True;
           // skip spectrum not selected by pol
           if (!pol(ipol)) {
             flag_spectrum_in_cube(flag_chunk, irow, ipol);
@@ -1539,20 +1432,19 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
           // actual execution of single spectrum
           float rms;
-          Vector<double> boundary(npiece);
+          Vector<double> boundary(npiece, ArrayInitPolicy::NO_INIT);
           // CAUTION!!!
           // data() method must be used with special care!!!
           double *boundary_data = boundary.data();
 
           if (write_baseline_text == true || write_baseline_csv == true
               || write_baseline_table == true) {
-            //if(write_baseline_table==true) {
             num_apply_true++;
             status = LIBSAKURA_SYMBOL(
                 GetBestFitBaselineCoefficientsCubicSplineFloat)(
                 bl_contexts[ctx_indices[idx]], num_chan, spec_data, mask_data,
                 clip_threshold_sigma, num_fitting_max, npiece, coeff_data,
-                mask2_data, //------------------------------------------------------------
+                mask2_data,
                 &rms, boundary_data,
                 &bl_status);
 
@@ -1560,7 +1452,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
               if (mask_data[i] == false) {
                 final_mask[ipol] += 1;
               }
-
               if (mask2_data[i] == false) {
                 final_mask2[ipol] += 1;
               }
@@ -1571,8 +1462,9 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                 status);
             set_array_for_bltable<double, Float>(ipol, num_coeff, coeff_data,
                 coeff_mtx);
+
             Vector<uInt> masklist;
-            get_masklist_from_mask(num_chan, mask2_data, masklist); //------------------------------------------
+            get_masklist_from_mask(num_chan, mask2_data, masklist);
             if (masklist.size() > num_masklist_max) {
               num_masklist_max = masklist.size();
             }
@@ -1580,6 +1472,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             for (size_t imask = 0; imask < masklist.size(); ++imask) {
               masklist_mtx_tmp[ipol].push_back(masklist[imask]);
             }
+
             set_array_for_bltable<double, Float>(ipol, npiece, boundary_data,
                 ffpar_mtx);
 
@@ -1633,17 +1526,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
         if (write_baseline_text) {
           if (num_apply_true > 0) {
-            /*
-             int year;
-             int month;
-             int day;
-             int hour;
-             int minute;
-             double second;
-             */
-
-            //MJD(second)-> year,month,day,hour,minute,second
-            //MJDtoYMDhms(&year, &month, &day, &hour, &minute, &second);
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
@@ -1653,24 +1535,13 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                   << "Beam" << '[' << (uInt) beams[irow] << ']' << ' ' << "Spw"
                   << '[' << (uInt) data_spw[irow] << ']' << ' ' << "Pol" << '['
                   << ipol << ']' << ' '
-                  //<< "Time" <<'[' <<  times[irow] << ']' << endl;
                   << "Time" << '['
                   << MVTime(times[irow] / 24. / 3600.).string(MVTime::YMD, 8)
                   << ']' << endl;
-              /*         << "Time" <<'[' << year << '/'
-               << setfill('0') << setw(2) << month << '/'
-               << setfill('0') << setw(2) << day <<  '/'
-               << setfill('0') << setw(2) << hour << ':'
-               << setfill('0') << setw(2) << minute  << ':';
-               ofs_txt.setf(ios::fixed);
-               ofs_txt << setprecision(3) << second << ']'
-               << endl;
-               */
               ofs_txt << endl;
               ofs_txt << "Fitter range = " << '[';
 
-              for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
-                  ++imasklist) {
+              for (size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist) {
                 if (imasklist == 0) {
                   ofs_txt << '[' << masklist_mtx2(ipol, 2 * imasklist) << ';'
                       << masklist_mtx2(ipol, 2 * imasklist + 1) << ']';
@@ -1683,15 +1554,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                 }
               }
 
-              //for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
-              //    ofs_txt << '[' << masklist_mtx2(ipol, 2*imasklist) << ',' << masklist_mtx2(ipol, 2*imasklist+1) << ']';
-              //    if(imasklist < num_masklist_max/2 -1){
-              //       ofs_txt  << ',';
-              //    }
-              //}
-
               ofs_txt << ']' << endl;
-              ;
               ofs_txt << endl;
               Matrix<uInt> bltype_mtx2 = bltype_mtx[0][ipol];
               Matrix<Int> fpar_mtx2 = fpar_mtx[0][ipol];
@@ -1709,19 +1572,14 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
               ofs_txt << endl;
               Matrix<Float> coeff_mtx2 = coeff_mtx;
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
-                //ofs_txt << "p" << icoeff << " = " << coeff_mtx2(ipol,icoeff) << "  ";
                 ofs_txt << "p" << icoeff << " = ";
-                //ofs_txt.setf(ios::scientific);
                 ofs_txt << setprecision(8) << coeff_mtx2(ipol, icoeff) << "  ";
               }
               ofs_txt << endl;
               ofs_txt << endl;
-              //ofs_txt << "rms = " << rms_mtx2(0,0) << endl;
               ofs_txt << "rms = ";
-              //ofs_txt.setf(ios::fixed);
               ofs_txt << setprecision(8) << rms_mtx2(0, 0) << endl;
               ofs_txt << endl;
-              //ofs_txt << "Number of clipped channels = " << (uInt)num_chan << endl;
               ofs_txt << "Number of clipped channels = "
                   << final_mask2[ipol] - final_mask[ipol] << endl;
               ofs_txt << endl;
@@ -1735,17 +1593,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
         if (write_baseline_csv) {
           if (num_apply_true > 0) {
-
-            //
-            // string fitting_func;
-            // if(bltype_mtx[0][ipol] =="[0]"){
-            //      fittingfunc = "poly";
-            //  }else if(bltype_mtx[0][ipol] =="[1]"){
-            //      fittingfunc = "chebyshev";
-            //  }else if(bltype_mtx[0][ipol] =="[2]"){
-            //      fittingfunc = "cspline";
-            //  }
-
             Array<uInt> masklist_mtx(IPosition(2, num_pol, num_masklist_max));
             set_matrix_for_bltable<uInt, uInt>(num_pol, num_masklist_max,
                 masklist_mtx_tmp, masklist_mtx);
@@ -1768,11 +1615,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
                   ofs_csv << ";[" << masklist_mtx2(ipol, 2 * imasklist) << ';'
                       << masklist_mtx2(ipol, 2 * imasklist + 1) << ']';
                 }
-
-                //ofs_csv << '[' << masklist_mtx2(ipol, 2*imasklist) << ',' << masklist_mtx2(ipol, 2*imasklist+1) << ']';
-                //if(imasklist < num_masklist_max/2 -1){
-                //   ofs_csv  << ',';
-                //}
               }
 
               ofs_csv << ']' << ',';
@@ -1781,11 +1623,11 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
               if (bltype_mtx2(0, 0) == (uInt) 2) {
                 bltype_name = "cspline";
               }
+
               Matrix<Int> fpar_mtx2 = fpar_mtx;
               Matrix<Float> coeff_mtx2 = coeff_mtx;
               ofs_csv << bltype_name.c_str() << ',' << fpar_mtx2(ipol, 0)
                   << ',';
-
               for (size_t icoeff = 0; icoeff < num_coeff; ++icoeff) {
                 //ofs_csv << coeff_mtx[icoeff][ipol] << ',';
                 ofs_csv << setprecision(8) << coeff_mtx2(ipol, icoeff) << ',';
@@ -1793,11 +1635,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
 
               Matrix<Float> rms_mtx2 = rms_mtx;
               ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
-
-              //ofs_csv << rms_mtx[0][ipol] << ',';
-              //ofs_csv << (uInt)num_chan ;
               ofs_csv << final_mask2[ipol] - final_mask[ipol];
-
               ofs_csv << endl;
               ofs_csv << endl;
             }
@@ -1823,7 +1661,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
   }
 
   finalize_process();
-  destroy_baseline_contexts (bl_contexts);
+  destroy_baseline_contexts(bl_contexts);
 
   //double tend = gettimeofday_sec();
   //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
