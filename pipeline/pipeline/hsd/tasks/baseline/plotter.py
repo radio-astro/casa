@@ -47,7 +47,15 @@ def analyze_grid_table(datatable, antid, spwid, polid, grid_table):
     refpix_list = [0,0]
     refval_list = grid_table[num_ra * num_plane -1][4:6]
     increment_ra = grid_table[num_plane][4] - grid_table[0][4]
-    increment_dec = grid_table[num_plane * num_ra][5] - grid_table[0][5]
+    if num_dec > 1:
+        LOG.trace('num_dec > 1 (%s)'%(num_dec))
+        increment_dec = grid_table[num_plane * num_ra][5] - grid_table[0][5]
+    else:
+        LOG.trace('num_dec is 1')
+        dec = grid_table[0][5]
+        dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
+        LOG.trace('declination correction factor is %s'%(dec_corr))
+        increment_dec = increment_ra * dec_corr
     increment_list = [-increment_ra, increment_dec]
     LOG.debug('refpix_list=%s'%(refpix_list))
     LOG.debug('refval_list=%s'%(refval_list))
