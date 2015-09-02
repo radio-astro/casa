@@ -293,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    modImage=(viloc->ms()).source().tableName();
 			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+			  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 
 				  //VisModelData::putModel(vb.getVisibilityIterator()->ms(), rec, fields, blockSpw[msid], blockStart[msid],
 				  //		blockWidth[msid], blockIncr[msid],
