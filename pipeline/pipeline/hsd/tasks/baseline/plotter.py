@@ -7,7 +7,8 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 
 LOG = infrastructure.get_logger(__name__)
 
-def analyze_grid_table(datatable, antid, spwid, polid, grid_table):
+def analyze_grid_table(context, antid, spwid, polid, grid_table):
+    datatable = context.observing_run.datatable_instance
     num_rows = len(grid_table) # num_plane * num_ra * num_dec
     num_dec = grid_table[-1][3] + 1
     num_ra = grid_table[-1][2] + 1
@@ -46,7 +47,17 @@ def analyze_grid_table(datatable, antid, spwid, polid, grid_table):
         
     refpix_list = [0,0]
     refval_list = grid_table[num_ra * num_plane -1][4:6]
-    increment_ra = grid_table[num_plane][4] - grid_table[0][4]
+    if num_ra > 1:
+        increment_ra = grid_table[num_plane][4] - grid_table[0][4]
+    else:
+        dec = grid_table[0][5]
+        dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
+        if num_dec > 1:
+            increment_ra = grid_table[num_plane * num_ra][5] - grid_table[0][5] / dec_corr
+        else:
+            reference_data = context.observing_run[antid]
+            beam_size = casatools.quanta.convert(reference_data.beam_size[spwid], outunit='deg')['value']
+            increment_ra = beam_size / dec_corr
     if num_dec > 1:
         LOG.trace('num_dec > 1 (%s)'%(num_dec))
         increment_dec = grid_table[num_plane * num_ra][5] - grid_table[0][5]
@@ -111,7 +122,7 @@ def get_lines(datatable, num_ra, rowlist):
 def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, line_range):
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(datatable, antid, spwid, polid, grid_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(context, antid, spwid, polid, grid_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
@@ -133,7 +144,7 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
 def plot_profile_map_with_fit(context, antid, spwid, polid, grid_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, line_range):
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(datatable, antid, spwid, polid, grid_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(context, antid, spwid, polid, grid_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
