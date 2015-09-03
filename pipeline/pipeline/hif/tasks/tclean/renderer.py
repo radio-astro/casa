@@ -104,6 +104,10 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     stats = residual.statistics(robust=False)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
 
+                # The RMS value needs to be taken with proper masking.
+                # Store the one used for QA scoring.
+                info_dict[(field, spw, pol, 'masked rms')] = r.rms
+
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative
 
         # Make the plots

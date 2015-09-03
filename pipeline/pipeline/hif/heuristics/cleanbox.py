@@ -723,8 +723,16 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         # get the rms of the residual image inside the cleaned area
         LOG.todo('Cannot use dirname in mask')
         clean_rms = None
-        if cleanmask is not None and os.path.exists(cleanmask):
+
+        have_mask = False
+        if flux is not None and os.path.exists(flux):
+            have_mask= True
+            statsmask = '"%s" > 0.2' % (os.path.basename(flux))
+        elif cleanmask is not None and os.path.exists(cleanmask):
+            have_mask = True
             statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
+
+        if have_mask:
             resid_clean_stats = image.statistics(mask=statsmask, 
               robust=False)
             try:
@@ -736,19 +744,24 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
 
         # and the rms of the residual image outside the cleaned area
         non_clean_rms = None
-        if cleanmask is not None and os.path.exists(cleanmask):
+
+        if flux is not None and os.path.exists(flux):
+            have_mask= True
+            statsmask = '"%s" < 0.3' % (os.path.basename(flux))
+        elif cleanmask is not None and os.path.exists(cleanmask):
+            have_mask= True
             statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
         else:
+            have_mask= False
             statsmask = ''
 
         resid_stats = image.statistics(mask=statsmask, robust=False)
         try:
             non_clean_rms = resid_stats['rms'][0]
-            if cleanmask is not None:
-                LOG.info('Residual rms outside cleaned area: %s' % 
-                  non_clean_rms)
+            if have_mask:
+                LOG.info('Residual rms outside (single field) / at the edge of (mosaic) the cleaned area: %s' % non_clean_rms)
             else:
-                LOG.info('Residual rms: %s' %  non_clean_rms)
+                LOG.info('Residual rms across full area: %s' %  non_clean_rms)
         except:
             pass
 

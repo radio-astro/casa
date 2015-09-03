@@ -121,8 +121,8 @@ def get_plot(plots, field, spw, i, colname):
                             </tr>
                             <tr>
                                 <th>residual rms</th>
-                                %if info_dict.get((field,str(spw),pol,'residual rms')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'residual rms')],
+                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
+                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'masked rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
