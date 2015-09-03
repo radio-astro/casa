@@ -700,7 +700,7 @@ Bool MSTransformDataHandler::selectCorrelations(const String& corrstr)
 	mssel1.getCorrSlices(corrSlices_p, &ms_p);
 
 	// Get correlation map
-	// jagonzal (CAS-6951): We have to use another MSSelection becuase the first one corrupts the correlation
+	// jagonzal (CAS-6951): We have to use another MSSelection because the first one corrupts the correlation
 	//                      expression for instance "XX;YY" is turned into "XX" after calling getCorrSlices
 	MSSelection mssel2;
 	if (areSelecting) mssel2.setPolnExpr(corrstr.c_str());
@@ -839,7 +839,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 			msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),Table(pointingSetup));
 			msOut_p.initRefs();
 
-			// Add aditional columns to SPECTRAL_WINDOW sub-table
+			// Add additional columns to SPECTRAL_WINDOW sub-table
 			addOptionalColumns(mssel_p.spectralWindow(), msOut_p.spectralWindow(), true);
 
 			// Initialize output MS Columns
@@ -1745,217 +1745,44 @@ Bool MSTransformDataHandler::fillFieldTable()
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::fillDDTables()
 {
+	fillPolTable();
+	fillDDITable();
+	fillSPWTable();
+
+	return true;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::fillPolTable()
+{
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
-	// Selected input MS SPW Table Columns (read-only)
-	ROMSSpWindowColumns inSpWCols(mssel_p.spectralWindow());
-
-	// SPW Table Columns of output MS (read-write)
-	MSSpWindowColumns& msSpW(msc_p->spectralWindow());
-
-	// Detect which optional columns of SPECTRAL_WINDOW are present.
-	// inSpWCols and msSpW should agree because addOptionalColumns() was done for
-	// SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling fillDDTables
-	Bool haveSpwAN = columnOk(inSpWCols.assocNature());
-	Bool haveSpwASI = columnOk(inSpWCols.assocSpwId());
-	Bool haveSpwBN = columnOk(inSpWCols.bbcNo());
-	Bool haveSpwBS = columnOk(inSpWCols.bbcSideband());
-	Bool haveSpwDI = columnOk(inSpWCols.dopplerId());
-
-	// DATA_DESCRIPTION Table columns of output MS
-	MSDataDescColumns& msDD(msc_p->dataDescription());
-
-	// POLARIZATION Table columns of output MS
-	MSPolarizationColumns& msPol(msc_p->polarization());
-
-	//DATA_DESCRIPTION table of selected MS
-	const MSDataDescription ddtable = mssel_p.dataDescription();
-
-	// POLARIZATION_ID column of DD in selected MS
-	ROScalarColumn<Int> polId(ddtable,
-			MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
-
-	// SPECTRAL_WINDOW_ID of selected SPWS
-	ROScalarColumn<Int> spwIds(ddtable,
-			MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
-
-	// From the selected DDI, get the SPW_IDs for the output MS
-	Vector<Int> selectedSpwIds;
-	uInt nddid = spw2ddid_p.size();
-	selectedSpwIds.resize(nddid);
-	for (uInt row=0; row<spw2ddid_p.size(); ++row){
-		// These are the selected SPW_IDs based on the DDI
-		// They need to be re-indexed later
-		selectedSpwIds[row] = spwIds(spw2ddid_p[row]);
-	}
-
-	// Re-label the SPW_IDs (get new indices)
-	spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
-	spwRelabel_p.set(-1);
-
-	// Make map from input to output spws.
-	// spwRelabel_p has to be the SPECTRAL_WINDOW_ID not DDI
-	Bool dum;
-	Sort sortSpws(spw_p.getStorage(dum), sizeof(Int));
-	sortSpws.sortKey((uInt) 0, TpInt);
-	Vector<uInt> spwsortindex, spwuniqinds;
-	sortSpws.sort(spwsortindex, spw_p.nelements());
-	uInt nuniqSpws = sortSpws.unique(spwuniqinds, spwsortindex);
-	spw_uniq_p.resize(nuniqSpws);
-
-	for (uInt k = 0; k < nuniqSpws; ++k)
-	{
-		spw_uniq_p[k] = spw_p[spwuniqinds[k]];
-		spwRelabel_p[spw_uniq_p[k]] = k;
-	}
-
-	/*
-	if (nuniqSpws < spw_p.nelements())
-	{
-		os 	<< LogIO::WARN
-			<< "Multiple channel ranges within an spw may not work.  SOME DATA MAY BE OMITTED!"
-			<< "\nConsider splitting them individually and optionally combining the output MSes with concat."
-			<< "\nEven then, expect problems if exporting to uvfits."
-			<< LogIO::POST;
-	}
-	*/
-
-	// Make map from input to output spws.
-	// SPW_ID must NOT be unique, as it can repeat sometimes
-	Sort sortSpws1(selectedSpwIds.getStorage(dum), sizeof(Int));
-	sortSpws1.sortKey((uInt) 0, TpInt);
-	Vector<uInt> spwsortindex1;
-	sortSpws1.sort(spwsortindex1, selectedSpwIds.nelements());
-	uInt nSortedSpws = spwsortindex1.nelements();
-
-	// This table is only used to fill the DD output table at
-	// the end of this function
-	Vector<Int> newDDtable;
-	newDDtable.resize(mscIn_p->dataDescription().nrow());
-	newDDtable.set(-1);
-
-	// Re-index the SPW IDs for the output DD table
-	uInt spwindex = 0;
-	for (uInt k=0; k < nSortedSpws; ++k){
-		// k --> row number of output DD table
-		if (k == 0){
-			// do it only the first time
-			newDDtable[k] = spwindex;
-			++spwindex;
-			continue;
-		}
-
-		if (selectedSpwIds[k] == selectedSpwIds[k-1]){
-			newDDtable[k] = spwindex - 1;
-		}
-		else {
-			newDDtable[k] = spwindex;
-			++spwindex;
-		}
-	}
-
+	// Input polarization table
 	const MSPolarization poltable = mssel_p.polarization();
 	ROScalarColumn<Int> numCorr(poltable,MSPolarization::columnName(MSPolarization::NUM_CORR));
 	ROArrayColumn<Int> corrType(poltable,MSPolarization::columnName(MSPolarization::CORR_TYPE));
 	ROArrayColumn<Int> corrProd(poltable,MSPolarization::columnName(MSPolarization::CORR_PRODUCT));
-	ROScalarColumn<Bool> polFlagRow(poltable,MSPolarization::columnName(MSPolarization::FLAG_ROW));
+	ROScalarColumn<Bool> flagRow(poltable,MSPolarization::columnName(MSPolarization::FLAG_ROW));
 
-	inNumChan_p.resize(spw_p.nelements());
+	// Output polarization table
+	MSPolarizationColumns& msPol(msc_p->polarization());
 
-	// Vector of POLARIZATION_ID column from selected MS
-	polID_p = polId.getColumn();
-	uInt nPol = polID_p.size();
-
-	// Map from output POLARIZATION_ID to input POLARIZATION_ID.
-	Vector<Int> selectedPolId(nPol);
-	for (uInt k = 0; k < nPol; ++k)
-	{
-		selectedPolId[k] = polID_p[k];
-	}
-
-	Vector<Int> newPolId(nddid);
-	for (uInt k = 0; k < nddid; ++k)
-	{
-		// jagonzal (CAS-6733): I don't understand why we don't assign polID directly instead of the DDI row
-		if ((size_t)spw2ddid_p[k] < polID_p.size())
-		{
-			newPolId[k] = polID_p[spw2ddid_p[k]];
-		}
-		else
-		{
-			os	<< LogIO::SEVERE
-				<< "No polarization ID found for output polarization setup " << k
-				<< LogIO::POST;
-			return false;
-		}
-
-
-		/*
-		Bool found = false;
-
-		for (uInt j = 0; j < nPol; ++j)
-		{
-			// Get the POLARIZATION_ID of the intersected DDI
-			// from spw and polarization selections (spw2ddid_p)
-			if (selectedPolId[j] == polID_p[spw2ddid_p[k]])
-			{
-				os	<< LogIO::NORMAL
-					<< " k=" << k
-					<< " spw2ddid_p[k]=" << spw2ddid_p[k]
-					<< " polID_p[spw2ddid_p[k]]=" << polID_p[spw2ddid_p[k]]
-					<< " j=" << j
-					<< " selectedPolId[j]=" << selectedPolId[j]
-					<< LogIO::POST;
-
-				// These should go to the POLARIZATION_ID column of the output MS
-				newPolId[k] = j;
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		{
-			os	<< LogIO::SEVERE
-				<< "No polarization ID found for output polarization setup " << k
-				<< LogIO::POST;
-			return false;
-		}
-		*/
-	}
-
-
-	// Get a unique sorted list of the POLARIZATION_ID of the selected DDI
-	Sort sort(selectedPolId.getStorage(dum), sizeof(Int));
-	sort.sortKey((uInt) 0, TpInt);
-	Vector<uInt> index, uniq;
-	sort.sort(index, selectedPolId.nelements());
-	nPol = sort.unique(uniq, index);
-
-	// jagonzal (CAS-6941): Generate resulting vector of unique sorted polarizations
-	Vector<Int> sortedPolId(selectedPolId.size());
-	for (uInt idx=0;idx < selectedPolId.size(); idx++)
-	{
-		sortedPolId(idx) = selectedPolId(index(idx));
-	}
-
-	Vector<Int> uniqueSortedPolId(uniq.size());
-	for (uInt idx=0;idx < uniq.size(); idx++)
-	{
-		uniqueSortedPolId(idx) = sortedPolId(uniq(idx));
-	}
-
-	// Write to output MS POLARIZATION table
-	// This table should not be resized!!!
+	// Fill output polarization table
+	uInt nPol = poltable.nrow(); // nOutputPol = nInputPol (no PolId re-index)
 	corrSlice_p.resize(nPol);
-	for (uInt outpid = 0; outpid < nPol; ++outpid)
+	for (uInt polId = 0; polId < nPol; polId++)
 	{
-		// jagonzal (CAS-6941): Must use vector of unique sorted polarizations and not original one
-		uInt inpid = uniqueSortedPolId[outpid];
+		uInt ncorr = inPolOutCorrToInCorrMap_p[polId].nelements();
+		const Vector<Int> inCT(corrType(polId));
 
-		uInt ncorr = inPolOutCorrToInCorrMap_p[inpid].nelements();
-		const Vector<Int> inCT(corrType(inpid));
+		// Add row
+		msOut_p.polarization().addRow();
+		msPol.numCorr().put(polId, ncorr);
+		msPol.flagRow().put(polId, flagRow(polId));
 
-		// ncorr will be 0 if none of the selected spws have this pid.
+		// Setup correlation slices
 		if (ncorr > 0 && ncorr < inCT.nelements())
 		{
 			keepShape_p = false;
@@ -1975,29 +1802,24 @@ Bool MSTransformDataHandler::fillDDTables()
 			size_t increment = 2;
 			if (ncorr > 1)
 			{
-				increment = inPolOutCorrToInCorrMap_p[inpid][1] - inPolOutCorrToInCorrMap_p[inpid][0];
+				increment = inPolOutCorrToInCorrMap_p[polId][1] - inPolOutCorrToInCorrMap_p[polId][0];
 			}
-			corrSlice_p[outpid] = Slice(inPolOutCorrToInCorrMap_p[inpid][0],ncorr,increment);
+			corrSlice_p[polId] = Slice(inPolOutCorrToInCorrMap_p[polId][0],ncorr,increment);
 		}
 		else
 		{
-			corrSlice_p[outpid] = Slice(0, ncorr);
+			corrSlice_p[polId] = Slice(0, ncorr);
 		}
 
-
-		// Add rows to POLARIZATION table of output MS
-		msOut_p.polarization().addRow();
-		msPol.numCorr().put(outpid, ncorr);
-		msPol.flagRow().put(outpid, polFlagRow(inpid));
-
+		// Apply slices to correlation type and product
 		Vector<Int> outCT;
-		const Matrix<Int> inCP(corrProd(inpid));
+		const Matrix<Int> inCP(corrProd(polId));
 		Matrix<Int> outCP;
 		outCT.resize(ncorr);
 		outCP.resize(2, ncorr);
 		for (uInt k = 0; k < ncorr; ++k)
 		{
-			Int inCorrInd = inPolOutCorrToInCorrMap_p[inpid][k];
+			Int inCorrInd = inPolOutCorrToInCorrMap_p[polId][k];
 
 			outCT[k] = inCT[inCorrInd];
 			for (uInt feedind = 0; feedind < 2; ++feedind)
@@ -2006,14 +1828,112 @@ Bool MSTransformDataHandler::fillDDTables()
 			}
 
 		}
-		msPol.corrType().put(outpid, outCT);
-		msPol.corrProduct().put(outpid, outCP);
+
+		// Fill correlation type and product
+		msPol.corrType().put(polId, outCT);
+		msPol.corrProduct().put(polId, outCP);
 	}
+
+	return True;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::fillDDITable()
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	// Input selected DDIs based on joint SPW-Pol selection
+	uInt nddid = spw2ddid_p.size();
+
+	// Input ddi table
+	const MSDataDescription inputDDI = mssel_p.dataDescription();
+	ROScalarColumn<Int> polIdCol(inputDDI, MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
+	ROScalarColumn<Int> spwIdCol(inputDDI,MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+
+	// Get selected SPWs
+	Vector<Int> selectedSpwIds(nddid);
+	for (uInt row=0; row<spw2ddid_p.size(); ++row)
+	{
+		selectedSpwIds[row] = spwIdCol(spw2ddid_p[row]);
+	}
+
+	// Get list of unique selected SPWs
+	Bool option(False);
+	Sort sortSpws(spw_p.getStorage(option), sizeof(Int));
+	sortSpws.sortKey((uInt) 0, TpInt);
+	Vector<uInt> spwsortindex, spwuniqinds;
+	sortSpws.sort(spwsortindex, spw_p.nelements());
+	uInt nuniqSpws = sortSpws.unique(spwuniqinds, spwsortindex);
+	spw_uniq_p.resize(nuniqSpws);
+
+	// Make map from input to output SPWs
+	spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
+	spwRelabel_p.set(-1);
+	for (uInt k = 0; k < nuniqSpws; ++k)
+	{
+		spw_uniq_p[k] = spw_p[spwuniqinds[k]];
+		spwRelabel_p[spw_uniq_p[k]] = k;
+	}
+
+	// Output SPECTRAL_WINDOW_ID column
+	Vector<Int> newSPWId(nddid);
+	for (uInt ddi=0; ddi<nddid; ddi++)
+	{
+		newSPWId[ddi] = spwRelabel_p[spwIdCol(spw2ddid_p[ddi])];
+	}
+
+	// Output POLARIZATION_ID column
+	Vector<Int> newPolId(nddid);
+	for (uInt ddi=0; ddi<nddid; ddi++)
+	{
+		newPolId[ddi] = polIdCol(spw2ddid_p[ddi]);
+	}
+
+	// Fill output DDI table
+	MSDataDescColumns& outputDDI(msc_p->dataDescription());
+	for (uInt ddi=0; ddi<nddid; ddi++)
+	{
+		msOut_p.dataDescription().addRow();
+		outputDDI.flagRow().put(ddi, False);
+		outputDDI.polarizationId().put(ddi, newPolId[ddi]);
+		outputDDI.spectralWindowId().put(ddi, newSPWId[ddi]);
+	}
+
+
+	return True;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::fillSPWTable()
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	// Selected input MS SPW Table Columns (read-only)
+	ROMSSpWindowColumns inSpWCols(mssel_p.spectralWindow());
+
+	// SPW Table Columns of output MS (read-write)
+	MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+
+	// Detect which optional columns of SPECTRAL_WINDOW are present.
+	// inSpWCols and msSpW should agree because addOptionalColumns() was done for
+	// SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling fillDDTables
+	Bool haveSpwAN = columnOk(inSpWCols.assocNature());
+	Bool haveSpwASI = columnOk(inSpWCols.assocSpwId());
+	Bool haveSpwBN = columnOk(inSpWCols.bbcNo());
+	Bool haveSpwBS = columnOk(inSpWCols.bbcSideband());
+	Bool haveSpwDI = columnOk(inSpWCols.dopplerId());
+
+	uInt nuniqSpws = spw_uniq_p.size();
 
 	// This sets the number of input channels for each spw. But
 	// it considers that a SPW ID contains only one set of channels.
 	// I hope this is true!!
 	// Write to SPECTRAL_WINDOW table
+	inNumChan_p.resize(spw_p.nelements());
 	for (uInt k = 0; k < spw_p.nelements(); ++k)
 	{
 		inNumChan_p[k] = inSpWCols.numChan()(spw_p[k]);
@@ -2176,9 +2096,12 @@ Bool MSTransformDataHandler::fillDDTables()
 		msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
 		msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
 		msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));
+
+
 		if (haveSpwBN) msSpW.bbcNo().put(min_k, inSpWCols.bbcNo()(spw_p[k]));
 		if (haveSpwBS) msSpW.bbcSideband().put(min_k, inSpWCols.bbcSideband()(spw_p[k]));
 		if (haveSpwDI) msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
+
 
 		if (haveSpwASI)
 		{
@@ -2216,14 +2139,6 @@ Bool MSTransformDataHandler::fillDDTables()
 				msSpW.assocNature().put(min_k, selectedAssocNatureVector);
 			}
 		}
-	}
-
-	// Write to the DATA_DESCRIPTION table of output MS
-	for (uInt dd=0; dd<nddid; ++dd){
-		msOut_p.dataDescription().addRow();
-		msDD.flagRow().put(dd, False);
-		msDD.polarizationId().put(dd, newPolId[dd]);
-		msDD.spectralWindowId().put(dd, newDDtable[dd]);
 	}
 
 
