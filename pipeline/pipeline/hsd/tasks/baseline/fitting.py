@@ -203,7 +203,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                 polyorder = self.fitorder_heuristic(spectra, [ list(masklist[i]) + flaglist[i] for i in range(len(idxs))], edge)
                 if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                     polyorder = min(polyorder, self.MaxPolynomialOrder)
-                LOG.info('time group %d: fitting order=%s'%(y,polyorder))
+                LOG.debug('time group %d: fitting order=%s'%(y,polyorder))
     
                 # calculate fragmentation
                 (fragment, nwindow, win_polyorder) = self.fragmentation_heuristic(polyorder, nchan, edge)
@@ -268,7 +268,7 @@ class FittingBase(common.SingleDishTaskTemplate):
 
         LOG.info('Baseline Fit: background subtraction...')
         LOG.info('Processing %d spectra...'%(len(row_list_total)))
-        LOG.info('rows = %s' % str(row_list_total))
+        LOG.debug('rows = %s' % str(row_list_total))
         job = casa_tasks.sdbaseline2(infile=filename_out, outfile=filename_out, overwrite=True,
                                      row=str(',').join(map(str,row_list_total)), blmode='subtract',
                                      blparam=blinfo, bltable=bltable_name, keeprows=True)
