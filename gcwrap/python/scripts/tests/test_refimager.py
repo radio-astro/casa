@@ -61,8 +61,8 @@ import inspect
 
 ## List to be run
 def suite():
-#     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
-     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
+#     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
 #refdatapath = "/export/home/riya/rurvashi/Work/ImagerRefactor/Runs/UnitData/"
