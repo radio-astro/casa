@@ -1639,5 +1639,60 @@ class msmd_test(unittest.TestCase):
         md.open('lala.ms')
         self.assertTrue((md.fieldsforintent('*') == numpy.array([0])).all())
             
+    def test_chaneffbws(self):
+        """Test chaneffbws()"""
+        md = self.md
+        nspw = md.nspw()
+        for i in range(nspw):
+            ebw = md.chaneffbws(i)
+            ebw2 = md.chaneffbws(i, "MHz")
+            nchans = len(ebw);
+            if (nchans == 1):
+                continue
+            
+            elif nchans == 4:
+                expec = 7.5e9;
+            elif nchans == 128:
+                expec = 1.5625e7;
+            elif nchans == 3840:
+                expec = 30517.578125;
+            for w in ebw:
+                self.assertTrue(w == expec)
+            for w2 in ebw2:
+                self.assertTrue(w2 == expec/1e6)
+        self.assertTrue(
+            near(md.chaneffbws(9, asvel=True)[0], 20.23684342, 1e-8)
+        )
+        self.assertTrue(
+            near(md.chaneffbws(9, "m/s", True)[0], 20236.84342, 1e-8)
+        )
+        
+    def test_chanres(self):
+        """Test chanres()"""
+        md = self.md
+        nspw = md.nspw()
+        for i in range(nspw):
+            ebw = md.chanres(i)
+            ebw2 = md.chanres(i, "MHz")
+            nchans = len(ebw);
+            if (nchans == 1):
+                continue
+            elif nchans == 4:
+                expec = 7.5e9;
+            elif nchans == 128:
+                expec = 1.5625e7;
+            elif nchans == 3840:
+                expec = 30517.578125;
+            for w in ebw:
+                self.assertTrue(w == expec)
+            for w2 in ebw2:
+                self.assertTrue(w2 == expec/1e6)
+        self.assertTrue(
+            near(md.chanres(9, asvel=True)[0], 20.23684342, 1e-8)
+        )
+        self.assertTrue(
+            near(md.chanres(9, "m/s", True)[0], 20236.84342, 1e-8)
+        )
+    
 def suite():
     return [msmd_test]

@@ -200,8 +200,8 @@ vector<int> msmetadata::antennaids(
 				"be either a string or string array"
 			);
 		}
-		vector<String> allNames COMMA foundNames;
-		set<String> foundSet;
+		vector<casa::String> allNames COMMA foundNames;
+		set<casa::String> foundSet;
 		if (foundIDs.empty()) {
 			foreach_(String name, myNames) {
 				Bool expand = name.find('*') != std::string::npos;
@@ -497,12 +497,38 @@ vector<int> msmetadata::chanavgspws() {
 	return vector<int>();
 }
 
+vector<double> msmetadata::chaneffbws(int spw, const string& unit, bool asvel) {
+    _FUNC(
+        _checkSpwId(spw, True);
+        string myunit = unit;
+        if (myunit.empty()) {
+            myunit = asvel ? "km/s" : "Hz";
+        }
+        vector<QVector<Double> > qvd = _msmd->getChanEffectiveBWs(asvel);
+        return qvd[spw].getValue(Unit(myunit), True).tovector();
+    )
+    return vector<double>();
+}
+
 vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 	_FUNC (
 		_checkSpwId(spw, True);
 		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
 	)
 	return vector<double>();
+}
+
+vector<double> msmetadata::chanres(int spw, const string& unit, bool asvel) {
+    _FUNC(
+        _checkSpwId(spw, True);
+        string myunit = unit;
+        if (myunit.empty()) {
+            myunit = asvel ? "km/s" : "Hz";
+        }
+        vector<QVector<Double> > qvd = _msmd->getChanResolutions(asvel);
+        return qvd[spw].getValue(Unit(myunit), True).tovector();
+    )
+    return vector<double>();
 }
 
 vector<double> msmetadata::chanwidths(int spw, const string& unit) {
