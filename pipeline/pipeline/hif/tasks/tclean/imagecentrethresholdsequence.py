@@ -36,13 +36,13 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
         elif self.iter == 0:
             # next iteration, 1, should have mask covering central area:
             #   centre quarter for single field
-            #   flux > 0.2 for mosaic
+            #   flux > 0.3 for mosaic
             if self.gridder == 'mosaic':
                 cm = casatools.image.newimagefromimage(infile=self.flux,
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
-                cm.calc('replace("%s"["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
+                cm.calc('replace("%s"["%s" > 0.3], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
                 cm.done()
             else:
                 cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
