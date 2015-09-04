@@ -183,6 +183,10 @@ public:
 	Bool fillFieldTable();
 	Bool fillDDTables(); // Includes spw and pol
 
+	Bool fillPolTable();
+	Bool fillDDITable();
+	Bool fillSPWTable();
+
 	// Add optional columns to outTab if present in inTab and possColNames.
 	// beLazy should only be true if outTab is in its default state.
 	// Returns the number of added columns.
