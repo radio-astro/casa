@@ -1159,7 +1159,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
             for (size_t ipol = 0; ipol < num_pol; ++ipol) {
               ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow] << ','
-                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(10) << times[irow]
+                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(12) << times[irow]
                   << ',';
               ofs_csv << '[';
 
@@ -1599,7 +1599,7 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
             Matrix<uInt> masklist_mtx2 = masklist_mtx;
             for (size_t ipol = 0; ipol < num_pol; ++ipol) {
               ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow] << ','
-                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(8) << times[irow]
+                  << (uInt) data_spw[irow] << ',' << ipol << ',' << setprecision(12) << times[irow]
                   << ',';
               ofs_csv << '[';
 
@@ -2845,7 +2845,7 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
               if (apply_mtx2(0, 0) == True) {
                 ofs_csv << (uInt) scans[irow] << ',' << (uInt) beams[irow]
                     << ',' << (uInt) data_spw[irow] << ',' << ipol << ','
-                    << setprecision(10) << times[irow] << ',';
+                    << setprecision(12) << times[irow] << ',';
                 ofs_csv << '[';
                 for (size_t imasklist = 0; imasklist < num_masklist_max / 2;
                     ++imasklist) {
