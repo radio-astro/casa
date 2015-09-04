@@ -2369,19 +2369,21 @@ void SingleDishMS::fitLine(string const& in_column_name,
 	    cent.resize(nfit[ifit]);
 	    fwhm.resize(nfit[ifit]);
 	    if (nfit[ifit] == 1) {
-	      Float sum = 0.0;
-	      Float max_spec = y_[fitrange_start[ifit]];
-	      Float max_spec_x = x_[fitrange_start[ifit]];
-	      for (size_t ichan = fitrange_start[ifit]; ichan <= fitrange_end[ifit]; ++ichan) {
-		sum += y_[ichan];
-		if (max_spec < y_[ichan]) {
-		  max_spec = y_[ichan];
-		  max_spec_x = x_[ichan];
-		}
-	      }
-	      peak[0] = max_spec;
-	      cent[0] = max_spec_x;
-	      fwhm[0] = sum / max_spec * 0.7;
+              Float sum = 0.0;
+              Float max_spec = fabs(y_[fitrange_start[ifit]]);
+              Float max_spec_x = x_[fitrange_start[ifit]];
+	      bool is_positive = true;
+              for (size_t ichan = fitrange_start[ifit]; ichan <= fitrange_end[ifit]; ++ichan) {
+                sum += y_[ichan];
+                if (max_spec < fabs(y_[ichan])) {
+                  max_spec = fabs(y_[ichan]);
+                  max_spec_x = x_[ichan];
+		  is_positive = (fabs(y_[ichan]) == y_[ichan]);
+                }
+              }
+              peak[0] = max_spec * (is_positive ? 1 : -1);
+              cent[0] = max_spec_x;
+              fwhm[0] = fabs(sum / max_spec * 0.7);
 	    } else {
 	      size_t x_start = fitrange_start[ifit];
 	      size_t x_width = (fitrange_end[ifit] - fitrange_start[ifit])/nfit[ifit];
@@ -2391,22 +2393,24 @@ void SingleDishMS::fitLine(string const& in_column_name,
 		  x_end = fitrange_end[ifit] + 1;
 		}
 
-		Float sum = 0.0;
-		Float max_spec = y_[x_start];
-		Float max_spec_x = x_[x_start];
-		for (size_t ichan = x_start; ichan < x_end; ++ichan) {
-		  sum += y_[ichan];
-		  if (max_spec < y_[ichan]) {
-		    max_spec = y_[ichan];
-		    max_spec_x = x_[ichan];
-		  }
-		}
-		peak[icomp] = max_spec;
-		cent[icomp] = max_spec_x;
-		fwhm[icomp] = sum / max_spec * 0.7;
-		
-		x_start += x_width;
-		x_end += x_width;
+                Float sum = 0.0;
+                Float max_spec = fabs(y_[x_start]);
+                Float max_spec_x = x_[x_start];
+		bool is_positive = true;
+                for (size_t ichan = x_start; ichan < x_end; ++ichan) {
+                  sum += y_[ichan];
+                  if (max_spec < fabs(y_[ichan])) {
+                    max_spec = fabs(y_[ichan]);
+                    max_spec_x = x_[ichan];
+		    is_positive = (fabs(y_[ichan]) == y_[ichan]);
+                  }
+                }
+                peak[icomp] = max_spec * (is_positive ? 1 : -1);
+                cent[icomp] = max_spec_x;
+                fwhm[icomp] = fabs(sum / max_spec * 0.7);
+
+                x_start += x_width;
+                x_end += x_width;
 	      }
 	    }
 
