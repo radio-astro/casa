@@ -1,5 +1,6 @@
 import asap as sd
 import sdutil
+from taskinit import casalog
 
 @sdutil.sdtask_decorator
 def sdlist(infile, antenna, outfile, overwrite):

@@ -67,4 +67,30 @@ from cvel2_pg import cvel2_pg as cvel2
 from plotms_pg import plotms_pg as plotms
 from tclean_pg import tclean_pg as tclean
 
+# single dish tasks
+from sdaverage_pg import sdaverage_pg as sdaverage
+from sdbaseline_pg import sdbaseline_pg as sdbaseline
+from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
+from sdcal_pg import sdcal_pg as sdcal
+from sdcal2_pg import sdcal2_pg as sdcal2
+from sdcoadd_pg import sdcoadd_pg as sdcoadd
+from sdfit_pg import sdfit_pg as sdfit
+from sdflag_pg import sdflag_pg as sdflag
+from sdflagmanager_pg import sdflagmanager_pg as sdflagmanager
+from sdgrid_pg import sdgrid_pg as sdgrid
+from sdimaging_pg import sdimaging_pg as sdimaging
+from sdimprocess_pg import sdimprocess_pg as sdimprocess
+from sdlist_pg import sdlist_pg as sdlist
+from sdmath_pg import sdmath_pg as sdmath
+from sdplot_pg import sdplot_pg as sdplot
+from sdreduce_pg import sdreduce_pg as sdreduce
+from sdsave_pg import sdsave_pg as sdsave
+from sdscale_pg import sdscale_pg as sdscale
+from sdstat_pg import sdstat_pg as sdstat
+from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
+from tsdbaseline_pg import  tsdbaseline_pg as tsdbaseline
+from tsdcal_pg import  tsdcal_pg as tsdcal
+from tsdfit_pg import  tsdfit_pg as tsdfit
+from tsdsmooth_pg import  tsdsmooth_pg as tsdsmooth
+
 # EOF
