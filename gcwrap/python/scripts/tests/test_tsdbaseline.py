@@ -3257,10 +3257,10 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
 
 
 def suite():
-    return [#tsdbaseline_basicTest, 
-            #tsdbaseline_maskTest,
-            #tsdbaseline_outbltableTest,
-            #tsdbaseline_applybltableTest,
-            #tsdbaseline_variableTest,
-            tsdbaseline_bloutputTest]#,
-            #tsdbaseline_autoTest]
+    return [tsdbaseline_basicTest, 
+            tsdbaseline_maskTest,
+            tsdbaseline_outbltableTest,
+            tsdbaseline_applybltableTest,
+            tsdbaseline_variableTest,
+            tsdbaseline_bloutputTest,
+            tsdbaseline_autoTest]
