@@ -38,7 +38,7 @@ import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
-import sdbaseline2_cli
+import sdbaseline2_pg
 import sdcal2_cli
 import sdflag_cli
 import sdimaging_cli
@@ -381,7 +381,7 @@ class CASATaskJobGenerator(object):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
     def sdbaseline2(self, *v, **k):
-        return self._get_job(sdbaseline2_cli.sdbaseline2_cli, *v, **k)
+        return self._get_job(sdbaseline2_pg.sdbaseline2_pg, *v, **k)
 
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)
