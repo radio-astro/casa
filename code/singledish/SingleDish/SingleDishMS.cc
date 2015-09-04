@@ -1319,7 +1319,7 @@ LogIO os(_ORIGIN);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  setprecision(10) << times[irow] << ',';
+                            <<  setprecision(12) << times[irow] << ',';
                     ofs_csv << '[';
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
                       
@@ -1862,7 +1862,7 @@ split_bloutputname(out_bloutput_name);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  setprecision(10) << times[irow] << ',';
+                            <<  setprecision(12) << times[irow] << ',';
                     ofs_csv << '[';
     
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
@@ -3121,7 +3121,7 @@ LogIO os(_ORIGIN);
                             << (uInt)beams[irow] << ','
                             << (uInt)data_spw[irow] << ','
                             << ipol << ','
-                            <<  setprecision(10) << times[irow] << ',';
+                            <<  setprecision(12) << times[irow] << ',';
                     ofs_csv << '[';
                     for(size_t imasklist = 0; imasklist < num_masklist_max/2; ++imasklist){
                         if(imasklist == 0){
