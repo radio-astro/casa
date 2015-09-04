@@ -1,3 +1,5 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <tools/casaswig_types.h>
 #include <tools/swigconvert_python.h>
 #include <Python.h>
@@ -48,7 +50,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
 #define CPXTOCOMPLEX(cpx) std::complex<double>(cpx.real,cpx.imag)
 
 #define NUMPY2VECTOR_PLACEIT(TYPE,DATATYPE,BOOLVALUES,CPXFUNC,CPXFUNC2,STRFUNC) \
-    if (PyArray_CHKFLAGS(obj,NPY_FORTRAN)) {				\
+    if (PyArray_CHKFLAGS(obj,NPY_ARRAY_F_CONTIGUOUS)) {			\
         DATATYPE *data = (DATATYPE*) PyArray_DATA(obj);			\
 	for ( unsigned int D=0; D < size; ++D ) {			\
 	    vec[D] = (TYPE) STRFUNC CPXFUNC CPXFUNC2 (data[D] BOOLVALUES); \
@@ -80,7 +82,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
     char *buf = new char[itemsize+1];					\
     buf[itemsize] = '\0';						\
     char *data = (char*) PyArray_DATA(obj);				\
-    if (PyArray_CHKFLAGS(obj,NPY_FORTRAN)) {				\
+    if (PyArray_CHKFLAGS(obj,NPY_ARRAY_F_CONTIGUOUS)) {			\
 	for ( unsigned int D=0; D < size; ++D ) {			\
 	    strncpy(buf,&data[D*itemsize],itemsize);			\
 	    vec[D] =  CONVERT(buf);					\
@@ -151,7 +153,7 @@ npycomplextostring(npy_clongdouble,"(%Lf,%Lf)")
     }
 
 #define NUMPY2VECTOR(TYPE,NPYTYPE,NPY_TYPE,DIRECT_COPY_COND,BOOLCVT,COPY,STRCVT,CPXCVT,CPXIMAG,BTOSTR,ITOSTR,DTOSTR,CTOSTR,ASSIGN,INCR) \
-void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
+void casac::numpy2vector( PyArrayObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape ) { \
     npy_intp *dims = (npy_intp *)PyArray_DIMS(obj);					\
     int ndims = (int)PyArray_NDIM(obj);							\
     npy_intp itemsize = (npy_intp)PyArray_ITEMSIZE(obj);				\
@@ -161,7 +163,7 @@ void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
     vec.resize(size);									\
 											\
     copy( dims, dims+ndims, shape.begin() );						\
-    if (DIRECT_COPY_COND && PyArray_CHKFLAGS(obj,NPY_FORTRAN)) {			\
+    if (DIRECT_COPY_COND && PyArray_CHKFLAGS(obj,NPY_ARRAY_F_CONTIGUOUS)) {		\
         NPY_TYPE *data = (NPY_TYPE*) PyArray_DATA(obj);					\
 	COPY( TYPE, NPY_TYPE, data, data+size, vec.begin() );				\
 	return;										\
@@ -265,16 +267,16 @@ void casac::numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
     }											\
 }
 
-NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
-NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE(obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
-NUMPY2VECTOR(bool,bool,npy_bool,(PyArray_TYPE(obj) == NPY_BOOL),? 1 : 0,COPY_BUILTIN,stringtobool,CPXNONZERO,NODOCOMPLEX,,,,,*to = (bool) *from,1)
+NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE((PyArrayObject*)obj) == NPY_INT),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
+NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE((PyArrayObject*)obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
+NUMPY2VECTOR(bool,bool,npy_bool,(PyArray_TYPE((PyArrayObject*)obj) == NPY_BOOL),? 1 : 0,COPY_BUILTIN,stringtobool,CPXNONZERO,NODOCOMPLEX,,,,,*to = (bool) *from,1)
 
 // here we're depending upon correspondence between npy_cdouble and std::complex<double> structs --+
 //                                                                                                 |
 //                                vvvvvvvvvvvvvvvvvvvv---------------------------------------------+
-//NUMPY2VECTOR(std::complex<double>,std::complex<double>,(PyArray_TYPE(obj) == NPY_CDOUBLE),? 1 : 0,copy,stringtocomplex,CPXTOCOMPLEX,,,,)
-NUMPY2VECTOR(std::complex<double>,std::complex<double>,npy_cdouble,(PyArray_TYPE(obj) == NPY_CDOUBLE),? 1 : 0,COPY_COMPLEX,stringtocomplex,CPXTOCOMPLEX,,,,,,(*to).real() = (*from).real; (*to).imag() = (*from).imag,1)
-NUMPY2VECTOR(casac::complex,casac::complex,npy_cdouble,(PyArray_TYPE(obj) == NPY_CDOUBLE),? 1 : 0,COPY_CCOMPLEX,stringtoccomplex,CPXTOCCOMPLEX,DOCOMPLEX,,,,,(*to).re = (*from).real; (*to).im = (*from).imag,1)
+//NUMPY2VECTOR(std::complex<double>,std::complex<double>,(PyArray_TYPE((PyArrayObject*)obj) == NPY_CDOUBLE),? 1 : 0,copy,stringtocomplex,CPXTOCOMPLEX,,,,)
+NUMPY2VECTOR(std::complex<double>,std::complex<double>,npy_cdouble,(PyArray_TYPE((PyArrayObject*)obj) == NPY_CDOUBLE),? 1 : 0,COPY_COMPLEX,stringtocomplex,CPXTOCOMPLEX,,,,,,(*to).real() = (*from).real; (*to).imag() = (*from).imag,1)
+NUMPY2VECTOR(casac::complex,casac::complex,npy_cdouble,(PyArray_TYPE((PyArrayObject*)obj) == NPY_CDOUBLE),? 1 : 0,COPY_CCOMPLEX,stringtoccomplex,CPXTOCCOMPLEX,DOCOMPLEX,,,,,(*to).re = (*from).real; (*to).im = (*from).imag,1)
 NUMPY2VECTOR(std::string,char,const char,(false),,COPY_PYNSTRING,,,NODOCOMPLEX,booltostring,inttostring,doubletostring,complextostring,*to = *from,itemsize)
 
 static unsigned int initialized_numpy_ = 0;
@@ -549,10 +551,11 @@ PyObject *map_vector_numpy(const std::vector<TYPE> &vec) {				\
 					   1 /* zero=>c-order, nonzero=>fortran */,		\
 					   NULL /*PyObject *obj*/ );				\
     if (sizeof(TYPE) == sizeof (NPYTYPE))							\
-	copy( vec.begin(), vec.end(), (TYPE*) PyArray_DATA(ary) );				\
+	copy( vec.begin(), vec.end(), (TYPE*) PyArray_DATA((PyArrayObject*)ary) );		\
     else {											\
 	std::vector<TYPE>::const_iterator from = vec.begin();					\
-	for ( NPYTYPE *to = (NPYTYPE*) PyArray_DATA(ary); from != vec.end(); ++from, ++to ) {	\
+	for ( NPYTYPE *to = (NPYTYPE*) PyArray_DATA((PyArrayObject*)ary); from != vec.end();    \
+              ++from, ++to ) {	                                                                \
 	    ASSIGN;										\
 	}											\
     }												\
@@ -572,10 +575,11 @@ PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> 
 					   1 /* zero=>c-order, nonzero=>fortran */,		\
 					   NULL /*PyObject *obj*/ );				\
     if (sizeof(TYPE) == sizeof (NPYTYPE))							\
-	copy( vec.begin(), vec.end(), (TYPE*) PyArray_DATA(ary) );				\
+	copy( vec.begin(), vec.end(), (TYPE*) PyArray_DATA((PyArrayObject*)ary) );		\
     else {											\
 	std::vector<TYPE>::const_iterator from = vec.begin();					\
-	for ( NPYTYPE *to = (NPYTYPE*) PyArray_DATA(ary); from != vec.end(); ++from, ++to ) {	\
+	for ( NPYTYPE *to = (NPYTYPE*) PyArray_DATA((PyArrayObject*)ary); from != vec.end();    \
+              ++from, ++to ) {	                                                                \
 	    ASSIGN;										\
 	}											\
     }												\
@@ -601,7 +605,7 @@ PyObject *map_vector_numpy( const std::vector<std::string> &vec ) {
     dim[0] = vec.size();
     PyObject *ary = PyArray_NewFromDescr( &PyArray_Type, get_string_description(size+1), 1, dim,
 					  NULL, NULL, 1, NULL );
-    char *data = (char*) PyArray_DATA(ary);
+    char *data = (char*) PyArray_DATA((PyArrayObject*)ary);
     memset(data, '\0', (size+1) * vec.size());
     for ( std::vector<std::string>::const_iterator iter = vec.begin(); iter != vec.end(); ++iter ) {
 	strcpy(data,(*iter).c_str( ));
@@ -621,7 +625,7 @@ PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vecto
     copy( shape.begin(), shape.end(), dim );
     PyObject *ary = PyArray_NewFromDescr( &PyArray_Type, get_string_description(size+1), shape.size(), dim,
 					  NULL, NULL, 1, NULL );
-    char *data = (char*) PyArray_DATA(ary);
+    char *data = (char*) PyArray_DATA((PyArrayObject*)ary);
     memset(data, '\0', (size+1) * vec.size());
     for ( std::vector<std::string>::const_iterator iter = vec.begin(); iter != vec.end(); ++iter ) {
 	strcpy(data,(*iter).c_str( ));
@@ -633,12 +637,13 @@ PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vecto
 
 #define HANDLE_NUMPY_ARRAY_CASE(NPYTYPE,CVTTYPE)				\
     case NPYTYPE:								\
-        casac::numpy2vector(obj,result.as ## CVTTYPE ## Vec(),result.arrayshape()); 	\
+        casac::numpy2vector((PyArrayObject*)obj,result.as ## CVTTYPE ## Vec(),  \
+                            result.arrayshape()); 	                        \
 	break;
 
 #define HANDLE_NUMPY_ARRAY							\
 else if ( casac::pyarray_check(obj) ) {						\
-    switch ( PyArray_TYPE(obj) ) {						\
+    switch ( PyArray_TYPE((PyArrayObject*)obj) ) {				\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BOOL,Bool)					\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BYTE,Int)					\
     HANDLE_NUMPY_ARRAY_CASE(NPY_UBYTE,Int)					\
@@ -679,7 +684,7 @@ else if ( casac::pyarray_check(obj) ) {						\
 	fprintf( stderr, "cannot handle numpy arrays of: NPY_USERDEF\n" );	\
 	break;									\
     default:									\
-	fprintf( stderr, "cannot handle numpy arrays of: %d\n", PyArray_TYPE(obj) ); \
+	fprintf( stderr, "cannot handle numpy arrays of: %d\n", PyArray_TYPE((PyArrayObject*)obj) ); \
 	break;									\
     }										\
 }
@@ -942,16 +947,25 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
             if(PyBool_Check(val) || PyInt_Check(val) || PyLong_Check(val) ||            \
                PyFloat_Check(val) || PyString_Check(val) || PyComplex_Check(val) ||     \
                PyList_Check(val) || PyTuple_Check(val) || PyDict_Check(val) ||          \
-               (casac::pyarray_check(val) && (PyArray_TYPE(val) == NPY_BOOL ||                 \
-               PyArray_TYPE(val) == NPY_BYTE || PyArray_TYPE(val) == NPY_UBYTE ||       \
-               PyArray_TYPE(val) == NPY_SHORT || PyArray_TYPE(val) == NPY_USHORT ||     \
-               PyArray_TYPE(val) == NPY_INT || PyArray_TYPE(val) == NPY_UINT ||         \
-               PyArray_TYPE(val) == NPY_LONG || PyArray_TYPE(val) == NPY_ULONG ||       \
-               PyArray_TYPE(val) == NPY_LONGLONG || PyArray_TYPE(val) == NPY_ULONGLONG||\
-               PyArray_TYPE(val) == NPY_FLOAT || PyArray_TYPE(val) == NPY_DOUBLE ||     \
-               PyArray_TYPE(val) == NPY_LONGDOUBLE || PyArray_TYPE(val) == NPY_CFLOAT ||\
-               PyArray_TYPE(val) == NPY_CDOUBLE ||PyArray_TYPE(val) == NPY_CLONGDOUBLE||\
-               PyArray_TYPE(val) == NPY_STRING))) {                                     \
+               (casac::pyarray_check(val) &&                                            \
+                (PyArray_TYPE((PyArrayObject*)val) == NPY_BOOL ||                       \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_BYTE ||                       \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_UBYTE ||                      \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_SHORT ||                      \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_USHORT ||                     \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_INT ||                        \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_UINT ||                       \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_LONG ||                       \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_ULONG ||                      \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_LONGLONG ||                   \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_ULONGLONG||                   \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_FLOAT ||                      \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_DOUBLE ||                     \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_LONGDOUBLE ||                 \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_CFLOAT ||                     \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_CDOUBLE ||                    \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_CLONGDOUBLE ||                \
+                 PyArray_TYPE((PyArrayObject*)val) == NPY_STRING))) {                   \
 	      rec.insert(str,pyobj2variant(val,DO_THROW));				\
             }                                                                           \
                                                                                         \
@@ -1185,11 +1199,11 @@ ARYSTRUCT_CONVERT(String)
 
 int is_intvec_compatible_numpy_array( PyObject *obj ) {
     if ( casac::pyarray_check(obj) &&
-	 ( PyArray_TYPE(obj) == NPY_BOOL ||
-	   PyArray_TYPE(obj) == NPY_BYTE ||
-	   PyArray_TYPE(obj) == NPY_UBYTE ||
-	   PyArray_TYPE(obj) == NPY_SHORT ||
-	   PyArray_TYPE(obj) == NPY_INT ) ) {
+	 ( PyArray_TYPE((PyArrayObject*)obj) == NPY_BOOL ||
+	   PyArray_TYPE((PyArrayObject*)obj) == NPY_BYTE ||
+	   PyArray_TYPE((PyArrayObject*)obj) == NPY_UBYTE ||
+	   PyArray_TYPE((PyArrayObject*)obj) == NPY_SHORT ||
+	   PyArray_TYPE((PyArrayObject*)obj) == NPY_INT ) ) {
 	return 1;
     } else {
 	return 0;
@@ -1200,7 +1214,7 @@ int convert_intvec_from_compatible_numpy_array( PyObject *obj, void *s ) {
     if ( is_intvec_compatible_numpy_array(obj) ) {
 	std::vector<int> *to = (std::vector<int>*) s;
 	std::vector<int> shape;
-	casac::numpy2vector(obj,*to, shape);
+	casac::numpy2vector((PyArrayObject*)obj,*to, shape);
 	return 1;
     }
     return 0;

@@ -59,6 +59,8 @@
 
 //# Includes
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <cmath>
 #include <casa/iostream.h>
 #include <casa/fstream.h>
@@ -1354,8 +1356,8 @@ Int TPPlotter::allocPlotArrays(Int size)
          PyGILState_STATE gstate;
          gstate = PyGILState_Ensure();
          //log->out( "Need to make larger");
-         px_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
-         py_p = PyArray_SimpleNew(1, dim, PyArray_DOUBLE);
+         px_p = PyArray_SimpleNew(1, dim, NPY_DOUBLE);
+         py_p = PyArray_SimpleNew(1, dim, NPY_DOUBLE);
 	 //Py_INCREF(px_p);
 	 //Py_INCREF(py_p);
          nelem_p = size;
@@ -1402,9 +1404,9 @@ Int TPPlotter::resizePlotArrays(Int numpoints)
       // These are needed for numpy arrays.
       PyGILState_STATE gstate;
       gstate = PyGILState_Ensure();
-      plotx_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,PyArray_DOUBLE,
+      plotx_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,NPY_DOUBLE,
                 PyArray_DATA((PyArrayObject *)px_p)));
-      ploty_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,PyArray_DOUBLE,
+      ploty_p = PyArray_Copy((PyArrayObject *)PyArray_SimpleNewFromData(1,dim,NPY_DOUBLE,
                 PyArray_DATA((PyArrayObject *)py_p)));
       
       //Py_INCREF((PyArrayObject *)plotx_p);

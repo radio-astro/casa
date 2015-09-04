@@ -1,6 +1,8 @@
 #ifndef _casac_conversions_python_h__
 #define _casac_conversions_python_h__
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
+#include <numpy/arrayobject.h>
 //#include <complexobject.h>
 #include <stdcasa/record.h>
 //#include <casac/BoolAry.h>
@@ -70,7 +72,7 @@ inline PyObject *map_array( const std::vector<TYPE> &vec, const std::vector<int>
 inline PyObject *map_vector( const std::vector<TYPE> &vec ) {                                   \
                              return map_vector_numpy( vec );                                    \
 }                                                                                               \
-void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape );           \
+void numpy2vector( PyArrayObject *obj, std::vector<TYPE > &vec, std::vector<int> &shape );      \
 int pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<int> &shape, int stride = 1, int offset = 0 );
 
 

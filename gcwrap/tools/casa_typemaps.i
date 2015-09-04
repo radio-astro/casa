@@ -221,7 +221,7 @@ if($1){
          std::vector<int> shape;
          std::vector<double> myVals;
          if(casac::pyarray_check(theVal)){
-            casac::numpy2vector(theVal, myVals, shape);
+            casac::numpy2vector((PyArrayObject*)theVal, myVals, shape);
          } else {
              if (PyString_Check(theVal)){
                 myVals.push_back(-1);
@@ -260,7 +260,7 @@ if($1){
          std::vector<int> shape;
          std::vector<double> myVals;
          if(casac::pyarray_check(theVal)){
-            casac::numpy2vector(theVal, myVals, shape);
+            casac::numpy2vector((PyArrayObject*)theVal, myVals, shape);
          } else {
              if (PyString_Check(theVal)){
                 myVals.push_back(-1);
@@ -299,7 +299,7 @@ if($1){
          std::vector<int> shape;
          std::vector<double> myVals;
          if(casac::pyarray_check(theVal)){
-            casac::numpy2vector(theVal, myVals, shape);
+            casac::numpy2vector((PyArrayObject*)theVal, myVals, shape);
          } else {
              if (PyString_Check(theVal)){
                 myVals.push_back(-1);
@@ -359,7 +359,7 @@ if($1){
 %typemap(in) BoolVec {
    $1 = new casac::BoolAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -369,7 +369,7 @@ if($1){
 %typemap(in) BoolVec& {
    $1 = new casac::BoolAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -379,7 +379,7 @@ if($1){
 %typemap(in) IntVec {
    $1 = new casac::IntAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -389,7 +389,7 @@ if($1){
 %typemap(in) IntVec& {
    $1 = new casac::IntAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -399,7 +399,7 @@ if($1){
 %typemap(in) DoubleVec {
    $1 = new casac::DoubleAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -410,7 +410,7 @@ if($1){
    if(!$1)
       $1 = new casac::DoubleAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -426,7 +426,7 @@ if($1){
       $1->resize(0);
    if(casac::pyarray_check($input)){
       //cerr << "numpy2vec" << endl;
-      casac::numpy2vector($input, *$1, shape);
+      casac::numpy2vector((PyArrayObject*)$input, *$1, shape);
    } else {
        if (PyString_Check($input)){
           $1->push_back(-1);
@@ -451,7 +451,7 @@ if($1){
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
-      casac::numpy2vector($input, *$1, shape);
+      casac::numpy2vector((PyArrayObject*)$input, *$1, shape);
    } else {
       if (PyString_Check($input)){
          $1->push_back(0);
@@ -481,7 +481,7 @@ if($1){
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
-      casac::numpy2vector($input, *$1, shape);
+      casac::numpy2vector((PyArrayObject*)$input, *$1, shape);
    } else {
       if (PyString_Check($input)){
          $1->push_back(-1);
@@ -508,7 +508,7 @@ if($1){
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
-      casac::numpy2vector($input, *$1, shape);
+      casac::numpy2vector((PyArrayObject*)$input, *$1, shape);
    } else {
       if (PyString_Check($input)){
          $1->push_back(-1);
@@ -536,7 +536,7 @@ if($1){
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
-      casac::numpy2vector($input, *$1, shape);
+      casac::numpy2vector((PyArrayObject*)$input, *$1, shape);
    } else {
       if (PyString_Check($input)){
          $1->push_back(-1);
@@ -571,7 +571,7 @@ if($1){
 %typemap(in) ComplexVec {
    $1 = new casac::ComplexAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
       shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
@@ -581,7 +581,7 @@ if($1){
 %typemap(in) ComplexVec& {
    $1 = new casac::ComplexAry;
    if(pyarray_check($input)){
-      numpy2vector($input, $1->value, $1->shape);
+      numpy2vector((PyArrayObject*)$input, $1->value, $1->shape);
    } else {
          shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
