@@ -405,6 +405,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <default param="maxuvwdistance"><value type="double">0.0</value></default>
             </equals>
           </when>
+        <when param="calibration">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                  <default param="callib"><value type="string"></value></default>
+            </equals>
+          </when>          
     </constraints>
 
 </input>
