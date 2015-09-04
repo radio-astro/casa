@@ -33,8 +33,7 @@ import numpy
 from odict import odict
 from task_</xsl:text><xsl:value-of select="$taskname"/> import <xsl:value-of select="$taskname"/>
 <xsl:text>
-from task_</xsl:text><xsl:value-of select="$taskname"/> import casalog
-<xsl:text>
+from taskinit import casalog
 class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:text>
     __name__ = "</xsl:text><xsl:value-of select="$taskname"/><xsl:text>"
