@@ -308,9 +308,17 @@ class CleanBase(basetask.StandardTaskTemplate):
         except:
             pass
 
+        spw_param_list = []
+        for spwid in inputs.spw.split(','):
+            if (inputs.spwsel.has_key('spw%s' % (spwid))):
+                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0)))
+            else:
+                spw_param_list.append(spwid)
+        spw_param = ','.join(spw_param_list)
+
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=','.join(['%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]) for spwid in inputs.spw.split(',')]),
+            spw=spw_param,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
             pblimit=0.2, niter=inputs.niter,
