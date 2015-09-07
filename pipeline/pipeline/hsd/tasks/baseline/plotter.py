@@ -7,63 +7,59 @@ import pipeline.infrastructure.displays.singledish.sparsemap as sparsemap
 
 LOG = infrastructure.get_logger(__name__)
 
-def analyze_grid_table(context, antid, spwid, polid, grid_table):
+def analyze_plot_table(context, antid, spwid, polid, plot_table):
     datatable = context.observing_run.datatable_instance
-    num_rows = len(grid_table) # num_plane * num_ra * num_dec
-    num_dec = grid_table[-1][3] + 1
-    num_ra = grid_table[-1][2] + 1
+    num_rows = len(plot_table) # num_plane * num_ra * num_dec
+    num_dec = plot_table[-1][1] + 1
+    num_ra = plot_table[-1][0] + 1
     num_plane = num_rows / (num_dec * num_ra)
     LOG.debug('num_ra=%s, num_dec=%s, num_plane=%s, num_rows=%s'%(num_ra,num_dec,num_plane,num_rows))
     each_grid = numpy.arange(num_rows, dtype=int).reshape((num_dec*num_ra,num_plane))
     LOG.trace('each_grid=%s'%(each_grid))
-    get_index = lambda x: (x[0], x[3], x[4])
     rowlist = []
     for each_plane in each_grid:
         datarows = []
         dataids = []
-        for grid_table_rowid in each_plane:
-            grid_table_row = grid_table[grid_table_rowid]
-            thisspw = grid_table_row[0]
-            LOG.debug('Process row %s: ra=%s, dec=%s'%(grid_table_rowid, grid_table_row[4], grid_table_row[5]))
-            for grid_data in grid_table_row[-1]:
-                row, idx, thisant = get_index(grid_data)
+        for plot_table_rowid in each_plane:
+            plot_table_row = plot_table[plot_table_rowid]
+            LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
+            for idx in plot_table_row[-1]:
+                row = datatable.tb1.getcell('ROW', idx)
                 thispol = datatable.tb1.getcell('POL', idx)
-                LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, thisant, thisspw, thispol))
-                if thisant == antid and thisspw == spwid and thispol == polid:
-                    LOG.debug('Adding data to datarows')
-                    datarows.append(row)
-                    dataids.append(idx)
+                LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, datatable.tb1.getcell('ANTENNA', idx), datatable.tb1.getcell('IF', idx), datatable.tb1.getcell('POL', idx)))
+                datarows.append(row)
+                dataids.append(idx)
         if len(datarows) > 0:
             midx = median_index(datarows)
         else:
             midx = None
-        raid = grid_table[each_plane[0]][2]
-        decid = grid_table[each_plane[0]][3]
-        ra = grid_table[each_plane[0]][4]
-        dec = grid_table[each_plane[0]][5]
+        raid = plot_table[each_plane[0]][0]
+        decid = plot_table[each_plane[0]][1]
+        ra = plot_table[each_plane[0]][2]
+        dec = plot_table[each_plane[0]][3]
         rowlist.append({"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
                         "ROWS": datarows, "IDS": dataids, "MEDIAN_INDEX": midx})
         LOG.trace('RA %s DEC %s: datarows=%s'%(raid, decid, datarows))
         
     refpix_list = [0,0]
-    refval_list = grid_table[num_ra * num_plane -1][4:6]
+    refval_list = plot_table[num_ra * num_plane -1][2:4]
     if num_ra > 1:
-        increment_ra = grid_table[num_plane][4] - grid_table[0][4]
+        increment_ra = plot_table[num_plane][2] - plot_table[0][2]
     else:
-        dec = grid_table[0][5]
+        dec = plot_table[0][5]
         dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
         if num_dec > 1:
-            increment_ra = grid_table[num_plane * num_ra][5] - grid_table[0][5] / dec_corr
+            increment_ra = plot_table[num_plane * num_ra][3] - plot_table[0][3] / dec_corr
         else:
             reference_data = context.observing_run[antid]
             beam_size = casatools.quanta.convert(reference_data.beam_size[spwid], outunit='deg')['value']
             increment_ra = beam_size / dec_corr
     if num_dec > 1:
         LOG.trace('num_dec > 1 (%s)'%(num_dec))
-        increment_dec = grid_table[num_plane * num_ra][5] - grid_table[0][5]
+        increment_dec = plot_table[num_plane * num_ra][3] - plot_table[0][3]
     else:
         LOG.trace('num_dec is 1')
-        dec = grid_table[0][5]
+        dec = plot_table[0][3]
         dec_corr = numpy.cos(dec * casatools.quanta.constants('pi')['value'] / 180.0)
         LOG.trace('declination correction factor is %s'%(dec_corr))
         increment_dec = increment_ra * dec_corr
@@ -119,10 +115,10 @@ def get_lines(datatable, num_ra, rowlist):
             lines_map[ix][iy] = None
     return lines_map
 
-def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, line_range):
+def plot_profile_map(context, antid, spwid, polid, plot_table, infile, outfile, line_range):
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(context, antid, spwid, polid, grid_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, antid, spwid, polid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     
@@ -141,10 +137,16 @@ def plot_profile_map(context, antid, spwid, polid, grid_table, infile, outfile, 
     plotter.done()
     return integrated_data, map_data
 
-def plot_profile_map_with_fit(context, antid, spwid, polid, grid_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, line_range):
+def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_data, postfit_data, prefit_figfile, postfit_figfile, line_range):
+    """
+    plot_table format:
+    [[0, 0, RA0, DEC0, [IDX00, IDX01, ...]],
+     [0, 1, RA0, DEC1, [IDX10, IDX11, ...]],
+     ...]
+    """
     datatable = context.observing_run.datatable_instance
 
-    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_grid_table(context, antid, spwid, polid, grid_table)
+    num_ra, num_dec, num_plane, refpix, refval, increment, rowlist = analyze_plot_table(context, antid, spwid, polid, plot_table)
         
     plotter = create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment)
     

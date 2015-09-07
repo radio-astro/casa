@@ -203,7 +203,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('pols=%s'%(pols))
                 #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
                 #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
-                per_antenna_table = per_antenna_grid_table(ant, grid_table)
+                #per_antenna_table = per_antenna_grid_table(ant, grid_table)
+                plot_table = generate_plot_table(ant, spwid, pols, grid_table)
                 #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
                 fitter_args = {"antennaid": ant,
                              "spwid": spwid,
@@ -212,7 +213,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                              "fit_order": fitorder,
                              "edge": edge,
                              "outfile": outfile,
-                             "grid_table": per_antenna_table,
+                             "grid_table": plot_table,
                              "channelmap_range": channelmap_range,
                              "stage_dir": stage_dir}
                         
@@ -328,7 +329,16 @@ class SDBaseline(common.SingleDishTaskTemplate):
 def per_antenna_grid_table(antenna_id, grid_table):
     def filter(ant, table):
         for row in table:
-            new_row_entry = row[:6] + [[r for r in row[6] if r[-1] == antenna_id]]
+            new_row_entry = row[:6] + [numpy.array([r for r in row[6] if r[-1] == antenna_id])]
             yield new_row_entry
     new_table = list(filter(antenna_id, grid_table))
+    return new_table
+
+def generate_plot_table(antenna_id, spw_id, polarization_ids, grid_table):
+    def filter(ant, spw, pols, table):
+        for row in table:
+            if row[0] == spw and row[1] in pols:
+                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == ant], dtype=int)]
+                yield new_row_entry
+    new_table = list(filter(antenna_id, spw_id, polarization_ids, grid_table))
     return new_table
