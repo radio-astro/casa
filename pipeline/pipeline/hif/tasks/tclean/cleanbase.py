@@ -46,7 +46,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     npixels = basetask.property_with_default('npixels', 0)
     outframe = basetask.property_with_default('outframe', 'LSRK')
     phasecenter = basetask.property_with_default('phasecenter', '')
-    restoringbeam = basetask.property_with_default('restoringbeam', '')
+    restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
     spwsel = basetask.property_with_default('spwsel', '')
