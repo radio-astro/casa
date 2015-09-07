@@ -5682,13 +5682,6 @@ int main(int argc, char *argv[]) {
       effectiveBwPerDD_m[ddIdx] = effectiveBwPerSpwId_m[r->getSpectralWindowId().getTagValue()];
     }
 
-    /*
-      infostream.str("");
-      infostream << "dd idx " ;
-      v2oss(dataDescriptionIdx2Idx, infostream, "{", "}", ", ");
-      info(infostream.str());
-    */
-
     if (nDataDescription) {
       infostream.str("");
       infostream << "converted in " << msFillers.begin()->second->ms()->dataDescription().nrow() << " data description(s)  in the measurement set(s)." ;
@@ -7054,6 +7047,7 @@ int main(int argc, char *argv[]) {
 	      infostream.str("");
 	      infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	      vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
+
 	      msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
 	      numberOfReadIntegrations += numberOfIntegrations;
 	      numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
