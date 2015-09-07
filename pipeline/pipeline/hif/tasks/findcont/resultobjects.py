@@ -30,14 +30,14 @@ class FindContResult(basetask.Results):
                 new_spw_sel = 'NEW' in [self.result_cont_ranges[source_name][spwid]['status'] for spwid in spwids.split(',')]
 
                 if (new_spw_sel):
-                    spwsel = []
+                    spwsel = {}
                     for spwid in spwids.split(','):
                         if (self.cont_ranges[source_name][spwid] in [['NONE'], ['']]):
-                            spwsel.append('')
+                            spwsel['spw%s' % (spwid)] = ''
                             LOG.warn('No continuum frequency range information available for %s, spw %s.' % (target, spwid))
                         else:
-                            spwsel.append(';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]]))
-                    context.clean_list_pending[i]['spwsel'] = ','.join(spwsel)
+                            spwsel['spw%s' % (spwid)] = ';'.join(['%s~%sGHz' % (cont_range[0], cont_range[1]) for cont_range in self.cont_ranges[source_name][spwid]])
+                    context.clean_list_pending[i]['spwsel'] = spwsel
 
     def __repr__(self):
         repr = 'FindCont:\n'

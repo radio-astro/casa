@@ -49,7 +49,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
-    spwsel = basetask.property_with_default('spwsel', '')
+    spwsel = basetask.property_with_default('spwsel', {})
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
     threshold = basetask.property_with_default('threshold', '0.0mJy')
@@ -310,7 +310,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=reduce(lambda x,y: x+','+y, ['%s%s%s' % (spwid, ':'*(1 if len(spwsel) > 0 else 0), spwsel) for spwid,spwsel in zip(inputs.spw.split(','), inputs.spwsel.split(','))]),
+            spw=','.join(['%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]) for spwid in inputs.spw.split(',')]),
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
             pblimit=0.2, niter=inputs.niter,

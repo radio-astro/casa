@@ -33,6 +33,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
     # Add extra getters and setters here
+    spwsel = basetask.property_with_default('spwsel', {})
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
     masklimit = basetask.property_with_default('masklimit', 4.0)
