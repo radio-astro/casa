@@ -41,6 +41,14 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
     ra = tbt.getcol('RA')
     dec = tbt.getcol('DEC')
     radvel = tbt.getcol('RadVel')
+    radvelunit = 'km/s'
+    tmpkw = tbt.getcolkeywords('RadVel')
+    if tmpkw.has_key('UNIT'):
+        radvelunit = tmpkw['UNIT']
+    elif tmpkw.has_key('QuantumUnits'):
+        radvelunit = tmpkw['QuantumUnits'][0]
+    else:
+        casalog.post('Cannot determine units of radial velocity column. Assuming km/s.', 'WARN')
     mjd = tbt.getcol('MJD')
     kw = tbt.getkeywords()
     tbt.close()
@@ -93,20 +101,20 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
 
         olddir={'m0': {'value': ra[i], 'unit': 'deg'},
                 'm1': {'value': dec[i], 'unit': 'deg'},
-                'refer': 'TOPO',
+                'refer': 'J2000',
                 'type': 'direction'}
         met.doframe(olddir)
-        newdir=met.measure(olddir, 'APP')
+        newdir=met.measure(olddir, 'J2000')
 
         newra.append(qat.convert(newdir['m0'],'deg')['value'])
         newdec.append(qat.convert(newdir['m1'],'deg')['value'])
 
-        oldradvel={'m0': {'value': radvel[i], 'unit': 'AU/d'},
+        oldradvel={'m0': {'value': radvel[i], 'unit': radvelunit},
                    'refer': 'TOPO',
                    'type': 'radialvelocity'}
 
         newradvelme = met.measure(oldradvel, 'GEO')
-        newradvel.append(qat.convert(newradvelme['m0'], 'AU/d')['value'])
+        newradvel.append(qat.convert(newradvelme['m0'], radvelunit)['value'])
 
     # create the converted table
     safetycopyname=tablename+'.orig'

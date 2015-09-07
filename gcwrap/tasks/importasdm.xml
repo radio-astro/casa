@@ -401,10 +401,11 @@ with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::point
 remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
 	            default: False
            
-convert_ephem2geo -- ALMA uses TOPO ephemerides. For later processing of the radial velocity information
-                     in, e.g. cvel, an ephemeris in the GEO reference frame is needed. 
-                     Setting this option to True will perform the conversion of positions and velocities
-		     on all attached ephemerides in the imported MS. 
+convert_ephem2geo -- ALMA uses ephemerides with observer location equal to the ALMA site. 
+                     For later processing of the radial velocity information in, e.g. cvel, 
+                     a geocentric ephemeris is needed. 
+                     Setting this option to True will perform the conversion of positions and 
+                     velocities on all attached ephemerides in the imported MS. 
                      This will neither change the time-spacing nor the duration of the ephemeris. 
                      No interpolation in time is done.
 
