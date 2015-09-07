@@ -217,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   static Bool addToRec(TableRecord& therec, const Vector<Int>& spws);
   static Bool removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws);
   static Bool removeFTFromRec(TableRecord& therec, const String& keyval, const Bool relabel=True);
-  static Bool removeSpw(TableRecord& therec, const Vector<Int>& spws);
+  static Bool removeSpw(TableRecord& therec, const Vector<Int>& spws, const Vector<Int>& fields=Vector<Int>(0));
   static Bool putModelRecord(const Vector<Int>& fieldIds, TableRecord& theRec, MeasurementSet& theMS);
   //Remove the Record which has the given key...will exterminate it from both the Source table or Main table
   static void removeRecordByKey(MeasurementSet& theMS, const String& theKey);
@@ -225,6 +225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //this default should only be used  if the optional SOURCE table in non-existant
   static void putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum=-1);
   static void deleteDiskImage(MeasurementSet& theMS, const String& theKey);
+  static Int  firstSourceRowRecord(const Int field, const MeasurementSet& theMS, 
+				   TableRecord& rec);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;

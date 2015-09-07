@@ -303,9 +303,14 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	    //if(newTab.rwKeywordSet().isDefined(elkey)){
 	    
 	    TableRecord conteneur;
+	    //cerr << "Just before getModelRecord " << elkey << "  fields " << fields << endl;
 	    getModelRecord(elkey, conteneur, newTab); 
+	    //cerr << "keys " ;
+	    //for (uInt k=0; k< conteneur.nfields() ; ++k)
+	    //  cerr << conteneur. name(k) ;
+	    //cerr << endl;
 	    //=newTab.rwKeywordSet().asRecord(elkey);
-	    if(removeSpw(conteneur, spws)){
+	    if(removeSpw(conteneur, spws, fields)){
 	    	putRecordByKey(newTab, elkey, conteneur, srow);
 	    }
 	    else{
@@ -349,7 +354,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
   }
 
-  Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws){
+  Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws, const Vector<Int>& fields){
      Int numft=0;
      Vector<String> numtype(2);
      Vector<String> keyval(2);
@@ -365,7 +370,16 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     		 Int numrem=0;
     		 for (Int k=0; k < numft; ++k){
     			 RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
-    			 if(!removeSpwFromMachineRec(ftrec, spws)){
+			 Bool hasField=True;
+			 if(fields.nelements() >0){
+			   hasField=False;
+			   Vector<Int> fieldsinrec;
+			   ftrec.get("fields", fieldsinrec);
+			   if(anyEQ(fieldsinrec, fields))
+			      hasField=True;
+			 }
+			 
+    			 if(hasField && !removeSpwFromMachineRec(ftrec, spws)){
     				 toberemoved[numrem]=String(keyval[j]+String::toString(k));
     				 ++numrem;
     			 }
@@ -677,12 +691,20 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     TableRecord outRec; 
     Bool addtorec=False;
     MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
+    
     if(isModelDefined(elkey, newTab)){ 
       getModelRecord(elkey, outRec, thems);
       //if incremental no need to check & remove what is in the record
       if(!incremental)
-    	  addtorec=addToRec(outRec, spws);
+	addtorec=addToRec(outRec, spws);
     }
+    ///////even if it is not defined some other field model might be sitting on that
+    //////model key
+    Int hasSourceRecord=firstSourceRowRecord(validfieldids[0], thems, outRec);
+    if(hasSourceRecord > -1 && outRec.nfields() > 0)
+      addtorec=True;
+    //cerr << "has Source " << hasSourceRecord << endl;
+    ////
     incremental=incremental || addtorec;
     if(iscomponentlist){
       modrec.define("type", "componentlist");
@@ -699,7 +721,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
   
     //for (uInt k=0; k < validfieldids.nelements();  ++k){
     //  newTab.rwKeywordSet().define("definedmodel_field_"+String::toString(validfieldids[k]), elkey);
-      
+    
     // }
     iscomponentlist ? outRec.defineRecord("cl_"+String::toString(counter), modrec):
       outRec.defineRecord("ft_"+String::toString(counter), modrec);
@@ -873,6 +895,7 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 
   FTMachine* VisModelData::NEW_FT(const Record& ftrec){
     String name=ftrec.asString("name");
+    //cerr << "NEW_FT " << name << endl;
     if(name=="GridFT")
       return new GridFT(ftrec);
     if(name=="rGridFT")
@@ -940,7 +963,7 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
     vb.setModelVisCube(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
-      // cerr << "In cft " << cl.nelements() << endl;
+      //cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	if(!cl[k].null()){
 	  cft_p->get(vb, *(cl[k]), -1); 
@@ -1014,7 +1037,39 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
     return ftholder_p[indx];
   }
 
-
+Int VisModelData::firstSourceRowRecord(const Int field, const MeasurementSet& theMS, TableRecord& rec){
+    Int row=-1;
+    
+    //Prefer the Source table first    
+    ROMSFieldColumns fCol(theMS.field());
+    if(Table::isReadable(theMS.sourceTableName()) && (theMS.source().nrow() > 0) &&  (!fCol.sourceId().isNull()) && (fCol.sourceId().get(field) != -1) ){
+    
+      const MSSource& mss=theMS.source();
+     
+      Int sid=fCol.sourceId().get(field);
+      Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
+      if(rows.nelements() > 0) 
+	row=rows[0];
+      const TableRecord& keywords=mss.keywordSet();
+      Bool rowIsUsed=False;
+      for (uInt n=0; n< keywords.nfields(); ++n){
+	if(keywords.dataType(n) == TpInt){
+	  if(row==keywords.asInt(n)){
+	     rowIsUsed=True;
+	     //cerr << "has record pointed to" << endl;
+	  }
+	}
+      }
+      //nobody is using that row ..any record there, if any,  must be dangling
+      if(!rowIsUsed)
+	return -1;
+      if(row >-1 && mss.isColumn(MSSource::SOURCE_MODEL)){
+	ROScalarColumn<TableRecord> scol(theMS.source(), "SOURCE_MODEL");
+	scol.get(row, rec);
+      }
+    }
+    return row;
+  }
 
 
 }//# NAMESPACE CASA - END

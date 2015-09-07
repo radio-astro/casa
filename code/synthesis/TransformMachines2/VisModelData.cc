@@ -207,9 +207,21 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
 	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
+      else{
+	///remove keys that point to nowehere
+	//cerr << "The key " << elkey << endl;
+	if(!newTab.source().isNull() && newTab.source().rwKeywordSet().isDefined(elkey))
+	  newTab.source().rwKeywordSet().removeField(elkey);
+	if(newTab.rwKeywordSet().isDefined(elkey))
+	  newTab.rwKeywordSet().removeField(elkey);
+	if( !newTab.source().isNull() && newTab.source().rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	  newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	   newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+      }
   }
   ////Cleaning out orphaned image disk models
-  String srctable=thems.source().tableName();
+  String srctable=thems.source().isNull() ? "" : thems.source().tableName();
   Vector<String> possibleFT(2); 
   possibleFT(0)=srctable+"/FT_MODEL*";
   possibleFT(1)=theParts[0]+"/FT_MODEL*";
@@ -293,10 +305,11 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	  else{
 	    //if(newTab.rwKeywordSet().isDefined(elkey)){
 	    
-	    TableRecord conteneur;
+	    TableRecord conteneur;  
 	    getModelRecord(elkey, conteneur, newTab); 
+	   
 	    //=newTab.rwKeywordSet().asRecord(elkey);
-	    if(removeSpw(conteneur, spws)){
+	    if(removeSpw(conteneur, spws, fields)){
 	    	putRecordByKey(newTab, elkey, conteneur, srow);
 	    }
 	    else{
@@ -340,7 +353,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
   }
 
-  Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws){
+  Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws, const Vector<Int>& fields){
      Int numft=0;
      Vector<String> numtype(2);
      Vector<String> keyval(2);
@@ -356,7 +369,15 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     		 Int numrem=0;
     		 for (Int k=0; k < numft; ++k){
     			 RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
-    			 if(!removeSpwFromMachineRec(ftrec, spws)){
+			 Bool hasField=True;
+			 if(fields.nelements() >0){
+			   hasField=False;
+			   Vector<Int> fieldsinrec;
+			   ftrec.get("fields", fieldsinrec);
+			   if(anyEQ(fieldsinrec, fields))
+			      hasField=True;
+			 }
+    			 if(hasField && !removeSpwFromMachineRec(ftrec, spws)){
     				 toberemoved[numrem]=String(keyval[j]+String::toString(k));
     				 ++numrem;
     			 }
@@ -674,6 +695,15 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       if(!incremental)
     	  addtorec=addToRec(outRec, spws);
     }
+
+    ///////even if it is not defined some other field model might be sitting on that
+    //////model key
+    Int hasSourceRecord=firstSourceRowRecord(validfieldids[0], thems, outRec);
+    if(hasSourceRecord > -1 && outRec.nfields() > 0)
+      addtorec=True;
+    //cerr << "has Source " << hasSourceRecord << endl;
+    ////
+
     incremental=incremental || addtorec;
     if(iscomponentlist){
       modrec.define("type", "componentlist");
@@ -838,6 +868,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 		  }
 		}
 		else{
+		  cerr << "spws, field, msid " << spws[spi] << " " << fields[fi] << " " <<  vb.msId() << " index " << indexcl << endl;
 		  clindex_p(spws[spi], fields[fi], vb.msId())=indexcl;
 		}
 	      }
@@ -918,7 +949,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     vb.setVisCubeModel(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
-      // cerr << "In cft " << cl.nelements() << endl;
+      cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	if(!cl[k].null()){
 	  cft_p->get(vb, *(cl[k]), -1); 
@@ -974,9 +1005,10 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     if(!hasModel(msId, fieldId, spwId))
       return Vector<CountedPtr<ComponentList> >(0);
     Int indx=clindex_p(spwId, fieldId, msId);
-    //cerr << "indx " << indx << "   " << clholder_p[indx].nelements() <<  " spw " << spwId << endl;
+    cerr << "indx " << indx << "   " << clholder_p[indx].nelements() <<  " spw " << spwId << " field " << fieldId << endl;
     if(indx <0)
       return Vector<CountedPtr<ComponentList> >(0);
+    cerr << "CL " << clholder_p[indx][0]->summarize(0) << endl;
     return clholder_p[indx];
 	
 
@@ -993,6 +1025,38 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     return ftholder_p[indx];
   }
 
+  Int VisModelData::firstSourceRowRecord(const Int field, const MeasurementSet& theMS, TableRecord& rec){
+    Int row=-1;
+    
+    //Prefer the Source table first    
+    ROMSFieldColumns fCol(theMS.field());
+    if(Table::isReadable(theMS.sourceTableName()) && (theMS.source().nrow() > 0) &&  (!fCol.sourceId().isNull()) && (fCol.sourceId().get(field) != -1) ){
+    
+      const MSSource& mss=theMS.source();
+      
+      Int sid=fCol.sourceId().get(field);
+      Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
+      if(rows.nelements() > 0) 
+	row=rows[0];
+      const TableRecord& keywords=mss.keywordSet();
+      Bool rowIsUsed=False;
+      for (uInt n=0; n< keywords.nfields(); ++n){
+	if(keywords.dataType(n) == TpInt){
+	  if(row==keywords.asInt(n)){
+	    rowIsUsed=True;
+	  }
+	}
+      }
+      //nobody is using that row ..any record there must be dangling
+      if(!rowIsUsed)
+	return -1;
+      if(row >-1 && mss.isColumn(MSSource::SOURCE_MODEL)){
+	ROScalarColumn<TableRecord> scol(theMS.source(), "SOURCE_MODEL");
+	scol.get(row, rec);
+      }
+    }
+    return row;
+  }
 
 
 }// end namespace refim
