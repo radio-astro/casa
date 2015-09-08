@@ -329,7 +329,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 This task simultaneously fits one or more gaussian singlets lorentzian singlets, gaussian multiplets, and/or a polynomial to one dimensional profiles.
 
-ARAMETER SUMMARY
+PARAMETER SUMMARY
 imagename       Name of the input (CASA, FITS, MIRIAD) image
 box             Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
                 may be specified. If not specified, region is used if specified. If region
