@@ -150,7 +150,7 @@ class DetectLine(common.SingleDishTaskTemplate):
 
             ProcStartTime = time.time()
             Protected = []
-            if grid_table[row][6] == 0:
+            if len(grid_table[row][6]) == 0:
                 LOG.debug('Row %d: No spectrum' % row)
                 # No spectrum
                 Protected = [[-1, -1, 1]]

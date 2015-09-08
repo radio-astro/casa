@@ -173,6 +173,7 @@ class SimpleGridding(common.SingleDishTaskTemplate):
                                      * dec_corr * dec_corr 
                                      + (decs[index] - DEC) * (decs[index] - DEC))
                         line[6].append([rows[index], Delta, stats[index], index_list[index], ants[index]])
+                    line[6] = numpy.array(line[6])
                     grid_table.append(line)
                     # LOG.info("grid_table: %s" % line)
         del ras, decs, combine_list
@@ -229,7 +230,9 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         bind_to_grid = dict([(k, []) for k in antenna_list])
         for ROW in xrange(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
-            for [row, delta, rms, index, ant] in RowDelta:
+            for [row, delta, rms, _index, _ant] in RowDelta:
+                index = int(_index)
+                ant = int(_ant)
                 if tSFLAG[index] == 1:
                     if tTSYS[index] > 0.5 and tEXPT[index] > 0.0:
                         Weight = tEXPT[index] / (tTSYS[index] ** 2.0)
