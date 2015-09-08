@@ -174,21 +174,19 @@ void ImageStatsCalculator::setDisk(Bool d) {
 }
 
 void ImageStatsCalculator::_reportDetailedStats(
-	const SHARED_PTR<const ImageInterface<Float> > tempIm,
-	const Record& retval
+	const SPCIIF tempIm, const Record& retval
 ) {
-	CoordinateSystem csys = tempIm->coordinates();
-	Vector<String> worldAxes = csys.worldAxisNames();
-	IPosition imShape = tempIm->shape();
+	const CoordinateSystem& csys = tempIm->coordinates();
+	auto worldAxes = csys.worldAxisNames();
+	auto imShape = tempIm->shape();
 	vector<uInt> colwidth;
 	Int stokesCol = -1;
 	Int freqCol = -1;
 	Int raCol = -1;
 	Int decCol = -1;
 	IPosition otherCol;
-
 	for (Int i=worldAxes.size()-1; i>=0; i--) {
-		String gg = worldAxes[i];
+		auto gg = worldAxes[i];
 		gg.upcase();
 		if (gg == "RIGHT ASCENSION") {
 			raCol = i;
@@ -237,7 +235,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 		}
 		myloc++;
 	}
-	if (otherCol.nelements() > 0) {
+	if (otherCol.size() > 0) {
 		for (uInt i=0; i<otherCol.nelements(); ++i) {
 			idx[myloc] = otherCol[i];
 			++myloc;
@@ -246,21 +244,45 @@ void ImageStatsCalculator::_reportDetailedStats(
 			}
 		}
 	}
-
+	Bool doVelocity = csys.hasSpectralAxis()
+		&& csys.spectralCoordinate().restFrequency() > 0;
 	ostringstream oss;
-	for (uInt i=0; i<reportAxes.nelements(); ++i) {
-		String gg = worldAxes[reportAxes[i]];
+	for (auto ax : reportAxes) {
+		if (ax == freqCol) {
+			if (doVelocity) {
+				oss << "VELOCITY column unit = "
+					<< csys.spectralCoordinate().velocityUnit() << endl;
+			}
+			else {
+				oss << "FREQUENCY column unit = "
+					<< csys.spectralCoordinate().worldAxisUnits()[0] << endl;
+			}
+		}
+	}
+	auto bUnit = _getImage()->units().getName();
+	oss << "Sum column unit = " << bUnit << endl;
+	oss << "Mean column unit = " << bUnit << endl;
+	oss << "Std_dev column unit = " << bUnit << endl;
+	oss << "Minimum column unit = " << bUnit << endl;
+	oss << "Maximum column unit = " << bUnit << endl;
+	for (auto ax : reportAxes) {
+		String gg = worldAxes[ax];
 		gg.upcase();
 		uInt width = gg == "STOKES" ? 6 : gg == "FREQUENCY"?  16: 15;
+		if (
+			gg == "FREQUENCY" && doVelocity
+		) {
+			gg = "VELOCITY";
+		}
 		colwidth.push_back(width);
-		oss << setw(width) << worldAxes[reportAxes[i]] << "  "
-			<< worldAxes[reportAxes[i]] << "(Plane)" << " ";
-		width = worldAxes[reportAxes[i]].size() + 8;
+		oss << setw(width) << gg << "  "
+			<< gg << "(Plane)" << " ";
+		width = gg.size() + 8;
 		colwidth.push_back(width);
 	}
 	Vector<Int> axesMap = reportAxes.asVector();
 	GenSort<Int>::sort(axesMap);
-	oss << "Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     ";
+	oss << "Npts          Sum           Mean          Rms           Std_dev       Minimum       Maximum     ";
 	std::map<String, uInt> chauvIters;
 	if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
 		chauvIters = _statistics->getChauvenetNiter();
@@ -290,11 +312,25 @@ void ImageStatsCalculator::_reportDetailedStats(
 	for (uInt i=0; i<reportAxes.size(); ++i) {
 		Vector<Double> indices = indgen(imShape[reportAxes[i]], 0.0, 1.0);
 		uInt prec = reportAxes[i] == freqCol ? 9 : 5;
-		ImageUtilities::pixToWorld(
-			coords[i], csys, reportAxes[i], _axes,
-			IPosition(imShape.nelements(),0), imShape-1, indices,prec,
-			True
-		);
+		if (doVelocity && reportAxes[i] == freqCol) {
+			const SpectralCoordinate& spc = csys.spectralCoordinate();
+			Vector<Double> vels;
+			spc.pixelToVelocity(vels, indices);
+			vector<String> sv;
+			for (auto v : vels) {
+				ostringstream oss;
+				oss << setprecision(prec) << v;
+				sv.push_back(oss.str());
+			}
+			coords[i] = Vector<String>(sv);
+		}
+		else {
+			ImageUtilities::pixToWorld(
+				coords[i], csys, reportAxes[i], _axes,
+				IPosition(imShape.size(),0), imShape-1, indices, prec,
+				True
+			);
+		}
 	}
 	uInt count = 0;
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
@@ -302,7 +338,7 @@ void ImageStatsCalculator::_reportDetailedStats(
 		position = inIter.position();
 		for (uInt i=0; i<reportAxes.nelements(); ++i) {
 			oss << setw(colwidth[colNum]);
-			oss	<< coords[i][position[reportAxes[i]]];// world[reportAxes[i]];
+			oss	<< coords[i][position[reportAxes[i]]];
 			++colNum;
 			oss << " " << setw(colwidth[colNum])
 				<< (position[reportAxes[i]] + blc[reportAxes[i]]) << " ";
