@@ -235,7 +235,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        try.alpha            - spectral index
                        try.alpha.error   - estimate of error on spectral index
                        try.beta              - spectral curvature (if nterms \> 2)
-                      
 
                        Tip : Include a directory name in 'imagename' for all 
                                output images to be sent there instead of the
@@ -655,10 +654,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                          per scale) from all smoothed Taylor residual images
                                        - Repeat from step 2
 
+                                       (Note : In addition to output Taylor coefficient images .tt0,.tt1,etc
+                                                   images of spectral index (.alpha), an estimate of error on 
+                                                   spectral index (.alpha.error) and spectral curvature (.beta,
+                                                   if nterms is greater than 2) are produced. 
+                                                  - These alpha, alpha.error and beta images contain 
+                                                     internal T/F masks based on a threshold computed 
+                                                     as peakresidual/10. Additional masking based on 
+                                                     .alpha/.alpha.error may be desirable.
+                                                  - .alpha.error is a purely empirical estimate derived 
+                                                    from the propagation of error during the division of
+                                                    two noisy numbers (alpha = xx.tt1/xx.tt0) where the
+                                                    'error' on tt1 and tt0 are simply the values picked from 
+                                                    the corresponding residual images. The absolute value
+                                                    of the error is not always accurate and it is best to intepret
+                                                    the errors across the image only in a relative sense.)
+
+
                        mem : Maximum Entropy Method (ref)
                                        - Iteratively solve for values at all individual pixels via the
                                          MEM method. It minimizes an objective function of
-                                         chi-square plus entropy (here, a measure of difference 
+                                          chi-square plus entropy (here, a measure of difference 
                                          between the current model and a flat prior model).
 
                                          (Note : This MEM implementation is not very robust. 
