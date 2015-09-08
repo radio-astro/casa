@@ -77,28 +77,41 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in new MS)
-  void subtractBaseline(string const& in_column_name, string const& out_ms_name,
-      string const& out_bltable_name, string const& out_blformat_name,
-      string const& out_bloutput_name, bool const& do_subtract,
-      string const& in_spw, string const& in_ppp, string const& blfunc,
-      int const order, float const clip_threshold_sigma,
-      int const num_fitting_max, bool const linefinding, float const threshold,
-      int const avg_limit, int const minwidth, vector<int> const& edge);
+  void subtractBaseline(string const& in_column_name,
+			string const& out_ms_name,
+			string const& out_bloutput_name,
+			bool const& do_subtract,
+			string const& in_spw,
+			string const& in_ppp,
+			string const& blfunc,
+			int const order,
+			float const clip_threshold_sigma,
+			int const num_fitting_max,
+			bool const linefinding,
+			float const threshold,
+			int const avg_limit,
+			int const minwidth,
+			vector<int> const& edge);
 
   //Cubicspline  
   void subtractBaselineCspline(string const& in_column_name,
-      string const& out_ms_name, string const& out_bltable_name,
-      string const& out_blformat_name, string const& out_bloutput_name,
-      bool const& do_subtract, string const& in_spw, string const& in_ppp,
-      int const npiece, float const clip_threshold_sigma,
-      int const num_fitting_max, bool const linefinding, float const threshold,
-      int const avg_limit, int const minwidth, vector<int> const& edge);
+			       string const& out_ms_name, 
+			       string const& out_bloutput_name,
+			       bool const& do_subtract,
+			       string const& in_spw,
+			       string const& in_ppp,
+			       int const npiece,
+			       float const clip_threshold_sigma,
+			       int const num_fitting_max,
+			       bool const linefinding,
+			       float const threshold,
+			       int const avg_limit,
+			       int const minwidth,
+			       vector<int> const& edge);
 
   //Sinusoid  
   /*  void subtractBaselineSinusoid(string const& in_column_name,
    string const& out_ms_name,
-   string const& out_bltable_name,
-   string const& out_blformat_name,
    string const& out_bloutput_name,
    bool const& do_subtract,
    string const& in_spw,
@@ -111,10 +124,12 @@ public:
 
   // variable fitting parameters stored in a text file
   void subtractBaselineVariable(string const& in_column_name,
-      string const& out_ms_name, string const& out_bltable_name,
-      string const& out_blformat_name, string const& out_bloutput_name,
-      bool const& do_subtract, string const& in_spw, string const& in_ppp,
-      string const& param_file);
+				string const& out_ms_name,
+				string const& out_bloutput_name,
+				bool const& do_subtract,
+				string const& in_spw,
+				string const& in_ppp,
+				string const& param_file);
 
   // apply baseline table
   void applyBaselineTable(string const& in_column_name,
@@ -216,6 +231,9 @@ private:
       bool const in_mask[/*num_data*/], float const threshold,
       int const avg_limit, int const minwidth, vector<int> const& edge,
       bool const invert, bool out_mask[/*num_data*/]);
+
+  template<typename Func>
+  void doSubtractBaseline(Func func);
 
   /////////////////////////////
   /// MS handling functions ///
