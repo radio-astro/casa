@@ -1746,6 +1746,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
     test008 --- blformat=['text'],               bloutput=[''] 
     test009 --- blformat=[''],                   bloutput=['']
     test010 --- blformat=['','csv'],             bloutput=['','test.csv'] 
+    test010a --- blformat=['','csv'],             bloutput=['test.text',''] 
     test011 --- blformat='',                     bloutput='' 
     test012 --- blformat='',                     bloutput='test.csv'
 
@@ -2113,7 +2114,7 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         #if len(blformat)==len(bloutput):
         #    self.check_bloutput(bloutput)
     
-        self.assertEqual(os.path.exists('test.csv'),False, msg='test.csv exists!')
+        self.assertEqual(os.path.exists('test.csv'), True, msg='test.csv exists!')
 
         result_exist = not os.path.exists(self.infile + '_blparam.txt')
         self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' does not exist!')
@@ -2124,6 +2125,30 @@ Basic unit tests for task tsdbaseline. No interactive testing.
         result_exist = not os.path.exists(self.infile + '_blparam.text')
         self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
 
+
+    def test010a(self):
+        """Basic Test 010a: default values for all parameters except blformat=['','csv'] and bloutput=['test.text','']"""
+        blfunc='poly'
+        blformat=['','csv']
+        bloutput=['test.text','']
+
+        result = self.run_test(blfunc=blfunc, blformat=blformat, bloutput=bloutput)
+        self.assertEqual(result,None,
+                         msg="The task returned '"+str(result)+"' instead of None")
+
+        #if len(blformat)==len(bloutput):
+        #    self.check_bloutput(bloutput)
+    
+        self.assertEqual(os.path.exists('test.text'), False, msg='test.text exists!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.txt')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.txt'+' does not exist!')
+
+        result_exist = os.path.exists(self.infile + '_blparam.csv')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.csv'+' does not exist!')
+
+        result_exist = not os.path.exists(self.infile + '_blparam.text')
+        self.assertEqual(result_exist, True, msg=self.infile + '_blparam.bltable'+' does not exist!')
 
 
     def test011(self):
@@ -2619,8 +2644,8 @@ Basic unit tests for task tsdbaseline. No interactive testing.
             print infile+'_blparam.bltable', ' does not exist!  OK' 
 
        
-        if(not os.path.exists('test.csv')):
-            print 'test.csv', ' does not exist!  OK' 
+        if(os.path.exists('test.csv')):
+            print 'test.csv', ' exists!  OK' 
 
 
 
@@ -2992,8 +3017,8 @@ Basic unit tests for task tsdbaseline. No interactive testing.
             print infile+'_blparam.bltable', ' does not exist!  OK' 
 
        
-        if(not os.path.exists('test.csv')):
-            print 'test.csv', ' does not exist!  OK' 
+        if(os.path.exists('test.csv')):
+            print 'test.csv', ' exists!  OK' 
 
 
 
@@ -3257,10 +3282,11 @@ class tsdbaseline_autoTest(tsdbaseline_unittest_base):
 
 
 def suite():
-    return [tsdbaseline_basicTest, 
-            tsdbaseline_maskTest,
-            tsdbaseline_outbltableTest,
-            tsdbaseline_applybltableTest,
-            tsdbaseline_variableTest,
+    return [#tsdbaseline_basicTest, 
+            #tsdbaseline_maskTest,
+            #tsdbaseline_outbltableTest,
+            #tsdbaseline_applybltableTest,
+            #tsdbaseline_variableTest,
             tsdbaseline_bloutputTest,
-            tsdbaseline_autoTest]
+            #tsdbaseline_autoTest
+            ]

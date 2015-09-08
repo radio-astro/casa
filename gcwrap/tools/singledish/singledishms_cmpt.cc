@@ -144,35 +144,40 @@ singledishms::_scale(float const factor, string const& datacolumn, string const&
 
 bool
 singledishms::subtract_baseline(string const& datacolumn,
-				string const& outfile,
-				string const& bltable,
-				string const& blformat,
-				string const& bloutput,
-				bool const dosubtract,
-				::casac::variant const& spw,
-				::casac::variant const& pol,
-				string const& blfunc,
-				int const order,
-				float const clip_threshold_sigma,
-				int const num_fitting_max,
-				bool const linefinding,
-				float const threshold,
-				int const avg_limit,
-				int const minwidth,
-				vector<int> const& edge)
+                                string const& outfile,
+                                string const& bloutput,
+                                bool const dosubtract,
+                                ::casac::variant const& spw,
+                                ::casac::variant const& pol,
+                                string const& blfunc,
+                                int const order,
+                                float const clip_threshold_sigma,
+                                int const num_fitting_max,
+                                bool const linefinding,
+                                float const threshold,
+                                int const avg_limit,
+                                int const minwidth,
+                                vector<int> const& edge)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaseline(datacolumn, outfile, bltable, 
-                 blformat, 
-                 bloutput, 
-                 dosubtract,
-			    toCasaString(spw), toCasaString(pol),
-			    blfunc, order, clip_threshold_sigma, 
-			    num_fitting_max, linefinding, threshold,
-			    avg_limit, minwidth, edge);
+    itsSd->subtractBaseline(datacolumn,
+                            outfile,
+                            bloutput, 
+                            dosubtract,
+                            toCasaString(spw),
+                            toCasaString(pol),
+                            blfunc,
+                            order,
+                            clip_threshold_sigma, 
+                            num_fitting_max,
+                            linefinding,
+                            threshold,
+                            avg_limit,
+                            minwidth,
+                            edge);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -184,36 +189,38 @@ singledishms::subtract_baseline(string const& datacolumn,
 
 bool
 singledishms::subtract_baseline_cspline(string const& datacolumn,
-				string const& outfile,
-				string const& bltable,
-				string const& blformat,
-				string const& bloutput,
-				bool const dosubtract,
-				::casac::variant const& spw,
-				::casac::variant const& pol,
-				int const npiece,
-				float const clip_threshold_sigma,
-				int const num_fitting_max,
-				bool const linefinding,
-				float const threshold,
-				int const avg_limit,
-				int const minwidth,
-				vector<int> const& edge)
+                                        string const& outfile,
+                                        string const& bloutput,
+                                        bool const dosubtract,
+                                        ::casac::variant const& spw,
+                                        ::casac::variant const& pol,
+                                        int const npiece,
+                                        float const clip_threshold_sigma,
+                                        int const num_fitting_max,
+                                        bool const linefinding,
+                                        float const threshold,
+                                        int const avg_limit,
+                                        int const minwidth,
+                                        vector<int> const& edge)
 {
-
-
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaselineCspline(datacolumn, outfile, bltable,
-                     blformat, 
-                     bloutput, 
-				   dosubtract, toCasaString(spw), 
-				   toCasaString(pol), npiece, 
-				   clip_threshold_sigma, num_fitting_max, 
-				   linefinding, threshold,
-				   avg_limit, minwidth, edge);
+    itsSd->subtractBaselineCspline(datacolumn,
+                                   outfile, 
+                                   bloutput, 
+                                   dosubtract,
+                                   toCasaString(spw), 
+                                   toCasaString(pol),
+                                   npiece, 
+                                   clip_threshold_sigma,
+                                   num_fitting_max, 
+                                   linefinding,
+                                   threshold,
+                                   avg_limit,
+                                   minwidth,
+                                   edge);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -226,27 +233,28 @@ singledishms::subtract_baseline_cspline(string const& datacolumn,
 /*
 bool
 singledishms::subtract_baseline_sinusoid(string const& datacolumn,
-				string const& outfile,
-				string const& bltable,
-				string const& blformat,
-				string const& bloutput,
-				bool const dosubtract,
-				::casac::variant const& spw,
-				::casac::variant const& pol,
-				int const npiece,
-				float const clip_threshold_sigma,
-				int const num_fitting_max)
+                                         string const& outfile,
+                                         string const& bloutput,
+                                         bool const dosubtract,
+                                         ::casac::variant const& spw,
+                                         ::casac::variant const& pol,
+                                         int const npiece,
+                                         float const clip_threshold_sigma,
+                                         int const num_fitting_max)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaselineSinusoid(datacolumn, outfile, bltable,
-                     blformat, 
-                     bloutput, 
-				     dosubtract, toCasaString(spw), 
-				     toCasaString(pol), npiece, 
-				     clip_threshold_sigma, num_fitting_max);
+    itsSd->subtractBaselineSinusoid(datacolumn,
+                                    outfile,
+                                    bloutput, 
+                                    dosubtract,
+                                    toCasaString(spw), 
+                                    toCasaString(pol),
+                                    npiece, 
+                                    clip_threshold_sigma,
+                                    num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -255,29 +263,28 @@ singledishms::subtract_baseline_sinusoid(string const& datacolumn,
   }
   return rstat;
 }
-
 */
 
 bool
 singledishms::subtract_baseline_variable(string const& datacolumn,
-					 string const& outfile,
-					 string const& bltable,
-					 string const& blformat,
-					 string const& bloutput,
-					 bool const dosubtract,
-					 ::casac::variant const& spw,
-					 ::casac::variant const& pol,
-					 string const& blparam)
+                                         string const& outfile,
+                                         string const& bloutput,
+                                         bool const dosubtract,
+                                         ::casac::variant const& spw,
+                                         ::casac::variant const& pol,
+                                         string const& blparam)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtractBaselineVariable(datacolumn, outfile, bltable, 
-                      blformat, 
-                      bloutput, 
-				      dosubtract, toCasaString(spw),
-				      toCasaString(pol), blparam);
+    itsSd->subtractBaselineVariable(datacolumn,
+                                    outfile,
+                                    bloutput, 
+                                    dosubtract,
+                                    toCasaString(spw),
+                                    toCasaString(pol),
+                                    blparam);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

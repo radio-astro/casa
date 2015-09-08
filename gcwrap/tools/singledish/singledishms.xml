@@ -169,16 +169,6 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="string" name="bltable">
-      <description>The name of Baseline Table to be output</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="blformat">
-      <description>The name(s) of Baseline Format to be output</description>
-      <value></value>
-    </param>
-
     <param type="string" name="bloutput">
       <description>The name(s) of Baseline to be output</description>
       <value></value>
@@ -277,16 +267,6 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="string" name="bltable">
-      <description>The name of Baseline Table to be output</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="blformat">
-      <description>The name(s) of Baseline Format to be output</description>
-      <value></value>
-    </param>
-
     <param type="string" name="bloutput">
       <description>The name(s) of Baseline to be output</description>
       <value></value>
@@ -382,16 +362,6 @@ Fit baseline and subtract it from selected spectra
       <value></value>
     </param>
 
-    <param type="string" name="bltable">
-      <description>The name of Baseline Table to be output</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="blformat">
-      <description>The name(s) of Baseline Format to be output</description>
-      <value></value>
-    </param>
-
     <param type="string" name="bloutput">
       <description>The name(s) of Baseline to be output</description>
       <value></value>
@@ -468,16 +438,6 @@ Fit parameters for each spectrum are obtained from a text file.
 
     <param type="string" name="outfile">
       <description>The name of output MeasurementSet</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="bltable">
-      <description>The name of Baseline Table to be output</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="blformat">
-      <description>The name(s) of Baseline Format to be output</description>
       <value></value>
     </param>
 
