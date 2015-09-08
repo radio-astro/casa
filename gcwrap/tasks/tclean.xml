@@ -193,7 +193,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="string" name="datacolumn" subparam="true">
+    <param type="string" name="datacolumn"> <!--  subparam="true">  -->
      <shortdescription>Data column to image(data,corrected)</shortdescription>
 <description>Data column to image (data or observed, corrected)
                      default:'corrected'
@@ -252,6 +252,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                 To automatically change 'imagename' with a numerical 
                                 increment, set overwrite=False (see inline docs for 'overwrite').
 
+                       Tip : To construct a .pb image with gridders other than mosaic,awproject
+                               please use the following script based on the old imager tool.
+                               
+
 </description>
       <any type="variant" limittypes="int string stringArray"/>
       <value type="string"></value>
@@ -272,7 +276,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="phasecenter" > <!-- subparam="true"> -->
-     <shortdescription>>Phase center of the image</shortdescription>
+     <shortdescription>Phase center of the image</shortdescription>
 <description>Phase center of the image</description>
       <any type="variant" limittypes="int string"/>
       <value type="string"></value>
@@ -379,8 +383,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 
     <param type="string" name="gridder">
-           <shortdescription>Gridding options (standard, wproject, widefield, mosaic, imagemosaic, awproject)</shortdescription>
-<description>Gridding options (standard, wproject, widefield, mosaic, imagemosaic, awproject)
+           <shortdescription>Gridding options (standard, wproject, widefield, mosaic, awproject)</shortdescription>
+<description>Gridding options (standard, wproject, widefield, mosaic, awproject)
 
                        The following options choose different gridding convolution
                        functions for the process of convolutional resampling of the measured
@@ -457,12 +461,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                        accuracy (given by the uv cell size or image field of view). 
                                        When combined with W-Projection they can be significantly larger.
 
-                       imagemosaic : Grid and iFT each pointing separately and combine the
-                                                images as a linear mosaic (weighted by a PB model) in 
+                       imagemosaic : (untested implementation)
+                                               Grid and iFT each pointing separately and combine the
+                                               images as a linear mosaic (weighted by a PB model) in 
                                                the image domain before a joint minor cycle. 
 
                                                VLA/ALMA PB models are same as for gridder='mosaicft'
-
 
                        Notes on PB models : 
 
@@ -624,7 +628,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                          components from the visibility domain, but without de-gridding.
                                        - Repeat
 
+                                      ( Note : 'clark' maps to imagermode='' in the old clean task.
+                                                   'clark_exp' is another implementation that maps to 
+                                                    imagermode='mosaic' or 'csclean' in the old clean task. )
+
                        clarkstokes : Clark Clean operating separately per Stokes plane
+
+                                  (Note : 'clarkstokes_exp' is an alternate version. See above.)
 
                        multiscale : MultiScale Clean (ref)
                                        - Smooth the residual image to multiple scale sizes
@@ -653,6 +663,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                                          (Note : This MEM implementation is not very robust. 
                                                       Improvements will be made in the future.)
+
 
 
 </description>
@@ -712,8 +723,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        source as seen by the telescope (sky spectrum x PB spectrum).
 
                        nterms=2 is a good starting point for wideband EVLA imaging 
-                       if there is at least one bright source for which a dynamic range of
-                       greater than few 100 is desired.
+                       and the lower frequency bands of ALMA (when fractional bandwidth
+                       is greater than 10%) and if there is at least one bright source for 
+                       which a dynamic range of greater than few 100 is desired.
 
                        Spectral artifacts for the VLA often look like spokes radiating out from
                        a bright source (i.e. in the image made with standard mfs imaging).
@@ -898,7 +910,64 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="mask" subparam="true">
 	   <shortdescription>Mask string (image name or region file or region string)</shortdescription>
-<description>Mask string (image name or region file or region string)</description>
+<description>Mask string (image name or region file or region string)
+
+              The name of a CASA image or region file or region string that specifies
+              a 1/0 mask to be used for deconvolution. Only locations with value 1 will
+              be considered for the centers of flux components in the minor cycle.
+
+              Manual mask options/examples : 
+
+                mask='xxx.mask'  : Use this CASA image named xxx.mask and containing 
+                                                ones and zeros as the mask. If this image is a different 
+                                                shape from what is being made it will be resampled to 
+                                                the target coordinate system before being used.
+
+                mask='xxx.crtf' : A text file with region strings and the following on the first line
+                                           ( #CRTFv0 CASA Region Text Format version 0 )
+                                           This is the format of a file created via the viewer's region
+                                           tool when saved in CASA region file format.
+  
+                mask='circle[[40pix,40pix],10pix]'  : A CASA region string.
+
+
+              There are also a few automasking options :
+
+                mask='auto' :  Run an autoboxing algorithm to produce a mask 
+                                        for deconvolution
+
+                mask='auto-pb' : Construct a mask at the 0.2 pb gain level.  
+                                            (Currently, this option will work only with 
+                                             gridders that produce .pb (i.e. mosaic and awproject))
+
+
+                mask='auto-within-pb' : Run an autoboxing algorithm and limit the mask to within
+                                                       a pb gain level of 0.2. (This option will work only with 
+                                                       gridders that produce .pb (i.e. mosaic and awproject))
+
+
+              Note : There are two types of masks that apply to CASA images
+                         - CASA images can contain an internal T/F mask used to select parts 
+                           of the image on which to perform math calculations
+                         - Image reconstruction tasks use 1/0 based clean masks which select
+                           parts of the image in which to search for flux components.
+                         These two types of masks are not automatically interchangeable. 
+                         ( Please use the makemask task to copy between them ).
+
+                         In tclean, A-Projection gridders (mosaic and awproject) produce a
+                         .pb image and use the 'pblimit' subparameter to decide normalization
+                         cutoffs and construct an internal T/F mask in the .pb and .image images.
+                         This mask is not used during deconvolution.
+                         Currently, to use a .pb based mask for deconvolution, please run tclean
+                         with niter=0 to produce the .pb, construct a 1/0 image with the
+                         desired threshold, and supply it via the 'mask' parameter in a
+                         subsequent run (with calcres=F and calcpsf=F to restart directly from
+                         the minor cycle).
+
+               Note : Work is in progress to generate more flexible masking options and
+                          enable more controls.
+
+</description>
 	    <value type="string"></value>
     </param>
 
@@ -1111,7 +1180,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="scan"><value>""</value></default>
 	 <default param="observation"><value>""</value></default>
 	 <default param="intent"><value>""</value></default>
-	 <default param="datacolumn"><value>"corrected"</value></default>
+<!--	 <default param="datacolumn"><value>"corrected"</value></default> -->
        </equals>
       </when> 
 
@@ -1301,7 +1370,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
      Usage Examples :
 
-     https://svn.cv.nrao.edu/svn/casa/trunk/gcwrap/python/scripts/tests/test_refimager.py
+     (A) A suite of test programs that demo all usable modes of tclean on small test datasets
+           https://svn.cv.nrao.edu/svn/casa/trunk/gcwrap/python/scripts/tests/test_refimager.py
+
+     (B) A set of demo examples for ALMA imaging
+           https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
 
   </example>
 
