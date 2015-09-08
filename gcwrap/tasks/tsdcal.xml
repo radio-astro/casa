@@ -54,7 +54,7 @@ spectrum is
   <input>
 
     <param type="string" name="infile"  mustexist="true">
-      <description>name of input SD dataset (must be in scantable format)</description>
+      <description>name of input SD dataset (must be MS)</description>
       <value></value>
     </param>
 
@@ -103,7 +103,7 @@ spectrum is
     </param>
     
     <param type="string" name="tsysspw" subparam="true">
-      <description>list of IF IDs (spectral windows) and their channel ranges of averaging for Tsys calibration.</description>
+      <description>list of spectral window IDs and their channel ranges of averaging for Tsys calibration.</description>
       <value></value>
     </param>
 -->
@@ -272,15 +272,15 @@ calmode -- Calibration mode. If you want to generate calibration table
         tsysavg \-\- Whether Tsys is averaged in spectral axis or not.
                 default: False
                 options: (bool) True, False
-        tsysspw \-\- list of IF IDs (spectral windows) and their channel
+        tsysspw \-\- list of spectral window IDs and their channel
                    ranges of averaging for Tsys calibration.
                    It does no effect if you don't want to do Tsys 
                    calibration. the user is able to specify channel
                    range for averaging (effective if tsysavg is True). 
                 default: '' (auto-detect tsys spws)
-                example: tsysspw='3,5,7' (IF IDs 3,5,7; all channels)
-                         tsysspw='&lt;2' (IF IDs less than 2; all channels)
-                         tsysspw='1:0~100' (IF ID1; between channels 0 and 100)
+                example: tsysspw='3,5,7' (spw IDs 3,5,7; all channels)
+                         tsysspw='&lt;2' (spw IDs less than 2; all channels)
+                         tsysspw='1:0~100' (spw ID1; between channels 0 and 100)
 -->
         applytable -- List of sky/Tsys calibration tables you want to 
                       apply.
