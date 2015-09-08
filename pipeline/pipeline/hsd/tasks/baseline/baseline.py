@@ -139,9 +139,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug('pols_list=%s'%(pols_list))
             iteration = first_member.iteration[0]
 
-            # reference data is first scantable 
-            st = context.observing_run[first_member.antenna]
-
             # skip channel averaged spw
             nchan = group_desc.nchan
             if nchan == 1:
