@@ -239,6 +239,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for ( uInt facet=0; facet<itsNFacets*itsNFacets; facet++ )
         { itsFacetImageStores[facet]->divideResidualByWeight( itsPBLimit , itsNormType ); }
     }
+    itsImages->releaseLocks();
     
   }
   

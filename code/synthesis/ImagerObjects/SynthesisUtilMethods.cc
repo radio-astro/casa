@@ -282,6 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Vector<CoordinateSystem>& outCsys,
 						 Vector<Int>& outnChan){
 
+    LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataImagePartition",WHERE) );
     outnChan.resize(npart);
     outCsys.resize(npart);
     Int nomnchan=nchannel/npart;
@@ -311,8 +312,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
      MFrequency::Types eltype=incsys.spectralCoordinate(incsys.findCoordinate(Coordinate::SPECTRAL)).frequencySystem(True);
 
-     //cerr << "freqStart " << freqStart << " end " << freqEnd << endl;
-
+     //os << "freqStart="<<freqStart<<" freqend="<<freqEnd<< "eltype="<<eltype<<LogIO::POST;
      Record rec=cubeDataPartition(selpars, freqStart, freqEnd, eltype);
      for (Int k=0; k < npart ; ++k){
        outCsys[k].save(rec.asrwRecord(String::toString(k)), "coordsys");
@@ -322,6 +322,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Record SynthesisUtilMethods::cubeDataPartition(const Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
+    LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataPartition",WHERE) );
     Record retRec;
     Int npart=freqBeg.shape()(0);
     for (Int k=0; k < npart; ++k){
@@ -335,10 +336,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  String msname=msRec.asString("msname");
     		  String userspw=msRec.isDefined("spw")? msRec.asString("spw") : "*";
     		  String userfield=msRec.isDefined("field") ? msRec.asString("field") : "*";
+                  String userstate=msRec.isDefined("state") ? msRec.asString("state") : "*";
+                  
     		  MeasurementSet elms(msname);
     		  Record laSelection=elms.msseltoindex(userspw, userfield);
-    		  Matrix<Int> spwsel=laSelection.asArrayInt("channel");
-    		  Vector<Int> fieldsel=laSelection.asArrayInt("field");
+                  if (userfield=="")  userfield="*";
+                  MSSelection mssel;
+                  mssel.setSpwExpr(userspw);
+                  mssel.setFieldExpr(userfield);
+                  mssel.setStateExpr(userstate);
+                  TableExprNode exprNode = mssel.toTableExprNode(&elms);
+    		  Matrix<Int> spwsel=mssel.getChanList();
+    		  Vector<Int> fieldsel=mssel.getFieldList();
+                  // case for scan intent specified 
+                  if (userstate!="*") {
+                    MeasurementSet elselms((elms)(exprNode), &elms);
+                    ROMSColumns tmpmsc(elselms);
+                    Vector<Int> fldidv=tmpmsc.fieldId().getColumn();
+                    if (fldidv.nelements()==0)
+                      throw(AipsError("No field ids were selected, please check input parameters"));
+                    std::set<Int> ufldids(fldidv.begin(),fldidv.end());
+                    std::vector<Int> tmpv(ufldids.begin(), ufldids.end());
+                    fieldsel.resize(tmpv.size());
+                    uInt count=0;
+                    for (std::vector<int>::const_iterator it=tmpv.begin();it != tmpv.end(); it++)
+                    {
+                      fieldsel(count) = *it;
+                      count++;
+                    }
+                  }
+    		  //Matrix<Int> spwsel=laSelection.asArrayInt("channel");
+    		  //Vector<Int> fieldsel=laSelection.asArrayInt("field");
     		  Vector<Int> freqSpw;
     		  Vector<Int> freqStart;
     		  Vector<Int> freqNchan;
