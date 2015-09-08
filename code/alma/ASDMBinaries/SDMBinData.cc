@@ -2529,7 +2529,8 @@ namespace sdmbin {
       for(unsigned int n=0; n<v_msDataPtr_.size(); n++) {
 	if (v_msDataPtr_[n]->dataDescId != ddIdOld) {
 	  ddIdOld = v_msDataPtr_[n]->dataDescId ;
-	  if ((ddId_i = find(ddId_v.begin(), ddId_v.end(),ddIdOld)) == ddId_v.end()) {
+	  ddId_i = find(ddId_v.begin(), ddId_v.end(),ddIdOld);
+	  if (ddId_i == ddId_v.end()) {
 	    ddId_v.push_back(ddIdOld);
 	    ddIndex = ddId_v.size()-1;
 	  }
@@ -3163,10 +3164,21 @@ namespace sdmbin {
 		  msDataPtr_->antennaId2         = v_antSet[na].getTagValue();
 		  msDataPtr_->feedId1            = v_feedSet[na*numFeed+nfe];
 		  msDataPtr_->feedId2            = v_feedSet[na*numFeed+nfe];
-		  if(e_cm[CROSS_AND_AUTO])
-		    msDataPtr_->dataDescId       = baselinesSet_->getAutoDataDescriptionId(v_ddList[ndd]).getTagValue();
-		  else
-		    msDataPtr_->dataDescId       = v_ddList[ndd].getTagValue();
+		  // if(e_cm[CROSS_AND_AUTO])
+		  //   msDataPtr_->dataDescId       = baselinesSet_->getAutoDataDescriptionId(v_ddList[ndd]).getTagValue();
+		  // else
+		  //   msDataPtr_->dataDescId       = v_ddList[ndd].getTagValue();
+		  msDataPtr_->dataDescId         = v_ddList[ndd].getTagValue();   // This comes in place of the 4 commented statements above,
+		                                                                  // in order to avoid that auto data and cross data of one same 
+                                                                                  // integration appear with different data description id in the 
+                                                                                  // case when two different data descriptions are declared while
+                                                                                  // would be enough (typically one for AUTO : XX, XY, YY one for 
+		                                                                  // CROSS : XX XY YX YY) while in my view CROSS : XX, XY, YX, YY 
+                                                                                  // *implicitely* means AUTo : XX, XY, YY. 
+		                                                                  // The motivation for this is to keep as simple as possible
+		                                                                  // the logic by which CROSS DATA will follow AUTO DATA in the resulting MS
+                                                                                  // with a UNIQUE (MS) data description id. Michel Caillat 7th of Sep, 2015.
+
 		  msDataPtr_->phaseDir           = phaseDir;                     // TODO Apply the polynomial formula
 		  /*
 		  msDataPtr_->stateId            = stateId;

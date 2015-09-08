@@ -218,7 +218,7 @@ public:
 MSFlagEval::MSFlagEval(FLAGSTYPE mask, FLAGSTYPE ignore):mask(mask),ignore(ignore) {;}
 MSFlagEval::~MSFlagEval() {;}
 char MSFlagEval::operator()(FLAGSTYPE f) { return ((f == ignore) || (f & mask & 0x0000FFFF) == 0) ? 0 : 1; }
-MSFlagEval& MSFlagEval::operator=(const MSFlagEval& other) {
+MSFlagEval & MSFlagEval::operator=(const MSFlagEval& other) {
   if ( this != &other ) {
     mask = other.mask;
   }
@@ -277,8 +277,6 @@ public:
   virtual ~MSFlagAccumulator() {;}
   void accumulate(unsigned int numChan, unsigned int numPol, const vector<T>& values) {
     LOGENTER("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
-    //cout << numIntegration_ << ", " << numBAL_ << ", " << numDD_ << endl;
-    //cout << currIntegration_ << ", " << currBAL_ << ", " << currDD_ << endl;
     vector<T> values_ = values;
     flagCell_vvv[currIntegration_][currBAL_][currDD_] = make_pair(make_pair(numChan, numPol), values_);
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
@@ -341,18 +339,12 @@ public:
     flagValues_p_v.clear();
     flagValues_p_v.resize(numIntegration_*numBAL_*numDD_);
 
-
-    //cout << "Size of flagShapes_p_v = " << flagShapes_p_v.size() << endl;
-    //cout << "numDD_ = " << numDD_ <<", numIntegration_ = " << numIntegration_ << ", numBAL_ = " << numBAL_ << endl;
-    
     unsigned int k = 0;
     for (unsigned int iDD = 0; iDD < numDD_; iDD++) 
       for (unsigned int iIntegration = 0; iIntegration < numIntegration_; iIntegration++)
 	for (unsigned int iBAL = 0; iBAL < numBAL_; iBAL++) {
 	  flagShapes_p_v[k] = &(flagCell_vvv[iIntegration][iBAL][iDD].first);
 	  flagValues_p_v[k] = &(flagCell_vvv[iIntegration][iBAL][iDD].second);
-	  //cout << "iDD = " << iDD << ", iIntegration = " <<  iIntegration << ", iBAL = " << iBAL << ", k = " << k
-	  //		 << "flagShape = [" << flagShapes_p_v[k]->first << "," << flagShapes_p_v[k]->second << "]" << endl;
 	  k++;
 	}
 
@@ -375,7 +367,6 @@ public:
     vector<FLAG_SHAPE *>* shapes_p_v_p = cds.first;
     vector<FLAG_V*>* values_p_v_p = cds.second;
     unsigned int numCell = shapes_p_v_p->size();
-    // cout << numCell << endl;
     unsigned rn = 0;
     for (unsigned int i = 0; i < numCell; i++) {
       os << rn++ << " - shape=[" << shapes_p_v_p->at(i)->first << "," << shapes_p_v_p->at(i)->second << "]" << endl;
@@ -492,13 +483,8 @@ void traverseBAB(bool					sameAntenna,
       // If we are with auto correlations and 4 polarizations; don't forget that only three (e.g. XX XY YY) are stored in the BDF while 4 must be stored in the MS (XX, XY, YX, YY).
       unsigned int flagsCellNumPolProducts =  (numPolProducts == 3 && sameAntenna) ? 4 : numPolProducts;
 
-
-      //cout << ddIter->first << "(" << spw.numSpectralPoint() << ")," << ddIter->second << "(" <<  numPolProducts<< ") - " << endl;
-      //ddIter++;      
-      //cout << " Flags[" << spw.numSpectralPoint() << ", " << numPolProducts << "]";
       vector<char>  MSFlagsCell(spw.numSpectralPoint()*flagsCellNumPolProducts, (char) 0);
       if (numFlags) {
-	// cout << "flagsCellNumPolProducts = " << flagsCellNumPolProducts  << "..."  << endl;
 	pair<const FLAGSTYPE*, const FLAGSTYPE*> range  = consumer.consume(numPolProducts);
 	unsigned int k = 0;
 	for (unsigned int i = 0; i < spw.numSpectralPoint(); i++){
@@ -509,15 +495,11 @@ void traverseBAB(bool					sameAntenna,
 	    if ((flagsCellNumPolProducts == 4) && sameAntenna && ( kk == 1 )) { // If we are in a case like XX XY YX, don't forget to repeat the value of index 1 .
 	      MSFlagsCell[k] =  MSFlagsCell[k-1]; k++;
 	    }
-	    //cout << "k= " << k ;
-	    //cout << endl;
 	  }
 	}
-	// cout << "About to exit if numFlags" << endl;
       }
       accumulator.accumulate(spw.numSpectralPoint(), flagsCellNumPolProducts, MSFlagsCell);
       accumulator.nextDD();
-      //cout << endl;
     }
   }
   LOGEXIT("traverseBAB");
@@ -596,7 +578,6 @@ void traverseALMARadiometerFlagsAxes(unsigned int				numTime,
   
   accumulator.resetIntegration();
   for (unsigned int iTime = 0; iTime < numTime; iTime++) {
-    //cout << "iTime = " << iTime << endl;
     traverseANT(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, accumulator);
     accumulator.nextIntegration();
   }  
@@ -638,7 +619,7 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   }
   flag.get((uInt)iRow0, flagCell);
   bool allSet = true;
-  unsigned int notNullBDF =  count_if(flag_v_p->begin(), flag_v_p->end(), isNotNull);
+  //unsigned int notNullBDF =  count_if(flag_v_p->begin(), flag_v_p->end(), isNotNull);
   //if (notNullBDF) cout << "row " << iRow0 << " - putCell in front of " << flag_v_p->size() << " elements of which " << notNullBDF << " are not null";
   int notNull = 0;
   int k = 0;
@@ -698,7 +679,7 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
     //
     // ... put the flags for auto correlation firstly
     if (correlationMode != CorrelationModeMod::CROSS_ONLY) {
-      if (debug) cout << "AUTO " << numIntegration << ", " << numDD << ", " << iDD << ", " << autoFlagShapes_p_v_p->at(0)->first << ", " << autoFlagShapes_p_v_p->at(0)->second << endl;
+      if (debug) cout << "AUTO numInt =" << numIntegration << ", numDD = " << numDD << ", iDD = " << iDD << ", " << autoFlagShapes_p_v_p->at(0)->first << ", " << autoFlagShapes_p_v_p->at(0)->second << endl;
       for (unsigned int iTIMEANT = 0; iTIMEANT < numIntegration * numANT; iTIMEANT++) {
 	if (putCell(autoFlagShapes_p_v_p->at(kAuto),
 		    autoFlagValues_p_v_p->at(kAuto),
@@ -712,13 +693,8 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
 	iRow0++;
 	kAuto++;
       }
-      //cout << "AUTO - numFlaggedRows " << numFlaggedRows << endl;
     }
-  }
 
-  //
-  // For each Data Description...
-  for (unsigned int iDD = 0; iDD < numDD; iDD++) {
     //
     // ... put the flags for cross correlation then
     if (correlationMode != CorrelationModeMod::AUTO_ONLY) {
@@ -734,7 +710,6 @@ pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode
 	iRow0++;
 	kCross++;
       }
-      //cout << "CROSS - numFlaggedRows " << numFlaggedRows << endl;
     }
   }
   LOGEXIT("mergeAndPut");
@@ -754,29 +729,27 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
   unsigned int numCells = shapes_p_v_p->size();
   
   uInt numFlaggedRows = 0;
-  //cout << "numCells = " << numCells << endl;
   for (unsigned int i = 0; i < numCells; i++) {
-    FLAG_V * values_p = values_p_v_p->at(i);
+    FLAG_V * flag_v_p = values_p_v_p->at(i);
     int numChan = shapes_p_v_p->at(i)->first;
     int numCorr = shapes_p_v_p->at(i)->second;
 
     bool cellFlagged = false;
     bool flagged = false;
 
-    char* p = &(values_p->at(0));
     Matrix<Bool> flagCell(IPosition(2, numCorr, numChan));
-    //cout << "Trying to retrieve a " << numCorr << " x " << numChan << " matrix of flags"; 
-    //cout << "in a cell shaped as follows " << flag.shape((uInt) iRow0) << " at row " << iRow0 << endl;
     flag.get((uInt)iRow0, flagCell);
     
     bool allSet = true;
+    int notNull = 0;
+    int k = 0;
     for (uInt i = 0;  i < numChan; i++)
       for (uInt j = 0; j < numCorr; j++) {
-	flagged = (*p & 0x0000FFFF) != 0;
+	flagged = flag_v_p->at(k++) != (char) 0;
+      
 	flagCell(j, i) = flagged ; // flagCell(j, i) || flagged;    // Let's OR the content of flag with what's found in the BDF flags.
 	cellFlagged = cellFlagged || flagged;
 	allSet = allSet && flagged;
-	p++;
       }
     
     if (cellFlagged) numFlaggedRows ++;
@@ -1224,7 +1197,6 @@ int main (int argC, char * argV[]) {
     // 
     // Retrieve metadata informations.
     //
-
     unsigned int numIntegration = mR->getNumIntegration();
 
     ConfigDescriptionRow * cfgR = cfgT.getRowByKey(mR->getConfigDescriptionId());
@@ -1320,7 +1292,6 @@ int main (int argC, char * argV[]) {
 		crossAccumulator.resetIntegration();
 
 	      for (int iIntegration = 0; iIntegration < numberOfIntegrations; iIntegration++) {
-		//cout << "iIntegration = " << iIntegration << endl;
 		const FLAGSTYPE * flags_p;
 		unsigned int numFlags = sdosr.getSubset().flags(flags_p);
 		pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
@@ -1337,15 +1308,12 @@ int main (int argC, char * argV[]) {
 		if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
 		  crossAccumulator.nextIntegration();
 	      }
-	      //cout << "About to call mergeAndPut" << endl;
-	      //cout << "iMSRow = " << iMSRow << endl;
 	      pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
 						       autoAccumulator,
 						       crossAccumulator,
 						       iMSRow,
 						       flag,
 						       flagRow);
-	      //cout << "Back from  mergeAndPut" << endl;
 	      iMSRow = putReturn.first;
 	      numFlaggedRows += putReturn.second;
 	      numberOfReadIntegrations += numberOfIntegrations;
@@ -1359,7 +1327,6 @@ int main (int argC, char * argV[]) {
 
 	  if (debug) cout << "REMAINING" << endl;
 	  uint32_t numberOfRemainingIntegrations = N - numberOfReadIntegrations;
-	  //cout << "--->" << numberOfRemainingIntegrations << endl;
 	  if (numberOfRemainingIntegrations) {
 	    MSFlagAccumulator<char> autoAccumulator(numberOfRemainingIntegrations, antennas.size(), numDD);
 	    MSFlagAccumulator<char> crossAccumulator(numberOfRemainingIntegrations, numBAL, numDD);
@@ -1368,7 +1335,6 @@ int main (int argC, char * argV[]) {
 	    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
 	      crossAccumulator.resetIntegration(); 
 	    for (int iIntegration = 0; iIntegration < numberOfRemainingIntegrations; iIntegration++) {
-	      // cout << "iIntegration = " << iIntegration << endl; 
 	      const FLAGSTYPE * flags_p;
 	      unsigned int numFlags = sdosr.getSubset().flags(flags_p);
 	      pair<unsigned int, const FLAGSTYPE *> flagsPair(numFlags, flags_p);
