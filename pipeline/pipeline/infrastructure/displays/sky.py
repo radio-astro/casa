@@ -24,8 +24,10 @@
 
 # package modules
 import os
+import copy
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import HPacker, TextArea, AnnotationBbox
 import string
 
 # alma modules
@@ -58,12 +60,12 @@ def plotfilename(image, reportdir):
 class SkyDisplay(object):
     """Class to plot sky images."""
 
-    def plot(self, context, result, reportdir, intent=None):
+    def plot(self, context, result, reportdir, intent=None, collapseFunction='mean'):
 
         if not result:
             return []
 
-        plotfile, coord_names, field = self._plot_panel(reportdir, result)
+        plotfile, coord_names, field = self._plot_panel(reportdir, result, collapseFunction=collapseFunction)
 
         # field names may not be unique, which leads to incorrectly merged
         # plots in the weblog output. As a temporary fix, change to field +
@@ -88,13 +90,16 @@ class SkyDisplay(object):
         return plot
 
     def _plot_panel(self, reportdir, result, vmin=None, vmax=None,
-     channelMap=False):
+     channelMap=False, collapseFunction='mean'):
         """Method to plot a map."""
         plotfile = plotfilename(image=os.path.basename(result),
           reportdir=reportdir)
 
         with casatools.ImageReader(result) as image:
-            collapsed = image.collapse(function='mean', axes=[2,3])
+            if (collapseFunction == 'center'):
+                collapsed = image.collapse(function='mean', chans=str(image.summary()['shape'][3]/2), axes=[2,3])
+            else:
+                collapsed = image.collapse(function=collapseFunction, axes=[2,3])
             name = image.name(strippath=True)
             coordsys = collapsed.coordsys()
             coord_names = coordsys.names()
@@ -135,7 +140,7 @@ class SkyDisplay(object):
             # remove any incomplete matplotlib plots, if left these can cause
             # weird errors
             plt.close('all')
-            plt.figure(1)
+            f1 = plt.figure(1)
 
             # plot data
             plt.jet()
@@ -204,9 +209,32 @@ class SkyDisplay(object):
             plt.xlabel('%s (%s)' % (coord_names[0], coord_units[0]))
             plt.ylabel('%s (%s)' % (coord_names[1], coord_units[1]))
 
-            label = ''.join('%s:%s ' % (key,miscinfo[key]) for key in ['type',
-              'field', 'spw', 'pol', 'iter'] if miscinfo.get(key) is not None)
-            plt.figtext(0.1, 0.95, label, ha='left')
+            mode_texts = {'mean': 'mean', 'max': 'max. at each pixel', 'center': 'center slice'}
+            image_info = {'display': mode_texts[collapseFunction]}
+            image_info.update(miscinfo)
+
+            label = [TextArea('%s:%s' % (key, image_info[key]), textprops=dict(color=color))
+                     for key, color in [('type', 'k'),
+                                        ('display', 'r'),
+                                        ('field','k'),
+                                        ('spw', 'k'),
+                                        ('pol', 'k'),
+                                        ('iter', 'k')]
+                     if image_info.get(key) is not None]
+
+            txt = HPacker(children=label, align="baseline", pad=0, sep=7)
+
+            bbox =  AnnotationBbox(txt, xy=(0.1, 0.5),
+                                   xycoords='data',
+                                   frameon=True,
+                                   box_alignment=(0.5, 0.5), # alignment center, center
+                                   )
+
+            ax = plt.Axes(f1, [0.085, 0.9, 0.7, 0.1])
+            ax.set_frame_on(False)
+            ax.set_axis_off()
+            ax.add_artist(bbox)
+            f1.add_axes(ax)
 
             # make axis fit snugly around image
             plt.axis([lims[0], lims[1], lims[2], lims[3]])

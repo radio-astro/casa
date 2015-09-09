@@ -40,7 +40,7 @@ class CleanSummary(object):
 
             # psf map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf+extension,
-              reportdir=stage_dir, intent=r.intent))
+              reportdir=stage_dir, intent=r.intent, collapseFunction='center'))
 
             # flux map
             #plot_wrappers.append(displays.SkyDisplay().plot(self.context,
@@ -52,8 +52,13 @@ class CleanSummary(object):
             for i in iterations:
                 # image for this iteration
                 if (r.iterations[i]['image'] != ''):
+                    if (r.iterations[i]['image'].find('cube') != -1):
+                        collapseFunction = 'max'
+                    else:
+                        collapseFunction = 'mean'
                     plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                      r.iterations[i]['image']+extension, reportdir=stage_dir, intent=r.intent))
+                      r.iterations[i]['image']+extension, reportdir=stage_dir,
+                      intent=r.intent, collapseFunction=collapseFunction))
 
                 # residual for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
