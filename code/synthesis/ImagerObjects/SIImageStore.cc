@@ -1830,10 +1830,20 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 								  pol, itsImageShape[2], 
 								  (*psf(0)) );
 
-	    LatticeExpr<Float> normed( (*(subim)) / max(*(subim0)) );
-	    subim->copyData( normed );
-	  }
-      }
+	    LatticeExprNode themax( max(*(subim0)) );
+	    Float maxim = themax.getFloat();
+	    
+	    if ( maxim > 1e-07 )
+	      {
+		LatticeExpr<Float> normed( (*(subim)) / maxim );
+		subim->copyData( normed );
+	      }
+	    else
+	      {
+		subim->set(0.0);
+	      }
+	  }//chan
+      }//pol
 
   }
 
