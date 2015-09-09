@@ -79,22 +79,21 @@ QPScaleDraw::QPScaleDraw(QwtPlot* parent, QwtPlot::Axis axis) :
 QPScaleDraw::~QPScaleDraw() { }
 
 PlotAxisScale QPScaleDraw::scale() const { return m_scale; }
+
 void QPScaleDraw::setScale(PlotAxisScale scale) {
-	if(scale != m_scale) {
-		m_scale = scale;
-		if ( m_parent != NULL ){
-			if(m_scale == LOG10){
-				m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
-			}
-			else {
-				m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
-			}
-            // CAS-7733 this causes seg fault in tarball; 
-            // testing in dev build indicates this is never called
-			//if(m_parent->autoReplot())
-			//	m_parent->replot();
-		}
-	}
+    if(scale != m_scale) {
+        m_scale = scale;
+        if ( m_parent != NULL ){
+            if(m_scale == LOG10){
+                m_parent->setAxisScaleEngine(m_axis, new QwtLog10ScaleEngine());
+            }
+            else {
+                m_parent->setAxisScaleEngine(m_axis, new QwtLinearScaleEngine());
+            }
+            if(m_parent->autoReplot())
+                m_parent->replot();
+        }
+    }
 }
 
 void QPScaleDraw::draw(QPainter* painter, const QPalette& palette) const {

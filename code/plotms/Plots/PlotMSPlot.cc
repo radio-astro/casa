@@ -963,50 +963,54 @@ void PlotMSPlot::exportToFormatCancel(){
 }
 
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
-	// Ensure we fail gracefully if cache loading yielded nothing
-	// or was cancelled
+    // Ensure we fail gracefully if cache loading yielded nothing
+    // or was cancelled
 
-	if ( itsCache_ == NULL ){
-		return;
-	}
-	if (!itsCache_->cacheReady() || wasCanceled) {
-		dataMissing();
-		return;
-	}
+    if ( itsCache_ == NULL ){
+        return;
+    }
+    if (!itsCache_->cacheReady() || wasCanceled) {
+        dataMissing();
+        return;
+    }
 
-	// Make this more specific than canvas-triggered
-	if (itsTCLParams_.updateCanvas || itsTCLParams_.updateIteration ){
-		updateIndexing();
-	}
-	// Reset the iterator (if data are new)
-	resetIter();
+    // Make this more specific than canvas-triggered
+    if (itsTCLParams_.updateCanvas || itsTCLParams_.updateIteration ){
+        updateIndexing();
+    }
 
-	// Let the plot know that the data has been changed as needed, unless the
-	// thread was canceled.
-	updatePlots();
+    // Reset the iterator (if data are new)
+    bool iterRecalculated = resetIter();
+
+    // These are called in recalculateIteration, so don't call again
+    // unless necessary
+    if (!iterRecalculated) {
+        // Let the plot know that the data has been changed as needed, unless the
+        // thread was canceled.
+        updatePlots();
 
 
-	// Update display as needed.  Put this before update canvas so
-	// that the legend item keys will have the correct color.
-	if(itsTCLParams_.updateDisplay){
-		updateDisplay();
-	}
+        // Update display as needed.  Put this before update canvas so
+        // that the legend item keys will have the correct color.
+        if(itsTCLParams_.updateDisplay){
+            updateDisplay();
+        }
 
-	// Update canvas as needed.
-	if(itsTCLParams_.updateCanvas){
-		updateCanvas();
-	}
+        // Update canvas as needed.
+        if(itsTCLParams_.updateCanvas){
+                updateCanvas();
+        }
+    }
 
-	// Report we are done
-	if(itsTCLParams_.endCacheLog){
-		itsParent_->getLogger()->releaseMeasurement();
-	}
+    // Report we are done
+    if(itsTCLParams_.endCacheLog){
+        itsParent_->getLogger()->releaseMeasurement();
+    }
 
-	// Release drawing if needed.
-	if(itsTCLParams_.releaseWhenDone && !isCacheUpdating() ){
-		releaseDrawing();
-	}
-
+    // Release drawing if needed.
+    if(itsTCLParams_.releaseWhenDone && !isCacheUpdating() ){
+        releaseDrawing();
+    }
 }
 
 void PlotMSPlot::setRelease( bool b ){
