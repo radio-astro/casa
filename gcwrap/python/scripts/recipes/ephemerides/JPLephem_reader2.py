@@ -35,7 +35,7 @@ from dict_to_table import dict_to_table
 # some mod to label names and comments so that they corresponds to
 # JPL-Horizons naming comvension
 cols = {
-    'MJD': {'header': r'Date__\(UT\)__HR:MN',
+    'MJD': {'header': r'Date__\(UT\)__HR:MN(:)?(\w+)?(\.)?(\w+)?',
             'comment': 'date',
             'pat':     r'(?P<MJD>\d+-\w+-\d+ \d+:\d+)'},
     'RA': {'header': r'R.A._+\([^)]+',
@@ -157,29 +157,33 @@ def readJPLephem(fmfile,version=''):
 
     # Try opening fmfile now, because otherwise there's no point continuing.
     try:
-        ephem = open(fmfile, 'r')
+        ephem = open(fmfile, 'rb')
         print "opened the file=",fmfile
         lines=ephem.readlines()
-        crCount=0
-        newlines=''
-        newln=''
-        for ln in lines:
-          n = ln.count('\r')
-          if n > 0:
-            newln=ln.replace('\r','\n')
-            crCount+=n
-          newlines += newln
-        if crCount > 0:
-          print "The input file appears to contains the carriage return code, \'^M\', will replace it with \'\\n\'..."
-          ephem.close()
-          ephem = open('temp_ephem_data.txt','w+')
-          ephem.write(newlines)
+        # skip this, handle by rstrip later
+        #crCount=0
+        #newlines=''
+        #newln=''
+        #for ln in lines:
+        #  n = ln.count('\r')
+        #  if n > 0:
+        #    newln=ln.replace('\r','\n')
+        #    crCount+=n
+        #    newlines += newln
+        #if crCount > 0:
+        #  print "The input file appears to contains the carriage return code, \'^M\', will replace it with \'\\n\'..."
+        #  raw_input('pause0')
+        #  ephem.close()
+        #  ephem = open('temp_ephem_data.txt','w+')
+        #  ephem.write(newlines)
         ephem.seek(0)
     except IOError:
         casalog.post("Could not open ephemeris file " + fmfile,
                      priority="SEVERE")
         return {}
 
+    # reset to default search pattern for MJD
+    cols['MJD']['pat']=r'(?P<MJD>\d+-\w+-\d+ \d+:\d+)'
     # Setup the regexps.
 
     # Headers (one time only things)
@@ -220,7 +224,8 @@ def readJPLephem(fmfile,version=''):
     # need date, r (heliocentric distance), delta (geocentric distance), and phang (phase angle).
     # (Could use the "dot" time derivatives for Doppler shifting, but it's
     # likely unnecessary.)
-    datapat = r'^[>\s]*'
+    #datapat = r'^[>\s]*'
+    datapat = r'^\s*'
 
     stoppat = r'[>\s]*\$\$EOE$'  # Signifies the end of data.
 
@@ -231,13 +236,16 @@ def readJPLephem(fmfile,version=''):
     print_datapat = False
     # define interpretation of invalid values ('n.a.')
     invalid=-999.
-    for line in ephem:
+    for origline in ephem:
+        line = origline.rstrip('\r\n')
         if in_data:
             if re.match(stoppat, line):
                 break
             matchobj = re.search(datapat, line)
             if matchobj:
+                #print "matchobj!"
                 gdict = matchobj.groupdict()
+                #print "gdict=",gdict
                 for col in gdict:
                     if gdict[col]=='n.a.':
                         gdict[col]=invalid
@@ -251,12 +259,16 @@ def readJPLephem(fmfile,version=''):
                     print "Found:"
                     print gdict
                     print_datapat = True
+                    raw_input("pause0")
             else:
                 print_datapat = True
                 # Chomp trailing whitespace.
                 comp_mismatches.append(re.sub(r'\s*$', '', line))
         elif re.match(r'^[>\s]*' + cols['MJD']['header'] + r'\s+'
                       + cols['RA']['header'], line):
+            # need to modify regex to search for the header name for MJD containing second digits
+            if re.match(r'^[>\s]*Date__\(UT\)__HR:MN:SC.fff', line):
+                cols['MJD']['pat'] = r'(?P<MJD>\d+-\w+-\d+ \d+:\d+:\d+.\d+)'
             # See what columns are present, and finish setting up datapat and
             # retdict.
             havecols = []
@@ -304,7 +316,9 @@ def readJPLephem(fmfile,version=''):
             #print "line =", line
             #print "looking for", 
             for hk in headers:
-                if not retdict.has_key(hk):
+                 #print "hk=",hk
+                  
+                 if not retdict.has_key(hk):
                     matchobj = re.search(headers[hk]['pat'], line)
                     if matchobj:
                         if hk=='radii':
@@ -319,13 +333,13 @@ def readJPLephem(fmfile,version=''):
                             break
     ephem.close()
     # clean up the temp file if exists
-    if os.path.exists('temp_ephem_data.txt'):
-      os.remove('temp_ephem_data.txt')
+    #if os.path.exists('temp_ephem_data.txt'):
+    #  os.remove('temp_ephem_data.txt')
 
     # If there were errors, provide debugging info.
     if comp_mismatches:
         print "Completely mismatching lines:"
-        print "\n".join(comp_mismatches)
+        #print "\n".join(comp_mismatches)
     if print_datapat:
         print "The apparent title line is:"
         print titleline
