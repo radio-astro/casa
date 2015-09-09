@@ -40,8 +40,6 @@
 
 namespace casa {
 
-template<class T> SubImageFactory<T>::SubImageFactory() {}
-
 template<class T> SHARED_PTR<SubImage<T> > SubImageFactory<T>::createSubImageRW(
 	CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
 	ImageInterface<T>& inImage, const Record& region,

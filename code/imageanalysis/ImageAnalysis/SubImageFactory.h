@@ -62,97 +62,99 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> class SubImageFactory {
 public: 
-  // Factory method to create a SubImage from a region and a WCLELMask string.
-  // Moved from ImageAnalysis
-  // <src>outRegion</src> Pointer to the corresponding region. Pointer is
-  // created internally by new(); it is the caller's responsibility to delete it.
-  // <src>outMask</src> Pointer to corresponding mask. Pointer is created
-  // internally via new(); it is the caller's responsibility to delete it.
-  // <src>inImage</src> input image for which a subimage is desired.
-  // <src>region</src> Input region record from which to make the subimage.
-  // <src>mask</src> LEL mask description.
-  // <src>os</src> Pointer to logger to which to log messages. If null, no logging (except exceptions).
-  // <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
-  // will always be False.
-  // <src>axesSpecifier</src> Specifier for output axes.
-  // <src>extendMask</src> If the mask has one
-  // or more of degenerate axes whereas the corresponding axes of <src>inImage</src> are
-  // not, extend the mask to match the shape of the input image.
-  // <src>preserveAxesOrder</src>. Only used when dropping degenerate axes and coordinate order
-  // and axes order are not the same. In that case, if False, the pixel/world axes order of the
-  // returned image will be different from the input, if True it will be the same. If not
-  // dropping degenerate axes or if coordinate order and axes order are the same in the input
-  // image's coordinate system, the output axex order will always be preserved.
 
-  static SHARED_PTR<SubImage<T> > createSubImageRW(
-	  CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-      ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os,
-      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
-      Bool extendMask=False, Bool preserveAxesOrder=False
-  );
+	SubImageFactory() = delete;
 
-  // variant on previous method where caller doesn't have to worry
-  // about creating pointers it does not need returned.
-  static SHARED_PTR<SubImage<T> > createSubImageRW(
-      ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os,
-      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
-      Bool extendMask=False, Bool preserveAxesOrder=False
-  );
+	// Factory method to create a SubImage from a region and a WCLELMask string.
+	// Moved from ImageAnalysis
+	// <src>outRegion</src> Pointer to the corresponding region. Pointer is
+	// created internally by new(); it is the caller's responsibility to delete it.
+	// <src>outMask</src> Pointer to corresponding mask. Pointer is created
+	// internally via new(); it is the caller's responsibility to delete it.
+	// <src>inImage</src> input image for which a subimage is desired.
+	// <src>region</src> Input region record from which to make the subimage.
+	// <src>mask</src> LEL mask description.
+	// <src>os</src> Pointer to logger to which to log messages. If null, no logging (except exceptions).
+	// <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
+	// will always be False.
+	// <src>axesSpecifier</src> Specifier for output axes.
+	// <src>extendMask</src> If the mask has one
+	// or more of degenerate axes whereas the corresponding axes of <src>inImage</src> are
+	// not, extend the mask to match the shape of the input image.
+	// <src>preserveAxesOrder</src>. Only used when dropping degenerate axes and coordinate order
+	// and axes order are not the same. In that case, if False, the pixel/world axes order of the
+	// returned image will be different from the input, if True it will be the same. If not
+	// dropping degenerate axes or if coordinate order and axes order are the same in the input
+	// image's coordinate system, the output axex order will always be preserved.
 
-  // The const ImageInterface versions where the resulting SubImage is not
-  // writable.
-  static SHARED_PTR<const SubImage<T> > createSubImageRO(
-	  CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
-      const ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os,
-      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
-      Bool extendMask=False, Bool preserveAxesOrder=False
-  );
+	static SHARED_PTR<SubImage<T> > createSubImageRW(
+		CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+		ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
+	);
 
-  // variant on previous method where caller doesn't have to worry
-  // about creating pointers it does not need returned.
-  static SHARED_PTR<const SubImage<T> > createSubImageRO(
-      const ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *const &os,
-      const AxesSpecifier& axesSpecifier=AxesSpecifier(),
-      Bool extendMask=False, Bool preserveAxesOrder=False
-  );
+	// variant on previous method where caller doesn't have to worry
+	// about creating pointers it does not need returned.
+	static SHARED_PTR<SubImage<T> > createSubImageRW(
+		ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
+	);
 
-  // <group>
-  // return a true copy (ie underlying data is a copy of the original, not
-  // a reference) of the subimage selected in the given region.
-  // A PagedImage is returned if outfile is not blank or a TempImage
-  // is returned if it is.
-  // If <src>attachMask</src> is True, attach a pixel mask to the newly created image
-  // if it otherwise wouldn't have a pixel mask. All the values in this mask will be
-  // True.
-  static SPIIT createImage(
-	  const ImageInterface<T>& image,
-	  const String& outfile, const Record& region,
-	  const String& mask, Bool dropDegenerateAxes,
-	  Bool overwrite, Bool list, Bool extendMask,
-	  Bool attachMask=False
-  );
+	// The const ImageInterface versions where the resulting SubImage is not
+	// writable.
+	static SHARED_PTR<const SubImage<T> > createSubImageRO(
+		CountedPtr<ImageRegion>& outRegion, CountedPtr<ImageRegion>& outMask,
+		const ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
+	);
 
-  static SPIIT createImage(
-  	  const ImageInterface<T>& image,
-  	  const String& outfile, const Record& region,
-  	  const String& mask, const AxesSpecifier& axesSpec,
-  	  Bool overwrite, Bool list, Bool extendMask,
-  	  Bool attachMask=False
-  );
-  // </group>
+	// variant on previous method where caller doesn't have to worry
+	// about creating pointers it does not need returned.
+	static SHARED_PTR<const SubImage<T> > createSubImageRO(
+		const ImageInterface<T>& inImage, const Record& region,
+		const String& mask, LogIO *const &os,
+		const AxesSpecifier& axesSpecifier=AxesSpecifier(),
+		Bool extendMask=False, Bool preserveAxesOrder=False
+	);
 
-  private:
-    SubImageFactory<T> (); 
+	// <group>
+	// return a true copy (ie underlying data is a copy of the original, not
+	// a reference) of the subimage selected in the given region.
+	// A PagedImage is returned if outfile is not blank or a TempImage
+	// is returned if it is.
+	// If <src>attachMask</src> is True, attach a pixel mask to the newly created image
+	// if it otherwise wouldn't have a pixel mask. All the values in this mask will be
+	// True.
+	static SPIIT createImage(
+		const ImageInterface<T>& image,
+		const String& outfile, const Record& region,
+		const String& mask, Bool dropDegenerateAxes,
+		Bool overwrite, Bool list, Bool extendMask,
+		Bool attachMask=False
+	);
 
-    static void _getMask(
-    	CountedPtr<ImageRegion>& outMask, const String& mask,
-    	Bool extendMask, const IPosition& imageShape,
-    	const CoordinateSystem& csys
-    );
+	static SPIIT createImage(
+		const ImageInterface<T>& image,
+		const String& outfile, const Record& region,
+		const String& mask, const AxesSpecifier& axesSpec,
+		Bool overwrite, Bool list, Bool extendMask,
+		Bool attachMask=False
+	);
+	// </group>
+
+private:
+
+	static void _getMask(
+		CountedPtr<ImageRegion>& outMask, const String& mask,
+		Bool extendMask, const IPosition& imageShape,
+		const CoordinateSystem& csys
+	);
 };
 
 
