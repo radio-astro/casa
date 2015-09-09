@@ -24,30 +24,54 @@ else :
 ##
 ## next adjust the PYTHONPATH
 ##
+
+def adapt_pythonpath(searchroot):
+    # tarball location
+    guess = os.path.join(searchroot, 'lib/python2.7/site-packages/numpy')
+    if os.path.isdir(guess):
+        sys.path.append(os.path.dirname(guess))
+    else:
+        for root, dirs, files in os.walk(searchroot):
+            # skip data folder which might be a network mount
+            if root == searchroot and 'data' in dirs:
+                del dirs[dirs.index('data')]
+            if root.endswith("/numpy"):
+                sys.path.append(os.path.dirname(root))
+                break
+
 if re.match( r'.*/\d+\.\d+\.\d+\w*-\d+$', __casapath__ ) :
-    for root, dirs, files in os.walk(os.path.dirname(__casapath__)):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
+    adapt_pythonpath(os.path.dirname(__casapath__))
 else:
-    for root, dirs, files in os.walk(__casapath__):
-        if root.endswith("/numpy"):
-            sys.path.append(os.path.dirname(root))
-            break
+    adapt_pythonpath(__casapath__)
 
 ##
 ## next adjust PATH and LD_LIBRARY_PATH
 ##
-for root, dirs, files in os.walk(__casapath__):
-    if root.endswith("/bin") and "casapyinfo" in files :
-        __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(root + "/casapyinfo --exec 'which ipcontroller'"))
-        if os.path.exists(__ipcontroller__) :
-            os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
-        else :
-            raise RuntimeError, "cannot configure CASA tasking system"
-        __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(root + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
-        map(lambda x: sys.path.append(x),__ld_library_path__)
-        break
+def setup_path():
+    global __ipcontroller__, __ld_library_path__
+    _rootdir = None
+    if os.path.exists(os.path.join(__casapath__, 'bin', 'casapyinfo')):
+        _rootdir = os.path.join(__casapath__, 'bin')
+    else:
+        for root, dirs, files in os.walk(__casapath__):
+            # skip data folder which might be a network mount
+            if root == __casapath__ and 'data' in dirs:
+                del dirs[dirs.index('data')]
+            if root.endswith("/bin") and "casapyinfo" in files :
+                _rootdir = root
+                break
+    if _rootdir is None:
+        return
+
+    __ipcontroller__ = (lambda fd: fd.readline().strip('\n'))(os.popen(_rootdir + "/casapyinfo --exec 'which ipcontroller'"))
+    if os.path.exists(__ipcontroller__) :
+        os.environ['PATH'] = os.path.dirname(__ipcontroller__) + ":" + os.environ['PATH']
+    else :
+        raise RuntimeError, "cannot configure CASA tasking system"
+    __ld_library_path__ = (lambda fd: fd.readline().strip('\n').split(':'))(os.popen(_rootdir + "/casapyinfo --exec 'echo $LD_LIBRARY_PATH'"))
+    map(lambda x: sys.path.append(x),__ld_library_path__)
+
+setup_path()
 
 ##
 ## finally load tools
