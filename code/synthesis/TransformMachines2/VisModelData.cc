@@ -868,7 +868,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 		  }
 		}
 		else{
-		  cerr << "spws, field, msid " << spws[spi] << " " << fields[fi] << " " <<  vb.msId() << " index " << indexcl << endl;
+		  //		  cerr << "spws, field, msid " << spws[spi] << " " << fields[fi] << " " <<  vb.msId() << " index " << indexcl << endl;
 		  clindex_p(spws[spi], fields[fi], vb.msId())=indexcl;
 		}
 	      }
@@ -949,7 +949,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     vb.setVisCubeModel(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
-      cerr << "In cft " << cl.nelements() << endl;
+      //     cerr << "In cft " << cl.nelements() << endl;
       for (uInt k=0; k < cl.nelements(); ++k)
 	if(!cl[k].null()){
 	  cft_p->get(vb, *(cl[k]), -1); 
@@ -1005,10 +1005,10 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     if(!hasModel(msId, fieldId, spwId))
       return Vector<CountedPtr<ComponentList> >(0);
     Int indx=clindex_p(spwId, fieldId, msId);
-    cerr << "indx " << indx << "   " << clholder_p[indx].nelements() <<  " spw " << spwId << " field " << fieldId << endl;
+    //  cerr << "indx " << indx << "   " << clholder_p[indx].nelements() <<  " spw " << spwId << " field " << fieldId << endl;
     if(indx <0)
       return Vector<CountedPtr<ComponentList> >(0);
-    cerr << "CL " << clholder_p[indx][0]->summarize(0) << endl;
+    // cerr << "CL " << clholder_p[indx][0]->summarize(0) << endl;
     return clholder_p[indx];
 	
 
