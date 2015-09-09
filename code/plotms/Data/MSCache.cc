@@ -1668,10 +1668,16 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 					vi_p->nextChunk();
 					vi_p->origin();
 				}
-				// Advance to the next flag
+				// Advance to the next flagged chunk
 				++iflag;
-				// Escape if we are already finished
+                while ((uInt(iflag) < nflag) && 
+                       (flchunks(order[iflag]) == flchunks(order[iflag-1]))) {
+                    ++iflag;
+                }
+
+				// Escape if we are finished
 				if (uInt(iflag) >= nflag) break;
+
 			} // flaggable VB with averaging handled by MSTransformIterator
 
 		} // ichk
