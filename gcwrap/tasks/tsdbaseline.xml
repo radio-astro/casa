@@ -76,9 +76,9 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="string" name="maskmode" ignorecase="true">
-<!--        <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription> -->
-        <shortdescription>mode of setting additional channel masks. \'list\' and \'auto\' are available now.</shortdescription>
-        <description>mode of setting additional channel masks</description>
+        <shortdescription>mode of setting additional channel masks</shortdescription>
+<!--        <description>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</description> -->
+        <description>mode of setting additional channel masks. \'list\' and \'auto\' are available now.</description>
         <value>list</value>
         <allowed kind="enum">
             <value>auto</value>
@@ -118,8 +118,8 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="any" name="blformat" ignorecase="true" subparam="true">
-        <shortdescription>format(s) of file(s) in which best-fit parameters are written [\'text\', \'csv\', \'table\' or \'\']</shortdescription>
-        <description>format(s) of file(s) in which best-fit parameters are written</description>
+        <shortdescription>format(s) of file(s) in which best-fit parameters are written</shortdescription>
+        <description>format(s) of file(s) in which best-fit parameters are written [\'text\', \'csv\', \'table\' or \'\']</description>
         <any type="variant" limittypes="string stringArray"/>
         <value type="string">text</value>
         <allowed kind="enum">
@@ -142,9 +142,9 @@ pipeline processing for huge dataset.
     </param>
 
     <param type="string" name="blfunc" ignorecase="true">
-        <!-- shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</shortdescription -->
-        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</shortdescription>
-        <description>baseline model function</description>
+        <shortdescription>baseline model function</shortdescription>
+        <!-- description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', \'sinusoid\', or \'variable\'(expert mode)]</description -->
+        <description>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'variable\'(expert mode)]</description>
         <value>poly</value>
         <allowed kind="enum">
             <value>poly</value>
@@ -408,35 +408,67 @@ blmode -- baselining mode.
                 default: True
         blformat -- format(s) of file(s) in which best-fit parameters are 
                     written. 
-                options: 'text', 'csv', 'table', '', and a list of these 
-                         available formats except for ''.
+                options: 'text', 'csv', 'table', and '' can be set for
+                         a single output. In case you want to output 
+                         fitting results in multiple formats, a list 
+                         containing the above keywords is accepted as well.
                 default: 'text'
-                example: blformat='text' outputs an ascii text file with 
-                         the best-fit baseline parameters written in 
-                         human-readable format. may be good to read, but 
-                         you should mind it might be huge.
-                         blformat='csv' outputs a CSV file.
-                         blformat='table' outputs a baseline table which 
-                         can be used to apply afterwards.
-                         blformat='' or a list including '' such as ['csv',''] 
-                         doesn't output any parameter file.
-                         blformat=['csv','table'] outputs both a CSV 
-                         file and a baseline table.
+                example: (1) blformat='text' outputs an ascii text file 
+                         with the best-fit baseline parameters written 
+                         in human-readable format. It may be good to read, 
+                         but you should mind it might be huge.
+                         (2) blformat='csv' outputs a CSV file. For example, 
+                         output of csv with blfunc='poly' is as below:
+                         #scan, beam, spw, pol, MJD[s], fitrange (i.e. inverse mask), blfunc, order, fitting coefficients, rms, number of clipped channels 
+                         4,0,17,0,4915973292.23,[[252;3828]],poly,1,767.647,-0.00956208,26.3036,0
+                         ... .
+                         (3) blformat='table' outputs a baseline table 
+                         which can be used to apply afterwards.
+                         (4) blformat='' doesn't output any parameter file.
+                         (5) blformat=['csv','table'] outputs both a CSV 
+                         file and a baseline table. 
+                         (6) If one or more ''s appear in blformat, they 
+                         are all ignored. For example, if blformat=['',
+                         'text',''] is given, only 'text' will be output. 
+                         (7) Elements of blformat other than '' must not 
+                         be duplicated. For example, blformat=['text','',
+                         'text'] is not accepted.
         bloutput -- name(s) of file(s) in which best-fit parameters are 
-                    written. If bloutput is '', name(s) of baseline 
-                    parameter file(s) will be set as follows: 
+                    written. If bloutput is a null string '', name(s) of 
+                    baseline parameter file(s) will be set as follows: 
                     &lt;outfile&gt;_blparam.txt for blformat='text', 
                     &lt;outfile&gt;_blparam.csv for blformat='csv', and 
                     &lt;outfile&gt;_blparam.bltable for blformat='table'.
-                    In case bloutput is not '', blformat and bloutput 
-                    must have the same length.
+                    Otherwise, blformat and bloutput must have the same 
+                    length, and one-to-one correspondence is assumed 
+                    between them. If there are '' elements in bloutput, 
+                    output file names will be set by following the above 
+                    rules. If there are '' elements in blformat, the 
+                    corresponding bloutput elements will be ignored. 
+                    Also, non-'' bloutput elements correspoding to 
+                    non-'' blformat elements must not be duplicated.
                 default: ''
-                example: Output of csv with blfunc='poly' is as below. 
-                #scan, beam, spw, pol, MJD[s], fitrange (i.e. inverse mask), blfunc, order, fitting coefficients, rms, number of clipped channels 
-                4,0,17,0,4915973292.23,[[252;3828]],poly,1,767.647,-0.00956208,26.3036,0
+                example: (1) bloutput='' and blformat=['csv','table']: 
+                         outputs a csv file '&lt;outfile&gt;_blparam.csv'
+                         and a baseline table '&lt;outfile&gt;_blparam.bltable'.
+                         (2) bloutput=['foo.csv',''] and blformat=['csv',
+                         'table']: outputs a csv file 'foo.csv' and a 
+                         baseline table '&lt;outfile&gt;_blparam.bltable'.
+                         (3) bloutput=['foo.csv','bar.blt'] and blformat=
+                         ['csv','']: outputs a csv file 'foo.csv' only.
+                         (4) bloutput=['foo.csv','foo.csv','bar.blt'] and 
+                         blformat=['csv','','table']: the second 'foo.csv' 
+                         is ignored because it corresponds to the blformat 
+                         element '', and thus outputs a csv file 'foo.csv' 
+                         and a baseline table 'bar.blt'.
+                         (5) bloutput=['foo.csv','foo.csv','bar.blt'] and 
+                         blformat=['csv','text','table']: will be error 
+                         since 'foo.csv' is duplicated.
+                         (6) bloutput=['foo.csv','bar.blt'] and blformat=
+                         ['csv','','table']: will be error since bloutput 
+                         and blformat have different lengths.
         bltable -- name of baseline table to apply
                 default: ''
-
 blfunc -- baseline model function. In cases blmode='apply' or blparam is 
           set, blfunc and its subparameters are ignored.
         options: 'poly', 'chebyshev', 'cspline', 'sinusoid' or 'variable'

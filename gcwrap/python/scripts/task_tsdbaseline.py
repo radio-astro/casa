@@ -22,20 +22,13 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         
         if (spw == ''): spw = '*'
 
-        if blmode == 'apply':
+        if (blmode == 'apply'):
             if not os.path.exists(bltable):
                 raise ValueError, "file specified in bltable '%s' does not exist." % bltable
 
-            with sdutil.tbmanager(infile + '/DATA_DESCRIPTION') as tb:
-                spw_ids = tb.getcol('SPECTRAL_WINDOW_ID')
-            with sdutil.tbmanager(infile + '/ANTENNA') as tb:
-                ant_ids = range(tb.nrows())
-            with sdutil.tbmanager(infile + '/FEED') as tb:
-                feed_ids = numpy.unique(tb.getcol('FEED_ID'))
-
             sorttab_info = remove_sorted_table_keyword(infile)
 
-            if overwrite and os.path.exists(outfile):
+            if overwrite and os.path.exists(outfile) and (infile != outfile):
                 os.system('rm -rf %s' % outfile)
 
             selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
@@ -53,167 +46,82 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             
             restore_sorted_table_keyword(infile, sorttab_info)
             
-        elif blmode == 'fit':
-            blout_exists = False
-            if (isinstance(bloutput, str) and os.path.exists(bloutput)):
-                blout_exists = True
-            elif isinstance(bloutput, list):
-                for blout in bloutput:
-                    if os.path.exists(blout):
-                        blout_exists = True
-                        break
-            if blout_exists and not overwrite:
-                raise ValueError, "file(s) specified in bloutput exists."
+        elif (blmode == 'fit'):
+            if isinstance(blformat, str):
+                blformat = [blformat]
+            if not isinstance(blformat, list):
+                raise ValueError, 'blformat must be string or list of string.'
+            elif has_duplicate_nonnull_element(blformat):
+                raise ValueError, 'duplicate elements in blformat.'
+
+            if isinstance(bloutput, str):
+                bloutput = [bloutput]
+                if (bloutput[0] == ''):    # the case for default bloutput of ''
+                    bloutput *= len(blformat)
+            if not isinstance(bloutput, list):
+                raise ValueError, 'bloutput must be string or list of string.'
+            elif has_duplicate_nonnull_element(bloutput):
+                raise ValueError, 'duplicate elements in bloutput.'
+
+            if (len(blformat) != len(bloutput)):
+                raise ValueError, 'blformat and bloutput must have the same length.'
+
+            new_bloutput=[]
+            prepare_for_bloutput(blformat, bloutput, infile, new_bloutput)
+            bloutput = ','.join(new_bloutput)
+
+            fname = new_bloutput[1]
+            if (fname != ''):
+                f = open(fname, 'w')
+
+                blf = blfunc.lower()
+                if (blf == 'poly'):
+                    ftitles = ['Fit order']
+                elif (blf == 'chebyshev'):
+                    ftitles = ['Fit order']
+                elif (blf == 'cspline'):
+                    ftitles = ['nPiece']
+                else: # sinusoid
+                    ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
+
+                mm = maskmode.lower()
+                if (mm == 'auto'):
+                    mtitles = ['Threshold', 'avg_limit', 'Edge']
+                elif (mm == 'list'):
+                    mtitles = []
+                else: # interact
+                    mtitles = []
+                ctitles = ['clipThresh', 'clipNIter']
+                outfile2 = ''
+                if (outfile == ''): 
+                    outfile2 = infile
+                else:
+                    outfile2 = outfile
+                info = [['Source Table', infile],
+                        ['Output File', outfile2],
+                        ['Mask mode', maskmode]]
+
+                separator = '#' * 60 + '\n'
+                f.write(separator)
+                for i in xrange(len(info)):
+                    f.write('%12s: %s\n' % tuple(info[i]))
+                f.write(separator)
+                f.write('\n')
+                f.close()
+            
+            if (blfunc == 'variable'):
+                sorttab_info = remove_sorted_table_keyword(infile)
+        
+            if overwrite and os.path.exists(outfile) and (infile != outfile):
+                os.system('rm -rf %s' % outfile)
 
             selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
                                         baseline=str(antenna), time=timerange, 
                                         scan=scan)
-
-            if blfunc == 'variable':
-                sorttab_info = remove_sorted_table_keyword(infile)
-        
             sdms.open(infile)
-            sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
-                               antenna=str(antenna), timerange=timerange, 
-                               scan=scan)
-            
-            new_bloutput=[]
-
-            if isinstance(blformat, str):
-                blformat = [blformat]
-        
-            if isinstance(bloutput, str):
-                bloutput = [bloutput] 
-
-            if isinstance(blformat, list):
-                if(len(blformat) != len(bloutput)):
-                    raise ValueError, "The size of blfomat must be the same as that of bloutput."
-                elif [key for key, val in Counter(blformat).items() if val>1]:
-                    raise ValueError, "Same multiple blformats are not allowed."
-                else:
-                    if('csv' in blformat):
-                        if(''!= bloutput[blformat.index('csv')]):
-                            fname=bloutput[blformat.index('csv')]
-                            if not overwrite and os.path.exists(fname):
-                                raise Exception(fname + ' exists.') 
-                            new_bloutput.append(bloutput[blformat.index('csv')])
-                        else:
-                            fname= infile + '_blparam.csv'
-                            if not overwrite and os.path.exists(fname):
-                                raise Exception(fname + ' exists. ')
-                            new_bloutput.append(infile + '_blparam.csv')
-                    else:
-                         new_bloutput.append('')
-
-                    if ('text' in blformat):
-                        if ('' != bloutput[blformat.index('text')]):
-                            new_bloutput.append(bloutput[blformat.index('text')])
-                            fname = bloutput[blformat.index('text')]
-                            if not overwrite and os.path.exists(fname):
-                                raise Exception(fname + ' exists.')
-
-                            f = open(fname, "w")
-
-                            blf = blfunc.lower()
-                            mm = maskmode.lower()
-                            if blf == 'poly':
-                                ftitles = ['Fit order']
-                            elif blf == 'chebyshev':
-                                ftitles = ['Fit order']
-                            elif blf == 'cspline':
-                                ftitles = ['nPiece']
-                                #print 'task 2'
-                            else: # sinusoid
-                                ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
-                            if mm == 'auto':
-                                mtitles = ['Threshold', 'avg_limit', 'Edge']
-                            elif mm == 'list':
-                                mtitles = []
-                            else: # interact
-                                mtitles = []
-                            ctitles = ['clipThresh', 'clipNIter']
-
-                            outfile2=''
-                            if(outfile==''): 
-                                outfile2 = infile
-                            else:
-                                outfile2 = outfile
-                            
-
-                            info = [['Source Table', infile],
-                                    ['Output File', outfile2],
-                                    ['Mask mode', maskmode]]
-
-                            separator = "#"*60 + "\n"
-                            f.write(separator)
-                            for i in xrange(len(info)):
-                                f.write('%12s: %s\n'%tuple(info[i]))
-                            f.write(separator)
-                            f.close()
-
-                        
-                        
-                        else:
-                            new_bloutput.append(infile + '_blparam.txt')
-                            fname2  = infile + '_blparam.txt'
-                            if not overwrite and os.path.exists(fname2):
-                                raise Exception(fname2 + ' exists.')
-
-                            f = open(fname2, "w")
-
-                            blf = blfunc.lower()
-                            mm = maskmode.lower()
-                            if blf == 'poly':
-                                ftitles = ['Fit order']
-                            elif blf == 'chebyshev':
-                                ftitles = ['Fit order']
-                            elif blf == 'cspline':
-                                ftitles = ['nPiece']
-                            else: # sinusoid
-                                ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
-                            if mm == 'auto':
-                                mtitles = ['Threshold', 'avg_limit', 'Edge']
-                            elif mm == 'list':
-                                mtitles = []
-                            else: # interact
-                                mtitles = []
-                            ctitles = ['clipThresh', 'clipNIter']
-
-                            outfile2 = ''
-                            if(outfile == ''):
-                                outfile2 = infile
-
-                            info = [['Source Table', infile],
-                                    ['Output File', outfile],
-                                    ['Mask mode', maskmode]]
-                            
-                            separator = "#"*60 + "\n"
-                            f.write(separator)
-                            for i in xrange(len(info)):
-                                f.write('%12s: %s\n'%tuple(info[i]))
-                            f.write(separator)
-                            f.close()
-                    else:
-                        new_bloutput.append('')
-
-                    if('table' in blformat):
-                        if ('' != bloutput[blformat.index('table')]):
-                            fname = bloutput[blformat.index('table')]
-                            if not overwrite and os.path.exists(fname):
-                                raise Exception(fname + ' exists.')
-                            new_bloutput.append(bloutput[blformat.index('table')])
-                        else:
-                            fname = infile + '_blparam.bltable'
-                            if not overwrite and os.path.exists(fname):
-                                raise Exception(fname + ' exists.')
-                                print ''
-                            new_bloutput.append(fname)
-                    else:
-                        new_bloutput.append('')
-
-                    blformat = ",".join(blformat)
-                    bloutput = ",".join(new_bloutput)
-            
+            sdms.set_selection(spw=sdutil.get_spwids(selection),
+                               field=field, antenna=str(antenna),
+                               timerange=timerange, scan=scan)
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
@@ -231,14 +139,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                                                   avg_limit=avg_limit,
                                                   minwidth=minwidth,
                                                   edge=edge)
-            if overwrite:
-                if os.path.exists(outfile):
-                    os.system('rm -rf %s' % outfile)
-                for bloutfile in new_bloutput:
-                    if os.path.exists(bloutfile):
-                        os.system('rm -rf %s' % bloutfile)
-
             func(**params)
+            sdms.close()
             
             if (blfunc == 'variable'):
                 restore_sorted_table_keyword(infile, sorttab_info)
@@ -246,6 +148,35 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     except Exception, instance:
         raise Exception, instance
 
+#return True if in_list has duplicated elements other than ''
+def has_duplicate_nonnull_element(in_list):
+    duplicates = [key for key, val in Counter(in_list).items() if val > 1]
+    len_duplicates = len(duplicates)
+    
+    if (len_duplicates >= 2):
+        return True
+    elif (len_duplicates == 1):
+        return (duplicates[0] != '')
+    else:
+        return False
+
+def do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, format_value, format_ext):
+    fname = ''
+    if (format_value in blformat):
+        fname = bloutput[blformat.index(format_value)]
+        if (fname == ''):
+            fname = infile + '_blparam.' + format_ext
+    if os.path.exists(fname):
+        if overwrite:
+            os.system('rm -rf %s' % fname)
+        else:
+            raise Exception(fname + ' exists.')
+    new_bloutput.append(fname)
+
+def prepare_for_bloutput(blformat, bloutput, infile, new_bloutput):
+    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'csv', 'csv')
+    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'text', 'txt')
+    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'table', 'bltable')
 
 def prepare_for_baselining(**keywords):
     params = {}
