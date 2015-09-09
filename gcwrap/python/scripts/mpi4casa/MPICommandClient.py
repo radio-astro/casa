@@ -597,10 +597,10 @@ class MPICommandClient:
             casalog_call_origin = "MPICommandClient::start_services"
             
             if self.__life_cycle_state == 1:
-                casalog.post("Services already started","WARN",casalog_call_origin)
+                casalog.post("Services already started","DEBUG",casalog_call_origin)
                 return       
             elif self.__life_cycle_state == 2:
-                casalog.post("MPICommandClient life cycle finalized","WARN",casalog_call_origin)
+                casalog.post("MPICommandClient life cycle finalized","INFO",casalog_call_origin)
                 return 
         
             # 1st: start servers
