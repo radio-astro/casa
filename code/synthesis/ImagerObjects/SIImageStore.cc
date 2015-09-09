@@ -952,6 +952,16 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
   {
    LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
 
+   //   cout << "Norm precalc'd PB to max 1 and set mask via pblimit" << endl;
+   /*
+    LatticeExprNode elmax= max( pbImage );
+    Float fmax = abs(elmax.getFloat());
+    //If there are multiple overlap of beam such that the peak is larger than 1 then normalize
+    //otherwise leave as is
+    if(fmax>1.0)
+      pbImage.copyData((LatticeExpr<Float>)(pbImage/fmax));
+*/
+
    /*
     	for(Int pol=0; pol<itsImageShape[2]; pol++)
 	  {
@@ -1075,8 +1085,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       os << LogIO::WARN << "No normalization done to residual" << LogIO::POST;
     
     // createMask
-    if((residual()->getDefaultMask()=="") && hasPB())
-      {copyMask(pb(),residual());}
+    ///// A T/F mask in the residual will confuse users looking at the interactive clean
+    ///// window
+        if((residual()->getDefaultMask()=="") && hasPB())
+       {copyMask(pb(),residual());}
   }
   
 
@@ -1830,10 +1842,21 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 								  pol, itsImageShape[2], 
 								  (*psf(0)) );
 
-	    LatticeExpr<Float> normed( (*(subim)) / max(*(subim0)) );
-	    subim->copyData( normed );
-	  }
-      }
+
+	    LatticeExprNode themax( max(*(subim0)) );
+	    Float maxim = themax.getFloat();
+	    
+	    if ( maxim > 1e-07 )
+	      {
+		LatticeExpr<Float> normed( (*(subim)) / maxim );
+		subim->copyData( normed );
+	      }
+	    else
+	      {
+		subim->set(0.0);
+	      }
+	  }//chan
+      }//pol
 
   }
 
