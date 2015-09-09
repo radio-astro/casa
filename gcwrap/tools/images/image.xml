@@ -9717,14 +9717,17 @@ ia.twopointcorrelation()   # Output image is virtual
         <description>Return an image analysis tool attached to the created subimage</description>
         <value>true</value>
      </param>
+     <param type="intArray" name="keepaxes">
+        <description>If dropdeg=True, these are the degenerate axes to keep. Nondegenerate axes are implicitly always kept.</description>
+        <value/>
+     </param>
 </input>
 <returns type="image"/>
 
 <description>
 
-This function copies all or
-part of the image to another on-the-fly Image tool. Both float and complex
-valued images are supported.
+This function copies all or part of the image to another on-the-fly Image tool.
+Both float and complex valued images are supported.
 
 If {\stfaf outfile} is given, the subimage is written to the specified
 disk file.  If {\stfaf outfile} is unset, the returned Image \tool\ actually
@@ -9735,7 +9738,13 @@ destroy this \tool\ (with the <link anchor="images:image.done.function">done</li
 the reference connection is broken. 
 
 Sometimes it is useful to drop axes of length one (degenerate axes).
-Use the {\stfaf dropdeg} argument if you want to do this.
+Use the {\stfaf dropdeg} argument if you want to do this. Further control
+is provided via the keepaxes parameter. If dropdeg=True, you may specify
+a list of degenerate axes to keep in the keep axes parameter. This allows
+you to drop only a subset of degenerate axes. This parameter is ignored if
+dropdeg=False. If dropdeg=True, all degenerate axes are dropped if keepaxes
+is set to an empty list (this is the default behavior). Nondegenerate
+axes are implicitly kept, even if they are included in the keepaxes list.
 
 The output mask is the combination (logical OR) of the default input
 \pixelmask\ (if any) and the OTF mask.  Any other input \pixelmasks\

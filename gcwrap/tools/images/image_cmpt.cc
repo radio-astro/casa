@@ -4528,9 +4528,9 @@ bool image::twopointcorrelation(
 
 ::casac::image* image::subimage(
 	const string& outfile, const variant& region,
-	const variant& vmask, const bool dropDegenerateAxes,
-	const bool overwrite, const bool list, const bool stretch,
-	const bool wantreturn
+	const variant& vmask, bool dropDegenerateAxes,
+	bool overwrite, bool list, bool stretch,
+	bool wantreturn, const vector<int>& keepaxes
 ) {
 	try {
 		_log << _ORIGIN;
@@ -4560,7 +4560,7 @@ bool image::twopointcorrelation(
 							_image->getImage()->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
-						overwrite, list, stretch
+						overwrite, list, stretch, keepaxes
 					)
 				)
 			);
@@ -4573,7 +4573,7 @@ bool image::twopointcorrelation(
 							_image->getComplexImage()->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
-						overwrite, list, stretch
+						overwrite, list, stretch, keepaxes
 					)
 				)
 			);
@@ -4594,14 +4594,26 @@ template<class T> SPIIT image::_subimage(
 	SPIIT clone,
 	const String& outfile, const Record& region,
 	const String& mask, bool dropDegenerateAxes,
-	bool overwrite, bool list, bool stretch
+	bool overwrite, bool list, bool stretch,
+	const vector<int>& keepaxes
 ) {
-	return SPIIT(
-		SubImageFactory<T>::createImage(
-			*clone, outfile, region,
-			mask, dropDegenerateAxes, overwrite, list, stretch
-		)
-	);
+	if (! dropDegenerateAxes || keepaxes.empty()) {
+		return SPIIT(
+			SubImageFactory<T>::createImage(
+				*clone, outfile, region, mask,
+				dropDegenerateAxes, overwrite, list, stretch
+			)
+		);
+	}
+	else {
+		return SPIIT(
+			SubImageFactory<T>::createImage(
+				*clone, outfile, region, mask,
+				AxesSpecifier(IPosition(Vector<Int>(keepaxes))),
+				overwrite, list, stretch
+			)
+		);
+	}
 }
 
 record* image::summary(

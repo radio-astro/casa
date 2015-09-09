@@ -90,7 +90,7 @@ template<class T> SHARED_PTR<casa::ImageInterface<T> > _subimage(
 	SHARED_PTR<casa::ImageInterface<T> > clone,
 	const casa::String& outfile, const casa::Record& region,
 	const casa::String& mask, bool dropDegenerateAxes,
-	bool overwrite, bool list, bool stretch
+	bool overwrite, bool list, bool stretch, const vector<int>& keepaxes
 );
 
 template<class T> image* _adddegaxes(

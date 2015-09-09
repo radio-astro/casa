@@ -192,5 +192,35 @@ class ia_subimage_test(unittest.TestCase):
         myia.done()
         self.assertTrue(type(subim.getchunk()[0,0]) == numpy.complex128)
 
+    def test_keepaxes(self):
+        """Test the keepaxes parameter"""
+        myia = self.myia
+        myia.fromshape("", [10, 20, 30])
+        zz = myia.subimage("", dropdeg=False)
+        self.assertTrue((zz.shape() == [10, 20, 30]).all())
+        zz = myia.subimage("", dropdeg=True)
+        self.assertTrue((zz.shape() == [10, 20, 30]).all())
+        zz = myia.subimage("", dropdeg=False, keepaxes=[0])
+        self.assertTrue((zz.shape() == [10, 20, 30]).all())
+        zz = myia.subimage("", dropdeg=True, keepaxes=[0])
+        self.assertTrue((zz.shape() == [10, 20, 30]).all())
+        
+        myia.fromshape("", [10, 20, 1, 1])
+        zz = myia.subimage("", dropdeg=False)
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz = myia.subimage("", dropdeg=True)
+        self.assertTrue((zz.shape() == [10, 20]).all())
+        zz = myia.subimage("", dropdeg=False, keepaxes=[0])
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz = myia.subimage("", dropdeg=True, keepaxes=[0])
+        self.assertTrue((zz.shape() == [10, 20]).all())
+        zz = myia.subimage("", dropdeg=False, keepaxes=[0])
+        self.assertTrue((zz.shape() == [10, 20, 1, 1]).all())
+        zz = myia.subimage("", dropdeg=True, keepaxes=[3])
+        self.assertTrue((zz.shape() == [10, 20, 1]).all())
+        
+        zz.done()
+        myia.done()
+
 def suite():
     return [ia_subimage_test]
