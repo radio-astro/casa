@@ -2031,10 +2031,6 @@ void MSTransformManager::initRefFrameTransParams()
     if(outputReferenceFramePar_p.empty())
     {
     	outputReferenceFrame_p = inputReferenceFrame_p;
-    	refFrameTransformation_p = False;
-    }
-    else if (outputReferenceFrame_p == inputReferenceFrame_p) {
-    	refFrameTransformation_p = False;
     }
     // CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
     else if (outputReferenceFramePar_p == "SOURCE")
@@ -2045,7 +2041,11 @@ void MSTransformManager::initRefFrameTransParams()
     else if(!MFrequency::getType(outputReferenceFrame_p, outputReferenceFramePar_p))
     {
     	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "Problem parsing output reference frame:" << outputReferenceFramePar_p  << LogIO::POST;
+    			<< "Problem parsing output reference frame:" << outputReferenceFramePar_p  << LogIO::EXCEPTION;
+    }
+
+    if (outputReferenceFrame_p == inputReferenceFrame_p) {
+    	refFrameTransformation_p = False;
     }
 
 
