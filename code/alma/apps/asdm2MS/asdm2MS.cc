@@ -1436,7 +1436,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       tableDesc.addColumn(rhoColumn);
     
       ScalarColumnDesc<casa::Double> radVelColumn("RadVel");
-      radVelColumn.rwKeywordSet().define("UNIT", "km/s");
+      radVelColumn.rwKeywordSet().define("UNIT", "AU/d");
       tableDesc.addColumn(radVelColumn);
     
       ScalarColumnDesc<casa::Double> diskLongColumn("diskLong");
@@ -1644,13 +1644,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  if (radVelExists) {
 	    temp_v = v[i]->getRadVel();
 	    if (numPolyRadVelIsOne) { 
-	      radVelASDM_v.push_back(temp_v[0] / 1000.0);                    // km/s
+	      radVelASDM_v.push_back(temp_v[0] /  1.4959787066e11 * 24. * 3600.);      // AU/d
 	      LOG_EPHEM(" " + lexical_cast<string>(radVelASDM_v.back()));
 	    }
 	    else {
 	      radVelASDM_vv.push_back(empty_v);
 	      for (unsigned int j = 0; j < v[i]->getNumPolyRadVel(); j++)
-		radVelASDM_vv.back().push_back(temp_v[j]/1000);              // km/s
+		radVelASDM_vv.back().push_back(temp_v[j]/ 1.4959787066e11 * 24. * 3600.);   // AU/d
 	    }	
 	  }
 	  LOG_EPHEM("\n");
@@ -1757,7 +1757,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  decMS_v.push_back(dir[0][1]/3.14159265*180.0); // deg
 	  distanceMS_v.push_back(eR_p->getDistance()[0] / 1.4959787066e11); // AU
 	  if (radVelExists)
-	    radVelMS_v.push_back(eR_p->getRadVel()[0] / 1000.0); // km / s
+	    radVelMS_v.push_back(eR_p->getRadVel()[0] / 1.4959787066e11 * 24. * 3600. ); // AU/d
 	}
       } // end not if interpolate_ephemeris
 
