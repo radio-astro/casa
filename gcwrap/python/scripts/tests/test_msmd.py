@@ -1693,6 +1693,40 @@ class msmd_test(unittest.TestCase):
         self.assertTrue(
             near(md.chanres(9, "m/s", True)[0], 20236.84342, 1e-8)
         )
+        
+    def test_restfreqs(self):
+        """Test restfreqs()"""
+        md = self.md
+        self.assertRaises(Exception, md.restfreqs, -1, 0)
+        self.assertRaises(Exception, md.restfreqs, 0, -1)
+        self.assertRaises(Exception, md.restfreqs, 50, 0)
+        self.assertRaises(Exception, md.restfreqs, 0, 50)
+        for i in range(40):
+            res = md.restfreqs(0, i)
+            if i == 34:
+                self.assertTrue(len(res) == 2)
+                self.assertTrue(res['0']['m0']['value'] == 1e10)
+                self.assertTrue(res['0']['m0']['unit'] == 'Hz')
+                self.assertTrue(res['1']['m0']['value'] == 2e10)
+                self.assertTrue(res['1']['m0']['unit'] == 'Hz')
+            else:
+                self.assertFalse(res)
+            
+    def test_transitions(self):
+        """Test transitions()"""
+        md = self.md
+        self.assertRaises(Exception, md.transitions, -1, 0)
+        self.assertRaises(Exception, md.transitions, 0, -1)
+        self.assertRaises(Exception, md.transitions, 50, 0)
+        self.assertRaises(Exception, md.transitions, 0, 50)
+        for i in range(40):
+            res = md.transitions(0, i)
+            if i == 34:
+                self.assertTrue(len(res) == 2)
+                self.assertTrue(res[0] == "myline")
+                self.assertTrue(res[1] == "yourline")
+            else:
+                self.assertFalse(res)
     
 def suite():
     return [msmd_test]

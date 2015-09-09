@@ -1259,6 +1259,43 @@ record* msmetadata::reffreq(int spw) {
 	return NULL;
 }
 
+variant* msmetadata::restfreqs(int sourceid, int spw) {
+    _FUNC(
+        _checkSpwId(spw, True);
+        ThrowIf(
+            sourceid < 0, "sourceid cannot be negative"
+        );
+        map<SourceKey COMMA SHARED_PTR<vector<MFrequency> > > mymap
+            = _msmd->getRestFrequencies();
+        SourceKey key;
+        key.id = sourceid;
+        key.spw = spw;
+        ThrowIf (
+            mymap.find(key) == mymap.end(),
+            "SOURCE table does not contain a row with SOURCE_ID="
+            + String::toString(sourceid) + " and SPECTRAL_WINDOW_ID="
+            + String::toString(spw)
+        );
+        SHARED_PTR<vector<MFrequency> > ptr = mymap[key];
+        if (ptr) {
+            Record mr;
+            Record r;
+            uInt i = 0;
+            for (const auto& freq : *ptr) {
+                MeasureHolder mh(freq);
+                mh.toRecord(mr);
+                r.defineRecord(casa::String::toString(i), mr);
+                ++i;
+            }
+            return new variant(fromRecord(r));
+        }
+        else {
+            return new variant(False);
+        }
+    )
+    return nullptr;
+}
+
 vector<int> msmetadata::scannumbers(int obsid, int arrayid) {
 	_FUNC(
 		_checkObsId(obsid, False);
@@ -1637,6 +1674,37 @@ vector<int> msmetadata::tdmspws() {
 	return vector<int>();
 }
 
+
+variant* msmetadata::transitions(int sourceid, int spw) {
+    _FUNC(
+        _checkSpwId(spw, True);
+        ThrowIf(
+            sourceid < 0, "sourceid cannot be negative"
+        );
+        map<SourceKey COMMA SHARED_PTR<vector<String> > > mymap
+            = _msmd->getTransitions();
+        SourceKey key;
+        key.id = sourceid;
+        key.spw = spw;
+        ThrowIf (
+            mymap.find(key) == mymap.end(),
+            "SOURCE table does not contain a row with SOURCE_ID="
+            + String::toString(sourceid) + " and SPECTRAL_WINDOW_ID="
+            + String::toString(spw)
+        );
+        SHARED_PTR<vector<String> > ptr = mymap[key];
+        if (ptr) {
+        	vector<string> v = _vectorStringToStdVectorString(*ptr);
+            return new variant(v);
+        }
+        else {
+            return new variant(False);
+        }
+    )
+    return nullptr;
+}
+
+
 vector<int> msmetadata::wvrspws(bool complement) {
 	_FUNC(
 			/*
@@ -1777,7 +1845,8 @@ void msmetadata::_checkSpwId(int id, bool throwIfNegative) const {
 	ThrowIf(
 		id >= (int)_msmd->nSpw(True) || (throwIfNegative && id < 0),
 		"Spectral window ID " + String::toString(id)
-		+ " out of range, must be less than "
+		+ " out of range, must be "
+		+ (throwIfNegative ? "nonnegative and " : "") + "less than "
 		+ String::toString((int)_msmd->nSpw(True))
 	);
 }

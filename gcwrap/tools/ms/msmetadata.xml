@@ -1460,6 +1460,34 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="restfreqs">
+            <shortdescription>Get the rest frequencies from the SOURCE table for the specified source and spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="sourceid">
+                    <description>Zero-based source ID (from the SOURCE::SOURCE_ID column).</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spectral window ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="any">
+                <any type="variant"/>
+            </returns>
+            <description>
+                Get the rest frequencies from the SOURCE table for the specified source and spectral window.
+                The return value will be a dictionary of frequency measures if the rest frequencies are
+                defined for the specified inputs, or False if they do not.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the rest frequencies for source ID 2 and spw ID 20
+    reffreq = msmd.restfreqs(2, 20)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="scannumbers">
             <shortdescription>Get an array of the unique scan numbers associated with the MS for the specified observation ID and array ID.</shortdescription>
             <input>
@@ -2045,6 +2073,34 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the times associated with scan numbers 10 and 20, all obsids, all arrayids
     times = msmd.timesforscans([10,20])
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="transitions">
+            <shortdescription>Get the spectral transitions from the SOURCE table for the specified source and spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="sourceid">
+                    <description>Zero-based source ID (from the SOURCE::SOURCE_ID column).</description>
+                    <value>0</value>
+                </param>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spectral window ID.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="any">
+                <any type="variant"/>
+            </returns>
+            <description>
+                Get the spectral transitions from the SOURCE table for the specified source and spectral window.
+                The return value will be an array of transitions if the transitions are
+                defined for the specified inputs, or False if they do not.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the transitions for source ID 2 and spw ID 20
+    reffreq = msmd.transitions(2, 20)
     msmd.done()
             </example>
         </method>
