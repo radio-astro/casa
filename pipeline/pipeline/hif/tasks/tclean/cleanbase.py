@@ -311,7 +311,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         spw_param_list = []
         for spwid in inputs.spw.split(','):
             if (inputs.spwsel.has_key('spw%s' % (spwid))):
-                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0)))
+                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]))
             else:
                 spw_param_list.append(spwid)
         spw_param = ','.join(spw_param_list)
