@@ -412,7 +412,7 @@ namespace casa{
     
     Vector<Float> sampling(2),scaledSampling(2);
     Vector<Int> support(2),loc(3), iloc(4),tiloc(4),scaledSupport(2);
-    Vector<Double> pos(2), off(3);
+    Vector<Double> pos(3), off(3);
     Vector<Int> igrdpos(4);
 
     Complex phasor, nvalue, wt;
@@ -660,7 +660,7 @@ runTimeG7_p += timer_p.real();
     Int achan, apol, rbeg, rend;//, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);//scaledSampling(2);
     Vector<Int> support(2),loc(3), iloc(4),tiloc(4);// scaledSupport(2);
-    Vector<Double> pos(2), off(3);
+    Vector<Double> pos(3), off(3);
     
     IPosition grdpos(4);
     
