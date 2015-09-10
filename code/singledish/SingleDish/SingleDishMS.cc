@@ -815,7 +815,7 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
     ofs_csv.open(bloutputname_csv.c_str());
   }
   if (write_baseline_text) {
-    ofs_txt.open(bloutputname_text.c_str(), std::ios::app);
+    ofs_txt.open(bloutputname_text.c_str(), std::ios_base::out | std::ios_base::app);
   }
   if (write_baseline_table) {
     bt = new BaselineTable(vi->ms());
@@ -1166,7 +1166,6 @@ void SingleDishMS::subtractBaseline(string const& in_column_name,
               Matrix<Float> rms_mtx2 = rms_mtx;
               ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
               ofs_csv << final_mask2[ipol] - final_mask[ipol];
-              ofs_csv << endl;
               ofs_csv << endl;
             }
           }
@@ -1599,7 +1598,6 @@ void SingleDishMS::subtractBaselineCspline(string const& in_column_name,
               Matrix<Float> rms_mtx2 = rms_mtx;
               ofs_csv << setprecision(8) << rms_mtx2(ipol, 0) << ',';
               ofs_csv << final_mask2[ipol] - final_mask[ipol];
-              ofs_csv << endl;
               ofs_csv << endl;
             }
           }
@@ -2815,7 +2813,6 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
                 //ofs_csv << (uInt)num_chan ;
                 ofs_csv << final_mask2[ipol] - final_mask[ipol];
                 ofs_csv << endl;
-                ofs_csv << endl;
               }                    //if apply_mtx ==true
             }                    //loop ipol
           }
@@ -2827,17 +2824,17 @@ void SingleDishMS::subtractBaselineVariable(string const& in_column_name,
     } // end of vi loop
   } // end of chunk loop
 
-  if (write_baseline_csv) { //---------------
-    ofs_csv.close(); //--------------------
-  } //------------------------------------
-  if (write_baseline_text) { //--------------
-    ofs_txt.close(); //---------------------
-  } //-----------------------------------
-
+  if (write_baseline_csv) {
+    ofs_csv.close();
+  }
+  if (write_baseline_text) {
+    ofs_txt.close();
+  }
   if (write_baseline_table) {
-    bt->save(bloutputname_table); //------------
+    bt->save(bloutputname_table);
     delete bt;
   }
+  
   finalize_process();
   // destroy baseline contexts
   map< const LIBSAKURA_SYMBOL(BaselineType), std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> >::iterator ctxiter = context_reservoir.begin();
