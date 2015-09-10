@@ -46,67 +46,11 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             restore_sorted_table_keyword(infile, sorttab_info)
             
         elif (blmode == 'fit'):
-            if isinstance(blformat, str):
-                blformat = [blformat]
-            if not isinstance(blformat, list):
-                raise ValueError, 'blformat must be string or list of string.'
-            elif has_duplicate_nonnull_element(blformat):
-                raise ValueError, 'duplicate elements in blformat.'
+            blformat, bloutput = prepare_for_blformat_bloutput(infile, blformat, bloutput)
 
-            if isinstance(bloutput, str):
-                bloutput = [bloutput]
-                if (bloutput[0] == ''):    # the case for default bloutput of ''
-                    bloutput *= len(blformat)
-            if not isinstance(bloutput, list):
-                raise ValueError, 'bloutput must be string or list of string.'
-            elif has_duplicate_nonnull_element_ex(bloutput, blformat):
-                raise ValueError, 'duplicate elements in bloutput.'
-
-            if (len(blformat) != len(bloutput)):
-                raise ValueError, 'blformat and bloutput must have the same length.'
-
-            new_bloutput=[]
-            prepare_for_bloutput(blformat, bloutput, infile, new_bloutput)
-            bloutput = ','.join(new_bloutput)
-
-            fname = new_bloutput[1]
-            if (fname != ''):
-                f = open(fname, 'w')
-
-                blf = blfunc.lower()
-                if (blf == 'poly'):
-                    ftitles = ['Fit order']
-                elif (blf == 'chebyshev'):
-                    ftitles = ['Fit order']
-                elif (blf == 'cspline'):
-                    ftitles = ['nPiece']
-                else: # sinusoid
-                    ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
-
-                mm = maskmode.lower()
-                if (mm == 'auto'):
-                    mtitles = ['Threshold', 'avg_limit', 'Edge']
-                elif (mm == 'list'):
-                    mtitles = []
-                else: # interact
-                    mtitles = []
-                ctitles = ['clipThresh', 'clipNIter']
-                outfile2 = ''
-                if (outfile == ''): 
-                    outfile2 = infile
-                else:
-                    outfile2 = outfile
-                info = [['Source Table', infile],
-                        ['Output File', outfile2],
-                        ['Mask mode', maskmode]]
-
-                separator = '#' * 60 + '\n'
-                f.write(separator)
-                for i in xrange(len(info)):
-                    f.write('%12s: %s\n' % tuple(info[i]))
-                f.write(separator)
-                f.write('\n')
-                f.close()
+            output_bloutput_text_header(blformat, bloutput,
+                                        blfunc, maskmode,
+                                        infile, outfile)
             
             if (blfunc == 'variable'):
                 sorttab_info = remove_sorted_table_keyword(infile)
@@ -124,7 +68,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
             params, func = prepare_for_baselining(blfunc=blfunc,
                                                   datacolumn=datacolumn,
                                                   outfile=outfile,
-                                                  bloutput=bloutput,
+                                                  bloutput=','.join(bloutput),
                                                   dosubtract=dosubtract,
                                                   spw=spw,
                                                   pol=pol,
@@ -147,8 +91,49 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
     except Exception, instance:
         raise Exception, instance
 
-#return True if in_list has duplicated elements other than ''
+
+blformat_item = ['csv', 'text', 'table']
+blformat_ext  = ['csv', 'txt',  'bltable']
+
+
+def prepare_for_blformat_bloutput(infile, blformat, bloutput):
+    # force to string list
+    blformat = force_to_string_list(blformat, 'blformat')
+    bloutput = force_to_string_list(bloutput, 'bloutput')
+
+    # the default bloutput value '' is expanded to a list 
+    # with length of blformat, and with '' throughout.
+    if (bloutput == ['']): bloutput *= len(blformat)
+
+    # check length
+    if (len(blformat) != len(bloutput)):
+        raise ValueError, 'blformat and bloutput must have the same length.'
+
+    # check duplication
+    if has_duplicate_nonnull_element(blformat):
+        raise ValueError, 'duplicate elements in blformat.'
+    if has_duplicate_nonnull_element_ex(bloutput, blformat):
+        raise ValueError, 'duplicate elements in bloutput.'
+
+    # fill bloutput items to be output, then rearrange them
+    # in the order of blformat_item.
+    bloutput = normalise_bloutput(infile, blformat, bloutput)
+
+    return blformat, bloutput
+
+def force_to_string_list(s, name):
+    mesg = '%s must be string or list of string.' % name
+    if isinstance(s, str): s = [s]
+    elif isinstance(s, list):
+        for i in range(len(s)):
+            if not isinstance(s[i], str):
+                raise ValueError, mesg
+    else:
+        raise ValueError, mesg
+    return s
+
 def has_duplicate_nonnull_element(in_list):
+    #return True if in_list has duplicated elements other than ''
     duplicates = [key for key, val in Counter(in_list).items() if val > 1]
     len_duplicates = len(duplicates)
     
@@ -160,35 +145,76 @@ def has_duplicate_nonnull_element(in_list):
         return False
 
 
-def has_duplicate_nonnull_element_ex(in_list, base):
-    # in_list and base must have the same length.
+def has_duplicate_nonnull_element_ex(lst, base):
+    # lst and base must have the same length.
     #
-    # (1) extract elements from in_list and make a new list
+    # (1) extract elements from lst and make a new list
     #     if the element of base with the same index
     #     is not ''.
     # (2) check if the list made in (1) has duplicated
     #     elements other than ''.
+    
     return has_duplicate_nonnull_element(
-        [in_list[i] for i in range(len(in_list)) if base[i] != ''])
+        [lst[i] for i in range(len(lst)) if base[i] != ''])
 
+def normalise_bloutput(infile, blformat, bloutput):
+    normalised_bloutput = []
+    for item in zip(blformat_item, blformat_ext):
+        normalised_bloutput.append(
+            get_normalised_name(infile, blformat, bloutput, item[0], item[1]))
+    return normalised_bloutput
 
-def do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, format_value, format_ext):
+def get_normalised_name(infile, blformat, bloutput, name, ext):
     fname = ''
-    if (format_value in blformat):
-        fname = bloutput[blformat.index(format_value)]
+    if (name in blformat):
+        fname = bloutput[blformat.index(name)]
         if (fname == ''):
-            fname = infile + '_blparam.' + format_ext
+            fname = infile + '_blparam.' + ext
     if os.path.exists(fname):
         if overwrite:
             os.system('rm -rf %s' % fname)
         else:
             raise Exception(fname + ' exists.')
-    new_bloutput.append(fname)
+    return fname
 
-def prepare_for_bloutput(blformat, bloutput, infile, new_bloutput):
-    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'csv', 'csv')
-    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'text', 'txt')
-    do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, 'table', 'bltable')
+def output_bloutput_text_header(blformat, bloutput, blfunc, maskmode, infile, outfile):
+    fname = bloutput[blformat_item.index('text')]
+    if (fname == ''): return
+    
+    f = open(fname, 'w')
+
+    blf = blfunc.lower()
+    if (blf == 'poly'):
+        ftitles = ['Fit order']
+    elif (blf == 'chebyshev'):
+        ftitles = ['Fit order']
+    elif (blf == 'cspline'):
+        ftitles = ['nPiece']
+    else: # sinusoid
+        ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
+
+    mm = maskmode.lower()
+    if (mm == 'auto'):
+        mtitles = ['Threshold', 'avg_limit', 'Edge']
+    elif (mm == 'list'):
+        mtitles = []
+    else: # interact
+        mtitles = []
+
+    ctitles = ['clipThresh', 'clipNIter']
+
+    info = [['Source Table', infile],
+            ['Output File', outfile if (outfile != '') else infile],
+            ['Mask mode', maskmode]]
+
+    separator = '#' * 60 + '\n'
+    
+    f.write(separator)
+    for i in xrange(len(info)):
+        f.write('%12s: %s\n' % tuple(info[i]))
+    f.write(separator)
+    f.write('\n')
+    f.close()
 
 def prepare_for_baselining(**keywords):
     params = {}
