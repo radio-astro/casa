@@ -121,6 +121,7 @@ test_po_sigmafractotpol         dmehring@nrao.edu
 test_po_sigmalinpolint          dmehring@nrao.edu
 test_po_sigmalinpolposang       dmehring@nrao.edu
 test_po_totpolint               dmehring@nrao.edu
+test_refimager                  rurvashi@nrao.edu
 test_report                     jkern@nrao.edu
 test_rg_frombcs                 dmehring@nrao.edu
 test_rg_fromtextfile            dmehring@nrao.edu
