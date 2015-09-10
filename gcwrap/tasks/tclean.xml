@@ -251,8 +251,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                 To automatically change 'imagename' with a numerical 
                                 increment, set overwrite=False (see inline docs for 'overwrite').
 
-                       Tip : To construct a .pb image with gridders other than mosaic,awproject
-                               please use the following script based on the old imager tool.
+                       Tip : For now, to construct a .pb image with gridders other than 
+                               mosaic and awproject please use the following script based 
+                               on the old imager tool.
+
+                                   from recipes import makepb
+                                   makepb.makePB(vis='xxx.ms',field='0~5',
+                                                               imtemplate='onefield.model',
+                                                               outimage='try.pb', pblimit=0.2)
                                
 
 </description>
@@ -542,8 +548,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="aterm" subparam="true">
-           <shortdescription>Use aperture illumination function during gridding</shortdescription>
-<description>Use aperture illumination function during gridding</description>
+           <shortdescription>Use aperture illumination functions during gridding</shortdescription>
+<description>Use aperture illumination functions during gridding
+
+                       This parameter turns on the A-term of the AW-Projection gridder.
+                       Gridding convolution functions are constructed from aperture illumination
+                       function models of each antenna.
+
+</description>
 	    <value type="bool">True</value>
     </param>
 
