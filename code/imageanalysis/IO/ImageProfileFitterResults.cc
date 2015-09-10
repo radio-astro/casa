@@ -330,8 +330,8 @@ void ImageProfileFitterResults::_processSolutions(
 		break;
 		case SpectralElement::LOGTRANSPOLY:
 		{
-			Vector<Double> sols = solutions[i]->get();
-			Vector<Double> errs = solutions[i]->getError();
+			auto sols = solutions[i]->get();
+			auto errs = solutions[i]->getError();
 			for (uInt j=0; j<_nLTPCoeffs; j++) {
 				IPosition arrIdx(1, j);
 				arrIdx.prepend(pixel);
@@ -623,17 +623,6 @@ void ImageProfileFitterResults::_writeImages(
 	const CoordinateSystem& xcsys,
 	const Array<Bool>& mask, const String& yUnit
 ) const {
-	// add a linear coordinate for the individual components
-	Vector<Double> crpix(1, 0);
-	Vector<Double> crval(1, 0);
-	Vector<Double> cdelt(1, 1);
-	Matrix<Double> pc(1, 1, 0);
-	pc.diagonal() = 1.0;
-	Vector<String> name(1, "Component Number");
-	Vector<String> units(1, "");
-	LinearCoordinate componentCoord(name, units, crval, cdelt, pc, crpix);
-	CoordinateSystem mycsys = CoordinateSystem(xcsys);
-	mycsys.addCoordinate(componentCoord);
 	map<String, String> mymap;
 	map<String, String> unitmap;
 	mymap["center"] = _centerName;
@@ -644,7 +633,6 @@ void ImageProfileFitterResults::_writeImages(
 	mymap["ampErr"] = _ampErrName;
 	mymap["integral"] = _integralName;
 	mymap["integralErr"] = _integralErrName;
-	//mymap["center"] = _centerName;
 	unitmap["center"] = _xUnit;
 	unitmap["centerErr"] = _xUnit;
 	unitmap["fwhm"] = _xUnit;
@@ -661,17 +649,8 @@ void ImageProfileFitterResults::_writeImages(
 			continue;
 		}
 		String id = _getTag(i);
-		IPosition maskShape = _results.asRecord(id).asArrayDouble("amp").shape();
-		maskShape[maskShape.size()-1] = 1;
-		Array<Bool> reshapedMask = mask.reform(maskShape);
-		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
-		uInt n = maskShape[maskShape.size()-1];
-		Array<Bool> fMask = _replicateMask(reshapedMask, n);
-		for (
-			map<String, String>::const_iterator iter=mymap.begin();
-			iter!=mymap.end(); iter++
-		) {
-			String imagename = iter->second;
+		for (const auto& p : mymap) {
+			String imagename = p.second;
 			String suffix = i == _gsPlane
 				? ""
 				: i == _lsPlane
@@ -680,11 +659,11 @@ void ImageProfileFitterResults::_writeImages(
 				    ? "_gm"
 				    : "_gm" + String::toString(i-_nOthers);
 			imagename += suffix;
-			if (! iter->second.empty()) {
-				_makeSolutionImage(
-					imagename, mycsys,
-					_results.asRecord(id).asArrayDouble(iter->first),
-					unitmap.find(iter->first)->second, fMask
+			if (! p.second.empty()) {
+				_makeSolutionImages(
+					imagename, xcsys,
+					_results.asRecord(id).asArrayDouble(p.first),
+					unitmap.find(p.first)->second, mask
 				);
 			}
 		}
@@ -694,40 +673,32 @@ void ImageProfileFitterResults::_writeImages(
 		|| (_nLTPCoeffs > 0 && (! _ltpName.empty() || ! _ltpErrName.empty()))
 	) {
 		String type = _results.isDefined("plp") ? "plp" : "ltp";
-		IPosition maskShape = _results.asRecord(type).asArrayDouble("solution").shape();
-		maskShape[maskShape.size() - 1] = 1;
-		Array<Bool> reshapedMask = mask.reform(maskShape);
-		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
 		if (_nPLPCoeffs > 0 && ! _plpName.empty()) {
-			Array<Bool> fMask = _replicateMask(reshapedMask, _nPLPCoeffs);
-			_makeSolutionImage(
-				_plpName, mycsys,
+			_makeSolutionImages(
+				_plpName, xcsys,
 				_results.asRecord("plp").asArrayDouble("solution"),
-				"", fMask
+				"", mask
 			);
 		}
 		if (_nPLPCoeffs > 0 && ! _plpErrName.empty()) {
-			Array<Bool> fMask = _replicateMask(reshapedMask, _nPLPCoeffs);
-			_makeSolutionImage(
-				_plpErrName, mycsys,
+			_makeSolutionImages(
+				_plpErrName, xcsys,
 				_results.asRecord("plp").asArrayDouble("error"),
-				"", fMask
+				"", mask
 			);
 		}
 		if (_nLTPCoeffs > 0 && ! _ltpName.empty()) {
-			Array<Bool> fMask = _replicateMask(reshapedMask, _nLTPCoeffs);
-			_makeSolutionImage(
-				_ltpName, mycsys,
+			_makeSolutionImages(
+				_ltpName, xcsys,
 				_results.asRecord("ltp").asArrayDouble("solution"),
-				"", fMask
+				"", mask
 			);
 		}
 		if (_nLTPCoeffs > 0 && ! _ltpErrName.empty()) {
-			Array<Bool> fMask = _replicateMask(reshapedMask, _nLTPCoeffs);
-			_makeSolutionImage(
-				_ltpErrName, mycsys,
+			_makeSolutionImages(
+				_ltpErrName, xcsys,
 				_results.asRecord("ltp").asArrayDouble("error"),
-				"", fMask
+				"", mask
 			);
 		}
 	}
@@ -1307,13 +1278,12 @@ String ImageProfileFitterResults::_logTransPolyToString(
 	return summary.str();
 }
 
-void ImageProfileFitterResults::_makeSolutionImage(
+void ImageProfileFitterResults::_makeSolutionImages(
 	const String& name, const CoordinateSystem& csys,
 	const Array<Double>& values, const String& unit,
 	const Array<Bool>& mask
 ) {
-	IPosition shape = values.shape();
-	PagedImage<Float> image(shape, csys, name);
+	auto valuesShape = values.shape();
 	Vector<Float> dataCopy(values.size());
 	Vector<Double>::const_iterator iter;
 	// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
@@ -1322,42 +1292,48 @@ void ImageProfileFitterResults::_makeSolutionImage(
 	for (iter=values.begin(); iter!=values.end(); ++iter, ++jiter) {
 		*jiter = (Float)*iter;
 	}
-	image.put(dataCopy.reform(shape));
-	Bool hasPixMask = ! allTrue(mask);
-	Bool hasNanMask = ! allTrue(nanInfMask);
-	if (hasNanMask || hasPixMask) {
-		Array<Bool> resMask(shape);
-		String maskName = image.makeUniqueRegionName(
-			String("mask"), 0
-		);
-		image.makeMask(maskName, True, True, False);
-		if (hasPixMask) {
-			if (shape == mask.shape()) {
-				resMask = mask.copy().reform(shape);
-			}
-			else {
-				IPosition maskShape = shape;
-				uInt ndim = maskShape.nelements();
-				maskShape[ndim - 1] = 1;
-				Array<Bool> maskCopy = mask.copy().reform(maskShape);
-				IPosition start(ndim, 0);
-				IPosition end = maskShape - 1;
-				for (uInt i=0; i<shape[ndim - 1]; i++) {
-					start[ndim - 1] = i;
-					end[ndim - 1] = i;
-					resMask(start, end) = maskCopy.copy();
+	auto dc = dataCopy.reform(valuesShape);
+	uInt nImages = valuesShape.last();
+	auto imageShape = valuesShape.getFirst(valuesShape.size() - 1);
+	IPosition start(values.ndim(), 0);
+	IPosition end = valuesShape - 1;
+	end[end.size() - 1] = 0;
+	for (uInt i=0; i<nImages; ++i) {
+		auto myname = nImages == 0
+			? name
+			: name + "_" + String::toString(i);
+		PagedImage<Float> image(imageShape, csys, myname);
+		start[start.size() - 1] = i;
+		end[end.size() - 1] = i;
+		auto imageVals = dc(start, end);
+		// remove the last axis
+		imageVals.removeDegenerate(values.ndim() -1);
+		image.put(imageVals);
+		Array<Double> doubleValues = values(start, end);
+		// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
+		Array<Bool> nanInfMask = ! (isNaN(doubleValues) || isInf(doubleValues));
+		nanInfMask.removeDegenerate(values.ndim() -1);
+		Bool hasPixMask = ! allTrue(mask);
+		Bool hasNanMask = ! allTrue(nanInfMask);
+		if (hasNanMask || hasPixMask) {
+			Array<Bool> resMask(imageShape);
+			String maskName = image.makeUniqueRegionName(
+				String("mask"), 0
+			);
+			image.makeMask(maskName, True, True, False);
+			if (hasPixMask) {
+				resMask = mask;
+				if (hasNanMask) {
+					resMask = resMask && nanInfMask;
 				}
 			}
-			if (hasNanMask) {
-				resMask = resMask && nanInfMask;
+			else {
+				resMask = nanInfMask;
 			}
+			(&image.pixelMask())->put(resMask);
 		}
-		else {
-			resMask = nanInfMask;
-		}
-		(&image.pixelMask())->put(resMask);
+		image.setUnits(Unit(unit));
 	}
-	image.setUnits(Unit(unit));
 }
 
 }

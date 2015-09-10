@@ -184,10 +184,6 @@ private:
    	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
    	const CoordinateSystem _csysIm;
    	String _plpDivisor;
-   	// mask for fitters
-   	// Array<Bool> _mask;
-
-   	// void _createMask();
 
     void _setResults();
 
@@ -238,10 +234,10 @@ private:
         Array<String>& directionInfo /*, Array<Bool>& mask */
     ); 
 
-    static void _makeSolutionImage(
+    static void _makeSolutionImages(
     	const String& name, const CoordinateSystem& csys,
-    	const Array<Double>& values, const String& unit,
-    	const Array<Bool>& mask
+		const Array<Double>& values, const String& unit,
+		const Array<Bool>& mask
     );
 
     void _insertPCF(

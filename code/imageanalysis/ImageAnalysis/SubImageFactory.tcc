@@ -216,7 +216,7 @@ template<class T> SPIIT SubImageFactory<T>::createImage(
 	}
 	SHARED_PTR<const SubImage<T> > x = createSubImageRO(
 		image, region, mask, list ? &log : 0,
-		axesSpec, extendMask
+		axesSpec, extendMask, True
 	);
 	SPIIT outImage;
 	if (outfile.empty()) {
