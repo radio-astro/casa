@@ -893,6 +893,7 @@ finally:
 	    #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
 	    fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
 	    fitsname = re.sub('\.iter\d+\.image', '', fitsname)
+	    fitsname = re.sub('\.iter\d+\.pbcor.image', '.pbcor', fitsname)
 	    fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
 	    fitsfile = os.path.join (products_dir,
 	        os.path.basename(fitsname) + '.fits')

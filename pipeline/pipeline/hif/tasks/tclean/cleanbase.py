@@ -334,15 +334,51 @@ class CleanBase(basetask.StandardTaskTemplate):
             parallel=inputs.parallel)
         self._executor.execute(job)
 
+        # Correct images for primary beam
+        pb_corrected = False
+        if ((image_name not in (None, '')) and (flux_name not in (None, '')) and (inputs.mask not in (None, ''))):
+            if (os.path.exists(flux_name)):
+                LOG.info('Applying PB correction')
+                pb_corrected = True
+                pbcor_image_name = '%s.%s.iter%s.pbcor.image' % (inputs.imagename, inputs.stokes, iter)
+                if (result.multiterm):
+                    for nterm in xrange(result.multiterm):
+                        # Mask name needs to be specified without path
+                        job = casa_tasks.impbcor(
+                                  imagename=image_name,
+                                  pbimage=flux_name,
+                                  outfile='%s.tt%d' % (pbcor_image_name, nterm),
+                                  mask=os.path.basename(inputs.mask))
+                        self._executor.execute(job)
+                else:
+                    # Mask name needs to be specified without path
+                    job = casa_tasks.impbcor(
+                              imagename=image_name,
+                              pbimage=flux_name,
+                              outfile=pbcor_image_name,
+                              mask=os.path.basename(inputs.mask))
+                    self._executor.execute(job)
+
+        if ((image_name not in (None, '')) and (not pb_corrected)):
+            if (flux_name in (None, '')):
+                LOG.warning('Image %s could not be PB corrected due to missing PB !')
+            else:
+                LOG.warning('Image %s could not be PB corrected !')
+ 
         # Store the model.
         set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
                      type='model', iter=iter, multiterm=result.multiterm)
         result.set_model(iter=iter, image=model_name)
 
         # Store the image.
-        set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                     type='image', iter=iter, multiterm=result.multiterm)
-        result.set_image(iter=iter, image=image_name)
+        if (pb_corrected):
+            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                         type='image', iter=iter, multiterm=result.multiterm)
+            result.set_image(iter=iter, image=pbcor_image_name)
+        else:
+            set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
+                         type='image', iter=iter, multiterm=result.multiterm)
+            result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,

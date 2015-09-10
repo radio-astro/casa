@@ -59,7 +59,7 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                         spw = info['spw']
                     if info.has_key('field'):
                         field = '%s (%s)' % (info['field'], r.intent)
-                    
+
                     coordsys = image.coordsys()
                     coord_names = numpy.array(coordsys.names())
                     coord_refs = coordsys.referencevalue(format='s')
@@ -86,17 +86,17 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     pa = qaTool.convert(beam['positionangle'], 'deg')
                     info_dict[(field, spw, pol, 'beam pa')] = pa
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
-                    
+
                     stats = image.statistics(robust=False)
                     info_dict[(field, spw, pol, 'image rms')] = stats.get('rms')[0]
-                    
+
                     summary = image.summary()
                     nchan = summary['shape'][3]
                     width = qaTool.quantity(summary['incr'][3], 
                                         summary['axisunits'][3])
                     width = qaTool.convert(width, 'MHz')
                     width = qaTool.tos(width, 2)
-                    
+
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
                     
