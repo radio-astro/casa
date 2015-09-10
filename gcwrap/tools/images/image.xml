@@ -4673,11 +4673,14 @@ via the parameters amp, amperr, center, centererr, fwhm, fwhmerr, integral, inte
 polynomial or a logarithmic transformed polynomial fit, plpsol or ltpsol and plperr or ltpsol are the names of the solution and error
 images to write, respectively.
 
-These images simply contain the arrays described for the associated parameter solutions or errors described in previous sections.
-In the case of lorentzian singlets, "\_ls" is appended to the image names, in the case of gaussian multiplets, "\_gm0", "\_gm1", etc
-are appended to the image names to distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be
-masked as bad. The last axis of these images is a linear axis and repesents component (or coeficient, depending on the funciton fit)
-number (and is named accordingly).
+These images contain the arrays described for the associated parameter solutions or errors described in previous sections. Each
+component is written to a different image, and each image is distiguished by the component it represents by its name ending
+in an uderscore and the relevant component number ("_0", "_1", etc). In the case of Gaussian multiplets, the image name ends
+with the number of the mulitplet group followed by the number of the component in that group (eg "_3_4" represents component
+4 in multiplet group 3). In the case of lorentzian singlets, "\_ls" is appended to the image names (but before the
+identifying component number), in the case of gaussian multiplets. Similarly "_gm" is included in the name of Gaussian multiplet
+images. Pixels for which fits were not attempted, did not converge, or converged but have values of NaN (not a number) or
+INF (infinity) will be masked as bad.
 
 Writing analogous images for polynomial coefficients is not supported.
 

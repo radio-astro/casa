@@ -638,12 +638,16 @@ In addition to the returned dictionary, optionally one or more of any combinatio
 The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
 should not be written.
 
-One can also write none, any or all of the solution and error images for gaussian singlet, lorentzian singlet,  and gaussian multiplet fits
+One can also write none, any or all of the solution and error images for Gaussian singlet, Lorentzian singlet,  and Gaussian multiplet fits
 via the parameters amp, amperr, center, centererr, fwhm, fwhmerr, integral, and integralerr when doing multi-pixel fits. These images simply
-contain the arrays described for the associated parameter solutions or errors described in previous sections. In the case of lorentzian
-singlets, "_ls" is appended to the image names, in the case of gaussian multiplets, "_gm0", "_gm1", etc are appended to the image names to
-distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be masked as bad. The last axis of these images
-is a linear axis and repesents component number (and is named accordingly).
+contain the arrays described for the associated parameter solutions or errors described in previous sections. In the case of Lorentzian
+singlets, "_ls" is appended to the image names, in the case of Gaussian multiplets, "_gm" is appended. Pixels for which fits were not attempted or did not converge will be masked as bad. The last axis of these images
+is a linear axis and repesents component number (and is named accordingly). In the case where multiple Gaussian singlets and/or
+Lorentzians are fitted, the image names are further appended with an underscore and the relevant component number ("_0", "_1", etc).
+In the case of Gaussian multiplets, the image names are appended with an underscore, followed by the number of the relevant
+multiplet group, followed by an underscore, followed by the number of the component in that group (eg, "image_gm_3_4" represents
+component number 4 of multiplet group number 3). Pixels for which fits were not attempted, did not converge, or converged but
+have values of NaN (not a number) or INF (infinity) will be masked as bad.
 
 Writing analogous images for polynomial coefficients is not supported.
 

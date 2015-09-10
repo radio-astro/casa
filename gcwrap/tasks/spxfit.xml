@@ -316,12 +316,11 @@ In addition to the returned dictionary, optionally one or more of any combinatio
 The model and residual parameters indicate the names of the model and residual images to be written; empty values inidcate that these images
 should not be written.
 
-The parameters spxsol and spxerr are the names of the solution and error images to write, respectively.
-These images simply contain the arrays for the associated parameter solutions or errors described in previous sections.
-Pixels for which fits were not attempted or did not converge will be
-masked as bad. The last axis of these images is a linear axis and repesents coefficient number (and is named accordingly). So, for example,
-if one fits a function for two coefficients, c0 and c1, the solution and error images will each have length 2 along the component number
-axis. The first plane corresponds to the solution/error for c0, the second corresponds to the solution/error for c1.
+The parameters spxsol and spxerr are the names of the solution and error images to write, respectively. In cases
+where more than one coefficient are fit, the image names will be appended with an underscore followed by the relevant
+coefficient number ("_0", "_1", etc). These images contain the arrays for the associated parameter solutions or errors
+described in previous sections. Pixels for which fits were not attempted, did not converge, or converged but have values
+of NaN (not a number) or INF (infinity) will be masked as bad.
 
 LPT vs PLP
 Ultimately, the choice of which functional form to use in determining the spectral index is up to the user and should be based

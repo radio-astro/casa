@@ -269,21 +269,22 @@ class spxfit_test(unittest.TestCase):
                 myia.done(remove=True)
             sols = rec['plp']['solution']
             self.assertTrue((sols[:,:,:,1] == 2.2).all())
-            myia.open(plpsol)
-            self.assertTrue(
-                (
-                    abs(myia.getchunk()/sols - 1) < 1e-7
-                ).all()
-            )
-            myia.done(remove=True)
+            for j in [0, 1]:
+                myia.open(plpsol + "_" + str(j))
+                self.assertTrue(
+                    (
+                     abs(myia.getchunk()/sols[:,:,:,j] - 1) < 1e-7
+                    ).all()
+                )
+                myia.done(remove=True)
 
-            myia.open(plperr)
-            self.assertTrue(
-                (
-                    abs(myia.getchunk() - rec['plp']['error']) < 1e-8
-                ).all()
-            )
-            myia.done(remove=True)
+                myia.open(plperr + "_" + str(j))
+                self.assertTrue(
+                    (
+                     abs(myia.getchunk() - rec['plp']['error'][:, :, :, j]) < 1e-8
+                    ).all()
+                )
+                myia.done(remove=True)
             
     def test_ltpfit(self):
         """ Test fitting a logarithmic transformed polynomial"""
@@ -336,8 +337,8 @@ class spxfit_test(unittest.TestCase):
             ltpfix = [False, True]
             if i == 0:
                 rec = myia.fitprofile(
-                        ngauss=0,  spxtype="ltp", spxest=ltpestoff, spxfix=ltpfix,
-                        multifit=True, spxsol=spxsol, spxerr=spxerr
+                    ngauss=0,  spxtype="ltp", spxest=ltpestoff, spxfix=ltpfix,
+                    multifit=True, spxsol=spxsol, spxerr=spxerr
                 )
             if i == 1:
                 rec = spxfit(
@@ -347,22 +348,22 @@ class spxfit_test(unittest.TestCase):
                 myia.done(remove=True)
             sols = rec['ltp']['solution']
             self.assertTrue((sols[:,:,:,1] == 2.2).all())
-            myia.open(spxsol)
-            self.assertTrue(
-                (
-                    abs(myia.getchunk()/sols - 1) < 1e-7
-                ).all()
-            )
-            myia.done(remove=True)
+            for j in [0, 1]:
+                myia.open(spxsol)
+                self.assertTrue(
+                    (
+                     abs(myia.getchunk()/sols[:,:,:,j] - 1) < 1e-7
+                    ).all()
+                )
+                myia.done(remove=True)
 
-            myia.open(spxerr)
-            self.assertTrue(
-                (
-                    abs(myia.getchunk() - rec['ltp']['error']) < 1e-8
-                ).all()
-            )
-            myia.done(remove=True)
-            
+                myia.open(spxerr)
+                self.assertTrue(
+                    (
+                     abs(myia.getchunk() - rec['ltp']['error'][:,:,:,j]) < 1e-8
+                    ).all()
+                )
+                myia.done(remove=True)
             
     def test_multi_image(self):
         """Test multi image support"""
@@ -423,20 +424,21 @@ class spxfit_test(unittest.TestCase):
         myia.done(remove=True)
         sols = rec['plp']['solution']
         self.assertTrue((sols[:,:,:,1] == 2.2).all())
-        myia.open(plpsol)
-        self.assertTrue(
-            (
-                abs(myia.getchunk()/sols - 1) < 1e-7
-            ).all()
-        )
-        myia.done(remove=True)
+        for j in [0, 1]:
+            myia.open(plpsol + "_" + str(j))
+            self.assertTrue(
+                (
+                 abs(myia.getchunk()/sols[:,:,:,j] - 1) < 1e-7
+                ).all()
+            )
+            myia.done(remove=True)
 
-        myia.open(plperr)
-        self.assertTrue(
-            (
-                abs(myia.getchunk() - rec['plp']['error']) < 1e-8
-            ).all()
-        )
+            myia.open(plperr + "_" + str(j))
+            self.assertTrue(
+                (
+                 abs(myia.getchunk() - rec['plp']['error'][:,:,:,j]) < 1e-8
+                ).all()
+            )
         
     def test_output_mask(self):
         """ Test the the output solution image mask is correct"""
@@ -471,18 +473,23 @@ class spxfit_test(unittest.TestCase):
             multifit=True,mask=mask,logresults=False,
             logfile=logfile
         )
-        for im in (sol, err, model, resid):
+        for im in (
+            sol + "_0", sol + "_1", err + "_0",
+            err + "_1", model, resid
+        ):
             print "checking image product " + im
             self.checkImage(im, datapath + im)
         global myia
         for im in (sol, err):
-            myia.open(im)
             key = 'solution'
             if (im == err):
                 key = 'error'
-            print "checking " + key + " array"
-            self.checkArray(res['plp'][key], myia.getchunk())
-            myia.done()
+            for j in [0, 1]:
+                myname = im + "_" + str(j)
+                myia.open(myname)
+                print "checking " + key + " " + str(j) + " array"
+                self.checkArray(res['plp'][key][:,:,:,:,j], myia.getchunk())
+                myia.done()
         got = open(logfile).readlines()
         expec = open(datapath + logfile).readlines()
         for i in [9, 6]:

@@ -390,10 +390,11 @@ class specfit_test(unittest.TestCase):
         multifit = True
         model = ""
         residual = ""
+        kk = [s + "-2g" for s in solims]
         [
             amp, amperr, center, centererr,
             fwhm, fwhmerr, integral, integralerr
-        ] = solims
+        ] = kk
         for code in [run_fitprofile, run_specfit]:
             res = code(
                 imagename, box, region, chans,
@@ -402,9 +403,11 @@ class specfit_test(unittest.TestCase):
                 amperr, center, centererr, fwhm, fwhmerr,
                 integral, integralerr
             )
-            for im in solims:
-                self.checkImage(im, datapath + im)
-                shutil.rmtree(im)
+            for im in kk:
+                for j in ["_0", "_1"]:
+                    name = im + j
+                    self.checkImage(name, datapath + name)
+                    shutil.rmtree(name)
                 
     def test_4_5(self):
         """writing solution images for multipixel, two gaussian fit with mask - CAS-6134"""
@@ -800,9 +803,11 @@ class specfit_test(unittest.TestCase):
                 "center", "centerErr", "fwhm", "fwhmErr", "amp",
                 "ampErr", "integral", "integralErr"
             ):
-                self.checkImage(
-                    image + "_gm", datapath + image + "_gm"
-                )
+                for j in ["0", "1", "2"]:
+                    self.checkImage(
+                        image + "_gm_" + j,
+                        datapath + image + "_gm_" + j
+                    )
             # appending, second time through size should double
             self.assertTrue(os.path.getsize(logfile) > 3e4*i)
             i = i+1
@@ -832,9 +837,11 @@ class specfit_test(unittest.TestCase):
                 "center", "centerErr", "fwhm", "fwhmErr", "amp",
                 "ampErr", "integral", "integralErr"
             ):
-                self.checkImage(
-                    image + "_ls", datapath + image + "_ls"
-                )
+                for j in ["0", "1"]:
+                    myim = image + "_ls_" + str(j)
+                    self.checkImage(
+                        myim, datapath + myim
+                    )
             # appending, second time through size should double
             self.assertTrue(os.path.getsize(logfile) > 2e4*i)
             i = i+1
