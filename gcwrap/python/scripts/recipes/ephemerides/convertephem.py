@@ -94,7 +94,7 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
     newradvel=[]
 
     for i in range(0, len(mjd)):
-        memjd={'m0': {'value': mjd[i]+100., 'unit': 'd'},
+        memjd={'m0': {'value': mjd[i], 'unit': 'd'},
                'refer': 'UTC',
                'type': 'epoch'}
         met.doframe(memjd)
@@ -106,7 +106,10 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         met.doframe(olddir)
         newdir=met.measure(olddir, 'J2000')
 
-        newra.append(qat.convert(newdir['m0'],'deg')['value'])
+        tmpnewra = qat.convert(newdir['m0'],'deg')['value']
+        if tmpnewra<0:
+            tmpnewra += 360.
+        newra.append(tmpnewra)
         newdec.append(qat.convert(newdir['m1'],'deg')['value'])
 
         oldradvel={'m0': {'value': radvel[i], 'unit': radvelunit},
