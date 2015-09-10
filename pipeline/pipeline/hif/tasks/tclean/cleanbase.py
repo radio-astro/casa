@@ -361,7 +361,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         if ((image_name not in (None, '')) and (not pb_corrected)):
             if (flux_name in (None, '')):
-                LOG.warning('Image %s could not be PB corrected due to missing PB !')
+                LOG.warning('Image %s could not be PB corrected due to missing PB !' % (image_name))
             else:
                 LOG.warning('Image %s could not be PB corrected !')
  
