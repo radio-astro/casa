@@ -1,6 +1,5 @@
 import numpy
 import os
-#from taskinit import *
 from taskinit import gentools, casalog
 import sdutil
 from collections import Counter
@@ -60,7 +59,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                     bloutput *= len(blformat)
             if not isinstance(bloutput, list):
                 raise ValueError, 'bloutput must be string or list of string.'
-            elif has_duplicate_nonnull_element(bloutput):
+            elif has_duplicate_nonnull_element_ex(bloutput, blformat):
                 raise ValueError, 'duplicate elements in bloutput.'
 
             if (len(blformat) != len(bloutput)):
@@ -157,8 +156,21 @@ def has_duplicate_nonnull_element(in_list):
         return True
     elif (len_duplicates == 1):
         return (duplicates[0] != '')
-    else:
+    else: #len_duplicates == 0
         return False
+
+
+def has_duplicate_nonnull_element_ex(in_list, base):
+    # in_list and base must have the same length.
+    #
+    # (1) extract elements from in_list and make a new list
+    #     if the element of base with the same index
+    #     is not ''.
+    # (2) check if the list made in (1) has duplicated
+    #     elements other than ''.
+    return has_duplicate_nonnull_element(
+        [in_list[i] for i in range(len(in_list)) if base[i] != ''])
+
 
 def do_prepare_for_bloutput(blformat, bloutput, infile, new_bloutput, format_value, format_ext):
     fname = ''
