@@ -643,7 +643,7 @@ def importasdm(
             # Call the cluster for each MS
             for myviso in vistoproc:
                 casalog.origin('importasdm')
-                outputmms = myviso.replace('.ms','.mms')
+                outputmms = myviso+'.temp.mms'
                 
                 # Get the proper column
                 datacolumn = 'DATA'
