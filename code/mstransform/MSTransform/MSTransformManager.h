@@ -1163,6 +1163,13 @@ protected:
 													Vector<T> &outputDataStripe,
 													Vector<Bool> &outputFlagsStripe);
 
+	std::pair<Float,Bool> calcOutputWeight( 	Vector<Float> &kernel,
+												Vector<Float> &inputWeights,
+												Vector<Bool> &inputFlags);
+
+	std::pair<Float,Bool> calcOutputWeight( 	Vector<Float> &kernel,
+												Vector<Float> &inputWeights);
+
 	// The following methods are single dish specific so far
 	void smoothFourierFloat(Int , Vector<Float> &inputDataStripe,
 	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,

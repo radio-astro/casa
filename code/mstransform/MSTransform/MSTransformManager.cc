@@ -914,7 +914,7 @@ void MSTransformManager::parsePhaseShiftParams(Record &configuration)
 		configuration.get (exists, dy_p);
 	}
 
-	if (dx_p > 0 or dy_p > 0)
+	if (abs(dx_p) > 0 or abs(dy_p) > 0)
 	{
 		phaseShifting_p = True;
 		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
@@ -7997,6 +7997,84 @@ Convolver<Float> *MSTransformManager::getConvolver(Int const numChan) {
         throw AipsError("Failed to get convolver. Smoothing is not properly configured.");
     }
     return &convolverPool_[numChan];
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kernel,
+																Vector<Float> &inputWeights,
+																Vector<Bool> &inputFlags)
+{
+	Float num, den = 0;
+	Bool sampleFlagged = False;
+	Bool accumulatorFlag = inputFlags(0);
+	for (uInt sample_i = 0; sample_i < kernel.size(); sample_i++)
+	{
+		// Consider sample as flag if it is actually flagged or weight <= 0
+		// Apart from consistency this prevents div. by zero operations
+		if ((inputFlags(sample_i) or inputWeights(sample_i) < 0))
+		{
+			sampleFlagged = True;
+		}
+		else
+		{
+			sampleFlagged = False;
+		}
+
+		// sample_i and accumulator have flags aligned
+		if (accumulatorFlag == sampleFlagged)
+		{
+			num += kernel(sample_i);
+			den += kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
+		}
+		// reset accumulation when accumulator switches from flagged to unflagged
+		else if ((accumulatorFlag == True) and (not sampleFlagged))
+		{
+			accumulatorFlag = False;
+			num = kernel(sample_i);
+			den = kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
+		}
+	}
+
+	// Calculate final result
+	Float outputWeight = 0;
+	if (den > 0)
+	{
+		outputWeight = num * num / den;
+	}
+	// Should never happen unless the kernel has some 0s
+	else
+	{
+		throw AipsError("Error propagating weights");
+	}
+
+	return std::make_pair(outputWeight, accumulatorFlag);
+}
+
+std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kernel,
+																Vector<Float> &inputWeights)
+{
+	Float num, den = 0;
+	for (uInt sample_i = 0; sample_i < kernel.size(); sample_i++)
+	{
+		num += kernel(sample_i);
+		den += kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
+	}
+
+	// Calculate final result
+	Float outputWeight = 0;
+	if (den > 0)
+	{
+		outputWeight = num * num / den;
+	}
+	// Should never happen unless the kernel has some 0s
+	else
+	{
+		throw AipsError("Error propagating weights");
+	}
+
+	return std::make_pair(outputWeight, False);
 }
 
 } //# NAMESPACE CASA - END
