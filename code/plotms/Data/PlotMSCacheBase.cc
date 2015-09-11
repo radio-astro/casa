@@ -89,16 +89,16 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		  maxX_(0),
 		  minY_(0),
 		  maxY_(0),
-          xminG_(0),
-          xmaxG_(0),
-          yminG_(0),
-          ymaxG_(0),
 		  time_(),
 		  timeIntr_(),
 		  field_(),
 		  spw_(),
 		  scan_(),
-		  dataLoaded_(false)
+		  dataLoaded_(false),
+          xminG_(0),
+          yminG_(0),
+          xmaxG_(0),
+          ymaxG_(0)
 {
 
 	// Make the empty indexer0 object so we have and empty PlotData object

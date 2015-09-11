@@ -139,9 +139,9 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	}
 	// Remember # of VBs per Average
 	nVBPerAve_.resize();
-	if (nIterPerAve.nelements()>0)
+	if (nIterPerAve.nelements()>0) {
 		nVBPerAve_ = nIterPerAve;
-	else {
+    } else {
 		nVBPerAve_.resize(nChunk_);
 		nVBPerAve_.set(1);
 	}
@@ -670,16 +670,14 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                     goodChunk_.resize(nChunk_, True);
                 }
 
-                // If a thread is given, check if the user canceled.
-                if(thread != NULL && thread->wasCanceled()) {
-                    dataLoaded_ = false;
-                    return;
-                }
-                // If a thread is given, update its chunk number
+                // If a thread is given, update its chunk number and progress bar
                 if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-                        chunk % THREAD_SEGMENT == 0))
+                        chunk % THREAD_SEGMENT == 0)) {
                     thread->setStatus("Loading chunk " + String::toString(chunk) +
                             " / " + String::toString(nChunk_) + ".");
+                    progress = ((double)chunk+1) / nChunk_;
+                    thread->setProgress((unsigned int)((progress * 100) + 0.5));
+                }
 
                 // Cache the data shapes
                 chshapes_(0,chunk) = vb->nCorrelations();
@@ -688,16 +686,16 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                 chshapes_(3,chunk) = vb->nAntennas();
                 goodChunk_(chunk)  = True;
                 for(unsigned int i = 0; i < loadAxes.size(); i++) {
+                    // If a thread is given, check if the user canceled.
+                    if(thread != NULL && thread->wasCanceled()) {
+                        dataLoaded_ = false;
+                        goodChunk_(chunk) = False; //only partially loaded
+                        return;
+                    }
                     loadAxis(vb, chunk, loadAxes[i], loadData[i]);
                 }
-                chunk++;
 
-                // If a thread is given, update its progress bar
-                if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-                        chunk % THREAD_SEGMENT == 0)) {
-                    progress = ((double)chunk+1) / nChunk_;
-                    thread->setProgress((unsigned int)((progress * 100) + 0.5));
-                }
+                chunk++;
             }
 		}
 	}
@@ -738,23 +736,21 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 	vi::VisBuffer2* vbToUse = NULL;
 
 	for (Int chunk=0; chunk<nChunk_; ++chunk) {
-		// If a thread is given, check if the user canceled.
-		if(thread != NULL && thread->wasCanceled()) {
-			dataLoaded_ = false;
-			return;
-		}
-
-		// If a thread is given, update it.
-		if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-				chunk % THREAD_SEGMENT == 0))
-			thread->setStatus("Loading chunk " + String::toString(chunk) +
-					" / " + String::toString(nChunk_) + ".");
 
 		if (chunk >= nChunk_) {  // nChunk_ was just an estimate
 			increaseChunks(chunk-nChunk_+1);  // updates nChunk_
 			chshapes_.resize(4, nChunk_, True);
 			goodChunk_.resize(nChunk_, True);
 		}
+
+		// If a thread is given, update it.
+		if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
+				chunk % THREAD_SEGMENT == 0)) {
+			thread->setStatus("Loading chunk " + String::toString(chunk) +
+					" / " + String::toString(nChunk_) + ".");
+			progress = ((double)chunk+1) / nChunk_;
+			thread->setProgress((unsigned int)((progress * 100) + 0.5));
+        }
 
 		// Save some data from vb 
 		// (averaged vb not attached to VI so cannot get this later)
@@ -781,14 +777,10 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
 		// Accumulate into the averager
 		pmsvba.accumulate(*vb);
-
-		
 		// Finalize the averaging
 		pmsvba.finalizeAverage();
 		// The averaged VisBuffer
 		vi::VisBuffer2& avb(pmsvba.aveVisBuff());
-
-		
 
 		// Only if the average yielded some data
 		if (avb.nRows() > 0) {
@@ -800,6 +792,12 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 			goodChunk_(chunk)  = True;
 
 			for(unsigned int i = 0; i < loadAxes.size(); i++) {
+                // If a thread is given, check if the user canceled.
+                if(thread != NULL && thread->wasCanceled()) {
+                    dataLoaded_ = false;
+                    goodChunk_(chunk)  = False;
+                    return;
+                }
 				if (useAveragedVisBuffer(loadAxes[i])) 
 					vbToUse = &avb;
                 else
@@ -826,12 +824,6 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
 
 		if (verby) ss << "\n";
 		if (verby) logLoad(ss.str());
-		// If a thread is given, update it.
-		if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
-				chunk % THREAD_SEGMENT == 0)) {
-			progress = ((double)chunk+1) / nChunk_;
-			thread->setProgress((unsigned int)((progress * 100) + 0.5));
-		}
 	}
 
 	//cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
