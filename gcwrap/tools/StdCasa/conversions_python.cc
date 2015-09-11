@@ -631,7 +631,7 @@ PyObject *map_array_numpy( const std::vector<std::string> &vec, const std::vecto
 	strcpy(data,(*iter).c_str( ));
 	data += size+1;
     }
-    delete dim;
+    delete [] dim;
     return ary;
 }
 
