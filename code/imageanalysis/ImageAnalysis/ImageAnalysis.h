@@ -74,13 +74,6 @@ public:
     	const std::pair<Int, Int> *const &seeds
     );
 
-    // The current object is replaced by the result of the calculation
-    void imagecalc(
-    	const String& outfile,
-    	const String& pixels,
-    	const Bool overwrite = False
-    );
-
     Bool imagefromascii(const String& outfile, const String& infile, 
                         const Vector<Int>& shape, const String& sep, 
                         const Record& csys, const Bool linear = False, 
@@ -409,13 +402,6 @@ public:
     	const ImageInterface<T>& image,
     	const String& doppler, const Bool list,
     	const Bool pixelorder, const Bool verbose
-    );
-
-    template<class T> SPIIT _imagecalc(
-    	const LatticeExprNode& node, const IPosition& shape,
-    	const CoordinateSystem& csys, const LELImageCoord* const imCoord,
-    	const String& outfile,
-    	Bool overwrite, const String& expr
     );
 
     template<class T> void _calc(

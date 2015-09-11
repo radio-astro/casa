@@ -304,73 +304,6 @@ void ImageAnalysis::addnoise(
 	deleteHist();
 }
 
-void ImageAnalysis::imagecalc(
-	const String& outfile, const String& expr,
-	const Bool overwrite
-) {
-	*_log << LogOrigin(className(), __func__);
-
-	Record regions;
-	// Check output file name
-	if (!outfile.empty() && !overwrite) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outfile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	// Get LatticeExprNode (tree) from parser.  Substitute possible
-	// object-id's by a sequence number, while creating a
-	// LatticeExprNode for it.  Convert the GlishRecord containing
-	// regions to a PtrBlock<const ImageRegion*>.
-	if (expr.empty()) {
-		*_log << "You must specify an expression" << LogIO::EXCEPTION;
-	}
-
-	Block<LatticeExprNode> temps;
-	String exprName;
-	PtrBlock<const ImageRegion*> tempRegs;
-	_makeRegionBlock(tempRegs, regions);
-	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
-
-	// Get the shape of the expression
-	const IPosition shape = node.shape();
-
-	// Get the CoordinateSystem of the expression
-	const LELAttribute attr = node.getAttribute();
-	const LELLattCoordBase* lattCoord = &(attr.coordinates().coordinates());
-	ThrowIf(
-		!lattCoord->hasCoordinates()
-		|| lattCoord->classname() != "LELImageCoord",
-		"Images in expression have no coordinates"
-	);
-	const LELImageCoord* imCoord =
-			dynamic_cast<const LELImageCoord*> (lattCoord);
-	AlwaysAssert (imCoord != 0, AipsError);
-	CoordinateSystem csys = imCoord->coordinates();
-	DataType type = node.dataType();
-	if (_imageFloat || _imageComplex) {
-		*_log << LogIO::WARN
-			<< "Replacing the currently attached image"
-			<< LogIO::POST;
-	}
-	if (type == TpComplex || type == TpDComplex) {
-		_imageComplex = _imagecalc<Complex>(
-			node, shape, csys, imCoord,
-			outfile, overwrite, expr
-		);
-	}
-	else {
-		_imageFloat = _imagecalc<Float>(
-			node, shape, csys, imCoord,
-			outfile, overwrite, expr
-		);
-	}
-	// Delete the ImageRegions (by using an empty Record).
-	_makeRegionBlock(tempRegs, Record());
-}
-
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		const Vector<Int>& shape, const String& sep, const Record& csys,
 		const Bool linear, const Bool overwrite) {
@@ -668,10 +601,9 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	ThrowIf(expr.empty(), "You must specify an expression");
 	Record regions;
 	Block<LatticeExprNode> temps;
-	String newexpr = expr;
 	PtrBlock<const ImageRegion*> tempRegs;
 	_makeRegionBlock(tempRegs, regions);
-	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
+	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
 	DataType type = node.dataType();
 	Bool isReal = casa::isReal(type);
 	ostringstream os;

@@ -147,6 +147,8 @@ install (FILES
     ImageAnalysis/ImageDecimatorData.h
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
+	ImageAnalysis/ImageExprCalculator.h
+    ImageAnalysis/ImageExprCalculator.tcc
 	ImageAnalysis/ImageFactory.h
 	ImageAnalysis/ImageFactory.tcc
 	ImageAnalysis/ImageFFT.h
