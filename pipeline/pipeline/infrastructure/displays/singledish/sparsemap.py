@@ -48,7 +48,8 @@ class SparseMapAxesManager(object):
             pl.ylabel('Intensity(%s)'%(self.brightnessunit), size=(self.ticksize+1))
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
-            pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
+            #pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
+            pl.title('Spatially Averaged Spectrum', size=(self.ticksize + 1))
 
             self._axes_integsp = axes
         return self._axes_integsp
@@ -100,7 +101,7 @@ class SDSparseMapPlotter(object):
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel)
-        self.lines_integrated = None
+        self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None
         
@@ -139,18 +140,18 @@ class SDSparseMapPlotter(object):
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
         self.axes.setup_labels(LabelRA, LabelDEC)
         
-    def setup_lines(self, lines_integrated, lines_map=None):
-        self.lines_integrated = lines_integrated
+    def setup_lines(self, lines_averaged, lines_map=None):
+        self.lines_averaged = lines_averaged
         self.lines_map = lines_map
         
     def setup_reference_level(self, level=0.0):
         self.reference_level = level
         
-    def plot(self, map_data, integrated_data, frequency, fit_result=None, figfile=None):
+    def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
-        spmin = integrated_data.min()
-        spmax = integrated_data.max()
+        spmin = averaged_data.min()
+        spmax = averaged_data.max()
         dsp = spmax - spmin
         spmin -= dsp * 0.1
         spmax += dsp * 0.1
@@ -180,15 +181,15 @@ class SDSparseMapPlotter(object):
         LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
 
         pl.gcf().sca(self.axes.axes_integsp)
-        plot_helper.plot(frequency, integrated_data, color='b', linestyle='-', linewidth=0.4)
+        plot_helper.plot(frequency, averaged_data, color='b', linestyle='-', linewidth=0.4)
         (_xmin,_xmax,_ymin,_ymax) = pl.axis()
         #pl.axis((_xmin,_xmax,spmin,spmax))
         pl.axis((xmin, xmax, spmin, spmax))
-        if self.lines_integrated is not None:
-            for chmin, chmax in self.lines_integrated:
+        if self.lines_averaged is not None:
+            for chmin, chmax in self.lines_averaged:
                 fmin = ch_to_freq(chmin, frequency)
                 fmax = ch_to_freq(chmax, frequency)
-                LOG.debug('plotting line range for integrated spectrum: [%s, %s]'%(chmin,chmax))
+                LOG.debug('plotting line range for mean spectrum: [%s, %s]'%(chmin,chmax))
                 plot_helper.axvspan(fmin, fmax, color='cyan')
                     
         is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
@@ -204,11 +205,11 @@ class SDSparseMapPlotter(object):
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s: [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
-                    elif self.lines_integrated is not None:
-                        for chmin, chmax in self.lines_integrated:
+                    elif self.lines_averaged is not None:
+                        for chmin, chmax in self.lines_averaged:
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
-                            LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
+                            LOG.debug('plotting line range for %s, %s (reuse lines_averaged): [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
                     if is_valid_fit_result:
                         plot_helper.plot(frequency, fit_result[x][y], color='r', linewidth=0.4)
