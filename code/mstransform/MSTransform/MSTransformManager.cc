@@ -914,7 +914,7 @@ void MSTransformManager::parsePhaseShiftParams(Record &configuration)
 		configuration.get (exists, dy_p);
 	}
 
-	if (dx_p > 0 or dy_p > 0)
+	if (abs(dx_p) > 0 or abs(dy_p) > 0)
 	{
 		phaseShifting_p = True;
 		logger_p 	<< LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
