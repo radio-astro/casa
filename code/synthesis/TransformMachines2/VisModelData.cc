@@ -775,6 +775,30 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 }
 
 
+  void VisModelData::modifyDiskImagePath(Record& rec, const VisBuffer2& vb){
+  Record& ftmac= rec.rwSubRecord("container");
+  if(ftmac.isDefined("diskimage")){
+    String theDiskImage=ftmac.asString("diskimage");
+    if(File(theDiskImage).exists())
+      return;
+    String subPathname[30];
+    String sep = "/";
+    uInt nw = split(theDiskImage, subPathname, 20, sep);
+    String theposs=(subPathname[nw-1]);
+    ///String msname=vb.msName(False);
+    ///As the above does not work ..returns some bogus reference table
+    String msname=(vb.getVi()->ms()).antenna().tableName();
+    msname.erase(msname.length()-8);
+    for (uInt i=nw-2 ; i>0; --i){ 
+      if(File(msname+"/"+theposs).exists()){
+		theDiskImage=msname+"/"+theposs;
+		ftmac.define("diskmage", theDiskImage);
+		return;
+      }
+      theposs=subPathname[i]+"/"+theposs;
+    }
+  }
+}
 
 
 
@@ -788,6 +812,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       if(numft >0){
 	for(Int ftk=0; ftk < numft; ++ftk){
 	  Record ftrec(rec.asRecord("ft_"+String::toString(ftk)));
+	  modifyDiskImagePath(ftrec, vb);
 	  Vector<Int>fields;
 	  Vector<Int> spws;
 	  ftrec.get("fields", fields);

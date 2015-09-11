@@ -227,6 +227,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   static void deleteDiskImage(MeasurementSet& theMS, const String& theKey);
   static Int  firstSourceRowRecord(const Int field, const MeasurementSet& theMS, 
 				   TableRecord& rec);
+  static void modifyDiskImagePath(Record& rec, const VisBuffer& vb);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;
