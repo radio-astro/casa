@@ -1108,6 +1108,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       String theDiskImage;
       inRecord.get("diskimage", theDiskImage);
       try{
+	File eldir(theDiskImage);
+	if(! eldir.exists()){
+	  String subPathname[30];
+	  String sep = "/";
+	  uInt nw = split(theDiskImage, subPathname, 20, sep);
+	  cerr << "nw " << nw << endl;
+	  String theposs=(subPathname[nw-1]);
+	  Bool isExistant=File(theposs).exists();
+	  if(isExistant) 
+	    theDiskImage=theposs;
+	    for (uInt i=nw-2 ; i>0; --i){
+	      theposs=subPathname[i]+"/"+theposs;
+	      cerr << "the poss " << theposs << endl;
+	      File newEldir(theposs);
+	      if(newEldir.exists()){
+		isExistant=True;
+		theDiskImage=theposs;
+	      }
+	    }
+	    if(!isExistant)
+	      throw(AipsError("Could not locate mage"));
+	}
 	cmplxImage_p=new PagedImage<Complex> (theDiskImage);
 	image=&(*cmplxImage_p);
       }
