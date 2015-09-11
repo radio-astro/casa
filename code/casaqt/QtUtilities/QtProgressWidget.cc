@@ -187,7 +187,8 @@ void QtProgressWidget::finalize() {
 }
 
 void QtProgressWidget::closeEvent(QCloseEvent* event) {
-    background();
+    cancel();
+    //background();
     event->ignore();
 }
 
@@ -205,6 +206,16 @@ void QtProgressWidget::pauseResume(bool pause) {
     else      emit resumeRequested();
 }
 
-void QtProgressWidget::cancel() { emit cancelRequested(); }
+void QtProgressWidget::cancel() { 
+    if (itsProgress_->cancelButton->isEnabled()) {
+        emit cancelRequested(); 
+    } else {
+        QLabel* statusLabel = (itsProgress_ != NULL) ?
+            itsProgress_->statusLabel : itsCompactProgress_->statusLabel;
+        QString status = statusLabel->text();
+        if (!status.endsWith(QString(" Cannot cancel now. Please wait.")))
+            statusLabel->setText(status.append(QString(" Cannot cancel now. Please wait.")));
+    }
+}
 
 }

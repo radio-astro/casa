@@ -100,7 +100,8 @@ private:
 		    PlotMSCalibration& calibration,
 		    String dataColumn,
             Bool interactive=False,
-		    Bool estimateMemory=False);
+		    Bool estimateMemory=False,
+            ThreadCommunication* thread=NULL);
   vi::VisibilityIterator2* setUpVisIter(MeasurementSet& selectedMS,
 	Vector<Vector<Slice> > chansel, Vector<Vector<Slice> > corrsel);
   void setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannels fs,
@@ -112,7 +113,7 @@ private:
   void loadError(String mesg);
 
   // Count the chunks with averaging
-  void countChunks(vi::VisibilityIterator2& vi, Vector<Int>& nIterPerAve, 
+  bool countChunks(vi::VisibilityIterator2& vi, Vector<Int>& nIterPerAve, 
                    /*PlotMSCacheThread**/ThreadCommunication* thread);
 
   // Trap attempt to use to much memory (too many points)

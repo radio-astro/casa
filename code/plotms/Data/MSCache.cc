@@ -112,25 +112,26 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		// make a "counting VI" -- plain VI2 is faster than TransformingTvi2.
 		// Use plotms code to determine nChunks and memory requirements
 		vi::VisibilityIterator2* cvi = setUpVisIter(*selMS, chansel, corrsel);
-		countChunks(*cvi, nIterPerAve, thread);
+		bool chunksCounted = countChunks(*cvi, nIterPerAve, thread);
 		delete cvi;
 		delete selMS;  // close open tables
-		try {
-			trapExcessVolume(pendingLoadAxes_);
-			// Now set up TransformingVi2 for averaging/loading data
-			setUpVisIter(selection_, calibration_, dataColumn, False, False);
-			loadChunks(*vi_p, averaging_, nIterPerAve,
-			   loadAxes, loadData, thread);
-		} catch(AipsError& log) {
-			loadError(log.getMesg());	
-		}	
-	}
-	else { 
+        if (chunksCounted) {
+            try {
+                trapExcessVolume(pendingLoadAxes_);
+                // Now set up TransformingVi2 for averaging/loading data
+                setUpVisIter(selection_, calibration_, dataColumn, False, False);
+                loadChunks(*vi_p, averaging_, nIterPerAve,
+                   loadAxes, loadData, thread);
+            } catch(AipsError& log) {
+                loadError(log.getMesg());	
+            }
+        }    
+	} else { 
 		delete selMS;  // close open tables
 		try {
 			// setUpVisIter also gets the VB shapes and 
 			// calls trapExcessVolume:
-			setUpVisIter(selection_, calibration_, dataColumn, False, True);
+			setUpVisIter(selection_, calibration_, dataColumn, False, True, thread);
 			loadChunks(*vi_p, loadAxes, loadData, thread);
 		} catch(AipsError& log) {
 			loadError(log.getMesg());
@@ -327,8 +328,10 @@ void MSCache::getNamesFromMS(MeasurementSet& ms)
 
 void MSCache::setUpVisIter(PlotMSSelection& selection,
 		PlotMSCalibration& calibration,
-		String dataColumn, Bool interactive,
-        Bool estimateMemory) {
+		String dataColumn, 
+        Bool interactive,
+        Bool estimateMemory,
+        ThreadCommunication* thread) {
 	/* Create plain or averaging (time or channel) VI with 
            configuration Record and MSTransformIterator factory */
 
@@ -384,6 +387,11 @@ void MSCache::setUpVisIter(PlotMSSelection& selection,
 		factory = new MSTransformIteratorFactory(configuration);
 
 		if (estimateMemory) {
+            if (thread != NULL) {
+                thread->setStatus("Establishing cache size.  Please wait...");
+                thread->setAllowedOperations(false,false,false);
+                thread->setProgress(2);
+            }
 			visBufferShapes_ = factory->getVisBufferStructure();
 			Int chunks = visBufferShapes_.size();
 			if(chunks != nChunk_) increaseChunks(chunks);
@@ -457,14 +465,14 @@ void MSCache::setUpFrequencySelectionChannels(vi::FrequencySelectionUsingChannel
 	}
 }
 
-void MSCache::countChunks(vi::VisibilityIterator2& vi,
+bool MSCache::countChunks(vi::VisibilityIterator2& vi,
 		Vector<Int>& nIterPerAve, 
 		ThreadCommunication* thread) {
 	/* Let plotms count the chunks for memory estimation 
 	   when baseline/antenna/spw averaging */
 	if (thread != NULL) {
 		thread->setStatus("Establishing cache size.  Please wait...");
-		thread->setAllowedOperations(false,false,false);
+		thread->setAllowedOperations(false,false,true);
 	}
 
 	Bool verby(false);
@@ -499,16 +507,19 @@ void MSCache::countChunks(vi::VisibilityIterator2& vi,
 		interval = averaging_.timeValue();
 
 	for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(), chunk++) {
-		if (thread!=NULL) {
-			if (thread->wasCanceled()) {
-				dataLoaded_=false;
-				return;
-			}
-			else 
-				thread->setProgress(2);
-		}
-
 		for (vi.origin(); vi.more(); vi.next()) {
+            // If a thread is given, check if the user canceled.
+            if (thread != NULL) {
+                if (thread->wasCanceled()) {
+                    dataLoaded_ = false;
+                    return false;
+                } else {
+                    // else users think it's hung...
+                    if ((chunk % 100) == 0)
+                        thread->setProgress(chunk/100);
+                }
+            }
+
 			time1 = vb->time()(0);  // first time in this vb
 			thisscan = vb->scan()(0);
 			thisfld = vb->fieldId()(0);
@@ -589,6 +600,7 @@ void MSCache::countChunks(vi::VisibilityIterator2& vi,
 		logInfo("count_chunks", ss.str());
 	}
 	// cout << "Found " << nChunk_ << " chunks." << endl;
+    return true;
 }
 
 void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
