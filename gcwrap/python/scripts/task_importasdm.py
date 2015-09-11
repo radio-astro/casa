@@ -485,13 +485,68 @@ def importasdm(
                     raise Exception, \
                           'ASDM binary flags conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
 
-        for myviso in vistoproc:
-            if os.path.exists(myviso) and flagbackup==True:
-                aflocal.open(myviso)
-                aflocal.saveflagversion('Original',
-                        comment='Original flags at import into CASA',
-                        merge='save')
-                aflocal.done()
+        ##############################################################################################3
+        # CAS-7369 - Create an output Multi-MS (MMS)
+        if createmms:
+            # Get the default parameters of partition
+            from tasks import partition
+            fpars = partition.parameters
+            for mypar in fpars.keys():
+                fpars[mypar] = partition.itsdefault(mypar)
+                
+            # Call the cluster for each MS
+            for myviso in vistoproc:
+                casalog.origin('importasdm')
+                
+                # Move original MS to tempdir
+                tempname = myviso+'.temp.ms'
+                outputmms = myviso
+                shutil.move(myviso, tempname)
+                
+                # Get the proper column
+                datacolumn = 'DATA'
+                dcols = ['DATA', 'FLOAT_DATA']
+                for dc in dcols:
+                    if len(th.getColDesc(tempname, dc)) > 0:
+                        datacolumn = dc
+                        break
+                    
+                fpars['datacolumn'] = datacolumn
+                    
+                casalog.post('Will create a Multi-MS for: '+myviso)
+                
+                fpars['vis'] =  tempname
+                fpars['flagbackup'] =  False 
+                fpars['outputvis'] = outputmms
+                fpars['separationaxis'] = separationaxis
+                fpars['numsubms'] = numsubms
+                pdh = ParallelDataHelper('partition', fpars) 
+            
+                # Get a cluster
+                pdh.setupCluster(thistask='partition')
+                try:
+                    pdh.go()
+                    
+                    # Remove original MS
+                    shutil.rmtree(tempname)
+
+                except Exception, instance:
+                    # Restore MS in case of error in MMS creation
+                    shutil.move(tempname, myviso)
+                    casalog.post('%s'%instance,'ERROR')
+                    return False
+                
+            casalog.origin('importasdm')
+
+        # Create a .flagversions for the MS or MMS
+        if flagbackup:
+            for myviso in vistoproc:
+                if os.path.exists(myviso):
+                    aflocal.open(myviso)
+                    aflocal.saveflagversion('Original',
+                            comment='Original flags at import into CASA',
+                            merge='save')
+                    aflocal.done()
                 
         # Importasdm Flag Parsing
         if os.access(asdm + '/Flag.xml', os.F_OK):
@@ -632,55 +687,56 @@ def importasdm(
                 
         #end if
 
-        # CAS-7369 - Create an output Multi-MS (MMS)
-        if createmms:
-            # Get the default parameters of partition
-            from tasks import partition
-            fpars = partition.parameters
-            for mypar in fpars.keys():
-                fpars[mypar] = partition.itsdefault(mypar)
-                
-            # Call the cluster for each MS
-            for myviso in vistoproc:
-                casalog.origin('importasdm')
-                outputmms = myviso+'.temp.mms'
-                
-                # Get the proper column
-                datacolumn = 'DATA'
-                dcols = ['DATA', 'FLOAT_DATA']
-                for dc in dcols:
-                    if len(th.getColDesc(myviso, dc)) > 0:
-                        datacolumn = dc
-                        break
-                    
-                fpars['datacolumn'] = datacolumn
-                    
-                casalog.post('Will create a Multi-MS for: '+myviso)
-                
-                fpars['vis'] =  myviso
-                fpars['flagbackup'] =  False 
-                fpars['outputvis'] = outputmms
-                fpars['separationaxis'] = separationaxis
-                fpars['numsubms'] = numsubms
-                pdh = ParallelDataHelper('partition', fpars) 
-            
-                # Get a cluster
-                pdh.setupCluster(thistask='partition')
-                try:
-                    pdh.go()
-                    
-                    # Rename MMS to MS 
-                    shutil.rmtree(myviso)
-                    shutil.move(outputmms, myviso)
-
-                except Exception, instance:
-                    casalog.post('%s'%instance,'ERROR')
-                    return False
-                
-            casalog.origin('importasdm')
-            return
+#        # CAS-7369 - Create an output Multi-MS (MMS)
+#        if createmms:
+#            # Get the default parameters of partition
+#            from tasks import partition
+#            fpars = partition.parameters
+#            for mypar in fpars.keys():
+#                fpars[mypar] = partition.itsdefault(mypar)
+#                
+#            # Call the cluster for each MS
+#            for myviso in vistoproc:
+#                casalog.origin('importasdm')
+#                outputmms = myviso+'.temp.mms'
+#                
+#                # Get the proper column
+#                datacolumn = 'DATA'
+#                dcols = ['DATA', 'FLOAT_DATA']
+#                for dc in dcols:
+#                    if len(th.getColDesc(myviso, dc)) > 0:
+#                        datacolumn = dc
+#                        break
+#                    
+#                fpars['datacolumn'] = datacolumn
+#                    
+#                casalog.post('Will create a Multi-MS for: '+myviso)
+#                
+#                fpars['vis'] =  myviso
+#                fpars['flagbackup'] =  False 
+#                fpars['outputvis'] = outputmms
+#                fpars['separationaxis'] = separationaxis
+#                fpars['numsubms'] = numsubms
+#                pdh = ParallelDataHelper('partition', fpars) 
+#            
+#                # Get a cluster
+#                pdh.setupCluster(thistask='partition')
+#                try:
+#                    pdh.go()
+#                    
+#                    # Rename MMS to MS 
+#                    shutil.rmtree(myviso)
+#                    shutil.move(outputmms, myviso)
+#
+#                except Exception, instance:
+#                    casalog.post('%s'%instance,'ERROR')
+#                    return False
+#                
+#            casalog.origin('importasdm')
+#            return
         
-        
+        return
+    
     except Exception, instance:
 
         print '*** Error ***', instance
