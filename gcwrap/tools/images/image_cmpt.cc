@@ -61,10 +61,10 @@
 #include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/SpectralComponents/SpectralListFactory.h>
 
-#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ComplexImageRegridder.h>
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageBoxcarSmoother.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -96,6 +96,7 @@
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/assign/std/vector.hpp>
+#include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
 
 using namespace boost::assign;
 using namespace std;
@@ -368,13 +369,32 @@ image* image::imagecalc(
 	const bool overwrite
 ) {
 	try {
-		SHARED_PTR<ImageAnalysis> ia(new ImageAnalysis());
-        ia->imagecalc(outfile, pixels, overwrite);
-        return  new image(ia);
+		ThrowIf(
+			pixels.empty(),
+			"You must provide an expression using the pixels parameter"
+		);
+		DataType type = ImageExprParse::command(pixels).dataType();
+		if (type == TpComplex || type == TpDComplex) {
+			return new image(_imagecalc<Complex>(outfile, pixels, overwrite));
+		}
+		else if (type == TpFloat || type == TpDouble || type == TpInt) {
+			return new image(_imagecalc<Float>(outfile, pixels, overwrite));
+		}
+		ThrowCc("Unsupported data type for resulting image");
 	}
 	catch (const AipsError& x) {
 		RETHROW(x);
 	}
+	return nullptr;
+}
+
+template<class T> SPIIT image::_imagecalc(
+	const string& outfile, const string& pixels,
+	const bool overwrite
+) {
+	ImageExprCalculator<T> calculator(pixels, outfile, overwrite);
+	calculator.setCopyMetaDataFromImage("");
+	return calculator.compute();
 }
 
 image* image::imageconcat(

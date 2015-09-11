@@ -80,6 +80,11 @@ template <class T> casa::Record _getprofile(
 	const casa::String& frame
 );
 
+template<class T> SPIIT _imagecalc(
+	const string& outfile, const string& pixels,
+	const bool overwrite
+);
+
 template<class T> void _putchunk(
 	SPIIT image, const casac::variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
