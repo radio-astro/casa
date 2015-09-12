@@ -207,7 +207,8 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 ### we have old libraries which are linked against the system fortran... which
 ### uses libgfortran.so.1 while the RedHat Dev Toolset compilers include
 ### libgfortran.so.3... even if we use the old gfortran (/usr/bin/gfortran)
-### and -lgfortran we ALWAYS get libgfortran.so.3...
+### and -lgfortran we ALWAYS get libgfortran.so.3 because it is being linked
+### into libraries and executables via the newer developer toolset gcc/g++...
 ###
 execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
                  COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; last; }} last if $found; } last if $found;}"
