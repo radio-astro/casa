@@ -6,6 +6,8 @@ import shutil
 import types
 
 import casadef
+#from recipes import makepb
+from . import makepb
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -294,12 +296,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         residual_name = '%s.%s.iter%s.residual' % (
             inputs.imagename, inputs.stokes, iter)
         psf_name = '%s.%s.iter%s.psf' % (
-          inputs.imagename, inputs.stokes, iter)
-        if inputs.gridder == 'mosaic':
-            flux_name = '%s.%s.iter%s.pb' % (
-                inputs.imagename, inputs.stokes, iter)
-        else:
-            flux_name = ''
+            inputs.imagename, inputs.stokes, iter)
+        flux_name = '%s.%s.iter%s.pb' % (
+            inputs.imagename, inputs.stokes, iter)
 
         # delete any old files with this naming root
         try:
@@ -334,6 +333,19 @@ class CleanBase(basetask.StandardTaskTemplate):
             parallel=inputs.parallel)
         self._executor.execute(job)
 
+        # Create PB for single fields since it is not auto-generated for
+        # gridder='standard'.
+        if (inputs.gridder == 'standard'):
+            # TODO: Change to use list of MSs when makePB supports this.
+            makepb.makePB(vis=inputs.vis[0],
+                          field=inputs.field,
+                          intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                          spw=spw_param,
+                          scan=scanidlist,
+                          imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
+                          outimage='%s.%s.iter%s.pb' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                          pblimit = 0.2)
+
         # Correct images for primary beam
         pb_corrected = False
         if ((image_name not in (None, '')) and (flux_name not in (None, '')) and (inputs.mask not in (None, ''))):
@@ -343,20 +355,16 @@ class CleanBase(basetask.StandardTaskTemplate):
                 pbcor_image_name = '%s.%s.iter%s.pbcor.image' % (inputs.imagename, inputs.stokes, iter)
                 if (result.multiterm):
                     for nterm in xrange(result.multiterm):
-                        # Mask name needs to be specified without path
                         job = casa_tasks.impbcor(
-                                  imagename=image_name,
+                                  imagename='%s.tt%d' % (image_name, nterm),
                                   pbimage=flux_name,
-                                  outfile='%s.tt%d' % (pbcor_image_name, nterm),
-                                  mask=os.path.basename(inputs.mask))
+                                  outfile='%s.tt%d' % (pbcor_image_name, nterm))
                         self._executor.execute(job)
                 else:
-                    # Mask name needs to be specified without path
                     job = casa_tasks.impbcor(
                               imagename=image_name,
                               pbimage=flux_name,
-                              outfile=pbcor_image_name,
-                              mask=os.path.basename(inputs.mask))
+                              outfile=pbcor_image_name)
                     self._executor.execute(job)
 
         if ((image_name not in (None, '')) and (not pb_corrected)):

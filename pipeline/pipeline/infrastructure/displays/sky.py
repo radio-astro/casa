@@ -26,6 +26,7 @@
 import os
 import copy
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import HPacker, TextArea, AnnotationBbox
 import string
@@ -117,8 +118,11 @@ class SkyDisplay(object):
 
             # otherwise do the plot
             data = collapsed.getchunk() 
+            mask = np.invert(collapsed.getchunk(getmask=True))
             shape = np.shape(data)
             data = data.reshape(shape[0], shape[1])
+            mask = mask.reshape(shape[0], shape[1])
+            mdata = np.ma.array(data, mask=mask)
 
             collapsed.done()
 
@@ -143,8 +147,9 @@ class SkyDisplay(object):
             f1 = plt.figure(1)
 
             # plot data
-            plt.jet()
-            plt.imshow(np.transpose(data), interpolation='nearest',
+            cmap = copy.deepcopy(matplotlib.cm.jet)
+            cmap.set_bad('k', 1.0)
+            plt.imshow(np.transpose(mdata), cmap=cmap, interpolation='nearest',
               origin='lower', aspect='equal', extent=[x[0], x[-1], y[0],
               y[-1]], vmin=vmin, vmax=vmax)
 

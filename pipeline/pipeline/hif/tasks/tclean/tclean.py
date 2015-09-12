@@ -336,6 +336,7 @@ class Tclean(cleanbase.CleanBase):
         for ms in context.observing_run.measurement_sets:
             for intSpw in [int(s) for s in spw.split(',')]:
                 with casatools.ImagerReader(ms.name) as imTool:
+                    # TODO: Add scan selection
                     imTool.selectvis(spw=intSpw, field=field)
                     imTool.defineimage(mode=specmode, spw=intSpw,
                                        cellx=inputs.cell[0], celly=inputs.cell[0],
