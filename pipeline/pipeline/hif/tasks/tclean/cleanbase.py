@@ -337,11 +337,16 @@ class CleanBase(basetask.StandardTaskTemplate):
         # gridder='standard'.
         if (inputs.gridder == 'standard'):
             # TODO: Change to use list of MSs when makePB supports this.
+            if (inputs.specmode == 'cube'):
+                mode = 'frequency'
+            else:
+                mode = 'mfs'
             makepb.makePB(vis=inputs.vis[0],
                           field=inputs.field,
                           intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
                           spw=spw_param,
                           scan=scanidlist,
+                          mode=mode,
                           imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
                           outimage='%s.%s.iter%s.pb' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
                           pblimit = 0.2)

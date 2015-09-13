@@ -11,7 +11,7 @@ import shutil;
 from  casac import *;
 from tasks import imregrid
 
-def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation='',intent='',scan='', imtemplate='',outimage='',pblimit=0.2):
+def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation='',intent='',scan='', mode='mfs', imtemplate='',outimage='',pblimit=0.2):
     
     """ Make a PB image using the imager tool, onto a specified image coordinate system 
 
@@ -58,7 +58,7 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
 
     im.open(vis)
     im.selectvis(field=field,spw=spw,time=timerange,intent=intent,scan=scan,uvrange=uvrange,baseline=antenna,observation=observation)
-    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step)
+    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step,mode=mode)
     im.setvp(dovp=True,telescope=tel)
     im.makeimage(type='pb',image=outimage+'.tmp')
     im.close()
