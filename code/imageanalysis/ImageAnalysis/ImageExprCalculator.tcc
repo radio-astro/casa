@@ -1,5 +1,15 @@
 #include "ImageExprCalculator.h"
 
+
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/images/Images/ImageInterface.h>
+
+#include <imageanalysis/ImageTypedefs.h>
+
+#include <memory>
+
+using namespace std;
+
 namespace casa {
 
 template<class T> ImageExprCalculator<T>::ImageExprCalculator(
@@ -16,8 +26,6 @@ template<class T> ImageExprCalculator<T>::ImageExprCalculator(
 			! NewFile().valueOK(outname, errmsg), errmsg
 		);
 	}
-
-    //this->_construct();
 }
 
 template<class T> SPIIT ImageExprCalculator<T>::compute() const {
@@ -101,8 +109,19 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 	}
 
 	// Copy miscellaneous stuff over
-	image->setMiscInfo(imCoord->miscInfo());
-	image->setImageInfo(imCoord->imageInfo());
+	SPIIT copyFromImage;
+	if (! _copyMetaDataFromImage.empty()) {
+		copyFromImage = ImageUtilities::openImage<T>(_copyMetaDataFromImage);
+	}
+	if (copyFromImage) {
+		image->setMiscInfo(copyFromImage->miscInfo());
+		image->setImageInfo(copyFromImage->imageInfo());
+		image->setCoordinateInfo(copyFromImage->coordinates());
+	}
+	else {
+		image->setMiscInfo(imCoord->miscInfo());
+		image->setImageInfo(imCoord->imageInfo());
+	}
 	if (_expr.contains("spectralindex")) {
 		image->setUnits("");
 	}
@@ -117,7 +136,12 @@ template<class T> SPIIT ImageExprCalculator<T>::_imagecalc(
 		image->setCoordinateInfo(cSys);
 	}
 	else {
-		image->setUnits(imCoord->unit());
+		if (copyFromImage) {
+			image->setUnits(copyFromImage->units());
+		}
+		else {
+			image->setUnits(imCoord->unit());
+		}
 	}
 	return image;
 }

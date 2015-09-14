@@ -5,6 +5,8 @@
 
 namespace casa {
 
+class String;
+
 template <class T> class ImageExprCalculator {
 	// <summary>
 	// Top level interface for computing the results of an image expression
@@ -33,6 +35,8 @@ public:
 
 	~ImageExprCalculator() {}
 
+	// the image from which to copy metadata, including the coordinate system,
+	// imageInfo() and miscInfo()
 	void setCopyMetaDataFromImage(const String& name) { _copyMetaDataFromImage = name; }
 
 	String getClass() const { const static String s = "ImageExprCalculator"; return s; }
