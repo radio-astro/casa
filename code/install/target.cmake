@@ -319,8 +319,6 @@ macro( casa_add_check_module)
     set (modules ${casa_add_check_MODULES})
     set (test ${casa_add_check_TEST})
 
-message ("DEBUG casa_add_check_module: modules=${modules}; test=${test}")
-
     set (targetSuffix "")
     set (pathSuffix "")
     list (GET modules 0 moduleName)
@@ -439,7 +437,6 @@ macro( casa_add_unit_test)
     add_dependencies( unit_test ${testName} )
 
     if (NOT casa_unit_test_COMMIT_ONLY)
-        MESSAGE ("DEBUG casa_add_check_module (${casa_unit_test_MODULES} ${testName})")
         casa_add_check_module (MODULES ${casa_unit_test_MODULES} TEST ${testName})
     endif ()
 
@@ -515,11 +512,16 @@ macro (casa_add_google_test)
     cmake_parse_arguments (google_test "${options}" "${oneValueArgs}"
                            "${multiValueArgs}"  ${ARGN})
 
+    list(GET google_test_SOURCES 0 testName)
+    get_filename_component (testName ${testName} NAME_WE)
+
+    message ("WARNING --- Unit test ${testName} was registered as using google-test but google-test not yet supported!")
+
+    if (FALSE) # commenting out
+
     set (gtestIncludeDirectory /home/orion/include)
     set (gtestLibrary /home/orion/lib/libgtest.so)
 
-    list(GET google_test_SOURCES 0 testName)
-    get_filename_component (testName ${testName} NAME_WE)
 
     set (libraries ${gtestLibrary})
     list (APPEND gtestLibrary ${google_test_LIBS})
@@ -527,6 +529,8 @@ macro (casa_add_google_test)
     casa_add_unit_test (MODULES ${google_test_MODULES} SOURCES ${google_test_SOURCES} 
                         LIBRARIES ${libraries} # gtest + provide libs
                         INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
+
+    endif () # commenting out
 
 endmacro ()
 
