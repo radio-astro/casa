@@ -366,7 +366,7 @@ image * image::collapse(
 
 image* image::imagecalc(
 	const string& outfile, const string& pixels,
-	const bool overwrite
+	bool overwrite, const string& imagemd
 ) {
 	try {
 		ThrowIf(
@@ -375,10 +375,14 @@ image* image::imagecalc(
 		);
 		DataType type = ImageExprParse::command(pixels).dataType();
 		if (type == TpComplex || type == TpDComplex) {
-			return new image(_imagecalc<Complex>(outfile, pixels, overwrite));
+			return new image(
+				_imagecalc<Complex>(outfile, pixels, overwrite, imagemd)
+			);
 		}
 		else if (type == TpFloat || type == TpDouble || type == TpInt) {
-			return new image(_imagecalc<Float>(outfile, pixels, overwrite));
+			return new image(
+				_imagecalc<Float>(outfile, pixels, overwrite, imagemd)
+			);
 		}
 		ThrowCc("Unsupported data type for resulting image");
 	}
@@ -390,10 +394,10 @@ image* image::imagecalc(
 
 template<class T> SPIIT image::_imagecalc(
 	const string& outfile, const string& pixels,
-	const bool overwrite
+	bool overwrite, const string& imagemd
 ) {
 	ImageExprCalculator<T> calculator(pixels, outfile, overwrite);
-	calculator.setCopyMetaDataFromImage("");
+	calculator.setCopyMetaDataFromImage(imagemd);
 	return calculator.compute();
 }
 
@@ -4343,8 +4347,10 @@ bool image::setrestoringbeam(
 			}
 			else {
 				bManip.set(
-					_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
-					_casaQuantityFromVar(pa), *rec, channel, polarization
+					major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
+					minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
+					pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
+					*rec, channel, polarization
 				);
 			}
 		}
@@ -4359,8 +4365,10 @@ bool image::setrestoringbeam(
 			}
 			else {
 				bManip.set(
-					_casaQuantityFromVar(major), _casaQuantityFromVar(minor),
-					_casaQuantityFromVar(pa), *rec, channel, polarization
+					major.empty() ? casa::Quantity() : _casaQuantityFromVar(major),
+					minor.empty() ? casa::Quantity() : _casaQuantityFromVar(minor),
+					pa.empty() ? casa::Quantity() : _casaQuantityFromVar(pa),
+					*rec, channel, polarization
 				);
 			}
 		}

@@ -82,7 +82,7 @@ template <class T> casa::Record _getprofile(
 
 template<class T> SPIIT _imagecalc(
 	const string& outfile, const string& pixels,
-	const bool overwrite
+	bool overwrite, const string& imagemd
 );
 
 template<class T> void _putchunk(

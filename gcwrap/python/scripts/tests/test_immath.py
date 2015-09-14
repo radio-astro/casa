@@ -1590,9 +1590,53 @@ class immath_test3(unittest.TestCase):
         myia.fromshape(im4, shape, type='f')
         self.assertRaises(Exception, myia.calc, im1 + '+' + im2)
         
-
-
-
+    def test_CAS6896(self):
+        """Verify CAS-6896, user can choose from which image to copy metadata"""
+        myia = iatool()
+        myia.fromshape("a.im",[20, 20, 20])
+        abeam = {
+                 'major': {'value': 20.0, 'unit': 'arcsec'},
+                 'positionangle': {'value': 5.0, 'unit': 'deg'},
+                 'minor': {'value': 10.0, 'unit': 'arcsec'}
+                }
+        myia.setrestoringbeam(major="", minor="", pa="", beam=abeam)
+        aunit = "Jy/beam"
+        myia.setbrightnessunit(aunit)
+        myia.fromshape("b.im",[20, 20, 20])
+        bbeam = {
+                 'major': {'value': 30.0, 'unit': 'arcsec'},
+                 'positionangle': {'value': 10.0, 'unit': 'deg'},
+                 'minor': {'value': 15.0, 'unit': 'arcsec'}
+                }
+        myia.setrestoringbeam(major="", minor="", pa="", beam=bbeam)
+        bunit = "Jy/pixel"
+        myia.setbrightnessunit(bunit)
+        myia.fromshape("c.im",[20, 20, 20])
+        cbeam = {
+                 'major': {'value': 5.0, 'unit': 'arcsec'},
+                 'positionangle': {'value': 4.0, 'unit': 'deg'},
+                 'minor': {'value': 2.0, 'unit': 'arcsec'}
+                }
+        myia.setrestoringbeam(major="", minor="", pa="", beam=cbeam)
+        cunit = "K"
+        myia.setbrightnessunit(cunit)
+        myia.done()
+        expr = "a.im + b.im + c.im"
+        beams = [abeam, bbeam, cbeam]
+        units = [aunit, bunit, cunit]
+        images = ['a.im', 'b.im', 'c.im']
+        for i in [0, 1, 2]:
+            myia = myia.imagecalc("", expr, imagemd=images[i])
+            self.assertTrue(myia.restoringbeam() == beams[i])
+            self.assertTrue(myia.brightnessunit() == units[i])
+            myia.done()
+        for i in [0, 1, 2]:
+            outfile = "immath_out" + str(i) + ".im"
+            immath("a.im", expr=expr, imagemd=images[i], outfile=outfile)
+            myia.open(outfile)
+            self.assertTrue(myia.restoringbeam() == beams[i])
+            self.assertTrue(myia.brightnessunit() == units[i])
+            myia.done()
 
 def suite():
     return [immath_test1, immath_test2, immath_test3]

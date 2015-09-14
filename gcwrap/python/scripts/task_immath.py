@@ -169,7 +169,8 @@ from taskinit import *
 
 def immath(
     imagename, mode, outfile, expr, varnames, sigma,
-    polithresh, mask, region, box, chans, stokes, stretch
+    polithresh, mask, region, box, chans, stokes, stretch,
+    imagemd
 ):
     # Tell CASA who will be reporting
     casalog.origin('immath')
@@ -307,7 +308,7 @@ def immath(
             lpolexpr = _immath_expr_from_varnames(lpolexpr, varnames, filenames)
             lpolexpr = lpolexpr + ")"
             lpol = tmpFilePrefix + "_lpol.im"
-            res = _myia.imagecalc(pixels=lpolexpr, outfile=lpol)
+            res = _myia.imagecalc(pixels=lpolexpr, outfile=lpol, imagemd=imagemd)
             res.done()
     elif mode=='poli':
         [expr, isLPol, isTPol] = _doPolI(filenames, varnames, tmpFilePrefix, True, True)
@@ -343,7 +344,7 @@ def immath(
         expr = _immath_expr_from_varnames(expr, varnames, filenames)
         casalog.post( 'Will evaluate expression: '+expr, 'DEBUG1' )
         try:
-            res = _myia.imagecalc(pixels=expr, outfile=outfile)
+            res = _myia.imagecalc(pixels=expr, outfile=outfile, imagemd=imagemd)
             # need to modify stokes type of output image for pol. intensity image
             if ( mode =="poli" ):
                 csys = res.coordsys()
@@ -436,7 +437,7 @@ def immath(
     casalog.post( 'Will evaluate expression of subimages: '+expr, 'DEBUG1' )
     try:
         # Do the calculation
-        res = _myia.imagecalc(pixels=expr, outfile=outfile )
+        res = _myia.imagecalc(pixels=expr, outfile=outfile, imagemd=imagemd )
 
         # modify stokes type for polarization intensity image
         if (  mode=="poli" ):                

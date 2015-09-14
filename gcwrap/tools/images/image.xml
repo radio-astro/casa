@@ -916,29 +916,28 @@ fitsimage.done()
 </example>
 </method>
 
-   <method type="function" name="imagecalc">
-   <shortdescription>Perform mathematical calculations on an image or images.</shortdescription>
-   
-<input>
-  
-     <param type="string"  name="outfile">
-     <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
-     <value></value>
-     </param>
-  
-     <param type="string"  name="pixels">
-     <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
-     <value></value>
-     </param>
-  
-     <param type="bool"  name="overwrite">
-     <description>Overwrite (unprompted) pre-existing output file?</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="image"/>
-
-<description> 
+<method type="function" name="imagecalc">
+    <shortdescription>Perform mathematical calculations on an image or images.</shortdescription>
+    <input>
+        <param type="string"  name="outfile">
+            <description>Output image file name. If blank the resulting image is not written, but it can still be accessed via the returned image analysis tool.</description>
+            <value/>
+        </param>
+        <param type="string"  name="pixels">
+            <description>LEL expression. Must be specified. For example "myimage1.im + myimage2.im".</description>
+            <value/>
+        </param>
+        <param type="bool"  name="overwrite">
+            <description>Overwrite (unprompted) pre-existing output file?</description>
+            <value>false</value>
+        </param>
+        <param type="string" name="imagemd">
+            <description>The image from which metadata should be copied. Default means no gaurantee from which image is used.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="image"/>
+    <description> 
 
 This method is used to evaluate a mathematical expression involving
 existing images. It fully supports both float and complex valued images.
@@ -979,12 +978,23 @@ you are interested in conserving disk space, you don't need to keep the result o
 the calculation around for very long, and/or you are only going to do a small 
 number of operations on the result image, should you set outfile="".
 
+Note that when multiple image are used in the expression, there is
+no garauntee about which of those images will be used to create the metadata
+of the output image, unless imagemd is specified. If imagemd is specified, the following
+rules of metadata copying will be followed:
 
-</description>
+    1. The pixel data type of the image specified by imagemd and the output image must
+    be the same.
+    2. The metadata copied include the coordinate system (and so of course the dimensionality of
+    the output image must correspond to the coordinate system to be copied), the image_info record
+    (which contains things like the beam(s)), the misc_info record (should one exist in the image
+    specified by imagemd), and the units.
+    3. If the output image is a spectral image, the brightness units are set to the empty string.
+    4. If the ouptut image is a polarization angle image, the brightness unit is set to "deg" and
+    the stokes coordinate is set to have a single plane of type of Pangle.
 
-<example>
-
-
+    </description>
+    <example>
 
 """
 # Suppose aF and bF are images with single precision and we want
@@ -1018,9 +1028,8 @@ myim.shape()
 # close the myim tool to free up system resources
 myim.done()
 """
-</example>
-
-<example>
+    </example>
+    <example>
 
 """
 # The following example shows the use of the two min() LEL functions. One takes a
@@ -1042,9 +1051,9 @@ myim=ia.imagecalc('cF', 'min(aF, (min(aF)+max(aF))/2)', overwrite=true)
 # up system resources
 myim.done()
 """
-</example>
+    </example>
 
-<example>
+    <example>
 """
 # Here's an example of a more complicated function. Currently
 # ia.fromshape() only creates real-valued images so the real()
@@ -1063,9 +1072,7 @@ ia.done()
 myim = ia.imagecalc('eF', 'sin(aD)+(aF*2)+min(bF)+real(aC)', overwrite=true)
 myim.done()
 """
-
-</example>
-
+    </example>
 </method>
 
 <method type="function" name="collapse">

@@ -28,84 +28,75 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 
 <input>
-        <param type="any" name="imagename">
-                <description>a list of input images </description>
-                <any type="variant" limttypes="string stringArray"/>
-                <value type="string"></value>
-        </param>
-
-
+    <param type="any" name="imagename">
+        <description>a list of input images </description>
+        <any type="variant" limttypes="string stringArray"/>
+        <value type="string"></value>
+    </param>
 	<param type="string" name="mode">
 		<description>mode for math operation (evalexpr, spix, pola, poli)</description>
 		<value>evalexpr</value>
-                <allowed kind="enum">
-                <value>evalexpr</value>
-                <value>spix</value>
-                <value>pola</value>
-                <value>poli</value>
-                </allowed>
+            <allowed kind="enum">
+            <value>evalexpr</value>
+            <value>spix</value>
+            <value>pola</value>
+            <value>poli</value>
+        </allowed>
 		<example>'evalexpr', 'spix', 'pola', or 'poli' </example>
 	</param>
-
 	<param type="string" name="outfile">
 		<description>File where the output is saved</description>
 		<value>immath_results.im</value>
 		<example>outfile=&quot;newimage&quot;</example>
 	</param>
-
-
 	<param type="string" name="expr" subparam="true">
 		<description>Mathematical expression using images</description>
 		<value>IM0</value>
 		<example>expr='&quot;sin(image1.im)+(image2.im*2)+real(image3.im)&quot;'</example>
 	</param>
-
-        <param type="any" name="varnames" subparam="true">
-                <description>a list of variable names to use with the image files</description>
-                <any type="variant" limttypes="string stringArray"/>
-                <value type="string"></value>
-        </param>
-
-
-        <param type="string" name="sigma" subparam="true">
-                <description>standard deviation of noise for debiasing</description>
-                <value>0.0mJy/beam</value>
-        </param>
-
-        <param type="string" name="polithresh" subparam="true">
-            <description>Threshold in linear polarization intensity image below which to mask pixels.</description>
-            <value type="string"/>
-        </param>
-
-        <param type="string" name="mask">
-        	<description>Mask to use. See help par.mask. Default is none.</description>
-        	<value/>
-    	</param>
-    	<param type="string" name="region">
-        	<description>File path which contains an Image Region</description>
-        	<value></value>
-    	</param>
-
-    	<param type="string" name="box">
-        	<description>Select one or more box regions in the input images</description>
-        	<value></value>
-    	</param>
-
-    	<param type="string" name="chans" >
-		<description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
-    		<value></value>
-    	</param >
-
-    	<param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+    <param type="any" name="varnames" subparam="true">
+        <description>a list of variable names to use with the image files</description>
+        <any type="variant" limttypes="string stringArray"/>
+        <value type="string"></value>
+    </param>
+    <param type="string" name="sigma" subparam="true">
+        <description>standard deviation of noise for debiasing</description>
+        <value>0.0mJy/beam</value>
+    </param>
+    <param type="string" name="polithresh" subparam="true">
+        <description>Threshold in linear polarization intensity image below which to mask pixels.</description>
+        <value type="string"/>
+    </param>
+    <param type="string" name="mask">
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value/>
+    </param>
+    <param type="string" name="region">
+        <description>File path which contains an Image Region</description>
+        <value/>
+    </param>
+    <param type="string" name="box">
+        <description>Select one or more box regions in the input images</description>
+        <value/>
+    </param>
+    <param type="string" name="chans" >
+        <description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
+        <value/>
+    </param >
+    <param type="string" name="stokes">
+        <description>Stokes params to image (I,IV,IQU,IQUV)</description>
 	    <value></value>
 	    <example>stokes='IQ'</example>
 	    <example>stokes='RR,LL'</example>
-    	</param>
-        <param type="bool" direction="in" name="stretch" subparam="true">
-            <description>Stretch the mask if necessary and possible? See help stretch.par </description>
-             <value>False</value>
-        </param>
+    </param>
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help stretch.par </description>
+        <value>False</value>
+    </param>
+    <param type="string" name="imagemd">
+        <description>The image from which metadata should be copied. Default means no gaurantee from which image is used.</description>
+        <value/>
+    </param>
 	<constraints>
         <when param="mode">
             <equals value="evalexpr">
@@ -221,6 +212,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     stokes     Stokes parameters. Example: stokes='IQUV';
                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
                Not used in for cases of mode='poli' or mode='pola'
+    imagemd    The image from which metadata should be copied to the output. Default means no gaurantee from
+                which image is used. The image must exist and should conform to the output image spec.
 
     Available functions in the <i>expr</i> and <i>mask</i> parameters:
     pi(), e(), sin(), sinh(), asinh(), cos(), cosh(), tan(), tanh(),
@@ -251,10 +244,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     the mask is shape [100, 200, 2], stretching is not possible and an
     error will result.
 
-    CAUTION: Note that when multiple image are used in the expression, there is
-    no garauntee about which of those images will be used to create the header
-    of the output image. Therefore, one may have to modify the output header as
-    needed if the input headers differ.
+    Note that when multiple image are used in the expression, there is
+    no garauntee about which of those images will be used to create the metadata
+    of the output image, unless imagemd is specified. If imagemd is specified, the following
+    rules of metadata copying will be followed:
+    
+    1. The pixel data type of the image specified by imagemd and the output image must
+    be the same.
+    2. The metadata copied include the coordinate system (and so of course the dimensionality of
+    the output image must correspond to the coordinate system to be copied), the image_info record
+    (which contains things like the beam(s)), the misc_info record (should one exist in the image
+    specified by imagemd), and the units.
+    3. If the output image is a spectral image, the brightness units are set to the empty string.
+    4. If the ouptut image is a polarization angle image, the brightness unit is set to "deg" and
+    the stokes coordinate is set to have a single plane of type of Pangle.
 
     Examples:
     # Double all values in an image.
