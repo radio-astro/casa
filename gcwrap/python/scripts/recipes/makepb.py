@@ -55,11 +55,15 @@ def makePB(vis='',field='',spw='',timerange='',uvrange='',antenna='',observation
     start=qa.quantity( csysa.referencevalue()['numeric'][3], csysa.units()[3] )  ## assumes refpix is zero
     step=qa.quantity( csysa.increment()['numeric'][3], csysa.units()[3] )
 
+    smode='mfs'
+    if nchan>1:
+        smode='frequency'
+
     print 'MAKEPB : Starting imager tool'
 
     im.open(vis)
     im.selectvis(field=field,spw=spw,time=timerange,intent=intent,scan=scan,uvrange=uvrange,baseline=antenna,observation=observation)
-    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step)
+    im.defineimage(nx=shp[0],ny=shp[0],phasecenter=phasecenter,cellx=qa.tos(cellx),celly=qa.tos(celly),nchan=nchan,start=start,step=step,mode=smode)
     im.setvp(dovp=True,telescope=tel)
     im.makeimage(type='pb',image=outimage+'.tmp')
     im.close()
