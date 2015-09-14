@@ -104,6 +104,7 @@ class SDSparseMapPlotter(object):
         self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None
+        self.global_scaling = True
         
     @property
     def nh(self):
@@ -147,6 +148,12 @@ class SDSparseMapPlotter(object):
     def setup_reference_level(self, level=0.0):
         self.reference_level = level
         
+    def set_global_scaling(self):
+        self.global_scaling = True
+        
+    def unset_global_scaling(self):
+        self.global_scaling = False
+        
     def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
@@ -157,9 +164,9 @@ class SDSparseMapPlotter(object):
         spmax += dsp * 0.1
         LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
         
-        xmin = min(frequency[0], frequency[-1])
-        xmax = max(frequency[0], frequency[-1])
-        LOG.debug('xmin=%s, xmax=%s'%(xmin,xmax))
+        global_xmin = min(frequency[0], frequency[-1])
+        global_xmax = max(frequency[0], frequency[-1])
+        LOG.debug('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
 
         # Auto scaling
         # to eliminate max/min value due to bad pixel or bad fitting,
@@ -172,19 +179,19 @@ class SDSparseMapPlotter(object):
         LOG.debug('ListMin=%s'%(list(ListMin)))
         if len(ListMax) == 0: 
             return False
-        ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
-        ymin = numpy.sort(ListMin)[len(ListMin)/10]
-        ymax = ymax + (ymax - ymin) * 0.2
-        ymin = ymin - (ymax - ymin) * 0.1
+        global_ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
+        global_ymin = numpy.sort(ListMin)[len(ListMin)/10]
+        global_ymax = global_ymax + (global_ymax - global_ymin) * 0.2
+        global_ymin = global_ymin - (global_ymax - global_ymin) * 0.1
         del ListMax, ListMin
 
-        LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
+        LOG.info('global_ymin=%s, global_ymax=%s'%(global_ymin,global_ymax))
 
         pl.gcf().sca(self.axes.axes_integsp)
         plot_helper.plot(frequency, averaged_data, color='b', linestyle='-', linewidth=0.4)
         (_xmin,_xmax,_ymin,_ymax) = pl.axis()
         #pl.axis((_xmin,_xmax,spmin,spmax))
-        pl.axis((xmin, xmax, spmin, spmax))
+        pl.axis((global_xmin, global_xmax, spmin, spmax))
         if self.lines_averaged is not None:
             for chmin, chmax in self.lines_averaged:
                 fmin = ch_to_freq(chmin, frequency)
@@ -196,6 +203,24 @@ class SDSparseMapPlotter(object):
 
         for x in xrange(self.nh):
             for y in xrange(self.nv):
+                if self.global_scaling is True:
+                    xmin = global_xmin
+                    xmax = global_xmax
+                    ymin = global_ymin
+                    ymax = global_ymax
+                else:
+                    xmin = global_xmin
+                    xmax = global_xmax
+                    if map_data[x][y].min() > NoDataThreshold:
+                        median = numpy.median(map_data[x][y])
+                        mad = numpy.median(map_data[x][y] - median)
+                        sigma = map_data[x][y].std()
+                        ymin = median - 2.0 * sigma
+                        ymax = median + 5.0 * sigma
+                    else:
+                        ymin = global_ymin
+                        ymax = global_ymax
+                    LOG.debug('Per panel scaling turned on: ymin=%s, ymax=%s (global ymin=%s, ymax=%s)'%(ymin,ymax,global_ymin,global_ymax))
                 pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
                 if map_data[x][y].min() > NoDataThreshold:
                     plot_helper.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
