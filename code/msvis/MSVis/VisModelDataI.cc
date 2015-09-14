@@ -17,7 +17,11 @@ VisModelDataI::create ()
 VisModelDataI *
 VisModelDataI::create2 ()
 {
-  ThrowIf (factory2_p == 0, "No VisModelDataI::factory available");
+//  ThrowIf (factory2_p == 0, "No VisModelDataI::factory available");
+
+  if (factory2_p == nullptr){
+      return nullptr;
+  }
 
   return factory2_p ();
 }

@@ -94,47 +94,6 @@ macro( casa_add_executable module name )
 
 endmacro()
 
-#
-# casa_add_test( module source1 [source2 ...])
-#
-#      Add a unit test. The name of the test will be the basename of
-#      of the source file.
-#
-#      Secondary source files without a path will be provided with the
-#      path of the primary source file (i.e., source1).
-#
-macro( casa_add_test module source )
-
-  get_filename_component( _tname ${source} NAME_WE )
-
-  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
-  target_link_libraries( ${_tname} lib${module} )
-  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
-  add_dependencies( check ${_tname} )
-
-endmacro()
-
-#
-# casa_add_assay( module source ...)
-#
-#      Add an assay unit test. The name of the test will be the basename of
-#      of the source file.
-#
-macro( casa_add_assay module source )
-
-  get_filename_component( _tname ${source} NAME_WE )
-
-  get_filename_component(path ${source} PATH)
-
-  string( REGEX REPLACE " ([a-zA-Z_0-9]+[.]cc)" " ${path}/\\1" result " ${ARGN}")
-  string( REGEX REPLACE "^ " "" result ${result})
-
-  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} ${result} )
-  target_link_libraries( ${_tname} lib${module} )
-  add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
-  add_dependencies( check ${_tname} )
-
-endmacro()
 
 
 #
@@ -312,3 +271,263 @@ macro( casa_add_pymodule name )
   install( TARGETS ${name} LIBRARY DESTINATION python/${PYTHONV} )
 
 endmacro()
+
+##############################################################################
+##############################################################################
+#
+# Unit test related macros
+
+
+#
+# casa_add_test( module source1 [source2 ...])
+#
+# Legacy macro for adding a unit test; used for already defined tests.
+# When the test is ready for prime-time the macro cass_add_unit_test
+# should be used instead.
+#
+macro( casa_add_test)
+
+    set (sources ${ARGN})
+    list (GET sources 0 module)
+    list (REMOVE_AT sources 0)
+    casa_add_unit_test (MODULES ${module} SOURCES ${sources} NOT_READY)
+
+#  get_filename_component( _tname ${source} NAME_WE )
+
+#  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
+#  target_link_libraries( ${_tname} lib${module} )
+#  add_test( ${_tname} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
+#  add_dependencies( check ${_tname} )
+
+endmacro()
+
+#
+# casa_add_check_module (MODULES module1 [module2] ... TEST test)
+#
+# Internal macro that creates a check_MODULE make target if it doesn't exist.
+# Adds dependency on "test" to that make target
+#
+macro( casa_add_check_module)
+
+    set (options ) 
+    set (oneValueArgs TEST) # None
+    set (multiValueArgs MODULES)
+
+    cmake_parse_arguments (casa_add_check "${options}" "${oneValueArgs}" 
+                           "${multiValueArgs}" ${ARGN})
+  
+    set (modules ${casa_add_check_MODULES})
+    set (test ${casa_add_check_TEST})
+
+message ("DEBUG casa_add_check_module: modules=${modules}; test=${test}")
+
+    set (targetSuffix "")
+    set (pathSuffix "")
+    list (GET modules 0 moduleName)
+    set (moduleDirectory "${CMAKE_BINARY_DIR}/${moduleName}")
+
+    foreach (source ${modules})
+
+        set (targetSuffix "${targetSuffix}_${source}")
+	set (pathSuffix "${pathSuffix}${source}/")
+        set (target  "unit_test${targetSuffix}")
+
+        if (NOT TARGET ${target})
+
+            add_custom_target (${target}
+                               "echo" "--- Checking module ${targetSuffix}"
+                               COMMAND "cd" ${moduleDirectory}
+                               COMMAND ctest)
+            message ("INFO added custom target: ${target}")
+        endif ()
+
+        add_dependencies (${target} ${test})
+
+    endforeach ()
+
+endmacro ()
+
+#
+# casa_add_assay (module source [source1 ...])
+#
+# Legacy macro for adding a unit test; used for already defined tests.
+# When the test is ready for prime-time the macro cass_add_unit_test
+# should be used instead.
+#
+macro (casa_add_assay)
+
+    set (sources ${ARGN})
+    list (GET sources 0 module)
+    list (REMOVE_AT sources 0)
+    casa_add_unit_test (MODULES ${module} SOURCES ${sources} NOT_READY)
+
+endmacro ()
+
+#
+# casa_add_unit_test( MODULES module [submodule [subsubmodule]  ...]
+#                     SOURCES source ... 
+#                     [LIBRARIES library1 [library2] ...] 
+#                     [INCLUDE_DIRS dir1 [dir2] ...] 
+#                     [NOT_READY])
+#
+#      Add a unit test. The name of the test will be the basename of
+#      of the first source file.  Usually there will be a single source
+#      file and not libraries or include directories added (feature used
+#      for other macros such as casa_add_google_test.  The NOT_READY option
+#      is used to keep an unproven unit test out of the production unit test
+#      build and test process (usually used for legacy unit tests awaiting
+#      vetting).
+#
+# Example: 
+#
+# casa_add_unit_test (msvis VisibilityIterator_Test.cc)
+#
+macro( casa_add_unit_test)
+
+  set (options NOT_READY COMMIT_ONLY) 
+  set (oneValueArgs) # None
+  set (multiValueArgs LIBRARIES COMMAND_ARGUMENTS INCLUDE_DIRS SOURCES MODULES) # None
+
+  cmake_parse_arguments (casa_unit_test "${options}" "${oneValueArgs}" 
+                         "${multiValueArgs}" ${ARGN})
+  
+  list (GET casa_unit_test_SOURCES 0 firstSource)
+  get_filename_component( testName ${firstSource} NAME_WE )
+  get_filename_component(path ${firstSource} PATH)
+
+  # If any of the other sources are missing a path provide them the
+  # path from the first source file.
+
+  set (sources "")
+  foreach (source ${casa_unit_test_SOURCES})
+     get_filename_component(thePath ${source} PATH)
+     if (thePath)
+         list (APPEND sources ${source})
+     else ()
+         list (APPEND sources ${path}/${source})
+     endif ()
+  endforeach ()
+
+  list (GET casa_unit_test_MODULES 0 module) # First element is the module
+
+  add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} )
+  target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
+
+  set (moduleDirectory "${CMAKE_BINARY_DIR}/${module}")
+  set (unit_test_target unit_test_${testName})
+  add_custom_target (${unit_test_target}
+                     COMMAND "cd" ${moduleDirectory}
+                     COMMAND ctest -R ${testName})
+  add_dependencies (${unit_test_target} ${testName})
+
+  if (NOT ${casa_unit_test_INCLUDE_DIRS})
+    target_include_directories (${testName} PRIVATE "${casa_unit_test_INCLUDE_DIRS}")
+  endif ()
+
+  if (NOT casa_unit_test_NOT_READY)
+
+    # This unit test is ready for normal use.  Add it as a runnable unit test both
+    # globally and within its module.
+    
+    add_test( ${testName} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${testName} 
+              ${casa_unit_test_COMMAND_ARGUMENTS})
+
+    if (NOT TARGET unit_test)
+        add_custom_target (unit_test COMMAND "cd" ${CMAKE_BINARY_DIR} COMMAND "ctest")
+    endif ()
+
+    add_dependencies( unit_test ${testName} )
+
+    if (NOT casa_unit_test_COMMIT_ONLY)
+        MESSAGE ("DEBUG casa_add_check_module (${casa_unit_test_MODULES} ${testName})")
+        casa_add_check_module (MODULES ${casa_unit_test_MODULES} TEST ${testName})
+    endif ()
+
+    if (CASA_SHOW_TESTS)
+      message ("INFO Unit test ${testName} defined for module ${module}")
+    endif ()
+
+  else ()
+
+    # This is a legacy unit test that hasn't been examined to see whether it will
+    # build or provide meaningful test results.  Add it to a separate unit_test_unready
+    # and unit_test_unready_MODULE build target so that it can be built.
+
+    message ("WARNING Unit test ${firstSource} not ready for normal unit test usage.")
+
+    if (NOT TARGET unit_test_unready) # create the unit_test_unready target if it doesn't exist
+
+       add_custom_target (unit_test_unready)
+    
+    endif (NOT TARGET unit_test_unready)
+
+    if (NOT TARGET unit_test_unready_${module}) # create unit_test_unready_MODULE if needed
+
+       add_custom_target (unit_test_unready_${module})
+    
+    endif (NOT TARGET unit_test_unready_${module})
+
+    # Add the test so that unit_test_unready and unit_test_unready_MODULE targets will depend on it.
+
+    add_dependencies( unit_test_unready ${testName} )
+    add_dependencies( unit_test_unready_${module} ${testName} )
+
+  endif ()
+
+endmacro()
+
+# casa_add_google_test (MODULES module [submodule [subsubmodule] ...] SOURCES source1 [source2] ... [LIB library1 [library2] ...])
+# 
+# Adds a google-test unit test to the module.
+#
+# module - The name of the module (e.g., msvis, synthesis, etc.); the module is used to name the
+#          library containing the module (e.g., libmsvis, libsynthesis)
+#
+# sources - The source files that make up the test.  
+#           The first source file is taken as the name of
+#           the test executable (e.g., msvis/MSVis/MyTest.cc -->
+#           executable MyTest).  Paths of the source files are usually
+#           relative to the directory holding the module's
+#           CMakeLists.txt file.
+#
+# libraries - These are any additional libraries needed to link the executable.
+#             CMake usually finds the expected ones and the macro
+#             provides the google-test library; thus only special
+#             libraries (usually test-only) need to be provided.  Not
+#             providing any libraries explicitly is the more usual
+#             case.  Libraries can be specified using an absolute path
+#             or in a form compatible with ld's -l switch:
+#             /home/orion/lib/libSomeLib.so or SomeLib (assumes that
+#             the normal library search path contains libSomeLib.so).
+#             # # Example: # # casa_add_google_test (Module msvis
+#             SOURCES MSVis/test/VisibilityIterator_Gtest.cc
+#             MSVis/test/MSFactory.cc) # # The test is invoked via the
+#             code/install/assay script.  # # An XML file testName.xml
+#             will be produced when the test is run.  # macro
+#             (casa_add_google_test)
+macro (casa_add_google_test)
+
+    # Parse the arguments
+
+    set (options ) # None
+    set (oneValueArgs ) # just MODULE
+    set (multiValueArgs SOURCES LIBS MODULES) # the lists of source files and libraries
+    cmake_parse_arguments (google_test "${options}" "${oneValueArgs}"
+                           "${multiValueArgs}"  ${ARGN})
+
+    set (gtestIncludeDirectory /home/orion/include)
+    set (gtestLibrary /home/orion/lib/libgtest.so)
+
+    list(GET google_test_SOURCES 0 testName)
+    get_filename_component (testName ${testName} NAME_WE)
+
+    set (libraries ${gtestLibrary})
+    list (APPEND gtestLibrary ${google_test_LIBS})
+
+    casa_add_unit_test (MODULES ${google_test_MODULES} SOURCES ${google_test_SOURCES} 
+                        LIBRARIES ${libraries} # gtest + provide libs
+                        INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
+
+endmacro ()
+
+

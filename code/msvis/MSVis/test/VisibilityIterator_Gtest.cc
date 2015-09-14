@@ -1,4 +1,4 @@
-#include "VisibilityIterator_Test.h"
+#include "VisibilityIterator_Gtest.h"
 
 #include <casa/aips.h>
 #include <casa/BasicSL.h>
@@ -26,31 +26,39 @@
 
 using namespace std;
 using namespace casa;
+using namespace casacore;
 using namespace casa::vi;
+
+ofstream gtestLog ("/tmp/gtest.log");
+
 
 int
 main (int nArgs, char * args [])
 {
-    using namespace casa::vi::test;
+    ::testing::InitGoogleTest(& nArgs, args);
 
-    Tester tester;
+gtestLog << "--- RUN_ALL_TESTS" << endl;
+    return RUN_ALL_TESTS();
 
-    bool allPassed = tester.doTests (nArgs, args);
-
-    //CopyMs msCopier;
-    //msCopier.doit ("ngc5921.ms");
-
-    return allPassed ? 0 : 1;
-
-//    MsFactory msf ("test.ms");
+//    using namespace casa::vi::test;
 //
-//    casa::MeasurementSet * ms;
-//    int nRows;
-//    boost::tie (ms, nRows) = msf.createMs ();
+//    Tester tester;
 //
-//    printMs (ms);
-
-    return allPassed ? 0 : 1;
+//    bool allPassed = tester.doTests (nArgs, args);
+//
+//    CopyMs msCopier;
+//    msCopier.doit ("ngc5921.ms");
+//    return 0;
+//
+////    MsFactory msf ("test.ms");
+////
+////    casa::MeasurementSet * ms;
+////    int nRows;
+////    boost::tie (ms, nRows) = msf.createMs ();
+////
+////    printMs (ms);
+//
+//    return allPassed ? 0 : 1;
 }
 
 namespace casa {
@@ -189,31 +197,31 @@ printMs (MeasurementSet * ms)
     }
 }
 
-std::pair<Bool,Bool>
-Tester::sweepMs (TestWidget & tester)
+void
+TestWidget::sweepMs()
 {
+gtestLog << "--- Starting sweepMs" << endl;
     Block<const MeasurementSet *> mss;
     pair<Bool,Bool> result;
     Bool moreSweeps = False;
     Subchunk subchunk;
-
     try {
 
         Int nRows;
         Bool writableVi;
-        if (tester.usesMultipleMss()){
-            boost::tie (mss, nRows, writableVi) = tester.createMss ();
+        if (usesMultipleMss()){
+            boost::tie (mss, nRows, writableVi) = createMss ();
         }
         else{
             MeasurementSet * ms;
-            boost::tie (ms, nRows, writableVi) = tester.createMs ();
+            boost::tie (ms, nRows, writableVi) = createMs ();
             mss = Block<const MeasurementSet *> (1, ms);
         }
 
         do {
             VisibilityIterator2 * vi = 0;
 
-            if (tester.usesMultipleMss()){
+            if (usesMultipleMss()){
                 vi = new VisibilityIterator2 (mss, SortColumns (), writableVi);
             }
             else {
@@ -223,11 +231,11 @@ Tester::sweepMs (TestWidget & tester)
             VisBuffer2 * vb = vi->getVisBuffer ();
             Int nRowsProcessed = 0;
 
-            tester.startOfData (* vi, vb);
+            startOfData (* vi, vb);
 
             for (vi->originChunks (); vi->moreChunks(); vi->nextChunk()){
 
-                tester.nextChunk (* vi, vb);
+                nextChunk (* vi, vb);
 
                 for (vi->origin(); vi->more (); vi->next()){
 
@@ -235,13 +243,13 @@ Tester::sweepMs (TestWidget & tester)
 
                     nRowsProcessed += vb->nRows();
 
-                    tester.nextSubchunk (* vi, vb);
+                    nextSubchunk (* vi, vb);
 
                 }
-                tester.endOfChunk (* vi, vb);
+                endOfChunk (* vi, vb);
             }
 
-            moreSweeps = tester.noMoreData (* vi, vb, nRowsProcessed);
+            moreSweeps = noMoreData (* vi, vb, nRowsProcessed);
 
         } while (moreSweeps);
 
@@ -249,132 +257,131 @@ Tester::sweepMs (TestWidget & tester)
         result = make_pair (True, False);
     }
     catch (TestError & e){
-
-        fprintf (stderr, "*** TestError at subchunk %s while executing test %s:\n-->%s\n",
-                 subchunk.toString().c_str(), tester.name ().c_str(), e.what());
-        result = make_pair (False, False);
+gtestLog << "Failed by TestError" << endl;
+        FAIL() << String::format ("*** TestError at subchunk %s while executing test %s:\n-->%s\n",
+                                  subchunk.toString().c_str(), name ().c_str(), e.what());
+        //result = make_pair (False, False);
     }
     catch (AipsError & e){
+gtestLog << "Failed by AipsError" << endl;
+        FAIL() << String::format ("*** AipsError while executing test %s:\n-->%s\n",
+                                  name ().c_str(), e.what());
 
-        fprintf (stderr, "*** AipsError while executing test %s:\n-->%s\n",
-                 tester.name ().c_str(), e.what());
-
-        result = make_pair (False, False);
+        //result = make_pair (False, False);
     }
     catch (...){
-
-        fprintf (stderr, "*** Unknown exception while executing test %s\n***\n*** Exiting ***\n",
-                 tester.name ().c_str());
-        result = make_pair (False, True);
+gtestLog << "Failed by ..." << endl;
+        FAIL() << String::format ("*** Unknown exception while executing test %s\n***\n*** Exiting ***\n",
+                                  name ().c_str());
+        //result = make_pair (False, True);
     }
+gtestLog << "Success" << endl;
 
     fflush (stderr); // just in case things are really bad and we croak
 
     for (uInt i = 0; i < mss.size(); i++){
         delete mss [i];
     }
-
-    return result;
 }
 
 
-template <typename T>
-bool
-Tester::doTest ()
-{
-    T t;
+//template <typename T>
+//bool
+//Tester::doTest ()
+//{
+//    T t;
+//
+//    nTestsAttempted_p ++;
+//
+//    bool ok;
+//    bool fatal;
+//
+//    printf ("Performing %s ...\n", t.name().c_str());
+//    fflush (stdout);
+//    boost::tie (ok, fatal) = sweepMs (t);
+//    String result = (ok ? "Passed" : (fatal ? "FATAL ERROR" : "FAILED"));
+//    printf ("... %s test %s\n", result.c_str(), t.name().c_str());
+//    fflush (stdout);
+//
+//    if (ok){
+//        nTestsPassed_p ++;
+//    }
+//
+//    TestErrorIf (fatal, "No message");
+//
+//    return ok;
+//}
 
-    nTestsAttempted_p ++;
-
-    bool ok;
-    bool fatal;
-
-    printf ("Performing %s ...\n", t.name().c_str());
-    fflush (stdout);
-    boost::tie (ok, fatal) = sweepMs (t);
-    String result = (ok ? "Passed" : (fatal ? "FATAL ERROR" : "FAILED"));
-    printf ("... %s test %s\n", result.c_str(), t.name().c_str());
-    fflush (stdout);
-
-    if (ok){
-        nTestsPassed_p ++;
-    }
-
-    TestErrorIf (fatal, "No message");
-
-    return ok;
-}
-
-bool
-Tester::doTests (int nArgs, char * args [])
-{
-
-    Arguments arguments = parseArgs (nArgs, args);
-    nTestsAttempted_p = 0;
-    nTestsPassed_p = 0;
-
-    try {
-
-        doTest<BasicChannelSelection> ();
-
-        doTest<BasicCorrelationSelection> ();
-
-        doTest<BasicMutation> ();
-
-        doTest<FrequencyChannelSelection> ();
-
-        doTest<MultipleMss> ();
-
-        doTest<Weighting> ();
-
-#if 0
-        int tests = PerformanceComparator::Both;
-
-        if (utilj::containsKey ("--old", arguments)){
-            tests = PerformanceComparator::Old;
-        }
-
-        if (utilj::containsKey ("--new", arguments)){
-            tests = PerformanceComparator::New;
-        }
-
-        int nSweeps = 1;
-        String sweepNumber = arguments ["--sweeps"];
-        if (! sweepNumber.empty()){
-            nSweeps = String::toInt (sweepNumber);
-            nSweeps = nSweeps <= 0 ? 1 : nSweeps;
-        }
-
-        int nChannelTests = 1;
-        String nChannelTestsNumber = arguments ["--nChannels"];
-        if (! nChannelTestsNumber.empty()){
-            nChannelTests = String::toInt (nChannelTestsNumber);
-            nChannelTests = nChannelTests <= 1 ? 1 : nChannelTests;
-        }
-
-        PerformanceComparator pc ("3c391_ctm_mosaic_spw0.ms");
-        pc.compare(tests, nSweeps, nChannelTests);
-#endif
-    }
-    catch (TestError & e){
-
-        fprintf (stderr, "\n\n*** Last error was fatal; ending test!\n");
-        fflush (stderr);
-        exit (1);
-    }
-
-    bool allPassed = nTestsAttempted_p == nTestsPassed_p;
-    printf ("Completed testing: ");
-
-    if (allPassed){
-        printf ("All %d tests passed ;-)\n", nTestsAttempted_p);
-    }
-    else{
-        printf ("FAILED %d of %d tests attempted ;-0\n", nTestsAttempted_p - nTestsPassed_p, nTestsAttempted_p);
-    }
-
-    return allPassed;
-}
+//bool
+//Tester::doTests (int nArgs, char * args [])
+//{
+//
+//    Arguments arguments = parseArgs (nArgs, args);
+//    nTestsAttempted_p = 0;
+//    nTestsPassed_p = 0;
+//
+//    try {
+//
+//        doTest<BasicChannelSelection> ();
+//
+//        doTest<BasicCorrelationSelection> ();
+//
+//        doTest<BasicMutation> ();
+//
+//        doTest<FrequencyChannelSelection> ();
+//
+//        doTest<MultipleMss> ();
+//
+//        doTest<Weighting> ();
+//
+//#if 0
+//        int tests = PerformanceComparator::Both;
+//
+//        if (utilj::containsKey ("--old", arguments)){
+//            tests = PerformanceComparator::Old;
+//        }
+//
+//        if (utilj::containsKey ("--new", arguments)){
+//            tests = PerformanceComparator::New;
+//        }
+//
+//        int nSweeps = 1;
+//        String sweepNumber = arguments ["--sweeps"];
+//        if (! sweepNumber.empty()){
+//            nSweeps = String::toInt (sweepNumber);
+//            nSweeps = nSweeps <= 0 ? 1 : nSweeps;
+//        }
+//
+//        int nChannelTests = 1;
+//        String nChannelTestsNumber = arguments ["--nChannels"];
+//        if (! nChannelTestsNumber.empty()){
+//            nChannelTests = String::toInt (nChannelTestsNumber);
+//            nChannelTests = nChannelTests <= 1 ? 1 : nChannelTests;
+//        }
+//
+//        PerformanceComparator pc ("3c391_ctm_mosaic_spw0.ms");
+//        pc.compare(tests, nSweeps, nChannelTests);
+//#endif
+//    }
+//    catch (TestError & e){
+//
+//        fprintf (stderr, "\n\n*** Last error was fatal; ending test!\n");
+//        fflush (stderr);
+//        exit (1);
+//    }
+//
+//    bool allPassed = nTestsAttempted_p == nTestsPassed_p;
+//    printf ("Completed testing: ");
+//
+//    if (allPassed){
+//        printf ("All %d tests passed ;-)\n", nTestsAttempted_p);
+//    }
+//    else{
+//        printf ("FAILED %d of %d tests attempted ;-0\n", nTestsAttempted_p - nTestsPassed_p, nTestsAttempted_p);
+//    }
+//
+//    return allPassed;
+//}
 
 Tester::Arguments
 Tester::parseArgs (int nArgs, char * args []) const
@@ -1648,6 +1655,39 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
     //     }
     // }
 }
+
+
+TEST_F (BasicChannelSelection, DoBasicChannelSelection)
+{
+    ASSERT_NO_FATAL_FAILURE (sweepMs ());
+    cout << "-------------- DoBasicChannelSelection" << endl;
+}
+
+TEST_F (BasicCorrelationSelection, DoBasicCorrelationSelection)
+{
+    sweepMs ();
+}
+
+TEST_F (BasicMutation, DoBasicMutation)
+{
+    sweepMs ();
+}
+
+TEST_F (FrequencyChannelSelection, DoFrequencyChannelSelection)
+{
+    sweepMs ();
+}
+
+TEST_F (MultipleMss, DoMultipleMss)
+{
+    sweepMs ();
+}
+
+TEST_F (Weighting, DoWeighting)
+{
+    sweepMs ();
+}
+
 
 
 } // end namespace test
