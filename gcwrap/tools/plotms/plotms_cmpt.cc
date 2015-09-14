@@ -771,9 +771,11 @@ bool plotms::displaySet() {
 
 void plotms::launchApp() {
 
-	if(!app.dbusName( ).empty() || !displaySet()) return;
-
-
+	if(!displaySet()) return;
+    // is it running?
+	if( (!app.dbusName( ).empty()) && 
+        (QtDBusApp::serviceIsAvailable(app.dbusName( ))) )
+        return;
 
 	// Launch PlotMS application with the DBus switch.
 	pid_t pid = fork();
@@ -809,18 +811,21 @@ void plotms::launchApp() {
 
 		// Wait for it to have launched...
 		unsigned int slept = 0;
-		bool launched = false;
+	    bool launched = false;
 		while(!launched && slept < LAUNCH_TOTAL_WAIT_US) {
 			usleep(LAUNCH_WAIT_INTERVAL_US);
 			launched = QtDBusApp::serviceIsAvailable(app.dbusName( ));
 			slept += LAUNCH_WAIT_INTERVAL_US;
 		}
 
+        /* Keep these for plotms restart
 		if(launched) {
 			itsLogFilename_ = "";
 			itsLogFilter_ = "";
 
 		} else {
+        */
+		if(!launched) {
 			app.dbusName( ) = "";
 			cerr << "ERROR: plotms application did not launch within specified"
 					" time window.  Check running processes and try again if "
