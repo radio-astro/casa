@@ -226,6 +226,9 @@ private:
       out_data[i][ipol] = static_cast<U>(in_data[i]);
     }
   }
+  size_t get_num_coeff_bloutput(LIBSAKURA_SYMBOL(BaselineType) bltype,
+				size_t order,
+                                size_t &num_coeff_max);
 
   void findLineAndGetMask(size_t const num_data, float const data[/*num_data*/],
       bool const in_mask[/*num_data*/], float const threshold,
@@ -241,7 +244,6 @@ private:
 			  string const& in_ppp,
 			  LIBSAKURA_SYMBOL(Status)& status,
 			  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts,
-			  Vector<size_t> &ctx_indices,
 			  LIBSAKURA_SYMBOL(BaselineType) bltype,
 			  int const order,
 			  float const clip_threshold_sigma,
