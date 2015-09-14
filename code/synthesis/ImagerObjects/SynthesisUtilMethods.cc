@@ -1390,7 +1390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         String measType;
         String unit;
-        Double val;
+        Double val = 0;
         rec.get("type", measType);
         if(measType=="doppler")
           {

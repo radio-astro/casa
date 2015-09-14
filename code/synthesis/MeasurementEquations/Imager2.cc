@@ -239,7 +239,6 @@ String Imager::imageName()
 // Make standard choices for coordinates
 Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose) 
 {  
-  Bool rstate;
   if(!valid()) return False;
   if(!assertDefinedImageParameters()) return False;
   LogIO os(LogOrigin("Imager", "imagecoordinates()", WHERE));
@@ -496,7 +495,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
       // should use obsFreqRef
-      rstate=calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq);
+      if (!calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+         return False;
+      }
       //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
       
 
@@ -563,7 +564,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     }
   
     // use data frame here (for channel mode)
-    rstate=calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq);
+    if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+      return False;
+    }
 
     if(imageMode_p=="CHANNEL") {
       if(imageNchan_p==0) {
@@ -635,7 +638,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	mfreqref=freqFrame_p;
       mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : mfreqref; 
       //rstate=calcImFreqs(chanFreq, freqResolution, mfreqref, obsEpoch, obsPosition,restFreq);
-      rstate=calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq);
+      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+        return False;
+      }
 
 
       Double finc;
@@ -691,7 +696,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       // when selecting in velocity its specfied freqframe or REST 
       MFrequency::Types imfreqref=(obsFreqRef==MFrequency::REST) ? MFrequency::REST : freqFrame_p;
       //rstate=calcImFreqs(chanFreq, freqResolution, imfreqref, obsEpoch, obsPosition,restFreq);
-      rstate=calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq);
+      if (!calcImFreqs(chanFreq, freqResolution, obsFreqRef, obsEpoch, obsPosition,restFreq)) {
+         return False;
+      }
   
       if (imageNchan_p==1) {
 	mySpectral = new SpectralCoordinate(imfreqref,
@@ -1125,7 +1132,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       // Since we are taking the frequencies as is, the frame must be
       // what is specified in the SPECTRAL_WINDOW table
       //      Double finc=(freqs(imageNchan_p-1)-freqs(0))/(imageNchan_p-1);
-      Double finc;
+      Double finc = 0;
       if(imageNchan_p > 1){
 	finc=freqs(1)-freqs(0);
       }

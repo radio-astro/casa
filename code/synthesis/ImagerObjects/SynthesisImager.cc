@@ -285,7 +285,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       IPosition shape = chanlist.shape();
       uInt nSelections = shape[0];
-      Int spw,chanStart,chanEnd,chanStep,nchan;
+      Int spw,chanStart,chanEnd,chanStep;
 
       ///////////////Temporary revert to using Vi/vb
       Int msin=mss4vi_p.nelements();
@@ -340,7 +340,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  chanEnd = chanlist(k,2);
     		  chanStep = chanlist(k,3);
     		  //nchan = chanEnd-chanStart+1;
-    		  nchan = Int(ceil(Double(chanEnd-chanStart+1)/Double(chanStep)));
+    		  //nchan = Int(ceil(Double(chanEnd-chanStart+1)/Double(chanStep)));
                   maxChanEnd(spw) = max(maxChanEnd(spw), chanEnd);
                   chanStepPerSpw(spw) = chanStep;
                   // find lowest selected channel for each spw
