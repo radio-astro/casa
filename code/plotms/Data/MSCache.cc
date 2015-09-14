@@ -1483,11 +1483,11 @@ bool MSCache::isEphemeris(){
 		const ROMSFieldColumns& fieldColumns = msc.field();
         uInt nrow = fieldColumns.nrow();
 
-		ephemerisAvailable = true;
+		ephemerisAvailable = false;
         String ephemPath;
         for (uInt i=0; i<nrow; ++i) {
             ephemPath = fieldColumns.ephemPath(i);
-		    if ( ephemPath.empty()) ephemerisAvailable = false;
+		    if ( !ephemPath.empty()) ephemerisAvailable = true;
 		}
 		ephemerisInitialized = true;
 	}
