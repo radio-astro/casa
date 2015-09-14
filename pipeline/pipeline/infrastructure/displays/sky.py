@@ -217,6 +217,9 @@ class SkyDisplay(object):
             mode_texts = {'mean': 'mean', 'max': 'max. at each pixel', 'center': 'center slice'}
             image_info = {'display': mode_texts[collapseFunction]}
             image_info.update(miscinfo)
+            if (image_info.get('type')):
+                if (image_info['type'] == 'flux'):
+                    image_info['type'] = 'pb'
 
             label = [TextArea('%s:%s' % (key, image_info[key]), textprops=dict(color=color))
                      for key, color in [('type', 'k'),

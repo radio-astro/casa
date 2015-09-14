@@ -143,9 +143,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'dirname'    : weblog_dir})
 
 
-class CleanPlotsRenderer(basetemplates.CommonRenderer):
+class TCleanPlotsRenderer(basetemplates.CommonRenderer):
     def __init__(self, context, result, plots_dict, field, spw, pol):
-        super(CleanPlotsRenderer, self).__init__('cleanplots.mako', context, 
+        super(TCleanPlotsRenderer, self).__init__('tcleanplots.mako', context, 
                                                  result)
         
         outfile = 'field%s-spw%s-pol%s-cleanplots.html' % (field, spw, pol)

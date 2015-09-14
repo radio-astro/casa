@@ -43,8 +43,8 @@ class CleanSummary(object):
               reportdir=stage_dir, intent=r.intent, collapseFunction='center'))
 
             # flux map
-            #plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-            #  r.flux, reportdir=stage_dir, intent=r.intent))
+            plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+              r.flux, reportdir=stage_dir, intent=r.intent, collapseFunction='mean'))
 
             # image iterations
             iterations = r.iterations.keys()
