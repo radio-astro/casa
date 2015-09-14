@@ -4136,11 +4136,12 @@ Bool Imager::makePBImage(PBMath& pbMath, ImageInterface<Float>& pbImage){
   for(rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()){
     Bool fieldDone=False;
     for (uInt k=0;  k < fieldsDone.nelements(); ++k)
-      fieldDone=fieldDone || (vb.fieldId()==fieldsDone(k));
+      //hopefully there is not more than 10000 fields per ms
+      fieldDone=fieldDone || ((vb.msId()*10000)+vb.fieldId())==fieldsDone(k);
     if(!fieldDone){
       ++fieldCounter;
       fieldsDone.resize(fieldCounter, True);
-      fieldsDone(fieldCounter-1)=vb.fieldId();
+      fieldsDone(fieldCounter-1)=vb.fieldId()+vb.msId()*10000;
       wcenter=vb.msColumns().field().phaseDirMeas(vb.fieldId());
       TempImage<Float> pbTemp(imShape, imageCoord);
       TempImage<Complex> ctemp(imShape, imageCoord);
