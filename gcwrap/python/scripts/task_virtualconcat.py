@@ -313,7 +313,7 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
 
 	 	ph.makeMMS(concatvis, mmsmembers,
  			   True, # copy subtables from first to all other members 
- 			   ['POINTING']) # excluding POINTING which will be linked
+ 			   ['POINTING', 'SYSCAL', 'SYSPOWER']) # excluding tables which will be linked
 
 		# remove the remaining "hulls" of the emptied input MMSs (if there are any)
 		for elvis in mmslist:

@@ -20,17 +20,17 @@
 
 
 step_title = { 0 : 'Data import and partitioning',
-	       1 : 'Generate antenna position cal tables',
-	       2 : 'Generate tsys cal tables',
-	       3 : 'Correct the Titan position',
-	       4 : 'Apriori flagging',
-	       5 : 'Generate WVR cal tables',
-	       6 : 'Generate delay calibration tables',
+	       	   1 : 'Generate antenna position cal tables',
+	           2 : 'Generate tsys cal tables',
+	           3 : 'Correct the Titan position',
+	           4 : 'Apriori flagging',
+	           5 : 'Generate WVR cal tables',
+	           6 : 'Generate delay calibration tables',
                7 : 'Apply antpos, wvr, tsys, and delay cal tables',
-	       8 : 'Split off non-wvr spws and save flags',
+	           8 : 'Split off non-wvr spws and save flags',
                9 : 'Flagging',
-	       10: 'Rebin to a reduced resolution of approx. 10 km/s',
-	       11: 'Fast phase-only gaincal for bandpass',
+	           10: 'Rebin to a reduced resolution of approx. 10 km/s',
+	           11: 'Fast phase-only gaincal for bandpass',
                12: 'Bandpass',
                13: 'Setjy',
                14: 'Fast phase-only gaincal',
@@ -56,7 +56,7 @@ step_title = { 0 : 'Data import and partitioning',
 basename=['X54','X220']
 makeplots=False
 print "Make plots?", makeplots
-usepclean=True
+usepclean=False
 print "Use pclean?", usepclean
 therefant = 'DV01'
 mynumsubmss = 8
@@ -133,14 +133,10 @@ mystep = 0
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    importasdm(asdm='uid___A002_X2a5c2f_X54',vis='X54-monolith.ms',asis='Stati* Anten*', overwrite=True)
-    importasdm(asdm='uid___A002_X2a5c2f_X220',vis='X220-monolith.ms',asis='Stati* Anten*', overwrite=True)
-
-    os.system('rm -rf X54.ms* X220.ms*')
-
-	# Note: the versionname after partition is called partition_1, not Original!
-    partition(vis='X54-monolith.ms', outputvis='X54.ms', numsubms=mynumsubmss, separationaxis='scan')
-    partition(vis='X220-monolith.ms', outputvis='X220.ms', numsubms=mynumsubmss, separationaxis='scan')
+    importasdm(asdm='uid___A002_X2a5c2f_X54',vis='X54.ms',asis='Stati* Anten*', overwrite=True,
+			createmms=True, numsubms=mynumsubmss)
+    importasdm(asdm='uid___A002_X2a5c2f_X220',vis='X220.ms',asis='Stati* Anten*', overwrite=True,
+			createmms=True, numsubms=mynumsubmss)
 
     if(makeplots):
         for name in basename:
@@ -181,8 +177,7 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf cal-tsys_'+name+'.fdm')
-        gencal(
-            vis=name+'.ms',
+        gencal(vis=name+'.ms',
             caltype='tsys', 
             caltable='cal-tsys_'+name+'.fdm')
 
@@ -214,22 +209,20 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     # Create flagcmd input list
-    flagcmd = ["mode='manual' antenna='CM01'",
+    myflagcmd = ["mode='manual' antenna='CM01'",
                "mode='manual' intent='*POINTING*'",
                "mode='manual' intent='*ATMOSPHERE*'",
                "mode='shadow'",
-               "mode='manual' autocorr=True spw='>0'" # do not flag the WVR data
+               "mode='manual' autocorr=True" # do not flag the WVR data
                ] 
                   
     for name in basename:
-
-        flagmanager(vis=name+'.ms', mode='restore', versionname='partition_1')
+        flagmanager(vis=name+'.ms', mode='restore', versionname='Original')        
+        flagdata(vis=name + '.ms', mode='list', inpfile=myflagcmd, flagbackup=False)		
         
-        flagdata(vis=name + '.ms', mode='list', inpfile=flagcmd, flagbackup=False)
-
-	if(makeplots):
-		# Plot amplitude vs time
-		plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
+        if(makeplots):
+			# Plot amplitude vs time
+			plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
 		       averagedata=T, avgchannel='4000', coloraxis='field',
 		       iteraxis='spw', plotfile=name+'-amp-vs-time.png', overwrite=True)
 
@@ -260,7 +253,8 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf cal-delay_'+name+'.K')
-	gaincal(vis=name+'.ms',caltable='cal-delay_'+name+'.K',
+        
+        gaincal(vis=name+'.ms',caltable='cal-delay_'+name+'.K',
 		field='*Phase*',spw='1,3,5,7',
 		solint='inf',combine='scan',refant=therefant,
 		gaintable='cal-antpos_'+name,
@@ -300,12 +294,12 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf '+name+'-line.ms')
-        split(vis=name+'.ms',
+        split2(vis=name+'.ms',
               outputvis=name+'-line.ms',
               spw='1,3,5,7',
               datacolumn='corrected',
-              keepmms=True
-              )
+              keepmms=True)
+        
         flagmanager(vis = name+'-line.ms',
                     mode = 'save',
                     versionname = 'apriori')
@@ -353,7 +347,7 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf '+name+'-line-vs.ms')
-        split(vis=name+'-line.ms',
+        split2(vis=name+'-line.ms',
               outputvis=name+'-line-vs.ms',
               datacolumn='data',
               width='8',
@@ -452,11 +446,10 @@ if(mystep in thesteps):
                   spw='0:200~479',
                   flagbackup=False)
  
-	setjy(vis=name+'-line-vs.ms',
+        setjy(vis=name+'-line-vs.ms',
               field='Titan',
-              standard='Butler-JPL-Horizons 2010', 
-              scalebychan=False,
-	      spw='0,1,2,3')
+              standard='Butler-JPL-Horizons 2012', 
+              scalebychan=False, spw='0,1,2,3')
 
     timing()
 
@@ -467,15 +460,15 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf cal-'+name+'-int.Gp')
-	gaincal(vis=name+'-line-vs.ms', 
+        gaincal(vis=name+'-line-vs.ms', 
 		caltable='cal-'+name+'-int.Gp', 
 		spw='*:25~455', 
 		field='*Phase*,*Band*,Titan',
 		gaintable='cal-'+name+'.B1',
 		selectdata=F, solint='int', 
 		refant=therefant, calmode='p')
-
-	if(makeplots):
+        
+        if(makeplots):
             plotcal(caltable='cal-'+name+'-int.Gp', 
                     xaxis = 'time', yaxis = 'phase',
                     poln='X', plotsymbol='o', plotrange = [0,0,-180,180], 
@@ -498,15 +491,16 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf cal-'+name+'-scan.Gp')
-	gaincal(vis=name+'-line-vs.ms', 
+        
+        gaincal(vis=name+'-line-vs.ms', 
 		caltable='cal-'+name+'-scan.Gp', 
 		spw='*:25~455', 
 		field='*Phase*,*Band*,Titan',
 		gaintable='cal-'+name+'.B1',
 		selectdata=F, solint='inf', 
 		refant=therefant, calmode='p')
-
-	if(makeplots):
+        
+        if(makeplots):
 		plotcal(caltable='cal-'+name+'-scan.Gp', 
 			xaxis = 'time', yaxis = 'phase',
 			poln='X', plotsymbol='o', plotrange = [0,0,-180,180], 
@@ -529,22 +523,23 @@ if(mystep in thesteps):
 
     for name in basename:
         os.system('rm -rf cal-'+name+'-scan.Gap')
-	gaincal(vis=name+'-line-vs.ms', 
+        
+        gaincal(vis=name+'-line-vs.ms', 
 		caltable='cal-'+name+'-scan.Gap', 
 		spw='*:25~455', 
 		field='*Phase*,*Band*,Titan',
 		gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp'],
 		selectdata=F, solint='inf', 
 		refant=therefant, calmode='ap')
-
-	if(makeplots):
-		plotcal(caltable='cal-'+name+'-scan.Gap', 
+        
+        if(makeplots):
+        	plotcal(caltable='cal-'+name+'-scan.Gap', 
 			xaxis = 'time', yaxis = 'amp',
 			poln='X', plotsymbol='o', 
 			iteration = 'spw',
 			figfile='cal-'+name+'-amp_vs_time_XX.scan.Gap.png', subplot = 221)
-
-		plotcal(caltable='cal-'+name+'-scan.Gap', 
+        	
+        	plotcal(caltable='cal-'+name+'-scan.Gap', 
 			xaxis = 'time', yaxis = 'amp',
 			poln='Y', plotsymbol='o', 
 			iteration = 'spw',
@@ -558,8 +553,8 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-	fluxscale(vis=name+'-line-vs.ms',caltable='cal-'+name+'-scan.Gap',
-		  fluxtable='cal-'+name+'.flux',reference='Titan',transfer='*Phase*,*Band*')
+		fluxscale(vis=name+'-line-vs.ms',caltable='cal-'+name+'-scan.Gap',
+		fluxtable='cal-'+name+'.flux',reference='Titan',transfer='*Phase*,*Band*')
 
 # Restore flags on calibrators?
 #for name in basename:
@@ -574,40 +569,38 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-	# to the bandpass cal
-	applycal(vis=name+'-line-vs.ms',field='*Band*',
+		# to the bandpass cal
+		applycal(vis=name+'-line-vs.ms',field='*Band*',
 	        gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
 	        interp=['nearest','nearest','nearest'],
-	        gainfield=['*Band*','*Band*','*Band*'],
-		calwt=F,
-		flagbackup=T)
+	        gainfield=['*Band*','*Band*','*Band*'],calwt=F,flagbackup=T)
 
-	# to the secondary phase cal
-	applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
+		# to the secondary phase cal
+		applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
 	        gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
        	 	interp=['nearest','linear','linear'],
        	 	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
 
-	# to the primary phase cal
-	applycal(vis=name+'-line-vs.ms',field='1224*',
+		# to the primary phase cal
+		applycal(vis=name+'-line-vs.ms',field='1224*',
         	gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
         	interp=['nearest','nearest','nearest'],
         	gainfield=['*Band*','1224*','1224*'],
 		calwt=F,
 		flagbackup=T)
 
-	# to Titan
-        applycal(vis=name+'-line-vs.ms',field='Titan',
+		# to Titan
+		applycal(vis=name+'-line-vs.ms',field='Titan',
                  gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
                  interp=['nearest','nearest','nearest'],
                  gainfield=['*Band*','Titan','Titan'],
                  calwt=F,
                  flagbackup=T)
 
-	# to M100
-	applycal(vis=name+'-line-vs.ms',field='M100',
+		# to M100
+		applycal(vis=name+'-line-vs.ms',field='M100',
         	gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
         	interp=['nearest','linear','linear'],
         	gainfield=['*Band*','1224*','1224*'],
@@ -749,12 +742,12 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-	os.system('rm -rf '+name+'-calibrated.ms*')
-	split(vis=name+'-line-vs.ms',field='M100',
+		os.system('rm -rf '+name+'-calibrated.ms*')
+		split2(vis=name+'-line-vs.ms',field='M100',
 	      outputvis=name+'-calibrated.ms',
 	      datacolumn = 'corrected',
-	      keepflags=F,
-              keepmms=True
+	      keepflags=False,
+          keepmms=True
               )
 
     timing()
@@ -780,7 +773,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     os.system('rm -rf M100all_lores.ms*')
-    split(vis='M100all.ms', outputvis='M100all_lores.ms',
+    split2(vis='M100all.ms', outputvis='M100all_lores.ms',
           datacolumn='data',
           timebin='60s',
           keepmms=True 
@@ -991,7 +984,7 @@ if(mystep in thesteps):
     exppeak21037 = [1.11501789093, 1.08849704266]
     exprms21037 = [0.000528678297997, 0.000582209031563]
     #expectation values set 17 April 2013 based on analysis using CASA trunk r23890
-    # (change was due to use of Butler-JPL-Horizons 2012 in the setjy task in stead of the 2010 standard)
+    # (change was due to use of Butler-JPL-Horizons 2012 in the setjy task instead of the 2010 standard)
     exppeak = [1.18009662628,1.15104115009]
     exprms = [0.000589906820096, 0.000633491261397]
 
