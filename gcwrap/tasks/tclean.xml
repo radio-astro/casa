@@ -251,15 +251,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                 To automatically change 'imagename' with a numerical 
                                 increment, set overwrite=False (see inline docs for 'overwrite').
 
-                       Tip : For now, to construct a .pb image with gridders other than 
-                               mosaic and awproject please use the following script based 
-                               on the old imager tool.
-
-                                   from recipes import makepb
-                                   makepb.makePB(vis='xxx.ms',field='0~5',
-                                                               imtemplate='onefield.model',
-                                                               outimage='try.pb', pblimit=0.2)
-                               
 
 </description>
       <any type="variant" limittypes="int string stringArray"/>
@@ -473,7 +464,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                                                VLA/ALMA PB models are same as for gridder='mosaicft'
 
-                       Notes on PB models : 
+                  ------ Notes on PB models : 
 
                        (1) Several different sources of PB models are used in the modes 
                             listed above. This is partly for reasons of algorithmic flexibility 
@@ -487,6 +478,40 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                            compleximage='/home/casa/data/trunk/alma/responses/ALMA_0_DV__0_0_360_0_45_90_348.5_373_373_GHz_ticra2007_VP.im', 
                            antnames=['DV'+'%02d'%k for k in range(25)]) 
                            ( Currently this will work only for non-parallel runs )
+
+
+                ------ Note on PB masks : 
+
+                         In tclean, A-Projection gridders (mosaic and awproject) produce a
+                         .pb image and use the 'pblimit' subparameter to decide normalization
+                         cutoffs and construct an internal T/F mask in the .pb and .image images.
+                         However, this T/F mask cannot directly be used during deconvolution 
+                         (which needs a 1/0 mask). 
+                         Currently, to use a .pb based maskT/F  for deconvolution, there are 
+                         two options : 
+                            -- Run tclean with niter=0 to produce the .pb, construct a 1/0 image 
+                         with the desired threshold, and supply it via the 'mask' parameter in a
+                         subsequent run (with calcres=F and calcpsf=F to restart directly from
+                         the minor cycle).
+                            -- Run tclean with mask='auto-pb' for it to automatically construct
+                         a 1/0 mask from the internal T/F mask from .pb at a fixed 0.2 threshold. 
+
+                ----- Note on making PBs for gridders other than mosaic,awproject
+
+                         For now, to construct a .pb image with gridders other than 
+                         mosaic and awproject please use the following script based 
+                         on the old imager tool.
+
+                             from recipes import makepb
+                             makepb.makePB(vis='xxx.ms',field='0~5',
+                                                         imtemplate='onefield.model',
+                                                         outimage='try.pb', pblimit=0.2)
+
+                          Here too, to use a pb-level mask for deconvolution, run tclean with
+                          niter=0, make the .pb image using the above recipe script (with its 
+                          internal T/F mask set at pblimit) and then either make a 1/0 mask 
+                          image at whatever desired pb level and supply it via 'mask' or set 
+                          mask='auto-pb' to automatically construct a 1/0 mask at the 0.2 level.
 
 </description>
 	    <value type="string">standard</value>
@@ -974,23 +999,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                                        gridders that produce .pb (i.e. mosaic and awproject))
 
 
-              Note : There are two types of masks that apply to CASA images
-                         - CASA images can contain an internal T/F mask used to select parts 
-                           of the image on which to perform math calculations
-                         - Image reconstruction tasks use 1/0 based clean masks which select
-                           parts of the image in which to search for flux components.
-                         These two types of masks are not automatically interchangeable. 
-                         ( Please use the makemask task to copy between them ).
+              Note : Mask images for deconvolution must contain 1 or 0 in each pixel.
+                         Such a mask is different from an internal T/F mask that can be
+                         held within each CASA image. These two types of masks are not
+                         automatically interchangeable, so please use the makemask task
+                         to copy between them if you need to construct a 1/0 based mask
+                         from a T/F one. 
 
-                         In tclean, A-Projection gridders (mosaic and awproject) produce a
-                         .pb image and use the 'pblimit' subparameter to decide normalization
-                         cutoffs and construct an internal T/F mask in the .pb and .image images.
-                         This mask is not used during deconvolution.
-                         Currently, to use a .pb based mask for deconvolution, please run tclean
-                         with niter=0 to produce the .pb, construct a 1/0 image with the
-                         desired threshold, and supply it via the 'mask' parameter in a
-                         subsequent run (with calcres=F and calcpsf=F to restart directly from
-                         the minor cycle).
 
                Note : Work is in progress to generate more flexible masking options and
                           enable more controls.
@@ -1396,11 +1411,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
+     This is the first release of our refactored imager code. Although most features have
+     been used and validated, there are many details that have not been thoroughly tested.
+     Feedback will be much appreciated.
+
      Usage Examples :
 
      (A) A suite of test programs that demo all usable modes of tclean on small test datasets
-           https://svn.cv.nrao.edu/svn/casa/trunk/gcwrap/python/scripts/tests/test_refimager.py
-
+           https://svn.cv.nrao.edu/svn/casa/branches/release-4_5/gcwrap/python/scripts/tests/test_refimager.py
      (B) A set of demo examples for ALMA imaging
            https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
 
