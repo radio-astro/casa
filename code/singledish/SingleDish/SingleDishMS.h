@@ -232,8 +232,30 @@ private:
       int const avg_limit, int const minwidth, vector<int> const& edge,
       bool const invert, bool out_mask[/*num_data*/]);
 
-  template<typename Func>
-  void doSubtractBaseline(Func func);
+  template<typename Func0, typename Func1, typename Func2, typename Func3>
+  void doSubtractBaseline(string const& in_column_name,
+			  string const& out_ms_name, 
+                          string const& out_bloutput_name,
+			  bool const& do_subtract,
+			  string const& in_spw,
+			  string const& in_ppp,
+			  LIBSAKURA_SYMBOL(Status)& status,
+			  std::vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts,
+			  Vector<size_t> &ctx_indices,
+			  LIBSAKURA_SYMBOL(BaselineType) bltype,
+			  int const order,
+			  float const clip_threshold_sigma,
+			  int const num_fitting_max,
+			  bool const linefinding,
+			  float const threshold,
+			  int const avg_limit,
+			  int const minwidth,
+			  vector<int> const& edge,
+			  Func0 func0,
+			  Func1 func1,
+			  Func2 func2,
+			  Func3 func3,
+			  LogIO os);
 
   /////////////////////////////
   /// MS handling functions ///
@@ -298,10 +320,6 @@ private:
 
   //split the name  
   void split_bloutputname(string str);
-
-  //MJD->year,month,day,hour,minutes,second
-  void MJDtoYMDhms(int* Y, int* M, int* D, int* h, int* m, double* s);
-
 };
 // class SingleDishMS -END
 
