@@ -61,7 +61,7 @@ import inspect
 
 ## List to be run
 def suite():
-     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_widefield, test_modelvis]
+     return [test_onefield, test_iterbot, test_multifield,test_stokes, test_modelvis]
 #     return [test_onefield, test_iterbot, test_multifield,test_stokes,test_cube, test_widefield,test_mask, test_modelvis,test_modelvis_failing,test_widefield_failing]
 
 refdatapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/refimager/'
@@ -377,14 +377,14 @@ class testref_base(unittest.TestCase):
           tb.close();
 
      def delmodels(self,msname="",dmodcol=False):
-          delmod(msname,scr=True)  ## Get rid of OTF model and model column
+          delmod(msname,scr=dmodcol)  ## Get rid of OTF model and model column
 #          if dmodcol:
 #               self.delmodelcol(msname) ## Delete model column
 #          else:
 #               self.resetmodelcol(msname)  ## Set model column to one
-          cb.open(msname)
-          cb.close()
-          self.resetmodelcol(msname)  ## Set model column to zero
+#          cb.open(msname)
+#          cb.close()
+#          self.resetmodelcol(msname)  ## Set model column to zero
           self.delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
 
      def delmodelcol(self,msname=""):
@@ -448,15 +448,15 @@ class test_onefield(testref_base):
      def test_onefield_clark(self):
           """ [onefield] Test_Onefield_clark : mfs with clark minor cycle """
           self.prepData('refim_twochan.ms')
-##          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=100,interactive=0) #,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=1000,interactive=0,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
-          clean(vis=self.msfile,imagename=self.img+'.old',imsize=200,cell='8.0arcsec',niter=1000,psfmode='clark',phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
-#          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[50,50,0,0])])
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='clark',interactive=0) #,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+          #off center#ret = tclean(vis=self.msfile,imagename=self.img,imsize=200,cell='8.0arcsec',niter=1000,interactive=0,phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+          #compare with clean#clean(vis=self.msfile,imagename=self.img+'.old',imsize=200,cell='8.0arcsec',niter=1000,psfmode='clark',phasecenter='J2000 19h59m57.5s +40d49m00.077s') # default is clark
+          self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[50,50,0,0])])
 
      def test_onefield_hogbom(self):
           """ [onefield] Test_Onefield_hogbom : mfs with hogbom minor cycle """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=100,deconvolver='hogbom',interactive=0)#,phasecenter='J2000 19h59m57.5s +40d49m00.077s')
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='hogbom',interactive=0)#,phasecenter='J2000 19h59m57.5s +40d49m00.077s')
           self.checkall(ret=ret, peakres=0.35, modflux=0.77, iterdone=10, imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image',self.img+'.model'], imval=[(self.img+'.psf',1.0,[50,50,0,0])])
          
      def test_onefield_mem(self):
@@ -512,19 +512,19 @@ class test_onefield(testref_base):
           self.prepData('refim_twochan.ms')
 
           ## Only psf
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=True,calcres=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=True,calcres=False,deconvolver='clark')
           self.checkall(imexist=[self.img+'.psf'], imexistnot=[self.img+'.residual', self.img+'.image'],nmajordone=1)
 
           ## Only residual
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0,calcpsf=False,calcres=True,deconvolver='clark')
           self.checkall(imexist=[self.img+'.psf', self.img+'.residual'], imexistnot=[self.img+'.image'],nmajordone=1)
 
           ## Start directly with minor cycle and do only the last major cycle.
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False,deconvolver='clark')
           self.checkall(ret=ret, peakres=0.392, modflux=0.732, imexist=[self.img+'.psf',self.img+'.residual', self.img+'.image'],nmajordone=1)
 
           ## Re-start from existing model image and continue on...
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,interactive=0,calcpsf=False,calcres=False,deconvolver='clark')
           self.checkall(ret=ret, peakres=0.161, modflux=0.991, imexist=[self.img+'.psf',self.img+'.residual', self.img+'.image'],nmajordone=1)
 
 
@@ -563,68 +563,68 @@ class test_iterbot(testref_base):
      def test_iterbot_mfs_1(self):
           """ [iterbot] Test_Iterbot_Mfs_1 : Zero Iterations """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=0,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=0,interactive=0)
           self.checkall(imexist=[self.img+'.psf', self.img+'.residual'], imexistnot=[self.img+'.image'])
 
      def test_iterbot_mfs_2(self):
           """ [iterbot] Test_Iterbot_Mfs_2 : Iterations with low gain """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,gain=0.1,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,gain=0.1,interactive=0)
           self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10,nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_3(self):
           """ [iterbot] Test_Iterbot_Mfs_3 : Cycleniter test """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,cycleniter=3,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,cycleniter=3,interactive=0)
           self.checkall(ret=ret, peakres=0.392, modflux=0.732, iterdone=10, nmajordone=5,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_4(self):
           """ [iterbot] Test_Iterbot_Mfs_4 : Iterations with high gain """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, gain=0.5,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10, gain=0.5,interactive=0)
           self.checkall(ret=ret, peakres=0.026, modflux=1.274, iterdone=10, nmajordone=3,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_5(self):
           """ [iterbot] Test_Iterbot_Mfs_5 : Threshold test """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,threshold='0.1Jy',gain=0.5,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,threshold='0.1Jy',gain=0.5,interactive=0)
           self.checkall(ret=ret, peakres=0.0924, modflux=1.129, iterdone=5, nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_6(self):
           """ [iterbot] Test_Iterbot_Mfs_6 : Cycleniter and threshold """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10, cycleniter=3, threshold='0.1Jy',gain=0.5,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10, cycleniter=3, threshold='0.1Jy',gain=0.5,interactive=0)
           self.checkall(ret=ret, peakres=0.0924, modflux=1.129, iterdone=5, nmajordone=3,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_7(self):
           """ [iterbot] Test_Iterbot_Mfs_7 : Threshold + cyclefactor to trigger major cycles earlier """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,threshold='0.01Jy', gain=0.5,cyclefactor=10.0,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=10,threshold='0.01Jy', gain=0.5,cyclefactor=10.0,interactive=0)
           self.checkall(ret=ret, peakres=0.026, modflux=1.274, iterdone=10, nmajordone=4,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_8(self):
           """ [iterbot] Test_Iterbot_Mfs_8 : minpsffraction to trigger major cycles earlier. """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=20,threshold='0.01Jy', minpsffraction = 0.5,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=20,threshold='0.01Jy', minpsffraction = 0.5,interactive=0)
           self.checkall(ret=ret, peakres=0.16127, modflux=0.9919, iterdone=20, nmajordone=4,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_mfs_9(self):
           """ [iterbot] Test_Iterbot_Mfs_9 : maxpsffraction """
           self.prepData('refim_twochan.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=20,threshold='0.01Jy', minpsffraction=0.8,maxpsffraction=0.5,interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',deconvolver='clark',niter=20,threshold='0.01Jy', minpsffraction=0.8,maxpsffraction=0.5,interactive=0)
           self.checkall(ret=ret, peakres=0.16127, modflux=0.9919, iterdone=20, nmajordone=4,imexist=[self.img+'.psf', self.img+'.residual', self.img+'.image'])
 
      def test_iterbot_cube_1(self):
           """ [iterbot] Test_Iterbot_cube_1 : iteration counting across channels (>niter) """
           self.prepData('refim_point_withline.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',niter=10,threshold='0.75Jy',interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',deconvolver='clark',niter=10,threshold='0.75Jy',interactive=0)
           self.checkall(ret=ret, iterdone=90,nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual'])
           ## Only chans 6 and 7 reach cycleniter, others reach threshold in fewer than 10 iters per chan.
 
      def test_iterbot_cube_2(self):
           """ [iterbot] Test_Iterbot_cube_2 : High threshold, iterate only on line channels. """
           self.prepData('refim_point_withline.ms')
-          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',niter=10,threshold='1.75Jy',interactive=0)
+          ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',specmode='cube',deconvolver='clark',niter=10,threshold='1.75Jy',interactive=0)
           self.checkall(ret=ret, peakres=1.73, modflux=0.407,iterdone=12,nmajordone=2,imexist=[self.img+'.psf', self.img+'.residual'])
 
 
@@ -860,16 +860,17 @@ class test_stokes(testref_base):
 
 ##Task level tests : cube.
 class test_cube(testref_base):
-     
-     def setUp(self):
-          self.msfile = 'refim_point.ms'
-          self.msfile2 = 'refim_Cband.G37line.ms'
-          ret = None
-          self.img = 'tst'
-          self.prepData(self.msfile)
 
-     def test_cube_1(self):
-          """ [cube] Test_Cube_1 : 20 basic cube tests """
+#     def __init__(self,methodName='runTest'):
+#          testref_base.__init__(self,methodName)
+#          self.test_cube_0.__func__.__doc__ %="aaaa"
+
+     def setUp(self):
+          self.epsilon = 0.05
+          self.msfile = ""
+          self.img = "tst"
+
+          ## Setup some variables to use in all the tests
 
           ## chan 5 (TOPO)
           qfstart=qa.quantity("1.1GHz")
@@ -893,6 +894,312 @@ class test_cube(testref_base):
           mvwidth = me.radialvelocity('TOPO',qvwidth)
 
           # restf = 1.25GHz
+          # vel range: 59961.1 -  -31174.7 km/s (lsrk/radio)
+          #            74952.3 -  -28238.3 km/s (lsrk/optical)  
+
+          self.testList = {
+                      0:{'imagename':'Cubetest_chandefstdefwidth','spw':'0','start':0,'width':1,'outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, default start and width, LSRK'},
+                      1:{'imagename':'Cubetest_chandefstdefwidthtopo','spw':'0','start':0,'width':1, 'outframe':'TOPO','veltype':'radio',
+                        'desc':'channel, default start and width, TOPO'},
+                      2:{'imagename':'Cubetest_chandefstwidth2','spw':'0','start':0,'width':2, 'outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, default start, width=2, LSRK'},
+                      3:{'imagename':'Cubetest_chanst5wd1','spw':'0','start':5,'width':1, 'outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, start=5, default width, LSRK'},
+                      # this will result in blank channnel images (calcChanFreqs requires start and width in channel       
+                      # mode to be given in chan index                                                                 
+                      4:{'imagename':'Cubetest_chandefstwd1spwsel','spw':'0:5~19','start':0,'width':1, 'outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, spw=0:5~19, LSRK'},
+                      #5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','width':'40MHz','outframe':'TOPO',
+                      #  'desc':'frequency, default start, width=\'40MHz\', TOPO'},
+                      # data set changed!
+                      5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','width':'100MHz','outframe':'TOPO','veltype':'radio',
+                        'desc':'frequency, default start, width=\'100MHz\', TOPO'},
+                      6:{'imagename':'Cubetest_freqst5defwd','spw':'0','start':'1.1GHz','width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'frequency, start=\'1.1GHz\', default width, TOPO'},
+                      7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:4~19','start':'1.1GHz','width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'frequency, start=\'1.1GHz\', default width, spw=0:6~19, TOPO'},
+                      8:{'imagename':'Cubetest_freqst10wdm','spw':'0','start':'1.2GHz','width':'-50MHz','outframe':'TOPO','veltype':'radio',
+                        'desc':'frequency, start=\'1.2GHz\', width=\'-50MHz\', TOPO'},
+                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','width':'23983.4km/s','outframe':'TOPO','veltype':'radio',
+                        'desc':'frequency, default start, width=\'23983.4km/s\', TOPO'},
+                     #10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','width':'-9593.40km/s','outframe':'TOPO','veltype':'radio',
+                     #   'desc':'velocity, default start, width=\'-9593.40m/s\', TOPO'},
+                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','width':'-23983.4km/s','outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, default start, width=\'-23983.4m/s\', TOPO'},
+                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','start':'11991.7km/s','width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, start=\'11991.7km/s\', default width, TOPO'},
+                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','start':'11977.6km/s','width':'','outframe':'BARY','veltype':'radio',
+                        'desc':'velocity, start=\'11977.6km/s\', default width, BARY'},
+                     # currently 13 is not quite properly working, investigating - 2014.08.27 TT 
+                     # skip 13 for now
+                     13: {},
+                     # for refim_point.ms ch10=-499626km/s (opt)
+                     #13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'-49962.6km/s','width':'',
+                     ##13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'12494.8km/s','width':'',
+                     ##13:{'imagename':'Cubetest_optvelst0defwdlsrk','spw':'0','start':'26072.5km/s','width':'8817km/s',
+                     ##13:{'imagename':'Cubetest_optvelst2defwdlsrk','spw':'0','start':'132605km/s','width':'-8817km/s',
+                     #   'veltype':'optical','outframe':'LSRK',
+                     ##   'desc':'velocity, start=\'74952.3km/s\', default width, veltype=optical LSRK'},
+                     #   'desc':'velocity, start=\'-49962.6km/s\', default width, veltype=optical LSRK'},
+                     14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':qfstart,'width':'', 'veltype':'radio','outframe':'',
+                        'desc':'frequency, start=%s, default width, veltype=radio TOPO' % qfstart},
+                     15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':mfstart,'width':'', 'veltype':'radio','outframe':'',
+                        'desc':'frequency, start=%s, default width, veltype=radio LSRK' % mfstart},
+                     16:{'imagename':'Cubetest_stqveldefwd','spw':'0','start':qvstart,'width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, start=%s, default width, TOPO' % qvstart},
+                     17:{'imagename':'Cubetest_stmveldefwd','spw':'0','start':mvstart,'width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, start=%s, default width, BARY' % mvstart},
+                     18:{'imagename':'Cubetest_veldefstqvwidth','spw':'0','start':'','width':qvwidth,'outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, default start, width=%s, TOPO' % qvwidth},
+                     19:{'imagename':'Cubetest_veldefstmvwidth','spw':'0','start':'','width':mvwidth,'outframe':'TOPO','veltype':'radio',
+                        'desc':'velocity, default start, width=%s, TOPO' % mvwidth},
+                     20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':dop,'width':'','outframe':'TOPO','veltype':'radio',
+                        'desc':'doppler, start=%s, default width, TOPO' % dop},
+                     # with a gap in spw channel sel
+                     21:{'imagename':'Cubetest_st5gap','spw':'0:5~9,12~14','start':5,'width':'','outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, start=%s, default width, channel gap (10-11) LSRK' % 5},
+                     # stride > 1
+                     22:{'imagename':'Cubetest_st5gap','spw':'0:0~10^2','start':0,'width':'','outframe':'LSRK','veltype':'radio',
+                        'desc':'channel, start=%s, default width, step=2 LSRK' % 0}
+                    }
+          
+#          self.test_cube_0.__func__.__doc__ %=self.testList[0]['desc']
+     
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+     def test_cube_0(self):
+          """ [cube] Test_Cube_0  """
+          testid=0
+          print " : " , self.testList[testid]['desc']
+          self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,field='0',imsize=100,cell='8.0arcsec',niter=10,specmode='cube',nchan=10,restfreq=['1.25GHz'],phasecenter="J2000 19:59:28.500 +40.44.01.50",deconvolver='hogbom',spw=self.testList[testid]['spw'],imagename=self.img+self.testList[testid]['imagename'],start=self.testList[testid]['start'], width=self.testList[testid]['width'],veltype=self.testList[testid]['veltype'],outframe=self.testList[testid]['outframe'])
+          self.assertTrue(os.path.exists(self.img+self.testList[testid]['imagename']+'.psf') and os.path.exists(self.img+self.testList[testid]['imagename']+'.residual') )
+
+
+
+
+     def test_cube_all(self):
+          """ [cube] Test_Cube_1 : 20 basic cube tests """
+
+          self.prepData('refim_point.ms')
+
+          ## chan 5 (TOPO)
+          self.qfstart=qa.quantity("1.1GHz")
+          #self.qvstart=qa.quantity("-59958.5km/s")
+          # for restf=1.25GHz
+          #self.qvstart=qa.quantity("35975.1km/s")
+          # ch10
+          self.qvstart=qa.quantity("16788.4km/s")
+
+          ##mfstart=me.frequency('LSRK',qa.quantity("1.1GHz"))
+          self.mfstart=me.frequency('LSRK',qa.quantity("1.09999GHz"))
+          #self.mvstart=me.radialvelocity('BARY',qa.quantity("-59976.1km/s"))
+          self.mvstart=me.radialvelocity('BARY',qa.quantity("11977.6km/s"))
+          #self.dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
+          self.mfstart10=me.frequency('LSRK',qa.quantity(" 1.17999GHz"))                                                        
+          self.dop = me.todoppler('radio',mfstart10,qa.quantity('1.25GHz'))                                              
+          #1chan width 
+          #self.qvwidth = qa.quantity("11991.700km/s")
+          #self.qvwidth = qa.quantity("4796.7km/s")
+          self.qvwidth = qa.quantity("11991.7km/s")
+          self.mvwidth = me.radialvelocity('TOPO',qvwidth)
+
+          # self.restf = 1.25GHz
           # vel range: 59961.1 -  -31174.7 km/s (lsrk/radio)
           #            74952.3 -  -28238.3 km/s (lsrk/optical)  
 
@@ -986,16 +1293,22 @@ class test_cube(testref_base):
               
      def test_cube_D1(self):
           """ [cube] Test_Cube_D1 : specmode cubedata - No runtime doppler corrections """
-          ret = tclean(vis=self.msfile2,field='1',spw='0:105~135',specmode='cubedata',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
+          self.prepData('refim_Cband.G37line.ms')
+          ret = tclean(vis=self.msfile,field='1',spw='0:105~135',specmode='cubedata',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
           self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',86.254,[128,128,0,18])])
+          ## line is smoother
 
      def test_cube_D2(self):
           """ [cube] Test_Cube_D2 : specmode cube - WITH doppler corrections """
-          ret = tclean(vis=self.msfile2,field='1',spw='0:105~135',specmode='cube',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
+          self.prepData('refim_Cband.G37line.ms')
+          ret = tclean(vis=self.msfile,field='1',spw='0:105~135',specmode='cube',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
           self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',92.1789,[128,128,0,20])])
+          ## line is tighter
 
-     def test_cube_D3(self):
-          """ [cube] Test_Cube_D3 : specmode cubesrc - Doppler correct to a SOURCE ephemeris """
+#     def test_cube_D3(self):
+#          """ EMPTY : [cube] Test_Cube_D3 : specmode cubesrc - Doppler correct to a SOURCE ephemeris"""
 #          ret = tclean(vis=self.msfile,field='1',spw='0:105~135',specmode='cubesrc',nchan=30,start=105,width=1,veltype='radio',imagename=self.img,imsize=256,cell='0.01arcmin',phasecenter=1,deconvolver='hogbom',niter=10)
 #          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.residual') )
 
@@ -1019,13 +1332,22 @@ class test_cube(testref_base):
           plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='data-model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.step3data.png',title="data-model")
           
 
-     def test_cube_continuum_subtract_otf(self):
-          """ [cube] Test_Cube_continuum_subtract :  On-The-Fly using multifield """
-          self.prepData('refim_pointline.ms')
+#     def test_cube_continuum_subtract_otf(self):
+#          """ EMPTY : [cube] Test_Cube_continuum_subtract :  On-The-Fly using multifield """
+#          self.prepData('refim_point_withline.ms')
 
      def test_cube_badchannel_restoringbeam(self):
           """ [cube] Test auto restoring beam with a bad edge channel """
           self.prepData('refim_point.ms')
+          ret = tclean(vis=self.msfile,imagename=self.img,specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom')
+          self.assertTrue(os.path.exists(self.img+'.psf') and os.path.exists(self.img+'.image') )
+          self.checkall(imexist=[self.img+'.image'],imval=[(self.img+'.image',0.889,[54,50,0,0]) , (self.img+'.image',0.0602,[54,50,0,19]) ])
+          # first channel's psf is 'bad' and wider along one axis. This offcenter location is higher in value
+
+          ret = tclean(vis=self.msfile,imagename=self.img+'1',specmode='cube',imsize=100,cell='10.0arcsec',niter=10,deconvolver='hogbom',restoringbeam='common')
+          self.assertTrue(os.path.exists(self.img+'1.psf') and os.path.exists(self.img+'1.image') )
+          self.checkall(imexist=[self.img+'1.image'],imval=[(self.img+'1.image',0.708,[54,50,0,0]), (self.img+'1.image',0.2536,[54,50,0,19]) ])
+          # first channel has been restored by a 'common' beam picked from channel 2
 
 ##############################################
 ##############################################
@@ -1090,8 +1412,8 @@ class test_widefield(testref_base):
      def test_widefield_aproj_mfs(self):
           """ [widefield] Test_Widefield_aproj : MFS with narrowband AWProjection (wbawp=F, 1spw)  stokes I """
           self.prepData("refim_mawproject.ms")
-##          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
-          ret = tclean(vis=self.msfile,spw='2',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
+          ret = tclean(vis=self.msfile,spw='1',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
+         ## ret = tclean(vis=self.msfile,spw='2',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',wbawp=False,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='hogbom')
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',1.0,[256,256,0,0]),(self.img+'.weight',0.493,[256,256,0,0]) ] )
           ## weight is pbsq which is 0.7^2 = 0.49 (approx).
 
@@ -1113,6 +1435,14 @@ class test_widefield(testref_base):
 
 
           #do stokes V too..
+
+     def test_widefield_wbaproj_mtmfs(self):
+          """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
+          self.prepData("refim_mawproject.ms")
+          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
+          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.96,[256,256,0,0]),(self.img+'.weight.tt0',0.486,[256,256,0,0]),(self.img+'.alpha',0.0,[256,256,0,0]) ] )
+          ## alpha should be ZERO as the pb spectrum has been taken out.
+
      
      ## CHECK NORMALIZATION OF WEIGHTIMAGE = normed to peak=1
      ## TODO : make vpman recognize EVLA in addition to VLA.
@@ -1136,10 +1466,11 @@ class test_widefield(testref_base):
      def test_widefield_mosaicft_cube(self):
           """ [widefield] Test_Widefield_mosaicft_cube : MFS with mosaicft  stokes I """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1)
+          ret = tclean(vis=self.msfile,spw='*',field='0',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",specmode='cube',niter=10,gridder='mosaicft',deconvolver='hogbom',gain=0.1,stokes='I')
           self.checkall(imexist=[self.img+'.image', self.img+'.psf', self.img+'.weight'],imval=[(self.img+'.image',0.9743,[256,256,0,0]),(self.img+'.weight',0.46,[256,256,0,0]) ] )
 
           #do stokes V too..
+
 
 class test_widefield_failing(testref_base):
 
@@ -1152,17 +1483,10 @@ class test_widefield_failing(testref_base):
      def test_widefield_aproj_mtmfs(self):
           """ [widefield] Test_Widefield_aproj_mtmfs : MFS with AWProjection (wbawp=T,conjbeams=F, allspw) and nt=2 stokes I  """
           self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=60,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs')
+          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=500,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=False,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs')
           self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',1.0,[256,256,0,0]),(self.img+'.weight.tt0',0.49,[256,256,0,0]),(self.img+'.alpha',0.0,[256,256,0,0]) ] )
           ## alpha should represent that of the mosaic PB (twice).. -0.1 doesn't look right. Sigh.... well.. it should converge to zero.
-
-     def test_widefield_wbaproj_mtmfs(self):
-          """ [widefield] Test_Widefield_wbaproj_mtmfs : MFS with wideband AWProjection (wbawp=T,conjbeams=T, allspw) and nt=2 stokes I  """
-          self.prepData("refim_mawproject.ms")
-          ret = tclean(vis=self.msfile,spw='*',field='*',imagename=self.img,imsize=512,cell='10.0arcsec',phasecenter="J2000 19:59:28.500 +40.44.01.50",niter=30,gridder='awproject',cfcache=self.img+'.cfcache',wbawp=True,conjbeams=True,psterm=False,computepastep=360.0,rotatepastep=360.0,deconvolver='mtmfs',pblimit=0.1)
-          self.checkall(imexist=[self.img+'.image.tt0', self.img+'.psf.tt0', self.img+'.weight.tt0'],imval=[(self.img+'.image.tt0',0.95,[256,256,0,0]),(self.img+'.weight.tt0',0.49,[256,256,0,0]),(self.img+'.alpha',0.0009,[256,256,0,0]) ] )
-          ## alpha should be ZERO as the pb spectrum has been taken out.
-
+          ## alpha keeps increasing in magnitude with niter.... not right.
 
      def test_widefield_mosaic_outlier(self):
           """ [multifield] Test_widefield_mosaic_outlier : Mosaic with an outlier field """
@@ -1238,6 +1562,8 @@ class test_modelvis(testref_base):
           self.prepData("refim_twochan.ms")
           self.delmodels(msname=self.msfile,dmodcol=True)
           ret = tclean(vis=self.msfile,imagename=self.img,imsize=100,cell='8.0arcsec',niter=10,deconvolver='mtmfs',savemodel='modelcolumn')
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='data',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.data.png',title="original data")
+          plotms(vis=self.msfile,xaxis='frequency',yaxis='amp',ydatacolumn='model',customsymbol=True,symbolshape='circle',symbolsize=5,showgui=False,plotfile=self.img+'.plot.model.png',title="empty model")
           hasmodcol, modsum, hasvirmod = self.checkmodel(self.msfile)
           self.assertTrue( hasmodcol==True and modsum>0.0 and hasvirmod==False )
 
