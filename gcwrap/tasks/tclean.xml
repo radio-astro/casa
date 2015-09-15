@@ -371,7 +371,7 @@ HPX HEALPix grid.  -->
 <!--============================================== -->
 
     <param type="any" name="specmode" required="true">
-     <shortdescription>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</shortdescription>
+     <shortdescription>Spectral definition mode (mfs,cube,cubedata)</shortdescription>
 <description>Spectral definition mode (mfs,cube,cubedata)
                        
                        mode='mfs' : Continuum imaging with only one channel
@@ -431,9 +431,9 @@ HPX HEALPix grid.  -->
                        Default:''; The first channel is automatically determined based on the 'spw' channel selection and 'width'.
                        When the channel number is used along with the channel selection in 'spw' (e.g. spw='0:6~100'),
                        'start' channel number is RELATIVE (zero-based) to the selected channels in 'spw'. So for the above example,
-                       start='1' means that the second selected data channel, which is channel 7.
+                       start=1 means that the first image channel is the second selected data channel, which is channel 7.
                        For specmode='cube', when velocity or frequency is used it is interpreted with the frame defined in outframe.
-                       examples: start='start='5.0km/s'; 1st channel, 5.0km/s in outframe
+                       examples: start='5.0km/s'; 1st channel, 5.0km/s in outframe
                                  start='22.3GHz'; 1st channel, 22.3GHz in outframe
 </description>
       <value type="string"></value>
@@ -445,17 +445,16 @@ HPX HEALPix grid.  -->
                       specified by data channel number (ingeter), velocity (string with a unit), or
                       or frequency (string with a unit).
                       Default:''; data channel width
-                      The sign of width indicates the direction of the channels to be incremented.
-                      For width specified in velocity or frequency with '-' gives image channels in
+                      The sign of width defines the direction of the channels to be incremented.
+                      For width specified in velocity or frequency with '-' in front  gives image channels in
                       decreasing velocity or frequency, respectively. 
                       For specmode='cube', when velocity or frequency is used it is interpreted with 
                       the reference frame defined in outframe.  
                       examples: width='2.0km/s'; results in channels with incresing velocity
                                 width='-2.0km/s';  results in channels with decreasing velocity
                                 width='40kHz'; results in channels with increasing frequency
-                                width=-2; results in channels averaged of 2 data channels incremented to from 
+                                width=-2; results in channels averaged of 2 data channels incremented from 
                                           high to low channel numbers 
-
 
 </description>
       <value type="string"></value>
@@ -497,18 +496,20 @@ HPX HEALPix grid.  -->
       <value type="stringArray"></value>
     </param>
 
+<!-- sub-param for 'cubesrc' desabled for now
     <param type="any" name="sysvel" subparam="true">
      <shortdescription>Systemic velocity (for mode=cubesrc)</shortdescription>
 <description>Systemic velocity (for mode=cubesrc) </description>
       <value type="string"></value>
     </param>
-
+-->
+<!-- sub-param for 'cubesrc' desabled for now
     <param type="string" name="sysvelframe" subparam="true">
      <shortdescription>Spectral frame in which sysvel is specified (for mode=cubesrc only)</shortdescription>
 <description>Spectral frame in which sysvel is specified (for mode=cubesrc only)</description>
       <value type="string"></value>
     </param>
-
+-->
     <param type="string" name="interpolation" subparam="true">
      <shortdescription>Spectral interpolation (nearest,linear,cubic)</shortdescription>
 <description>Spectral interpolation (nearest,linear,cubic)
@@ -1485,6 +1486,7 @@ HPX HEALPix grid.  -->
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
        </equals>
+       <!-- desable for now...
        <equals type="string" value="cubesrc">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
@@ -1496,6 +1498,7 @@ HPX HEALPix grid.  -->
 	 <default param="sysvelframe"><value>""</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
        </equals>
+       -->
        <equals type="string" value="cubedata">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
