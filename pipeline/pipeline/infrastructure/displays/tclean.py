@@ -40,7 +40,7 @@ class CleanSummary(object):
 
             # psf map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf+extension,
-              reportdir=stage_dir, intent=r.intent, collapseFunction='center'))
+              reportdir=stage_dir, intent=r.intent, collapseFunction='mean'))
 
             # flux map
             plot_wrappers.append(displays.SkyDisplay().plot(self.context,
