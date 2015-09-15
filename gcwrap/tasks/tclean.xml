@@ -8,9 +8,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="tclean" category="imaging" visibility="experimental">
 
-  <shortdescription>Construct and deconvolve images</shortdescription>
+  <shortdescription>Radio Interferometric Image Reconstruction</shortdescription>
 
-  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+  <description>Form images from visibilities and reconstruct a sky model. 
+                         This task handles continuum images and spectral line cubes, 
+                         supports outlier fields, contains standard clean based algorithms
+                         along with algorithms for multi-scale and wideband image
+                         reconstruction, widefield imaging correcting for the w-term, 
+                         full primary-beam imaging and joint mosaic imaging.
+
+</description>
 
   <input>
 
@@ -32,7 +39,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="selectdata" visibility="hidden">
      <shortdescription>Enable data selection parameters</shortdescription>
-<description>Enable data selection parameters in the task interface.
+<description>Enable data selection parameters. 
 </description>
       <value type="bool">True</value>
     </param>
@@ -259,40 +266,101 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="imsize" > <!-- subparam="true"> -->
      <shortdescription>Number of pixels</shortdescription>
-<description>Number of pixels</description>
+<description>Number of pixels
+         example :  imsize = [350,250]
+                           imsize = 500 is equivalent to [500,500]
+         To take proper advantage of internal optimized FFT routines, the 
+         number of pixels must be even and factorizable by 2,3,5,7 only.
+</description>
       <any type="variant" limittypes="int intArray"/>
       <value type="intArray">100</value>
     </param>
 
     <param type="any" name="cell" > <!-- subparam="true"> -->
      <shortdescription>Cell size</shortdescription>
-<description>Cell size</description>
+<description>Cell size
+               example: cell=['0.5arcsec,'0.5arcsec'] or
+               cell=['1arcmin', '1arcmin']
+               cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
+</description>
       <any type="variant" limittypes="int double intArray doubleArray string stringArray"/>
       <value type="stringArray">"1arcsec"</value>
     </param>
 
     <param type="any" name="phasecenter" > <!-- subparam="true"> -->
      <shortdescription>Phase center of the image</shortdescription>
-<description>Phase center of the image</description>
+<description>Phase center of the image (string or field id)
+               example: phasecenter=6
+                        phasecenter='J2000 19h30m00 -40d00m00'
+                        phasecenter='J2000 292.5deg  -40.0deg'
+                        phasecenter='J2000 5.105rad  -0.698rad'
+</description>
       <any type="variant" limittypes="int string"/>
       <value type="string"></value>
     </param>
 
     <param type="string" name="stokes" > <!-- subparam="true"> -->
      <shortdescription>Stokes Planes to make</shortdescription>
-<description>Stokes Planes to make</description>
+<description>Stokes Planes to make
+               default='I'; example: stokes='IQUV';
+               Options: 'I','Q','U','V','IV','QU','IQ','UV','IQU','IUV','IQUV','RR','LL','XX','YY','RRLL','XXYY'
+</description>
       <value type="string">I</value>
     </param>
 
     <param type="string" name="projection" > <!-- subparam="true"> -->
      <shortdescription>Coordinate projection (SIN, HPX)</shortdescription>
-<description>Coordinate projection (SIN, HPX) </description>
+<description>Coordinate projection 
+                     (SIN, NCP, HPX, CYP, etc) 
+                     A list of supported projections can be found here :
+                     http://casa.nrao.edu/active/docs/doxygen/html/classcasa_1_1Projection.html#a3d5f9ec787e4eabdce57ab5edaf7c0cd
+
+<!-- AZP	Zenithal/Azimuthal perspective.
+SZP  Slant zenithal perspective, new.
+TAN Gnomonic.
+SIN 	Orthographics/synthesis. (NCP is a hard-coded special case)
+STG  Stereographic.
+ARC zenith/azimuthal equidistant.
+ZPN zenithal/azimuthal polynomial.
+ZEA zenithal/azimuthal equal area.
+AIR Airy.
+CYP Cylindrical perspective.
+CAR Plate carree.
+MER Mercator.
+CEA Cylindrical equal area.
+COP Conic perspective.
+COD Conic equidistant.
+COE Conic equal area.
+COO Conic orthomorphic.
+BON Bonne.
+PCO Polyconic.
+SFL Sanson-Flamsteed (global sinusoidal). The old GLS projection is now SFL. The 'GLS' string will be converted to 'SFL'
+PAR Parabolic.
+AIT Hammer-Aitoff.
+MOL Mollweide.
+CSC COBE quadrilateralized spherical cube.
+QSC Quadrilateralized spherical cube.
+TSC  Tangential spherical cube.
+HPX HEALPix grid.  -->
+
+</description>
       <value type="string">SIN</value>
     </param>
 
     <param type="string" name="startmodel" > <!-- subparam="true"> -->
      <shortdescription>Name of starting model image</shortdescription>
-<description>Name of starting model image </description>
+<description>Name of starting model image
+
+                       This name must be only the prefix (similar to 'imagename') with
+                       CASA images with the full name with extension .model existing on disk.
+                       startmodel='try' will look for try.model on disk.
+                       For deconvolver='mtmfs' it will look for try.model.tt0, try.model.tt1,etc.
+
+                       This starting model can be of a different image shape and size from
+                       what is currently being imaged. If so, an image regrid is first triggered
+                       to resample the input image onto the target coordinate system.
+
+ </description>
       <value type="string"></value>
     </param>
 
@@ -304,19 +372,49 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="specmode" required="true">
      <shortdescription>Spectral definition mode (mfs,cube,cubedata(,cubesrc))</shortdescription>
-<description>Spectral definition mode (mfs,cube,cubedata)</description>
+<description>Spectral definition mode (mfs,cube,cubedata)
+                       
+                       mode='mfs' : Continuum imaging with only one channel
+
+                       mode='cube' : Spectral line imaging with one or more channels
+                                               Parameters start, width,and nchan define the spectral
+                                               coordinate system and can be specified either in terms
+                                               of channel numbers, frequency or velocity in whatever
+                                               spectral frame is specified in 'outframe'.
+                                               All internal and output images are made only in the 
+                                               LSRK frame, with automatic internal software Doppler 
+                                               tracking. Therefore a spectral line observed over an
+                                               extended time range will line up appropriately.
+
+                        mode='cubedata' : Spectral line imaging with one or more channels
+                                                        There is no internal software Doppler tracking so
+                                                        a spectral line observed over an extended time range
+                                                        may be smeared out in frequency. There is strictly
+                                                        no valid spectral frame with which to label the ouput
+                                                        images, but they will list the frame defined in the MS.
+                                                        
+
+</description>
       <value type="string">mfs</value>
     </param>
 
     <param type="any" name="reffreq" subparam="true">
      <shortdescription>Reference frequency</shortdescription>
-<description>Reference frequency</description>
+<description>Reference frequency of the output image coordinate system
+
+                       By default, it is calculated as the middle of the selected frequency range.
+
+                       For deconvolver='mtmfs' the Taylor expansion is also done about
+                       this specified reference frequency.
+
+</description>
       <value type="string"></value>
     </param>
 
     <param type="int" name="nchan" subparam="true">
      <shortdescription>Number of channels in the output image</shortdescription>
-<description>Number of channels in the output image</description>
+<description>Number of channels in the output image
+</description>
       <value type="int">-1</value>
     </param>
 
@@ -396,7 +494,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                        wproject,
                        wprojectft : W-Projection algorithm to correct for the widefield
-                                           non-coplanar baseline effect.
+                                           non-coplanar baseline effect. [Cornwell et.al 2008]
 
                                            wprojplanes is the number of distinct w-values at 
                                            which to compute and use different gridding convolution
@@ -422,7 +520,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        mosaic,
                        ftmosaic,
                        mosaicft : A-Projection with azimuthally symmetric beams without
-                                        sidelobes, beam rotation or squint correction. 
+                                        sidelobes, beam rotation or squint correction.
                                         Gridding convolution functions per visibility are computed
                                         from FTs of PB models per antenna.
                                         This gridder can be run on single fields as well as mosaics.
@@ -439,10 +537,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        awproject,
                        awprojectft : A-Projection with azimuthally asymmetric beams and 
                                             including beam rotation, squint correction,
-                                            conjugate frequency beams and W-projection.
+                                            conjugate frequency beams and W-projection. 
+                                            [Bhatnagar et.al, 2008]
+                                           
                                             Gridding convolution functions are computed from 
                                             aperture illumination models per antenna and optionally
-                                            combined with W-Projection kernels as well.
+                                            combined with W-Projection kernels and a prolate spheroid.
                                             This gridder can be run on single fields as well as mosaics.
  
                                         VLA : Uses ray traced model (VLA and EVLA) including feed 
@@ -486,13 +586,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          .pb image and use the 'pblimit' subparameter to decide normalization
                          cutoffs and construct an internal T/F mask in the .pb and .image images.
                          However, this T/F mask cannot directly be used during deconvolution 
-                         (which needs a 1/0 mask). 
-                         Currently, to use a .pb based maskT/F  for deconvolution, there are 
-                         two options : 
+                         (which needs a 1/0 mask). There are two options for making a pb based
+                         deconvolution mask.
                             -- Run tclean with niter=0 to produce the .pb, construct a 1/0 image 
-                         with the desired threshold, and supply it via the 'mask' parameter in a
-                         subsequent run (with calcres=F and calcpsf=F to restart directly from
-                         the minor cycle).
+                         with the desired threshold (using ia.open('newmask.im'); 
+                         ia.calc('iif("xxx.pb">0.3,1.0,0.0)');ia.close() for example), 
+                         and supply it via the 'mask' parameter in a subsequent run 
+                         (with calcres=F and calcpsf=F to restart directly from the minor cycle).
                             -- Run tclean with mask='auto-pb' for it to automatically construct
                          a 1/0 mask from the internal T/F mask from .pb at a fixed 0.2 threshold. 
 
@@ -592,43 +692,117 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="bool" name="wbawp" subparam="true">
            <shortdescription>Use wideband A-terms</shortdescription>
-<description>Use wideband A-terms</description>
+<description>Use frequency dependent A-terms
+                       Scale aperture illumination functions appropriately with frequency
+                       when gridding and combining data from multiple channels.
+ </description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="conjbeams" subparam="true">
            <shortdescription>Use conjugate frequency for wideband A-terms</shortdescription>
-<description>Use conjugate frequency for wideband A-terms </description>
+<description>Use conjugate frequency for wideband A-terms 
+  
+                       While gridding data from one frequency channel, choose a 
+                       convolution function from a 'conjugate' frequency such that
+                       the resulting baseline primary beam is approximately constant
+                       across frequency. For a system in which the primary beam scales
+                       with frequency, this step will eliminate instrumental spectral
+                       structure from the measured data and leave only the sky spectrum
+                       for the minor cycle to model and reconstruct [Bhatnagar et.al,2013]
+
+</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="string" name="cfcache" subparam="true">
            <shortdescription>>Convolution function cache directory name</shortdescription>
-<description>Convolution function cache directory name</description>
+<description>Convolution function cache directory name
+
+                       Name of a directory in which to store gridding convolution functions.
+                       This cache is filled at the beginning of an imaging run. This step can be time
+                       consuming but the cache can be reused across multiple imaging runs that
+                       use the same image parameters (cell size, field-of-view, spectral data 
+                       selections, etc).
+ 
+                       By default, cfcache = imagename + '.cf'
+
+</description>
 	    <value type="string"></value>
     </param>
 
     <param type="double" name="computepastep" subparam="true">
      <shortdescription>At what parallactic angle interval to recompute AIFs (deg)</shortdescription>
-<description>At what parallactic angle interval to recompute AIFs (deg) </description>
+<description>At what parallactic angle interval to recompute aperture 
+                       illumination functions (deg) 
+
+                       This parameter controls the accuracy of the aperture illumination function
+                       used with AProjection for alt-az mount dishes where the AIF rotates on the
+                       sky as the synthesis image is built up.
+
+</description>
       <value type="double">360.0</value>
     </param>
 
     <param type="double" name="rotatepastep" subparam="true">
      <shortdescription>At what parallactic angle interval to rotate nearest AIF (deg) </shortdescription>
-<description>At what parallactic angle interval to rotate nearest AIF (deg) </description>
+<description>At what parallactic angle interval to rotate nearest 
+                       aperture illumination function (deg) 
+
+                       Instead of recomputing the AIF for every timestep's parallactic angle, 
+                       the nearest existing AIF is picked and rotated in steps of this amount.
+
+                       For example, computepastep=360.0 and rotatepastep=5.0 will compute
+                       the AIFs at only the starting parallactic angle and all other timesteps will
+                       use a rotated version of that AIF at the nearest 5.0 degree point.
+
+</description>
       <value type="double">360.0</value>
     </param>
 
     <param type="double" name="pblimit" subparam="true">
-     <shortdescription>>PB gain level at which to cut off image calculations </shortdescription>
-<description>PB gain level at which to cut off image calculations  </description>
+     <shortdescription>>PB gain level at which to cut off normalizations </shortdescription>
+<description>PB gain level at which to cut off normalizations
+
+                       Divisions by .pb during normalizations have a cut off at a .pb gain
+                       level given by pblimit. Outside this limit, image values are set to zero.
+                       Additionally, an internal T/F mask is applied to the .pb, .image and
+                       .residual images to mask out (T) all invalid pixels outside the pblimit area.
+
+                      Note : This internal T/F mask cannot be used as a deconvolution mask. 
+                                 To do so, please follow the steps listed above in the Notes for the
+                                 'gridder' parameter.
+
+  </description>
       <value type="double">0.2</value>
     </param>
 
     <param type="string" name="normtype" subparam="true">
      <shortdescription>Normalization type (flatnoise, flatsky)</shortdescription>
-<description>Normalization type (flatnoise, flatsky) </description>
+<description>Normalization type (flatnoise, flatsky) 
+
+                       Gridded (and FT'd) images represent the PB-weighted sky image.
+                       Qualitatively it can be approximated as two instances of the PB 
+                       applied to the sky image (one naturally present in the data
+                       and one introduced during gridding via the convolution functions).
+
+                       xxx.weight : Weight image approximately equal to sum ( square ( pb ) )
+                       xxx.pb : Primary beam calculated as  sqrt ( xxx.weight )
+
+                       normtype='flatnoise' : Divide the raw image by sqrt(.weight) so that
+                                                           the input to the minor cycle represents the
+                                                           product of the sky and PB. The noise is 'flat' 
+                                                           across the image.
+
+                      normtype='flatsky' : Divide the raw image by .weight so that the input
+                                                       to the minor cycle represents only the sky. 
+                                                       The noise is higher in the outer regions of the 
+                                                       primary beam where the sensitivity is low.
+
+                      normtype='pbsquare' : No normalization after gridding. The minor cycle
+                                                            sees the sky times pb square [not yet implemented]
+
+</description>
       <value type="string">flatnoise</value>
     </param>
 
@@ -672,7 +846,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                                   (Note : 'clarkstokes_exp' is an alternate version. See above.)
 
-                       multiscale : MultiScale Clean (ref)
+                       multiscale : MultiScale Clean [Cornwell, 2003]
                                        - Smooth the residual image to multiple scale sizes
                                        - Find the location and scale at which the peak occurs
                                        - Add this multiscale component to the model image
@@ -680,7 +854,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                          patch size per scale) from all residual images
                                        - Repeat from step 2
 
-                       mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis (ref)
+                       mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis 
+                                    [Rau and Cornwell, 2011]
                                        - Smooth each Taylor residual image to multiple scale sizes
                                        - Solve a NTxNT system of equations per scale size to compute
                                          Taylor coefficients for components at all locations
@@ -708,7 +883,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                                     the errors across the image only in a relative sense.)
 
 
-                       mem : Maximum Entropy Method (ref)
+                       mem : Maximum Entropy Method [Cornwell 1994]
                                        - Iteratively solve for values at all individual pixels via the
                                          MEM method. It minimizes an objective function of
                                           chi-square plus entropy (here, a measure of difference 
