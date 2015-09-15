@@ -125,6 +125,7 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		mask = mask && collapsed->pixelMask().get(True);
 	}
 	ret.define("mask", mask);
+	ret.define("yUnit", collapsed->units().getName());
 	String tunit = unit;
 	tunit.downcase();
 	if (tunit.startsWith("pix")) {
