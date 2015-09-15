@@ -75,11 +75,17 @@ class ImportDataQAHandler(pqa.QAResultHandler):
                     origin_col = table.getcol('ORIGIN')
                     if createmms:
                         # special treatment is needed when createmms mode is turned on
-                        if not numpy.all(numpy.logical_or(origin_col == 'importasdm', origin_col == 'partition')):
+                        for i in range(len(origin_col)):
+                            if origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or origin_col[i] == 'im::calcuvw()':
+                                continue
                             bad_mses.append(ms)
+                            break
                     else:
-                        if (not (origin_col == 'importasdm').all()):
+                        for i in range(len(origin_col)):
+                            if origin_col[i] == 'importasdm' or origin_col[i] == 'im::calcuvw()':
+                                continue
                             bad_mses.append(ms)
+                            break
     
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
     
