@@ -288,13 +288,13 @@ class MPICommandServer:
             except:
                 cookie = str(uuid.uuid4()).replace('-', '')
 
-            #sometimes also works without auth, so accept failure
-            subprocess.call(['xauth', '-f', self.__xauthfile.name, 'add',
-                             self.__virtual_frame_buffer_port, '.', cookie],
-                             stdout=self.__logfile_descriptor,
-                             stderr=self.__logfile_descriptor)
 
             try:
+                subprocess.call(['xauth', '-f', self.__xauthfile.name, 'add',
+                                 self.__virtual_frame_buffer_port, '.', cookie],
+                                 stdout=self.__logfile_descriptor,
+                                 stderr=self.__logfile_descriptor)
+
                 self.__virtual_frame_buffer_process = subprocess.Popen(['Xvfb',self.__virtual_frame_buffer_port,
                                                                        '-auth', self.__xauthfile.name],
                                                                        stdout=self.__logfile_descriptor, 
@@ -337,10 +337,13 @@ class MPICommandServer:
             else:
                 casalog.post("Virtual frame buffer not deployed","WARN",casalog_call_origin)            
 
-            subprocess.call(['xauth', '-f', self.__xauthfile.name, 'remove',
-                             self.__virtual_frame_buffer_port],
-                             stdout=self.__logfile_descriptor,
-                             stderr=self.__logfile_descriptor)
+            try:
+                subprocess.call(['xauth', '-f', self.__xauthfile.name, 'remove',
+                                 self.__virtual_frame_buffer_port],
+                                 stdout=self.__logfile_descriptor,
+                                 stderr=self.__logfile_descriptor)
+            except OSError:
+                pass
             self.__xauthfile.close()
             
         def start_services(self):
