@@ -69,7 +69,7 @@ class MakeImListHeuristics(object):
         # determine spw selection parameters to exclude lines for mfs and cont images
         self.cont_ranges_spwsel = {}
         for source_name in [s.name for s in ms.sources]:
-            if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
+            if (re.search('[+-=; ]', source_name):
                 source_name = '"%s"' % (source_name)
             self.cont_ranges_spwsel[source_name] = {}
             for spwid in spwids:
@@ -130,7 +130,7 @@ class MakeImListHeuristics(object):
                     spw_selection = ''
 
                 for source_name in [s.name for s in ms.sources]:
-                    if ((source_name.find(' ') != -1) or (source_name.find(';') != -1)):
+                    if (re.search('[+-=; ]', source_name):
                         source_name_key = '"%s"' % (source_name)
                     else:
                         source_name_key = source_name
