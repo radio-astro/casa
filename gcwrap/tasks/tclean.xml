@@ -414,37 +414,86 @@ HPX HEALPix grid.  -->
     <param type="int" name="nchan" subparam="true">
      <shortdescription>Number of channels in the output image</shortdescription>
 <description>Number of channels in the output image
+                       For default (=-1), the number of channels will be automatically determined
+                       based on data selected by 'spw' with 'start' and 'width'.
+                       It is often easiest to leave nchan at the default value.
+                       example: nchan=100
+
 </description>
       <value type="int">-1</value>
     </param>
 
     <param type="any" name="start" subparam="true">
      <shortdescription>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</shortdescription>
-<description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</description>
+<description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')
+                       of output cube images specified by data channel number (integer), velocity (string with a unit),
+                       or frequency (string with a unit).
+                       Default:''; The first channel is automatically determined based on the 'spw' channel selection and 'width'.
+                       When the channel number is used along with the channel selection in 'spw' (e.g. spw='0:6~100'),
+                       'start' channel number is RELATIVE (zero-based) to the selected channels in 'spw'. So for the above example,
+                       start='1' means that the second selected data channel, which is channel 7.
+                       For specmode='cube', when velocity or frequency is used it is interpreted with the frame defined in outframe.
+                       examples: start='start='5.0km/s'; 1st channel, 5.0km/s in outframe
+                                 start='22.3GHz'; 1st channel, 22.3GHz in outframe
+</description>
       <value type="string"></value>
     </param>
 
     <param type="any" name="width" subparam="true">
      <shortdescription>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</shortdescription>
-<description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</description>
+<description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\') of output cube images
+                      specified by data channel number (ingeter), velocity (string with a unit), or
+                      or frequency (string with a unit).
+                      Default:''; data channel width
+                      The sign of width indicates the direction of the channels to be incremented.
+                      For width specified in velocity or frequency with '-' gives image channels in
+                      decreasing velocity or frequency, respectively. 
+                      For specmode='cube', when velocity or frequency is used it is interpreted with 
+                      the reference frame defined in outframe.  
+                      examples: width='2.0km/s'; results in channels with incresing velocity
+                                width='-2.0km/s';  results in channels with decreasing velocity
+                                width='40kHz'; results in channels with increasing frequency
+                                width=-2; results in channels averaged of 2 data channels incremented to from 
+                                          high to low channel numbers 
+
+
+</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="outframe" subparam="true">
      <shortdescription>Spectral reference frame in which to interpret \'start\' and \'width\'</shortdescription>
-<description>Spectral reference frame in which to interpret \'start\' and \'width\'</description>
+<description>Spectral reference frame in which to interpret \'start\' and \'width\'
+                      Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
+                      example: outframe='bary' for Barycentric frame
+</description>
       <value type="string">LSRK</value>
     </param>
 
     <param type="string" name="veltype" subparam="true">
      <shortdescription>Velocity type (radio, z, ratio, beta, gamma, optical)</shortdescription>
-<description>Velocity type (radio, z, ratio, beta, gamma, optical)</description>
+<description>Velocity type (radio, z, ratio, beta, gamma, optical)
+                      For start and/or width specified in velocity, specifies the velocity definition
+                      Options: 'radio','optical'
+                      NOTE: the viewer always defaults to displaying the 'radio' frame, 
+                        but that can be changed in the position tracking pull down.
+
+</description>
       <value type="string">radio</value>
     </param>
 
     <param type="any" name="restfreq" subparam="true">
      <shortdescription>List of rest frequencies</shortdescription>
-<description>List of rest frequencies</description>
+<description>List of rest frequencies or a rest frequency in a string.
+                      Specify rest frequency to use for output image.
+                      *Currently it uses the first rest frequency in the list for translation of
+                      velocities. The list will be stored in the output images.
+                      Default: []; look for the rest frequency stored in the MS, if not available,
+                      use center frequency of the selected channels
+                      examples: restfreq=['1.42GHz']
+                                restfreq='1.42GHz'
+
+</description>
       <value type="stringArray"></value>
     </param>
 
@@ -462,7 +511,15 @@ HPX HEALPix grid.  -->
 
     <param type="string" name="interpolation" subparam="true">
      <shortdescription>Spectral interpolation (nearest,linear,cubic)</shortdescription>
-<description>Spectral interpolation (nearest,linear,cubic)</description>
+<description>Spectral interpolation (nearest,linear,cubic)
+                      Note : 'linear' and 'cubic' interpolation requires data points on both sides of
+                        each image frequency. Errors  are therefore possible at edge  channels, or near
+                        flagged data channels. When image channel width is much larger than the data
+                        channel width there is nothing much to be gained using linear or cubic thus
+                        not worth the extra computation involved.
+
+
+</description>
       <value type="string">linear</value>
 	    <allowed kind="enum">
 	      <value>nearest</value>
