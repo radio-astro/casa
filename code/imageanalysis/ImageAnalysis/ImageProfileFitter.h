@@ -296,7 +296,7 @@ private:
 
     void _fitProfiles(const Bool showProgress);
 
-    Bool _inVelocitySpace() const;
+    //Bool _inVelocitySpace() const;
 
     void _flagFitterIfNecessary(ImageFit1D<Float>& fitter) const;
 

@@ -326,7 +326,6 @@ Record ImageProfileFitter::fit(Bool doDetailedResults) {
 		resultHandler.setIntegralName(_integralName);
 		resultHandler.setIntegralErrName(_integralErrName);
 	}
-	// resultHandler.setOutputSigmaImage(_sigmaName);
 	if (doDetailedResults) {
 		resultHandler.createResults();
 		_results = resultHandler.getResults();
@@ -613,11 +612,13 @@ void ImageProfileFitter::_finishConstruction() {
 	}
     this->_setSupportsLogfile(True);
 }
-
+/*
 Bool ImageProfileFitter::_inVelocitySpace() const {
 	return _fitAxis == _subImage->coordinates().spectralAxisNumber()
-		&& Quantity(1, _xUnit).isConform("m/s");
+		&& Quantity(1, _xUnit).isConform("m/s")
+		&& _subImage->coordinates().spectralCoordinate().restFrequency() > 0;
 }
+*/
 
 Double ImageProfileFitter::getWorldValue(
     double pixelVal, const IPosition& imPos, const String& units,
@@ -700,24 +701,27 @@ void ImageProfileFitter::_fitProfiles(Bool showProgress) {
 	if (_residImage) {
 		AlwaysAssert(inShape.isEqual(_residImage->shape()), AipsError);
 	}
-	const uInt nDim = _subImage->ndim();
+	const auto nDim = _subImage->ndim();
 	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
 	Array<Float> resultData(sliceShape);
 	Array<Bool> resultMask(sliceShape);
     String doppler = "";
-	CoordinateSystem csys = _subImage->coordinates();
-	if (_isSpectralIndex) {
-		_xUnit = csys.spectralCoordinate().worldAxisUnits()[0];
-	}
-	else {
-		ImageUtilities::getUnitAndDoppler(
-			_xUnit, doppler, _fitAxis, csys
+	auto csys = _subImage->coordinates();
+	_xUnit = csys.spectralCoordinate().worldAxisUnits()[0];
+	if (
+		! _isSpectralIndex && _fitAxis == _subImage->coordinates().spectralAxisNumber()
+		&& _subImage->coordinates().spectralCoordinate().restFrequency() > 0
+	) {
+		SpectralCoordinate specCoord = csys.spectralCoordinate();
+		_xUnit = specCoord.velocityUnit();
+		doppler = MDoppler::showType(
+			specCoord.velocityDoppler()
 		);
 	}
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
-	String abscissaUnits = _isSpectralIndex ? "native" : "pix";
+	auto abscissaUnits = _isSpectralIndex ? "native" : "pix";
 	ThrowIf(
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
@@ -858,11 +862,6 @@ void ImageProfileFitter::_loopOverFits(
 	Bool hasXMask = ! goodPlanes.empty();
 	Bool hasNonPolyEstimates = _nonPolyEstimates.nelements() > 0;
 	Bool updateOutput = _modelImage || _residImage;
-	/*
-	PrecTimer timer0, timer1, timer2, timer3, timer4, timer5, timer6, timer7, timer8,
-		timer9, timer10, timer11;
-	timer0.start();
-	*/
 	Bool storeGoodPos = hasNonPolyEstimates && ! _fitters.empty();
 	for (inIter.reset(); ! inIter.atEnd(); ++inIter, ++nProfiles) {
 		if (showProgress && /*nProfiles % mark == 0 &&*/ nProfiles > 0) {

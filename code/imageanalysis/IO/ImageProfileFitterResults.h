@@ -162,7 +162,7 @@ private:
 	};
     
     const static String _class;
-    Bool _logResults, _multiFit;
+    Bool _logResults, _multiFit, _doVelocity;
    	String _xUnit, _centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName,
@@ -258,7 +258,7 @@ private:
     	const PCFSpectralElement& solution, const IPosition& imPos
     ) const;
 
-    Bool _inVelocitySpace() const;
+    //Bool _inVelocitySpace() const;
 
     Vector< Vector<Double> > _pixelPositions;
 

@@ -171,18 +171,6 @@ template <class T>  void ImageFit1D<T>::setData (
 	else {
 		_weightSlice = _unityWeights;
 	}
-	/*
-	// Generate Abscissa
-
-	Vector<Double> x = _x;
-	if (x.size() == 0) {
-		cout << "makeAbscissa" << endl;
-		x = makeAbscissa(abcissaType, doAbs, abscissaDivisor);
-		if (xfunc) {
-			x = (*xfunc)(x);
-		}
-	}
-	*/
 	// Set data in fitter; we need to use a Double fitter at present
 	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
@@ -358,11 +346,7 @@ Bool ImageFit1D<T>::setAbcissaState (
    }
    Unit unitKMS(String("km/s"));
 
-// Is the axis Spectral ?
-
-   Int pAxis, wAxis, sCoord;
-   CoordinateUtil::findSpectralAxis (pAxis, wAxis, sCoord, cSys);
-   Bool isSpectral = (Int(pixelAxis)==pAxis);
+   auto isSpectral = cSys.spectralAxisNumber(False) == (Int)pixelAxis;
 
 // Defer unit making until now as 'pix' not a valid unit
 

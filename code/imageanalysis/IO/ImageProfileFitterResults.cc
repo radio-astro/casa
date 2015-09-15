@@ -58,7 +58,12 @@ ImageProfileFitterResults::ImageProfileFitterResults(
 	uInt nPLPCoeffs, uInt nLTPCoeffs,
 	Bool logResults, Bool multiFit, const SHARED_PTR<LogFile> logfile,
 	const String& xUnit, const String& summaryHeader
-) : _logResults(logResults), _multiFit(multiFit), _xUnit(xUnit), _summaryHeader(summaryHeader),
+) : _logResults(logResults), _multiFit(multiFit),
+	_doVelocity(
+		fitAxis == subImage->coordinates().spectralAxisNumber()
+		&& Quantity(1, xUnit).isConform("m/s")
+		&& subImage->coordinates().spectralCoordinate().restFrequency() > 0
+	), _xUnit(xUnit), _summaryHeader(summaryHeader),
 	_nGaussSinglets(nGaussSinglets), _nGaussMultiplets(nGaussMultiplets),
 	_nLorentzSinglets(nLorentzSinglets), _nPLPCoeffs(nPLPCoeffs),_nLTPCoeffs(nLTPCoeffs),
 	_fitters(fitters),
@@ -703,14 +708,16 @@ void ImageProfileFitterResults::_writeImages(
 		}
 	}
 }
-
+/*
 Bool ImageProfileFitterResults::_inVelocitySpace() const {
 	return _fitAxis == _subImage->coordinates().spectralAxisNumber()
-		&& Quantity(1, _xUnit).isConform("m/s");
+		&& Quantity(1, _xUnit).isConform("m/s")
+		&& _subImage->coordinates().spectralCoordinate().restFrequency() > 0;
 }
+*/
 
 Double ImageProfileFitterResults::_fitAxisIncrement() const {
-	if (_inVelocitySpace()) {
+	if (_doVelocity) {
 		Vector<Double> pixels(2);
 		pixels[0] = 0;
 		pixels[1] = 1;
@@ -744,7 +751,7 @@ Double ImageProfileFitterResults::_centerWorld(
 	// in pixels here
 	pixel[_fitAxis] = solution.getCenter();
 	_subImage->coordinates().toWorld(world, pixel);
-	if (_inVelocitySpace()) {
+	if (_doVelocity) {
 		Double velocity;
 		_subImage->coordinates().spectralCoordinate().frequencyToVelocity(velocity, world(_fitAxis));
 		return velocity;
@@ -971,7 +978,6 @@ String ImageProfileFitterResults::_elementToString(
 	String outUnit;
 	Quantity qVal(value, unit);
 	Quantity qErr(error, unit);
-
 	if (myUnit.getValue() == UnitVal::ANGLE) {
 		Vector<String> angUnits(5);
 		angUnits[0] = "deg";
@@ -988,7 +994,11 @@ String ImageProfileFitterResults::_elementToString(
 	    	}
 	    }
 	}
-	else if (unit.empty() || Quantity(1, myUnit).isConform(Quantity(1, "m/s"))) {
+	// some optical images have very weird units that start with numbers
+	else if (
+		unit.empty() || Quantity(1, myUnit).isConform(Quantity(1, "m/s"))
+		|| isdigit(unit[0])
+	) {
 		// do nothing
 	}
     else {
@@ -1004,8 +1014,8 @@ String ImageProfileFitterResults::_elementToString(
 		unitPrefix[8] = "p";
 		unitPrefix[9] = "f";
 
-		for (uInt i=0; i<unitPrefix.size(); i++) {
-			outUnit = unitPrefix[i] + unit;
+		for (auto prefix: unitPrefix) {
+			outUnit = prefix + unit;
 			if (fabs(qVal.getValue(outUnit)) > 1) {
 				qVal.convert(outUnit);
 				qErr.convert(outUnit);
@@ -1065,19 +1075,14 @@ String ImageProfileFitterResults::_pcfToString(
 	Int specCoordIndex = csys.findCoordinate(Coordinate::SPECTRAL);
 	Bool convertedCenterToPix = True;
 	Bool convertedFWHMToPix = True;
-
-    if (
-    	specCoordIndex >= 0
-    	&& _fitAxis == csys.pixelAxes(specCoordIndex)[0]
-    	&& ! csys.spectralCoordinate(specCoordIndex).velocityUnit().empty()
-    ) {
+    if (_doVelocity) {
     	if (csys.spectralCoordinate(specCoordIndex).velocityToPixel(pCenter, center)) {
     		Double nextVel;
     		csys.spectralCoordinate(specCoordIndex).pixelToVelocity(nextVel, pCenter+1);
     		Double velInc = fabs(center - nextVel);
     		pCenterErr = centerErr/velInc;
-    		pFWHM = fwhm/velInc;
-    		pFWHMErr = fwhmErr/velInc;
+    		pFWHM = abs(fwhm/velInc);
+    		pFWHMErr = abs(fwhmErr/velInc);
     	}
     	else {
     		convertedCenterToPix = False;
@@ -1090,13 +1095,13 @@ String ImageProfileFitterResults::_pcfToString(
     	Double delta = csys.increment()[_fitAxis];
     	if (csys.toPixel(pixel, myWorld)) {
     		pCenter = pixel[_fitAxis];
-    		pCenterErr = centerErr/delta;
+    		pCenterErr = abs(centerErr/delta);
     	}
     	else {
     		convertedCenterToPix = False;
     	}
-    	pFWHM = fwhm/delta;
-    	pFWHMErr = fwhmErr/delta;
+    	pFWHM = abs(fwhm/delta);
+    	pFWHMErr = abs(fwhmErr/delta);
     }
 	summary << indent << "        Center   : "
 		<< _elementToString(
@@ -1182,9 +1187,8 @@ String ImageProfileFitterResults::_polynomialToString(
     // coefficients in pixel coordinates
     Double x0;
     Double deltaX = _fitAxisIncrement();
-
-    if (Quantity(1,_xUnit).isConform(Quantity(1, "m/s"))) {
-        csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x0, 0);
+    if (_doVelocity) {
+        csys.spectralCoordinate().pixelToVelocity(x0, 0);
     }
     else {
         Vector<Double> p0 = imPix;

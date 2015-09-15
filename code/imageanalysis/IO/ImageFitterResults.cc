@@ -37,10 +37,6 @@
 
 #include <iomanip>
 
-#include <boost/assign/std/vector.hpp>
-#include <boost/assign/list_of.hpp>
-using namespace boost::assign;
-
 namespace casa {
 
 const String ImageFitterResults::_class = "ImageFitterResults";
