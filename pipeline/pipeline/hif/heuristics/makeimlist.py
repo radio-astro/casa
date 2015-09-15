@@ -69,8 +69,6 @@ class MakeImListHeuristics(object):
         # determine spw selection parameters to exclude lines for mfs and cont images
         self.cont_ranges_spwsel = {}
         for source_name in [s.name for s in ms.sources]:
-            if (re.search('[+-=; ]', source_name)):
-                source_name = '"%s"' % (source_name)
             self.cont_ranges_spwsel[source_name] = {}
             for spwid in spwids:
                 self.cont_ranges_spwsel[source_name][str(spwid)] = ''
@@ -130,11 +128,7 @@ class MakeImListHeuristics(object):
                     spw_selection = ''
 
                 for source_name in [s.name for s in ms.sources]:
-                    if (re.search('[+-=; ]', source_name)):
-                        source_name_key = '"%s"' % (source_name)
-                    else:
-                        source_name_key = source_name
-                    self.cont_ranges_spwsel[source_name_key][str(spwid)] = spw_selection
+                    self.cont_ranges_spwsel[source_name][str(spwid)] = spw_selection
 
 
     def field_intent_list(self, intent, field):
