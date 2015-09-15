@@ -1525,5 +1525,61 @@ class test_setpol(SetjyUnitTestBase):
         self.check_eq(retrecU['MODEL']['min'],ufexpmin,0.0001)
         self.check_eq(retrecAngle['MODEL']['min'],anglemin,0.0001)
 
+
+class test_ephemtbl(SetjyUnitTestBase):
+    """Test for data with attached ephem table(s)"""
+
+    def setUp(self):
+        prefix = 'alma_uid___A002_Xa3f11a_X3df1.ms.split.thinned'
+        if testmms:
+            msfile = prefix.replace('.ms.','.mms.')
+        else:
+            msfile = prefix
+        self.setUpMS(msfile)
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+
+    def test_ephemtbl1(self):
+        """ Test for Titan with the ephemeris table """
+        sjran = setjy(vis=self.inpms, field='1', spw='0,1,2,3', standard='Butler-JPL-Horizons 2012', usescratch=True)
+        #print sjran
+        print "Checking returned flux densities..."
+        self.check_eq(sjran['1']['0']['fluxd'][0],1.91422844,0.0001)
+        self.check_eq(sjran['1']['1']['fluxd'][0],1.94107008,0.0001)
+        self.check_eq(sjran['1']['2']['fluxd'][0],2.06917405,0.0001)
+        self.check_eq(sjran['1']['3']['fluxd'][0],2.08158374,0.0001)
+
+         
+        stats={}
+        stats['1stNull']={}
+        stats['phase0']={}
+        stats['phase180']={}
+        ms.open(self.inpms)
+        stats['1stNull']['spw0']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='0',baseline='2&18',time='2015/06/21/04:56:50.4')['MODEL']
+        stats['1stNull']['spw1']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='1',baseline='0&16',time='2015/06/21/04:54:25.1')['MODEL']
+        stats['1stNull']['spw2']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='2',baseline='7&13',time='2015/06/21/04:54:25.1')['MODEL']
+        stats['1stNull']['spw3']=ms.statistics(column='MODEL',complex_value='amp',field='1',spw='3',baseline='7&13',time='2015/06/21/04:55:01.4')['MODEL']
+        stats['phase0']['spw0']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='0',baseline='0&16', time='2015/06/21/04:55:37.8')['MODEL']
+        stats['phase180']['spw0']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='0',baseline='2&18', time='2015/06/21/04:55:37.8')['MODEL'] 
+        stats['phase0']['spw1']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='1:186~190',baseline='0&16', time='2015/06/21/04:54:25.1')['MODEL'] 
+        stats['phase180']['spw1']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='1:0~10',baseline='0&16', time='2015/06/21/04:55:37.8')['MODEL'] 
+        stats['phase0']['spw2']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='2:0~10',baseline='7&13', time='2015/06/21/04:54:25.1')['MODEL'] 
+        stats['phase180']['spw2']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='2:180~190',baseline='7&13', time='2015/06/21/04:54:25.1')['MODEL'] 
+        stats['phase0']['spw3']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='3:0~10',baseline='7&13', time='2015/06/21/04:55:01.4')['MODEL'] 
+        stats['phase180']['spw3']=ms.statistics(column='MODEL',complex_value='phase',field='1',spw='3:180~190',baseline='7&13', time='2015/06/21/04:55:01.4')['MODEL'] 
+        ms.close()
+        spwlist = ['spw0','spw1','spw2','spw3']
+        print "Checking values of  model amplitudes near 1st null ..."
+        self.check_eq(stats['1stNull']['spw0']['min'],3.58091e-4,1.0e-4)
+        self.check_eq(stats['1stNull']['spw1']['min'],2.00987e-6,1.0e-4)
+        self.check_eq(stats['1stNull']['spw2']['min'],7.29703e-6,1.0e-4)
+        self.check_eq(stats['1stNull']['spw3']['min'],2.16629e-5,1.0e-4)
+        print "Checking values of model phases transition of 1st null (shuold see phase 0 deg -> 180 deg)..."
+        for spwn in spwlist:
+            self.check_eq(stats['phase0'][spwn]['min']*180.0/numpy.pi,0.0,1.0e-4)
+            self.check_eq(stats['phase180'][spwn]['min']*180.0/numpy.pi,180.0,1.0e-4)
+
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol, test_ephemtbl]
