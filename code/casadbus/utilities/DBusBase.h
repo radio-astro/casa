@@ -1,7 +1,7 @@
 #ifndef CASA_DBUS_BASE_H__
 #define CASA_DBUS_BASE_H__
 
-#include <boost/thread/thread.hpp>
+#include <thread>
 #if defined(DBUS_CPP)
 #include <dbus-cpp/dbus.h>
 #else
@@ -27,7 +27,7 @@ class DBusThreadedBase
  private:
   
   void serviceLoop();
-  boost::thread  *itsThread;
+  std::thread  *itsThread;
 };
 
   class DBusService : public DBus::IntrospectableAdaptor,

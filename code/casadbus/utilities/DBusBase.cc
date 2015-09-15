@@ -6,19 +6,18 @@
 #include <casa/Containers/Record.h>
 #include <casadbus/session/DBusSession.h>
 #include <casadbus/utilities/BusAccess.h>
-#include <boost/bind.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <thread>
+#include <functional>
 
 namespace casa {
 
   DBusThreadedBase::DBusThreadedBase():
     itsThread(NULL) 
   {
-    itsThread=new boost::thread(boost::bind(&DBusThreadedBase::serviceLoop,
-                                            this));
+    itsThread=new std::thread(std::bind(&DBusThreadedBase::serviceLoop,this));
     /* This prevents a race condition that occurs when the service
        is destroyed as soon as it starts */
-    boost::this_thread::yield(); 
+    std::this_thread::yield(); 
   }
 
   DBusThreadedBase::~DBusThreadedBase() {
@@ -31,10 +30,7 @@ namespace casa {
     std::cout << "Leaving dispatcher loop: " << time(0) << std::endl;
     casa::DBusSession::instance().dispatcher( ).leave( );
     std::cout << "Waiting for timed join: " << time(0) <<std::endl;
-    if (!itsThread->timed_join(boost::posix_time::time_duration(0,0,30,0))) {
-      std::cout << "Error Closing service thread" << std::endl;
-    }
-    std::cout << "Timed Join Passed: " << time(0) <<std::endl;
+    itsThread->join( );
     itsThread = NULL;
   }
 
