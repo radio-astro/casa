@@ -195,6 +195,21 @@ add_custom_target( check ${CMAKE_CTEST_COMMAND} )
 enable_testing()
 set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 
+###
+### we need to distinguish between different libgfortran versions on RHEL5...
+### we have old libraries which are linked against the system fortran... which
+### uses libgfortran.so.1 while the RedHat Dev Toolset compilers include
+### libgfortran.so.3... even if we use the old gfortran (/usr/bin/gfortran)
+### and -lgfortran we ALWAYS get libgfortran.so.3 because it is being linked
+### into libraries and executables via the newer developer toolset gcc/g++...
+###
+execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                 COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; last; }} last if $found; } last if $found;}"
+                 OUTPUT_VARIABLE _gfortran_lib_path
+                 OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
+
 #
 # Define paths for development packages.
 # Check for unresolved symbols at link time.
@@ -202,10 +217,22 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 # 
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
-    execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
-                     OUTPUT_VARIABLE _gfortran_lib_path
-                     OUTPUT_STRIP_TRAILING_WHITESPACE )
+
+    ### look for dynamic libgfortran
+    if( NOT _gfortran_lib_path )
+        execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                         COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; last; }} last if $found; } last if $found;}"
+                         OUTPUT_VARIABLE _gfortran_lib_path
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+    endif()
+
+    ### look for static libgfortran
+    if( NOT _gfortran_lib_path )
+        execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
+                         COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; $found = 1; last; }} last if $found; } last if $found;}"
+                         OUTPUT_VARIABLE _gfortran_lib_path
+                         OUTPUT_STRIP_TRAILING_WHITESPACE )
+    endif( )
 
     if( CMAKE_SYSTEM MATCHES ^Darwin-9 )
         set( casa_packages /opt/casa/core2-apple-darwin8/3rd-party )
@@ -280,7 +307,6 @@ if( APPLE )
 	    endif()
 
 	    message( STATUS "$_gfortran_version = ${_gfortran_version}" )
-	    message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
 	    message( STATUS "$_gcc_machine = ${_gcc_machine}" )
         message( STATUS "cxxversion (${_cxx_version})" )
 	    if( NOT _gfortran_version STREQUAL "4.4" AND
