@@ -4,6 +4,7 @@
 #
 # History:
 #  v1.0 (gmoellen; 2013Oct02) initial distributed version
+#  v1.1 (gmoellen; 2015Sep16) fixed spw name resolution
 #
 # This script defines several functions useful for ALMA Polarization processing.
 #
@@ -11,10 +12,7 @@
 #
 # from recipes.almapolhelpers import *
 #
-# For more information about each function type
 
-#
-#
 
 # enable local tools (tb)
 import taskinit
@@ -27,8 +25,18 @@ from recipes.almahelpers import tsysspwmap
 
 
 def bandname(spwname):
-    # before first #, after last _
-    return spwname.split("#")[0].split('_')[-1]
+    # spwname can be an ALMA name, or a string containing a digit
+    if spwname.isdigit():
+        return spwname  # just return what was specified
+
+    # Attempt resolution according to ALMA conventions
+    lo=spwname.find('ALMA_RB_')
+    if lo>-1:
+        lo+=8  # 2-digit band name starts 8 chars later
+        return spwname[lo:].split("#")[0]
+    else:
+        print "Can't discern an ALMA bandname from: "+str(spwname)
+        return spwname
 
 def bandpa(name):
     #  From rhills (CSV-481, 2012Sep04)
@@ -52,15 +60,19 @@ def bandpa(name):
         if (bn.isdigit()):
             iband=int(bn)
         else:
-            iband=0
+            print "Unresolved bandname: default band position angle set to "+str(bparad[0])
+            iband=0  # Use 0
 
     if (iband<11):
         return bparad[iband]
     else:
-        raise Exception, "Can't discern bandname from: "+str(name)
+        raise Exception, "Error extracting band position angle for "+str(name)
 
 
 def qufromgain(caltable,badspw=[],paoffset=0.0):
+    
+    if paoffset!=0.0:
+        print "NB: default band position angle will be offset by "+str(paoffset)+"deg."
 
     mytb=taskinit.tbtool()
     myme=taskinit.metool()
@@ -71,9 +83,9 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
     frame=mytb.getcolkeyword('POSITION','MEASINFO')['Ref']
     units=mytb.getcolkeyword('POSITION','QuantumUnits')
     mpos=myme.position(frame,
-                     str(meanpos[0])+units[0],
-                     str(meanpos[1])+units[1],
-                     str(meanpos[2])+units[2])
+                       str(meanpos[0])+units[0],
+                       str(meanpos[1])+units[1],
+                       str(meanpos[2])+units[2])
     myme.doframe(mpos)
 
     # _geodetic_ latitude
@@ -89,7 +101,7 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
 
     mytb.open(caltable+'/SPECTRAL_WINDOW')
     nspw=mytb.nrows()
-    bandnames=[x.split('#')[0].split('_')[-1] for x in mytb.getcol('NAME')]
+    bandnames=[bandname(x) for x in mytb.getcol('NAME')]
     mytb.close()
     print 'Found as many as '+str(nspw)+' spws.'
 
@@ -165,7 +177,7 @@ def qufromgain(caltable,badspw=[],paoffset=0.0):
                 P=sqrt(Q[ispw,ifld]**2+U[ispw,ifld]**2)
                 X=0.5*atan2(U[ispw,ifld],Q[ispw,ifld])*180/pi
 
-                print 'Fld=',ifld,'Spw=',ispw,'(B='+str(bandnames[ispw])+', PA offset='+str(bandpa(bandnames[ispw])*180./pi)+'deg)','Gx/Gy=',R[ispw,ifld],'Q=',Q[ispw,ifld],'U=',U[ispw,ifld],'P=',P,'X=',X
+                print 'Fld=',ifld,'Spw=',ispw,'(B='+str(bandnames[ispw])+', PA offset='+str(bandpa(bandnames[ispw])*180/pi+paoffset)+'deg)','Gx/Gy=',R[ispw,ifld],'Q=',Q[ispw,ifld],'U=',U[ispw,ifld],'P=',P,'X=',X
                 
             else:
                 mask[ispw,ifld]=False
