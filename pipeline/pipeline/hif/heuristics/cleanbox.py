@@ -691,7 +691,7 @@ def find_island(searchmask, pixels, grid):
 
     return peak, peak_x, peak_y, island_pix
 
-def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
+def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask, pblimit_image=0.2, pblimit_cleanmask=0.3):
 
     if flux == '':
         flux = None
@@ -743,7 +743,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         if flux is not None and os.path.exists(flux):
             have_mask= True
             # Default is annulus 0.2 < pb < 0.3
-            statsmask = '("%s" > 0.2) && ("%s" < 0.3)' % (os.path.basename(flux), os.path.basename(flux))
+            statsmask = '("%s" > %.2f) && ("%s" < %.2f)' % (os.path.basename(flux), pblimit_image, os.path.basename(flux), pblimit_cleanmask)
         elif cleanmask is not None and os.path.exists(cleanmask):
             have_mask= True
             # Area outside clean mask
@@ -757,7 +757,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         try:
             non_clean_rms = resid_stats['rms'][0]
             if have_mask:
-                LOG.info('Residual rms outside (single field) / at the edge of (mosaic) the cleaned area: %s' % non_clean_rms)
+                LOG.info('Residual rms at the edge of the cleaned area: %s' % non_clean_rms)
             else:
                 LOG.info('Residual rms across full area: %s' %  non_clean_rms)
         except:
@@ -767,7 +767,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         # where spikes can occur)
         if flux is not None and os.path.exists(flux):
             residual_stats = image.statistics(
-              mask='"%s" > 0.2' % os.path.basename(flux), robust=False)
+              mask='"%s" > %.2f' % (os.path.basename(flux), pblimit_image), robust=False)
         else:
             residual_stats = image.statistics(robust=False)
         try:

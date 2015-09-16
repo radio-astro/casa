@@ -31,8 +31,8 @@ class CleanBaseInputs(basetask.StandardInputs):
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 sensitivity=None, result=None, parallel=None):
+                 restoringbeam=None, iter=None, mask=None, pblimit=None, niter=None,
+                 threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
     deconvolver = basetask.property_with_default('deconvolver', '')
@@ -48,6 +48,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     npixels = basetask.property_with_default('npixels', 0)
     outframe = basetask.property_with_default('outframe', 'LSRK')
     phasecenter = basetask.property_with_default('phasecenter', '')
+    pblimit = basetask.property_with_default('pblimit', 0.2)
     restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
@@ -320,7 +321,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             spw=spw_param,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
             scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
-            pblimit=0.2, niter=inputs.niter,
+            pblimit=inputs.pblimit, niter=inputs.niter,
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -349,7 +350,7 @@ class CleanBase(basetask.StandardTaskTemplate):
                           mode=mode,
                           imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
                           outimage='%s.%s.iter%s.pb' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
-                          pblimit = 0.2)
+                          pblimit = inputs.pblimit)
 
         # Correct images for primary beam
         pb_corrected = False

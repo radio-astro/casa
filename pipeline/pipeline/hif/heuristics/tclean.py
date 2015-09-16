@@ -51,6 +51,19 @@ class TcleanHeuristics(object):
           (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
           (180.0 * 3600.0 / math.pi))
 
+    def pblimits(self, imsize, cell):
+
+        qaTool = casatools.quanta
+        pb_edge = math.exp(-4.0 * math.log(2.0) * (0.9 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
+        if (pb_edge < 0.2):
+            pblimit_image = 0.2
+            pblimit_cleanmask = 0.3
+        else:
+            pblimit_image = math.exp(-4.0 * math.log(2.0) * (0.9 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
+            pblimit_cleanmask = math.exp(-4.0 * math.log(2.0) * (0.8 * 0.5 * imsize[0] * qaTool.convert(cell[0], 'arcsec')['value'] / qaTool.convert(self.beam_radius, 'arcsec')['value']) ** 2)
+
+        return pblimit_image, pblimit_cleanmask
+
     def field(self, intent, field):
         result = []
 

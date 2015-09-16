@@ -31,7 +31,7 @@ class BaseCleanSequence:
         self.multiterm = multiterm
 
     def iteration_result(self, iter, multiterm, psf, model, restored, residual,
-                         flux, cleanmask, threshold=None):
+                         flux, cleanmask, threshold=None, pblimit_image=0.2, pblimit_cleanmask=0.3):
         """This method sets the iteration counter and returns statistics for
         that iteration.
         """
@@ -46,7 +46,7 @@ class BaseCleanSequence:
         #if cleanmask is not None and os.path.exists(cleanmask):
         model_sum, clean_rms, non_cleaned_rms, residual_max, \
             residual_min, rms2d, image_max = cbheuristic.analyse_clean_result(
-            multiterm, model, restored, residual, flux, cleanmask)
+            multiterm, model, restored, residual, flux, cleanmask, pblimit_image, pblimit_cleanmask)
 
         # Append the statistics.
         self.iters.append(iter)

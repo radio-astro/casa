@@ -117,6 +117,11 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('deleting %s*.iter*', inputs.imagename)
         shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
 
+        # Determine masking limits depending on image and cell sizes
+        self.pblimit_image, self.pblimit_cleanmask = \
+            inputs.heuristics.pblimits(inputs.imsize, inputs.cell)
+        inputs.pblimit = self.pblimit_image
+
         # Get an empirical noise estimate by generating Q or V image.
         #    Assumes presence of XX and YY, or RR and LL
         #    Assumes source is unpolarized
@@ -142,8 +147,10 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_cleaning == 'rms':
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
             sequence_manager = ImageCentreThresholdSequence(
-                gridder=inputs.gridder, threshold=threshold,
-                sensitivity=sensitivity, niter=inputs.niter)
+                gridder = inputs.gridder, threshold=threshold,
+                sensitivity = sensitivity, niter=inputs.niter,
+                pblimit_image = self.pblimit_image,
+                pblimit_cleanmask = self.pblimit_cleanmask)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
@@ -218,9 +225,11 @@ class Tclean(cleanbase.CleanBase):
         # Give the result to the sequence_manager for analysis
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
             rms2d, image_max = sequence_manager.iteration_result(iter=0,
-                    multiterm=result.multiterm, psf=result.psf, model=result.model,
-                    restored=result.image, residual=result.residual,
-                    flux=result.flux, cleanmask=None, threshold=None)
+                    multiterm = result.multiterm, psf = result.psf, model = result.model,
+                    restored = result.image, residual = result.residual,
+                    flux = result.flux, cleanmask=None, threshold = None,
+                    pblimit_image = self.pblimit_image,
+                    pblimit_cleanmask = self.pblimit_cleanmask)
 
         LOG.info('Dirty image stats')
         LOG.info('    Rms %s', non_cleaned_rms)
@@ -263,7 +272,8 @@ class Tclean(cleanbase.CleanBase):
             # Give the result to the clean 'sequencer'
             model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min, rms2d, image_max = sequence_manager.iteration_result(
                 iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
-                flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold)
+                flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
+                pblimit_cleanmask = self.pblimit_cleanmask)
 
             # Keep RMS for QA
             result.set_rms(non_cleaned_rms)
@@ -387,7 +397,7 @@ class Tclean(cleanbase.CleanBase):
                 spw=inputs.spw,
                 intent='*TARGET*',
                 scan='', specmode='mfs', gridder=inputs.gridder,
-                pblimit=0.2, niter=0,
+                pblimit=self.pblimit_image, niter=0,
                 threshold='0.0mJy', deconvolver=inputs.deconvolver,
                 interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
                 start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -476,6 +486,7 @@ class Tclean(cleanbase.CleanBase):
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
+                                                  pblimit=self.pblimit_image,
                                                   result=result,
                                                   parallel=parallel)
         clean_task = cleanbase.CleanBase(clean_inputs)
