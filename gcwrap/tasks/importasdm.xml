@@ -296,7 +296,16 @@ compression  -- produces comrpressed columns in the resulting measurement set.
                 default: False
 
 lazy         -- Make the MS DATA column read the ASDM Binary data directly
-                (faster import, smaller MS)
+                (faster import, smaller MS). Instead of writing a copy of the visibilities
+                into a standard DATA column, lazy=True will make importasdm only write
+                a lookup-table such that later access to the DATA column will read the
+                ASDM binary visibility data directly. This requires that the ASDM not
+                be removed from its location as long the the DATA column is needed.
+                Use method ms.asdmref() to query and manipulate the reference to the ASDM.
+                lazy=True will save ca. 50% disk space and accelerate the DATA column
+                access by ca. 10%.
+                lazy=True will only work when there is visibility data in the ASDM,
+                not with pure radiometer data.
                 default: False
 
 asis         --  creates verbatim copies of the ASDM tables in 
