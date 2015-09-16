@@ -188,35 +188,40 @@ class SDBaseline(common.SingleDishTaskTemplate):
             else:
                 job_generator = common.create_serial_job
             # create job 
-            for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
-                if len(pols) == 0:
-                    LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
-                    continue
-                
-                LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
-                
-                _iteration = group_desc.get_iteration(ant, spwid)
-                outfile = self._get_dummy_name(context, ant)
-                LOG.debug('pols=%s'%(pols))
-                #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
-                #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
-                #per_antenna_table = per_antenna_grid_table(ant, grid_table)
-                plot_table = generate_plot_table(ant, spwid, pols, grid_table)
-                #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
-                fitter_args = {"antennaid": ant,
-                             "spwid": spwid,
-                             "pollist": pols,
-                             "iteration": _iteration,
-                             "fit_order": fitorder,
-                             "edge": edge,
-                             "outfile": outfile,
-                             "grid_table": plot_table,
-                             "channelmap_range": channelmap_range,
-                             "stage_dir": stage_dir}
-                        
-                job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
-                                 'meta': (ant, spwid, pols, outfile)})
-
+            def _gen():
+                for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
+                    if len(pols) == 0:
+                        LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
+                        continue
+                    
+                    LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
+                    
+                    _iteration = group_desc.get_iteration(ant, spwid)
+                    outfile = self._get_dummy_name(context, ant)
+                    LOG.debug('pols=%s'%(pols))
+                    #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
+                    #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
+                    #per_antenna_table = per_antenna_grid_table(ant, grid_table)
+                    plot_table = generate_plot_table(ant, spwid, pols, grid_table)
+                    #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
+                    fitter_args = {"antennaid": ant,
+                                 "spwid": spwid,
+                                 "pollist": pols,
+                                 "iteration": _iteration,
+                                 "fit_order": fitorder,
+                                 "edge": edge,
+                                 "outfile": outfile,
+                                 "grid_table": plot_table,
+                                 "channelmap_range": channelmap_range,
+                                 "stage_dir": stage_dir}
+                    yield {'job': job_generator(fitter_cls, fitter_args, context),
+                           'meta': (ant, spwid, pols, outfile)}                      
+#                 job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
+#                                  'meta': (ant, spwid, pols, outfile)})
+            if mpihelpers.is_mpi_ready():
+                job_list = list(_gen())
+            else:
+                job_list = _gen()
             # execute job, get result, and generate plots before/after baseline subtraction
             for job_entry in job_list:
                 job = job_entry['job']

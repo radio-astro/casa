@@ -201,6 +201,7 @@ class FittingBase(common.SingleDishTaskTemplate):
     
                 # fit order determination
                 polyorder = self.fitorder_heuristic(spectra, [ list(masklist[i]) + flaglist[i] for i in range(len(idxs))], edge)
+                del spectra
                 if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                     polyorder = min(polyorder, self.MaxPolynomialOrder)
                 LOG.debug('time group %d: fitting order=%s'%(y,polyorder))

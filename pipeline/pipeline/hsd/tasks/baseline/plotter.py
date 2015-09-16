@@ -18,28 +18,30 @@ def analyze_plot_table(context, antid, spwid, polid, plot_table):
     LOG.trace('each_grid=%s'%(each_grid))
     rowlist = []
     for each_plane in each_grid:
-        datarows = []
+        #datarows = []
         dataids = []
         for plot_table_rowid in each_plane:
             plot_table_row = plot_table[plot_table_rowid]
             LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
-            for idx in plot_table_row[-1]:
-                row = datatable.tb1.getcell('ROW', idx)
-                thispol = datatable.tb1.getcell('POL', idx)
-                LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, datatable.tb1.getcell('ANTENNA', idx), datatable.tb1.getcell('IF', idx), datatable.tb1.getcell('POL', idx)))
-                datarows.append(row)
-                dataids.append(idx)
+            dataids.extend(plot_table_row[-1])
+            #for idx in plot_table_row[-1]:
+            #    row = datatable.tb1.getcell('ROW', idx)
+            #    LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, datatable.tb1.getcell('ANTENNA', idx), datatable.tb1.getcell('IF', idx), datatable.tb1.getcell('POL', idx)))
+            #    datarows.append(row)
+            #    dataids.append(idx)
+        datarows = [datatable.tb1.getcell('ROW', i) for i in dataids]
         if len(datarows) > 0:
             midx = median_index(datarows)
         else:
             midx = None
+        del datarows
         raid = plot_table[each_plane[0]][0]
         decid = plot_table[each_plane[0]][1]
         ra = plot_table[each_plane[0]][2]
         dec = plot_table[each_plane[0]][3]
         rowlist.append({"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
-                        "ROWS": datarows, "IDS": dataids, "MEDIAN_INDEX": midx})
-        LOG.trace('RA %s DEC %s: datarows=%s'%(raid, decid, datarows))
+                        "IDS": dataids, "MEDIAN_INDEX": midx})
+        LOG.trace('RA %s DEC %s: dataids=%s'%(raid, decid, dataids))
         
     refpix_list = [0,0]
     refval_list = plot_table[num_ra * num_plane -1][2:4]
@@ -75,22 +77,23 @@ def create_plotter(num_ra, num_dec, num_plane, refpix, refval, increment):
     plotter.setup_labels(refpix, refval, increment)
     return plotter
     
-def get_data(infile, num_ra, num_dec, num_chan, rowlist):
+def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist):
     integrated_data = numpy.zeros(num_chan, dtype=float)
     map_data = numpy.zeros((num_ra, num_dec, num_chan), dtype=float) + sparsemap.NoDataThreshold
     nrow = 0
     for d in rowlist:
         ix = num_ra - 1 - d['RAID']
         iy = d['DECID']
-        rows = d['ROWS']
-        if len(rows) > 0:
+        #rows = d['ROWS']
+        idxs = d['IDS']
+        if len(idxs) > 0:
             midx = d['MEDIAN_INDEX']
-            median_row = rows[midx]
-            LOG.debug('median row for (%s,%s) is %s (median %s)'%(ix, iy, median_row, numpy.median(rows)))
-            nrow += len(rows)
+            median_row = datatable.tb1.getcell('ROW', idxs[midx])
+            LOG.debug('median row for (%s,%s) is %s'%(ix, iy, median_row))
+            nrow += len(idxs)
             with casatools.TableReader(infile) as tb:
                 map_data[ix,iy,:] = tb.getcell('SPECTRA', median_row)
-                for row in rows:
+                for row in (datatable.tb1.getcell('ROW', i) for i in idxs):
                     integrated_data += tb.getcell('SPECTRA', row)
         else:
             LOG.debug('no data is available for (%s,%s)'%(ix,iy))
@@ -125,7 +128,7 @@ def plot_profile_map(context, antid, spwid, polid, plot_table, infile, outfile, 
     nchan = context.observing_run[antid].spectral_window[spwid].num_channels
     LOG.debug('nchan=%s'%(nchan))
     
-    integrated_data, map_data= get_data(infile, num_ra, num_dec, nchan, rowlist)
+    integrated_data, map_data= get_data(infile, datatable, num_ra, num_dec, nchan, rowlist)
     lines_map = get_lines(datatable, num_ra, rowlist)
 
     spw = context.observing_run[antid].spectral_window[spwid]
@@ -153,33 +156,46 @@ def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_d
     nchan = context.observing_run[antid].spectral_window[spwid].num_channels
     LOG.debug('nchan=%s'%(nchan))
     
-    prefit_integrated_data, prefit_map_data = get_data(prefit_data, num_ra, num_dec, nchan, rowlist)
-    postfit_integrated_data, postfit_map_data = get_data(postfit_data, num_ra, num_dec, nchan, rowlist)
+    spw = context.observing_run[antid].spectral_window[spwid]
+    frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
+    LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
+
+    postfit_integrated_data, postfit_map_data = get_data(postfit_data, datatable, num_ra, num_dec, nchan, rowlist)
     lines_map = get_lines(datatable, num_ra, rowlist)
+
+    # plot post-fit spectra
+    plotter.setup_reference_level(0.0)
+    #plotter.set_global_scaling()
+    plotter.plot(postfit_map_data, postfit_integrated_data, frequency, figfile=postfit_figfile)
+
+    del postfit_integrated_data
     
-    fit_result = numpy.zeros(prefit_map_data.shape, dtype=float) + sparsemap.NoDataThreshold
+    prefit_integrated_data, prefit_map_data = get_data(prefit_data, datatable, num_ra, num_dec, nchan, rowlist)
+    
+    # fit_result shares its storage with postfit_map_data to reduce memory usage
+    fit_result = postfit_map_data#numpy.zeros(prefit_map_data.shape, dtype=float) + sparsemap.NoDataThreshold
+    #fit_result[:] = sparsemap.NoDataThreshold
     for x in xrange(num_ra):
         for y in xrange(num_dec):
             prefit = prefit_map_data[x][y]
             if not all(prefit == sparsemap.NoDataThreshold):
                 postfit = postfit_map_data[x][y]
                 fit_result[x][y] = prefit - postfit
+            else:
+                fit_result[x][y][:] = sparsemap.NoDataThreshold
     
-    spw = context.observing_run[antid].spectral_window[spwid]
-    frequency = numpy.array([spw.refval + (i - spw.refpix) * spw.increment for i in xrange(nchan)]) * 1.0e-9    
-    LOG.debug('frequency=%s~%s (nchan=%s)'%(frequency[0], frequency[-1], len(frequency)))
     
     plotter.setup_lines(line_range, lines_map)
     
     # plot pre-fit spectra
     plotter.setup_reference_level(None)
+    #plotter.unset_global_scaling()
     plotter.plot(prefit_map_data, prefit_integrated_data, frequency, fit_result=fit_result, figfile=prefit_figfile)
-    
-    # plot post-fit spectra
-    plotter.setup_reference_level(0.0)
-    plotter.plot(postfit_map_data, postfit_integrated_data, frequency, figfile=postfit_figfile)
-        
+            
     plotter.done()
+    
+    del prefit_integrated_data, prefit_map_data, postfit_map_data, fit_result
+    
     return True
 
 def median_index(arr):
