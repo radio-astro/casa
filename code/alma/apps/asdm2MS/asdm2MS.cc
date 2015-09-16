@@ -5217,6 +5217,7 @@ int main(int argc, char *argv[]) {
     error(errstream.str());
   }
 
+
   //
   // Prepare a map AtmPhaseCorrection -> name of measurement set.
   // Three cases are possible :
@@ -5258,6 +5259,10 @@ int main(int argc, char *argv[]) {
 
   infostream.str("");
   infostream << "The resulting measurement set will contain a '" << ((complexData) ? "DATA" : "FLOAT_DATA") << "' column" << endl; 
+  if (lazy && !complexData) {
+    lazy = false;
+    infostream << "The lazy filler can't be used to fill the FLOAT_DATA column. The non lazy version of the filler will be used." << endl;
+  }
   info(infostream.str());
 
 #if DDPRIORITY
