@@ -850,15 +850,16 @@ HPX HEALPix grid.  -->
                        normtype='flatnoise' : Divide the raw image by sqrt(.weight) so that
                                                            the input to the minor cycle represents the
                                                            product of the sky and PB. The noise is 'flat' 
-                                                           across the image.
+                                                           across the region covered by each PB.
 
                       normtype='flatsky' : Divide the raw image by .weight so that the input
                                                        to the minor cycle represents only the sky. 
                                                        The noise is higher in the outer regions of the 
                                                        primary beam where the sensitivity is low.
 
-                      normtype='pbsquare' : No normalization after gridding. The minor cycle
-                                                            sees the sky times pb square [not yet implemented]
+                      normtype='pbsquare' : No normalization after gridding and FFT. 
+                                                            The minor cycle sees the sky times pb square
+                                                            [not yet implemented]
 
 </description>
       <value type="string">flatnoise</value>
@@ -880,14 +881,14 @@ HPX HEALPix grid.  -->
                        or cycleniter are reached. For all methods, components are picked from
                        the entire extent of the image or (if specified) within a mask.
 
-                       hogbom : An adapted version of Hogbom Clean (ref)
+                       hogbom : An adapted version of Hogbom Clean [Hogbom, 1974]
                                        - Find the location of the peak residual
                                        - Add this delta function component to the model image
                                        - Subtract a scaled and shifted PSF of the same size as the image
                                          from regions of the residual image where the two overlap.
                                        - Repeat
 
-                       clark : An adapted version of Clark Clean (ref)
+                       clark : An adapted version of Clark Clean [Clark, 1980]
                                        - Find the location of max(I^2+Q^2+U^2+V^2) 
                                        - Add delta functions to each stokes plane of the model image
                                        - Subtract a scaled and shifted PSF within a small patch size
@@ -904,7 +905,7 @@ HPX HEALPix grid.  -->
 
                                   (Note : 'clarkstokes_exp' is an alternate version. See above.)
 
-                       multiscale : MultiScale Clean [Cornwell, 2003]
+                       multiscale : MultiScale Clean [Cornwell, 2008]
                                        - Smooth the residual image to multiple scale sizes
                                        - Find the location and scale at which the peak occurs
                                        - Add this multiscale component to the model image
@@ -912,36 +913,21 @@ HPX HEALPix grid.  -->
                                          patch size per scale) from all residual images
                                        - Repeat from step 2
 
-                       mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis 
-                                    [Rau and Cornwell, 2011]
+                       mtmfs : Multi-term (Multi Scale) Multi-Frequency Synthesis [Rau and Cornwell, 2011]
                                        - Smooth each Taylor residual image to multiple scale sizes
                                        - Solve a NTxNT system of equations per scale size to compute
                                          Taylor coefficients for components at all locations
                                        - Compute gradient chi-square and pick the Taylor coefficients
-                                          and scale size at the location with maximum reduction in chi-square
-                                       - Add multi-scale components to each Taylor-coefficient model image
+                                          and scale size at the location with maximum reduction in 
+                                          chi-square
+                                       - Add multi-scale components to each Taylor-coefficient 
+                                         model image
                                        - Subtract scaled,smoothed,shifted PSF (within a small patch size
                                          per scale) from all smoothed Taylor residual images
                                        - Repeat from step 2
 
-                                       (Note : In addition to output Taylor coefficient images .tt0,.tt1,etc
-                                                   images of spectral index (.alpha), an estimate of error on 
-                                                   spectral index (.alpha.error) and spectral curvature (.beta,
-                                                   if nterms is greater than 2) are produced. 
-                                                  - These alpha, alpha.error and beta images contain 
-                                                     internal T/F masks based on a threshold computed 
-                                                     as peakresidual/10. Additional masking based on 
-                                                     .alpha/.alpha.error may be desirable.
-                                                  - .alpha.error is a purely empirical estimate derived 
-                                                    from the propagation of error during the division of
-                                                    two noisy numbers (alpha = xx.tt1/xx.tt0) where the
-                                                    'error' on tt1 and tt0 are simply the values picked from 
-                                                    the corresponding residual images. The absolute value
-                                                    of the error is not always accurate and it is best to intepret
-                                                    the errors across the image only in a relative sense.)
 
-
-                       mem : Maximum Entropy Method [Cornwell 1994]
+                       mem : Maximum Entropy Method [Cornwell and Evans, 1985]
                                        - Iteratively solve for values at all individual pixels via the
                                          MEM method. It minimizes an objective function of
                                           chi-square plus entropy (here, a measure of difference 
@@ -997,7 +983,7 @@ HPX HEALPix grid.  -->
 
                        - nterms=1 : Assume flat spectrum source
                        - nterms=2 : Spectrum is a straight line with a slope
-                       - nterms &gt; 2 : A polynomial of order n-1
+                       - nterms=N : A polynomial of order N-1
 
                        From a Taylor expansion of the expression of a power law, the 
                        spectral index is derived as alpha = taylorcoeff_1 / taylorcoeff_0
@@ -1018,6 +1004,23 @@ HPX HEALPix grid.  -->
                        If increasing the number of terms does not eliminate these artifacts,
                        check the data for inadequate bandpass calibration. If the source is away 
                        from the pointing center, consider including wide-field corrections too.
+
+                       (Note : In addition to output Taylor coefficient images .tt0,.tt1,etc
+                                   images of spectral index (.alpha), an estimate of error on 
+                                   spectral index (.alpha.error) and spectral curvature (.beta,
+                                   if nterms is greater than 2) are produced. 
+                                   - These alpha, alpha.error and beta images contain 
+                                     internal T/F masks based on a threshold computed 
+                                     as peakresidual/10. Additional masking based on 
+                                    .alpha/.alpha.error may be desirable.
+                                   - .alpha.error is a purely empirical estimate derived 
+                                     from the propagation of error during the division of
+                                     two noisy numbers (alpha = xx.tt1/xx.tt0) where the
+                                     'error' on tt1 and tt0 are simply the values picked from 
+                                     the corresponding residual images. The absolute value
+                                     of the error is not always accurate and it is best to intepret
+                                     the errors across the image only in a relative sense.)
+
 
 </description>
       <value type="int">2</value>
@@ -1043,6 +1046,10 @@ HPX HEALPix grid.  -->
                          and the largest beam from the remaining 'good' planes is
                          picked as the common beam. 
 
+                       Note : For any restoring beam different from the native resolution
+                                  the model image is convolved with the beam and added to
+                                  residuals that have been convolved to the same target resolution.
+
 </description>
 	    <any type="variant" limittypes="string stringArray"/>
 	    <value type="stringArray"></value>
@@ -1061,7 +1068,56 @@ HPX HEALPix grid.  -->
 <!--============================================== -->
     <param type="string" name="outlierfile">
      <shortdescription>Name of outlier-field image definitions</shortdescription>
-<description>Name of outlier-field image definitions</description>
+<description>Name of outlier-field image definitions
+
+                       A text file containing sets of parameter=value pairs, 
+                       one set per outlier field.  
+
+                       Example :   outlierfile='outs.txt'
+
+                                          Contents of outs.txt : 
+
+                                                    imagename=tst1
+                                                    nchan=1
+                                                    imsize=[80,80]
+                                                    cell=[8.0arcsec,8.0arcsec]
+                                                    phasecenter=J2000 19:58:40.895 +40.55.58.543
+                                                    mask=circle[[40pix,40pix],10pix]
+
+                                                    imagename=tst2
+                                                    nchan=1
+                                                    imsize=[100,100]
+                                                    cell=[8.0arcsec,8.0arcsec]
+                                                    phasecenter=J2000 19:58:40.895 +40.56.00.000
+                                                    mask=circle[[60pix,60pix],20pix]
+
+                          The following parameters are currently allowed to be different between
+                          the main field and the outlier fields (i.e. they will be recognized if found
+                          in the outlier text file). If a parameter is not listed, the value is picked from
+                          what is defined in the main task input. 
+ 
+                              imagename, imsize, cell, phasecenter, startmodel, mask
+                              specmode, nchan, start, width, nterms, reffreq, 
+                              gridder, deconvolver, wprojplanes
+
+                          Note : 'specmode' is an option, so combinations of mfs and cube
+                                     for different image fields, for example, are supported.
+                                    'deconvolver' and 'gridder' are also options that allow different
+                                     imaging or deconvolution algorithm per image field. 
+
+                                     For example, multiscale with wprojection and 16 w-term planes
+                                     on the main field and mtmfs with nterms=3 and wprojection
+                                     with 64 planes on a bright outlier source for which the frequency
+                                     dependence of the primary beam produces a strong effect that
+                                     must be modeled.   The traditional alternative to this approach is 
+                                     to first image the outlier, subtract it out of the data (uvsub) and
+                                     then image the main field.
+
+                          Note : If you encounter a use-case where some other parameter needs
+                                    to be allowed in the outlier file (and it is logical to do so), please 
+                                    send us feedback. The above is an initial list.
+
+</description>
       <value type="string"></value>
     </param>
 
@@ -1072,19 +1128,97 @@ HPX HEALPix grid.  -->
 
     <param type="string" name="weighting">
            <shortdescription>Weighting scheme (natural,uniform,briggs)</shortdescription>
-<description>Weighting scheme (natural,uniform,briggs)</description>
+<description>Weighting scheme (natural,uniform,briggs,superuniform,radial)
+
+                       During gridding of the dirty or residual image, each visibility value is 
+                       multiplied by a weight before it is accumulated on the uv-grid. 
+                       The PSF's uv-grid is generated by gridding only the weights (weightgrid).
+
+                       weighting='natural' : Gridding weights are identical to the data weights 
+                                                         from the MS. For visibilities with similar data weights, 
+                                                         the weightgrid will follow the sample density 
+                                                         pattern on the uv-plane. This weighting scheme 
+                                                         provides the maximum imaging sensitivity at the 
+                                                         expense of a possibly fat PSF with high sidelobes.
+                                                         It is most appropriate for detection experiments
+                                                         where sensitivity is most important.
+
+                       weighting='uniform' : Gridding weights per visibility data point are the
+                                                          original data weights divided by the total weight of 
+                                                          all data points that map to the same uv grid cell : 
+                                                          ' data_weight / total_wt_per_cell '.
+
+                                                          The weightgrid is as close to flat as possible resulting
+                                                          in a PSF with a narrow main lobe and suppressed
+                                                          sidelobes. However, since heavily sampled areas of
+                                                          the uv-plane get down-weighted, the imaging 
+                                                          sensitivity is not as high as with natural weighting.
+                                                          It is most appropriate for imaging experiments where 
+                                                          a well behaved PSF can help the reconstruction.
+
+                       weighting='briggs' :  Gridding weights per visibility data point are given by
+                                                         'data_weight / ( A / total_wt_per_cell + B ) ' where
+                                                         A and B vary according to the 'robust' parameter.
+
+                                                         robust = -2.0 maps to A=1,B=0 or uniform weighting.
+                                                         robust = +2.0 maps to natural weighting.
+                                                         (robust=0.5 is equivalent to robust=0.0 in AIPS IMAGR.)
+
+                                                         Robust/Briggs weighting generates a PSF that can
+                                                         vary smoothly between 'natural' and 'uniform' and 
+                                                         allow customized trade-offs between PSF shape and
+                                                         imaging sensitivity.
+
+                       weighting='superuniform' : This is similar to uniform weighting except that
+                                                                    the total_wt_per_cell is replaced by the 
+                                                                    total_wt_within_NxN_cells around the uv cell of 
+                                                                    interest.  ( N = subparameter 'npixels' )
+
+                                                                   This method tends to give a PSF with inner
+                                                                   sidelobes that are suppressed as in uniform
+                                                                   weighting but with far-out sidelobes closer to
+                                                                   natural weighting. The peak sensitivity is also
+                                                                   closer to natural weighting.
+
+                       weighting='radial' : Gridding weights are given by 
+                                                       ' data_weight * uvdistance '
+
+               For more details on weighting please see Chapter3
+               of Dan Briggs' thesis (http://www.aoc.nrao.edu/dissertations/dbriggs)
+
+</description>
 	    <value type="string">natural</value>
     </param>
 
     <param type="double" name="robust" subparam="true">
            <shortdescription>Robustness parameter</shortdescription>
-<description>Robustness parameter</description>
+<description>Robustness parameter for Briggs weighting.
+                                                         
+                            robust = -2.0 maps to uniform weighting.
+                            robust = +2.0 maps to natural weighting.
+                            (robust=0.5 is equivalent to robust=0.0 in AIPS IMAGR.)
+
+</description>
 	    <value type="double">0.5</value>
     </param>
 
     <param type="int" name="npixels" subparam="true">
            <shortdescription>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</shortdescription>
-<description>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</description>
+<description>Number of pixels to determine uv-cell size for super-uniform weighting
+                      (0 : -/+ 3 pixels)
+
+                     npixels -- uv-box used for weight calculation
+                                    a box going from -npixel/2 to +npixel/2 on each side
+                                   around a point is used to calculate weight density.
+                                   0 means box is pixel size
+                   example npixels=2 goes from -1 to +1 and covers 3 pixels on a side.
+                   Default = 0
+
+               Exception: when choosing superuniform it does not make sens to use 
+                                 npixels=0 as it is  uniform thus if npixels is 0  it will be forced to 6 or 
+                                 a box of -3pixels  to 3pixels (covers 7 pixels on a side)
+
+</description>
 	    <value type="int">0</value>
     </param>
 
@@ -1100,9 +1234,17 @@ HPX HEALPix grid.  -->
 	   <shortdescription>uv-taper on outer baselines in uv-plane</shortdescription>
 <description>uv-taper on outer baselines in uv-plane
 
-                   [bmaj, bmin, bpa] taper Gaussian scale in uv or 
- 		   angular units. NOTE: the on-sky FWHM in arcsec is roughly
-                   the uv taper/200 (klambda).
+                   Apply a Gaussian taper in addition to the weighting scheme specified 
+                   via the 'weighting' parameter. Higher spatial frequencies are weighted
+                   down relative to lower spatial frequencies to suppress artifacts 
+                   arising from poorly sampled areas of the uv-plane. It is equivalent to
+                   smoothing the PSF obtained by other weighting schemes and can be
+                   specified either as a Gaussian in uv-space (eg. units of lambda)
+                   or as a Gaussian in the image domain (eg. angular units like arcsec).
+
+                   uvtaper = [bmaj, bmin, bpa]
+
+                   NOTE: the on-sky FWHM in arcsec is roughly  the uv taper/200 (klambda).
                    default: outertaper=[]; no outer taper applied
  		   example: outertaper=['5klambda']  circular taper 
  				FWHM=5 kilo-lambda
@@ -1134,51 +1276,155 @@ HPX HEALPix grid.  -->
     <param type="int" name="niter">
      <shortdescription>Maximum number of iterations</shortdescription>
 <description>Maximum number of iterations
-  
-  Iterations are counted across all channels...
 
-  Major Cycle Triggers
-    - cyclethreshold
-    - cycleniter
+                       A stopping criterion based on total iteration count. 
 
-  
+                       Iterations are typically defined as the selecting one flux component 
+                       and partially subtracting it out from the residual image. 
+
+                       For images with multiple planes on which the deconvolver operates
+                       in sequence, iterations are counted across all planes. 
+
+                       niter=0 : Do only the initial major cycle (make dirty image, psf, pb, etc)
+
+                       niter larger than zero : Run major and minor cycles.
+
+                                  Note : Global stopping criteria vs major-cycle triggers
+
+                                  In addition to global stopping criteria, the following rules are
+                                  used to determine when to terminate a set of minor cycle iterations
+                                  and trigger major cycles [derived from Cotton-Schwab Clean, 1984]
+
+                                  'cycleniter' : controls the maximum number of iterations per image
+                                                      plane before triggering a major cycle.
+                                  'cyclethreshold' : Automatically computed threshold related to the
+                                                              max sidelobe level of the PSF and peak residual.
+
+                                   The first criterion to be satisfied takes precedence.
+
 </description>
       <value type="int">0</value>
     </param>
 
     <param type="double" name="gain" subparam="true">
      <shortdescription>Loop gain</shortdescription>
-<description>Loop gain</description>
+<description>Loop gain
+     
+                       Fraction of the source flux to subtract out of the residual image 
+                       for the CLEAN algorithm and its variants.
+
+                       A low value (0.2 or less) is recommended when the sky brightness
+                       distribution is not well represented by the basis functions used by 
+                       the chosen deconvolution algorithm. A higher value can be tried when
+                       there is a good match between the true sky brightness structure and
+                       the basis function shapes.  For example, for extended emisison, 
+                       multiscale clean with an appropriate set of scale sizes will tolerate
+                       a higher loop gain than Clark clean (for example).
+
+                       <!-- Setting loop gain to negative triggers automatic loop gain
+                              control based on the Levenberg Macquart algorithm, using
+                              the absolute of the supplied value as the initial setting   -->
+
+</description>
       <value type="double">0.1</value>
     </param>
 
     <param type="any" name="threshold" subparam="true">
-     <shortdescription>Stopping threshold (number, in units of Jy)</shortdescription>
-<description>Stopping threshold (number, in units of Jy)</description>
+     <shortdescription>Stopping threshold </shortdescription>
+<description>Stopping threshold (number in units of Jy, or string)
+
+                      A global stopping threshold that the peak residual (within clean mask) 
+                      across all image planes is compared to.
+
+                      threshold = 0.005  : 5mJy 
+                      threshold = '5.0mJy' 
+
+                      Note : A 'cyclethreshold' is internally computed and used as a major cycle
+                                 trigger. It is related what fraction of the PSF can be reliably 
+                                 used during minor cycle updates of the residual image. By default
+                                 the minor cycle iterations terminate once the peak residual reaches
+                                 the first sidelobe level of the brightest source. 
+
+                                 'cyclethreshold' is computed as follows using the settings in 
+                                  parameters 'cyclefactor','minpsffraction','maxpsffraction','threshold' : 
+
+                                psf_fraction = max_psf_sidelobe_level * 'cyclefactor'
+                                psf_fraction = max(psf_fraction, 'minpsffraction');
+                                psf_fraction = min(psf_fraction, 'maxpsffraction');
+                                cyclethreshold = peak_residual * psf_fraction
+                                cyclethreshold = max( cyclethreshold, 'threshold' )
+
+                                'cyclethreshold' is made visible and editable only in the 
+                                interactive GUI when tclean is run with interactive=True.
+</description>
+
       <value type="double">0.0</value>
     </param>
 
     <param type="int" name="cycleniter" subparam="true">
-     <shortdescription>Maximum number of minor-cycle iterations before triggering a major cycle</shortdescription>
-<description>Maximum number of minor-cycle iterations (per plane) before triggering a major cycle</description>
+     <shortdescription>Maximum number of minor-cycle iterations</shortdescription>
+<description>Maximum number of minor-cycle iterations (per plane) before triggering 
+                       a major cycle
+
+                       For example, for a single plane image, if niter=100 and cycleniter=20,
+                       there will be 5 major cycles after the initial one (assuming there is no
+                       threshold based stopping criterion). At each major cycle boundary, if
+                       the number of iterations left over (to reach niter) is less than cycleniter, 
+                       it is set to the difference.
+
+                       Note : cycleniter applies per image plane, even if cycleniter x nplanes 
+                                  gives a total number of iterations greater than 'niter'. This is to 
+                                  preserve consistency across image planes within one set of minor
+                                  cycle iterations.
+
+</description>
       <value type="int">-1</value>
     </param>
 
     <param type="double" name="cyclefactor" subparam="true">
      <shortdescription>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</shortdescription>
-<description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
+<description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.
+
+                       Please refer to the Note under the documentation for 'threshold' that
+                       discussed the calculation of 'cyclethreshold'
+
+                       cyclefactor=1.0 results in a cyclethreshold at the first sidelobe level of
+                       the brightest source in the residual image before the minor cycle starts.
+ 
+                       cyclefactor=0.5 allows the minor cycle to go deeper.
+                       cyclefactor=2.0 triggers a major cycle sooner.
+
+</description>
       <value type="double">1.0</value>
     </param>
 
     <param type="double" name="minpsffraction" subparam="true">
      <shortdescription>PSF fraction that marks the max depth of cleaning in the minor cycle</shortdescription>
-<description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+<description>PSF fraction that marks the max depth of cleaning in the minor cycle 
+
+                       Please refer to the Note under the documentation for 'threshold' that
+                       discussed the calculation of 'cyclethreshold'
+
+                       For example, minpsffraction=0.5 will stop cleaning at half the height of
+                       the peak residual and trigger a major cycle earlier.
+
+</description>
       <value type="double">0.05</value>
     </param>
 
     <param type="double" name="maxpsffraction" subparam="true">
      <shortdescription>>PSF fraction that marks the minimum depth of cleaning in the minor cycle </shortdescription>
-<description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+<description>PSF fraction that marks the minimum depth of cleaning in the minor cycle 
+
+                       Please refer to the Note under the documentation for 'threshold' that
+                       discussed the calculation of 'cyclethreshold'
+
+                       For example, maxpsffraction=0.8 will ensure that at least the top 20
+                       percent of the source will be subtracted out in the minor cycle even if
+                       the first PSF sidelobe is at the 0.9 level (an extreme example), or if the
+                       cyclefactor is set too high for anything to get cleaned.
+
+</description>
       <value type="double">0.8</value>
     </param>
 
@@ -1188,8 +1434,58 @@ HPX HEALPix grid.  -->
 	    <value type="bool">False</value>
     </param> -->
     <param type="any" name="interactive" subparam="true">
-     <shortdescription>True to be able to modify masks and parameters at runtime</shortdescription>
-<description>True to be able to modify masks and parameters at runtime</description>
+     <shortdescription>Modify masks and parameters at runtime</shortdescription>
+<description>Modify masks and parameters at runtime
+
+                       interactive=True will trigger an interactive GUI at every major cycle
+                       boundary (after the major cycle and before the minor cycle).
+
+                       Options for runtime parameter modification are : 
+
+                       Interactive clean mask : Draw a 1/0 mask (appears as a contour) by hand.
+                                                              If a mask is supplied at the task interface or if
+                                                              automasking is invoked, the current mask is
+                                                              displayed in the GUI and is available for manual 
+                                                              editing.
+
+                                                              Note : If a mask contour is not visible, please
+                                                                         check the cursor display at the bottom of 
+                                                                         GUI to see which parts of the mask image
+                                                                         have ones and zeros. If the entire mask=1 
+                                                                         no contours will be visible.
+
+
+                       Operation buttons :  -- Stop execution now (restore current model and exit)
+                                                        -- Continue on until global stopping criteria are reached
+                                                           without stopping for any more interaction
+                                                        -- Continue with minor cycles and return for interaction
+                                                            after the next major cycle.
+
+                       Iteration control : -- max cycleniter :  Trigger for the next major cycle
+                                                                                   
+                                                                                   The display begins with 
+                                                                                   [ min( cycleniter, niter - itercount ) ]
+                                                                                   and can be edited by hand. 
+
+                                                    -- iterations left :  The display begins with [niter-itercount ] 
+                                                                                and can be edited to increase or 
+                                                                                decrease the total allowed niter.
+
+                                                    -- threshold : Edit global stopping threshold
+ 
+                                                    -- cyclethreshold : The display begins with the 
+                                                                                  automatically computed value 
+                                                                                  (see Note in help for 'threshold'),
+                                                                                  and can be edited by hand. 
+
+                                                    All edits will be reflected in the log messages that appear
+                                                    once minor cycles begin.
+
+
+                       [ For scripting purposes, replacing True/False with 1/0 will get tclean to
+                         return an imaging summary dictionary to python ]
+
+</description>
       <any type="variant" limittypes="bool int"/>
       <value type="bool">False</value>
     </param>
@@ -1224,12 +1520,13 @@ HPX HEALPix grid.  -->
 
                 mask='auto-pb' : Construct a mask at the 0.2 pb gain level.  
                                             (Currently, this option will work only with 
-                                             gridders that produce .pb (i.e. mosaic and awproject))
-
+                                             gridders that produce .pb (i.e. mosaic and awproject)
+                                             or if an externally produced .pb image exists on disk)
 
                 mask='auto-within-pb' : Run an autoboxing algorithm and limit the mask to within
                                                        a pb gain level of 0.2. (This option will work only with 
-                                                       gridders that produce .pb (i.e. mosaic and awproject))
+                                                       gridders that produce .pb (i.e. mosaic and awproject)
+                                                       or if an externally produced .pb image exists on disk)
 
 
               Note : Mask images for deconvolution must contain 1 or 0 in each pixel.
@@ -1238,7 +1535,6 @@ HPX HEALPix grid.  -->
                          automatically interchangeable, so please use the makemask task
                          to copy between them if you need to construct a 1/0 based mask
                          from a T/F one. 
-
 
                Note : Work is in progress to generate more flexible masking options and
                           enable more controls.
@@ -1310,7 +1606,8 @@ HPX HEALPix grid.  -->
                        Often, model visibilities must be created and saved in the MS
                        to be later used for self-calibration (or to just plot and view them).
 
-                          none : Do not save any model visibilities in the MS. 
+                          none : Do not save any model visibilities in the MS. The MS is opened
+                                     in readonly mode. 
                       
                                      Model visibilities can always be predicted in a separate step by 
                                      running tclean with niter=0,savemodel=virtual or modelcolumn
@@ -1359,14 +1656,42 @@ HPX HEALPix grid.  -->
     </param>
 
     <param type="bool" name="calcres">
-	   <shortdescription>Calculate residual image</shortdescription>
-<description>Calculate residual image</description>
+	   <shortdescription>Calculate initial residual image</shortdescription>
+<description>Calculate initial residual image
+
+                      This parameter controls what the first major cycle does.
+
+                      calcres=False with niter greater than 0 will assume that 
+                      a .residual image already exists  and that the minor cycle can 
+                      begin without recomputing it.
+
+                      calcres=False with niter=0 implies that only the PSF will be made
+                      and no data will be gridded.
+
+                      calcres=True requires that calcpsf=True or that the .psf and .sumwt
+                      images already exist on disk (for normalization purposes).
+
+                      Usage example : For large runs (or a pipeline scripts) it may be
+                                                  useful to first run tclean with niter=0 to create
+                                                  an initial .residual to look at and perhaps make 
+                                                  a custom mask for. Imaging can be resumed
+                                                  without recomputing it.
+
+</description>
 	    <value type="bool">True</value>
     </param>
 
     <param type="bool" name="calcpsf">
 	   <shortdescription>Calculate PSF</shortdescription>
-<description>Calculate PSF</description>
+<description>Calculate PSF
+
+                      This parameter controls what the first major cycle does.
+
+                      calcpsf=False will assume that a .psf image already exists
+                      and that the minor cycle can begin without recomputing it.
+
+
+</description>
 	    <value type="bool">True</value>
     </param>
 
@@ -1650,12 +1975,34 @@ HPX HEALPix grid.  -->
      been used and validated, there are many details that have not been thoroughly tested.
      Feedback will be much appreciated.
 
+
      Usage Examples :
+     -----------------------
 
      (A) A suite of test programs that demo all usable modes of tclean on small test datasets
            https://svn.cv.nrao.edu/svn/casa/branches/release-4_5/gcwrap/python/scripts/tests/test_refimager.py
      (B) A set of demo examples for ALMA imaging
            https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
+
+     
+     Example use cases that illustrate options in top level control flow :
+     ----------------------------------------------------------------------------------------
+
+     *** Standard imaging and deconvolution
+
+     *** Make only the dirty image and PSF
+
+     *** Make only the PSF (and primary beam)
+
+     *** Make only a residual image (given a startmodel) and PSF
+
+     *** Start from deconvolution without recalculating an existing PSF and residual image
+
+     *** Predict model visibilities and save them.
+
+     *** Predict wideband model visibilities in preparation for continuum subtraction
+
+     *** A run with outlier fields...
 
   </example>
 

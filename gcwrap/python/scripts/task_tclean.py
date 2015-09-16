@@ -50,8 +50,8 @@ def tclean(
     outframe,#='LSRK',
     veltype,#='',
     restfreq,#=[''],
-    sysvel,#='',
-    sysvelframe,#='',
+#    sysvel,#='',
+#    sysvelframe,#='',
     interpolation,#='',
     ## 
     ####### Gridding parameters
@@ -161,8 +161,8 @@ def tclean(
         outframe=outframe,
         veltype=veltype,
         restfreq=restfreq,
-        sysvel=sysvel,
-        sysvelframe=sysvelframe,
+        sysvel='',#sysvel,
+        sysvelframe='',#sysvelframe,
         interpolation=interpolation,
 
         gridder=gridder,
