@@ -517,7 +517,8 @@ if( NOT FORTRAN_LIBRARIES )
     )
 
   execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                   COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
+		   COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; last; }} last if $found; } last if $found;}"
+#                   COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
                    OUTPUT_VARIABLE _gfortran_lib_path
                    OUTPUT_STRIP_TRAILING_WHITESPACE )
 

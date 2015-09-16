@@ -256,7 +256,7 @@ export SVNGEN_REVISION=%{CASAREV}
 #cd $top
 #git clone https://github.com/casacore/casacore
 
-export COMPILERS="-DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gfortran"
+export COMPILERS="-DCXX11=1 -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-2/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/usr/bin/gfortran"
 
 cd $top/casacore
 mkdir build && cd build
