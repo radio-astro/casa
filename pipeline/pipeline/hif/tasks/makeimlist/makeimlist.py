@@ -353,7 +353,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((specmode not in ('mfs', 'cont')) and (nchan == -1) and (width == '')):
+        if ((specmode not in ('mfs', 'cont')) and (width == 'pilotimage')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:

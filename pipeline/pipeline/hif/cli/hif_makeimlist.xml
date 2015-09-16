@@ -236,6 +236,7 @@ width -- Output channel width.
     default: '' Difference in frequency between first 2 selected channels.
         for frequency mode images.
     example: '24.2kHz'
+             'pilotimage' for 15 MHz / 8 channel heuristic
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
