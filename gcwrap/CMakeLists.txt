@@ -767,7 +767,6 @@ else()
        casadbus
        casaqt
        components
-       dish
        display
        flagging
        graphics
