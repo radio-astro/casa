@@ -1232,7 +1232,7 @@ def get_full_description(date_string, year='YYYY', month='MM', day='DD', hour='h
     else:
         default_values = split_date_string(default)
         if len(default_values) < 7:
-            default_values = defalut_values + ['00']
+            default_values = default_values + ['00']
             
     values = default_values[:7-len(elements_list)] + elements_list
 
