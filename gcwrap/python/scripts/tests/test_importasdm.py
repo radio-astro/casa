@@ -1743,6 +1743,79 @@ class asdm_import10(test_base):
         self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')
         self.assertTrue(len(th.getColDesc(themsname, 'DATA')) > 0)
 
+
+
+class asdm_import11(test_base):
+    '''Test importasdm with MMS and ephemerides data'''
+    
+    def setUp(self):
+        self.setUp_eph()
+       
+    def tearDown(self):
+        for myasdmname in ['uid___A002_X997a62_X8c-short']:
+            os.system('rm -f '+myasdmname) # a link
+            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+            
+    def test_mms_ephem(self):
+        '''Asdm-import: Test good 12 m ASDM with Ephemeris table in lazy mode and MMS'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X997a62_X8c-short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, convert_ephem2geo=True, 
+                              process_pointing=False, flagbackup=False, createmms=True) 
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["FIELD/table.dat",
+                            "FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                            "FIELD/EPHEM1_Titania_57034.934999999998.tab"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All relevant tables present. Try opening as MS ..."
+        try:
+            mslocal.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            mslocal.close()
+            print myname, ": OK."
+
+        for name in ["FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                     "FIELD/EPHEM1_Titania_57034.934999999998.tab"]:
+            tblocal.open(themsname+"/"+name)
+            kw = tblocal.getkeywords()
+            tblocal.close()
+            geodist = kw['GeoDist'] # (km above reference ellipsoid)
+            geolat = kw['GeoLat'] # (deg)
+            geolong = kw['GeoLong'] # (deg)
+            print myname, ": Testing if ephemeris ", name, " was converted to GEO ..."
+            if not (geodist==geolat==geolong==0.):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+' Ephemeris was not converted to GEO for '+themsname+'\n'
+            else:
+                print myname, ": OK."
+            prsys = kw['posrefsys']
+            print myname, ": Testing if posrefsys was set correctly ..."
+            if not (prsys=="ICRF/J2000.0"):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/J2000.0 '+themsname+'\n'
+            else:
+                print myname, ": OK."
+ 
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
         
 def suite():
     return [asdm_import1, 
@@ -1754,6 +1827,7 @@ def suite():
             asdm_import7,
             asdm_import8,
             asdm_import9,
-            asdm_import10]        
+            asdm_import10,
+            asdm_import11]        
         
     
