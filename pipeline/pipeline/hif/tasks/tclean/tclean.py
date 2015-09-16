@@ -37,7 +37,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
     masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 1.0)
     subcontms = basetask.property_with_default('subcontms', False)
 
     @property
@@ -143,7 +143,7 @@ class Tclean(cleanbase.CleanBase):
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
             sequence_manager = ImageCentreThresholdSequence(
                 gridder=inputs.gridder, threshold=threshold,
-                sensitivity=sensitivity)
+                sensitivity=sensitivity, niter=inputs.niter)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(

@@ -75,7 +75,7 @@ Compute clean results from a list of specified targets.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>4.0</value>
+       <value>1.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -158,10 +158,10 @@ Compute clean results from a list of specified targets.
       <equals value="">
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">1.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">4.0</value></default>
+        <default param="tlimit"><value type="double">1.0</value></default>
       </equals>
       <equals value="timesmask">
         <default param="masklimit"><value type="int">4</value></default>
