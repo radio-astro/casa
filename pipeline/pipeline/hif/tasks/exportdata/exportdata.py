@@ -861,8 +861,12 @@ finally:
                     if (image['multiterm']):
 	                for nt in xrange(image['multiterm']):
                             images_list.append('%s.tt%d' % (image['imagename'], nt))
-                        images_list.append(image['imagename'].replace('.image', '.alpha'))
-                        images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
+                        if (image['imagename'].find('.pbcor') != -1):
+                            images_list.append(image['imagename'].replace('.pbcor.image', '.alpha'))
+                            images_list.append('%s.error' % (image['imagename'].replace('.pbcor.image', '.alpha')))
+                        else:
+                            images_list.append(image['imagename'].replace('.image', '.alpha'))
+                            images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
                     else:
 	                images_list.append(image['imagename'])
 	else:
@@ -889,6 +893,7 @@ finally:
 	# Convert to FITS.
         fits_list = []
 	for image in images_list:
+            print 'Working on', image
 	    # Need to remove stage / iter information
 	    #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
 	    fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
