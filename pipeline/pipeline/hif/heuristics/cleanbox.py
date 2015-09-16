@@ -724,15 +724,10 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         LOG.todo('Cannot use dirname in mask')
         clean_rms = None
 
-        have_mask = False
-        if flux is not None and os.path.exists(flux):
-            have_mask= True
-            statsmask = '"%s" > 0.2' % (os.path.basename(flux))
-        elif cleanmask is not None and os.path.exists(cleanmask):
-            have_mask = True
+        if cleanmask is not None and os.path.exists(cleanmask):
+            # Area inside clean mask
             statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
 
-        if have_mask:
             resid_clean_stats = image.statistics(mask=statsmask, 
               robust=False)
             try:
@@ -747,15 +742,18 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
 
         if flux is not None and os.path.exists(flux):
             have_mask= True
-            statsmask = '"%s" < 0.3' % (os.path.basename(flux))
+            # Default is annulus 0.2 < pb < 0.3
+            statsmask = '("%s" > 0.2) && ("%s" < 0.3)' % (os.path.basename(flux), os.path.basename(flux))
         elif cleanmask is not None and os.path.exists(cleanmask):
             have_mask= True
+            # Area outside clean mask
             statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
         else:
             have_mask= False
             statsmask = ''
 
         resid_stats = image.statistics(mask=statsmask, robust=False)
+
         try:
             non_clean_rms = resid_stats['rms'][0]
             if have_mask:
@@ -769,7 +767,7 @@ def analyse_clean_result(multiterm, model, restored, residual, flux, cleanmask):
         # where spikes can occur)
         if flux is not None and os.path.exists(flux):
             residual_stats = image.statistics(
-              mask='"%s" > 0.1' % os.path.basename(flux), robust=False)
+              mask='"%s" > 0.2' % os.path.basename(flux), robust=False)
         else:
             residual_stats = image.statistics(robust=False)
         try:
