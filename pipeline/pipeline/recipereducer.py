@@ -134,7 +134,7 @@ def _as_task_call(task_class, task_args):
 
 def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
            context=None, name=None, loglevel='info', plotlevel='default',
-           session=None):
+           session=None, exitstage=None):
     if vis is None:
         vis = []
     if infiles is None:
@@ -155,6 +155,9 @@ def reduce(vis=None, infiles=None, procedure='procedure_hifa.xml',
             try:
                 result = task.execute(dry_run=False)
                 result.accept(context)
+
+                if result.stage_number is exitstage:
+                    break
             except:
                 LOG.error('Error executing pipeline task %s.' % task._hif_call)
                 traceback.print_exc()
