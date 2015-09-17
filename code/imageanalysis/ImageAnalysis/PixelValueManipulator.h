@@ -92,29 +92,35 @@ public:
 		uInt axis, const String& function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
 		const Quantity *const restFreq=0, const String& frame=""
-	) const;
+	);
 
 	Record getProfile(
 		uInt axis, ImageCollapserData::AggregateType function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
 		const Quantity *const restFreq=0, const String& frame=""
-	) const;
+	);
 
 	String getClass() const { const static String name = "PixelValueManipulator"; return name; }
 
+	// set region name for logging purposes. Only used if the logfile is set.
+	void setRegionName(const String& rname) { _regionName = rname; }
+
 protected:
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+	CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+	std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
 		return std::vector<Coordinate::Type>();
 	}
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+	Bool _hasLogfileSupport() const { return True; }
+
+    Bool _supportsMultipleRegions() const {return True;}
 
 private:
     IPosition _axes, _lastChunkShape;
+    String _regionName;
 
 	void _checkUnit(
 		const String& unit, const CoordinateSystem& csys,

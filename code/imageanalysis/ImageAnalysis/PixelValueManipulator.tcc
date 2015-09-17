@@ -96,7 +96,7 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	uInt axis, ImageCollapserData::AggregateType function,
 	const String& unit, PixelValueManipulatorData::SpectralType specType,
 	const Quantity *const restFreq, const String& frame
-) const {
+) {
 	return getProfile(
 		axis, ImageCollapserData::minMatchMap()->find((uInt)function)->second,
 		unit,  specType, restFreq,  frame
@@ -107,7 +107,7 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 	uInt axis, const String& function,
 	const String& unit, PixelValueManipulatorData::SpectralType specType,
 	const Quantity *const restFreq, const String& frame
-) const {
+) {
 	ImageCollapser<T> collapser(
 		function, this->_getImage(), this->_getRegion(),
 		this->_getMask(), IPosition(1, axis), True, "", ""
@@ -148,6 +148,40 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 			)
 		);
 	}
+	if (this->_getLogFile()) {
+		auto axisName = this->_getImage()->coordinates().worldAxisNames()[axis];
+		auto cAxis = axisName;
+		cAxis.downcase();
+		Quantity xunit(1, ret.asString("xUnit"));
+		if (
+			cAxis.startsWith("freq")
+			&& xunit.isConform(Unit("m/s"))
+		) {
+			axisName = "Velocity";
+		}
+		auto imageName = this->_getImage()->name();
+		ostringstream oss;
+		oss << "#title: " << axisName
+			<< " profile - " << imageName << endl;
+		if (! _regionName.empty()) {
+			oss << "#region : " << _regionName << endl;
+		}
+		oss << "#xUnit " << xunit << endl;
+		oss << "#yUnit " << ret.asString("yUnit") << endl;
+		oss << "# " << imageName << endl << endl;
+		Vector<T> data;
+		ret.get("values", data);
+		Vector<Double> xvals = ret.asArrayDouble("coords");
+		auto diter = data.begin();
+		auto dend = data.end();
+		auto citer = xvals.begin();
+		for ( ; diter != dend; ++diter, ++citer) {
+			oss << fixed << setprecision(7) << *citer
+				<< " " << setw(10) << *diter << endl;
+		}
+		this->_writeLogfile(oss.str());
+	}
+
 	return ret;
 }
 
