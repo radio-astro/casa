@@ -1674,7 +1674,7 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 	canvas->clearAxesLabels();
 
 	//x-axis label
-	if(set) {
+	if(set && showX) {
 		PMS::DataColumn xDataColumn = cacheParams->xDataColumn();
 		String xLabelSingle = canvParams->xLabelFormat().getLabel(x, xref, xrefval, xDataColumn);
 		canvas->setAxisLabel(cx, xLabelSingle);
@@ -1717,18 +1717,20 @@ void PlotMSPlot::setCanvasProperties (int row, int col,
 			}
 		}
 	}
-	if ( yLabelLeft.size() > 0 ){
-		canvas->setAxisLabel(Y_LEFT, yLabelLeft);
-		PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
-		yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-		canvas->setAxisFont(Y_LEFT, yFont);
-	}
-	if ( yLabelRight.size() > 0 ){
-		canvas->setAxisLabel(Y_RIGHT, yLabelRight);
-		PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
-		yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
-		canvas->setAxisFont(Y_RIGHT, yFont);
-	}
+    if (showY) {
+        if ( yLabelLeft.size() > 0 ){
+            canvas->setAxisLabel(Y_LEFT, yLabelLeft);
+            PlotFontPtr yFont = canvas->axisFont( Y_LEFT);
+            yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+            canvas->setAxisFont(Y_LEFT, yFont);
+        }
+        if ( yLabelRight.size() > 0 ){
+            canvas->setAxisLabel(Y_RIGHT, yLabelRight);
+            PlotFontPtr yFont = canvas->axisFont( Y_RIGHT);
+            yFont->setPointSize(std::max(12. - rows*cols+1., 8.));
+            canvas->setAxisFont(Y_RIGHT, yFont);
+        }
+    }
 
 	// Custom axes ranges set by user
     // OR CAS-3263 points near zero are not plotted so add margin to the lower bound 
