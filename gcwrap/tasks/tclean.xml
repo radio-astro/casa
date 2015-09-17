@@ -393,10 +393,10 @@ HPX HEALPix grid.  -->
                                                extended time range will line up appropriately.
 
                                                (Note : If the input parameters are specified in a frame 
-                                                           other than LSRK, a spectral conversion layer is 
-                                                           attached to the output images so that tools like 
-                                                           the viewer will label the spectral axis in that frame 
-                                                           by default.)
+                                                           other than LSRK, the viewer can be used to relabel
+                                                           the spectral axis in that frame - via the spectral
+                                                           reference option under axis label properties in the
+                                                           data display options window.)
 
                         mode='cubedata' : Spectral line imaging with one or more channels
                                                         There is no internal software Doppler tracking so
