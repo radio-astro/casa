@@ -2096,7 +2096,7 @@ SPIIF ImageAnalysis::rotate(
 	const Bool overwrite, const Bool extendMask
 ) const {
 	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", __func__);
+	*_log << LogOrigin(className(), __func__);
 
 	Int dbg = 0;
 
@@ -2173,15 +2173,14 @@ SPIIF ImageAnalysis::rotate(
 				+ 1 << LogIO::POST;
 	}
 
-	if (pixelAxes.nelements() == 0) {
-		*_log << "Could not find a Direction or Linear coordinate to rotate"
-				<< LogIO::EXCEPTION;
-	}
-	else if (pixelAxes.nelements() != 2) {
-		*_log << "Coordinate to rotate must hold exactly two axes"
-				<< LogIO::EXCEPTION;
-	}
-
+	ThrowIf(
+		pixelAxes.nelements() == 0,
+		"Could not find a Direction or Linear coordinate to rotate"
+	);
+	ThrowIf(
+		pixelAxes.nelements() != 2,
+		"Coordinate to rotate must hold exactly two axes"
+	);
 	// Apply new linear transform matrix to coordinate
 	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
 		std::unique_ptr<DirectionCoordinate> c(
@@ -2209,14 +2208,12 @@ SPIIF ImageAnalysis::rotate(
 	// not to be regridded
 	std::set<Coordinate::Type> coordsToRegrid;
 	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(
-		*_log, coordsToRegrid,
-		cSysTo, cSysFrom, axes2
+		*_log, coordsToRegrid, cSysTo, cSysFrom, axes2
 	);
-	if (cSys.nPixelAxes() != outShape.nelements()) {
-		*_log
-				<< "The number of pixel axes in the output shape and Coordinate System must be the same"
-				<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		cSys.nPixelAxes() != outShape.nelements(),
+		"The number of pixel axes in the output shape and Coordinate System must be the same"
+	);
 
 	// Create the image and mask
 	SPIIF imOut;
@@ -2239,10 +2236,9 @@ SPIIF ImageAnalysis::rotate(
 	IPosition dummy;
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
-	Bool forceRegrid = False;
 	ir.regrid(
 		*imOut, method, axes2, *subImage, replicate,
-		decimate, True, forceRegrid
+		decimate, True, False
 	);
 	return imOut;
 }
