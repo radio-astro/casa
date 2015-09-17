@@ -9,8 +9,9 @@ import nose.plugins.xunit
 import traceback
 import inspect
 import time
-import commands
 import os
+import subprocess
+import sys
 
 def nice_classname(obj):
     """Returns a nice name for class object or class instance.
@@ -91,6 +92,14 @@ class MemTest(nose.plugins.xunit.Xunit):
             stream.writeln("-" * 70)
             stream.writeln("XML: %s" % self.error_report_file.name)
 
+    @staticmethod
+    def _getstatusoutput(cmd):
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdoutdata, stderrdata = p.communicate(None)
+        if stderrdata is not None and len(stderrdata) > 0:
+            print >> sys.stderr, stderrdata
+        return (p.returncode, stdoutdata)
+
     def startTest(self, test):
         """Initializes a timer before starting a test."""
         self._timer = time.time()
@@ -100,36 +109,41 @@ class MemTest(nose.plugins.xunit.Xunit):
         infile.write(msg)
         infile.close()
 
-        (errorcode, n) = commands.getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
+        (errorcode, n) = self._getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
         if errorcode == 0:
             self._openfiles = n
         else:
             self._openfiles = 0
 
-        (errorcode, n) = commands.getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
+        (errorcode, n) = self._getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
         if errorcode == 0:
             self._resident_memory = n
         else:
             self._resident_memory = 0           
 
     def stopContext(self, context):
-        out = commands.getoutput("du -h")
+        try:
+            out = subprocess.check_output("du -h", shell=True)
+        except subprocess.CalledProcessError, e:
+            out = e.output
         print "Directory contents after", context
         print out
 
     def _update_after_test(self):
         # The predefined hooks stopTest() and afterTest() cannot be used
         # because they get called after addError/addFailure/addSuccess
-        os.system(self.lsof + ' -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles')
+        subprocess.call(
+            self.lsof + ' -p ' + str(self._pid) + ' | grep -i nosedir >> ListOpenFiles',
+            shell=True)
 
-        (errorcode, n) = commands.getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
+        (errorcode, n) = self._getstatusoutput(self.lsof + ' -p ' + str(self._pid) + ' | wc -l')
 
         if errorcode == 0:
             self._fileleak = int(n) - int(self._openfiles)
         else:
             self._fileleak = -1
 
-        (errorcode, n) = commands.getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
+        (errorcode, n) = self._getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
         if errorcode == 0:
             self._memoryleak = int(n) - int(self._resident_memory)
         else:
