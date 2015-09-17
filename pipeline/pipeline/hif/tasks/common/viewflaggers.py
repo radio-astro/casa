@@ -900,38 +900,40 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # Create flagging view                
             viewresult = self.viewtask(data)
 
-            # If no view could be created, return result
-            if not viewresult.descriptions():
-                return self.result
+            # If a view could be created, continue with flagging
+            if viewresult.descriptions():
             
-            # Import the views from viewtask into the final result
-            self.result.importfrom(viewresult)
-
-            # Flag the view
-            newflags, newflags_reason = self.flag_view(viewresult, inputs.rules)
-        
-            # Report how many flags were found in this iteration and
-            # stop iteration if no new flags were found
-            if len(newflags) == 0:
-                # If no new flags are found, report as a log message
-                LOG.info('%s%s iteration %s raised %s flagging commands' % \
-                         (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
-                break
-            else:
-                # Report newly found flags as a warning message
-                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
-                            (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
-
-            # Accumulate new flags and flag reasons
-            flags += newflags
-            for description in newflags_reason.keys():
-                if flag_reason_plane.has_key(description):
-                    flag_reason_plane[description][newflags_reason[description] > 0] = \
-                        newflags_reason[newflags_reason[description] > 0]
+                # Import the views from viewtask into the final result
+                self.result.importfrom(viewresult)
+    
+                # Flag the view
+                newflags, newflags_reason = self.flag_view(viewresult, inputs.rules)
+            
+                # Report how many flags were found in this iteration and
+                # stop iteration if no new flags were found
+                if len(newflags) == 0:
+                    # If no new flags are found, report as a log message
+                    LOG.info('%s%s iteration %s raised %s flagging commands' % \
+                             (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+                    break
                 else:
-                    flag_reason_plane[description] = newflags_reason[description]
-            
-            counter += 1
+                    # Report newly found flags as a warning message
+                    LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                                (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+    
+                # Accumulate new flags and flag reasons
+                flags += newflags
+                for description in newflags_reason.keys():
+                    if flag_reason_plane.has_key(description):
+                        flag_reason_plane[description][newflags_reason[description] > 0] = \
+                            newflags_reason[newflags_reason[description] > 0]
+                    else:
+                        flag_reason_plane[description] = newflags_reason[description]
+                
+                counter += 1
+            else:
+                # If no view could be created, exit the iteration
+                break
 
         # Create final set of flags by removing duplicates from our accumulated flags
         flags = list(set(flags))

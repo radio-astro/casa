@@ -213,11 +213,13 @@ class LowgainflagData(basetask.StandardTaskTemplate):
             gatable = gatable[0].gaintable
             LOG.warning('No amplitude time solution computed for %s ' % (inputs.ms.basename))
             result.table = gatable
+            result.table_available = False
         else:
             gacal.accept(inputs.context)
             gatable = gacal.final
             gatable = gatable[0].gaintable
             result.table = gatable
+            result.table_available = True
             
         return result
 
@@ -238,26 +240,27 @@ class LowgainflagView(object):
 
     def __call__(self, data):
         
-        # Calculate the view
-        gatable = data.table
-        LOG.info ('Computing flagging metrics for caltable %s ' % (
-            os.path.basename(gatable)))
-        result = self.calculate_view(gatable)
+        # Initialize result structure
+        self.result = LowgainflagViewResults()
+
+        if data.table_available:
+            # Calculate the view
+            gatable = data.table
+            LOG.info ('Computing flagging metrics for caltable %s ' % (
+                os.path.basename(gatable)))
+            self.calculate_view(gatable)
 
         # Add visibility name to result
-        result.vis = self.vis
+        self.result.vis = self.vis
 
-        return result
-
+        return self.result
 
     def calculate_view(self, table):
         """
         table -- Name of gain table to be analysed.
         spwid -- view will be calculated using data for this spw id.
         """
-        # Initialize result structure
-        result = LowgainflagViewResults()
-        
+
         gtable = caltableaccess.CalibrationTableDataFiller.getcal(table)
 
         ms = self.context.observing_run.get_ms(name=self.vis)
@@ -328,6 +331,4 @@ class LowgainflagView(object):
           
             # add the view results and their children results to the
             # class result structure
-            result.addview(viewresult.description, viewresult)
-        
-        return result
+            self.result.addview(viewresult.description, viewresult)
