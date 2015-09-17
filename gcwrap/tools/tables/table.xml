@@ -557,8 +557,8 @@ hardly ever needed.
 	<value></value>
 	</param>
         <param type="record" name="lockoptions">
-        <description>locking to be used</description>
-        <value>default</value>
+        <description>locking dictionary to be used : dict keys are 'option', 'interval', 'maxwait'</description>
+        <value></value>
         </param>
 	<param type="bool" name="nomodify">
 	<value>true</value>
@@ -590,7 +590,7 @@ The first line opens an existing table 3C273XC1.MS, the second browses
 it using the <link anchor="table:table.browse.function">browse</link> function.
 
 
-  tb.open("3C273XC1.MS", nomodify=False, lockoptions='user')
+  tb.open("3C273XC1.MS", nomodify=False, lockoptions={'option':'user'})
   tb.lock();
   tb.addrows();
   tb.unlock();
@@ -602,6 +602,8 @@ Thereafter the lock is released to give other processes the chance
 to operate on the table.
 \\Note that releasing a lock implies flushing the table, so doing
 that very often can be quite expensive.
+
+
 
 </example>
 
