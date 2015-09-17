@@ -33,12 +33,13 @@ template <class T> class PixelValueManipulator : public ImageTask<T> {
 
 public:
 
+	PixelValueManipulator() = delete;
+
 	// regionRec = 0 => no region selected, full image used
 	// mask = "" => No additional mask specification, although image default mask will be used
 	// if one exists.
 	PixelValueManipulator(
-		const SPCIIT image,
-		const Record *const regionRec,
+		const SPCIIT image, const Record *const regionRec,
 		const String& mask
 	);
 
@@ -114,9 +115,6 @@ protected:
 
 private:
     IPosition _axes, _lastChunkShape;
-
-	// disallow default constructor
-	PixelValueManipulator();
 
 	void _checkUnit(
 		const String& unit, const CoordinateSystem& csys,

@@ -54,7 +54,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 	_disk(False), _robust(False), _verbose(False), _algConf(),
 	_subImage(), _prefClassStatsAlg(AUTO) {
 	_construct(beVerboseDuringConstruction);
-	_setSupportsLogfile(True);
+	//_setSupportsLogfile(True);
 	_algConf.algorithm = StatisticsData::CLASSICAL;
 }
 

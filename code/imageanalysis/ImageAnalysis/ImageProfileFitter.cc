@@ -610,7 +610,7 @@ void ImageProfileFitter::_finishConstruction() {
 				<< ") as fit axis" << LogIO::POST;
 		}
 	}
-    this->_setSupportsLogfile(True);
+    //this->_setSupportsLogfile(True);
 }
 /*
 Bool ImageProfileFitter::_inVelocitySpace() const {

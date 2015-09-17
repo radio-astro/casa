@@ -167,6 +167,9 @@ public:
 	Record getOutputRecord() const {return _output; }
 
 protected:
+
+	virtual Bool _hasLogfileSupport() const { return True; }
+
     virtual inline Bool _supportsMultipleRegions() const {return True;}
 
 private:

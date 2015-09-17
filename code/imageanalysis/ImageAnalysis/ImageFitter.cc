@@ -910,7 +910,7 @@ CasacRegionManager::StokesControl ImageFitter::_getStokesControl() const {
 
 void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	*_getLog() << LogOrigin(_class, __func__);
-	_setSupportsLogfile(True);
+	//_setSupportsLogfile(True);
 	// <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
 	_stokesPixNumber = _getImage()->coordinates().hasPolarizationCoordinate()

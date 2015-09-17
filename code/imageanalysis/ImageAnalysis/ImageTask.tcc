@@ -54,7 +54,7 @@ template <class T> ImageTask<T>::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False), _suppressHistory(False),
+	/*_logfileSupport(False), */ _logfileAppend(False), _suppressHistory(False),
 	_dropDegen(False),
 	_verbosity(NORMAL), _logfile(), _newHistory() {
     FITSImage::registerOpenFunction();
@@ -176,7 +176,7 @@ template <class T> void ImageTask<T>::setLogfile(const String& lf) {
 		return;
 	}
 	ThrowIf(
-		! _logfileSupport,
+		! _hasLogfileSupport(),
 		"Logic Error: This task does not support writing of a log file"
 	);
 	try {
@@ -188,7 +188,7 @@ template <class T> void ImageTask<T>::setLogfile(const String& lf) {
 
 template <class T> const SHARED_PTR<LogFile> ImageTask<T>::_getLogFile() const {
 	ThrowIf(
-		! _logfileSupport,
+		! _hasLogfileSupport(),
 		"Logic Error: This task does not support writing of a log file"
 	);
 	return _logfile;
@@ -199,7 +199,7 @@ template <class T> Bool ImageTask<T>::_openLogfile() {
 		return False;
 	}
 	ThrowIf(
-		! _logfileSupport,
+		! _hasLogfileSupport(),
 		"Logic Error: This task does not support writing of a log file"
 	);
 	return _logfile->open();
@@ -215,7 +215,7 @@ template<class T> Bool ImageTask<T>::_writeLogfile(
 	const String& output, const Bool open, const Bool close
 ) {
 	ThrowIf(
-		! _logfileSupport,
+		! _hasLogfileSupport(),
 		"Logic Error: This task does not support writing of a log file"
 	);
 	if (! _logfile) {
@@ -226,7 +226,7 @@ template<class T> Bool ImageTask<T>::_writeLogfile(
 
 template <class T> void ImageTask<T>::setLogfileAppend(Bool a) {
 	ThrowIf(
-		! _logfileSupport,
+		! _hasLogfileSupport(),
 		"Logic Error: This task does not support writing of a log file"
 	);
 	_logfileAppend = a;

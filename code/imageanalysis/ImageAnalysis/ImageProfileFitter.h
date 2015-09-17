@@ -236,6 +236,8 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
+    Bool _hasLogfileSupport() const { return True; }
+
     inline Bool _supportsMultipleRegions() const {return True;}
 
 private:

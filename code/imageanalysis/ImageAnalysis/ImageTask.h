@@ -145,9 +145,11 @@ protected:
 
     inline const SHARED_PTR<LogIO> _getLog() const {return _log;}
 
-    inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
+    //inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
-    Bool _hasLogfileSupport() const {return _logfileSupport;}
+    // by default, derived classes are configured to have no log file
+    // support.
+    virtual Bool _hasLogfileSupport() const {return False;}
 
     inline Bool _getStretch() const {return _stretch;}
 
@@ -201,7 +203,7 @@ private:
     const Record *const _regionPtr;
     Record _regionRecord;
     String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
+    Bool _overwrite, _stretch, /* _logfileSupport,*/ _logfileAppend,
     	_suppressHistory, _dropDegen;
 	std::unique_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;

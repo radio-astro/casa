@@ -130,17 +130,19 @@ public:
 
 protected:
 
-   	inline CasacRegionManager::StokesControl _getStokesControl() const {
+   	CasacRegionManager::StokesControl _getStokesControl() const {
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    inline vector<OutputDestinationChecker::OutputStruct> _getOutputStruct() {
+    vector<OutputDestinationChecker::OutputStruct> _getOutputStruct() {
     	return vector<OutputDestinationChecker::OutputStruct>(0);
     }
 
-    inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    vector<Coordinate::Type> _getNecessaryCoordinates() const {
     	return vector<Coordinate::Type>(0);
     }
+
+    Bool _hasLogfileSupport() const { return True; }
 
     inline Bool _supportsMultipleRegions() const {return True;}
 
