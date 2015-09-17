@@ -38,14 +38,15 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
-
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Path.h>
 
 #include <casa/OS/HostInfo.h>
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
+#include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -946,8 +947,25 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	  im->setDefaultMask("");
 	  im->removeRegion(strung);
 	} 
-  }
+  } 
+  void SIImageStore:: rescaleResolution(ImageInterface<Float>& image, 
+					const GaussianBeam& newbeam, 
+					const GaussianBeam& oldbeam){
 
+    GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), 
+			  Quantity(0.0, "deg")) ;
+    try {
+      GaussianDeconvolver::deconvolve(toBeUsed, newbeam, oldbeam);
+      Double pixwidth=sqrt(image.coordinates().increment()(0)*image.coordinates().increment()(0)+image.coordinates().increment()(1)*image.coordinates().increment()(1));
+      if(toBeUsed.getMinor(image.coordinates().worldAxisUnits()[0]) > pixwidth)
+	   StokesImageUtil::Convolve(image, toBeUsed, True);
+    }
+    catch (const AipsError& x) {
+      throw(AipsError("Cannot convolve to new beam: may be smaller than old beam"));
+    }
+    
+
+  }
   void  SIImageStore::makePBImage(const Float pblimit)
   {
    LogIO os( LogOrigin("SIImageStore","makePBImage",WHERE) );
@@ -1249,7 +1267,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     Int npol = itsImageShape[2];
     Int nchan = itsImageShape[3];
     itsPSFBeams.resize( nchan, npol );
-
+    itsRestoredBeams.resize(nchan, npol);
     //    cout << "makeImBeamSet : imshape : " << itsImageShape << endl;
 
     String blankpsfs="";
@@ -1273,6 +1291,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	      {
 		StokesImageUtil::FitGaussianPSF( subPsf, beam );
 		itsPSFBeams.setBeam( chanid, polid, beam );
+		itsRestoredBeams.setBeam(chanid, polid, beam);
 	      }
 	    catch(AipsError &x)
 	      {
@@ -1305,7 +1324,9 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     for( Int chanid=0; chanid<nchan;chanid++) {
       for( Int polid=0; polid<npol; polid++ ) {
 	if( (itsPSFBeams.getBeam(chanid, polid)).isNull() ) 
-	  { itsPSFBeams.setBeam( chanid, polid, defaultbeam ); }
+	  { itsPSFBeams.setBeam( chanid, polid, defaultbeam );
+	    itsRestoredBeams.setBeam( chanid, polid, defaultbeam );
+	  }
       }// end of pol loop
     }// end of chan loop
     
@@ -1404,7 +1425,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	// Get PSF Beams....
 	ImageInfo ii = psf()->imageInfo();
 	itsPSFBeams = ii.getBeamSet();
-
+	itsRestoredBeams=itsPSFBeams;
 	IPosition beamset2 = itsPSFBeams.shape();
 
 	AlwaysAssert( beamset2.nelements()==2 , AipsError );
@@ -1421,15 +1442,17 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
     //// If rbeam is Null but usebeam=='common', calculate a common beam and set 'rbeam'
     //// If rbeam is given (or exists due to 'common'), just use it.
     if( rbeam.isNull() && usebeam=="common") {
-      rbeam = findGoodBeam();
+      rbeam = CasaImageBeamSet(itsPSFBeams).getCommonBeam();
     }
     if( !rbeam.isNull() ) {
-      for( Int chanid=0; chanid<nchan;chanid++) {
+      /*for( Int chanid=0; chanid<nchan;chanid++) {
 	for( Int polid=0; polid<npol; polid++ ) {
 	  itsPSFBeams.setBeam( chanid, polid, rbeam );
 	  /// Still need to add the 'common beam' option.
 	}//for chanid
       }//for polid
+      */
+      itsRestoredBeams=ImageBeamSet(rbeam);
     }// if rbeam not NULL
     //// Done modifying beamset if needed
     
@@ -1444,7 +1467,7 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	SubImage<Float> subModel( *model(term) , imslice, True );
 	SubImage<Float> subResidual( *residual(term) , imslice, True );
 	
-	GaussianBeam beam = itsPSFBeams.getBeam( chanid, polid );;
+	GaussianBeam beam = itsRestoredBeams.getBeam( chanid, polid );;
 	
 	try
 	  {
@@ -1455,7 +1478,10 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
 	    // Smooth model by beam
 	    StokesImageUtil::Convolve( subRestored, beam);
 	    // Add residual image
+	    if(usebeam == "common")
+	      rescaleResolution(subResidual, beam, itsPSFBeams.getBeam(chanid, polid));
 	    subRestored.copyData( LatticeExpr<Float>( subRestored + subResidual  ) );
+	   
 	    
 	  }
 	catch(AipsError &x)
@@ -1470,10 +1496,16 @@ void SIImageStore::setWeightDensity( SHARED_PTR<SIImageStore> imagetoset )
       {
 	//MSK//	
 	if(hasPB()){copyMask(pb(),image(term));}
+	ImageInfo iminf = image(term)->imageInfo();
+        iminf.setBeams( itsRestoredBeams);
+	image(term)->setImageInfo(iminf);
+ 
+	
+
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Restoration Error (setting mask) : "  + x.getMesg() ) );
+	throw( AipsError("Restoration Error  : "  + x.getMesg() ) );
       }
 	
   }// end of restore()

@@ -259,18 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "[" << imagestore->getName() << "] : Restoring model image." << LogIO::POST;
     imagestore->restore( itsRestoringBeam, itsUseBeam );
 
-    ImageInfo ii = (imagestore->image())->imageInfo();
-    ii.setBeams( imagestore->getBeamSet() );
-    imagestore->printBeamSet();
-
-    try
-      {
-	(imagestore->image())->setImageInfo(ii);
-      }
-    catch( AipsError &x)
-      {
-	os << LogIO::WARN << "Cannot save restoring beams in image header for " << imagestore->getName() <<  " : " << x.getMesg() << LogIO::POST;
-      }
+   
   }
 
  
