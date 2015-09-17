@@ -2499,15 +2499,16 @@ image* image::pbcor(
 
 record* image::getprofile(
 	int axis, const string& function, const variant& region,
-	const string& mask, const string& unit,
-	bool stretch, const string& spectype,
-	const variant& restfreq, const string& frame
+	const string& mask, const string& unit, bool stretch,
+	const string& spectype, const variant& restfreq,
+	const string& frame, const string& logfile
 ) {
 	try {
 		_log << _ORIGIN;
 		ThrowIf(
-			detached(), "Unable to create image"
+			detached(), "No image attached to tool"
 		);
+		ThrowIf(axis<0, "Axis must be greater than 0");
 		SHARED_PTR<Record> myregion(_getRegion(region, False));
 		SHARED_PTR<casa::Quantity> rfreq;
 		if (restfreq.type() != variant::BOOLVEC) {
@@ -2519,6 +2520,8 @@ record* image::getprofile(
 				);
 			}
 		}
+		String regionName = region.type() == variant::STRING
+			? region.toString() : "";
 		String myframe = frame;
 		myframe.trim();
 		if (_image->isFloat()) {
@@ -2527,7 +2530,8 @@ record* image::getprofile(
 				_getprofile(
 					myimage, axis, function, unit,
 					*myregion, mask, stretch,
-					spectype, rfreq.get(), myframe
+					spectype, rfreq.get(), myframe,
+					logfile, regionName
 				)
 			);
 		}
@@ -2537,7 +2541,8 @@ record* image::getprofile(
 				_getprofile(
 					myimage, axis, function, unit,
 					*myregion, mask, stretch,
-					spectype, rfreq.get(), myframe
+					spectype, rfreq.get(), myframe,
+					logfile, regionName
 				)
 			);
 		}
@@ -2547,16 +2552,19 @@ record* image::getprofile(
 			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return 0;
+	return nullptr;
 }
 template <class T> Record image::_getprofile(
 	SPCIIT myimage, int axis, const String& function,
 	const String& unit, const Record& region, const String& mask,
 	bool stretch, const String& spectype,
-	const casa::Quantity* const &restfreq, const String& frame
+	const casa::Quantity* const &restfreq, const String& frame,
+	const String& logfile, const String& regionName
 ) {
 	PixelValueManipulatorData::SpectralType type = PixelValueManipulatorData::spectralType(spectype);
 	PixelValueManipulator<T> pvm(myimage, &region, mask);
+	pvm.setLogfile(logfile);
+	pvm.setRegionName(regionName);
 	pvm.setStretch(stretch);
 	Record x = pvm.getProfile(axis, function, unit, type, restfreq, frame);
 	return x;

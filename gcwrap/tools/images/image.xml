@@ -5385,6 +5385,10 @@ In this example we recover first the pixels and then the pixel mask.
             <description>Reference frame to use when calculating coordinate values. Used only if axis is spectral axis and unit is not the unit associated with the axis in the coordinate system. Empty string means use the reference frame associated with the image coordinate system</description>
             <value/>
         </param>
+        <param type="string" name="logfile">
+            <description>File to which to write profile.</description>
+            <value/>
+        </param>
 </input>
 <returns type="record"/>
 <description>

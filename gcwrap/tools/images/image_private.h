@@ -77,7 +77,8 @@ template <class T> casa::Record _getprofile(
 	const casa::String& unit, const casa::Record& region,
 	const casa::String& mask, bool stretch,
 	const casa::String& spectype, const casa::Quantity* const &restfreq,
-	const casa::String& frame
+	const casa::String& frame, const casa::String& logfile,
+	const casa::String& regionName
 );
 
 template<class T> SPIIT _imagecalc(
