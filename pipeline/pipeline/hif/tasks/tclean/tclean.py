@@ -200,6 +200,7 @@ class Tclean(cleanbase.CleanBase):
                     (iminfo['specmode'] == 'mfs') and \
                     (inputs.spw in iminfo['spwlist'].split(','))):
                     cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
+                    cont_image_name = cont_image_name.replace('.pbcor', '')
                     break
 
             if (cont_image_name != ''):
