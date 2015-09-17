@@ -66,6 +66,7 @@ from hanningsmooth2_pg import hanningsmooth2_pg as hanningsmooth2
 from cvel2_pg import cvel2_pg as cvel2
 from plotms_pg import plotms_pg as plotms
 from tclean_pg import tclean_pg as tclean
+from impbcor_pg import impbcor_pg as impbcor
 
 # single dish tasks
 from sdaverage_pg import sdaverage_pg as sdaverage
