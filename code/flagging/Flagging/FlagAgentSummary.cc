@@ -220,9 +220,11 @@ FlagAgentSummary::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 
     // Read in channel-frequencies.
     // RVU : I'm not sure if this should go here, or in the FlagDataHandler so that all agents get it.
-    Vector<Double> flist(visBuffer.getFrequencies(0,MFrequency::TOPO));
-    for(Int i=0;i<(Int) flist.nelements();i++)
-        frequencyList[spw].push_back(flist[i]);
+    if (spwChannelCounts) {
+        Vector<Double> flist(visBuffer.getFrequencies(0,MFrequency::TOPO));
+        for(Int i=0;i<(Int) flist.nelements();i++)
+            frequencyList[spw].push_back(flist[i]);
+    }
 
     if (fieldCounts)
     {
