@@ -15,7 +15,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          supports outlier fields, contains standard clean based algorithms
                          along with algorithms for multi-scale and wideband image
                          reconstruction, widefield imaging correcting for the w-term, 
-                         full primary-beam imaging and joint mosaic imaging.
+                         full primary-beam imaging and joint mosaic imaging (with 
+                         heterogeneous array support for ALMA).
 
 </description>
 
@@ -155,6 +156,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    used:
                    antenna=['5','5\&amp;6'];
                    antenna='5'; antenna index 5 for all input MSes
+                   antenna='!DV14'; use all antennas except DV14
 
 </description>
       <any type="variant" limittypes="string stringArray"/>
@@ -170,7 +172,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    For multiple MS input, a list of scan strings can be used:
                    scan=['0~100','10~200']
                    scan='0~100; scan ids 0-100 for all input MSes
-                   Check 'go listobs' to insure the scan numbers are in order.
 
 </description>
       <any type="variant" limittypes="string stringArray"/>
@@ -256,7 +257,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                   the runs, set calcres=False, calcpsf=False to resume directly from
                                   the minor cycle without the (unnecessary) first major cycle.
                                 To automatically change 'imagename' with a numerical 
-                                increment, set overwrite=False (see inline docs for 'overwrite').
+                                increment, set overwrite=False (see tclean docs for 'overwrite').
 
 
 </description>
@@ -294,6 +295,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         phasecenter='J2000 19h30m00 -40d00m00'
                         phasecenter='J2000 292.5deg  -40.0deg'
                         phasecenter='J2000 5.105rad  -0.698rad'
+                        phasecenter='ICRS 13:05:27.2780 -049.28.04.458' 
 </description>
       <any type="variant" limittypes="int string"/>
       <value type="string"></value>
@@ -311,8 +313,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="projection" > <!-- subparam="true"> -->
      <shortdescription>Coordinate projection (SIN, HPX)</shortdescription>
 <description>Coordinate projection 
-                     (SIN, NCP, HPX, CYP, etc) 
-                     A list of supported projections can be found here :
+                     Examples : SIN,   NCP
+                     A list of supported (but untested) projections can be found here :
                      http://casa.nrao.edu/active/docs/doxygen/html/classcasa_1_1Projection.html#a3d5f9ec787e4eabdce57ab5edaf7c0cd
 
 <!-- AZP	Zenithal/Azimuthal perspective.
@@ -360,6 +362,10 @@ HPX HEALPix grid.  -->
                        what is currently being imaged. If so, an image regrid is first triggered
                        to resample the input image onto the target coordinate system.
 
+                       A common usage is to set this parameter equal to a single dish image
+                       ( In this case, rename the single dish image to xxx.model and 
+                         supply it as startmodel='xxx' ).
+
  </description>
       <value type="string"></value>
     </param>
@@ -386,6 +392,12 @@ HPX HEALPix grid.  -->
                                                tracking. Therefore a spectral line observed over an
                                                extended time range will line up appropriately.
 
+                                               (Note : If the input parameters are specified in a frame 
+                                                           other than LSRK, a spectral conversion layer is 
+                                                           attached to the output images so that tools like 
+                                                           the viewer will label the spectral axis in that frame 
+                                                           by default.)
+
                         mode='cubedata' : Spectral line imaging with one or more channels
                                                         There is no internal software Doppler tracking so
                                                         a spectral line observed over an extended time range
@@ -401,6 +413,8 @@ HPX HEALPix grid.  -->
     <param type="any" name="reffreq" subparam="true">
      <shortdescription>Reference frequency</shortdescription>
 <description>Reference frequency of the output image coordinate system
+
+                       Example :  reffreq='1.5GHz'    as a string with units.
 
                        By default, it is calculated as the middle of the selected frequency range.
 
@@ -426,13 +440,20 @@ HPX HEALPix grid.  -->
     <param type="any" name="start" subparam="true">
      <shortdescription>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')</shortdescription>
 <description>First channel (e.g. start=3,start=\'1.1GHz\',start=\'15343km/s\')
-                       of output cube images specified by data channel number (integer), velocity (string with a unit),
-                       or frequency (string with a unit).
-                       Default:''; The first channel is automatically determined based on the 'spw' channel selection and 'width'.
-                       When the channel number is used along with the channel selection in 'spw' (e.g. spw='0:6~100'),
-                       'start' channel number is RELATIVE (zero-based) to the selected channels in 'spw'. So for the above example,
-                       start=1 means that the first image channel is the second selected data channel, which is channel 7.
-                       For specmode='cube', when velocity or frequency is used it is interpreted with the frame defined in outframe.
+                       of output cube images specified by data channel number (integer), 
+                       velocity (string with a unit),  or frequency (string with a unit).
+                       Default:''; The first channel is automatically determined based on 
+                       the 'spw' channel selection and 'width'.
+                       When the channel number is used along with the channel selection
+                        in 'spw' (e.g. spw='0:6~100'),
+                       'start' channel number is RELATIVE (zero-based) to the selected 
+                       channels in 'spw'. So for the above example,
+                       start=1 means that the first image channel is the second selected 
+                       data channel, which is channel 7.
+                       For specmode='cube', when velocity or frequency is used it is 
+                       interpreted with the frame defined in outframe. [The parameters of
+                       the desired output cube can be estimated by using the 'transform'
+                       functionality of 'plotms']
                        examples: start='5.0km/s'; 1st channel, 5.0km/s in outframe
                                  start='22.3GHz'; 1st channel, 22.3GHz in outframe
 </description>
@@ -465,6 +486,20 @@ HPX HEALPix grid.  -->
 <description>Spectral reference frame in which to interpret \'start\' and \'width\'
                       Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB'
                       example: outframe='bary' for Barycentric frame
+
+                      REST -- Rest frequency
+                      LSRD -- Local Standard of Rest (J2000) 
+                               -- as the dynamical definition (IAU, [9,12,7] km/s in galactic coordinates)
+                      LSRK -- LSR as a kinematical (radio) definition 
+                               -- 20.0 km/s in direction ra,dec = [270,+30] deg (B1900.0)
+                      BARY -- Barycentric (J2000)
+                      GEO --- Geocentric
+                      TOPO -- Topocentric
+                      GALACTO -- Galacto centric (with rotation of 220 km/s in direction l,b = [90,0] deg.
+                      LGROUP -- Local group velocity -- 308km/s towards l,b = [105,-7] deg (F. Ghigo)
+                     CMB -- CMB velocity -- 369.5km/s towards l,b = [264.4, 48.4] deg (F. Ghigo)
+                     DEFAULT = LSRK
+
 </description>
       <value type="string">LSRK</value>
     </param>
@@ -473,9 +508,22 @@ HPX HEALPix grid.  -->
      <shortdescription>Velocity type (radio, z, ratio, beta, gamma, optical)</shortdescription>
 <description>Velocity type (radio, z, ratio, beta, gamma, optical)
                       For start and/or width specified in velocity, specifies the velocity definition
-                      Options: 'radio','optical'
+                      Options: 'radio','optical','z','beta','gamma','optical'
                       NOTE: the viewer always defaults to displaying the 'radio' frame, 
                         but that can be changed in the position tracking pull down.
+
+                       The different types (with F = f/f0, the frequency ratio), are:
+
+                       Z = (-1 + 1/F)
+                      RATIO = (F) *
+                      RADIO = (1 - F)
+                      OPTICAL == Z
+                      BETA = ((1 - F2)/(1 + F2))
+                      GAMMA = ((1 + F2)/2F) *
+                      RELATIVISTIC == BETA (== v/c)
+                      DEFAULT == RADIO
+                      Note that the ones with an '*' have no real interpretation 
+                      (although the calculation will proceed) if given as a velocity.
 
 </description>
       <value type="string">radio</value>
@@ -546,8 +594,8 @@ HPX HEALPix grid.  -->
                        convolution functions. Gridding (degridding) runtime will rise in 
                        proportion to the support size of these convolution functions (in uv-pixels).
 
-                       standard,
-                       ft,
+                       standard,  
+                       ft, 
                        gridft : Prolate Spheroid with 3x3 uv pixel support size (ref)
 
                        wproject,
@@ -586,7 +634,8 @@ HPX HEALPix grid.  -->
                                        VLA : PB polynomial fit model (Napier and Rots, 1982)
                                        ALMA : Airy disks for a 10.7m dish (for 12m dishes) and
                                                    6.25m dish (for 7m dishes) each with 0.75m 
-                                                   blockages (Hunter/Brogan 2011)
+                                                   blockages (Hunter/Brogan 2011). Joint mosaic
+                                                   imaging supports heterogeneous arrays for ALMA.
                                        
                                        Typical gridding convolution function support sizes are 
                                        between 7 and 50 depending on the desired
@@ -629,7 +678,7 @@ HPX HEALPix grid.  -->
                             and partly due to the current  lack of a common beam model 
                             repository or consensus on what beam models are most appropriate.
 
-                       (2) For ALMA and gridder='mosaicft', ray-traced (TICRA) beams 
+                       (2) For ALMA and gridder='mosaic', ray-traced (TICRA) beams 
                             are also available via the vpmanager tool. 
                             For example, call the following before the tclean run.
                            vp.setpbimage(telescope="ALMA", 
@@ -662,8 +711,12 @@ HPX HEALPix grid.  -->
 
                              from recipes import makepb
                              makepb.makePB(vis='xxx.ms',field='0~5',
-                                                         imtemplate='onefield.model',
+                                                         imtemplate='template.im',
                                                          outimage='try.pb', pblimit=0.2)
+
+                             ( where template.im is any output image from the tclean run
+                               for which .pb is to be made. The coordinate system to use for
+                               .pb is picked from this template image )
 
                           Here too, to use a pb-level mask for deconvolution, run tclean with
                           niter=0, make the .pb image using the above recipe script (with its 
@@ -767,7 +820,15 @@ HPX HEALPix grid.  -->
                        across frequency. For a system in which the primary beam scales
                        with frequency, this step will eliminate instrumental spectral
                        structure from the measured data and leave only the sky spectrum
-                       for the minor cycle to model and reconstruct [Bhatnagar et.al,2013]
+                       for the minor cycle to model and reconstruct [Bhatnagar et.al,2013].
+                       
+                       As a rough guideline for when this is relevant, a source at the half
+                       power point of the PB at the center frequency will see an artificial 
+                       spectral index of -1.4 due to the frequency dependence of the PB
+                       [Sault and Wieringa, 1994].  If left uncorrected during gridding, this
+                       spectral structure must be modeled in the minor cycle (using the
+                       mtmfs algorithm) to avoid dynamic range limits (of a few hundred 
+                       for a 2:1 bandwidth).
 
 </description>
 	    <value type="bool">True</value>
