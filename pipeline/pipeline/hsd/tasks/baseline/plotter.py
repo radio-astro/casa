@@ -14,33 +14,25 @@ def analyze_plot_table(context, antid, spwid, polid, plot_table):
     num_ra = plot_table[-1][0] + 1
     num_plane = num_rows / (num_dec * num_ra)
     LOG.debug('num_ra=%s, num_dec=%s, num_plane=%s, num_rows=%s'%(num_ra,num_dec,num_plane,num_rows))
-    each_grid = numpy.arange(num_rows, dtype=int).reshape((num_dec*num_ra,num_plane))
-    LOG.trace('each_grid=%s'%(each_grid))
-    rowlist = []
-    for each_plane in each_grid:
-        #datarows = []
-        dataids = []
+    each_grid = (range(i*num_plane, (i+1)*num_plane) for i in xrange(num_dec * num_ra))
+    rowlist = [{} for i in xrange(num_dec * num_ra)]
+    for row_index, each_plane in enumerate(each_grid):
+        dataids = numpy.array([], dtype=int)
         for plot_table_rowid in each_plane:
             plot_table_row = plot_table[plot_table_rowid]
             LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
-            dataids.extend(plot_table_row[-1])
-            #for idx in plot_table_row[-1]:
-            #    row = datatable.tb1.getcell('ROW', idx)
-            #    LOG.debug('ROW=%s, IDX=%s, ANT=%s, SPW=%s, POL=%s'%(row, idx, datatable.tb1.getcell('ANTENNA', idx), datatable.tb1.getcell('IF', idx), datatable.tb1.getcell('POL', idx)))
-            #    datarows.append(row)
-            #    dataids.append(idx)
-        datarows = [datatable.tb1.getcell('ROW', i) for i in dataids]
-        if len(datarows) > 0:
-            midx = median_index(datarows)
+            dataids = numpy.concatenate((dataids, plot_table_row[-1]))
+        if len(dataids) > 0:
+            midx = median_index(dataids)
         else:
             midx = None
-        del datarows
         raid = plot_table[each_plane[0]][0]
         decid = plot_table[each_plane[0]][1]
         ra = plot_table[each_plane[0]][2]
         dec = plot_table[each_plane[0]][3]
-        rowlist.append({"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
-                        "IDS": dataids, "MEDIAN_INDEX": midx})
+        rowlist[row_index].update(
+                {"RAID": raid, "DECID": decid, "RA": ra, "DEC": dec,
+                 "IDS": dataids, "MEDIAN_INDEX": midx})
         LOG.trace('RA %s DEC %s: dataids=%s'%(raid, decid, dataids))
         
     refpix_list = [0,0]
@@ -84,7 +76,6 @@ def get_data(infile, datatable, num_ra, num_dec, num_chan, rowlist):
     for d in rowlist:
         ix = num_ra - 1 - d['RAID']
         iy = d['DECID']
-        #rows = d['ROWS']
         idxs = d['IDS']
         if len(idxs) > 0:
             midx = d['MEDIAN_INDEX']
@@ -173,8 +164,7 @@ def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_d
     prefit_integrated_data, prefit_map_data = get_data(prefit_data, datatable, num_ra, num_dec, nchan, rowlist)
     
     # fit_result shares its storage with postfit_map_data to reduce memory usage
-    fit_result = postfit_map_data#numpy.zeros(prefit_map_data.shape, dtype=float) + sparsemap.NoDataThreshold
-    #fit_result[:] = sparsemap.NoDataThreshold
+    fit_result = postfit_map_data
     for x in xrange(num_ra):
         for y in xrange(num_dec):
             prefit = prefit_map_data[x][y]

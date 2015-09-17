@@ -4,6 +4,7 @@ import os
 import time
 import re
 import numpy
+import collections
 
 import asap as sd
 
@@ -158,8 +159,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         else:
             timetable_index = 0
             
-        index_list_total = []
-        row_list_total = []
+        index_list_total = numpy.array([], dtype=int)
+        row_list_total = numpy.array([], dtype=int)
         blinfo = []
 
         for pol in pollist:
@@ -167,7 +168,7 @@ class FittingBase(common.SingleDishTaskTemplate):
             member_list = time_table[timetable_index]
 
             # working with spectral data in scantable
-            nrow_total = sum([len(x[0]) for x in member_list])
+            nrow_total = sum((len(x[0]) for x in member_list))
                 
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
@@ -254,10 +255,8 @@ class FittingBase(common.SingleDishTaskTemplate):
                 # In the current implementation, all the rows in timetable are processed regardless of 
                 # the value of NOCHANGE column in DataTable. Thus, we don't need to construct index_list 
                 # nor row_list since they should be equivalent to idxs and rows
-                #index_list_total.extend(index_list)
-                #row_list_total.extend(row_list)
-                index_list_total.extend(idxs)
-                row_list_total.extend(rows)
+                index_list_total = numpy.concatenate((index_list_total, idxs))
+                row_list_total = numpy.concatenate((row_list_total, rows))
 
 #         f = open(bltable_name+'.in.txt', 'w')
 #         f.write("row_idx = %s\n" % str(row_list_total))
@@ -534,15 +533,16 @@ class FittingSummary(object):
         # number of segments for cspline_baseline
         with casatools.TableReader(tablename) as tb:
             nrow = tb.nrows()
-            num_segments = [( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) \
-                            for irow in xrange(nrow)]
-        unique_values = numpy.unique(num_segments)
-        max_segments = max(unique_values) + 2
+            num_segments = (( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) for irow in xrange(nrow))
+            counts = collections.Counter(num_segments)
+        max_segments = max(counts.keys()) + 2
         LOG.info('3) Frequency distribution for number of segments')
         LOG.info('')
         LOG.info('# of segments|frequency')
         LOG.info('-------------|---------')
+        _counts = collections.defaultdict(lambda: 0)
+        _counts.update(counts)
         for val in xrange(1, max_segments):
-            count = num_segments.count(val)
+            count = _counts[val]
             LOG.info('%13d|%9d'%(val, count))
         LOG.info('')

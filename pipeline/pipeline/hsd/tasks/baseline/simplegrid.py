@@ -79,25 +79,11 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         assert len(antenna_list) == len(spwid_list)
         index_list = self.inputs.index_list
         reference_data = self.context.observing_run[antenna_list[0]]
-        srctype = reference_data.calibration_strategy['srctype']
         beam_size = reference_data.beam_size[spwid_list[0]]
         grid_size = casatools.quanta.convert(beam_size, 'deg')['value']
         
-        rows = self.datatable.tb1.getcol('ROW').take(index_list)
-        ants = self.datatable.tb1.getcol('ANTENNA').take(index_list)
         ras = self.datatable.tb1.getcol('RA').take(index_list)
         decs = self.datatable.tb1.getcol('DEC').take(index_list)
-        stats = self.datatable.tb2.getcol('STATISTICS')[0,:].take(index_list)
-
-        ### test
-        if DO_TEST:
-            ifnos = self.datatable.tb1.getcol('IF').take(index_list)
-            for _i in xrange(len(ants)):
-                _ant = ants[_i]
-                _spw = ifnos[_i]
-                _index = numpy.where(antenna_list == _ant)[0]
-                assert _spw in spwid_list, 'row %s is bad selection: IFNO not in selected list (actual %s expected %s)'%(index_list[_i], _spw, spwid_list)
-        ###
         
         # Curvature has not been taken account
         dec_corr = 1.0 / cos(decs[0] / 180.0 * 3.141592653)
@@ -172,7 +158,11 @@ class SimpleGridding(common.SingleDishTaskTemplate):
                         Delta = sqrt((ras[index] - RA) * (ras[index] - RA)
                                      * dec_corr * dec_corr 
                                      + (decs[index] - DEC) * (decs[index] - DEC))
-                        line[6].append([rows[index], Delta, stats[index], index_list[index], ants[index]])
+                        datatable_index = index_list[index]
+                        row = self.datatable.tb1.getcell('ROW', datatable_index)
+                        stat = self.datatable.tb2.getcell('STATISTICS', datatable_index)[0]
+                        ant = self.datatable.tb1.getcell('ANTENNA', datatable_index)
+                        line[6].append([row, Delta, stat, datatable_index, ant])
                     line[6] = numpy.array(line[6])
                     grid_table.append(line)
                     # LOG.info("grid_table: %s" % line)
@@ -209,17 +199,6 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         reference_data = self.context.observing_run[antenna_list[0]]
         nchan = reference_data.spectral_window[spwid_list[0]].nchan
         
-        # create storage for output
-        StorageOut = numpy.zeros((nrow, nchan), dtype=numpy.float32)
-        #FlagOut = numpy.zeros((nrow, nchan), dtype=numpy.int)
-        StorageWeight = numpy.zeros((nrow, nchan), dtype=numpy.float32)
-        #StorageNumSp = numpy.zeros((nrow, nchan), dtype=numpy.int)
-        StorageNumSp = numpy.zeros((nrow), dtype=numpy.int)
-        StorageNumFlag = numpy.zeros((nrow), dtype=numpy.int)
-        StorageNoData = numpy.ones((nchan), dtype=numpy.float32) * NoData
-        OutputTable = []
-
-        tROW = self.datatable.getcol('ROW')
         tTSYS = self.datatable.getcol('TSYS')
         tEXPT = self.datatable.getcol('EXPOSURE')
         tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
@@ -228,16 +207,27 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         # associates spectra in data_in and weights with grids.
         # bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
         bind_to_grid = dict([(k, []) for k in antenna_list])
-        for ROW in xrange(nrow):
-            [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
-            for [row, delta, rms, _index, _ant] in RowDelta:
+        for grid_table_row in xrange(nrow):
+            [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[grid_table_row]
+            for [_data_row, delta, rms, _index, _ant] in RowDelta:
                 index = int(_index)
                 ant = int(_ant)
+                data_row = int(_data_row)
                 if tSFLAG[index] == 1:
                     if tTSYS[index] > 0.5 and tEXPT[index] > 0.0:
                         Weight = tEXPT[index] / (tTSYS[index] ** 2.0)
                     else: Weight = 1.0
-                    bind_to_grid[ant].append([tROW[index], ROW, Weight, tSFLAG[index]])
+                    bind_to_grid[ant].append([data_row, grid_table_row, Weight, tSFLAG[index]])
+        del tTSYS, tEXPT, tSFLAG
+
+        # create storage for output
+        StorageOut = numpy.zeros((nrow, nchan), dtype=numpy.float32)
+        #FlagOut = numpy.zeros((nrow, nchan), dtype=numpy.int)
+        StorageWeight = numpy.zeros((nrow, nchan), dtype=numpy.float32)
+        #StorageNumSp = numpy.zeros((nrow, nchan), dtype=numpy.int)
+        StorageNumSp = numpy.zeros((nrow), dtype=numpy.int)
+        StorageNumFlag = numpy.zeros((nrow), dtype=numpy.int)
+        OutputTable = []
 
         # Return empty result if all the spectra are flagged out
         number_of_spectra = sum(map(len, bind_to_grid.values()))
@@ -256,8 +246,8 @@ class SimpleGridding(common.SingleDishTaskTemplate):
                 get = lambda col, row: tb.getcell(col, row)
                 query = lambda condition: 1 if condition else 0
                 for entry in bind_to_grid[AntID]:
-                    [tROW, ROW, Weight, tSFLAG] = entry
-                    if tSFLAG == 1:
+                    [tROW, ROW, Weight, SFLAG] = entry
+                    if SFLAG == 1:
                         Sp = get('SPECTRA', tROW)
                         Mask = numpy.array(map(query, get('FLAGTRA', tROW) == 0), dtype=numpy.int)
                         StorageOut[ROW] += Sp * Mask * Weight
@@ -273,7 +263,7 @@ class SimpleGridding(common.SingleDishTaskTemplate):
         for ROW in range(nrow):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
             if StorageNumSp[ROW] == 0 or all(StorageWeight[ROW] == 0.0):
-                StorageOut[ROW] = StorageNoData
+                StorageOut[ROW,:] = NoData
                 #FlagOut[ROW,:] = 1
                 RMS = 0.0
             else:
@@ -286,6 +276,6 @@ class SimpleGridding(common.SingleDishTaskTemplate):
                 RMS = 1.0
             OutputTable.append([IF, POL, X, Y, RAcent, DECcent, StorageNumSp[ROW], StorageNumFlag[ROW], RMS])
 
-        del StorageWeight, StorageNumSp, StorageNumFlag, StorageNoData, Timer
+        del StorageWeight, StorageNumSp, StorageNumFlag, Timer 
         #return (StorageOut, FlagOut, OutputTable)
         return (StorageOut, OutputTable)
