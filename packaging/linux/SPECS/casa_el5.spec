@@ -96,6 +96,9 @@ Version:       %{CASAVER}
 Autoreqprov:   on
 Requires:      %{name}-shared = %{version}-%{release}
 Requires:      casa01-python >= %{pythondep}
+Requires:      casa01-mpi4py
+# needed for remote mpi4casa
+Requires:      xorg-x11-server-Xvfb, xorg-x11-xauth
 
 #Obsoletes:     casapy-bin
 Conflicts:     casapy-bin
@@ -472,6 +475,7 @@ pushd $RPM_BUILD_ROOT%{prefix}/bin
 for i in asdm2MS casabrowser casa-config casafeather casalogger casaplotms casaviewer casapy; do
     ln -s casa $i
 done
+ln -s /usr/lib64/casa/01/bin/mpicasa
 popd
 
 ####################### .aipsrc ###################
@@ -670,6 +674,7 @@ done
 %{prefix}/bin/casalogger
 %{prefix}/bin/casaplotms
 %{prefix}/bin/casaviewer
+%{prefix}/bin/mpicasa
 
 %files bin
 %defattr(-,root,root)

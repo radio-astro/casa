@@ -672,13 +672,19 @@ sub osver {
 		$state_osver = "el4";
 	    } elsif ( m/^Scientific Linux SL release 4.*/ ) {
 		$state_osver =  "el4";
+	    } elsif ( m/^CentOS release 4.*/ ) {
+		$state_osver = "el4";
 	    } elsif ( m/^Red Hat Enterprise.*release 5/ ) {
 		$state_osver = "el5";
 	    } elsif ( m/^Scientific Linux SL release 5.*/ ) {
 		$state_osver = "el5";
+	    } elsif ( m/^CentOS release 5.*/ ) {
+		$state_osver = "el5";
 	    } elsif ( m/^Red Hat Enterprise.*release 6/ ) {
 		$state_osver = "el6";
 	    } elsif ( m/^Scientific Linux SL release 6.*/ ) {
+		$state_osver = "el6";
+	    } elsif ( m/^CentOS release 6.*/ ) {
 		$state_osver = "el6";
 	    } elsif ( m/^Red Hat Enterprise/ ) {
 		die "unknown enterprise version: $_";
