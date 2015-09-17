@@ -212,7 +212,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( nSubChans>1 || nSubPols>1 )
       {
 	os << "[" << imagestore->getName() << "] ";
-	os << "Total model flux (over all planes) : " << totalFluxAcrossPlanes ; //<< LogIO::POST;
+	os << "Total model flux (over all planes) : " << totalFluxAcrossPlanes; //<< LogIO::POST;
 	os << "     Peak Residual (over all planes) : " << maxResidualAcrossPlanes << " in C"<<maxResChan << ":P"<<maxResPol << LogIO::POST;
       }
 
@@ -259,18 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "[" << imagestore->getName() << "] : Restoring model image." << LogIO::POST;
     imagestore->restore( itsRestoringBeam, itsUseBeam );
 
-    ImageInfo ii = (imagestore->image())->imageInfo();
-    ii.setBeams( imagestore->getBeamSet() );
-    imagestore->printBeamSet();
-
-    try
-      {
-	(imagestore->image())->setImageInfo(ii);
-      }
-    catch( AipsError &x)
-      {
-	os << LogIO::WARN << "Cannot save restoring beams in image header for " << imagestore->getName() <<  " : " << x.getMesg() << LogIO::POST;
-      }
+   
   }
 
  
