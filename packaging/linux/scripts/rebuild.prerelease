@@ -36,7 +36,10 @@ BEGIN {
 	    ### does work because the shell sets up forked children as the
 	    ### process group leader...
 	    ###
-	    if ( $pid eq $$ || $pid eq getpgrp( ) ) {
+	    ### ... getpgrp( ) seems to fail with, e.g.
+	    ### svn update -q /opt/users/rpmbuild/casa/prerelease && /opt/users/rpmbuild/casa/prerelease/scripts/rebuild.prerelease rel=4.5.0
+	    ###
+	    if ( $pid eq $$ || $pid eq $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
 		$reference_pid = $pid;
 	    } else {
 		open( PS, "ps -A |" );
@@ -195,7 +198,7 @@ $logfile = "$HOME/casa/log/casa-prerelease.$version.$revision";
 ## if necessary...
 ##
 unless ( defined $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
-    $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} = '1';
+    $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} = $$;
     $lines = 0;
     my $selfflags = join(' ',@selfflags);
     open( CHILD, "$self $selfflags 2>&1 | tee $logfile.errors |" );
