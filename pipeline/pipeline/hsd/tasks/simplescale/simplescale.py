@@ -111,7 +111,7 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
             out_name = st.scaled_name
             scale_args = {'infile': in_name,
                           'factor': factor,
-                          'scaletsys': False,
+                          'scaletsys': True,
                           'outfile': out_name,
                           'overwrite': True,
                           'verbose': False}
