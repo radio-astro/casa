@@ -65,6 +65,7 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         context = inputs.context
+        datatable = context.observing_run.datatable_instance
         reduction_group = context.observing_run.reduction_group
         infiles = inputs.infiles # will return a list of original scantables if None
         if isinstance(infiles, str):
@@ -123,6 +124,8 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
             self._executor.execute(scale_job)
             # update results
             table_summary.append((idx, in_name, out_name))
+        # also needed to scale data table for flagging
+        datatable.tb1.putcol('TSYS', numpy.array(datatable.getcol('TSYS')) * factor)
 
         outcome = {'scantable': table_summary,
                    'factor': factor,
