@@ -21,7 +21,8 @@ import gencal_cli
 import hanningsmooth_cli
 import immath_cli
 import immoments_cli
-import impbcor_cli
+import imregrid_pg
+import impbcor_pg
 import importasdm_cli
 import importevla_cli
 import listobs_cli
@@ -330,8 +331,11 @@ class CASATaskJobGenerator(object):
     def immoments(self, *v, **k):
         return self._get_job(immoments_cli.immoments_cli, *v, **k)
 
+    def imregrid(self, *v, **k):
+        return self._get_job(imregrid_pg.imregrid_pg, *v, **k)
+
     def impbcor(self, *v, **k):
-        return self._get_job(impbcor_cli.impbcor_cli, *v, **k)
+        return self._get_job(impbcor_pg.impbcor_pg, *v, **k)
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
