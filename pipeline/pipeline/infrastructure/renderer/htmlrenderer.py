@@ -1359,12 +1359,10 @@ def group_into_sessions(context, task_results):
 
 def group_into_measurement_sets(context, task_results):
     def get_vis(r):
-        vis = r.inputs['vis']
-        if type(r).__name__ == 'ImportDataResults' or type(r).__name__ == 'SDImportDataResults':
-            vis = vis.rstrip('/')
-            if not vis.endswith('.ms'):
-                vis = '%s.ms' % vis
-        return os.path.basename(vis)
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+            # in splitting by vis, there's only one MS in the mses array
+            return r.mses[0].basename
+        return os.path.basename(r.inputs['vis'])
     
     vises = [get_vis(r) for r in task_results]
     mses = [context.observing_run.get_ms(vis) for vis in vises]
@@ -1392,11 +1390,10 @@ def sort_by_time(mses):
 
 def get_rootdir(r):
     try:
-        vis = r.inputs['vis']
-        if type(r).__name__ == 'ImportDataResults':
-            if not vis.endswith('.ms'):
-                vis = '%s.ms' % vis
-        return os.path.basename(vis)
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+            # in splitting by vis, there's only one MS in the mses array
+            return r.mses[0].basename
+        return os.path.basename(r.inputs['vis'])
     except:
         return 'shared'
 
