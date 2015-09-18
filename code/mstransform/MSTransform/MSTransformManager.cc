@@ -8052,9 +8052,6 @@ std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kern
 	return std::make_pair(outputWeight, accumulatorFlag);
 }
 
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
 std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kernel,
 																Vector<Float> &inputWeights)
 {
