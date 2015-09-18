@@ -1134,7 +1134,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
     // Get the converter from the observed to the requested frame.
 
-    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False);
+    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False, Unit(String("Hz")));
 
     // For each selected channel, get its observed frequency and convert it into
     // the frequency in the requested frame.  Put the result into the
@@ -1147,7 +1147,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
         Double fO = spectralWindowChannels [channelNumber].getFrequency ();
             // Observed frequency
 
-        Double fF = fromObserved (Quantity (fO, "Hz")).get ("Hz").getValue();
+        Double fF = fromObserved (fO).getValue();
             // Frame frequency
 
         frequencies [i] = fF;
@@ -1933,7 +1933,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // measured frequency
 
     MFrequency::Convert convertToObservedFrame =
-        makeFrequencyConverter (time, selection.getFrameOfReference(), True);
+        makeFrequencyConverter (time, selection.getFrameOfReference(), True, Unit("Hz"));
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -1945,10 +1945,10 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
          i++){
 
         Double f = i->getBeginFrequency();
-        Double lowerFrequency = convertToObservedFrame (Quantity (f, "Hz")).get ("Hz").getValue();
+        Double lowerFrequency = convertToObservedFrame (f).getValue();
 
         f = i->getEndFrequency();
-        Double upperFrequency = convertToObservedFrame (Quantity (f, "Hz")).get ("Hz").getValue();
+        Double upperFrequency = convertToObservedFrame (f).getValue();
 
         Slice s = findChannelsInRange (lowerFrequency, upperFrequency, spectralWindowChannels);
 
@@ -1994,7 +1994,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 
 MFrequency::Convert
 VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfReference,
-                                                     Bool toObservedFrame) const
+                                                     Bool toObservedFrame, Unit unit) const
 {
     MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
 
@@ -2017,11 +2017,11 @@ VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfRe
 
     if (toObservedFrame){
 
-        result = MFrequency::Convert (selectionFrame, observedFrame);
+        result = MFrequency::Convert (unit, selectionFrame, observedFrame);
     }
     else{
 
-        result = MFrequency::Convert (observedFrame, selectionFrame);
+        result = MFrequency::Convert (unit, observedFrame, selectionFrame);
     }
 
     return result;

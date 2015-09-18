@@ -692,7 +692,7 @@ protected:
                           Int polarizationId) const;
 
     MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
-                                                Bool toObservedFrame) const;
+                                                Bool toObservedFrame, Unit) const;
 
     // Allow access to the MSColumns object; for use by VisBuffer2Adapter *KLUGE*
 
