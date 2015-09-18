@@ -81,6 +81,11 @@ template<class T> class ImageInterface;
 
   const CountedPtr<FTMachine>& getFTM(const Bool ift=True) {if (ift) return ift_p; else return ft_p;};
 
+  /*
+  virtual void initPB();
+  virtual void addPB(VisBuffer& vb, PBMath& pbMath);
+  */
+
 protected:
 
   CountedPtr<FTMachine> ft_p, ift_p; 

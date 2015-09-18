@@ -594,12 +594,11 @@ HPX HEALPix grid.  -->
                        convolution functions. Gridding (degridding) runtime will rise in 
                        proportion to the support size of these convolution functions (in uv-pixels).
 
-                       standard,  
-                       ft, 
-                       gridft : Prolate Spheroid with 3x3 uv pixel support size (ref)
+                       standard : Prolate Spheroid with 3x3 uv pixel support size 
 
-                       wproject,
-                       wprojectft : W-Projection algorithm to correct for the widefield
+                                        [ This mode can also be invoked using 'ft' or 'gridft' ]
+
+                       wproject : W-Projection algorithm to correct for the widefield
                                            non-coplanar baseline effect. [Cornwell et.al 2008]
 
                                            wprojplanes is the number of distinct w-values at 
@@ -607,6 +606,8 @@ HPX HEALPix grid.  -->
                                            functions (see help for wprojplanes). 
                                           Convolution function support size can range
                                            from 5x5 to few 100 x few 100. 
+
+                                        [ This mode can also be invoked using 'wprojectft' ]
 
                        widefield : Facetted imaging with or without W-Projection per facet.
 
@@ -623,9 +624,7 @@ HPX HEALPix grid.  -->
                                         A combination of facetting and W-Projection is relevant only for
                                         very large fields of view.
 
-                       mosaic,
-                       ftmosaic,
-                       mosaicft : A-Projection with azimuthally symmetric beams without
+                       mosaic : A-Projection with azimuthally symmetric beams without
                                         sidelobes, beam rotation or squint correction.
                                         Gridding convolution functions per visibility are computed
                                         from FTs of PB models per antenna.
@@ -641,8 +640,9 @@ HPX HEALPix grid.  -->
                                        between 7 and 50 depending on the desired
                                        accuracy (given by the uv cell size or image field of view).
 
-                       awproject,
-                       awprojectft : A-Projection with azimuthally asymmetric beams and 
+                                        [ This mode can also be invoked using 'mosaicft' or 'ftmosaic' ]
+
+                       awproject : A-Projection with azimuthally asymmetric beams and 
                                             including beam rotation, squint correction,
                                             conjugate frequency beams and W-projection. 
                                             [Bhatnagar et.al, 2008]
@@ -663,6 +663,8 @@ HPX HEALPix grid.  -->
                                        between 7 and 50 depending on the desired
                                        accuracy (given by the uv cell size or image field of view). 
                                        When combined with W-Projection they can be significantly larger.
+
+                                       [ This mode can also be invoked using 'awprojectft' ]
 
                        imagemosaic : (untested implementation)
                                                Grid and iFT each pointing separately and combine the
@@ -750,6 +752,27 @@ HPX HEALPix grid.  -->
                        are gridded separately using their respective phase centers 
                        (to minimize max W). Deconvolution is done on the joint
                        full size image, using a PSF from the first subregion/facet.
+
+</description>
+      <value type="int">1</value>
+    </param>
+
+    <param type="int" name="chanchunks" subparam="true">
+     <shortdescription>Number of channel chunks</shortdescription>
+<description>Number of channel chunks to grid separately
+
+                       For large image cubes, the gridders can run into memory limits
+                       as they loop over all available image planes for each row of data
+                       accessed. To prevent this problem, we can grid subsets of channels
+                       in sequence so that at any given time only part of the image cube
+                       needs to be loaded into memory. This parameter controls the 
+                       number of chunks to split the cube into. 
+
+                       Example :  chanchunks = 4
+
+                       [ This feature is experimental and may have restrictions on how
+                          chanchunks is to be chosen. For now, please pick chanchunks so 
+                          that nchan/chanchunks is an integer. ]
 
 </description>
       <value type="int">1</value>
@@ -1871,6 +1894,7 @@ HPX HEALPix grid.  -->
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
        <!-- desable for now...
        <equals type="string" value="cubesrc">
@@ -1883,6 +1907,7 @@ HPX HEALPix grid.  -->
 	 <default param="sysvel"><value>""</value></default>
 	 <default param="sysvelframe"><value>""</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
        -->
        <equals type="string" value="cubedata">
@@ -1892,6 +1917,7 @@ HPX HEALPix grid.  -->
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
+	 <default param="chanchunks"><value>1</value></default>
        </equals>
      </when>
 

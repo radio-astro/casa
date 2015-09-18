@@ -329,6 +329,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}// if non zero model
     }
 
+  /*
+  void SIMapperCollection::initPB()
+  {
+    for (uInt k=0; k < itsMappers.nelements(); ++k)
+      {
+	(itsMappers[k])->initPB();
+      }
+  }
+  
+  void SIMapperCollection::addPB(VisBuffer& vb, PBMath& pbMath)
+  {
+    for (uInt k=0; k < itsMappers.nelements(); ++k)
+      {
+	(itsMappers[k])->addPB(vb,pbMath);
+	
+      }
+  }
+  */
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////// End of VB dependent code.

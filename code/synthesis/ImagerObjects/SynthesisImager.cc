@@ -111,6 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      facetsStore_p=-1;
      unFacettedImStore_p=NULL;
+     unChanChunkedImStore_p=NULL;
      dataSel_p.resize();
 
      nMajorCycles=0;
@@ -516,6 +517,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	
       }
+    /*
+    else if( selpars.datacolumn.contains("model") ) {
+      datacol_p = FTMachine::MODEL;
+    }
+    else if( selpars.datacolumn.contains("residual") ) {
+      datacol_p = FTMachine::RESIDUAL;
+    }
+    else if( selpars.datacolumn.contains("psf") ) {
+      datacol_p = FTMachine::PSF;
+    }
+    */
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
     dataSel_p.resize(dataSel_p.nelements()+1, True);
@@ -558,6 +570,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Quantity& freqStep, 
 				    const Vector<Quantity>& restFreq,
 				    const Int facets,
+				    //s				    const Int chanchunks,
 				    const String ftmachine, 
 				    const Int nTaylorTerms,
 				    const Quantity& refFreq,
@@ -616,7 +629,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   gridpars.trackSource=trackSource;
   gridpars.trackDir=trackDir;
   gridpars.padding=padding;
-  gridpars.facets=facets;
+  gridpars.facets=facets; 
+  //  gridpars.chanchunks=chanchunks;
   gridpars.useAutoCorr=useAutocorr;
   gridpars.useDoublePrec=useDoublePrec;
   gridpars.wprojplanes=wprojplanes;
@@ -660,6 +674,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	csys = impars.buildCoordinateSystem( rvi_p );
 	IPosition imshape = impars.shp();
+
+	os << "Impars : start " << impars.start << LogIO::POST;
+	os << "Shape : " << imshape << "Spectral : " << csys.spectralCoordinate().referenceValue() << " at " << csys.spectralCoordinate().referencePixel() << " with increment " << csys.spectralCoordinate().increment() << LogIO::POST;
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
@@ -710,7 +727,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	appendToMapperList(impars.imageName,  csys,  impars.shp(),
 			   ftm, iftm,
-			   gridpars.distance, gridpars.facets, impars.overwrite,
+			   gridpars.distance, gridpars.facets, gridpars.chanchunks,impars.overwrite,
 			   gridpars.mType, impars.nTaylorTerms, impars.startModel);
 	imageDefined_p=True;
       }
@@ -831,11 +848,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ////reset code
 	itsMappers=SIMapperCollection();
 	unFacettedImStore_p=NULL;
+	unChanChunkedImStore_p=NULL;
   }
 //////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////
   CountedPtr<SIImageStore> SynthesisImager::imageStore(const Int id)
   {
+    AlwaysAssert( ! ( facetsStore_p>1 && chanChunksStore_p>1 ) , AipsError);
+
     if(facetsStore_p >1)
       {
 	if(id==0)
@@ -847,6 +867,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
 	  }
       }
+
+    if(chanChunksStore_p >1)
+      {
+	if(id==0)
+	  {
+	    return unChanChunkedImStore_p;
+	  }
+	else
+	  {
+	    return itsMappers.imageStore(chanChunksStore_p+id-1);
+	  }
+      }
+
+
     return itsMappers.imageStore(id);
   }
 
@@ -898,10 +932,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	runMajorCycle(True, False);
 
-	//  	  if(facetsStore_p >1)
-	//   {
-	//     setPsfFromOneFacet();
-	//     }
+	//	makeImage();
 
     	  itsMappers.releaseImageLocks();
 
@@ -1253,6 +1284,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 									      CountedPtr<SIImageStore> imagestore,
 									      Int facets)
   {
+      LogIO os(LogOrigin("SynthesisImager", "createFacetImageStoreList"));
+
+      os << "Creating " << facets*facets << " facets in total " << LogIO::POST;
+
     Block<CountedPtr<SIImageStore> > facetList( facets*facets );
 
     if( facets==1 ) { facetList[0] = imagestore;  return facetList; }
@@ -1274,6 +1309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return facetList;
   }
 
+  /*
   void SynthesisImager::setPsfFromOneFacet()
   {
 
@@ -1310,7 +1346,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
 
   }
+  */
 
+  Block<CountedPtr<SIImageStore> > SynthesisImager::createChanChunkImageStoreList(
+									      CountedPtr<SIImageStore> imagestore,
+									      Int chanchunks)
+  {
+      LogIO os(LogOrigin("SynthesisImager", "createChanChunkImageStoreList"));
+
+      os << "Creating " << chanchunks << " reference subCubes for gridding " << LogIO::POST;
+
+    Block<CountedPtr<SIImageStore> > chunkList( chanchunks );
+
+    if( chanchunks==1 ) { chunkList[0] = imagestore;  return chunkList; }
+
+    // Remember, only the FIRST field in each run can have chanchunks. So, check for this.
+    if( ! unChanChunkedImStore_p.null() ) {
+	throw( AipsError("A channel chunked image has already been set. Chanchunks are supported only for the main (first) field. Please submit a feature-request if you need multiple chanchunks for outlier fields as well. ") );
+      }
+    
+    unChanChunkedImStore_p = imagestore;
+    chanChunksStore_p = chanchunks;
+    
+    for (Int chunk=0; chunk< chanchunks; ++chunk){
+      chunkList[chunk] = unChanChunkedImStore_p->getSubImageStore(0,1,chunk, chanchunks);
+      }
+    
+    return chunkList;
+  }
 
   
   
@@ -1321,7 +1384,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   CountedPtr<FTMachine>& ftm,
 					   CountedPtr<FTMachine>& iftm,
 					   Quantity distance, 
-					   Int facets, 
+					   Int facets,
+					   Int chanchunks,
 					   const Bool overwrite,
 					   String mappertype,
 					   uInt ntaylorterms,
@@ -1332,6 +1396,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Some checks..
       if(facets > 1 && itsMappers.nMappers() > 0)
 	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
+
+      if(chanchunks > 1 && itsMappers.nMappers() > 0)
+	log_l << "Chan Chunked image has to be first of multifields" << LogIO::EXCEPTION;
       
       AlwaysAssert( ( ( ! (ftm->name()=="MosaicFTNew" && mappertype=="imagemosaic") )  && 
       		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
@@ -1343,26 +1410,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
 
       // Create the Mappers
-      if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
+      if( facets<2 && chanchunks<2) // One facet. Just add the above imagestore to the mapper list.
 	{
 	  itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, ntaylorterms) );
 	}
       else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
 	{
-	  // First, make sure that full images have been allocated before trying to make references.....
-	  //	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
-	  //	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
 
-	  // Make and connect the list.
-	  Block<CountedPtr<SIImageStore> > imstorList = createFacetImageStoreList( imstor, facets );
-	  for( uInt facet=0; facet<imstorList.nelements(); facet++)
+	  if ( facets>1 && chanchunks==1 )
 	    {
-	      CountedPtr<FTMachine> new_ftm, new_iftm;
-	      if(facet==0){ new_ftm = ftm;  new_iftm = iftm; }
-	      else{ new_ftm=ftm->cloneFTM();  new_iftm=iftm->cloneFTM(); }
-	      itsMappers.addMapper(createSIMapper( mappertype, imstorList[facet], new_ftm, new_iftm, ntaylorterms));
+	      // Make and connect the list.
+	      Block<CountedPtr<SIImageStore> > imstorList = createFacetImageStoreList( imstor, facets );
+	      for( uInt facet=0; facet<imstorList.nelements(); facet++)
+		{
+		  CountedPtr<FTMachine> new_ftm, new_iftm;
+		  if(facet==0){ new_ftm = ftm;  new_iftm = iftm; }
+		  else{ new_ftm=ftm->cloneFTM();  new_iftm=iftm->cloneFTM(); }
+		  itsMappers.addMapper(createSIMapper( mappertype, imstorList[facet], new_ftm, new_iftm, ntaylorterms));
+		}
+	    }// facets
+	  else if ( facets==1 && chanchunks>1 )
+	    {
+	      // Make and connect the list.
+	      Block<CountedPtr<SIImageStore> > imstorList = createChanChunkImageStoreList( imstor, chanchunks );
+	      for( uInt chunk=0; chunk<imstorList.nelements(); chunk++)
+		{
+		  CountedPtr<FTMachine> new_ftm, new_iftm;
+		  if(chunk==0){ new_ftm = ftm;  new_iftm = iftm; }
+		  else{ new_ftm=ftm->cloneFTM();  new_iftm=iftm->cloneFTM(); }
+		  itsMappers.addMapper(createSIMapper( mappertype, imstorList[chunk], new_ftm, new_iftm, ntaylorterms));
+		}
+	    }// chanchunks
+	  else
+	    {
+	      throw( AipsError("Error in requesting "+String::toString(facets)+" facets on a side with " + String::toString(chanchunks) + " channel chunks.  Support for faceting along with channel chunking is not yet available. Please submit a feature-request if you need multiple facets as well as chanchunks. ") );
 	    }
-	}
+
+	}// facets or chunks
 
     }
 
@@ -1784,7 +1868,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; // No valid rows in this VB
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
-    				vb->setModelVisCube(Complex(0.0, 0.0));
+			    { vb->setModelVisCube(Complex(0.0, 0.0)); }
     				itsMappers.degrid(*vb, savevirtualmodel );
     				if(savemodelcolumn && writeAccess_p )
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
@@ -1808,6 +1892,94 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end runMajorCycle
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::predictModel(){
+    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+
+    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
+    
+    Bool savemodelcolumn = !readOnly_p && useScratch_p;
+    Bool savevirtualmodel = !readOnly_p && !useScratch_p;
+
+    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
+    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
+
+    itsMappers.checkOverlappingModels("blank");
+
+
+    {
+      VisBufferAutoPtr vb(rvi_p);
+      rvi_p->originChunks();
+      rvi_p->origin();
+
+      ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+		       "Predict Model", "","","",True);
+      Int cohDone=0;
+
+      itsMappers.initializeDegrid(*vb);
+      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	{
+	  
+	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	    {
+	      //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
+	      //if !usescratch ...just save
+	      vb->setModelVisCube(Complex(0.0, 0.0));
+	      itsMappers.degrid(*vb, savevirtualmodel);
+	      if(savemodelcolumn && writeAccess_p )
+		wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+
+	      //	      cout << "nRows "<< vb->nRow() << "   " << max(vb->modelVisCube()) <<  endl;
+	      cohDone += vb->nRow();
+	      pm.update(Double(cohDone));
+
+	    }
+	}
+      itsMappers.finalizeDegrid(*vb);
+    }
+
+    itsMappers.checkOverlappingModels("restore");
+    unlockMSs();
+   
+  }// end of predictModel
+
+  /*
+  void SynthesisImager::makeImage()
+  {
+    LogIO os( LogOrigin("SynthesisImager","makeImage",WHERE) );
+
+    Bool dopsf=False;
+    if(datacol_p==FTMachine::PSF) dopsf=True;
+
+    {
+    	VisBufferAutoPtr vb(rvi_p);
+    	rvi_p->originChunks();
+    	rvi_p->origin();
+
+	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+			 String(datacol_p), "","","",True);
+	Int cohDone=0;
+
+    	itsMappers.initializeGrid(*vb,dopsf);
+    	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+    	{
+
+    		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+    		{
+    			itsMappers.grid(*vb, dopsf, datacol_p);
+			cohDone += vb->nRow();
+			pm.update(Double(cohDone));
+    		}
+    	}
+    	itsMappers.finalizeGrid(*vb, dopsf);
+
+    }
+
+    unlockMSs();
+
+  }// end makeImage
+  */
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
  
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1977,55 +2149,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::predictModel(){
-    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
-
-    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
-    
-    Bool savemodelcolumn = !readOnly_p && useScratch_p;
-    Bool savevirtualmodel = !readOnly_p && !useScratch_p;
-
-    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
-    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
-
-    itsMappers.checkOverlappingModels("blank");
-
-
-    {
-      VisBufferAutoPtr vb(rvi_p);
-      rvi_p->originChunks();
-      rvi_p->origin();
-
-      ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-		       "Predict Model", "","","",True);
-      Int cohDone=0;
-
-      itsMappers.initializeDegrid(*vb);
-      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
-	{
-	  
-	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
-	    {
-	      //if (SynthesisUtilMethods::validate(*vb)==SynthesisUtilMethods::NOVALIDROWS) break; //No valid rows in this MS
-	      //if !usescratch ...just save
-	      vb->setModelVisCube(Complex(0.0, 0.0));
-	      itsMappers.degrid(*vb, savevirtualmodel);
-	      if(savemodelcolumn && writeAccess_p )
-		wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
-
-	      //	      cout << "nRows "<< vb->nRow() << "   " << max(vb->modelVisCube()) <<  endl;
-	      cohDone += vb->nRow();
-	      pm.update(Double(cohDone));
-
-	    }
-	}
-      itsMappers.finalizeDegrid(*vb);
-    }
-
-    itsMappers.checkOverlappingModels("restore");
-    unlockMSs();
-   
-  }// end of predictModel
 
   //Utility function to properly convert Double to String.
   //With C++11 we can probably use STL to_string() function instead...
@@ -2036,8 +2159,107 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return ss.str();
   }
 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+  Bool SynthesisImager::makePB(String vpString)
+  {
+    Bool doDefaultVP = vpString.length()>0 ? False : True;
 
+      if (doDefaultVP) {
+
+	CoordinateSystem coordsys=itsMappers(0)->imageStore()->itsCoordSys;
+
+	String telescope=coordsys.obsInfo().telescope();
+	
+	ROMSAntennaColumns ac(ms_p->antenna());
+	Double dishDiam=ac.dishDiameter()(0);
+	if(!allEQ(ac.dishDiameter().getColumn(), dishDiam))
+	  os << LogIO::WARN
+	     << "The MS has multiple antenna diameters ..PB could be wrong "
+	     << LogIO::POST;
+        return makePBImage(coordsys, telescope, False, dishDiam);
+      }
+      else{
+	Table vpTable(vpString);
+        return makePBImage( vpTable );	
+      }
+
+  }
+
+Bool SynthesisImager::makePBImage(const CoordinateSystem& imageCoord, 
+			 const String& telescopeName, 
+			 Bool useSymmetricBeam, Double diam){
+
+  LogIO os(LogOrigin("SynthesisImager", "makePBImage()", WHERE));
+  Int spectralIndex=imageCoord.findCoordinate(Coordinate::SPECTRAL);
+  SpectralCoordinate
+    spectralCoord=imageCoord.spectralCoordinate(spectralIndex);
+  Vector<String> units(1); units = "Hz";
+  spectralCoord.setWorldAxisUnits(units);	
+  Vector<Double> spectralWorld(1);
+  Vector<Double> spectralPixel(1);
+  spectralPixel(0) = 0;
+  spectralCoord.toWorld(spectralWorld, spectralPixel);  
+  Double freq  = spectralWorld(0);
+  Quantity qFreq( freq, "Hz" );
+  String telName=telescopeName;
+  if(telName=="ALMA" &&  diam < 12.0)
+    telName="ACA";
+  //cerr << "Telescope Name is " << telName<< endl;
+  PBMath::CommonPB whichPB;
+  PBMath::enumerateCommonPB(telName, whichPB);  
+  PBMath myPB;
+  if(whichPB!=PBMath::UNKNOWN && whichPB!=PBMath::NONE){
+    
+    myPB=PBMath(telName, useSymmetricBeam, qFreq);
+  }
+  else if(diam > 0.0){
+    myPB=PBMath(diam,useSymmetricBeam, qFreq);
+  }
+  else{
+    os << LogIO::WARN << "Telescope " << telName << " is not known\n "
+       << "Not making the PB  image" 
+       << LogIO::POST;
+    return False; 
+  }
+  return makePrimaryBeam(myPB );
+}
+
+Bool SynthesisImager::makePBImage(const Table& vpTable){
+  ROScalarColumn<TableRecord> recCol(vpTable, (String)"pbdescription");
+  PBMath myPB(recCol(0));
+  return makePrimaryBeam(myPB);
+}
+
+
+  void SynthesisImager::makePrimaryBeam(PBMath& pbMath)
+  {
+    LogIO os( LogOrigin("SynthesisImager","makePrimaryBeam",WHERE) );
+
+    itsMappers->initPB();
+
+    VisBuffer vb(*rvi_p);
+    Int fieldCounter=0;
+    Vector<Int> fieldsDone;
+  
+    for(rvi_p->originChunks(); rvi_p->moreChunks(); rvi_p->nextChunk()){
+      Bool fieldDone=False;
+      for (uInt k=0;  k < fieldsDone.nelements(); ++k)
+	fieldDone=fieldDone || (vb.fieldId()==fieldsDone(k));
+      if(!fieldDone){
+	++fieldCounter;
+	fieldsDone.resize(fieldCounter, True);
+	fieldsDone(fieldCounter-1)=vb.fieldId();
+
+	itsMappers->addPB(vb,pbMath);
+
+      }
+    }
+      unlockMSs();
+
+  }// end makePB
+
+*/
 
 } //# NAMESPACE CASA - END
 

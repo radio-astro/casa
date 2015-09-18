@@ -286,6 +286,9 @@ public:
   // Facets for gridding.
   Int facets;
 
+  // Cube chunks for gridding
+  Int chanchunks;
+
   // Spectral axis interpolation
   String interpolation;
 

@@ -2652,6 +2652,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// facets	
 	err += readVal( inrec, String("facets"), facets);
+	// chanchunks
+	err += readVal( inrec, String("chanchunks"), chanchunks);
 
 	// Spectral interpolation
 	err += readVal( inrec, String("interpolation"), interpolation );// not used in SI yet...
@@ -2714,6 +2716,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( facets < 1 )
       {err += "Must have at least 1 facet\n"; }
+    if( chanchunks < 1 )
+      {err += "Must have at least 1 chanchunk\n"; }
+    if( (facets>1) && (chanchunks>1) )
+      { err += "The combination of facetted imaging with channel chunking is not yet supported. Please choose only one or the other for now. \n";}
 
     if(ftmachine=="wproject" && wprojplanes<=1)
       {err += "The wproject gridder must be accompanied with wprojplanes>1\n";}
@@ -2745,6 +2751,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // facets
     facets=1;
+
+    // chanchunks
+    chanchunks=1;
 
     // Spectral Axis interpolation
     interpolation=String("nearest");
@@ -2783,6 +2792,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("convfunc", convFunc);
 
     gridpar.define("facets", facets);
+    gridpar.define("chanchunks", chanchunks);
     
     gridpar.define("interpolation",interpolation);
 

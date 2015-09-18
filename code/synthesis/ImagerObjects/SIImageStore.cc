@@ -361,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       oss << "  |||||  " << x.getMesg() << endl;
     }
 
-    //cout << " SIIM:validate : " << oss.str() << endl;
+    //   cout << " SIIM:validate : " << oss.str() << endl;
 
     if( state == False )  throw(AipsError("Internal Error : Invalid ImageStore state : "+ oss.str()) );
     

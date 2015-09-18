@@ -121,11 +121,6 @@ class PySynthesisImager:
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
-            #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            #normpars['nterms'] = self.allimpars[str(immod)]['nterms']
-            #normpars['facets'] = self.allgridpars[str(immod)]['facets']
             normpars = self.allnormpars[str(immod)]
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -1313,6 +1308,7 @@ class ImagerParameters():
                  gridder="standard",
 #                 ftmachine='gridft', 
                  facets=1, 
+                 chanchunks=1,
 
                  wprojplanes=1,
 
@@ -1394,7 +1390,8 @@ class ImagerParameters():
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
                                    'rotatepastep':rotatepastep, #'mtype':mtype, # 'weightlimit':weightlimit,
-                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes,
+                                   'facets':facets,'chanchunks':chanchunks,
+                                   'interpolation':interpolation, 'wprojplanes':wprojplanes,
                                    'deconvolver':deconvolver }     }
         ######### weighting
         self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}

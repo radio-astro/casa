@@ -89,6 +89,11 @@ class SIMapperCollection
 
   const CountedPtr<FTMachine> getFTM(Int which, const Bool ift=True) {return itsMappers[which]->getFTM(ift);};
 
+  /*
+  void initPB();
+  void addPB(VisBuffer& vb, PBMath& pbMath);
+  */
+
 protected:
 
   ///////////////////// Member Objects

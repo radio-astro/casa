@@ -57,6 +57,7 @@ def tclean(
     ####### Gridding parameters
     gridder,#='ft', 
     facets,#=1,
+    chanchunks,#=1,
 
     wprojplanes,#=1,
 
@@ -168,6 +169,7 @@ def tclean(
         gridder=gridder,
 #        ftmachine=ftmachine,
         facets=facets,
+        chanchunks=chanchunks,
 
         wprojplanes=wprojplanes,
         

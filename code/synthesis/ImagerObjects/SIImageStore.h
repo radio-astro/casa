@@ -188,6 +188,8 @@ class SIImageStore
   void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {itsDataPolRep = datapolrep;};
   virtual void calcSensitivity();
 
+  CoordinateSystem getCSys(){return itsCoordSys;}
+
 protected:
   SHARED_PTR<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
 						  const Int chan, const Int nchanchunks,

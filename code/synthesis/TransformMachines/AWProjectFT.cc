@@ -1516,7 +1516,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "finalizeToVis[R&D]"));
     
-    cerr << "De-gridding run time = " << visResampler_p->runTimeDG_p << endl;
+    //    cerr << "De-gridding run time = " << visResampler_p->runTimeDG_p << endl;
     visResampler_p->runTimeDG_p=0.0;
 
     if(isTiled) 
