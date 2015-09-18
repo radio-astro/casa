@@ -61,6 +61,7 @@ END {
     ###
     my $HOME = $ENV{'HOME'};
     if ( -e "$HOME/casa/state/rebuild-prerelease.pid" ) {
+	print "removing pid file...\n";
 	unlink("$HOME/casa/state/rebuild-prerelease.pid");
     }
 }
