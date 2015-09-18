@@ -126,15 +126,14 @@ class SDBLFlagWorker(object):
                 
                 # Calculate Standard Deviation and Diff from running mean
                 t0 = time.time()
-                data = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge, is_baselined)
+                dt_idx, tmpdata, _ = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge, is_baselined)
                 t1 = time.time()
                 LOG.info('Standard Deviation and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
                 t0 = time.time()
-                tmpdata = numpy.transpose(data)
-                dt_idx = numpy.array(tmpdata[0], numpy.int)
+                LOG.debug('tmpdata.shape=%s, len(Threshold)=%s'%(str(tmpdata.shape),len(Threshold)))
                 LOG.info('Calculating the thresholds by Standard Deviation and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (clip_niteration))
-                stat_flag, final_thres = self._get_flag_from_stats(tmpdata[1:6], Threshold, clip_niteration, is_baselined)
+                stat_flag, final_thres = self._get_flag_from_stats(tmpdata, Threshold, clip_niteration, is_baselined)
                 LOG.debug('final threshold shape = %d' % len(final_thres))
                 LOG.info('Final thresholds: StdDev (pre-/post-fit) = %.2f / %.2f , Diff StdDev (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
                 
@@ -173,7 +172,6 @@ class SDBLFlagWorker(object):
         LOG.info('Calculate Standard Deviation and Diff from running mean for Pre/Post fit...')
         LOG.info('Processing %d spectra...' % NROW)
         LOG.info('Nchan for running mean=%s' % Nmean)
-        data = []
 
         ProcStartTime = time.time()
 
@@ -186,6 +184,9 @@ class SDBLFlagWorker(object):
 
         # Create progress timer
         #Timer = ProgressTimer(80, NROW, LogLevel)
+        datatable_index = numpy.array([], dtype=int)
+        statistics_array = numpy.zeros((5,0), dtype=numpy.float)
+        num_masked_array = numpy.array([], dtype=int)
         for chunks in TimeTable:
             # chunks[0]: row, chunks[1]: index
             chunk = chunks[0]
@@ -196,8 +197,8 @@ class SDBLFlagWorker(object):
             ### 2011/05/26 shrink the size of data on memory
             SpIn = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
             SpOut = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
-            FlIn = numpy.zeros((nrow, NCHAN), dtype=int)
-            FlOut = numpy.zeros((nrow,NCHAN), dtype=int)
+            FlIn = numpy.zeros((nrow, NCHAN), dtype=numpy.int16)
+            FlOut = numpy.zeros((nrow,NCHAN), dtype=numpy.int16)
             for index in range(len(chunks[0])):
                 data_row = chunks[0][index]
                 SpIn[index] = tbIn.getcell('SPECTRA', data_row)
@@ -220,7 +221,10 @@ class SDBLFlagWorker(object):
             valid_indices = numpy.where(numpy.any(FlIn == 0, axis=1))[0]
             valid_nrow = len(valid_indices)
             
-            for index in range(len(chunks[0])):
+            datatable_index = numpy.concatenate((datatable_index, chunks[1]))
+            statistics = numpy.zeros((5,nrow),dtype=numpy.float)
+            num_masked = numpy.zeros(nrow, dtype=int)
+            for index in xrange(len(chunks[0])):
                 row = chunks[0][index]
                 idx = chunks[1][index]
                 
@@ -361,9 +365,16 @@ class SDBLFlagWorker(object):
                 DataTable.putcell('NMASK',idx,Nmask)
                 LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
                 if is_baselined: LOG.debug('Row=%d, post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, NewRMS, NewRMSdiff))
-                data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
+                statistics[0,index] = NewRMS
+                statistics[1,index] = OldRMS
+                statistics[2,index] = NewRMSdiff
+                statistics[3,index] = OldRMSdiff
+                statistics[4,index] = DataTable.getcell('TSYS', idx)
+                num_masked[index] = Nmask
+            statistics_array = numpy.concatenate((statistics_array, statistics), axis=1)
+            num_masked_array = numpy.concatenate((num_masked_array, num_masked))
             del SpIn, SpOut
-        return data
+        return datatable_index, statistics_array, num_masked_array
 
     def _calculate_masked_stddev(self, data, mask):
         """Calculated standard deviation of data array with mask array (1=valid, 0=flagged)"""
@@ -504,15 +515,12 @@ class SDBLFlagWorker(object):
 
         # The noise equivalent bandwidth is proportional to the channel width
         # but may need a scaling factor. This factor was read above.
-        st_name = DataTable.getkeyword('FILENAMES')[vAnt]
-        s = sd.scantable(st_name, average=False)
-        s.set_selection(ifs=[vIF])
-        s.set_unit('GHz')
-        Abcissa = s.get_abcissa()[0]
-        noiseEquivBW = abs(Abcissa[1]-Abcissa[0]) * 1e9 * nebw_fact
+        st = self.context.observing_run[vAnt]
+        spw = st.spectral_window[vIF]
+        noiseEquivBW = abs(spw.increment) * nebw_fact
 
-        tEXPT = DataTable.getcol('EXPOSURE')
-        tTSYS = DataTable.getcol('TSYS')
+        tEXPT = DataTable.tb1.getcol('EXPOSURE')
+        tTSYS = DataTable.tb1.getcol('TSYS')
 
         for ID in ids:
             row = DataTable.getcell('ROW',ID)
