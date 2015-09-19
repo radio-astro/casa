@@ -208,7 +208,12 @@ unless ( defined $ENV{'_REBUILD_PRERELEASE_RECURSIVE_'} ) {
         $uname=`/bin/uname -n`;
 	$uname =~ s/\n$//;
 	if ( -e $logfile ) {
-	    exec "/bin/mail -s '[$uname] casa rpm app build' $email_list < $logfile";
+	    my $lines_to_show = 75;
+	    if ( -e "$logfile.errors" ) {
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && cat $logfile.errors && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | /bin/mail -s '[$uname] casa rpm app build' $email_list";
+	    } else {
+		exec "(echo 'build failed...  showing last $lines_to_show lines of log...' && echo '----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----' && tail -$lines_to_show $logfile) | /bin/mail -s '[$uname] casa rpm app build' $email_list";
+	    }
 	} elsif ( -e "$logfile.errors" ) {
 	    exec "/bin/mail -s '[$uname] casa rpm app build' $email_list < $logfile.errors";
 	} else {
