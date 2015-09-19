@@ -1354,6 +1354,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
       LogIO os(LogOrigin("SynthesisImager", "createChanChunkImageStoreList"));
 
+      if( imagestore->getShape()[3] % chanchunks > 0 )
+	{
+	  os << LogIO::WARN << "chanchunks ["+String::toString(chanchunks)+"] is not a divisor of nchan ["+String::toString(imagestore->getShape()[3])+"]. Therefore, "+String::toString(imagestore->getShape()[3] % chanchunks)+" channels at the end of the cube will be ignored." << LogIO::POST ;
+	}
+
       os << "Creating " << chanchunks << " reference subCubes for gridding " << LogIO::POST;
 
     Block<CountedPtr<SIImageStore> > chunkList( chanchunks );
