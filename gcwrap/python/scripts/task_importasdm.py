@@ -485,6 +485,79 @@ def importasdm(
                     raise Exception, \
                           'ASDM binary flags conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
 
+
+        theephemfields = ce.findattachedephemfields(myviso,field='*')
+        if len(theephemfields)>0: 
+            # until asdm2MS does this internally: recalc the UVW coordinates for ephem fields
+            imt = imtool()
+            imt.open(myviso, usescratch=False)
+            imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
+            imt.close()
+
+        if convert_ephem2geo:
+            for myviso in vistoproc:
+                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
+        
+        if len(theephemfields)>0: 
+            # also set the direction column in the SOURCE table
+            tblocal.open(myviso+'/FIELD', nomodify=False)
+            sourceids = tblocal.getcol('SOURCE_ID')
+            ftimes = tblocal.getcol('TIME')
+            ftimekw = tblocal.getcolkeywords('TIME')
+            tmpa = tblocal.getcol('PHASE_DIR')
+            origphasedir = tmpa
+
+            affectedsids = []
+            thesamplefields = []
+            for fld in theephemfields: # determine all source ids used by the ephem fields
+                if not (sourceids[fld] in affectedsids): # this source id wasn't handled yet
+                    affectedsids.append(sourceids[fld])
+                    thesamplefields.append(fld)
+                    # need to temporarily change the offset (not all mosaics have an element at (0,0))
+                    tmpa[0][0][fld]=0.
+                    tmpa[1][0][fld]=0.
+                #endif
+            #endfor
+            tblocal.putcol('PHASE_DIR', tmpa)
+            tblocal.close()
+
+            directions = []
+            msmdlocal = casac.msmetadata()
+            msmdlocal.open(myviso)
+            
+            for fld in thesamplefields:
+                thedirmeas = msmdlocal.phasecenter(fld)
+                if thedirmeas['refer']!='J2000':
+                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
+                directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
+                thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
+                casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
+                             +" to ephemeris phase center for time "+str(thetime['m0']['value'])+" "+thetime['m0']['unit']+" "+thetime['refer']) 
+            #endfor
+            msmdlocal.close()
+             
+            # restore original PHASE_DIR
+            tblocal.open(myviso+'/FIELD', nomodify=False)
+            tblocal.putcol('PHASE_DIR', origphasedir)
+            tblocal.close()
+
+            # write source directions
+            tblocal.open(myviso+'/SOURCE', nomodify=False)
+            ssourceids = tblocal.getcol('SOURCE_ID')
+            sdirs = tblocal.getcol('DIRECTION')
+            for row in xrange(0,len(ssourceids)):
+                for i in xrange(0,len(affectedsids)):
+                    if ssourceids[row]==affectedsids[i]:
+                        sdirs[0][row] = directions[i][0]
+                        sdirs[1][row] = directions[i][1]
+                        break
+                #endfor
+            #endfor
+            tblocal.putcol('DIRECTION', sdirs) # write back corrected directions
+            tblocal.close()
+                
+        #end if        
+
         ##############################################################################################3
         # CAS-7369 - Create an output Multi-MS (MMS)
         if createmms:
@@ -615,125 +688,6 @@ def importasdm(
         else:
             casalog.post('There is no Flag.xml in ASDM', 'WARN')
 
-        theephemfields = ce.findattachedephemfields(myviso,field='*')
-        if len(theephemfields)>0: 
-            # until asdm2MS does this internally: recalc the UVW coordinates for ephem fields
-            imt = imtool()
-            imt.open(myviso, usescratch=False)
-            imt.calcuvw(theephemfields, refcode='J2000', reuse=False)
-            imt.close()
-
-        if convert_ephem2geo:
-            for myviso in vistoproc:
-                ce.convert2geo(myviso, '*') # convert any attached ephemerides to GEO
-        
-        if len(theephemfields)>0: 
-            # also set the direction column in the SOURCE table
-            tblocal.open(myviso+'/FIELD', nomodify=False)
-            sourceids = tblocal.getcol('SOURCE_ID')
-            ftimes = tblocal.getcol('TIME')
-            ftimekw = tblocal.getcolkeywords('TIME')
-            tmpa = tblocal.getcol('PHASE_DIR')
-            origphasedir = tmpa
-
-            affectedsids = []
-            thesamplefields = []
-            for fld in theephemfields: # determine all source ids used by the ephem fields
-                if not (sourceids[fld] in affectedsids): # this source id wasn't handled yet
-                    affectedsids.append(sourceids[fld])
-                    thesamplefields.append(fld)
-                    # need to temporarily change the offset (not all mosaics have an element at (0,0))
-                    tmpa[0][0][fld]=0.
-                    tmpa[1][0][fld]=0.
-                #endif
-            #endfor
-            tblocal.putcol('PHASE_DIR', tmpa)
-            tblocal.close()
-
-            directions = []
-            msmdlocal = casac.msmetadata()
-            msmdlocal.open(myviso)
-            
-            for fld in thesamplefields:
-                thedirmeas = msmdlocal.phasecenter(fld)
-                if thedirmeas['refer']!='J2000':
-                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
-                directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
-                thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
-                casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
-                             +" to ephemeris phase center for time "+str(thetime['m0']['value'])+" "+thetime['m0']['unit']+" "+thetime['refer']) 
-            #endfor
-            msmdlocal.close()
-             
-            # restore original PHASE_DIR
-            tblocal.open(myviso+'/FIELD', nomodify=False)
-            tblocal.putcol('PHASE_DIR', origphasedir)
-            tblocal.close()
-
-            # write source directions
-            tblocal.open(myviso+'/SOURCE', nomodify=False)
-            ssourceids = tblocal.getcol('SOURCE_ID')
-            sdirs = tblocal.getcol('DIRECTION')
-            for row in xrange(0,len(ssourceids)):
-                for i in xrange(0,len(affectedsids)):
-                    if ssourceids[row]==affectedsids[i]:
-                        sdirs[0][row] = directions[i][0]
-                        sdirs[1][row] = directions[i][1]
-                        break
-                #endfor
-            #endfor
-            tblocal.putcol('DIRECTION', sdirs) # write back corrected directions
-            tblocal.close()
-                
-        #end if
-
-#        # CAS-7369 - Create an output Multi-MS (MMS)
-#        if createmms:
-#            # Get the default parameters of partition
-#            from tasks import partition
-#            fpars = partition.parameters
-#            for mypar in fpars.keys():
-#                fpars[mypar] = partition.itsdefault(mypar)
-#                
-#            # Call the cluster for each MS
-#            for myviso in vistoproc:
-#                casalog.origin('importasdm')
-#                outputmms = myviso+'.temp.mms'
-#                
-#                # Get the proper column
-#                datacolumn = 'DATA'
-#                dcols = ['DATA', 'FLOAT_DATA']
-#                for dc in dcols:
-#                    if len(th.getColDesc(myviso, dc)) > 0:
-#                        datacolumn = dc
-#                        break
-#                    
-#                fpars['datacolumn'] = datacolumn
-#                    
-#                casalog.post('Will create a Multi-MS for: '+myviso)
-#                
-#                fpars['vis'] =  myviso
-#                fpars['flagbackup'] =  False 
-#                fpars['outputvis'] = outputmms
-#                fpars['separationaxis'] = separationaxis
-#                fpars['numsubms'] = numsubms
-#                pdh = ParallelDataHelper('partition', fpars) 
-#            
-#                # Get a cluster
-#                pdh.setupCluster(thistask='partition')
-#                try:
-#                    pdh.go()
-#                    
-#                    # Rename MMS to MS 
-#                    shutil.rmtree(myviso)
-#                    shutil.move(outputmms, myviso)
-#
-#                except Exception, instance:
-#                    casalog.post('%s'%instance,'ERROR')
-#                    return False
-#                
-#            casalog.origin('importasdm')
-#            return
         
         return
     
