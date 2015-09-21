@@ -19,18 +19,18 @@
 # using observations of M100 from September 2011 and _parallelisation_
 
 
-step_title = { 0 : 'Data import and partitioning',
-	       	   1 : 'Generate antenna position cal tables',
-	           2 : 'Generate tsys cal tables',
-	           3 : 'Correct the Titan position',
-	           4 : 'Apriori flagging',
-	           5 : 'Generate WVR cal tables',
-	           6 : 'Generate delay calibration tables',
+step_title = { 0 : 'Data import',
+			   1 : 'Generate antenna position cal tables',
+               2 : 'Generate tsys cal tables',
+               3 : 'Correct the Titan position',
+               4 : 'Apriori flagging',
+               5 : 'Generate WVR cal tables',
+               6 : 'Generate delay calibration tables',
                7 : 'Apply antpos, wvr, tsys, and delay cal tables',
-	           8 : 'Split off non-wvr spws and save flags',
+               8 : 'Split off non-wvr spws and save flags',
                9 : 'Flagging',
-	           10: 'Rebin to a reduced resolution of approx. 10 km/s',
-	           11: 'Fast phase-only gaincal for bandpass',
+               10: 'Rebin to a reduced resolution of approx. 10 km/s',
+               11: 'Fast phase-only gaincal for bandpass',
                12: 'Bandpass',
                13: 'Setjy',
                14: 'Fast phase-only gaincal',
@@ -57,7 +57,7 @@ basename=['X54','X220']
 makeplots=False
 print "Make plots?", makeplots
 therefant = 'DV01'
-mynumsubmss = 8
+mynumsubmss = 4
 
 #############################
 
@@ -132,9 +132,9 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     importasdm(asdm='uid___A002_X2a5c2f_X54',vis='X54.ms',asis='Stati* Anten*', overwrite=True,
-			createmms=True, numsubms=mynumsubmss)
+            lazy=True, createmms=True, numsubms=mynumsubmss)
     importasdm(asdm='uid___A002_X2a5c2f_X220',vis='X220.ms',asis='Stati* Anten*', overwrite=True,
-			createmms=True, numsubms=mynumsubmss)
+            lazy=True, createmms=True, numsubms=mynumsubmss)
 
     if(makeplots):
         for name in basename:
@@ -153,17 +153,17 @@ if(mystep in thesteps):
         os.system('rm -rf cal-antpos_'+name)
 
     gencal(vis = 'X54.ms',
-	   caltable = 'cal-antpos_X54',
-	   caltype = 'antpos',
-	   antenna = 'CM01,PM02,PM04,DV08,DV06,DV13,DV03,DV14',
-	   parameter = [-0.000379055076246,0.000910912511392,-0.000226045671848,7.8790821135e-05,0.000363811850548,-0.000224065035582,-0.000315962965482,0.000397399838991,-0.000581170175089,-6.35427422822e-05,0.00129573699087,-0.000625061802566,-0.000167516991496,0.000174060463905,-0.000417742878199,-0.00010875146836,0.000319179147482,-0.000588130671531,0.000142965465784,0.000455257482827,0.000168651808053,-0.00150847900659,0.00357818510383,0.000811365433037]
-	   )
+       caltable = 'cal-antpos_X54',
+       caltype = 'antpos',
+       antenna = 'CM01,PM02,PM04,DV08,DV06,DV13,DV03,DV14',
+       parameter = [-0.000379055076246,0.000910912511392,-0.000226045671848,7.8790821135e-05,0.000363811850548,-0.000224065035582,-0.000315962965482,0.000397399838991,-0.000581170175089,-6.35427422822e-05,0.00129573699087,-0.000625061802566,-0.000167516991496,0.000174060463905,-0.000417742878199,-0.00010875146836,0.000319179147482,-0.000588130671531,0.000142965465784,0.000455257482827,0.000168651808053,-0.00150847900659,0.00357818510383,0.000811365433037]
+       )
     gencal(vis = 'X220.ms',
-	   caltable = 'cal-antpos_X220',
-	   caltype = 'antpos',
-	   antenna = 'CM01,PM02,PM04,DV08,DV06,DV13,DV03,DV14',
-	   parameter = [-0.000379055076246,0.000910912511392,-0.000226045671848,7.8790821135e-05,0.000363811850548,-0.000224065035582,-0.000315962965482,0.000397399838991,-0.000581170175089,-6.35427422822e-05,0.00129573699087,-0.000625061802566,-0.000167516991496,0.000174060463905,-0.000417742878199,-0.00010875146836,0.000319179147482,-0.000588130671531,0.000142965465784,0.000455257482827,0.000168651808053,-0.00150847900659,0.00357818510383,0.000811365433037]
-	   )
+       caltable = 'cal-antpos_X220',
+       caltype = 'antpos',
+       antenna = 'CM01,PM02,PM04,DV08,DV06,DV13,DV03,DV14',
+       parameter = [-0.000379055076246,0.000910912511392,-0.000226045671848,7.8790821135e-05,0.000363811850548,-0.000224065035582,-0.000315962965482,0.000397399838991,-0.000581170175089,-6.35427422822e-05,0.00129573699087,-0.000625061802566,-0.000167516991496,0.000174060463905,-0.000417742878199,-0.00010875146836,0.000319179147482,-0.000588130671531,0.000142965465784,0.000455257482827,0.000168651808053,-0.00150847900659,0.00357818510383,0.000811365433037]
+       )
 
     timing()
 
@@ -196,7 +196,7 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
     
     for name in basename:
-	    fixplanets(vis=name+'.ms', field='Titan', fixuvw=True, refant=therefant)
+        fixplanets(vis=name+'.ms', field='Titan', fixuvw=True, refant=therefant)
 
     timing()
 
@@ -216,13 +216,13 @@ if(mystep in thesteps):
                   
     for name in basename:
         flagmanager(vis=name+'.ms', mode='restore', versionname='Original')        
-        flagdata(vis=name + '.ms', mode='list', inpfile=myflagcmd, flagbackup=False)		
+        flagdata(vis=name + '.ms', mode='list', inpfile=myflagcmd, flagbackup=False)        
         
         if(makeplots):
-			# Plot amplitude vs time
-			plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
-		       averagedata=T, avgchannel='4000', coloraxis='field',
-		       iteraxis='spw', plotfile=name+'-amp-vs-time.png', overwrite=True)
+            # Plot amplitude vs time
+            plotms(vis=name+'.ms', xaxis='time', yaxis='amp', spw='1',
+               averagedata=T, avgchannel='4000', coloraxis='field',
+               iteraxis='spw', plotfile=name+'-amp-vs-time.png', overwrite=True)
 
     timing()
 
@@ -235,11 +235,10 @@ if(mystep in thesteps):
     for name in basename:
         os.system('rm -rf cal-wvr_'+name)
 
-#    os.system('/home/arcproc/opsw/alma/wvrgcal-stable/bin/wvrgcal --ms X54.ms --output cal-wvr_X54 --toffset -1 --wvrflag CM01 --segsource --tie "1224+213 Phase","M100" --statsource "1224+213 Phase"')
-
-#    os.system('/home/arcproc/opsw/alma/wvrgcal-stable/bin/wvrgcal --ms X220.ms --output cal-wvr_X220 --toffset -1 --wvrflag CM01 --segsource --tie "1224+213 Phase","M100" --statsource "1224+213 Phase"')
-    wvrgcal(vis="X54.ms", caltable='cal-wvr_X54', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase")
-    wvrgcal(vis='X220.ms', caltable='cal-wvr_X220', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase")
+    wvrgcal(vis="X54.ms", caltable='cal-wvr_X54', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], 
+            statsource="1224+213 Phase",spw=[1,3,5,7], wvrspw=[0])
+    wvrgcal(vis='X220.ms', caltable='cal-wvr_X220', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], 
+            statsource="1224+213 Phase",spw=[1,3,5,7], wvrspw=[0])
 
     timing()
 
@@ -253,10 +252,10 @@ if(mystep in thesteps):
         os.system('rm -rf cal-delay_'+name+'.K')
         
         gaincal(vis=name+'.ms',caltable='cal-delay_'+name+'.K',
-		field='*Phase*',spw='1,3,5,7',
-		solint='inf',combine='scan',refant=therefant,
-		gaintable='cal-antpos_'+name,
-		gaintype='K')
+        field='*Phase*',spw='1,3,5,7',
+        solint='inf',combine='scan',refant=therefant,
+        gaintable='cal-antpos_'+name,
+        gaintype='K')
 
     timing()
 
@@ -311,7 +310,7 @@ if(mystep in thesteps):
 
     # Create flagcmd input list (could also call flagdata twice alternatively)
     flagcmd = ["mode='manual' field='' spw='0~3:0~10;3800~3839'",
-    		  "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'"]
+              "mode='manual' field='' spw='0~3:239;447~448;720~721;2847~2848'"]
               
     for name in basename:
 
@@ -376,7 +375,7 @@ if(mystep in thesteps):
                     poln='X', plotsymbol='o', plotrange = [0,0,-180,180], 
                     iteration = 'spw',
                     figfile='cal-'+name+'-phase_vs_time_XX.BPint.Gp.png', subplot = 221)
-		
+        
             plotcal(caltable='cal-'+name+'-BPint.Gp', 
                     xaxis = 'time', yaxis = 'phase',
                     poln='Y', plotsymbol='o', plotrange = [0,0,-180,180], 
@@ -401,7 +400,7 @@ if(mystep in thesteps):
                  solint='inf',
                  refant=therefant,
                  gaintable='cal-'+name+'-BPint.Gp')
-	
+    
         if(makeplots):
             for spw in ['0','1','2','3']:
                 plotcal(caltable = 'cal-'+name+'.B1', 
@@ -418,7 +417,7 @@ if(mystep in thesteps):
                         plotsymbol='.', timerange='',
                         figfile='cal-'+name+'-amplitude.spw'+spw+'.B1.png')
     timing()
-	
+    
 
 # Setjy
 # Strong line for Titan is obvious
@@ -459,12 +458,12 @@ if(mystep in thesteps):
     for name in basename:
         os.system('rm -rf cal-'+name+'-int.Gp')
         gaincal(vis=name+'-line-vs.ms', 
-		caltable='cal-'+name+'-int.Gp', 
-		spw='*:25~455', 
-		field='*Phase*,*Band*,Titan',
-		gaintable='cal-'+name+'.B1',
-		selectdata=F, solint='int', 
-		refant=therefant, calmode='p')
+        caltable='cal-'+name+'-int.Gp', 
+        spw='*:25~455', 
+        field='*Phase*,*Band*,Titan',
+        gaintable='cal-'+name+'.B1',
+        selectdata=F, solint='int', 
+        refant=therefant, calmode='p')
         
         if(makeplots):
             plotcal(caltable='cal-'+name+'-int.Gp', 
@@ -491,25 +490,25 @@ if(mystep in thesteps):
         os.system('rm -rf cal-'+name+'-scan.Gp')
         
         gaincal(vis=name+'-line-vs.ms', 
-		caltable='cal-'+name+'-scan.Gp', 
-		spw='*:25~455', 
-		field='*Phase*,*Band*,Titan',
-		gaintable='cal-'+name+'.B1',
-		selectdata=F, solint='inf', 
-		refant=therefant, calmode='p')
+        caltable='cal-'+name+'-scan.Gp', 
+        spw='*:25~455', 
+        field='*Phase*,*Band*,Titan',
+        gaintable='cal-'+name+'.B1',
+        selectdata=F, solint='inf', 
+        refant=therefant, calmode='p')
         
         if(makeplots):
-		plotcal(caltable='cal-'+name+'-scan.Gp', 
-			xaxis = 'time', yaxis = 'phase',
-			poln='X', plotsymbol='o', plotrange = [0,0,-180,180], 
-			iteration = 'spw',
-			figfile='cal-'+name+'-phase_vs_time_XX.scan.Gp.png', subplot = 221)
+			plotcal(caltable='cal-'+name+'-scan.Gp', 
+            	xaxis = 'time', yaxis = 'phase',
+             poln='X', plotsymbol='o', plotrange = [0,0,-180,180], 
+             iteration = 'spw',
+             figfile='cal-'+name+'-phase_vs_time_XX.scan.Gp.png', subplot = 221)
 
-		plotcal(caltable='cal-'+name+'-scan.Gp', 
-			xaxis = 'time', yaxis = 'phase',
-			poln='Y', plotsymbol='o', plotrange = [0,0,-180,180], 
-			iteration = 'spw',
-			figfile='cal-'+name+'-phase_vs_time_YY.scan.Gp.png', subplot = 221)
+			plotcal(caltable='cal-'+name+'-scan.Gp', 
+            	xaxis = 'time', yaxis = 'phase',
+             poln='Y', plotsymbol='o', plotrange = [0,0,-180,180], 
+             iteration = 'spw',
+             figfile='cal-'+name+'-phase_vs_time_YY.scan.Gp.png', subplot = 221)
 
     timing()
 
@@ -523,25 +522,25 @@ if(mystep in thesteps):
         os.system('rm -rf cal-'+name+'-scan.Gap')
         
         gaincal(vis=name+'-line-vs.ms', 
-		caltable='cal-'+name+'-scan.Gap', 
-		spw='*:25~455', 
-		field='*Phase*,*Band*,Titan',
-		gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp'],
-		selectdata=F, solint='inf', 
-		refant=therefant, calmode='ap')
+        caltable='cal-'+name+'-scan.Gap', 
+        spw='*:25~455', 
+        field='*Phase*,*Band*,Titan',
+        gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp'],
+        selectdata=F, solint='inf', 
+        refant=therefant, calmode='ap')
         
         if(makeplots):
-        	plotcal(caltable='cal-'+name+'-scan.Gap', 
-			xaxis = 'time', yaxis = 'amp',
-			poln='X', plotsymbol='o', 
-			iteration = 'spw',
-			figfile='cal-'+name+'-amp_vs_time_XX.scan.Gap.png', subplot = 221)
-        	
-        	plotcal(caltable='cal-'+name+'-scan.Gap', 
-			xaxis = 'time', yaxis = 'amp',
-			poln='Y', plotsymbol='o', 
-			iteration = 'spw',
-			figfile='cal-'+name+'-amp_vs_time_YY.scan.Gap.png', subplot = 221)
+            plotcal(caltable='cal-'+name+'-scan.Gap', 
+            xaxis = 'time', yaxis = 'amp',
+            poln='X', plotsymbol='o', 
+            iteration = 'spw',
+            figfile='cal-'+name+'-amp_vs_time_XX.scan.Gap.png', subplot = 221)
+            
+            plotcal(caltable='cal-'+name+'-scan.Gap', 
+            xaxis = 'time', yaxis = 'amp',
+            poln='Y', plotsymbol='o', 
+            iteration = 'spw',
+            figfile='cal-'+name+'-amp_vs_time_YY.scan.Gap.png', subplot = 221)
 
     timing()
 
@@ -551,12 +550,12 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-		fluxscale(vis=name+'-line-vs.ms',caltable='cal-'+name+'-scan.Gap',
-		fluxtable='cal-'+name+'.flux',reference='Titan',transfer='*Phase*,*Band*')
+        fluxscale(vis=name+'-line-vs.ms',caltable='cal-'+name+'-scan.Gap',
+        fluxtable='cal-'+name+'.flux',reference='Titan',transfer='*Phase*,*Band*')
 
 # Restore flags on calibrators?
 #for name in basename:
-	# flagmanager(vis=name+'-line-vs.ms',mode='restore',versionname='apriori')
+    # flagmanager(vis=name+'-line-vs.ms',mode='restore',versionname='apriori')
 
     timing()
 
@@ -567,43 +566,43 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-		# to the bandpass cal
-		applycal(vis=name+'-line-vs.ms',field='*Band*',
-	        gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
-	        interp=['nearest','nearest','nearest'],
-	        gainfield=['*Band*','*Band*','*Band*'],calwt=F,flagbackup=T)
+        # to the bandpass cal
+        applycal(vis=name+'-line-vs.ms',field='*Band*',
+            gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
+            interp=['nearest','nearest','nearest'],
+            gainfield=['*Band*','*Band*','*Band*'],calwt=F,flagbackup=T)
 
-		# to the secondary phase cal
-		applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
-	        gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
-       	 	interp=['nearest','linear','linear'],
-       	 	gainfield=['*Band*','1224*','1224*'],
-		calwt=F,
-		flagbackup=T)
+        # to the secondary phase cal
+        applycal(vis=name+'-line-vs.ms',field='3c273 - Phase',
+            gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
+                interp=['nearest','linear','linear'],
+                gainfield=['*Band*','1224*','1224*'],
+        calwt=F,
+        flagbackup=T)
 
-		# to the primary phase cal
-		applycal(vis=name+'-line-vs.ms',field='1224*',
-        	gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
-        	interp=['nearest','nearest','nearest'],
-        	gainfield=['*Band*','1224*','1224*'],
-		calwt=F,
-		flagbackup=T)
+        # to the primary phase cal
+        applycal(vis=name+'-line-vs.ms',field='1224*',
+            gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
+            interp=['nearest','nearest','nearest'],
+            gainfield=['*Band*','1224*','1224*'],
+        calwt=F,
+        flagbackup=T)
 
-		# to Titan
-		applycal(vis=name+'-line-vs.ms',field='Titan',
+        # to Titan
+        applycal(vis=name+'-line-vs.ms',field='Titan',
                  gaintable=['cal-'+name+'.B1','cal-'+name+'-int.Gp','cal-'+name+'.flux'],
                  interp=['nearest','nearest','nearest'],
                  gainfield=['*Band*','Titan','Titan'],
                  calwt=F,
                  flagbackup=T)
 
-		# to M100
-		applycal(vis=name+'-line-vs.ms',field='M100',
-        	gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
-        	interp=['nearest','linear','linear'],
-        	gainfield=['*Band*','1224*','1224*'],
-		calwt=F,
-		flagbackup=T)
+        # to M100
+        applycal(vis=name+'-line-vs.ms',field='M100',
+            gaintable=['cal-'+name+'.B1','cal-'+name+'-scan.Gp','cal-'+name+'.flux'],
+            interp=['nearest','linear','linear'],
+            gainfield=['*Band*','1224*','1224*'],
+        calwt=F,
+        flagbackup=T)
 
 
 # For X146 the calibrated fluxes for the secondary phase cal are different for the different pols. What
@@ -688,11 +687,11 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-		os.system('rm -rf '+name+'-calibrated.ms*')
-		split2(vis=name+'-line-vs.ms',field='M100',
-	      outputvis=name+'-calibrated.ms',
-	      datacolumn = 'corrected',
-	      keepflags=False,
+        os.system('rm -rf '+name+'-calibrated.ms*')
+        split2(vis=name+'-line-vs.ms',field='M100',
+          outputvis=name+'-calibrated.ms',
+          datacolumn = 'corrected',
+          keepflags=False,
           keepmms=True
               )
 
