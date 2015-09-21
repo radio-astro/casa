@@ -111,8 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        ift_p->initializeToSkyNew( dopsf, vb, itsImages);
 
        /////////////DEBUG
-       CoordinateSystem csys = itsImages->getCSys();
-       cout << "SIMapper : im spectral axis : " <<  csys.spectralCoordinate().referenceValue() << " at " << csys.spectralCoordinate().referencePixel() << " with increment " << csys.spectralCoordinate().increment() << endl;
+       //       CoordinateSystem csys = itsImages->getCSys();
+       //       cout << "SIMapper : im spectral axis : " <<  csys.spectralCoordinate().referenceValue() << " at " << csys.spectralCoordinate().referencePixel() << " with increment " << csys.spectralCoordinate().increment() << endl;
 
      }
 
