@@ -3052,6 +3052,23 @@ Bool MSTransformDataHandler::copyGenericSubtables()
 		}
 	}
 
+	// Find ephemerides files
+	std::vector<String> ephemerides;
+	for (uInt i = 0; i < inkws.nfields(); ++i)
+	{
+		if (inkws.type(i) == TpTable && inkws.name(i).contains("EPHEM"))
+		{
+			ephemerides.push_back(inkws.name(i));
+		}
+	}
+
+	// Remove ephemerides files
+	for (uInt i = 0; i < ephemerides.size(); ++i)
+	{
+		inkws.removeField(ephemerides.at(i));
+	}
+
+
 	// msOut_p.rwKeywordSet() (pass a reference, not a copy) will put a lock on msOut_p.
 	TableCopy::copySubTables(msOut_p.rwKeywordSet(), inkws, msOut_p.tableName(), msOut_p.tableType(), mssel_p);
 
