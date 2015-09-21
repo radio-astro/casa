@@ -22,7 +22,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: findContinuum.py,v 1.21 2015/09/16 22:50:09 we Exp $" 
+    myversion = "$Id: findContinuum.py,v 1.22 2015/09/21 04:06:02 we Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -47,7 +47,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
                   percentile=20, continuumThreshold=None, narrow='auto', 
                   separator=';', overwrite=False, titleText='', 
                   showAverageSpectrum=False, maxTrim=20, maxTrimFraction=0.33,
-                  meanSpectrumFile=''):
+                  meanSpectrumFile='', centralArcsec='auto'):
     """
     This function calls functions to:
     1) compute the mean spectrum of a dirty cube
@@ -99,6 +99,101 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
     maxTrimFraction: in trimChannels='auto', the max fraction of channels to trim per group
     meanSpectrumFile: an alternative ASCII text file to use for the mean spectrum.
        Note: You still need to have the parent cube since frequency axis is read from there.
+    centralArcsec: radius of central box within which to compute the mean spectrum
+           default='auto' means start with whole field, then reduce to 1/10 if only
+           one window is found
+    """
+    if (centralArcsec == 'auto'):
+        centralArcsecField = -1  # use the whole field
+    else:
+        centralArcsecField = centralArcsec  # use the specified field radius
+    selection, png = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
+                                      sigmaCube, nBaselineChannels, sigmaFindContinuum,
+                                      verbose, png, pngBasename, nanBufferChannels, 
+                                      source, useAbsoluteValue, trimChannels, 
+                                      percentile, continuumThreshold, narrow, 
+                                      separator, overwrite, titleText, 
+                                      showAverageSpectrum, maxTrim, maxTrimFraction,
+                                      meanSpectrumFile, centralArcsecField)
+    if (centralArcsec == 'auto' and len(selection.split(separator)) < 2):
+        # reduce the field size to one tenth of the previous
+        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = getImageInfo(img)
+        imageWidthArcsec = 0.5*(np.abs(naxis2*cdelt2) + np.abs(naxis1*cdelt1))
+        centralArcsec = 0.1*imageWidthArcsec
+        overwrite = True
+        print "Re-running findContinuum over central %.1f arcsec" % (centralArcsec)
+        selection, png = runFindContinuum(img, spw, transition, baselineModeA, baselineModeB,
+                                          sigmaCube, nBaselineChannels, sigmaFindContinuum,
+                                          verbose, png, pngBasename, nanBufferChannels, 
+                                          source, useAbsoluteValue, trimChannels, 
+                                          percentile, continuumThreshold, narrow, 
+                                          separator, overwrite, titleText, 
+                                          showAverageSpectrum, maxTrim, maxTrimFraction,
+                                          meanSpectrumFile, centralArcsec)
+    return(selection, png)
+
+def runFindContinuum(img='', spw='', transition='', baselineModeA='min', baselineModeB='min',
+                  sigmaCube=3, nBaselineChannels=0.19, sigmaFindContinuum='auto',
+                  verbose=False, png='', pngBasename=False, nanBufferChannels=2, 
+                  source='', useAbsoluteValue=True, trimChannels='auto', 
+                  percentile=20, continuumThreshold=None, narrow='auto', 
+                  separator=';', overwrite=False, titleText='', 
+                  showAverageSpectrum=False, maxTrim=20, maxTrimFraction=0.33,
+                  meanSpectrumFile='', centralArcsec=-1):
+    """
+    This function calls functions to:
+    1) compute the mean spectrum of a dirty cube
+    2) find the continuum channels 
+    3) plot the results
+
+    Returns:
+    * A channel selection string suitable for the spw parameter of clean.
+    * The name of the png produced
+
+    Inputs:
+    img: the image cube to operate upon
+    spw: the spw name or number to put in the x-axis label
+    transition: the name of the spectral transition (for the plot title)
+    baselineModeA: 'min' or 'edge', method to define the baseline in meanSpectrum()
+    baselineModeB: 'min' or 'edge', method to define the baseline in findContinuumChannels()
+    sigmaCube: multiply this value by the rms to get the threshold above which a pixel
+               is included in the mean spectrum
+    nBaselineChannels: if integer, then the number of channels to use
+          if float, then the fraction of channels to use (i.e. the percentile)
+          default = 0.19, which is 24 channels (i.e. 12 on each side) of a TDM window
+    sigmaFindContinuum: passed to findContinuumChannels, 'auto' starts with 3
+    verbose: if True, then print additional information during processing
+    png: the name of the png to produce ('' yields default name)
+    pngBasename: if True, then remove the directory from img name before generating png name
+    nanBufferChannels: when removing or replacing NaNs, do this many extra channels
+                       beyond their extent
+    source: the name of the source, to be shown in the title of the spectrum.
+            if None, then use the filename, up to the first underscore.
+    findContinuum: if True, then find the continuum channels before plotting
+    overwrite: if True, or ASCII file does not exist, then recalculate the mean spectrum
+                      writing it to <img>.meanSpectrum
+               if False, then read the mean spectrum from the existing ASCII file
+    trimChannels: after doing best job of finding continuum, remove this many 
+         channels from each edge of each block of channels found (for margin of safety)
+         If it is a float between 0..1, then trim this fraction of channels in each 
+         group (rounding up). If it is 'auto', use 0.1 but not more than maxTrim channels
+         and not more than maxTrimFraction
+    percentile: control parameter used with baselineMode='min'
+    continuumThreshold: if specified, only use pixels above this intensity level
+    separator: the character to use to separate groups of channels in the string returned
+    narrow: the minimum number of channels that a group of channels must have to survive
+            if 0<narrow<1, then it is interpreted as the fraction of all
+                           channels within identified blocks
+            if 'auto', then use int(ceil(log10(nchan)))
+    titleText: default is img name and transition and the control parameter values
+    showAverageSpectrum: make a two-panel plot, showing the raw mean spectrum in black
+    maxTrim: in trimChannels='auto', this is the max channels to trim per group
+    maxTrimFraction: in trimChannels='auto', the max fraction of channels to trim per group
+    meanSpectrumFile: an alternative ASCII text file to use for the mean spectrum.
+       Note: You still need to have the parent cube since frequency axis is read from there.
+    centralArcsec: radius of central box within which to compute the mean spectrum
+               default='auto' means start with whole field, then reduce to 10 arcsec if only
+               one window is found
     """
     replaceNans = True 
     startTime = timeUtilities.time()
@@ -127,7 +222,7 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
           edgesUsed, nchan, nanmin = meanSpectrum(img, nBaselineChannels, sigmaCube, verbose,
                                                   nanBufferChannels,useAbsoluteValue,
                                                   baselineModeA, percentile,
-                                                  continuumThreshold, meanSpectrumFile)
+                                                  continuumThreshold, meanSpectrumFile, centralArcsec)
     else:
         if (fitsTable):
             result = readMeanSpectrumFITSFile(meanSpectrumFile)
@@ -322,6 +417,11 @@ def findContinuum(img='', spw='', transition='', baselineModeA='min', baselineMo
             transform=ax1.transAxes, ha='center', size=fontsize)
     pl.text(0.5,0.99-4*inc,'chans above median: %d (%.5f), below median: %d (%.5f), ratio: %.2f (%.2f)'%(channelsAboveMedian,sumAboveMedian,channelsBelowMedian,sumBelowMedian,channelRatio,sumRatio),
             transform=ax1.transAxes, ha='center', size=fontsize)
+    if (centralArcsec < 0):
+        areaString = 'mean over area: whole field'
+    else:
+        areaString = 'mean over area: central box of radius %.1f arcsec' % (centralArcsec)
+    pl.text(0.5,0.99-5*inc,areaString, transform=ax1.transAxes, ha='center', size=fontsize)
     # Write CVS version
     pl.text(1.03, -0.005-2*inc, ' '.join(version().split()[1:4]), size=8, 
             transform=ax1.transAxes, ha='right')
@@ -775,6 +875,99 @@ def computeMedianCorrectionFactor(baselineMode, percentile):
         return(0)
     return(6.3*(5.0/percentile)**0.5)
 
+def headerToArcsec(mydict, unit=None):
+    """
+    Converts an angle quantity dictionary to the angle
+    in arcsec.
+    """
+    if (unit == None):
+        value = mydict['value']
+    else:
+        value = mydict
+        mydict = {'value': mydict, 'unit': unit}
+    if (mydict['unit'].find('rad') >= 0):
+        value = 3600*np.degrees(value)
+    elif (mydict['unit'].find('deg') >= 0):
+        value *= 3600
+    return(value)
+
+def getImageInfo(image):
+    """
+    Extract the beam and pixel information from a CASA image.
+    Returns: bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, frequency
+             Angles are in arcseconds (bpa in degrees)
+             Frequency is in GHz and is the central frequency
+    -Todd Hunter
+    """
+    if (os.path.exists(image) == False):
+        print "image not found: ", image
+        return
+    # Assume this is a CASA image
+    a = imhead(image, mode = 'list')
+    if (a == None):
+        print "imhead returned NoneType. This image header is not sufficiently standard."
+        return
+    if ('beammajor' in a.keys()):
+        bmaj = a['beammajor']
+        bmin = a['beamminor']
+        bpa = a['beampa']
+    elif ('perplanebeams' in a.keys()):
+        beammajor = []
+        beamminor = []
+        beampa = []
+        for beamchan in range(a['perplanebeams']['nChannels']):
+            beamdict = a['perplanebeams']['*'+str(beamchan)]
+            beammajor.append(beamdict['major']['value'])
+            beamminor.append(beamdict['minor']['value'])
+            beampa.append(beamdict['positionangle']['value'])
+        bmaj = np.median(beammajor)
+        bmin = np.median(beamminor)
+        sinbpa = np.sin(np.radians(np.array(beampa)))
+        cosbpa = np.cos(np.radians(np.array(beampa)))
+        bpa = np.degrees(np.median(np.arctan2(np.median(sinbpa), np.median(cosbpa))))
+    else:
+        bmaj = 0
+        bmin = 0
+        bpa = 0
+    naxis1 = a['shape'][0]
+    naxis2 = a['shape'][1]
+    cdelt1 = a['cdelt1']
+    cdelt2 = a['cdelt2']
+    if (a['cunit1'].find('rad') >= 0):
+        # convert from rad to arcsec
+        cdelt1 *= 3600*180/np.pi
+    elif (a['cunit1'].find('deg') >= 0):
+        # convert from deg to arcsec
+        cdelt1 *= 3600
+    if (a['cunit2'].find('rad') >= 0):
+        cdelt2 *= 3600*180/np.pi
+        # convert from rad to arcsec
+    elif (a['cunit2'].find('deg') >= 0):
+        # convert from deg to arcsec
+        cdelt2 *= 3600
+    if (type(bmaj) == dict):
+        # casa >= 4.1.0  (previously these were floats)
+        bmaj = headerToArcsec(bmaj)
+        bmin = headerToArcsec(bmin)
+        bpa = headerToArcsec(bpa)/3600.
+    ghz = 0
+    if ('ctype4' in a.keys()):
+        if (a['ctype4'] == 'Frequency'):
+            imgfreq = a['crval4']
+            cdelt = a['cdelt4']
+            crpix = a['crpix4']
+            npix = a['shape'][3]
+            ghz = imgfreq*1e-9
+    if (ghz == 0):
+        if ('ctype3' in a.keys()):
+            if (a['ctype3'] == 'Frequency'):
+                imgfreq = a['crval3']
+                cdelt = a['cdelt3']
+                crpix = a['crpix3']
+                npix = a['shape'][2]
+                ghz = imgfreq*1e-9
+    return([bmaj,bmin,bpa,cdelt1,cdelt2,naxis1,naxis2,ghz])
+                                                                
 def numberOfChannelsInCube(img, returnFreqs=False, verbose=False):
     """
     Finds the number of channels in a CASA or FITS image cube.
@@ -863,7 +1056,7 @@ def avgOverCube(pixels, useAbsoluteValue=False, threshold=None, median=False):
 def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
                  sigmaCube=3, verbose=False, nanBufferChannels=2, useAbsoluteValue=False,
                  baselineMode='edge', percentile=20, continuumThreshold=None,
-                 meanSpectrumFile=''):
+                 meanSpectrumFile='', centralArcsec=-1):
     """
     Computes the average spectrum across a CASA image cube, using a selection of
     baseline channels to compute the rms to be used as a threshold value (similar to
@@ -879,6 +1072,7 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
     percentile: used with baselineMode='min'
     continuumThreshold: if specified, only use pixels above this intensity level
     meanSpectrumFile: name of ASCII file to produce to speed up future runs 
+    centralArcsec: default=-1 means whole field
     Returns 6 items:
        * avgspectrum (vector)
        * avgspectrumAboveThresholdNansRemoved (vector)
@@ -894,7 +1088,19 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
     if verbose: print "Assuming spectral axis = ", axis
     myia = createCasaTool(iatool)
     myia.open(img)
-    pixels = myia.getregion()
+    if (centralArcsec < 0):
+        pixels = myia.getregion()
+    else:
+        myrg = createCasaTool(rgtool)
+        bmaj, bmin, bpa, cdelt1, cdelt2, naxis1, naxis2, freq = getImageInfo(img)
+        nchan = numberOfChannelsInCube(img)
+        x0 = naxis1*0.5 - centralArcsec*0.5/np.abs(cdelt1)
+        x1 = naxis1*0.5 + centralArcsec*0.5/np.abs(cdelt1)
+        y0 = naxis2*0.5 - centralArcsec*0.5/cdelt2
+        y1 = naxis2*0.5 + centralArcsec*0.5/cdelt2
+        region = myrg.box(blc=[x0,y0,0,0], trc=[x1,y1,0,nchan])
+        pixels = myia.getregion(region=region)
+        myrg.done()
     if (continuumThreshold != None):
         pixels[np.where(pixels < continuumThreshold)] = 0.0
     std = MAD(pixels)
@@ -950,7 +1156,10 @@ def meanSpectrum(img='g35.03_KDnh3_11.hline.self.image', nBaselineChannels=16,
     xpix =  np.shape(pixels)[0]
     ypix =  np.shape(pixels)[1]
     npixFraction = nBaselineChannels*1.0/nchan
-    allPixels = myia.getregion()
+    if (centralArcsec < 0):
+        allPixels = myia.getregion()
+    else:
+        allPixels = pixels
     myia.close()
     # Convert all NaNs to zero
     allPixels[np.isnan(allPixels)] = 0
