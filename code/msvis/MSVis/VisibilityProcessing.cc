@@ -27,7 +27,7 @@ using namespace casa;
 using namespace casa::asyncio;
 using namespace casa::utilj;
 using namespace std;
-using boost::shared_ptr;
+using std::shared_ptr;
 
 namespace casa {
 

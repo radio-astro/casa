@@ -16,7 +16,7 @@
 #include "UtilJ.h"
 
 #include <boost/iterator/indirect_iterator.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/tuple/tuple.hpp>
 #include <boost/utility.hpp>
 #include <map>
@@ -98,19 +98,19 @@ private:
     Int subChunkNumber_p;
 };
 
-class VbPtr : public boost::shared_ptr<casa::VisBuffer> {
+class VbPtr : public std::shared_ptr<casa::VisBuffer> {
 
 public:
 
-    VbPtr () : boost::shared_ptr<casa::VisBuffer> () {}
-    explicit VbPtr (casa::VisBuffer * vb) : boost::shared_ptr<casa::VisBuffer> (vb) {}
+    VbPtr () : std::shared_ptr<casa::VisBuffer> () {}
+    explicit VbPtr (casa::VisBuffer * vb) : std::shared_ptr<casa::VisBuffer> (vb) {}
 
     // Assignment operator setting VbPtr to a normal pointer.  Ownership is passed to the
     // VbPtr so caller must ensure that delete is not called on the VisBuffer.
 
     VbPtr & operator= (casa::VisBuffer * vb)
     {
-        boost::shared_ptr<casa::VisBuffer>::operator= (VbPtr (vb));
+        std::shared_ptr<casa::VisBuffer>::operator= (VbPtr (vb));
         return * this;
     }
 };

@@ -2671,7 +2671,7 @@ namespace sdmbin {
     return getNextMSMainCols( e_qcm, es_qapc, nDataSubset);
   }
 
-  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
+  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, std::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
     Enum<CorrelationMode>       e_qcm;
     EnumSet<AtmPhaseCorrection> es_qapc;
     if(canSelect_){
@@ -2833,13 +2833,13 @@ namespace sdmbin {
     return vmsDataPtr_;
   }
 
-  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
+  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  std::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
     if (verbose_) cout << "SDMBinData::getNextMSMainCols (with VMSDataSharedPtr) : entering" << endl;
 
     VMSDataWithSharedPtr* vmsData_p = vmsData_p_sp.get();
 
     // Delete the content of v_msDataPtr (but do not delete "deeply" i.e. do not delete the visibilities referred to by pointers stored into v_msDataPtr since the 
-    // memory they occupy is going to be managed by boost::shared_ptr s.
+    // memory they occupy is going to be managed by std::shared_ptr s.
     //
     if ( v_msDataPtr_.size() > 0 ){
       for(vector<MSData*>::reverse_iterator it=v_msDataPtr_.rbegin(); it!=v_msDataPtr_.rend(); ++it) delete (*it);
