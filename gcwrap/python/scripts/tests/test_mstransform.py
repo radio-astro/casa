@@ -2271,6 +2271,11 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.tolerance['DATA'] = 1e-5
 
         self.post_process()
+        
+        # Also check that the ephemerides table is copied to the right place
+        self.assertTrue(os.path.isdir(self.outvis + '/FIELD/EPHEM0_Titan.tab'), 'Ephemerides table not copied to FIELD') 
+        self.assertFalse(os.path.isdir(self.outvis + '/EPHEM0_Titan.tab'), 'Ephemerides table copied to MAIN')
+        
 
     def test_descending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='0', field='Titan',
@@ -2287,6 +2292,10 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.tolerance['DATA'] = 1e-5
 
         self.post_process()
+        
+        # Also check that the ephemerides table is copied to the right place
+        self.assertTrue(os.path.isdir(self.outvis + '/FIELD/EPHEM0_Titan.tab'), 'Ephemerides table not copied to FIELD') 
+        self.assertFalse(os.path.isdir(self.outvis + '/EPHEM0_Titan.tab'), 'Ephemerides table copied to MAIN')        
 
         
 class test_vla_mixed_polarizations(test_base):
