@@ -369,7 +369,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Make this a nice composite number, to speed up FFTs
       CompositeNumber cn(uInt(convSize_p*2.0));    
       convSize_p  = cn.nextLargerEven(Int(convSize_p));
-   
+      convSize_p=(convSize_p/16)*16;  // need it to be divisible by 8 in places
     }
     
 
@@ -570,7 +570,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //convFunc_p(begin, end).copyMatchingPart(pBScreen.get(False));
 	  //weightConvFunc_p(begin, end).copyMatchingPart(pB2Screen.get(False));
 	  IPosition blcQ(4, pbShape(0)/8*3, pbShape(1)/8*3, 0, 0);
-	  IPosition trcQ(4,  pbShape(0)/8*5-1, pbShape(1)/8*5-1, nBeamPols-1, nBeamChans-1);
+	  IPosition trcQ(4,  blcQ[0]+ pbShape(0)/4-1, blcQ[1]+pbShape(1)/4-1 , nBeamPols-1, nBeamChans-1);
+
+	  //cerr << "blcQ " << blcQ << " trcQ " << trcQ << " pbShape " << pbShape << endl;
 	  Slicer slQ(blcQ, trcQ, Slicer::endIsLast);
 	  {
 	    SubImage<Complex>  pBSSub(pBScreen, slQ, False);
