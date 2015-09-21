@@ -19,20 +19,12 @@
     <ProcessingCommand>
         <Command xmlns="">hif_findcont</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">parallel</Keyword>
-                <Value xmlns="">false</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">parallel</Keyword>
-                <Value xmlns="">false</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -49,10 +41,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">parallel</Keyword>
-                <Value xmlns="">false</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -65,10 +53,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">parallel</Keyword>
-                <Value xmlns="">false</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

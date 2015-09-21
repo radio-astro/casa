@@ -56,22 +56,22 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         hif_makeimlist (specmode='cont', pipelinemode=pipelinemode)
  
         # Find continuum frequency ranges
-        hif_findcont(parallel=False, pipelinemode=pipelinemode)
+        hif_findcont(pipelinemode=pipelinemode)
 
         # Make clean cont images for the selected targets
-        hif_makeimages (parallel=False, pipelinemode=pipelinemode)
+        hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in mfs mode (used for continuum subtraction)
         hif_makeimlist (specmode='mfs', pipelinemode=pipelinemode)
  
         # Make clean mfs images for the selected targets
-        hif_makeimages (parallel=False, pipelinemode=pipelinemode)
+        hif_makeimages (pipelinemode=pipelinemode)
 
         # Make a list of expected targets to be cleaned in continuum subtracted cube mode
         hif_makeimlist (pipelinemode=pipelinemode)
 
         # Make clean continuum subtracted cube images for the selected targets
-        hif_makeimages (parallel=False, pipelinemode=pipelinemode)
+        hif_makeimages (pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:
