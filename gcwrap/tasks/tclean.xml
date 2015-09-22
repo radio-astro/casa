@@ -366,6 +366,11 @@ HPX HEALPix grid.  -->
                        ( In this case, rename the single dish image to xxx.model and 
                          supply it as startmodel='xxx' ).
 
+                      [ Note : If an error occurs during image resampling/regridding, 
+                                   please try using task imregrid to resample the starting model
+                                   image onto a CASA image with the target shape and 
+                                   coordinate system before supplying it via startmodel ]
+
  </description>
       <value type="string"></value>
     </param>
@@ -594,12 +599,11 @@ HPX HEALPix grid.  -->
                        convolution functions. Gridding (degridding) runtime will rise in 
                        proportion to the support size of these convolution functions (in uv-pixels).
 
-                       standard,  
-                       ft, 
-                       gridft : Prolate Spheroid with 3x3 uv pixel support size (ref)
+                       standard : Prolate Spheroid with 3x3 uv pixel support size 
 
-                       wproject,
-                       wprojectft : W-Projection algorithm to correct for the widefield
+                                        [ This mode can also be invoked using 'ft' or 'gridft' ]
+
+                       wproject : W-Projection algorithm to correct for the widefield
                                            non-coplanar baseline effect. [Cornwell et.al 2008]
 
                                            wprojplanes is the number of distinct w-values at 
@@ -607,6 +611,8 @@ HPX HEALPix grid.  -->
                                            functions (see help for wprojplanes). 
                                           Convolution function support size can range
                                            from 5x5 to few 100 x few 100. 
+
+                                        [ This mode can also be invoked using 'wprojectft' ]
 
                        widefield : Facetted imaging with or without W-Projection per facet.
 
@@ -623,9 +629,7 @@ HPX HEALPix grid.  -->
                                         A combination of facetting and W-Projection is relevant only for
                                         very large fields of view.
 
-                       mosaic,
-                       ftmosaic,
-                       mosaicft : A-Projection with azimuthally symmetric beams without
+                       mosaic : A-Projection with azimuthally symmetric beams without
                                         sidelobes, beam rotation or squint correction.
                                         Gridding convolution functions per visibility are computed
                                         from FTs of PB models per antenna.
@@ -641,8 +645,9 @@ HPX HEALPix grid.  -->
                                        between 7 and 50 depending on the desired
                                        accuracy (given by the uv cell size or image field of view).
 
-                       awproject,
-                       awprojectft : A-Projection with azimuthally asymmetric beams and 
+                                        [ This mode can also be invoked using 'mosaicft' or 'ftmosaic' ]
+
+                       awproject : A-Projection with azimuthally asymmetric beams and 
                                             including beam rotation, squint correction,
                                             conjugate frequency beams and W-projection. 
                                             [Bhatnagar et.al, 2008]
@@ -663,6 +668,8 @@ HPX HEALPix grid.  -->
                                        between 7 and 50 depending on the desired
                                        accuracy (given by the uv cell size or image field of view). 
                                        When combined with W-Projection they can be significantly larger.
+
+                                       [ This mode can also be invoked using 'awprojectft' ]
 
                        imagemosaic : (untested implementation)
                                                Grid and iFT each pointing separately and combine the
@@ -960,7 +967,9 @@ HPX HEALPix grid.  -->
 
                                       ( Note : 'clark' maps to imagermode='' in the old clean task.
                                                    'clark_exp' is another implementation that maps to 
-                                                    imagermode='mosaic' or 'csclean' in the old clean task. )
+                                                    imagermode='mosaic' or 'csclean' in the old clean task
+                                                    but the behaviour is not identical. For now, please
+                                                    use deconvolver='hogbom' if you encounter problems. )
 
                        clarkstokes : Clark Clean operating separately per Stokes plane
 
@@ -1241,8 +1250,10 @@ HPX HEALPix grid.  -->
                                                                    natural weighting. The peak sensitivity is also
                                                                    closer to natural weighting.
 
-                       weighting='radial' : Gridding weights are given by 
-                                                       ' data_weight * uvdistance '
+                       weighting='radial' : Gridding weights are given by ' data_weight * uvdistance '
+                                                       
+                                                      This method approximately minimizes rms sidelobes 
+                                                      for an east-west synthesis array. 
 
                For more details on weighting please see Chapter3
                of Dan Briggs' thesis (http://www.aoc.nrao.edu/dissertations/dbriggs)
@@ -1266,19 +1277,19 @@ HPX HEALPix grid.  -->
     <param type="int" name="npixels" subparam="true">
            <shortdescription>Number of pixels to determine uv-cell size (0 : -/+ 3 pixels)</shortdescription>
 <description>Number of pixels to determine uv-cell size for super-uniform weighting
-                      (0 : -/+ 3 pixels)
+                      (0 defaults to -/+ 3 pixels)
 
                      npixels -- uv-box used for weight calculation
                                     a box going from -npixel/2 to +npixel/2 on each side
                                    around a point is used to calculate weight density.
-                                   0 means box is pixel size
-                   example npixels=2 goes from -1 to +1 and covers 3 pixels on a side.
-                   Default = 0
 
-               Exception: when choosing superuniform it does not make sens to use 
-                                 npixels=0 as it is  uniform thus if npixels is 0  it will be forced to 6 or 
-                                 a box of -3pixels  to 3pixels (covers 7 pixels on a side)
-
+                     npixels=2 goes from -1 to +1 and covers 3 pixels on a side.
+                     
+                     npixels=0 implies a single pixel, which does not make sense for
+                                     superuniform weighting. Therefore, if npixels=0 it will
+                                     be forced to 6 (or a box of -3pixels to +3pixels) to cover
+                                     7 pixels on a side.
+                   
 </description>
 	    <value type="int">0</value>
     </param>
@@ -1566,6 +1577,13 @@ HPX HEALPix grid.  -->
                                                 shape from what is being made it will be resampled to 
                                                 the target coordinate system before being used.
 
+                                                [ Note : If an error occurs during image resampling or
+                                                            if the expected mask does not appear, please try
+                                                            using tasks 'imregrid' or 'makemask' to resample 
+                                                            the mask image onto a CASA image with the target 
+                                                            shape and coordinates and supply it via the 'mask' 
+                                                            parameter. ]
+
                 mask='xxx.crtf' : A text file with region strings and the following on the first line
                                            ( #CRTFv0 CASA Region Text Format version 0 )
                                            This is the format of a file created via the viewer's region
@@ -1669,11 +1687,12 @@ HPX HEALPix grid.  -->
 
                           none : Do not save any model visibilities in the MS. The MS is opened
                                      in readonly mode. 
-                      
-                                     Model visibilities can always be predicted in a separate step by 
-                                     running tclean with niter=0,savemodel=virtual or modelcolumn
-                                     and with startmodel='xxx.model' or simply not changing any
-                                     image names.
+                     
+                                     Model visibilities can be predicted in a separate step by 
+                                     restarting tclean with niter=0,savemodel=virtual or modelcolumn
+                                     and not changing any image names so that it finds the .model on
+                                     disk (or by changing imagename and setting startmodel to the
+                                     original imagename).
 
                           virtual : In the last major cycle, save the image model and state of the
                                        gridder used during imaging within the SOURCE subtable of the
@@ -1758,7 +1777,7 @@ HPX HEALPix grid.  -->
 
     <param type="bool" name="parallel">
 	   <shortdescription>Run major cycles in parallel</shortdescription>
-<description>Run major cycles in parallel
+<description>Run major cycles in parallel (this feature is experimental)
                        
                        Parallel tclean will run only if casapy has already been started using mpirun.
                        Please refer to HPC documentation for details on how to start this on your system.
