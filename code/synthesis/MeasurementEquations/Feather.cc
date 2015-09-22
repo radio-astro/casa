@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $kgolap$
-#include <boost/math/special_functions/round.hpp>
+#include <cmath>
 #include <synthesis/MeasurementEquations/Feather.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
@@ -560,7 +560,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        sumval=0;
        counter=0;
        for (Int xval=0; xval <= pix; ++xval){
-	 Int yval=boost::math::iround(sqrt(Double(pix*pix-xval*xval)));
+	 Int yval=std::lround(sqrt(Double(pix*pix-xval*xval)));
 	 start[directionIndex[0]]=xval+centreX;
 	 start[directionIndex[1]]=yval+centreY;
 	 tmpval.resize();
