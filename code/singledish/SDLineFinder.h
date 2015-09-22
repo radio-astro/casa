@@ -37,9 +37,6 @@
 #include <utility>
 #include <exception>
 
-// boost
-//#include <boost/python.hpp>
-
 // AIPS++
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>

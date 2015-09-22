@@ -34,8 +34,6 @@
 #include <vector>
 #include <string>
 
-//#include <boost/python/tuple.hpp>
-
 #include <casa/Utilities/CountedPtr.h>
 
 #include <singledish/SDMemTableWrapper.h>
