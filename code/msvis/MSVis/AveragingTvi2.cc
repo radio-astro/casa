@@ -1299,6 +1299,10 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
             weightToUse = adjustedWeight;
         }
 
+        if (flagChange){
+            rowAveraged->setNormalizationFactor(0.0);
+        }
+
         rowAveraged->accumulateNormalizationFactor(weightToUse);
 
         Double weightedTC = (rowInput->timeCentroid() - rowAveraged->timeFirst()) * weightToUse;
@@ -1566,7 +1570,6 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
         msRow->setTimeCentroid (msRow->timeCentroid() / weight + msRow->timeFirst());
 
         msRow->setUvw (msRow->uvw() / weight);
-
 
         // Exposure is a simple sum, not an average so it is already
         // done at this point.
