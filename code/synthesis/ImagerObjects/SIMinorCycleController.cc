@@ -59,39 +59,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 
-    /*
-    if (itsCycleIterDone >= itsCycleNiter ||
-        fabs(currentPeakResidual) <= itsCycleThreshold ||
-	itsIterDiff==0 )
-      return true;
-    return false;
-    */
-
-    /*
-    Bool doStop=False;
-
-    if (itsCycleIterDone >= itsCycleNiter ) 
-      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
-    if( fabs(currentPeakResidual) <= itsCycleThreshold )
-      { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
-    if( itsIterDiff==0 )
-      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
-    
-    if( doStop == True ) {os << LogIO::NORMAL1 << " Triggering major cycle." << LogIO::POST;}
-
-    //cout << "MajorCycleRequired : " << currentPeakResidual << " : " << itsCycleIterDone << "  stop : " << doStop << endl;
-    
-    return doStop;
-    */
-
     Int stopCode=0;
 
     if (itsCycleIterDone >= itsCycleNiter ) {stopCode=1;}
-    //      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
     if( fabs(currentPeakResidual) <= itsCycleThreshold ) { stopCode=2; }
-      //  { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
     if( itsIterDiff==0 ) {stopCode=3;}
-    //      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
 
     return stopCode;
 

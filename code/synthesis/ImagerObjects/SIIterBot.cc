@@ -66,6 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsMaxPsfFraction(0.8),
 						itsMaxPsfSidelobe(0.0),
 						itsPeakResidual(0.0),
+						itsPrevPeakResidual(0.0),
 						itsControllerCount(0),
 						itsNiter(0),
 						itsCycleNiter(0),
@@ -161,10 +162,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		    //return true;
 		  }
+		else // not converged yet... but....if nothing has changed in this round... also stop
+		  {
+		    if( fabs( itsPrevPeakResidual - itsPeakResidual )<1e-10) 
+		      {stopCode = 4;}
+		  }
 		
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
-		//		return false;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
+
+		itsPrevPeakResidual = itsPeakResidual;
+
 		itsStopCode=stopCode;
 		return stopCode;
 	}
