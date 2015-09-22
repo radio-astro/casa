@@ -869,6 +869,12 @@ finally:
                             images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
                     else:
 	                images_list.append(image['imagename'])
+
+                    # Add PB
+                    if (image['imagename'].find('.pbcor') != -1):
+                        images_list.append(image['imagename'].replace('.pbcor.image', '.pb'))
+                    else:
+                        images_list.append(image['imagename'].replace('.image', '.pb'))
 	else:
 	    # Assume only the root image name was given.
 	    cleanlib = imagelibrary.ImageLibrary()
@@ -900,6 +906,8 @@ finally:
 	    fitsname = re.sub('\.iter\d+\.image', '', fitsname)
 	    fitsname = re.sub('\.iter\d+\.pbcor.image', '.pbcor', fitsname)
 	    fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
+            # .pb must be tried after .pbcor.image !
+	    fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
 	    fitsfile = os.path.join (products_dir,
 	        os.path.basename(fitsname) + '.fits')
 	    LOG.info('Saving final image %s to FITS file %s' % \
