@@ -58,6 +58,8 @@ private:
     	PtrBlock<const ImageRegion*>& regions,
     	const Record& Regions
     );
+
+    void _checkImages() const;
 };
 }
 
