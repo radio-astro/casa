@@ -187,6 +187,7 @@ def is_mpi_ready():
                 MPIEnvironment.is_mpi_client,  # running as MPI client
                 mpiclient])  # MPICommandClient ready
 
+
 def _splitall(path):
     allparts = []
     while 1:
@@ -201,6 +202,19 @@ def _splitall(path):
             path = parts[0]
             allparts.insert(0, parts[1])
     return allparts
+
+
+def parse_mpi_input_parameter(input_arg):
+    lowercase = str(input_arg).lower()
+    if lowercase == 'automatic':
+        return is_mpi_ready()
+    elif lowercase == 'true':
+        return True
+    elif lowercase == 'false':
+        return False
+    else:
+        raise ValueError('Arg must be one of true, false or automatic. Got %s' % input_arg)
+
 
 mpiclient = None
 mpi_server_list = None

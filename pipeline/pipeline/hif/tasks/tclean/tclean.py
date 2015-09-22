@@ -2,15 +2,14 @@ import os
 import shutil
 import numpy
 
-from mpi4casa.MPIEnvironment import MPIEnvironment
-
-import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import basetask
-import pipeline.infrastructure.casatools as casatools
-from pipeline.infrastructure import casa_tasks
-import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.pipelineqa as pipelineqa
+from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -382,7 +381,6 @@ class Tclean(cleanbase.CleanBase):
         return sensitivity
 
     def _do_continuum(self, cont_image_name, mode):
-
         """
         Add/Subtract continuum model.
         """
@@ -454,8 +452,7 @@ class Tclean(cleanbase.CleanBase):
         """
         inputs = self.inputs
 
-        # ensure we don't try to run Tier 1 tclean on an MPI server
-        parallel = inputs.parallel and MPIEnvironment.is_mpi_client
+        parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
         clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
                                                   output_dir=inputs.output_dir,

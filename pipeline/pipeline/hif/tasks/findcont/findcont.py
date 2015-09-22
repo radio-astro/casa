@@ -18,24 +18,12 @@ LOG = infrastructure.get_logger(__name__)
 
 
 class FindContInputs(basetask.StandardInputs):
+    parallel = basetask.property_with_default('parallel', 'automatic')
+
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  parallel=None):
         self._init_properties(vars())
-
-    @property
-    def parallel(self):
-        return self._parallel
-
-    @parallel.setter
-    def parallel(self, value):
-        if value in ('true', 'True', 'TRUE', True, 1):
-            value = True
-        elif value in ('false', 'False', 'FALSE', False, 0):
-            value = False
-        else:
-            value = mpihelpers.is_mpi_ready()
-        self._parallel = value
 
     @property
     def target_list(self):
@@ -132,6 +120,8 @@ class FindCont(basetask.StandardTaskTemplate):
                         scanids = scanids.replace(']', '')
                         scanidlist.append(scanids)
 
+                    parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
+
                     # Need to make a cube in the spw frequency frame to get
                     # correct frequency ranges. Assume TOPO for now, read from
                     # MS later.
@@ -144,7 +134,7 @@ class FindCont(basetask.StandardTaskTemplate):
                         cell=target['cell'], phasecenter=target['phasecenter'],
                         stokes='I', weighting='briggs', robust=0.5,
                         npixels=0, restoringbeam='common',
-                        savemodel='none', parallel=inputs.parallel)
+                        savemodel='none', parallel=parallel)
                     self._executor.execute(job)
 
                     # Try detecting continuum frequency ranges

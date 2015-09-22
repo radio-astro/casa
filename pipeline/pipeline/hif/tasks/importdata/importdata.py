@@ -40,26 +40,13 @@ class ImportDataInputs(basetask.StandardInputs):
     # This are ALMA specific settings. Make them generic at some point.
     #asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
     asis = basetask.property_with_default('asis', '')
-    overwrite = basetask.property_with_default('overwrite', False)
-    save_flagonline = basetask.property_with_default('save_flagonline', True)
     bdfflags = basetask.property_with_default('bdfflags', True)
-    process_caldevice = basetask.property_with_default('process_caldevice', False)
-    lazy = basetask.property_with_default('lazy', False)
+    createmms = basetask.property_with_default('createmms', 'automatic')
     dbservice = basetask.property_with_default('dbservice', True)
-
-    @property
-    def createmms(self):
-        return self._createmms
-
-    @createmms.setter
-    def createmms(self, value):
-        if value in ('true', 'True', 'TRUE', 'on', 'On', 'ON', True, 1):
-            value = True
-        elif value in ('false', 'False', 'FALSE', 'off', 'Off', 'OFF', False, 0):
-            value = False
-        else:
-            value = 'automatic'
-        self._createmms = str(value)
+    lazy = basetask.property_with_default('lazy', False)
+    overwrite = basetask.property_with_default('overwrite', False)
+    process_caldevice = basetask.property_with_default('process_caldevice', False)
+    save_flagonline = basetask.property_with_default('save_flagonline', True)
 
     @property
     def session(self):
@@ -341,12 +328,9 @@ class ImportData(basetask.StandardTaskTemplate):
         if inputs.save_flagonline:
             self._make_template_flagfile(asdm)
 
-        if inputs.createmms == 'automatic':
-            createmms = mpihelpers.is_mpi_ready()
-        else:
-            createmms = (inputs.createmms == 'True')
+        createmms = mpihelpers.parse_mpi_input_parameter(inputs.createmms)
 
-        with_pointing_correction = inputs.with_pointing_correction if hasattr(inputs, 'with_pointing_correction') else False
+        with_pointing_correction = getattr(inputs, 'with_pointing_correction', False)
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,

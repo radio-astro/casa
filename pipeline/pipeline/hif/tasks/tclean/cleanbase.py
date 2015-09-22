@@ -47,6 +47,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     nchan = basetask.property_with_default('nchan', -1)
     npixels = basetask.property_with_default('npixels', 0)
     outframe = basetask.property_with_default('outframe', 'LSRK')
+    parallel = basetask.property_with_default('parallel', 'automatic')
     phasecenter = basetask.property_with_default('phasecenter', '')
     pblimit = basetask.property_with_default('pblimit', 0.2)
     restoringbeam = basetask.property_with_default('restoringbeam', 'common')
@@ -59,23 +60,6 @@ class CleanBaseInputs(basetask.StandardInputs):
     uvrange = basetask.property_with_default('uvrange', '')
     weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
-
-    @property
-    def parallel(self):
-        if self._parallel == 'automatic':
-            tier1_capable = mpihelpers.is_mpi_ready()
-            return tier1_capable and 'TARGET' in self.intent
-        return self._parallel
-
-    @parallel.setter
-    def parallel(self, value):
-        if value in ('true', 'True', 'TRUE', True, 1):
-            value = True
-        elif value in ('false', 'False', 'FALSE', False, 0):
-            value = False
-        else:
-            value = 'automatic'
-        self._parallel = value
 
     @property
     def spw(self):
@@ -316,6 +300,9 @@ class CleanBase(basetask.StandardTaskTemplate):
                 spw_param_list.append(spwid)
         spw_param = ','.join(spw_param_list)
 
+        parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
+                        'TARGET' in inputs.intent])
+
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
             spw=spw_param,
@@ -331,7 +318,7 @@ class CleanBase(basetask.StandardTaskTemplate):
             npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
             mask=inputs.mask, savemodel='none', nterms=2,
-            parallel=inputs.parallel)
+            parallel=parallel)
         self._executor.execute(job)
 
         # Create PB for single fields since it is not auto-generated for
