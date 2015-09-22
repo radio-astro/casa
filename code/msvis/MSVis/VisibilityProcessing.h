@@ -17,7 +17,7 @@
 
 #include <boost/iterator/indirect_iterator.hpp>
 #include <memory>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <boost/utility.hpp>
 #include <map>
 #include <set>
@@ -242,7 +242,7 @@ public:
         EndOfData    // Called after all chunks have been processed
     } ProcessingType;
 
-    typedef boost::tuple <ChunkCode, VpData> ProcessingResult;
+    typedef std::tuple <ChunkCode, VpData> ProcessingResult;
 
     VisibilityProcessor ();
     VisibilityProcessor (const String & name,
@@ -422,7 +422,7 @@ public:
 //
 //protected:
 //
-//    class SimpleResult : public boost::tuple<ChunkCode, VisBuffer *> {};
+//    class SimpleResult : public std::tuple<ChunkCode, VisBuffer *> {};
 //
 //    virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
 //                                               VpData & inputData,
@@ -555,7 +555,7 @@ private:
 
     typedef std::map<VpPort, VpPort> Network;
     typedef std::set<VpPort> NetworkReverse;
-    typedef boost::tuple<VisibilityProcessor *, VpData> ReadyVpAndData;
+    typedef std::tuple<VisibilityProcessor *, VpData> ReadyVpAndData;
 
     class VpSet : public std::set<VisibilityProcessor *> {
     public:

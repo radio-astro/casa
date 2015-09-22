@@ -10,9 +10,7 @@
 #include "VisibilityIteratorImplAsync.h"
 #include "UtilJ.h"
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
+#include <tuple>
 
 #include <casa/System/AipsrcValue.h>
 
@@ -117,8 +115,8 @@ SubchunkIndex::SubchunkIndex (Int chunkNumber, Int subChunkNumber, Int iteration
 Bool
 SubchunkIndex::operator< (const SubchunkIndex & other) const
 {
-    Bool result = boost::make_tuple (chunkNumber_p, subChunkNumber_p, iteration_p) <
-                  boost::make_tuple (other.chunkNumber_p, other.subChunkNumber_p, other.iteration_p);
+    Bool result = std::make_tuple (chunkNumber_p, subChunkNumber_p, iteration_p) <
+                  std::make_tuple (other.chunkNumber_p, other.subChunkNumber_p, other.iteration_p);
 
     return result;
 }
@@ -661,7 +659,7 @@ VpContainer::connect (VisibilityProcessor * sourceVp, const String &  sourcePort
                      sinkVp->getName().c_str(), getName().c_str()));
 
     VpPort sink, source;
-    boost::tie (source, sink) = validateConnectionPorts (sourceVp, sourcePortName, sinkVp, sinkPortName);
+    std::tie (source, sink) = validateConnectionPorts (sourceVp, sourcePortName, sinkVp, sinkPortName);
 
     // See if this is a connection to the container inputs or outputs or
     // a normal connection between VPs
@@ -746,7 +744,7 @@ VpContainer::doProcessingImpl (ProcessingType processingType, VpData & data, con
             // Find a VP which can compute given the current set of inputs
 
             Bool flushing = processingType != Subchunk;
-            boost::tie (vp, vpInputs) = findReadyVp (vpsWaiting, data, flushing);
+            std::tie (vp, vpInputs) = findReadyVp (vpsWaiting, data, flushing);
 
             if (vp != NULL){
 
@@ -759,7 +757,7 @@ VpContainer::doProcessingImpl (ProcessingType processingType, VpData & data, con
                 ChunkCode chunkCode;
                 VpData outputs;
 
-                boost::tie (chunkCode, outputs) =
+                std::tie (chunkCode, outputs) =
                         vp->doProcessing (processingType, vpInputs, getVpEngine(), sci);
 
                 Log (3, "VpContainer::doProcessing: execution of %s output {%s}.\n",
@@ -1320,7 +1318,7 @@ VpEngine::process (VisibilityProcessor & processor,
 
                 VpData noData;
                 VpData ignored;
-                boost::tie (chunkCode, ignored) =
+                std::tie (chunkCode, ignored) =
                         processor.doProcessing (VisibilityProcessor::EndOfChunk,
                                                 noData,
                                                 this,
