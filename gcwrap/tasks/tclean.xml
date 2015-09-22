@@ -366,6 +366,11 @@ HPX HEALPix grid.  -->
                        ( In this case, rename the single dish image to xxx.model and 
                          supply it as startmodel='xxx' ).
 
+                      [ Note : If an error occurs during image resampling/regridding, 
+                                   please try using task imregrid to resample the starting model
+                                   image onto a CASA image with the target shape and 
+                                   coordinate system before supplying it via startmodel ]
+
  </description>
       <value type="string"></value>
     </param>
@@ -1703,11 +1708,12 @@ HPX HEALPix grid.  -->
 
                           none : Do not save any model visibilities in the MS. The MS is opened
                                      in readonly mode. 
-                      
-                                     Model visibilities can always be predicted in a separate step by 
-                                     running tclean with niter=0,savemodel=virtual or modelcolumn
-                                     and with startmodel='xxx.model' or simply not changing any
-                                     image names.
+                     
+                                     Model visibilities can be predicted in a separate step by 
+                                     restarting tclean with niter=0,savemodel=virtual or modelcolumn
+                                     and not changing any image names so that it finds the .model on
+                                     disk (or by changing imagename and setting startmodel to the
+                                     original imagename).
 
                           virtual : In the last major cycle, save the image model and state of the
                                        gridder used during imaging within the SOURCE subtable of the
