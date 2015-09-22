@@ -62,7 +62,7 @@ class WvrgcalResult(basetask.Results):
                     ant_msg = utils.commafy(bad_antennas, quotes=False,
                                             multi_prefix='s')
                     LOG.warning('Antenna%s with bad WVR removed from refant list for '
-                                '%s', ant_msg, os.path.basename(self.vis))
+                                '%s' % (ant_msg, os.path.basename(self.vis)))
                     for antenna in list(bad_antennas):
                         refant.remove(antenna)
                     ms.reference_antenna = ','.join(refant)
