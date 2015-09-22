@@ -25,7 +25,7 @@
 //#
 //# $Id: VisibilityIterator2.cc,v 19.15 2006/02/01 01:25:14 kgolap Exp $
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Exceptions/Error.h>
@@ -650,7 +650,7 @@ VisibilityIteratorImplAsync2::applyPendingChanges ()
         // Handle a pending frequency selection if it exists.
 
         FrequencySelections * newSelection;
-        boost::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
+        std::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
 
         if (exists){
 
@@ -662,7 +662,7 @@ VisibilityIteratorImplAsync2::applyPendingChanges ()
         // Handle any pending interval change
 
         Double newInterval;
-        boost::tie (exists, newInterval) = pendingChanges_p.popInterval ();
+        std::tie (exists, newInterval) = pendingChanges_p.popInterval ();
 
         if (exists){
 
@@ -673,7 +673,7 @@ VisibilityIteratorImplAsync2::applyPendingChanges ()
         // Handle any row-blocking change
 
         Int newBlocking;
-        boost::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
+        std::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
 
         if (exists){
 

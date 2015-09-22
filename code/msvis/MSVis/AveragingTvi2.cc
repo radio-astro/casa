@@ -10,7 +10,7 @@
 #include <msvis/MSVis/Vbi2MsRow.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <set>
 
 using std::set;
@@ -960,7 +960,7 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     Vector<Double> adjustedWeights;
     Bool rowFlagged = False;
 
-    boost::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
+    std::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
     Double adjustedWeight = 0;
     for (Int c = 0; c < nCorrelations(); c++){

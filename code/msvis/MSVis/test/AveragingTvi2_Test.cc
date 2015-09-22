@@ -8,7 +8,7 @@
 #include <msvis/MSVis/test/MsFactory.h>
 #include <msvis/MSVis/AveragingVi2Factory.h>
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <map>
 #include <memory>
 #include <utility>
@@ -1143,7 +1143,7 @@ public:
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
-        boost::tie (msTmp, nRows_p) = createMs (msName);
+        tie (msTmp, nRows_p) = createMs (msName);
         ms.reset (msTmp);
 
         doSimpleTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1347,7 +1347,7 @@ public:
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
-        boost::tie (msTmp, nRows_p) = createMs (msName);
+        tie (msTmp, nRows_p) = createMs (msName);
         ms.reset (msTmp);
 
         doSimpleTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1560,7 +1560,7 @@ public:
 
         MeasurementSet * msTmp;
         const Double interval = 1.0;
-        boost::tie (msTmp, nRows_p) = createMs (msName, interval);
+        tie (msTmp, nRows_p) = createMs (msName, interval);
         ms.reset (msTmp);
 
         doTest (ms.get(), interval, 10, 1); // interval, chunkInterval, factor
@@ -1662,7 +1662,7 @@ public:
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
-        boost::tie (msTmp, nRows_p) = createMs (msName);
+        tie (msTmp, nRows_p) = createMs (msName);
         ms.reset (msTmp);
 
         doTest (ms.get(), 1, 10, 1); // interval, chunkInterval, factor
@@ -1776,7 +1776,7 @@ public:
         auto_ptr<MeasurementSet> ms;
 
         MeasurementSet * msTmp;
-        boost::tie (msTmp, nRows_p) = createMs (msName);
+        tie (msTmp, nRows_p) = createMs (msName);
         ms.reset (msTmp);
 
         doSimpleTest (ms.get(), 1, 10, 1); // interval, chunkInterval, factor
@@ -1908,7 +1908,7 @@ public:
             printf ("... +++ Starting test using normal weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 2.0f);
+            tie (msTmp, nRows_p) = createMs (msName, 2.0f);
             ms.reset (msTmp);
 
             doWeightedTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -1925,7 +1925,7 @@ public:
             printf ("... +++ Starting test using corrected weight spectrum\n");
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 1000.0f);
+            tie (msTmp, nRows_p) = createMs (msName, 1000.0f);
             ms.reset (msTmp);
 
             doCorrectedWeightingTest (ms.get(), interval_p, 10, 1); // interval, chunkInterval, factor
@@ -2191,7 +2191,7 @@ public:
             auto_ptr<MeasurementSet> ms;
 
             MeasurementSet * msTmp;
-            boost::tie (msTmp, nRows_p) = createMs (msName, 1, 0);
+            tie (msTmp, nRows_p) = createMs (msName, 1, 0);
             ms.reset (msTmp);
 
             doSimpleTest (ms.get(), interval_p, 10, 1, 0.1); // interval, chunkInterval, factor
@@ -2222,7 +2222,7 @@ public:
                 }
             }
 
-            boost::tie (msTmp, nRows_p) = createMs (msName, velocity);
+            tie (msTmp, nRows_p) = createMs (msName, velocity);
             ms.reset (msTmp);
 
             doHarderTest (ms.get(), interval_p, 10, 1, 0.1, velocity); // interval, chunkInterval, factor

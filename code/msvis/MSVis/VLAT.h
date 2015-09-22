@@ -32,7 +32,7 @@
 #include "AsynchronousTools.h"
 #include "UtilJ.h"
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <msvis/MSVis/AsynchronousInterface.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferAsync.h>

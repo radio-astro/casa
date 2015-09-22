@@ -25,7 +25,7 @@
 //#
 //# $Id: VisibilityIterator2.cc,v 19.15 2006/02/01 01:25:14 kgolap Exp $
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <casa/Arrays.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Containers/Record.h>
@@ -1467,7 +1467,7 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
   Vector<Int> firstChannels; // ignored
   Vector<Int> channelIncrement; // ignored
 
-  boost::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
+  std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
       getChannelInformation (False); // info generation should not use time as input
 }
 
@@ -1508,7 +1508,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle a pending frequency selection if it exists.
 
         FrequencySelections * newSelection;
-        boost::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
+        std::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
 
         if (exists){
 
@@ -1520,7 +1520,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle any pending interval change
 
         Double newInterval;
-        boost::tie (exists, newInterval) = pendingChanges_p.popInterval ();
+        std::tie (exists, newInterval) = pendingChanges_p.popInterval ();
 
         if (exists){
 
@@ -1531,7 +1531,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle any row-blocking change
 
         Int newBlocking;
-        boost::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
+        std::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
 
         if (exists){
 
@@ -3228,7 +3228,7 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponent
   Vector<Int> firstChannels;
   Vector<Int> channelIncrement;
 
-  boost::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
+  std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
       getChannelInformation (True);
 
   CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
@@ -3303,7 +3303,7 @@ VisibilityIteratorImpl2::getChannelInformationUsingFrequency (Bool now) const
         }
     }
 
-    return boost::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
+    return std::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
 }
 
 
@@ -3372,7 +3372,7 @@ VisibilityIteratorImpl2::getChannelInformation (Bool now) const
         }
     }
 
-    return boost::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
+    return std::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
 }
 
 void

@@ -8,7 +8,7 @@
 #include <msvis/MSVis/UtilJ.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <gtest/gtest.h>
 
 #include <map>
@@ -45,12 +45,12 @@ public:
 
     virtual String name () const = 0;
 
-    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs (){
+    virtual std::tuple <MeasurementSet *, Int, Bool> createMs (){
         return boost::make_tuple ((MeasurementSet *) 0, 0, False);
         // Useless placeholder implementation
     }
 
-    virtual boost::tuple <Block<const MeasurementSet *>, Int, Bool> createMss (){
+    virtual std::tuple <Block<const MeasurementSet *>, Int, Bool> createMss (){
         return boost::make_tuple (Block<const MeasurementSet *> (), 0, False);
         // Useless placeholder implementation
     }
@@ -77,7 +77,7 @@ public:
     ~BasicChannelSelection ();
 
 
-    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+    virtual std::tuple <MeasurementSet *, Int, Bool> createMs ();
     virtual String name () const { return "BasicChannelSelection";}
     virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
     virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
@@ -127,7 +127,7 @@ public:
 
     MultipleMss ();
 
-    virtual boost::tuple <Block<const MeasurementSet *>, Int, Bool> createMss ();
+    virtual std::tuple <Block<const MeasurementSet *>, Int, Bool> createMss ();
 
     virtual String name () const { return "MultipleMss";}
     virtual void endOfChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
@@ -161,7 +161,7 @@ public:
 
     Weighting (): TestWidget ("Weighting") {}
 
-    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+    virtual std::tuple <MeasurementSet *, Int, Bool> createMs ();
 
     virtual String name () const { return "Weighting";}
     virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
@@ -179,7 +179,7 @@ public:
     BasicMutation ();
     ~BasicMutation ();
 
-    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+    virtual std::tuple <MeasurementSet *, Int, Bool> createMs ();
     virtual String name () const { return "BasicMutation";}
     virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
     virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);

@@ -39,14 +39,12 @@
 #include <casa/System/Aipsrc.h>
 #include <memory>
 #include <mcheck.h>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
+#include <tuple>
 
 using namespace std;
 using namespace casa::utilj;
 using namespace casa;
 using namespace casa::asyncio;
-using namespace boost;
 
 #include <tables/DataMan/ForwardCol.h>
 
@@ -265,8 +263,8 @@ Rovia_Test::compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Co
     Cube<Bool> flagCubeSync = rtc.vbSync->flagCube ();
     Cube<Bool> flagCubeAsync = rtc.vbAsync->flagCube ();
 
-    boost::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
-    boost::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
+    std::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
+    std::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
 
     if (dimsSync != dimsAsync){
         out << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
@@ -333,8 +331,8 @@ Rovia_Test::compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Co
 //        Cube<Bool> flagCubeSync = rtc.vbSync->flagCube ();
 //        Cube<Bool> flagCubeAsync = rtc.vbAsync->flagCube ();
 //
-//        boost::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
-//        boost::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
+//        std::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
+//        std::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
 //
 //        if (dimsSync != dimsAsync){
 //            cout << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;

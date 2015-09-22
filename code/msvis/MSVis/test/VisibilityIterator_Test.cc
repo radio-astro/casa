@@ -22,7 +22,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/test/MsFactory.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 using namespace std;
 using namespace casa;
@@ -46,7 +46,7 @@ main (int nArgs, char * args [])
 //
 //    casa::MeasurementSet * ms;
 //    int nRows;
-//    boost::tie (ms, nRows) = msf.createMs ();
+//    std::tie (ms, nRows) = msf.createMs ();
 //
 //    printMs (ms);
 
@@ -202,11 +202,11 @@ Tester::sweepMs (TestWidget & tester)
         Int nRows;
         Bool writableVi;
         if (tester.usesMultipleMss()){
-            boost::tie (mss, nRows, writableVi) = tester.createMss ();
+            std::tie (mss, nRows, writableVi) = tester.createMss ();
         }
         else{
             MeasurementSet * ms;
-            boost::tie (ms, nRows, writableVi) = tester.createMs ();
+            std::tie (ms, nRows, writableVi) = tester.createMs ();
             mss = Block<const MeasurementSet *> (1, ms);
         }
 
@@ -291,7 +291,7 @@ Tester::doTest ()
 
     printf ("Performing %s ...\n", t.name().c_str());
     fflush (stdout);
-    boost::tie (ok, fatal) = sweepMs (t);
+    std::tie (ok, fatal) = sweepMs (t);
     String result = (ok ? "Passed" : (fatal ? "FATAL ERROR" : "FAILED"));
     printf ("... %s test %s\n", result.c_str(), t.name().c_str());
     fflush (stdout);
@@ -545,7 +545,7 @@ BasicChannelSelection::checkUvw (VisBuffer2 * vb, Int nRows, Int rowId, Int row)
 }
 
 
-boost::tuple <MeasurementSet *, Int, Bool>
+std::tuple <MeasurementSet *, Int, Bool>
 BasicChannelSelection::createMs ()
 {
     system ("rm -r BasicChannelSelection.ms");
@@ -555,7 +555,7 @@ BasicChannelSelection::createMs ()
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
     nRowsToProcess_p = p.second;
-    return boost::make_tuple (p.first, p.second, False);
+    return std::make_tuple (p.first, p.second, False);
 }
 
 
@@ -1040,16 +1040,16 @@ BasicMutation::~BasicMutation ()
 {
 }
 
-boost::tuple <MeasurementSet *, Int, Bool>
+std::tuple <MeasurementSet *, Int, Bool>
 BasicMutation::createMs ()
 {
     MeasurementSet * ms;
     Int nRows;
     Bool toss;
 
-    boost::tie (ms, nRows, toss) = BasicChannelSelection::createMs ();
+    std::tie (ms, nRows, toss) = BasicChannelSelection::createMs ();
 
-    return boost::make_tuple (ms, nRows, True);
+    return std::make_tuple (ms, nRows, True);
 }
 
 class LogicalNot {
@@ -1482,7 +1482,7 @@ CopyMs::doit (const String & oldMsName)
 
 MultipleMss::MultipleMss () : TestWidget ("MultipleMss"), nMss_p (3) {}
 
-boost::tuple <Block<const MeasurementSet *>, Int, Bool>
+std::tuple <Block<const MeasurementSet *>, Int, Bool>
 MultipleMss::createMss (){
 
     Block <const MeasurementSet *> mss (nMss_p, 0);
@@ -1504,7 +1504,7 @@ MultipleMss::createMss (){
         delete msf;
     }
 
-    return boost::make_tuple (mss, nRows, False);
+    return std::make_tuple (mss, nRows, False);
 }
 
 void
@@ -1571,7 +1571,7 @@ MultipleMss::usesMultipleMss () const {
     return True;
 }
 
-boost::tuple <MeasurementSet *, Int, Bool>
+std::tuple <MeasurementSet *, Int, Bool>
 Weighting::createMs ()
 {
     system ("rm -r Weighting.ms");
@@ -1584,7 +1584,7 @@ Weighting::createMs ()
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
     nRowsToProcess_p = p.second;
-    return boost::make_tuple (p.first, p.second, False);
+    return std::make_tuple (p.first, p.second, False);
 }
 
 void

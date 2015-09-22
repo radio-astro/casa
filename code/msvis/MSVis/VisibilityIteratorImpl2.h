@@ -38,7 +38,7 @@
 #include <msvis/MSVis/VisBuffer2.h>
 
 #include <boost/noncopyable.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <map>
 #include <vector>
 
@@ -582,7 +582,7 @@ public:
 
 protected:
 
-    typedef boost::tuple <Vector<Int>, Vector<Int>, Vector<Int>, Vector<Int> > ChannelInfo;
+    typedef std::tuple <Vector<Int>, Vector<Int>, Vector<Int>, Vector<Int> > ChannelInfo;
 
     void addDataSelection (const MeasurementSet & ms);
 
