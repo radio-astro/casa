@@ -23,10 +23,21 @@
 #include <flagging/Flagging/FlagAgentRFlag.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>
 #include <flagging/Flagging/FlagAgentManual.h>
-#include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <sstream>
 
 using namespace casa;
+
+// --- utility type for splitting strings
+template<char split>
+struct PARTITION {
+    std::string  p;
+    operator std::string const&( ) const {return p;}
+    friend std::istream& operator>>(std::istream &s, PARTITION &data) {
+        return std::getline(s, data.p, split);
+    }
+};
+
 
 void deleteFlags(string inputFile,Record dataSelection)
 {
@@ -92,69 +103,69 @@ void deleteFlags(string inputFile,Record dataSelection)
 			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
-			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
+			if (dh->visibilityBuffer_p->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
-					 << dh->visibilityBuffer_p->get()->observationId()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->observationId()[dh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->observationId()[0] << "~"
+					 << dh->visibilityBuffer_p->observationId()[dh->visibilityBuffer_p->observationId().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Observation:" << dh->visibilityBuffer_p->get()->observationId()[0] << " ";
+				cout << "Observation:" << dh->visibilityBuffer_p->observationId()[0] << " ";
 			}
 
-			cout << "Array:" << dh->visibilityBuffer_p->get()->arrayId() << " ";
+			cout << "Array:" << dh->visibilityBuffer_p->arrayId() << " ";
 
-			if (dh->visibilityBuffer_p->get()->scan().nelements() > 1)
+			if (dh->visibilityBuffer_p->scan().nelements() > 1)
 			{
 				cout << "Scan:"
-					 << dh->visibilityBuffer_p->get()->scan()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->scan()[dh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->scan()[0] << "~"
+					 << dh->visibilityBuffer_p->scan()[dh->visibilityBuffer_p->scan().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Scan:" << dh->visibilityBuffer_p->get()->scan()[0] << " ";
+				cout << "Scan:" << dh->visibilityBuffer_p->scan()[0] << " ";
 			}
 
-			cout << "Field:" << dh->visibilityBuffer_p->get()->fieldId() << " " ;
+			cout << "Field:" << dh->visibilityBuffer_p->fieldId() << " " ;
 
-			cout << "Spw:" << dh->visibilityBuffer_p->get()->spectralWindow() << " ";
+			cout << "Spw:" << dh->visibilityBuffer_p->spectralWindows() << " ";
 
-			if (dh->visibilityBuffer_p->get()->time().nelements() > 1)
+			if (dh->visibilityBuffer_p->time().nelements() > 1)
 			{
 				cout << "Time:"
-					 << dh->visibilityBuffer_p->get()->time()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->time()[dh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->time()[0] << "~"
+					 << dh->visibilityBuffer_p->time()[dh->visibilityBuffer_p->time().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Time:" << dh->visibilityBuffer_p->get()->time()[0] << " ";
+				cout << "Time:" << dh->visibilityBuffer_p->time()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna1().nelements() > 1)
 			{
 				cout << "Antenna1:"
-					 << dh->visibilityBuffer_p->get()->antenna1()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna1()[dh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna1()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna1()[dh->visibilityBuffer_p->antenna1().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna1:" << dh->visibilityBuffer_p->get()->antenna1()[0] << " ";
+				cout << "Antenna1:" << dh->visibilityBuffer_p->antenna1()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna2().nelements() > 1)
 			{
 				cout << "Antenna2:"
-					 << dh->visibilityBuffer_p->get()->antenna2()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna2()[dh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna2()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna2()[dh->visibilityBuffer_p->antenna2().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
+				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 */
-			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
-			cumRows += dh->visibilityBuffer_p->get()->nRow();
+			//cout << "nRows:" << dh->visibilityBuffer_p->nRows() <<endl;
+			cumRows += dh->visibilityBuffer_p->nRows();
 
 			// Apply flags
 			agentList.apply();
@@ -276,69 +287,69 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			//cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 /*
-			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
+			if (dh->visibilityBuffer_p->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
-					 << dh->visibilityBuffer_p->get()->observationId()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->observationId()[dh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->observationId()[0] << "~"
+					 << dh->visibilityBuffer_p->observationId()[dh->visibilityBuffer_p->observationId().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Observation:" << dh->visibilityBuffer_p->get()->observationId()[0] << " ";
+				cout << "Observation:" << dh->visibilityBuffer_p->observationId()[0] << " ";
 			}
 
-			cout << "Array:" << dh->visibilityBuffer_p->get()->arrayId() << " ";
+			cout << "Array:" << dh->visibilityBuffer_p->arrayId() << " ";
 
-			if (dh->visibilityBuffer_p->get()->scan().nelements() > 1)
+			if (dh->visibilityBuffer_p->scan().nelements() > 1)
 			{
 				cout << "Scan:"
-					 << dh->visibilityBuffer_p->get()->scan()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->scan()[dh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->scan()[0] << "~"
+					 << dh->visibilityBuffer_p->scan()[dh->visibilityBuffer_p->scan().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Scan:" << dh->visibilityBuffer_p->get()->scan()[0] << " ";
+				cout << "Scan:" << dh->visibilityBuffer_p->scan()[0] << " ";
 			}
 
-			cout << "Field:" << dh->visibilityBuffer_p->get()->fieldId() << " " ;
+			cout << "Field:" << dh->visibilityBuffer_p->fieldId() << " " ;
 
-			cout << "Spw:" << dh->visibilityBuffer_p->get()->spectralWindow() << " ";
+			cout << "Spw:" << dh->visibilityBuffer_p->spectralWindows() << " ";
 
-			if (dh->visibilityBuffer_p->get()->time().nelements() > 1)
+			if (dh->visibilityBuffer_p->time().nelements() > 1)
 			{
 				cout << "Time:"
-					 << dh->visibilityBuffer_p->get()->time()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->time()[dh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->time()[0] << "~"
+					 << dh->visibilityBuffer_p->time()[dh->visibilityBuffer_p->time().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Time:" << dh->visibilityBuffer_p->get()->time()[0] << " ";
+				cout << "Time:" << dh->visibilityBuffer_p->time()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna1().nelements() > 1)
 			{
 				cout << "Antenna1:"
-					 << dh->visibilityBuffer_p->get()->antenna1()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna1()[dh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna1()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna1()[dh->visibilityBuffer_p->antenna1().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna1:" << dh->visibilityBuffer_p->get()->antenna1()[0] << " ";
+				cout << "Antenna1:" << dh->visibilityBuffer_p->antenna1()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna2().nelements() > 1)
 			{
 				cout << "Antenna2:"
-					 << dh->visibilityBuffer_p->get()->antenna2()[0] << "~"
-					 << dh->visibilityBuffer_p->get()->antenna2()[dh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna2()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna2()[dh->visibilityBuffer_p->antenna2().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
+				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 */
-			//cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
-			cumRows += dh->visibilityBuffer_p->get()->nRow();
+			//cout << "nRows:" << dh->visibilityBuffer_p->nRows() <<endl;
+			cumRows += dh->visibilityBuffer_p->nRows();
 
 			// Apply flags
 			agentList.apply();
@@ -430,71 +441,71 @@ bool checkFlags(string targetFile,string referenceFile, Record dataSelection)
 		{
 			cout << "Chunk:" << targetFiledh->chunkNo << " " << "Buffer:" << targetFiledh->bufferNo << " ";
 
-			if (targetFiledh->visibilityBuffer_p->get()->observationId().nelements() > 1)
+			if (targetFiledh->visibilityBuffer_p->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
-					 << targetFiledh->visibilityBuffer_p->get()->observationId()[0] << "~"
-					 << targetFiledh->visibilityBuffer_p->get()->observationId()[targetFiledh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
+					 << targetFiledh->visibilityBuffer_p->observationId()[0] << "~"
+					 << targetFiledh->visibilityBuffer_p->observationId()[targetFiledh->visibilityBuffer_p->observationId().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Observation:" << targetFiledh->visibilityBuffer_p->get()->observationId()[0] << " ";
+				cout << "Observation:" << targetFiledh->visibilityBuffer_p->observationId()[0] << " ";
 			}
 
-			cout << "Array:" << targetFiledh->visibilityBuffer_p->get()->arrayId() << " ";
+			cout << "Array:" << targetFiledh->visibilityBuffer_p->arrayId() << " ";
 
-			if (targetFiledh->visibilityBuffer_p->get()->scan().nelements() > 1)
+			if (targetFiledh->visibilityBuffer_p->scan().nelements() > 1)
 			{
 				cout << "Scan:"
-					 << targetFiledh->visibilityBuffer_p->get()->scan()[0] << "~"
-					 << targetFiledh->visibilityBuffer_p->get()->scan()[targetFiledh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
+					 << targetFiledh->visibilityBuffer_p->scan()[0] << "~"
+					 << targetFiledh->visibilityBuffer_p->scan()[targetFiledh->visibilityBuffer_p->scan().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Scan:" << targetFiledh->visibilityBuffer_p->get()->scan()[0] << " ";
+				cout << "Scan:" << targetFiledh->visibilityBuffer_p->scan()[0] << " ";
 			}
 
-			cout << "Field:" << targetFiledh->visibilityBuffer_p->get()->fieldId() << " " ;
+			cout << "Field:" << targetFiledh->visibilityBuffer_p->fieldId() << " " ;
 
-			cout << "Spw:" << targetFiledh->visibilityBuffer_p->get()->spectralWindow() << " ";
+			cout << "Spw:" << targetFiledh->visibilityBuffer_p->spectralWindows() << " ";
 
-			if (targetFiledh->visibilityBuffer_p->get()->time().nelements() > 1)
+			if (targetFiledh->visibilityBuffer_p->time().nelements() > 1)
 			{
 				cout << "Time:"
-					 << targetFiledh->visibilityBuffer_p->get()->time()[0] << "~"
-					 << targetFiledh->visibilityBuffer_p->get()->time()[targetFiledh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
+					 << targetFiledh->visibilityBuffer_p->time()[0] << "~"
+					 << targetFiledh->visibilityBuffer_p->time()[targetFiledh->visibilityBuffer_p->time().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Time:" << targetFiledh->visibilityBuffer_p->get()->time()[0] << " ";
+				cout << "Time:" << targetFiledh->visibilityBuffer_p->time()[0] << " ";
 			}
 
-			if (targetFiledh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
+			if (targetFiledh->visibilityBuffer_p->antenna1().nelements() > 1)
 			{
 				cout << "Antenna1:"
-					 << targetFiledh->visibilityBuffer_p->get()->antenna1()[0] << "~"
-					 << targetFiledh->visibilityBuffer_p->get()->antenna1()[targetFiledh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
+					 << targetFiledh->visibilityBuffer_p->antenna1()[0] << "~"
+					 << targetFiledh->visibilityBuffer_p->antenna1()[targetFiledh->visibilityBuffer_p->antenna1().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna1:" << targetFiledh->visibilityBuffer_p->get()->antenna1()[0] << " ";
+				cout << "Antenna1:" << targetFiledh->visibilityBuffer_p->antenna1()[0] << " ";
 			}
 
-			if (targetFiledh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
+			if (targetFiledh->visibilityBuffer_p->antenna2().nelements() > 1)
 			{
 				cout << "Antenna2:"
-					 << targetFiledh->visibilityBuffer_p->get()->antenna2()[0] << "~"
-					 << targetFiledh->visibilityBuffer_p->get()->antenna2()[targetFiledh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
+					 << targetFiledh->visibilityBuffer_p->antenna2()[0] << "~"
+					 << targetFiledh->visibilityBuffer_p->antenna2()[targetFiledh->visibilityBuffer_p->antenna2().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna2:" << targetFiledh->visibilityBuffer_p->get()->antenna2()[0] << " ";
+				cout << "Antenna2:" << targetFiledh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 
-			cout << "nRows:" << targetFiledh->visibilityBuffer_p->get()->nRow() <<endl;
+			cout << "nRows:" << targetFiledh->visibilityBuffer_p->nRows() <<endl;
 
-			targetFileFlags = targetFiledh->visibilityBuffer_p->get()->flagCube();
-			referenceFileFlags = referenceFiledh->visibilityBuffer_p->get()->flagCube();
+			targetFileFlags = targetFiledh->visibilityBuffer_p->flagCube();
+			referenceFileFlags = referenceFiledh->visibilityBuffer_p->flagCube();
 			IPosition targetFileFlagsShape = targetFileFlags.shape();
 			IPosition referenceFileFlagsShape = referenceFileFlags.shape();
 
@@ -535,7 +546,10 @@ bool checkFlags(string targetFile,string referenceFile, Record dataSelection)
 
 int main(int argc, char **argv)
 {
-	// Parsing variables declaration
+    // Parsing type declarations
+    typedef PARTITION<':'> separator;
+
+	// Parsing variable definitions
 	string parameter, value;
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
@@ -680,9 +694,9 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-timedev"))
 		{
-			string field_spw_dev = string(value);
-            vector<string> field_spw_dev_breakdown;
-            boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
+            std::istringstream field_spw_dev(value);
+            vector<string> field_spw_dev_breakdown((std::istream_iterator<separator>(field_spw_dev)), (std::istream_iterator<separator>( )));
+
             if (field_spw_dev_breakdown.size() == 3)
             {
             	cout << "timedev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
@@ -699,9 +713,9 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-freqdev"))
 		{
-			string field_spw_dev = string(value);
-            vector<string> field_spw_dev_breakdown;
-            boost::split(field_spw_dev_breakdown, field_spw_dev, boost::is_any_of(":"));
+            std::istringstream field_spw_dev(value);
+            vector<string> field_spw_dev_breakdown((std::istream_iterator<separator>(field_spw_dev)), (std::istream_iterator<separator>( )));
+
             if (field_spw_dev_breakdown.size() == 3)
             {
             	cout << "freqdev(" << field_spw_dev_breakdown[0] << "," << field_spw_dev_breakdown[1] << ") = " << field_spw_dev_breakdown[2] << endl;
