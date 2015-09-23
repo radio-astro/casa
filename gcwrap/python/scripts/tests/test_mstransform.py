@@ -5349,7 +5349,7 @@ class test_otf_calibration(test_base_compare):
         
     def test_otf_calibration_mst_vs_applycal_split2(self):
         
-        mstransform(vis=self.vis,outputvis=self.outvis,calibration=True,callib=self.auxfile)
+        mstransform(vis=self.vis,outputvis=self.outvis,docallib=True,callib=self.auxfile)
 
         applycal(vis=self.vis,docallib=True,callib=self.auxfile)
         split2(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED') 
