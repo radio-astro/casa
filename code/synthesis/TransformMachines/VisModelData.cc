@@ -691,20 +691,23 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     TableRecord outRec; 
     Bool addtorec=False;
     MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
-    
+    //cerr << elkey << " incr " << incremental << endl;
     if(isModelDefined(elkey, newTab)){ 
       getModelRecord(elkey, outRec, thems);
       //if incremental no need to check & remove what is in the record
       if(!incremental)
 	addtorec=addToRec(outRec, spws);
+      //cerr << "addToRec " << addtorec << endl;
     }
-    ///////even if it is not defined some other field model might be sitting on that
-    //////model key
-    Int hasSourceRecord=firstSourceRowRecord(validfieldids[0], thems, outRec);
-    if(hasSourceRecord > -1 && outRec.nfields() > 0)
-      addtorec=True;
-    //cerr << "has Source " << hasSourceRecord << endl;
-    ////
+    else{
+      ///////even if it is not defined some other field model might be sitting on that
+      //////model key
+      Int hasSourceRecord=firstSourceRowRecord(validfieldids[0], thems, outRec);
+      if(hasSourceRecord > -1 && outRec.nfields() > 0)
+	addtorec=True;
+      //cerr << "has Source " << hasSourceRecord << " addToRec " << addtorec << endl;
+      ////
+    }
     incremental=incremental || addtorec;
     if(iscomponentlist){
       modrec.define("type", "componentlist");
