@@ -241,6 +241,15 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)         
+        
+    def setUp_CAS_7841(self):
+
+        self.vis = 'CAS-7841.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)          
           
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
@@ -2262,6 +2271,11 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.tolerance['DATA'] = 1e-5
 
         self.post_process()
+        
+        # Also check that the ephemerides table is copied to the right place
+        self.assertTrue(os.path.isdir(self.outvis + '/FIELD/EPHEM0_Titan.tab'), 'Ephemerides table not copied to FIELD') 
+        self.assertFalse(os.path.isdir(self.outvis + '/EPHEM0_Titan.tab'), 'Ephemerides table copied to MAIN')
+        
 
     def test_descending_freq(self):
         cvel(vis=self.vis, outputvis=self.refvis, spw='0', field='Titan',
@@ -2278,6 +2292,10 @@ class test_radial_velocity_correction_largetimerange(test_base_compare):
         self.tolerance['DATA'] = 1e-5
 
         self.post_process()
+        
+        # Also check that the ephemerides table is copied to the right place
+        self.assertTrue(os.path.isdir(self.outvis + '/FIELD/EPHEM0_Titan.tab'), 'Ephemerides table not copied to FIELD') 
+        self.assertFalse(os.path.isdir(self.outvis + '/EPHEM0_Titan.tab'), 'Ephemerides table copied to MAIN')        
 
         
 class test_vla_mixed_polarizations(test_base):
@@ -2313,6 +2331,41 @@ class test_vla_mixed_polarizations(test_base):
         # Check that flagdata can run properly with output MS
         summary = flagdata(vis=self.outputms,mode='summary')
         self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS') 
+        
+        
+class test_polarization_reindex(test_base):
+    '''Test behaviour of mstransform in split mode when the input MS contains polarizations not reference by any DDI'''
+    
+    def setUp(self):
+                
+        self.setUp_CAS_7841()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_polarization_reindex_1(self):
+        
+        self.outputms = 'test_polarization_reindex_1.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outputms,field='J1256-0547',datacolumn='DATA')
+        
+        # Check that DDI sub-table is consistent with POLARIZATION sub-table
+        mytb = tbtool()
+        mytb.open(self.outputms + '/POLARIZATION')
+        npols = mytb.nrows()
+        mytb.close()
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/DATA_DESCRIPTION')
+        polIds = mytb.getcol('POLARIZATION_ID')
+        mytb.close()    
+        
+        self.assertTrue(all(polIds < npols) and all(polIds > -1), 'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table') 
+        
+        # Check that flagdata can run properly with output MS
+        summary = flagdata(vis=self.outputms,mode='summary')
+        self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')         
         
         
 class test_alma_wvr_correlation_products(test_base):
@@ -5359,6 +5412,7 @@ def suite():
             test_spectrum_transformations_flagged_average,   
             test_spectrum_transformations_mean,
             test_otf_calibration,
+            test_polarization_reindex,
             # jagonzal: Replace median with mean to capture overall behaviour
             # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 
