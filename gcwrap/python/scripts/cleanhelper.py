@@ -2339,7 +2339,7 @@ class cleanhelper:
             retnchan=len(newfreqs)
           else:
             retnchan=nchan
-            newfreqs=chanfreqs
+            newfreqs=chanfreqs.tolist()
 
         # set start parameter
         # first analyze data order etc
