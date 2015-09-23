@@ -216,7 +216,7 @@ namespace casa {
     if (itsOpenBDF >= 0) {
       delete itsBDF;
       itsBDF = 0;
-      LargeFiledesIO::close (itsFD);
+      FiledesIO::close (itsFD);
       itsOpenBDF = -1;
     }
   }
@@ -252,8 +252,8 @@ namespace casa {
     if(itsIndex.size()>0){
       // test if the referenced ASDM seems to be present
       try{
-	itsFD  = LargeFiledesIO::open (itsBDFNames[0].c_str(), False);
-	itsBDF = new LargeFiledesIO (itsFD, itsBDFNames[0]);
+	itsFD  = FiledesIO::open (itsBDFNames[0].c_str(), False);
+	itsBDF = new FiledesIO (itsFD, itsBDFNames[0]);
 	itsOpenBDF = 0;
 	closeBDF();
       }
@@ -489,8 +489,8 @@ namespace casa {
     // Open the BDF if needed.
     if (Int(ix.fileNr) != itsOpenBDF) {
       closeBDF();
-      itsFD  = LargeFiledesIO::open (itsBDFNames[ix.fileNr].c_str(), False);
-      itsBDF = new LargeFiledesIO (itsFD, itsBDFNames[ix.fileNr]);
+      itsFD  = FiledesIO::open (itsBDFNames[ix.fileNr].c_str(), False);
+      itsBDF = new FiledesIO (itsFD, itsBDFNames[ix.fileNr]);
       itsOpenBDF = ix.fileNr;
       itsFileOffset = ix.fileOffset;
       itsData.resize(0);

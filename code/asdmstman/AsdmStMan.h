@@ -33,7 +33,7 @@
 //# Includes
 #include <asdmstman/AsdmIndex.h>
 #include <tables/DataMan/DataManager.h>
-#include <casa/IO/LargeFiledesIO.h>
+#include <casa/IO/FiledesIO.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 
@@ -292,7 +292,7 @@ private:
   // The column objects.
   vector<AsdmColumn*>    itsColumns;
   Block<String>          itsBDFNames;
-  LargeFiledesIO*        itsBDF;
+  FiledesIO*             itsBDF;
   int                    itsFD;
   int                    itsOpenBDF;
   Int64                  itsFileOffset;
