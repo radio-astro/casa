@@ -2064,26 +2064,6 @@ HPX HEALPix grid.  -->
      (B) A set of demo examples for ALMA imaging
            https://casaguides.nrao.edu/index.php/TCLEAN_and_ALMA 
 
-     
-     Example use cases that illustrate options in top level control flow :
-     ----------------------------------------------------------------------------------------
-
-     *** Standard imaging and deconvolution
-
-     *** Make only the dirty image and PSF
-
-     *** Make only the PSF (and primary beam)
-
-     *** Make only a residual image (given a startmodel) and PSF
-
-     *** Start from deconvolution without recalculating an existing PSF and residual image
-
-     *** Predict model visibilities and save them.
-
-     *** Predict wideband model visibilities in preparation for continuum subtraction
-
-     *** A run with outlier fields...
-
   </example>
 
 </task>
