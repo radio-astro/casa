@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.72 2015/08/01 00:29:12 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.72 2015/08/01 00:29:12 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2668,6 +2668,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             frequencyRangeToPlotInBaseband.append(callFrequencyRangeForSpws(mymsmd, myspwlist,vm,caltable))
   
     firstTimeMatch = -1    # Aug 5, 2013
+    finalTimeMatch = -1 #  for CAS-7820
     groupByBaseband = False # don't activate this parameter yet
     if (overlaySpws or overlayBasebands):
         groupByBaseband = True
@@ -3225,7 +3226,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                       mytime += 1
                               if (debug):
                                   print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d = %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot, antennasToPlot[firstUnflaggedAntennaToPlot])
-                              continue
+                              if (mytime < nUniqueTimes):  # Add this 'if' conditional on 9-22-2015 for CAS-7839
+                                  continue  # Try adding this statement on Apr 2, 2012 to fix bug.
+                              mytime -= 1  # Add this on 9-22-2015 for CAS-7839
                       if (overlaySpws or overlayBasebands):
                           if (xctr == firstUnflaggedAntennaToPlot):
                               firstUnflaggedAntennaToPlot += 1
@@ -3267,6 +3270,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       firstTimeMatch = mytime
                       if (debug):
                           print "Setting firstTimeMatch from -1 to %s" % (str(firstTimeMatch))
+                  # The following was needed to support overlay='antenna,time' for showatm for QA2 report (CAS-7820)
+                  if (finalTimeMatch == -1 or finalTimeMatch < mytime):
+                      if (debug):
+                          print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Setting finalTimeMatch from %d to %d" % (finalTimeMatch, mytime)
+                      finalTimeMatch = mytime
           
 ################### Here is the amplitude plotting ############    stopping here Sep 4, 2013
                   if (yaxis.find('amp')>=0 or yaxis.find('both')>=0 or yaxis.find('ap')>=0) and doneOverlayTime==False:
@@ -3938,7 +3946,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   if (debug): print "done drawOverlayTimeLegends loc 2"
                       elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
                           # This will only happen for overlay='antenna,time'
-                          if (xframe == firstFrame and mytime == 0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
+                          if (xframe == firstFrame and mytime == firstTimeMatch and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):  # bug fix on 2015-08-19 for CAS-7820
                               # draw title including caltable name
                               pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                                       transform=pb.gcf().transFigure)
@@ -4006,7 +4014,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
 #       #                  (xant==antennasToPlot[-1] and doneOverlayTime) # support showatm with overlay='antenna,time'
                           (overlayTimes and overlayAntennas and  # Aug 5, 2013
-                           xant==antennasToPlot[-1] and doneOverlayTime and mytime==nUniqueTimes-1
+                           xant==antennasToPlot[-1] and doneOverlayTime and mytime==finalTimeMatch # 2015-08-19 for CAS-7820
                            and not drewAtmosphere)  # added on 2014-12-04 to support case of a flagged antenna CAS-7187
                           ):
                           if ((showatm or showtsky) and len(atmString) > 0): 
