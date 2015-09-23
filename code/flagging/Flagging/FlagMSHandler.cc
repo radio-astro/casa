@@ -268,10 +268,12 @@ FlagMSHandler::selectData()
 	// Catch also invalid intent values in a valid intent expression.
 	// This will issue a WARNING and not fail.
     MSSelectionLogError mssLEA,mssLES;
+    measurementSetSelection_p = new MSSelection();
+    
     measurementSetSelection_p->setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
     measurementSetSelection_p->setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
 
-	measurementSetSelection_p = new MSSelection(
+    measurementSetSelection_p->reset(
 			*originalMeasurementSet_p,
 			MSSelection::PARSE_NOW,
 			(const String)timeSelection_p,
