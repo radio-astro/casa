@@ -42,7 +42,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
-    niter = basetask.property_with_default('niter', 2000)
+    niter = basetask.property_with_default('niter', 1000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
     npixels = basetask.property_with_default('npixels', 0)

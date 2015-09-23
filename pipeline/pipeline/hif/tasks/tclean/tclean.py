@@ -36,7 +36,7 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
     masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 1.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     subcontms = basetask.property_with_default('subcontms', False)
 
     @property

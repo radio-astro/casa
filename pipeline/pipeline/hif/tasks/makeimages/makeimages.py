@@ -41,7 +41,7 @@ class MakeImagesInputs(basetask.StandardInputs):
     parallel = basetask.property_with_default('parallel', 'automatic')
     robust = basetask.property_with_default('robust', -999.0)
     subcontms = basetask.property_with_default('subcontms', False)
-    tlimit = basetask.property_with_default('tlimit', 1.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     weighting = basetask.property_with_default('weighting', 'briggs')
 
 
