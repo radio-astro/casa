@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.73 2015/08/20 02:09:44 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.73 2015/08/20 02:09:44 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.74 2015/09/23 01:47:37 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -3226,7 +3226,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                       mytime += 1
                               if (debug):
                                   print "----- Resetting firstUnflaggedAntennaToPlot from %d to %d = %d" % (firstUnflaggedAntennaToPlot-1, firstUnflaggedAntennaToPlot, antennasToPlot[firstUnflaggedAntennaToPlot])
-                              continue
+                              if (mytime < nUniqueTimes):  # Add this 'if' conditional on 9-22-2015 for CAS-7839
+                                  continue  # Try adding this statement on Apr 2, 2012 to fix bug.
+                              mytime -= 1  # Add this on 9-22-2015 for CAS-7839
                       if (overlaySpws or overlayBasebands):
                           if (xctr == firstUnflaggedAntennaToPlot):
                               firstUnflaggedAntennaToPlot += 1
