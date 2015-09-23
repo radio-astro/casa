@@ -328,7 +328,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         
         <!-- OTF CALIBRATION parameters -->
         
-	    <param type="bool" name="calibration" >
+	    <param type="bool" name="docallib" >
 	        <description>Enable OTF calibration</description>
 	        <value>False</value>
 	    </param>
@@ -405,7 +405,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <default param="maxuvwdistance"><value type="double">0.0</value></default>
             </equals>
           </when>
-        <when param="calibration">
+        <when param="docallib">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                   <default param="callib"><value type="string"></value></default>

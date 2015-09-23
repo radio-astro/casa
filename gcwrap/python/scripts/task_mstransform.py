@@ -54,7 +54,7 @@ def mstransform(
              timebin,
              timespan,
              maxuvwdistance,
-             calibration,
+             docallib,
              callib,
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
@@ -257,8 +257,8 @@ def mstransform(
             config['timespan'] = timespan
             config['maxuvwdistance'] = maxuvwdistance
             
-        if calibration:
-            casalog.post('Parse calibration parameters')
+        if docallib:
+            casalog.post('Parse docallib parameters')
             mycallib = callibrary()
             mycallib.read(callib)
             config['calibration'] = True
