@@ -270,14 +270,15 @@ class convertToMMS():
             casalog.post('Cannot create MMS ->'+mms, 'ERROR')
             return False
         
-        # If requested, create a link to this MMS
+        # If requested, create a link to this MMS with the original MS name
         if createlink:
             here = os.getcwd()
             os.chdir(mmsdir)
             mmsname = os.path.basename(mms)
-            lms = mmsname.replace('.mms', '.ms')
+#            lms = mmsname.replace('.mms', '.ms')
             casalog.post('Creating symbolic link to MMS')
-            os.symlink(mmsname, lms)
+#            os.symlink(mmsname, lms)
+            os.symlink(mmsname, bname)
             os.chdir(here)
                 
         return True
@@ -775,7 +776,7 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
         # AND put links for those subtables omitted
         os.chdir('SUBMSS/'+mastersubms)
         
-        # Check if firtst subMS has POINTING and SYSCAL
+        # Check if firtst subMS has POINTING, SYSCAL and SYSPOWER
         hasPointing = os.path.exists('POINTING')
         hasSyscal = os.path.exists('SYSCAL')
         hasSyspower = os.path.exists('SYSPOWER')
