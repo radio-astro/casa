@@ -132,9 +132,9 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     importasdm(asdm='uid___A002_X2a5c2f_X54',vis='X54.ms',asis='Stati* Anten*', overwrite=True,
-            lazy=True, createmms=True, numsubms=mynumsubmss)
+            lazy=True, createmms=True, numsubms='auto')
     importasdm(asdm='uid___A002_X2a5c2f_X220',vis='X220.ms',asis='Stati* Anten*', overwrite=True,
-            lazy=True, createmms=True, numsubms=mynumsubmss)
+            lazy=True, createmms=True, numsubms='auto')
 
     if(makeplots):
         for name in basename:
