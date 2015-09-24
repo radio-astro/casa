@@ -1377,10 +1377,6 @@ void PlotMSPlot::recalculateIteration( ) {
 		assignCanvases(pages);
 	}
 
-	//Add for CAS-6928/CAS-7014.  Tools were not being reset when
-	//the iteration plot page changed.
-	itsParent_->resetTools();
-
 	//Put the data into the plot
 	uInt rows = itsPlots_.size();
 	for(uInt r = 0; r < rows; ++r) {
@@ -1409,6 +1405,11 @@ void PlotMSPlot::recalculateIteration( ) {
 	if ( !isCacheUpdating() && !drawingHeld ){
 		releaseDrawing();
 	}
+
+	//Add for CAS-6928/CAS-7014.  Tools were not being reset when
+	//the iteration plot page changed.
+    // CAS-3125 Need to do this after plots are set for axes stack
+	itsParent_->resetTools();
 
 	logPoints();
 
