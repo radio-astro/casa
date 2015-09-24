@@ -166,18 +166,23 @@ template<class T> Record PixelValueManipulator<T>::getProfile(
 		if (! _regionName.empty()) {
 			oss << "#region : " << _regionName << endl;
 		}
-		oss << "#xUnit " << xunit << endl;
+		oss << "#xUnit " << xunit.getUnit() << endl;
 		oss << "#yUnit " << ret.asString("yUnit") << endl;
 		oss << "# " << imageName << endl << endl;
 		Vector<T> data;
 		ret.get("values", data);
+        Vector<Bool> mask;
+		ret.get("mask", mask);
 		Vector<Double> xvals = ret.asArrayDouble("coords");
-		auto diter = data.begin();
-		auto dend = data.end();
-		auto citer = xvals.begin();
-		for ( ; diter != dend; ++diter, ++citer) {
-			oss << fixed << setprecision(7) << *citer
-				<< " " << setw(10) << *diter << endl;
+		auto diter = begin(data);
+		auto dend = end(data);
+		auto citer = begin(xvals);
+        auto miter = begin(mask);
+		for ( ; diter != dend; ++diter, ++citer, ++miter) {
+            if (*miter) {
+			    oss << fixed << setprecision(7) << *citer
+				    << " " << setw(10) << *diter << endl;
+            }
 		}
 		this->_writeLogfile(oss.str());
 	}
