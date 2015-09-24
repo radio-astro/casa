@@ -1099,7 +1099,7 @@ Bool MSTransformDataHandler::makeSelection()
 			antNewIndex_p[selAnts[k]] = k;
 		}
 		// It is possible to exclude baselines without excluding any antennas.
-		// antennaSel_p = !trivial;
+		antennaSel_p = !trivial;
 	}
 	// This still gets tripped up by VLA:OUT.
 	else
