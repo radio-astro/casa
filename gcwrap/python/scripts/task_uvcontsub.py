@@ -3,6 +3,7 @@ import re
 import shutil
 import time
 import tempfile
+import numpy as np
 
 # shutil.copytree is useless with directories created by tempfile
 # (or any directories that already exist).
@@ -311,7 +312,7 @@ def _quantityRangesToChannels(vis,field,infitspw,excludechans):
     myms.close()
     # sort the arrays so that chan ranges are
     # in order
-    usersels.sort(axis=0)
+    usersels[np.lexsort((usersels[:,1],usersels[:,0]))]
     spwsels=''
     spwid=-1
     prevspwid=None
