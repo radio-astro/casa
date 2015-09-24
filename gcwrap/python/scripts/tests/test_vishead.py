@@ -35,8 +35,8 @@ if os.environ.has_key('TEST_DATADIR'):
 print 'vishead tests will use data from '+datapath         
 
 input_file = 'n4826_16apr98.ms'  # 128 channels
-if testmms:
-    input_file = 'n4826_16apr98.mms'
+#if testmms:
+#    input_file = 'n4826_16apr98.mms'
 stars = "*************"
 
 stop_on_first_error = False

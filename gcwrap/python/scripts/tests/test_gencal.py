@@ -40,8 +40,8 @@ class gencal_antpostest(unittest.TestCase):
 
     # Input and output names
     msfile = 'tdem0003gencal.ms'
-    if testmms:
-        msfile = 'tdem0003gencal.mms'
+#    if testmms:
+#        msfile = 'tdem0003gencal.mms'
     caltable = 'anpos.cal'
     reffile1 = datapath+'anpos.manual.cal'
     reffile2 = datapath+'anpos.auto.cal'

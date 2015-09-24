@@ -38,8 +38,8 @@ reffile = datapath+'reflistvis'
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
 msfile2 = 'OrionS_rawACSmod'
-if testmms:
-    msfile2 = 'OrionS_rawACSmod.mms'
+#if testmms:
+#    msfile2 = 'OrionS_rawACSmod.mms'
     
 msfile3 = 'as1039q4_ut.ms'
 out = 'listvis'

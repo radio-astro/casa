@@ -61,6 +61,10 @@ class convertToMMS():
         else:
             self.outdir = os.path.abspath(self.outdir)
             self.mmsdir = self.outdir
+            
+        if self.mmsdir == self.inpdir:
+            casalog.post('Output directory cannot be same of input directory','ERROR')
+            return
 
         # Cleanup output directory
         if self.cleanup:
@@ -103,7 +107,7 @@ class convertToMMS():
             time.sleep(10)
         
             casalog.origin('convertToMMS')
-            casalog.post('--------------- Successfully created MMS')
+            casalog.post('--------------- Successfully created MMS -----------------')
                     
                 
         # Create links to the other files
@@ -242,44 +246,54 @@ class convertToMMS():
             return False
         
         # Create MMS name
-        bname = os.path.basename(ms)
-        if bname.endswith('.ms'):
-            mmsname = bname.replace('.ms','.mms')
-        else:
-            mmsname = bname+'.mms'
-        
-        mms = os.path.join(self.mmsdir, mmsname)
-        if os.path.lexists(mms):
-            casalog.post('Output MMS already exist -->'+mms,'ERROR')
+#        bname = os.path.basename(ms)
+#        if bname.endswith('.ms'):
+#            mmsname = bname.replace('.ms','.mms')
+#        else:
+#            mmsname = bname+'.mms'
+            
+        # Create MMS with the same name of the MS, but in a different location
+        MSBaseName = os.path.basename(ms)
+        MMSFullName = os.path.join(self.mmsdir, MSBaseName)
+        if os.path.lexists(MMSFullName):
+            casalog.post('Output MMS already exist -->'+MMSFullName,'ERROR')
             return False
+            
+        casalog.post('Output MMS will be: '+MMSFullName)
+        
+#        mms = os.path.join(self.mmsdir, mmsname)
+#        if os.path.lexists(mms):
+#            casalog.post('Output MMS already exist -->'+mms,'ERROR')
+#            return False
         
         # Check for remainings of corrupted mms
-        corrupted = mms.replace('.mms','.data')
+#        corrupted = mms.replace('.mms','.data')
+        corrupted = MMSFullName + '.data'
         if os.path.exists(corrupted):
             casalog.post('Cleaning up left overs','WARN')
             shutil.rmtree(corrupted)
         
         # Run partition   
         default('partition')
-        partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', flagbackup=False,
+        partition(vis=ms, outputvis=MMSFullName, createmms=True, datacolumn='all', flagbackup=False,
                   separationaxis=axis, numsubms=subms)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created
-        if not os.path.exists(mms):
-            casalog.post('Cannot create MMS ->'+mms, 'ERROR')
+        if not os.path.exists(MMSFullName):
+            casalog.post('Cannot create MMS ->'+MMSFullName, 'ERROR')
             return False
         
         # If requested, create a link to this MMS with the original MS name
-        if createlink:
-            here = os.getcwd()
-            os.chdir(mmsdir)
-            mmsname = os.path.basename(mms)
-#            lms = mmsname.replace('.mms', '.ms')
-            casalog.post('Creating symbolic link to MMS')
-#            os.symlink(mmsname, lms)
-            os.symlink(mmsname, bname)
-            os.chdir(here)
+#        if createlink:
+#            here = os.getcwd()
+#            os.chdir(mmsdir)
+#            mmsname = os.path.basename(mms)
+##            lms = mmsname.replace('.mms', '.ms')
+#            casalog.post('Creating symbolic link to MMS')
+##            os.symlink(mmsname, lms)
+#            os.symlink(mmsname, bname)
+#            os.chdir(here)
                 
         return True
         

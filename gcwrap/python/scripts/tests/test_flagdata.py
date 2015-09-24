@@ -68,8 +68,6 @@ class test_base(unittest.TestCase):
     def setUp_flagdatatest(self):
         '''VLA data set, scan=2500~2600 spw=0 1 chan, RR,LL'''
         self.vis = "flagdatatest.ms"
-        if testmms:
-            self.vis = "flagdatatest.mms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -85,8 +83,6 @@ class test_base(unittest.TestCase):
     def setUp_ngc5921(self, force=False):
         '''VLA data set, scan=1~7, spw=0 63 chans, RR,LL'''
         self.vis = "ngc5921.ms"
-#        if testmms:
-#            self.vis = 'ngc5921.mms'
             
         if force:
             # Need a fresh restart. Copy the MS
@@ -105,8 +101,6 @@ class test_base(unittest.TestCase):
     def setUp_alma_ms(self):
         '''ALMA MS, scan=1,8,10 spw=0~3 4,128,128,1 chans, I,XX,YY'''
         self.vis = "uid___A002_X30a93d_X43e_small.ms"
-        if testmms:
-            self.vis = 'uid___A002_X30a93d_X43e_small.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -122,8 +116,6 @@ class test_base(unittest.TestCase):
     def setUp_data4tfcrop(self):
         '''EVLA MS, 4 ants, scan=30,31 spw=0~15, 64 chans, RR,RL,LR,LL'''
         self.vis = "Four_ants_3C286.ms"
-        if testmms:
-            self.vis = 'Four_ants_3C286.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -138,8 +130,6 @@ class test_base(unittest.TestCase):
     def setUp_shadowdata1(self):
         '''ALMA ACA observation with one field in APP ref frame'''
         self.vis = "shadowAPP.ms"
-        if testmms:
-            self.vis = "shadowAPP.mms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -154,8 +144,6 @@ class test_base(unittest.TestCase):
     def setUp_shadowdata2(self):
         '''CASA simulation data set. scan=0 spw=0, 2 chans, RR,LL'''
         self.vis = "shadowtest_part.ms"
-        if testmms:
-            self.vis = "shadowtest_part.mms"
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -169,8 +157,6 @@ class test_base(unittest.TestCase):
         
     def setUp_multi(self):
         self.vis = "multiobs.ms"
-        if testmms:
-            self.vis = 'multiobs.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -185,8 +171,6 @@ class test_base(unittest.TestCase):
     def setUp_mwa(self):
         '''MWA data set, scan=1 spw=0, 11 chans, XX,XY,YX,YY'''
         self.vis = "testmwa.ms"
-        if testmms:
-            self.vis = 'testmwa.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -201,8 +185,6 @@ class test_base(unittest.TestCase):
     def setUp_wtspec(self):
         # Four rows, 2 ants, 1 spw, 31 chans, 2 pols, WEIGHT_SPECTRUM col
         self.vis = "four_rows_weight_spectrum.ms"
-        if testmms:
-            self.vis = 'four_rows_weight_spectrum.mms'
 
         if os.path.exists(self.vis):
             print "The MS is already around, just unflag"
@@ -217,8 +199,6 @@ class test_base(unittest.TestCase):
     def setUp_floatcol(self, force=False):
         # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
         self.vis = "SDFloatColumn.ms"
-        if testmms:
-            self.vis = 'SDFloatColumn.mms'
 
         if force:
             # Need a fresh restart. Copy the MS

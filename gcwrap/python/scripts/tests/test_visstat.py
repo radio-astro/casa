@@ -31,8 +31,6 @@ class visstat_test(unittest.TestCase):
         # MS in repository was flagged with the following command:
         # flagdata(vis=self.msfile, antenna='17', flagbackup=False)
         self.msfile = "ngc5921.ms"
-        if testmms:
-            self.msfile = "ngc5921.mms"
         if(not os.path.exists(self.msfile)):
             shutil.copytree(datapath+self.msfile, self.msfile)
             

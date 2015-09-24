@@ -42,8 +42,8 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc5921'
         self.msfile = prefix + '.ms'
-        if testmms:
-            self.msfile = prefix + '.mms'
+#        if testmms:
+#            self.msfile = prefix + '.mms'
 
         self.reffile = datapath + prefix
         self.cleanUp()
@@ -62,8 +62,8 @@ class test_base(unittest.TestCase):
         # Input names
         prefix = 'ngc4826'
         self.msfile = prefix + '.ms'
-        if testmms:
-            self.msfile = prefix + '.mms'
+#        if testmms:
+#            self.msfile = prefix + '.mms'
 
         self.reffile = datapath + prefix
         self.cleanUp()

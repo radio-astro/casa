@@ -39,8 +39,8 @@ class fluxscale1_test(unittest.TestCase):
         # Input names
         self.prefix = 'ngc5921'
         self.msfile = self.prefix + '.ms'
-        if testmms:
-            self.msfile = self.prefix + '.mms'
+#        if testmms:
+#            self.msfile = self.prefix + '.mms'
                         
         self.gtable = self.prefix + '.ref1a.gcal'
         self.reffile = self.prefix + '.def.fcal'
@@ -210,8 +210,8 @@ class fluxscale2_test(unittest.TestCase):
         # Input names
         prefix = 'ngc4826'
         self.msfile = prefix + '.ms'
-        if testmms:
-            self.msfile = prefix + '.mms'
+#        if testmms:
+#            self.msfile = prefix + '.mms'
             
         self.gtable = prefix + '.spw.gcal'
         self.reffile = prefix + '.spw.fcal'
@@ -308,8 +308,8 @@ class fluxscale3_test(unittest.TestCase):
         prefix = 'n2403.short'
         self.prefix = prefix
         self.msfile = prefix + '.ms'
-        if testmms:
-            self.msfile = prefix + '.mms'
+#        if testmms:
+#            self.msfile = prefix + '.mms'
 
         self.gtable = prefix + '.flagFld1.gcal'
         self.reffile = prefix + '.flagFld1.ref.fcal'

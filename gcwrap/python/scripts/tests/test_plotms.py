@@ -25,11 +25,7 @@ print 'plotms tests will use data from '+plotmspath
 class test_base(unittest.TestCase):
 
     ms = "pm_ngc5921.ms"
-    if testmms:
-        ms = "pm_ngc5921.mms"
     plotmspath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/plotms/'
-    #if not testmms:
-    #    ms = plotmspath + ms
     outputDir='/tmp/'
     plotfile_jpg = "/tmp/myplot.jpg"
     display = os.environ.get("DISPLAY")

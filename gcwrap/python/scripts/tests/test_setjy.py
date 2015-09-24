@@ -149,11 +149,7 @@ class test_SingleObservation(SetjyUnitTestBase):
         # Use TWHYA data (Titan)
         prefix = 'twhya_setjy' 
         self.ismms = False
-        if testmms:
-            msname=prefix+'.mms'
-            self.ismms = True
-        else:
-            msname=prefix+'.ms'
+        msname=prefix+'.ms'
         self.setUpMS(msname)        
 
     def tearDown(self):
@@ -787,11 +783,7 @@ class test_MultipleObservations(SetjyUnitTestBase):
     def setUp(self):
         prefix = 'multiobs' 
         self.ismms = False
-        if testmms:
-            msname = prefix+'.mms'
-            self.ismms = True
-        else:
-            msname=prefix+'.ms'
+        msname=prefix+'.ms'
         #self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
         self.setUpMS(msname)         # Titan
 
@@ -946,11 +938,7 @@ class test_ModImage(SetjyUnitTestBase):
         #self.inpms = 'unittest/setjy/n1333_1.ms'
         prefix = 'n1333_1' 
         self.ismms = False
-        if testmms:
-            msname=prefix+'.mms'
-            self.ismms = True
-        else:
-            msname=prefix+'.ms'
+        msname=prefix+'.ms'
         #self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
         self.setUpMS(msname)         # Titan
         #self.inpms = 'n1333_1.ms'
@@ -1171,10 +1159,7 @@ class test_conesearch(SetjyUnitTestBase):
 
     def setUp(self):
         prefix = 'n1333_nonstdcalname' 
-        if testmms:
-            msname=prefix+'.mms'
-        else:
-            msname=prefix+'.ms'
+        msname=prefix+'.ms'
         #self.setUpMS('unittest/setjy/n1333_nonstdcalname.ms')
         self.setUpMS(msname)
         self.field = 'myfcalsrc'
@@ -1213,10 +1198,7 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
 
     def setUp(self):
         prefix = 'ngc5921' 
-        if testmms:
-            msname=prefix+'.mms'
-        else:
-            msname=prefix+'.ms'
+        msname=prefix+'.ms'
         self.setUpMS(msname) 
         self.field = 'myfcalsrc'
         self.modelim = '3C147_U.im'
@@ -1267,10 +1249,7 @@ class test_setpol(SetjyUnitTestBase):
 
     def setUp(self):
         prefix = '3c391calonly'
-        if testmms:
-            msfile = prefix + '.mms'
-        else:
-            msfile = prefix + '.ms'
+        msfile = prefix + '.ms'
         #self.setUpMS('unittest/setjy/3c391calonly.ms')
         self.setUpMS(msfile)
         self.result = {}
@@ -1531,10 +1510,7 @@ class test_ephemtbl(SetjyUnitTestBase):
 
     def setUp(self):
         prefix = 'alma_uid___A002_Xa3f11a_X3df1.ms.split.thinned'
-        if testmms:
-            msfile = prefix.replace('.ms.','.mms.')
-        else:
-            msfile = prefix
+        msfile = prefix
         self.setUpMS(msfile)
         self.result = {}
 
