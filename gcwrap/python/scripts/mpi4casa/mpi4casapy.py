@@ -61,6 +61,7 @@ def run():
         # Install filter to remove MSSelectionNullSelection errors
         casalog.filter('NORMAL1')
         casalog.filterMsg('MSSelectionNullSelection')
+        casalog.filterMsg('non-existent spw')
         
         # Post MPI welcome msg
         casalog.post(MPIEnvironment.mpi_info_msg,"INFO",casalog_call_origin)
