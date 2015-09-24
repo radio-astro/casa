@@ -42,7 +42,7 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         h_init()
 
         # Load the data
-        hifa_importdata (vis=vislist, pipelinemode=pipelinemode)
+        hifa_importdata (vis=vislist, dbservice=False, pipelinemode=pipelinemode)
         if importonly:
             raise Exception(IMPORT_ONLY)
 

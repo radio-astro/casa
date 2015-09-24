@@ -3,6 +3,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_importdata</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">dbservice</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

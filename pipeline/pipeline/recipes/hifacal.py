@@ -60,7 +60,7 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         h_init()
 
         # Load the data
-        hifa_importdata (vis=vislist, pipelinemode=pipelinemode)
+        hifa_importdata (vis=vislist, dbservice=False, pipelinemode=pipelinemode)
 	if importonly:
 	   raise Exception(IMPORT_ONLY)
     
