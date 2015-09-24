@@ -376,9 +376,12 @@ namespace casa {
 
 				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
 				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
-				const float ERR = 0.000001;
-				if ( xdistance >= ERR && ydistance >= ERR ){
-
+				//const float ERR = 0.000001;
+				const float ERR = 0;
+				//ERROR check changed because of CAS-7902.  Apparently the previous
+				//error lower bound of 0.000001 was not allowing small elliptical
+				//regions to be profiled.
+				if ( xdistance > ERR && ydistance > ERR ){
 					radius[0] = Quantity(xdistance, radUnits );
 					radius[1] = Quantity(ydistance, radUnits );
 
@@ -466,6 +469,7 @@ namespace casa {
 					int tabularAxis, ImageCollapserData::AggregateType function, String unit,
 					const String& coordinateType, const Quantity *const restFreq, const String& frame){
 
+
 		DisplayCoordinateSystem cSys = imagePtr->coordinates();
 		uInt spectralAxis = 0;
 		if ( cSys.hasSpectralAxis()){
@@ -497,7 +501,6 @@ namespace casa {
 			const String VALUE_KEY( "values");
 			if ( result.isDefined( VALUE_KEY )){
 				result.get( VALUE_KEY, jyValues );
-
 			}
 
 			const String COORD_KEY( "coords" );
