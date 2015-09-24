@@ -95,7 +95,7 @@ def mmstest(mytask, axis, subms):
     print '--------- Will create MMS data for test_'+mytask
     
     ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, 
-                    axis=axis, numsubms=subms, createmslink=True, cleanup=True)
+                    axis=axis, numsubms=subms, cleanup=True)
 
       
 # Location of the data repository
