@@ -16,17 +16,11 @@ except:
 
 __rethrow_casa_exceptions = True
 
-# Setup paths
-# Should no longer be needed
-#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
-
 # CASA imports
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hif_findcont_cli import hif_findcont_cli as hif_findcont
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
