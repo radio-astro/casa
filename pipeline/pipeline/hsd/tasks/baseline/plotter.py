@@ -17,11 +17,14 @@ def analyze_plot_table(context, antid, spwid, polid, plot_table):
     each_grid = (range(i*num_plane, (i+1)*num_plane) for i in xrange(num_dec * num_ra))
     rowlist = [{} for i in xrange(num_dec * num_ra)]
     for row_index, each_plane in enumerate(each_grid):
-        dataids = numpy.array([], dtype=int)
+        #dataids = numpy.array([], dtype=int)
+        dataids = []
         for plot_table_rowid in each_plane:
             plot_table_row = plot_table[plot_table_rowid]
             LOG.debug('Process row %s: ra=%s, dec=%s'%(plot_table_rowid, plot_table_row[2], plot_table_row[3]))
-            dataids = numpy.concatenate((dataids, plot_table_row[-1]))
+            #dataids = numpy.concatenate((dataids, plot_table_row[-1]))
+            dataids.extend(plot_table_row[-1])
+        dataids = numpy.array(dataids, dtype=int)
         if len(dataids) > 0:
             midx = median_index(dataids)
         else:

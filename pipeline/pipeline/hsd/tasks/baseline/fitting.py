@@ -159,8 +159,10 @@ class FittingBase(common.SingleDishTaskTemplate):
         else:
             timetable_index = 0
             
-        index_list_total = numpy.array([], dtype=int)
-        row_list_total = numpy.array([], dtype=int)
+        #index_list_total = numpy.array([], dtype=int)
+        #row_list_total = numpy.array([], dtype=int)
+        index_list_total = []
+        row_list_total = []
         blinfo = []
 
         for pol in pollist:
@@ -255,8 +257,8 @@ class FittingBase(common.SingleDishTaskTemplate):
                 # In the current implementation, all the rows in timetable are processed regardless of 
                 # the value of NOCHANGE column in DataTable. Thus, we don't need to construct index_list 
                 # nor row_list since they should be equivalent to idxs and rows
-                index_list_total = numpy.concatenate((index_list_total, idxs))
-                row_list_total = numpy.concatenate((row_list_total, rows))
+                index_list_total.extend(idxs)
+                row_list_total.extend(rows)
 
 #         f = open(bltable_name+'.in.txt', 'w')
 #         f.write("row_idx = %s\n" % str(row_list_total))

@@ -185,9 +185,13 @@ class SDBLFlagWorker(object):
 
         # Create progress timer
         #Timer = ProgressTimer(80, NROW, LogLevel)
-        datatable_index = numpy.array([], dtype=int)
-        statistics_array = numpy.zeros((5,0), dtype=numpy.float)
-        num_masked_array = numpy.array([], dtype=int)
+        
+        # A priori evaluation of output array size
+        output_array_size = sum((len(c[0]) for c in TimeTable))
+        output_array_index = 0
+        datatable_index = numpy.zeros(output_array_size, dtype=int)
+        statistics_array = numpy.zeros((5,output_array_size), dtype=numpy.float)
+        num_masked_array = numpy.zeros(output_array_size, dtype=int)
         for chunks in TimeTable:
             # chunks[0]: row, chunks[1]: index
             chunk = chunks[0]
@@ -222,9 +226,7 @@ class SDBLFlagWorker(object):
             valid_indices = numpy.where(numpy.any(FlIn == 0, axis=1))[0]
             valid_nrow = len(valid_indices)
             
-            datatable_index = numpy.concatenate((datatable_index, chunks[1]))
-            statistics = numpy.zeros((5,nrow),dtype=numpy.float)
-            num_masked = numpy.zeros(nrow, dtype=int)
+            datatable_index[output_array_index:output_array_index+nrow] = chunks[1]
             for index in xrange(len(chunks[0])):
                 row = chunks[0][index]
                 idx = chunks[1][index]
@@ -366,15 +368,15 @@ class SDBLFlagWorker(object):
                 DataTable.tb2.putcell('NMASK',idx,Nmask)
                 LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
                 if is_baselined: LOG.debug('Row=%d, post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, NewRMS, NewRMSdiff))
-                statistics[0,index] = NewRMS
-                statistics[1,index] = OldRMS
-                statistics[2,index] = NewRMSdiff
-                statistics[3,index] = OldRMSdiff
-                statistics[4,index] = DataTable.tb1.getcell('TSYS', idx)
-                num_masked[index] = Nmask
-            statistics_array = numpy.concatenate((statistics_array, statistics), axis=1)
-            num_masked_array = numpy.concatenate((num_masked_array, num_masked))
+                output_serial_index = output_array_index + index
+                statistics_array[0,output_serial_index] = NewRMS
+                statistics_array[1,output_serial_index] = OldRMS
+                statistics_array[2,output_serial_index] = NewRMSdiff
+                statistics_array[3,output_serial_index] = OldRMSdiff
+                statistics_array[4,output_serial_index] = DataTable.tb1.getcell('TSYS', idx)
+                num_masked_array[output_serial_index] = Nmask
             del SpIn, SpOut
+            output_array_index += nrow
         return datatable_index, statistics_array, num_masked_array
 
     def _calculate_masked_stddev(self, data, mask):
@@ -423,9 +425,9 @@ class SDBLFlagWorker(object):
         Ndata = len(stat[0])
         Nflag = len(stat)
         mask = numpy.ones((Nflag, Ndata), numpy.int)
-        for cycle in range(clip_niteration + 1):
+        for cycle in xrange(clip_niteration + 1):
             threshold = []
-            for x in range(Nflag):
+            for x in xrange(Nflag):
                 if x in skip_flag: # for not baselined data
                     threshold.append([-1, -1])
                     # Leave mask all 1 (no need to modify)
