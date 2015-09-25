@@ -5,6 +5,7 @@ import time
 import re
 import numpy
 import collections
+import itertools
 
 import asap as sd
 
@@ -162,8 +163,8 @@ class FittingBase(common.SingleDishTaskTemplate):
         #index_list_total = numpy.array([], dtype=int)
         #row_list_total = numpy.array([], dtype=int)
         index_list_total = []
-        row_list_total = []
         blinfo = []
+        row_list_string = []
 
         for pol in pollist:
             time_table = datatable.get_timetable(antennaid, spwid, pol)
@@ -245,7 +246,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                     polyorder = min(polyorder, max_polyorder)
                     mask_array[edge[0]:nchan-edge[1]] = 1
                     #irow = len(row_list_total)+len(row_list)
-                    irow = len(row_list_total) + i
+                    irow = len(index_list_total) + i
                     param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
                     # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
                     param['masklist'] = [ [start, end-1] for [start, end] in param['masklist'] ]
@@ -258,7 +259,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                 # the value of NOCHANGE column in DataTable. Thus, we don't need to construct index_list 
                 # nor row_list since they should be equivalent to idxs and rows
                 index_list_total.extend(idxs)
-                row_list_total.extend(rows)
+                row_list_string.append(','.join(itertools.imap(str, rows)))
 
 #         f = open(bltable_name+'.in.txt', 'w')
 #         f.write("row_idx = %s\n" % str(row_list_total))
@@ -269,10 +270,11 @@ class FittingBase(common.SingleDishTaskTemplate):
         sd.rcParams['scantable.storage'] = 'disk'
 
         LOG.info('Baseline Fit: background subtraction...')
-        LOG.info('Processing %d spectra...'%(len(row_list_total)))
-        LOG.debug('rows = %s' % str(row_list_total))
+        LOG.info('Processing %d spectra...'%(len(index_list_total)))
+        row_list = ','.join(row_list_string)
+        LOG.debug('row_list = %s'%(row_list))
         job = casa_tasks.sdbaseline2(infile=filename_out, outfile=filename_out, overwrite=True,
-                                     row=str(',').join(map(str,row_list_total)), blmode='subtract',
+                                     row=row_list, blmode='subtract',
                                      blparam=blinfo, bltable=bltable_name, keeprows=True)
         self._executor.execute(job)
 #         st_out = sd.scantable(filename_out, average=False)
