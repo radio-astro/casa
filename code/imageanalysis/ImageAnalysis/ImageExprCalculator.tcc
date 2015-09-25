@@ -1,14 +1,12 @@
 #include "ImageExprCalculator.h"
 
 
-#include <casacore/casa/BasicSL/String.h>
-#include <casacore/images/Images/ImageBeamSet.h>
-#include <casacore/images/Images/ImageInterface.h>
+#include <casa/BasicSL/String.h>
+#include <images/Images/ImageBeamSet.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Images/ImageProxy.h>
 
 #include <imageanalysis/ImageTypedefs.h>
-
-#include <memory>
-#include <regex>
 
 using namespace std;
 
@@ -164,92 +162,22 @@ template<class T> void ImageExprCalculator<T>::_makeRegionBlock(
 }
 
 template<class T> void ImageExprCalculator<T>::_checkImages() const {
-	String target = _expr;
-	set<String> images;
-	vector<string> quotes {"'", "\""};
-	for (const auto& q : quotes) {
-		while (True) {
-			auto pos = target.find_first_of(q);
-			if (pos == string::npos) {
-				break;
-			}
-			// find closing quote
-			auto close = target.find_first_of(q, pos + 1);
-			ThrowIf(
-				close == String::npos,
-				"No matching closing quote found in " + _expr
-			);
-			images.insert(target.substr(pos + 1, close - pos - 1));
-			target.erase(pos, close - pos + 1);
-			target.insert(pos, " ");
-		}
-	}
-	static const vector<string> lelFuncs {
-		"PI", "E", "SIN", "SINH", "ASIN", "COS", "COSH", "ACOS",
-		"TAN", "TANH", "ATAN", "ATAN2", "EXP", "LOG", "LOG10",
-		"POW", "SQRT", "COMPLEX", "CONJ", "REAL", "IMAG", "NORM",
-		"ABS", "ARG", "MIN", "MAX", "SIGN", "ROUND", "FLOOR", "CEIL",
-		"FMOD", "NELEMENTS", "NDIM", "LENGTH", "ANY", "ALL", "NTRUE",
-		"NFALSE", "SUM", "MEDIAN", "FRACTILE", "FRACTILERANGE",
-		"MEAN", "VARIANCE", "STDDEV", "AVDEV", "REBIN", "AMP",
-		"PA", "VALUE", "MASK", "ISNAN", "IIF", "INDEXIN", "INDEXNOTIN",
-		"FLOAT", "DOUBLE", "DCOMPLEX", "BOOLEAN"
+	auto images = ImageExprParse::getImageNames();
 
-	};
-	for (const auto& func: lelFuncs) {
-		std::regex re(func + "\\((.*)\\)", std::regex_constants::icase);
-		string replacement = " $1";
-		target = regex_replace(target, re, replacement);
-	}
-	vector<string> operators = {
-		"==", ">=", "<=", "&&",
-		"||", "^", "+", "-", "!",
-		"*", "/", "%", ">", "<", "="
-	};
-	for (const auto& op: operators) {
-		while (True) {
-			auto pos = target.find_first_of(op);
-			if (pos == string::npos) {
-				break;
-			}
-			if (pos > 0 && target.at(Int(pos-1), Int(1)) != "\\") {
-				target.erase(pos, op.length());
-				target.insert(pos, " ");
-			}
-		}
-	}
-	static const regex numberRE ("^[-+]?[0-9]*.?[0-9]+$");
-	set<String> tokens;
-	istringstream iss(target);
-	copy(istream_iterator<String>(iss),
-	     istream_iterator<String>(),
-	     inserter(tokens, tokens.begin()));
-	for (auto& token: tokens) {
-		// erase tokens that are numbers
-		if (regex_match(token, numberRE)) {
-			tokens.erase(token);
-		}
-	}
-	for (auto& token: tokens) {
-		String x = token;
-		// remove backslashes
-		auto pos = x.find_first_of("/");
-		while (pos != string::npos) {
-			x.erase(pos, 1);
-		}
-		images.insert(x);
-	}
 	if (images.size() <= 1) {
 		return;
 	}
+
+
 	unique_ptr<String> unit(nullptr);
 	unique_ptr<ImageBeamSet> beamSet(nullptr);
+	unique_ptr<Vector<String>> axisNames(nullptr);
 	for (auto& image: images) {
 		if (File(image).exists()) {
 			try {
-				auto myImage = ImageUtilities::openImage<T>(image);
-				if (myImage) {
-					String myUnit = myImage->units().getName();
+				ImageProxy myImage(image, "", vector<ImageProxy>());
+				if (myImage.getLattice()) {
+					auto myUnit = myImage.unit();
 					if (unit) {
 						if (myUnit != *unit) {
 							_log << LogIO::WARN << "image units are not the same: '"
@@ -260,7 +188,7 @@ template<class T> void ImageExprCalculator<T>::_checkImages() const {
 					else {
 						unit.reset(new String(myUnit));
 					}
-					ImageBeamSet mybs = myImage->imageInfo().getBeamSet();
+					ImageBeamSet mybs = myImage.imageInfoObject().getBeamSet();
 					if (beamSet) {
 						if (mybs != *beamSet) {
 							ostringstream oss;
@@ -272,6 +200,28 @@ template<class T> void ImageExprCalculator<T>::_checkImages() const {
 					else {
 						beamSet.reset(new ImageBeamSet(mybs));
 					}
+					auto myAxes = myImage.coordSysObject().worldAxisNames();
+					if (axisNames) {
+						if (myAxes.size() != axisNames->size()) {
+							_log << LogIO::WARN << "Number of axes in input images differs"
+								<< LogIO::POST;
+							break;
+						}
+						auto iter = begin(myAxes);
+						for (const auto& axis: *axisNames) {
+							if (axis != *iter) {
+								_log << LogIO::WARN << "Axes ordering and/or axes names "
+									<< "in input images differs:" << *axisNames << " vs "
+									<< myAxes << LogIO::POST;
+								break;
+							}
+							++iter;
+						}
+					}
+					else {
+						axisNames.reset(new Vector<String>(myAxes));
+					}
+
 				}
 			}
 			catch (const AipsError&) {}
