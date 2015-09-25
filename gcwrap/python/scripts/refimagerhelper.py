@@ -205,7 +205,7 @@ class PySynthesisImager:
          stopflag = self.IBtool.cleanComplete()
          #print 'Converged : ', stopflag
          if( stopflag>0 ):
-             stopreasons = ['iteration limit', 'threshold', 'force stop']
+             stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
          return (stopflag>0)
 
@@ -1013,7 +1013,7 @@ class PyParallelDeconvolver(PySynthesisImager):
         stopflag = self.IBtool.cleanComplete()
         print 'Converged : ', stopflag
         if( stopflag>0 ):
-            stopreasons = ['iteration limit', 'threshold', 'force stop']
+            stopreasons = ['iteration limit', 'threshold', 'force stop','no change in peak residual across two major cycles']
             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
         return (stopflag>0)
 

@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 modelflux,
 				 iterdone);
 		    
-		    //os << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+		    os << LogIO::NORMAL1 << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
 		    
 		    loopcontrols.incrementMinorCycleCount( iterdone );
 		    
@@ -156,7 +156,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    
 		    loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
 						  modelflux, peakresidual );
-		    
+
+		    /// Catch the situation where takeOneStep returns without satisfying any
+		    ///  convergence criterion. For now, takeOneStep is the entire minor cycle.
+		    /// Later, when you can interrupt minor cycles, takeOneStep will become more
+		    /// fine grained, and then stopCode=0 will be valid.  For now though, check on
+                    /// it and handle it (for CAS-7898).
+		    if(stopCode==0)
+		      {
+			os << LogIO::NORMAL1 << "Exited " << itsAlgorithmName << " minor cycle without satisfying stopping criteria " << LogIO::POST;
+			stopCode=4;
+		      }
+
 		  }// end of minor cycle iterations for this subimage.
 		
 		finalizeDeconvolver();
@@ -171,7 +182,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if(nSubPols>1) os << ":P" << polid ;
 	    Int iterend = loopcontrols.getIterDone();
 	    os << "]"
-	       <<" iters=" << ( (iterend>startiteration) ? startiteration+1 : startiteration )<< "->" << iterend
+	      //	       <<" iters=" << ( (iterend>startiteration) ? startiteration+1 : startiteration )<< "->" << iterend
+	       <<" iters=" << startiteration << "->" << iterend
 	       << ", model=" << startmodelflux << "->" << modelflux
 	       << ", peakres=" << startpeakresidual << "->" << peakresidual ;
 
@@ -188,6 +200,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		break;
 	      case 3:
 		os << ", Zero iterations performed.";
+		break;
+	      case 4:
+		os << ", Exited " << itsAlgorithmName << " minor cycle without reaching any stopping criterion.";
 		break;
 	      default:
 		break;

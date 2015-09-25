@@ -1354,9 +1354,6 @@ HPX HEALPix grid.  -->
                        Iterations are typically defined as the selecting one flux component 
                        and partially subtracting it out from the residual image. 
 
-                       For images with multiple planes on which the deconvolver operates
-                       in sequence, iterations are counted across all planes. 
-
                        niter=0 : Do only the initial major cycle (make dirty image, psf, pb, etc)
 
                        niter larger than zero : Run major and minor cycles.
@@ -1373,6 +1370,19 @@ HPX HEALPix grid.  -->
                                                               max sidelobe level of the PSF and peak residual.
 
                                    The first criterion to be satisfied takes precedence.
+
+                       Note :  Iteration counts for cubes or multi-field images :
+                                   For images with multiple planes (or image fields) on which the 
+                                   deconvolver operates in sequence, iterations are counted across 
+                                   all planes (or image fields). The iteration count is compared with 
+                                   'niter' only after all channels/planes/fields have completed their
+                                   minor cycles and exited either due to 'cycleniter' or 'cyclethreshold'.
+                                   Therefore, the actual number of iterations reported in the logger 
+                                   can sometimes be larger than the user specified value in 'niter'.
+                                   For example, with niter=100, cycleniter=20,nchan=10,threshold=0,
+                                   a total of 200 iterations will be done in the first set of minor cycles
+                                   before the total is compared with niter=100 and it exits.
+
 
 </description>
       <value type="int">0</value>
