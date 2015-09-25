@@ -4,7 +4,7 @@
 #
 # History:
 #  v1.0 (gmoellen; 2013Oct02) initial distributed version
-#  v1.1 (gmoellen; 2015Sep16) fixed spw name resolution
+#  v1.1 (gmoellen; 2015Sep16,25) fixed spw name resolution, B7 pos ang
 #
 # This script defines several functions useful for ALMA Polarization processing.
 #
@@ -40,17 +40,18 @@ def bandname(spwname):
 
 def bandpa(name):
     #  From rhills (CSV-481, 2012Sep04)
+    #   B7 corrected according to CSV-2778 (2015Sep25)
     #  B1: [ 135.0, 225.0]
     #  B2: [ 45.0, 135.0]
     #  B3: [-10.0, 80.0]
     #  B4: [-170.0, -80.0]
     #  B5: [-45.0, 45.0]
     #  B6: [-135.0, -45.0]
-    #  B7: [-52.5, 37.5] ( +37.5 from radial)
+    #  B7: [-53.55,36.45]  {old: [-52.5, 37.5] ( +37.5 from radial)}
     #  B8: [ 0.0, 90.0]
     #  B9: [-180.0, -90.0]
     #  B10: [ 90.0, 180.0]
-    bparad=pl.array([0.0,135.,45.,-10.,-170.,-45.,-135.,-52.5,0.,-180.,90.])*pi/180.0 # in rad
+    bparad=pl.array([0.0,135.,45.,-10.,-170.,-45.,-135.,-53.55,0.,-180.,90.])*pi/180.0 # in rad
     iband=0
     if (type(name)==type(1)):
         iband=name
