@@ -39,6 +39,7 @@
 #include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageRegridder.h>
 #include <casa/OS/File.h>
 #include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
@@ -498,7 +499,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     SpectralCoordinate outSpecCsys = outcsys.spectralCoordinate();
      
     // do regrid   
-    IPosition axes(3,0, 1, 2);
+    IPosition axes(3,0,1,2);
     IPosition inshape = inImageMask.shape();
     CoordinateSystem incsys = inImageMask.coordinates(); 
     DirectionCoordinate inDirCsys = incsys.directionCoordinate();
@@ -509,8 +510,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes(1) = dirAxes(1);
     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
     try {
-      ImageRegrid<Float> imregrid;
-      imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
+      // Since regrid along the spectral axis does not seems to work
+      // properly replacing with ImageRegridder 
+      //ImageRegrid<Float> imregrid;
+      //imregrid.showDebugInfo(1);
+      //imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
+      //
+      TempImage<Float>* inImageMaskptr = new TempImage<Float>(inshape,incsys);
+      inImageMaskptr->copyData((LatticeExpr<Float>)(inImageMask));
+      //
+      SPCIIF tempim(inImageMaskptr);
+      SPCIIF templateim(new TempImage<Float>(outshape,outcsys));
+      Record* dummyrec = 0;
+      const String outfilename = outImageMask.name();
+      ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", True, outshape);
+      regridder.setMethod(Interpolate2D::LINEAR);
+      regridder.setForceRegrid(True);
+      SPIIF retim = regridder.regrid();
     } catch (AipsError &x) {
 	throw(AipsError("ImageRegrid error : "+ x.getMesg()));
       }
