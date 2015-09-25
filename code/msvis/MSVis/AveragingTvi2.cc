@@ -10,7 +10,7 @@
 #include <msvis/MSVis/Vbi2MsRow.h>
 #include <msvis/MSVis/UtilJ.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <set>
 
 using std::set;
@@ -960,7 +960,7 @@ VbAvg::accumulateOneRow (MsRow * rowInput, MsRowAvg * rowAveraged, const Subchun
     Vector<Double> adjustedWeights;
     Bool rowFlagged = False;
 
-    boost::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
+    std::tie (rowFlagged, adjustedWeights) = accumulateCubeData (rowInput, rowAveraged);
 
     Double adjustedWeight = 0;
     for (Int c = 0; c < nCorrelations(); c++){
@@ -1299,6 +1299,10 @@ VbAvg::accumulateRowData (MsRow * rowInput, MsRowAvg * rowAveraged,
             weightToUse = adjustedWeight;
         }
 
+        if (flagChange){
+            rowAveraged->setNormalizationFactor(0.0);
+        }
+
         rowAveraged->accumulateNormalizationFactor(weightToUse);
 
         Double weightedTC = (rowInput->timeCentroid() - rowAveraged->timeFirst()) * weightToUse;
@@ -1566,7 +1570,6 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
         msRow->setTimeCentroid (msRow->timeCentroid() / weight + msRow->timeFirst());
 
         msRow->setUvw (msRow->uvw() / weight);
-
 
         // Exposure is a simple sum, not an average so it is already
         // done at this point.
