@@ -152,9 +152,11 @@ dump( CMAKE_SYSTEM
 
 set( BUILD_SHARED_LIBS ON )
 
-set( DEFAULT_CXX_FLAGS 
-     "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment"
-     )
+if( APPLE )
+    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
+else ()
+    set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
+endif()
 
 set( DEFAULT_C_FLAGS 
      "-pipe -Wall -Wextra -Wcast-align -Wno-comment"
