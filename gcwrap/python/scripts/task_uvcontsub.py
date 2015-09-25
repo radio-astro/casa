@@ -316,7 +316,7 @@ def _quantityRangesToChannels(vis,field,infitspw,excludechans):
     myms.close()
     # sort the arrays so that chan ranges are
     # in order
-    usersels[np.lexsort((usersels[:,1],usersels[:,0]))]
+    usersels=usersels[np.lexsort((usersels[:,1],usersels[:,0]))]
     spwsels=''
     spwid=-1
     prevspwid=None

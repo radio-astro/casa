@@ -367,6 +367,42 @@ class excludechans(UVContsubUnitTestBase):
         self.assertEqual(pnrows['cont'], 1)
         self.assertEqual(pnrows['contsub'], 1)
 
+class excludechans2(UVContsubUnitTestBase):
+
+    def setUp(self):
+        self.initialize('combspw.ms')
+    
+    def tearDown(self):
+        self.cleanup()
+
+    def test_excludechans2(self):
+        record = {}
+        infitspw = '1:0~5;10~15;123~127,3:0~5;11~15;123~127,2:0~5;10~15;123~127'
+	try:
+	    print "\nRunning uvcontsub"
+	    uvran = uvcontsub(self.inpms, fitspw=infitspw,
+				   spw='1~3', want_cont=False, excludechans=True)
+	except Exception, e:
+	    print "Error running uvcontsub"
+	    raise e
+
+	specms = self.inpms + '.contsub'
+        # TODO: add value tests?
+	#tb.open(specms)
+	#record[infitorder]['contsub'] = tb.getcell('DATA', 52)[0][73]
+	#tb.close()
+	#shutil.rmtree(specms)
+	#self.__class__.records[corrsel] = record
+	#return uvran
+	self.assertEqual(uvran,True)
+
+        #print "combspw fitorder=0 line estimate"
+        #self.check_eq(record[0]['contsub'], -6.2324+17.9865j, 0.001)
+
+        #print "combspw fitorder=1 line estimate"
+        #self.check_eq(record[1]['contsub'], -6.2533+17.6584j, 0.001)
+    
+    
 class freqrangeselection(UVContsubUnitTestBase):
     """Test frequency range fitspw """
     # test excludechans=True, otherwise the result should be identical
@@ -429,4 +465,4 @@ class freqrangeselection(UVContsubUnitTestBase):
 
     
 def suite():
-    return [zeroth, fourth, combspw, excludechans, freqrangeselection]
+    return [zeroth, fourth, combspw, excludechans, excludechans2, freqrangeselection]
