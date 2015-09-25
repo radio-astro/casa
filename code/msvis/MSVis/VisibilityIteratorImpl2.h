@@ -650,6 +650,8 @@ protected:
     Vector<Stokes::StokesTypes> getCorrelationTypesDefined () const;
     Vector<Stokes::StokesTypes> getCorrelationTypesSelected () const;
 
+    int getMeasurementFrame (int spectralWindowId) const;
+
     Int getPolarizationId (Int spectralWindowId, Int msId) const;
 
     Int getReportingFrameOfReference () const;
@@ -918,6 +920,7 @@ protected:
     Bool                          floatDataFound_p; // True if a float data column was found
     FrequencySelections *         frequencySelections_p; // [own] Current frequency selection
     VisImagingWeight              imwgt_p;    // object to calculate imaging weight
+    mutable Int                   measurementFrame_p; // cached value of observatory type
     MeasurementSets               measurementSets_p; // [use]
     Bool                          more_p; // True if more data in this chunk
     Int                           msIndex_p; // array index of current MS
@@ -926,7 +929,6 @@ protected:
     mutable MSDerivedValues       msd_p; // Helper class holding MS derived values.
     Int                           nCorrelations_p;
     Int                           nRowBlocking_p; // suggested # of rows in a subchunk
-    mutable Int                   observatoryFrame_p; // cached value of observatory type
     PendingChanges                pendingChanges_p; // holds pending changes to VI properties
     Int                           reportingFrame_p; // default frequency reporting (not selecting)
                                                     // frame of reference
