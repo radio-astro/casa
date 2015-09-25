@@ -15,7 +15,7 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
     bdfflags  = basetask.property_with_default('bdfflags', True)
     lazy  = basetask.property_with_default('lazy', False)
-    dbservice = basetask.property_with_default('dbservice', True)
+    dbservice = basetask.property_with_default('dbservice', False)
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
