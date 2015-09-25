@@ -2145,7 +2145,8 @@ VisBufferImpl2::modelDataIsVirtual () const
 	if (state_p->visModelData_p == 0){
 		state_p->visModelData_p = VisModelDataI::create2();
 	}
-	Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), elkey, sourcerow);
+	Bool hasmodkey= ! (state_p->visModelData_p == 0) &&
+	                state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), elkey, sourcerow);
 
     Bool isVirtual = hasmodkey || !(getViP()->ms().tableDesc().isColumn("MODEL_DATA"));
 
@@ -2159,17 +2160,16 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
     //String modelkey = String("definedmodel_field_")+String::toString(fieldId());
     //Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
-    String modelkey;
-    Int sourcerow;
-    if (state_p->visModelData_p == 0){
-                state_p->visModelData_p = VisModelDataI::create2();
-    }
-    Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), modelkey, sourcerow);
-
+//    String modelkey;
+//    if (state_p->visModelData_p == 0){
+//                state_p->visModelData_p = VisModelDataI::create2();
+//    }
 
     if (modelDataIsVirtual ()){
 
-
+        Int sourcerow;
+        String modelkey = String("definedmodel_field_")+String::toString(fieldId());
+        Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), modelkey, sourcerow);
 
         if (state_p->visModelData_p->hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
 

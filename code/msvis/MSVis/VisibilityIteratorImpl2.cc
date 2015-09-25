@@ -25,7 +25,7 @@
 //#
 //# $Id: VisibilityIterator2.cc,v 19.15 2006/02/01 01:25:14 kgolap Exp $
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 #include <casa/Arrays.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Containers/Record.h>
@@ -939,13 +939,13 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   columns_p (),
   floatDataFound_p (False),
   frequencySelections_p (0),
+  measurementFrame_p (VisBuffer2::FrameNotSpecified),
   more_p (False),
   msIndex_p (0),
   msIterAtOrigin_p (False),
   msIter_p ( ),
   nCorrelations_p (-1),
   nRowBlocking_p (0),
-  observatoryFrame_p (VisBuffer2::FrameNotSpecified),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
   sortColumns_p (sortColumns),
   spectralWindowChannelsCache_p (new SpectralWindowChannelsCache ()),
@@ -1115,9 +1115,13 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
     Vector<Int> channels = getChannels (time, frameOfReference, spectralWindowId, msId);
 
     Vector<Double> frequencies (channels.nelements());
-    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
+//    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
 
-    if (frameOfReference == observatoryFrequencyType){
+
+    MFrequency::Types measurementFrequencyType =
+        static_cast<MFrequency::Types> (getMeasurementFrame (spectralWindowId));
+
+    if (frameOfReference == measurementFrequencyType){
 
         // Since the observed frequency is being asked for, no conversion is necessary.
         // Just copy each selected channel's observed frequency over to the result.
@@ -1134,7 +1138,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
     // Get the converter from the observed to the requested frame.
 
-    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False);
+    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False, Unit(String("Hz")));
 
     // For each selected channel, get its observed frequency and convert it into
     // the frequency in the requested frame.  Put the result into the
@@ -1147,7 +1151,7 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
         Double fO = spectralWindowChannels [channelNumber].getFrequency ();
             // Observed frequency
 
-        Double fF = fromObserved (Quantity (fO, "Hz")).get ("Hz").getValue();
+        Double fF = fromObserved (fO).getValue();
             // Frame frequency
 
         frequencies [i] = fF;
@@ -1212,6 +1216,15 @@ VisibilityIteratorImpl2::getInterval () const
 {
     return timeInterval_p;
 }
+
+int
+VisibilityIteratorImpl2::getMeasurementFrame (int spectralWindowId) const
+{
+    int frame = subtableColumns_p->spectralWindow ().measFreqRef()(spectralWindowId);
+
+    return frame;
+}
+
 
 Bool
 VisibilityIteratorImpl2::isNewArrayId () const
@@ -1467,7 +1480,7 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindo
   Vector<Int> firstChannels; // ignored
   Vector<Int> channelIncrement; // ignored
 
-  boost::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
+  std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
       getChannelInformation (False); // info generation should not use time as input
 }
 
@@ -1508,7 +1521,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle a pending frequency selection if it exists.
 
         FrequencySelections * newSelection;
-        boost::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
+        std::tie (exists, newSelection) = pendingChanges_p.popFrequencySelections ();
 
         if (exists){
 
@@ -1520,7 +1533,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle any pending interval change
 
         Double newInterval;
-        boost::tie (exists, newInterval) = pendingChanges_p.popInterval ();
+        std::tie (exists, newInterval) = pendingChanges_p.popInterval ();
 
         if (exists){
 
@@ -1531,7 +1544,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
         // Handle any row-blocking change
 
         Int newBlocking;
-        boost::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
+        std::tie (exists, newBlocking) = pendingChanges_p.popNRowBlocking ();
 
         if (exists){
 
@@ -1584,8 +1597,7 @@ VisibilityIteratorImpl2::next ()
     // Attempt to advance to the next subchunk
 
     rowBounds_p.subchunkBegin_p = rowBounds_p.subchunkEnd_p + 1;
-    observatoryFrame_p = VisBuffer2::FrameNotSpecified; // flush cached value
-
+    measurementFrame_p = VisBuffer2::FrameNotSpecified; // flush cached value
 
     more_p = rowBounds_p.subchunkBegin_p < rowBounds_p.chunkNRows_p;
 
@@ -1933,7 +1945,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // measured frequency
 
     MFrequency::Convert convertToObservedFrame =
-        makeFrequencyConverter (time, selection.getFrameOfReference(), True);
+        makeFrequencyConverter (time, selection.getFrameOfReference(), True, Unit("Hz"));
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -1945,10 +1957,10 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
          i++){
 
         Double f = i->getBeginFrequency();
-        Double lowerFrequency = convertToObservedFrame (Quantity (f, "Hz")).get ("Hz").getValue();
+        Double lowerFrequency = convertToObservedFrame (f).getValue();
 
         f = i->getEndFrequency();
-        Double upperFrequency = convertToObservedFrame (Quantity (f, "Hz")).get ("Hz").getValue();
+        Double upperFrequency = convertToObservedFrame (f).getValue();
 
         Slice s = findChannelsInRange (lowerFrequency, upperFrequency, spectralWindowChannels);
 
@@ -1994,7 +2006,7 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 
 MFrequency::Convert
 VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfReference,
-                                                     Bool toObservedFrame) const
+                                                 Bool toObservedFrame, Unit unit) const
 {
     MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
 
@@ -2017,11 +2029,11 @@ VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfRe
 
     if (toObservedFrame){
 
-        result = MFrequency::Convert (selectionFrame, observedFrame);
+        result = MFrequency::Convert (unit, selectionFrame, observedFrame);
     }
     else{
 
-        result = MFrequency::Convert (observedFrame, selectionFrame);
+        result = MFrequency::Convert (unit, observedFrame, selectionFrame);
     }
 
     return result;
@@ -2223,9 +2235,9 @@ VisibilityIteratorImpl2::setTileCache ()
         return;
     }
 
-//    if (autoTileCacheSizing_p){
-//        return; // take the default behavior
-//    }
+    if (autoTileCacheSizing_p){
+        return; // take the default behavior
+    }
 
     const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
 
@@ -2897,15 +2909,8 @@ VisibilityIteratorImpl2::getReportingFrameOfReference () const
                 // Since selection was done by channels, the frequencies
                 // are native.
 
-                if (observatoryFrame_p == VisBuffer2::FrameNotSpecified){
-
-                    // No cached value, so look it up (somewhat price operation
-                    // which is why it's cached).  Cache flushed with VI movement
-
-                    observatoryFrame_p = getObservatoryFrequencyType ();
-                }
-
-                frame = observatoryFrame_p;
+                measurementFrame_p = getMeasurementFrame (spectralWindow());
+                frame = measurementFrame_p;
             }
         }
         else{
@@ -3228,7 +3233,7 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponent
   Vector<Int> firstChannels;
   Vector<Int> channelIncrement;
 
-  boost::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
+  std::tie (selectedWindows, nChannels, firstChannels, channelIncrement) =
       getChannelInformation (True);
 
   CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
@@ -3303,7 +3308,7 @@ VisibilityIteratorImpl2::getChannelInformationUsingFrequency (Bool now) const
         }
     }
 
-    return boost::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
+    return std::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
 }
 
 
@@ -3372,7 +3377,7 @@ VisibilityIteratorImpl2::getChannelInformation (Bool now) const
         }
     }
 
-    return boost::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
+    return std::make_tuple (spectralWindow, nChannels, firstChannel, channelIncrement);
 }
 
 void
