@@ -31,6 +31,10 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
             if retVar[subMS]:
                 cont_subMS_list.append(subMS + ".cont")
                 contsub_subMS_list.append(subMS + ".contsub")
+                
+        if len(cont_subMS_list) <= 0:
+            casalog.post("No continuum-subtracted sub-MSs for concatenation","SEVERE")
+            return False
 
         # We have to sort the list because otherwise it  
         # depends on the time the engines dispatches their sub-MSs
@@ -199,7 +203,7 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
             myms.close()
             # jagonzal (CAS-4113): Take care of the trivial parallelization
             if not split_result:
-                casalog.post("NullSelection: %s does not have data for spw=%s, field=%s, bailing out!" % (vis,tempspw,field),'SEVERE')
+                casalog.post("MSSelectionNullSelection: %s does not have data for spw=%s, field=%s, bailing out!" % (vis,tempspw,field),'SEVERE')
                 shutil.rmtree(csvis)
                 return False
         else:
@@ -285,7 +289,7 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
     except Exception, instance:
         casalog.post('Error in uvcontsub: ' + str(instance), 'SEVERE')
         mycb.close()                        # Harmless if cb is closed.
-        raise Exception
+        raise Exception, 'Error in uvcontsub: ' + str(instance)
 
 
 def _quantityRangesToChannels(vis,field,infitspw,excludechans):
