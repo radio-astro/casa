@@ -158,7 +158,7 @@ dump( CMAKE_SYSTEM
 
 set( BUILD_SHARED_LIBS ON )
 
-if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11 OR CMAKE_SYSTEM MATCHES ^Darwin-12)
+if( APPLE )
     set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
 else ()
     set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-align -Wno-comment" )
