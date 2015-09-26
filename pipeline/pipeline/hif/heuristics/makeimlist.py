@@ -67,11 +67,14 @@ class MakeImListHeuristics(object):
               (180.0 * 3600.0 / math.pi)
 
         # determine spw selection parameters to exclude lines for mfs and cont images
+
+        # initialize lookup dictionary for all possible source names
         self.cont_ranges_spwsel = {}
-        for source_name in [s.name for s in ms.sources]:
-            self.cont_ranges_spwsel[source_name] = {}
-            for spwid in spwids:
-                self.cont_ranges_spwsel[source_name][str(spwid)] = ''
+        for ms_ref in self.context.observing_run.get_measurement_sets():
+            for source_name in [s.name for s in ms_ref.sources]:
+                self.cont_ranges_spwsel[source_name] = {}
+                for spwid in spwids:
+                    self.cont_ranges_spwsel[source_name][str(spwid)] = ''
 
         if (contfile is None):
             contfile = ''
