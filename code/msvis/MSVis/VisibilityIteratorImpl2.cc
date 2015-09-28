@@ -1138,7 +1138,9 @@ VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
 
     // Get the converter from the observed to the requested frame.
 
-    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False, Unit(String("Hz")));
+    MFrequency::Convert fromObserved =
+        makeFrequencyConverter (time, spectralWindowId, frameOfReference,
+                                False, Unit(String("Hz")));
 
     // For each selected channel, get its observed frequency and convert it into
     // the frequency in the requested frame.  Put the result into the
@@ -1945,7 +1947,8 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // measured frequency
 
     MFrequency::Convert convertToObservedFrame =
-        makeFrequencyConverter (time, selection.getFrameOfReference(), True, Unit("Hz"));
+        makeFrequencyConverter (time, spectralWindowId, selection.getFrameOfReference(),
+                                True, Unit("Hz"));
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -2005,10 +2008,16 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
 }
 
 MFrequency::Convert
-VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfReference,
-                                                 Bool toObservedFrame, Unit unit) const
+VisibilityIteratorImpl2::makeFrequencyConverter (Double time,
+                                                 int spectralWindowId,
+                                                 Int otherFrameOfReference,
+                                                 Bool toObservedFrame,
+                                                 Unit unit) const
 {
-    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
+//    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
+
+    MFrequency::Types measurementFrequencyType =
+        static_cast<MFrequency::Types> (getMeasurementFrame (spectralWindowId));
 
     // Set up frequency converter so that we can convert to the
     // measured frequency
@@ -2020,7 +2029,7 @@ VisibilityIteratorImpl2::makeFrequencyConverter (Double time, Int otherFrameOfRe
 
     MeasFrame measFrame (epoch, position, direction);
 
-    MFrequency::Ref observedFrame (observatoryFrequencyType, measFrame);
+    MFrequency::Ref observedFrame (measurementFrequencyType, measFrame);
 
     MFrequency::Types selectionFrame =
         static_cast<MFrequency::Types> (otherFrameOfReference);
