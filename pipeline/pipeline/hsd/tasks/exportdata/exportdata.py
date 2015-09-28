@@ -34,7 +34,6 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
-import pipeline.hif.tasks.exportdata.manifest as manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -245,6 +244,9 @@ class SDExportData(hif_exportdata.ExportData):
         # Create fits files from CASA images
         imagelist, targetimages_fitslist = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
 
+        # export Jy/K conversion factor file
+        jyperk_file_list = self._export_jyperk(inputs.context, inputs.products_dir)
+        
         # Export a tar file of the web log
         weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
         
@@ -761,6 +763,33 @@ class SDExportData(hif_exportdata.ExportData):
         os.chdir(cwd)
     
         return tarfilename
+    
+    def _export_jyperk(self, context, products_dir):
+        reffile_list = set(self.__get_reffile(context.results))
+        
+        ps = context.project_structure
+        if ps is None or ps.ousstatus_entity_id == 'unknown':
+            product_tarfilename = 'jyperk.tar.gz'
+        else:
+            ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__')) 
+            product_tarfilename = ousid + '.jyperk.tar.gz'
+        
+        if not self._executor._dry_run:
+            tar = tarfile.open(os.path.join(products_dir, product_tarfilename), 'w:gz')
+            for reffile in reffile_list:
+                tar.add(os.path.basename(reffile))
+                
+        return product_tarfilename
+        
+    
+    def __get_reffile(self, results):
+        for proxy in results:
+            result = proxy.read()
+            for r in result:
+                if str(r).find('IntensityScalingResults') != -1:#isinstance(r, scaling.IntensityScalingResults):
+                    outcome = r.outcome
+                    if outcome.has_key('reffile'):
+                        yield outcome['reffile']
     
     def _generate_vislist(self):
         return list(self.__generate_vislist())
