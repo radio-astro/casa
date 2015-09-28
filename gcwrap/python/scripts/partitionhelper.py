@@ -17,7 +17,7 @@ class convertToMMS():
                  mmsdir=None, \
                  axis='auto', \
                  numsubms=4,
-                 createmslink=False, \
+#                 createmslink=False, \
                  cleanup=False):
 
         '''Run the partition task to create MMSs from a directory with MSs'''
@@ -27,7 +27,7 @@ class convertToMMS():
         self.outdir = mmsdir
         self.axis = axis
         self.numsubms = numsubms
-        self.createmslink = createmslink
+#        self.createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
         self.cleanup = cleanup        
         
@@ -99,7 +99,7 @@ class convertToMMS():
         # Create an MMS for each MS in list
         for ms in mslist:
             casalog.post('Will create an MMS for '+ms)
-            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.axis, self.numsubms)
+            ret = self.runPartition(ms, self.mmsdir, self.axis, self.numsubms)
             if not ret:
                 sys.exit(2)
             
@@ -230,12 +230,10 @@ class convertToMMS():
         return fileslist
 
 
-    def runPartition(self, ms, mmsdir, createlink, axis, subms):
+    def runPartition(self, ms, mmsdir, axis, subms):
         '''Run partition with default values to create an MMS.
            ms         --> full pathname of the MS
            mmsdir     --> directory to save the MMS to
-           createlink --> when True, it will create a symbolic link to the
-                         just created MMS in the same directory with extension .ms  
            axis      --> separationaxis to use (spw, scan, auto)
            subms  --> number of subMss to create
 
@@ -309,14 +307,12 @@ class convertToMMS():
         print '                       the MMS in a directory called mmsdir in the current directory.'
         print "   axis='auto'         separationaxis parameter of partition (spw,scan,auto)."
         print "   numsubms=4         number of subMSs to create in output MMS"
-        print '   createmslink=False  if True it will create a link to the new MMS with extension .ms.'
         print '   cleanup=False       if True it will remove the output directory before starting.\n'
         
         print ' NOTE: this script will run using the default values of partition. It will try to '
         print ' create an MMS for every MS in the input directory. It will skip non-MS directories '
         print ' such as cal tables. If partition succeeds, the script will create a link to every '
-        print ' other directory or file in the output directory. This script might fail if run on '
-        print ' single dish MS because the datacolumn needs to be set in partition.\n'
+        print ' other directory or file in the output directory. '
         print ' The script will not walk through sub-directories of inpdir. It will also skip '
         print ' files or directories that start with a .'
         print '=========================================================================='
