@@ -693,7 +693,9 @@ protected:
                           Double time, Int msId, Int spectralWindowId,
                           Int polarizationId) const;
 
-    MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
+    MFrequency::Convert makeFrequencyConverter (Double time,
+                                                int spectralWindowId,
+                                                Int otherFrameOfReference,
                                                 Bool toObservedFrame, Unit) const;
 
     // Allow access to the MSColumns object; for use by VisBuffer2Adapter *KLUGE*
