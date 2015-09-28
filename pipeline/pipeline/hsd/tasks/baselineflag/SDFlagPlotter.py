@@ -167,6 +167,8 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
         PL.savefig(OldPlot, format='png', dpi=DPIDetail)
         #os.system('convert %s -trim %s' % (OldPlot, NewPlot))
     PL.gcf().set_size_inches(figsize_org)
+    
+    PL.close()
 
     del data, ScaleOut
     return
