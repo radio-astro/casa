@@ -842,7 +842,7 @@ casa_find( CASACORE
            LIBS ${casacore_libs}
            PREFIX_HINTS ${casacore_prefix}
            CPP_VERSION CASACORE_VERSION
-           RUN_VERSION "casa::getVersionCASA()"
+           RUN_VERSION "casacore::getVersionCASA()"
            DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL Boost)
 # Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries 
 # were built with correct linking information, which they are not.

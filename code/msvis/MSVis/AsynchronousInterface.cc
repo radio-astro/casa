@@ -9,7 +9,6 @@
 
 #include <ostream>
 #include <utility>
-#include <boost/lexical_cast.hpp>
 
 using namespace boost;
 using namespace casa::async;
@@ -45,7 +44,7 @@ AsynchronousInterface::~AsynchronousInterface ()
 void
 AsynchronousInterface::addModifier (RoviaModifier * modifier)
 {
-    Log (1, "AsynchronousInterface::addModifier: {%s}\n", lexical_cast<string> (* modifier).c_str());
+    Log (1, "AsynchronousInterface::addModifier: {%s}\n", string(*modifier).c_str());
 
     LockGuard lg (mutex_p);
 
@@ -340,7 +339,7 @@ RoviaModifiers::apply (ROVisibilityIterator * rovi)
     // Free the objects owned by the vector
 
     for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        Log (1, "Applying vi modifier: %s\n", lexical_cast<string> (** i).c_str());
+        Log (1, "Applying vi modifier: %s\n", string(** i).c_str());
         (* i) -> apply (rovi);
     }
 

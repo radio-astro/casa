@@ -23,7 +23,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -1261,8 +1260,8 @@ void cubicSplineCoeff(unsigned int		npoints,
 
   for (unsigned int i = 0 ; i < npoints - 1; i++) {
     vector<double> coeff_v (4);
-    LOG(" delta k " + lexical_cast<string>(k_v[i+1]-k_v[i]) + " delta t " + lexical_cast<string>(time_v[i+1] - time_v[i]));
-    LOG(" m_i = " + lexical_cast<string>(m_v[i]) + ", m_i+1 = " + lexical_cast<string>(m_v[i+1]));
+    LOG(" delta k " + to_string(k_v[i+1]-k_v[i]) + " delta t " + to_string(time_v[i+1] - time_v[i]));
+    LOG(" m_i = " + to_string(m_v[i]) + ", m_i+1 = " + to_string(m_v[i+1]));
     coeff_v[0] = k_v[i];
     coeff_v[1] = (k_v[i+1] - k_v[i]) / (time_v[i+1] - time_v[i]) - (time_v[i+1] - time_v[i]) * (2 * m_v[i] + m_v[i+1]) / 6.0;
     coeff_v[2] = m_v[i] / 2.0;
@@ -1278,7 +1277,7 @@ double evalPoly (unsigned int		numCoeff,
 		 double 		timeOrigin,
 		 double 		time) {
   LOGENTER("evalPoly");
-  LOG( "numCoeff=" + lexical_cast<string>(numCoeff) + ", size of coeff=" + lexical_cast<string>(coeff.size())) ;
+  LOG( "numCoeff=" + to_string(numCoeff) + ", size of coeff=" + to_string(coeff.size())) ;
   //
   // Let's use the Horner schema to evaluate the polynomial.
   double result = coeff[numCoeff-1];
@@ -1453,7 +1452,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	+ "_"
 	+ fieldName
 	+ "_"
-	+ lexical_cast<string>(mjd0)
+	+ to_string(mjd0)
 	+ ".tab";
 
       map<AtmPhaseCorrection, Table*> apc2EphemTable_m;
@@ -1543,10 +1542,10 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  }
 	}
     
-	LOG ("numPolyDirIsOne = " + lexical_cast<string>(numPolyDirIsOne));
-	LOG ("numPolyDistIsOne = " + lexical_cast<string>(numPolyDistIsOne));
-	LOG ("radVelExists = " + lexical_cast<string>(radVelExists));
-	LOG ("numPolyRadVelIsOne = " + lexical_cast<string>(numPolyRadVelIsOne));
+	LOG ("numPolyDirIsOne = " + to_string(numPolyDirIsOne));
+	LOG ("numPolyDistIsOne = " + to_string(numPolyDistIsOne));
+	LOG ("radVelExists = " + to_string(radVelExists));
+	LOG ("numPolyRadVelIsOne = " + to_string(numPolyRadVelIsOne));
     
 
 	//
@@ -1557,13 +1556,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	//
 	if (numPolyDirIsOne || numPolyDistIsOne || (radVelExists && numPolyRadVelIsOne)) {
 	  // Then just "forget" the last element.
-	  LOG("Erasing the last element of v (size before = '" + lexical_cast<string>(v.size()) + "')");
+	  LOG("Erasing the last element of v (size before = '" + to_string(v.size()) + "')");
 	  v.erase(v.begin() + v.size() - 1);
-	  LOG("Erasing the last element of v (size after = '" + lexical_cast<string>(v.size()) + "')");
+	  LOG("Erasing the last element of v (size after = '" + to_string(v.size()) + "')");
 
-	  LOG("Erasing the last element of duration_v (size before = '" + lexical_cast<string>(duration_v.size()) + "')");
+	  LOG("Erasing the last element of duration_v (size before = '" + to_string(duration_v.size()) + "')");
 	  duration_v.erase(duration_v.begin() + duration_v.size() - 1);
-	  LOG("Erasing the last element of duration_v (size after = '" + lexical_cast<string>(duration_v.size()) + "')");
+	  LOG("Erasing the last element of duration_v (size after = '" + to_string(duration_v.size()) + "')");
 	}
 
 	// 
@@ -1577,7 +1576,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	int64_t tMS = t0MS;
 
 	atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
-	LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+	LOG ("size of atiIdxMStime_v="+to_string(atiIdxMStime_v.size())+", index = "+to_string(index)+", tMS = "+to_string(tMS));
 	tMS += timeStepInNanoSecond;
 
 	int64_t  start =  v[index]->getTimeInterval().getStart().get();
@@ -1586,7 +1585,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  if (tMS < end) {
 	    atiIdxMStime_v.push_back(atiIdxMStime_pair(index, tMS));
 	    tMS += timeStepInNanoSecond;
-	    LOG ("size of atiIdxMStime_v="+lexical_cast<string>(atiIdxMStime_v.size())+", index = "+lexical_cast<string>(index)+", tMS = "+lexical_cast<string>(tMS));
+	    LOG ("size of atiIdxMStime_v="+to_string(atiIdxMStime_v.size())+", index = "+to_string(index)+", tMS = "+to_string(tMS));
 	  }
 	  else {
 	    index++;
@@ -1595,7 +1594,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
 	} while (index < v.size()-1);
     
-	LOG("atiIdxMStime_v has " + lexical_cast<string>(atiIdxMStime_v.size()) + " elements.");
+	LOG("atiIdxMStime_v has " + to_string(atiIdxMStime_v.size()) + " elements.");
 
 	//
 	// Prepare the coefficients which will be used for the tabulation.
@@ -1614,12 +1613,12 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
     
 	cout.precision(10);
 	for (unsigned int i = 0; i < v.size(); i++) {
-	  LOG_EPHEM("original " + lexical_cast<string> (ArrayTime(v[i]->getTimeInterval().getStart().get()).getMJD()));
+	  LOG_EPHEM("original " + to_string(ArrayTime(v[i]->getTimeInterval().getStart().get()).getMJD()));
 	  vector<vector<double> > temp_vv = v[i]->getDir();
 	  if (numPolyDistIsOne) {
 	    raASDM_v.push_back(temp_vv[0][0]/3.14159265*180.0);
 	    decASDM_v.push_back(temp_vv[0][1]/3.14159265*180.0);
-	    LOG_EPHEM (" " + lexical_cast<string>(raASDM_v.back()) + " " + lexical_cast<string>(decASDM_v.back()));
+	    LOG_EPHEM (" " + to_string(raASDM_v.back()) + " " + to_string(decASDM_v.back()));
 	  }
 	  else {
 	    raASDM_vv.push_back(empty_v);
@@ -1633,7 +1632,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  temp_v = v[i]->getDistance();      
 	  if (numPolyDistIsOne) {
 	    distanceASDM_v.push_back(temp_v[0] / 1.4959787066e11);           // AU
-	    LOG_EPHEM (" " + lexical_cast<string>(distanceASDM_v.back()));
+	    LOG_EPHEM (" " + to_string(distanceASDM_v.back()));
 	  }
 	  else {
 	    distanceASDM_vv.push_back(empty_v);
@@ -1645,7 +1644,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	    temp_v = v[i]->getRadVel();
 	    if (numPolyRadVelIsOne) { 
 	      radVelASDM_v.push_back(temp_v[0] /  1.4959787066e11 * 24. * 3600.);      // AU/d
-	      LOG_EPHEM(" " + lexical_cast<string>(radVelASDM_v.back()));
+	      LOG_EPHEM(" " + to_string(radVelASDM_v.back()));
 	    }
 	    else {
 	      radVelASDM_vv.push_back(empty_v);
@@ -1700,32 +1699,32 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	  //
 	  // MJD
 	  mjdMS_v.push_back(ArrayTime(atiIdxMStime.second).getMJD());
-	  LOG_EPHEM( "resampled " + lexical_cast<string>(mjdMS_v.back()));
-	  LOG("mjdMS_v -> "+lexical_cast<string>(mjdMS_v.back()));
+	  LOG_EPHEM( "resampled " + to_string(mjdMS_v.back()));
+	  LOG("mjdMS_v -> "+to_string(mjdMS_v.back()));
       
 	  double timeOrigin = 1.0e-09 * v[atiIdxMStime.first]->getTimeOrigin().get();
 	  double timeStart  = 1.0e-09 * v[atiIdxMStime.first]->getTimeInterval().getStart().get();
 	  double time       = 1.0e-09 * atiIdxMStime.second;
       
-	  LOG("timeOrigin="+lexical_cast<string>(timeOrigin)+", time="+lexical_cast<string>(time));
+	  LOG("timeOrigin="+to_string(timeOrigin)+", time="+to_string(time));
 
 	  //
 	  // RA / DEC
 	  LOG("Eval poly for RA");
-	  LOG("atiIdxMStime.first = " + lexical_cast<string>(atiIdxMStime.first));
+	  LOG("atiIdxMStime.first = " + to_string(atiIdxMStime.first));
 	  raMS_v.push_back(evalPoly(raASDM_vv[atiIdxMStime.first].size(),
 				    raASDM_vv[atiIdxMStime.first],
 				    timeOrigin,
 				    time));
-	  LOG_EPHEM(" " + lexical_cast<string>(raMS_v.back()));
-	  LOG("raMS_v -> "+lexical_cast<string>(raMS_v.back()));
+	  LOG_EPHEM(" " + to_string(raMS_v.back()));
+	  LOG("raMS_v -> "+to_string(raMS_v.back()));
 
 	  LOG("Eval poly for DEC");
 	  decMS_v.push_back(evalPoly(decASDM_vv[atiIdxMStime.first].size(),
 				     decASDM_vv[atiIdxMStime.first],
 				     timeOrigin,
 				     time));
-	  LOG_EPHEM(" " + lexical_cast<string>(decMS_v.back()));
+	  LOG_EPHEM(" " + to_string(decMS_v.back()));
       
 	  //
 	  // Distance
@@ -1734,7 +1733,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 					  distanceASDM_vv[atiIdxMStime.first],
 					  timeOrigin,
 					  time));
-	  LOG_EPHEM(" " + lexical_cast<string>(distanceMS_v.back()));
+	  LOG_EPHEM(" " + to_string(distanceMS_v.back()));
 	  //
 	  // Radvel
 	  if (radVelExists) { 
@@ -1743,7 +1742,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 					  radVelASDM_vv[atiIdxMStime.first],
 					  timeOrigin,
 					  time));
-	    LOG_EPHEM(" " + lexical_cast<string>(radVelMS_v.back()));
+	    LOG_EPHEM(" " + to_string(radVelMS_v.back()));
 	  }
 	  LOG_EPHEM("\n");
 	}
@@ -1780,7 +1779,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	
 	// And fill the table
 	table_p->addRow(numRows);
-	LOG ("Added "+lexical_cast<string>(numRows)+" rows to table "+((string)table_p->tableName()));
+	LOG ("Added "+to_string(numRows)+" rows to table "+((string)table_p->tableName()));
       
 	LOG("Filling column MJD");
 	Vector<casa::Double> MJD_V(IPosition(1, numRows), &mjdMS_v[0], SHARE);
@@ -2638,9 +2637,9 @@ void fillMainLazily2(const string& dsName,
       if (!onlyUncorrected and !uncorrectedANDcorrected) {
 	errstream.str("");
 	errstream.str("I don't know how to process data with uncorrected = " +
-		      lexical_cast<string>(iter->uncorrected) +
+		      to_string(iter->uncorrected) +
 		      " and corrected = " +
-		      lexical_cast<string>(iter->corrected) );
+		      to_string(iter->corrected) );
 	error(errstream.str());
       }
 
@@ -4395,7 +4394,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   vector<float>		switchedPowerSum;
   vector<float>		requantizerGain;
 
-  LOG("fillSysPower_aux : resizing the arrays (" + lexical_cast<string>(sysPowers.size()) + ") to populate the columns of the MS SYSPOWER table.");
+  LOG("fillSysPower_aux : resizing the arrays (" + to_string(sysPowers.size()) + ") to populate the columns of the MS SYSPOWER table.");
 
   antennaId.resize(sysPowers.size());
   spectralWindowId.resize(sysPowers.size());
@@ -4420,7 +4419,7 @@ void fillSysPower_aux (const vector<SysPowerRow *>& sysPowers, map<AtmPhaseCorre
   LOG("fillSysPower_aux : working on the optional attributes.");
 
   unsigned int numReceptor0 = sysPowers[0]->getNumReceptor();
-  LOG("fillSysPower_aux : numReceptor = " + lexical_cast<string>(numReceptor0));
+  LOG("fillSysPower_aux : numReceptor = " + to_string(numReceptor0));
  
   bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
   if (switchedPowerDifferenceExists0) {

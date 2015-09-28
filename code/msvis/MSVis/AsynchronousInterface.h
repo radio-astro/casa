@@ -50,6 +50,12 @@ public:
     virtual ~RoviaModifier () {}
     virtual void apply (ROVisibilityIterator *) const = 0;
 
+    inline operator std::string( ) const {
+        std::stringstream ss;
+        print(ss);
+        return ss.str( );
+    }
+
 private:
 
     virtual void print (std::ostream & o) const = 0;

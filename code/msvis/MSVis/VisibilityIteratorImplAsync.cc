@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <cstdarg>
 #include <ostream>
-#include <boost/lexical_cast.hpp>
 
 using namespace boost;
 using namespace std;

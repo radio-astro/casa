@@ -42,9 +42,7 @@ using namespace casa::async;
 #include <cstdarg>
 #include <functional>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/lambda/lambda.hpp>
-//#include <boost/bind.hpp>
 #include <boost/function.hpp>
 
 #include "UtilJ.h"

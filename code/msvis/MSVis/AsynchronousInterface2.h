@@ -35,6 +35,7 @@ using casa::utilj::DeltaThreadTimes;
 #include <memory>
 #include <queue>
 #include <vector>
+#include <sstream>
 
 namespace casa {
 
@@ -45,10 +46,13 @@ class VisibilityIterator2;
 class RoviaModifier {
 public:
 
-    friend std::ostream & operator<< (std::ostream & o, const RoviaModifier & m);
-
     virtual ~RoviaModifier () {}
     virtual void apply (VisibilityIterator2 *) const = 0;
+    inline operator std::string( ) const {
+        std::stringstream ss;
+        print(ss);
+        return ss.str( );
+    }
 
 private:
 
