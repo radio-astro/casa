@@ -898,13 +898,27 @@ def selection_to_frequencies(img, selection, unit='GHz'):
     if (selection != ''):
         iaTool = casatools.image
         qaTool = casatools.quanta
+
         iaTool.open(img)
+
+        # Get frequency axis
+        imInfo = iaTool.summary()
+        try:
+            fIndex = imInfo['axisnames'].tolist().index('Frequency')
+        except:
+            LOG.error('No frequency axis found in %s.' % (img))
+            iaTool.close()
+            return ['NONE']
+
+        refFreq = imInfo['refval'][fIndex]
+        deltaFreq = imInfo['incr'][fIndex]
+        freqUnit = imInfo['axisunits'][fIndex]
+        refPix = imInfo['refpix'][fIndex]
+
         for crange in selection.split(';'):
-            c0, c1 = crange.split('~')
-            m0 = iaTool.coordmeasures([None, None, None, c0])['measure']['spectral']['frequency']['m0']
-            m1 = iaTool.coordmeasures([None, None, None, c1])['measure']['spectral']['frequency']['m0']
-            f0 = qaTool.convert('%.15e %s' % (m0['value'], m0['unit']), unit)
-            f1 = qaTool.convert('%.15e %s' % (m1['value'], m1['unit']), unit)
+            c0, c1 = map(int, crange.split('~'))
+            f0 = qaTool.convert({'value': refFreq + (c0 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
+            f1 = qaTool.convert({'value': refFreq + (c1 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
             if (qaTool.lt(f0, f1)):
                 print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
                 frequencies.append((f0['value'], f1['value']))
