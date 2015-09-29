@@ -34,6 +34,7 @@ import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.hif.tasks.exportdata.exportdata as hif_exportdata
+from . import manifest
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
@@ -245,7 +246,7 @@ class SDExportData(hif_exportdata.ExportData):
         imagelist, targetimages_fitslist = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
 
         # export Jy/K conversion factor file
-        jyperk_file_list = self._export_jyperk(inputs.context, inputs.products_dir)
+        jyperk_file = self._export_jyperk(inputs.context, inputs.products_dir)
         
         # Export a tar file of the web log
         weblog_file = self._export_weblog (inputs.context, inputs.products_dir)
@@ -272,7 +273,7 @@ class SDExportData(hif_exportdata.ExportData):
         
         # Export a XML format list of files within a products directory
         self._fill_manifest(pipemanifest, ouss, ppr_file, sessiondict, visdict, weblog_file, casa_commands_file, 
-                            casa_pipescript, casa_restore_script, targetimages_fitslist)
+                            casa_pipescript, casa_restore_script, targetimages_fitslist, jyperk_file)
 
 #         # Export a text format list of files whithin a products directory
 #         self._export_list_txt(inputs.products_dir, fitsfiles=targetimages_fitslist, weblog=weblog_file, pprfile=ppr_file,
@@ -312,8 +313,17 @@ class SDExportData(hif_exportdata.ExportData):
             if hasattr(scantable, 'exported_ms') and scantable.exported_ms is not None:
                 self.visdict[os.path.basename(scantable.exported_ms)] = original_vis
      
+    def _init_pipemanifest (self, oussid):
+        """
+        Initialize the pipeline manifest
+        """
+        
+        pipemanifest = manifest.SingleDishPipelineManifest(oussid) 
+        return pipemanifest
+
     def _fill_manifest(self, pipemanifest, ouss, ppr_file, sessiondict, visdict, weblog_file, 
-                       casa_commands_file, casa_pipescript, casa_restorescript, target_images):
+                       casa_commands_file, casa_pipescript, casa_restorescript, target_images,
+                       jyperk_file):
         # PPR
         pipemanifest.add_pprfile (ouss, os.path.basename(ppr_file))
         
@@ -337,6 +347,9 @@ class SDExportData(hif_exportdata.ExportData):
         pipemanifest.add_images (ouss,
                                  map(os.path.basename, target_images),#[os.path.basename(image) for image in targetimages_fitslist],
                                  'target')
+        
+        # jyperk factors file
+        pipemanifest.add_jyperk(ouss, os.path.basename(jyperk_file))
 
     def _export_pprfile (self, context, products_dir, pprfile):
         """
