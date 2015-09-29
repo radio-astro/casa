@@ -1,14 +1,14 @@
 from taskinit import *
 import glob
 
-# Conversion of TOPO ephemerides to GEO
+# Conversion of TOPO ephemerides to GEO (ICRS)
 #
 # Example:
 #       import recipes.ephemerides.convertephem as ce
 #       ce.convert2geo('titan.ms', 'Titan')
 #
 #   will find the ephemeris attached to field "Titan" in the MS "titan.ms"
-#   and convert RA, Dec, and RadVel to the geocentric ref frame
+#   and convert RA, Dec, and RadVel to the geocentric ref frame (ICRS)
 
 
 def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
@@ -67,15 +67,26 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         else:
             obsloc='unknown'
 
+    oldref = 'J2000'
+    newref = 'ICRS'
+
     if kw.has_key('posrefsys'):
         posref = kw['posrefsys']
     else:
-        casalog.post('Ephemeris does not have the posrefsys keyword. Assuming ICRF/J2000.0', 'INFO')
+        casalog.post('Ephemeris does not have the posrefsys keyword. Assuming ICRF/J2000.0', 'WARN')
         posref = 'ICRF/J2000.0'
 
-    if posref!='ICRF/J2000.0':
-        casalog.post('Unsupported position reference system: '+posref+', need ICRF/J2000.0', 'WARN')
-        return False
+    if not ('J2000' in posref):
+        if 'ICRS' in posref:
+            oldref = 'ICRS'
+        else:
+            casalog.post('Position reference is '+posref+' is not supported, yet.', 'WARN')
+            return False
+
+    newposref = 'ICRF/'+newref
+
+    if oldref!='ICRS':
+        casalog.post('Position reference is '+oldref+'. Will convert positions to '+newref, 'INFO')
 
     if obsloc=='GEOCENTRIC':
         casalog.post('Obsloc is already GEOCENTRIC. Nothing to be done.', 'INFO')
@@ -101,10 +112,10 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
 
         olddir={'m0': {'value': ra[i], 'unit': 'deg'},
                 'm1': {'value': dec[i], 'unit': 'deg'},
-                'refer': 'J2000',
+                'refer': oldref,
                 'type': 'direction'}
         met.doframe(olddir)
-        newdir=met.measure(olddir, 'J2000')
+        newdir=met.measure(olddir, newref)
 
         tmpnewra = qat.convert(newdir['m0'],'deg')['value']
         if tmpnewra<0:
@@ -142,6 +153,7 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         tbt.putkeyword('GeoLat', 0.)
         tbt.putkeyword('GeoLong', 0.) 
         tbt.putkeyword('obsloc', 'GEOCENTRIC')
+        tbt.putkeyword('posrefsys', newposref)
         tbt.close()
     except Exception, instance:
         casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
@@ -151,11 +163,11 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
             os.system('mv '+safetycopyname+' '+tablename)
         return False
     
-
     if overwrite and outtablename==tablename:
         os.system('rm -rf '+safetycopyname)
 
     return True
+
 
 def findattachedephemfields(vis='',field='*'):
     mst = mstool()

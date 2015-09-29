@@ -1251,10 +1251,10 @@ class asdm_import7(test_base):
                 print myname, ": OK."
             prsys = kw['posrefsys']
             print myname, ": Testing if posrefsys was set correctly ..."
-            if not (prsys=="ICRF/J2000.0"):
+            if not (prsys=="ICRF/ICRS"):
                 print myname, ": ERROR."
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/J2000.0 '+themsname+'\n'
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/ICRS '+themsname+'\n'
             else:
                 print myname, ": OK."
  
@@ -1807,10 +1807,10 @@ class asdm_import11(test_base):
                 print myname, ": OK."
             prsys = kw['posrefsys']
             print myname, ": Testing if posrefsys was set correctly ..."
-            if not (prsys=="ICRF/J2000.0"):
+            if not (prsys=="ICRF/ICRS"):
                 print myname, ": ERROR."
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/J2000.0 '+themsname+'\n'
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/ICRS '+themsname+'\n'
             else:
                 print myname, ": OK."
  
