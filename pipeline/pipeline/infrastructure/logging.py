@@ -247,12 +247,12 @@ def suspend_handler(handler_class):
     loggers.
 
     :param handler_class: the class to remove
-    :return: list of handler classes removed by this call
+    :return: set of handler classes removed by this call
     """
-    global _loggers
-    to_remove = [l for l in _loggers if isinstance(l, handler_class)]
-    for l in to_remove:
-        remove_handler(l)
+    to_remove = set([h for l in _loggers for h in l.handlers
+                     if isinstance(h, handler_class)])
+    for h in to_remove:
+        remove_handler(h)
     return to_remove
 
 
@@ -279,7 +279,7 @@ class CapturingHandler(logging.Handler):
         """
         Initialize the handler.
         """
-        logging.Handler.__init__(self, level)
+        super(CapturingHandler, self).__init__(level)
         self.buffer = []
 
     def emit(self, record):
