@@ -155,6 +155,7 @@ MsPlot::MsPlot() : msa(0), itsResetCallBack(0)
     
     //# Initialize the various variables.
     itsInitialized = False;
+    itsConvertClassSet = False;
     initialize();
 
     //# Indicate that MS is not open yet.
@@ -178,6 +179,7 @@ MsPlot::MsPlot( const String& MSPath ) : msa(0), itsResetCallBack(0)
 
     //# Set MsPlot to its initialized state.
     itsInitialized = False;
+    itsConvertClassSet = False;
     initialize();
 
     //# Since we have a measurment set name creat the measurment set.
