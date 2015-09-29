@@ -88,6 +88,7 @@ tableplot::tableplot()
 		adbg=0;
 		if(adbg)cout << "tableplot constructor" << endl;
 		nTabs=0;
+		alive=0;
 		TABS.resize(0);
 		TabNames.resize(0);
                 resetter_p = NULL;
