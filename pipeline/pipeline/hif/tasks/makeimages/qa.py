@@ -21,7 +21,7 @@ class MakeImagesQAHandler(pqa.QAResultHandler):
         # calculate QA score as minimum of all sub-scores
         if (len(result.results) > 0):
             minScore = pqa.QAScore(min([item.qa.representative.score for item in result.results]), \
-                                   longmsg='Image RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')
+                                   longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')
         else:
             minScore = pqa.QAScore(-0.1, longmsg='No imaging results found', shortmsg='No imaging results')
         result.qa.pool[:] = [minScore]
