@@ -71,6 +71,9 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
+
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/ia_modify/'
 
 class ia_modify_test(unittest.TestCase):
     
@@ -103,6 +106,37 @@ class ia_modify_test(unittest.TestCase):
         self.assertTrue(zz and type(zz) == type(True))
         yy.done()
         mycl.done()
+        
+    def test_CAS5688(self):
+        """verify output is the same after this performance fix"""
+        myia = iatool()
+        for i in [0, 1]:
+            if i == 0:
+                imagename = "CAS5688_1.im"
+            elif i == 1:
+                imagename = "CAS5688_2.im"
+            myia.fromshape(imagename, [20,20,1,10])
+            if i == 0:
+                world = myia.toworld([4.4, 4.4])['numeric']
+            elif i == 1:
+                world = myia.toworld([4.51, 4.51])['numeric']
+            myia.setbrightnessunit("Jy/pixel")
+            v0 = qa.quantity(world[0], "arcmin")
+            v1 = qa.quantity(world[1], "arcmin")
+            dir = me.direction("J2000", v0, v1)
+            mycl = cltool()
+            mycl.addcomponent(
+                [1,0, 0, 0], "Jy", dir=dir, shape="point",
+                polarization="Stokes", spectrumtype="spectral index", index=2.5
+            )
+            myia.modify(model=mycl.torecord(), subtract=False)
+            bb = myia.getchunk()
+            myia.done()
+            mycl.done()
+            myia.open(datapath + imagename)
+            cc = myia.getchunk()
+            myia.done()
+            self.assertTrue((bb == cc).all())
     
 def suite():
     return [ia_modify_test]
