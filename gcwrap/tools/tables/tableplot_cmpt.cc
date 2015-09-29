@@ -47,8 +47,8 @@ class TPConvertAdd : public TPConvertBase
 	public :
 		TPConvertAdd(){};
 		~TPConvertAdd(){};
-		inline Double Xconvert(Double x,Int row, Int tblNum){x += 100;return x;};
-		inline Double Yconvert(Double y,Int row, Int tblNum){y += 10;return y;};
+		inline Double Xconvert(Double x,Int /*row*/, Int /*tblNum*/){x += 100;return x;};
+		inline Double Yconvert(Double y,Int /*row*/, Int /*tblNum*/){y += 10;return y;};
 };
 
 
@@ -215,7 +215,7 @@ tableplot::savefig( const std::string& filename,
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-   return True;
+   return rstat;
 }
 
 /* Select subtables from opened tables */
@@ -421,7 +421,7 @@ tableplot::iterplotnext()
 
 /* Terminate Iteration plotting */
 bool
-tableplot::iterplotstop( const bool rmplotter )
+tableplot::iterplotstop( const bool /*rmplotter*/ )
 {
 	if(alive==0) return False;
 	if(adbg)cout << " Stop iterplot..." << endl;
