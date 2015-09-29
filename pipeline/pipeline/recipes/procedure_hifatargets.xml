@@ -47,12 +47,20 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">width</Keyword>
+                <Value xmlns=""></Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">subcontms</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
