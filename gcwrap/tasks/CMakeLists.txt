@@ -44,6 +44,7 @@ imhead.xml
 immath.xml
 immoments.xml
 impbcor.xml
+importatca.xml
 importasdm.xml
 importevla.xml
 importfits.xml

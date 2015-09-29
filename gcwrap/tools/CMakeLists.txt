@@ -59,6 +59,7 @@ install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PY
 
 casa_add_library( tools
  atmosphere/atmosphere_cmpt.cc
+ atnf/atcafiller_cmpt.cc
  calanalysis/calanalysis_cmpt.cc
  calibrater/calplot_cmpt.cc
  casa/logsink_cmpt.cc
@@ -129,6 +130,7 @@ add_dependencies( libtools      tools_definitions )
 
 casa_add_tools( tools_swig tools_sources tools_py
  atmosphere/atmosphere.xml
+ atnf/atcafiller.xml
  calanalysis/calanalysis.xml
  calibrater/calplot.xml
  casa/logsink.xml

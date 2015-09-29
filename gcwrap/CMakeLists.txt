@@ -763,6 +763,7 @@ else()
       set( casacode_prefix ${CMAKE_INSTALL_PREFIX}/.. )
   endif()
   set( casacode_libs
+       atnf
        alma 
        atmosphere
        calanalysis

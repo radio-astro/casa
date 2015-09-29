@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+	file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+	<task type="function" name="importatca" category="import/export">
+importatca(files=None,vis=None,
+              options=None,spw=None,
+              nscans=None,
+              lowfreq=None,highfreq=None,fields=None,
+              edge=None,
+              async=None):
+  <shortdescription>Import ATCA RPFITS file(s) to a measurement set</shortdescription>
+ 
+  <description>
+      Imports an arbitrary number of ATCA RPFITS format data sets into
+      a casa measurement set.  If more than one band is present, they
+      will be put in the same measurement set but in a separate spectral
+      window.  The task will handle both old ATCA and new CABB (after
+      April 2009) archive data.
+   </description>
+   <input>
+	   <param type="stringArray" name="files" mustexist="true">
+		   <description>Name of input ATCA RPFits file(s)</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="vis">
+		   <description>Name of output visibility file (MeasurementSet)</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="options">
+		   <description>Processing options: birdie, reweight, noauto, noxycorr, fastmosaic, hires, notsys (comma separated list)</description>
+		   <value></value>	 
+	   </param>
+
+	   <param type="intArray" name="spw">
+		   <description>Specify the spectral windows to use, default=all</description>
+		   <value>-1</value>
+	   </param>
+
+	   <param type="intArray" name="nscans">
+		   <description>Number of scans to skip followed by number of scans to read</description>
+		   <value>0,0</value>
+	   </param>
+
+	   <param type="double" name="lowfreq" units="GHz">
+		   <description>Lowest reference frequency to select</description>
+		   <value>0.1</value>
+	   </param>
+	   <param type="double" name="highfreq" units="GHz">
+		   <description>Highest reference frequency to select</description>
+		   <value>999</value>
+	   </param>
+
+	   <param type="stringArray" name="fields">
+		   <description>List of field names to select</description>
+		   <value></value>
+	   </param>
+
+	  <param type="double" name="edge">
+		   <description>Percentage of edge channels to flag. For combined zooms, this specifies the percentage for a single zoom window</description>
+		   <value>8</value>
+	   </param>
+
+	   <!-- opcor not implemented
+	     <param type="int" name="opcor" >
+		   <description>Apply interpolated opacity correction with opcor frequencies. Use 2 for linear interpolation, 0 to disable correction.</description>
+		   <value>2</value>
+	   </param> -->
+
+   </input>
+   <example>
+      importatca(['2001-01-02_1*.C999','2001-01-03_0*.C999'],'c999.ms',
+      options='birdie,reweight',edge=10)
+      Imports a number of ATCA RPFITS-format data sets into
+      a casa measurement set. We are applying birdie flagging and lag spectrum reweighting 
+      (as approriate for old 33 channel continuum data) as well as flagging the 10% edge channels.
+   </example>
+</task>
+</casaxml>
