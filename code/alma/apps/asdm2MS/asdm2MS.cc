@@ -1385,7 +1385,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       double equator =  v[0]->getEquinoxEquator();
       string posref = "unknown";
       if (equator == 2000.) { // the Ephemeris table presently only stores the equator
-	posref = "ICRF/J2000.0";
+	posref = "ICRF/ICRS";
       }
 
       // Prepare the table keywords with the values computed above.

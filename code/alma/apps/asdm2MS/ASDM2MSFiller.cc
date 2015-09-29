@@ -1768,17 +1768,23 @@ void ASDM2MSFiller::addSource(int             source_id_,
     }
   }
   else{
+    casa::MDirection::Types theFirstType;
     casa::MDirection mD;
     mssourceCol.directionMeas().get(0, mD);
-    casa::MDirection::Types theFirstType;
     casa::MDirection::getType(theFirstType, mD.getRefString());
     if(theType != theFirstType){
-      cout << "Inconsistent directionCodes in Source table: " << theType << " (" << MDirection::showType(theType) << ") and "
-	   << theFirstType << " (" << MDirection::showType(theFirstType) << ")"<< endl;
-      cout << "Will convert all directions to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;
+      cout << "Inconsistent directionCodes in Source table for ID " << source_id_
+	   << ", SPW ID " << spectral_window_id_
+	   << ": " << theType << " (" << MDirection::showType(theType) << ") original and "
+	   << theFirstType << " (" << MDirection::showType(theFirstType) << ") required"<< endl;
+      cout << "Will convert direction to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;
+      
       if( ((int)theType) >= MDirection::N_Types ){
 	cout << "(Proper conversion not yet implemented for solar system objects.)" << endl;
 	directionMD = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), theFirstType);
+      }
+      else{ // convert to theFirstType
+	directionMD = MDirection::Convert(directionMD, theFirstType)();
       }
     }
   }
