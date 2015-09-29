@@ -76,10 +76,6 @@ def converttopoephem2geo(tablename='', outtablename='', overwrite=True):
         casalog.post('Ephemeris does not have the posrefsys keyword. Assuming ICRF/J2000.0', 'WARN')
         posref = 'ICRF/J2000.0'
 
-    if not 'ICRF' in posref:
-        casalog.post('Observatory location reference in '+posref+' is not supported, yet. Need ICRF.', 'WARN')
-        return False
-        
     if not ('J2000' in posref):
         if 'ICRS' in posref:
             oldref = 'ICRS'
