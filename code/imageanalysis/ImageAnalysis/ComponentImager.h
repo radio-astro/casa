@@ -64,12 +64,20 @@
 
 #include <casa/aips.h>
 
+#include <memory>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T> class ImageInterface;
 class ComponentList;
 class Unit;
 class LogIO;
+template <class T> class MeasRef;
+class MDirection;
+class MVAngle;
+template <class T> class Vector;
+class MVFrequency;
+class MFrequency;
 
 // <summary>
 // </summary>
@@ -106,18 +114,30 @@ class ComponentImager
 {
 public:
 
-// Project the componentlist onto the image.  If any of the coordinate
-// transformations for a particular pixel fail (e.g. coordinate system
-// is not defined for that pixel) if the image has a writable mask, then those 
-// pixels will be masked, otherwise they are just zeroed.  Any pixels
-// that are already masked mask=F) will not have their values changed
-// (perhaps this behaviour should be changed).
-  static void project(ImageInterface<Float>& image, 
-		      const ComponentList& list);
+	// Project the componentlist onto the image.  If any of the coordinate
+	// transformations for a particular pixel fail (e.g. coordinate system
+	// is not defined for that pixel) if the image has a writable mask, then those
+	// pixels will be masked, otherwise they are just zeroed.  Any pixels
+	// that are already masked mask=F) will not have their values changed
+	// (perhaps this behaviour should be changed).
+	static void project(
+		ImageInterface<Float>& image,
+		const ComponentList& list
+	);
+
+private:
+
+	static std::unique_ptr<ComponentList> _doPoints(
+		ImageInterface<Float>& image, const ComponentList& list,
+		int longAxis, int latAxis, const Unit& fluxUnits,
+		const MeasRef<MDirection>& dirRef, const MVAngle& pixelLatSize,
+		const MVAngle& pixelLongSize, const Vector<MVFrequency>& freqValues,
+		const MeasRef<MFrequency>& freqRef, Int freqAxis, Int polAxis, uInt nStokes
+	);
+
 };
 
-
-} //# NAMESPACE CASA - END
+}
 
 #endif
 

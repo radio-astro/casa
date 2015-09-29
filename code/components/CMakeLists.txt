@@ -42,8 +42,10 @@ casa_add_library( components
     ComponentModels/SkyCompRep.cc
     ComponentModels/SpectralIndex.cc
     ComponentModels/SpectralModel.cc
+    ComponentModels/C11Timer.cc
     ComponentModels/TabularSpectrum.cc
     ComponentModels/TwoSidedShape.cc
+    
     
     SpectralComponents/CompiledSpectralElement.cc
     SpectralComponents/GaussianMultipletSpectralElement.cc
@@ -89,6 +91,7 @@ install (FILES
     ComponentModels/SpectralIndex.h
     ComponentModels/SpectralModel.h
     ComponentModels/TabularSpectrum.h
+    ComponentModels/C11Timer.h
     ComponentModels/TwoSidedShape.h
 	DESTINATION include/casacode/components/ComponentModels
 )

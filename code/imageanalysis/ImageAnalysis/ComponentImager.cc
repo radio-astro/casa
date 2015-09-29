@@ -26,6 +26,7 @@
 //# $Id: ComponentImager.cc 18855 2005-07-21 08:03:40Z nkilleen $
 
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
+
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Vector.h>
@@ -50,9 +51,16 @@
 #include <casa/Quanta/QMath.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
+#include <casa/Arrays/ArrayLogical.h>
+
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/GaussianShape.h>
+#include <components/ComponentModels/PointShape.h>
+#include <components/ComponentModels/C11Timer.h>
+#include <components/ComponentModels/SkyCompRep.h>
+
 #include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -63,13 +71,15 @@
 #include <lattices/Lattices/LatticeStepper.h>
 #include <casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <iomanip>
+
+namespace casa {
 
 void ComponentImager::project(ImageInterface<Float>& image, const ComponentList& list) 
 {
-	const CoordinateSystem& coords = image.coordinates();
-	const IPosition imageShape = image.shape();
-	LogIO os(LogOrigin("ComponentImager", "project"));
+	const auto& coords = image.coordinates();
+	const auto imageShape = image.shape();
+	LogIO os(LogOrigin("ComponentImager", __func__));
 
 	// I currently REQUIRE that:
 	// * The list has at least one element.
@@ -83,13 +93,11 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	ThrowIf(
 		! coords.hasDirectionCoordinate(), "Image does not have a direction coordinate"
 	);
-	// FIXME: the variable definitions are reveresed; the first axis is the longitude axis,
-	// the second axis is the latitude axis.
-	uInt latAxis, longAxis;
+	uInt longAxis, latAxis;
 	{
 		const Vector<Int> dirAxes = coords.directionAxesNumbers();
-		latAxis = dirAxes(0);
-		longAxis = dirAxes(1);
+		longAxis = dirAxes(0);
+		latAxis = dirAxes(1);
 	}
 	DirectionCoordinate dirCoord = coords.directionCoordinate();
 	dirCoord.setWorldAxisUnits(Vector<String>(2, "rad"));
@@ -103,8 +111,9 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	MVAngle pixelLatSize, pixelLongSize;
 	{
 		const Vector<Double> inc = dirCoord.increment();
-		pixelLatSize = MVAngle(abs(inc(0)));
-		pixelLongSize = MVAngle(abs(inc(1)));
+		pixelLongSize = MVAngle(abs(inc[0]));
+		pixelLatSize = MVAngle(abs(inc[1]));
+		;
 	}
 
 	// Check if there is a Stokes Axes and if so which polarizations. Otherwise
@@ -203,7 +212,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 				UnitMap::putUser("beam", pixel.getValue());
 			}
 			else {
-				const Quantum<Double> beamArea = beam.getArea("sr");
+				const Quantity beamArea = beam.getArea("sr");
 				UnitMap::putUser(
 					"beam", UnitVal(beamArea.getValue(),
 					beamArea.getFullUnit().getName()))
@@ -239,27 +248,6 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			fluxUnits = jy;
 		}
 	}
-	// Setup an iterator to step through the image in chunks that can fit into
-	// memory. Go to a bit of effort to make the chunk size as large as
-	// possible but still minimize the number of tiles in the cache.
-	IPosition chunkShape = imageShape;
-	{
-		const IPosition tileShape = image.niceCursorShape();
-		chunkShape(latAxis) = tileShape(latAxis);
-		chunkShape(longAxis) = tileShape(longAxis);
-	}
-	IPosition pixelShape = imageShape;
-	pixelShape(latAxis) = pixelShape(longAxis) = 1;
-	LatticeStepper pixelStepper(imageShape, pixelShape, LatticeStepper::RESIZE);
-	LatticeIterator<Float> chunkIter(image, chunkShape);
-	const uInt nDirs = chunkShape(latAxis) * chunkShape(longAxis);
-	Cube<Double> pixelVals(4, nDirs, nFreqs);
-	Vector<MVDirection> dirVals(nDirs);
-	Vector<Bool> coordIsGood(nDirs);
-	const uInt naxis = imageShape.nelements();
-	Vector<Double> pixelDir(2);
-	uInt d;
-	IPosition pixelPosition(naxis, 0);
 
 	// Does the image have a writable mask ?  Output pixel values are
 	// only modified if the mask==T  and the coordinate conversions
@@ -270,47 +258,92 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	if (image.isMasked() && image.hasPixelMask()) {
 		if (image.pixelMask().isWritable()) {
 			doMask = True;
-		} else {
+		}
+		else {
 			os << LogIO::WARN
-					<< "The image is masked, but it cannot be written to" << LogIO::POST;
+				<< "The image is masked, but it cannot be written to" << LogIO::POST;
 		}
 	}
-	Lattice<Bool>* pixelMaskPtr = 0;
-	if (doMask) pixelMaskPtr = &image.pixelMask();
-	PtrHolder<Array<Bool> > maskPtr;
-	Int polAxis = coords.polarizationAxisNumber(False);
-	for (chunkIter.reset(); !chunkIter.atEnd(); chunkIter++) {
 
+	auto myList = &list;
+	const auto naxis = imageShape.nelements();
+	IPosition pixelPosition(naxis, 0);
+	Int polAxis = coords.polarizationAxisNumber(False);
+	auto modifiedList = _doPoints(
+		image, list, longAxis, latAxis, fluxUnits, dirRef,
+		pixelLatSize, pixelLongSize, freqValues, freqRef,
+		freqAxis, polAxis, nStokes
+	);
+
+
+	if (modifiedList) {
+		myList = modifiedList.get();
+	}
+
+
+	// Setup an iterator to step through the image in chunks that can fit into
+	// memory. Go to a bit of effort to make the chunk size as large as
+	// possible but still minimize the number of tiles in the cache.
+	auto chunkShape = imageShape;
+	{
+		const IPosition tileShape = image.niceCursorShape();
+		chunkShape(longAxis) = tileShape(longAxis);
+		chunkShape(latAxis) = tileShape(latAxis);
+	}
+	auto pixelShape = imageShape;
+	pixelShape(longAxis) = pixelShape(latAxis) = 1;
+	LatticeStepper pixelStepper(imageShape, pixelShape, LatticeStepper::RESIZE);
+	LatticeIterator<Float> chunkIter(image, chunkShape);
+	const uInt nDirs = chunkShape(longAxis) * chunkShape(latAxis);
+	Cube<Double> pixelVals(4, nDirs, nFreqs);
+	Vector<MVDirection> dirVals(nDirs);
+	Vector<Bool> coordIsGood(nDirs);
+	Vector<Double> pixelDir(2);
+	uInt d;
+
+	auto doSample = myList->nelements() > 0;
+	Lattice<Bool>* pixelMaskPtr = 0;
+	if (doMask) {
+		pixelMaskPtr = &image.pixelMask();
+	}
+	PtrHolder<Array<Bool> > maskPtr;
+	for (chunkIter.reset(); !chunkIter.atEnd(); chunkIter++) {
 		// Iterate through sky plane of cursor and do coordinate conversions
 
 		const IPosition& blc = chunkIter.position();
 		const IPosition& trc = chunkIter.endPosition();
 		d = 0;
-		pixelDir(1) = blc(longAxis);
+		pixelDir[1] = blc[latAxis];
 		coordIsGood = True;
-		while (pixelDir(1) <= trc(longAxis)) {
-			pixelDir(0) = blc(latAxis);
-			while (pixelDir(0) <= trc(latAxis)) {
-				if (!dirCoord.toWorld(dirVals(d), pixelDir)) {
+		auto endLat = trc[latAxis];
+		while (pixelDir[1] <= endLat) {
+			pixelDir[0] = blc[longAxis];
+			auto endLong = trc[longAxis];
+			while (pixelDir[0] <= endLong) {
+				if (!dirCoord.toWorld(dirVals[d], pixelDir)) {
 					// These pixels will be masked
-					coordIsGood(d) = False;
+					coordIsGood[d] = False;
 				}
-				d++;
-				pixelDir(0)++;
+				++d;
+				++pixelDir[0];
 			}
-			pixelDir(1)++;
+			++pixelDir[1];
 		}
-
-		// Sample model, converting the values in the components
-		// to the specified direction and spectral frames
-		list.sample(pixelVals, fluxUnits, dirVals, dirRef, pixelLatSize,
-				pixelLongSize, freqValues, freqRef);
-
+		if (doSample) {
+			// Sample model, converting the values in the components
+			// to the specified direction and spectral frames
+			myList->sample(
+				pixelVals, fluxUnits, dirVals, dirRef, pixelLatSize,
+				pixelLongSize, freqValues, freqRef
+			);
+		}
+		else {
+			pixelVals = 0;
+		}
 		// Modify data by model for this chunk of data
-		Array<Float>& imageChunk = chunkIter.rwCursor();
+		auto& imageChunk = chunkIter.rwCursor();
 
 		// Get input mask values if available
-
 		if (doMask) {
 			maskPtr.set(
 				new Array<Bool>(
@@ -320,16 +353,21 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			);
 		}
 		d = 0;
-		pixelPosition(longAxis) = 0;
+		pixelPosition[latAxis] = 0;
 		coordIsGood = True;
-		while (pixelPosition(longAxis) < chunkShape(longAxis)) {
-			pixelPosition(latAxis) = 0;
-			while (pixelPosition(latAxis) < chunkShape(latAxis)) {
-				if (coordIsGood(d)) {
+
+		while (pixelPosition[latAxis] < chunkShape[latAxis]) {
+			pixelPosition(longAxis) = 0;
+			while (pixelPosition[longAxis] < chunkShape[longAxis]) {
+				if (coordIsGood[d]) {
 					for (uInt f = 0; f < nFreqs; f++) {
-						if (freqAxis >= 0) pixelPosition(freqAxis) = f;
+						if (freqAxis >= 0) {
+							pixelPosition(freqAxis) = f;
+						}
 						for (uInt s = 0; s < nStokes; s++) {
-							if (polAxis >= 0) pixelPosition(polAxis) = s;
+							if (polAxis >= 0) {
+								pixelPosition(polAxis) = s;
+							}
 							if (! doMask || (doMask && (*maskPtr)(pixelPosition))) {
 								imageChunk(pixelPosition) += pixelVals(s, d, f);
 							}
@@ -340,11 +378,10 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 					(*maskPtr)(pixelPosition) = False;
 				}
 				d++;
-				pixelPosition(latAxis)++;
+				pixelPosition(longAxis)++;
 			}
-			pixelPosition(longAxis)++;
+			pixelPosition(latAxis)++;
 		}
-
 		// Update output mask in appropriate fashion
 
 		if (doMask) {
@@ -352,5 +389,104 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		}
 	}
 }
-} //# NAMESPACE CASA - END
 
+
+std::unique_ptr<ComponentList> ComponentImager::_doPoints(
+	ImageInterface<Float>& image, const ComponentList& list,
+	int longAxis, int latAxis, const Unit& fluxUnits,
+	const MeasRef<MDirection>& dirRef, const MVAngle& pixelLatSize,
+	const MVAngle& pixelLongSize, const Vector<MVFrequency>& freqValues,
+	const MeasRef<MFrequency>& freqRef, Int freqAxis, Int polAxis, uInt nStokes
+) {
+	// deal with point sources separately
+	vector<Int> pointSourceIdx;
+	auto n = list.nelements();
+	Vector<Double> pixel;
+	MVDirection imageWorld;
+	auto nFreqs = freqValues.size();
+	Cube<Double> values(4, 1, nFreqs);
+	IPosition pixelPosition(image.ndim(), 0);
+	const auto& dirCoord = image.coordinates().directionCoordinate();
+	const auto imageShape = image.shape();
+	std::unique_ptr<ComponentList> modifiedList;
+	for (uInt i=0; i<n; ++i) {
+		if (list.getShape(i)->type() == ComponentType::POINT) {
+			auto dir = list.getRefDirection(i);
+			dirCoord.toPixel(pixel, dir);
+			pixelPosition[longAxis] = floor(pixel[0] + 0.5);
+			pixelPosition[latAxis] = floor(pixel[1] + 0.5);
+			// in case the source and the coordinate system have different
+			// ref frames
+			dirCoord.toWorld(imageWorld, pixel);
+			const auto& point = list.component(i);
+			values = 0;
+			Bool foundPixel = False;
+			if (
+				pixelPosition[longAxis] >= 0 && pixelPosition[latAxis] >= 0
+				&& pixelPosition[longAxis] < imageShape[longAxis]
+				&& pixelPosition[latAxis] < imageShape[latAxis]
+			) {
+				point.sample(
+					values, fluxUnits, Vector<MVDirection>(1, imageWorld),
+					dirRef, pixelLatSize, pixelLongSize, freqValues, freqRef
+				);
+				foundPixel = anyNE(values, 0.0);
+			}
+			if (! foundPixel) {
+				// look for the pixel in a 3x3 square around the target pixel
+				auto targetPixel = pixelPosition;
+				for (
+					pixelPosition[longAxis]=targetPixel[longAxis]-1;
+					pixelPosition[longAxis]<=targetPixel[longAxis]+1; ++pixelPosition[longAxis]
+				) {
+					for (
+						pixelPosition[latAxis]=targetPixel[latAxis]-1;
+						pixelPosition[latAxis]<=targetPixel[latAxis]+1; ++pixelPosition[latAxis]
+					) {
+						if (
+							(pixelPosition[longAxis] != targetPixel[longAxis]
+							|| pixelPosition[latAxis] != targetPixel[latAxis])
+							&& pixelPosition[longAxis] >= 0 && pixelPosition[latAxis] >= 0
+							&& pixelPosition[longAxis] < imageShape[longAxis]
+							&& pixelPosition[latAxis] < imageShape[latAxis]
+						) {
+							dirCoord.toWorld(imageWorld, pixel);
+							point.sample(
+								values, fluxUnits, Vector<MVDirection>(1, imageWorld),
+								dirRef, pixelLatSize, pixelLongSize, freqValues, freqRef
+							);
+							foundPixel = anyNE(values, 0.0);
+							if (foundPixel) {
+								break;
+							}
+						}
+						if (foundPixel) {
+							break;
+						}
+					}
+				}
+			}
+			if (foundPixel) {
+				pointSourceIdx.push_back(i);
+				for (uInt f = 0; f < nFreqs; f++) {
+					if (freqAxis >= 0) {
+						pixelPosition[freqAxis] = f;
+					}
+					for (uInt s = 0; s < nStokes; s++) {
+						if (polAxis >= 0) {
+							pixelPosition[polAxis] = s;
+						}
+						image.putAt(image.getAt(pixelPosition) + values(s, 0, f), pixelPosition);
+					}
+				}
+			}
+		}
+	}
+	if (! pointSourceIdx.empty()) {
+		modifiedList.reset(new ComponentList(list));
+		modifiedList->remove(Vector<Int>(pointSourceIdx));
+	}
+	return modifiedList;
+}
+
+}
