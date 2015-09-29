@@ -1251,10 +1251,10 @@ class asdm_import7(test_base):
                 print myname, ": OK."
             prsys = kw['posrefsys']
             print myname, ": Testing if posrefsys was set correctly ..."
-            if not (prsys=="ICRF/J2000.0"):
+            if not (prsys=="ICRF/ICRS"):
                 print myname, ": ERROR."
                 retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/J2000.0 '+themsname+'\n'
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/ICRS '+themsname+'\n'
             else:
                 print myname, ": OK."
  
@@ -1570,6 +1570,123 @@ class asdm_import8(test_base):
         os.system("mv moved_"+myasdmname+" "+myasdmname)
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
+    def test_mms7(self):
+        '''Asdm-import: Test good 12 m ASDM with mixed pol/channelisation input with default filler in lazy mode with reading the BDF flags. Output MMS'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X71e4ae_X317_short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, bdfflags=True, createmms=True) 
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            mslocal.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            mslocal.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm=myasdmname, vis='reference.ms', lazy=True, overwrite=True, bdfflags=False, createmms=True)
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                                    +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1.DATA,t2.DATA, 1.e-06)))") == 0
+                if not retValue['success']:
+                    print "ERROR: DATA does not agree with reference."
+                else:
+                    print "DATA columns agree."
+                retValueTmp = th.checkwithtaql("select from [select from reference.ms orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t1, [select from "
+                                            +themsname+" orderby TIME, DATA_DESC_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(t1.FLAG==t2.FLAG)) ") != 0
+                if not retValueTmp:
+                    print "ERROR: FLAG columns do agree with reference but they shouldn't."
+                else:
+                    print "FLAG columns do not agree as expected."
+
+                retValue['success'] = retValue['success'] and retValueTmp
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "OBSERVATION",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "\n*** Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SYSCAL':
+                        excllist=['TANT_SPECTRUM', 'TANT_TSYS_SPECTRUM']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION', 'ASSOC_SPW_ID', 'ASSOC_NATURE']
+                        for colname in excllist:
+                            if colname!='ASSOC_NATURE':
+                                retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                          themsname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                    if subtname=='POLARIZATION':
+                        excllist=['CORR_TYPE', 'CORR_PRODUCT']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/POLARIZATION',
+                                                                      themsname+'/POLARIZATION', colname, 0.01) and retValue['success']
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            themsname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+            
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
 
 class asdm_import9(test_base):
     '''Test importasdm with spw selection in online flags'''
@@ -1626,6 +1743,79 @@ class asdm_import10(test_base):
         self.assertTrue(ParallelDataHelper.isParallelMS(themsname), 'Output is not a Multi-MS')
         self.assertTrue(len(th.getColDesc(themsname, 'DATA')) > 0)
 
+
+
+class asdm_import11(test_base):
+    '''Test importasdm with MMS and ephemerides data'''
+    
+    def setUp(self):
+        self.setUp_eph()
+       
+    def tearDown(self):
+        for myasdmname in ['uid___A002_X997a62_X8c-short']:
+            os.system('rm -f '+myasdmname) # a link
+            shutil.rmtree(myasdmname+".ms",ignore_errors=True)
+            shutil.rmtree(myasdmname+'.ms.flagversions',ignore_errors=True)
+            
+    def test_mms_ephem(self):
+        '''Asdm-import: Test good 12 m ASDM with Ephemeris table in lazy mode and MMS'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        myasdmname = 'uid___A002_X997a62_X8c-short'
+        themsname = myasdmname+".ms"
+
+        self.res = importasdm(myasdmname, vis=themsname, lazy=True, convert_ephem2geo=True, 
+                              process_pointing=False, flagbackup=False, createmms=True) 
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["FIELD/table.dat",
+                            "FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                            "FIELD/EPHEM1_Titania_57034.934999999998.tab"
+                            ])
+        for name in mscomponents:
+            if not os.access(themsname+"/"+name, os.F_OK):
+                print myname, ": Error  ", themsname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+themsname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All relevant tables present. Try opening as MS ..."
+        try:
+            mslocal.open(themsname)
+        except:
+            print myname, ": Error  Cannot open MS table", themsname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+themsname
+        else:
+            mslocal.close()
+            print myname, ": OK."
+
+        for name in ["FIELD/EPHEM0_Mars_57034.896000000001.tab",
+                     "FIELD/EPHEM1_Titania_57034.934999999998.tab"]:
+            tblocal.open(themsname+"/"+name)
+            kw = tblocal.getkeywords()
+            tblocal.close()
+            geodist = kw['GeoDist'] # (km above reference ellipsoid)
+            geolat = kw['GeoLat'] # (deg)
+            geolong = kw['GeoLong'] # (deg)
+            print myname, ": Testing if ephemeris ", name, " was converted to GEO ..."
+            if not (geodist==geolat==geolong==0.):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+' Ephemeris was not converted to GEO for '+themsname+'\n'
+            else:
+                print myname, ": OK."
+            prsys = kw['posrefsys']
+            print myname, ": Testing if posrefsys was set correctly ..."
+            if not (prsys=="ICRF/ICRS"):
+                print myname, ": ERROR."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+' posrefsys keyword is not ICRF/ICRS '+themsname+'\n'
+            else:
+                print myname, ": OK."
+ 
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
         
 def suite():
     return [asdm_import1, 
@@ -1637,6 +1827,7 @@ def suite():
             asdm_import7,
             asdm_import8,
             asdm_import9,
-            asdm_import10]        
+            asdm_import10,
+            asdm_import11]        
         
     

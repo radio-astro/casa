@@ -521,6 +521,10 @@ def importasdm(
             tblocal.putcol('PHASE_DIR', tmpa)
             tblocal.close()
 
+            tblocal.open(myviso+'/SOURCE')
+            sourceposref = tblocal.getcolkeywords('DIRECTION')['MEASINFO']['Ref']
+            tblocal.close()
+
             directions = []
             msmdlocal = casac.msmetadata()
             msmdlocal.open(myviso)
@@ -528,7 +532,12 @@ def importasdm(
             for fld in thesamplefields:
                 thedirmeas = msmdlocal.phasecenter(fld)
                 if thedirmeas['refer']!='J2000':
-                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of J2000 frame.', 'WARN')
+                    casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of '+sourceposref
+                                 +' frame.\nEntry in SOURCE table will be converted to '+sourceposref, 'WARN')
+                    melocal = metool()
+                    melocal.doframe(thedirmeas)
+                    thedirmeas = melocal.measure(thedirmeas, sourceposref)
+
                 directions.append([thedirmeas['m0']['value'], thedirmeas['m1']['value']])
                 thetime = me.epoch(v0=str(ftimes[fld])+'s', rf=ftimekw['MEASINFO']['Ref'])
                 casalog.post("Will set SOURCE direction for SOURCE_ID "+str(sourceids[fld])
