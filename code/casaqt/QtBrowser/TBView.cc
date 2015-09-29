@@ -330,7 +330,8 @@ bool TBView::saveToFile(String file) {
 
              // output to file
             Writer* writer = create_writer(impl);
-            write_to_file( writer, doc, file, TBConstants::xstr("UTF-8") );
+            String encoding = "UTF-8";
+            write_to_file( writer, doc, file, TBConstants::xstr(encoding) );
 
             writer->release();
             doc->release();

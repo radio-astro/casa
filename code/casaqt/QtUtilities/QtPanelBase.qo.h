@@ -29,11 +29,13 @@
 #ifndef QTPANELBASE_H_
 #define QTPANELBASE_H_
 
- #include <QMainWindow>
+#include <QMainWindow>
 
 namespace casa {
 
     class QtPanelBase : public QMainWindow {
+        Q_OBJECT
+
     public:
 	QtPanelBase( QWidget *parent=0 ) : QMainWindow(parent), close_override(false) { }
 

@@ -84,8 +84,9 @@ void TBViewArray::setDataAt(vector<int> d, TBData& newVal, bool f) {
             bool inView = true;
             for(unsigned int i = 0; i < currentSlice.size(); i++) {
                 int n = currentSlice.at(i);
-                if(n != TBConstants::SLICER_ROW_AXIS &
-                   n != TBConstants::SLICER_COL_AXIS && n != d.at(i))
+                if( (n != TBConstants::SLICER_ROW_AXIS) &&
+                    (n != TBConstants::SLICER_COL_AXIS) && 
+                    (n != d.at(i)) )
                     inView = false;
 
                 if(n == TBConstants::SLICER_ROW_AXIS) row = d.at(i);

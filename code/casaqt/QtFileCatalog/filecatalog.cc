@@ -621,15 +621,17 @@ void FileCatalog::paste()
       else {
          //qDebug() << "file to file";
          if (copyName != selName) {
-            bool ret = dir->remove(selName);
+            dir->remove(selName);
+            //bool ret = dir->remove(selName);
             //qDebug() << "remove ret=" << ret;
             QFile file(copyName);
             //qDebug() << "from file name=" << file.fileName();
             int sd = selName.lastIndexOf("/");
             QString nowName = selName.mid(0, sd).append("/").
                       append(copyName.section("/", -1));
+            file.copy(nowName); 
             //qDebug() << "nowname=" << nowName;
-            ret = file.copy(nowName); 
+            //ret = file.copy(nowName); 
             //qDebug() << "copy ret=" << ret;
             //qDebug() << "after copy file name=" << file.fileName();
          }

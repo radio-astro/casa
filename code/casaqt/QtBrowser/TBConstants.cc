@@ -506,7 +506,7 @@ bool TBConstants::valueIsValid(String& value, String& type) {
     } else if(type == TYPE_BOOL) {
         String t = "true";
         String f = "false";
-        return findWS(value) >= value.length() && value == "0" || value == "1"
+        return ((findWS(value) >= value.length()) && (value == "0" || value == "1"))
                || equalsIgnoreCase(value, t) || equalsIgnoreCase(value, f);
     } else if(type == TYPE_UCHAR) {
         return findWS(value) >= value.length() && value.length() == 1;

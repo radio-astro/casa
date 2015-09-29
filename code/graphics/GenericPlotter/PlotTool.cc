@@ -1206,10 +1206,10 @@ void PlotStandardMouseToolGroup::setActiveTool(ToolCode toolcode) {
         return;
     }
     for(unsigned int i = 0; i < m_tools.size(); i++)    {
-        if ((dynamic_cast<PlotSelectTool*> (&*m_tools[i]) != NULL  && toolcode==SELECT_TOOL) 
-         || (dynamic_cast<PlotSelectTool*> (&*m_tools[i]) != NULL  && toolcode==SUBTRACT_TOOL)
-         || (dynamic_cast<PlotZoomTool*>   (&*m_tools[i]) != NULL  && toolcode==ZOOM_TOOL)
-         || (dynamic_cast<PlotPanTool*>    (&*m_tools[i]) != NULL) && toolcode==PAN_TOOL)    
+        if (((dynamic_cast<PlotSelectTool*>(&*m_tools[i]) != NULL && toolcode==SELECT_TOOL)) 
+         || ((dynamic_cast<PlotSelectTool*>(&*m_tools[i]) != NULL && toolcode==SUBTRACT_TOOL))
+         || ((dynamic_cast<PlotZoomTool*>(&*m_tools[i]) != NULL && toolcode==ZOOM_TOOL))
+         || ((dynamic_cast<PlotPanTool*>(&*m_tools[i]) != NULL) && toolcode==PAN_TOOL))    
         {
             PlotMouseToolGroup::setActiveTool(i, toolcode);
             return;

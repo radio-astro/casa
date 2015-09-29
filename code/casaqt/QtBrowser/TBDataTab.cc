@@ -807,8 +807,8 @@ void TBDataTab::cellClicked(int row, int col) {
     }
     highlightedCells.clear();
     
-    if(row < 0 || row >= tableWidget->rowCount() &&
-       col < 0 || col >= tableWidget->columnCount()) {
+    if( (row < 0 || row >= tableWidget->rowCount()) &&
+        (col < 0 || col >= tableWidget->columnCount()) ) {
         tableWidget->blockSignals(false);
         return;
     }
