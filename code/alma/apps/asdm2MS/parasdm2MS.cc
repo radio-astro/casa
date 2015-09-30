@@ -20,8 +20,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#define TO_STRING lexical_cast<string>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -192,6 +190,11 @@ ostringstream errstream;
 ostringstream infostream;
 
 using namespace std;
+template<typename T> string TO_STRING(const T &v) {
+    stringstream tmp;
+    tmp << setprecision(numeric_limits<T>::digits10 + 1) << v;
+    return tmp.str( );
+}
 
 //
 // A class to describe Exceptions.
