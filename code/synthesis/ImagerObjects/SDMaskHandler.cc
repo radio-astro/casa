@@ -509,9 +509,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes(0) = dirAxes(0); 
     axes(1) = dirAxes(1);
     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+
     try {
-      // Since regrid along the spectral axis does not seems to work
-      // properly replacing with ImageRegridder 
+      // Since regrid along the spectral axis does not seem to work
+      // properly, replacing with ImageRegridder 
       //ImageRegrid<Float> imregrid;
       //imregrid.showDebugInfo(1);
       //imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
@@ -525,10 +526,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       const String outfilename = outImageMask.name();
       ImageRegridder regridder(tempim, outfilename, templateim, axes, dummyrec, "", True, outshape);
       regridder.setMethod(Interpolate2D::LINEAR);
-      regridder.setForceRegrid(True);
       SPIIF retim = regridder.regrid();
+      retim->copyData((LatticeExpr<Float>) iif(*retim > 0.1, 1.0, 0.0)); 
     } catch (AipsError &x) {
-	throw(AipsError("ImageRegrid error : "+ x.getMesg()));
+	throw(AipsError("Image regrid error : "+ x.getMesg()));
       }
   } 
 
