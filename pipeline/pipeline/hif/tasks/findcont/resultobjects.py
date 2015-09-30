@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import os.path
-
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.contfilehandler as contfilehandler
 
+LOG = infrastructure.get_logger(__name__)
 
 class FindContResult(basetask.Results):
     def __init__(self, result_cont_ranges, cont_ranges, num_found, num_total):
