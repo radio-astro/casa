@@ -349,7 +349,8 @@ class SDExportData(hif_exportdata.ExportData):
                                  'target')
         
         # jyperk factors file
-        pipemanifest.add_jyperk(ouss, os.path.basename(jyperk_file))
+        if jyperk_file is not None:
+            pipemanifest.add_jyperk(ouss, os.path.basename(jyperk_file))
 
     def _export_pprfile (self, context, products_dir, pprfile):
         """
@@ -780,6 +781,9 @@ class SDExportData(hif_exportdata.ExportData):
     def _export_jyperk(self, context, products_dir):
         reffile_list = set(self.__get_reffile(context.results))
         
+        if len(reffile_list) == 0:
+            return None
+        
         ps = context.project_structure
         if ps is None or ps.ousstatus_entity_id == 'unknown':
             product_tarfilename = 'jyperk.tar.gz'
@@ -798,11 +802,15 @@ class SDExportData(hif_exportdata.ExportData):
     def __get_reffile(self, results):
         for proxy in results:
             result = proxy.read()
+            if not isinstance(result, basetask.ResultsList):
+                result = [result]
             for r in result:
                 if str(r).find('IntensityScalingResults') != -1:#isinstance(r, scaling.IntensityScalingResults):
                     outcome = r.outcome
                     if outcome.has_key('reffile'):
-                        yield outcome['reffile']
+                        reffile = outcome['reffile']
+                        if reffile is not None and os.path.exists(reffile):
+                            yield outcome['reffile']
     
     def _generate_vislist(self):
         return list(self.__generate_vislist())
