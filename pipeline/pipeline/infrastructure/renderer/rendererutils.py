@@ -19,47 +19,48 @@ def printTsysFlags(tsystable, htmlreport):
     """Method that implements a version of printTsysFlags by Todd Hunter.
     """
     with casatools.TableReader(tsystable) as mytb:
-        flags = mytb.getcol("FLAG")
-        npol = len(flags)
-        antIndices=mytb.getcol("ANTENNA1")
         spws=mytb.getcol("SPECTRAL_WINDOW_ID")
-        times=mytb.getcol("TIME")
-        fields=mytb.getcol("FIELD_ID")
-        uniqueTimes = np.unique(times)
-
+        
     with casatools.TableReader(tsystable+"/ANTENNA") as mytb:
         antNames = mytb.getcol("NAME")
 
     with open(htmlreport, 'w') as stream:
         stream.write('<html>')
 
-        for iant in range(len(antNames)):
-            for spw in np.unique(spws):
-                # zsel will be an array of (a few) row numbers that
-                # match the ant and spw
-                zsel = np.where((antIndices==iant)*(spws==spw))[0]
-
-                for pol in range(npol):
-                    for t in range(len(zsel)):
-                        zflag=np.where(flags[pol,:,zsel[t]])
-
-                        if (len(zflag[0]) > 0):
-                            if (len(zflag[0]) == len(flags[0,:,zsel[t]])):
-                                chans = 'all channels'
-                            else:
-                                chans = '%d channels: ' % (
-                                  len(zflag[0])) + str(zflag[0])
-
-                            timeIndex = list(uniqueTimes).index(times[zsel[t]])
-                            myline = antNames[iant] + \
-                              " (#%02d), field %d, time %d, pol %d, spw %d, "%(
-                              iant, fields[zsel[t]], timeIndex, pol, spw) + \
-                              chans + "<br>\n"
-
-                            stream.write(myline)
-
-            # format break between antennas
-            stream.write('<br>\n')
+        with casatools.TableReader(tsystable) as mytb:
+            for iant in range(len(antNames)):
+                for spw in np.unique(spws):
+                    
+                    # select rows from table for specified antenna and spw
+                    zseltb = mytb.query("SPECTRAL_WINDOW_ID=={0} && ANTENNA1=={1}".format(spw, iant))
+                    flags = zseltb.getcol("FLAG")
+                    npol = len(flags)
+                    nchan = len(flags[0])
+                    times = zseltb.getcol("TIME")
+                    fields = zseltb.getcol("FIELD_ID")
+                    uniqueTimes = np.unique(times)
+                    
+                    for pol in range(npol):
+                        for t in range(len(times)):
+                            zflag=np.where(flags[pol,:,t])[0]
+                            
+                            if (len(zflag) > 0):
+                                if (len(zflag) == nchan):
+                                    chans = 'all channels'
+                                else:
+                                    chans = '%d channels: ' % (
+                                      len(zflag)) + str(zflag)
+                                
+                                timeIndex = list(uniqueTimes).index(times[t])
+                                myline = antNames[iant] + \
+                                  " (#%02d), field %d, time %d, pol %d, spw %d, "%(
+                                  iant, fields[t], timeIndex, pol, spw) + \
+                                  chans + "<br>\n"
+                                
+                                stream.write(myline)
+                
+                # format break between antennas
+                stream.write('<br>\n')
 
 def renderflagcmds(flagcmds, htmlflagcmds):
     """Method to render a list of flagcmds into html format.

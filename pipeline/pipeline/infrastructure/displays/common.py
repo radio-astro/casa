@@ -524,9 +524,9 @@ class CaltableWrapperFactory(object):
         if caltype == 'gaincal':
             return CaltableWrapperFactory.create_gaincal_wrapper(filename)
         if caltype == 'tsys':
-            return CaltableWrapperFactory.create_fparam_wrapper(filename)            
+            return CaltableWrapperFactory.create_param_wrapper(filename, 'FPARAM')            
         if caltype == 'bandpass':
-            return CaltableWrapperFactory.create_bandpass_wrapper(filename)            
+            return CaltableWrapperFactory.create_param_wrapper(filename, 'CPARAM')            
         raise NotImplementedError('Unhandled caltype: %s', caltype)
     
     @staticmethod    
@@ -551,7 +551,7 @@ class CaltableWrapperFactory(object):
                                    scan)
 
     @staticmethod    
-    def create_bandpass_wrapper(path):
+    def create_param_wrapper(path, param):
         with casatools.TableReader(path) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')
@@ -568,7 +568,7 @@ class CaltableWrapperFactory(object):
             # correlation/channel combination - which is always 1. Squeeze out
             # the unnecessary dimension and swap the channel and correlation
             # axes.
-            data_col = tb.getvarcol('CPARAM')
+            data_col = tb.getvarcol(param)
             row_data = [data_col['r%s' % (k+1)].swapaxes(0, 1).squeeze(2)
                        for k in range(len(data_col))]
 
@@ -582,25 +582,6 @@ class CaltableWrapperFactory(object):
             std_array = numpy.asarray([numpy.ma.MaskedArray(d, mask=f)
                                        for (d, f) in zip(row_data, row_flag)])
             data = numpy.ma.asarray(std_array)
-
-            return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
-                                   scan)
-
-    @staticmethod    
-    def create_fparam_wrapper(path):
-        with casatools.TableReader(path) as tb:
-            time_mjd = tb.getcol('TIME')
-            antenna1 = tb.getcol('ANTENNA1')
-            spw = tb.getcol('SPECTRAL_WINDOW_ID')
-            scan = tb.getcol('SCAN_NUMBER')
-            flag = tb.getcol('FLAG')
-
-            # convert MJD times stored in caltable to matplotlib equivalent
-            time_unix = utils.mjd_seconds_to_datetime(time_mjd)
-            time_matplotlib = matplotlib.dates.date2num(time_unix)
-            
-            tsys = tb.getcol('FPARAM')            
-            data = numpy.ma.MaskedArray(tsys, mask=flag)
 
             return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
                                    scan)
