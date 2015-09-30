@@ -346,22 +346,29 @@ class Tclean(cleanbase.CleanBase):
         for ms in context.observing_run.measurement_sets:
             for intSpw in [int(s) for s in spw.split(',')]:
                 with casatools.ImagerReader(ms.name) as imTool:
-                    # TODO: Add scan selection
-                    imTool.selectvis(spw=intSpw, field=field)
-                    imTool.defineimage(mode=specmode, spw=intSpw,
-                                       cellx=inputs.cell[0], celly=inputs.cell[0],
-                                       nx=inputs.imsize[0], ny=inputs.imsize[1])
-                    # TODO: Mosaic switch needed ?
-                    imTool.weight(type=inputs.weighting, robust=inputs.robust)
-
                     try:
-                        result = imTool.apparentsens()
-                        sensitivities.append(result[1])
-                    except Exception as e:
-                        sensitivities.append(0.01)
-                        LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
+                        # TODO: Add scan selection
+                        imTool.selectvis(spw=intSpw, field=field)
+                        imTool.defineimage(mode=specmode, spw=intSpw,
+                                           cellx=inputs.cell[0], celly=inputs.cell[0],
+                                           nx=inputs.imsize[0], ny=inputs.imsize[1])
+                        # TODO: Mosaic switch needed ?
+                        imTool.weight(type=inputs.weighting, robust=inputs.robust)
 
-        sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
+                        result = imTool.apparentsens()
+                        if (result[1] != 0.0):
+                            sensitivities.append(result[1])
+                    except Exception as e:
+                        # Simply pass as this could be a case of a source not
+                        # being present in the MS.
+                        pass
+
+        if (len(sensitivities) != 0):
+            sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
+        else:
+            defaultSensitivity = 0.001
+            LOG.warning('Exception in calculating sensitivity. Assuming %g Jy/beam.' % (defaultSensitivity))
+            sensitivity = defaultSensitivity
 
         if inputs.specmode == 'cube':
             if inputs.nchan != -1:
