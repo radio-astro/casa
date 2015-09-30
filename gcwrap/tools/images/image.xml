@@ -8214,20 +8214,14 @@ then the output pixel would be masked bad (F).
 <example>
 
 """
-#
-print "\t----\t rotate Ex 1 \t----"
-ia.maketestimage();
-imr=ia.rotate(pa='45deg');
+ia.maketestimage()
+imr=ia.rotate(outfile="rotated.im", pa='45deg')
 imr.done()
 ia.close()
-#
-"""
 
 
 In this example, we rotate the direction coordinate axes (RA/Dec) of a
-test image by 45 degress and regrid the image onto the axes.  <!-- The viewer
-displays the before and after images.
-#imr.view(axislabels=T);-->
+test image by 45 degress and regrid the image onto the axes.
 </example>
 
 </method>
