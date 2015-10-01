@@ -548,7 +548,7 @@ class SDBLFlagWorker(object):
                 LOG.debug('DEBUG_DM: Row: %d Expected RMS: %f PostFit RMS: %f PreFit RMS: %f' % (row, expectedRMS, PostFitRMS, PreFitRMS))
                 stats[5] = expectedRMS * ThreExpectedRMSPostFit if is_baselined else -1
                 stats[6] = expectedRMS * ThreExpectedRMSPreFit
-                DataTable.tb2.putcell('STATISTICS',ID,stats)
+                DataTable.putcell('STATISTICS',ID,stats)
                 flags = DataTable.tb2.getcell('FLAG',ID)
                 #if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
                 if PostFitRMS != INVALID_STAT and (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
