@@ -162,7 +162,7 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
-            pos=str(e).find('No Spw ID(s) matched')
+            pos = str(e).find('Spw Expression: No match found for %s'%(id))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
         except Exception, e:
