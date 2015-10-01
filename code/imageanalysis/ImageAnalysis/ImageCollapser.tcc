@@ -385,6 +385,23 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 	if (! copied) {
 		ImageUtilities::copyMiscellaneous(tmpIm, *subImage, True);
 	}
+	if (_aggType == ImageCollapserData::FLUX) {
+	    // get the flux units right
+	    auto sbunit = subImage->units().getName();
+	    String unit;
+	    if (sbunit.contains("K")) {
+	        String areaUnit = "arcsec2";
+	        unit = sbunit + "." + areaUnit;
+	    }
+	    else {
+	        unit = "Jy";
+	        if (sbunit.contains("/beam")) {
+	            uInt iBeam = sbunit.find("/beam");
+	            unit = sbunit.substr(0, iBeam) + sbunit.substr(iBeam+5);
+	        }
+	    }
+	    tmpIm.setUnits(unit);
+	}
     return this->_prepareOutputImage(tmpIm);
 }
 
