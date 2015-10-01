@@ -387,12 +387,12 @@ class DataTableImpl( object ):
         LOG.info('set_timetable start')
         start_time = time.time()
 
-        mygrp_s = numpy.array(mygrp['small'])
-        mygrp_l = numpy.array(mygrp['large'])
+        mygrp_s = mygrp['small']
+        mygrp_l = mygrp['large']
         rows = self.getcol('ROW')
 
-        timedic_s = construct_timegroup(rows, mygrp_s, timegrp_s)
-        timedic_l = construct_timegroup(rows, mygrp_l, timegrp_l)
+        timedic_s = construct_timegroup(rows, set(mygrp_s), timegrp_s)
+        timedic_l = construct_timegroup(rows, set(mygrp_l), timegrp_l)
         timetable_s = [timedic_s[idx] for idx in mygrp_s]
         timetable_l = [timedic_l[idx] for idx in mygrp_l]
         timetable = [timetable_s, timetable_l]
