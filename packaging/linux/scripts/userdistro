@@ -1153,7 +1153,7 @@ $prefix = $1;
 
 chdir( "$prefix/data" ) or die "data resources missing: $prefix/data";
 
-open( RSYNC, "rsync -avz rsync://svn.cv.nrao.edu/casa-data . 2>&1 |" ) or die $!;
+open( RSYNC, "rsync -avz rsync://casa.nrao.edu/casa-data . 2>&1 |" ) or die $!;
 @output = ( );
 $limit = 3;
 $msg = '...';
