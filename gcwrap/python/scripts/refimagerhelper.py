@@ -894,8 +894,8 @@ class PyParallelCubeSynthesisImager():
         retval = True
         for node in self.listOfNodes:
              rest = self.PH.pullval("rest", node )
-             retval = retval and rest
-             print "Node " , node , " converged : ", rest;
+             retval = retval and rest[node]
+             print "Node " , node , " converged : ", rest[node];
 
         return retval
 
