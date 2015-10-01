@@ -2014,6 +2014,8 @@ VisibilityIteratorImpl2::makeFrequencyConverter (Double time,
                                                  Bool toObservedFrame,
                                                  Unit unit) const
 {
+
+    // Time is from the "time" field of the data row and is potentially in
 //    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
 
     MFrequency::Types measurementFrequencyType =
@@ -2021,8 +2023,13 @@ VisibilityIteratorImpl2::makeFrequencyConverter (Double time,
 
     // Set up frequency converter so that we can convert to the
     // measured frequency
+    // =========================================================
 
-    MEpoch epoch (MVEpoch (Quantity (time, "s")));
+    // Take the provided time in units native to the MS and attach the frame
+    // of reference so that the time users won't be confused (most MSs have
+    // time in UTC, but there are some that use different time standards).
+
+    MEpoch epoch (MVEpoch (Quantity (time, "s")), timeFrameOfReference_p);
 
     MPosition position = getObservatoryPosition ();
     MDirection direction = phaseCenter();
@@ -2204,7 +2211,7 @@ VisibilityIteratorImpl2::configureNewChunk ()
     minMax (rowBounds_p.timeMin_p, rowBounds_p.timeMax_p, ignore1,
             ignore2, rowBounds_p.times_p);
 
-    // If this is a new MeasurementSet then set up the antenna locations
+    // If this is a new MeasurementSet then set up the antenna locations, etc.
 
     if (msIter_p->newMS ()) {
 
@@ -2213,6 +2220,12 @@ VisibilityIteratorImpl2::configureNewChunk ()
         cache_p.flush ();
 
         msd_p.setAntennas (msIter_p->msColumns ().antenna ());
+
+        // Grab the time frame of reference so that it can be converted to UTC
+        // for use in other frame of reference conversions.
+
+        timeFrameOfReference_p = msIter_p->msColumns().timeMeas () (0).getRef();
+
     }
 
     if (msIter_p->newField () || msIterAtOrigin_p) {

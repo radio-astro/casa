@@ -940,6 +940,7 @@ protected:
     Subchunk                      subchunk_p; // (chunkN #, subchunk #) pair
     SubtableColumns *             subtableColumns_p; // [own] Allows const access to MS's subtable columns
     Vector<Bool>                  tileCacheIsSet_p; // Flags indicating whether tile cache set for this column
+    MeasRef<MEpoch>               timeFrameOfReference_p;
     Double                        timeInterval_p;
     VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
     VisibilityIterator2 *         vi_p; // [use] Containing VI
