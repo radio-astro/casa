@@ -125,7 +125,7 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
             # update results
             table_summary.append((idx, in_name, out_name))
         # also needed to scale data table for flagging
-        datatable.tb1.putcol('TSYS', numpy.array(datatable.getcol('TSYS')) * factor)
+        datatable.tb1.putcol('TSYS', [ val*factor if val!=1 else val for val in datatable.getcol('TSYS') ])
 
         outcome = {'scantable': table_summary,
                    'factor': factor,
