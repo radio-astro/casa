@@ -389,13 +389,15 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             spwsel = self.get_selection_param_for_ms(0, self.spw)
             if spwsel.strip() in ['', '*']: spwsel = selection_ids['spw']
             ### TODO: channel selection based on spw
-            self.imager.selectvis(field=selection_ids['field'],
-                                  #spw=selection_ids['spw'],
-                                  spw=spwsel,
-                                  nchan=-1, start=0, step=1,
-                                  baseline=selection_ids['baseline'],
-                                  scan=selection_ids['scan'],
-                                  intent=selection_ids['intent']) 
+            ok = self.imager.selectvis(field=selection_ids['field'],
+                                       #spw=selection_ids['spw'],
+                                       spw=spwsel,
+                                       nchan=-1, start=0, step=1,
+                                       baseline=selection_ids['baseline'],
+                                       scan=selection_ids['scan'],
+                                       intent=selection_ids['intent']) 
+            if not ok:
+                raise ValueError, "Selection is empty: you may want to review this MS selection"
         else:
             self.close_imager()
             self.sorted_idx.reverse()

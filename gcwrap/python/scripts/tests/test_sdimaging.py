@@ -319,7 +319,7 @@ class sdimaging_test0(sdimaging_unittest_base):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('No Spw ID(s) matched specifications')
+            pos=str(e).find('Spw Expression: No match found for %s' % self.badid)
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -357,7 +357,7 @@ class sdimaging_test0(sdimaging_unittest_base):
         try:
             res=sdimaging(infiles=self.rawfile,scan=self.badid,outfile=self.outfile)
         except Exception, e:
-            pos=str(e).find('Failed to generate output image')
+            pos=str(e).find('Selection is empty')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
