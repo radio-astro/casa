@@ -159,7 +159,7 @@ def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_d
     # plot post-fit spectra
     plotter.setup_lines(line_range, lines_map)
     plotter.setup_reference_level(0.0)
-    #plotter.set_global_scaling()
+    plotter.set_global_scaling()
     plotter.plot(postfit_map_data, postfit_integrated_data, frequency, figfile=postfit_figfile)
 
     del postfit_integrated_data
@@ -180,7 +180,7 @@ def plot_profile_map_with_fit(context, antid, spwid, polid, plot_table, prefit_d
     
     # plot pre-fit spectra
     plotter.setup_reference_level(None)
-    #plotter.unset_global_scaling()
+    plotter.unset_global_scaling()
     plotter.plot(prefit_map_data, prefit_integrated_data, frequency, fit_result=fit_result, figfile=prefit_figfile)
             
     plotter.done()
