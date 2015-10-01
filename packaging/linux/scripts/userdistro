@@ -843,7 +843,7 @@ close( NEW );
 ##
 ## retrieve version of data repository which can be updated with SVN
 ##
-open( DATA, "svn co https://svn.cv.nrao.edu/svn/casa-data/distro data 2>&1 |" );
+open( DATA, "svn export https://svn.cv.nrao.edu/svn/casa-data/distro data 2>&1 |" );
 $count = 0;
 while ( <DATA> ) { print "." if ++$cout % 5 == 0; }
 close( DATA );
