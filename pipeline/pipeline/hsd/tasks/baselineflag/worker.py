@@ -567,10 +567,10 @@ class SDBLFlagWorker(object):
     def flagUser(self, DataTable, ids, UserFlag=[]):
         # flag by scantable row ID.
         for ID in ids:
-            #row = DataTable.getcell('ROW', ID)
+            row = DataTable.getcell('ROW', ID)
             # Update User Flag 2008/6/4
             try:
-                Index = UserFlag.index(ID)
+                Index = UserFlag.index(row)
                 tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[2] = 0
                 DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
