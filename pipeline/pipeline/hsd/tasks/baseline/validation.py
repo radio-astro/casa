@@ -279,7 +279,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('2D fit the line characteristics...')
 
-        tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
+        #tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
         Totallines = 0
         RMS0 = 0.0
         lines = []
@@ -301,7 +301,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     # Check statistics flag. tSFLAG[row]==1 => Valid Spectra 2008/1/17
                     # Bug fix 2008/5/29
                     #if (line[0] != line[1]) and ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
-                    if line[0] != line[1] and tSFLAG[row] == 1:
+                    # refering tSFLAG is not correct
+                    if line[0] != line[1]: #and tSFLAG[row] == 1:
                         #2014/11/28 add Binning info into Region
                         Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag, line[2]])
                         ### 2011/05/17 make cluster insensitive to the line width
@@ -315,7 +316,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         del dummy
         LOG.debug('Npos = %s' % Npos)
         # 2010/6/9 for non-detection
-        if Npos == 0: 
+        if Npos == 0 or len(Region2) == 0: 
             outcome = {'lines': [],
                        'channelmap_range': [],
                        'cluster_info': {},
