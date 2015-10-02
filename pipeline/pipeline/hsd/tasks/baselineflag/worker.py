@@ -570,7 +570,7 @@ class SDBLFlagWorker(object):
             #row = DataTable.getcell('ROW', ID)
             # Update User Flag 2008/6/4
             try:
-                Index = UserFlag.index(row)
+                Index = UserFlag.index(ID)
                 tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[2] = 0
                 DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
