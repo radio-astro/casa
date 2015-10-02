@@ -611,7 +611,7 @@ class tsdcal_test_ps(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
 
-    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    @exception_case(RuntimeError, 'Spw Expression: No match found for 99,')
     def test_ps02(self):
         """
         test_ps02 --- invalid selection (invalid spw selection)
@@ -1373,7 +1373,7 @@ class tsdcal_test_apply(tsdcal_test_base):
         """
         self.result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
 
-    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    @exception_case(RuntimeError, 'Spw Expression: No match found for 99')
     def test_apply_sky05(self):
         """
         test_apply_sky05 --- invalid selection (empty selection result)

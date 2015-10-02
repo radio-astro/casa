@@ -839,10 +839,9 @@ class tsdbaseline_basicTest(tsdbaseline_unittest_base):
         spw = '10' # non-existent IF value
         mode = 'list'
         try:
-            result = tsdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
+            tsdbaseline(infile=infile, outfile=outfile, spw=spw, maskmode=mode)
         except Exception, e:
-            pos = str(e).find('No Spw ID(s) matched')
-            self.assertNotEqual(pos, -1, msg='Unexpected exception was thrown: %s'%(str(e)))
+            self.assertIn('Spw Expression: No match found for 10,', str(e))
 
 
 class tsdbaseline_maskTest(tsdbaseline_unittest_base):

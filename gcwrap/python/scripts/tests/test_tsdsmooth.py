@@ -208,7 +208,7 @@ class tsdsmooth_test_fail(tsdsmooth_test_base):
         """test_tsdsmooth_fail02 --- invalid kernel type"""
         self.result = tsdsmooth(infile=self.infile, kernel='normal', outfile=self.outfile)
         
-    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    @exception_case(RuntimeError, 'Spw Expression: No match found for 3')
     def test_tsdsmooth_fail03(self):
         """test_tsdsmooth_fail03 --- invalid selection (empty selection result)"""
         self.result = tsdsmooth(infile=self.infile, kernel='gaussian', outfile=self.outfile, spw='3')
