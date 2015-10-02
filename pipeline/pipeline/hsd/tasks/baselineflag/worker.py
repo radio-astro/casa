@@ -364,8 +364,8 @@ class SDBLFlagWorker(object):
                     Nmask = NCHAN
 
                 # Fit STATISTICS and NMASK columns in DataTable (post-Fit statistics will be -1 when is_baselined=F)
-                DataTable.tb2.putcell('STATISTICS',idx,stats)
-                DataTable.tb2.putcell('NMASK',idx,Nmask)
+                DataTable.putcell('STATISTICS',idx,stats)
+                DataTable.putcell('NMASK',idx,Nmask)
                 LOG.debug('Row=%d, pre-fit StdDev= %.2f pre-fit diff StdDev= %.2f' % (row, OldRMS, OldRMSdiff))
                 if is_baselined: LOG.debug('Row=%d, post-fit StdDev= %.2f post-fit diff StdDev= %.2f' % (row, NewRMS, NewRMSdiff))
                 output_serial_index = output_array_index + index
@@ -474,8 +474,8 @@ class SDBLFlagWorker(object):
             flags[3] = stat_flag[2][N]
             flags[4] = stat_flag[3][N]
             pflags[1] = stat_flag[4][N]
-            DataTable.tb2.putcell('FLAG', ID, flags)
-            DataTable.tb2.putcell('FLAG_PERMANENT', ID, pflags)
+            DataTable.putcell('FLAG', ID, flags)
+            DataTable.putcell('FLAG_PERMANENT', ID, pflags)
             N += 1
 
     def flagExpectedRMS(self, DataTable, vIF, ids, vAnt, FlagRule=None, rawFileIdx=0, is_baselined=True):
@@ -562,7 +562,7 @@ class SDBLFlagWorker(object):
                     flags[6] = 0
                 else:
                     flags[6] = 1
-                DataTable.tb2.putcell('FLAG',ID,flags)
+                DataTable.putcell('FLAG',ID,flags)
 
     def flagUser(self, DataTable, ids, UserFlag=[]):
         # flag by scantable row ID.
@@ -573,11 +573,11 @@ class SDBLFlagWorker(object):
                 #Index = UserFlag.index(row)
                 tPFLAG = DataTable.tb2.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[2] = 0
-                DataTable.tb2.putcell('FLAG_PERMANENT', ID, tPFLAG)
+                DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
             except ValueError:
                 tPFLAG = DataTable.tbe.getcell('FLAG_PERMANENT', ID)
                 tPFLAG[2] = 1
-                DataTable.tb2.putcell('FLAG_PERMANENT', ID, tPFLAG)
+                DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
 
 
     def flagSummary(self, DataTable, ids, FlagRule):
@@ -589,7 +589,7 @@ class SDBLFlagWorker(object):
             pflag = self._get_parmanent_flag_summary(tPFLAG, FlagRule)
             sflag = self._get_stat_flag_summary(tFLAG, FlagRule)
             Flag = pflag*sflag
-            DataTable.tb2.putcell('FLAG_SUMMARY', ID, Flag)
+            DataTable.putcell('FLAG_SUMMARY', ID, Flag)
 
     def _get_parmanent_flag_summary(self, pflag, FlagRule):
         # FLAG_PERMANENT[0] --- 'WeatherFlag'
