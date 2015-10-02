@@ -1581,6 +1581,11 @@ class test_mpi4casa_uvcont(unittest.TestCase):
         compare_contsub3 = testhelper.compTables(self.ref[1],self.vis3+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
         self.assertTrue(compare_contsub3)
         
+    def test3_uvcont_fun_with_flags(self):
+
+        uvcontsub(vis=self.vis,field = 'N5921*',fitspw='0:4~6;50~59',spw = '50',
+                  solint = 'int',fitorder = 0,want_cont = True)
+        
         
 class test_mpi4casa_NullSelection(unittest.TestCase):
 

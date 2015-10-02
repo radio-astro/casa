@@ -112,6 +112,11 @@ namespace MSTransformations
 		flagCumSumNonZero
 	};
 
+	enum SmoothingSetup {
+		plainSmooth,
+		plainSmoothSpectrum
+	};
+
 	enum dataCol {
 		visCube,
 		visCubeCorrected,
@@ -418,6 +423,7 @@ protected:
 	void propagateWeights(Bool on);
 	void setBufferMode(Bool on);
 	void setChannelAverageKernel(uInt mode);
+	void setSmoothingKernel(uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
@@ -1071,12 +1077,51 @@ protected:
 														uInt outputPos,
 														uInt width);
 
-	template <class T> void smooth(	Int ,
+
+	template <class T> void smooth(	Int inputSpw,
 									Vector<T> &inputDataStripe,
 									Vector<Bool> &inputFlagsStripe,
-									Vector<Float> &,
+									Vector<Float> &inputWeightsStripe,
 									Vector<T> &outputDataStripe,
 									Vector<Bool> &outputFlagsStripe);
+	void smoothKernel(	Vector<Complex> &inputData,
+						Vector<Bool> &inputFlags,
+						Vector<Float> &inputWeights,
+						Vector<Complex> &outputData,
+						Vector<Bool> &outputFlags,
+						uInt outputPos);
+	void smoothKernel(	Vector<Float> &inputData,
+						Vector<Bool> &inputFlags,
+						Vector<Float> &inputWeights,
+						Vector<Float> &outputData,
+						Vector<Bool> &outputFlags,
+						uInt outputPos);
+	void (casa::MSTransformManager::*smoothKernelComplex_p)(	Vector<Complex> &inputData,
+																Vector<Bool> &inputFlags,
+																Vector<Float> &inputWeights,
+																Vector<Complex> &outputData,
+																Vector<Bool> &outputFlags,
+																uInt outputPos);
+	void (casa::MSTransformManager::*smoothKernelFloat_p)(		Vector<Float> &inputData,
+																Vector<Bool> &inputFlags,
+																Vector<Float> &inputWeights,
+																Vector<Float> &outputData,
+																Vector<Bool> &outputFlags,
+																uInt outputPos);
+	template <class T> void plainSmooth(	Vector<T> &inputData,
+											Vector<Bool> &inputFlags,
+											Vector<Float> &inputWeights,
+											Vector<T> &outputData,
+											Vector<Bool> &outputFlags,
+											uInt outputPos);
+
+	template <class T> void plainSmoothSpectrum(	Vector<T> &inputData,
+													Vector<Bool> &inputFlags,
+													Vector<Float> &inputWeights,
+													Vector<T> &outputData,
+													Vector<Bool> &outputFlags,
+													uInt outputPos);
+
 
 	template <class T> void regrid(	Int ,
 									Vector<T> &inputDataStripe,
@@ -1163,13 +1208,6 @@ protected:
 													Vector<T> &outputDataStripe,
 													Vector<Bool> &outputFlagsStripe);
 
-	std::pair<Float,Bool> calcOutputWeight( 	Vector<Float> &kernel,
-												Vector<Float> &inputWeights,
-												Vector<Bool> &inputFlags);
-
-	std::pair<Float,Bool> calcOutputWeight( 	Vector<Float> &kernel,
-												Vector<Float> &inputWeights);
-
 	// The following methods are single dish specific so far
 	void smoothFourierFloat(Int , Vector<Float> &inputDataStripe,
 	          Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightStripe,
@@ -1227,6 +1265,9 @@ protected:
 	String outputReferenceFramePar_p;
 	Bool radialVelocityCorrection_p;
 	Bool regridding_p;
+	uInt smoothBin_p;
+	uInt smoothmode_p;
+	Vector<Float> smoothCoeff_p;
 
 	// Frequency specification parameters
 	String mode_p;

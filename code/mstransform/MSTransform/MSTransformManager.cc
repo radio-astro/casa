@@ -152,6 +152,12 @@ void MSTransformManager::initialize()
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 	radialVelocityCorrection_p = False;
+	smoothBin_p = 3;
+	smoothCoeff_p.resize(3,False);
+	smoothCoeff_p(0) = 0.25;
+	smoothCoeff_p(1) = 0.5;
+	smoothCoeff_p(2) = 0.25;
+	smoothmode_p = MSTransformations::plainSmooth;
 
 	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
@@ -254,6 +260,8 @@ void MSTransformManager::initialize()
 	transformStripeOfDataFloat_p = NULL;
 	averageKernelComplex_p = NULL;
 	averageKernelFloat_p = NULL;
+	smoothKernelComplex_p = NULL;
+	smoothKernelFloat_p = NULL;
 
 	// I/O related function pointers
 	writeOutputPlanesComplex_p = NULL;
@@ -683,6 +691,12 @@ void MSTransformManager::parseFreqTransParams(Record &configuration)
 
 		if (hanningSmooth_p)
 		{
+			smoothBin_p = 3;
+			smoothCoeff_p.resize(3,False);
+			smoothCoeff_p(0) = 0.25;
+			smoothCoeff_p(1) = 0.5;
+			smoothCoeff_p(2) = 0.25;
+			weightmode_p = MSTransformations::plainSmooth;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< "Hanning Smooth is activated" << LogIO::POST;
 		}
@@ -1422,6 +1436,7 @@ void MSTransformManager::setup()
 
 	propagateWeights(propagateWeights_p);
 	setChannelAverageKernel(weightmode_p);
+	setSmoothingKernel(smoothmode_p);
 
 
 	// Set Regridding kernel
@@ -1717,6 +1732,36 @@ void MSTransformManager::setChannelAverageKernel(uInt mode)
 		{
 			averageKernelComplex_p = &MSTransformManager::simpleAverageKernel;
 			averageKernelFloat_p = &MSTransformManager::simpleAverageKernel;
+			break;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::setSmoothingKernel(uInt mode)
+{
+	switch (mode)
+	{
+		case MSTransformations::plainSmooth:
+		{
+			smoothKernelComplex_p = &MSTransformManager::plainSmooth;
+			smoothKernelFloat_p = &MSTransformManager::plainSmooth;
+			break;
+		}
+		case MSTransformations::plainSmoothSpectrum:
+		{
+			smoothKernelComplex_p = &MSTransformManager::plainSmoothSpectrum;
+			smoothKernelFloat_p = &MSTransformManager::plainSmoothSpectrum;
+			break;
+		}
+		default:
+		{
+			smoothKernelComplex_p = &MSTransformManager::plainSmooth;
+			smoothKernelFloat_p = &MSTransformManager::plainSmooth;
 			break;
 		}
 	}
@@ -5723,6 +5768,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// Switch average and smooth kernels
 		setChannelAverageKernel(MSTransformations::flagCumSumNonZero);
+		setSmoothingKernel(MSTransformations::plainSmoothSpectrum);
 
 		// Dummy auxiliary weightSpectrum
 		const Cube<Float> applicableSpectrum;
@@ -5920,6 +5966,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// Reset average and smooth kernels
 		setChannelAverageKernel(weightmode_p);
+		setSmoothingKernel(smoothmode_p);
 	}
 
 	return;
@@ -7707,18 +7754,147 @@ template <class T> void MSTransformManager::flagCumSumNonZeroKernel(	Vector<T> &
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T> void MSTransformManager::smooth(	Int ,
-														Vector<T> &inputDataStripe,
-														Vector<Bool> &inputFlagsStripe,
-														Vector<Float> &,
-														Vector<T> &outputDataStripe,
-														Vector<Bool> &outputFlagsStripe)
+template <class T> void MSTransformManager::smooth(	Int inputSpw,
+													Vector<T> &inputDataStripe,
+													Vector<Bool> &inputFlagsStripe,
+													Vector<Float> &inputWeightsStripe,
+													Vector<T> &outputDataStripe,
+													Vector<Bool> &outputFlagsStripe)
 {
-    Smooth<T>::hanning(	outputDataStripe, 		// the output data
-    					outputFlagsStripe, 		// the output flags
-    					inputDataStripe, 		// the input data
-    					inputFlagsStripe, 		// the input flags
-    					False);					// A good data point has its flag set to False
+	// Calculate limits
+	uInt width = smoothBin_p;
+	uInt halfWidth = width / 2;
+	uInt outChanStart = halfWidth;
+	uInt outChanStop = inputDataStripe.size() - outChanStart;
+
+	// Main loop
+	for (uInt outChan = outChanStart; outChan<outChanStop; outChan++)
+	{
+		smoothKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
+						outputDataStripe,outputFlagsStripe,outChan);
+	}
+
+	// Flag lower edge
+	for (uInt outChan = 0; outChan<outChanStart; outChan++)
+	{
+		outputFlagsStripe(outChan) = True;
+		outputDataStripe(outChan) = inputDataStripe(outChan);
+	}
+
+	// Flag higher edge
+	for (uInt outChan = outChanStop; outChan<inputDataStripe.size(); outChan++)
+	{
+		outputFlagsStripe(outChan) = True;
+		outputDataStripe(outChan) = inputDataStripe(outChan);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::smoothKernel(	Vector<Complex> &inputData,
+										Vector<Bool> &inputFlags,
+										Vector<Float> &inputWeights,
+										Vector<Complex> &outputData,
+										Vector<Bool> &outputFlags,
+										uInt outputPos)
+{
+	(*this.*smoothKernelComplex_p)(	inputData,inputFlags,inputWeights,
+										outputData,outputFlags,outputPos);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::smoothKernel(	Vector<Float> &inputData,
+										Vector<Bool> &inputFlags,
+										Vector<Float> &inputWeights,
+										Vector<Float> &outputData,
+										Vector<Bool> &outputFlags,
+										uInt outputPos)
+{
+	(*this.*smoothKernelFloat_p)(	inputData,inputFlags,inputWeights,
+									outputData,outputFlags,outputPos);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void  MSTransformManager::plainSmooth(	Vector<T> &inputData,
+															Vector<Bool> &inputFlags,
+															Vector<Float> &inputWeights,
+															Vector<T> &outputData,
+															Vector<Bool> &outputFlags,
+															uInt outputPos)
+{
+	uInt halfWidth = smoothBin_p / 2;
+
+	// Initialization
+	outputFlags(outputPos) = inputFlags(outputPos-halfWidth);
+	outputData(outputPos) = smoothCoeff_p(0)*inputData(outputPos-halfWidth);
+
+	// Main loop
+	for (uInt i = 1; i<smoothBin_p;i++)
+	{
+		outputData(outputPos) += smoothCoeff_p(i)*inputData(outputPos-halfWidth+i);
+
+		// Output sample is flagged if any of the contributors are flagged
+		if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=True;
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void  MSTransformManager::plainSmoothSpectrum(	Vector<T> &inputData,
+																	Vector<Bool> &inputFlags,
+																	Vector<Float> &inputWeights,
+																	Vector<T> &outputData,
+																	Vector<Bool> &outputFlags,
+																	uInt outputPos)
+{
+	uInt halfWidth = smoothBin_p / 2;
+
+	// Initialization (mind for zeros as there is a division operation)
+	if (inputData(outputPos-halfWidth) <= FLT_MIN)
+	{
+		outputData(outputPos) = 0;
+		outputFlags(outputPos) = True;
+	}
+	else
+	{
+		outputFlags(outputPos) = inputFlags(outputPos-halfWidth);
+		outputData(outputPos) = smoothCoeff_p(0)*smoothCoeff_p(0)/inputData(outputPos-halfWidth);
+	}
+
+	// Main accumulation loop
+	for (uInt i = 1; i<smoothBin_p;i++)
+	{
+		// Mind for zeros as there is a division operation
+		if (inputData(outputPos-halfWidth+i) <= FLT_MIN)
+		{
+			outputFlags(outputPos) = True;
+		}
+		else
+		{
+			outputData(outputPos) += smoothCoeff_p(i)*smoothCoeff_p(i)/inputData(outputPos-halfWidth+i);
+
+			// Output sample is flagged if any of the contributors are flagged
+			if (inputFlags(outputPos-halfWidth+i)) outputFlags(outputPos)=True;
+		}
+	}
+
+	// Final propaged weight si the inverse of the accumulation
+	if (outputData(outputPos) > FLT_MIN)
+	{
+		outputData(outputPos) = 1/outputData(outputPos);
+	}
 
 	return;
 }
@@ -7997,84 +8173,6 @@ Convolver<Float> *MSTransformManager::getConvolver(Int const numChan) {
         throw AipsError("Failed to get convolver. Smoothing is not properly configured.");
     }
     return &convolverPool_[numChan];
-}
-
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kernel,
-																Vector<Float> &inputWeights,
-																Vector<Bool> &inputFlags)
-{
-	Float num, den = 0;
-	Bool sampleFlagged = False;
-	Bool accumulatorFlag = inputFlags(0);
-	for (uInt sample_i = 0; sample_i < kernel.size(); sample_i++)
-	{
-		// Consider sample as flag if it is actually flagged or weight <= 0
-		// Apart from consistency this prevents div. by zero operations
-		if ((inputFlags(sample_i) or inputWeights(sample_i) < 0))
-		{
-			sampleFlagged = True;
-		}
-		else
-		{
-			sampleFlagged = False;
-		}
-
-		// sample_i and accumulator have flags aligned
-		if (accumulatorFlag == sampleFlagged)
-		{
-			num += kernel(sample_i);
-			den += kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
-		}
-		// reset accumulation when accumulator switches from flagged to unflagged
-		else if ((accumulatorFlag == True) and (not sampleFlagged))
-		{
-			accumulatorFlag = False;
-			num = kernel(sample_i);
-			den = kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
-		}
-	}
-
-	// Calculate final result
-	Float outputWeight = 0;
-	if (den > 0)
-	{
-		outputWeight = num * num / den;
-	}
-	// Should never happen unless the kernel has some 0s
-	else
-	{
-		throw AipsError("Error propagating weights");
-	}
-
-	return std::make_pair(outputWeight, accumulatorFlag);
-}
-
-std::pair<Float,Bool> MSTransformManager::calcOutputWeight( 	Vector<Float> &kernel,
-																Vector<Float> &inputWeights)
-{
-	Float num, den = 0;
-	for (uInt sample_i = 0; sample_i < kernel.size(); sample_i++)
-	{
-		num += kernel(sample_i);
-		den += kernel(sample_i) * kernel(sample_i) / inputWeights(sample_i);
-	}
-
-	// Calculate final result
-	Float outputWeight = 0;
-	if (den > 0)
-	{
-		outputWeight = num * num / den;
-	}
-	// Should never happen unless the kernel has some 0s
-	else
-	{
-		throw AipsError("Error propagating weights");
-	}
-
-	return std::make_pair(outputWeight, False);
 }
 
 } //# NAMESPACE CASA - END
