@@ -259,6 +259,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                 To automatically change 'imagename' with a numerical 
                                 increment, set overwrite=False (see tclean docs for 'overwrite').
 
+                        Note : An imaging run with niter=0 will not produce an output restored
+                                  image (extension .image) since there is no .model to restore. 
+                                  The .residual image is the (un-deconvolved or dirty) output image.
 
 </description>
       <any type="variant" limittypes="int string stringArray"/>
