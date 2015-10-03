@@ -569,6 +569,10 @@ HPX HEALPix grid.  -->
     <param type="string" name="interpolation" subparam="true">
      <shortdescription>Spectral interpolation (nearest,linear,cubic)</shortdescription>
 <description>Spectral interpolation (nearest,linear,cubic)
+ 
+                       Interpolation rules to use when binning data channels onto image channels
+                       and evaluating visibility values at the centers of image channels. 
+
                       Note : 'linear' and 'cubic' interpolation requires data points on both sides of
                         each image frequency. Errors  are therefore possible at edge  channels, or near
                         flagged data channels. When image channel width is much larger than the data
