@@ -309,6 +309,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <description>Stokes Planes to make
                default='I'; example: stokes='IQUV';
                Options: 'I','Q','U','V','IV','QU','IQ','UV','IQU','IUV','IQUV','RR','LL','XX','YY','RRLL','XXYY'
+
+                             Note : Due to current internal code constraints, if any correlation pair 
+                                        is flagged, no data for that row in the MS will be used. 
+                                        So, in an MS with XX,YY, if only YY is flagged, neither a 
+                                        Stokes I image nor an XX image can be made. In such a 
+                                        situation, please split out only the unflagged correlation into
+                                        a separate MS. This constraint shall be removed (where logical)
+                                        in a future release.
+
 </description>
       <value type="string">I</value>
     </param>
