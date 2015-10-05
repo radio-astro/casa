@@ -541,7 +541,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 					<< "the image to a smaller pixel size" << LogIO::POST;
 			}
 		}
-		else if (beamIn.getMinor() < diag) {
+		else if (beamIn.getMinor() < diag && beamIn != GaussianBeam::NULL_BEAM) {
 			diag.convert(beamIn.getMinor().getFullUnit());
 			if (! _suppressWarnings) {
 				os << LogIO::WARN << "Input beam has minor axis "
