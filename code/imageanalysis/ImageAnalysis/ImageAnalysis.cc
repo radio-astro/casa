@@ -1162,7 +1162,7 @@ Record ImageAnalysis::histograms(
 		);
 	}
 	else {
-		if (_histograms.get() == 0) {
+		if (! _histograms) {
 			// We are here if this is the first time or the image has changed
 			_histograms.reset(
 				new ImageHistograms<Float> (
