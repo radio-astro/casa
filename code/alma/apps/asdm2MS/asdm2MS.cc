@@ -214,10 +214,21 @@ ostringstream infostream;
 
 using namespace std;
 template<typename T> string TO_STRING(const T &v) {
-    stringstream tmp;
-    tmp << setprecision(numeric_limits<T>::digits10 + 1) << v;
-    return tmp.str( );
+    const T shift = 100000000;
+    const T rnd = .000000005;
+    char buffer[128];
+    int whole = int(v);
+    int fraction = int((v-whole+rnd)*shift);
+    sprintf(buffer,"%d.%08d",whole,fraction);
+    return string(buffer);
 }
+
+string TO_STRING(const int &v) {
+    char buffer[128];
+    sprintf(buffer,"%d",v);
+    return string(buffer);
+}
+
 
 //
 // A class to describe Exceptions.

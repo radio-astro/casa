@@ -1213,8 +1213,8 @@ class asdm_import7(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["FIELD/table.dat",
-                            "FIELD/EPHEM0_Mars_57034.896.tab",
-                            "FIELD/EPHEM1_Titania_57034.935.tab"
+                            "FIELD/EPHEM0_Mars_57034.89600000.tab",
+                            "FIELD/EPHEM1_Titania_57034.93500000.tab"
                             ])
         for name in mscomponents:
             if not os.access(themsname+"/"+name, os.F_OK):
@@ -1234,8 +1234,8 @@ class asdm_import7(test_base):
             mslocal.close()
             print myname, ": OK."
 
-        for name in ["FIELD/EPHEM0_Mars_57034.896.tab",
-                     "FIELD/EPHEM1_Titania_57034.935.tab"]:
+        for name in ["FIELD/EPHEM0_Mars_57034.89600000.tab",
+                     "FIELD/EPHEM1_Titania_57034.93500000.tab"]:
             tblocal.open(themsname+"/"+name)
             kw = tblocal.getkeywords()
             tblocal.close()
@@ -1769,8 +1769,8 @@ class asdm_import11(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["FIELD/table.dat",
-                            "FIELD/EPHEM0_Mars_57034.896.tab",
-                            "FIELD/EPHEM1_Titania_57034.935.tab"
+                            "FIELD/EPHEM0_Mars_57034.89600000.tab",
+                            "FIELD/EPHEM1_Titania_57034.93500000.tab"
                             ])
         for name in mscomponents:
             if not os.access(themsname+"/"+name, os.F_OK):
@@ -1790,8 +1790,8 @@ class asdm_import11(test_base):
             mslocal.close()
             print myname, ": OK."
 
-        for name in ["FIELD/EPHEM0_Mars_57034.896.tab",
-                     "FIELD/EPHEM1_Titania_57034.935.tab"]:
+        for name in ["FIELD/EPHEM0_Mars_57034.89600000.tab",
+                     "FIELD/EPHEM1_Titania_57034.93500000.tab"]:
             tblocal.open(themsname+"/"+name)
             kw = tblocal.getkeywords()
             tblocal.close()
