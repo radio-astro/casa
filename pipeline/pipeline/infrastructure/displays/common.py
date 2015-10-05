@@ -116,6 +116,7 @@ class PlotbandpassDetailBase(object):
                      'interactive' : False,
                      'spw'         : spw_arg,
                      'antenna'     : antenna_arg,
+                     'chanrange'   : '90%',  # CAS-7011
                      'subplot'     : 11,
                      'figfile'     : self._figroot}
         task_args.update(**self._kwargs)

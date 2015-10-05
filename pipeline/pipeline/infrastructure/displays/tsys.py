@@ -58,6 +58,7 @@ class TsysSummaryChart(object):
                      'spw'         : spw_arg,
                      'showatm'     : True,
                      'showfdm'     : True,
+                     'chanrange'   : '90%',  # CAS-7011
                      'subplot'     : 11,
                      'figfile'     : self._figroot}
 
