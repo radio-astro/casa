@@ -129,13 +129,15 @@ String Plotter::formattedDateString(const String& format, double value,
                 break;
                 
             case 's': case 'S':
+                ss.precision(4);
                 if(!isRelative) {
                     if(t.seconds() < 10) ss << '0';
-                    ss << (t.seconds() + seconds);
+                    ss << fixed << (t.seconds() + seconds);
                 } else {
                     if(seconds < 10) ss << '0';
-                    ss << seconds;
+                    ss << fixed << seconds;
                 }
+                ss.precision(defPrec);
                 break;
                 
             case 'p': case 'P': {

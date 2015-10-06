@@ -1205,7 +1205,7 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 	}
 	ss << " ";
 
-	ss << "Time=" << MVTime(plotmscache_->getTime(currChunk_,0)/C::day).string(MVTime::YMD,7) << " ";
+	ss << "Time=" << MVTime(plotmscache_->getTime(currChunk_,0)/C::day).string(MVTime::YMD,10) << " ";
 	ss << "BL=";
 
 	Int ant1=Int( plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)) );
