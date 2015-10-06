@@ -684,7 +684,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    itsMaxShape=imshape;
 	    itsMaxCoordSys=csys;
 	  }
-
+        itsNchan = imshape[3];
         itsCsysRec = impars.getcsys();
 	/*
 	os << "Define image  [" << impars.imageName << "] : nchan : " << impars.nchan 

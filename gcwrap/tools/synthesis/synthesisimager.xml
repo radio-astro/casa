@@ -621,12 +621,23 @@ Define the image coordinate systems and shapes.
 <!-- ===================================== -->
 
    <method type="function" name="getcsys">
-   <shortdescription>get internal stored coordsys record</shortdescription>
+   <shortdescription>get internally stored coordsys record</shortdescription>
 <description>
 </description>
 <input>
 </input>
 <returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="updatenchan">
+   <shortdescription>get internally stored updated nchan </shortdescription>
+<description>
+</description>
+<input>
+</input>
+<returns type="int"/>
 </method>
 
 <!-- ===================================== -->

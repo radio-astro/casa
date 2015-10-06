@@ -134,6 +134,7 @@ class SynthesisImager
 			   const String& ftmachine);
 
   Record getcsys() {return itsCsysRec;};
+  Int updateNchan() {return itsNchan;};
 
   //Function to tune the data selection to intersect with image definition chosen
   //This is to optimize the data selection so that unnecessary data is not parsed despite the user
@@ -315,7 +316,7 @@ protected:
   CoordinateSystem itsMaxCoordSys;
   IPosition itsMaxShape;
   Record itsCsysRec;
-
+  Int itsNchan;
 
   /////////////// All input parameters
 

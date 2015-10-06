@@ -513,6 +513,23 @@ casac::record* synthesisimager::getcsys()
      }
    return rstat;
 }
+
+int synthesisimager::updatenchan()
+{
+  int rstat;
+  try
+    {
+      if ( itsImager )
+        {
+           rstat = itsImager->updateNchan();
+        }
+    }
+  catch (AipsError x)
+    {
+      RETHROW(x);
+    }
+  return rstat;
+}
        
   bool synthesisimager::getweightdensity()
   {

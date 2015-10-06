@@ -18,7 +18,6 @@ Summary...
 '''
 
 debug = False
-
 #############################################
 #############################################
 
@@ -101,6 +100,7 @@ class PySynthesisImager:
             exists = (os.path.exists(cfCacheName) and os.path.isdir(cfCacheName));
 
         for fld in range(0,self.NF):
+            print "self.allimpars=",self.allimpars,"\n"
             self.SItool.defineimage( self.allimpars[str(fld)] , self.allgridpars[str(fld)] )
     
         # For cube imaging:  align the data selections and image setup
@@ -756,11 +756,13 @@ class PyParallelCubeSynthesisImager():
             # insert coordsys record in imagepars 
             # partionCubeSelection works per field ...
             allimagepars[fid]['csys'] = self.SItool.getcsys()
+            if allimagepars[fid]['nchan'] == -1:
+                allimagepars[fid]['nchan'] = self.SItool.updatenchan()
             alldataimpars[fid] = self.PH.partitionCubeSelection(allselpars,allimagepars[fid])
 
-        print "********************** ", alldataimpars.keys()
-        for kk in alldataimpars.keys():
-            print "KEY : ", kk , " --->", alldataimpars[kk].keys()
+        #print "********************** ", alldataimpars.keys()
+        #for kk in alldataimpars.keys():
+        #    print "KEY : ", kk , " --->", alldataimpars[kk].keys()
 
         # reorganize allselpars and allimpars for partitioned data        
         synu = casac.synthesisutils()
@@ -785,17 +787,19 @@ class PyParallelCubeSynthesisImager():
                         if alldataimpars[fid][nodeidx][ky]['spw']=='-1':
                             selparsPerNode[tnode][ky]['spw']=''
 
-            imparsPerNode[tnode][fid] = allimagepars[fid].copy()
-            imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
-            imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
-            imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
-            imparsPerNode[tnode]=synu.updateimpars(imparsPerNode[tnode])
+                imparsPerNode[tnode][fid] = allimagepars[fid].copy()
+                imparsPerNode[tnode][fid]['csys'] = alldataimpars[fid][nodeidx]['coordsys'].copy()
+                imparsPerNode[tnode][fid]['nchan'] = alldataimpars[fid][nodeidx]['nchan']
+                imparsPerNode[tnode][fid]['imagename'] = imparsPerNode[tnode][fid]['imagename'] + '.n'+str(tnode) 
+
+                # skip this for now (it is not working properly, but should not affect results without this)
+                #imparsPerNode[tnode][fid]=synu.updateimpars(imparsPerNode[tnode][fid])
             self.allselpars.update(selparsPerNode)
             self.allimpars.update(imparsPerNode)
 
-        #print "self.allimpars IN init>>>> ",self.allimpars
 
-        print "****** SELPARS in init **********", self.allselpars
+        #print "****** SELPARS in init **********", self.allselpars
+        #print "****** SELIMPARS in init **********", self.allimpars
         
         joblist=[]
         #### MPIInterface related changes
