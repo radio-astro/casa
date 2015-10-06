@@ -26,6 +26,7 @@
 
 #include <imageanalysis/IO/ImageProfileFitterResults.h>
 
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Utilities/Precision.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
@@ -1310,12 +1311,13 @@ void ImageProfileFitterResults::_makeSolutionImages(
 		start[start.size() - 1] = i;
 		end[end.size() - 1] = i;
 		auto imageVals = dc(start, end);
+		Array<Double> doubleValues = values(start, end);
+		// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
+		// Its important to use isInf on the float values not the double values
+		Array<Bool> nanInfMask = ! (isNaN(doubleValues) || isInf(imageVals));
 		// remove the last axis
 		imageVals.removeDegenerate(values.ndim() -1);
 		image.put(imageVals);
-		Array<Double> doubleValues = values(start, end);
-		// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
-		Array<Bool> nanInfMask = ! (isNaN(doubleValues) || isInf(doubleValues));
 		nanInfMask.removeDegenerate(values.ndim() -1);
 		Bool hasPixMask = ! allTrue(mask);
 		Bool hasNanMask = ! allTrue(nanInfMask);
