@@ -366,7 +366,7 @@ class plotms_test1(test_base):
     def test014(self):
         '''Plotms 14: Test that we iterate over time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot014.jpg"
-        self.writefile_jpg = self.outputDir + "testPlot014_Time09:18:59.9998,09:19:30.0002,09:20:00.000572205,09:20:30.001.jpg"
+        self.writefile_jpg = self.outputDir + "testPlot014_Time09:18:59.9998,09:19:30.0002,09:20:00.0006,09:20:30.0010.jpg"
         if os.path.exists( self.writefile_jpg):
             os.remove( self.writefile_jpg)
         time.sleep(5)
