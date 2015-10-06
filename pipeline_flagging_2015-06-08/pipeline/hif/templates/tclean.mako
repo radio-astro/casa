@@ -1,11 +1,12 @@
 <%!
 import os.path
 import pipeline.infrastructure.casatools as casatools
-import pipeline.hif.tasks.clean.renderer as clean_renderer
+import pipeline.hif.tasks.tclean.renderer as clean_renderer
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
 
 columns = {'cleanmask' : 'Clean Mask',
+           'flux' : 'Primary Beam',
            'image' : 'Image',
            'residual' : 'Residual',
            'model' : 'Final Model',
@@ -73,7 +74,7 @@ def get_plot(plots, field, spw, i, colname):
                                 %>
                                 % if plot is not None:
                                     <%
-                                    renderer = clean_renderer.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
+                                    renderer = clean_renderer.TCleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
                                     %>
@@ -121,8 +122,8 @@ def get_plot(plots, field, spw, i, colname):
                             </tr>
                             <tr>
                                 <th>residual rms</th>
-                                %if info_dict.get((field,str(spw),pol,'residual rms')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'residual rms')],
+                                %if info_dict.get((field,str(spw),pol,'masked rms')) is not None:
+                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'masked rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>

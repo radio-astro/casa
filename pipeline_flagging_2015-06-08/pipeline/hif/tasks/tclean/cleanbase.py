@@ -6,6 +6,8 @@ import shutil
 import types
 
 import casadef
+#from recipes import makepb
+from . import makepb
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -29,8 +31,8 @@ class CleanBaseInputs(basetask.StandardInputs):
                  gridder=None, deconvolver=None, outframe=None, imsize=None, cell=None,
                  phasecenter=None, nchan=None, start=None, width=None, stokes=None,
                  weighting=None, robust=None, noise=None, npixels=None,
-                 restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-                 sensitivity=None, result=None, parallel=None):
+                 restoringbeam=None, iter=None, mask=None, pblimit=None, niter=None,
+                 threshold=None, sensitivity=None, result=None, parallel=None):
         self._init_properties(vars())
 
     deconvolver = basetask.property_with_default('deconvolver', '')
@@ -40,39 +42,24 @@ class CleanBaseInputs(basetask.StandardInputs):
     intent = basetask.property_with_default('intent', '')
     iter = basetask.property_with_default('iter', 0)
     mask = basetask.property_with_default('mask', '')
-    niter = basetask.property_with_default('niter', 500)
+    niter = basetask.property_with_default('niter', 1000)
     noise = basetask.property_with_default('noise', '1.0Jy')
     nchan = basetask.property_with_default('nchan', -1)
     npixels = basetask.property_with_default('npixels', 0)
     outframe = basetask.property_with_default('outframe', 'LSRK')
+    parallel = basetask.property_with_default('parallel', 'automatic')
     phasecenter = basetask.property_with_default('phasecenter', '')
-    restoringbeam = basetask.property_with_default('restoringbeam', '')
+    pblimit = basetask.property_with_default('pblimit', 0.2)
+    restoringbeam = basetask.property_with_default('restoringbeam', 'common')
     robust = basetask.property_with_default('robust', -999.0)
     sensitivity = basetask.property_with_default('sensitivity', 0.0)
-    spwsel = basetask.property_with_default('spwsel', '')
+    spwsel = basetask.property_with_default('spwsel', {})
     start = basetask.property_with_default('start', '')
     stokes = basetask.property_with_default('stokes', 'I')
     threshold = basetask.property_with_default('threshold', '0.0mJy')
     uvrange = basetask.property_with_default('uvrange', '')
     weighting = basetask.property_with_default('weighting', 'briggs')
     width = basetask.property_with_default('width', '')
-
-    @property
-    def parallel(self):
-        if self._parallel == 'automatic':
-            tier1_capable = mpihelpers.is_mpi_ready()
-            return tier1_capable and 'TARGET' in self.intent
-        return self._parallel
-
-    @parallel.setter
-    def parallel(self, value):
-        if value in ('true', 'True', 'TRUE', True, 1):
-            value = True
-        elif value in ('false', 'False', 'FALSE', False, 0):
-            value = False
-        else:
-            value = 'automatic'
-        self._parallel = value
 
     @property
     def spw(self):
@@ -134,6 +121,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         return True
 
     def prepare(self):
+        context = self.inputs.context
         inputs = self.inputs
 
         # Make sure inputs.vis is a list, even it is one that contains a
@@ -144,7 +132,9 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Instantiate the clean list heuristics class
         clheuristics = makeimlist.MakeImListHeuristics(context=inputs.context,
                                                        vislist=inputs.vis,
-                                                       spw=inputs.spw)
+                                                       spw=inputs.spw,
+                                                       contfile=context.contfile,
+                                                       linesfile=context.linesfile)
 
         # Generate the image name if one is not supplied.
         if inputs.imagename == '':
@@ -174,7 +164,7 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Adjust the width to get around problems with increasing / decreasing
         # frequency with channel issues.
         if inputs.width == '':
-            if inputs.specmode != 'mfs':
+            if inputs.specmode == 'cube':
                 width = clheuristics.width(int(spw.split(',')[0]))
                 #width = inputs.width
             else:
@@ -244,7 +234,11 @@ class CleanBase(basetask.StandardTaskTemplate):
             plotdir = os.path.join(inputs.context.report_dir,
                                    'stage%s' % inputs.context.stage.split('_')[0])
             result = TcleanResult(sourcename=inputs.field,
-                                  intent=inputs.intent, spw=inputs.spw, plotdir=plotdir)
+                                  intent=inputs.intent,
+                                  spw=inputs.spw,
+                                  specmode=inputs.specmode,
+                                  multiterm=2 if inputs.deconvolver=='mtmfs' else None,
+                                  plotdir=plotdir)
         else:
             result = inputs.result
 
@@ -267,11 +261,6 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         inputs = self.inputs
 
-        if (inputs.deconvolver == 'mtmfs'):
-            mt_name = '.tt0'
-        else:
-            mt_name = ''
-
         #        LOG.info('Stokes %s' % (inputs.stokes))
         #        LOG.info('Iteration %s threshold %s niter %s' % (iter,
         #          inputs.threshold, inputs.niter))
@@ -279,23 +268,22 @@ class CleanBase(basetask.StandardTaskTemplate):
         # Derive names of clean products for this iteration, remove
         # old clean products with the name name,
         old_model_name = result.model
-        model_name = '%s.%s.iter%s.model%s' % (
-            inputs.imagename, inputs.stokes, iter, mt_name)
-        rename_image(old_name=old_model_name, new_name=model_name)
+        model_name = '%s.%s.iter%s.model' % (inputs.imagename, inputs.stokes, iter)
+        if (result.multiterm):
+            rename_image(old_name=old_model_name, new_name=model_name, extensions=['.tt%d' % (nterm) for nterm in xrange(result.multiterm)])
+        else:
+            rename_image(old_name=old_model_name, new_name=model_name)
         if (inputs.niter == 0):
             image_name = ''
         else:
-            image_name = '%s.%s.iter%s.image%s' % (
-                inputs.imagename, inputs.stokes, iter, mt_name)
-        residual_name = '%s.%s.iter%s.residual%s' % (
-            inputs.imagename, inputs.stokes, iter, mt_name)
-        psf_name = '%s.%s.iter%s.psf%s' % (
-          inputs.imagename, inputs.stokes, iter, mt_name)
-        if inputs.gridder == 'mosaic':
-            flux_name = '%s.%s.iter%s.weight%s' % (
-                inputs.imagename, inputs.stokes, iter, mt_name)
-        else:
-            flux_name = ''
+            image_name = '%s.%s.iter%s.image' % (
+                inputs.imagename, inputs.stokes, iter)
+        residual_name = '%s.%s.iter%s.residual' % (
+            inputs.imagename, inputs.stokes, iter)
+        psf_name = '%s.%s.iter%s.psf' % (
+            inputs.imagename, inputs.stokes, iter)
+        flux_name = '%s.%s.iter%s.pb' % (
+            inputs.imagename, inputs.stokes, iter)
 
         # delete any old files with this naming root
         try:
@@ -304,12 +292,23 @@ class CleanBase(basetask.StandardTaskTemplate):
         except:
             pass
 
+        spw_param_list = []
+        for spwid in inputs.spw.split(','):
+            if (inputs.spwsel.has_key('spw%s' % (spwid))):
+                spw_param_list.append('%s%s%s' % (spwid, ':'*(1 if inputs.spwsel['spw%s' % (spwid)] != '' else 0), inputs.spwsel['spw%s' % (spwid)]))
+            else:
+                spw_param_list.append(spwid)
+        spw_param = ','.join(spw_param_list)
+
+        parallel = all([mpihelpers.parse_mpi_input_parameter(inputs.parallel),
+                        'TARGET' in inputs.intent])
+
         job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.%s.iter%s' %
 	    (os.path.basename(inputs.imagename), inputs.stokes, iter),
-            spw=reduce(lambda x,y: x+','+y, ['%s%s%s' % (spwid, ':'*(1 if len(spwsel) > 0 else 0), spwsel) for spwid,spwsel in zip(inputs.spw.split(','), inputs.spwsel.split(','))]),
+            spw=spw_param,
 	    intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
-            scan=scanidlist, specmode=inputs.specmode, gridder=inputs.gridder,
-            pblimit=0.2, niter=inputs.niter,
+            scan=scanidlist, specmode=inputs.specmode if inputs.specmode != 'cont' else 'mfs', gridder=inputs.gridder,
+            pblimit=inputs.pblimit, niter=inputs.niter,
             threshold=inputs.threshold, deconvolver=inputs.deconvolver,
 	    interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
             start=inputs.start, width=inputs.width, imsize=inputs.imsize,
@@ -318,28 +317,78 @@ class CleanBase(basetask.StandardTaskTemplate):
             weighting=inputs.weighting, robust=inputs.robust,
             npixels=inputs.npixels,
             restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
-            mask=inputs.mask, savemodel='none', ntaylorterms=2,
-            parallel=inputs.parallel)
+            mask=inputs.mask, savemodel='none', nterms=2,
+            parallel=parallel)
         self._executor.execute(job)
 
+        # Create PB for single fields since it is not auto-generated for
+        # gridder='standard'.
+        if (inputs.gridder == 'standard'):
+            # TODO: Change to use list of MSs when makePB supports this.
+            if (inputs.specmode == 'cube'):
+                mode = 'frequency'
+            else:
+                mode = 'mfs'
+            makepb.makePB(vis=inputs.vis[0],
+                          field=inputs.field,
+                          intent=utils.to_CASA_intent(inputs.ms[0], inputs.intent),
+                          spw=spw_param,
+                          scan=scanidlist,
+                          mode=mode,
+                          imtemplate='%s.%s.iter%s.residual%s' % (os.path.basename(inputs.imagename), inputs.stokes, iter, '.tt0' if result.multiterm else ''),
+                          outimage='%s.%s.iter%s.pb' % (os.path.basename(inputs.imagename), inputs.stokes, iter),
+                          pblimit = inputs.pblimit)
+
+        # Correct images for primary beam
+        pb_corrected = False
+        if ((image_name not in (None, '')) and (flux_name not in (None, '')) and (inputs.mask not in (None, ''))):
+            if (os.path.exists(flux_name)):
+                LOG.info('Applying PB correction')
+                pb_corrected = True
+                pbcor_image_name = '%s.%s.iter%s.pbcor.image' % (inputs.imagename, inputs.stokes, iter)
+                if (result.multiterm):
+                    for nterm in xrange(result.multiterm):
+                        job = casa_tasks.impbcor(
+                                  imagename='%s.tt%d' % (image_name, nterm),
+                                  pbimage=flux_name,
+                                  outfile='%s.tt%d' % (pbcor_image_name, nterm))
+                        self._executor.execute(job)
+                else:
+                    job = casa_tasks.impbcor(
+                              imagename=image_name,
+                              pbimage=flux_name,
+                              outfile=pbcor_image_name)
+                    self._executor.execute(job)
+
+        if ((image_name not in (None, '')) and (not pb_corrected)):
+            if (flux_name in (None, '')):
+                LOG.warning('Image %s could not be PB corrected due to missing PB !' % (image_name))
+            else:
+                LOG.warning('Image %s could not be PB corrected !')
+ 
         # Store the model.
         set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-                     type='model', iter=iter)
+                     type='model', iter=iter, multiterm=result.multiterm)
         result.set_model(iter=iter, image=model_name)
 
         # Store the image.
-        set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-                     type='image', iter=iter)
-        result.set_image(iter=iter, image=image_name)
+        if (pb_corrected):
+            set_miscinfo(name=pbcor_image_name, spw=inputs.spw, field=inputs.field,
+                         type='image', iter=iter, multiterm=result.multiterm)
+            result.set_image(iter=iter, image=pbcor_image_name)
+        else:
+            set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
+                         type='image', iter=iter, multiterm=result.multiterm)
+            result.set_image(iter=iter, image=image_name)
 
         # Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-                     type='residual', iter=iter)
+                     type='residual', iter=iter, multiterm=result.multiterm)
         result.set_residual(iter=iter, image=residual_name)
 
         # Store the PSF.
         set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
-                     type='psf', iter=iter)
+                     type='psf', iter=iter, multiterm=result.multiterm)
         result.set_psf(image=psf_name)
 
         # Store the flux image.
@@ -359,20 +408,25 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         return result
 
-def rename_image(old_name, new_name):
+def rename_image(old_name, new_name, extensions=['']):
     """
     Rename an image
     """
     if old_name is not None:
-        with casatools.ImageReader(old_name) as image:
-            image.rename(name=new_name, overwrite=True)
+        for extension in extensions:
+            with casatools.ImageReader('%s%s' % (old_name, extension)) as image:
+                image.rename(name=new_name, overwrite=True)
 
-def set_miscinfo(name, spw=None, field=None, type=None, iter=None):
+def set_miscinfo(name, spw=None, field=None, type=None, iter=None, multiterm=None):
     """
     Define miscellaneous image information
     """
     if name != '':
-        with casatools.ImageReader(name) as image:
+        if (multiterm):
+            extension = '.tt0'
+        else:
+            extension = ''
+        with casatools.ImageReader(name+extension) as image:
             info = image.miscinfo()
             if spw:
                 info['spw'] = spw

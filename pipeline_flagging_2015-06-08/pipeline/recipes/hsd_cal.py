@@ -41,7 +41,6 @@ from hsd_mstoscantable_cli import hsd_mstoscantable_cli as hsd_mstoscantable
 from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
 from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
 from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
-from hsd_simplescale_cli import hsd_simplescale_cli as hsd_simplescale
 from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
 from hsd_exportdata_cli import hsd_exportdata_cli as hsd_exportdata
 from h_save_cli import h_save_cli as h_save
@@ -86,10 +85,7 @@ def hsd_cal (vislist, importonly=False, pipelinemode='automatic', interactive=Tr
         
         # Apply the calibrations
         hsd_applycal (pipelinemode=pipelinemode)
-    
-        # Apply non-linearity correction
-        hsd_simplescale (pipelinemode=pipelinemode)
-    
+        
         # Imaging
         hsd_imaging (pipelinemode=pipelinemode, mode='ampcal')
 

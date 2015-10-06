@@ -6,7 +6,6 @@ import contextlib
 import pipeline.infrastructure.renderer.weblog as weblog
 
 import pipeline.infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
 import pipeline.infrastructure.logging as logging
@@ -14,14 +13,6 @@ import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.applycal as applycal
-
-
-
-
-
-
-
-#import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 LOG = logging.get_logger(__name__)
 
@@ -77,9 +68,6 @@ class VLASubPlotRenderer(object):
         display_context = self._get_display_context()
         t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
-        
-        
-        
 
 
 class T2_4MDetailsfinalcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -213,20 +201,8 @@ class T2_4MDetailsfinalcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'dirname'         : weblog_dir})
                 
         return ctx
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
 class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='applycal.mako', 
                  description='Apply calibrations from context',
@@ -371,13 +347,13 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             self.create_plots(context, 
                               result, 
                               applycal.AmpVsTimeDetailChart, 
-                              ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
                               ApplycalAmpVsTimePlotRenderer, correlation=corrstring)
     
             self.create_plots(context, 
                               result, 
                               applycal.PhaseVsTimeDetailChart, 
-                              ['AMPLITUDE','PHASE','BANDPASS','TARGET'],
+                              ['AMPLITUDE', 'PHASE', 'BANDPASS', 'TARGET'],
                               ApplycalPhaseVsTimePlotRenderer, correlation=corrstring)
 
         ctx.update({'amp_vs_freq_plots'   : amp_vs_freq_summary_plots,
@@ -391,7 +367,7 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                     'science_amp_vs_uv_plots' : science_amp_vs_uv_summary_plots,
                     'uv_max' : uv_max})
         
-    def create_science_plots(self, context, results, correlation=''):
+    def create_science_plots(self, context, results, correlation):
         """
         Create plots for the science targets, returning two dictionaries of 
         vis:[Plots].
@@ -401,32 +377,31 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         amp_vs_uv_summary_plots = collections.defaultdict(dict)
         max_uvs = collections.defaultdict(dict)
         
-        by_source_id = lambda field: field.source.id
         for result in results:
             # Plot for 1 science field (either 1 science target or for a mosaic 1 
             # pointing). The science field that should be chosen is the one with
             # the brightest average amplitude over all spws
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
-            
+
+            # Ideally, the uvmax of the spectrum (plots 1 and 2)
+            # would be set by the appearance of plot 3; that is, if there is
+            # no obvious drop in amplitude with uvdist, then use all the data.
+            # A simpler compromise would be to use a uvrange that captures the
+            # inner half the data.
+            baselines = sorted(ms.antenna_array.baselines,
+                               key=operator.attrgetter('length'))
+            # take index as midpoint + 1 so we include the midpoint in the
+            # constraint
+            half_baselines = baselines[0:(len(baselines)//2)+1]
+            uv_max = half_baselines[-1].length.to_units(measures.DistanceUnits.METRE)
+            uv_range = '<%s' % uv_max
+            LOG.debug('Setting UV range to %s for %s', uv_range, vis)
+            max_uvs[vis] = half_baselines[-1].length
+
             brightest_fields = T2_4MDetailsVLAApplycalRenderer.get_brightest_fields(ms)        
             for source_id, brightest_field in brightest_fields.items():
-                # Ideally, the uvmax of the spectrum (plots 1 and 2) 
-                # would be set by the appearance of plot 3; that is, if there is 
-                # no obvious drop in amplitude with uvdist, then use all the data. 
-                # A simpler compromise would be to use a uvrange that captures the
-                # inner half the data. 
-                baselines = sorted(ms.antenna_array.baselines,
-                                   key=operator.attrgetter('length'))
-                # take index as midpoint + 1 so we include the midpoint in the
-                # constraint
-                half_baselines = baselines[0:(len(baselines)//2)+1]
-                uv_max = half_baselines[-1].length.to_units(measures.DistanceUnits.METRE)
-                uv_range = '<%s' % uv_max
-                LOG.debug('Setting UV range to %s for %s', uv_range, vis)
-                max_uvs[vis] = half_baselines[-1].length
-    
-                plots = self.science_plots_for_result(context, 
+                plots = self.science_plots_for_result(context,
                                                       result, 
                                                       applycal.AmpVsFrequencySummaryChart,
                                                       [brightest_field.id],
@@ -486,10 +461,11 @@ class T2_4MDetailsVLAApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
                 amp_vs_uv_summary_plots, max_uvs)
 
     def science_plots_for_result(self, context, result, plotter_cls, fields, 
-                                 uvrange=None, renderer_cls=None, correlation='', **overrides):
+                                 uvrange=None, renderer_cls=None, correlation=''):
         # override field when plotting amp/phase vs frequency, as otherwise
         # the field is resolved to a list of all field IDs  
-        overrides = {'coloraxis' : 'spw', 'correlation' : correlation}
+        overrides = {'coloraxis': 'spw',
+                     'correlation': correlation}
         if uvrange is not None:
             overrides['uvrange'] = uvrange
         

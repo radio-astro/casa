@@ -57,7 +57,7 @@ Imports data into the interferometry pipeline
     
     <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
-	<value>True</value>
+	<value>False</value>
     </param>
 
     <param type="string" name="createmms">
@@ -160,7 +160,7 @@ bdfflags -- Apply BDF flags on line
    default: True
 
 dbservice -- Use online flux catalog on import
-   default: True
+   default: False
 
 lazy -- Use the lazy filter import
    default: False

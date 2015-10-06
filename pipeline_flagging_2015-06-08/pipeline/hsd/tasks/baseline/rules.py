@@ -12,5 +12,8 @@ LineFinderRule = {'MaxFWHM': 900,
 ClusterRule = {'ThresholdValid': 0.5, 
                'ThresholdMarginal': 0.35, 
                'ThresholdQuestionable': 0.2, 
+               'ClusterAlgorithm': 'kmean',
+               #'ClusterAlgorithm': 'hierarchy',
+               'ThresholdHierarchy': 3.0,
                'MaxCluster': 100, 
                'BlurRatio': 0.3}

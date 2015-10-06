@@ -14,6 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
+import pipeline.extern.plotTPSampling as plotTPSampling
 from . import plotpwv
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
@@ -645,3 +646,40 @@ class PlotAntsChart2(object):
                [antenna.offset['elevation offset']['value']]]
 
         return pylab.array(pos)
+
+class TPSamplingChart(object):
+    def __init__(self, context, ms):
+        self.context = context
+        self.ms = ms
+        self.figfile = self._get_figfile()
+
+    def plot(self):
+        if os.path.exists(self.figfile):
+            LOG.debug('Reusing existing TPSampling plot')
+            return self._get_plot_object()
+
+        try:
+            LOG.debug('creating TPSampling plot for %s'%(self.ms.basename))
+            plotTPSampling.plotTPSampling(vis=self.ms.name,
+                                          plotfile=self.figfile) 
+
+            pylab.close()
+
+        except Exception, e:
+            LOG.debug(str(e))
+            return None
+
+        return self._get_plot_object()
+
+    def _get_figfile(self):
+        session_part = self.ms.session
+        ms_part = self.ms.basename
+        return os.path.join(self.context.report_dir, 
+                            'session%s' % session_part, 
+                            ms_part, 'tpsampling.png')
+
+    def _get_plot_object(self):
+        return logger.Plot(self.figfile,
+                           x_axis='RA',
+                           y_axis='Dec',
+                           parameters={'vis' : self.ms.basename})

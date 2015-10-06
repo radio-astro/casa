@@ -48,6 +48,15 @@
 	<value>True</value>
     </param>
 
+    <param type="string" name="clusteringalgorithm">
+	<description>Algorithm for line validation clustering algorithm</description>
+	<value>kmean</value>
+	<allowed kind="enum">
+	    <value>kmean</value>
+	    <value>hierarchy</value>
+	</allowed>
+    </param>
+
     <param type="string" name="pipelinemode">
 	<description>The pipeline operating mode</description>
 	<value>automatic</value>
@@ -166,6 +175,12 @@ edge -- number of edge channels to be dropped from baseline subtraction.
 
 broadline -- Try to detect broad component of spectral line if True.
    default: True
+
+clusteringalgorithm -- selection of the algorithm used in the clustering
+   analysis to check the validity of detected line features. 'kmean'
+   algorithm and hierarchical clustering algorithm 'hierarchy' are so
+   far implemented.
+   default: 'kmean'.
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the 
    pipeline determines the values of all context defined pipeline inputs

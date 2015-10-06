@@ -36,8 +36,13 @@ Create a a list of images to be cleaned.
     <value></value>
   </param>
 
+  <param type="string" name="contfile" subparam="true">
+    <description>Name of file with frequency ranges to use for continuum images.</description>
+    <value></value>
+  </param>
+
   <param type="string" name="linesfile" subparam="true">
-    <description>Name of file with line regions to exclude for continuum images.</description>
+    <description>Name of file with line frequency ranges to exclude for continuum images.</description>
     <value></value>
   </param>
 
@@ -137,6 +142,7 @@ Create a a list of images to be cleaned.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="contfile"><value type="string"></value></default>
         <default param="linesfile"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
@@ -151,6 +157,7 @@ Create a a list of images to be cleaned.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="contfile"><value type="string"></value></default>
         <default param="linesfile"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
@@ -229,6 +236,7 @@ width -- Output channel width.
     default: '' Difference in frequency between first 2 selected channels.
         for frequency mode images.
     example: '24.2kHz'
+             'pilotimage' for 15 MHz / 8 channel heuristic
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
@@ -254,7 +262,11 @@ spw -- Select spectral window/channels to image.
     windows.
     example: '9'
 
-linesfile -- Name of file with line regions to exclude for continuum images.
+contfile -- Name of file with frequency ranges to exclude for continuum images.
+    default: 'cont.dat'
+    example: 'mycont.dat'
+
+linesfile -- Name of file with line frequency ranges to exclude for continuum images.
     default: 'lines.dat'
     example: 'mylines.dat'
 

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import pprint
 import types
+import gc
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.argmapper as argmapper
@@ -78,6 +79,8 @@ def execute_task(context, taskname, casa_args, fn_name):
         _merge_results(context, results)
 
     # before returning them
+    gc.collect()
+
     return results
 
 

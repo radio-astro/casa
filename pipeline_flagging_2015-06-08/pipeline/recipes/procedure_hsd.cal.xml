@@ -53,12 +53,6 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_simplescale</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
         <Command xmlns="">hsd_imaging</Command>
         <ParameterSet>
             <Parameter>

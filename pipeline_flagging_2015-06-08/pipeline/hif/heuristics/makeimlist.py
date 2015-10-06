@@ -6,6 +6,7 @@ import re
 import types
 
 import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.contfilehandler as contfilehandler
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import cleanhelper
@@ -17,7 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class MakeImListHeuristics(object):
 
-    def __init__(self, context, vislist, spw, linesfile=None):
+    def __init__(self, context, vislist, spw, contfile=None, linesfile=None):
         self.context = context
         if type(vislist) is types.ListType:
             self.vislist = vislist
@@ -38,25 +39,6 @@ class MakeImListHeuristics(object):
             spwidsclean = map(int, spwidsclean)
             spwids.update(spwidsclean)
 
-        # read and merge line regions if any
-        if (linesfile not in (None, '')):
-            p=re.compile('([\d.]*)(~)([\d.]*)(\D*)')
-            try:
-                line_regions = p.findall(open(linesfile, 'r').read().replace('\n','').replace(';','').replace(' ',''))
-            except Exception as e:
-                line_regions = []
-            line_ranges_GHz = []
-            for line_region in line_regions:
-                try:
-                    fLow = casatools.quanta.convert('%s%s' % (line_region[0], line_region[3]), 'GHz')['value']
-                    fHigh = casatools.quanta.convert('%s%s' % (line_region[2], line_region[3]), 'GHz')['value']
-                    line_ranges_GHz.append((fLow, fHigh))
-                except:
-                    pass
-            merged_line_ranges_GHz = [r for r in self.merge_ranges(line_ranges_GHz)]
-        else:
-            merged_line_ranges_GHz = []
-
         # calculate beam radius for all spwids, saves repetition later 
         self.beam_radius = {}
 
@@ -68,9 +50,6 @@ class MakeImListHeuristics(object):
             for antenna in antennas:
                 diameters.append(antenna.diameter)
         smallest_diameter = np.min(np.array(diameters))
-
-        # determine spw selection parameters to exclude lines for mfs images
-        self.cont_ranges = {}
 
         # get spw info from first vis set, assume spws uniform
         # across datasets
@@ -87,17 +66,73 @@ class MakeImListHeuristics(object):
               (1.22 * (3.0e8/ref_frequency) / smallest_diameter) * \
               (180.0 * 3600.0 / math.pi)
 
-            # assemble continuum spw selection
-            min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-            max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
-            spw_sel_intervals = self.spw_intersect([min_frequency, max_frequency], merged_line_ranges_GHz)
-            spw_selection = reduce(lambda x,y: '%s;%s' % (x,y), \
-                ['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in spw_sel_intervals])
-            if (spw_selection != '%s~%sGHz' % (min_frequency, max_frequency)):
-                self.cont_ranges[str(spwid)] = spw_selection
-            else:
+        # determine spw selection parameters to exclude lines for mfs and cont images
+
+        # initialize lookup dictionary for all possible source names
+        self.cont_ranges_spwsel = {}
+        for ms_ref in self.context.observing_run.get_measurement_sets():
+            for source_name in [s.name for s in ms_ref.sources]:
+                self.cont_ranges_spwsel[source_name] = {}
+                for spwid in spwids:
+                    self.cont_ranges_spwsel[source_name][str(spwid)] = ''
+
+        if (contfile is None):
+            contfile = ''
+        if (linesfile is None):
+            linesfile = ''
+
+        # read and merge continuum regions if contfile exists
+        if (os.path.isfile(contfile)):
+            LOG.info('Using continuum frequency ranges from %s to calculate continuum frequency selections.' % (contfile))
+
+            contfile_handler = contfilehandler.ContFileHandler(contfile)
+
+            # read the ranges
+            cont_ranges = contfile_handler.read(skip_none = True)
+
+            # merge the ranges
+            for source_name in self.cont_ranges_spwsel.iterkeys():
+                for spw_id in self.cont_ranges_spwsel[source_name].iterkeys():
+                    if (cont_ranges.has_key(source_name)):
+                        if (cont_ranges[source_name].has_key(spw_id)):
+                            self.cont_ranges_spwsel[source_name][spw_id] = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in self.merge_ranges(cont_ranges[source_name][spw_id])])
+
+        # alternatively read and merge line regions and calculate continuum regions
+        elif (os.path.isfile(linesfile)):
+            LOG.info('Using line frequency ranges from %s to calculate continuum frequency selections.' % (linesfile))
+
+            p=re.compile('([\d.]*)(~)([\d.]*)(\D*)')
+            try:
+                line_regions = p.findall(open(linesfile, 'r').read().replace('\n','').replace(';','').replace(' ',''))
+            except Exception as e:
+                line_regions = []
+            line_ranges_GHz = []
+            for line_region in line_regions:
+                try:
+                    fLow = casatools.quanta.convert('%s%s' % (line_region[0], line_region[3]), 'GHz')['value']
+                    fHigh = casatools.quanta.convert('%s%s' % (line_region[2], line_region[3]), 'GHz')['value']
+                    line_ranges_GHz.append((fLow, fHigh))
+                except:
+                    pass
+            merged_line_ranges_GHz = [r for r in self.merge_ranges(line_ranges_GHz)]
+
+            # get source and spw info from first vis set, assume spws uniform
+            # across datasets
+            for spwid in spwids:
+                spw = ms.get_spectral_window(spwid)
+                # assemble continuum spw selection
+                min_frequency = float(spw.min_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                max_frequency = float(spw.max_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ))
+                spw_sel_intervals = self.spw_intersect([min_frequency, max_frequency], merged_line_ranges_GHz)
+                spw_selection = ';'.join(['%s~%sGHz' % (spw_sel_interval[0], spw_sel_interval[1]) for spw_sel_interval in spw_sel_intervals])
+
                 # Skip selection syntax completely if the whole spw is selected
-                self.cont_ranges[str(spwid)] = ''
+                if (spw_selection == '%s~%sGHz' % (min_frequency, max_frequency)):
+                    spw_selection = ''
+
+                for source_name in [s.name for s in ms.sources]:
+                    self.cont_ranges_spwsel[source_name][str(spwid)] = spw_selection
+
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')
@@ -171,7 +206,7 @@ class MakeImListHeuristics(object):
 
             if vis_scanids in done_vis_scanids:
                 LOG.warn(
-                  'field: %s intent: %s is a duplicate - removing from cleanlist' %
+                  'field: %s intent: %s is a duplicate - removing from imlist' %
                   (field, intent))
                 field_intent_result.discard(field_intent)
             else:
@@ -364,7 +399,7 @@ class MakeImListHeuristics(object):
             return 'standard'
 
     def deconvolver(self, intent, field):
-        return 'clark'
+        return 'hogbom'
 
     def phasecenter(self, fields, centreonly=True):
 
@@ -385,7 +420,11 @@ class MakeImListHeuristics(object):
             for field in visfields:
                 # get field centres as measures
                 fieldobj = ms.get_fields(field_id=field)[0]
-                phase_dir = cme.measure(fieldobj.mdirection, 'ICRS')
+                ref =  cme.getref(fieldobj.mdirection)
+                if ref=='ICRS' or ref=='J2000' or ref=='B1950':
+                    phase_dir = cme.measure(fieldobj.mdirection, 'ICRS')
+                else:
+                    phase_dir = fieldobj.mdirection
                 mdirections.append(phase_dir)
 
         # sanity check - for single field images the field centres from
@@ -429,7 +468,7 @@ class MakeImListHeuristics(object):
 
         # get direction of image centre crudely by adding offset
         # of centre to ref values of first field.
-        ref =  cme.getref(mdirections[0])
+        ref = cme.getref(mdirections[0])
         md = cme.getvalue(mdirections[0])
         m0 = cqa.quantity(md['m0'])
         m1 = cqa.quantity(md['m1'])
@@ -440,10 +479,10 @@ class MakeImListHeuristics(object):
         # convert to strings (CASA 4.0 returns as list for some reason
         # hence 0 index)
         if ref=='ICRS' or ref=='J2000' or ref=='B1950':
-            m0 = cqa.time(m0, prec=9)[0]
+            m0 = cqa.time(m0, prec=10)[0]
         else:
-            m0 = cqa.angle(m0, prec=8)[0]
-        m1 = cqa.angle(m1, prec=8)[0]
+            m0 = cqa.angle(m0, prec=9)[0]
+        m1 = cqa.angle(m1, prec=9)[0]
 
         if centreonly:
             return '%s %s %s' % (ref, m0, m1)
@@ -555,7 +594,7 @@ class MakeImListHeuristics(object):
             p=re.compile(r"[ ,]+(\d+)")
             spwids = p.findall(' %s' % spwspec)
             spwids = list(set(spwids))
-            spwids.sort()
+            spwids = map(str, sorted(map(int, spwids)))
             spw = '_'.join(spwids)
             namer.spectral_window(spw)
         if specmode:

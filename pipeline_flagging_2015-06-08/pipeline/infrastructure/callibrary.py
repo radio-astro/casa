@@ -931,7 +931,10 @@ class SDCalApplication(object):
     @staticmethod
     def from_export(s):
         d = eval(string.replace(s, 'sdcal2(', 'dict('))
-        calto = CalTo(vis=d['infile'])
+        if d.has_key('spw') and len(d['spw']) > 0:
+            calto = CalTo(vis=d['infile'], spw=d['spw'])
+        else:
+            calto = CalTo(vis=d['infile'])
         
         # wrap these values in a list if they are single valued, 
         # eg. 'm31' -> ['m31']
@@ -945,7 +948,7 @@ class SDCalApplication(object):
                 caltype = applytable.getkeyword('ApplyType')
 
             if caltype == 'CALTSYS':
-                calfrom = SDCalFrom(tab, interp=d['interp'], spwmap=d['ifmap'])
+                calfrom = SDCalFrom(tab, interp=d['interp'], spwmap=d['spwmap'])
                 calfrom.caltype = 'tsys'
             else:
                 calfrom = SDCalFrom(tab, interp=d['interp'])
@@ -1216,6 +1219,10 @@ class SDCalFrom(CalFrom):
     @property
     def caltype(self):
         return self.__caltype
+    
+    @caltype.setter
+    def caltype(self, value):
+        self.__caltype = value
 
     @property
     def calwt(self):

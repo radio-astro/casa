@@ -110,6 +110,14 @@ def get_plot_dir(context, stage_number):
     plots_dir = os.path.join(stage_dir, 'plots')
     return plots_dir
 
+def is_singledish_ms(context):
+    # importdata results
+    importdata_result = context.results[0]
+    if isinstance(importdata_result, basetask.ResultsProxy):
+        result_repr = str(importdata_result.read())
+    else:
+        result_repr = str(importdata_result)
+    return result_repr.find('SDImportDataResults') != -1
 
 class Session(object):
     def __init__(self, mses=None, name='Unnamed Session'):
@@ -580,6 +588,15 @@ class T2_1DetailsRenderer(object):
 
         task = summary.ElVsTimeChart(context, ms)
         el_vs_time_plot = task.plot()
+        
+        if is_singledish_ms(context):
+            LOG.debug('TPSampling plot is enabled for single dish MS')
+            task = summary.TPSamplingChart(context, ms)
+            tpsampling_plot = task.plot()
+        else:
+            tpsampling_plot = None
+            
+        LOG.trace('tpsampling_plot = %s'%(tpsampling_plot))
 
         dirname = os.path.join('session%s' % ms.session,
                                ms.basename)
@@ -603,7 +620,8 @@ class T2_1DetailsRenderer(object):
             'weather_plot'    : weather_plot,
             'pwv_plot'        : pwv_plot,
             'azel_plot'       : azel_plot,
-            'el_vs_time_plot' : el_vs_time_plot
+            'el_vs_time_plot' : el_vs_time_plot,
+            'tpsampling_plot' : tpsampling_plot
         }
 
     @classmethod
@@ -1341,12 +1359,10 @@ def group_into_sessions(context, task_results):
 
 def group_into_measurement_sets(context, task_results):
     def get_vis(r):
-        vis = r.inputs['vis']
-        if type(r).__name__ == 'ImportDataResults' or type(r).__name__ == 'SDImportDataResults':
-            vis = vis.rstrip('/')
-            if not vis.endswith('.ms'):
-                vis = '%s.ms' % vis
-        return os.path.basename(vis)
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+            # in splitting by vis, there's only one MS in the mses array
+            return r.mses[0].basename
+        return os.path.basename(r.inputs['vis'])
     
     vises = [get_vis(r) for r in task_results]
     mses = [context.observing_run.get_ms(vis) for vis in vises]
@@ -1374,11 +1390,10 @@ def sort_by_time(mses):
 
 def get_rootdir(r):
     try:
-        vis = r.inputs['vis']
-        if type(r).__name__ == 'ImportDataResults':
-            if not vis.endswith('.ms'):
-                vis = '%s.ms' % vis
-        return os.path.basename(vis)
+        if type(r).__name__ in ('ImportDataResults', 'SDImportDataResults'):
+            # in splitting by vis, there's only one MS in the mses array
+            return r.mses[0].basename
+        return os.path.basename(r.inputs['vis'])
     except:
         return 'shared'
 

@@ -33,13 +33,18 @@ class CleanSummary(object):
             if r.empty():
                 continue
 
+            if (r.multiterm):
+                extension = '.tt0'
+            else:
+                extension = ''
+
             # psf map
-            plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf,
-              reportdir=stage_dir, intent=r.intent))
+            plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf+extension,
+              reportdir=stage_dir, intent=r.intent, collapseFunction='mean'))
 
             # flux map
-            #plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-            #  r.flux, reportdir=stage_dir, intent=r.intent))
+            plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+              r.flux, reportdir=stage_dir, intent=r.intent, collapseFunction='mean'))
 
             # image iterations
             iterations = r.iterations.keys()
@@ -47,19 +52,24 @@ class CleanSummary(object):
             for i in iterations:
                 # image for this iteration
                 if (r.iterations[i]['image'] != ''):
+                    if (r.iterations[i]['image'].find('cube') != -1):
+                        collapseFunction = 'max'
+                    else:
+                        collapseFunction = 'mean'
                     plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                      r.iterations[i]['image'], reportdir=stage_dir, intent=r.intent))
+                      r.iterations[i]['image']+extension, reportdir=stage_dir,
+                      intent=r.intent, collapseFunction=collapseFunction))
 
                 # residual for this iteration
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
-                  r.iterations[i]['residual'], reportdir=stage_dir, intent=r.intent))
+                  r.iterations[i]['residual']+extension, reportdir=stage_dir, intent=r.intent))
 
                 # model for this iteration (currently only last but
                 # allow for others in future)
                 if r.iterations[i].has_key('model') and \
-                  os.path.exists(r.iterations[i]['model']):
+                  os.path.exists(r.iterations[i]['model']+extension):
                     plot_wrappers.append(displays.SkyDisplay().plot(
-                      self.context, r.iterations[i]['model'],
+                      self.context, r.iterations[i]['model']+extension,
                       reportdir=stage_dir, intent=r.intent))
 
                 # cleanmask for this iteration - not for iter 0

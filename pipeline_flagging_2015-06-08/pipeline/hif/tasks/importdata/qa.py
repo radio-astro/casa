@@ -2,12 +2,14 @@ from __future__ import absolute_import
 import collections
 import datetime
 import os
+import numpy
 
 from pipeline.infrastructure import casa_tasks, casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.qa.scorecalculator as qacalc
+import pipeline.infrastructure.mpihelpers as mpihelpers
 
 LOG = logging.get_logger(__name__)
 from . import importdata
@@ -21,7 +23,7 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         score1 = self._check_intents(result.mses)
         self._check_flagged_calibrator_data(result.mses)
         score3 = self._check_model_data_column(result.mses)
-        score4 = self._check_history_column(result.mses)
+        score4 = self._check_history_column(result.mses, result.inputs)
         
         LOG.todo('How long can MSes be separated and still be considered ' 
                  'contiguous?')
@@ -57,19 +59,33 @@ class ImportDataQAHandler(pqa.QAResultHandler):
     
         return qacalc.score_ms_model_data_column_present(mses, bad_mses)
     
-    def _check_history_column(self, mses):
+    def _check_history_column(self, mses, inputs):
         '''
         Check whether any of the measurement sets has entries in the history
         column, potentially signifying a non-pristine data set.
         '''
         bad_mses = []
+        
+        createmms = False if not inputs.has_key('createmms') else inputs['createmms']
     
         for ms in mses:
             history_table = os.path.join(ms.name, 'HISTORY')
             with casatools.TableReader(history_table) as table:
                 if table.nrows() != 0:
-                    if (not (table.getcol('ORIGIN') == 'importasdm').all()):
-                        bad_mses.append(ms)
+                    origin_col = table.getcol('ORIGIN')
+                    if createmms:
+                        # special treatment is needed when createmms mode is turned on
+                        for i in range(len(origin_col)):
+                            if origin_col[i] == 'importasdm' or origin_col[i] == 'partition' or origin_col[i] == 'im::calcuvw()':
+                                continue
+                            bad_mses.append(ms)
+                            break
+                    else:
+                        for i in range(len(origin_col)):
+                            if origin_col[i] == 'importasdm' or origin_col[i] == 'im::calcuvw()':
+                                continue
+                            bad_mses.append(ms)
+                            break
     
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
     

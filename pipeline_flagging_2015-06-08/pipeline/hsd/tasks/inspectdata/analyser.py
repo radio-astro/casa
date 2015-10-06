@@ -41,7 +41,8 @@ class DataTableAnalyser(object):
             for (k,v) in spw_list.items():
                 if v.type == 'WVR' or v.nchan == 1:
                     continue
-                if re.match('TARGET',v.intent):
+#                 if re.match('TARGET',v.intent): # match only matches the beginning of string
+                if re.search('TARGET',v.intent):
                     target_spw.append(k)
 
             # update reduction_group 
@@ -50,19 +51,12 @@ class DataTableAnalyser(object):
                 pol_properties = entry.polarization
                 freq_range = spw_property.frequency_range
                 nchan = spw_property.nchan
+                spw_name = spw_property.name
                 pols = pol_properties[spw_property.pol_association[0]].polno
-                match = False
-                for (k,v) in self.reduction_group.items():
-                    group_range = v.frequency_range#v['freq_range']
-                    group_nchan = v.nchan#v['nchan']
-                    overlap = max( 0.0, min(group_range[1],freq_range[1]) \
-                                   - max(group_range[0],freq_range[0]))
-                    width = max(group_range[1],freq_range[1]) \
-                            - min(group_range[0],freq_range[0])
-                    coverage = overlap/width
-                    if nchan == group_nchan and coverage >= 0.99:
-                        match = k
-                        break
+                if len(spw_name) == 0: #matching by coverage
+                    match = self.__find_match_by_coverage(nchan, freq_range, fraction=0.99)
+                else:
+                    match = self.__find_match_by_name(spw_name)
                 if match is False:
                     # add new group
                     key = len(self.reduction_group)
@@ -74,6 +68,33 @@ class DataTableAnalyser(object):
 
         LOG.debug('reduction_group:\n%s'%(self.reduction_group))
 
+    def __find_match_by_name(self, spw_name):
+        match = False
+        for (k,v) in self.reduction_group.items():
+            first_member = v[0]
+            group_name = self.scantablelist[first_member.antenna].spectral_window[first_member.spw].name
+            if (group_name==''): raise RuntimeError, "Got empty group spectral window name"
+            if spw_name == group_name:
+                match = k
+                break
+        return match
+
+    def __find_match_by_coverage(self, nchan, freq_range, fraction=0.99):
+        if fraction<=0 or fraction>1.0:
+            raise ValueError, "overlap fraction should be between 0.0 and 1.0"
+        LOG.warn("Creating reduction group by frequency overlap. This may be not proper if observation dates extend over long period.")
+        match = False
+        for (k,v) in self.reduction_group.items():
+            group_range = v.frequency_range#v['freq_range']
+            group_nchan = v.nchan#v['nchan']
+            overlap = max( 0.0, min(group_range[1],freq_range[1])
+                           - max(group_range[0],freq_range[0]))
+            width = max(group_range[1],freq_range[1]) - min(group_range[0],freq_range[0])
+            coverage = overlap/width
+            if nchan == group_nchan and coverage >= fraction:
+                match = k
+                break
+        return match
 
     def analyse_calibration(self):
         self.calibration_strategy = []
@@ -150,7 +171,7 @@ class DataTableAnalyser(object):
             thispol = pol[i]
             spw_prop = self.scantablelist[thisant].spectral_window[thisspw]
             if spw_prop.type == 'WVR' or \
-                   re.match('TARGET',spw_prop.intent) is None or \
+                   re.search('TARGET',spw_prop.intent) is None or \
                    srt[i] not in on_source:
                 continue
 

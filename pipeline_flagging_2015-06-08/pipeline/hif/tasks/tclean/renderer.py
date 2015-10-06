@@ -45,17 +45,21 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     continue
                 if not r.iterations:
                     continue
+                if (r.multiterm):
+                    extension = '.tt0'
+                else:
+                    extension = ''
 
                 maxiter = max(r.iterations.keys())
 
-                with casatools.ImageReader(r.iterations[maxiter]['image']) as image:
+                with casatools.ImageReader(r.iterations[maxiter]['image']+extension) as image:
                     info = image.miscinfo()
                     spw = pol = field = None
                     if info.has_key('spw'): 
                         spw = info['spw']
                     if info.has_key('field'):
                         field = '%s (%s)' % (info['field'], r.intent)
-                    
+
                     coordsys = image.coordsys()
                     coord_names = numpy.array(coordsys.names())
                     coord_refs = coordsys.referencevalue(format='s')
@@ -82,23 +86,27 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     pa = qaTool.convert(beam['positionangle'], 'deg')
                     info_dict[(field, spw, pol, 'beam pa')] = pa
                     info_dict[(field, spw, pol, 'brightness unit')] = image.brightnessunit()
-                    
+
                     stats = image.statistics(robust=False)
                     info_dict[(field, spw, pol, 'image rms')] = stats.get('rms')[0]
-                    
+
                     summary = image.summary()
                     nchan = summary['shape'][3]
                     width = qaTool.quantity(summary['incr'][3], 
                                         summary['axisunits'][3])
                     width = qaTool.convert(width, 'MHz')
                     width = qaTool.tos(width, 2)
-                    
+
                     info_dict[(field, spw, pol, 'nchan')] = nchan
                     info_dict[(field, spw, pol, 'width')] = width
                     
-                with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
+                with casatools.ImageReader(r.iterations[maxiter]['residual']+extension) as residual:
                     stats = residual.statistics(robust=False)
                     info_dict[(field, spw, pol, 'residual rms')] = stats.get('rms')[0]
+
+                # The RMS value needs to be taken with proper masking.
+                # Store the one used for QA scoring.
+                info_dict[(field, spw, pol, 'masked rms')] = r.rms
 
                 info_dict[(field, spw, pol, 'score')] = r.qa.representative
 
@@ -135,9 +143,9 @@ class T2_4MDetailsTcleanRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                     'dirname'    : weblog_dir})
 
 
-class CleanPlotsRenderer(basetemplates.CommonRenderer):
+class TCleanPlotsRenderer(basetemplates.CommonRenderer):
     def __init__(self, context, result, plots_dict, field, spw, pol):
-        super(CleanPlotsRenderer, self).__init__('cleanplots.mako', context, 
+        super(TCleanPlotsRenderer, self).__init__('tcleanplots.mako', context, 
                                                  result)
         
         outfile = 'field%s-spw%s-pol%s-cleanplots.html' % (field, spw, pol)

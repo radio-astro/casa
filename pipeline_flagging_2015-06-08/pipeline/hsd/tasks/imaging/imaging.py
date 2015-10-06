@@ -345,6 +345,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwids,
+                                                        specmode='cube',
                                                         sourcetype='TARGET')
                     image_item.antenna = name
                     outcome = {}
@@ -460,6 +461,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 image_item = imagelibrary.ImageItem(imagename=imagename,
                                                     sourcename=source_name,
                                                     spwlist=combined_spws,
+                                                    specmode='cube',
                                                     sourcetype='TARGET')
                 image_item.antenna = 'COMBINED'
                 outcome = {}

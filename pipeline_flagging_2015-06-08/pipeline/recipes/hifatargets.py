@@ -16,17 +16,11 @@ except:
 
 __rethrow_casa_exceptions = True
 
-# Setup paths
-# Should no longer be needed
-#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
-#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
-
 # CASA imports
 #     Clunky but import casa does not work for pipeline tasks
 from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hif_findcont_cli import hif_findcont_cli as hif_findcont
 from hif_makeimlist_cli import hif_makeimlist_cli as hif_makeimlist
 from hif_makeimages_cli import hif_makeimages_cli as hif_makeimages
 from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
@@ -48,21 +42,30 @@ def hifatargets (vislist, importonly=False, pipelinemode='automatic', interactiv
         h_init()
 
         # Load the data
-        hifa_importdata (vis=vislist, pipelinemode=pipelinemode)
+        hifa_importdata (vis=vislist, dbservice=False, pipelinemode=pipelinemode)
         if importonly:
             raise Exception(IMPORT_ONLY)
 
-        # Make a list of expected targets to be cleaned in mfs mode
+        # Make a list of expected targets to be cleaned in cont (aggregate over all spws) mode
+        hif_makeimlist (specmode='cont', pipelinemode=pipelinemode)
+ 
+        # Find continuum frequency ranges
+        hif_findcont(pipelinemode=pipelinemode)
+
+        # Make clean cont images for the selected targets
+        hif_makeimages (pipelinemode=pipelinemode)
+
+        # Make a list of expected targets to be cleaned in mfs mode (used for continuum subtraction)
         hif_makeimlist (specmode='mfs', pipelinemode=pipelinemode)
  
         # Make clean mfs images for the selected targets
         hif_makeimages (pipelinemode=pipelinemode)
 
-        # Make a list of expected targets to be cleaned in cube mode
-        hif_makeimlist (pipelinemode=pipelinemode)
+        # Make a list of expected targets to be cleaned in continuum subtracted cube mode
+        hif_makeimlist (width='', pipelinemode=pipelinemode)
 
-        # Make clean cube images for the selected targets
-        hif_makeimages (pipelinemode=pipelinemode)
+        # Make clean continuum subtracted cube images for the selected targets
+        hif_makeimages (subcontms=False, pipelinemode=pipelinemode)
 
     except Exception, e:
         if str(e) == IMPORT_ONLY:

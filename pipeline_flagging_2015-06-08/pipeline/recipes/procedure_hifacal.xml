@@ -3,6 +3,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifa_importdata</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">dbservice</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -103,6 +107,10 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">tlimit</Keyword>
+                <Value xmlns="">2.0</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 

@@ -24,6 +24,9 @@ import uuid
 
 import cachetools
 
+# for is_top_level_task
+from mpi4casa.MPIEnvironment import MPIEnvironment
+
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
 from . import casatools
@@ -496,7 +499,15 @@ def is_top_level_task():
     """
     Return True if the callee if executing as part of a top-level task.
     """
-    return task_depth() is 1
+    # If this code is executed on an MPI server, it must have been invoked
+    # from a sub-task running on an MPI server, which itself must have been
+    # called from a pipeline task running on the MPI client. In this case, we
+    # know this is not a top-level task without examining the stack.
+    if all((MPIEnvironment.is_mpi_enabled,       # running on MPI cluster
+           not MPIEnvironment.is_mpi_client)):   # running as MPI server
+        return False
+
+    return task_depth() is  1
 
 def get_logrecords(result, loglevel):
     """
@@ -745,10 +756,6 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
     # treat all jobs the same
     merged_results.extend([(j, [j]) for j in non_mergeable])
 
-    # generate random filename to make it easier to identify when things go wrong
-    iter_filename = '%s.png' % uuid.uuid4()
-    root, ext = os.path.splitext(iter_filename)
-
     jobs_and_callbacks = []
     for merged_job, component_jobs in merged_results:
         # filename components are only inserted if there is more than one plot
@@ -760,6 +767,10 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             job_to_execute = component_jobs[0]
             src_filenames = [job_to_execute.kw['plotfile']]
         else:
+            # generate random filename to make it easier to identify when things go wrong
+            iter_filename = '%s.png' % uuid.uuid4()
+            root, ext = os.path.splitext(iter_filename)
+
             # activate plotms iteration in the merged job arguments to activate
             merged_job.kw['plotfile'] = iter_filename
             merged_job.kw['clearplots'] = True
@@ -795,7 +806,12 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             else:
                 queued_job = mpihelpers.SyncTask(job_to_execute)
 
-            def callback():
+            # variables within functions and lambdas are late binding, so we
+            # supply them as default arguments to get the values at function
+            # definition time into the closure scope
+            def callback(src_filenames=src_filenames,
+                         dest_filenames=dest_filenames,
+                         component_jobs=component_jobs):
                 # move the plotms output into place, renaming to the expected
                 # filename containing ant, spw, field components.
                 for src, dst, cjob in zip(src_filenames, dest_filenames,
@@ -813,7 +829,7 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             LOG.trace('Skipping unnecessary job: %s' % job_to_execute)
 
     # now execute all the callbacks, which will rename the output files
-    LOG.info('Compressed %s jobs to %s iterated jobs',
+    LOG.info('Compressed %s plotms jobs to %s jobs',
              len(jobs_and_wrappers), len(jobs_and_callbacks))
     for (queued_job, callback) in jobs_and_callbacks:
         queued_job.get_result()
@@ -872,3 +888,46 @@ def merge_td_columns(rows, num_to_merge=None, vertical_align=False):
         new_cols.append(merged)
     
     return zip(*new_cols)
+
+
+def selection_to_frequencies(img, selection, unit='GHz'):
+
+    '''Convert channel selection to frequency tuples.'''
+
+    frequencies = []
+    if (selection != ''):
+        iaTool = casatools.image
+        qaTool = casatools.quanta
+
+        iaTool.open(img)
+
+        # Get frequency axis
+        imInfo = iaTool.summary()
+        try:
+            fIndex = imInfo['axisnames'].tolist().index('Frequency')
+        except:
+            LOG.error('No frequency axis found in %s.' % (img))
+            iaTool.close()
+            return ['NONE']
+
+        refFreq = imInfo['refval'][fIndex]
+        deltaFreq = imInfo['incr'][fIndex]
+        freqUnit = imInfo['axisunits'][fIndex]
+        refPix = imInfo['refpix'][fIndex]
+
+        for crange in selection.split(';'):
+            c0, c1 = map(int, crange.split('~'))
+            f0 = qaTool.convert({'value': refFreq + (c0 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
+            f1 = qaTool.convert({'value': refFreq + (c1 - refPix) * deltaFreq, 'unit': freqUnit}, unit)
+            if (qaTool.lt(f0, f1)):
+                print '%.9f~%.9f%s' % (f0['value'], f1['value'], unit)
+                frequencies.append((f0['value'], f1['value']))
+            else:
+                print '%.9f~%.9f%s' % (f1['value'], f0['value'], unit)
+                frequencies.append((f1['value'], f0['value']))
+        iaTool.close()
+    else:
+        frequencies = ['NONE']
+        print 'None'
+
+    return frequencies

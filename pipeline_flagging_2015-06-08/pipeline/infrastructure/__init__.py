@@ -4,6 +4,7 @@ import sys
 from . import api
 from . import callibrary
 from . import casatools
+from . import contfilehandler
 from . import filenamer
 from . import imagelibrary
 from . import jobrequest

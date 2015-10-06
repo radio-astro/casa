@@ -25,8 +25,7 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
       intent=None, spw=None, refant=None, flag_nmedian=None,
-      fnm_lo_limit=None, fnm_hi_limit=None, niter=None, 
-      iter_datatask=None, use_antenna_names=None):
+      fnm_lo_limit=None, fnm_hi_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -96,26 +95,6 @@ class LowgainflagInputs(commoncalinputs.CommonCalibrationInputs):
             value = 1
         self._niter = value
 
-    @property
-    def iter_datatask(self):
-        return self._iter_datatask
-
-    @iter_datatask.setter
-    def iter_datatask(self, value):
-        if value is None:
-            value = True
-        self._iter_datatask = value
-
-    @property
-    def use_antenna_names(self):
-        return self._use_antenna_names
-
-    @use_antenna_names.setter
-    def use_antenna_names(self, value):
-        if value is None:
-            value = True
-        self._use_antenna_names = value
-
 
 class Lowgainflag(basetask.StandardTaskTemplate):
     Inputs = LowgainflagInputs
@@ -158,8 +137,7 @@ class Lowgainflag(basetask.StandardTaskTemplate):
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, viewtask=viewtask, 
           flagsettertask=flagsettertask, rules=rules, niter=inputs.niter,
-          extendfields=['field', 'timerange'], iter_datatask=inputs.iter_datatask,
-          use_antenna_names=inputs.use_antenna_names)
+          extendfields=['field', 'timerange'], iter_datatask=True)
         flaggertask = viewflaggers.NewMatrixFlagger(matrixflaggerinputs)
 
         # Execute the flagger task
@@ -235,11 +213,13 @@ class LowgainflagData(basetask.StandardTaskTemplate):
             gatable = gatable[0].gaintable
             LOG.warning('No amplitude time solution computed for %s ' % (inputs.ms.basename))
             result.table = gatable
+            result.table_available = False
         else:
             gacal.accept(inputs.context)
             gatable = gacal.final
             gatable = gatable[0].gaintable
             result.table = gatable
+            result.table_available = True
             
         return result
 
@@ -260,26 +240,27 @@ class LowgainflagView(object):
 
     def __call__(self, data):
         
-        # Calculate the view
-        gatable = data.table
-        LOG.info ('Computing flagging metrics for caltable %s ' % (
-            os.path.basename(gatable)))
-        result = self.calculate_view(gatable)
+        # Initialize result structure
+        self.result = LowgainflagViewResults()
+
+        if data.table_available:
+            # Calculate the view
+            gatable = data.table
+            LOG.info ('Computing flagging metrics for caltable %s ' % (
+                os.path.basename(gatable)))
+            self.calculate_view(gatable)
 
         # Add visibility name to result
-        result.vis = self.vis
+        self.result.vis = self.vis
 
-        return result
-
+        return self.result
 
     def calculate_view(self, table):
         """
         table -- Name of gain table to be analysed.
         spwid -- view will be calculated using data for this spw id.
         """
-        # Initialize result structure
-        result = LowgainflagViewResults()
-        
+
         gtable = caltableaccess.CalibrationTableDataFiller.getcal(table)
 
         ms = self.context.observing_run.get_ms(name=self.vis)
@@ -350,6 +331,4 @@ class LowgainflagView(object):
           
             # add the view results and their children results to the
             # class result structure
-            result.addview(viewresult.description, viewresult)
-        
-        return result
+            self.result.addview(viewresult.description, viewresult)

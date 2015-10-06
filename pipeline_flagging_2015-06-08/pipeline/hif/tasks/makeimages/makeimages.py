@@ -19,22 +19,8 @@ class MakeImagesInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
                  weighting=None, robust=None, noise=None, npixels=None,
                  hm_masking=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, parallel=None):
+                 masklimit=None, maxncleans=None, subcontms=None, parallel=None):
         self._init_properties(vars())
-
-    @property
-    def parallel(self):
-        return self._parallel
-
-    @parallel.setter
-    def parallel(self, value):
-        if value in ('true', 'True', 'TRUE', True, 1):
-            value = True
-        elif value in ('false', 'False', 'FALSE', False, 0):
-            value = False
-        else:
-            value = mpihelpers.is_mpi_ready()
-        self._parallel = value
 
     @property
     def target_list(self):
@@ -52,8 +38,10 @@ class MakeImagesInputs(basetask.StandardInputs):
     maxncleans = basetask.property_with_default('maxncleans', 10)
     noise = basetask.property_with_default('noise', '1.0Jy')
     npixels = basetask.property_with_default('npixels', 0)
+    parallel = basetask.property_with_default('parallel', 'automatic')
     robust = basetask.property_with_default('robust', -999.0)
-    tlimit = basetask.property_with_default('tlimit', 1.0)
+    subcontms = basetask.property_with_default('subcontms', False)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
     weighting = basetask.property_with_default('weighting', 'briggs')
 
 
@@ -135,8 +123,9 @@ class CleanTaskFactory(object):
         is_cal_image = 'TARGET' not in target['intent']
 
         is_tier0_job = is_mpi_ready and is_cal_image
+        parallel_wanted = mpihelpers.parse_mpi_input_parameter(self.__inputs.parallel)
 
-        if is_tier0_job and self.__inputs.parallel:
+        if is_tier0_job and parallel_wanted:
             executable = mpihelpers.Tier0PipelineTask(Tclean,
                                                       task_args,
                                                       self.__context_path)
@@ -149,9 +138,11 @@ class CleanTaskFactory(object):
     def __get_task_args(self, target):
         inputs = self.__inputs
 
+        parallel_wanted = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
+
         # request Tier 1 tclean parallelisation if the user requested it, this
         # is science target imaging, and we are running as an MPI client.
-        parallel = all([inputs.parallel,
+        parallel = all([parallel_wanted,
                         'TARGET' in target['intent'],
                         mpihelpers.is_mpi_ready()])
 
@@ -167,6 +158,7 @@ class CleanTaskFactory(object):
             # other vals
             'tlimit': inputs.tlimit,
             'masklimit': inputs.masklimit,
+            'subcontms': inputs.subcontms,
             'parallel': parallel,
         })
 

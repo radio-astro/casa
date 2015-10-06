@@ -118,7 +118,7 @@ application of WVR correction. Plots based on these data in these evaluation
 caltables are presented below.</p>
 
 <%self:plot_group plot_dict="${flag_plots}"
-				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % filenamer.sanitize(x)}">
+				  url_fn="${lambda x: 'science_amp_vs_uv-%s.html' % filenamer.sanitize(x)}">
 
 	<%def name="title()">
 		Flagging plots
@@ -160,7 +160,7 @@ for that measurement set.</p>
 <ul>
 % for ms, plot in metric_plots.items():
     <li>
-        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric_%s.html' % ms), pcontext.report_dir)}"
+        <a href="${os.path.relpath(os.path.join(dirname, 'flagging_metric-%s.html' % ms), pcontext.report_dir)}"
           class="replace">${ms}</a>
     </li>
 % endfor        
@@ -168,7 +168,7 @@ for that measurement set.</p>
 % endif
 
 <%self:plot_group plot_dict="${phase_offset_summary_plots}"
-				  url_fn="${lambda x: 'phase_offsets_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'phase_offsets-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">
@@ -195,7 +195,7 @@ for that measurement set.</p>
 </%self:plot_group>
 
 <%self:plot_group plot_dict="${baseline_summary_plots}"
-				  url_fn="${lambda x: 'phase_offsets_vs_baseline_%s.html' % filenamer.sanitize(x)}"
+				  url_fn="${lambda x: 'phase_offsets_vs_baseline-%s.html' % filenamer.sanitize(x)}"
 				  data_spw="${True}">
 
 	<%def name="title()">

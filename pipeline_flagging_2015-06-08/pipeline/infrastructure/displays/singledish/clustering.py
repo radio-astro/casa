@@ -113,8 +113,11 @@ class ClusterDisplay(object):
         start_time = time.time()
         for group in self.__baselined():
             cluster = group['clusters']
-            if not cluster.has_key('cluster_score'):
-                # it should be empty cluster (no detection) so skip this cycle
+            lines = group['lines']
+            is_all_invalid_lines = all([l[2] == False for l in lines])
+            if (not cluster.has_key('cluster_score')) or (is_all_invalid_lines):
+                # it should be empty cluster (no detection) or false clusters (detected but 
+                # judged as an invalid clusters) so skip this cycle
                 continue
             antenna = group['index'][0]
             spw = group['spw'][0]
@@ -126,7 +129,6 @@ class ClusterDisplay(object):
             t1 = time.time()
             plot_property = ClusterPropertyDisplay(group_id, iteration, cluster, spw, stage_dir)
             plot_list.extend(plot_property.plot())
-            lines = group['lines']
             t2 = time.time()
             plot_validation = ClusterValidationDisplay(self.context, group_id, iteration, cluster, spw, antenna, lines, stage_dir)
             plot_list.extend(plot_validation.plot())

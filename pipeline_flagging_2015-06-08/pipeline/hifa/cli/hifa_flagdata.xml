@@ -89,6 +89,11 @@
             <any type="variant" limittypes="double doubleArray" />
             <value type="double">[0.0,0.0]</value>
         </param>
+        
+        <param type="bool" name="qa0">
+	    <description>QA0 flags</description>
+	    <value>True</value>
+	</param>
 
 	<param type="string" name="pipelinemode">
 	    <description>The pipeline operating mode</description>

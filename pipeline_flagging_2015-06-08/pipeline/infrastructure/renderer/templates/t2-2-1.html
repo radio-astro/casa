@@ -19,7 +19,7 @@ $(document).ready(function() {
         <tr>
             <th scope="col" rowspan="2">ID</th>
             <th scope="col" rowspan="2">Source Name</th>
-            <th scope="col" colspan="2">Source Position (${ms.sources[0].frame})</th>
+            <th scope="col" colspan="3">Source Position</th>
             <th scope="col" colspan="2">Proper Motion</th>
             <th scope="col" rowspan="2"># Pointings</th>
             <th scope="col" rowspan="2">Intent</th>
@@ -27,6 +27,7 @@ $(document).ready(function() {
         <tr>
             <th scope="col">RA</th>
             <th scope="col">Dec</th>
+            <th scope="col">Ref. Frame</th>
             <th scope="col">X</th>
             <th scope="col">Y</th>
         </tr>
@@ -40,6 +41,7 @@ $(document).ready(function() {
 		  <td>${source.name}</td>
 		  <td>${source.ra}</td>
 		  <td>${source.dec}</td>
+		  <td>${source.frame}</td>
 		  <td>${source.pm_x}</td>
 		  <td>${source.pm_y}</td>
 		  <td>${num_pointings}</td>
@@ -58,13 +60,14 @@ $(document).ready(function() {
         <tr>
             <th scope="col" rowspan="2">Field ID</th>
             <th scope="col" rowspan="2">Field Name</th>
-            <th scope="col" colspan="2">Position (${ms.sources[0].frame})</th>
+            <th scope="col" colspan="3">Position</th>
             <th scope="col" rowspan="2">Intent</th>
             <th scope="col" rowspan="2">Source Reference</th>
         </tr>
         <tr>
             <th scope="col">RA</th>
             <th scope="col">Dec</th>
+            <th scope="col">Ref. Frame</th>
         </tr>
     </thead>
 	<tbody>
@@ -75,6 +78,7 @@ $(document).ready(function() {
 		  <td>${field.name}</td>
 		  <td>${field.ra}</td>
 		  <td>${field.dec}</td>
+		  <td>${field.frame}</td>
 		  <td>${', '.join(sorted([i for i in field.intents]))}</td>
 		% if len(sources) == 1:
 		  <td>${sources[0].name} (#${field.source_id})</td>

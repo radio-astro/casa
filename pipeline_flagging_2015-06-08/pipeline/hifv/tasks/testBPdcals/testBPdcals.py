@@ -225,7 +225,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
                         bpdgain_touse = tablebase + table_suffix[2]
 
                         if (fracFlaggedSolns > 0.05):
-                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
+                            LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.  The fraction of flagged solutions is " + str(fracFlaggedSolns))
 
 
         LOG.info("Test amp and phase calibration on delay and bandpass calibrators complete")
@@ -359,6 +359,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         critfrac = m.get_vla_critfrac()
 
         if (fracFlaggedSolns > critfrac):
+            print RefAntOutput
             RefAntOutput.pop(0)
             self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)
             LOG.info("Not enough good solutions, trying a different reference antenna.")

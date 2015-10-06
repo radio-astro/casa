@@ -36,9 +36,10 @@ Compute a clean map.
     <value></value>
   </param>
 
-  <param type="string" name="spwsel" subparam="true">
-    <description>Set of spw frequency selections \'\' for all</description>
-    <value></value>
+  <param type="any" name="spwsel" subparam="true">
+    <any type="variant"/>
+    <description>Dictionary of spw frequency selections {} for automatic</description>
+    <value>{}</value>
   </param>
 
   <param type="any" name="uvrange" subparam="true">
@@ -68,12 +69,12 @@ Compute a clean map.
   </param>
 
   <param type="string" name="deconvolver" subparam="true">
-     <description>Minor cycle algorithm (clark, hogbom, mtmfs, \'\' for default)</description>
+     <description>Minor cycle algorithm (hogbom, clark, mtmfs, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
-         <value>clark</value>
          <value>hogbom</value>
+         <value>clark</value>
          <value>mtmfs</value>
        </allowed>
   </param>
@@ -185,7 +186,7 @@ Compute a clean map.
 
   <param type="int" name="niter" subparam="true">
     <description>Maximum number of clean iterations</description>
-    <value>500</value>
+    <value>1000</value>
   </param>
 
   <param type="double" name="threshold" units="mJy" subparam="true">
@@ -195,7 +196,7 @@ Compute a clean map.
 
   <param type="double" name="tlimit" subparam="true">
        <description>Times the sensitivity limit for cleaning</description>
-       <value>4.0</value>
+       <value>2.0</value>
   </param>
 
   <param type="int" name="masklimit" subparam="true">
@@ -206,6 +207,11 @@ Compute a clean map.
   <param type="int" name="maxncleans" subparam="true">
     <description>Maximum number of clean task calls</description>
     <value>1</value>
+  </param>
+
+  <param type="bool" name="subcontms">
+    <description>Subtract continuum in MS</description>
+    <value>False</value>
   </param>
 
   <param type="string" name="parallel">
@@ -249,7 +255,7 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="spwsel"><value type="string"></value></default>
+        <default param="spwsel"><value type="any">{}</value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
@@ -269,7 +275,7 @@ Compute a clean map.
         <default param="intent"><value type="string"></value></default>
         <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
-        <default param="spwsel"><value type="string"></value></default>
+        <default param="spwsel"><value type="any">{}</value></default>
         <default param="uvrange"><value type="string"></value></default>
         <default param="gridder"><value type="string"></value></default>
         <default param="deconvolver"><value type="string"></value></default>
@@ -300,16 +306,16 @@ Compute a clean map.
 
     <when param="hm_cleaning">
       <equals value="manual">
-        <default param="niter"><value type="int">500</value></default>
+        <default param="niter"><value type="int">1000</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
       <equals value="sensitivity">
-        <default param="tlimit"><value type="double">4.0</value></default>
-        <default param="niter"><value type="int">500</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
       </equals>
       <equals value="rms">
-        <default param="tlimit"><value type="double">4.0</value></default>
-        <default param="niter"><value type="int">500</value></default>
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
       </equals>
       <equals value="mask">
         <default param="masklimit"><value type="int">4</value></default>
@@ -417,9 +423,9 @@ spw -- Spectral window/channels to image. \'\' for all science data.
     default: ''
     example: '9', '9,11'
 
-spwsel -- Spectral window frequency selection. \'\' for all science data.
-    default: ''
-    example: '89.1~89.5GHz'
+spwsel -- Spectral window frequency selection for continuum. {} for all science data.
+    default: {}
+    example: {'spw16': '89.1~89.5GHz;90.2~90.3GHz', 'spw18': '101.2~102.1GHz'}
 
 specmode -- Frequency imaging mode, 'mfs', 'cube'. \'\' defaults to
     'cube' if intent parameter includes 'TARGET' otherwise 'mfs'.
@@ -436,8 +442,8 @@ gridder -- Gridding options, 'standard', 'mosaic'.
     default: ''
     'standard'
 
-deconvolver -- Minor cycle algorithm e.g. clark or hogbom clean. \'\' defaults to
-    ''
+deconvolver -- Minor cycle algorithm e.g. hogbom or clark clean. \'\' defaults to
+    'hogbom'
 
 outframe -- The reference frame of the output image. The only supported option
     is 'LSRK'
@@ -507,8 +513,8 @@ mask -- Image mask for hm_masking manual mode. User responsible for
     example: 'mymask.mask'
 
 niter -- Maximum number of iterations per clean call
-    default: 500
-    example: 100
+    default: 1000
+    example: 500
 
 threshold -- Threshold for cleaning
     default: '0.0'
@@ -517,6 +523,12 @@ threshold -- Threshold for cleaning
 maxncleans -- Maximum number of clean calls
     default: 1
     example: 10
+
+subcontms -- Subtract continuum in MS
+             Caveat: if enabled, repeated continuum subtraction will
+             lead to erroneous negative fluxes.
+                default=False
+                Options: False, True
 
 parallel -- use MPI cluster to clean images
     default: \'automatic\'

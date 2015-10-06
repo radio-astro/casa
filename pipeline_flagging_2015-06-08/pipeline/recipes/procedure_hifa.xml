@@ -4,8 +4,8 @@
         <Command xmlns="">hifa_importdata</Command>
         <ParameterSet>
             <Parameter>
-                <Keyword xmlns="">createmms</Keyword>
-                <Value xmlns="">false</Value>
+                <Keyword xmlns="">dbservice</Keyword>
+                <Value xmlns="">False</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
@@ -113,6 +113,48 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makeimlist</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">cont</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_findcont</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">specmode</Keyword>
+                <Value xmlns="">mfs</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimages</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_makeimlist</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">width</Keyword>
+                <Value xmlns=""></Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -120,8 +162,8 @@
         <Command xmlns="">hif_makeimages</Command>
         <ParameterSet>
             <Parameter>
-                <Keyword xmlns="">parallel</Keyword>
-                <Value xmlns="">false</Value>
+                <Keyword xmlns="">subcontms</Keyword>
+                <Value xmlns="">False</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>

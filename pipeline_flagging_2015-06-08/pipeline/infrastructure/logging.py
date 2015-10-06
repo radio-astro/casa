@@ -213,26 +213,61 @@ def set_logging_level(logger=None, level='info'):
     
         for logger in _loggers:
             logger.setLevel(level_no)
-            
+
+    import pipeline.infrastructure.mpihelpers as mpihelpers
+    if mpihelpers.is_mpi_ready():
+        cmd = 'pipeline.infrastructure.logging.set_logging_level(level=%r)' % level
+        mpihelpers.mpiclient.push_command_request(cmd,
+                                                  block=True,
+                                                  target_server=mpihelpers.mpi_server_list)
+
     #     casa_level = CASALogHandler.get_casa_priority(level_no)
     #     casatools.log.filter(casa_level)
     
 
 def add_handler(handler):
-    '''
+    """
     Add given handler to all registered loggers.
-    '''
+    """
     for l in _loggers:
         l.addHandler(handler)
 
         
 def remove_handler(handler):
-    '''
+    """
     Remove specified handler from all registered loggers. 
-    '''
+    """
     for l in _loggers:
         l.removeHandler(handler)
-       
+
+
+def suspend_handler(handler_class):
+    """
+    Remove and return any logger of the given class from the list of active
+    loggers.
+
+    :param handler_class: the class to remove
+    :return: set of handler classes removed by this call
+    """
+    to_remove = set([h for l in _loggers for h in l.handlers
+                     if isinstance(h, handler_class)])
+    for h in to_remove:
+        remove_handler(h)
+    return to_remove
+
+
+class SuspendCapturingLogger(object):
+    def __enter__(self):
+        self.__removed = suspend_handler(CapturingHandler)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.__removed:
+            for l in self.__removed:
+                add_handler(l)
+
+        # don't suppress any raised exception
+        return False
+
        
 class CapturingHandler(logging.Handler):
     """
@@ -241,18 +276,18 @@ class CapturingHandler(logging.Handler):
     """
     
     def __init__(self, level=WARNING):
-        '''
+        """
         Initialize the handler.
-        '''
-        logging.Handler.__init__(self, level)
+        """
+        super(CapturingHandler, self).__init__(level)
         self.buffer = []
 
     def emit(self, record):
-        '''
+        """
         Emit a record.
 
         Append the record to the buffer.
-        '''
+        """
         # The Traceback object attached to the LogRecord exception tuple is
         # not serializable. Replace it with a substitute wrapper object that 
         # is.
@@ -263,19 +298,19 @@ class CapturingHandler(logging.Handler):
         self.buffer.append(record)
 
     def flush(self):
-        '''
+        """
         Override to implement custom flushing behaviour.
 
         This version just zaps the buffer to empty.
-        '''
+        """
         self.buffer = []
 
     def close(self):
-        '''
+        """
         Close the handler.
 
         This version just flushes and chains to the parent class' close().
-        '''
+        """
         self.flush()
         logging.Handler.close(self)
 

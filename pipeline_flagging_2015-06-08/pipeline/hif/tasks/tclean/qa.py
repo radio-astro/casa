@@ -24,7 +24,7 @@ class TcleanQAHandler(pqa.QAResultHandler):
             score = imageScorer(result.rms / qaTool.convert(result.threshold, 'Jy')['value'])
         except:
             score = -0.1
-        result.qa.pool[:] = [pqa.QAScore(score, longmsg='Image RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
+        result.qa.pool[:] = [pqa.QAScore(score, longmsg='RMS outside mask vs. threshold', shortmsg='RMS vs. threshold')]
 
 
 class TcleanListQAHandler(pqa.QAResultHandler):

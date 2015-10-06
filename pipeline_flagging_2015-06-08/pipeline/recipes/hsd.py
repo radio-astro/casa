@@ -40,7 +40,6 @@ from hsd_mstoscantable_cli import hsd_mstoscantable_cli as hsd_mstoscantable
 from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
 from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
 from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
-from hsd_simplescale_cli import hsd_simplescale_cli as hsd_simplescale
 from hsd_baseline_cli import hsd_baseline_cli as hsd_baseline
 from hsd_blflag_cli import hsd_blflag_cli as hsd_blflag
 from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
@@ -90,10 +89,7 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
         
         # Apply the calibrations
         hsd_applycal (pipelinemode=pipelinemode)
-    
-        # Apply non-linearity correction
-        hsd_simplescale (pipelinemode=pipelinemode)
-    
+        
         # Improve line mask for baseline subtraction by executing 
         # hsd_baseline and hsd_blflag iteratively
         for i in xrange(ITERATION):

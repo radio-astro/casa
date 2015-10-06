@@ -121,8 +121,9 @@ class SDRmsMapDisplay(SDImageDisplay):
                         for t in rms_colorbar.ax.get_yticklabels():
                             newfontsize = t.get_fontsize()*0.5
                             t.set_fontsize(newfontsize)
-                        rms_colorbar.ax.set_title('[%s]' % self.brightnessunit)
-                        lab = rms_colorbar.ax.title
+#                         rms_colorbar.ax.set_title('[%s]' % self.brightnessunit)
+#                         lab = rms_colorbar.ax.title
+                        rms_colorbar.ax.set_ylabel('[%s]' % self.brightnessunit)
                     else:
                         rms_colorbar.set_clim((rmsmin,rmsmax))
                         rms_colorbar.draw_all()

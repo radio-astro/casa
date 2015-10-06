@@ -10,6 +10,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from .utils import RADEClabel, RArotation, DECrotation
+from pipeline.domain.datatable import OnlineFlagIndex
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -61,10 +62,11 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
         vis = parent_ms.basename
-        target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
-                       if spwobj.is_target and spwobj.nchan != 4]
+        # target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
+        #                if spwobj.is_target and spwobj.nchan != 4]
+        target_spws = self.context.observing_run.get_spw_for_science(st.basename)
         spwid = target_spws[0]
-        beam_size = casatools.quanta.convert(self.context.observing_run[idx].beam_size[spwid], 'deg')
+        beam_size = casatools.quanta.convert(st.beam_size[spwid], 'deg')
         obs_pattern = st.pattern[spwid].values()[0]
         rows = self.datatable.get_row_index(idx, spwid)
         datatable = self.datatable
@@ -72,19 +74,19 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         plots = []
         
         #ROW = datatable.getcol('ROW')
-        tRA = datatable.getcol('RA')
-        tDEC = datatable.getcol('DEC')
-        tNCHAN = datatable.getcol('NCHAN')
-        tSRCTYPE = datatable.getcol('SRCTYPE')
+        tRA = datatable.tb1.getcol('RA').take(rows)
+        tDEC = datatable.tb1.getcol('DEC').take(rows)
+        tNCHAN = datatable.tb1.getcol('NCHAN').take(rows)
+        tSRCTYPE = datatable.tb1.getcol('SRCTYPE').take(rows)
+        tFLAG = datatable.tb2.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
         
-        RA = []
-        DEC = []
-        for row in rows:
-            if tNCHAN[row] > 1:
-                RA.append(tRA[row])
-                DEC.append(tDEC[row])
+        full_pointing_index = numpy.where(tNCHAN > 1)
+        
+        FLAG = tFLAG[full_pointing_index]
+        RA = tRA[full_pointing_index]
+        DEC = tDEC[full_pointing_index]
         plotfile = os.path.join(stage_dir, 'pointing_full_%s.png'%(st.basename))
-        self.draw_radec(RA, DEC, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
+        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -97,15 +99,15 @@ class SDPointingDisplay(common.SDInspectionDisplay):
                                  x_axis='R.A.', y_axis='Dec.',
                                  field=parent_ms.fields[0].name,
                                  parameters=parameters))
-        RA = []
-        DEC = []
+        
         srctype = st.calibration_strategy['srctype']
-        for row in rows:
-            if tNCHAN[row] > 1 and tSRCTYPE[row] == srctype:
-                RA.append(tRA[row])
-                DEC.append(tDEC[row])
+        onsource_pointing_index = numpy.where(numpy.logical_and(tNCHAN > 1, tSRCTYPE == srctype))
+        
+        FLAG = tFLAG[onsource_pointing_index]
+        RA = tRA[onsource_pointing_index]
+        DEC = tDEC[onsource_pointing_index]
         plotfile = os.path.join(stage_dir, 'pointing_onsource_%s.png'%(st.basename))
-        self.draw_radec(RA, DEC, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
+        self.draw_radec(RA, DEC, FLAG, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -120,12 +122,19 @@ class SDPointingDisplay(common.SDInspectionDisplay):
                                  parameters=parameters))
         return plots
         
-    def draw_radec(self, RA, DEC, plotfile, connect=True, circle=[], ObsPattern=False):
+    def draw_radec(self, RA, DEC, FLAG=None, plotfile=None, connect=True, circle=[], ObsPattern=False, plotpolicy='ignore'):
         """
         Draw loci of the telescope pointing
+        RA: horizontal coordinate value
+        DEC: vertical coordinate value
+        FLAG: flag info. (1: Valid, 0: Invalid)
         xaxis: extension header keyword for RA
         yaxis: extension header keyword for DEC
         connect: connect points if True
+        plotpolicy: plot policy for flagged data
+                    'ignore' -- ignore flagged data
+                    'plot' -- plot flagged data with same color as unflagged
+                    'greyed' -- plot flagged data with grey color
         """
         span = max(max(RA) - min(RA), max(DEC) - min(DEC))
         xmax = min(RA) - span / 10.0
@@ -156,9 +165,31 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         else:
             a.title.set_text('Telescope Pointing on the Sky\nPointing Pattern = %s' % ObsPattern)
         plot_objects = []
-        plot_objects.extend(
-            pl.plot(RA, DEC, Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
-            )
+        
+        if plotpolicy == 'plot':
+            # Original
+            plot_objects.extend(
+                pl.plot(RA, DEC, Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                )
+        elif plotpolicy == 'ignore':
+            # Ignore Flagged Data
+            filter = FLAG == 1
+            plot_objects.extend(
+                pl.plot(RA[filter], DEC[filter], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                )
+        elif plotpolicy == 'greyed':
+            # Change Color 
+            if connect is True:
+                plot_objects.extend(pl.plot(RA, DEC, 'g-'))
+            filter = FLAG == 1
+            plot_objects.extend(
+                pl.plot(RA[filter], DEC[filter], 'o', markersize=2, markeredgecolor='b', markerfacecolor='b')
+                )
+            filter = FLAG == 0
+            if numpy.any(filter == True):
+                plot_objects.extend(
+                    pl.plot(RA[filter], DEC[filter], 'o', markersize=2, markeredgecolor='grey', markerfacecolor='grey')
+                    )
         # plot starting position with beam and end position 
         if len(circle) != 0:
             plot_objects.append(
@@ -170,7 +201,8 @@ class SDPointingDisplay(common.SDInspectionDisplay):
                 )
         pl.axis([xmin, xmax, ymin, ymax])
         if common.ShowPlot != False: pl.draw()
-        pl.savefig(plotfile, format='png', dpi=common.DPISummary)
+        if plotfile is not None:
+            pl.savefig(plotfile, format='png', dpi=common.DPISummary)
 
         for obj in plot_objects:
             obj.remove()

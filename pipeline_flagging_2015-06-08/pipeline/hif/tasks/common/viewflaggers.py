@@ -804,6 +804,16 @@ class NewMatrixFlaggerInputs(basetask.StandardInputs):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
 
+    @property
+    def use_antenna_names(self):
+        return self._use_antenna_names
+
+    @use_antenna_names.setter
+    def use_antenna_names(self, value):
+        if value is None:
+            value = True
+        self._use_antenna_names = value
+
 
 class NewMatrixFlaggerResults(basetask.Results,
   flaggableviewresults.FlaggableViewResults):
@@ -890,38 +900,40 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # Create flagging view                
             viewresult = self.viewtask(data)
 
-            # If no view could be created, return result
-            if not viewresult.descriptions():
-                return self.result
+            # If a view could be created, continue with flagging
+            if viewresult.descriptions():
             
-            # Import the views from viewtask into the final result
-            self.result.importfrom(viewresult)
-
-            # Flag the view
-            newflags, newflags_reason = self.flag_view(viewresult, inputs.rules)
-        
-            # Report how many flags were found in this iteration and
-            # stop iteration if no new flags were found
-            if len(newflags) == 0:
-                # If no new flags are found, report as a log message
-                LOG.info('%s%s iteration %s raised %s flagging commands' % \
-                         (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
-                break
-            else:
-                # Report newly found flags as a warning message
-                LOG.warning('%s%s iteration %s raised %s flagging commands' % \
-                            (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
-
-            # Accumulate new flags and flag reasons
-            flags += newflags
-            for description in newflags_reason.keys():
-                if flag_reason_plane.has_key(description):
-                    flag_reason_plane[description][newflags_reason[description] > 0] = \
-                        newflags_reason[newflags_reason[description] > 0]
+                # Import the views from viewtask into the final result
+                self.result.importfrom(viewresult)
+    
+                # Flag the view
+                newflags, newflags_reason = self.flag_view(viewresult, inputs.rules)
+            
+                # Report how many flags were found in this iteration and
+                # stop iteration if no new flags were found
+                if len(newflags) == 0:
+                    # If no new flags are found, report as a log message
+                    LOG.info('%s%s iteration %s raised %s flagging commands' % \
+                             (inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+                    break
                 else:
-                    flag_reason_plane[description] = newflags_reason[description]
-            
-            counter += 1
+                    # Report newly found flags as a warning message
+                    LOG.warning('%s%s iteration %s raised %s flagging commands' % \
+                                (self.inputs.prepend, os.path.basename(inputs.vis), counter, len(newflags)))
+    
+                # Accumulate new flags and flag reasons
+                flags += newflags
+                for description in newflags_reason.keys():
+                    if flag_reason_plane.has_key(description):
+                        flag_reason_plane[description][newflags_reason[description] > 0] = \
+                            newflags_reason[newflags_reason[description] > 0]
+                    else:
+                        flag_reason_plane[description] = newflags_reason[description]
+                
+                counter += 1
+            else:
+                # If no view could be created, exit the iteration
+                break
 
         # Create final set of flags by removing duplicates from our accumulated flags
         flags = list(set(flags))
@@ -1142,10 +1154,23 @@ class NewMatrixFlagger(basetask.StandardTaskTemplate):
             # deal with antenna id not name
             antenna = antenna[0]
 
-        # If requested, initialize antenna id to name translation
-        antenna_id_to_name = None
+        # If requested to use antenna names instead of IDs antenna,
+        # create an id-to-name translation and check to make sure this
+        # would result in unique non-empty names for all IDs, otherwise
+        # revert back to flagging by ID
         if self.inputs.use_antenna_names:
-            antenna_id_to_name = {ant.id: ant.name for ant in self.inputs.ms.antennas}
+            
+            # create translation dictionary, reject empty antenna name strings
+            antenna_id_to_name = {ant.id: ant.name for ant in self.inputs.ms.antennas if ant.name.strip()}
+
+            # Check that each antenna ID is represented by a unique non-empty name, by testing that the 
+            # unique set of antenna names is same length as list of IDs. If not, then unset the 
+            # translation dictionary to revert back to flagging by ID
+            if len(set(antenna_id_to_name.values())) != len(self.inputs.ms.antennas):
+                LOG.info('No unique name available for each antenna ID: flagging by antenna ID instead of by name.')
+                antenna_id_to_name = None
+        else:
+            antenna_id_to_name = None
 
         # Initialize flags
         newflags = []

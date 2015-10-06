@@ -858,12 +858,28 @@ finally:
 	    for image in cleanlist:
 		# Image name probably includes path
 		if image['sourcetype'] in intents:
-	            images_list.append(image['imagename'])
+                    if (image['multiterm']):
+	                for nt in xrange(image['multiterm']):
+                            images_list.append('%s.tt%d' % (image['imagename'], nt))
+                        if (image['imagename'].find('.pbcor') != -1):
+                            images_list.append(image['imagename'].replace('.pbcor.image', '.alpha'))
+                            images_list.append('%s.error' % (image['imagename'].replace('.pbcor.image', '.alpha')))
+                        else:
+                            images_list.append(image['imagename'].replace('.image', '.alpha'))
+                            images_list.append('%s.error' % (image['imagename'].replace('.image', '.alpha')))
+                    else:
+	                images_list.append(image['imagename'])
+
+                    # Add PB
+                    if (image['imagename'].find('.pbcor') != -1):
+                        images_list.append(image['imagename'].replace('.pbcor.image', '.pb'))
+                    else:
+                        images_list.append(image['imagename'].replace('.image', '.pb'))
 	else:
 	    # Assume only the root image name was given.
 	    cleanlib = imagelibrary.ImageLibrary()
 	    for image in images:
-		if caliimages:
+		if calimages:
 		    imageitem = imagelibrary.ImageItem(imagename=image,
 		        sourcename='UNKNOWN',
 		        spwlist='UNKNOWN',
@@ -883,10 +899,15 @@ finally:
 	# Convert to FITS.
         fits_list = []
 	for image in images_list:
+            print 'Working on', image
 	    # Need to remove stage / iter information
 	    #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
 	    fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
 	    fitsname = re.sub('\.iter\d+\.image', '', fitsname)
+	    fitsname = re.sub('\.iter\d+\.pbcor.image', '.pbcor', fitsname)
+	    fitsname = re.sub('\.iter\d+\.alpha', '.alpha', fitsname)
+            # .pb must be tried after .pbcor.image !
+	    fitsname = re.sub('\.iter\d+\.pb', '.pb', fitsname)
 	    fitsfile = os.path.join (products_dir,
 	        os.path.basename(fitsname) + '.fits')
 	    LOG.info('Saving final image %s to FITS file %s' % \

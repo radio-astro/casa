@@ -14,8 +14,8 @@ LOG = infrastructure.get_logger(__name__)
 class MakeImListInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, 
-      imagename=None, intent=None, field=None, spw=None, linesfile=None,
-      uvrange=None, specmode=None, outframe=None,
+      imagename=None, intent=None, field=None, spw=None, contfile=None,
+      linesfile=None, uvrange=None, specmode=None, outframe=None,
       imsize=None, cell=None, calmaxpix=None, phasecenter=None,
       nchan=None, start=None, width=None):
 
@@ -63,6 +63,16 @@ class MakeImListInputs(basetask.StandardInputs):
     @spw.setter
     def spw(self, value):
         self._spw = value
+
+    @property
+    def contfile(self):
+        return self._contfile
+
+    @contfile.setter
+    def contfile(self, value=None):
+        if value in (None, ''):
+            value = os.path.join(self.context.output_dir, 'cont.dat')
+        self._contfile = value
 
     @property
     def linesfile(self):
@@ -221,16 +231,31 @@ class MakeImList(basetask.StandardTaskTemplate):
         spwlist = spwlist[1:-1].split("','")
 
         if inputs.specmode == 'cont':
-            spwlist = [reduce(lambda x,y: x+','+y, spwlist)]
+            # Make sure the spw list is sorted numerically
+            spwlist = [','.join(map(str, sorted(map(int, spwlist))))]
 
         # instantiate the heuristics classes needed, some sorting out needed
         # here to remove duplicated code
         self.heuristics = makeimlist.MakeImListHeuristics(
-          context=inputs.context, vislist=inputs.vis, spw=spw, linesfile=inputs.linesfile)
+          context=inputs.context, vislist=inputs.vis, spw=spw, contfile=inputs.contfile, linesfile=inputs.linesfile)
 
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
+
+        # Remove bad spws in cont mode
+        if inputs.specmode == 'cont':
+            filtered_spwlist = []
+            for spw in spwlist[0].split(','):
+                # Can not just use "has_data" as it only sets up
+                # a selection which checks against existance of
+                # a given item (e.g. an spw).
+                cell, valid_data = self.heuristics.cell(field_intent_list=field_intent_list, spwspec=spw)
+                # For now we consider the spw for all fields / intents.
+                # May need to handle this individually.
+                if (valid_data[list(field_intent_list)[0]]):
+                    filtered_spwlist.append(spw)
+            spwlist = [reduce(lambda x,y: x+','+y, filtered_spwlist)]
 
         # get beams for each spw
         beams = {}
@@ -261,6 +286,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         else:
             for spwspec in spwlist:
                 cells[spwspec] = cell
+                # TODO: "has_data" does not really check the data
                 valid_data[spwspec] = self.heuristics.has_data(
                   field_intent_list=field_intent_list, spwspec=spwspec)
 
@@ -327,7 +353,7 @@ class MakeImList(basetask.StandardTaskTemplate):
         nchans = {}
         width = inputs.width
         widths = {}
-        if ((specmode not in ('mfs', 'cont')) and (nchan == -1) and (width == '')):
+        if ((specmode not in ('mfs', 'cont')) and (width == 'pilotimage')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:
@@ -368,9 +394,13 @@ class MakeImList(basetask.StandardTaskTemplate):
         for field_intent in field_intent_list:
             for spwspec in spwlist:
                 if (specmode in ('mfs', 'cont')):
-                    spwsel = ','.join(self.heuristics.cont_ranges[spwid] for spwid in spwspec.split(','))
+                    spwsel = {}
+                    for spwid in spwspec.split(','):
+                        spwsel['spw%s' % (spwid)] = self.heuristics.cont_ranges_spwsel[field_intent[0].replace('"','')][spwid]
+                        if (spwsel['spw%s' % (spwid)] == ''):
+                            LOG.warn('No continuum frequency range information available for %s, spw %s.' % (field_intent[0], spwid))
                 else:
-                    spwsel = ''
+                    spwsel = {}
 
                 if valid_data[spwspec][field_intent] and \
                   imsizes.has_key((field_intent[0],spwspec)):
@@ -395,6 +425,10 @@ class MakeImList(basetask.StandardTaskTemplate):
                               'uvrange':inputs.uvrange}
 
                     result.add_target(target)
+
+        # Temporarily pass contfile and linefile for hif_findcont and hif_makeimages
+        result.contfile = inputs.contfile
+        result.linesfile = inputs.linesfile
 
         return result
 

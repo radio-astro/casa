@@ -5,16 +5,13 @@ import pipeline.infrastructure.casatools as casatools
 
 
 class Field(object):
-    def __init__(self, field_id, name, source_id, time, phase_dir_ref_type,
-                 phase_dir_quanta):
+    def __init__(self, field_id, name, source_id, time, direction):
         self.id = field_id
         self.source_id = source_id
         self.time = time
         self.name = name
 
-        self._mdirection = casatools.measures.direction(phase_dir_ref_type,
-                                                        phase_dir_quanta[0], 
-                                                        phase_dir_quanta[1])
+        self._mdirection = direction
 
         self.intents = set()
         self.states = set()
@@ -36,6 +33,10 @@ class Field(object):
     @property
     def dec(self):
         return casatools.quanta.formxxx(self.latitude, format='dms', prec=2)
+
+    @property
+    def frame(self):
+        return self._mdirection['refer']
 
     @property
     def identifier(self):
@@ -83,7 +84,9 @@ class Field(object):
         source_type = string.replace(source_type, 'FLUX', 'AMPLITUDE')
 
         for intent in ['BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'POINTING', 
-                       'WVR', 'ATMOSPHERE', 'SIDEBAND', 'POLARIZATION', 'POLANGLE', 'POLLEAKAGE', 'CHECK', 'UNKNOWN', 'SYSTEM_CONFIGURATION']:
+                       'WVR', 'ATMOSPHERE', 'SIDEBAND', 'POLARIZATION',
+                       'POLANGLE', 'POLLEAKAGE', 'CHECK', 'UNKNOWN',
+                       'SYSTEM_CONFIGURATION']:
             if source_type.find(intent) != -1:
                 self.intents.add(intent)
 
@@ -91,4 +94,3 @@ class Field(object):
         return '<Field {id}: name=\'{name}\' intents=\'{intents}\'>'.format(
             id=self.identifier, name=self.name, 
             intents=','.join(self.intents))
-

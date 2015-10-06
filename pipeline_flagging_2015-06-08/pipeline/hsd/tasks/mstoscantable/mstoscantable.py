@@ -85,19 +85,32 @@ class SDMsToScantableResults(common.SingleDishResults):
                 calfrom = calstate.merged().values()[0][0]
                 spwmap = calfrom.spwmap
 
-                myspwmap = remap_spwmap(spwmap)
-                for key in myspwmap.keys():
-                    filtered_value = [spw for spw in myspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
-                    myspwmap[key] = filtered_value
-                mycalto = callibrary.CalTo(vis=vis,
-                                           spw='',
-                                           antenna=antenna,
-                                           intent='TARGET,REFERENCE')
-                mycalfrom = callibrary.SDCalFrom(gaintable=caltable_list[antenna],
-                                                 interp='',
-                                                 spwmap=myspwmap,
-                                                 caltype='tsys')
-                mycallib.add(mycalto, mycalfrom)
+                LOG.info('caltable_list.keys()=%s'%(caltable_list.keys()))
+                for (spwid, caltable_per_antenna) in caltable_list.items():
+                    LOG.info('spwid %s: caltable list %s'%(spwid, caltable_per_antenna))
+                    myspwmap = {spwmap[spwid]: [spwid]}
+                    mycalto = callibrary.CalTo(vis=vis, 
+                                               spw='%s'%(spwid), 
+                                               antenna=antenna, 
+                                               intent='TARGET,REFERENCE')
+                    mycalfrom = callibrary.SDCalFrom(gaintable=caltable_per_antenna[antenna],
+                                                     interp='',
+                                                     spwmap=myspwmap,
+                                                     caltype='tsys')
+                    mycallib.add(mycalto, mycalfrom)
+#                 myspwmap = remap_spwmap(spwmap)
+#                 for key in myspwmap.keys():
+#                     filtered_value = [spw for spw in myspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+#                     myspwmap[key] = filtered_value
+#                 mycalto = callibrary.CalTo(vis=vis,
+#                                            spw='',
+#                                            antenna=antenna,
+#                                            intent='TARGET,REFERENCE')
+#                 mycalfrom = callibrary.SDCalFrom(gaintable=caltable_list[antenna],
+#                                                  interp='',
+#                                                  spwmap=myspwmap,
+#                                                  caltype='tsys')
+#                 mycallib.add(mycalto, mycalfrom)
 
         context.callibrary = mycallib
             
@@ -232,6 +245,7 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
                     reftable = st.basename
                     break
             assert reftable is not None
+            science_window_ids = list(set([spw.id for spw in st.spectral_window.values() if not (spw.nchan==1 or spw.type=='WVR' or 'TARGET' not in spw.intents)]))
             
             vis = ms.basename
             prefix = vis.replace('.ms','')
@@ -245,8 +259,34 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
             assert len(tsyscaltables) == 1
 
             caltable = tsyscaltables[0]
-            names = tsystablemapper.map(prefix, caltable, reftable)
+            
+            # tsys caltable must be created for each spectral window
+            merged = calstate.merged()
+            assert len(merged) == 1
+            mycalto = merged.keys()[0]
+            mycalfroms = merged[mycalto]
+            calapp = callibrary.CalApplication(mycalto, mycalfroms)
+            spwmap = calapp.spwmap
+            sdspwmap = remap_spwmap(spwmap)
+            for key in sdspwmap.keys():
+                # Remove non-science spw from calibration target (key of spwmap).
+#                 filtered_value = [spw for spw in sdspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+                # NOTE: WVR band is also detected as TARGET.
+                filtered_value = [spw for spw in sdspwmap[key] if spw in science_window_ids]
+                sdspwmap[key] = filtered_value
+            # names = {spw: {antenna: caltable_name}}
+            names = {}
+            for (aspwid, science_spwid_list) in sdspwmap.items():
+                atm_spw = st.spectral_window[aspwid]
+                for sspwid in science_spwid_list: # nothing will be done if science spw (target) is empty
+                    science_spw = st.spectral_window[sspwid]
+                    _names = tsystablemapper.map_with_average(prefix, caltable, reftable, atm_spw, science_spw)
+                    LOG.info('_names=%s'%(_names))
+                    names.update(_names)
+                    LOG.info('names=%s'%(names))
+            #names = tsystablemapper.map(prefix, caltable, reftable)
             sdtsystables[vis] = {'mapped': names, 'original': caltable}
+        LOG.info('sdtsystables=%s'%(sdtsystables))
 
         if len(sdtsystables) > 0:
             LOG.debug('setting mappedcaltables attribute to result object')
@@ -306,9 +346,9 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
 def remap_spwmap(spwmap):
     remapped = {}
     for (i,spw) in enumerate(spwmap):
-        if i != spw:
-            if remapped.has_key(spw):
-                remapped[spw].append(i)
-            else:
-                remapped[spw] = [i]
+#         if i != spw: #non-science spw is filtered in the next step
+        if remapped.has_key(spw):
+            remapped[spw].append(i)
+        else:
+            remapped[spw] = [i]
     return remapped

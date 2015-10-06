@@ -39,6 +39,7 @@ class DataTableReader(object):
         
         name = self.name
         spwids = self.detect_target_spw()
+        exclude_types = list(self.detect_exclude_type())
         
         Rad2Deg = 180. / 3.141592653
         
@@ -49,23 +50,44 @@ class DataTableReader(object):
         else:
             filenames = [name]
         self.datatable.putkeyword('FILENAMES',filenames)
-        s = sd.scantable(name, average=False)
-        selector = sd.selector(ifs=spwids)
-        s.set_selection(selector)
-        nrow = s.nrow()
-        npol = s.npol()
-        nbeam = s.nbeam()
-        nif = s.nif()
-        vorg=sd.rcParams['verbose']
-        sd.rcParams['verbose']=False
-        sd.asaplog.disable()
-        Tsys = s.get_tsys()
-        sd.rcParams['verbose']=vorg
-        sd.asaplog.enable()
-        if s.get_azimuth()[0] == 0: s.recalc_azel()
+
+        storage_save = sd.rcParams['scantable.storage']
+        try:
+            # to reduce memory usage, use disk storage mode
+            sd.rcParams['scantable.storage'] = 'disk'
+            s = sd.scantable(name, average=False)
+            selector = sd.selector(ifs=spwids)
+            selector.set_query('SRCTYPE NOT IN %s'%(exclude_types))
+            s.set_selection(selector)
+            nrow = s.nrow()
+            npol = s.npol()
+            nbeam = s.nbeam()
+            nif = s.nif()
+            nchan_map = dict([(n,s.nchan(n)) for n in s.getifnos()])
+            #vorg=sd.rcParams['verbose']
+            #sd.rcParams['verbose']=False
+            #sd.asaplog.disable()
+            #Tsys = s.get_tsys()
+            #sd.rcParams['verbose']=vorg
+            #sd.asaplog.enable()
+            #if s.get_azimuth()[0] == 0: s.recalc_azel()
+            if s.get_azimuth(0) == 0: s.recalc_azel()
+
+            # 2009/7/16 to speed-up, get values as a list
+            # 2011/11/8 get_direction -> get_directionval
+            #Sdir = s.get_directionval()
+            ##Sdir = s.get_direction()
+            #Ssrc = s.get_sourcename()
+            #Saz = s.get_azimuth()
+            #Sel = s.get_elevation()
+
+            s.set_selection()
+            del s
+        finally:
+            sd.rcParams['scantable.storage'] = storage_save
         
         #with casatools.TableReader(name) as tb:
-        with TableSelector(name, 'IFNO IN %s'%(list(spwids))) as tb:
+        with TableSelector(name, 'IFNO IN %s and SRCTYPE NOT IN %s'%(spwids, exclude_types)) as tb:
             rows = tb.rownumbers()
             Texpt = tb.getcol('INTERVAL')
             Tmjd = tb.getcol('TIME')
@@ -77,10 +99,21 @@ class DataTableReader(object):
             Tbeam = tb.getcol('BEAMNO')
             Tsrctype = tb.getcol('SRCTYPE')
             Tflagrow = tb.getcol('FLAGROW')
+            Tdirection = tb.getcol('DIRECTION')
+            Tdirection *= Rad2Deg
+            Taz = tb.getcol('AZIMUTH')
+            Taz *= Rad2Deg
+            Tel = tb.getcol('ELEVATION')
+            Tel *= Rad2Deg
+            Tsrc = tb.getcol('SRCNAME')
+            # This is equivalent to sd.scantable.get_tsys() that
+            # returns first element of Tsys array for each row
+            Tsys = tb.getcolslice('TSYS', [0], [0], [1]).squeeze()
             # 2009/10/19 nchan for scantable is not correctly set
-            NchanArray = numpy.zeros(nrow, numpy.int)
-            for row in range(nrow):
-                NchanArray[row] = len(tb.getcell('SPECTRA', row))
+            #NchanArray = numpy.zeros(nrow, numpy.int)
+            #for row in range(nrow):
+            #    NchanArray[row] = len(tb.getcell('SPECTRA', row))
+            NchanArray = numpy.fromiter((nchan_map[n] for n in Tif), dtype=numpy.int)   
 
         # 2011/10/23 GK List of DataTable for multiple antennas
         #self.datatable = {}
@@ -113,16 +146,6 @@ class DataTableReader(object):
         #ID = 0
         ROWs = []
         IDs = []
-        # 2009/7/16 to speed-up, get values as a list
-        # 2011/11/8 get_direction -> get_directionval
-        Sdir = s.get_directionval()
-        #Sdir = s.get_direction()
-        Ssrc = s.get_sourcename()
-        Saz = s.get_azimuth()
-        Sel = s.get_elevation()
-
-        s.set_selection()
-        del s
 
 
         # 2012/08/31 Temporary
@@ -145,16 +168,21 @@ class DataTableReader(object):
         self.datatable.putcol('TIME',Tmjd,startrow=ID)
         self.datatable.putcol('ELAPSED',(Tmjd-Tmjd[0])*86400.0,startrow=ID)
         self.datatable.putcol('EXPOSURE',Texpt,startrow=ID)
-        dirNP = numpy.array(Sdir,dtype=float) * Rad2Deg
-        self.datatable.putcol('RA',dirNP[:,0],startrow=ID)
-        self.datatable.putcol('DEC',dirNP[:,1],startrow=ID)
-        azNP = numpy.array(Saz,dtype=float) * Rad2Deg
-        self.datatable.putcol('AZ',azNP,startrow=ID)
-        elNP = numpy.array(Sel,dtype=float) * Rad2Deg
-        self.datatable.putcol('EL',elNP,startrow=ID)
+        #dirNP = numpy.array(Sdir,dtype=float) * Rad2Deg
+        #self.datatable.putcol('RA',dirNP[:,0],startrow=ID)
+        #self.datatable.putcol('DEC',dirNP[:,1],startrow=ID)
+        self.datatable.putcol('RA',Tdirection[0],startrow=ID)
+        self.datatable.putcol('DEC',Tdirection[1],startrow=ID)
+        #azNP = numpy.array(Saz,dtype=float) * Rad2Deg
+        #self.datatable.putcol('AZ',azNP,startrow=ID)
+        self.datatable.putcol('AZ',Taz,startrow=ID)
+        #elNP = numpy.array(Sel,dtype=float) * Rad2Deg
+        #self.datatable.putcol('EL',elNP,startrow=ID)
+        self.datatable.putcol('EL',Tel,startrow=ID)
         self.datatable.putcol('NCHAN',NchanArray,startrow=ID)
         self.datatable.putcol('TSYS',Tsys,startrow=ID)
-        self.datatable.putcol('TARGET',Ssrc,startrow=ID)
+        #self.datatable.putcol('TARGET',Ssrc,startrow=ID)
+        self.datatable.putcol('TARGET',Tsrc,startrow=ID)
         #intArr[:] = 1
         intArr = numpy.ones(nrow, dtype=int)
         self.datatable.putcol('FLAG_SUMMARY',intArr,startrow=ID)
@@ -186,10 +214,5 @@ class DataTableReader(object):
 
         self.vAnt += 1
 
-def _detect_target_spw(spectral_windows):
-    # exclude spws for WVR and square-law detector
-    exclude_name = ['SQLD', 'WVR']
-    for (spwid, spw) in spectral_windows.items():
-        spw_name = spw.name
-        if all([spw_name.find(name) == -1 for name in exclude_name]):
-            yield spwid
+    def detect_exclude_type(self):
+        return map(int, [sd.srctype.poncal, sd.srctype.poffcal])

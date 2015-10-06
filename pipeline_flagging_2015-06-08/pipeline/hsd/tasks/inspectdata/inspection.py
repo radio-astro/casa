@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
+from pipeline.domain.datatable import absolute_path
 import pipeline.domain as domain
 from .. import common
 from . import reader
@@ -53,17 +54,18 @@ class SDInspectDataResults(common.SingleDishResults):
                 spw = member.spw
                 pols = member.pols
                 for pol in pols:
+                    LOG.info('Adding time table for Reduction Group %s (antenna %s spw %s pol %s)'%(group_id,ant,spw,pol))
                     datatable.set_timetable(ant, spw, pol, time_group_list[ant][spw][pol], numpy.array(time_group[0]), numpy.array(time_group[1]))
 
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
-
+        
         # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
         
         # update callibrary
-        if isinstance(context.observing_run, domain.ScantableList):
-            self.update_callibrary(context)
+        #if isinstance(context.observing_run, domain.ScantableList):
+        #    self.update_callibrary(context)
 
     def update_callibrary(self, context):
         callib = context.callibrary
@@ -121,7 +123,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
         inputs = self.inputs
 
         # create DataTable under context directory
-        table_name = os.path.join(inputs.context.name,'DataTable.tbl')
+        table_name = absolute_path(os.path.join(inputs.context.name,'DataTable.tbl'))
 
         if os.path.exists(table_name):
             # if DataTable already exists, remove it

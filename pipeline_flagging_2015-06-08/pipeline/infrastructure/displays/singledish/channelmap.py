@@ -107,8 +107,8 @@ class ChannelMapAxesManager(tpimage.ChannelAveragedAxesManager):
         for i in xrange(self.nchmap):
             x = i % self.nh
             y = self.nv - int(i / self.nh) - 1
-            left = 1.0 / float(self.nh) * (x + 0.05)
-            width = 1.0 / float(self.nh) * 0.9
+            left = 1.0 / float(self.nh) * x #(x + 0.05)
+            width = 1.0 / float(self.nh) * 0.85 #0.9
             bottom = 1.0 / float((self.nv+2)) * (y + 0.05)
             height = 1.0 / float((self.nv+2)) * 0.85
             a = pl.axes([left, bottom, width, height])
@@ -165,7 +165,7 @@ class SDChannelMapDisplay(SDImageDisplay):
         weightname = self.inputs.imagename + '.weight'
         new_id_stokes = 0 if self.id_stokes < self.id_spectral else 1
         # un-weighted image
-        unweight_ia = casatools.image.imagecalc(outfile='', pixels='%s * %s' % (imagename, weightname))
+        unweight_ia = casatools.image.imagecalc(outfile='', pixels='"%s" * "%s"' % (imagename, weightname))
         # average image spectra over map area taking mask into account
         try:
             collapsed_ia = unweight_ia.collapse(outfile='', function='mean', axes=self.image.id_direction)
@@ -180,9 +180,10 @@ class SDChannelMapDisplay(SDImageDisplay):
         with casatools.ImageReader(imagename) as ia:
             maskname = ia.maskhandler('get')[0]
         with casatools.ImageReader(weightname) as ia:
-            ia.maskhandler('delete', [maskname])
-            ia.maskhandler('copy', ['%s:%s' % (imagename, maskname), maskname])
-            ia.maskhandler('set', maskname)
+            if maskname!='T': #'T' is no mask (usually an image from completely flagged MSes)
+                ia.maskhandler('delete', [maskname])
+                ia.maskhandler('copy', ['%s:%s' % (imagename, maskname), maskname])
+                ia.maskhandler('set', maskname)
             # average weight over map area taking the mask into account
             collapsed_ia = ia.collapse(outfile='', function='mean', axes=self.image.id_direction)
         try:
@@ -356,9 +357,10 @@ class SDChannelMapDisplay(SDImageDisplay):
                             for t in integmap_colorbar.ax.get_yticklabels():
                                 newfontsize = t.get_fontsize()*0.5
                                 t.set_fontsize(newfontsize)
-                            integmap_colorbar.ax.set_title('[%s km/s]'%(self.brightnessunit))
-                            lab = integmap_colorbar.ax.title
-                            lab.set_fontsize(newfontsize)
+#                             integmap_colorbar.ax.set_title('[%s km/s]'%(self.brightnessunit))
+#                             lab = integmap_colorbar.ax.title
+#                             lab.set_fontsize(newfontsize)
+                            integmap_colorbar.ax.set_ylabel('[%s km/s]'%(self.brightnessunit), fontsize=newfontsize)
                         else:
                             integmap_colorbar.set_clim((Total.min(),Total.max()))
                             integmap_colorbar.draw_all()
@@ -445,9 +447,10 @@ class SDChannelMapDisplay(SDImageDisplay):
                                 for t in cb.ax.get_yticklabels():
                                     newfontsize = t.get_fontsize()*0.5
                                     t.set_fontsize(newfontsize)
-                                cb.ax.set_title('[%s km/s]'%(self.brightnessunit))
-                                lab=cb.ax.title
-                                lab.set_fontsize(newfontsize)
+#                                 cb.ax.set_title('[%s km/s]'%(self.brightnessunit))
+#                                 lab=cb.ax.title
+#                                 lab.set_fontsize(newfontsize)
+                                cb.ax.set_ylabel('[%s km/s]'%(self.brightnessunit), fontsize=newfontsize)
                                 chmap_colorbar[y] = cb
                             else:
                                 chmap_colorbar[y].set_clim(Vmin,Vmax)

@@ -48,7 +48,8 @@ class SparseMapAxesManager(object):
             pl.ylabel('Intensity(%s)'%(self.brightnessunit), size=(self.ticksize+1))
             pl.xticks(size=self.ticksize)
             pl.yticks(size=self.ticksize)
-            pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
+            #pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
+            pl.title('Spatially Averaged Spectrum', size=(self.ticksize + 1))
 
             self._axes_integsp = axes
         return self._axes_integsp
@@ -100,9 +101,10 @@ class SDSparseMapPlotter(object):
         elif step == 1:
             ticksize = 10 - int(max(nh, nv)) / 2
         self.axes = SparseMapAxesManager(nh, nv, brightnessunit, ticksize, clearpanel)
-        self.lines_integrated = None
+        self.lines_averaged = None
         self.lines_map = None
         self.reference_level = None
+        self.global_scaling = True
         
     @property
     def nh(self):
@@ -139,26 +141,32 @@ class SDSparseMapPlotter(object):
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
         self.axes.setup_labels(LabelRA, LabelDEC)
         
-    def setup_lines(self, lines_integrated, lines_map=None):
-        self.lines_integrated = lines_integrated
+    def setup_lines(self, lines_averaged, lines_map=None):
+        self.lines_averaged = lines_averaged
         self.lines_map = lines_map
         
     def setup_reference_level(self, level=0.0):
         self.reference_level = level
         
-    def plot(self, map_data, integrated_data, frequency, figfile):
+    def set_global_scaling(self):
+        self.global_scaling = True
+        
+    def unset_global_scaling(self):
+        self.global_scaling = False
+        
+    def plot(self, map_data, averaged_data, frequency, fit_result=None, figfile=None):
         plot_helper = PlotObjectHandler()
         
-        spmin = integrated_data.min()
-        spmax = integrated_data.max()
+        spmin = averaged_data.min()
+        spmax = averaged_data.max()
         dsp = spmax - spmin
         spmin -= dsp * 0.1
         spmax += dsp * 0.1
         LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
         
-        xmin = min(frequency[0], frequency[-1])
-        xmax = max(frequency[0], frequency[-1])
-        LOG.debug('xmin=%s, xmax=%s'%(xmin,xmax))
+        global_xmin = min(frequency[0], frequency[-1])
+        global_xmax = max(frequency[0], frequency[-1])
+        LOG.debug('global_xmin=%s, global_xmax=%s'%(global_xmin,global_xmax))
 
         # Auto scaling
         # to eliminate max/min value due to bad pixel or bad fitting,
@@ -171,29 +179,48 @@ class SDSparseMapPlotter(object):
         LOG.debug('ListMin=%s'%(list(ListMin)))
         if len(ListMax) == 0: 
             return False
-        ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
-        ymin = numpy.sort(ListMin)[len(ListMin)/10]
-        ymax = ymax + (ymax - ymin) * 0.2
-        ymin = ymin - (ymax - ymin) * 0.1
+        global_ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
+        global_ymin = numpy.sort(ListMin)[len(ListMin)/10]
+        global_ymax = global_ymax + (global_ymax - global_ymin) * 0.2
+        global_ymin = global_ymin - (global_ymax - global_ymin) * 0.1
         del ListMax, ListMin
 
-        LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
+        LOG.info('global_ymin=%s, global_ymax=%s'%(global_ymin,global_ymax))
 
         pl.gcf().sca(self.axes.axes_integsp)
-        plot_helper.plot(frequency, integrated_data, color='b', linestyle='-', linewidth=0.4)
+        plot_helper.plot(frequency, averaged_data, color='b', linestyle='-', linewidth=0.4)
         (_xmin,_xmax,_ymin,_ymax) = pl.axis()
         #pl.axis((_xmin,_xmax,spmin,spmax))
-        pl.axis((xmin, xmax, spmin, spmax))
-        if self.lines_integrated is not None:
-            for chmin, chmax in self.lines_integrated:
+        pl.axis((global_xmin, global_xmax, spmin, spmax))
+        if self.lines_averaged is not None:
+            for chmin, chmax in self.lines_averaged:
                 fmin = ch_to_freq(chmin, frequency)
                 fmax = ch_to_freq(chmax, frequency)
-                LOG.debug('plotting line range for integrated spectrum: [%s, %s]'%(chmin,chmax))
+                LOG.debug('plotting line range for mean spectrum: [%s, %s]'%(chmin,chmax))
                 plot_helper.axvspan(fmin, fmax, color='cyan')
                     
+        is_valid_fit_result = (fit_result is not None and fit_result.shape == map_data.shape)
 
         for x in xrange(self.nh):
             for y in xrange(self.nv):
+                if self.global_scaling is True:
+                    xmin = global_xmin
+                    xmax = global_xmax
+                    ymin = global_ymin
+                    ymax = global_ymax
+                else:
+                    xmin = global_xmin
+                    xmax = global_xmax
+                    if map_data[x][y].min() > NoDataThreshold:
+                        median = numpy.median(map_data[x][y])
+                        mad = numpy.median(map_data[x][y] - median)
+                        sigma = map_data[x][y].std()
+                        ymin = median - 2.0 * sigma
+                        ymax = median + 5.0 * sigma
+                    else:
+                        ymin = global_ymin
+                        ymax = global_ymax
+                    LOG.debug('Per panel scaling turned on: ymin=%s, ymax=%s (global ymin=%s, ymax=%s)'%(ymin,ymax,global_ymin,global_ymax))
                 pl.gcf().sca(self.axes.axes_spmap[y+(self.nh-x-1)*self.nv])
                 if map_data[x][y].min() > NoDataThreshold:
                     plot_helper.plot(frequency, map_data[x][y], color='b', linestyle='-', linewidth=0.2)
@@ -203,13 +230,15 @@ class SDSparseMapPlotter(object):
                             fmax = ch_to_freq(chmax, frequency)
                             LOG.debug('plotting line range for %s, %s: [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
-                    elif self.lines_integrated is not None:
-                        for chmin, chmax in self.lines_integrated:
+                    elif self.lines_averaged is not None:
+                        for chmin, chmax in self.lines_averaged:
                             fmin = ch_to_freq(chmin, frequency)
                             fmax = ch_to_freq(chmax, frequency)
-                            LOG.debug('plotting line range for %s, %s (reuse lines_integrated): [%s, %s]'%(x,y,chmin,chmax))
+                            LOG.debug('plotting line range for %s, %s (reuse lines_averaged): [%s, %s]'%(x,y,chmin,chmax))
                             plot_helper.axvspan(fmin, fmax, color='cyan')
-                    if self.reference_level is not None and ymin < self.reference_level and self.reference_level < ymax:
+                    if is_valid_fit_result:
+                        plot_helper.plot(frequency, fit_result[x][y], color='r', linewidth=0.4)
+                    elif self.reference_level is not None and ymin < self.reference_level and self.reference_level < ymax:
                         plot_helper.axhline(self.reference_level, color='r', linewidth=0.4) 
                 else:
                     plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', ha='center', va='center', 
@@ -218,7 +247,8 @@ class SDSparseMapPlotter(object):
 
         if ShowPlot: pl.draw()
 
-        pl.savefig(figfile, format='png', dpi=DPIDetail)
+        if figfile is not None:
+            pl.savefig(figfile, format='png', dpi=DPIDetail)
         LOG.debug('figfile=\'%s\''%(figfile))
         
         plot_helper.clear()
@@ -305,7 +335,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
 
             status = plotter.plot(Plot, TotalSP, self.frequency[chan0:chan1], 
-                                  plotfile)
+                                  figfile=plotfile)
             
             if status:
                 parameters = {}

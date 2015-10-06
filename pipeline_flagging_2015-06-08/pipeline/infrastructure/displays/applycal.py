@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import collections
 import os
 import string
 
@@ -92,6 +93,11 @@ class PlotmsLeaf(object):
         if self._baseband:
             del plot_args['baseband']
 
+        # same procedure for receiver
+        self._receiver = plot_args.get('receiver', '')
+        if self._receiver:
+            del plot_args['receiver']
+
         self._plot_args = plot_args
         self._plotfile = self._get_plotfile()
 
@@ -107,7 +113,8 @@ class PlotmsLeaf(object):
             'ant'      : '' if self._ant == '' else 'ant%s-' % self._ant.replace(',','_'),
             'field'    : '' if self._field_label == '' else '-%s' % filenamer.sanitize(self._field_label.replace(',','_')),
             'intent'   : '' if self._intent == '' else '%s-' % self._intent.replace(',','_'),
-            'uvrange'  : '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',','_')
+            'uvrange'  : '' if self._uvrange == '' else 'uvrange%s-' % self._uvrange.replace(',','_'),
+            'receiver' : '' if self._receiver == '' else '%s-' % filenamer.sanitize(self._receiver.replace(',','_'))
         }
 
         if self._spw == '':
@@ -120,7 +127,7 @@ class PlotmsLeaf(object):
         if self._baseband:
             fileparts['spw'] = 'bb%s-' % self._baseband
 
-        png = '{vis}{field}-{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
+        png = '{vis}{field}-{receiver}{spw}{ant}{intent}{uvrange}{y}_vs_{x}.png'.format(**fileparts)
         
         #LOG.info("UVRANGE APPLYCAL DISPLAY: "+self._uvrange)
         #LOG.info("PNG FILENAME: "+png)
@@ -221,26 +228,35 @@ class BasebandComposite(common.LeafComposite):
     leaf_class = None
 
     def __init__(self, context, result, calto, xaxis, yaxis, ant='', field='',
-                 intent='', **kwargs):
+                 intent='', overplot_receivers=False, **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
-        
-        basebands = utils.OrderedDefaultdict(list)
+
+        receivers = collections.defaultdict(lambda: utils.OrderedDefaultdict(list))
+
         for spw in ms.get_spectral_windows(calto.spw):
             if intent != '':
                 wanted = set(intent.split(','))
                 if spw.intents.isdisjoint(wanted):
                     continue
-                
-            basebands[spw.baseband].append(spw.id)
+
+            rx = 'all' if overplot_receivers else spw.band
+            receivers[rx][spw.baseband].append(spw.id)
+
+        is_single_receiver = len(receivers) is 1
 
         children = []
-        for baseband_id, spw_ids in basebands.items():
-            spws = ','.join([str(i) for i in spw_ids])
-            leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
-                                       spw=spws, ant=ant, field=field, 
-                                       intent=intent, baseband=str(baseband_id),
-                                       **kwargs)
-            children.append(leaf_obj)
+        for receiver_id, basebands in receivers.items():
+            # keep receiver component out of filename if possible
+            if overplot_receivers or is_single_receiver:
+                receiver_id = ''
+
+            for baseband_id, spw_ids in basebands.items():
+                spws = ','.join([str(i) for i in spw_ids])
+                leaf_obj = self.leaf_class(context, result, calto, xaxis,
+                        yaxis, spw=spws, ant=ant, field=field, intent=intent,
+                        baseband=str(baseband_id), receiver=receiver_id,
+                        **kwargs)
+                children.append(leaf_obj)
 
         super(BasebandComposite, self).__init__(children)
     
@@ -725,11 +741,12 @@ class PhaseVsFrequencyDetailChart(FieldSpwAntDetailChart):
                 **plot_args)
 
 
-class AmpVsUVDetailChart(SpwAntDetailChart):
+class AmpVsUVDetailChart(FieldSpwAntDetailChart):
     """
-    Create an amplitude vs UV distance plot for each spw and antenna
+    Create an amplitude vs UV distance plot for each field, spw and antenna
     """
-    def __init__(self, context, result, intent='', ydatacolumn='corrected', **overrides):
+    def __init__(self, context, result, intent='', ydatacolumn='corrected',
+                 **overrides):
         plot_args = {'ydatacolumn' : ydatacolumn,
                      'avgtime'     : '',
                      'avgscan'     : False,

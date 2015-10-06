@@ -129,7 +129,7 @@ class SDBLFlagSummary(object):
         
         types = ['WeatherFlag', 'TsysFlag', 'UserFlag']
         mask = 1
-        for idx in range(len(types)):
+        for idx in xrange(len(types)):
             if FlagRule[types[idx]]['isActive'] and pflag[idx] == 0:
                 mask = 0
                 break
@@ -146,7 +146,7 @@ class SDBLFlagSummary(object):
         types = ['RmsPostFitFlag', 'RmsPreFitFlag', 'RunMeanPostFitFlag', 'RunMeanPreFitFlag',
                  'RmsExpectedPostFitFlag', 'RmsExpectedPreFitFlag']
         mask = 1
-        for idx in range(len(types)):
+        for idx in xrange(len(types)):
             if FlagRule[types[idx]]['isActive'] and tflag[idx+1] == 0:
                 mask = 0
                 break

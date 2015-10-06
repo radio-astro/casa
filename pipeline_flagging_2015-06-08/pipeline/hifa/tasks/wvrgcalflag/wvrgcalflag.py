@@ -4,6 +4,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.logging as logging
 
 from pipeline.hifa.tasks import bandpass
 from ..wvrgcal import wvrgcal
@@ -159,13 +160,16 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
           rules=rules, niter=1)
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
-        # Execute it to flag the data view
-        result = self._executor.execute(flaggertask)
+        # Wrap the child task in a SuspendCapturingLogger so that warnings
+        # emitted by the child task do not make it to the web log page.
+        # See CAS-7795.
+        with logging.SuspendCapturingLogger():
+            # Execute it to flag the data view
+            result = self._executor.execute(flaggertask)
 
         return result
 
     def analyse(self, result):
-
         inputs = self.inputs
 
         # the result should now contain a wvrg file that has been

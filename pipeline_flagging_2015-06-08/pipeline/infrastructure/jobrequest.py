@@ -21,6 +21,8 @@ import gencal_cli
 import hanningsmooth_cli
 import immath_cli
 import immoments_cli
+import imregrid_pg
+import impbcor_pg
 import importasdm_cli
 import importevla_cli
 import listobs_cli
@@ -38,11 +40,7 @@ import statwt_cli
 import tclean_pg
 import wvrgcal_cli
 import visstat_cli
-casa_version = map(int,casadef.casa_version.split('.'))
-if casa_version[0] < 4 or casa_version[1] < 3:
-    import sdbaseline_cli as sdbaseline2_cli
-else:
-    import sdbaseline2_cli # for CASA >= 4.3
+import sdbaseline2_pg
 import sdcal2_cli
 import sdflag_cli
 import sdimaging_cli
@@ -333,6 +331,12 @@ class CASATaskJobGenerator(object):
     def immoments(self, *v, **k):
         return self._get_job(immoments_cli.immoments_cli, *v, **k)
 
+    def imregrid(self, *v, **k):
+        return self._get_job(imregrid_pg.imregrid_pg, *v, **k)
+
+    def impbcor(self, *v, **k):
+        return self._get_job(impbcor_pg.impbcor_pg, *v, **k)
+
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
 
@@ -384,9 +388,8 @@ class CASATaskJobGenerator(object):
     def visstat(self, *v, **k):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
-    # for CASA >= 4.3
-    def sdblcal(self, *v, **k):
-        return self._get_job(sdbaseline2_cli.sdbaseline2_cli, *v, **k)
+    def sdbaseline2(self, *v, **k):
+        return self._get_job(sdbaseline2_pg.sdbaseline2_pg, *v, **k)
 
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)

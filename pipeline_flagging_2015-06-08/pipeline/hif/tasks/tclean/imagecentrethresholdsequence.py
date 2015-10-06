@@ -12,7 +12,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImageCentreThresholdSequence(BaseCleanSequence):
 
-    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0, niter=1000):
+    def __init__(self, gridder, threshold='0.0mJy', sensitivity=0.0,
+                 niter=1000, pblimit_image=0.2, pblimit_cleanmask=0.3):
         """Constructor.
         """
         BaseCleanSequence.__init__(self)
@@ -21,26 +22,33 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
 	self.sensitivity = sensitivity
 	self.niter = niter
         self.iter = None
+        self.pblimit_image = pblimit_image
+        self.pblimit_cleanmask = pblimit_cleanmask
         self.result = BoxResult()
 
     def iteration(self, new_cleanmask):
+
+        if (self.multiterm):
+            extension = '.tt0'
+        else:
+            extension = ''
 
         if self.iter is None:
             raise Exception, 'no data for iteration'
 
         elif self.iter == 0:
             # next iteration, 1, should have mask covering central area:
-            #   centre quarter for single field
-            #   flux > 0.2 for mosaic
-            if self.gridder == 'mosaic':
+            #   flux > 0.3 (or adjusted for image size) when flux available
+            #   centre quarter otherwise
+            if self.flux not in (None, ''):
                 cm = casatools.image.newimagefromimage(infile=self.flux,
                   outfile=new_cleanmask, overwrite=True)
                 # verbose = False to suppress warning message
                 cm.calc('1', verbose=False)
-                cm.calc('replace(%s["%s" > 0.2], 0)' % (os.path.basename(new_cleanmask), self.flux), verbose=False)
+                cm.calc('replace("%s"["%s" > %.2f], 0)' % (os.path.basename(new_cleanmask), self.flux, self.pblimit_cleanmask), verbose=False)
                 cm.done()
             else:
-                cm = casatools.image.newimagefromimage(infile=self.residuals[0],
+                cm = casatools.image.newimagefromimage(infile=self.residuals[0]+extension,
                   outfile=new_cleanmask, overwrite=True)
                 cm.set(pixels='0')
                 shape = cm.shape()
@@ -64,5 +72,3 @@ class ImageCentreThresholdSequence(BaseCleanSequence):
             self.result.iterating = False
 
 	return self.result
-
-

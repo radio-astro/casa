@@ -23,7 +23,7 @@ class SDBaselineInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, infiles=None, spw=None, pol=None,
                  linewindow=None, edge=None, broadline=None, fitorder=None,
-                 fitfunc=None):
+                 fitfunc=None, clusteringalgorithm=None):
         self._init_properties(vars())
         for key in ['spw', 'pol']:
             val = getattr(self, key)
@@ -107,6 +107,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         broadline = False if inputs.broadline is None else inputs.broadline
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
+        clusteringalgorithm = inputs.clusteringalgorithm
         
         dummy_suffix = "_temp"
         # Clear-up old temporary scantables (but they really shouldn't exist)
@@ -138,9 +139,6 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug('pols_list=%s'%(pols_list))
             iteration = first_member.iteration[0]
 
-            # reference data is first scantable 
-            st = context.observing_run[first_member.antenna]
-
             # skip channel averaged spw
             nchan = group_desc.nchan
             if nchan == 1:
@@ -166,7 +164,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.debug('\tAntenna %s Spw %s Pol %s'%(antenna_list[i], spwid_list[i], pols_list[i]))
             
             maskline_inputs = maskline.MaskLine.Inputs(context, iteration, antenna_list, spwid_list, 
-                                                       pols_list, window, edge, broadline)
+                                                       pols_list, window, edge, broadline, clusteringalgorithm)
             maskline_task = maskline.MaskLine(maskline_inputs)
             maskline_result = self._executor.execute(maskline_task, merge=True)
             grid_table = maskline_result.outcome['grid_table']
@@ -185,45 +183,70 @@ class SDBaseline(common.SingleDishTaskTemplate):
             if mpihelpers.is_mpi_ready():
                 context_path = os.path.join(context.output_dir, context.name + '.context')
                 context.save(context_path)
+                datatable.exportdata(minimal=False)
                 job_generator = common.create_parallel_job
             else:
                 job_generator = common.create_serial_job
             # create job 
-            for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
-                if len(pols) == 0:
-                    LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
-                    continue
-                
-                LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
-                
-                _iteration = group_desc.get_iteration(ant, spwid)
-                outfile = self._get_dummy_name(context, ant)
-                LOG.debug('pols=%s'%(pols))
-                fitter_args = {"antennaid": ant,
-                             "spwid": spwid,
-                             "pollist": pols,
-                             "iteration": _iteration,
-                             "fit_order": fitorder,
-                             "edge": edge,
-                             "outfile": outfile,
-                             "grid_table": grid_table,
-                             "channelmap_range": channelmap_range}
-                        
-                job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
-                                 'meta': (ant, spwid, pols, outfile)})
-
+            def _gen():
+                for (ant,spwid,pols) in zip(antenna_list, spwid_list, pols_list):
+                    if len(pols) == 0:
+                        LOG.info('Skip Antenna %s Spw %s (polarization selection is null)'%(ant, spwid))
+                        continue
+                    
+                    LOG.debug('Performing spectral baseline subtraction for Antenna %s Spw %s Pols %s'%(ant, spwid, pols))
+                    
+                    _iteration = group_desc.get_iteration(ant, spwid)
+                    outfile = self._get_dummy_name(context, ant)
+                    LOG.debug('pols=%s'%(pols))
+                    #LOG.info('asizeof(grid_table)=%s'%(asizeof.asizeof(grid_table)))
+                    #LOG.info('asizeof(channelmap_range)=%s'%(asizeof.asizeof(channelmap_range)))
+                    #per_antenna_table = per_antenna_grid_table(ant, grid_table)
+                    plot_table = generate_plot_table(ant, spwid, pols, grid_table)
+                    #LOG.info('asizeof(per antenna grid_table)=%s'%(asizeof.asizeof(per_antenna_table)))
+                    fitter_args = {"antennaid": ant,
+                                 "spwid": spwid,
+                                 "pollist": pols,
+                                 "iteration": _iteration,
+                                 "fit_order": fitorder,
+                                 "edge": edge,
+                                 "outfile": outfile,
+                                 "grid_table": plot_table,
+                                 "channelmap_range": channelmap_range,
+                                 "stage_dir": stage_dir}
+                    yield {'job': job_generator(fitter_cls, fitter_args, context),
+                           'meta': (ant, spwid, pols, outfile)}                      
+#                 job_list.append({'job': job_generator(fitter_cls, fitter_args, context),
+#                                  'meta': (ant, spwid, pols, outfile)})
+            if mpihelpers.is_mpi_ready():
+                job_list = list(_gen())
+            else:
+                job_list = _gen()
             # execute job, get result, and generate plots before/after baseline subtraction
             for job_entry in job_list:
                 job = job_entry['job']
                 ant, spwid, pols, outfile = job_entry['meta']
                 fitter_result = job.get_result()
+                #LOG.info('asizeof(fitter_result type %s)=%s'%(type(fitter_result), asizeof.asizeof(fitter_result)))
+                #LOG.info('asizeof(fitter_result.inputs=%s'%(asizeof.asizeof(fitter_result.inputs)))
+                #LOG.info('asizeof(fitter_result.casalog=%s'%(asizeof.asizeof(fitter_result.casalog)))
                 if isinstance(fitter_result, basetask.ResultsList):
                     temp_name = fitter_result[0].outcome.pop('outtable')
                     for r in fitter_result:
                         r.accept(context)
+                        #if hasattr(r, 'index_list'):
+                        #    LOG.info('asizeof(index_list)=%s'%(asizeof.asizeof(r.outcome['index_list'])))
+                        #if hasattr(r, 'inputs'):
+                        #    LOG.info('asizeof(inputs)=%s'%(asizeof.asizeof(r.inputs)))
+                        #    for (k,v) in r.inputs.items():
+                        #        LOG.info('asizeof(r.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
                         plot_list.extend(r.outcome.pop('plot_list'))
                 else:
                     temp_name = fitter_result.outcome.pop('outtable')
+                    #if hasattr(fitter_result, 'index_list'):
+                    #    LOG.debug('asizeof(index_list)=%s'%(asizeof.asizeof(fitter_result.outcome['index_list'])))
+                    #    for (k,v) in fitter_result.inputs.items():
+                    #        LOG.info('asizeof(fitter_result.inputs[\'%s\'])=%s'%(k,asizeof.asizeof(v)))
                     fitter_result.accept(context)
                     plot_list.extend(fitter_result.outcome.pop('plot_list'))
                 if not files_temp.has_key(ant):
@@ -304,3 +327,20 @@ class SDBaseline(common.SingleDishTaskTemplate):
             LOG.debug("Removing old temprary file '%s'" % dummy)
             shutil.rmtree(dummy)
         del remove_list
+
+def per_antenna_grid_table(antenna_id, grid_table):
+    def filter(ant, table):
+        for row in table:
+            new_row_entry = row[:6] + [numpy.array([r for r in row[6] if r[-1] == antenna_id])]
+            yield new_row_entry
+    new_table = list(filter(antenna_id, grid_table))
+    return new_table
+
+def generate_plot_table(antenna_id, spw_id, polarization_ids, grid_table):
+    def filter(ant, spw, pols, table):
+        for row in table:
+            if row[0] == spw and row[1] in pols:
+                new_row_entry = row[2:6] + [numpy.array([r[3] for r in row[6] if r[-1] == ant], dtype=int)]
+                yield new_row_entry
+    new_table = list(filter(antenna_id, spw_id, polarization_ids, grid_table))
+    return new_table

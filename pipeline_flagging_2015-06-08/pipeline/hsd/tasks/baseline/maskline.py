@@ -16,7 +16,7 @@ NoData = common.NoData
 
 class MaskLineInputs(common.SingleDishInputs):
     def __init__(self, context, iteration, antenna_list, spwid_list, pols_list, 
-                 window=None, edge=None, broadline=None):
+                 window=None, edge=None, broadline=None, clusteringalgorithm=None):
         self._init_properties(vars())
         
     @property
@@ -70,7 +70,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         datatable = context.observing_run.datatable_instance
         pols_list = self.inputs.pols_list
         srctype = reference_data.calibration_strategy['srctype']
-        index_list = common.get_index_list(datatable, file_index, spwid_list, pols_list, srctype)
+        index_list = numpy.array(common.get_index_list(datatable, file_index, spwid_list, pols_list, srctype))
 
         LOG.debug('index_list=%s'%(index_list))
         if len(index_list) == 0:
@@ -91,6 +91,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         window = self.inputs.window
         edge = self.inputs.edge
         broadline = self.inputs.broadline
+        clusteringalgorithm = self.inputs.clusteringalgorithm
         beam_size = casatools.quanta.convert(reference_data.beam_size[spwid_list[0]], 'deg')['value']
         observing_pattern = reference_data.pattern[spwid_list[0]][0]
         
@@ -153,7 +154,7 @@ class MaskLine(common.SingleDishTaskTemplate):
         # line validation
         t0 = time.time()
         validator_cls = validation.ValidationFactory(observing_pattern)
-        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid_list, index_list, iteration, grid_size, grid_size, window, edge)
+        validation_inputs = validator_cls.Inputs(context, grid_table, detect_signal, spwid_list, index_list, iteration, grid_size, grid_size, window, edge, clusteringalgorithm=clusteringalgorithm)
         line_validator = validator_cls(validation_inputs)
         LOG.trace('len(index_list)=%s'%(len(index_list)))
         validation_result = self._executor.execute(line_validator, merge=True)

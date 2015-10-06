@@ -76,10 +76,11 @@ class SpectralImage(object):
     
     @property
     def brightnessunit(self):
-        if self._brightnessunit.find('Jy') != -1:
-            return 'Jy'
-        else:
-            return 'K'
+        return self._brightnessunit
+#         if self._brightnessunit.find('Jy') != -1:
+#             return 'Jy'
+#         else:
+#             return 'K'
 
     def to_velocity(self, frequency, freq_unit='GHz'):
         qa = casatools.quanta

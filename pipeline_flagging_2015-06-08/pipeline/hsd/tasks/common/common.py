@@ -154,10 +154,8 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         super(SingleDishTaskTemplate,self).__init__(inputs)
     
-    @basetask.timestamp
     @basetask.capture_log
-    @basetask.result_finaliser
-    def execute(self, dry_run=True, **parameters):
+    def _execute(self, dry_run=True, **parameters):
         try:
             # Empty a reference to DataTable instance to avoid an additional instantiation 
             # of DataTable by copying context
@@ -174,9 +172,18 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             LOG.debug('%s: Clean up after execute...'%(self.__class__.__name__))
             self._reconnect_datatable(context   )
         
+        return aresult
+
+    @basetask.timestamp
+    @basetask.result_finaliser
+    def execute(self, dry_run=True, **parameters):
+        aresult = self._execute(dry_run, **parameters)
+        
         # Don't convert results to ResultsList if it is not
         # the top-level task.
         if self.inputs.context.subtask_counter > 0:
+            if hasattr(aresult, 'casalog'):
+                del aresult.casalog
             return aresult
         
         if type(aresult) is basetask.ResultsList:
@@ -184,6 +191,8 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
         else:
             results = basetask.ResultsList()
             results.append(aresult)
+            # add casalog to ResultsList object
+            results.casalog = aresult.casalog
 
         # Delete the capture log for subtasks as the log will be attached to the
         # outer ResultList.
@@ -191,8 +200,7 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             if hasattr(r, 'casalog'):
                 del r.casalog
         return results
-
-
+    
     @property
     def context(self):
         return self.inputs.context
@@ -219,10 +227,11 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
             and hasattr(self, '_datatable_instance') \
             and self._datatable_instance is not None:
             datatable = self._datatable_instance
+            LOG.debug('datatable name \'%s\''%(datatable.name))
             if context.observing_run.datatable_instance is None:
                 LOG.trace('Set reference to DataTable instance (address 0x%x)'%(id(datatable)))
                 context.observing_run.datatable_instance = datatable
-                context.observing_run.datatable_name = os.path.relpath(datatable.name, context.output_dir)
+                context.observing_run.datatable_name = datatable.name#os.path.relpath(datatable.name, context.output_dir)
 
 def datatable_setter(func):
     import functools

@@ -11,6 +11,7 @@ import string
 #import inspect
 import traceback
 import os
+import gc
 
 import pipeline
 import pipeline.extern.XmlObjectifier as XmlObjectifier
@@ -121,7 +122,8 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	ppr_file=pprXmlFile)
 
     # Create performance parameters object
-    context.project_performance_parameters = project.PerformanceParameters()
+    #context.project_performance_parameters = project.PerformanceParameters()
+    context.project_performance_parameters = _getPerformanceParameters(intentsDict)
 
     # Get the session info from the intents dictionary
     if len(intentsDict) > 0:
@@ -212,6 +214,8 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 		    "Failed to update context for " + taskname,
 		    echo_to_screen=echo_to_screen)
 		raise
+            finally:
+                gc.collect()
 
             if taskname == 'ImportData' and importonly: 
 		casatools.post_to_log(
@@ -490,6 +494,35 @@ def _getIntents (pprObject, requestId, numRequests):
 	        search = 0
 
     return numIntents, intentsDict
+
+def _getPerformanceParameters(intentsDict):
+
+    # Initalize
+    performanceParams = project.PerformanceParameters()
+
+    # No performance parameters
+    if len(intentsDict) <= 0:
+        return performanceParams
+
+    # Supported performance parameters
+    #   Don't use. Rely on class __init__ method
+    #params = ['desired_angular_resolution',
+        #'desired_largest_scale',
+        #'desired_spectral_resolution',
+        #'desired_sensitivity',
+        #'desired_dynamic_range']
+
+    # Set supported attributes
+    for key in intentsDict:
+        # Parameter not defined in __init__ method
+        if not hasattr (performanceParams, key):
+            continue
+        # Parameter not supported
+        #if key not in params:
+            #continue
+        setattr (performanceParams, key, intentsDict[key])
+
+    return performanceParams
 
 def _getSessions (intentsDict):
     

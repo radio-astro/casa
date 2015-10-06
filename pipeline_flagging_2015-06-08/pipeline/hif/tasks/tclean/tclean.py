@@ -2,14 +2,14 @@ import os
 import shutil
 import numpy
 
-from mpi4casa.MPIEnvironment import MPIEnvironment
-
-import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import basetask
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.pipelineqa as pipelineqa
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import tclean
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.mpihelpers as mpihelpers
+import pipeline.infrastructure.pipelineqa as pipelineqa
+from pipeline.infrastructure import casa_tasks
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
@@ -27,15 +27,17 @@ class TcleanInputs(cleanbase.CleanBaseInputs):
                  weighting=None, robust=None, noise=None, npixels=None,
                  restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
                  noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
-                 masklimit=None, maxncleans=None, parallel=None):
+                 masklimit=None, maxncleans=None, subcontms=None, parallel=None):
         self._init_properties(vars())
         self.heuristics = tclean.TcleanHeuristics(self.context, self.vis, self.spw)
 
     # Add extra getters and setters here
+    spwsel = basetask.property_with_default('spwsel', {})
     hm_cleaning = basetask.property_with_default('hm_cleaning', 'rms')
     hm_masking = basetask.property_with_default('hm_masking', 'centralquarter')
     masklimit = basetask.property_with_default('masklimit', 4.0)
-    tlimit = basetask.property_with_default('tlimit', 4.0)
+    tlimit = basetask.property_with_default('tlimit', 2.0)
+    subcontms = basetask.property_with_default('subcontms', False)
 
     @property
     def noiseimage(self):
@@ -114,6 +116,11 @@ class Tclean(cleanbase.CleanBase):
         LOG.info('deleting %s*.iter*', inputs.imagename)
         shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
 
+        # Determine masking limits depending on image and cell sizes
+        self.pblimit_image, self.pblimit_cleanmask = \
+            inputs.heuristics.pblimits(inputs.imsize, inputs.cell)
+        inputs.pblimit = self.pblimit_image
+
         # Get an empirical noise estimate by generating Q or V image.
         #    Assumes presence of XX and YY, or RR and LL
         #    Assumes source is unpolarized
@@ -139,8 +146,10 @@ class Tclean(cleanbase.CleanBase):
             elif inputs.hm_cleaning == 'rms':
                 threshold = '%sJy' % (inputs.tlimit * sensitivity)
             sequence_manager = ImageCentreThresholdSequence(
-                gridder=inputs.gridder, threshold=threshold,
-                sensitivity=sensitivity)
+                gridder = inputs.gridder, threshold=threshold,
+                sensitivity = sensitivity, niter=inputs.niter,
+                pblimit_image = self.pblimit_image,
+                pblimit_cleanmask = self.pblimit_cleanmask)
 
         elif inputs.hm_masking == 'psfiter':
             sequence_manager = IterativeSequence(
@@ -169,7 +178,43 @@ class Tclean(cleanbase.CleanBase):
         return result
 
     def _do_iterative_imaging(self, sequence_manager, result):
-        # Compute the dirty image.
+
+        context = self.inputs.context
+        inputs = self.inputs
+
+        # TODO: For inputs.specmode=='cont' get continuum frequency ranges from
+        # dirty cubes if no lines.dat is defined
+        #if (inputs.specmode == 'cont') and ("no lines.dat") ...
+            # Make dirty cubes, run detection algorithm on each of them
+
+        # Check if a matching 'cont' image exists for continuum subtraction.
+        # NOTE: For Cycle 3 we use 'mfs' images due to possible
+        #       inaccuracies in the nterms=2 cont images.
+        cont_image_name = ''
+        if (('TARGET' in inputs.intent) and (inputs.specmode == 'cube')):
+            imlist = self.inputs.context.sciimlist.get_imlist()
+            for iminfo in imlist[::-1]:
+                if ((iminfo['sourcetype'] == 'TARGET') and \
+                    (iminfo['sourcename'] == inputs.field) and \
+                    (iminfo['specmode'] == 'mfs') and \
+                    (inputs.spw in iminfo['spwlist'].split(','))):
+                    cont_image_name = iminfo['imagename'][:iminfo['imagename'].rfind('.image')]
+                    cont_image_name = cont_image_name.replace('.pbcor', '')
+                    break
+
+            if (cont_image_name != ''):
+                LOG.info('Using %s for continuum subtraction.' % (os.path.basename(cont_image_name)))
+            else:
+                LOG.warning('Could not find any matching continuum image. Skipping continuum subtraction.')
+
+        # Do continuum subtraction for target cubes
+        # NOTE: This currently needs to be done as a separate step.
+        #       In the future the subtraction will be handled
+        #       on-the-fly in tclean.
+        if (cont_image_name != ''):
+            self._do_continuum(cont_image_name = cont_image_name, mode = 'sub')
+
+        # Compute the dirty image
         LOG.info('Compute the dirty image')
         iter = 0
         result = self._do_clean(iter=iter, stokes='I', cleanmask='', niter=0,
@@ -180,9 +225,11 @@ class Tclean(cleanbase.CleanBase):
         # Give the result to the sequence_manager for analysis
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min,\
             rms2d, image_max = sequence_manager.iteration_result(iter=0,
-                    psf=result.psf, model=result.model,
-                    restored=result.image, residual=result.residual,
-                    flux=result.flux, cleanmask=None, threshold=None)
+                    multiterm = result.multiterm, psf = result.psf, model = result.model,
+                    restored = result.image, residual = result.residual,
+                    flux = result.flux, cleanmask=None, threshold = None,
+                    pblimit_image = self.pblimit_image,
+                    pblimit_cleanmask = self.pblimit_cleanmask)
 
         LOG.info('Dirty image stats')
         LOG.info('    Rms %s', non_cleaned_rms)
@@ -224,8 +271,9 @@ class Tclean(cleanbase.CleanBase):
 
             # Give the result to the clean 'sequencer'
             model_sum, cleaned_rms, non_cleaned_rms, residual_max, residual_min, rms2d, image_max = sequence_manager.iteration_result(
-                iter=iter, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
-                flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold)
+                iter=iter, multiterm=result.multiterm, psf=result.psf, model=result.model, restored=result.image, residual=result.residual,
+                flux=result.flux, cleanmask=new_cleanmask, threshold=seq_result.threshold, pblimit_image = self.pblimit_image,
+                pblimit_cleanmask = self.pblimit_cleanmask)
 
             # Keep RMS for QA
             result.set_rms(non_cleaned_rms)
@@ -238,6 +286,13 @@ class Tclean(cleanbase.CleanBase):
 
             # Up the iteration counter
             iter += 1
+
+        # Re-add continuum so that the MS is unchanged afterwards.
+        if (cont_image_name != ''):
+            if (inputs.subcontms == False):
+                self._do_continuum(cont_image_name = cont_image_name, mode = 'add')
+            else:
+                LOG.warn('Not re-adding continuum model. MS is modified !')
 
         return result
 
@@ -260,7 +315,7 @@ class Tclean(cleanbase.CleanBase):
         sequence_manager = BaseCleanSequence()
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
         residual_min, rms2d, image_max = \
-            sequence_manager.iteration_result(iter=0,
+            sequence_manager.iteration_result(iter=0, multiterm=result.multiterm,
                                               psf=result.psf, model=result.model, restored=result.image,
                                               residual=result.residual, flux=result.flux, cleanmask=None)
 
@@ -288,26 +343,32 @@ class Tclean(cleanbase.CleanBase):
             specmode = 'cube'
         else:
             raise Exception, 'Unknown specmode "%s"' % (inputs.specmode)
-        imTool = casatools.imager
-        for msName in [msInfo.name for msInfo in context.observing_run.measurement_sets]:
-            for intSpw in map(int, spw.split(',')):
-                imTool.open(msName)
-                imTool.selectvis(spw=intSpw, field=field)
-                imTool.defineimage(mode=specmode, spw=intSpw,
-                                   cellx=inputs.cell[0], celly=inputs.cell[0],
-                                   nx=inputs.imsize[0], ny=inputs.imsize[1])
-                # TODO: Mosaic switch needed ?
-                imTool.weight(type=inputs.weighting, robust=inputs.robust)
+        for ms in context.observing_run.measurement_sets:
+            for intSpw in [int(s) for s in spw.split(',')]:
+                with casatools.ImagerReader(ms.name) as imTool:
+                    try:
+                        # TODO: Add scan selection
+                        imTool.selectvis(spw=intSpw, field=field)
+                        imTool.defineimage(mode=specmode, spw=intSpw,
+                                           cellx=inputs.cell[0], celly=inputs.cell[0],
+                                           nx=inputs.imsize[0], ny=inputs.imsize[1])
+                        # TODO: Mosaic switch needed ?
+                        imTool.weight(type=inputs.weighting, robust=inputs.robust)
 
-                try:
-                    result = imTool.apparentsens()
-                    sensitivities.append(result[1])
-                except Exception as e:
-                    sensitivities.append(0.01)
-                    LOG.warning('Exception in calculating sensitivity. Assuming 0.01 Jy/beam.')
-                imTool.close()
+                        result = imTool.apparentsens()
+                        if (result[1] != 0.0):
+                            sensitivities.append(result[1])
+                    except Exception as e:
+                        # Simply pass as this could be a case of a source not
+                        # being present in the MS.
+                        pass
 
-        sensitivity = 1.0/numpy.sqrt(numpy.sum(1.0/numpy.array(sensitivities)**2))
+        if (len(sensitivities) != 0):
+            sensitivity = 1.0 / numpy.sqrt(numpy.sum(1.0 / numpy.array(sensitivities)**2))
+        else:
+            defaultSensitivity = 0.001
+            LOG.warning('Exception in calculating sensitivity. Assuming %g Jy/beam.' % (defaultSensitivity))
+            sensitivity = defaultSensitivity
 
         if inputs.specmode == 'cube':
             if inputs.nchan != -1:
@@ -326,21 +387,79 @@ class Tclean(cleanbase.CleanBase):
 
         return sensitivity
 
+    def _do_continuum(self, cont_image_name, mode):
+        """
+        Add/Subtract continuum model.
+        """
+
+        context = self.inputs.context
+        inputs = self.inputs
+
+        LOG.info('Predict continuum model.')
+
+        # Predict continuum model
+        job = casa_tasks.tclean(vis=inputs.vis, imagename='%s.I.cont_%s_pred' %
+                (os.path.basename(inputs.imagename), mode),
+                spw=inputs.spw,
+                intent='*TARGET*',
+                scan='', specmode='mfs', gridder=inputs.gridder,
+                pblimit=self.pblimit_image, niter=0,
+                threshold='0.0mJy', deconvolver=inputs.deconvolver,
+                interactive=False, outframe=inputs.outframe, nchan=inputs.nchan,
+                start=inputs.start, width=inputs.width, imsize=inputs.imsize,
+                cell=inputs.cell, phasecenter=inputs.phasecenter,
+                stokes='I',
+                weighting=inputs.weighting, robust=inputs.robust,
+                npixels=inputs.npixels,
+                restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                mask='', startmodel=cont_image_name,
+                savemodel='modelcolumn',
+                parallel=False)
+        self._executor.execute(job)
+
+        # Add/subtract continuum model
+        if mode == 'sub':
+            LOG.info('Subtract continuum model.')
+        else:
+            LOG.info('Add continuum model.')
+        # Need to use MS tool to get the proper data selection.
+        # The uvsub task does not provide this.
+        cms = casatools.ms
+        for vis in inputs.vis:
+            ms_info = context.observing_run.get_ms(vis)
+
+            field_ids = []
+            field_infos = ms_info.get_fields()
+            for i in xrange(len(field_infos)):
+                if ((field_infos[i].name == inputs.field) and ('TARGET' in field_infos[i].intents)):
+                    field_ids.append(str(i))
+            field_ids = reduce(lambda x, y: '%s,%s' % (x, y), field_ids)
+
+            scan_numbers = []
+            for scan_info in ms_info.scans:
+                if ((inputs.field in [f.name for f in scan_info.fields]) and ('TARGET' in scan_info.intents)):
+                    scan_numbers.append(scan_info.id)
+            scan_numbers = reduce(lambda x, y: '%s,%s' % (x, y), scan_numbers)
+
+            if mode == 'sub':
+                LOG.info('Subtracting continuum for %s.' % (os.path.basename(vis)))
+            else:
+                LOG.info('Adding continuum for %s.' % (os.path.basename(vis)))
+            cms.open(vis, nomodify=False)
+            cms.msselect({'field': field_ids, 'scan': scan_numbers, 'spw': inputs.spw})
+            if mode == 'sub':
+                cms.uvsub()
+            else:
+                cms.uvsub(reverse=True)
+            cms.close()
+
     def _do_clean(self, iter, stokes, cleanmask, niter, threshold, sensitivity, result):
         """
         Do basic cleaning.
         """
         inputs = self.inputs
 
-        if inputs.specmode in ['mfs', 'cont']:
-            specmode = 'mfs'
-        elif inputs.specmode == 'cube':
-            specmode = 'cube'
-        else:
-            raise Exception, 'Unknown specmode "%s"' % inputs.specmode
-
-        # ensure we don't try to run Tier 1 tclean on an MPI server
-        parallel = inputs.parallel and MPIEnvironment.is_mpi_client
+        parallel = mpihelpers.parse_mpi_input_parameter(inputs.parallel)
 
         clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
                                                   output_dir=inputs.output_dir,
@@ -351,7 +470,7 @@ class Tclean(cleanbase.CleanBase):
                                                   spw=inputs.spw,
                                                   spwsel=inputs.spwsel,
                                                   uvrange=inputs.uvrange,
-                                                  specmode=specmode,
+                                                  specmode=inputs.specmode,
                                                   gridder=inputs.gridder,
                                                   deconvolver=inputs.deconvolver,
                                                   outframe=inputs.outframe,
@@ -372,6 +491,7 @@ class Tclean(cleanbase.CleanBase):
                                                   niter=niter,
                                                   threshold=threshold,
                                                   sensitivity=sensitivity,
+                                                  pblimit=self.pblimit_image,
                                                   result=result,
                                                   parallel=parallel)
         clean_task = cleanbase.CleanBase(clean_inputs)
@@ -384,8 +504,8 @@ class Tclean(cleanbase.CleanBase):
         # will corrupt the table cache, so do things using only the
         # table tool.
         for vis in self.inputs.vis:
-            with casatools.TableReader(
-                            '%s/POINTING' % vis, nomodify=False) as table:
+            with casatools.TableReader('%s/POINTING' % vis,
+                                       nomodify=False) as table:
                 # make a copy of the table
                 LOG.debug('Making copy of POINTING table')
                 copy = table.copy('%s/POINTING_COPY' % vis, valuecopy=True)
@@ -397,9 +517,8 @@ class Tclean(cleanbase.CleanBase):
     def _restore_pointing_table(self):
         for vis in self.inputs.vis:
             # restore the copy of the POINTING table
-            with casatools.TableReader(
-                            '%s/POINTING_COPY' % vis, nomodify=False) as table:
+            with casatools.TableReader('%s/POINTING_COPY' % vis,
+                                       nomodify=False) as table:
                 LOG.debug('Copying back into POINTING table')
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
-

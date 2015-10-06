@@ -565,9 +565,23 @@ class VLAImportData(basetask.StandardTaskTemplate):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagtemplate.txt")
-	f = open (outfile, "w")
-	f.writelines(['# User flagging commands file'])
-	f.close()
+	#f = open (outfile, "w")
+	#f.writelines(['# User flagging commands file'])
+	#f.close()
+	
+	# Create a new file if overwrite is true and the file
+        # does not already exist.
+        if inputs.overwrite or not os.path.exists(outfile):
+            with open(outfile, 'w') as f:
+                f.writelines(['# VLA User flagging commands file\n'])
+                f.writelines(['#\n'])
+                f.writelines(['# Examples\n'])
+                f.writelines(['# Note: Do not put spaces inside the reason string !\n'])
+                f.writelines(['#\n'])
+                f.writelines(["# mode='manual' correlation='RR' antenna='ea01;ea08;ea43;ea48&ea23' spw='21:1920~2880' autocorr=True reason='bad_channels'\n"])
+                f.writelines(["# mode='manual' spw='25:0~3;122~127' reason='spwflag'\n"])
+                f.writelines(["# mode='manual' antenna='ea07' timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'\n"])
+                f.writelines(['#\n'])
             
         
             

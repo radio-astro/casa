@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import datetime
 import itertools
+import operator
 import os
 import re
 import string
@@ -16,8 +17,11 @@ import pipeline.domain.measures as measures
 
 LOG = logging.get_logger(__name__)
 
-def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
+def find_EVLA_band(frequency, bandlimits=None, BBAND='?4PLSCXUKAQ?'):
     """identify VLA band"""
+    if bandlimits is None:
+        bandlimits = [0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9,
+                      18.0e9, 26.5e9, 40.0e9, 56.0e9]
     i = bisect_left(bandlimits, frequency)
 
     return BBAND[i]
@@ -153,8 +157,6 @@ class MeasurementSetReader(object):
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
             
-            #LOG.info('************************(1) '+spw.band+'********************')
-            
             #Used EVLA band name from spw instead of frequency range
             observatory = string.upper(ms.antenna_array.name)
             if observatory in ('VLA', 'EVLA'):
@@ -271,9 +273,10 @@ class MeasurementSetReader(object):
             ms.spectral_windows = SpectralWindowTable.get_spectral_windows(msmd)
             ms.states = StateTable.get_states(msmd)
             ms.fields = FieldTable.get_fields(msmd)
+            ms.sources = SourceTable.get_sources(msmd)
+            ms.data_descriptions = DataDescriptionTable.get_descriptions(msmd, ms)
 
-            # No MSMD functions to help populating DDs and pols yet
-            ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
+            # No MSMD functions to help populating pols yet
             ms.polarizations = PolarizationTable.get_polarizations(ms)
             with casatools.MSReader(ms.name) as openms:
                 for dd in ms.data_descriptions:
@@ -283,8 +286,6 @@ class MeasurementSetReader(object):
                     dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
                     dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
     
-            ms.sources = SourceTable.get_sources(ms)        
-
             # now back to pure MSMD calls
             MeasurementSetReader.link_fields_to_states(msmd, ms)
             MeasurementSetReader.link_fields_to_sources(msmd, ms)
@@ -292,9 +293,10 @@ class MeasurementSetReader(object):
             MeasurementSetReader.link_spws_to_fields(msmd, ms)
             ms.scans = MeasurementSetReader.get_scans(msmd, ms)
 
-        MeasurementSetReader.add_band_to_spws(ms)
+            (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(msmd)
 
-        (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(ms)
+
+        MeasurementSetReader.add_band_to_spws(ms)
 
         # work around NumPy bug with empty strings
         # http://projects.scipy.org/numpy/ticket/1239
@@ -323,22 +325,15 @@ class SpectralWindowTable(object):
         spw_types.update({i:'CHANAVG' for i in msmd.chanavgspws()})
         spw_types.update({i:'SQLD' for i in msmd.almaspws(sqld=True)})
 
-        LOG.trace('Opening SPECTRAL_WINDOW table to read '
-                  'SPECTRAL_WINDOW.REF_FREQUENCY')
-        spectral_window_table = os.path.join(msmd.name(), 'SPECTRAL_WINDOW')        
-        with casatools.TableReader(spectral_window_table) as table:
-            ref_frequency = table.getcol('REF_FREQUENCY')
-
         # these msmd functions don't need a spw argument. They return a list of
         # values, one for each spw
         spw_names = msmd.namesforspws()            
         bandwidths = msmd.bandwidths()
 
-        spws = []        
+        spws = []
         for i, spw_name in enumerate(spw_names):
             # get this spw's values from our precalculated lists and dicts
             bandwidth = bandwidths[i]
-            ref_freq = ref_frequency[i]
             spw_type = spw_types.get(i, 'UNKNOWN')
 
             # the following msmd functions need a spw argument, so they have
@@ -348,7 +343,10 @@ class SpectralWindowTable(object):
             chan_widths = msmd.chanwidths(i)            
             sideband = msmd.sideband(i)
             baseband = msmd.baseband(i)                            
-            
+
+            ref_freq_hz = casatools.quanta.convertfreq(msmd.reffreq(i)['m0'], 'Hz')
+            ref_freq = casatools.quanta.getvalue(ref_freq_hz)[0]
+
             spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
                     ref_freq, mean_freq, chan_freqs, chan_widths, sideband,
                     baseband)
@@ -359,74 +357,25 @@ class SpectralWindowTable(object):
 
 class ObservationTable(object):
     @staticmethod
-    def get_telescope_name(ms):
-        LOG.debug('Analysing OBSERVATION table')
-        vis = _get_ms_name(ms)
-        with casatools.MSMDReader(vis) as msmd:
-            names = set(msmd.observatorynames())
-            assert len(names) is 1
-            return names.pop()
+    def get_project_info(msmd):
+        project_id = msmd.projects()[0]
+        observer = msmd.observers()[0]
 
-    @staticmethod
-    def get_project_info(ms):
-        ms = _get_ms_name(ms)
-        table_filename = os.path.join(ms, 'OBSERVATION')
-        with casatools.TableReader(table_filename) as table:
-            telescope_name = table.getcol('TELESCOPE_NAME')[0]
-            project_id = table.getcol('PROJECT')[0]
-            observer = table.getcol('OBSERVER')[0]
+        schedblock_id = 'N/A'
+        execblock_id = 'N/A'
 
-            schedblock_id = 'N/A'
-            execblock_id = 'N/A'
+        if 'ALMA' in msmd.observatorynames():
+            # TODO this would break if > 1 observation in an EB. Can that
+            # ever happen?
+            d = {}
+            for cell in msmd.schedule(0):
+                key, val = string.split(cell)
+                d[key] = val
 
-            if telescope_name == 'ALMA':
-                schedule = table.getcol('SCHEDULE')[0]
-            
-                d = {}
-                for cell in schedule:
-                    key, val = string.split(cell)
-                    d[key] = val
-                                    
-                schedblock_id = d.get('SchedulingBlock', 'N/A')
-                execblock_id = d.get('ExecBlock', 'N/A')
+            schedblock_id = d.get('SchedulingBlock', 'N/A')
+            execblock_id = d.get('ExecBlock', 'N/A')
 
-            return observer, project_id, schedblock_id, execblock_id
-
-    @staticmethod
-    def get_time_range(ms):
-        ms = _get_ms_name(ms)
-
-        with casatools.TableReader(ms) as openms:
-            # get columns and tools needed to create scan times
-            time_colkeywords = openms.getcolkeywords('TIME')
-            time_unit = time_colkeywords['QuantumUnits'][0]
-            time_ref = time_colkeywords['MEASINFO']['Ref']    
-            me = casatools.measures
-            qa = casatools.quanta
-                
-        table_filename = os.path.join(ms, 'OBSERVATION')
-        with casatools.TableReader(table_filename) as table:
-            start_s, end_s = table.getcol('TIME_RANGE')
-
-            # start_s, end_s are arrays with a single entry for
-            # simple datasets. Measurement sets that are
-            # concats of simple datasets have more than 1 entry,
-            # so use the 'min' and 'max' to handle this possibiity.
-            start_s = numpy.min(start_s)
-            end_s = numpy.max(end_s)
-
-            epoch_start = me.epoch(time_ref, qa.quantity(start_s, time_unit))
-            epoch_end = me.epoch(time_ref, qa.quantity(end_s, time_unit))
-
-            str_start = qa.time(epoch_start['m0'], form=['fits'])[0]
-            str_end = qa.time(epoch_end['m0'], form=['fits'])[0]
-
-            dt_start = datetime.datetime.strptime(str_start, 
-                                                  '%Y-%m-%dT%H:%M:%S')
-            dt_end = datetime.datetime.strptime(str_end, 
-                                                '%Y-%m-%dT%H:%M:%S')
-    
-            return (dt_start, dt_end)
+        return observer, project_id, schedblock_id, execblock_id
 
 
 class AntennaTable(object):
@@ -446,11 +395,9 @@ class AntennaTable(object):
     @staticmethod
     def get_antennas(msmd):
         antenna_table = os.path.join(msmd.name(), 'ANTENNA')
-        LOG.trace('Opening ANTENNA table to read ANTENNA.FLAG_ROW and '
-                  'ANTENNA.DISH_DIAMETER')
+        LOG.trace('Opening ANTENNA table to read ANTENNA.FLAG_ROW')
         with casatools.TableReader(antenna_table) as table:
             flags = table.getcol('FLAG_ROW')
-            diameters = table.getcol('DISH_DIAMETER')
 
         antennas = []
         for (i, name, station) in zip(msmd.antennaids(), 
@@ -462,8 +409,9 @@ class AntennaTable(object):
 
             position = msmd.antennaposition(i)
             offset = msmd.antennaoffset(i)
-            diameter = diameters[i]
-            
+            diameter_m = casatools.quanta.convert(msmd.antennadiameter(i), 'm')
+            diameter = casatools.quanta.getvalue(diameter_m)[0]
+
             antenna = domain.Antenna(i, name, station, position, offset,
                                      diameter)
             antennas.append(antenna)
@@ -477,47 +425,17 @@ class AntennaTable(object):
         if flag is True:
             return
 
-#         # get the x, y, z values from the positions tuple
-#         x = position['m0']
-#         y = position['m1']
-#         z = position['m2']
-# 
-#         # find out what units these values are in
-#         ref_keyword = keywords['MEASINFO']['Ref']
-#         x_units = keywords['QuantumUnits'][0]
-#         y_units = keywords['QuantumUnits'][1]
-#         z_units = keywords['QuantumUnits'][2]
-# 
-#         # save these as we'll need them to work round a CASA bug which converts
-#         # all positions to radians
-#         qt = casatools.quanta
-#         v0=qt.quantity(x, x_units)
-#         v1=qt.quantity(y, y_units)
-#         v2=qt.quantity(z, z_units)
-# 
-#         # so we can create a CASA position..
-#         mt = casatools.measures   
-#         rad_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-# 
-#         # and now for our workaround..
-#         m_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-#         m_position['m0'] = v0
-#         m_position['m1'] = v1
-#         m_position['m2'] = v2
-    
-        # .. with which we can create an Antenna
-        antenna = domain.Antenna(antenna_id, name, station, position, offset, 
-                                 diameter)
-        return antenna
+        return domain.Antenna(antenna_id, name, station, position, offset,
+                              diameter)
 
 
 class DataDescriptionTable(object):
     @staticmethod
-    def get_descriptions(ms):
+    def get_descriptions(msmd, ms):
         spws = ms.spectral_windows
         # read the data descriptions table and create the objects
         descriptions = [DataDescriptionTable._create_data_description(spws, *row) 
-                        for row in DataDescriptionTable._read_table(ms)]
+                        for row in DataDescriptionTable._read_table(msmd)]
             
         return descriptions            
         
@@ -530,19 +448,17 @@ class DataDescriptionTable(object):
         return domain.DataDescription(dd_id, spw, pol_id)
     
     @staticmethod
-    def _read_table(ms):
-        """Read the DATA_DESCRIPTION table of the given measurement set.
+    def _read_table(msmd):
+        """
+        Read the DATA_DESCRIPTION table of the given measurement set.
         """
         LOG.debug('Analysing DATA_DESCRIPTION table')
-        ms = _get_ms_name(ms)
-        data_description_table = os.path.join(ms, 'DATA_DESCRIPTION')        
-        with casatools.TableReader(data_description_table) as table:
-            spw_ids = table.getcol('SPECTRAL_WINDOW_ID')
-            pol_ids = table.getcol('POLARIZATION_ID')
-            dd_ids = range(len(spw_ids))
 
-            rows = zip(dd_ids, spw_ids, pol_ids)
-            return rows
+        dd_ids = msmd.datadescids()
+        spw_ids = msmd.spwfordatadesc()
+        pol_ids = msmd.polidfordatadesc()
+
+        return zip(dd_ids, spw_ids, pol_ids)
 
 
 class PolarizationTable(object):
@@ -585,69 +501,40 @@ class PolarizationTable(object):
 
 class SourceTable(object):
     @staticmethod
-    def get_sources(ms):
-        sources = [SourceTable._create_source(*row) 
-                   for row in SourceTable._read_table(ms)]
+    def get_sources(msmd):
+        rows = SourceTable._read_table(msmd)
 
         # duplicate source entries may be present due to duplicate entries
         # differing by non-essential columns, such as spw
-        key_fn = lambda source: source.id
-        data = sorted(sources, key=key_fn)
+        key_fn = operator.itemgetter(0)
+        data = sorted(rows, key=key_fn)
         grouped_by_source_id = []
         for _, g in itertools.groupby(data, key_fn):
             grouped_by_source_id.append(list(g))
-        return [s[0] for s in grouped_by_source_id]             
+
+        no_dups = [s[0] for s in grouped_by_source_id]
+
+        return [SourceTable._create_source(*row)
+                for row in no_dups]
+
+    @staticmethod
+    def _create_source(source_id, name, direction, proper_motion):
+        return domain.Source(source_id, name, direction, proper_motion)
         
     @staticmethod
-    def _create_source(source_id, name, direction, direction_kw, motion, 
-                       motion_kw):
-        # get the x, y, values from the direction tuple
-        x = direction[0]
-        y = direction[1]
-
-        # find out what units these values are in
-        ref_keyword = direction_kw['MEASINFO']['Ref']
-        x_units = direction_kw['QuantumUnits'][0]
-        y_units = direction_kw['QuantumUnits'][1]
-
-        # so we can create a CASA position..
-        mt = casatools.measures   
-        qt = casatools.quanta
-        direction = mt.direction(rf=ref_keyword,
-                                 v0=qt.quantity(x, x_units),
-                                 v1=qt.quantity(y, y_units))
-        
-        motion_units = motion_kw['QuantumUnits'][0]
-        motion_x = qt.quantity(motion[0], motion_units)
-        motion_y = qt.quantity(motion[1], motion_units)
-        
-        return domain.Source(source_id, name, direction, motion_x, motion_y)
-        
-    @staticmethod
-    def _read_table(ms):
-        """Read the SOURCE table of the given measurement set.
+    def _read_table(msmd):
+        """
+        Read the SOURCE table of the given measurement set.
         """
         LOG.debug('Analysing SOURCE table')
-        ms = _get_ms_name(ms)
-        source_table = os.path.join(ms, 'SOURCE')   
-        with casatools.TableReader(source_table) as table:
-            source_ids = table.getcol('SOURCE_ID')
-            names = table.getcol('NAME')
-            directions = table.getcol('DIRECTION')
-            direction_keywords = table.getcolkeywords('DIRECTION')
-            motions = table.getcol('PROPER_MOTION')
-            motions_keywords = table.getcolkeywords('PROPER_MOTION')
+        ids = msmd.sourceidsfromsourcetable()
+        sourcenames = msmd.sourcenames()
+        directions = [v for _, v in sorted(msmd.sourcedirs().items(),
+                                           key=lambda (k, _): int(k))]
+        propermotions = [v for _, v in sorted(msmd.propermotions().items(),
+                                              key=lambda (k, _): int(k))]
 
-            # transpose lists to get n tuples of x,y for each source rather
-            # than 2 lists of all x,y values
-            directions = zip(*directions)
-            motions = zip(*motions)
-
-            direction_keywords = [direction_keywords] * len(source_ids)
-            motions_keywords = [motions_keywords] * len(source_ids)
-
-            return zip(source_ids, names, directions, direction_keywords,
-                       motions, motions_keywords)
+        return zip(ids, sourcenames, directions, propermotions)
 
 
 class StateTable(object):
@@ -700,54 +587,23 @@ class FieldTable(object):
         field_ids = range(num_fields)
         field_names = msmd.namesforfields()
         times = [msmd.timesforfield(i) for i in field_ids]
-            
-        LOG.trace('Opening FIELD table to read FIELD.PHASE_DIR, '
-                  'FIELD.SOURCE_ID and FIELD.SOURCE_TYPE')
+        phase_centres = [msmd.phasecenter(i) for i in field_ids]
+        source_ids = [msmd.sourceidforfield(i) for i in field_ids]
+
+        LOG.trace('Opening FIELD table to read FIELD.SOURCE_TYPE')
         field_table = os.path.join(msmd.name(), 'FIELD')
         with casatools.TableReader(field_table) as table:
-            # we need msmd.sourcesforfield() to eliminate this read
-            source_ids = table.getcol('SOURCE_ID')
-
-            phase_dir = table.getcol('PHASE_DIR')
-            phase_dir_keywords = table.getcolkeywords('PHASE_DIR')
-            phase_dir_quanta = []
-            for field_id in field_ids:
-                field_dir_quanta = [
-                        '%s%s' % (phase_dir[0,0,field_id],
-                                  phase_dir_keywords['QuantumUnits'][0]),
-                        '%s%s' % (phase_dir[1,0,field_id],
-                                  phase_dir_keywords['QuantumUnits'][1])]
-                phase_dir_quanta.append(field_dir_quanta)
-
-            # get array of phase dir ref types
-            meas_info = phase_dir_keywords['MEASINFO']
-            if 'VarRefCol' in meas_info:
-                # ref varies with row
-                phase_dir_ref = table.getcol(meas_info['VarRefCol'])
-                phase_dir_ref_types = meas_info['TabRefTypes']
-                phase_dir_ref_codes = meas_info['TabRefCodes']
-            else:
-                # ref fixed for all rows,
-                # construct as though variable reference with all refs
-                # the same
-                phase_dir_ref = numpy.zeros([numpy.shape(phase_dir)[2]], 
-                                            numpy.int)
-                phase_dir_ref_types = numpy.array([meas_info['Ref']])
-                phase_dir_ref_codes = numpy.array([0])
-            phase_dir_ref_type = []
-            for field_id in field_ids:
-                field_dir_ref_type = phase_dir_ref_types[
-                        phase_dir_ref[field_id]==phase_dir_ref_codes][0]
-                phase_dir_ref_type.append(field_dir_ref_type)
-
+            # TODO can this old code be removed? We've not handled non-APDMs
+            # for a *long* time!
+            #
             # FIELD.SOURCE_TYPE contains the intents in non-APDM MS
             if 'SOURCE_TYPE' in table.colnames():
                 source_types = table.getcol('SOURCE_TYPE')
             else:
                 source_types = [None] * num_fields
 
-            return zip(field_ids, field_names, source_ids, times, 
-                       source_types, phase_dir_ref_type, phase_dir_quanta)
+            return zip(field_ids, field_names, source_ids, times,
+                       source_types, phase_centres)
     
     @staticmethod
     def get_fields(msmd):
@@ -755,14 +611,13 @@ class FieldTable(object):
                 for row in FieldTable._read_table(msmd)]
     
     @staticmethod
-    def _create_field(field_id, name, source_id, time, source_type,
-                      phase_dir_ref_type, phase_dir_quanta):
-        # .. with which we can create an Antenna
-        field = domain.Field(field_id, name, source_id, time,
-                             phase_dir_ref_type, phase_dir_quanta)
+    def _create_field(field_id, name, source_id, time, source_type, phase_centre):
+        field = domain.Field(field_id, name, source_id, time, phase_centre)
+
         if source_type:
             field.set_source_type(source_type)
-        return field    
+
+        return field
 
 
 def _make_range(f_min, f_max):

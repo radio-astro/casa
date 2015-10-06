@@ -387,8 +387,8 @@ class RMSOffsetVsRefAntDistanceChart(PhaseVsBaselineChart):
         return ''                
 
     def get_data_object(self, data, corr_id):
-        delegate =  common.PhaseVsBaselineData(data, self.ms, corr_id,
-                                               self.refant.id)
+        delegate = common.PhaseVsBaselineData(data, self.ms, corr_id,
+                                              self.refant.id)
         return common.XYData(delegate, 
                              'distance_to_refant', 
                              'unwrapped_rms')

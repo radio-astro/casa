@@ -11,7 +11,7 @@ def hif_tclean(vis=None, imagename=None, intent=None, field=None, spw=None, spws
 	       width=None, weighting=None, robust=None, noise=None, npixels=None,
 	       restoringbeam=None, hm_masking=None, hm_cleaning=None, mask=None,
 	       niter=None, threshold=None, tlimit=None, masklimit=None,
-	       maxncleans=None, parallel=None,
+	       maxncleans=None, subcontms=None, parallel=None,
 	       pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

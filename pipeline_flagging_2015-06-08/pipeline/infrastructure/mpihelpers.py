@@ -173,7 +173,7 @@ def mpiexec(tier0_executable):
               MPIEnvironment.hostname, tier0_executable)
 
     executable = tier0_executable.get_executable()
-    LOG.info('Executing %s on rank%s@%s', executable,
+    LOG.info('Executing %s on rank%s@%s', tier0_executable,
              MPIEnvironment.mpi_processor_rank, MPIEnvironment.hostname)
     return executable.execute(dry_run=False)
 
@@ -186,6 +186,7 @@ def is_mpi_ready():
                 MPIEnvironment.is_mpi_enabled,  # running on MPI cluster
                 MPIEnvironment.is_mpi_client,  # running as MPI client
                 mpiclient])  # MPICommandClient ready
+
 
 def _splitall(path):
     allparts = []
@@ -202,6 +203,21 @@ def _splitall(path):
             allparts.insert(0, parts[1])
     return allparts
 
+
+def parse_mpi_input_parameter(input_arg):
+    lowercase = str(input_arg).lower()
+    if lowercase == 'automatic':
+        return is_mpi_ready()
+    elif lowercase == 'true':
+        return True
+    elif lowercase == 'false':
+        return False
+    else:
+        raise ValueError('Arg must be one of true, false or automatic. Got %s' % input_arg)
+
+
+mpiclient = None
+mpi_server_list = None
 
 if MPIEnvironment.is_mpi_enabled:
     try:

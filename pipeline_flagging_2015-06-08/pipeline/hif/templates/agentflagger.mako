@@ -5,6 +5,7 @@ import types
 agent_description = {
 	'before'   : 'Before Task',
 	'online'   : 'Online Flags',
+	'qa0'      : 'QA0',
 	'template' : 'Flagging Template',
 	'autocorr' : 'Autocorrelations',
 	'shadow'   : 'Shadowed Antennas',

@@ -435,7 +435,7 @@ def score_online_shadow_agents(ms, summaries):
     0 < score < 1 === 60% < frac_flagged < 5%
     """
     return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, 
-                                        ['online', 'shadow'])
+                                        ['online', 'shadow', 'qa0', 'before'])
 
 @log_qa
 def score_applycal_agents(ms, summaries):
@@ -1112,4 +1112,30 @@ def score_caltables_exist(filedir, sessiondict):
         longmsg = 'No missing caltables files'
         shortmsg = 'No missing caltables files'
 
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_sd_line_detection(group_id_list, spw_id_list, lines_list):
+    detected_spw = []
+    detected_group = []
+    for group_id, spw_id, lines in zip(group_id_list, spw_id_list, lines_list):
+        if any([l[2] for l in lines]):
+            LOG.trace('detected lines exist at group_id %s spw_id %s'%(group_id, spw_id))
+            unique_spw_id = set(spw_id)
+            if len(unique_spw_id) == 1:
+                detected_spw.append(unique_spw_id.pop())
+            else:
+                detected_spw.append(-1)
+            detected_group.append(group_id)
+    if len(detected_spw) == 0:
+        score = 0.0
+        longmsg = 'No spectral lines are detected'
+        shortmsg = 'No spectral lines are detected'
+    else:
+        score = 1.0
+        if detected_spw.count(-1) == 0:
+            longmsg = 'Spectral lines are detected at Spws %s'%(', '.join(map(str,detected_spw)))
+        else:
+            longmsg = 'Spectral lines are detected at ReductionGroups %s'%(','.join(map(str,detected_group)))
+        shortmsg = 'Spectral lines are detected'
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)

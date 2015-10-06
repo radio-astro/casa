@@ -27,11 +27,13 @@ class BoxResult(basetask.Results):
 
 
 class TcleanResult(basetask.Results):
-    def __init__(self, sourcename=None, intent=None, spw=None, plotdir=None):
+    def __init__(self, sourcename=None, intent=None, spw=None, specmode=None, multiterm=None, plotdir=None):
         super(TcleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
+        self.specmode = specmode
+        self.multiterm = multiterm
         self.plotdir = plotdir
         self._psf = None
         self._model = None
@@ -150,7 +152,7 @@ class TcleanResult(basetask.Results):
             repr += ' flux: %s\n' % os.path.basename(self._flux)
         else:
             repr += ' flux: None'
-    
+
         for k,v in self.iterations.items():
             repr += ' iteration %s:\n' % k
             repr += '   image    : %s\n' % os.path.basename(v['image'])
@@ -160,6 +162,3 @@ class TcleanResult(basetask.Results):
                 repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
 
         return repr
-
-
-

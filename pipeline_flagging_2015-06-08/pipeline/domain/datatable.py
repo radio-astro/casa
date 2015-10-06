@@ -387,12 +387,12 @@ class DataTableImpl( object ):
         LOG.info('set_timetable start')
         start_time = time.time()
 
-        mygrp_s = numpy.array(mygrp['small'])
-        mygrp_l = numpy.array(mygrp['large'])
+        mygrp_s = mygrp['small']
+        mygrp_l = mygrp['large']
         rows = self.getcol('ROW')
 
-        timedic_s = construct_timegroup(rows, mygrp_s, timegrp_s)
-        timedic_l = construct_timegroup(rows, mygrp_l, timegrp_l)
+        timedic_s = construct_timegroup(rows, set(mygrp_s), timegrp_s)
+        timedic_l = construct_timegroup(rows, set(mygrp_l), timegrp_l)
         timetable_s = [timedic_s[idx] for idx in mygrp_s]
         timetable_l = [timedic_l[idx] for idx in mygrp_l]
         timetable = [timetable_s, timetable_l]
@@ -406,6 +406,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
+        LOG.debug('add time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         dictify = lambda x:  dict([(str(i), t) for (i,t) in enumerate(x)])
         if key_small not in keys or key_large not in keys:
             self.putkeyword(key_small, dictify(timetable[0]))
@@ -421,6 +422,7 @@ class DataTableImpl( object ):
         key_small = timetable_key('SMALL', ant, spw, pol)
         key_large = timetable_key('LARGE', ant, spw, pol)
         keys = self.tb2.keywordnames()
+        LOG.debug('get time table: keys for small gap \'%s\' large gap \'%s\''%(key_small,key_large))
         if key_small in keys and key_large in keys:
             ttdict_small = self.getkeyword(key_small)
             ttdict_large = self.getkeyword(key_large)
@@ -428,7 +430,6 @@ class DataTableImpl( object ):
             timetable_large = [ttdict_large[str(i)].tolist() for i in xrange(len(ttdict_large))]
             timetable = [timetable_small, timetable_large]
         else:
-            #timetable = self.get_timetable(ant, spw, pol)
             raise RuntimeError('time table for Antenna %s spw %s pol %s is not configured properly'%(ant,spw,pol))
         end_time = time.time()
         LOG.info('new get_timetable end: Elapsed time %s sec'%(end_time - start_time))
@@ -481,9 +482,12 @@ class DataTableImpl( object ):
                     continue
                 
                 for ifno_to in ifmap[ifno_from]:
-                    start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
-                                                        spectral_windows[ifno_to])
-                    atsys = [numpy.mean(tsys[i][start_chan:end_chan])
+                    # 2015/07/22 TN
+                    # Averaged Tsys is always applied due to change in CAS-7653
+                    #start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
+                    #                                    spectral_windows[ifno_to])
+                    #atsys = [numpy.mean(tsys[i][start_chan:end_chan])
+                    atsys = [tsys[i][0]
                              for i in indices]
                     LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)

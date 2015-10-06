@@ -9,6 +9,7 @@ from . import common
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
+from pipeline.domain.datatable import OnlineFlagIndex
 
 from . import utils
 from . import common
@@ -65,13 +66,14 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         st = self.context.observing_run[idx]
         parent_ms = st.ms
         vis = parent_ms.basename
-        target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
-                       if spwobj.is_target and spwobj.nchan != 4]
+        # target_spws = [spwid for (spwid, spwobj) in st.spectral_window.items()
+        #                if spwobj.is_target and spwobj.nchan != 4]
+        target_spws = self.context.observing_run.get_spw_for_science(st.basename)
         spwid = target_spws[0]
         rows = self.datatable.get_row_index(idx, spwid, 0)
         timegap = self.datatable.get_timegap(idx, spwid, 0, asrow=False)
         plotfile = os.path.join(stage_dir, 'azel_%s.png'%(st.basename))
-        self.draw_azel(timegap, rows, plotfile)
+        self.draw_azel(timegap, rows, plotfile, plotpolicy='greyed')
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -86,11 +88,15 @@ class SDAzElDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_azel(self, TimeGapList, rows, plotfile):
+    def draw_azel(self, TimeGapList, rows, plotfile, plotpolicy='ignore'):
         """
         Plot Az El v.s. Time
         Table: DataTable
         TimeGapList: [[rowX1, rowX2,...,rowXN],[rowX1, rowX2,...,rowXN]]
+        plotpolicy: plot policy for flagged data
+                    'ignore' -- ignore flagged data
+                    'plot' -- plot flagged data with same color as unflagged
+                    'greyed' -- plot flagged data with grey color
         """
         qa = casatools.quanta
         datatable = self.datatable
@@ -99,8 +105,9 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         TimeGap = TimeGapList[1]
 
         # if DoStack is true plot will be stacked with different dates.
-        #DoStack = True
+        ###DoStack = True
         DoStack = False
+        
         # Extract Az, El, and MJD
         AzArr = []
         ElArr = []
@@ -108,10 +115,12 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         TGap = []
         PGap = []
         TmpArr = []
+        FlagArr = []
 
-        tTIME = datatable.getcol('TIME')
-        tAZ = datatable.getcol('AZ')
-        tEL = datatable.getcol('EL')
+        tTIME = datatable.tb1.getcol('TIME')
+        Az = datatable.tb1.getcol('AZ').take(rows)
+        El = datatable.tb1.getcol('EL').take(rows)
+        Flag = datatable.tb2.getcol('FLAG_PERMANENT').take(rows, axis=1)[OnlineFlagIndex]
 
         for gap in TimeGap:
             if gap > rows[-1]: break
@@ -125,9 +134,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                   else []
         PGapTmp = utils.mjd_to_plotval(numpy.array(PGap)) if len(PGap) > 0 \
                   else []
-        Az = numpy.array([tAZ[row] for row in rows])
-        El = numpy.array([tEL[row] for row in rows])
-        MJD = numpy.array([tTIME[row] for row in rows])
+        MJD = tTIME.take(rows)
         time_for_plot = utils.mjd_to_plotval(MJD)
         MJDmin = numpy.array(MJD).min()
         MJDmax = numpy.array(MJD).max()
@@ -151,6 +158,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     AzArr.append([Az[0]])
                     ElArr.append([El[0]])
                     TmpArr.append([time_for_plot[0]])
+                    FlagArr.append([Flag[0]])
                 else:
                     delt = int(MJD[n]) - int(MJD[n-1])
                     if delt >= 1:
@@ -159,11 +167,13 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                         AzArr.append([])
                         ElArr.append([])
                         TmpArr.append([])
+                        FlagArr.append([])
 
                     MJDArr[ndays-1].append(MJD[n])
                     AzArr[ndays-1].append(Az[n])
                     ElArr[ndays-1].append(El[n])
                     TmpArr[ndays-1].append(time_for_plot[n])
+                    FlagArr[ndays-1].append(Flag[n])
 
         # Plotting routine
         UTmin = time_for_plot.min()
@@ -193,9 +203,32 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
 
-                plot_objects.extend(
-                    pl.plot(UTdata, ElArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
-                    )
+                if plotpolicy == 'plot':
+                    plot_objects.extend(
+                        pl.plot(UTdata, ElArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                elif plotpolicy == 'ignore':
+                    NpElArr = numpy.array(ElArr[nd])
+                    NpUTdata = numpy.array(UTdata)
+                    NpFlagArr = numpy.array(FlagArr[nd]) 
+                    filter = NpFlagArr == 1
+                    plot_objects.extend(
+                        pl.plot(NpUTdata[filter], NpElArr[filter], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                elif plotpolicy == 'greyed':
+                    NpElArr = numpy.array(ElArr[nd])
+                    NpUTdata = numpy.array(UTdata)
+                    NpFlagArr = numpy.array(FlagArr[nd]) 
+                    filter = NpFlagArr == 1
+                    plot_objects.extend(
+                        pl.plot(NpUTdata[filter], NpElArr[filter], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                    filter = NpFlagArr == 0
+                    if numpy.any(filter == True):
+                        plot_objects.extend(
+                            pl.plot(NpUTdata[filter], NpElArr[filter], markers[nd], markersize=2, markeredgecolor='grey', markerfacecolor='grey')
+                            )
+                    
                 pl.legend(prop={'size': 'smaller'},markerscale=1.0,numpoints=1)
                 for Time in TGap:
                     if int(Time) == int(MJDArr[nd][0]):
@@ -211,9 +244,33 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 UTdata = TmpArr[nd]
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
-                plot_objects.extend(
-                    pl.plot(UTdata, AzArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
-                    )
+                
+                if plotpolicy == 'plot':
+                    plot_objects.extend(
+                        pl.plot(UTdata, AzArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                elif plotpolicy == 'ignore':
+                    NpAzArr = numpy.array(AzArr[nd])
+                    NpUTdata = numpy.array(UTdata)
+                    NpFlagArr = numpy.array(FlagArr[nd]) 
+                    filter = NpFlagArr == 1
+                    plot_objects.extend(
+                        pl.plot(NpUTdata[filter], NpAzArr[filter], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                elif plotpolicy == 'greyed':
+                    NpAzArr = numpy.array(AzArr[nd])
+                    NpUTdata = numpy.array(UTdata)
+                    NpFlagArr = numpy.array(FlagArr[nd]) 
+                    filter = NpFlagArr == 1
+                    plot_objects.extend(
+                        pl.plot(NpUTdata[filter], NpAzArr[filter], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                        )
+                    filter = NpFlagArr == 0
+                    if numpy.any(filter == True):
+                        plot_objects.extend(
+                            pl.plot(NpUTdata[filter], NpAzArr[filter], markers[nd], markersize=2, markeredgecolor='grey', markerfacecolor='grey')
+                            )                    
+                    
                 pl.legend(prop={'size': 'smaller'},markerscale=0.8,numpoints=1)
                 for Time in PGap:
                     if int(Time) == int(MJDArr[nd][0]):
@@ -230,9 +287,27 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 plot_objects.append(
                     pl.axvline(x=Time, linewidth=0.5, color='c')
                     )
-            plot_objects.extend(
-                pl.plot(UTdata, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
-                )
+                
+            if plotpolicy == 'plot':
+                plot_objects.extend(
+                    pl.plot(UTdata, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
+                    )
+            elif plotpolicy == 'ignore':
+                filter = Flag == 1
+                plot_objects.extend(
+                    pl.plot(UTdata[filter], El[filter], 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b' )
+                    )
+            elif plotpolicy == 'greyed':
+                filter = Flag == 1
+                plot_objects.extend(
+                    pl.plot(UTdata[filter], El[filter], 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b' )
+                    )
+                filter = Flag == 0
+                if numpy.any(filter == True):
+                    plot_objects.extend(
+                        pl.plot(UTdata[filter], El[filter], 'o', markersize=2, markeredgecolor='grey', markerfacecolor='grey' )
+                        )
+                
             if ELmin < 0:
                 pl.axis([UTmin, UTmax, -90, 90])
             else:
@@ -243,9 +318,27 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 plot_objects.append(
                     pl.axvline(x=Time, linewidth=0.5, color='g')
                     )
-            plot_objects.extend(
-                pl.plot(UTdata, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
-                )
+                
+            if plotpolicy == 'plot':
+                plot_objects.extend(
+                    pl.plot(UTdata, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
+                    )
+            elif plotpolicy == 'ignore':
+                filter = Flag == 1
+                plot_objects.extend(
+                    pl.plot(UTdata[filter], Az[filter], 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
+                    )
+            elif plotpolicy == 'greyed':
+                filter = Flag == 1
+                plot_objects.extend(
+                    pl.plot(UTdata[filter], Az[filter], 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b' )
+                    )
+                filter = Flag == 0
+                if numpy.any(filter == True):
+                    plot_objects.extend(
+                        pl.plot(UTdata[filter], Az[filter], 'o', markersize=2, markeredgecolor='grey', markerfacecolor='grey' )
+                        )
+                
             pl.axis([UTmin, UTmax, 0, 380])
 
         if common.ShowPlot != False: pl.draw()

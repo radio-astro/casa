@@ -25,6 +25,7 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
                                   'stage%s' % result.stage_number)
 
         flag_totals = {}
+        #non_science_agents = ['qa0']
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
                                            flagutils.flags_for_result(r, pipeline_context))
@@ -62,7 +63,7 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
 #         agents = [s for s in order if s in agent_names]
 
         # return all agents so we get ticks and crosses against each one
-        agents = ['before', 'online', 'template', 'autocorr', 'shadow', 
+        agents = ['before', 'online', 'qa0', 'template', 'autocorr', 'shadow', 
                   'intents', 'edgespw']
 
         flagplots = [self.flagplot(r, pipeline_context) for r in result]

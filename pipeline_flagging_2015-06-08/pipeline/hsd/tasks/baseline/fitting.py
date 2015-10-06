@@ -4,6 +4,8 @@ import os
 import time
 import re
 import numpy
+import collections
+import itertools
 
 import asap as sd
 
@@ -13,6 +15,7 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
 from pipeline.hsd.tasks.common import utils as sdutils
+from pipeline.infrastructure import casa_tasks
 
 # for plot routine
 from . import plotter
@@ -34,7 +37,7 @@ class FittingFactory(object):
 class FittingInputs(common.SingleDishInputs):
     def __init__(self, context, antennaid, spwid, pollist, iteration, 
                  fit_order=None, edge=None, outfile=None, 
-                 grid_table=None, channelmap_range=None):
+                 grid_table=None, channelmap_range=None, stage_dir=None):
         self._init_properties(vars())
         self._bltable = None
         LOG.debug('pollist=%s'%(pollist))
@@ -55,14 +58,14 @@ class FittingInputs(common.SingleDishInputs):
     def fit_order(self, value):
         self._fit_order = value
         
-    @property
+    #@property
     def data_object(self):
         return self.context.observing_run[self.antennaid]
         
     @property
     def infile(self):
         #return self.data_object.name
-        return self.data_object.baseline_source
+        return self.data_object().baseline_source
     
     @property
     def outfile(self):
@@ -77,7 +80,7 @@ class FittingInputs(common.SingleDishInputs):
         if self._bltable is None:
             namer = filenamer.BaselineSubtractedTable()
             namer.spectral_window(self.spwid)
-            st = self.data_object
+            st = self.data_object()
             asdm = common.asdm_name(st)
             namer.asdm(asdm)
             namer.antenna_name(st.antenna.name)
@@ -86,11 +89,11 @@ class FittingInputs(common.SingleDishInputs):
     
     @property
     def srctype(self):
-        return self.data_object.calibration_strategy['srctype']
+        return self.data_object().calibration_strategy['srctype']
     
     @property
     def nchan(self):
-        return self.data_object.spectral_window[self.spwid].nchan
+        return self.data_object().spectral_window[self.spwid].nchan
                 
 class FittingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -137,7 +140,7 @@ class FittingBase(common.SingleDishTaskTemplate):
         bltable_name = self.inputs.bltable
             
         if not filename_out or len(filename_out) == 0:
-            self.outfile = self.data_object.baselined_name
+            self.outfile = self.data_object().baselined_name
             LOG.debug("Using default output scantable name, %s" % self.outfile)
         
         if not os.path.exists(filename_out):
@@ -157,16 +160,18 @@ class FittingBase(common.SingleDishTaskTemplate):
         else:
             timetable_index = 0
             
+        #index_list_total = numpy.array([], dtype=int)
+        #row_list_total = numpy.array([], dtype=int)
         index_list_total = []
-        row_list_total = []
         blinfo = []
+        row_list_string = []
 
         for pol in pollist:
             time_table = datatable.get_timetable(antennaid, spwid, pol)
             member_list = time_table[timetable_index]
 
             # working with spectral data in scantable
-            nrow_total = sum([len(x[0]) for x in member_list])
+            nrow_total = sum((len(x[0]) for x in member_list))
                 
             LOG.info('Calculating Baseline Fitting Parameter...')
             LOG.info('Baseline Fit: background subtraction...')
@@ -200,9 +205,10 @@ class FittingBase(common.SingleDishTaskTemplate):
     
                 # fit order determination
                 polyorder = self.fitorder_heuristic(spectra, [ list(masklist[i]) + flaglist[i] for i in range(len(idxs))], edge)
+                del spectra
                 if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                     polyorder = min(polyorder, self.MaxPolynomialOrder)
-                LOG.info('time group %d: fitting order=%s'%(y,polyorder))
+                LOG.debug('time group %d: fitting order=%s'%(y,polyorder))
     
                 # calculate fragmentation
                 (fragment, nwindow, win_polyorder) = self.fragmentation_heuristic(polyorder, nchan, edge)
@@ -211,8 +217,8 @@ class FittingBase(common.SingleDishTaskTemplate):
                 LOG.debug('nrow = %s'%(nrow))
                 LOG.debug('len(idxs) = %s'%(len(idxs)))
                 
-                index_list = []
-                row_list = []
+                #index_list = []
+                #row_list = []
 
                 for i in xrange(nrow):
                     row = rows[i]
@@ -239,16 +245,21 @@ class FittingBase(common.SingleDishTaskTemplate):
                     # fitting
                     polyorder = min(polyorder, max_polyorder)
                     mask_array[edge[0]:nchan-edge[1]] = 1
-                    irow = len(row_list_total)+len(row_list)
+                    #irow = len(row_list_total)+len(row_list)
+                    irow = len(index_list_total) + i
                     param = self._calc_baseline_param(irow, polyorder, nchan, 0, edge, _masklist, win_polyorder, fragment, nwindow, mask_array)
                     # defintion of masklist differs in pipeline and ASAP (masklist = [a, b+1] in pipeline masks a channel range a ~ b-1)
                     param['masklist'] = [ [start, end-1] for [start, end] in param['masklist'] ]
                     blinfo.append(param)
-                    index_list.append(idx)
-                    row_list.append(row)
+                    #index_list.append(idx)
+                    #row_list.append(row)
 
-                index_list_total.extend(index_list)
-                row_list_total.extend(row_list)
+                # 2015/07/17 TN
+                # In the current implementation, all the rows in timetable are processed regardless of 
+                # the value of NOCHANGE column in DataTable. Thus, we don't need to construct index_list 
+                # nor row_list since they should be equivalent to idxs and rows
+                index_list_total.extend(idxs)
+                row_list_string.append(','.join(itertools.imap(str, rows)))
 
 #         f = open(bltable_name+'.in.txt', 'w')
 #         f.write("row_idx = %s\n" % str(row_list_total))
@@ -259,15 +270,20 @@ class FittingBase(common.SingleDishTaskTemplate):
         sd.rcParams['scantable.storage'] = 'disk'
 
         LOG.info('Baseline Fit: background subtraction...')
-        LOG.info('Processing %d spectra...'%(len(row_list_total)))
-        LOG.info('rows = %s' % str(row_list_total))
-        st_out = sd.scantable(filename_out, average=False)
-        LOG.info('number of rows in scantable = %d' % st_out.nrow())
-        st_out.set_selection(rows=row_list_total)
-        LOG.info('number of rows in selected = %d' % st_out.nrow())
-        st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
-        st_out.set_selection()
-        st_out.save(filename_out, format='ASAP', overwrite=True)
+        LOG.info('Processing %d spectra...'%(len(index_list_total)))
+        row_list = ','.join(row_list_string)
+        LOG.debug('row_list = %s'%(row_list))
+        job = casa_tasks.sdbaseline2(infile=filename_out, outfile=filename_out, overwrite=True,
+                                     row=row_list, blmode='subtract',
+                                     blparam=blinfo, bltable=bltable_name, keeprows=True)
+        self._executor.execute(job)
+#         st_out = sd.scantable(filename_out, average=False)
+#         LOG.info('number of rows in scantable = %d' % st_out.nrow())
+#         st_out.set_selection(rows=row_list_total)
+#         LOG.info('number of rows in selected = %d' % st_out.nrow())
+#         st_out.sub_baseline(insitu=True, retfitres=False, blinfo=blinfo, bltable=bltable_name, overwrite=True)
+#         st_out.set_selection()
+#         st_out.save(filename_out, format='ASAP', overwrite=True)
         
         sd.rcParams['scantable.storage'] = storage_save
         
@@ -277,10 +293,12 @@ class FittingBase(common.SingleDishTaskTemplate):
         plot_list = []
         if grid_table is not None:
             # mkdir stage_dir if it doesn't exist
-            stage_number = self.inputs.context.task_counter
-            stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
-            if not os.path.exists(stage_dir):
-                os.makedirs(stage_dir)
+            stage_dir = self.inputs.stage_dir
+            if stage_dir is None:
+                stage_number = self.inputs.context.task_counter
+                stage_dir = os.path.join(self.inputs.context.report_dir,"stage%d" % stage_number)
+                if not os.path.exists(stage_dir):
+                    os.makedirs(stage_dir)
                 
             st = self.inputs.context.observing_run[antennaid]
             # TODO: use proper source name when we can handle multiple source 
@@ -288,12 +306,13 @@ class FittingBase(common.SingleDishTaskTemplate):
             for (source_id,source) in st.source.items():
                 if 'TARGET' in source.intents:
                     source_name = source.name.replace(' ', '_').replace('/','_')
-            prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
-            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
-                                               filename_in, stage_dir, prefix, channelmap_range))
-            prefix = prefix.replace('before', 'after')
-            plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
+#             prefix = 'spectral_plot_before_subtraction_%s_%s_ant%s_spw%s'%('.'.join(st.basename.split('.')[:-1]),source_name,antennaid,spwid)
+#             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, self.inputs.grid_table, 
+#                                                filename_in, stage_dir, prefix, channelmap_range))
+#             prefix = prefix.replace('before', 'after')
+#             plot_list.extend(self.plot_spectra(source_name, antennaid, spwid, pollist, grid_table, filename_out, stage_dir, prefix, channelmap_range))
         
+            plot_list.extend(list(self.plot_spectra_with_fit(source_name, antennaid, spwid, pollist, grid_table, filename_in, filename_out, stage_dir, channelmap_range)))
         
         outcome = {'bltable': bltable_name,
                    'index_list': index_list_total,
@@ -313,7 +332,7 @@ class FittingBase(common.SingleDishTaskTemplate):
                 
     def analyse(self, result):
         bltable = result.outcome['bltable']
-        index_list = result.outcome['index_list']
+        index_list = result.outcome.pop('index_list')
         stname = self.inputs.infile
 #         stname = self.inputs.data_object.name
         spwid = self.inputs.spwid
@@ -400,6 +419,46 @@ class FittingBase(common.SingleDishTaskTemplate):
                                    field=source,
                                    parameters=parameters)
                 yield plot
+                
+    def plot_spectra_with_fit(self, source, ant, spwid, pols, grid_table, prefit_data, postfit_data, outdir, channelmap_range):
+        st = self.inputs.context.observing_run[ant]
+        line_range = [[r[0] - 0.5 * r[1], r[0] + 0.5 * r[1]] for r in channelmap_range if r[2] is True]
+        if len(line_range) == 0:
+            line_range = None
+        for pol in pols:
+            outfile_template = lambda x: 'spectral_plot_%s_subtraction_%s_%s_ant%s_spw%s_pol%s.png'%(x,'.'.join(st.basename.split('.')[:-1]),source,ant,spwid,pol)
+            prefit_outfile = os.path.join(outdir, outfile_template('before'))
+            postfit_outfile = os.path.join(outdir, outfile_template('after'))
+            status = plotter.plot_profile_map_with_fit(self.inputs.context, ant, spwid, pol, grid_table, prefit_data, postfit_data, prefit_outfile, postfit_outfile, line_range)
+            if os.path.exists(prefit_outfile):
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': 'sd_sparse_map_before_subtraction',
+                              'file': prefit_data}
+                plot = logger.Plot(prefit_outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                yield plot
+            if os.path.exists(postfit_outfile):
+                parameters = {'intent': 'TARGET',
+                              'spw': spwid,
+                              'pol': sd_polmap[pol],
+                              'ant': st.antenna.name,
+                              'vis': st.ms.basename,
+                              'type': 'sd_sparse_map_after_subtraction',
+                              'file': postfit_data}
+                plot = logger.Plot(postfit_outfile,
+                                   x_axis='Frequency',
+                                   y_axis='Intensity',
+                                   field=source,
+                                   parameters=parameters)
+                yield plot
+            
 
 class CubicSplineFitting(FittingBase):
     def _get_param(self, idx, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist):
@@ -478,15 +537,16 @@ class FittingSummary(object):
         # number of segments for cspline_baseline
         with casatools.TableReader(tablename) as tb:
             nrow = tb.nrows()
-            num_segments = [( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) \
-                            for irow in xrange(nrow)]
-        unique_values = numpy.unique(num_segments)
-        max_segments = max(unique_values) + 2
+            num_segments = (( len(tb.getcell('FUNC_PARAM', irow)) - 1 ) for irow in xrange(nrow))
+            counts = collections.Counter(num_segments)
+        max_segments = max(counts.keys()) + 2
         LOG.info('3) Frequency distribution for number of segments')
         LOG.info('')
         LOG.info('# of segments|frequency')
         LOG.info('-------------|---------')
+        _counts = collections.defaultdict(lambda: 0)
+        _counts.update(counts)
         for val in xrange(1, max_segments):
-            count = num_segments.count(val)
+            count = _counts[val]
             LOG.info('%13d|%9d'%(val, count))
         LOG.info('')
