@@ -66,7 +66,7 @@ namespace LibAIR2 {
     const fT  TWOH_ON_CSQUARED = 1.4744992e-18;
     const fT  H_ON_K	       = 4.7992375e-2;
 
-    return TWOH_ON_CSQUARED * std::pow( f, 3) / 
+    return TWOH_ON_CSQUARED * f*(f*f) /
       ( exp( H_ON_K / T * f) -1 );
 
   }
