@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 
 import itertools
+import numpy as np
 
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
@@ -245,7 +246,11 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         critfrac = m.get_vla_critfrac()
 
         if (fracFlaggedSolns > critfrac):
-            RefAntOutput.pop(0)
+            print type(RefAntOutput)
+            print RefAntOutput
+            #RefAntOutput.pop(0)
+            RefAntOutput = np.delete(RefAntOutput,0)
+            print RefAntOutput
             self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)
             LOG.info("Not enough good solutions, trying a different reference antenna.")
             LOG.info("The pipeline will use antenna "+RefAntOutput[0]+" as the reference.")

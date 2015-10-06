@@ -360,7 +360,8 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         if (fracFlaggedSolns > critfrac):
             print RefAntOutput
-            RefAntOutput.pop(0)
+            #RefAntOutput.pop(0)
+            RefAntOutput = np.delete(RefAntOutput,0)
             self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(RefAntOutput)
             LOG.info("Not enough good solutions, trying a different reference antenna.")
             LOG.info("The pipeline will use antenna "+RefAntOutput[0].lower()+" as the reference.")
