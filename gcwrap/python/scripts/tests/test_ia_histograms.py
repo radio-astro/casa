@@ -71,6 +71,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
 
 def alleqnum(x,num,tolerance=0):
     if len(x.shape)==1:
@@ -103,6 +104,7 @@ def alleqnum(x,num,tolerance=0):
         stop('unhandled array shape in alleq')
     return true
 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/ia_histograms/'
 
 class ia_histograms_test(unittest.TestCase):
     
@@ -132,7 +134,7 @@ class ia_histograms_test(unittest.TestCase):
         
         nbins = 25
         idx = nbins/2+1
-        out = myim.histograms(list=F, nbins=nbins)
+        out = myim.histograms(nbins=nbins)
         self.assertTrue(out, 'Histograms failed (1)')
         hists=out
         self.assertTrue(
@@ -149,7 +151,7 @@ class ia_histograms_test(unittest.TestCase):
         
         blc = [0,0]; trc = [4,4]
         r1 = rg.box(blc=blc, trc=trc)
-        hists = myim.histograms(nbins=nbins, list=F, region=r1)
+        hists = myim.histograms(nbins=nbins, region=r1)
         self.assertTrue(hists, 'Histograms failed (2)')
         ok = (hists['counts'][0]==1) and (hists['counts'][nbins-1]==((trc[0]-blc[0]+1)*(trc[1]-blc[1]+1)-1))
         self.assertTrue(ok, 'Histograms values are wrong (2)')
@@ -159,7 +161,7 @@ class ia_histograms_test(unittest.TestCase):
             pixels[imshape[0]-1,j] = 100*(j+1)
         ok = myim.putchunk(pixels)
         self.assertTrue(ok, 'putchunk failed (1)')
-        hists = myim.histograms(nbins=nbins, list=F, axes=[0])
+        hists = myim.histograms(nbins=nbins, axes=[0])
         self.assertTrue(hists, 'Histograms failed (3)')
         ok = list(hists['values'].shape)==[nbins,imshape[1]]
         ok = ok and list(hists['counts'].shape)==[nbins,imshape[1]]
@@ -169,7 +171,7 @@ class ia_histograms_test(unittest.TestCase):
             ok = ok and alleqnum(hists['counts'][idx-1],(imshape[0]-2),tolerance=0.0001)
         self.assertTrue(ok, 'Histograms values are wrong (3)')
         
-        hists = myim.histograms(list=F, includepix=[-5,5], nbins=25)
+        hists = myim.histograms(includepix=[-5,5], nbins=25)
         self.assertTrue(hists, 'Histograms failed (4)')
         ok = hists['counts'][idx-1]==(imshape[0]*imshape[1]-(imshape[1]+imshape[1]))
         self.assertTrue(ok, 'Histograms values are wrong (4)')
@@ -178,11 +180,11 @@ class ia_histograms_test(unittest.TestCase):
         ok = ok and alleqnum(hists['counts'][idx:nbins],0,tolerance=0.0001)
         self.assertTrue(ok, 'Histograms values are wrong (4)')
         
-        hists = myim.histograms(list=F, disk=T, force=T)
+        hists = myim.histograms()
         self.assertTrue(hists, 'histograms failed (4)')
-        hists = myim.histograms(list=F, disk=F, force=T)
+        hists = myim.histograms()
         self.assertTrue(hists, 'histograms failed (5)')
-        hists = myim.histograms(list=F, gauss=T, cumu=T, log=T)
+        hists = myim.histograms(cumu=T, log=T)
         self.assertTrue(hists, 'histograms failed (6)')
 
         ok = myim.done()
@@ -207,6 +209,20 @@ class ia_histograms_test(unittest.TestCase):
         )
         self.assertTrue(zz and type(zz) == type({}))
         yy.done()
+    
+    def test_stats(self):
+        """ test returned stats"""
+        myia = iatool()
+        myia.open(datapath + "myim.im")
+        res = myia.histograms()
+        self.assertTrue(abs(res['mean'][0] - -0.01586026) < 1e-7)
+        self.assertTrue(abs(res['sigma'][0] - 0.99244785) < 1e-7)
+        res = myia.histograms(axes=[0,1])
+        bb = myia.getchunk()
+        for i in range(20):
+            self.assertTrue(abs(res['mean'][i] - numpy.mean(bb[:,:,i])) < 1e-7)
+            self.assertTrue(abs(res['sigma'][i] - numpy.std(bb[:,:,i], ddof=1)) < 1e-7)
+        myia.done()
     
 def suite():
     return [ia_histograms_test]

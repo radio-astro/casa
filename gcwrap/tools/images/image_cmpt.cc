@@ -22,7 +22,6 @@
 #include <casa/OS/SymLink.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Utilities/Assert.h>
-#include <components/ComponentModels/SkyCompRep.h>
 
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
@@ -59,6 +58,7 @@
 #include <tables/LogTables/NewFile.h>
 
 #include <components/ComponentModels/GaussianDeconvolver.h>
+#include <components/ComponentModels/SkyCompRep.h>
 #include <components/SpectralComponents/SpectralListFactory.h>
 
 #include <imageanalysis/ImageAnalysis/BeamManipulator.h>
@@ -75,10 +75,11 @@
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageHanningSmoother.h>
+#include <imageanalysis/ImageAnalysis/ImageHistogramsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 #include <imageanalysis/ImageAnalysis/ImageMaskedPixelReplacer.h>
-#include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsTask.h>
+#include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageRebinner.h>
@@ -2808,15 +2809,21 @@ record* image::histograms(
 	const vector<int>& axes,
 	const variant& region, const variant& mask,
 	const int nbins, const vector<double>& includepix,
-	const bool gauss, const bool cumu, const bool log, const bool list,
-	const bool force, const bool disk,
-	const bool /* async */, bool stretch
+	const bool cumu, const bool log, bool stretch
 ) {
 	_log << LogOrigin(_class, __func__);
 	if (detached()) {
 		return 0;
 	}
 	try {
+	    vector<uInt> myaxes;
+	    if (axes.size() != 1 || axes[0] != -1) {
+	        ThrowIf(
+	            *min_element(axes.begin(), axes.end()) < 0,
+	            "All axes must be nonnegative"
+	        );
+	        myaxes.insert(begin(myaxes), begin(axes), end(axes));
+	    }
 		SHARED_PTR<Record> regionRec(_getRegion(region, False));
 		String Mask;
 		if (mask.type() == variant::BOOLVEC) {
@@ -2829,27 +2836,35 @@ record* image::histograms(
 			Mask = mask.toString();
 		}
 		else {
-			_log << LogIO::WARN
-					<< "Only LEL string handled for mask...region is yet to come"
-					<< LogIO::POST;
-			Mask = "";
+		    ThrowCc("Unsupported type for mask parameter");
 		}
-		Vector<Int> naxes;
-		if (!(axes.size() == 1 && axes[0] == -1)) {
-			naxes.resize(axes.size());
-			naxes = Vector<Int> (axes);
-		}
-		Vector<Double> includePix;
+		vector<Double> myIncludePix;
 		if (!(includepix.size() == 1 && includepix[0] == -1)) {
-			includePix.resize(includepix.size());
-			includePix = Vector<Double> (includepix);
+			myIncludePix = includepix;
 		}
+		ImageHistogramsCalculator ihc(
+		    _image->getImage(), regionRec.get(), Mask
+		);
+		if (! myaxes.empty()) {
+		    ihc.setAxes(myaxes);
+		}
+		ihc.setNBins(nbins);
+		if (! myIncludePix.empty()) {
+		    ihc.setIncludeRange(myIncludePix);
+		}
+		ihc.setCumulative(cumu);
+		ihc.setDoLog10(log);
+		ihc.setStretch(stretch);
+        return fromRecord(ihc.compute());
+
+		/*
         return fromRecord(
         	_image->histograms(
         		naxes, *regionRec, Mask, nbins, includePix,
         		gauss, cumu, log, list, force, disk, stretch
         	)
         );
+        */
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()

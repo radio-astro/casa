@@ -5728,85 +5728,50 @@ and acquires just a read lock.
 </method>
 
  
-   <method type="function" name="histograms">
-   <shortdescription>Compute histograms from the image</shortdescription>
-   
-<input>
-  
-     <param type="intArray"  name="axes">
-     <description>List of axes to compute histograms over.  Default is all axes.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="any"  name="region">
-     <any type="variant" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. Default is whole image.</description>
-     <value/>
-     </param>
-  
-     <param type="any"  name="mask">
-	     <any type="variant"/>
-     <description>Mask to use. See help par.mask. Default is none.</description>
-     <value type="string"/>
-     </param>
-  
-     <param type="int"  name="nbins">
-     <description>Number of bins in histograms, \&gt; 0</description>
-     <value>25</value>
-     </param>
-  
-     <param type="doubleArray"  name="includepix">
-     <description>Range of pixel values to include.  Default is to include all pixels.</description>
-     <value>-1</value>
-     </param>
-  
-     <param type="bool"  name="gauss">
-     <description>If T overlay a Gaussian on each histogram</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="cumu">
-     <description>If T plot cumulative histograms, otherwise plot non-cumulatively</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="log">
-     <description>If T plot the ordinate logarithmically, otherwise plot linearly</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="list">
-     <description>If T then list some statistics as well</description>
-     <value>true</value>
-     </param>
-
-     <param type="bool"  name="force">
-     <description>If T then force the stored statistical accumulations to be regenerated</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="disk">
-     <description>If T then force the storage image to disk</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="async">
-     <description>Run asynchronously?</description>
-     <value>false</value>
-     </param>
-     
-     <param type="bool"  name="stretch">
+<method type="function" name="histograms">
+    <shortdescription>Compute histograms from the image</shortdescription>
+    <input>
+        <param type="intArray"  name="axes">
+        <description>List of axes to compute histograms over.  Default is all axes.</description>
+        <value>-1</value>
+    </param>
+    <param type="any"  name="region">
+        <any type="variant" limittypes="record string"/>
+        <description>Region of interest. See help par.region for details. Default is whole image.</description>
+        <value/>
+    </param>
+    <param type="any"  name="mask">
+	   <any type="variant"/>
+        <description>Mask to use. See help par.mask. Default is none.</description>
+        <value type="string"/>
+    </param>
+    <param type="int"  name="nbins">
+        <description>Number of bins in histograms, \&gt; 0</description>
+        <value>25</value>
+    </param>
+    <param type="doubleArray"  name="includepix">
+        <description>Range of pixel values to include.  Default is to include all pixels.</description>
+        <value>-1</value>
+    </param>
+    <param type="bool"  name="cumu">
+        <description>If T the bin values are cumulative.</description>
+        <value>false</value>
+    </param>
+    <param type="bool"  name="log">
+        <description>If true, the returned counts values will be the log10 values of the actual counts, if false, the actual counts will be returned.</description>
+        <value>false</value>
+    </param>
+    <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
-     </param>
+    </param>
 </input>
 <returns type="record"/>
 
 <description>
 
-This function <!-- (short-hand name is {\stff histo}) --> computes
-histograms of the pixel values in the \imagefile.  You can <!-- plot them
-and --> retrieve them (into a record) for further analysis or display.
+This method computes histograms of the pixel values in the image.
+The values are returned in a dictionary.
 
 The chunk of the image over which you compute the histograms is
 specified by a vector of axis numbers (argument {\stfaf axes}).  For
@@ -5831,77 +5796,44 @@ range, then the range of pixel intensities over which the histograms are
 binned is given by this range too.  This is a way to make the bin width
 the same for each histogram. 
 
-You have control over the form of the histogram; the ordinate can be
-linear or logarithmic ({\stfaf log=T}), and cumulative or non-cumulative
-({\stfaf cumu=F}). 
+You can control if the histogram is cumulative or non-cumulative via the
+cumu parameter. 
 
-You can overlay a Gaussian on each histogram ({\stfaf gauss=T}). It has
-the same mean and standard deviation about the mean of the pixels that
-were binned and the same integral as the histogram. 
+You have countrol over how the bin counts are returned. If log = false,
+the actual counts are returned. If true, the values returned are the log10
+values of the actual counts.
 
-You can list some additional statistical information about the data in
-each image chunk that is being histogrammed ({\stfaf list=T}). 
+The results are returned as a dictionary. The counts (field "counts") and
+the abscissa values (field "values") for all bins in each histogram are returned.
+The shape of the first dimension of those arrays contained in those fields is {\stfaf nbins}. 
+The number and shape of the remaining dimensions are those of the display axes(the
+axes in the image for which you did not compute the histograms).  For example, if one
+has a three dimensional image and sets {\stfaf axes=[2]}, the display axes are 0 and 1,
+so the shape of each counts and values array is then [nbins,nx,ny], where nx and ny
+are the length of the zeroth and first axes, respectively.
 
-You can retrieve the histograms into a record (the counts and
-the abcissa values for each histogram).  The names of the fields in the
-record are {\cf `values'} and {\cf `counts'}.  The shape of the first
-dimension of those arrays contained in those fields is {\stfaf nbins}. 
-The number and shape of the remaining dimensions are those in the image
-for which you did not compute the histograms.  For example, in the
-second example above, we set {\stfaf axes=[2]} and asked for histograms
-as a function of the remaining axes, in this case, the X and Y (axes 0
-and 1) axes.  The shape of each histogram array is then [nbins,nx,ny]. 
-The form of the retrieved histograms is that specified by the {\stfaf
-cumu} and {\stfaf log} arguments. 
-
-This function generates ``storage'' images, into which the histograms
-and statistics are written.  They are only regenerated when necessary.
-For example, if you run the function twice successively with identical arguments,
-the histograms will be directly retrieved from the storage image.
-However, you can force regeneration of the storage image
-if you set {\stfaf force=T}.   The storage medium is either in memory
-or on disk, depending upon its size.  You can force it to
-disk if you set {\stfaf disk=T}, otherwise it decides for itself.
+In addition, the mean (field "mean") and standard deviation (field "sigma") computed
+using the data in each histogram is returned. The shape of these arrays is equal to
+the shape of the display axes. So, 
 
 </description>
 
 <example> 
 
-"""
-#
-print "\t----\t histograms Ex 1 \t----"
+# obtain a histogram using the entire image
 ia.maketestimage()
-ia.histograms()
+res = ia.histograms()
 ia.close()
-#
-"""
 
-In this example we obtain the histogram of the entire image.
-</example>
-
-<example> 
- 
-"""
-#
-print "\t----\t histograms Ex 2 \t----"
-ia.fromshape(shape=[128,128,64]) #attach your 3-dim image instead
-r= ia.histograms(axes=[0,2],nbins=30,includepix=1e-3,cumu=T, gauss=T)
-print r.keys()
-#['return', 'histout']
+# obtain histograms for each plane along axis 1 with each
+# histogram having 30 bins. Only pixel values in the range
+# -0.001 to 0.001 are used in computing the histograms and the
+# statistics. The counts in the returned data structure represent
+# the cumulative number of data points in the current bin and in
+# bins less than the current bin.
+ia.open("myimage.im")
+r = ia.histograms(axes=[0,2],nbins=30,includepix=1e-3,cumu=T)
 ia.close()
-#
-"""
- 
-
-<!--  cumu=T,gauss=T,plotter='',nx=4,ny=3) -->
-
-
-In this example, let us assume the image has 3 dimensions.  We
-generate cumulative histograms of XZ (axes 0 and 2) planes for pixels
-with values in the range $-0.001$ to $0.001$ and plot them with Gaussian
-overlays as a function of Y-axis location.  The histograms are retrieved
-into a record {\gvf r['histout']} for further use. <!-- (because
-we are plotting the function is run synchronously).-->
 
 </example>
 
