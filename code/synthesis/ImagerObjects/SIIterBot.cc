@@ -164,14 +164,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  }
 		else // not converged yet... but....if nothing has changed in this round... also stop
 		  {
+		    //cout << "Prev Res : " << itsPrevPeakResidual << "   current res : " << itsPeakResidual << endl;
 		    if( fabs( itsPrevPeakResidual - itsPeakResidual )<1e-10) 
 		      {stopCode = 4;}
 		  }
 		
 		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
 		//cout << "cleancomp : stopcode : " << stopCode << endl;
-
-		itsPrevPeakResidual = itsPeakResidual;
 
 		itsStopCode=stopCode;
 		return stopCode;
@@ -195,6 +194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* Now that we have set the threshold, zero the peak residual 
 		   so it can be found again after the minor cycles */
+		itsPrevPeakResidual = itsPeakResidual;
 		itsPeakResidual = 0;
 
 		/* This returns a record suitable for initializing the minor cycle
