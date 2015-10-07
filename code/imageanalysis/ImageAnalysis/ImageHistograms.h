@@ -36,7 +36,7 @@
 #include <casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 //# Forward Declarations
 template <class T> class ImageInterface;
@@ -156,8 +156,7 @@ class IPosition;
 //
 
 
-template <class T> class ImageHistograms : public LatticeHistograms<T>
-{
+template <class T> class ImageHistograms : public LatticeHistograms<T> {
 public:
 
 // Constructor takes the image and a <src>LogIO</src> object for logging.
@@ -207,9 +206,7 @@ protected:
   using LatticeHistograms<T>::cursorAxes_p;
 };
 
-
-
-} //# NAMESPACE CASA - END
+}
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/ImageHistograms.tcc>
