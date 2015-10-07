@@ -284,8 +284,10 @@ def tclean(
                     imager.predictModel()
         
             ## Do deconvolution and iterations
+            dorestore=False
             if niter>0 :
                 while ( not imager.hasConverged() ):
+                    dorestore=True
                     t0=time.time();
                     imager.runMinorCycle()
                     t1=time.time();
@@ -297,10 +299,11 @@ def tclean(
                     casalog.post("***Time for major cycle: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Restore images.
-                t0=time.time();
-                imager.restoreImages()
-                t1=time.time();
-                casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
+                if dorestore:
+                    t0=time.time();
+                    imager.restoreImages()
+                    t1=time.time();
+                    casalog.post("***Time for restoring images: "+"%.2f"%(t1-t0)+" sec", "INFO3", "task_tclean");
 
                 ## Get summary from iterbot
                 if type(interactive) != bool:

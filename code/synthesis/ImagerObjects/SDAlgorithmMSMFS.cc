@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     iterdone = itsMTCleaner.mtclean( cycleNiter, 0.0, loopgain, cycleThreshold );
     if( iterdone>0 ) iterdone--; // To counter the return(iterdone_p+1) in the mtclean func!
 
-    if( iterdone==-2 ) throw(AipsError("MT-Cleaner error : Non-invertible Hessian "));
+    if( iterdone==-2 ) throw(AipsError("MT-Cleaner error : Non-invertible Hessian. Please check if the multi-frequency data selection is appropriate for a polynomial fit of the desired order."));
 
     for(uInt tix=0; tix<itsNTerms; tix++)
       {
@@ -177,8 +177,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
  
     /////////////////
-    //    findMaxAbs( itsMatResiduals[0], itsPeakResidual, itsMaxPos );
-    //    peakresidual = itsPeakResidual;
+    //findMaxAbs( itsMatResiduals[0], itsPeakResidual, itsMaxPos );
+    //peakresidual = itsPeakResidual;
 
     peakresidual = itsMTCleaner.getpeakresidual();
 
@@ -206,7 +206,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SDAlgorithmMSMFS","restore",WHERE) );
 
-
     // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
     //////  Put some image misc info in here, to say if it has been done or not. 
 
@@ -217,14 +216,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsMatPsfs.resize( 2*itsNTerms-1 );
 	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
 	  {
-	    (itsImages->psf(tix))->get( itsMatPsfs[tix], True );
+	    (imagestore->psf(tix))->get( itsMatPsfs[tix], True );
 	  }
 
 	//cout << "Setting up the MT Cleaner once" << endl;
 	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
 	itsMTCleaner.setscales( itsScaleSizes );
 	itsMTCleaner.setntaylorterms( itsNTerms );
-	itsMTCleaner.initialise( itsImages->getShape()[0], itsImages->getShape()[1] );
+	itsMTCleaner.initialise( imagestore->getShape()[0], imagestore->getShape()[1] );
 	
 	for(uInt tix=0; tix<2*itsNTerms-1; tix++)
 	  {
