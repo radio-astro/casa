@@ -41,7 +41,7 @@ class LatticeExprNode;
 class LELImageCoord;
 class RecordInterface;
 
-template<class T> class ImageHistograms;
+//template<class T> class ImageHistograms;
 
 // <summary>
 // Image analysis and handling tool
@@ -164,15 +164,6 @@ public:
                      const Int npts = 0, const String& method = "linear");
 
     Vector<Bool> haslock();
-
-    Record histograms(
-    	const Vector<Int>& axes, Record& region,
-        const String& mask, const Int nbins,
-        const Vector<Double>& includepix, const Bool gauss,
-        const Bool cumu, const Bool log, const Bool list,
-        const Bool force=False,
-        const Bool disk=False, const Bool extendMask=False
-    );
 
     Bool insert(
     	const String& infile, Record& region,
@@ -346,14 +337,8 @@ public:
 
     std::unique_ptr<LogIO> _log;
 
-    // Having private version of IS and IH means that they will
-    // only recreate storage images if they have to
-
-    SHARED_PTR<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    CountedPtr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
-    Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
    
@@ -361,17 +346,7 @@ public:
     void centreRefPix (casa::CoordinateSystem& cSys,
                        const casa::IPosition& shape) const;
     
-    // Convert types
-    //casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
-    // Delete private ImageHistograms objects
-    void deleteHist();
-   
-    Bool _haveRegionsChanged (
-    	ImageRegion* pNewRegionRegion,
-    	ImageRegion* pNewMaskRegion
-    );
-
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
       makeCoordinateSystem(const casa::Record& cSys,
@@ -417,11 +392,10 @@ public:
 
 };
 
-} // casac namespace
+}
 
 #ifndef AIPS_NO_TEMPLATE_SRC
 #include <imageanalysis/ImageAnalysis/ImageAnalysis2.tcc>
 #endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
-

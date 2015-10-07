@@ -80,7 +80,7 @@
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Regions/WCEllipsoid.h>
 #include <imageanalysis/IO/CasaImageOpener.h>
-#include <imageanalysis/ImageAnalysis/ImageHistograms.h>
+// #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Regions/ImageRegion.h>
@@ -134,8 +134,7 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_imageFloat(), _imageComplex(), _histograms(),
-			pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
+	_imageFloat(), _imageComplex(),
 			imageMomentsProgressMonitor(0){
 
 	// Register the functions to create a FITSImage or MIRIADImage object.
@@ -147,14 +146,12 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(SPIIF image) :
-	_imageFloat(image),_imageComplex(), _log(new LogIO()), _histograms(),
-				pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
+	_imageFloat(image),_imageComplex(), _log(new LogIO()),
 				imageMomentsProgressMonitor(0) {}
 
 
 ImageAnalysis::ImageAnalysis(SPIIC image) :
-	_imageFloat(),_imageComplex(image), _log(new LogIO()), _histograms(),
-				pOldHistRegionRegion_p(), pOldHistMaskRegion_p(),
+	_imageFloat(),_imageComplex(image), _log(new LogIO()),
 				imageMomentsProgressMonitor(0) {}
 
 
@@ -165,7 +162,7 @@ ImageAnalysis::~ImageAnalysis() {
 	if (_imageComplex) {
 		_destruct(*_imageComplex);
 	}
-	deleteHist();
+	//deleteHist();
 }
 
 Bool ImageAnalysis::toRecord(RecordInterface& rec) {
@@ -207,9 +204,7 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 		retval = _imageFloat->fromRecord(err, rec);
 
 	}
-
 	return retval;
-
 }
 
 Bool ImageAnalysis::open(const String& infile) {
@@ -271,8 +266,6 @@ Bool ImageAnalysis::open(const String& infile) {
 		os << dataType;
 		ThrowCc("unsupported image data type " + os.str());
 	}
-	// Ensure that we reconstruct the statistics and histograms objects
-	deleteHist();
 	return True;
 }
 
@@ -301,7 +294,7 @@ void ImageAnalysis::addnoise(
 		: new LatticeAddNoise(typeNoise, pars)
 	);
 	lan->add(*subImage);
-	deleteHist();
+	//deleteHist();
 }
 
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
@@ -636,7 +629,7 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	}
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
-	deleteHist();
+	//deleteHist();
 }
 
 Bool ImageAnalysis::calcmask(
@@ -955,7 +948,7 @@ Bool ImageAnalysis::remove(Bool verbose)
             << "Detaching from image" << LogIO::POST;
   }
   _imageFloat.reset();
-  deleteHist();
+  //deleteHist();
 
   // Now try and blow it away.  If it's open, tabledelete won't delete it.
   String message;
@@ -1112,142 +1105,6 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::_haveRegionsChanged(
-	ImageRegion* pNewRegionRegion,
-	ImageRegion* pNewMaskRegion
-) {
-	Bool regionChanged = (
-			pNewRegionRegion != 0 && pOldHistRegionRegion_p
-			&& *pNewRegionRegion != *pOldHistRegionRegion_p
-		)
-		|| (pNewRegionRegion == 0 && pOldHistRegionRegion_p)
-		|| (pNewRegionRegion != 0 && ! pOldHistRegionRegion_p);
-	Bool maskChanged = (
-			pNewMaskRegion != 0 && pOldHistMaskRegion_p
-			&& *pNewMaskRegion != *pOldHistMaskRegion_p
-		)
-		|| (pNewMaskRegion == 0 && pOldHistMaskRegion_p)
-		|| (pNewMaskRegion != 0 && ! pOldHistMaskRegion_p);
-	return (regionChanged || maskChanged);
-}
-
-Record ImageAnalysis::histograms(
-	const Vector<Int>& axes,
-	Record& regionRec, const String& sMask, const Int nbins,
-	const Vector<Double>& includepix, const Bool gauss,
-	const Bool cumu, const Bool log, const Bool list,
-	const Bool force,
-	const Bool disk, const Bool extendMask
-) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-	CountedPtr<ImageRegion> pRegionRegion, pMaskRegion;
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		pRegionRegion, pMaskRegion, *_imageFloat, regionRec,
-        sMask, _log.get(), AxesSpecifier(), extendMask
-	);
-
-	// Make new object only if we need to.
-	Bool forceNewStorage = force;
-	if (_histograms.get() != 0 && oldHistStorageForce_p != disk) {
-		forceNewStorage = True;
-	}
-
-	if (forceNewStorage) {
-		deleteHist();
-		_histograms.reset(
-			new ImageHistograms<Float> (
-				*subImage, *_log, True, disk
-			)
-		);
-	}
-	else {
-		if (! _histograms) {
-			// We are here if this is the first time or the image has changed
-			_histograms.reset(
-				new ImageHistograms<Float> (
-					*subImage, *_log, True, disk
-				)
-			);
-		}
-		else {
-			// We already have a histogram object.  We only have to set
-			// the new image (which will force the accumulation image
-			// to be recomputed) if the region has changed.  If the image itself
-			// changed, _histograms will already have been set to 0
-			_histograms->resetError();
-			if (
-				_haveRegionsChanged(pRegionRegion.get(), pMaskRegion.get())
-			) {
-				_histograms->setNewImage(*subImage);
-			}
-		}
-	}
-	pOldHistRegionRegion_p = pRegionRegion;
-	pOldHistMaskRegion_p = pMaskRegion;
-	oldHistStorageForce_p = disk;
-
-	// Set cursor axes
-	Vector<Int> tmpaxes(axes);
-	ThrowIf(
-		!_histograms->setAxes(tmpaxes),
-		_histograms->errorMessage()
-	);
-	if(
-		_imageFloat->coordinates().hasDirectionCoordinate()
-		&& _imageFloat->imageInfo().hasMultipleBeams()
-	) {
-		Vector<Int> dirAxes = _imageFloat->coordinates().directionAxesNumbers();
-		for (uInt i=0; i<dirAxes.size(); i++) {
-			for (uInt j=0; j<tmpaxes.size(); j++) {
-				if (tmpaxes[j] == dirAxes[i]) {
-					*_log << LogIO::WARN << "Specified cursor axis " << tmpaxes[j]
-					     << " is a direction axis and image has per plane beams. "
-					     << "Care should be used when interpreting the results."
-					     << LogIO::POST;
-					break;
-				}
-			}
-		}
-	}
-	// Set number of bins
-	if (!_histograms->setNBins(nbins)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// Set pixel include ranges
-	Vector<Float> tmpinclude(includepix.size());
-	for (uInt i = 0; i < includepix.size(); i++) {
-		tmpinclude[i] = includepix[i];
-	}
-	if (!_histograms->setIncludeRange(tmpinclude)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-	// Plot the gaussian ?
-	if (!_histograms->setGaussian(gauss)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// Set form of histogram
-	if (!_histograms->setForm(log, cumu)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// List statistics as well ?
-	if (!_histograms->setStatsList(list)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	Array<Float> values, counts;
-	if (!_histograms->getHistograms(values, counts)) {
-		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-	}
-	Record rec;
-	rec.define(RecordFieldId("values"), values);
-	rec.define(RecordFieldId("counts"), counts);
-	return rec;
-}
-
 Bool ImageAnalysis::insert(
 	const String& infile, Record& Region,
 	const Vector<double>& locatePixel, Bool verbose
@@ -1299,9 +1156,6 @@ Bool ImageAnalysis::insert(
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
 	ir.insert(*_imageFloat, outPix, inSub);
-
-	// Make sure hist and stats are redone
-	deleteHist();
 	return True;
 }
 
@@ -1309,9 +1163,7 @@ Bool ImageAnalysis::insert(
 Bool ImageAnalysis::ispersistent() {
 	_onlyFloat(__func__);
 	*_log << LogOrigin("ImageAnalysis", "ispersistent");
-
 	return _imageFloat->isPersistent();
-
 }
 
 Bool ImageAnalysis::lock(const Bool writelock, const Int nattempts) {
@@ -1471,10 +1323,6 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 	} else {
 		*_log << "Unknown operation" << LogIO::EXCEPTION;
 	}
-
-	// Make sure hist is redone
-	deleteHist();
-
 	if (hasOutput)
 		return namesOut;
 	return Vector<String> (0);
@@ -1530,10 +1378,6 @@ Bool ImageAnalysis::modify(
 
 	// Do it
 	ComponentImager::project(*subImage, cl);
-
-	// Ensure that we reconstruct the histograms objects
-	// now that the data have changed
-	deleteHist();
 
 	return True;
 }
@@ -1760,8 +1604,6 @@ ImageAnalysis::pixelvalue(const Vector<Int>& pixel) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin("ImageAnalysis", "pixelvalue");
 
-	//
-
 	Bool offImage;
 	Quantum<Double> value;
 	Bool mask;
@@ -1823,8 +1665,6 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	Array<Float> pixels = _imageFloat->getSlice(iPos, shp);
 	Array<Bool> maskPixels = _imageFloat->getMaskSlice(iPos, shp);
 	Unit units = _imageFloat->units();
-	//
-
 	if (pos.nelements() != iPos.nelements()) {
 		pos.resize(iPos.nelements());
 	}
@@ -2078,7 +1918,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
-	deleteHist();
+	//deleteHist();
 	if (isFloat()) {
 		_imageFloat->unlock();
 	}
@@ -2302,7 +2142,6 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 		_imageFloat.reset();
 
 	}
-	deleteHist();
 
 	// Now try and move it
 	Bool follow(True);
@@ -2488,10 +2327,6 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 		LatticeExprNode node4(iif(region, mask, pixelMask));
 		pixelMask.copyData(LatticeExpr<Bool> (node4));
 	}
-	// Ensure that we reconstruct the histograms objects
-	// now that the data/mask have changed
-
-	deleteHist();
 
 	return True;
 }
@@ -2752,12 +2587,6 @@ Bool ImageAnalysis::toASCII(
 		nline += 1;
 	}
 	return True;
-}
-
-void ImageAnalysis::deleteHist() {
-	_histograms.reset();
-	pOldHistRegionRegion_p.reset();
-	pOldHistMaskRegion_p.reset();
 }
 
 void ImageAnalysis::_makeRegionBlock(
@@ -3339,8 +3168,6 @@ Record ImageAnalysis::_worldVectorToMeasures(
 				    }
                 }
 
-				// Fill spectral record
-
 				rec.defineRecord("spectral", specRec);
 			}
 			spectralCount++;
@@ -3407,4 +3234,4 @@ void ImageAnalysis::_onlyFloat(const String& method) const {
 	ThrowIf(! _imageFloat, "Method " + method + " only supports Float valued images");
 }
 
-} // end of  casa namespace
+}
