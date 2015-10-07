@@ -44,6 +44,7 @@ ImageAnalysis/ImageCollapserData.cc
 ImageAnalysis/ImageFactory2.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
+ImageAnalysis/ImageHistogramsCalculator.cc
 ImageAnalysis/ImageInputProcessor.cc
 ImageAnalysis/ImageMetaData.cc
 ImageAnalysis/ImageMetaDataBase.cc
@@ -161,6 +162,7 @@ install (FILES
     ImageAnalysis/ImageHanningSmoother.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
+    ImageAnalysis/ImageHistogramsCalculator.h
     ImageAnalysis/ImageHistory.h
     ImageAnalysis/ImageHistory.tcc
 	ImageAnalysis/ImageInputProcessor.h
@@ -268,4 +270,6 @@ casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
 casa_add_assay( imageanalysis Regions/test/tCasacRegionManager.cc )
+
+casa_add_google_test (MODULES imageanalysis SOURCES ImageAnalysis/test/tImageHistogramsCalculator.cc)
 
