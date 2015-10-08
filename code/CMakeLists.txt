@@ -1113,6 +1113,20 @@ casa_find( LIBSAKURA
   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
 )
 
+###########################
+#                         #
+# Google Test Installtion #
+#                         #
+###########################
+
+if (CMAKE_SYSTEM_NAME STREQUAL Linux )
+
+   include (GoogleTestInstall)
+
+else ()
+   message ("WARNING:: Google Test support only for Linux right now")
+endif ()
+
 casa_config_end()
 
 # The modules must be defined in dependency order!
@@ -1183,7 +1197,6 @@ set( _dd "" )
 foreach( _d ${MYDEFINES} )
   set( _dd "${_dd} -D${_d}" )
 endforeach()
-
 
 file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   "# This file exists only for ASAP\n"

@@ -33,7 +33,9 @@
 
 #include <casa/namespace.h>
 
-int main( int argc, char ** argv )
+#include <unistd.h>
+
+int main( int /*argc*/, char ** /*argv*/ )
 {
     Double min = 0;
     Double max = 100;

@@ -1,0 +1,15 @@
+# Derived from GoogleTestInstall.in
+
+# Define a variable so that Google Test clients can establish a
+# dependency on this library.
+
+add_library (libgtest STATIC @GoogleTest_ReleaseRoot@/src/gtest-all.cc)
+set_target_properties( libgtest PROPERTIES OUTPUT_NAME gtest )
+
+# Add in the include directories needed by google test.  Since
+# the "gtest-all" just includes the other cc files, it needs to
+# be in the include path as well
+
+include_directories (SYSTEM @GoogleTest_ReleaseRoot@/include)
+include_directories (@GoogleTest_ReleaseRoot@)
+

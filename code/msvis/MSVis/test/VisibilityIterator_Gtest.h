@@ -46,12 +46,12 @@ public:
     virtual String name () const = 0;
 
     virtual std::tuple <MeasurementSet *, Int, Bool> createMs (){
-        return boost::make_tuple ((MeasurementSet *) 0, 0, False);
+        return std::make_tuple ((MeasurementSet *) 0, 0, False);
         // Useless placeholder implementation
     }
 
     virtual std::tuple <Block<const MeasurementSet *>, Int, Bool> createMss (){
-        return boost::make_tuple (Block<const MeasurementSet *> (), 0, False);
+        return std::make_tuple (Block<const MeasurementSet *> (), 0, False);
         // Useless placeholder implementation
     }
 

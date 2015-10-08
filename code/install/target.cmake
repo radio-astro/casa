@@ -408,7 +408,12 @@ macro( casa_add_unit_test)
 
   list (GET casa_unit_test_MODULES 0 module) # First element is the module
 
-  add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} )
+  if (casa_unit_test_NOT_READY)
+    add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
+  else ()
+    add_executable( ${testName} ${sources} )
+  endif ()
+
   target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
 
   set (moduleDirectory "${CMAKE_BINARY_DIR}/${module}")
@@ -471,6 +476,8 @@ macro( casa_add_unit_test)
 
   endif ()
 
+  set (CasaTestName ${testName})
+
 endmacro()
 
 # casa_add_google_test (MODULES module [submodule [subsubmodule] ...] SOURCES source1 [source2] ... [LIB library1 [library2] ...])
@@ -515,13 +522,18 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    message ("WARNING --- Unit test ${testName} was registered as using google-test but google-test not yet supported!")
+    if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
-    if (FALSE) # commenting out
+       message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
+       return()
 
-    set (gtestIncludeDirectory /home/orion/include)
-    set (gtestLibrary /home/orion/lib/libgtest.so)
+    endif ()
 
+    # The Google Test install logic in cmake will put the needed include and library
+    # below the directory stored in the variable GtestRoot.
+
+    set (gtestIncludeDirectory ${GoogleTest_ReleaseRoot}/include)
+    set (gtestLibrary ${GoogleTest_LibraryDir}/libgtest.a)
 
     set (libraries ${gtestLibrary})
     list (APPEND gtestLibrary ${google_test_LIBS})
@@ -530,7 +542,7 @@ macro (casa_add_google_test)
                         LIBRARIES ${libraries} # gtest + provide libs
                         INCLUDE_DIRS ${gtestIncludeDirectory}) # gtest include dirs
 
-    endif () # commenting out
+    add_dependencies (${CasaTestName} ${GoogleTest_Target})
 
 endmacro ()
 
