@@ -412,9 +412,11 @@ macro( casa_add_unit_test)
     add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
   else ()
     add_executable( ${testName} ${sources} )
+    target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
   endif ()
-
-  target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
+  
+  # add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build
+  # target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
 
   set (moduleDirectory "${CMAKE_BINARY_DIR}/${module}")
   set (unit_test_target unit_test_${testName})
@@ -424,8 +426,12 @@ macro( casa_add_unit_test)
   add_dependencies (${unit_test_target} ${testName})
 
   if (NOT ${casa_unit_test_INCLUDE_DIRS})
-    target_include_directories (${testName} PRIVATE "${casa_unit_test_INCLUDE_DIRS}")
-  endif ()
+####  target_include_directories (${testName} PRIVATE "${casa_unit_test_INCLUDE_DIRS}")
+####  Relace next three lines with the above commented out line once cmake on jenkins gets upgraded (10/8/15)
+	get_target_property (includes ${testName} INCLUDE_DIRECTORIES)	
+	list (APPEND includes ${casa_unit_test_INCLUDE_DIRS})
+	set_target_properties (${testName} PROPERTIES INCLUDE_DIRECTORIES "${includes}" )	
+ endif ()
 
   if (NOT casa_unit_test_NOT_READY)
 
