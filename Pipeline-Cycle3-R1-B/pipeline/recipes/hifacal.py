@@ -37,7 +37,6 @@ from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
 from hif_setjy_cli import hif_setjy_cli as hif_setjy
 from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
-from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
@@ -94,9 +93,6 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         # Compute the bandpass calibration
         hif_bandpass (pipelinemode=pipelinemode)
 
-        # Flag deviant channels in the bandpass calibration
-        hif_bpflagchans (pipelinemode=pipelinemode)
-    
         # Determine flux values for the bandpass and gain calibrators
         # assuming point sources and set their model fluxes
         hifa_gfluxscale (pipelinemode=pipelinemode)
