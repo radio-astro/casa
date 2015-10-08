@@ -66,7 +66,6 @@ ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
 
-IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
 IO/CasaImageOpener.cc
 IO/FitterEstimatesFileParser.cc
@@ -74,7 +73,9 @@ IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
 IO/LogFile.cc
 IO/OutputDestinationChecker.cc
+IO/ParameterParser.cc
 IO/ProfileFitterEstimatesFileParser.cc
+IO/RegionTextParser.cc
 
 Regions/CasacRegionManager.cc
 Utilities/SpectralImageUtil.cc
@@ -108,9 +109,10 @@ install (FILES
 	IO/CasaImageOpener.h
 	IO/FitterEstimatesFileParser.h
 	IO/LogFile.h
-    IO/OutputDestinationChecker.h
     IO/ImageFitterResults.h
     IO/ImageProfileFitterResults.h
+    IO/OutputDestinationChecker.h
+    IO/ParameterParser.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
 	DESTINATION include/casacode/imageanalysis/IO
@@ -271,5 +273,4 @@ casa_add_assay( imageanalysis IO/test/tRegionTextParser.cc )
 
 casa_add_assay( imageanalysis Regions/test/tCasacRegionManager.cc )
 
-casa_add_google_test (MODULES imageanalysis SOURCES ImageAnalysis/test/tImageHistogramsCalculator.cc)
 
