@@ -416,7 +416,11 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
     // This baseline occurs in input, so preserve in output
     blnOK_p(obln) = True;
 
-    wt = &vb.weightSpectrum()(0,0,ibln);
+    wt = &vb.weight()(0,ibln);
+    Float vbweight = *wt;
+    // Ensure weights strictly positive
+    // assumes chanIndepWt_p=True
+    if (vbweight < FLT_MIN) vbweight = FLT_MIN;
     Double blnWt(0.0);
 
     for (Int chn=0; chn<vb.nChannels(); chn++) {
@@ -455,21 +459,21 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 	if (acc) {
 	  if (doVC_p)
 		avgVisCube_(cor,chn,obln) += 
-			((*wt) * accumVisCube(cor,chn,ibln) );
+			((vbweight) * accumVisCube(cor,chn,ibln) );
 	  if (doMVC_p) 
 		avgModelCube_(cor,chn,obln) += 
-			( (*wt) * accumVisCubeModel(cor,chn,ibln) );
+			((vbweight) * accumVisCubeModel(cor,chn,ibln) );
 	  if (doCVC_p)
 		avgCorrectedCube_(cor,chn,obln) +=
-			((*wt) * accumVisCubeCorrected(cor,chn,ibln) );
+			((vbweight) * accumVisCubeCorrected(cor,chn,ibln) );
 	  if (doFC_p)
 		avgFloatCube_(cor,chn,obln)+=
-			((*wt) * accumVisCubeFloat(cor,chn,ibln) );
+			((vbweight) * accumVisCubeFloat(cor,chn,ibln) );
 	  if (doWC_p) {
-		avgWeight_(cor,chn,obln) += (*wt);
+		avgWeight_(cor,chn,obln) += (vbweight);
 	  }
 	} // acc
-	blnWt += (*wt);
+	blnWt += vbweight;
       } // cor 
     } // chn
 
@@ -485,7 +489,6 @@ void PlotMSVBAverager::simpAccumulate (vi::VisBuffer2& vb)
 	avgUvw_(i,obln) += (vb.uvw()(i,ibln) * blnWt);
     
   } // ibln
-
   if (vbWt>0) {
 
     vbWtSum_p += vbWt;
