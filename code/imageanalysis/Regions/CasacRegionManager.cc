@@ -372,7 +372,7 @@ Record CasacRegionManager::regionFromString(
 	Record reg;
 	String diag;
 	mgr._setRegion(
-		reg, diag, regionStr, imShape, imageName, "", nullptr, ""
+		reg, diag, regionStr, imShape, imageName, "", "", ""
 		/*globalOverrideChans, globalStokesOverride*/
 	);
 	return reg;
@@ -406,7 +406,6 @@ void CasacRegionManager::_setRegion(
 	const static Regex regionText(
 		"^[[:space:]]*[[:alpha:]]+[[:space:]]*\\[(.*)+,(.*)+\\]"
 	);
-
 	File myFile(regionName);
 	const CoordinateSystem csys = getcoordsys();
 	if (myFile.exists()) {
