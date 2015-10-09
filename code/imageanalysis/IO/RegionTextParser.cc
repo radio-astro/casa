@@ -30,10 +30,14 @@
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <imageanalysis/Annotations/AnnText.h>
 #include <imageanalysis/Annotations/AnnVector.h>
+#include <imageanalysis/IO/ParameterParser.h>
 
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/VelocityMachine.h>
+
+#include <iomanip>
+#include <casa/BasicSL/STLIO.h>
 
 #define _ORIGIN "RegionTextParser::" + String(__FUNCTION__) + ": "
 
@@ -54,38 +58,41 @@ const Regex RegionTextParser::startNPair("^" + sNPair);
 RegionTextParser::RegionTextParser(
 	const String& filename, const CoordinateSystem& csys,
 	const IPosition& imShape,
-	const Int requireAtLeastThisVersion
-) : _csys(csys),
-	_log(new LogIO()),
-	_currentGlobals(ParamSet()),
+	const Int requireAtLeastThisVersion,
+	const String& prependRegion,
+	const String& globalOverrideChans, const String& globalOverrrideStokes
+) : _csys(csys), _log(new LogIO()), _currentGlobals(),
 	_lines(),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
+	_globalKeysToApply(),
 	_fileVersion(-1), _imShape(imShape), _regions(0) {
 	RegularFile file(filename);
 	if (! file.exists()) {
 		throw AipsError(
-			_ORIGIN + "File "
-			+ filename + " does not exist."
+			_ORIGIN + "File " + filename + " does not exist."
 		);
 	}
 	if (! file.isReadable()) {
 		throw AipsError(
-			_ORIGIN + "File "
-			+ filename + " is not readable."
+			_ORIGIN + "File " + filename + " is not readable."
 		);
 	}
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
 			_ORIGIN
-			+ "Coordinate system does not have a direction coordintate"
+			+ "Coordinate system does not have a direction coordinate"
 		);
 	}
 	_setInitialGlobals();
+	_setOverridingChannelRange(globalOverrideChans);
+	_setOverridingCorrelations(globalOverrrideStokes);
 	RegularFileIO fileIO(file);
 	Int bufSize = 4096;
 	PtrHolder<char> buffer(new char[bufSize], True);
 	int nRead;
 	String contents;
+	if (! prependRegion.empty()) {
+		contents = prependRegion + "\n";
+	}
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
 		String chunk(buffer, bufSize);
 		if (_fileVersion < 0) {
@@ -99,36 +106,33 @@ RegionTextParser::RegionTextParser(
 		_determineVersion(chunk, filename, requireAtLeastThisVersion);
 	}
 	contents += chunk;
-	//delete [] buffer;
 	_parse(contents, filename);
 }
 
 RegionTextParser::RegionTextParser(
 	const CoordinateSystem& csys, const IPosition& imShape,
-	const String& text
-) : _csys(csys),
-	_log(new LogIO()),
-	_currentGlobals(ParamSet()),
-	_lines(),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
-	_fileVersion(-1), _imShape(imShape), _regions(0) {
+	const String& text, const String& prependRegion,
+	const String& globalOverrideChans, const String& globalOverrrideStokes
+) : _csys(csys), _log(new LogIO()), _currentGlobals(), _lines(),
+	_globalKeysToApply(), _fileVersion(-1), _imShape(imShape), _regions(0) {
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
-			_ORIGIN
-			+ "Coordinate system has no direction coordintate"
+			_ORIGIN + "Coordinate system has no direction coordinate"
 		);
 	}
 	_setInitialGlobals();
-	_parse(text, "");
+	_setOverridingChannelRange(globalOverrideChans);
+	_setOverridingCorrelations(globalOverrrideStokes);
+	_parse(prependRegion.empty() ? text : prependRegion + "\n" + text, "");
 }
 
 RegionTextParser::~RegionTextParser() {}
 
 Int RegionTextParser::getFileVersion() const {
-	if (_fileVersion < 0) {
-		*_log << _ORIGIN << "File version not associated with simple text strings"
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		_fileVersion < 0,
+		"File version not associated with simple text strings"
+	);
 	return _fileVersion;
 }
 
@@ -145,17 +149,17 @@ void RegionTextParser::_determineVersion(
 		// already determined
 		return;
 	}
-	if (! chunk.contains(MAGIC)) {
-		*_log << _ORIGIN << "File " << filename
-			<< " does not contain CASA region text file magic value"
-			<< LogIO::EXCEPTION;
-	}
-	Regex version = Regex(MAGIC.regexp() + "v[0-9]+");
+	ThrowIf(
+		! chunk.contains(MAGIC),
+		_ORIGIN + "File " + filename
+		+ " does not contain CASA region text file magic value"
+	);
+	Regex version(MAGIC.regexp() + "v[0-9]+");
 	if (chunk.contains(version)) {
-		String vString = chunk.substr(6);
-		Bool done = False;
-		Int count = 1;
-		Int oldVersion = -2000;
+		const auto vString = chunk.substr(6);
+		auto done = False;
+		auto count = 1;
+		auto oldVersion = -2000;
 		while (! done) {
 			try {
 				_fileVersion = String::toInt(vString.substr(0, count));
@@ -167,7 +171,7 @@ void RegionTextParser::_determineVersion(
 					oldVersion = _fileVersion;
 				}
 			}
-			catch (AipsError) {
+			catch (const AipsError&) {
 				done = True;
 			}
 		}
@@ -199,21 +203,25 @@ void RegionTextParser::_determineVersion(
 }
 
 void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
-	_log->origin(LogOrigin("AsciiRegionFileParser", __FUNCTION__));
+	_log->origin(LogOrigin("AsciiRegionFileParser", __func__));
 	static const Regex startAnn("^ann[[:space:]]+");
 	static const Regex startDiff("^-[[:space:]]+");
 	static const Regex startGlobal("^global[[:space:]]+");
 	AnnotationBase::unitInit();
-
-	Vector<String> lines = stringToVector(contents, '\n');
+	/*Vector<String>*/ auto lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
-	Vector<Quantity> qFreqs(2, Quantity(0));
-	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); ++iter) {
+	/*std::pair<Quantity, Quantity>*/ auto qFreqs = _overridingFreqRange
+		? std::pair<Quantity, Quantity>(
+			Quantity(_overridingFreqRange->first.getValue().getValue(), "Hz"),
+			Quantity(_overridingFreqRange->second.getValue().getValue(), "Hz")
+		)
+		: std::pair<Quantity, Quantity>(Quantity(0), Quantity(0));
+	for(/*Vector<String>::iterator*/ auto iter=lines.cbegin(); iter!=lines.cend(); ++iter) {
 		++lineCount;
 		Bool annOnly = False;
 		ostringstream preambleoss;
 		preambleoss << fileDesc + " line# " << lineCount << ": ";
-		String preamble = preambleoss.str();
+		/*String*/ const auto preamble = preambleoss.str();
 		Bool difference = False;
 		iter->trim();
 		if (
@@ -223,7 +231,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			_addLine(AsciiAnnotationFileLine(*iter));
 			continue;
 		}
-		String consumeMe = *iter;
+		auto consumeMe = *iter;
 		// consumeMe.downcase();
 		Bool spectralParmsUpdated;
 		ParamSet newParams;
@@ -249,7 +257,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			);
 			map<AnnotationBase::Keyword, String> gParms;
 			for (
-				ParamSet::const_iterator iter=newParams.begin();
+				auto iter=newParams.begin();
 				iter != newParams.end(); ++iter
 			) {
 				gParms[iter->first] = iter->second.stringVal;
@@ -267,7 +275,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		Vector<Quantity> qDirs;
 		vector<Quantity> quantities;
 		String textString;
-		AnnotationBase::Type annType = _getAnnotationType(
+		/*AnnotationBase::Type */ const auto annType = _getAnnotationType(
 			qDirs, quantities, textString, consumeMe, preamble
 		);
 		ParamSet currentParamSet = _getCurrentParamSet(
@@ -307,16 +315,16 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			else if(
 				_currentGlobals.find(AnnotationBase::RANGE)
 				== _currentGlobals.end()
-				|| _currentGlobals.at(AnnotationBase::RANGE).freqRange.size() == 0
+				|| ! _currentGlobals.at(AnnotationBase::RANGE).freqRange
 			) {
 				// no global frequency range, so use entire freq span
-				qFreqs = Vector<Quantity>(2, Quantity(0));
+				qFreqs = std::pair<Quantity, Quantity>(Quantity(0), Quantity(0));
 			}
 		}
-		ParamSet globalsLessLocal = _currentGlobals;
+		/*ParamSet*/ auto globalsLessLocal = _currentGlobals;
 		for (
-			ParamSet::const_iterator iter=newParams.begin();
-			iter != newParams.end(); ++iter
+			/*ParamSet::const_iterator*/ auto iter=newParams.cbegin();
+			iter != newParams.cend(); ++iter
 		) {
 			AnnotationBase::Keyword key = iter->first;
 			if (globalsLessLocal.find(key) != globalsLessLocal.end()) {
@@ -342,10 +350,6 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 }
 
 void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {
-	/*
-	_lines.resize(_lines.size()+1, True);
-	_lines[_lines.size()-1] = line;
-	*/
 	_lines.push_back(line);
 }
 
@@ -371,12 +375,13 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 	consumeMe.del(0, (Int)tmp.length());
 	consumeMe.trim();
 	AnnotationBase::Type annotationType = AnnotationBase::typeFromString(tmp);
+	std::pair<Quantity, Quantity> myPair;
 	switch(annotationType) {
 	case AnnotationBase::RECT_BOX:
-		if (! consumeMe.contains(startTwoPair)) {
-			*_log << preamble << "Illegal box specification "
-				<< consumeMe << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! consumeMe.contains(startTwoPair),
+			preamble + "Illegal box specification "
+		);
 		qDirs = _extractNQuantityPairs(consumeMe, preamble);
 
 		if (qDirs.size() != 4) {
@@ -516,8 +521,10 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		qDirs.resize(2);
 		_extractQuantityPairAndString(
-			qDirs, textString, consumeMe, preamble, True
+			myPair, textString, consumeMe, preamble, True
 		);
+		qDirs[0] = myPair.first;
+		qDirs[1] = myPair.second;
 		break;
 	case AnnotationBase::SYMBOL:
 		if (! consumeMe.contains(startOnePairOneSingle)) {
@@ -526,8 +533,10 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 		}
 		qDirs.resize(2);
 		_extractQuantityPairAndString(
-			qDirs, textString, consumeMe, preamble, False
+			myPair, textString, consumeMe, preamble, False
 		);
+		qDirs[0] = myPair.first;
+		qDirs[1] = myPair.second;
 		textString.trim();
 		if (textString.length() > 1) {
 			throw AipsError(
@@ -549,11 +558,13 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 RegionTextParser::ParamSet RegionTextParser::getParamSet(
 	Bool& spectralParmsUpdated, LogIO& log,
 	const String& text, const String& preamble,
-	const CoordinateSystem& csys
+	const CoordinateSystem& csys,
+    SHARED_PTR<std::pair<MFrequency, MFrequency> > overridingFreqRange,
+	SHARED_PTR<Vector<Stokes::StokesTypes> > overridingCorrRange
 ) {
 	ParamSet parms;
 	spectralParmsUpdated = False;
-	String consumeMe = text;
+	/*String*/ auto consumeMe = text;
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
@@ -561,13 +572,13 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 		consumeMe.trim();
 		consumeMe.ltrim(',');
 		consumeMe.trim();
-		if (! consumeMe.contains('=')) {
-			log << preamble << "Illegal extra characters on line ("
-				<< consumeMe << "). Did you forget a '='?"
-				<< LogIO::EXCEPTION;
-		}
-		uInt equalPos = consumeMe.find('=');
-		String keyword = consumeMe.substr(0, equalPos);
+		ThrowIf(
+			! consumeMe.contains('='),
+			preamble + "Illegal extra characters on line ("
+				+ consumeMe + "). Did you forget a '='?"
+		);
+		/*uInt*/ const auto equalPos = consumeMe.find('=');
+		/*String*/ auto keyword = consumeMe.substr(0, equalPos);
 		keyword.trim();
 		keyword.downcase();
 		consumeMe.del(0, (Int)equalPos + 1);
@@ -581,7 +592,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 			if (keyword == "coord") {
 				key = AnnotationBase::COORD;
 			}
-			else if (keyword == "corr") {
+			else if (keyword == "corr" && ! overridingCorrRange) {
 				if (csys.hasPolarizationCoordinate()) {
 					key = AnnotationBase::CORR;
 					paramValue.stokes = _stokesFromString(
@@ -596,8 +607,11 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 				}
 			}
 			else if (
-				keyword == "frame" || keyword == "range"
-				|| keyword == "veltype" || keyword == "restfreq"
+				! overridingFreqRange
+                && (
+                    keyword == "frame" || keyword == "range"
+				    || keyword == "veltype" || keyword == "restfreq"
+                )
 			) {
 				spectralParmsUpdated = True;
 				if (! csys.hasSpectralAxis()) {
@@ -619,11 +633,11 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 				else if (keyword == "restfreq") {
 					key = AnnotationBase::RESTFREQ;
 					Quantity qRestfreq;
-					if (! readQuantity(qRestfreq, paramValue.stringVal)) {
-						log << preamble << "Could not convert rest frequency "
-							<< paramValue.stringVal << " to quantity"
-							<< LogIO::EXCEPTION;
-					}
+					ThrowIf(
+						! readQuantity(qRestfreq, paramValue.stringVal),
+						"Could not convert rest frequency "
+						+ paramValue.stringVal + " to quantity"
+					);
 				}
 			}
 			else if (keyword == "linewidth") {
@@ -723,8 +737,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 				key = AnnotationBase::LABELOFF;
 			}
 			else {
-				log << preamble << "Unrecognized key " << keyword
-					<< LogIO::EXCEPTION;
+				ThrowCc(preamble + "Unrecognized key " + keyword);
 			}
 		}
 		consumeMe.trim();
@@ -740,45 +753,42 @@ RegionTextParser::_getCurrentParamSet(
 	Bool& spectralParmsUpdated, ParamSet& newParams,
 	String& consumeMe, const String& preamble
 ) const {
-	ParamSet currentParams = _currentGlobals;
+	/*ParamSet*/ auto currentParams = _currentGlobals;
 	newParams = getParamSet(
 		spectralParmsUpdated,
-		*_log, consumeMe, preamble, _csys
+		*_log, consumeMe, preamble, _csys, _overridingFreqRange,
+		_overridingCorrRange
 	);
-	ParamSet::const_iterator end = newParams.end();
+	/*ParamSet::const_iterator*/ auto end = newParams.cend();
 	for (
-		ParamSet::const_iterator iter=newParams.begin();
+		/*ParamSet::const_iterator */ auto iter=newParams.cbegin();
 		iter!=end; ++iter
 	) {
 		currentParams[iter->first] = iter->second;
 	}
-	if (
+	ThrowIf(
 		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
-		&& currentParams.find(AnnotationBase::FRAME) != currentParams.end()
-	) {
-		*_log << preamble << "Frame specified but frequency range not specified"
-			<< LogIO::EXCEPTION;
-	}
-	if (
+		&& currentParams.find(AnnotationBase::FRAME) != currentParams.end(),
+		preamble + "Frame specified but frequency range not specified"
+	);
+	ThrowIf(
 		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
-		&& currentParams.find(AnnotationBase::RESTFREQ) != currentParams.end()
-	) {
-		*_log << preamble << "Rest frequency specified but velocity range not specified"
-			<< LogIO::EXCEPTION;
-	}
+		&& currentParams.find(AnnotationBase::RESTFREQ) != currentParams.end(),
+		preamble + "Rest frequency specified but velocity range not specified"
+	);
 	return currentParams;
 }
 
-Vector<Quantity> RegionTextParser::_quantitiesFromFrequencyString(
+std::pair<Quantity, Quantity> RegionTextParser::_quantitiesFromFrequencyString(
 	const String& freqString, const String& preamble
 ) const {
 	// the brackets have been stripped, add them back to make it easier
 	// to parse with a method already in existence
 	String cString = "[" + freqString + "]";
-	if (! cString.contains(startOnePair)) {
-		*_log << preamble << "Incorrect spectral range specification ("
-			<< freqString << ")" << LogIO::EXCEPTION;
-	}
+	ThrowIf(! cString.contains(startOnePair),
+		preamble + "Incorrect spectral range specification ("
+		+ freqString + ")"
+	);
 	return _extractSingleQuantityPair(
 		cString, preamble
 	);
@@ -787,7 +797,7 @@ Vector<Quantity> RegionTextParser::_quantitiesFromFrequencyString(
 void RegionTextParser::_createAnnotation(
 	const AnnotationBase::Type annType,
 	const Vector<Quantity>& qDirs,
-	const Vector<Quantity>& qFreqs,
+	const std::pair<Quantity, Quantity>& qFreqs,
 	const vector<Quantity>& quantities,
 	const String& textString,
 	const ParamSet& currentParamSet,
@@ -824,7 +834,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::RECT_BOX:
 			annotation = new AnnRectBox(
 				qDirs[0], qDirs[1], qDirs[2], qDirs[3],
-				dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
+				dirRefFrame, _csys, _imShape, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq, stokes,
 				annOnly
 			);
@@ -832,7 +842,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::CENTER_BOX:
 			annotation = new AnnCenterBox(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
+				dirRefFrame, _csys, _imShape, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq, stokes,
 				annOnly
 			);
@@ -840,7 +850,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::ROTATED_BOX:
 			annotation = new AnnRotBox(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				quantities[2], dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
+				quantities[2], dirRefFrame, _csys, _imShape, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
@@ -853,7 +863,7 @@ void RegionTextParser::_createAnnotation(
 					y[i] = qDirs[2*i + 1];
 				}
 				annotation = new AnnPolygon(
-					x, y, dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+					x, y, dirRefFrame,  _csys, _imShape, qFreqs.first, qFreqs.second,
 					freqRefFrame, doppler, restfreq,  stokes, annOnly
 				);
 			}
@@ -867,14 +877,14 @@ void RegionTextParser::_createAnnotation(
 				// an AnnEllipse
 				annotation = new AnnEllipse(
 					qDirs[0], qDirs[1], quantities[0], quantities[0], Quantity(0, "deg"),
-					dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+					dirRefFrame,  _csys, _imShape, qFreqs.first, qFreqs.second,
 					freqRefFrame, doppler, restfreq,  stokes, annOnly
 				);
 			}
 			else {
 				annotation = new AnnCircle(
 					qDirs[0], qDirs[1], quantities[0],
-					dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+					dirRefFrame,  _csys, _imShape, qFreqs.first, qFreqs.second,
 					freqRefFrame, doppler, restfreq,  stokes, annOnly
 				);
 			}
@@ -882,14 +892,14 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::ANNULUS:
 			annotation = new AnnAnnulus(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+				dirRefFrame,  _csys, _imShape, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
 		case AnnotationBase::ELLIPSE:
 			annotation = new AnnEllipse(
 				qDirs[0], qDirs[1], quantities[0], quantities[1], quantities[2],
-				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
+				dirRefFrame,  _csys, _imShape, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
@@ -897,7 +907,7 @@ void RegionTextParser::_createAnnotation(
 			annotation = new AnnLine(
 				qDirs[0], qDirs[1], qDirs[2],
 				qDirs[3], dirRefFrame,  _csys,
-				qFreqs[0], qFreqs[1],
+				qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
@@ -905,14 +915,14 @@ void RegionTextParser::_createAnnotation(
 			annotation = new AnnVector(
 				qDirs[0], qDirs[1], qDirs[2],
 				qDirs[3], dirRefFrame,  _csys,
-				qFreqs[0], qFreqs[1],
+				qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
 		case AnnotationBase::TEXT:
 			annotation = new AnnText(
 				qDirs[0], qDirs[1], dirRefFrame,
-				_csys, textString, qFreqs[0], qFreqs[1],
+				_csys, textString, qFreqs.first, qFreqs.second,
 				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
@@ -920,7 +930,7 @@ void RegionTextParser::_createAnnotation(
 			annotation = new AnnSymbol(
 				qDirs[0], qDirs[1], dirRefFrame,
 				_csys, textString.firstchar(),
-				qFreqs[0], qFreqs[1], freqRefFrame,
+				qFreqs.first, qFreqs.second, freqRefFrame,
 				doppler, restfreq,  stokes
 			);
 			break;
@@ -1030,21 +1040,21 @@ Vector<String> RegionTextParser::_extractSinglePair(const String& string) {
 String RegionTextParser::_doLabel(
 	String& consumeMe, const String& preamble
 ) {
-	Char firstChar = consumeMe.firstchar();
+	const auto firstChar = consumeMe.firstchar();
 	if (firstChar != '\'' && firstChar != '"') {
 		ostringstream oss;
 		oss << preamble << "keyword 'label' found but first non-whitespace "
 			<< "character after the '=' is not a quote. It must be.";
 		throw AipsError(oss.str());
 	}
-	String::size_type posCloseQuote = consumeMe.find(firstChar, 1);
+	const auto posCloseQuote = consumeMe.find(firstChar, 1);
 	if (posCloseQuote == String::npos) {
 		ostringstream err;
 		err << preamble << "Could not find closing quote ("
 			<< String(firstChar) << ") for label";
 		throw AipsError(err.str());
 	}
-	String label = consumeMe.substr(1, posCloseQuote - 1);
+	const auto label = consumeMe.substr(1, posCloseQuote - 1);
 	consumeMe.del(0, (Int)posCloseQuote + 1);
 	return label;
 }
@@ -1115,7 +1125,7 @@ Vector<Quantity> RegionTextParser::_extractTwoQuantityPairsAndSingleQuantity(
 }
 
 void RegionTextParser::_extractQuantityPairAndString(
-	Vector<Quantity>& quantities, String& string,
+	std::pair<Quantity, Quantity>& quantities, String& string,
 	String& consumeMe, const String& preamble,
 	const Bool requireQuotesAroundString
 ) const {
@@ -1157,15 +1167,19 @@ Vector<Quantity> RegionTextParser::_extractQuantityPairAndSingleQuantity(
 	String& consumeMe, const String& preamble
 ) const {
 	String qString;
-	Vector<Quantity> quantities(2);
+
+	std::pair<Quantity, Quantity> myPair;
 	_extractQuantityPairAndString(
-		quantities, qString, consumeMe, preamble, False
+		myPair, qString, consumeMe, preamble, False
 	);
-	quantities.resize(3, True);
-	if (! readQuantity(quantities[2], qString)) {
-		*_log << preamble << "Could not convert "
-			<< qString << " to quantity" << LogIO::EXCEPTION;
-	}
+	Vector<Quantity> quantities(3);
+	quantities[0] = myPair.first;
+	quantities[1] = myPair.second;
+	ThrowIf(
+		! readQuantity(quantities[2], qString),
+		preamble + "Could not convert "
+		+ qString + " to quantity"
+	);
 	return quantities;
 }
 
@@ -1201,10 +1215,10 @@ Vector<Quantity> RegionTextParser::_extractNQuantityPairs (
 	pairs.trim();
 	Vector<Quantity> qs(0);
 	while (pairs.length() > 1) {
-		Vector<Quantity> myqs = _extractSingleQuantityPair(pairs, preamble);
+		std::pair<Quantity, Quantity> myqs = _extractSingleQuantityPair(pairs, preamble);
 		qs.resize(qs.size() + 2, True);
-		qs[qs.size() - 2] = myqs[0];
-		qs[qs.size() - 1] = myqs[1];
+		qs[qs.size() - 2] = myqs.first;
+		qs[qs.size() - 1] = myqs.second;
 		pairs.del(0, (Int)pairs.find(']', 0) + 1);
 		pairs.trim();
 		pairs.ltrim(',');
@@ -1213,28 +1227,105 @@ Vector<Quantity> RegionTextParser::_extractNQuantityPairs (
 	return qs;
 }
 
-Vector<Quantity> RegionTextParser::_extractSingleQuantityPair(
+std::pair<Quantity, Quantity> RegionTextParser::_extractSingleQuantityPair(
 	const String& pairString, const String& preamble
 ) const {
 	String mySubstring = String(pairString).through(sOnePair, 0);
 	Vector<String> pair = _extractSinglePair(mySubstring);
-	Vector<Quantity> quantities(2);
-
+	std::pair<Quantity, Quantity> quantities;
 	for (uInt i=0; i<2; ++i) {
 		String value = pair[i];
-		if (! readQuantity(quantities[i], value)) {
-			*_log << preamble << "Could not convert "
-				<< " (" << value << ") to quantity." << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			! readQuantity(
+				i == 0
+					? quantities.first
+					: quantities.second,
+				value
+			),
+			preamble + "Could not convert ("
+			+ value + ") to quantity."
+		);
 	}
 	return quantities;
+}
+
+void RegionTextParser::_setOverridingCorrelations(const String& globalOverrideStokes) {
+	if (globalOverrideStokes.empty() || ! _csys.hasPolarizationAxis()) {
+		// no global override specified
+		return;
+	}
+	String mycopy = globalOverrideStokes;
+	vector<String> myStokes = ParameterParser::stokesFromString(mycopy);
+	String myCommaSeperatedString;
+	vector<String>::const_iterator iter = myStokes.begin();
+	vector<String>::const_iterator end = myStokes.end();
+	uInt count = 0;
+	while(iter != end) {
+		myCommaSeperatedString += *iter;
+		if (count < myStokes.size() - 1) {
+			myCommaSeperatedString += ",";
+		}
+		++count;
+		++iter;
+	}
+	ParamValue corr;
+	corr.stokes = _stokesFromString(myCommaSeperatedString, String(__func__));
+	_currentGlobals[AnnotationBase::CORR] = corr;
+	_overridingCorrRange.reset((new Vector<Stokes::StokesTypes>(corr.stokes)));
+}
+
+void RegionTextParser::_setOverridingChannelRange(
+	const String& globalOverrideChans
+) {
+	if (globalOverrideChans.empty() || ! _csys.hasSpectralAxis()) {
+		// no global override specified
+		return;
+	}
+    uInt nSelectedChannels = 0;
+    uInt nChannels = _imShape[_csys.spectralAxisNumber(False)];
+    std::vector<uInt> myChanRange =  ParameterParser::spectralRangesFromChans(
+        nSelectedChannels, globalOverrideChans,
+        nChannels
+    );
+    uInt nRanges = myChanRange.size();
+    if (nRanges == 0) {
+        // no channel range specified
+        return;
+    }
+    ThrowIf(
+        nRanges > 2,
+        "Overriding spectral specification must be "
+        "limited to a sngle channel range"
+    );
+    MFrequency first, second;
+    const SpectralCoordinate specCoord = _csys.spectralCoordinate();
+    specCoord.toWorld(first, myChanRange[0]);
+    specCoord.toWorld(second, myChanRange[1]);
+    _overridingFreqRange.reset(new std::pair<MFrequency, MFrequency>(first, second));
+    ParamValue range;
+    range.freqRange = _overridingFreqRange;
+    _currentGlobals[AnnotationBase::RANGE] = range;
+
+    ParamValue frame;
+	frame.intVal = specCoord.frequencySystem(False);
+	_currentGlobals[AnnotationBase::FRAME] = frame;
+
+    ParamValue veltype;
+	veltype.intVal = specCoord.velocityDoppler();
+	_currentGlobals[AnnotationBase::VELTYPE] = veltype;
+
+	ParamValue restfreq;
+	restfreq.stringVal = String::toString(
+		specCoord.restFrequency()
+	) + "Hz";
+	_currentGlobals[AnnotationBase::RESTFREQ] = restfreq;
 }
 
 Vector<Stokes::StokesTypes>
 RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) {
-	Int maxn = Stokes::NumberOfTypes;
+	const auto maxn = Stokes::NumberOfTypes;
 	PtrHolder<string> res(new string[maxn], True);
 	Int nStokes = split(stokes, res, maxn, ",");
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
@@ -1246,7 +1337,6 @@ RegionTextParser::_stokesFromString(
 			throw AipsError(preamble + "Unknown correlation type " + x);
 		}
 	}
-	//delete [] res;
 	return myTypes;
 }
 
@@ -1259,7 +1349,8 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::COORD] = coord;
 
 	ParamValue range;
-	range.freqRange = Vector<MFrequency>(0);
+	// range.freqRange = Vector<MFrequency>(0);
+	range.freqRange.reset();
 	_currentGlobals[AnnotationBase::RANGE] = range;
 
 	ParamValue corr;
@@ -1332,7 +1423,6 @@ void RegionTextParser::_setInitialGlobals() {
 	ParamValue labeloff;
 	labeloff.intVec = AnnotationBase::DEFAULT_LABELOFF;
 	_currentGlobals[AnnotationBase::LABELOFF] = labeloff;
-
 }
 
 }

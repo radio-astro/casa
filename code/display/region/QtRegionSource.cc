@@ -352,7 +352,7 @@ namespace casa {
 				shape(i) = dd->dataShape( )[axes[i]];
 
 			try {
-				RegionTextList region_list( path.toAscii( ).constData( ), viewer_cs, shape );
+				RegionTextList region_list( path.toAscii( ).constData( ), viewer_cs, shape, "", nullptr, "" );
 				const casa::Vector<AsciiAnnotationFileLine> &lines = region_list.getLines( );
 				for ( uInt i=0; i < lines.size( ); ++i ) {
 					if ( lines[i].getType() == AsciiAnnotationFileLine::ANNOTATION ) {

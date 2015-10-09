@@ -69,9 +69,12 @@ public:
 	// <src>shape</src> is the image shape and is only used if
 	// the first region is a difference; in that case, the all pixels in entire
 	// shape are set to good initially.
+	// <src>globalOverrideChans</src> override all spectral selections in the file
+	// or text by using this channel selection<src>
+	// <src>globalOverrideStokes</src> override all correlation selections in the file
+	// or text by using this polarization selection<src>
 	RegionTextList(
-		const CoordinateSystem& csys,
-		const IPosition shape
+		const CoordinateSystem& csys, const IPosition shape
 	);
 
 	// create a list by reading it from a file.
@@ -83,7 +86,8 @@ public:
 	// shape are set to good initially.
 	RegionTextList(
 		const String& filename, const CoordinateSystem& csys,
-		const IPosition shape,
+		const IPosition shape, const String& prependRegion,
+		const String& globalOverrideChans, const String& globalOverrrideStokes,
 		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
 	);
 
@@ -96,7 +100,10 @@ public:
 	// shape are set to good initially.
 	RegionTextList(
 		const CoordinateSystem& csys, const String& text,
-		const IPosition shape
+		const IPosition shape,
+		const String& prependRegion,
+		const String& globalOverrideChans,
+		const String& globalOverrrideStokes
 	);
 	//</group>
 
@@ -126,16 +133,15 @@ public:
 
 private:
 	Vector<AsciiAnnotationFileLine> _lines;
-	//Bool _deletePointersOnDestruct;
-	vector<CountedPtr<const WCRegion> > _regions;
+	vector<SHARED_PTR<const WCRegion> > _regions;
 	CoordinateSystem _csys;
 	IPosition _shape;
 	Bool _canGetRegion;
 	// if false, then the corresponding region is complementary to
 	// the result of the previous region operations in the sequence
 	vector<Bool> _union;
-	mutable vector<CountedPtr<const WCDifference> > _myDiff;
-	mutable CountedPtr<const WCRegion> _composite;
+	mutable vector<SHARED_PTR<const WCDifference> > _myDiff;
+	mutable SHARED_PTR<const WCRegion> _composite;
 };
 
 inline ostream &operator<<(ostream& os, const RegionTextList& list) {

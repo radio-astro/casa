@@ -29,6 +29,8 @@
 
 #include <images/Regions/RegionManager.h>
 
+#include <imageanalysis/IO/RegionTextParser.h>
+
 namespace casa {
 
 /**
@@ -52,9 +54,14 @@ public:
 	};
 
 	CasacRegionManager();
+
 	CasacRegionManager(const CoordinateSystem& csys);
+
+	CasacRegionManager(const CasacRegionManager&) = delete;
+
 	~CasacRegionManager();
 
+	CasacRegionManager& operator=(const CasacRegionManager&) = delete;
 
 	// convert to a record a region specified by a rectangular directional <src>box</src>,
 	// <src>chans</src>, and <src>stokes</src>, or althernatively a pointer to
@@ -91,17 +98,11 @@ public:
 			const String& box, const IPosition& imShape
 	) const;
 
-	// <src>ranges</src> are pairs describing the pixel range over which to select.
-	// If you want to select just one pixel in the "range", you must specify that pixel
-	// in both parts of the pair. So if you want to select pixels 0 through 5 and pixel 13,
-	// you'd specify ranges[0] = 0; ranges[1] = 5; ranges[2] = 13; ranges[3] = 13
-	static vector<uInt> consolidateAndOrderRanges(
-		uInt& nSelected, const vector<uInt>& ranges
-	);
-
 	static Record regionFromString(
 		const CoordinateSystem& csys, const String& regionStr,
-		const String& imageName, const IPosition& imShape
+		const String& imageName, const IPosition& imShape /*,
+		const String& globalOverrideChans,
+		const String& globalStokesOverride */
 	);
 
 	// Return the range(s) of spectral channels selected by the specification or the
@@ -115,6 +116,10 @@ public:
 
 	vector<uInt> setSpectralRanges(
 		String specification, uInt& nSelectedChannels,
+		/*
+		const String& globalChannelOverride,
+		const String& globalStokesOverrideconst,
+		*/
 		const IPosition& imShape=IPosition(0)
 	) const;
 
@@ -122,11 +127,13 @@ private:
 
 	// disallow copy constructor and = operator
 
-	CasacRegionManager(const CasacRegionManager&) : RegionManager() {}
+	// CasacRegionManager(const CasacRegionManager&) : RegionManager() {}
 
+	/*
 	CasacRegionManager& operator=(const CasacRegionManager&) {
 		ThrowCc("=operator disallowed");
 	}
+	*/
 
 	String _pairsToString(const vector<uInt>& pairs) const;
 
@@ -136,8 +143,6 @@ private:
 	) const;
 
 	vector<Double> _setBoxCorners(const String& box) const;
-
-
 
 	ImageRegion _fromBCS(
 			String& diagnostics,
@@ -157,16 +162,16 @@ private:
 	void _setRegion(
 		Record& regionRecord, String& diagnostics,
 		const String& regionName, const IPosition& imShape,
-		const String& imageName
+		const String& imageName,
+		const String& prependBox,
+		const String& globalOverrideChans,
+		const String& globalStokesOverride
 	);
-
-	vector<uInt> _spectralRangesFromTraditionalFormat(
-		uInt& nSelectedChannels, const String& specification, const uInt nChannels
-	) const;
 
 	vector<uInt> _spectralRangeFromRangeFormat(
 		uInt& nSelectedChannels, const String& specification,
-		const IPosition& imShape
+		const IPosition& imShape /*, const String& globalChannelOverride,
+		const String& globalStokesOverride */
 	) const;
 
 	vector<uInt> _spectralRangeFromRegionRecord(

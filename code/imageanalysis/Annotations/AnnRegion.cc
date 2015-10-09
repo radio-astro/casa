@@ -4,7 +4,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <imageanalysis/Regions/CasacRegionManager.h>
+//#include <imageanalysis/Regions/CasacRegionManager.h>
+#include <imageanalysis/IO/ParameterParser.h>
 #include <images/Regions/WCExtension.h>
 #include <images/Regions/WCUnion.h>
 #include <tables/Tables/TableRecord.h>
@@ -117,6 +118,10 @@ CountedPtr<const WCRegion>  AnnRegion::getRegion() const {
 	return _imageRegion.asWCRegionPtr()->cloneRegion();
 }
 
+SHARED_PTR<const WCRegion>  AnnRegion::getRegion2() const {
+	return SHARED_PTR<const WCRegion>(_imageRegion.asWCRegionPtr()->cloneRegion());
+}
+
 Bool AnnRegion::isRegion() const {
 	return True;
 }
@@ -210,7 +215,7 @@ void AnnRegion::_extend() {
 			stokesNumbers[2*i + 1] = stokesNumbers[2*i];
 		}
         uInt nSel = 0;
-		vector<uInt> orderedRanges = CasacRegionManager::consolidateAndOrderRanges(
+		vector<uInt> orderedRanges = ParameterParser::consolidateAndOrderRanges(
 			nSel, stokesNumbers
 		);
 		for (uInt i=0; i<orderedRanges.size(); i++) {

@@ -65,7 +65,11 @@ public:
 
 	virtual ImageRegion asImageRegion() const;
 
+	// this version is deprecated, use the version that returns
+	// SHARED_PTR instead
 	virtual CountedPtr<const WCRegion> getRegion() const;
+
+	virtual SHARED_PTR<const WCRegion> getRegion2() const;
 
 	// returns True unless overridden.
 	virtual Bool isRegion() const;

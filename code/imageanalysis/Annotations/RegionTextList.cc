@@ -47,10 +47,15 @@ RegionTextList::RegionTextList(
 RegionTextList::RegionTextList(
 	const String& filename, const CoordinateSystem& csys,
 	const IPosition shape,
+	const String& prependRegion, const String& globalOverrideChans, const String& globalOverrrideStokes,
 	const Int requireAtLeastThisVersion
 ) : _lines(),
 	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
-	RegionTextParser parser(filename, csys, shape, requireAtLeastThisVersion);
+	RegionTextParser parser(
+		filename, csys, shape, requireAtLeastThisVersion,
+		prependRegion,
+		globalOverrideChans, globalOverrrideStokes
+	);
 	vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	vector<AsciiAnnotationFileLine>::const_iterator iter = lines.begin();
 	vector<AsciiAnnotationFileLine>::const_iterator end = lines.end();
@@ -62,9 +67,13 @@ RegionTextList::RegionTextList(
 
 RegionTextList::RegionTextList(
 	const CoordinateSystem& csys, const String& text,
-	const IPosition shape) : _lines(),
+	const IPosition shape, const String& prependRegion,
+	const String& globalOverrideChans, const String& globalOverrrideStokes
+) : _lines(),
 	_csys(csys), _shape(shape), _canGetRegion(True), _union(), _composite() {
-	RegionTextParser parser(csys, shape, text);
+	RegionTextParser parser(
+		csys, shape, text, prependRegion, globalOverrideChans, globalOverrrideStokes
+	);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
@@ -85,7 +94,7 @@ void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 		if (annotation->isRegion()) {
 			const AnnRegion *region = dynamic_cast<const AnnRegion *>(annotation.get());
 			if (! region->isAnnotationOnly()) {
-				CountedPtr<const WCRegion> wcregion = region->getRegion();
+				auto wcregion = region->getRegion2();
 				if (region->isDifference() && _regions.size() == 0) {
 					Vector<Double> blc, trc;
 					_csys.toWorld(blc, IPosition(_csys.nPixelAxes(), 0));
@@ -97,7 +106,11 @@ void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 						qblc[i] = Quantity(blc[i], wUnits[i]);
 						qtrc[i] = Quantity(blc[i], wUnits[i]);
 					}
-					_regions.push_back(new WCBox(qblc, qtrc, _csys, absRel));
+					_regions.push_back(
+						SHARED_PTR<const WCRegion>(
+							new WCBox(qblc, qtrc, _csys, absRel)
+						)
+					);
 					_union.push_back(True);
 				}
 				_regions.push_back(wcregion);
@@ -139,7 +152,7 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 		for (uInt i=0; i<_regions.size(); ++i) {
 			unionRegions[i] = _regions[i].get();
 		}
-		_composite = new WCUnion(False, unionRegions);
+		_composite.reset(new WCUnion(False, unionRegions));
 		return _composite;
 	}
 	uInt count = 0;
@@ -151,16 +164,18 @@ CountedPtr<const WCRegion> RegionTextList::getRegion() const {
 		else {
 			WCUnion myUnion(False, unionRegions);
 			const WCDifference *myDiff = new WCDifference(myUnion, *_regions[count]);
-			_myDiff.push_back(CountedPtr<const WCDifference>(myDiff));
+			_myDiff.push_back(SHARED_PTR<const WCDifference>(myDiff));
 			unionRegions.resize(1);
 			unionRegions[0] = myDiff;
 		}
 		++count;
 		++iter;
 	}
-	_composite = (unionRegions.size() == 1)
+	_composite.reset(
+		(unionRegions.size() == 1)
 		? unionRegions[0]
-		: new WCUnion(False, unionRegions);
+		: new WCUnion(False, unionRegions)
+	);
 	return _composite;
 }
 

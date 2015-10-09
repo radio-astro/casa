@@ -23,6 +23,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/Utilities/Regex.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <imageanalysis/Annotations/AnnotationBase.h>
 #include <imageanalysis/IO/AsciiAnnotationFileLine.h>
 
@@ -74,28 +75,55 @@ public:
 		Bool boolVal;
 		AnnotationBase::LineStyle lineStyleVal;
 		AnnotationBase::FontStyle fontStyleVal;
-		Vector<MFrequency> freqRange;
+		// Vector<MFrequency> freqRange;
+		SHARED_PTR<std::pair<MFrequency, MFrequency> > freqRange;
 		Vector<Stokes::StokesTypes> stokes;
 		AnnotationBase::RGB color;
 		vector<Int> intVec;
 	};
+	/*
+	struct GlobalOverrideChans {
+		// the "classic" channel specification
+		String chanSpec;
+		// the number of spectral planes in the image
+		uInt nChannels;
+		// the image's spectral coordinate
+		SpectralCoordinate specCoord;
+	};
+	*/
 
 	using ParamSet = std::map<AnnotationBase::Keyword, ParamValue>;
 
+	RegionTextParser() = delete;
+
+
+
+
 	// <group>
 	// differentiating between the filename and simple text constructors
+	// <src>globalOverrideChans</src> override all spectral selections in the file
+	// or text by using this channel selection<src>
+	// <src>globalOverrideStokes</src> override all correlation selections in the file
+	// or text by using this polarization selection<src>
+	// <src>prependRegion</src> allows one to specify region(s) that will be prepended to
+	// any text in <src>filename</src> or <src>text</src>
 	RegionTextParser(
 		const String& filename, const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Int requireAtLeastThisVersion
+		const IPosition& imShape, const Int requireAtLeastThisVersion,
+		const String& prependRegion,
+		const String& globalOverrideChans, const String& globalOverrrideStokes
 	);
 
 	RegionTextParser(
-		const CoordinateSystem& csys, const IPosition& imShape, const String& text
+		const CoordinateSystem& csys, const IPosition& imShape, const String& text,
+		const String& prependRegion,
+		const String& globalOverrideChans, const String& globalOverrrideStokes
 	);
 	//</group>
 
 	~RegionTextParser();
+
+	RegionTextParser& operator=(const RegionTextParser&) = delete;
 
 	Int getFileVersion() const;
 
@@ -105,7 +133,9 @@ public:
 	static ParamSet getParamSet(
 		Bool& spectralParmsUpdated,
 		LogIO& log, const String& text, const String& preamble,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys,
+		SHARED_PTR<std::pair<MFrequency, MFrequency> > overridingFreqRange,
+		SHARED_PTR<Vector<Stokes::StokesTypes> > overridingCorrRange
 	);
 
 private:
@@ -125,9 +155,14 @@ private:
 	IPosition _imShape;
 	uInt _regions;
 
+	SHARED_PTR<std::pair<MFrequency, MFrequency> > _overridingFreqRange;
+	SHARED_PTR<Vector<Stokes::StokesTypes> > _overridingCorrRange;
+
+	/*
 	RegionTextParser() {}
 
 	RegionTextParser& operator=(const RegionTextParser&);
+	*/
 
 	void _parse(const String& contents, const String& fileDesc);
 
@@ -154,7 +189,7 @@ private:
 		const AnnotationBase::Type annType,
 		//const Vector<MDirection> dirs,
 		const Vector<Quantity>& qDirs,
-		const Vector<Quantity>& qFreqs,
+		const std::pair<Quantity, Quantity>& qFreqs,
 		const vector<Quantity>& quantities,
 		const String& textString,
 		const ParamSet& currentParamSet,
@@ -162,9 +197,8 @@ private:
 		const String& preamble
 	);
 
-	Vector<Quantity> _quantitiesFromFrequencyString(
-		const String& freqString,
-		const String& preamble
+	std::pair<Quantity, Quantity> _quantitiesFromFrequencyString(
+		const String& freqString, const String& preamble
 	) const;
 
 	static String _doLabel(String& consumeMe, const String& logPreamble);
@@ -183,7 +217,7 @@ private:
 		String& consumeMe, const String& preamble
 	) const;
 
-	Vector<Quantity> _extractSingleQuantityPair(
+	std::pair<Quantity, Quantity> _extractSingleQuantityPair(
 		const String& pair, const String& preamble
 	) const;
 
@@ -198,7 +232,7 @@ private:
 	) const;
 
 	void _extractQuantityPairAndString(
-		Vector<Quantity>& quantities, String& string,
+		std::pair<Quantity, Quantity>& quantities, String& string,
 		String& consumeMe, const String& preamble,
 		const Bool requireQuotesAroundString
 	) const;
@@ -212,6 +246,13 @@ private:
 		const Int requireAtLeastThisVersion
 	);
 
+	// set the Stokes/polarizations/correlations that will override all global and per line correlation
+	// specifications. If multiple ranges are specified, an exception will be thrown.
+	void _setOverridingCorrelations(const String& globalOverrideStokes);
+
+	// set the (single) channel range that will override all global and per line frequency
+	// specifications. If multiple ranges are specified, an exception will be thrown.
+	void _setOverridingChannelRange(const String& globalOverrideChans);
 
 };
 }

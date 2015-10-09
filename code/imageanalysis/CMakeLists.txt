@@ -73,6 +73,7 @@ IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
 IO/LogFile.cc
 IO/OutputDestinationChecker.cc
+IO/ParameterParser.cc
 IO/ProfileFitterEstimatesFileParser.cc
 IO/RegionTextParser.cc
 
@@ -111,6 +112,7 @@ install (FILES
     IO/ImageFitterResults.h
     IO/ImageProfileFitterResults.h
     IO/OutputDestinationChecker.h
+	IO/ParameterParser.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
 	DESTINATION include/casacode/imageanalysis/IO
