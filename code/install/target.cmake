@@ -55,6 +55,11 @@ macro( casa_add_library module )
   add_library( lib${module} ${ARGN} )
   set_target_properties( lib${module} PROPERTIES OUTPUT_NAME ${module} )
 
+  if (${module}_WarningsAsErrors)
+    set_property (TARGET lib${module} APPEND PROPERTY COMPILE_FLAGS "-Werror")
+    message ("-- Library lib${module} has WarningsAsErrors")
+  endif ()
+
   add_dependencies( inst lib${module} )
   add_custom_target( lib${module}_fast ${CMAKE_BUILD_TOOL} lib${module}/fast )
   add_dependencies( ${module}_fast lib${module}_fast )
@@ -116,7 +121,7 @@ macro( casa_add_module module )
   cmake_parse_arguments (casa_add_module "${options}" "${oneValueArgs}" 
                          "${multiValueArgs}" ${ARGN})
 
-  set( _dependencies ${ARGN} ${casa_add_module_UNPARSED_ARGUMENTS})
+  set( _dependencies ${casa_add_module_UNPARSED_ARGUMENTS})
 
   # Internal target to update this module including dependencies,
   # then install this module, excluding dependencies
@@ -142,9 +147,16 @@ macro( casa_add_module module )
   # warnings as error for this module
 
   if ( casa_add_module_WarningsAsErrors )
-    get_target_property (compileFlags ${testName} COMPILE_FLAGS)	
-    list (APPEND  compileFlags "-Werror")
-    set_target_properties (${testName} PROPERTIES COMPILE_FLAGS "${compileFlags}" )	
+    set (${module}_WarningsAsErrors true)
+    # get_target_property (compileFlags ${module} COMPILE_FLAGS)	
+    # if (compileFlags)
+    #     list (APPEND  compileFlags "-Werror")
+    # else ()
+    #    set (compileFlags "-Werror")
+    # endif ()
+    # set_target_properties (${module} PROPERTIES COMPILE_FLAGS "${compileFlags}" )	
+    # get_target_property (compileFlags ${module} COMPILE_FLAGS)	
+    # message ("-- Module ${module} treating warnings as errors.")
   endif ()
 
   # Include path always include code/

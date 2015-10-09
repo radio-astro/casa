@@ -1119,13 +1119,7 @@ casa_find( LIBSAKURA
 #                         #
 ###########################
 
-#if (CMAKE_SYSTEM_NAME STREQUAL Linux )
-
 include (GoogleTestInstall)
-
-#else ()
-#   message ("WARNING:: Google Test support only for Linux right now")
-#endif ()
 
 casa_config_end()
 
@@ -1151,7 +1145,7 @@ casa_add_module( components stdcasa CASACORE GSL)
 casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
-casa_add_module( msvis CASACORE Boost asdmstman )
+casa_add_module( msvis CASACORE Boost asdmstman)
 casa_add_module( mstransform CASACORE stdcasa imageanalysis msvis)
 casa_add_module( synthesis CASACORE atmosphere stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis mstransform)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4 msvis)
