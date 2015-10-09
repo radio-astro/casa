@@ -1066,13 +1066,13 @@ OR
      </param>
     
      <param type="any" name="majoraxis">
-     <description>The width of the larger axis.
+     <description>The width (FWHM in the case of a Gaussian) of the larger axis.
      A quantity with angular units</description>
      <value>2.0arcmin</value>
      </param>
     
      <param type="any" name="minoraxis">
-     <description>The width of the smaller axis.
+     <description>The width (FWHM in the case of a Gaussian) of the smaller axis.
      A quantity with angular units</description>
      <value>1.0arcmin</value>
      </param>
