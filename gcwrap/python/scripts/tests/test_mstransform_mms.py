@@ -13,6 +13,8 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 from parallel.parallel_data_helper import ParallelDataHelper
 from unittest.case import expectedFailure
 
+from mpi4casa.MPICommandClient import MPICommandClient
+
 
 # Define the root for the data files
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
@@ -1030,7 +1032,7 @@ class test_vla_mixed_polarizations_mms(test_base):
     
     def setUp(self):
                 
-        self.setUp_CAS_6733()
+        self.setUp_CAS_6733()    
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
@@ -1053,9 +1055,15 @@ class test_vla_mixed_polarizations_mms(test_base):
         mytb = tbtool()
         mytb.open(self.outputms + '/DATA_DESCRIPTION')
         polIds = mytb.getcol('POLARIZATION_ID')
+        spwIds = mytb.getcol('SPECTRAL_WINDOW_ID')
         mytb.close()    
         for id in polIds:
             self.assertTrue(id in range(npols),'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table')
+            
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        nspw = mytb.nrows()
+        mytb.close()        
+        self.assertEqual(max(spwIds), nspw-1, 'SPW index does not match consolidated SPW subtable')
          
 #        self.assertTrue(all(polIds < npols), 'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table') 
         

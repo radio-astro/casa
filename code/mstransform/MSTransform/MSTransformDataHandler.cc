@@ -3267,8 +3267,15 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
             			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
             			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
-            			// SPW_ID cannot be the re-indexed value here
-            			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
+
+            			// Take into account that some SPW may be pointed by several DDIs
+            			uInt deltaDDI = 1;
+            			if (subms_row_index>0)
+            			{
+            				deltaDDI = ddicols_i.spectralWindowId()(subms_row_index) - ddicols_i.spectralWindowId()(subms_row_index-1);
+            			}
+
+            			ddiCols_0.spectralWindowId().put(rowIndex,spwid+deltaDDI);
             			rowIndex += 1;
             		}
         		}
