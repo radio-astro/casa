@@ -109,7 +109,14 @@ endmacro()
 
 macro( casa_add_module module )
 
-  set( _dependencies ${ARGN} )
+  set (options WarningsAsErrors) 
+  set (oneValueArgs ) # None
+  set (multiValueArgs )
+
+  cmake_parse_arguments (casa_add_module "${options}" "${oneValueArgs}" 
+                         "${multiValueArgs}" ${ARGN})
+
+  set( _dependencies ${ARGN} ${casa_add_module_UNPARSED_ARGUMENTS})
 
   # Internal target to update this module including dependencies,
   # then install this module, excluding dependencies
@@ -130,7 +137,15 @@ macro( casa_add_module module )
   # Target to update and install this module, including dependency modules
   add_custom_target( ${module} COMMENT "Updating ${module}..." )
   add_dependencies( ${module} ${module}_install )
-  
+
+  # If WarningsAsErrors was specified, then add a compiler flag to treat 
+  # warnings as error for this module
+
+  if ( casa_add_module_WarningsAsErrors )
+    get_target_property (compileFlags ${testName} COMPILE_FLAGS)	
+    list (APPEND  compileFlags "-Werror")
+    set_target_properties (${testName} PROPERTIES COMPILE_FLAGS "${compileFlags}" )	
+  endif ()
 
   # Include path always include code/
   set( ${module}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/ )
@@ -464,7 +479,7 @@ macro( casa_add_unit_test)
     message ("WARNING Unit test ${firstSource} not ready for normal unit test usage.")
 
     if (NOT TARGET unit_test_unready) # create the unit_test_unready target if it doesn't exist
-
+ 
        add_custom_target (unit_test_unready)
     
     endif (NOT TARGET unit_test_unready)
@@ -528,12 +543,12 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    if (CMAKE_SYSTEM_NAME STREQUAL Linux AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
+    # if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
-       message ("WARNING:: Test ${testName}: CASA support for Google Test only supported for 64 bit Linux")
-       return()
+    #    message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
+    #    return()
 
-    endif ()
+    # endif ()
 
     # The Google Test install logic in cmake will put the needed include and library
     # below the directory stored in the variable GtestRoot.

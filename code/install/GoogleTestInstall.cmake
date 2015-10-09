@@ -75,13 +75,14 @@ if (NOT EXISTS ${GoogleTest_Root})
    # Wire the Google Test subproject in by adding it as a subdirector and
    # creating dependencies
 
-   add_subdirectory (${GoogleTest_Root})
-
    message ("INFO:: GoogleTest installation complete")
 
 else ()
    message ("INFO:: Google Test already installed")
 endif ()
+
+add_subdirectory (${GoogleTest_Root})
+
 
 
 
