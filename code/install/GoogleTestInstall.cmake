@@ -50,9 +50,9 @@ set (GoogleTest_ReleaseRoot ${GoogleTest_Root}/googletest-release-${GoogleTest_V
 set (GoogleTest_LibraryDir ${CMAKE_BINARY_DIR}/gtest CACHE STRING "Location of libgtest.a")
    set (GoogleTest_Target "libgtest" CACHE STRING "Target building Google Test library")
 
-if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
+if ((CMAKE_SYSTEM_NAME STREQUAL Linux AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
-   message ("WARNING:: Google Test installation not yet supported outside of Linux for x64")
+   message ("WARNING:: Google Test installation support available for 64 bit linux only.")
    return()
 
 endif ()
@@ -64,7 +64,7 @@ if (NOT EXISTS ${GoogleTest_Root})
    message ("INFO:: Google Test installation commencing ...")
 
    execute_process (COMMAND mkdir ${GoogleTest_Root})
-   execute_process (COMMAND wget ${GoogleTest_ReleaseArchive} -O release-${GoogleTest_Version}.tar.gz
+   execute_process (COMMAND curl -L -O ${GoogleTest_ReleaseArchive}
                     WORKING_DIRECTORY ${GoogleTest_Root})
 
    message ("INFO:: ... Downloaded source")

@@ -528,9 +528,9 @@ macro (casa_add_google_test)
     list(GET google_test_SOURCES 0 testName)
     get_filename_component (testName ${testName} NAME_WE)
 
-    if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
+    if (CMAKE_SYSTEM_NAME STREQUAL Linux AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 )
 
-       message ("WARNING:: Test ${testName}: CASA support for Google Test not ready except of Linux for x64")
+       message ("WARNING:: Test ${testName}: CASA support for Google Test only supported for 64 bit Linux")
        return()
 
     endif ()

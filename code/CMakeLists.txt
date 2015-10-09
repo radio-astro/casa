@@ -1119,13 +1119,13 @@ casa_find( LIBSAKURA
 #                         #
 ###########################
 
-if (CMAKE_SYSTEM_NAME STREQUAL Linux )
+#if (CMAKE_SYSTEM_NAME STREQUAL Linux )
 
-   include (GoogleTestInstall)
+include (GoogleTestInstall)
 
-else ()
-   message ("WARNING:: Google Test support only for Linux right now")
-endif ()
+#else ()
+#   message ("WARNING:: Google Test support only for Linux right now")
+#endif ()
 
 casa_config_end()
 
