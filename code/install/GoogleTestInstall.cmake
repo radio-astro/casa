@@ -64,7 +64,7 @@ if (NOT EXISTS ${GoogleTest_Root})
    message ("INFO:: Google Test installation commencing ...")
 
    execute_process (COMMAND mkdir ${GoogleTest_Root})
-   execute_process (COMMAND wget ${GoogleTest_ReleaseArchive}
+   execute_process (COMMAND wget ${GoogleTest_ReleaseArchive} -O release-${GoogleTest_Version}.tar.gz
                     WORKING_DIRECTORY ${GoogleTest_Root})
 
    message ("INFO:: ... Downloaded source")
