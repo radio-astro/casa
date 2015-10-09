@@ -832,6 +832,18 @@ if ( -l "lib/tcl8.4" ) {
 #}
 
 ### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+###   create bin directory with links to root scripts
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
+mkpath "bin" or die "could not make directory";
+chdir "bin" or die "could not cd to 'bin'";
+foreach $script ( @wrappers ) {
+    system( "ln -s ../$script" );
+}
+system( "ln -s ../casapyinfo" );
+system( "ln -s ../casapyinfo casainfo" );
+chdir "..";
+
+### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
 ###   generate readme
 ### ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ---- ----- ---- ----
 $readme = readme( );
@@ -1107,12 +1119,12 @@ example, if you unpacked the 4.4.0 casa distribution:
 
 you could setup your environment to use CASA in bash like:
 
-    cd casa-release-4.4.0-el6
+    cd casa-release-4.4.0-el6/bin
     PATH=`pwd`:$PATH
 
 or if you use tcsh, you could setup your environment like:
 
-    cd casa-release-4.4.0-el6
+    cd casa-release-4.4.0-el6/bin
     setenv PATH `pwd`:$PATH
 
 You can use the casa-config script for extra information about this
