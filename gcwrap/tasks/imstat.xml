@@ -25,20 +25,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>[0, 1]</example> 
     </param>
     <param type="string" name="region">
-        <description>Image Region or name. Use Viewer</description>
-        <value></value>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <value/>
     </param>
     <param type="string" name="box">
-        <description>Select one or more box regions</description>
-        <value></value>
+        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
     </param>
     <param type="string" name="chans" >
-	<description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
-    	<value></value>
+	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+    	<value/>
     </param>
     <param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV). Default "" => include all</description>
-	    <value></value>
+	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
@@ -157,19 +157,17 @@ Keyword arguments:
 imagename    Name of input image
 		     Default: none; Example: imagename='ngc5921_task.im'
 axes         axes to compute statistics over. -1 => all axes.
-region       Region of interest. See help par.region.
-box          A box region specified in pixels on the directional plane
-		     Default: none (whole 2-D plane); 
+region       Region selection. See "help par.region" for details. Default is
+             to use the full image.
+box          Rectangular region(s) to select in direction plane. See
+             "help par.box" for details. Default is to use the entire direction plane.
              Example: box='10,10,50,50'
              box = '10,10,30,30,35,35,50,50' (two boxes)
-chans        Zero based channel numbers
-	         Range of channel numbers to include in statistics
-             See "help par.chans" for examples. 
-		     Default:''= all;  Example: chans='3~20'    
-stokes       Stokes parameters to analyze.
-             Default: all; Example: stokes='IQUV';  
+chans        Channels to use. See "help par.chans" for details. Default is to use all channels.
+	         Example: chans='3~20'    
+stokes       Stokes planes to use. See "help par.stokes" for details. Default is to
+             use all Stokes planes.
              Example:stokes='I,Q'
-             Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
 listit       Print stats and bounding box to logger? 
 verbose      Print additional messages to logger?
 mask         Mask to use. See help par.mask. Default is none.

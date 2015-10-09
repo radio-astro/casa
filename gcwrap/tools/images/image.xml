@@ -1080,7 +1080,7 @@ myim.done()
     <input>
         <param type="string"  name="function">
             <description>Aggregate function to apply. This can be set one of flux, max, mean, median, min, rms, stdev, sum, variance. Must be specified.</description>
-            <value></value>
+            <value/>
         </param>
         <param type="any"  name="axes">
             <any type="variant"/>
@@ -1093,20 +1093,20 @@ myim.done()
         </param>
         <param type="any" direction="in" name="region">
             <any type="variant" limittypes="string record"/>
-            <description>Region specification. See help par.region for more details. Default setting is to use the full image.</description>
-            <value type="string"></value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value type="string"/>
         </param>
         <param type="string"  name="box">
-            <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy" ("bottom/top left/right corner x/y")</description>
-            <value></value>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+            <value/>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. See help par.chans for more details. Channels specified must be contiguous. Default setting is to use all channels.</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Channels must be contiguous. Default is to use all channels.</description>
+            <value/>
         </param>
         <param type="string"  name="stokes">
-            <description>Stokes planes to use. Planes specified must be contiguous. Default setting is to use all Stokes planes.</description>
-            <value></value>
+            <description>Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
+            <value/>
         </param>
         <param type="string"  name="mask">
             <description>Mask to use. See help par.mask for more details. Default setting is none. </description>
@@ -1213,8 +1213,8 @@ collapsed.done()
             </param>
             	<param type="any" direction="in" name="region">
             	<any type="variant" limittypes="string record"/>
-            	<description>Region specification. See help par.region for more details. Default setting is to use the full image.</description>
-            	<value type="string"></value>
+            	<description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            	<value type="string"/>
         	</param>
         	<param type="string"  name="mask">
             	<description>Mask to use. See help par.mask for more details. Default setting is none. </description>
@@ -1828,18 +1828,15 @@ the example we list the names of the fields in this record.
      <description>Output sub-image file name.  Default is unset.</description>
      <value></value>
      </param>
-  
      <param type="string"  name="infile">
      <description>Input image file name.  Must be specified.</description>
      <value></value>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
-  
      <param type="any"  name="mask">
      <any type="variant"/>    
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -2174,7 +2171,7 @@ In this example, all the images are virtual (temporary images).
   
      <param type="any"  name="region">
         <any type="variant" limittypes="record string"/>
-        <description>Region of interest. See help par.region for details.  Default is whole image.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
         <value/>
      </param>
      <param type="bool"  name="zero">
@@ -2303,8 +2300,8 @@ value (which is an empty list).
 
      <param type="variant"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
 
      <param type="any"  name="mask">
@@ -2411,7 +2408,7 @@ im3.done()
   
      <param type="any" name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
 </input>
@@ -2500,8 +2497,7 @@ the increment.
 			</param>
 			<param type="any" name="region">
 				<any type="variant" limittypes="record, string" />
-				<description>Dictionary or string specifying the region of interest.
-					See help par.region. Default is whole image.</description>
+				<description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
 				<value />
 			</param>
 			<param type="any" name="mask">
@@ -2891,8 +2887,8 @@ ia.close()              # The Image tool is detached from the image again, using
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>Region over which output is desired. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="intArray"  name="channels">
@@ -3079,8 +3075,8 @@ ia.close()
 
      <param type="any"  name="region">
      <any limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
 
      <param type="any"  name="mask">
@@ -3468,8 +3464,8 @@ at a particular location at a particular time.
   
      <param type="variant"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. Default is unset.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -3955,7 +3951,7 @@ ia.close()
 
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. The default setting is the whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
 
@@ -4056,7 +4052,7 @@ ia.removefile('p.im')
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
   
@@ -4140,21 +4136,21 @@ We use the Componentlist GUI to look at the strongest component.
     <shortdescription>Fit gaussians and/or polynomials to a 1-dimensional profile.</shortdescription>
     <input>
         <param type="string"  name="box">
-            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
-            <value></value>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+            <value/>
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="string record"/>
-            <description>Region of interest. See help par.region for details. Default is entire image.</description>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
             <value type="string"/>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. See "help par.chans" for examples. Channels must be contigous. Default: all channels ("").</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Channels must be contiguous. Default is to use all channels..</description>
+            <value/>
         </param>
         <param type="string"  name="stokes">
-            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
-            <value></value>
+            <description>Stokes planes to use. See "help par.stokes" for details. Planes must be contiguous. Default is to use all stokes planes.</description>
+            <value/>
         </param>
         <param type="int"  name="axis">
             <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (\&lt;0).</description>
@@ -4706,73 +4702,60 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
     <shortdescription>Fit 2-dimensional models to an image.</shortdescription>
     <input>
         <param type="string"  name="box">
-            <value></value>
-            <description>One or more boxes to use for fit region(s). Default is to use the entire plane.</description>
+            <value/>
+            <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
-        
         <param type="any"  name="region">
             <any type="variant"/>
-            <description>The 2-D region of interest to fit. Default is entire plane. If both box and region are specified, box is used and region is not.</description>
-            <value></value>
-        </param>
-        
-        <param type="any"  name="chans">
-            <any type="variant"/>
-            <description>Channels to use in the fit. See "help par.chans" for examples. Default is 0 (first plane).</description>
-            <value></value>
-        </param>
-        
-        <param type="string"  name="stokes">
-            <description>The polarization to use in the fit. Default is to use the first stokes plane.</description>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
             <value/>
         </param>
-        
+        <param type="any"  name="chans">
+            <any type="variant"/>
+            <description>Channels to use. See "help par.chans" for details. Default is 0 (first plane).</description>
+            <value/>
+        </param>
+        <param type="string"  name="stokes">
+            <description>The stokes planes to use. See "help par.stokes" for details. Default is to use the first stokes plane.</description>
+            <value/>
+        </param>
         <param type="any"  name="mask">
             <any type="variant"/>
             <description>Mask to use. See help par.mask. Default is none.</description>
             <value type="string"/>
         </param>
-    
         <param type="doubleArray"  name="includepix">
             <description>Range of pixel values to include.  Default is to include all pixels.</description>
             <value>-1</value>
         </param>
-    
         <param type="doubleArray"  name="excludepix">
             <description>Range of pixel values to exclude.  Default is to exclude no pixels.</description>
             <value>-1</value>
         </param>
-    
         <param type="string"  name="residual">
             <description>Name of the residual image to write. Default is not to write the residual.</description>
             <value></value>
         </param>
-    
         <param type="string"  name="model">
             <description>Name of the model image to write. Default is not to write the model.</description>
             <value></value>
         </param>
-    
         <param type="string"  name="estimates">
             <description>Name of the input estimates file. Default is to auto-estimate in which case a single gaussian will be fit.</description>
             <value></value>
         </param>
-        
         <param type="string"  name="logfile">
             <description>File in which to log results. Default is not to write a logfile.</description>
             <value></value>
         </param>
-        
         <param type="bool"  name="append">
             <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
             <value>true</value>
         </param>
-        
         <param type="string"  name="newestimates">
             <description>File to which to write results in "estimates" format suitable as estimates input for another run. Default is do not write an estimates file.</description>
             <value></value>
         </param>
-    
         <param type="string"  name="complist">
             <description>Output component list table name. Default is do not write a component list table.</description>
             <value></value>
@@ -5240,12 +5223,12 @@ ia.close()
 
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
 
      <param type="intArray"  name="axes">
-     <description>Axes to average over.  Default is none.</description>
+     <description>Axes to average over. Default is none.</description>
      <value>-1</value>
      </param>
 
@@ -5357,8 +5340,8 @@ In this example we recover first the pixels and then the pixel mask.
         
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
-            <description>The region of interest. See help par.region for details. Default is whole image.</description>
-            <value></value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value/>
         </param>
         <param type="string"  name="mask">
             <description>Mask to use. See help par.mask. Default is none.</description>
@@ -5544,7 +5527,7 @@ ia.close()
   
      <param type="any"  name="region">
      	<any type="variant" limittypes="record, string"/>
-    	<description>Region of interest. See help par.region for details. Default is whole image.</description>
+    	<description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      	<value/>
      </param>
   
@@ -5737,7 +5720,7 @@ and acquires just a read lock.
     </param>
     <param type="any"  name="region">
         <any type="variant" limittypes="record string"/>
-        <description>Region of interest. See help par.region for details. Default is whole image.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
         <value/>
     </param>
     <param type="any"  name="mask">
@@ -5902,8 +5885,8 @@ ia.history(list=T, browse=F)       # List history to logger
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest of the input image. See help par.region for details.  Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="doubleArray"  name="locate">
@@ -6096,8 +6079,8 @@ and acquire a readonly lock.
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="overwrite">
@@ -6368,8 +6351,8 @@ ia.close()
   
      <param type="any" name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The 2-D region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -6447,7 +6430,7 @@ In this example we subtract the model returned by the fitcomponents function.
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
   
@@ -6526,8 +6509,8 @@ ia.close()
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>Region specification. See help par.region for details. Default is entire image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -7042,20 +7025,20 @@ The {\stff open} function first closes the old \imagefile.
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
-            <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
-            <value></value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value/>
         </param>
         <param type="string" name="box">
-            <value></value>
-            <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
+            <value/>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
         <param type="string" name="chans">
-            <description>Spectral selection. See "help par.chans" for examples.  Default is the entire spectral range.</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <value/>
         </param>
         
         <param type="string" name="stokes">
-            <description>Polarization selection. Default is all.</description>
+            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all stokes planes.</description>
             <value/>
         </param>
         <param type="string" name="mask">
@@ -7111,16 +7094,16 @@ The {\stff open} function first closes the old \imagefile.
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
-            <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
-            <value></value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value/>
         </param>
         <param type="string" name="box">
-            <value></value>
-            <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
+            <value/>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
         <param type="string" name="chans">
-            <description>Spectral selection. See "help par.chans" for examples.  Default is the entire spectral range.</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <value/>
         </param>
         
         <param type="string" name="stokes">
@@ -7397,7 +7380,7 @@ ia.close()
   
      <param type="any"  name="region">
      <any type="any" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
   
@@ -7513,8 +7496,8 @@ ia.close()
   
      <param type="any"  name="region">
      <any type="variant" limittypes="string record"/>
-     <description>The region of interest.  See help par.region. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -7629,13 +7612,11 @@ ia.close()
      <description>The output pixel axes to regrid.  Default is all.</description>
      <value>-1</value>
      </param>
-  
      <param type="any"  name="region">
         <any type="variant" limittypes="record string"/>
-        <description>The region of interest. See help par.region for details. Default is the whole image.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
         <value/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
 	     <description>Mask to use. See help par.mask. Default is none.</description>
@@ -8026,13 +8007,11 @@ ia.done()
      <description>Angle by which to rotate.  Default is no rotation.</description>
      <value>0deg</value>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
-  
      <param type="any"  name="mask">
      <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -8237,13 +8216,11 @@ print ia.name(strippath=T)
 	     <any type="variant"/>
      <description>The new value(s), Numeric scalar or LEL expression</description>
      </param>
-  
      <param type="any"  name="region">
      	<any type="variant" limittypes="record string"/>
-     	<description>The region of interest. See help par.region for details. Default is whole image.</description>
+     	<description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
     	<value/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -8511,13 +8488,11 @@ ia.close()
      <description>Scale factor.  Default is autoscale.</description>
      <value>-1</value>
      </param>
-  
      <param type="any"  name="region">
      <any type="region" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
 	     <description>Mask to use. See help par.mask. Default is none.</description>
@@ -8653,7 +8628,7 @@ ia.close()
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
   
@@ -9135,8 +9110,8 @@ ib.done()
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>Region of interest. See help par.region for details. Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -9535,7 +9510,7 @@ in the record {\stfaf 'stats'}.
   
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
   
@@ -9622,13 +9597,11 @@ ia.twopointcorrelation()   # Output image is virtual
      <description>Output image file name.  Default is unset.</description>
      <value></value>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant" ypes="record string"/>
-     <description>Region of interest.  Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value type="string"/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -9900,13 +9873,11 @@ listed in square brackets.
      is to autoscale if maxpix \&lt; minpix.</description>
      <value>-1</value>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -10046,14 +10017,11 @@ ia.close()
      <description>ASCII file name.
      Default is input name + '.ascii'.</description>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details.
-     Default is whole image.</description>
-     <value></value>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+     <value/>
      </param>
-  
      <param type="any"  name="mask">
 	     <any type="variant"/>
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -10527,13 +10495,11 @@ the example we list the names of the fields in this record.
      <description>Output sub-image file name.  Default is unset.</description>
      <value></value>
      </param>
-  
      <param type="any"  name="region">
      <any type="variant" limittypes="record string"/>
-     <description>The region of interest. See help par.region for details. Default is the whole image.</description>
+     <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
      <value/>
      </param>
-  
      <param type="any"  name="mask">
      <any type="variant"/>    
      <description>Mask to use. See help par.mask. Default is none.</description>
@@ -10728,21 +10694,21 @@ used to create a 2D temporary image.
             <value>false</value>
         </param>
         <param type="string"  name="box">
-            <value></value>
-            <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
+            <value/>
+            <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
-            <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
-            <value></value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value/>
         </param>
         <param type="string"  name="chans">
-            <description>The frequency planes to correct. See "help par.chans" for examples. Default is all frequencies.</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <value/>
         </param>
         
         <param type="string"  name="stokes">
-            <description>The correlations to correct. Default is all.</description>
+            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all stokes planes.</description>
             <value/>
         </param>
         <param type="string"  name="mask">
@@ -10838,15 +10804,15 @@ used to create a 2D temporary image.
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="record string"/>
-            <description>Region selection. See help par.region for details. Default is entire image. No selection is permitted in the direction plane.</description>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image. No selection is permitted in the direction plane.</description>
             <value/>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for details. Channels must be contiguous. Default is to use all channels.</description>
             <value/>
         </param>
         <param type="string"  name="stokes">
-            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <description>Stokes planes to use. See "help par.stokes" for details. Planes must be contiguous. Default is to use all stokes planes.</description>
             <value/>
         </param>
         <param type="string"  name="mask">

@@ -34,21 +34,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="string" direction="in" name="box">
-            <value></value>
-            <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
+            <value/>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
         <param type="any" direction="in" name="region" subparam="true">
             <any type="variant"/>
-            <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
-            <value>""</value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value type="string"/>
         </param>
         <param type="string" direction="in" name="chans">
-            <description>The frequency planes to correct. See "help par.chans" for examples. Default is all frequencies.</description>
-            <value></value>
+            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <value/>
         </param>
         
         <param type="string" direction="in" name="stokes">
-            <description>The correlations to correct. Default is all.</description>
+            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
             <value/>
         </param>
         <param type="string" direction="in" name="mask">
@@ -98,15 +98,11 @@ outfile          Name of output CASA image. Must be specified.
 overwrite        If output file is specified, controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
-box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-                 may be specified. If not specified, region is used if specified. If region
-                 is also not specified, entire directional plane unioned with any chans and
-                 stokes specification determines the region.
-region           Optional region file to use.
-chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. See "help par.chans" for examples. Default is all channels.
-stokes           Contiguous stokes planes specification. Not used if region is specified.
-                 Default is all stokes.
+box              Rectangular region to select in direction plane. See "help par.box" for details. Default
+                 is to use the entire direction plane.
+region           Region selection. See "help par.region" for details. Default is to use the full image.
+chans            Channels to use. See "help par.chans" for details. Default is to use all channels.
+stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.
 mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. See help par.mask.
 mode             Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"

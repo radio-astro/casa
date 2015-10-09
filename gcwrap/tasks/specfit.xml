@@ -22,22 +22,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>imagenam='ngc5921_task.image'</example>
     </param>
     <param type="string" direction="in" name="box">
-        <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
-        <value></value>
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
         <example>box="4,4,10,10"</example>
     </param>
     <param type="string" direction="in" name="region">
-        <description>Region of interest. See help par.region for possible specifications. Default: Do not use a region.</description>
-        <value></value>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <value/>
         <example>region="myregion.rgn"</example>
     </param>
     <param type="string" direction="in" name="chans">
-        <description>Channels to use. Channels must be contiguous. See "help par.chans" for examples. Default: all channels ("").</description>
-        <value></value>
+        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+        <value/>
     </param>
     <param type="string" direction="in" name="stokes">
-        <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
-        <value></value>
+        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+        <value/>
         <example>stokes="I"</example>
     </param>
     <param type="int" direction="in" name="axis">
@@ -331,15 +331,14 @@ This task simultaneously fits one or more gaussian singlets lorentzian singlets,
 
 PARAMETER SUMMARY
 imagename       Name of the input (CASA, FITS, MIRIAD) image
-box             Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-                may be specified. If not specified, region is used if specified. If region
-                is also not specified, entire directional plane unioned with any chans and
-                stokes specification determines the region.
-region          Region of interest. See help par.region for possible specifications.
-chans           Optional contiguous frequency specification. Not used if
-                region is specified. See "help par.chans" for examples. Default is all channels.
-stokes          Contiguous stokes planes specification. Not used if region is specified.
-                Default is all stokes.     
+box             Rectangular region to select in direction plane. See "help par.box"
+                for details. Default is to use the entire direction plane.
+region          Region selection. See "help par.region" for details. Default is to use the
+                full image.
+chans           Channels to use. See "help par.chans" for details. Default is to use
+                all channels.
+stokes          Stokes planes to use. See "help par.stokes" for details. Default is
+                to use all Stokes planes.
 axis            Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
                 zeroth axis if a spectral axis is not present.
 mask            Mask to use. See help par.mask. Default is none.

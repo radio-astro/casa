@@ -6,18 +6,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-
-<!-- This task reads values at a particular location in       -->
-<!-- an image.                                                -->
-<!-- This does the equivalent of                              -->
-<!-- ia.open('anyfile.im');                                   -->
-<!-- ia.pixelvalue();                                         -->
-<!--    OR                                                    -->
-<!-- ia.getchunk();                                           -->
-<!--    OR                                                    -->
-<!-- ia.getregion();                                          -->
-
-
 <task type="function" name="imval" category="analysis, information">
 
 <shortdescription>Get the data value(s) and/or mask value in an image.</shortdescription>
@@ -31,24 +19,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Region over which to get values. See help par.region.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
 
     <param type="string" name="box">
-        <description>Select one or more box regions</description>
-        <value></value>
+        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
     </param>
 
     <param type="string" name="chans" >
-	<description>Select the spectral range. See "help par.chans" for examples. </description>
-    	<value></value>
+	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+    	<value/>
     </param>
 
     <param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
-	    <value></value>
+	    <description>Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.</description>
+	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
@@ -118,28 +106,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	Keyword arguments:
 	imagename -- Name of input image
 		Default: none; Example: imagename='ngc5921_task.im'
-        region -- region file or name.
-                Use the viewer, then region manager to select regions of
-                   the image to process.  Similar to box, but graphical
-                Or the name of a region stored with the image, 
-                      use rg.namesintable()
-                to retrieve the list of names.
-                Default: none
+        region -- Region selection. See "help par.region" for details. Default is to use the full image.
                 Example: region='myimage.im.rgn'
                          region='region1'
-	box --  A box region on the directional plane
-	        Only pixel values acceptable at this time.
+	box --  Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.
 		Default: '' (referencepixel values for the Directional coord); 
                 Example: box='10,10,50,50'
                          box = '10,10,30,30,35,35,50,50' (two boxes)
-                         box = '-1,-1'                   (all points)
-	chans -- Spectral range. See "help par.chans" for examples. 
-                                           chans='-1' (all channels)
-	stokes -- Stokes parameters to analyze.
-                Default: none (all); Example: stokes='IQUV';  
-                                              stokes='I,Q'
-                                              stokes='-1' (all stokes values)
-                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
+	chans -- Channels to use. See "help par.chans" for details. Default is to use all channels.
+	stokes -- Stokes planes to use. See "help par.stokes" for details. Planes specified must be contiguous. Default is to use all Stokes planes.
+	         Example: stokes='IQUV';  
+                      stokes='I,Q'
 
       General procedure:
 

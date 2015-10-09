@@ -20,29 +20,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<value></value>
         <example>imagenam='ngc5921.im'</example>
     </param>
-
     <param type="string" name="box">
-        <description>Specify one or more box regions for the fit.</description>
-        <value></value>
+        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
         <example>box='100,120,200,200'</example>
     </param>
-
     <param type="any" name="region">
-        <description>Region. See help par.region for specs.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
 	    <any type='variant' limittype='string stringArray record'/>
         <value type='string'/>
         <example>region='myregion'</example>
     </param>
-
     <param type="any" name="chans">
-        <description>Spectral channels on which to perform fit. See "help par.chans" for examples.</description>
+        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
         <any type='variant' limittype='string int'/>
         <value type="string"/>
     </param>
-    
     <param type="string" name="stokes">
-        <description>Stokes parameter to fit. If blank, first stokes plane is used.</description>
-        <value></value>
+        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use first Stokes plane.</description>
+        <value/>
         <example>stokes='Q'</example>
     </param>
     
@@ -171,13 +167,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 PARAMETER SUMMARY
 imagename        Name of the input image
-box              One or more box regions to use for fitting,
-                 eg "100, 120, 200, 220, 300, 300, 400, 400"
-                 to use two boxes. If both box and region
-                 parameters are specified, box is used.
-region           Region of interest. See help par.region for specification options.
-chans            Spectral channels on which to perform fit. See "help par.chans" for examples.
-stokes           Stokes parameter to fit. If blank, first polarization plane is used.
+box              Rectangular region(s) to select in direction plane. See "help par.box"
+                 for details. Default is to use the entire direction plane.
+                 eg "100, 120, 200, 220, 300, 300, 400, 400" to use two boxes.
+region           Region selection. See "help par.region" for details. Default is to use
+                 the full image.
+chans            Channels to use. See "help par.chans" for details. Default is to use all
+                 channels.
+stokes           Stokes planes to use. See "help par.stokes" for details. Default is to
+                 use first Stokes plane.
 mask             Mask to use. See help par.mask. Default is none.
 includepix       Range of pixel values to include for fitting. Array of two numeric
                  values assumed to have same units as image pixel values. Only one

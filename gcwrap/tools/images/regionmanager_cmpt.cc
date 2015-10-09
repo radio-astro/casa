@@ -372,7 +372,8 @@ regionmanager::fromtextfile(
     	    ncsys.set((CoordinateSystem::restore(*csysRec, "")));
     	}
     	RegionTextList annList(
-    		filename, ncsys.ptr() ? *ncsys : _regMan->getcoordsys(), myShape
+    		filename, ncsys.ptr() ? *ncsys : _regMan->getcoordsys(),
+            myShape, "", nullptr, ""
     	);
 		return fromRecord(annList.regionAsRecord());
     }
@@ -408,7 +409,7 @@ regionmanager::fromtext(
     	    //user has set csys already
     	    coordsys = _regMan->getcoordsys();
     	}
-    	RegionTextList annList(coordsys, text, myShape);
+    	RegionTextList annList(coordsys, text, myShape, "", nullptr, "");
 		return fromRecord(annList.regionAsRecord());
     }
     catch (const AipsError& x) {

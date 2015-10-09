@@ -26,19 +26,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="any" direction="in" name="region">
             <any type="variant"/>
-            <description>The region to rebin. Default is entire image. Do not specify region and box/chans simultaneously.</description>
-            <value>""</value>
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+            <value type="string"/>
         </param>
-        <param type="string" direction="in" name="box" subparam="true">
-            <value></value>
-            <description>Box in directional plane to rebin. Default is to use the entire directional plane.</description>
+        <param type="string" direction="in" name="box">
+            <value/>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         </param>
-        <param type="string" direction="in" name="chans" subparam="true">
-            <description>Channels to rebin. See "help par.chans" for examples. Default is all channels</description>
-            <value></value>
+        <param type="string" direction="in" name="chans">
+            <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+            <value/>
         </param>
-        <param type="string" direction="in" name="stokes" subparam="true">
-            <description>The correlations to include in the output. Default is all. Stokes planes cannot be rebinned.</description>
+        <param type="string" direction="in" name="stokes">
+            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes. Stokes planes cannot be rebinned.</description>
             <value/>
         </param>
         <param type="string" direction="in" name="mask">
@@ -70,19 +70,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </notequals>
             </when>
-            <when param="region">
-                <equals type="string" value="">
-                    <default param="box">
-                        <value>""</value>
-                    </default>
-                    <default param="chans">
-                        <value>""</value>
-                    </default>
-                    <default param="stokes">
-                        <value>""</value>
-                    </default>
-                </equals>
-            </when>
             <when param="mask">
                 <notequals type="string" value="">
                    <default param="stretch"><value type="bool">False</value></default>
@@ -97,13 +84,13 @@ imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
 factor           Array of binning factors for each axis, eg [2,3]. Use imhead or ia.summary()
                  to determine order of axes in your image.
-region           Region to use. Do not specify region and box/chans/stokes simultaneously.
-                 See help par.region for details.
-box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-                 may be specified. Default is entire directional plane.
-chans            Optional contiguous frequency channel number specification. See "help par.chans"
-                 for examples. Default is all channels.
-stokes           Stokes planes specification. Not used if region is specified. Default is all stokes.
+region           Region selection. See "help par.region" for details. Default is to use the
+                 full image.
+box              Rectangular region to select in direction plane. See "help par.box" for
+                 details. Default is to use the entire direction plane.
+chans            Channels to use. See "help par.chans" for details. Default is to use all channels.
+stokes           Stokes planes to use. See "help par.stokes" for details. Default is to use all
+                 Stokes planes. Stokes planes cannot be rebiined.
 mask             Mask to use. See help par.mask. Default is none.
 dropdeg          Drop degenerate axes?
 overwrite        Should the image of the same name as specified in outfile be overwritten?

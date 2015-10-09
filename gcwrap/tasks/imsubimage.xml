@@ -22,22 +22,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
         </param>
             <param type="string" name="box">
-            <description>Optional direction plane box ("blcx, blcy, trcx trcy").</description>
+            <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
             <value/>
             <example>box="100,100,200,200"</example>
         </param>
-        <param type="string" name="region" subparam="true">
-            <description>Region specification. See help par.region. Default is to not use a region.</description>
+        <param type="string" name="region">
+            <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
             <value/>
             <example>region="my.rgn"</example>
         </param>
         <param type="string" name="chans">
-           <description>Channel range specification. See help par.chans.</description>
+           <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
            <value/>
            <example>chans="5~20"</example>
         </param>
         <param type="string" name="stokes">
-            <description>Optional contiguous stokes planes specification.</description>
+            <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
             <value/>
             <example>stokes="iq"</example>
         </param>
@@ -63,13 +63,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <constraints>
-            <when param="box">
-                <equals type="string" value="">
-                    <default param="region">
-                        <value>""</value>
-                    </default>
-                </equals>
-            </when>
             <when param="mask">
                 <notequals type="string" value="">
                     <default param="stretch">
@@ -91,16 +84,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input image
 outfile          Name of output file. Must be specified.
-box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-                 may be specified. If not specified, region is used if specified. If region
-                 is also not specified, entire directional plane unioned with any chans and
-                 stokes specification determines the region.
-region           Region specification. See help par.region. Default is to not use a region. Do not
-                 specify both region and box/chans/stokes as that will result in an error.
-chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. See "help par.chans" for examples.  Default is all channels.
-stokes           Contiguous stokes planes specification. Not used if region is specified.
-                 Default is all stokes.
+box              Rectangular region to select in direction plane. See "help par.box"
+                 for details. Default is to use the entire direction plane.
+region           Region selection. See "help par.region" for details. Default is to use
+                 the full image.
+chans            Channels to use. See "help par.chans" for details. Default is to use
+                 all channels.
+stokes           Stokes planes to use. See "help par.stokes" for details. Default is to
+                 use all Stokes planes.
 mask             Mask to use. See help par.mask. Default ("") is none.
 dropdeg          If True, all degenerate axes in the input image will be excluded in the output image.
 overwrite        If True, a pre-existing file of the same name as outfile will be overwritten.

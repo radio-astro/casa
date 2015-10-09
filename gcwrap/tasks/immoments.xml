@@ -32,24 +32,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Region specification. See help par.region. Default is to not use a region.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
 
     <param type="string" name="box">
-        <description>Select one or more box regions</description>
-        <value></value>
+        <description>Rectangular region(s) to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
     </param>
 
     <param type="string" name="chans" >
-	<description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
-    	<value></value>
+	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+    	<value/>
     </param>
 
     <param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
-	    <value></value>
+	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <value/>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
     </param>
@@ -127,20 +127,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: ra, dec, lattitude, longitude, spectral, stokes
    mask         Mask to use. See help par.mask. Default is none.  
    stretch      Stretch the input mask if necessary and possible. See below.
-   region       Region specification. See help par.region. Default is to not use a region.
-    box         A box region on the directional plane
-                Only pixel values acceptable.
-                Default: none (whole 2-D plane); 
+   region       Region selection. See "help par.region" for details. Default
+                is to use the full image.
+    box         Rectangular region to select in direction plane. See
+                "help par.box" for details. Default is to use the entire direction plane.
                 Example: box=&quot;10,10,50,50&quot;
                 box = &quot;10,10,30,30,35,35,50,50&quot; (two boxes)
-    chans       channel numbers
-                Range of channel numbers to include in statistics
-                All spectral windows are included
+    chans       Channels to use. See "help par.chans" for details. Default is to use
+                all channels.
                 See "help par.chans" for examples. 
-    stokes      Stokes parameters to analyze.
-                Default: none (all); Example: stokes=&quot;IQUV&quot;;  
+    stokes      Stokes planes to use. See "help par.stokes" for details. Default is to
+                use all Stokes planes.
+                Example: stokes=&quot;IQUV&quot;;  
                 Example:stokes=&quot;I,Q&quot;
-                Options: &quot;I&quot;,&quot;Q&quot;,&quot;U&quot;,&quot;V&quot;,&quot;RR&quot;,&quot;RL&quot;,&quot;LR&quot;,&quot;LL&quot;,&quot;XX&quot;,&quot;YX&quot;,&quot;XY&quot;,&quot;YY&quot;, ...
     includepix  Range of pixel values to include
                 default: [-1] (all pixels); example=[0.02,100.0]
     excludepix  Range of pixel values to exclude

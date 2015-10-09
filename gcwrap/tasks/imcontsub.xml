@@ -41,26 +41,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<allowed kind="range"><value range="min">0</value></allowed> 
         <example>fitorder=2</example>
     </param>
-
     <param type="string" name="region">
-        <description>Image region used for output selection</description>
-        <value></value>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
+        <value/>
     </param>
-
     <param type="any" name="box">
-        <description>[blcx, blcy, trcx, trcy] for output selection</description>
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         <any type="variant" limittypes="string intArray stringArray"/>
-        <value type="string"></value>
+        <value type="string"/>
     </param>
-
     <param type="string" name="chans" >
-	<description>Channel range(s) for continuum fitting</description>
-    	<value></value>
+	<description>Channels to use for fitting. See "help par.chans" for details. Default is to use all channels.</description>
+    	<value/>
     </param>
-
     <param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
-	    <value></value>
+	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <value/>
     </param>
 
     <constraints>
@@ -92,27 +88,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Default: none; Example: contfile='ngc5921_cont.im'
   fitorder -- Polynomial order for the continuum estimation.
     Default: 0; Example fitorder=2
-  region -- region of interest. If specified, neither  box nor stokes
-        should be specified. See help par.region
-<!--                to retrieve the list of names. -->
-  box --  A [blcx, blcy, trcx, trcy] region on the directional plane for
-          selecting a subset for output.
-          ONLY pixel values are acceptable at this time.
-          Default: none (whole 2-D plane); Example: box='10,10,50,50'
-          N.B. This is NOT for selecting a subset of the input for
-               fitting the continuum!  Only pixels that are in region
-               will be considered, however.
-  chans -- line-free channel numbers to fit the continuum to.
-           N.B.: This is currently the _only_ way to specify what is
-                 continuum vs. line emission.
-           ONLY channel numbers accepted at this time, i.e. there is no
-           'spw:' as in the spw parameter of other tasks.  For
-           a multi-spw image, the channelization must be the same for all.
-           Default: '' (all)
+  region -- Region selection. See "help par.region" for details. Default is
+            to use the full image.
+  box --  Rectangular region to select in direction plane. See "help par.box"
+          for details. Default is to use the entire direction plane.
+  chans -- Channels to use for fitting. See "help par.chans" for details.
+           Default is to use all channels.
            Example: chans='3~6;>40'
-  stokes -- Stokes parameter. Must be limited to a single Stokes.
-
-
+  stokes -- Stokes planes to use. See "help par.stokes" for details. Default is
+            to use all Stokes planes.
+  
 Fit a second order polynomial (fitorder=2) to channels 3-8 and 54-60 
 to an RA x Dec x Frequency x Stokes cube, selecting the Stokes I plane
 

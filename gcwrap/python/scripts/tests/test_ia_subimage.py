@@ -192,6 +192,63 @@ class ia_subimage_test(unittest.TestCase):
         myia.done()
         self.assertTrue(type(subim.getchunk()[0,0]) == numpy.complex128)
 
+    def test_CAS7704(self):
+        """Test CAS-7704, chans can be specified with region file"""
+        myia = self.myia
+        imagename = "CAS-7704.im"
+        myia.fromshape(imagename,[20,20,20, 4])
+        outfile = 'myout.im'
+        region = "box[[1pix,1pix],[19pix,19pix]])"
+        imsubimage(
+            imagename=imagename, outfile=outfile, overwrite=True, region=region,
+            chans=""
+        )
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == numpy.array([19, 19, 20, 4])).all())
+        myia.done()
+        self.assertFalse(
+            imsubimage(
+                imagename=imagename, outfile=outfile, overwrite=True, region=region,
+                chans="5~6,9~10"
+            )
+        )
+        imsubimage(
+            imagename=imagename, outfile=outfile, overwrite=True, region=region,
+            chans="5~10"
+        )
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == numpy.array([19, 19, 6, 4])).all())
+        myia.done()
+        imsubimage(
+            imagename=imagename, outfile=outfile, overwrite=True, region=region,
+            stokes="IU"
+        )
+        myia.open(outfile)
+        # includes Q although that plane should be fully masked
+        self.assertTrue((myia.shape() == numpy.array([19, 19, 20, 3])).all())
+        self.assertTrue(myia.getchunk(getmask=T)[:,:,:,0].all())
+        self.assertTrue(myia.getchunk(getmask=T)[:,:,:,2].all())
+        self.assertFalse(myia.getchunk(getmask=T)[:,:,:,1].any())
+        myia.done()
+        
+        region = "box[[2pix,2pix],[6pix,6pix]])"
+        box = "10,10,12,12"
+        imsubimage(
+            imagename=imagename, box=box, outfile=outfile, overwrite=True, region=region,
+            chans=""
+        )
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == numpy.array([11, 11, 20, 4])).all())
+        myia.done()
+        
+        imsubimage(
+            imagename=imagename, box=box, outfile=outfile, overwrite=True, region=region,
+            chans="5~10"
+        )
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == numpy.array([11, 11, 6, 4])).all())
+        myia.done()
+
     def test_keepaxes(self):
         """Test the keepaxes parameter"""
         myia = self.myia

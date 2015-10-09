@@ -72,20 +72,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value/>
     </param>
     <param type="string" name="region">
-        <description>File path which contains an Image Region</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
         <value/>
     </param>
     <param type="string" name="box">
-        <description>Select one or more box regions in the input images</description>
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
         <value/>
     </param>
     <param type="string" name="chans" >
-        <description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
+        <description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
         <value/>
     </param >
     <param type="string" name="stokes">
-        <description>Stokes params to image (I,IV,IQU,IQUV)</description>
-	    <value></value>
+        <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <value/>
 	    <example>stokes='IQ'</example>
 	    <example>stokes='RR,LL'</example>
     </param>
@@ -205,12 +205,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	           Default: immath_results.im;  Example: outfile='results.im'
     mask       Mask to use. See help par.mask. Default is none. Also see polithresh.
     stretch    Stretch the input mask if necessary and possible. See below.
-    region     Name of region file, region text description, or region dictionary.
-    box        A rectangular region on the directional plane expressed in pixels.
+    region     Region selection. See "help par.region" for details. Default is to use the full image.
+    box        Rectangular region to select in direction plane. See "help par.box" for details. Default
+               is to use the entire direction plane.
                Example: box='10,10,50,50'
-    chans      Channel ranges to use, expressed in pixels. See "help par.chans" for examples.   
-    stokes     Stokes parameters. Example: stokes='IQUV';
-               Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+    chans      Channels to use. See "help par.chans" for details. Default is to use all channels.
+    stokes     Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.
                Not used in for cases of mode='poli' or mode='pola'
     imagemd    The image from which metadata should be copied to the output. Default means no gaurantee from
                 which image is used. The image must exist and should conform to the output image spec.

@@ -259,7 +259,7 @@ class par(str):
 	@staticmethod
 	def box():
 		"""
-		box -- 	A box region in the directional portion of an image.
+		box -- 	A rectangular region(s) in the directional portion of an image.
 		The directional portion of an image are the axes for right
 		ascension and declination, for example.  Boxes are specified
 		by there bottom-left corner (blc) and top-right corner (trc)
@@ -268,6 +268,18 @@ class par(str):
 		Default: none (all);
 		Example: box='0,0,50,50'
 		Example: box='10,20,30,40,100,100,150,150'
+		
+		For image analysis tasks and tool methods which also accept the region parameter,
+		the following rules apply if both the box and region parameters are simultaneously
+		specified:
+		* If the region parameter is specified as a python dictionary (eg such as
+		  various rg tool methods return), a binary region file, or a region-in-image,
+		  it is not permissable to specify any of the box, chans, or stokes parameters.
+		* If the region parameter is specified to be a CRTF file name, or a CRTF region string, 
+          then the resulting region and box selection is the union of the box specification
+          with any regions in the CRTF file/string. This is the equivalent of translating the
+          box specification into the equivalent "box" CRTF specification and prepending that
+          specification to the specified CRTF file/string in the region parameter. 
 		"""
 
 	@staticmethod
@@ -401,7 +413,18 @@ class par(str):
         Example in a task call. Parentheses not required around chans string.
  
         imsubimage(imagename="myin.im", outfile="myout.im", chans="range=[20chan, 30chan], restfreq=100GHz, frame=LSRK")
-
+        
+        For image analysis tasks and tool methods which also accept the region parameter,
+        the following rules apply if both the chans and region parameters are simultaneously
+        specified:
+        * If the region parameter is specified as a python dictionary (eg such as
+          various rg tool methods return), a binary region file, or a region-in-image,
+          it is not permissable to specify any of the box, chans, or stokes parameters.
+        * If the region parameter is specified to be a CRTF file name, or a CRTF region string, 
+          it is only permissable to specify chans if that specification can be represented
+          as a single contiguous channel range. In that case, the chans specification overrides
+          any global or per-region range specification in the CRTF file/string, and is used as
+          the global spectral range selection for all regions in the CRTF file/string. 
 		"""
 
 	@staticmethod
@@ -2355,7 +2378,7 @@ class par(str):
 	@staticmethod
 	def region():
 		"""
-             Region over which to carry out the operation. For ia tool methods, this is usually specified
+             Region over which to carry out the operation. For ia tool methods, this is often specified
              as a python dictionary returned from an rg tool method (rg.box(), rg.fromtextfile() etc).
              In image analysis tasks, the region can be specified in one of several ways:
                (a) Using the CASA region format
@@ -2372,6 +2395,28 @@ class par(str):
                           rotbox [ [ 60pix , 50pix ] , [ 30pix , 30pix ] , 30deg ]
                (c) Filename for region in binary format (e.g. from viewer or rg.tofile()).
                    Example: region='myregion.rgn'
+                   
+            For image analysis tasks and tool methods which also accept the box, chans,
+            and/or stokes parameters, the following rules apply if the region parameter
+            is specified:
+            * If region is specified as a python dictionary (eg such as various rg tool
+              methods return), a binary region file, or a region-in-image, then it is not
+              permissable to specify any of the box, chans, or stokes parameters.
+            * If the region parameter is specified to be a CRTF file name, or a CRTF region
+              string, the following rules apply:
+              * If box is specified, the resulting selection is the union of the box
+                specification with any regions in the CRTF file/string. This is the
+                equivalent of translating the box specification into the equivalent "box"
+                CRTF specification and prepending that specification to the specified CRTF
+                file/string in the region parameter.
+              * If chans is specified, it must be able to be represented as a single
+                contiguous range of channels. In this case, the chans specification overrides
+                any global or per-region range specification in the CRTF file/string, and
+                is used as the global spectral range selection for all regions in the CRTF
+                file/string.
+              * If stokes is specified, this specification overrides any global or per-region
+                corr specification in the CRTF file/string, and is used as the global
+                correlation selection for all regions in the CRTF file/string.
 		"""
 
         @staticmethod
@@ -2727,6 +2772,17 @@ class par(str):
 		stokes -- stokes parameters to select/image
 		options: 'I','IV','QU','IQUV',...
                 'RR', 'LL', can only be done by flagging one polarization
+                
+        For image analysis tasks and tool methods which also accept the region parameter,
+        the following rules apply if both the stokes and region parameters are simultaneously
+        specified:
+        * If the region parameter is specified as a python dictionary (eg such as
+          various rg tool methods return), a binary region file, or a region-in-image,
+          it is not permissable to specify any of the box, chans, or stokes parameters.
+        * If the region parameter is specified to be a CRTF file name, or a CRTF region string,
+          then the stokes specification overrides any global or per-region corr specification
+          in the CRTF file/string, and is used as the global correlation selection for all
+          regions in the CRTF file/string. 
 		"""
 
 	@staticmethod

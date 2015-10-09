@@ -79,26 +79,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>-1.0</value>
     </param>
     <param type="any" name="region">
-        <description>Region selection. See help par.region. Empty string means use box/chans/stokes if supplied, or else entire image.</description>
+        <description>Region selection. See "help par.region" for details. Default is to use the full image.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
-
     <param type="string" name="box">
-        <description>Rectangular region specification in directional plane. Do not specify region if you specify box.</description>
-        <value></value>
+        <description>Rectangular region to select in direction plane. See "help par.box" for details. Default is to use the entire direction plane.</description>
+        <value/>
     </param>
-
     <param type="string" name="chans" >
-	<description>Select the spectral channel range. See "help par.chans" for examples. Do not specify region if you specify chans.</description>
-    	<value></value>
+	<description>Channels to use. See "help par.chans" for details. Default is to use all channels.</description>
+    	<value/>
     </param>
-
     <param type="string" name="stokes">
-	    <description>Stokes parameters to image (eg, I,IV,IQU,IQUV). Do not specify region if you specify stokes.</description>
-	    <value></value>
+	    <description>Stokes planes to use. See "help par.stokes" for details. Default is to use all Stokes planes.</description>
+	    <value/>
     </param>
-
     <param type="string" name="mask">
 	    <description>Mask to use. See help par.mask. Default is none.</description>
 	    <value/>
@@ -231,20 +227,14 @@ targetres    Boolean used only for kernel='gauss'. If True, kernel parameters (m
 kimage       The image to be used as the convolution kernel. Only used if kernel="image" or "i".
 scale        Scale  factor to use if kernel="i" or "image".  -1.0 means auto-scale, which is the default.
 mask         Mask to use. See help par.mask. Default is none.
-region       Region selection in the input image. See help par.region for details.
-             You may specify none or one of region or a box/chans/stokes combination, but not both.
-            
-box          A rectangular region on the directional plane. Four comma seperated non-negative numbers,
-             the first two representing the blc and the last two representing the trc, in pixels.
-             The specified corners must be located within the image. Empty string means use the
-             full directional plane.
+region       Region selection. See "help par.region" for details. Default is to use the full image.
+box          Rectangular region to select in direction plane. See "help par.box" for details.
+             Default is to use the entire direction plane.
              Example: "5, 10, 100, 200".
-             
-chans        Channel selection. See help par.chans for details.
-             See "help par.chans" for examples. Empty string means use all channels.
-stokes       Stokes selection. Empty string means use all stokes.
+chans        Channels to use. See "help par.chans" for details. Default is to use all channels.
+stokes       Stokes planes to use. See "help par.stokes" for details. Default is to use
+             all Stokes planes.
              Example: 'I'
-             Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
 
 GAUSSIAN KERNEL
 
