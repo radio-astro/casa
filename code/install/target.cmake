@@ -44,12 +44,18 @@ endmacro()
 macro( casa_add_library module )
 
   add_definitions( ${${module}_DEFINITIONS} )
+
+  # Treat all but the first include dir as a "system" one which will
+  # disable warnings form these often uneditable files.  The first one
+  # is the path to code which is how CASA header files will be found
+  # and there is no leniency for them.  Order of these files is set
+  # in casa_add_module.
+
   list (GET ${module}_INCLUDE_DIRS 0 codeIncludeDir)
   list (REMOVE_ITEM ${module}_INCLUDE_DIRS ${codeIncludeDir})
+
   include_directories( SYSTEM ${${module}_INCLUDE_DIRS} )
-message ("DEBUG  include_directories( SYSTEM ${${module}_INCLUDE_DIRS} )")
   include_directories( ${codeIncludeDir})
-message ("DEBUG  include_directories( ${codeIncludeDir})")
 
   # Create the target lib<module>, but set the output library
   # filename to lib<module>.<suffix> (which would have defaulted
