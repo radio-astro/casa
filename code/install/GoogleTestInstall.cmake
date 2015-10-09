@@ -50,46 +50,48 @@ set (GoogleTest_ReleaseRoot ${GoogleTest_Root}/googletest-release-${GoogleTest_V
 set (GoogleTest_LibraryDir ${CMAKE_BINARY_DIR}/gtest CACHE STRING "Location of libgtest.a")
    set (GoogleTest_Target "libgtest" CACHE STRING "Target building Google Test library")
 
-if ((CMAKE_SYSTEM_NAME STREQUAL Linux AND NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
+if (NOT (CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 ))
 
-   message ("WARNING:: Google Test installation support available for 64 bit linux only.")
+   message ("WARNING:: Google Test installation not yet supported outside of Linux for x64")
    return()
 
 endif ()
 
-# If there is not an existing gtest directory, then download, build and install gtest
+message ("INFO:: Google Test installation commencing ...")
 
 if (NOT EXISTS ${GoogleTest_Root})
-
-   message ("INFO:: Google Test installation commencing ...")
-
    execute_process (COMMAND mkdir ${GoogleTest_Root})
-   execute_process (COMMAND curl -L -O ${GoogleTest_ReleaseArchive}
-                    WORKING_DIRECTORY ${GoogleTest_Root})
-
-   message ("INFO:: ... Downloaded source")
-
-   execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile}
-                    WORKING_DIRECTORY ${GoogleTest_Root})
-
-   # Create a root directory for GoogleTest and configure a CMakeLists.txt
-   # file in that directory.
-
-   message ("INFO:: ... Configuring directory ")
-
-   configure_file (install/GoogleTestInstall.in ${GoogleTest_Root}/CMakeLists.txt @ONLY)
-
-   # Wire the Google Test subproject in by adding it as a subdirector and
-   # creating dependencies
-
-   add_subdirectory (${GoogleTest_Root})
-
-   message ("INFO:: GoogleTest installation complete")
-
-else ()
-   message ("INFO:: Google Test already installed")
 endif ()
 
+if (NOT EXISTS ${GoogleTest_Root}/${GoogleTest_ArchiveFile}) # download archive
+   message ("INFO File ${GoogleTest_Root}/${GoogleTest_ArchiveFile} not present; downloading")
+   execute_process (COMMAND wget ${GoogleTest_ReleaseArchive}
+    		    WORKING_DIRECTORY ${GoogleTest_Root})
+   message ("INFO:: ... Downloaded source")
+endif ()
+
+# Explode the archive
+
+execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile} --overwrite
+		 WORKING_DIRECTORY ${GoogleTest_Root})
+
+# Create a root directory for GoogleTest and configure a CMakeLists.txt
+# file in that directory.
+
+message ("INFO:: ... Configuring directory ")
+
+configure_file (install/GoogleTestInstall.in ${GoogleTest_Root}/CMakeLists.txt @ONLY)
+
+# Wire the Google Test subproject in by adding it as a subdirector and
+# creating dependencies
+
+add_subdirectory (${GoogleTest_Root})
+
+message ("INFO:: GoogleTest installation complete")
+
+
+
+ 
 
 
 
