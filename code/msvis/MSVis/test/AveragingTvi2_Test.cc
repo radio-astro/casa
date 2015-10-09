@@ -326,7 +326,7 @@ protected:
 class FrequencyChecker : public RowChecker{
 
     void
-    checkRow (VisBuffer2 * vb, const VisibilityIterator2 * vi, Int rowId,
+    checkRow (VisBuffer2 * vb, const VisibilityIterator2 * /*vi*/, Int rowId,
               Int row, Int subchunkIndex)
     {
         double actual = vb->getFrequency (row, 0);

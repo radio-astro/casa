@@ -81,9 +81,14 @@ endmacro()
 #
 macro( casa_add_executable module name )
 
-  set( _sources ${ARGN} )
+  set( _sources ${ARGN})
 
   add_executable( ${name} ${_sources} )
+  if (${module}_WarningsAsErrors)
+    set_property (TARGET ${name} APPEND PROPERTY COMPILE_FLAGS "-Werror")
+    message ("-- Executable ${name} has WarningsAsErrors")
+  endif ()
+
   add_dependencies( inst ${name} )
   add_custom_target( ${name}_fast ${CMAKE_BUILD_TOOL} ${name}/fast )
   add_dependencies( ${module}_fast ${name}_fast )
@@ -440,6 +445,10 @@ macro( casa_add_unit_test)
   else ()
     add_executable( ${testName} ${sources} )
     target_link_libraries( ${testName} lib${module} ${casa_unit_test_LIBRARIES})
+
+    if (${module}_WarningsAsErrors)
+      set_property (TARGET ${testName} APPEND PROPERTY COMPILE_FLAGS "-Werror")
+    endif ()
   endif ()
   
   # add_executable( ${testName} EXCLUDE_FROM_ALL ${sources} ) # not part of main build

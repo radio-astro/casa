@@ -645,7 +645,7 @@ Semaphore::wait (int milliseconds)
 {
     Assert (milliseconds >= 0); // it's weird if it's negative
 
-    struct timespec t = convertMsDeltaToTimespec (milliseconds);
+    //// struct timespec t = convertMsDeltaToTimespec (milliseconds);
     int errorCode = 0;
     int code;
 

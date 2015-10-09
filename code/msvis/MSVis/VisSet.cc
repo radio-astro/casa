@@ -613,12 +613,12 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress, Bool doModelData) {
             uInt nHyper = tsm.nhypercubes();
             // Find smallest tile shape
             Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
-            Int lowestId=0, highestId=0;
+            Int highestId=0;
             for (uInt id=0; id < nHyper; id++) {
                 Int product = tsm.getTileShape(id).product();
                 if (product > 0 && (product < lowestProduct)) {
                     lowestProduct = product;
-                    lowestId = id;
+                    //lowestId = id;
                 };
                 if (product > 0 && (product > highestProduct)) {
                     highestProduct = product;
@@ -865,12 +865,12 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress, Bool doModelData) {
 	uInt nHyper = tsm.nhypercubes();
 	// Find smallest tile shape
 	Int lowestProduct=INT_MAX,highestProduct=-INT_MAX;
-	Int lowestId=0, highestId=0;
+	Int highestId=0;
 	for (uInt id=0; id < nHyper; id++) {
 	  Int product = tsm.getTileShape(id).product();
 	  if (product > 0 && (product < lowestProduct)) {
 	    lowestProduct = product;
-	    lowestId = id;
+	    //lowestId = id;
 	  };
 	  if (product > 0 && (product > highestProduct)) {
 	    highestProduct = product;

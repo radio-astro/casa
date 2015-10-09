@@ -333,7 +333,7 @@ void Reweighter::selectTime(Double timeBin, String timerng)
   
 Bool Reweighter::reweight(String& colname, const String& combine)
 {
-  Bool retval = True;
+    //Bool retval = True;
   LogIO os(LogOrigin("Reweighter", "reweight()"));
 
   try{
@@ -395,7 +395,7 @@ Bool Reweighter::reweight(String& colname, const String& combine)
          minsamp_p,selcorrs);
     GroupProcessor gp(viIn, &statwt);
 
-    retval = gp.go();
+    gp.go();
 
     // There should be now be statistically determined sigmas and weights for
     // each selected row.  If smoothing is wanted, i.e. convolving by a

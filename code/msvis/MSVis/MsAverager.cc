@@ -741,8 +741,8 @@ void MsAverager::setAverager(
                      //     << pAveBuff->visCube()(pol, chn, orow);
                      if (aveF(pol, chn, 0) == aveFlag) {
                         pAveBuff->flagCube()(pol, chn, orow) = aveFlag;
-                        DComplex wtvis = 
-                                          aveV(pol, chn, 0) * Double(wt);
+                        // DComplex wtvis = 
+                        //                   aveV(pol, chn, 0) * Double(wt);
                         //cout << " aveV=" << wt * aveV(pol, chn, 0) ;
                         pAveBuff->visCube()(pol, chn, orow) += 
                                           wt * aveV(pol, chn, 0);

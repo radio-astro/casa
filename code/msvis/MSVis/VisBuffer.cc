@@ -916,7 +916,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
 
         // Row weight and sigma currently refer to the number of channels in the
         // MS, regardless of any selection.
-        Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
+        //Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
 
         const Bool doWtSp(visIter_p->existsWeightSpectrum());
 
@@ -931,7 +931,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
         Matrix<Float> rowWtFac(nCor, nrows);
 
         uInt nch = flagCube().shape()(1);   // # of selected channels
-        Double selChanFac;
+        //Double selChanFac;
 
         if(doWtSp){                                    // Get the total weight spectrum
             const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
@@ -1011,7 +1011,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds,Bool calmode)
         // This is slightly fudgy because it ignores the unselected part of
         // weightSpectrum.  Unfortunately now that selection is applied to
         // weightSpectrum, we can't get at the unselected channel weights.
-        selChanFac = static_cast<Float>(totn) / nAllChan0;
+        //Float selChanFac = static_cast<Float>(totn) / nAllChan0;
 
         for(uInt row = 0; row < nrows; ++row){
             for(uInt icor = 0; icor < nCor; ++icor){
