@@ -209,7 +209,7 @@ def convert2geo(vis='', field=''):
             casalog.post( "Field selection returned zero results.", 'WARN')
             return True
 
-        theephstoconvert = []
+        theephstoconvert = set([])
 
         tbt.open(vis+'/FIELD')
 
@@ -218,7 +218,7 @@ def convert2geo(vis='', field=''):
                 theid = tbt.getcell('EPHEMERIS_ID',fld)
                 if theid>=0: # there is an ephemeris attached
                     ephemname = glob.glob(vis+'/FIELD/EPHEM'+str(theid)+'_*.tab')[0]
-                    theephstoconvert.append(ephemname)
+                    theephstoconvert.add(ephemname)
                     casalog.post('Found ephemeris '+ephemname+' for field '+str(fld), 'INFO')
 
         tbt.close()

@@ -531,7 +531,7 @@ def importasdm(
             
             for fld in thesamplefields:
                 thedirmeas = msmdlocal.phasecenter(fld)
-                if thedirmeas['refer']!='J2000':
+                if thedirmeas['refer']!=sourceposref:
                     casalog.post('Ephemeris is in '+thedirmeas['refer']+' instead of '+sourceposref
                                  +' frame.\nEntry in SOURCE table will be converted to '+sourceposref, 'WARN')
                     melocal = metool()
