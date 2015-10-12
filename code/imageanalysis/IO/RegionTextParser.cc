@@ -347,6 +347,11 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 	}
 	*_log << LogIO::NORMAL << "Combined " << _regions
 		<< " image regions (which excludes any annotation regions)" << LogIO::POST;
+    if (_regions > 0) {
+        *_log << LogIO::NORMAL << "The specified region will select all pixels that are "
+            << "included in the region. Full pixels will be included even when they are "
+            << "only partially covered by the region(s)." << LogIO::POST;
+    }
 }
 
 void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {

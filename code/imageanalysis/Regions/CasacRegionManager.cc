@@ -413,9 +413,14 @@ void CasacRegionManager::_setRegion(
             ! myFile.isReadable(),
             "File " + regionName + " exists but is not readable."
         );
-		try {
-			std::unique_ptr<Record> rec(readImageFile(regionName, ""));
-			ThrowIf(
+        std::unique_ptr<Record> rec;
+        try {
+			rec.reset(readImageFile(regionName, ""));
+		}
+		catch(const AipsError& x) {
+		}
+        if (rec) {
+    	    ThrowIf(
 				! globalOverrideChans.empty() || ! globalStokesOverride.empty()
 				|| ! prependBox.empty(),
 				"a binary region file and any of box, chans and/or stokes cannot "
@@ -424,10 +429,8 @@ void CasacRegionManager::_setRegion(
 			regionRecord = *rec;
 			diagnostics = "Region read from binary region file " + regionName;
 			return;
-		}
-		catch(const AipsError& x) {
-		}
-		try {
+        }
+        try {
 			// CRTF file attempt
 			RegionTextList annList(
 				regionName, csys, imShape, prependBox,
@@ -435,7 +438,7 @@ void CasacRegionManager::_setRegion(
 			);
 			regionRecord = annList.regionAsRecord();
 			diagnostics = "Region read from CRTF file " + regionName;
-		}
+        }
 		catch (const AipsError& x) {
 			ThrowCc(
 				regionName + " is neither a valid binary region file, "
