@@ -164,7 +164,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         
         
         # Export the data
-        hif_exportdata(pipelinemode=pipelinemode)
+        ##hif_exportdata(pipelinemode=pipelinemode)
     
     except Exception, e:
 	if str(e) == IMPORT_ONLY:
