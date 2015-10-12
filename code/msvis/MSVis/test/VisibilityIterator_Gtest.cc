@@ -800,6 +800,7 @@ BasicChannelSelection::checkFlagCategory (Int rowId, Int spectralWindow, Int row
         default:
 
             Assert (False);
+            expected = false;
             break;
 
         }
