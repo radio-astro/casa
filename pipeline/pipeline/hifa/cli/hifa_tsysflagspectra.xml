@@ -199,7 +199,7 @@ Flag deviant system temperature measurements.
 
 <example>
 
-hif_tsyscal flags deviant system temperature measurements in the system
+hifa_tsysflagspectra flags deviant system temperature measurements in the system
 temperature calibration table. 
 
 Keyword arguments:
