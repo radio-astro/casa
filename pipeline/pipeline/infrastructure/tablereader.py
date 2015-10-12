@@ -364,7 +364,9 @@ class ObservationTable(object):
         schedblock_id = 'N/A'
         execblock_id = 'N/A'
 
-        if 'ALMA' in msmd.observatorynames():
+        obsnames = msmd.observatorynames()
+
+        if 'ALMA' in obsnames or 'VLA' in obsnames or 'EVLA' in obsnames:
             # TODO this would break if > 1 observation in an EB. Can that
             # ever happen?
             d = {}
@@ -374,6 +376,8 @@ class ObservationTable(object):
 
             schedblock_id = d.get('SchedulingBlock', 'N/A')
             execblock_id = d.get('ExecBlock', 'N/A')
+
+        
 
         return observer, project_id, schedblock_id, execblock_id
 
