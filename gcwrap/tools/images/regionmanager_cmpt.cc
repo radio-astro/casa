@@ -373,7 +373,7 @@ regionmanager::fromtextfile(
     	}
     	RegionTextList annList(
     		filename, ncsys.ptr() ? *ncsys : _regMan->getcoordsys(),
-            myShape, "", nullptr, ""
+            myShape
     	);
 		return fromRecord(annList.regionAsRecord());
     }
@@ -395,7 +395,7 @@ regionmanager::fromtext(
     	CoordinateSystem coordsys;
     	IPosition myShape(shape);
     	PtrHolder<Record> csysRec(toRecord(csys));
-    	if((csysRec->nfields()) != 0){
+        if((csysRec->nfields()) != 0){
     	    ThrowIf(
     	    	csysRec->nfields() < 2,
     	    	"Given coordsys parameter is not a valid coordsystem record"
@@ -409,7 +409,7 @@ regionmanager::fromtext(
     	    //user has set csys already
     	    coordsys = _regMan->getcoordsys();
     	}
-    	RegionTextList annList(coordsys, text, myShape, "", nullptr, "");
+    	RegionTextList annList(coordsys, text, myShape);
 		return fromRecord(annList.regionAsRecord());
     }
     catch (const AipsError& x) {
@@ -685,7 +685,7 @@ vector<int> regionmanager::selectedchannels(
 		);
 		uInt nChannels = shape[csys.spectralAxisNumber()];
 		uInt nSelectedChannels;
-		vector<uInt> ranges = _regMan->setSpectralRanges(
+        vector<uInt> ranges = _regMan->setSpectralRanges(
 			specification, nSelectedChannels,
 			IPosition(shape)
 		);
