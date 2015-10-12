@@ -1624,7 +1624,7 @@ print b; print me.asbaseline(b); print sb; print me.asbaseline(sb)
 
  
    <method type="function" name="listcodes">
-   <shortdescription>get known reference codes</shortdescription>
+   <shortdescription>get known reference code names (list indices do not necessarily correspond to enumeration indices)</shortdescription>
    
 <input>
 
@@ -1640,6 +1640,9 @@ listcodes will produce the known reference codes for a specified measure
 type. It will return a record with two entries. The first is a string vector
 of all normal codes; the second a string vector (maybe empty) with all extra
 codes (like planets).
+NOTE: Synonyms and different code groups may be present in the code name lists.
+The indices in these lists therefore do not necessarily correspond to
+the internal CASA enumeration indices.
 </description>
 <example>
 
