@@ -548,7 +548,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   // If the user is using the automatic, non-fitting window method, they need a 
   // good assesment of the noise, The use can input that value, but if they don't, 
   // we work it out here.
-  T noise ;
+  T noise = 0 ;
   if ( stdDeviation_p <= T(0) && ( (doWindow_p && doAuto_p) || (doFit_p && !doWindow_p && doAuto_p) ) ) {
     if ( pSmoothedData ) {
       os_p << LogIO::NORMAL << "Evaluating noise level from smoothed data" << LogIO::POST ;
