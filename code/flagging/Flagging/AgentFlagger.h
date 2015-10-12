@@ -43,7 +43,6 @@
 #include <flagging/Flagging/FlagAgentSummary.h>
 #include <flagging/Flagging/FlagAgentDisplay.h>
 
-#include <boost/smart_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -41,8 +41,6 @@
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/Quantum.h>
 
-#include <boost/smart_ptr.hpp>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class VisSet;
