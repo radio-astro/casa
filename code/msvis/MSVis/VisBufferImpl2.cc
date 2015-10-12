@@ -2908,7 +2908,7 @@ VisBufferImpl2::getSigmaScaled (Int correlation, Int row) const
 
     if (weightSpectrumPresent()){
 
-        Float sum;
+        Float sum = 0;
         Int n = nChannels ();
 
         for (Int channel = 0; channel < n; ++ channel){
