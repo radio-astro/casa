@@ -86,8 +86,8 @@ public:
 	// shape are set to good initially.
 	RegionTextList(
 		const String& filename, const CoordinateSystem& csys,
-		const IPosition shape, const String& prependRegion,
-		const String& globalOverrideChans, const String& globalOverrrideStokes,
+		const IPosition shape, const String& prependRegion="",
+		const String& globalOverrideChans="", const String& globalOverrrideStokes="",
 		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION
 	);
 
@@ -101,9 +101,9 @@ public:
 	RegionTextList(
 		const CoordinateSystem& csys, const String& text,
 		const IPosition shape,
-		const String& prependRegion,
-		const String& globalOverrideChans,
-		const String& globalOverrrideStokes
+		const String& prependRegion="",
+		const String& globalOverrideChans="",
+		const String& globalOverrrideStokes=""
 	);
 	//</group>
 

@@ -1020,7 +1020,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 	// Parameters OK. We need to modify the input string so we can construct an AnnRegion
 	// from which to get the spectral range information
 	String regSpec = "box[[0pix, 0pix], [1pix, 1pix]] " + specification;
-	RegionTextParser parser(csys, imShape, regSpec, "", nullptr, "");
+	RegionTextParser parser(csys, imShape, regSpec);
 	vector<uInt> range(2);
 	ThrowIf(
 		parser.getLines().empty(),

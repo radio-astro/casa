@@ -110,14 +110,14 @@ public:
 	RegionTextParser(
 		const String& filename, const CoordinateSystem& csys,
 		const IPosition& imShape, const Int requireAtLeastThisVersion,
-		const String& prependRegion,
-		const String& globalOverrideChans, const String& globalOverrrideStokes
+		const String& prependRegion="",
+		const String& globalOverrideChans="", const String& globalOverrrideStokes=""
 	);
 
 	RegionTextParser(
 		const CoordinateSystem& csys, const IPosition& imShape, const String& text,
-		const String& prependRegion,
-		const String& globalOverrideChans, const String& globalOverrrideStokes
+		const String& prependRegion="",
+		const String& globalOverrideChans="", const String& globalOverrrideStokes=""
 	);
 	//</group>
 
