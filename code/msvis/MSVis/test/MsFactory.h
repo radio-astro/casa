@@ -176,6 +176,7 @@ public:
         default:
 
             Assert (False);
+            result = false;
             break;
 
         }
