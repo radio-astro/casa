@@ -451,13 +451,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        Record myrec;
        //Record imageRegRec;
        if (fname.exists() && fname.isRegular()) {
-         RegionTextList  CRTFList(text, csys, imshape, "", nullptr, "");
+         RegionTextList  CRTFList(text, csys, imshape);
          myrec = CRTFList.regionAsRecord();
        }
        else { // direct text input....
          Regex rx (Regex::fromPattern("*\\[*\\]*"));
          if (text.matches(rx)) {
-           RegionTextList CRTFList(csys, text, imshape, "", nullptr, "");
+           RegionTextList CRTFList(csys, text, imshape);
            myrec = CRTFList.regionAsRecord();
            //cerr<<"myrec.nfields()="<<myrec.nfields()<<endl;
          }
