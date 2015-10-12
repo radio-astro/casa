@@ -789,6 +789,7 @@ Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 	if (!makeSelection())
 	{
 		ms_p = MeasurementSet();
+		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
 		return False;
 	}
 
