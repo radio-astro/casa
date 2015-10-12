@@ -32,8 +32,6 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
-#include <stdcasa/cboost_foreach.h>
-
 #include <iomanip>
 
 namespace casa {

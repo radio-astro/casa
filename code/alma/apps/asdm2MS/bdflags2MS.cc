@@ -31,7 +31,6 @@ using namespace ProcessorTypeMod;
 using namespace asdmbinaries;
 
 #include "asdm2MSGeneric.h"
-#include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 using namespace boost;
@@ -469,9 +468,9 @@ void traverseBAB(bool					sameAntenna,
   unsigned int		 numFlags = flagsPair.first;
 
   accumulator.resetDD();
-  BOOST_FOREACH (SDMDataObject::Baseband bab, basebands) {
+  for (SDMDataObject::Baseband bab: basebands) {
     const vector<SDMDataObject::SpectralWindow>& spws = bab.spectralWindows();
-    BOOST_FOREACH(SDMDataObject::SpectralWindow spw, spws) {
+    for(SDMDataObject::SpectralWindow spw: spws) {
       vector<StokesParameter>::const_iterator ppIter, ppBegin, ppEnd;
       ppIter = ppBegin = sameAntenna ? spw.sdPolProducts().begin() : spw.crossPolProducts().begin();
       ppEnd = sameAntenna ? spw.sdPolProducts().end() : spw.crossPolProducts().end();
@@ -955,7 +954,7 @@ int main (int argC, char * argV[]) {
       iss.str(flagcond_opt);
       while (iss >> token) {
 	if ( to_upper_copy(token) == "ALL") {
-	  BOOST_FOREACH ( s_ui p, abbrev2bitpos ) {
+	  for ( s_ui p: abbrev2bitpos ) {
 	    flagmask.set(p.second, true);
 	    infostream << " " << p.first;
 	  }
@@ -964,7 +963,7 @@ int main (int argC, char * argV[]) {
 	else {
 	  unsigned hits = 0;
 	  unsigned int bitpos = 0;
-	  BOOST_FOREACH ( s_ui p , abbrev2bitpos ) {
+	  for ( s_ui p: abbrev2bitpos ) {
 	    if (starts_with(p.first, to_upper_copy(trim_copy(token)))) {
 	      bitpos = p.second;
 	      hits++;
@@ -1193,7 +1192,7 @@ int main (int argC, char * argV[]) {
 
   iMSRowBegin = iMSRow;
   unsigned int iASDMIndex = 0;
-  BOOST_FOREACH (MainRow * mR, v) {
+  for (MainRow * mR: v) {
     // 
     // Retrieve metadata informations.
     //

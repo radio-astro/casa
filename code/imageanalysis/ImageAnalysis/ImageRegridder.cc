@@ -35,7 +35,6 @@
 
 #include <casa/BasicSL/STLIO.h>
 #include <memory>
-#include <stdcasa/cboost_foreach.h>
 
 namespace casa {
 
@@ -235,7 +234,7 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 				workIm->coordinates().polarizationAxisNumber(False)
 			)
 		);
-		foreach_(String stokes, _getOutputStokes()) {
+		for( String stokes: _getOutputStokes() ) {
 			Record region = rm.fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				"", CasacRegionManager::USE_FIRST_STOKES,
@@ -269,9 +268,9 @@ void ImageRegridder::_checkOutputShape(
 		const Coordinate::Type coordType = csysFrom.coordinate(i).type();
 		if (coordsToRegrid.find(coordType) == coordsToRegridEnd) {
 			Vector<Int> coordAxes = csysFrom.worldAxes(i);
-			foreach_(uInt oldAxis, coordAxes) {
+			for( uInt oldAxis: coordAxes ) {
 				uInt count = 0;
-				foreach_(uInt newAxis, outputAxisOrder) {
+				for( uInt newAxis: outputAxisOrder ) {
 					if (
 						newAxis == oldAxis
 						&& inputShape[oldAxis] != _getKludgedShape()[count]

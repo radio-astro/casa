@@ -64,8 +64,6 @@
 #include <components/ComponentModels/SkyComponent.h>
 #include <measures/Measures/MeasureHolder.h>
 
-#include <stdcasa/cboost_foreach.h>
-
 using namespace std;
 
 namespace casac {
@@ -816,7 +814,7 @@ std::vector<double> componentlist::getfluxerror(const int which) {
 		_checkIndex(which);
 		Vector<DComplex> fluxes = itsList->component(which).flux().errors();
 		vector<Double> realfluxes;
-		foreach_(DComplex flux, fluxes) {
+		for(DComplex flux: fluxes) {
 	        realfluxes.push_back(real(flux));
 		}
 		return realfluxes;

@@ -26,7 +26,6 @@ extern	void	ftime( struct timeb * );	/* this is the funtion */
 
 #endif
 
-#include <boost/foreach.hpp>
 
 void	timer( double *cpu_time ,		/* cpu timer */
 	       double *real_time ,		/* real timer */
@@ -1360,7 +1359,7 @@ void ASDM2MSFiller::updateEphemerisIdInField(vector<pair<int, int> >& idxEphemer
 
   typedef pair<int, int> pairOfInt_t;
 
-  BOOST_FOREACH (pairOfInt_t p, idxEphemerisId_v) {
+  for ( pairOfInt_t p: idxEphemerisId_v ) {
     msfieldCol.ephemerisId().put(p.first, p.second);
   }
 

@@ -72,7 +72,6 @@ install (FILES
 	variant.h
 	casac.h
 	version.h
-    cboost_foreach.h
 	DESTINATION include/casacode/stdcasa
 	)
 install (FILES

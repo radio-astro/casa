@@ -1,5 +1,3 @@
-#include <boost/foreach.hpp>
-
 #include <casa/IO/AipsIO.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Containers/BlockIO.h>
@@ -31,7 +29,7 @@ BDF2AsdmStManIndex::BDF2AsdmStManIndex(const vector<string>& bdfNames, bool isBi
   if (getenv("SHOW_ASDMINDEX"))
     cout << "* isBigEndian = " << isBigEndian << endl;
 
-  BOOST_FOREACH(string bdfName, bdfNames) {
+  for ( string bdfName: bdfNames ) {
     if (s2i_m.find(bdfName) == s2i_m.end()) {
       this->bdfNames[i] = bdfName;
       s2i_m[bdfName] = i;
@@ -70,7 +68,7 @@ void BDF2AsdmStManIndex::init(const vector<string>& bdfNames, bool isBigEndian, 
   if (getenv("SHOW_ASDMINDEX"))
     cout << "* isBigEndian = " << isBigEndian << endl;
 
-  BOOST_FOREACH(string bdfName, bdfNames) {
+  for( string bdfName: bdfNames ) {
     if (s2i_m.find(bdfName) == s2i_m.end()) {
       this->bdfNames[i] = bdfName;
       s2i_m[bdfName] = i;

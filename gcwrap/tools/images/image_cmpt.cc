@@ -95,7 +95,6 @@
 
 #include <casa/namespace.h>
 
-#include <stdcasa/cboost_foreach.h>
 #include <boost/assign/std/vector.hpp>
 #include "../../../code/imageanalysis/ImageAnalysis/ImageExprCalculator.h"
 

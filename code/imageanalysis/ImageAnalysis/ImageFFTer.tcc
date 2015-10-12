@@ -1,7 +1,5 @@
 #include <imageanalysis/ImageAnalysis/ImageFFTer.h>
 
-#include <stdcasa/cboost_foreach.h>
-
 namespace casa {
 
 template<class T> ImageFFTer<T>::ImageFFTer(
@@ -41,7 +39,7 @@ template<class T> void ImageFFTer<T>::fft() const {
 	else {
 		// Set vector of bools specifying axes
 		Vector<Bool> which(subImage->ndim(), False);
-		foreach_(uInt i, _axes) {
+		for(uInt i: _axes) {
 			which(_axes(i)) = True;
 		}
 		*this->_getLog() << LogIO::NORMAL << "FFT zero-based axes " << _axes << LogIO::POST;

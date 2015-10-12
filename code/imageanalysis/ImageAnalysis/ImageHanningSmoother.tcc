@@ -1,6 +1,5 @@
 #include <imageanalysis/ImageAnalysis/ImageHanningSmoother.h>
 
-#include<stdcasa/cboost_foreach.h>
 
 namespace casa {
 

@@ -38,8 +38,6 @@ using namespace boost::filesystem;
 #include <boost/lambda/casts.hpp>
 using namespace boost::lambda;
 
-#include <boost/foreach.hpp>
-
 #include <ASDMAll.h>
 
 #include "SDMBinData.h"
@@ -524,9 +522,9 @@ public :
   static vector<vector<double> > toMatrixD(const vector<vector<T> >& vv) {
     vector<vector<double> > result;
     vector<double> vD;
-    BOOST_FOREACH(vector<T> v, vv) {
+    for(vector<T> v: vv) {
       vD.clear();
-      BOOST_FOREACH(T x, v) {
+      for(T x: v) {
 	vD.push_back(x.get());
       }
       result.push_back(vD);
@@ -1331,7 +1329,7 @@ map<Tag, AnyValueMap<string> > msGroup(ASDM * ds_p) {
   }
 
   map<Tag, AnyValueMap<string> > msGroupPerConfigDesc_m;
-  BOOST_FOREACH (ConfigDescriptionRow * cfgR_p, cfgR_s) {
+  for (ConfigDescriptionRow * cfgR_p: cfgR_s) {
     AnyValueMap<string> msGroup_avm;
     msGroup_avm.setValue("spectralResolution", cfgR_p->getSpectralType());
     msGroup_avm.setValue("processorType", cfgR_p->getProcessorType());
@@ -1797,7 +1795,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond) {
     map<int, vector<EphemerisRow *> > i2e_m; // A map which associates a value of ephemerisId to the vector of Ephemeris rows 
     // having this value in their field ephemerisId.
     set<int> ephemerisId_s;
-    BOOST_FOREACH(EphemerisRow * eR_p , eR_v) {
+    for(EphemerisRow * eR_p: eR_v) {
       int ephemerisId = eR_p -> getEphemerisId();
       if (i2e_m.find(ephemerisId) == i2e_m.end()) {
 	ephemerisId_s.insert(ephemerisId);
@@ -1808,13 +1806,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond) {
 
     // Let's create and fill the MS ephemeris tables.
 
-    BOOST_FOREACH(int ephemerisId, ephemerisId_s) {
+    for(int ephemerisId: ephemerisId_s) {
       /**
        * Check if there is at least one ASDM::Field row refering to this ephemerisId.
        */
       const vector<FieldRow *> fR_v = ds_p->getField().get();
       vector<FieldRow *> relatedField_v;    // This vector elements will contain pointers to all the Fields refering to this ephemerisId.
-      BOOST_FOREACH(const FieldRow* fR_p, fR_v) {
+      for(const FieldRow* fR_p: fR_v) {
 	if (fR_p->isEphemerisIdExists() && (fR_p->getEphemerisId() == ephemerisId))
 	  relatedField_v.push_back(const_cast<FieldRow *>(fR_p));
       }
@@ -2141,9 +2139,9 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond) {
 			   dRA_v,
 			   raASDM_vv);
 	  LOG("size of raASDM_vv="+TO_STRING(raASDM_vv.size()));
-	  BOOST_FOREACH(vector<double> temp_v, raASDM_vv) {
+	  for(vector<double> temp_v: raASDM_vv) {
 	    LOG("raASDM_v = [");
-	    BOOST_FOREACH(double temp, temp_v){
+	    for(double temp: temp_v){
 	      LOG(TO_STRING(temp)+" ");
 	    }
 	    LOG("]");
@@ -2243,7 +2241,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond) {
       vector<double> distanceMS_v;
       vector<double> radVelMS_v;
 
-      BOOST_FOREACH (atiIdxMStime_pair atiIdxMStime, atiIdxMStime_v) {
+      for (atiIdxMStime_pair atiIdxMStime: atiIdxMStime_v) {
 	//
 	// MJD
 	mjdMS_v.push_back(ArrayTime(atiIdxMStime.second).getMJD());
@@ -4093,7 +4091,6 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
   // copy ( keys_v.begin(), keys_v.end(), std::ostream_iterator<Tag>(std::cout, "\n") );
 
   //#pragma omp parallel for if(doparallel)
-  //BOOST_FOREACH(Tag configDescriptionId, keys_v) {
   for (uint32_t iKey = 0; iKey < keys_v.size(); iKey++) {
     Tag configDescriptionId = keys_v[iKey];
 
@@ -4108,13 +4105,13 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
     vector<Tag> dataDescriptionId_v = msGroup_avm.getValue<vector<Tag> >("ddId");
     vector<ofstream *> binaryDataPath_p_v(dataDescriptionId_v.size());
     uint32_t iBinaryDataPath = 0;
-    BOOST_FOREACH (Tag dataDescriptionId, dataDescriptionId_v ) {
+    for (Tag dataDescriptionId: dataDescriptionId_v ) {
       binaryDataPath_p_v[iBinaryDataPath] = new ofstream ((oss.str()+"_"+dataDescriptionId.toString()).c_str(), ios_base::binary);
       iBinaryDataPath++;
     }
 
     ProcessorTypeMod::ProcessorType processorType = msGroup_avm.getValue<ProcessorTypeMod::ProcessorType>("processorType");
-    BOOST_FOREACH( string bdfName, msGroup_avm.getValue<vector<string> >("bdfNames") ) {
+    for( string bdfName: msGroup_avm.getValue<vector<string> >("bdfNames") ) {
       try {
 	if ( processorType == ProcessorTypeMod::CORRELATOR) {
 	  SDMDataObjectStreamReader sdosr;
@@ -4133,10 +4130,10 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	  vector<AnyValueMap<string> > bb_spw_v;
 	  unsigned int ibb_spw = 1;
 	  const vector<SDMDataObject::Baseband>& baseband_v = sdosr.dataStruct().basebands();
-	  BOOST_FOREACH ( SDMDataObject::Baseband  bb, baseband_v ) {
+	  for ( SDMDataObject::Baseband  bb: baseband_v ) {
 	    const vector<SDMDataObject::SpectralWindow>& spectralWindow_v = bb.spectralWindows();
 
-	    BOOST_FOREACH ( SDMDataObject::SpectralWindow spectralWindow, spectralWindow_v ) {
+	    for ( SDMDataObject::SpectralWindow spectralWindow: spectralWindow_v ) {
 	      AnyValueMap<string> attributes_avm;
 	      attributes_avm.setValue("sdPolProducts", spectralWindow.sdPolProducts());
 	      attributes_avm.setValue("crossPolProducts", spectralWindow.crossPolProducts());
@@ -4176,7 +4173,6 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	    vector<PrimitiveDataTypeMod::PrimitiveDataType> crossDataType_v;
 	    vector<void *> crossData_p_v;
 
-	    //BOOST_FOREACH(SDMDataSubset& subset , subset_v) {
 	    for (uint32_t subsetIndex = 0; subsetIndex < subset_v.size(); subsetIndex++) {
 	      const SDMDataSubset& subset = subset_v[subsetIndex];
 	      midpoint_v.push_back(subset.time());
@@ -4315,10 +4311,10 @@ void fillMainPar( const string& dsPath, ASDM * ds_p, bool doparallel, bool mute 
 	  vector<AnyValueMap<string> > bb_spw_v;
 	  unsigned int ibb_spw = 1;
 	  const vector<SDMDataObject::Baseband>& baseband_v = sdo.dataStruct().basebands();
-	  BOOST_FOREACH ( SDMDataObject::Baseband  bb, baseband_v ) {
+	  for ( SDMDataObject::Baseband  bb: baseband_v ) {
 	    const vector<SDMDataObject::SpectralWindow>& spectralWindow_v = bb.spectralWindows();
 
-	    BOOST_FOREACH ( SDMDataObject::SpectralWindow spectralWindow, spectralWindow_v ) {
+	    for ( SDMDataObject::SpectralWindow spectralWindow: spectralWindow_v ) {
 	      AnyValueMap<string> attributes_avm;
 	      attributes_avm.setValue("sdPolProducts", spectralWindow.sdPolProducts());
 	      attributes_avm.setValue("numSpectralPoint", spectralWindow.numSpectralPoint());
@@ -5770,7 +5766,7 @@ int main(int argc, char *argv[]) {
   int maxNumCorr=1;
   const vector<PolarizationRow *>& polRs_v = ds_p->getPolarization().get();
 
-  BOOST_FOREACH(PolarizationRow* polR_p, polRs_v) {
+  for(PolarizationRow* polR_p: polRs_v) {
     maxNumCorr=max(maxNumCorr, polR_p->getNumCorr());
   }
 
@@ -5778,7 +5774,7 @@ int main(int argc, char *argv[]) {
   int maxNumChan=1;
   const vector<SpectralWindowRow *>& spwRs_v = ds_p->getSpectralWindow().get();
 
-  BOOST_FOREACH(SpectralWindowRow* spwR_p , spwRs_v) {
+  for(SpectralWindowRow* spwR_p: spwRs_v) {
     maxNumChan = max(maxNumChan, spwR_p->getNumChan());
   }
 
@@ -5845,19 +5841,19 @@ int main(int argc, char *argv[]) {
 
   // Iterate over the vector elements.
   vector<boost::filesystem::path> subMSpath_v;
-  BOOST_FOREACH(Tag configDescriptionId, keys_v) {
+  for(Tag configDescriptionId: keys_v) {
     ostringstream oss;
     oss << msNames_m.begin()->second << "/";
     oss << CProcessorType::toString(msGroup_avm[configDescriptionId].getValue<ProcessorTypeMod::ProcessorType>("processorType"))
 	<< "_"
 	<< CSpectralResolutionType::toString(msGroup_avm[configDescriptionId].getValue<SpectralResolutionTypeMod::SpectralResolutionType>("spectralResolution"));
     vector<Tag> dataDescriptionId_v = msGroup_avm[configDescriptionId].getValue<vector<Tag> >("ddId");
-    BOOST_FOREACH (Tag dataDescriptionId, dataDescriptionId_v ) {
+    for (Tag dataDescriptionId: dataDescriptionId_v ) {
       subMSpath_v.push_back(boost::filesystem::path(oss.str()+"_"+dataDescriptionId.toString()));
     }
   }
   
-  BOOST_FOREACH(boost::filesystem::path path, subMSpath_v) {
+  for(boost::filesystem::path path: subMSpath_v) {
     if (boost::filesystem::exists(boost::filesystem::status(path))) {
       int nRemoved = boost::filesystem::remove_all(path);
       cout << "removing directory " << path << " (" << nRemoved << " files deleted.)" << endl;
@@ -5884,8 +5880,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  BOOST_FOREACH(boost::filesystem::path subMSPath, subMSpath_v) { 
-    BOOST_FOREACH(boost::filesystem::path subTablePath, subTablePath_v) {
+  for(boost::filesystem::path subMSPath: subMSpath_v) { 
+    for(boost::filesystem::path subTablePath: subTablePath_v) {
       boost::filesystem::create_symlink(subTablePath, subMSPath / subTablePath.leaf());
     }
   }
@@ -5899,7 +5895,7 @@ int main(int argc, char *argv[]) {
   for (directory_iterator iter(path(msNames_m.begin()->second)); iter != end_iter; ++iter) {
     string filename = iter->path().leaf();
     if (boost::starts_with(filename, "table"))
-      BOOST_FOREACH(boost::filesystem::path subMSPath, subMSpath_v) {
+      for(boost::filesystem::path subMSPath: subMSpath_v) {
 	cout << "Trying to copy " << iter->path() << " to " << subMSPath << endl;
 	boost::filesystem::copy_file(iter->path(), subMSPath / iter->path().leaf());
       }

@@ -42,8 +42,6 @@ using namespace boost::filesystem;
 //#include <boost/lambda/casts.hpp>
 //using namespace boost::lambda;
 
-#include <boost/foreach.hpp>
-
 #include <ASDMAll.h>
 
 #include "SDMBinData.h"
@@ -547,9 +545,9 @@ public :
   static vector<vector<double> > toMatrixD(const vector<vector<T> >& vv) {
     vector<vector<double> > result;
     vector<double> vD;
-    BOOST_FOREACH(vector<T> v, vv) {
+    for( vector<T> v: vv ) {
       vD.clear();
-      BOOST_FOREACH(T x, v) {
+      for( T x: v ) {
 	vD.push_back(x.get());
       }
       result.push_back(vD);
@@ -1329,7 +1327,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
     map<int, vector<EphemerisRow *> > i2e_m; // A map which associates a value of ephemerisId to the vector of Ephemeris rows 
     // having this value in their field ephemerisId.
     set<int> ephemerisId_s;
-    BOOST_FOREACH(EphemerisRow * eR_p , eR_v) {
+    for( EphemerisRow * eR_p: eR_v ) {
       int ephemerisId = eR_p -> getEphemerisId();
       if (i2e_m.find(ephemerisId) == i2e_m.end()) {
 	ephemerisId_s.insert(ephemerisId);
@@ -1340,13 +1338,13 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 
     // Let's create and fill the MS ephemeris tables.
 
-    BOOST_FOREACH(int ephemerisId, ephemerisId_s) {
+    for(int ephemerisId: ephemerisId_s) {
       /**
        * Check if there is at least one ASDM::Field row refering to this ephemerisId.
        */
       const vector<FieldRow *> fR_v = ds_p->getField().get();
       vector<FieldRow *> relatedField_v;    // This vector elements will contain pointers to all the Fields refering to this ephemerisId.
-      BOOST_FOREACH(const FieldRow* fR_p, fR_v) {
+      for(const FieldRow* fR_p: fR_v) {
 	if (fR_p->isEphemerisIdExists() && (fR_p->getEphemerisId() == ephemerisId))
 	  relatedField_v.push_back(const_cast<FieldRow *>(fR_p));
       }
@@ -1712,7 +1710,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
 	// End of interpolating with piecewise polynomial of degree 1.
 
 
-	BOOST_FOREACH (atiIdxMStime_pair atiIdxMStime, atiIdxMStime_v) {
+	for (atiIdxMStime_pair atiIdxMStime: atiIdxMStime_v) {
 	  //
 	  // MJD
 	  mjdMS_v.push_back(ArrayTime(atiIdxMStime.second).getMJD());
@@ -1766,7 +1764,7 @@ void fillEphemeris(ASDM* ds_p, uint64_t timeStepInNanoSecond, bool interpolate_e
       } // end if interpolate_ephemeris
       else { 
 	// Just copy ephemeris without any interpolation. Just adapt the units.
-	BOOST_FOREACH(const EphemerisRow *eR_p, v) {
+	for(const EphemerisRow *eR_p: v) {
 	  mjdMS_v.push_back(eR_p->getTimeInterval().getStart().getMJD()); // MJD
 	  vector<vector<double> > dir = eR_p->getDir();
 	  raMS_v.push_back(dir[0][0]/3.14159265*180.0);  // deg
@@ -2325,14 +2323,14 @@ bool checkForConstantNPolNChan(ASDM* ds_p) {
   PolarizationTable&	polT = ds_p->getPolarization();
 
   //bool result = true;
-  BOOST_FOREACH (ConfigDescriptionRow* cfgR_p , cfgR_v) {
+  for (ConfigDescriptionRow* cfgR_p: cfgR_v) {
     vector <Tag> ddId_v = cfgR_p->getDataDescriptionId();
 
     bool	firstElement = true;
     int		numChanRef   = 0;
     int		numPolRef    = 0;
 
-    BOOST_FOREACH(Tag ddId, ddId_v) {
+    for(Tag ddId: ddId_v) {
       if (firstElement) {
 	numChanRef = spwT.getRowByKey(ddT.getRowByKey(ddId)->getSpectralWindowId())->getNumChan();
 	numPolRef = polT.getRowByKey(ddT.getRowByKey(ddId)->getPolOrHoloId())->getNumCorr();
@@ -2546,7 +2544,7 @@ void fillMainLazily2(const string& dsName,
 	bdf2AsdmStManIndexC.setNumberOfDataDescriptions(dataDescriptionIds.size());
       
       unsigned int numberOfSpectralWindows = 0;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
 	numberOfSpectralWindows += bb.spectralWindows().size();
       }
 
@@ -2562,8 +2560,8 @@ void fillMainLazily2(const string& dsName,
       vector<unsigned int> numberOfChannels_v;
       vector<unsigned int> numberOfSDPolarizations_v;
       vector<unsigned int> numberOfCrossPolarizations_v;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	  numberOfChannels_v.push_back(spw.numSpectralPoint());
 	  if (correlationMode != AUTO_ONLY)
 	    numberOfCrossPolarizations_v.push_back(spw.crossPolProducts().size());
@@ -2595,8 +2593,8 @@ void fillMainLazily2(const string& dsName,
       
       // The cross data scale factors exist.
       if (correlationMode != AUTO_ONLY) { 
-	BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	  BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+	for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	  for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	    crossScaleFactors.push_back(spw.scaleFactor());
 	  }
 	}
@@ -3280,7 +3278,7 @@ void fillMainLazily(const string& dsName,
       const SDMDataObject::DataStruct& dataStruct = sdosr.dataStruct();
       
       unsigned int numberOfSpectralWindows = 0;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
 	numberOfSpectralWindows += bb.spectralWindows().size();
       }
 
@@ -3297,8 +3295,8 @@ void fillMainLazily(const string& dsName,
       // vector<unsigned int> numberOfPolarizations_v;
       vector<unsigned int> numberOfSDPolarizations_v;
       vector<unsigned int> numberOfCrossPolarizations_v;
-      BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+      for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	  numberOfChannels_v.push_back(spw.numSpectralPoint());
 	  if (correlationMode != AUTO_ONLY)
 	    numberOfCrossPolarizations_v.push_back(spw.crossPolProducts().size());
@@ -3330,8 +3328,8 @@ void fillMainLazily(const string& dsName,
       
       // The cross data scale factors exist.
       if (correlationMode != AUTO_ONLY) { 
-	BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
-	  BOOST_FOREACH (const SDMDataObject::SpectralWindow& spw, bb.spectralWindows()) {
+	for (const SDMDataObject::Baseband& bb: dataStruct.basebands()) {
+	  for (const SDMDataObject::SpectralWindow& spw: bb.spectralWindows()) {
 	    crossScaleFactors.push_back(spw.scaleFactor());
 	  }
 	}

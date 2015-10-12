@@ -257,7 +257,7 @@ template <class T> void ImageTask<T>::addHistory(
 ) const {
 	std::pair<String, String> x;
 	x.first = origin.fullName();
-	foreach_(String m, msgs) {
+	for( String m: msgs ) {
 		x.second = m;
 		_newHistory.push_back(x);
 	}

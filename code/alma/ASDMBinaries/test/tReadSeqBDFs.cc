@@ -27,8 +27,6 @@ using namespace boost::filesystem;
 #include <boost/lambda/casts.hpp>
 using namespace boost::lambda;
 
-#include <boost/foreach.hpp>
-
 #include <ASDMAll.h>
 
 #include "SDMBinData.h"

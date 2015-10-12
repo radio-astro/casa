@@ -1,6 +1,5 @@
 #include <imageanalysis/ImageAnalysis/ImageHistory.h>
 
-#include<stdcasa/cboost_foreach.h>
 #include <iomanip>
 
 #include <casa/OS/Time.h>
@@ -67,7 +66,7 @@ template<class T> void ImageHistory<T>::addHistory(
 	//
 	log.reopenRW();
 	LogSink& sink = log.sink();
-	foreach_(String line, history) {
+	for( String line: history ) {
 		String x = line;
 		x.trim();
 		if (! x.empty()) {
@@ -82,7 +81,7 @@ template<class T> void ImageHistory<T>::addHistory(
 	const vector<string>& history
 ) {
 	vector<String> x;
-	foreach_(string h, history) {
+	for( String h: history ) {
 		x.push_back(h);
 	}
 	addHistory(origin, x);
@@ -123,7 +122,7 @@ template<class T> vector<string> ImageHistory<T>::getAsStdStrings(
 ) const {
 	vector<String> hist = get(list);
 	vector<string> x;
-	foreach_(String s, hist) {
+	for( String s: hist ) {
 		x.push_back(s.c_str());
 	}
 	return x;

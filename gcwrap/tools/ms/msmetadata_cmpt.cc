@@ -44,7 +44,7 @@
 #include <ms/MSOper/MSMetaData.h>
 #include <ms/MSOper/MSKeys.h>
 
-#include <stdcasa/cboost_foreach.h>
+#include <algorithm>
 #include <boost/regex.hpp>
 
 #include <boost/iterator/counting_iterator.hpp>
@@ -130,7 +130,7 @@ vector<String> msmetadata::_vectorStdStringToVectorString(
 	const vector<string>& inset
 ) {
 	vector<String> outset;
-	foreach_(string el, inset) {
+	for(string el: inset) {
 		outset.push_back(el);
 	}
 	return outset;
@@ -203,7 +203,7 @@ vector<int> msmetadata::antennaids(
 		vector<casa::String> allNames COMMA foundNames;
 		set<casa::String> foundSet;
 		if (foundIDs.empty()) {
-			foreach_(String name, myNames) {
+			for(String name: myNames) {
 				Bool expand = name.find('*') != std::string::npos;
 				if (expand) {
 					if (allNames.empty()) {
@@ -211,7 +211,7 @@ vector<int> msmetadata::antennaids(
 						allNames = _msmd->getAntennaNames(namesToIDsMap);
 					}
 					vector<String> matches = _match(allNames, name);
-					foreach_(String match, matches) {
+					for(String match: matches) {
 						if (foundSet.find(match) == foundSet.end()) {
 							foundNames.push_back(match);
 							foundSet.insert(match);
@@ -234,7 +234,7 @@ vector<int> msmetadata::antennaids(
 			vector<Int> newList;
 			String unit = diams.getUnit();
 			Vector<Double> v = diams.getValue();
-			foreach_(uInt id, foundIDs) {
+			for(uInt id: foundIDs) {
 				casa::Quantity d(v[id], unit);
 				if (d >= mind && d <= maxd) {
 					newList.push_back(id);
@@ -1717,9 +1717,7 @@ vector<int> msmetadata::wvrspws(bool complement) {
 				boost::counting_iterator<int>(0),
 				boost::counting_iterator<int>(_msmd->nSpw(True)));
 			vector<int>::iterator begin = nonwvrs.begin();
-			foreach_r_(int spw, wvrs) {
-				nonwvrs.erase(begin + spw);
-			}
+			for_each(wvrs.rbegin(), wvrs.rend(), [&](int spw){ nonwvrs.erase(begin + spw); });
 			return nonwvrs;
 		}
 		else {

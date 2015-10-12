@@ -53,8 +53,6 @@ using namespace TimeSamplingMod;
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-#include <boost/foreach.hpp>
-
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogSink.h>
 using namespace casa;
@@ -195,7 +193,7 @@ void mainSummary(ExecBlockRow* eb_p, int scanNumber, int subscanNumber) {
   const vector<MainRow *>& mains = ds.getMain().get();
   vector<MainRow *> eb_mains;
 
-  BOOST_FOREACH(MainRow* main_p, mains) {
+  for(MainRow* main_p: mains) {
     if ( main_p->getExecBlockId() == ebId && main_p->getScanNumber() == scanNumber && main_p->getSubscanNumber() == subscanNumber )
       eb_mains.push_back(main_p);
   }
@@ -205,7 +203,7 @@ void mainSummary(ExecBlockRow* eb_p, int scanNumber, int subscanNumber) {
   SpectralWindowTable& spwT = ds.getSpectralWindow();
   ConfigDescriptionTable& cfgDescT = ds.getConfigDescription();
 
-  BOOST_FOREACH ( MainRow* main_p, eb_mains ) {
+  for ( MainRow* main_p: eb_mains ) {
     infostream.str("");
     infostream << endl;
     infostream << "\t\t Binary data in " << main_p->getDataUID().getEntityId() << endl;
@@ -221,7 +219,7 @@ void mainSummary(ExecBlockRow* eb_p, int scanNumber, int subscanNumber) {
     info(infostream.str());
 
     vector<Tag> ddIds = cfgDesc_p->getDataDescriptionId();
-    BOOST_FOREACH ( Tag ddId, ddIds ) {
+    for ( Tag ddId: ddIds ) {
       DataDescriptionRow * dd_p = ddT.getRowByKey(ddId);
       SpectralWindowRow * spw_p = spwT.getRowByKey(dd_p->getSpectralWindowId());
       PolarizationRow * p_p = polT.getRowByKey(dd_p->getPolOrHoloId());
@@ -248,12 +246,12 @@ void subscanSummary(ExecBlockRow* eb_p, int scanNumber) {
 
   const vector<SubscanRow *>& subscans = ds.getSubscan().get();
   vector<SubscanRow *> eb_subscans;
-  BOOST_FOREACH (SubscanRow * sscan_p, subscans) {
+  for (SubscanRow * sscan_p: subscans) {
     if (sscan_p->getExecBlockId() == ebId && sscan_p->getScanNumber() == scanNumber) 
       eb_subscans.push_back(sscan_p);
   }
 
-  BOOST_FOREACH (SubscanRow* sscan_p, eb_subscans) {
+  for (SubscanRow* sscan_p: eb_subscans) {
     infostream.str("");
     infostream << "\tSubscan #" << sscan_p->getSubscanNumber()
 	       << " from " << sscan_p->getStartTime().toFITS()
@@ -283,13 +281,13 @@ void scanSummary(ExecBlockRow* eb_p) {
   const vector<MainRow *>& mains = ds.getMain().get();
   vector<MainRow *> eb_mains;
 
-  BOOST_FOREACH(MainRow* main, mains) {
+  for(MainRow* main: mains) {
     if ( main->getExecBlockId() == ebId) eb_mains.push_back(main);
   }
   
   const vector<ScanRow*>& scans = ds.getScan().get();
   vector<ScanRow *> eb_scans;
-  BOOST_FOREACH(ScanRow* scan, scans) {
+  for(ScanRow* scan: scans) {
     if ( scan->getExecBlockId() == ebId) eb_scans.push_back(scan);
   }
 
@@ -298,7 +296,7 @@ void scanSummary(ExecBlockRow* eb_p) {
   infostream << "Number of scans in this exec Block : " << eb_scans.size() << endl;
   info(infostream.str());
   if (eb_scans.size() > 0) {
-    BOOST_FOREACH (ScanRow* scan_p, eb_scans) {
+    for (ScanRow* scan_p: eb_scans) {
       infostream.str("");
       infostream << endl;
       infostream << "scan #" << scan_p->getScanNumber()

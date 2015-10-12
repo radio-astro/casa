@@ -147,7 +147,7 @@ template <class T> void ImageRegridderBase<T>::_finishConstruction() {
 		&& ! _axes.empty()
 	) {
 		uInt count = 0;
-		foreach_(Int axis, _axes) {
+		for( Int axis: _axes ) {
 			if (axis == spectralAxisNumber) {
 				*this->_getLog() << LogIO::NORMAL << "You've specified "
 					<< "explicitly that the spectral axis should be "

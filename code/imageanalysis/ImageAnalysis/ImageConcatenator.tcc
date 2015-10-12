@@ -112,7 +112,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 		);
 	}
 	uInt i = 1;
-	foreach_(String name, imageNames) {
+	for(String name: imageNames) {
 		SPIIT im2 = ImageUtilities::openImage<T>(name);
 		ThrowIf(
 			im2->dataType() != dataType,
@@ -166,7 +166,7 @@ SPIIT ImageConcatenator<T>::concatenate(
 	ThrowIf(
 		! pConcat.get(), "Failed to create ImageConcat object"
 	);
-	foreach_(String name, imageList) {
+	for(String name: imageList) {
 		_addImage(pConcat, name);
 	}
 	return this->_prepareOutputImage(*pConcat);
