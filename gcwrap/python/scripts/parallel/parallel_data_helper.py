@@ -1439,7 +1439,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                     return False
 
         if len(nFailures) > 0:
-            casalog.post('%s subMSs failed to be created'%len(nFailures))
+            casalog.post('%s subMSs failed to be created. This is not an error, if due to selection when creating a Multi-MS'%len(nFailures))
             # need to rename/re-index the subMSs
             newList = copy.deepcopy(subMSList)
             idx = 0
