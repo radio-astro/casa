@@ -1036,8 +1036,20 @@ class specfit_test(unittest.TestCase):
                 multifit, model, residual
             )
         )
-            #self.assertTrue(len(res["converged"]) == 1)
-            #self.assertFalse(res["converged"][0, 0, 0, 0])
+        
+    def test_noinf(self):
+        """Test that output images have infs and nans masked"""
+        pixfit = specfit(
+            imagename=datapath + 'IRC10216_HC3N.cube_r0.5.image',
+            region=datapath + 'specfit.crtf', ngauss=2,
+            multifit=T, amp='fit.amp.image', center='fitcenter.image',
+            fwhm='fitfwhm.image'
+        )
+        for im in ('fit.amp.image', 'fitcenter.image', 'fitfwhm.image'):
+            for k in ('0', '1'):
+                image = im + '_' + k
+                res = imstat(image)
+                self.assertTrue(numpy.isfinite(res['sum']))
 
 def suite():
     return [specfit_test]
