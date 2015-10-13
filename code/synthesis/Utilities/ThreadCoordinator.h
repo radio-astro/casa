@@ -63,11 +63,9 @@
 #ifndef SYNTHESIS_THREADCOORDINATOR_H
 #define SYNTHESIS_THREADCOORDINATOR_H
 
-namespace boost {
-    class barrier;
-};
-
 namespace casa {
+
+class Barrier;
 
 namespace async {
   class Condition;
@@ -101,7 +99,7 @@ protected:
 
 private:
 
-  boost::barrier * barrier_p;
+  Barrier * barrier_p;
   bool logStates_p;
   async::Mutex * mutex_p;
   volatile Int nThreadsAtBarrier_p;

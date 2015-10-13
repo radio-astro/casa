@@ -79,3 +79,7 @@ install (FILES
 	StdCasa/string_conversions
 	DESTINATION include/casacode/stdcasa/StdCasa
 	)
+install (FILES
+    thread/Barrier.h
+	DESTINATION include/casacode/stdcasa/thread
+	)

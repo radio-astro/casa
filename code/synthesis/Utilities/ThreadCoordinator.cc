@@ -29,7 +29,8 @@
 #include <synthesis/Utilities/ThreadCoordinator.h>
 #include <msvis/MSVis/AsynchronousTools.h>
 #include <cassert>
-#include <boost/thread/barrier.hpp>
+#include <stdcasa/thread/Barrier.h>
+
 
 #define Log(level, ...) \
     {Logger::get()->log (__VA_ARGS__);};
@@ -40,7 +41,7 @@ namespace casa {
 
 ThreadCoordinatorBase::ThreadCoordinatorBase (Int nThreads, bool logStates)
   : nThreads_p (nThreads),
-    barrier_p (new boost::barrier(nThreads)),
+    barrier_p (new Barrier(nThreads)),
     logStates_p (logStates),
     mutex_p (new async::Mutex()),
     nThreadsAtBarrier_p (0),
