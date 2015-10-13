@@ -512,6 +512,7 @@ bool MSCache::countChunks(vi::VisibilityIterator2& vi,
             if (thread != NULL) {
                 if (thread->wasCanceled()) {
                     dataLoaded_ = false;
+                    userCanceled_ = true;
                     return false;
                 } else {
                     // else users think it's hung...
@@ -689,6 +690,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                     // If a thread is given, check if the user canceled.
                     if(thread != NULL && thread->wasCanceled()) {
                         dataLoaded_ = false;
+                        userCanceled_ = true;
                         goodChunk_(chunk) = False; //only partially loaded
                         return;
                     }
@@ -795,6 +797,7 @@ void MSCache::loadChunks(vi::VisibilityIterator2& vi,
                 // If a thread is given, check if the user canceled.
                 if(thread != NULL && thread->wasCanceled()) {
                     dataLoaded_ = false;
+                    userCanceled_ = true;
                     goodChunk_(chunk)  = False;
                     return;
                 }

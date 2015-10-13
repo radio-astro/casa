@@ -45,6 +45,8 @@
 #include <tables/Tables/Table.h>
 #include <QDebug>
 
+#include <unistd.h>
+
 namespace casa {
 
 const unsigned int PlotMSCacheBase::N_METADATA = 13;
@@ -95,6 +97,7 @@ PlotMSCacheBase::PlotMSCacheBase(PlotMSApp* parent):
 		  spw_(),
 		  scan_(),
 		  dataLoaded_(false),
+		  userCanceled_(false),
           xminG_(0),
           yminG_(0),
           xmaxG_(0),
@@ -266,6 +269,8 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 	// need a way to keep track of whether:
 	// 1) we already have the metadata loaded
 	// 2) the underlying MS has changed, requiring a reloading of metadata
+
+    userCanceled_ = false;
 
 	// Remember the axes that we will load for plotting:
 	currentX_.clear();
@@ -441,18 +446,23 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 		cout << endl;
 	}
 
-	// Now Load data.
+	// Now Load data if the user doesn't cancel.
 	if(loadAxes.size() > 0) {
 
 		// Call method that actually does the loading (MS- or Cal-specific)
 		loadIt(loadAxes,loadData,thread);
 
-		// Update loaded axes.
-		for(unsigned int i = 0; i < loadAxes.size(); i++) {
-			axis = loadAxes[i];
-			loadedAxes_[axis] = true;
-			if(PMS::axisIsData(axis)) loadedAxesData_[axis] = loadData[i];
-		}
+		// Update loaded axes if not canceled.
+        if (wasCanceled()) { 
+            logLoad("Cache loading cancelled.");
+            return;  // no need to continue
+        } else {
+            for(unsigned int i = 0; i < loadAxes.size(); i++) {
+                axis = loadAxes[i];
+                loadedAxes_[axis] = true;
+                if(PMS::axisIsData(axis)) loadedAxesData_[axis] = loadData[i];
+            }
+        }
 
 		if (False) {
 			{
@@ -469,40 +479,45 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
 	} // something to load
 
-	// Setup/revis masks that we use to realize axes relationships
-	netAxesMask_.resize( dataCount );
-	for ( int i = 0; i < dataCount; i++ ){
-		Vector<Bool> xmask(4,False);
-		Vector<Bool> ymask(4,False);
-		setAxesMask(currentX_[i],xmask);
-		setAxesMask(currentY_[i],ymask);
-		netAxesMask_[i]=(xmask || ymask);
-	}
+    if (wasCanceled()) { 
+        logLoad("Cache loading cancelled.");
+        return;  // no need to continue
+    }
 
-	/*
+    // Setup/revis masks that we use to realize axes relationships
+    netAxesMask_.resize( dataCount );
+    for ( int i = 0; i < dataCount; i++ ){
+        Vector<Bool> xmask(4,False);
+        Vector<Bool> ymask(4,False);
+        setAxesMask(currentX_[i],xmask);
+        setAxesMask(currentY_[i],ymask);
+        netAxesMask_[i]=(xmask || ymask);
+    }
+
+    /*
   cout << boolalpha;
   cout << "xmask = " << xmask << endl;
   cout << "ymask = " << ymask << endl;
   cout << "netAxesMask_ = " << netAxesMask_ << endl;
-	 */
+     */
 
-	// Generate the plot mask from scratch
-	deletePlotMask();
-	plmask_.resize( dataCount );
-	for ( int i = 0; i < dataCount; i++ ){
-		setPlotMask( i );
-	}
+    // Generate the plot mask from scratch
+    deletePlotMask();
+    plmask_.resize( dataCount );
+    for ( int i = 0; i < dataCount; i++ ){
+        setPlotMask( i );
+    }
 
-	// At this stage, data is loaded and ready for indexing then plotting....
-	dataLoaded_ = true;
+    // At this stage, data is loaded and ready for indexing then plotting....
+    dataLoaded_ = true;
 
-	// Calculate refTime (for plot labels)
-	refTime_p=min(time_);
-	refTime_p=86400.0*floor(refTime_p/86400.0);
-	logLoad("refTime = "+MVTime(refTime_p/C::day).string(MVTime::YMD,7));
-	QString timeMesg("refTime = ");
-	timeMesg.append(MVTime(refTime_p/C::day).string(MVTime::YMD,7).c_str());
-	logLoad("Finished loading.");
+    // Calculate refTime (for plot labels)
+    refTime_p=min(time_);
+    refTime_p=86400.0*floor(refTime_p/86400.0);
+    logLoad("refTime = "+MVTime(refTime_p/C::day).string(MVTime::YMD,7));
+    QString timeMesg("refTime = ");
+    timeMesg.append(MVTime(refTime_p/C::day).string(MVTime::YMD,7).c_str());
+    logLoad("Finished loading.");
 }
 
 bool PlotMSCacheBase::axisIsValid(PMS::Axis axis, const PlotMSAveraging& averaging) {

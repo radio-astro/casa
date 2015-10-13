@@ -106,6 +106,9 @@ public:
   // Returns whether cache is filled
   bool cacheReady() const { return dataLoaded_; }
 
+  // Returns whether user canceled during loading chunks
+  bool wasCanceled() const { return userCanceled_; }
+
   // Report the data shapes
   inline Matrix<Int>& chunkShapes() {return chshapes_;};
 
@@ -378,6 +381,7 @@ protected:
 
   // Current setup/state.
   bool dataLoaded_;
+  bool userCanceled_;
   vector<PMS::Axis> currentX_;
   vector<PMS::Axis> currentY_;
   map<PMS::Axis, bool> loadedAxes_;

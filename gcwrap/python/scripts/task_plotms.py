@@ -263,8 +263,7 @@ def plotms(vis=None,
         pm.setShowGui( showgui )
         
         if pm.isDrawing() and clearplots:
-            casalog.post("Plotms is running in GUI mode and cannot be run again until the current drawing completes.")
-            print "ERROR: Plotms is running in GUI mode and cannot be run again until the current drawing completes."
+            casalog.post("Plotms is running in GUI mode and cannot be run again until the current drawing completes.", "SEVERE")
             return False
 
         #Clear any existing plots.
@@ -347,8 +346,10 @@ def plotms(vis=None,
         if not averagedata:
             avgchannel = avgtime = ''
             avgscan = avgfield = avgbaseline = avgantenna = avgspw = False
-           
             scalar = False
+        if avgbaseline and avgantenna:
+            casalog.post('Averaging over baselines is mutually exclusive with per-antenna averaging.', "SEVERE")
+            return False  
         pm.setPlotMSAveraging(avgchannel, avgtime, avgscan, avgfield, avgbaseline, 
                               avgantenna, avgspw, scalar, False, plotindex)
         # Set transformations

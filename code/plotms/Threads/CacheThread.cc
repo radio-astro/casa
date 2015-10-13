@@ -109,27 +109,28 @@ bool CacheThread::doWork(){
 			else {
 				throw(AipsError("Problem in Cache Thread::run A"));
 			}
-
-			if( itsSetupPlot ) {
-				//There will be an indexer for each data set.
-				int dataCount = itsAxesData.size()/2;
-				if ( itsCache ){
-					itsCache->resizeIndexer( dataCount );
-				}
-				else {
-					throw(AipsError("Problem in CacheThread::run B"));
-				}
-				if ( itsCache ){
-					itsCache->clearRanges();
-					bool globalRanges = False;
-					for ( int i = 0; i < dataCount; i++ ){
-						itsCache->setUpIndexer(PMS::NONE, globalRanges, globalRanges, i);
-					}
-				}
-			}
-			// Release
-		}
-		else {
+            // Don't set up indexer(s) if user cancelled cache loading
+            if (!itsCache->wasCanceled()) {
+                if( itsSetupPlot ) {
+                    //There will be an indexer for each data set.
+                    int dataCount = itsAxesData.size()/2;
+                    if ( itsCache ){
+                        itsCache->resizeIndexer( dataCount );
+                    }
+                    else {
+                        throw(AipsError("Problem in CacheThread::run B"));
+                    }
+                    if ( itsCache ){
+                        itsCache->clearRanges();
+                        bool globalRanges = False;
+                        for ( int i = 0; i < dataCount; i++ ){
+                            itsCache->setUpIndexer(PMS::NONE, globalRanges, globalRanges, i);
+                        }
+                    }
+                }
+             }
+	    // Release
+		} else {
 			if (itsCache ){
 				itsCache->release( workAxes );
 			}
