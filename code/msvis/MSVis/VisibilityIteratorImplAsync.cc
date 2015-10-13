@@ -11,6 +11,7 @@
 #include <msvis/MSVis/VisBufferAsyncWrapper.h>
 #include <msvis/MSVis/VLAT.h>
 #include <msvis/MSVis/AsynchronousInterface.h>
+#include <msvis/MSVis/UtilJ.h>
 
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/System/AipsrcValue.h>
@@ -109,8 +110,10 @@ ViReadImplAsync::ViReadImplAsync (const PrefetchColumns & prefetchColumns,
 ViReadImplAsync::~ViReadImplAsync ()
 {
     if (! vbaWrapperStack_p.empty()){
-        VisBufferAsync * vba = vbaWrapperStack_p.top()->releaseVba ();
+        VisBufferAsync * vba =
+                vbaWrapperStack_p.top()->releaseVba ();
         assert (vba == visBufferAsync_p);
+        UnusedVariable (vba);
         vba = NULL; // prevent warning when in non425debug build
         delete visBufferAsync_p;
     }
@@ -286,7 +289,7 @@ ViReadImplAsync::detachVisBuffer (VisBuffer & vb0)
 
         VisBufferAsync * vba = vb->releaseVba ();
         Assert (vba == visBufferAsync_p);
-        vba = NULL; // prevent warning in nondebug builds
+        UnusedVariable (vba); // prevent release build warning
 
         vbaWrapperStack_p.pop ();
 

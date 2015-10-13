@@ -1166,6 +1166,7 @@ VpData::getSelection (const VpPorts & ports, bool missingIsOk) const
         }
         else{
             assert (missingIsOk);
+            UnusedVariable (missingIsOk);
         }
     }
 

@@ -28,6 +28,7 @@
 #include <msvis/MSVis/Vbi2MsRow.h>
 #include <msvis/MSVis/VisModelDataI.h>
 #include <msvis/MSVis/VisBufferImpl2Internal.h>
+#include <msvis/MSVis/UtilJ.h>
 
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
@@ -537,6 +538,7 @@ VisBufferImpl2::deleteRows (const Vector<Int> & rowsToDelete)
                 rowToDelete = rowsToDelete (deleteIndex);
 
                 Assert (oldRowToDelete < rowToDelete);
+                UnusedVariable (oldRowToDelete);
             }
         }
         else if (destinationRow != sourceRow){

@@ -48,6 +48,8 @@
 #define Assert AssertCc
 #define Throw ThrowCc
 
+#define UnusedVariable(x) ((void) x);
+
 namespace casa {
 
 class String;
