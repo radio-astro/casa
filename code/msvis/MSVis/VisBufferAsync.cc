@@ -359,6 +359,8 @@ void
 VisBufferAsync::copyCache (const VisBuffer & other, Bool force)
 {
     assert (! force);
+    // Silencing unused parameter warning for the release builds
+    (void) force;
 
     VisBuffer::copyCache (other, False);
 }
