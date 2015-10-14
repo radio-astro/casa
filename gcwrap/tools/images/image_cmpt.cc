@@ -4960,21 +4960,20 @@ image* image::newimagefromimage(
 
 image* image::newimagefromfile(const std::string& fileName) {
 	try {
-		image *rstat(0);
 		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
-		SHARED_PTR<ImageInterface<Float> > outIm(
-			newImage->newimagefromfile(fileName)
-		);
-		if (outIm.get() != 0) {
-			rstat =  new image(outIm);
-		} else {
-			rstat =  new image();
+		auto mypair = newImage->newimagefromfile(fileName);
+		if (mypair.first) {
+			return new image(mypair.first);
 		}
-		if(!rstat)
-			throw AipsError("Unable to create image");
-		return rstat;
-	} catch (const AipsError& x) {
+		else if (mypair.second) {
+		    return new image(mypair.second);
+		}
+		else {
+		    return new image();
+		}
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
