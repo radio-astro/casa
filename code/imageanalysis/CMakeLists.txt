@@ -57,6 +57,7 @@ ImageAnalysis/ImagePolProxy.cc
 ImageAnalysis/ImagePrimaryBeamCorrector.cc
 ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageRegridder.cc
+ImageAnalysis/ImageRotator.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
@@ -192,6 +193,7 @@ install (FILES
     ImageAnalysis/ImageRegridder.h
     ImageAnalysis/ImageRegridderBase.h
     ImageAnalysis/ImageRegridderBase.tcc
+    ImageAnalysis/ImageRotator.h
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h

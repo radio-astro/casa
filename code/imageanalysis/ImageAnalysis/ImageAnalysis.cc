@@ -1928,6 +1928,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	return True;
 }
 
+/*
 SPIIF ImageAnalysis::rotate(
 	const String& outFile, const Vector<Int>& shape,
 	const Quantity& pa, Record& Region, const String& mask,
@@ -2082,6 +2083,7 @@ SPIIF ImageAnalysis::rotate(
 	);
 	return imOut;
 }
+*/
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	_onlyFloat(__func__);

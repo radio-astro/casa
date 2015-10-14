@@ -30,10 +30,11 @@
 #include <measures/Measures/MDirection.h>
 #include <tables/Tables/PlainTable.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+//#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
+#include <imageanalysis/ImageAnalysis/ImageRotator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <iomanip>
@@ -375,11 +376,17 @@ SPIIF PVGenerator::generate() const {
 		auto outShape = subShape;
 		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
 		outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
+		ImageRotator rotator(imageToRotate, &lcbox, "", "", False);
+		rotator.setAngle(Quantity(paInRad, "rad"));
+		rotator.setShape(outShape);
+		rotated = rotator.rotate();
+		/*
 		ImageAnalysis ia(imageToRotate);
 		rotated = ia.rotate(
 			"", outShape.asVector(), Quantity(paInRad, "rad"),
 			lcbox, ""
 		);
+		*/
 	}
 
 	// done with these pointers

@@ -140,8 +140,10 @@ SPIIF ImageRegridder::_regrid() const {
 		_subimage->shape(), False
 	);
 	ThrowIf(
-		csys.nPixelAxes() != _getShape().nelements(),
-		"The number of pixel axes in the output shape and Coordinate System must be the same"
+		csys.nPixelAxes() != _getShape().size(),
+		"The number of pixel axes in the output shape and Coordinate System must be the same. "
+		"Shape has size " + String::toString(_getShape().size()) + ". Output coordinate system "
+		"has " + String::toString(csys.nPixelAxes()) + " axes"
 	);
 	_checkOutputShape(*_subimage, coordsToRegrid);
 	SPIIF workIm(new TempImage<Float>(_getKludgedShape(), csys));

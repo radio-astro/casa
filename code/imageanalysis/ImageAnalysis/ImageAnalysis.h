@@ -221,6 +221,7 @@ public:
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
+    /*
     SPIIF rotate(
     	const String& outfile, const Vector<int>& shape,
         const Quantity& pa, Record& region,
@@ -229,6 +230,7 @@ public:
         const Bool dropdeg=False, const Bool overwrite=False,
         const Bool extendMask=False
     ) const;
+    */
 
     Bool rename(const String& name, const Bool overwrite = False);
 
