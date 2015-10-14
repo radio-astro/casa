@@ -94,7 +94,8 @@ class VLAImportDataResults(basetask.Results):
                 context.evla = collections.defaultdict(dict)
             #msinfo = self._do_msinfo_heuristics(context)
             msinfos = dict((ms.name, self._do_msinfo_heuristics(ms.name, context)) for ms in self.mses)
-            context.evla['msinfo'].update(msinfos) 
+            context.evla['msinfo'].update(msinfos)
+            context.project_summary.telescope = 'EVLA'
             #context.evla['msinfo'] = { m.name : msinfo }
             
 
