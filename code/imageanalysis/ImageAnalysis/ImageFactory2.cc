@@ -28,6 +28,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
 #include <images/Images/ImageUtilities.h>
+#include <imageanalysis/IO/CasaImageOpener.h>
 
 namespace casa {
 
@@ -147,6 +148,52 @@ SHARED_PTR<TempImage<Float> > ImageFactory::floatFromComplex(
 		ThrowCc("Logic Error: Unhandled function");
 	}
 	return newImage;
+}
+
+pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
+    ThrowIf(
+        infile.empty(), "File name is empty"
+    );
+    File thefile(infile);
+    ThrowIf(
+        ! thefile.exists(),
+        "File " + infile + " does not exist."
+    );
+    unique_ptr<LatticeBase> latt(CasaImageOpener::openImage(infile));
+    ThrowIf (! latt, "Unable to open lattice");
+    DataType dataType = latt->dataType();
+    pair<SPIIF, SPIIC> ret(nullptr, nullptr);
+    if (isReal(dataType)) {
+        if (dataType != TpFloat) {
+            ostringstream os;
+            os << dataType;
+            LogIO log;
+            log << LogOrigin("ImageFactory", __func__);
+            log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
+                << "to float precision in CASA image" << LogIO::POST;
+        }
+        return pair<SPIIF, SPIIC>(
+            SPIIF(dynamic_cast<ImageInterface<Float> *>(latt.release())),
+            SPIIC(nullptr)
+        );
+    }
+    else if (isComplex(dataType)) {
+        if (dataType != TpComplex) {
+            ostringstream os;
+            os << dataType;
+            LogIO log;
+            log << LogOrigin("ImageFactory", __func__);
+            log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
+                << "to complex float precision in CASA image" << LogIO::POST;
+        }
+        return pair<SPIIF, SPIIC>(
+            SPIIF(nullptr),
+            SPIIC(dynamic_cast<ImageInterface<Complex> *>(latt.release()))
+        );
+    }
+    ostringstream os;
+    os << dataType;
+    throw AipsError("unsupported image data type " + os.str());
 }
 
 }

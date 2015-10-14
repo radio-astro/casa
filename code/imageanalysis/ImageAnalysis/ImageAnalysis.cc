@@ -207,21 +207,6 @@ Bool ImageAnalysis::fromRecord(const RecordInterface& rec, const String& name) {
 }
 
 Bool ImageAnalysis::open(const String& infile) {
-	if (_log.get() == 0) {
-		_log.reset(new LogIO());
-	}
-	*_log << LogOrigin(className(), __func__);
-	// Check whether infile exists
-	if (infile.empty()) {
-		*_log << LogIO::WARN << "File string is empty" << LogIO::POST;
-		return False;
-	}
-	File thefile(infile);
-	if (!thefile.exists()) {
-		*_log << LogIO::WARN << "File [" << infile << "] does not exist."
-				<< LogIO::POST;
-		return False;
-	}
 	// Generally used if the image is already closed !b
 	if (_imageFloat || _imageComplex) {
 		*_log << LogIO::WARN << "Another image is already open, closing first"
@@ -232,44 +217,10 @@ Bool ImageAnalysis::open(const String& infile) {
 		_imageFloat.reset();
 		_imageComplex.reset();
 	}
-	pair<SPIIF, SPIIC> ret = _open(infile);
+	pair<SPIIF, SPIIC> ret = ImageFactory::fromFile(infile);
 	_imageFloat = ret.first;
 	_imageComplex = ret.second;
 	return True;
-}
-
-pair<SPIIF, SPIIC> ImageAnalysis::_open(const String& infile) const {
-    SPtrHolder<LatticeBase> latt(CasaImageOpener::openImage(infile));
-	ThrowIf (! latt.ptr(), "Unable to open lattice");
-	DataType dataType = latt->dataType();
-	pair<SPIIF, SPIIC> ret(nullptr, nullptr);
-	if (isReal(dataType)) {
-	    if (dataType != TpFloat) {
-			ostringstream os;
-			os << dataType;
-			*_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
-				<< "to float precision in CASA image" << LogIO::POST;
-		}
-	    return pair<SPIIF, SPIIC>(
-	        SPIIF(dynamic_cast<ImageInterface<Float> *>(latt.transfer())),
-	        SPIIC(nullptr)
-	    );
-	}
-	else if (isComplex(dataType)) {
-	    if (dataType != TpComplex) {
-	        ostringstream os;
-            os << dataType;
-            *_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
-                << "to complex float precision in CASA image" << LogIO::POST;
-        }
-        return pair<SPIIF, SPIIC>(
-            SPIIF(nullptr),
-            SPIIC(dynamic_cast<ImageInterface<Complex> *>(latt.transfer()))
-        );
-	}
-	ostringstream os;
-	os << dataType;
-	throw AipsError("unsupported image data type " + os.str());
 }
 
 Bool ImageAnalysis::detached() {
@@ -2577,27 +2528,6 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		}
 
 	return outImage;
-}
-
-pair<SPIIF, SPIIC>
-ImageAnalysis::newimagefromfile(const String& fileName) {
-	ImageInterface<Float>* outImage = 0;
-	if (_log.get() == 0) {
-		_log.reset(new LogIO());
-	}
-	*_log << LogOrigin(className(), __func__);
-
-	// Check whether infile exists
-	ThrowIf(
-	    fileName.empty(), "File name is empty"
-	);
-
-	File thefile(fileName);
-	ThrowIf(
-	    !thefile.exists(),
-	    "File " + fileName + " does not exist."
-	);
-	return _open(fileName);
 }
 
 ImageInterface<Float> *

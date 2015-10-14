@@ -36,6 +36,9 @@
 #include <casa/namespace.h>
 #include <utility>
 #include <vector>
+
+using namespace std;
+
 namespace casa {
 
 class CoordinateSystem;
@@ -120,6 +123,10 @@ public:
     	SPCIIF realPart, const Array<Float>& imagPart
     );
 
+    // exactly one of the pointers will not be null, indicating the
+    // pixel data type
+    static pair<SPIIF, SPIIC> fromFile(const String& filename);
+
 private:
 
 	ImageFactory() {};
@@ -140,6 +147,7 @@ private:
         const casa::Record& cSys,
         const casa::IPosition& shape
     );
+
 };
 }
 

@@ -296,8 +296,6 @@ public:
                                      const bool dropdeg = False,
                                      const bool overwrite = False);
 
-    pair<SPIIF, SPIIC> newimagefromfile(const String& fileName);
-
     ImageInterface<Float> * newimagefromarray(const String& outfile,
                                               Array<Float> & pixelsArray,
                                               const Record& csys,
@@ -384,9 +382,6 @@ public:
     	const LatticeExprNode& node,
     	const String& name, const Bool makedefault
     );
-
-    // at most, only one of the pointers will not be null.
-    pair<SPIIF, SPIIC> _open(const String& infile) const;
 
 };
 
