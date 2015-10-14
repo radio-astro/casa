@@ -296,13 +296,6 @@ public:
                                      const bool dropdeg = False,
                                      const bool overwrite = False);
 
-    ImageInterface<Float> * newimagefromarray(const String& outfile,
-                                              Array<Float> & pixelsArray,
-                                              const Record& csys,
-                                              const Bool linear = False,
-                                              const Bool overwrite = False,
-                                              const Bool log = True);
-
     ImageInterface<Float> * newimagefromfits(const String& outfile,
                                              const String& infile, 
                                              const Int whichrep = 0,
