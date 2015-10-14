@@ -228,6 +228,7 @@ Enumerations/CAtmPhaseCorrection.cc
 Enumerations/CAxisName.cc
 Enumerations/CBasebandName.cc
 Enumerations/CBaselineReferenceCode.cc
+Enumerations/CBinaryDataFlags.cc
 Enumerations/CCalCurveType.cc
 Enumerations/CCalDataOrigin.cc
 Enumerations/CCalibrationDevice.cc
@@ -295,6 +296,7 @@ Enumtcl/AtmPhaseCorrection.cc
 Enumtcl/AxisName.cc
 Enumtcl/BasebandName.cc
 Enumtcl/BaselineReferenceCode.cc
+Enumtcl/BinaryDataFlags.cc
 Enumtcl/CalCurveType.cc
 Enumtcl/CalDataOrigin.cc
 Enumtcl/CalibrationDevice.cc
@@ -572,6 +574,7 @@ install (FILES
 	Enumerations/CAtmPhaseCorrection.h
 	Enumerations/CAxisName.h
 	Enumerations/CBasebandName.h
+	Enumerations/CBinaryDataFlags.h
 	Enumerations/CBaselineReferenceCode.h
 	Enumerations/CCalCurveType.h
 	Enumerations/CCalDataOrigin.h
@@ -641,6 +644,7 @@ install (FILES
 	Enumtcl/AxisName.h
 	Enumtcl/BasebandName.h
 	Enumtcl/BaselineReferenceCode.h
+	Enumtcl/BinaryDataFlags.h
 	Enumtcl/CalCurveType.h
 	Enumtcl/CalDataOrigin.h
 	Enumtcl/CalType.h
@@ -738,6 +742,7 @@ casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadSeqBDFs.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadParBDFs.cc)
 #casa_add_assay(alma test/tEmptyMS.cc)
+casa_add_assay(alma ASDM/test/t2xReadASDM.cc)
 
 #
 # The Python <- C++ binding generated with swig
