@@ -114,6 +114,11 @@ template<class T> image* _decimate(
 	const vector<casa::String>& msgs
 ) const;
 
+shared_ptr<ImageAnalysis> _fromarray(
+    const string& outfile, const variant& pixels,
+    const record& csys, bool linear, bool overwrite, bool log
+) const;
+
 template <class T> static image* _hanning(
 	SPCIIT image, SHARED_PTR<const casa::Record> region,
 	const casa::String& mask, const std::string& outfile, bool overwrite,
