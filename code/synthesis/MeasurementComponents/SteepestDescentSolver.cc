@@ -86,8 +86,9 @@ namespace casa {
 	      (!vb.flag()(0,ndx(2)))    &&
 	      //	  (!vb.flagCube()(ndx))   &&
 	      ((ant1[ndx(2)] != ant2[ndx(2)]) && 
-	       (ant1[ndx(2)] == whichAnt)     || 
-	       (ant2[ndx(2)] == whichAnt)))
+	       ((ant1[ndx(2)] == whichAnt)     || 
+		(ant2[ndx(2)] == whichAnt))
+	       ))
 	    {
 	      wt = vb.weight()(ndx(2));
 	      sumWt += wt;
@@ -119,13 +120,13 @@ namespace casa {
   // Compute the penalty function (also called the Goodness-of-fit criteria).
   // For us, its the Chi-square function.
   //
-  Double SteepestDescentSolver::getGOF(const VisBuffer& residual, Int& whichPol, Double& sumWt, char* /*msg*/)
+  Double SteepestDescentSolver::getGOF(const VisBuffer& residual, Int& whichPol, Double& sumWt, const char* /*msg*/)
   {
     Double Chisq=0.0;
     Int nRow=residual.nRow();
     IPosition vbShape(residual.modelVisCube().shape());
-    Int nPoints;
-    nPoints=0;
+    //Int nPoints;
+    //nPoints=0;
     sumWt=0.0;
 
     IPosition ndx(3,0);
@@ -216,8 +217,8 @@ namespace casa {
     Cube<Float> oldOffsets;
     Vector<Complex> ResidualVj, dAzVj, dElVj;
     Double Chisq0,Chisq,sumWt;
-    Double Time;
-    static Double Time0;
+    //Double Time;
+    //static Double Time0;
     Double AzHDiag,ElHDiag;
     Timer timer;
     Double localGain;
@@ -253,12 +254,12 @@ namespace casa {
 
     if (sumWt == 0) return -Chisq;
 
-    Time = getCurrentTimeStamp(residual_p);
-    if (SlotNo == 0) Time0 = Time;
+    //Time = getCurrentTimeStamp(residual_p);
+    //if (SlotNo == 0) Time0 = Time;
 
     timer.mark();
     Int iter;
-    Bool Converged=False;
+    //Bool Converged=False;
     Vector<Bool> antFlagged;
     antFlagged.resize(nAnt);
     logIO() << LogOrigin("PointingCal","SDS::solve()") 
@@ -330,7 +331,7 @@ namespace casa {
 	  //	  cout << iter << " " << Chisq0 << " " << Chisq << " " << dChisq << endl;
 	  if ((fabs(dChisq) < tolerance()))
 	    {
-	      Converged=True;
+	      //Converged=True;
 	      break;
 	    }
 	  if ((dChisq < tolerance()))// && (iter > 0))
@@ -382,7 +383,7 @@ namespace casa {
     Vector<Complex> ResidualVj, dAzVj, dElVj;
     Vector<Bool> antFlagged;
     Double Chisq = MAXFLOAT;
-    Double dChisq, bestChisq, sumWt, Time, AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
+    Double dChisq, bestChisq, sumWt, /*Time,*/ AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
       stepSize0,stepSize1;
     Int iPol=0, nPol, iter, axis0=0,axis1=0, iCorr;
     Bool Converged=False;
@@ -432,7 +433,7 @@ namespace casa {
 	    bestSolution.resize(epj.solveRPar().shape());
 	    bestSolution = epj.solveRPar();	
 	    //epj.guessPar();
-	    Time = getCurrentTimeStamp(residual_p);
+	    //Time = getCurrentTimeStamp(residual_p);
 	    timer.mark();
 	    antFlagged.resize(nAnt);
 	    logIO() << LogOrigin("PointingCal","SDS::solve2") 

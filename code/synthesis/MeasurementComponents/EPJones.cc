@@ -247,14 +247,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // TBD: make a nice log message concerning preavg
     // TBD: make this work better with solnboundary par
     //
-    if (preavg()<0.0)
+    if (preavg()<0.0) {
       if (interval()>0.0)
 	// use interval
 	preavg()=interval();
       else
 	// scan-based, so max out preavg() to get full-chunk time-average
 	preavg()=DBL_MAX;
-    
+    }
     // This is the solve context
     setSolved(True);
     setApplied(False);

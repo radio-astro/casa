@@ -2890,7 +2890,7 @@ Bool Imager::apparentSensitivity(Double& effSensitivity,
     
     ROVisibilityIterator& vi(*rvi_p);
     VisBuffer vb(vi);
-    Bool doWtSp=vb.existsWeightSpectrum();
+    //Bool doWtSp=vb.existsWeightSpectrum();
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin();vi.more();vi++) {
 	Int nRow=vb.nRow();

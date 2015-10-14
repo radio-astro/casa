@@ -587,12 +587,12 @@ void BJonesPoly::selfSolveOne(VisBuffGroupAcc& vbga)
 	  (*accumVis[iph])(ichan,ibl)/= (static_cast<Complex>(wt));
 	  
 	  // If requested, normalize the data, if possible
-	  if (visnorm_p)
+	  if (visnorm_p) {
 	    if (abs((*normVis[iph])(ibl))>0.0 )
 	      (*accumVis[iph])(ichan,ibl)/=(*normVis[iph])(ibl);
 	    else
 	      (*accumVis[iph])(ichan,ibl)=0.0; // causes problems in polyant?
-	  
+	  }
   
 	  (*totalAmp[iph])(ichan,ibl)=static_cast<Double>(log(abs((*accumVis[iph])(ichan,ibl))));
 	  // Note phase sign convention!

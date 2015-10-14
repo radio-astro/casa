@@ -305,7 +305,6 @@ void EVLASwPow::specify(const Record& specify) {
     solveAllParErr()=0.0;  // what should we use here?  ~1/bandwidth?
     solveAllParSNR()=1.0;
 
-    Bool anyantgood(False);
     IPosition blc(3,0,0,0),trc(3,2*nrec-1,0,0),stp(3,nrec,1,1);
     for (uInt iant=0;iant<ants.nelements();++iant) {
       Int thisant=ants(iant);
@@ -387,7 +386,6 @@ void EVLASwPow::specify(const Record& specify) {
       
 	// Increment good counter
 	++goodcount(ispw,thisant);
-	anyantgood=True;
 
       }
 

@@ -641,15 +641,8 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
 
       // Turn the crank on the solver
       uInt rank;
-      Bool ok;
-      ok=lsq.invert(rank,False);  // True);  // SVD?
+      lsq.invert(rank,False);  // True);  // SVD?
       Cube<Complex> Dest(2,1,nAnt());
-
-    /*      
-      cout << ": ng = " << ng;
-      cout << ": ok = " << boolalpha << ok;
-      cout << "  rank = " << rank << " /" << nAnt();
-    */      
 
       lsq.solve(Dest.data());
       

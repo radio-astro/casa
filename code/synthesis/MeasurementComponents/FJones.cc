@@ -237,7 +237,7 @@ void FJones::setSpecify(const Record& specify) {
 
 }
 
-void FJones::specify(const Record& specify) {
+void FJones::specify(const Record&) {
 
   //cout << "FJones-specific specify: " << tectype_ << endl;
 

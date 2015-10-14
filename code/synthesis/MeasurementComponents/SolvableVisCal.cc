@@ -2725,15 +2725,18 @@ void SolvableVisCal::formSolveSNR() {
   // Nominally zero
   solveParSNR()=0.0;
 
-  for (Int iant=0;iant<nAnt();++iant)
+  for (Int iant=0;iant<nAnt();++iant) {
     for (Int ipar=0;ipar<nPar();++ipar) {
-      if (solveParOK()(ipar,0,iant))
+      if (solveParOK()(ipar,0,iant)) {
 	if (solveParErr()(ipar,0,iant)>0.0f) 
 	  solveParSNR()(ipar,0,iant)=abs(solveCPar()(ipar,0,iant))/solveParErr()(ipar,0,iant);
 	else 
 	  // if error is zero, SNR is officially infinite; use a (large) special value here
 	  solveParSNR()(ipar,0,iant)=9999999.0;
-    }
+      } // ok
+    } // ipar
+  } // iant
+
 }
 
 void SolvableVisCal::applySNRThreshold() {

@@ -161,13 +161,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Long cachesize=200000000;
     Float paInc=1.0; // 1 deg.
     String cfCacheDirName("tmpCFCache.dir");
-    Bool doPBCorr=False;// applyPointingOffsets=True;
+    //Bool doPBCorr=False;// applyPointingOffsets=True;
     if (solve.isDefined("cfcache"))
       cfCacheDirName=solve.asString("cfcache");
     if (solve.isDefined("painc"))
       paInc=solve.asDouble("painc");
-    if (solve.isDefined("pbcorr"))
-      doPBCorr=solve.asBool("pbcorr");
+    //if (solve.isDefined("pbcorr"))
+    //  doPBCorr=solve.asBool("pbcorr");
     
     if (pbwp_p) delete pbwp_p;
     
@@ -249,14 +249,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // TBD: make a nice log message concerning preavg
     // TBD: make this work better with solnboundary par
     //
-    if (preavg()<0.0)
+    if (preavg()<0.0) {
       if (interval()>0.0)
 	// use interval
 	preavg()=interval();
       else
 	// scan-based, so max out preavg() to get full-chunk time-average
 	preavg()=DBL_MAX;
-    
+    }
     // This is the solve context
     setSolved(True);
     setApplied(False);

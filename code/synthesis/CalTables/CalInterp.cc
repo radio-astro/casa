@@ -325,7 +325,8 @@ Bool CalInterp::findSlot(const Double& time) {
     }
 
   }
-  if (newSlot = slot!=currSlot()) {
+  newSlot = (slot!=currSlot());
+  if (newSlot) {
     currSlot_(currSpw_)=slot;
   }
 

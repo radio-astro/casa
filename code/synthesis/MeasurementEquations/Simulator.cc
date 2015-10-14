@@ -2725,9 +2725,9 @@ Bool Simulator::setdata(const Vector<Int>& spectralwindowids,
     makeVisSet();
     //Now assign the source directions to something selected or sensible
     {
-      Int fieldsel=0;
+      //Int fieldsel=0;
       if(fieldids.nelements() >0) {
-	fieldsel=fieldids(0);
+	//fieldsel=fieldids(0);
 	// RI TODO does sim:setdata need this?
 	nField=fieldids.nelements();
 	for (Int i=0;i<nField;i++) {

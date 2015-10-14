@@ -302,10 +302,12 @@ template<class T> void CalSet<T>::load (const String& file,
   LogMessage message(LogOrigin("CalSet","load"));
   
   // Decode the Jones matrix type
+  /*
   Int jonesType = 0;
   if (nPar_ == 1) jonesType = 1;
   if (nPar_ == 2) jonesType = 2;
   if (nPar_ == 4) jonesType = 3;
+  */
 
  // Open, select, sort the calibration table
   SolvableVisJonesTable svjtab(file);
@@ -451,7 +453,7 @@ template<class T> void CalSet<T>::load (const String& file,
       Cube<Float>    snr;        (*svjmcol).snr().getColumn(snr);
 
       // Read the calibration information
-      Double lastTime(-1.0), thisTime(0.0), thisInterval(0.0);
+      Double /*lastTime(-1.0),*/ thisTime(0.0), thisInterval(0.0);
       Int islot(-1);
       Int iant;
 
@@ -478,7 +480,7 @@ template<class T> void CalSet<T>::load (const String& file,
 	  (*fit_[thisSpw])(islot) = totalFit(irow);
 	  (*fitwt_[thisSpw])(islot) = totalFitWt(irow);
 	  
-	  lastTime = thisTime;
+	  //lastTime = thisTime;
 	};
 	
 	iant=antenna1(irow);
@@ -557,7 +559,7 @@ template<class T> void CalSet<T>::store (const String& file,
   // No. of rows in cal_main, cal_desc and cal_history
   Int nMain = 0; 
   Int nDesc = 0;
-  Int nHist = 0;
+  //Int nHist = 0;
   
   if (calTabDesc_ == NULL)
     {
@@ -582,7 +584,7 @@ template<class T> void CalSet<T>::store (const String& file,
     calTab_  = new CalTable2 (file, *calTabDesc_, Table::Update);
     nMain = calTab_->nRowMain();
     nDesc = calTab_->nRowDesc();
-    nHist = calTab_->nRowHistory();
+    //nHist = calTab_->nRowHistory();
   } else {
     // Create a new calibration table
     Table::TableOption access = Table::New;
@@ -865,7 +867,7 @@ template<class T> void CalSet<T>::store (const String& file,
   // No. of rows in cal_main, cal_desc and cal_history
   Int nMain = 0; 
   Int nDesc = 0;
-  Int nHist = 0;
+  //Int nHist = 0;
   
   // Calibration table
   SolvableVisJonesTable *tab;
@@ -875,7 +877,7 @@ template<class T> void CalSet<T>::store (const String& file,
     tab  = new SolvableVisJonesTable (file, Table::Update);
     nMain = tab->nRowMain();
     nDesc = tab->nRowDesc();
-    nHist = tab->nRowHistory();
+    //nHist = tab->nRowHistory();
   } else {
     // Create a new calibration table
     Table::TableOption access = Table::New;

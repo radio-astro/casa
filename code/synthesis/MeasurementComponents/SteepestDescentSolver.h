@@ -64,7 +64,7 @@ namespace casa {
   private:
     Vector<Complex> getVj(const VisBuffer& vb, Int NAnt, Int whichAnt, Int whichPol,
 			  Double& sumWt,Int negate=0, Int weighted=1);
-    Double getGOF(const VisBuffer& residual,Int& whichPol, Double& sumWt,char *msg="");
+    Double getGOF(const VisBuffer& residual,Int& whichPol, Double& sumWt,const char *msg="");
 
     Int maxIter,maxParams;
     

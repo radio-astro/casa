@@ -111,6 +111,9 @@ public:
   // Arrange a pivot point for evaluating the equation in collapseForSim
   void setPivot(VisCal::Type pivot);
 
+  // Where is the pivot?
+  VisCal::Type pivot() const { return pivot_; };
+
   // Arrange the model to use for calibration
   void setModel(const Vector<Float>& stokes);
   inline void unSetModel() { useInternalModel_=False; };
@@ -167,8 +170,6 @@ public:
  
   // Report the VisEq's state
   void state();
-
-  inline const VisCal::Type pivot() const { return pivot_; };
 
   // Set the print level
   inline void setPrtlev(const Int& prtlev) { prtlev_=prtlev; };
