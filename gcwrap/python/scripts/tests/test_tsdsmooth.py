@@ -15,6 +15,7 @@ import listing
 import sdutil
 
 from tsdsmooth import tsdsmooth
+#from test.test_funcattrs import StaticMethodAttrsTest
 
 try:
     from testutils import copytree_ignore_subversion
@@ -90,8 +91,25 @@ class tsdsmooth_test_base(unittest.TestCase):
             return _wrapper
         return wrapper
     
+    @staticmethod    
+    def weight_case(func):
+        import functools
+        @functools.wraps(func)
+        def wrapper(self):
+            with sdutil.tbmanager(self.infile) as tb:
+                for irow in xrange(tb.nrows()):
+                    self.assertTrue(tb.iscelldefined('WEIGHT_SPECTRUM', irow))
+            
+            # weight mode flag
+            self.weight_propagation = True
+            
+            func(self)
+            
+        return wrapper
+    
     def run_test(self, *args, **kwargs):
         datacol_name = self.datacolumn.upper()
+        weight_mode = hasattr(self, 'weight_propagation') and getattr(self, 'weight_propagation') is True
         
         if kwargs.has_key('kwidth'):
             kwidth = kwargs['kwidth']
@@ -114,6 +132,8 @@ class tsdsmooth_test_base(unittest.TestCase):
             with sdutil.tbmanager(self.infile) as tb:
                 data_in = tb.getvarcol(datacol_name)
                 flag_in = tb.getvarcol('FLAG')
+                if weight_mode is True:
+                    weight_in = tb.getvarcol('WEIGHT_SPECTRUM')
         else:
             myms = gentools(['ms'])[0]
             a = myms.msseltoindex(self.infile, spw=spw)
@@ -125,6 +145,8 @@ class tsdsmooth_test_base(unittest.TestCase):
                     tsel = tb.query('DATA_DESC_ID IN %s'%(dd_selection.tolist()))
                     data_in = tsel.getvarcol(datacol_name)
                     flag_in = tsel.getvarcol('FLAG')
+                    if weight_mode is True:
+                        weight_in = tsel.getvarcol('WEIGHT_SPECTRUM')
                 finally:
                     tsel.close()
 
@@ -132,6 +154,8 @@ class tsdsmooth_test_base(unittest.TestCase):
             nrow = tb.nrows()
             data_out = tb.getvarcol(datacol_name)
             flag_out = tb.getvarcol('FLAG')
+            if weight_mode is True:
+                weight_out = tb.getvarcol('WEIGHT_SPECTRUM')
             
         # verify nrow
         self.assertEqual(nrow, expected_nrow, msg='Number of rows mismatch (expected %s actual %s)'%(expected_nrow, nrow))
@@ -145,7 +169,7 @@ class tsdsmooth_test_base(unittest.TestCase):
             row_out = data_out[key]
             self.assertEqual(row_in.shape, row_out.shape, msg='Shape mismatch in row %s'%(key))
             
-            nchan = row_out.shape[1]
+            npol, nchan, _ = row_out.shape
             kernel_array = gaussian_kernel(nchan, kwidth)
             expected = numpy.convolve(row_in[0,:,0], kernel_array, mode='same')
             output = row_out[0,:,0]
@@ -161,6 +185,28 @@ class tsdsmooth_test_base(unittest.TestCase):
             #print 'gaussian', kernel_array.tolist()
             #print 'expected', expected.tolist() 
             #print 'result', row_out[0,:,0].tolist()
+            
+            # weight check if this is weight test
+            if weight_mode is True:
+                #print 'Weight propagation test'
+                wgt_in = weight_in[key]
+                wgt_out = weight_out[key]
+                wkwidth = int(kwidth + 0.5)
+                wkwidth += (1 if wkwidth % 2 == 0 else 0)
+                half_width = wkwidth / 2
+                peak_chan = kernel_array.argmax()
+                start_chan = peak_chan - half_width
+                wkernel = kernel_array[start_chan:start_chan+wkwidth].copy()
+                wkernel /= sum(wkernel)
+                weight_expected = wgt_in.copy()
+                for ichan in xrange(half_width, nchan-half_width):
+                    s = numpy.zeros(npol, dtype=float)
+                    for jchan in xrange(wkwidth):
+                        s += wkernel[jchan] * wkernel[jchan] / wgt_in[:,ichan-half_width+jchan,0]
+                    weight_expected[:,ichan,0] = 1.0 / s
+                #print weight_expected[:,:10]
+                diff = numpy.abs((wgt_out - weight_expected) / weight_expected)
+                self.assertTrue(all(diff.flatten() < eps), msg='Failed to verify spectral weight: row %s'%(key))
         
     def _setUp(self, files, task):
         for f in files:
@@ -303,9 +349,38 @@ class tsdsmooth_test_float(tsdsmooth_test_base):
         """test_tsdsmooth_float_overwrite --- overwrite existing outfile (overwrite=True)"""
         shutil.copytree(self.infile, self.outfile)
         self.run_test(kwidth=5, overwrite=True)
+
+class tsdsmooth_test_weight(tsdsmooth_test_base):   
+    """
+    Unit test for task tsdsmooth. Verify weight propagation.
+
+    The list of tests:
+    test_tsdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)
+    test_tsdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)
+    """
+    weight_case = tsdsmooth_test_base.weight_case
+    infile = tsdsmooth_test_base.infile_data
+    datacolumn = 'data'
+    
+    def setUp(self):
+        super(tsdsmooth_test_weight, self).setUp()
+        
+        # initialize WEIGHT_SPECTRUM
+        with sdutil.cbmanager(self.infile) as cb:
+            cb.initweights()
+        
+    @weight_case
+    def test_tsdsmooth_weight_gauss01(self):
+        """test_tsdsmooth_weight_gauss01 --- gaussian smoothing (kwidth 5)"""
+        self.run_test(kwidth=5)
+        
+    @weight_case
+    def test_tsdsmooth_weight_gauss02(self):
+        """test_tsdsmooth_weight_gauss02 --- gaussian smoothing (kwidth 3)"""
+        self.run_test(kwidth=3)
    
 def suite():
     return [tsdsmooth_test_fail, tsdsmooth_test_complex,
-            tsdsmooth_test_float]
+            tsdsmooth_test_float, tsdsmooth_test_weight]
 
 
