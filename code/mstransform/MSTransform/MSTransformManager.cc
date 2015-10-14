@@ -1772,6 +1772,40 @@ void MSTransformManager::setSmoothingKernel(uInt mode)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+void MSTransformManager::setSmoothingFourierKernel(uInt mode)
+{
+  if (smoothFourier_p) {
+    switch (mode)
+    {
+      case MSTransformations::plainSmooth:
+      {
+        //logger_p << "Set smoothing kernel to smoothFourier" << LogIO::POST;
+        transformStripeOfDataComplex_p = &MSTransformManager::smoothFourierComplex;
+        transformStripeOfDataFloat_p = &MSTransformManager::smoothFourierFloat;
+        break;
+      }
+      case MSTransformations::plainSmoothSpectrum:
+      {
+        //logger_p << "Set smoothing kernel to smooth (for weight propagation)" << LogIO::POST;
+        transformStripeOfDataComplex_p = &MSTransformManager::smooth;
+        transformStripeOfDataFloat_p = &MSTransformManager::smooth;
+        break;
+      }
+      default:
+      {
+        transformStripeOfDataComplex_p = &MSTransformManager::smoothFourierComplex;
+        transformStripeOfDataFloat_p = &MSTransformManager::smoothFourierFloat;
+        break;
+      }
+    }
+  }
+
+  return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void MSTransformManager::initDataSelectionParams()
 {
 	MSSelection mssel;
@@ -5769,6 +5803,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		// Switch average and smooth kernels
 		setChannelAverageKernel(MSTransformations::flagCumSumNonZero);
 		setSmoothingKernel(MSTransformations::plainSmoothSpectrum);
+		setSmoothingFourierKernel(MSTransformations::plainSmoothSpectrum);
 
 		// Dummy auxiliary weightSpectrum
 		const Cube<Float> applicableSpectrum;
@@ -5967,6 +6002,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		// Reset average and smooth kernels
 		setChannelAverageKernel(weightmode_p);
 		setSmoothingKernel(smoothmode_p);
+    setSmoothingFourierKernel(MSTransformations::plainSmooth);
 	}
 
 	return;

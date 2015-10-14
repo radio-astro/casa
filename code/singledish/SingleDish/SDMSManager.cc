@@ -451,27 +451,27 @@ void SDMSManager::initializeSmoothing()
     convolverPool_[numChan].setPsf(theKernel, IPosition(1, numChan));
   }
 
-//  // set smoothing kernel for weight
-//  smoothBin_p = static_cast<uInt>(kernelWidth_ + 0.5f);
-//  smoothBin_p += (smoothBin_p % 2 == 0) ? 1 : 0; // to make smoothBin_p odd
-//  uInt numChanMinimum = min(numChanList);
-//  smoothBin_p = min(smoothBin_p, numChanMinimum - ((numChanMinimum % 2 == 0) ? 1 : 0)); // smoothBin_p < numChanMinimum
-//  uInt halfWidth = smoothBin_p / 2;
-//  Sort sort;
-//  Vector<Float> kernelForMinimumNumChan = convolverPool_[numChanMinimum].getPsf();
-//  sort.sortKey(kernelForMinimumNumChan.data(), TpFloat, 0, Sort::Descending);
-//  Vector<uInt> indexArray;
-//  uInt indexArrayLength = sort.sort(indexArray, numChanMinimum);
-//  uInt startChan = indexArray[0] - halfWidth;
-//  uInt endChan = startChan + smoothBin_p;
-//  smoothCoeff_p.resize(smoothBin_p, False);
-//  for (uInt i = startChan, j = 0; i < endChan; ++i, ++j) {
-//    smoothCoeff_p[j] = kernelForMinimumNumChan[i];
-//  }
-//  // normalize smoothCoeff_p
-//  smoothCoeff_p /= sum(smoothCoeff_p);
-//  os << LogIO::DEBUGGING << "smoothBin_p = " << smoothBin_p << LogIO::POST;
-//  os << LogIO::DEBUGGING << "smoothCoeff_p = " << smoothCoeff_p << LogIO::POST;
+  // set smoothing kernel for weight
+  smoothBin_p = static_cast<uInt>(kernelWidth_ + 0.5f);
+  smoothBin_p += (smoothBin_p % 2 == 0) ? 1 : 0; // to make smoothBin_p odd
+  uInt numChanMinimum = min(numChanList);
+  smoothBin_p = min(smoothBin_p, numChanMinimum - ((numChanMinimum % 2 == 0) ? 1 : 0)); // smoothBin_p < numChanMinimum
+  uInt halfWidth = smoothBin_p / 2;
+  Sort sort;
+  Vector<Float> kernelForMinimumNumChan = convolverPool_[numChanMinimum].getPsf();
+  sort.sortKey(kernelForMinimumNumChan.data(), TpFloat, 0, Sort::Descending);
+  Vector<uInt> indexArray;
+  uInt indexArrayLength = sort.sort(indexArray, numChanMinimum);
+  uInt startChan = indexArray[0] - halfWidth;
+  uInt endChan = startChan + smoothBin_p;
+  smoothCoeff_p.resize(smoothBin_p, False);
+  for (uInt i = startChan, j = 0; i < endChan; ++i, ++j) {
+    smoothCoeff_p[j] = kernelForMinimumNumChan[i];
+  }
+  // normalize smoothCoeff_p
+  smoothCoeff_p /= sum(smoothCoeff_p);
+  os << LogIO::DEBUGGING << "smoothBin_p = " << smoothBin_p << LogIO::POST;
+  os << LogIO::DEBUGGING << "smoothCoeff_p = " << smoothCoeff_p << LogIO::POST;
 }
 
 Vector<Int> SDMSManager::inspectNumChan()

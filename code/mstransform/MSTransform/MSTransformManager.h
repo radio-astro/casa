@@ -424,6 +424,7 @@ protected:
 	void setBufferMode(Bool on);
 	void setChannelAverageKernel(uInt mode);
 	void setSmoothingKernel(uInt mode);
+    void setSmoothingFourierKernel(uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
