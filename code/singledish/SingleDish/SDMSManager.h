@@ -98,6 +98,7 @@ private:
   // for Gaussian smoothing
   Bool doSmoothing_;
   VectorKernel::KernelTypes kernelType_;
+  // FWHM of Gaussian
   float kernelWidth_;
 
 }; // class SDMSManager -END
