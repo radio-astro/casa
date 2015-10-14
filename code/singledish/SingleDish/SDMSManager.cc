@@ -35,6 +35,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Utilities/Sort.h>
 
 #include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
@@ -410,76 +411,104 @@ MeasurementSet SDMSManager::getMS()
 
 void SDMSManager::setSmoothing(string const &kernelType, float const &kernelWidth)
 {
-    // kernel type
-    VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
+  // kernel type
+  VectorKernel::KernelTypes type = VectorKernel::toKernelType(kernelType);
 
-    // Fail if type is not GAUSSIAN since other kernel types are not supported yet
-    if (type != VectorKernel::GAUSSIAN) {
-        stringstream oss;
-        oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
-        throw AipsError(oss.str());
-    }
+  // Fail if type is not GAUSSIAN since other kernel types are not supported yet
+  if (type != VectorKernel::GAUSSIAN) {
+    stringstream oss;
+    oss << "Smoothing kernel type \"" << kernelType << "\" is not supported yet.";
+    throw AipsError(oss.str());
+  }
 
-    doSmoothing_ = True;
-    kernelType_ = type;
-    kernelWidth_ = kernelWidth;
+  // Fail if kernel width is zero or negative
+  if (kernelWidth <= 0.0) {
+    throw AipsError("Zero or negative kernel width is not allowed.");
+  }
+
+  doSmoothing_ = True;
+  kernelType_ = type;
+  kernelWidth_ = kernelWidth;
 }
 
 void SDMSManager::unsetSmoothing()
 {
-    doSmoothing_ = False;
+  doSmoothing_ = False;
 }
 
 void SDMSManager::initializeSmoothing()
 {
-    if (!doSmoothing_) {
-        return;
-    }
+  LogIO os(_ORIGIN);
+  if (!doSmoothing_) {
+    return;
+  }
 
-    Vector<Int> numChanList = inspectNumChan();
-    for (size_t i = 0; i < numChanList.nelements(); ++i) {
-        Int numChan = numChanList[i];
-        Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
-        convolverPool_[numChan] = Convolver<Float>();
-        convolverPool_[numChan].setPsf(theKernel, IPosition(1, numChan));
-    }
+  Vector<Int> numChanList = inspectNumChan();
+  for (size_t i = 0; i < numChanList.nelements(); ++i) {
+    Int numChan = numChanList[i];
+    Vector<Float> theKernel = VectorKernel::make(kernelType_, kernelWidth_, numChan, True, False);
+    convolverPool_[numChan] = Convolver<Float>();
+    convolverPool_[numChan].setPsf(theKernel, IPosition(1, numChan));
+  }
+
+//  // set smoothing kernel for weight
+//  smoothBin_p = static_cast<uInt>(kernelWidth_ + 0.5f);
+//  smoothBin_p += (smoothBin_p % 2 == 0) ? 1 : 0; // to make smoothBin_p odd
+//  uInt numChanMinimum = min(numChanList);
+//  smoothBin_p = min(smoothBin_p, numChanMinimum - ((numChanMinimum % 2 == 0) ? 1 : 0)); // smoothBin_p < numChanMinimum
+//  uInt halfWidth = smoothBin_p / 2;
+//  Sort sort;
+//  Vector<Float> kernelForMinimumNumChan = convolverPool_[numChanMinimum].getPsf();
+//  sort.sortKey(kernelForMinimumNumChan.data(), TpFloat, 0, Sort::Descending);
+//  Vector<uInt> indexArray;
+//  uInt indexArrayLength = sort.sort(indexArray, numChanMinimum);
+//  uInt startChan = indexArray[0] - halfWidth;
+//  uInt endChan = startChan + smoothBin_p;
+//  smoothCoeff_p.resize(smoothBin_p, False);
+//  for (uInt i = startChan, j = 0; i < endChan; ++i, ++j) {
+//    smoothCoeff_p[j] = kernelForMinimumNumChan[i];
+//  }
+//  // normalize smoothCoeff_p
+//  smoothCoeff_p /= sum(smoothCoeff_p);
+//  os << LogIO::DEBUGGING << "smoothBin_p = " << smoothBin_p << LogIO::POST;
+//  os << LogIO::DEBUGGING << "smoothCoeff_p = " << smoothCoeff_p << LogIO::POST;
 }
 
 Vector<Int> SDMSManager::inspectNumChan()
 {
-    LogIO os(_ORIGIN);
+  LogIO os(_ORIGIN);
 
-    if (selectedInputMs_p == NULL) {
-        throw AipsError("Input MS is not opened yet.");
-    }
+  if (selectedInputMs_p == NULL) {
+      throw AipsError("Input MS is not opened yet.");
+  }
 
-    ROScalarColumn<Int> col(*selectedInputMs_p, "DATA_DESC_ID");
-    Vector<Int> ddIdList = col.getColumn();
-    uInt numDDId = GenSort<Int>::sort(ddIdList, Sort::Ascending,
-            Sort::QuickSort | Sort::NoDuplicates);
-    col.attach(selectedInputMs_p->dataDescription(), "SPECTRAL_WINDOW_ID");
-    Vector<Int> spwIdList(numDDId);
-    for (uInt i = 0; i < numDDId; ++i) {
-        spwIdList[i] = col(ddIdList[i]);
-    }
-    Vector<Int> numChanList(numDDId);
-    col.attach(selectedInputMs_p->spectralWindow(), "NUM_CHAN");
-    os << "spwIdList = " << spwIdList << LogIO::POST;
-    for (size_t i = 0; i < spwIdList.nelements(); ++i) {
-        Int spwId = spwIdList[i];
-        Int numChan = col(spwId);
-        numChanList[i] = numChan;
-        os << "examine spw " << spwId << ": nchan = " << numChan << LogIO::POST;
-        if (numChan == 1) {
-            stringstream ss;
-            ss << "smooth: Failed due to wrong spw " << i;
-            throw AipsError(ss.str());
-        }
-    }
+  ROScalarColumn<Int> col(*selectedInputMs_p, "DATA_DESC_ID");
+  Vector<Int> ddIdList = col.getColumn();
+  uInt numDDId = GenSort<Int>::sort(ddIdList, Sort::Ascending,
+          Sort::QuickSort | Sort::NoDuplicates);
+  col.attach(selectedInputMs_p->dataDescription(), "SPECTRAL_WINDOW_ID");
+  Vector<Int> spwIdList(numDDId);
+  for (uInt i = 0; i < numDDId; ++i) {
+      spwIdList[i] = col(ddIdList[i]);
+  }
+  Vector<Int> numChanList(numDDId);
+  col.attach(selectedInputMs_p->spectralWindow(), "NUM_CHAN");
+  os << LogIO::DEBUGGING << "spwIdList = " << spwIdList << LogIO::POST;
+  for (size_t i = 0; i < spwIdList.nelements(); ++i) {
+      Int spwId = spwIdList[i];
+      Int numChan = col(spwId);
+      numChanList[i] = numChan;
+      os << LogIO::DEBUGGING << "examine spw " << spwId << ": nchan = " << numChan << LogIO::POST;
+      if (numChan == 1) {
+          stringstream ss;
+          ss << "smooth: Failed due to wrong spw " << i;
+          throw AipsError(ss.str());
+      }
+  }
 
-    uInt numNumChan = GenSort<Int>::sort(numChanList, Sort::Ascending,
-            Sort::QuickSort | Sort::NoDuplicates);
-    return numChanList(Slice(0, numNumChan));
+  uInt numNumChan = GenSort<Int>::sort(numChanList, Sort::Ascending,
+          Sort::QuickSort | Sort::NoDuplicates);
+  return numChanList(Slice(0, numNumChan));
 }
 
 }  // End of casa namespace.
