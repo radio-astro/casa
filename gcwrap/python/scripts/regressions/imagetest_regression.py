@@ -1384,8 +1384,12 @@ def imagetest(which=None, size=[32,32,8]):
         # Test native aips++ image
         imname = testdir+'/'+'image.image'
         note('Expect SEVERE error here')
-        myim = ia.newimage(infile='_doggies')
-        if myim.isopen():
+        thrown = False
+        try:
+            myim = ia.newimage(infile='_doggies')
+        except Exception:
+            thrown = True
+        if not thrown:
             stop('image constructor 1 unexpectedly did not fail')
         myim = ia.newimagefromshape(outfile=imname, shape=[10,20])
         if not myim:

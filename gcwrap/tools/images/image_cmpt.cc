@@ -4962,7 +4962,7 @@ image* image::newimagefromfile(const std::string& fileName) {
 	try {
 		std::unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
-		auto mypair = newImage->newimagefromfile(fileName);
+		auto mypair = ImageFactory::fromFile(fileName);
 		if (mypair.first) {
 			return new image(mypair.first);
 		}
