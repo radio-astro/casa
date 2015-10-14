@@ -32,6 +32,10 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
+#include <utility>
+
+using namespace std;
+
 namespace casa {
 
 class CoordinateSystem;
@@ -221,17 +225,6 @@ public:
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
 
-    /*
-    SPIIF rotate(
-    	const String& outfile, const Vector<int>& shape,
-        const Quantity& pa, Record& region,
-        const String& mask, const String& method="cubic",
-        const Int decimate=0, const Bool replicate=False,
-        const Bool dropdeg=False, const Bool overwrite=False,
-        const Bool extendMask=False
-    ) const;
-    */
-
     Bool rename(const String& name, const Bool overwrite = False);
 
     ImageInterface<Float>* sepconvolve(
@@ -303,7 +296,7 @@ public:
                                      const bool dropdeg = False,
                                      const bool overwrite = False);
 
-    ImageInterface<Float> * newimagefromfile(const String& fileName);
+    pair<SPIIF, SPIIC> newimagefromfile(const String& fileName);
 
     ImageInterface<Float> * newimagefromarray(const String& outfile,
                                               Array<Float> & pixelsArray,
@@ -391,6 +384,9 @@ public:
     	const LatticeExprNode& node,
     	const String& name, const Bool makedefault
     );
+
+    // at most, only one of the pointers will not be null.
+    pair<SPIIF, SPIIC> _open(const String& infile) const;
 
 };
 

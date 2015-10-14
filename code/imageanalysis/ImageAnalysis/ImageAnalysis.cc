@@ -125,11 +125,10 @@
 
 #include <casa/namespace.h>
 
+#include <iostream>
 #include <memory>
 
-#include <iostream>
 using namespace std;
-#include <boost/math/constants/constants.hpp>
 
 namespace casa { //# name space casa begins
 
@@ -233,40 +232,44 @@ Bool ImageAnalysis::open(const String& infile) {
 		_imageFloat.reset();
 		_imageComplex.reset();
 	}
+	pair<SPIIF, SPIIC> ret = _open(infile);
+	_imageFloat = ret.first;
+	_imageComplex = ret.second;
+	return True;
+}
 
-	SPtrHolder<LatticeBase> latt(CasaImageOpener::openImage(infile));
-	ThrowIf (! latt.ptr(), "Unable to open image");
+pair<SPIIF, SPIIC> ImageAnalysis::_open(const String& infile) const {
+    SPtrHolder<LatticeBase> latt(CasaImageOpener::openImage(infile));
+	ThrowIf (! latt.ptr(), "Unable to open lattice");
 	DataType dataType = latt->dataType();
+	pair<SPIIF, SPIIC> ret(nullptr, nullptr);
 	if (isReal(dataType)) {
-		_imageFloat.reset(
-			dynamic_cast<ImageInterface<Float> *>(latt.transfer())
-		);
-		if (dataType != TpFloat) {
+	    if (dataType != TpFloat) {
 			ostringstream os;
 			os << dataType;
 			*_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
 				<< "to float precision in CASA image" << LogIO::POST;
 		}
-		_imageComplex.reset();
+	    return pair<SPIIF, SPIIC>(
+	        SPIIF(dynamic_cast<ImageInterface<Float> *>(latt.transfer())),
+	        SPIIC(nullptr)
+	    );
 	}
 	else if (isComplex(dataType)) {
-		_imageComplex.reset(
-			dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
-		);
-		if (dataType != TpComplex) {
-			ostringstream os;
-			os << dataType;
-			*_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
-				<< "to complex float precision in CASA image" << LogIO::POST;
-		}
-		_imageFloat.reset();
+	    if (dataType != TpComplex) {
+	        ostringstream os;
+            os << dataType;
+            *_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
+                << "to complex float precision in CASA image" << LogIO::POST;
+        }
+        return pair<SPIIF, SPIIC>(
+            SPIIF(nullptr),
+            SPIIC(dynamic_cast<ImageInterface<Complex> *>(latt.transfer()))
+        );
 	}
-	else {
-		ostringstream os;
-		os << dataType;
-		ThrowCc("unsupported image data type " + os.str());
-	}
-	return True;
+	ostringstream os;
+	os << dataType;
+	throw AipsError("unsupported image data type " + os.str());
 }
 
 Bool ImageAnalysis::detached() {
@@ -1928,163 +1931,6 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	return True;
 }
 
-/*
-SPIIF ImageAnalysis::rotate(
-	const String& outFile, const Vector<Int>& shape,
-	const Quantity& pa, Record& Region, const String& mask,
-	const String& methodU, const Int decimate,
-	const Bool replicate, const Bool dropdeg,
-	const Bool overwrite, const Bool extendMask
-) const {
-	_onlyFloat(__func__);
-	*_log << LogOrigin(className(), __func__);
-
-	Int dbg = 0;
-
-	// Validate outfile
-	if (!overwrite && !outFile.empty()) {
-		NewFile validfile;
-		String errmsg;
-		if (!validfile.valueOK(outFile, errmsg)) {
-			*_log << errmsg << LogIO::EXCEPTION;
-		}
-	}
-
-	Vector<Int> tmpShape;
-	Vector<Int> tmpShape2;
-	if (shape.size() == 1 && shape[0] == -1) {
-		tmpShape = _imageFloat->shape().asVector();
-		tmpShape2.resize(tmpShape.size());
-		if (dropdeg) {
-			int j = 0;
-			for (uInt i = 0; i < tmpShape.size(); i++) {
-				if (tmpShape[i] != 1) {
-					tmpShape2[j] = tmpShape[i];
-					j++;
-				}
-			}
-			tmpShape2.resize(j);
-			tmpShape = tmpShape2;
-		}
-	}
-	else {
-		tmpShape = shape;
-	}
-
-	//
-	// Only handles Direction or Linear coordinate
-	//
-	String method2 = methodU;
-	method2.upcase();
-
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	AxesSpecifier axesSpecifier;
-	SHARED_PTR<const SubImage<Float> > subImage = SubImageFactory<Float>::createSubImageRO(
-		*_imageFloat, Region, mask, _log.get(), axesSpecifier, extendMask
-	);
-
-	// Get image coordinate system
-	CoordinateSystem cSysFrom = subImage->coordinates();
-	CoordinateSystem cSysTo = cSysFrom;
-
-	// We automatically find a DirectionCoordinate or LInearCoordinate
-	// These must hold *only* 2 axes at this point (restriction in ImageRegrid)
-	Int after = -1;
-	Int dirInd = -1;
-	Int linInd = -1;
-	uInt coordInd = 0;
-	Vector<Int> pixelAxes;
-
-	dirInd = cSysTo.findCoordinate(Coordinate::DIRECTION, after);
-	if (dirInd < 0) {
-		after = -1;
-		linInd = cSysTo.findCoordinate(Coordinate::LINEAR, after);
-		if (linInd >= 0) {
-			pixelAxes = cSysTo.pixelAxes(linInd);
-			coordInd = linInd;
-			*_log << "Rotating LinearCoordinate holding axes " << pixelAxes
-					+ 1 << LogIO::POST;
-		}
-	}
-	else {
-		pixelAxes = cSysTo.pixelAxes(dirInd);
-		coordInd = dirInd;
-		*_log << "Rotating DirectionCoordinate holding axes " << pixelAxes
-				+ 1 << LogIO::POST;
-	}
-
-	ThrowIf(
-		pixelAxes.nelements() == 0,
-		"Could not find a Direction or Linear coordinate to rotate"
-	);
-	ThrowIf(
-		pixelAxes.nelements() != 2,
-		"Coordinate to rotate must hold exactly two axes"
-	);
-	// Apply new linear transform matrix to coordinate
-	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
-		std::unique_ptr<DirectionCoordinate> c(
-			dynamic_cast<DirectionCoordinate *>(
-				cSysTo.directionCoordinate(coordInd).rotate(pa)
-			)
-		);
-		cSysTo.replaceCoordinate(*c, coordInd);
-	}
-	else {
-		std::unique_ptr<LinearCoordinate> c(
-			dynamic_cast<LinearCoordinate *>(
-				cSysTo.linearCoordinate(coordInd).rotate(pa)
-			)
-		);
-		cSysTo.replaceCoordinate(*c, coordInd);
-	}
-
-	// Determine axes to regrid to new coordinate system
-	IPosition axes2(pixelAxes);
-	IPosition outShape(tmpShape);
-
-	// Now build a CS which copies the user specified Coordinate for
-	// axes to be regridded and the input image Coordinate for axes
-	// not to be regridded
-	std::set<Coordinate::Type> coordsToRegrid;
-	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(
-		*_log, coordsToRegrid, cSysTo, cSysFrom, axes2
-	);
-	ThrowIf(
-		cSys.nPixelAxes() != outShape.nelements(),
-		"The number of pixel axes in the output shape and Coordinate System must be the same"
-	);
-
-	// Create the image and mask
-	SPIIF imOut;
-	if (outFile.empty()) {
-		*_log << LogIO::NORMAL << "Creating (temp)image of shape "
-				<< outShape << LogIO::POST;
-		imOut.reset(new TempImage<Float> (outShape, cSys));
-	}
-	else {
-		*_log << LogIO::NORMAL << "Creating image '" << outFile
-				<< "' of shape " << outShape << LogIO::POST;
-		imOut.reset(new PagedImage<Float> (outShape, cSys, outFile));
-	}
-
-	imOut->set(0.0);
-	ImageUtilities::copyMiscellaneous(*imOut, *subImage);
-	String maskName("");
-	ImageMaskAttacher::makeMask(*imOut, maskName, True, True, *_log, True);
-	Interpolate2D::Method method = Interpolate2D::stringToMethod(methodU);
-	IPosition dummy;
-	ImageRegrid<Float> ir;
-	ir.showDebugInfo(dbg);
-	ir.regrid(
-		*imOut, method, axes2, *subImage, replicate,
-		decimate, True, False
-	);
-	return imOut;
-}
-*/
-
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	_onlyFloat(__func__);
 	*_log << LogOrigin(className(), __func__);
@@ -2733,36 +2579,25 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 	return outImage;
 }
 
-ImageInterface<Float> *
+pair<SPIIF, SPIIC>
 ImageAnalysis::newimagefromfile(const String& fileName) {
 	ImageInterface<Float>* outImage = 0;
 	if (_log.get() == 0) {
 		_log.reset(new LogIO());
 	}
+	*_log << LogOrigin(className(), __func__);
 
-		*_log << LogOrigin(className(), __func__);
+	// Check whether infile exists
+	ThrowIf(
+	    fileName.empty(), "File name is empty"
+	);
 
-		// Check whether infile exists
-		if (fileName.empty()) {
-			*_log << LogIO::WARN << "File string is empty" << LogIO::POST;
-			return 0;
-		}
-		File thefile(fileName);
-		if (!thefile.exists()) {
-			*_log << LogIO::WARN << "File " << fileName << " does not exist."
-					<< LogIO::POST;
-			return 0;
-		}
-
-		// Open
-		PtrHolder<ImageInterface<Float> > inImage;
-		ImageUtilities::openImage(inImage, fileName);
-		outImage = inImage->cloneII();
-		if (outImage == 0) {
-			*_log << "Failed to create image tool" << LogIO::EXCEPTION;
-		}
-
-	return outImage;
+	File thefile(fileName);
+	ThrowIf(
+	    !thefile.exists(),
+	    "File " + fileName + " does not exist."
+	);
+	return _open(fileName);
 }
 
 ImageInterface<Float> *
