@@ -72,6 +72,8 @@ from taskinit import *
 from __main__ import *
 import unittest
 
+datapath = os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/ia_rotate/'
+
 class ia_rotate_test(unittest.TestCase):
     
     def setUp(self):
@@ -101,6 +103,20 @@ class ia_rotate_test(unittest.TestCase):
         self.assertTrue(zz and type(zz) == type(yy))
         yy.done()
         zz.done()
+        
+    def test_basic(self):
+        """verify basic rotation works"""
+        myia = iatool()
+        myia.open(datapath + "prerot.im")
+        rot = myia.rotate(pa="45deg")
+        got = rot.getchunk();
+        rot.done()
+        myia.open(datapath + "postrot.im")
+        expec = myia.getchunk()
+        myia.done()
+        self.assertTrue((got == expec).all())
+        
+        
     
 def suite():
     return [ia_rotate_test]

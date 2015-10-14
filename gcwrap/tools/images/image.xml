@@ -26,7 +26,6 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 		<include>tools/images/image_private.h</include> </private>
 </code>
 
-
 <description>
 \medskip
 \noindent{\bf Summary}
@@ -7994,7 +7993,7 @@ ia.done()
   
      <param type="string"  name="outfile">
      <description>Output image file name.  Default is unset.</description>
-     <value></value>
+     <value/>
      </param>
   
      <param type="intArray"  name="shape">
@@ -8041,11 +8040,6 @@ ia.done()
   
      <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="async">
-     <description>Run asynchronously?</description>
      <value>false</value>
      </param>
      <param type="bool"  name="stretch">

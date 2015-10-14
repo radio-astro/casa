@@ -84,6 +84,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageRebinner.h>
 #include <imageanalysis/ImageAnalysis/ImageRegridder.h>
+#include <imageanalysis/ImageAnalysis/ImageRotator.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
@@ -3916,28 +3917,33 @@ image* image::rotate(
 	const variant& inpa, const variant& region,
 	const variant& vmask, const std::string& method,
 	const int decimate, const bool replicate, const bool dropdeg,
-	const bool overwrite, const bool /* async */, const bool stretch
+	const bool overwrite, const bool stretch
 ) {
 	try {
 		_log << _ORIGIN;
-		if (detached()) {
-		        throw AipsError("Unable to create image");
-			return 0;
-		}
+		ThrowIf(detached(), "Unable to create image");
 		Vector<Int> shape(inshape);
+		if (shape.size() == 1 && shape[0] == -1) {
+		    shape.resize(0);
+		}
 		Quantum<Double> pa(_casaQuantityFromVar(inpa));
 		SHARED_PTR<Record> Region(_getRegion(region, False));
-		String mask = vmask.toString();
+		auto mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-		SPIIF pImOut(
-			_image->rotate(
-				outfile, shape, pa, *Region, mask, method,
-				decimate, replicate, dropdeg, overwrite, stretch
-			)
+		ImageRotator rotator(
+		    _image->getImage(), Region.get(),
+		    mask, outfile, overwrite
 		);
-		return new image(pImOut);
+		rotator.setShape(IPosition(shape));
+		rotator.setAngle(pa);
+		rotator.setInterpolationMethod(method);
+		rotator.setDecimate(decimate);
+		rotator.setReplicate(replicate);
+		rotator.setDropDegen(dropdeg);
+		rotator.setStretch(stretch);
+		return new image(rotator.rotate());
 	}
 	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
