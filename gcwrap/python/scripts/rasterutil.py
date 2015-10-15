@@ -355,7 +355,8 @@ def _get_sampling(alldir,row_gap_idx):
         the position angle (deg) of scan direction.
     """
     alldir = numpy.array(alldir)
-    dra = alldir[0,1:]-alldir[0,:-1]
+    mean_dec = numpy.mean(alldir[1])
+    dra = (alldir[0,1:]-alldir[0,:-1])*numpy.cos(mean_dec)
     ddec = alldir[1,1:]-alldir[1,:-1]
     dpos2 = dra**2+ddec**2
     alongScan = numpy.sqrt(numpy.median(dpos2))

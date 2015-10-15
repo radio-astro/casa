@@ -568,7 +568,7 @@ class sdimaging_test1(sdimaging_unittest_base):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
         # beam size from r32523
-        ref_beam=dict(major='678.608683arcsec',minor='678.608683arcsec')
+        ref_beam=dict(major='661.858412arcsec',minor='661.858412arcsec')
         self._check_beam(self.outfile, ref_beam)
 
     def test104(self):
@@ -596,7 +596,7 @@ class sdimaging_test1(sdimaging_unittest_base):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
         # beam size from r32523
-        ref_beam=dict(major='525.242243arcsec',minor='525.242243arcsec')
+        ref_beam=dict(major='503.181345arcsec',minor='503.181345arcsec')
         self._check_beam(self.outfile, ref_beam)
 
     def test105(self):
@@ -628,7 +628,7 @@ class sdimaging_test1(sdimaging_unittest_base):
         #          xSamplingArcsec=354.16985191848795,
         #          ySamplingArcsec=180.0432853343201,
         #          convsupport=3,obscuration=0.0)
-        ref_beam=dict(major='636.38188150396184arcsec',minor='636.38188150396184arcsec')
+        ref_beam=dict(major='618.853892arcsec',minor='618.853892arcsec')
         self._check_beam(self.outfile, ref_beam)
 
     def test106(self):
@@ -681,7 +681,7 @@ class sdimaging_test1(sdimaging_unittest_base):
                   'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats,compstats=self.keys,ignoremask=True)
         # beam size from r32523
-        ref_beam=dict(major='531.909699arcsec',minor='531.909699arcsec')
+        ref_beam=dict(major='510.142597arcsec',minor='510.142597arcsec')
         self._check_beam(self.outfile, ref_beam)
 
     def test108(self):
@@ -713,7 +713,7 @@ class sdimaging_test1(sdimaging_unittest_base):
         #             xSamplingArcsec=354.16985191848795,
         #             ySamplingArcsec=180.0432853343201,
         #             obscuration=0.0,widthMultiplier=1.0)
-        ref_beam=dict(major='598.81865927903209arcsec',minor='598.81865927903209arcsec')
+        ref_beam=dict(major='580.094135arcsec',minor='580.094135arcsec')
         self._check_beam(self.outfile, ref_beam)
 
     def test109(self):
