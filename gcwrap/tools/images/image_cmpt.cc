@@ -597,13 +597,24 @@ bool image::fromfits(const std::string& outfile, const std::string& fitsfile,
 	try {
 		_reset();
 		_log << _ORIGIN;
+		auto im = ImageFactory::fromFITS(
+		    outfile, fitsfile, whichrep, whichhdu,
+		    zeroBlanks, overwrite
+		);
+		if (im) {
+		    _image.reset(new ImageAnalysis(im));
+		    return True;
+		}
+		/*
 		return _image->imagefromfits(outfile, fitsfile, whichrep, whichhdu,
 				zeroBlanks, overwrite);
-	} catch (AipsError x) {
+				*/
+	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+    return False;
 }
 
 bool image::fromimage(const string& outfile, const string& infile,
