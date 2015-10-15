@@ -307,49 +307,6 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 	return True;
 }
 
-Bool ImageAnalysis::imagefromfits(
-	const String& outfile, const String& fitsfile,
-	const Int whichrep, const Int whichhdu,
-	const Bool zeroBlanks, const Bool overwrite
-) {
-	Bool rstat = False;
-	try {
-		*_log << LogOrigin(className(), __func__);
-
-		// Check output file
-		if (!overwrite && !outfile.empty()) {
-			NewFile validfile;
-			String errmsg;
-			if (!validfile.valueOK(outfile, errmsg)) {
-				*_log << errmsg << LogIO::EXCEPTION;
-			}
-		}
-		//
-		if (whichrep < 0) {
-			*_log	<< "The Coordinate Representation index must be non-negative"
-				<< LogIO::EXCEPTION;
-		}
-		//
-		ImageInterface<Float>* pOut = 0;
-		String error;
-		Bool rval;
-		rval = ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-						       whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
-						       zeroBlanks);
-		//
-		if (!rval || pOut == 0) {
-		        *_log << error << LogIO::EXCEPTION;
-		}
-		_imageFloat.reset(pOut);
-		rstat = True;
-	}
-	catch (const AipsError& x) {
-		*_log << "Exception Reported: " << x.getMesg()
-				<< LogIO::EXCEPTION;
-	}
-	return rstat;
-}
-
 Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		Record& region, const String& Mask, const bool dropdeg,
 		const bool overwrite) {
@@ -2443,9 +2400,9 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	cSys.setReferencePixel(refPix);
 }
 
-bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
+Bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
-	bool rstat(false);
+	Bool rstat(false);
 	*_log << LogOrigin("ImageAnalysis", "maketestimage");
 	String var = EnvironmentVariable::get("CASAPATH");
 	if (var.empty()) {
@@ -2464,8 +2421,14 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 				int whichrep(0);
 				int whichhdu(0);
 				Bool zeroblanks = False;
-				rstat = ImageAnalysis::imagefromfits(outfile, fitsfile,
-						whichrep, whichhdu, zeroblanks, overwrite);
+				auto x = ImageFactory::fromFITS(
+				    outfile, fitsfile,
+				    whichrep, whichhdu, zeroblanks, overwrite
+				);
+				rstat = (Bool)x;
+				if (rstat) {
+				    _imageFloat = x;
+				}
 			}
 			else {
 				*_log << LogIO::EXCEPTION << "Bad environment variable";

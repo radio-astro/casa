@@ -83,11 +83,6 @@ public:
                         const Record& csys, const Bool linear = False, 
                         const Bool overwrite = False);
 
-    Bool imagefromfits(const String& outfile, const String& infile, 
-                       const Int whichrep = 0, const Int whichhdu = 0, 
-                       const Bool zeroblanks = False, 
-                       const Bool overwrite = False);
-
     Bool imagefromimage(const String& outfile, const String& infile, 
                         Record& region, const String& mask, 
                         const Bool dropdeg = False, 

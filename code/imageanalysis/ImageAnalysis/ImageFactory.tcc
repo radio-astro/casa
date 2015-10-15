@@ -41,21 +41,14 @@ template <class T> SPIIT ImageFactory::createImage(
     Bool log, Bool overwrite,
     const vector<std::pair<LogOrigin, String> > *const &msgs
 ) {
+    _checkOutfile(outfile, overwrite);
     Bool blank = outfile.empty();
-    if (! overwrite && ! blank) {
-        NewFile validfile;
-        String errmsg;
-        ThrowIf(
-            !validfile.valueOK(outfile, errmsg),
-            errmsg
-        );
-    }    
     ThrowIf(
         shape.nelements() != cSys.nPixelAxes(),
         "Supplied CoordinateSystem and image shape are inconsistent"
     );
     SPIIT image;
-    if (outfile.empty()) {
+    if (blank) {
         image.reset(new TempImage<T>(shape, cSys));
         ThrowIf(
             ! image,

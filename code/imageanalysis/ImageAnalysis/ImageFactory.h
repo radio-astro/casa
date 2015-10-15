@@ -83,6 +83,8 @@ public:
         const std::vector<std::pair<LogOrigin, String> > *const &msgs
     );
 
+    static String className() { static const String s = "ImageFactory"; return s; }
+
     // create an image with the specified shape and specified coordinate system.
     // If outfile is blank, the returned object is a TempImage, PagedImage otherwise.
     // If csys is empty,
@@ -127,6 +129,12 @@ public:
     // pixel data type
     static pair<SPIIF, SPIIC> fromFile(const String& filename);
 
+    static SPIIF fromFITS(
+        const String& outfile, const String& fitsfile,
+        const Int whichrep, const Int whichhdu,
+        const Bool zeroBlanks, const Bool overwrite
+    );
+
 private:
 
 	ImageFactory() {};
@@ -147,6 +155,8 @@ private:
         const casa::Record& cSys,
         const casa::IPosition& shape
     );
+
+    static void _checkOutfile(const String& outfile, Bool overwrite);
 
 };
 }

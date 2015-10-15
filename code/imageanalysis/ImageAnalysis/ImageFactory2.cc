@@ -27,6 +27,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
+#include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageUtilities.h>
 #include <imageanalysis/IO/CasaImageOpener.h>
 
@@ -168,7 +169,7 @@ pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
             ostringstream os;
             os << dataType;
             LogIO log;
-            log << LogOrigin("ImageFactory", __func__);
+            log << LogOrigin(className(), __func__);
             log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
                 << "to float precision in CASA image" << LogIO::POST;
         }
@@ -182,7 +183,7 @@ pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
             ostringstream os;
             os << dataType;
             LogIO log;
-            log << LogOrigin("ImageFactory", __func__);
+            log << LogOrigin(className(), __func__);
             log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
                 << "to complex float precision in CASA image" << LogIO::POST;
         }
@@ -196,4 +197,36 @@ pair<SPIIF, SPIIC> ImageFactory::fromFile(const String& infile) {
     throw AipsError("unsupported image data type " + os.str());
 }
 
+SPIIF ImageFactory::fromFITS(
+    const String& outfile, const String& fitsfile,
+    const Int whichrep, const Int whichhdu,
+    const Bool zeroBlanks, const Bool overwrite
+) {
+    _checkOutfile(outfile, overwrite);
+    ThrowIf(
+        whichrep < 0,
+        "The Coordinate Representation index must be non-negative"
+    );
+    ImageInterface<Float> *x = nullptr;
+    String error;
+    Bool rval = ImageFITSConverter::FITSToImage(
+        x, error, outfile, fitsfile, whichrep, whichhdu,
+        HostInfo::memoryFree() / 1024, overwrite, zeroBlanks
+    );
+    SPIIF pOut(x);
+    ThrowIf(! rval || ! pOut, error);
+    return pOut;
 }
+
+void ImageFactory::_checkOutfile(const String& outfile, Bool overwrite) {
+    if (! overwrite && ! outfile.empty()) {
+        NewFile validfile;
+        String errmsg;
+        ThrowIf(
+            ! validfile.valueOK(outfile, errmsg), errmsg
+        );
+    }
+}
+
+}
+
