@@ -1554,7 +1554,8 @@ class simobserve_badinputs(simobserve_unittest_base):
                              skymodel=skymodel)
             self.fail(self.failmsg)
         except Exception, e:
-            pos=str(e).find("Image %s cannot be opened; its type is unknown" % skymodel)
+            #pos=str(e).find("Image %s cannot be opened; its type is unknown" % skymodel)
+            pos=str(e).find("Unable to open lattice.")
             msg =  self.errmsg % str(e)
             self.assertNotEqual(pos,-1,msg=msg)
         
