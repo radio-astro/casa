@@ -71,6 +71,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
 
 datapath = os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/ia_rotate/'
 
@@ -114,7 +115,7 @@ class ia_rotate_test(unittest.TestCase):
         myia.open(datapath + "postrot.im")
         expec = myia.getchunk()
         myia.done()
-        self.assertTrue((got == expec).all())
+        self.assertTrue(numpy.abs(got - expec).max() < 10e-22)
         
         
     
