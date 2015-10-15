@@ -13,6 +13,7 @@ from concat import concat
 from imregrid import imregrid
 from immath import immath
 from sdimaging import sdimaging
+import sdbeamutil
 
 def simalma(
     project=None,
@@ -1131,20 +1132,15 @@ def simalma(
                 # Generate TP image
                 msg(" ",priority=v_priority)
                 temp_out = fileroot+"/"+imagename_tp + '0'
+                task_param = dict(infiles=vis_tp, outfile=temp_out, imsize=imsize,
+                                  cell=cell_tp, phasecenter=model_refdir,
+                                  mode='channel', nchan= model_nchan)
                 if tp_kernel.upper() == 'SF':
                     msg("Generating TP image using 'SF' kernel.",\
                          priority=v_priority)
                     # Parameters for sdimaging
-                    task_param = {}
-                    task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'sf'
                     task_param['convsupport'] = 6
-                    task_param['outfile'] = temp_out
-                    task_param['imsize'] = imsize_tp
-                    task_param['cell'] = cell_tp
-                    task_param['phasecenter'] = model_refdir
-                    task_param['mode'] = 'channel'
-                    task_param['nchan'] = model_nchan
                 else:
                     msg("Generating TP image using 'GJinc' kernel.",\
                          priority=v_priority)
@@ -1160,17 +1156,9 @@ def simalma(
                     jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
                     #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
                     # Parameters for sdimaging
-                    task_param = {}
-                    task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'gjinc'
                     task_param['gwidth'] = gwidth
                     task_param['jwidth'] = jwidth
-                    task_param['outfile'] = temp_out
-                    task_param['imsize'] = imsize_tp
-                    task_param['cell'] = cell_tp
-                    task_param['phasecenter'] = model_refdir
-                    task_param['mode'] = 'channel'
-                    task_param['nchan'] = model_nchan
 
                 saveinputs('sdimaging',
                            fileroot+"/"+project+".sd.sdimaging.last",
@@ -1180,41 +1168,41 @@ def simalma(
 
                 if not dryrun:
                     sdimaging(**task_param)
-                del task_param
+                #del task_param
                 # TODO: scale TP image
                 
-                # Set restoring beam
-                ia.open(temp_out)
-                imbeam = ia.restoringbeam()
-                ia.close()
+                # Scale TP image
+                if dryrun: #emulate beam calc in sdimaging
+                    bu = sdbeamutil.TheoreticalBeam()
+                    bu.set_antenna("12m", "0.75m")
+                    bu.set_sampling([ptgspacing_tp, ptgspacing_tp], "0.0deg")
+                    bu.set_image_param(task_param['cell'], model_center,task_param['gridfunction'],
+                                       task_param['convsupport'] if task_param.has_key('convsupport') else -1,
+                                       -1,
+                                       task_param['gwidth'] if task_param.has_key('gwidth') else -1,
+                                       task_param['jwidth'] if task_param.has_key('jwidth') else -1,
+                                       is_alma=True)
+                    #bu.summary()
+                    imbeam = bu.get_beamsize_image()
+                else:
+                    ia.open(temp_out)
+                    imbeam = ia.restoringbeam()
+                    ia.close()
                 bmsize = imbeam['major']
-#                 if tp_kernel.upper() == 'SF':
-#                     bmsize = myutil.sfBeam1d(PB12sim, cell=cell_tp[0],
-#                                              convsupport=4, sampling=ptgspacing_tp)
-#                 else: # GJinc
-#                     pbunit = PB12sim['unit']
-#                     simpb_val = PB12sim['value']
-#                     # the acutal HWHM is 3.5% smaller
-#                     kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
-#                     bmsize = qa.quantity(pl.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
                 beam_area_ratio = qa.getvalue(qa.convert(bmsize, 'arcsec'))**2 \
                                   / qa.getvalue(qa.convert(PB12sim, 'arcsec'))**2
                 msg(" ",priority=v_priority)
-#                 msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
-#                          priority=v_priority)
                 msg("Scaling TP image intensity by beam area before and after gridding: %f" % beam_area_ratio)
-                #print "- SimPB = %f%s" % (simpb_val, pbunit)
-                #print "- image kernel = %f%s" % (kernel_val, pbunit)
-
+                task_param = dict(imagename=temp_out, mode='evalexpr',
+                                  expr=("IM0*%f" % (beam_area_ratio)),
+                                  outfile = fileroot+"/"+imagename_tp)
+                saveinputs('immath',
+                           fileroot+"/"+project+".sd.immath.last",
+                           myparams=task_param)
+                msg(get_taskstr('immath', task_param), priority="info")
                 if not dryrun:
-                    immath(imagename=temp_out, mode='evalexpr',
-                           expr="IM0*%f" % (beam_area_ratio),
-                           outfile=fileroot+"/"+imagename_tp)
-#                     ia.open(fileroot+"/"+imagename_tp)
-#                     ia.setrestoringbeam(major=bmsize, minor=bmsize,
-#                                     pa=qa.quantity("0.0deg"))
-#                     ia.close()
-                
+                    immath(**task_param)
+                del task_param
 
                 # Analyze TP image
                 tpskymodel = fileroot+"/"+pref_tp+".skymodel"
