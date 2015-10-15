@@ -91,7 +91,6 @@ Bool ATCAFiller::open(const String& msName, const Vector<String>& rpfitsFiles,
 
   LogOrigin orig("ATCAFiller", "open()", WHERE);
   os_p = LogIO(orig);  
-  
   rpfitsFiles_p = Directory::shellExpand(rpfitsFiles, False);
   if (rpfitsFiles_p.nelements() > 0) {
      os_p << LogIO::NORMAL << "Expanded file names are : " << endl;
@@ -99,7 +98,6 @@ Bool ATCAFiller::open(const String& msName, const Vector<String>& rpfitsFiles,
        if (rpfitsFiles_p(i).empty()) {
           os_p << "Input file number " << i+1 << " is empty" << LogIO::EXCEPTION;
        }
-//
        os_p << rpfitsFiles_p(i) << endl;
      }
   } else {
@@ -538,32 +536,7 @@ void ATCAFiller::makeSubTables(MS& ms, Table::TableOption option, Bool cabb)
                                 Table(scanInfoSetup,nrow));
 
   // update the references to the subtable keywords
-  //  cout << "ms table keywords: ";
-  //  for (Int i=0; i<ms.keywordSet().nfields(); i++)
-  //    cout << ms.keywordSet().name(i) << " ";
-  //  cout << endl;
   ms.initRefs();
-
-  // Some items we don't store at present:
-  // SC table (System Calibration info)
-  // scTd.addColumn(ScalarColumnDesc<Float>("ParalAngle","deg"));
-  //
-  // SH table (Scan Header info)
-  // shTd.addColumn(ScalarColumnDesc<String>("Instrument"));   // strlen=16
-  // shTd.addColumn(ScalarColumnDesc<String>("DateObserved")); // strlen=8
-  // shTd.addColumn(ScalarColumnDesc<String>("DateWritten"));  // strlen=8
-  // shTd.addColumn(ScalarColumnDesc<String>("DateSystem"));   // strlen=8
-  // shTd.addColumn(ScalarColumnDesc<String>("Cal"));          // strlen=16
-  // shTd.addColumn(ScalarColumnDesc<Double>("UTC-TAI"));
-  // shTd.addColumn(ArrayColumnDesc<Double>("CParams","",IPosition(1,12),
-  //                                               ColumnDesc::Direct));
-  // shTd.addColumn(ScalarColumnDesc<Double>("DJMRefP"));
-  // shTd.addColumn(ScalarColumnDesc<Double>("DJMRefT"));
-  // shTd.addColumn(ScalarColumnDesc<Int>("Defeat"));
-  // shTd.addColumn(ScalarColumnDesc<Int>("NominalIntTime"));
-  // shTd.addColumn(ArrayColumnDesc<Double>("ArrayXYZ","",IPosition(1,3),
-  //                                               ColumnDesc::Direct));
-
 }
 
 
@@ -574,22 +547,6 @@ void ATCAFiller::init()
   freqRange(0.0,1.e30);
   Vector<String> fieldNames(0);
   fields(fieldNames);
-  // optional columns 
-
-  // scanheader table columns
-  // cObserver.attach(scanHeaderTable,"Observer");
-  // cInstrument.attach(scanHeaderTable,"Instrument");
-  // cDateObserved.attach(scanHeaderTable,"DateObserved");
-  // cDateWritten.attach(scanHeaderTable,"DateWritten");
-  // cDateSystem.attach(scanHeaderTable,"DateSystem");
-  // cSHCal.attach(scanHeaderTable,"Cal");
-  // cUTC_TAI.attach(scanHeaderTable,"UTC-TAI");
-  // cSHCParams.attach(scanHeaderTable,"CParams");
-  // cSHDJMRefP.attach(scanHeaderTable,"DJMRefP");
-  // cSHDJMRefT.attach(scanHeaderTable,"DJMRefT");
-  // cSHDefeat.attach(scanHeaderTable,"Defeat");
-  // cSHIntTime.attach(scanHeaderTable,"NominalIntTime");
-  // cArrayXYZ.attach(scanHeaderTable,"ArrayXYZ");
   
   // extra ID columns in main table
   colSysCalIdAnt1.attach(atms_p,"ATCA_SYSCAL_ID_ANT1");
@@ -952,7 +909,7 @@ Bool ATCAFiller::fill1(const String& rpfitsFile)
           os_p<< LogIO::NORMAL <<"Flagged                  : "<<perc(FLAG)<<"%"<<endl; 
           os_p<< LogIO::NORMAL <<"  Antenna off source     : "<<perc(ONLINE)<<"%"<<endl; 
           os_p<< LogIO::NORMAL <<"  ScanType (Point/Paddle): "<<perc(SCANTYPE)<<"%"<<endl; 
-          os_p<< LogIO::NORMAL <<"  Bad Sampler stats      : "<<perc(SYSCAL)<<"%"<<endl; 
+          if (!cabb_p) os_p<< LogIO::NORMAL <<"  Bad Sampler stats      : "<<perc(SYSCAL)<<"%"<<endl; 
           os_p<< LogIO::NORMAL <<"  Antenna shadowed       : "<<perc(SHADOW)<<"%"<<LogIO::POST; 
         }
       }
@@ -1345,7 +1302,6 @@ void ATCAFiller::storeATCAHeader() {
   // find out spectral window index of IFs
   Vector<Int> spwId(nIF,-1);
   if (if_no>=0) spwId(if_no)=spWId_p;
-  //cout <<" if_no="<<if_no<<", spwid="<<spWId_p<<", nIF="<<nIF<<endl;
   if (nIF>1) {
     for (Int ifNum=0; ifNum<nIF; ifNum++) {
       if (ifNum!=if_no) {
@@ -1357,7 +1313,6 @@ void ATCAFiller::storeATCAHeader() {
   if (if_no>0) checkSpW(if_no);
   
   Int row=msScanInfo_p.nrow();
-  //cout << "SCaninfo nrow="<<row<<endl;
   msScanInfo_p.addRow(nAnt*nIF);
   colScanInfoScanId.put(row,scanNo_p+1);
   colScanInfoCacal.put(row,cacalCnt);
@@ -1754,7 +1709,8 @@ void ATCAFiller::checkField() {
 void ATCAFiller::storeSysCal() 
 {
   // RPFITS SysCal table layout:
-  // sc_cal(q,if,ant)
+  // sc_.sc_ant = 7 (1-6 is antenna 1-6 syscal data, 7th has ant=0 weather data)
+  // sc_cal(q,if,ant) (in practice sc_.sc_if is always 1 since ~1999)
   // q=0 : ant
   //   1 : if
   //   2 : XYPhase (deg)
@@ -1778,18 +1734,6 @@ void ATCAFiller::storeSysCal()
         // field 7-12 contain weather data
         if (sc_.sc_ut!=lastWeatherUT_p) {
           lastWeatherUT_p = sc_.sc_ut;
-//          cout <<"Found weather data: is="<<i<<" ant="<<ant<<", time="<< sc_.sc_ut<<
-//              ", temp="<<sc_.sc_cal[scq*(i+scif*ant)+1]<<
-//              ", press="<<sc_.sc_cal[scq*(i+scif*ant)+2]<<
-//              ", hum="<<sc_.sc_cal[scq*(i+scif*ant)+3]<<
-//              ", windspeed="<<sc_.sc_cal[scq*(i+scif*ant)+4]<<
-//              ", winddir="<<sc_.sc_cal[scq*(i+scif*ant)+5]<<
-//              ", weatherflag="<<sc_.sc_cal[scq*(i+scif*ant)+6]<<
-//              ", rain="<<sc_.sc_cal[scq*(i+scif*ant)+7]<<
-//              ", seemon phase="<<sc_.sc_cal[scq*(i+scif*ant)+8]<<
-//              ", seemon rms="<<sc_.sc_cal[scq*(i+scif*ant)+9]<<
-//              ", seemon flag="<<sc_.sc_cal[scq*(i+scif*ant)+10]<< endl;
-          
           Int nAnt = max(1,sc_.sc_ant-1);
           Int row=atms_p.weather().nrow();
           atms_p.weather().addRow(nAnt);
@@ -1823,12 +1767,12 @@ void ATCAFiller::storeSysCal()
       }
       if_no=Int(sc_.sc_cal[scq*(i+scif*ant)+1])-1; // make 0-based
       if (if_no!=last_if_no) { // check if we want this one
-              last_if_no=if_no; 
-              skip=Bool(if_no<0 || !selected(if_no));
-              if (!skip) {
-          checkSpW(if_no); // sets spWId_p corresponding to this if_no
-          checkField(); // sets fieldId_p
-        }
+          last_if_no=if_no; 
+          skip=Bool(if_no<0 || if_no>=if_.n_if || !selected(if_no));
+          if (!skip) {
+              checkSpW(if_no); // sets spWId_p corresponding to this if_no
+              checkField(); // sets fieldId_p
+          }
       }
       if (!skip) {
               atms_p.sysCal().addRow();
@@ -1873,13 +1817,13 @@ void ATCAFiller::storeSysCal()
               colXYAmplitude.put(n,sc_.sc_cal[scq*(i+scif*ant)+13]);
               msc_p->sysCal().tcalFlag().put(n,True);
               msc_p->sysCal().trxFlag().put(n,True);
-        colTrackErrMax.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+14]));
-        colTrackErrRMS.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+15]));
+             colTrackErrMax.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+14]));
+             colTrackErrRMS.put(n,Float(sc_.sc_cal[scq*(i+scif*ant)+15]));
       }
     }
   }
 }
-      
+
 
 void ATCAFiller::reweight()
 {
@@ -1996,6 +1940,7 @@ void ATCAFiller::storeData()
     msc_p->observationId().put(n,obsId_p);
     msc_p->processorId().put(n,-1);
     msc_p->scanNumber().put(n,scanNo_p);
+    msc_p->stateId().put(n,-1);
     Double mjd=mjd0_p+ut;
     // try to figure out what the midpoint of the integration interval was
     if (nBin>1 || !atca) {
@@ -2147,17 +2092,16 @@ void ATCAFiller::storeData()
 
   // Flag CABB birdies and RFI
   if (cabb_p) rfiFlag(flags);
-
     
   // correct for xy phase - multiply y correlation with opposite of xyphase
-  Complex gain1 = (sysCalId_p(ant1)!=-1 && 
-                   !msc_p->sysCal().phaseDiffFlag()(sysCalId_p(ant1)) ?
-                   exp(Complex(0,1)*msc_p->sysCal().phaseDiff()(sysCalId_p(ant1))*inversion):
+  Int id1 = sysCalId_p(ant1);
+  Complex gain1 = (id1!=-1 && !msc_p->sysCal().phaseDiffFlag()(id1) ?
+                   exp(Complex(0,1)*msc_p->sysCal().phaseDiff()(id1)*inversion):
                    Complex(1,0));
   // negate xyphase for second antenna since the correlation product uses conjugate for ant2
-  Complex gain2 = (sysCalId_p(ant2)!=-1 && 
-                   !msc_p->sysCal().phaseDiffFlag()(sysCalId_p(ant1)) ?
-                   exp(-Complex(0,1)*msc_p->sysCal().phaseDiff()(sysCalId_p(ant2))*inversion):
+  Int id2 = sysCalId_p(ant2);
+  Complex gain2 = (id2!=-1 && !msc_p->sysCal().phaseDiffFlag()(id2) ?
+                   exp(-Complex(0,1)*msc_p->sysCal().phaseDiff()(id2)*inversion):
                    Complex(1,0));
   Int polId = msc_p->dataDescription().polarizationId()(spWId_p);
   Vector<Int> corrType = msc_p->polarization().corrType()(polId);
@@ -2318,7 +2262,6 @@ void ATCAFiller::fillObservationTable()
   Int endInd;
 
   Int nObs=atms_p.observation().nrow();
-
   Vector<Double> vt(2);
   for (Int obs=0; obs<nObs; obs++) {
     // fill time range
@@ -2376,7 +2319,6 @@ void ATCAFiller::unlock()
 Bool ATCAFiller::selected(Int ifNum)
 {
   Bool select=True;
-  //cout << "spws="<<spws_p<<"ifs="<<if_.if_chain[ifNum]<<" "<<ifNum<<endl;
   // check if we want this frequency
   //if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,if_.if_chain[ifNum]))
   if (spws_p.nelements()>0 && spws_p(0)>=0 && !anyEQ(spws_p,ifNum))
