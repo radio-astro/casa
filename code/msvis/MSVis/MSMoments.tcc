@@ -864,7 +864,7 @@ Bool MSMoments<T>::whatIsTheNoise (T& /*noise*/,
 }
 
 template<class T>
-Bool MSMoments<T>::setMomentAxis (const Int& momentAxisU)
+Bool MSMoments<T>::setMomentAxis (Int momentAxisU)
 {
    if (!goodParameterStatus_p) {
       error_p = "Internal class status is bad";

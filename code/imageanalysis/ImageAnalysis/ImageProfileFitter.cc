@@ -63,7 +63,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	_deleteImageOnDestruct(False), _logResults(True),
+	/*_deleteImageOnDestruct(False),*/ _logResults(True),
 	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
 	_storeFits(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(ngauss),
@@ -92,7 +92,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	_deleteImageOnDestruct(False), _logResults(True),
+	/*_deleteImageOnDestruct(False),*/ _logResults(True),
 	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
 	_storeFits(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
@@ -128,7 +128,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_ampName(), _ampErrName(), _integralName(),
 	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
-	_deleteImageOnDestruct(False), _logResults(True),
+	/* _deleteImageOnDestruct(False),*/ _logResults(True),
 	_isSpectralIndex(False), _createResid(False), _overwrite(overwrite),
 	_storeFits(True),
 	_polyOrder(-1), _fitAxis(axis), _nGaussSinglets(0),
@@ -555,10 +555,8 @@ void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	_abscissaDivisorForDisplay = String::toString(q);
 }
 
-void ImageProfileFitter::_getOutputStruct(
-    vector<OutputDestinationChecker::OutputStruct>& outputs
-) {
-	outputs.resize(0);
+std::vector<OutputDestinationChecker::OutputStruct> ImageProfileFitter::_getOutputStruct() {
+    std::vector<OutputDestinationChecker::OutputStruct> outputs;
     if (! _model.empty()) {
     	OutputDestinationChecker::OutputStruct modelImage;
     	modelImage.label = "model image";
@@ -575,6 +573,7 @@ void ImageProfileFitter::_getOutputStruct(
     	residImage.replaceable = _overwrite;
     	outputs.push_back(residImage);
     }
+    return outputs;
 }
 
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {

@@ -89,7 +89,7 @@ public:
    ImageTwoPtCorr ();
 
 // Copy constructor (reference semantics)
-   ImageTwoPtCorr(const ImageTwoPtCorr& other);
+   ImageTwoPtCorr(const ImageTwoPtCorr& other) = delete;
 
 // Assignment (reference semantics)
    ImageTwoPtCorr& operator=(const ImageTwoPtCorr& other);
@@ -125,8 +125,6 @@ public:
 // Helper function to provide output image shape given the input shape
 // and the axes to find the structure function over.
    static IPosition setUpShape (const IPosition& inShape, const IPosition& axes);
-
-
 
 private:
 

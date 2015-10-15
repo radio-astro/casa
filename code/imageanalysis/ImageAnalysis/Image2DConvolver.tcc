@@ -792,7 +792,8 @@ template <class T> T Image2DConvolver<T>::_fillKernel(
 // at this point.  Later the filling code can be moved out
 // of the if statement
 
-   T maxValKernel, volumeKernel;  
+   T maxValKernel;
+   T volumeKernel = T(0);  
    T pa = static_cast<T>(parameters(2));
    T ratio = static_cast<T>(parameters(1) / parameters(0));
    T major = static_cast<T>(parameters(0));

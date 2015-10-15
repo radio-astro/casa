@@ -131,7 +131,7 @@ Bool MomentsBase<T>::setMoments(const Vector<Int>& momentsU)
 }
 
 template<class T>
-Bool MomentsBase<T>::setMomentAxis( const Int &)
+Bool MomentsBase<T>::setMomentAxis( Int )
 {
   return False ;
 }

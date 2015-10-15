@@ -53,11 +53,6 @@ ImageTwoPtCorr<T>::~ImageTwoPtCorr()
 {}
 
 template <class T> 
-ImageTwoPtCorr<T>::ImageTwoPtCorr(const ImageTwoPtCorr& other)
-{}
-
-
-template <class T> 
 ImageTwoPtCorr<T>& ImageTwoPtCorr<T>::operator=(const ImageTwoPtCorr& other)
 {
   if (this != &other) {

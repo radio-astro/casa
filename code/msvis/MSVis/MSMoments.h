@@ -185,7 +185,7 @@ public:
    // call this function, the default state of the class is to set the 
    // moment axis to the spectral axis if it can find one.  Otherwise 
    // an error will result.
-   Bool setMomentAxis (const Int& momentAxis);
+   Bool setMomentAxis (Int momentAxis);
 
    // This function invokes smoothing of the input MS. Not implemented.
    Bool setSmoothMethod(const Vector<Int> &smoothAxes,

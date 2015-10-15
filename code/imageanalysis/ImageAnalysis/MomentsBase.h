@@ -181,7 +181,7 @@ enum MomentTypes {
 // call this function, the default state of the class is to set the 
 // moment axis to the spectral axis if it can find one.  Otherwise 
 // an error will result.
-   virtual Bool setMomentAxis (const Int&) ;
+   virtual Bool setMomentAxis (Int) ;
 
 // The <src>enum MethodTypes</src> is provided for use with the
 // <src>setWinFitMethod</src> function.  It gives the allowed moment

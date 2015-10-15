@@ -285,7 +285,7 @@ public:
     // call this function, the default state of the class is to set the
     // moment axis to the spectral axis if it can find one.  Otherwise
     // an error will result.
-    void setMomentAxis (const Int momentAxis);
+    Bool setMomentAxis (Int momentAxis);
 
     // This function invokes smoothing of the input image.  Give <src>Int</src>
     // arrays for the axes (0 relative) to be smoothed and the smoothing kernel

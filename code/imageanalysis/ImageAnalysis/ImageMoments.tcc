@@ -189,7 +189,7 @@ Bool ImageMoments<T>::setNewImage(const ImageInterface<T>& image) {
 }
 
 template <class T>
-void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
+Bool ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
     if (!goodParameterStatus_p) {
         throw AipsError("Internal class status is bad");
     }
@@ -237,6 +237,7 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
         _image = imageCopy;
     }
     worldMomentAxis_p = _image->coordinates().pixelAxisToWorldAxis(momentAxis_p);
+    return True;
 }
 
 template <class T>

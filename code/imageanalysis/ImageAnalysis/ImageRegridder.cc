@@ -363,7 +363,8 @@ SPIIF ImageRegridder::_regridByVelocity() const {
 			! specCoord.frequencyToVelocity(velRefVal, freqRefVal),
 			"Unable to determine reference velocity"
 		);
-		Double vel0, vel1;
+		Double vel0;
+		Double vel1 = 0;
 		ThrowIf(
 			! specCoord.pixelToVelocity(vel0, 0.0)
 			|| ! specCoord.pixelToVelocity(vel1, 1.0),
