@@ -591,9 +591,11 @@ bool image::fromascii(const string& outfile, const string& infile,
 	}
 }
 
-bool image::fromfits(const std::string& outfile, const std::string& fitsfile,
-		const int whichrep, const int whichhdu, const bool zeroBlanks,
-		const bool overwrite) {
+bool image::fromfits(
+    const string& outfile, const string& fitsfile,
+	int whichrep, int whichhdu, bool zeroBlanks,
+	bool overwrite
+) {
 	try {
 		_reset();
 		_log << _ORIGIN;
@@ -605,11 +607,8 @@ bool image::fromfits(const std::string& outfile, const std::string& fitsfile,
 		    _image.reset(new ImageAnalysis(im));
 		    return True;
 		}
-		/*
-		return _image->imagefromfits(outfile, fitsfile, whichrep, whichhdu,
-				zeroBlanks, overwrite);
-				*/
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -5088,28 +5087,23 @@ image* image::newimagefromfits(
 	const bool zeroBlanks, const bool overwrite
 ) {
 	try {
-		image *rstat(0);
-		unique_ptr<ImageAnalysis> newImage(new ImageAnalysis());
-		_log << _ORIGIN;
-        SHARED_PTR<ImageInterface<Float> > outIm(
-			newImage->newimagefromfits(
-				outfile,
-				fitsfile, whichrep, whichhdu, zeroBlanks, overwrite
-			)
-		);
-		if (outIm.get() != 0) {
-			rstat = new image(outIm);
-		} else {
-			rstat = new image();
-		}
-		if(!rstat)
-			throw AipsError("Unable to create image");
-		return rstat;
-	} catch (const AipsError& x) {
+	    auto im = ImageFactory::fromFITS(
+	        outfile, fitsfile, whichrep, whichhdu,
+	        zeroBlanks, overwrite
+	    );
+	    if (im) {
+	        return new image(im);
+	    }
+	    else {
+	        ThrowCc("Unable to create image");
+	    }
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return nullptr;
 }
 
 ::casac::variant*
