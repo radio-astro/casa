@@ -166,7 +166,7 @@ protected:
 
     virtual inline Bool _supportsMultipleRegions() const {return False;}
 
-    virtual inline Bool _supportsMultipleBeams() {return True;}
+    virtual inline Bool _supportsMultipleBeams() const {return True;}
 
     // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
     // Create a TempImage or PagedImage depending if outname/_outname is empty or not. Generally meant

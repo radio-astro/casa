@@ -28,8 +28,12 @@ template <class T> class BeamManipulator {
 
 public:
 
+	BeamManipulator() = delete;
+	
 	BeamManipulator(SPIIT image);
 
+	BeamManipulator operator=(const BeamManipulator& other) = delete;
+	
 	~BeamManipulator() {}
 
 	// remove all existing beam(s)
@@ -52,10 +56,6 @@ public:
 private:
 	SPIIT _image;
 	SHARED_PTR<LogIO> _log;
-
-	BeamManipulator() {}
-
-	BeamManipulator operator=(const BeamManipulator& other) {}
 };
 }
 

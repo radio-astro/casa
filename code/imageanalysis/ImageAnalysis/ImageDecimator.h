@@ -62,7 +62,7 @@ protected:
 		return std::vector<Coordinate::Type>();
 	}
 
-    inline Bool _supportsMultipleBeams() {return False;}
+    inline Bool _supportsMultipleBeams() const {return False;}
 
     virtual inline Bool _supportsMultipleRegions() const {return True;}
 
