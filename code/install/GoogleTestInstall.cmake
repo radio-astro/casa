@@ -60,7 +60,12 @@ endif ()
 message ("-- Google Test installation commencing ...")
 
 if (NOT EXISTS ${GoogleTest_Root})
-   execute_process (COMMAND mkdir ${GoogleTest_Root})
+   execute_process (COMMAND mkdir ${GoogleTest_Root},
+                    RESULT_VARIABLE status)
+
+   if (NOT ${status} EQUAL 0)
+       message (SEND_ERROR "*** Failed to create Google Test directory: ${GoogleTest_Root}")
+   endif ()
 endif ()
 
 if (NOT EXISTS ${GoogleTest_Root}/${GoogleTest_ArchiveFile}) # download archive
@@ -68,7 +73,11 @@ if (NOT EXISTS ${GoogleTest_Root}/${GoogleTest_ArchiveFile}) # download archive
    message ("-- File ${GoogleTest_Root}/${GoogleTest_ArchiveFile} not present; downloading")
 
    execute_process (COMMAND curl -L -O ${GoogleTest_ReleaseArchive}
-                    WORKING_DIRECTORY ${GoogleTest_Root})
+                    WORKING_DIRECTORY ${GoogleTest_Root}
+		    RESULT_VARIABLE status)
+   if (NOT ${status} EQUAL 0)
+       message (SEND_ERROR "*** Failed to download Google Test from github")
+   endif ()
 
    message ("-- ... Downloaded source")
 
@@ -79,7 +88,12 @@ endif ()
 # Explode the archive
 
 execute_process (COMMAND tar xf ${GoogleTest_ArchiveFile} --overwrite
-		 WORKING_DIRECTORY ${GoogleTest_Root})
+		 WORKING_DIRECTORY ${GoogleTest_Root}
+		 RESULT_VARIABLE status)
+
+if (NOT ${status} EQUAL 0)
+   message (SEND_ERROR "*** Failed to explode Google Test tar file.")
+endif ()
 
 # Create a root directory for GoogleTest and configure a CMakeLists.txt
 # file in that directory.
