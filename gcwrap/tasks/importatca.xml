@@ -22,7 +22,7 @@ importatca(files=None,vis=None,
       April 2009) archive data.
    </description>
    <input>
-	   <param type="stringArray" name="files" mustexist="true">
+	   <param type="stringArray" name="files" mustexist="false">
 		   <description>Name of input ATCA RPFits file(s)</description>
 		   <value></value>
 	   </param>
