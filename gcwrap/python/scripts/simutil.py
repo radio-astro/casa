@@ -393,7 +393,8 @@ class simutil:
             highvalue=im_max
             lowvalue=im_min
         else:
-            imhist=ia.histograms(cumu=True,nbins=nbin,list=False)#['histout']
+            #imhist=ia.histograms(cumu=True,nbins=nbin,list=False)#['histout']
+            imhist=ia.histograms(cumu=True,nbins=nbin)#['histout']
             ii=0
             lowcounts=imhist['counts'][ii]
             while imhist['counts'][ii]<0.005*lowcounts and ii<nbin: 
