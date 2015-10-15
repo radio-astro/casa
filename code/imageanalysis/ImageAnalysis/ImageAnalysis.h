@@ -284,19 +284,13 @@ public:
     bool maketestimage(const String& outfile="", const Bool overwrite=False, 
                        const String& imagetype="2d");
 
+
     ImageInterface<Float> * newimage(const String& infile,
                                      const String& outfile,
                                      Record& region,
                                      const String& Mask,
                                      const bool dropdeg = False,
                                      const bool overwrite = False);
-
-    ImageInterface<Float> * newimagefromfits(const String& outfile,
-                                             const String& infile, 
-                                             const Int whichrep = 0,
-                                             const Int whichhdu = 0, 
-                                             const Bool zeroblanks = False, 
-                                             const Bool overwrite = False);
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);

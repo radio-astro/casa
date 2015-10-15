@@ -77,10 +77,7 @@
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExprParse.h>
-#include <images/Images/ImageFITSConverter.h>
 #include <images/Regions/WCEllipsoid.h>
-#include <imageanalysis/IO/CasaImageOpener.h>
-// #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Regions/ImageRegion.h>
@@ -118,7 +115,6 @@
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
-#include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
 
 #include <casa/OS/PrecTimer.h>
@@ -2488,43 +2484,6 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 
 			// Copy data and mask
 			LatticeUtilities::copyDataAndMask(*_log, *outImage, *subImage);
-		}
-
-	return outImage;
-}
-
-ImageInterface<Float> *
-ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
-		const Int whichrep, const Int whichhdu, const Bool zeroBlanks,
-		const Bool overwrite) {
-	ImageInterface<Float>* outImage = 0;
-		*_log << LogOrigin("ImageAnalysis", __func__);
-
-		// Check output file
-		if (!overwrite && !outfile.empty()) {
-			NewFile validfile;
-			String errmsg;
-			if (!validfile.valueOK(outfile, errmsg)) {
-				*_log << errmsg << LogIO::EXCEPTION;
-			}
-		}
-		if (whichrep < 0) {
-			*_log
-					<< "The Coordinate Representation index must be non-negative"
-					<< LogIO::EXCEPTION;
-		}
-		ImageInterface<Float>* pOut = 0;
-		String error;
-		ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-				whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
-				zeroBlanks);
-		if (pOut == 0) {
-			*_log << error << LogIO::EXCEPTION;
-		}
-		outImage = pOut->cloneII();
-		delete pOut;
-		if (outImage == 0) {
-			*_log << "Failed to create image tool" << LogIO::EXCEPTION;
 		}
 
 	return outImage;
