@@ -961,20 +961,21 @@ template <class T> image* image::_boxcar(
 }
 
 std::string image::brightnessunit() {
-	std::string rstat;
-	try {
-		_log << _ORIGIN;
-		if (!detached()) {
-			rstat = _image->brightnessunit();
-		} else {
-			rstat = "";
-		}
-	} catch (const AipsError& x) {
+    if (detached()) {
+        return "";
+    }
+    try {
+        auto unit = _image->isFloat()
+            ? _image->getImage()->units().getName()
+            : _image->getComplexImage()->units().getName();
+       return unit;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
+	return "";
 }
 
 bool image::calc(const std::string& expr, bool verbose) {
@@ -2245,13 +2246,13 @@ image* image::transpose(
 		if (dooff) {
 			fitter.setZeroLevelEstimate(offset, fixoffset);
 		}
-		casa::Quantity myrms = (rms.type() == variant::DOUBLE || rms.type() == variant::INT)
-			? casa::Quantity(rms.toDouble(), _image->brightnessunit())
+		auto myrms = (rms.type() == variant::DOUBLE || rms.type() == variant::INT)
+			? casa::Quantity(rms.toDouble(), brightnessunit())
 			: _casaQuantityFromVar(rms);
 		if (myrms.getValue() > 0) {
 			fitter.setRMS(myrms);
 		}
-		variant::TYPE noiseType = noisefwhm.type();
+		auto noiseType = noisefwhm.type();
 		if (noiseType == variant::DOUBLE || noiseType == variant::INT) {
 			fitter.setNoiseFWHM(noisefwhm.toDouble());
 		}
@@ -2288,7 +2289,6 @@ image* image::transpose(
 		}
 		std::pair<ComponentList, ComponentList> compLists = fitter.fit();
 		return fromRecord(fitter.getOutputRecord());
-
 	}
 	catch (const AipsError& x) {
 		FluxRep<Double>::clearAllowedUnits();
