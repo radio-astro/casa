@@ -349,15 +349,15 @@ class spxfit_test(unittest.TestCase):
             sols = rec['ltp']['solution']
             self.assertTrue((sols[:,:,:,1] == 2.2).all())
             for j in [0, 1]:
-                myia.open(spxsol)
+                self.assertTrue(myia.open(spxsol + "_" + str(j)))
                 self.assertTrue(
                     (
                      abs(myia.getchunk()/sols[:,:,:,j] - 1) < 1e-7
-                    ).all()
+                   ).all()
                 )
                 myia.done(remove=True)
 
-                myia.open(spxerr)
+                self.assertTrue(myia.open(spxerr + "_" + str(j)))
                 self.assertTrue(
                     (
                      abs(myia.getchunk() - rec['ltp']['error'][:,:,:,j]) < 1e-8
@@ -451,10 +451,12 @@ class spxfit_test(unittest.TestCase):
         )
         self.assertTrue(res)
         global myia
-        myia.open(outfile)
-        mask = myia.getchunk(getmask=T)
-        self.assertTrue((mask.shape == myia.shape()).all())
-        self.assertTrue(mask.all())
+        for i in (0, 1):
+            myia.open(outfile + "_" + str(i))
+            mask = myia.getchunk(getmask=T)
+            self.assertTrue((mask.shape == myia.shape()).all())
+            self.assertTrue(mask.all())
+            myia.done()
 
     def test_mask_and_pixels(self):
         """Test that the mask and pixels of the output are correct"""
