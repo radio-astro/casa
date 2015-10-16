@@ -1279,9 +1279,7 @@ image* image::convolve2d(
 
 ::casac::coordsys *
 image::coordsys(const std::vector<int>& pixelAxes) {
-
 	_log << _ORIGIN;
-
 	try {
 		if (detached()) {
 			return 0;
@@ -4912,12 +4910,21 @@ bool image::maketestimage(
 	try {
 		_reset();
 		_log << _ORIGIN;
-		return _image->maketestimage(outfile, overwrite);
-	} catch (AipsError x) {
+		_image.reset(
+		    new ImageAnalysis(
+		        ImageFactory::testImage(
+		            outfile, overwrite
+		        )
+		    )
+		);
+		return True;
+	}
+	catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 image* image::newimagefromimage(
