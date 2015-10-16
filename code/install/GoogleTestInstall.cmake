@@ -100,8 +100,7 @@ endif ()
 
 message ("-- ... Configuring directory ")
 
-   file(COPY GoogleTest_Root DESTINATION ${CMAKE_INSTALL_PREFIX}/gtest)
-   message ("INFO:: GoogleTest installation complete")
+configure_file (install/GoogleTestInstall.in ${GoogleTest_Root}/CMakeLists.txt @ONLY)
 
 # Wire the Google Test subproject in by adding it as a subdirector and
 # creating dependencies
