@@ -280,10 +280,11 @@ public:
 
     Bool detached();
 
+    /*
     //make test image...cube or 2d (default)
     bool maketestimage(const String& outfile="", const Bool overwrite=False, 
                        const String& imagetype="2d");
-
+    */
 
     ImageInterface<Float> * newimage(const String& infile,
                                      const String& outfile,

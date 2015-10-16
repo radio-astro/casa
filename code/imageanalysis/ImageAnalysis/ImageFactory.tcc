@@ -50,10 +50,7 @@ template <class T> SPIIT ImageFactory::createImage(
     SPIIT image;
     if (blank) {
         image.reset(new TempImage<T>(shape, cSys));
-        ThrowIf(
-            ! image,
-            "Failed to create TempImage"
-        );
+        ThrowIf(! image, "Failed to create TempImage");
     }
     else {
         image.reset(new PagedImage<T>(shape, cSys, outfile));

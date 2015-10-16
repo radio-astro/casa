@@ -45,7 +45,6 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/OS/Directory.h>
-#include <casa/OS/EnvVar.h>
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/RegularFile.h>
@@ -534,9 +533,6 @@ void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	else {
 		_calc(_imageComplex, node);
 	}
-	// Ensure that we reconstruct the statistics and histograms objects
-	// now that the data have changed
-	//deleteHist();
 }
 
 Bool ImageAnalysis::calcmask(
@@ -2396,6 +2392,7 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	cSys.setReferencePixel(refPix);
 }
 
+/*
 Bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
 	Bool rstat(false);
@@ -2435,6 +2432,7 @@ Bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		}
 	return rstat;
 }
+*/
 
 ImageInterface<Float> *
 ImageAnalysis::newimage(const String& infile, const String& outfile,

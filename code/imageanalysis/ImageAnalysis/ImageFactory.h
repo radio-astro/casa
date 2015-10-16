@@ -135,6 +135,12 @@ public:
         const Bool zeroBlanks, const Bool overwrite
     );
 
+    // open a canonical image
+    static SPIIF testImage(
+        const String& outfile, const Bool overwrite,
+        const String& imagetype="2d"
+    );
+
 private:
 
 	ImageFactory() {};
