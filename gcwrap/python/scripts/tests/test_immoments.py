@@ -1144,7 +1144,6 @@ class immoment_test2(unittest.TestCase):
                         imagename="myim.im", outfile=outfile,
                         mask=mask, stretch=stretch
                     )
-
                 if j == 1:
                     myia.open("myim.im")
                     ret = True
@@ -1153,16 +1152,17 @@ class immoment_test2(unittest.TestCase):
                             outfile=outfile, mask=mask,
                             stretch=stretch, drop=False
                         )
-                        myia.done()
                         ret.done()
                     except:
                         ret = False
-                myia.open(outfile)
+                    finally:
+                        myia.done()
                 if (atype):
+                    self.assertTrue(myia.open(outfile))
                     self.assertTrue(myia.shape().tolist() == exp)
+                    myia.done()
                 else:
                     self.assertFalse(ret)
-                myia.done()
                 if os.path.exists(outfile):
                     shutil.rmtree(outfile)
         self.assertTrue(len(tb.showcache()) == 0)
