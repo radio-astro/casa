@@ -1535,6 +1535,151 @@ the ms definition itself. -->
   </example>
 </method>
 
+<method type="function" name="statistics2">
+  <shortdescription>
+    Get statistics on the selected measurement set
+  </shortdescription>
+
+  <keyword>statistics</keyword>
+  <input>
+
+    <param type="string" name="column">
+      <description>
+        Column name
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="complex_value">
+      <description>
+        Which derived value to use for complex columns (amp, amplitude, phase,
+        imag, real, imaginary)
+      </description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="useflags">
+      <description>
+        Use the data flags
+      </description>
+      <value>true</value>
+    </param>
+
+    <param type="bool" name="useweights">
+      <description>
+        Use the data weights
+      </description>
+      <value>false</value>
+    </param>
+
+    <param type="string" name="spw">
+      <description>
+        Spectral Window Indices or names : example : '1,2'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="field">
+      <description>
+        Field indices or source names : example : '2,3C48'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="baseline">
+      <description>
+        Baseline number(s): example: "2\&amp;3;4\&amp;5"
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="uvrange">
+      <description>
+        UV-distance range, with a unit : example : '2.0-3000.0 m'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="time">
+      <description>
+        Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="correlation">
+      <description>
+        Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="scan">
+      <description>
+        Scan number : example : '1,2,3'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="array">
+      <description>
+        Array Indices or names : example : 'VLAA'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="obs">
+      <description>
+        Observation ID(s): examples : '' or '1~3'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="string" name="reportingaxes">
+      <description>
+        Statistics reporting axes: example: 'ddid,field'
+      </description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="timeaverage">
+      <description>
+        Average data in time
+      </description>
+      <value>true</value>
+    </param>
+
+    <param type="string" name="timebin">
+      <description>
+        Time averaging interval
+      </description>
+      <value>0s</value>
+    </param>
+
+    <param type="string" name="timespan">
+      <description>
+        Boundaries to ignore in time averaging: example: 'scan,subscan'
+      </description>
+      <value></value>
+    </param>
+  </input>
+  <returns type="record"/>
+
+  <description>
+    This function computes descriptive statistics on the measurement set.
+    It returns the statistical values as a python dictionary.  The given
+    column name must be a numerical column.
+    If it is a complex valued column, the parameter complex\_value defines
+    which derived real value is used for the statistics computation.
+  </description>
+  <example>
+
+    ms.open("3C273XC1.MS")
+    ms.statistics2(column="DATA", antenna="2")
+
+  </example>
+</method>
+
    <method type="function" name="range">
    <shortdescription>Get the range of values in the measurement set</shortdescription>
    
