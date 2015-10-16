@@ -60,7 +60,7 @@ endif ()
 message ("-- Google Test installation commencing ...")
 
 if (NOT EXISTS ${GoogleTest_Root})
-   execute_process (COMMAND mkdir ${GoogleTest_Root},
+   execute_process (COMMAND mkdir ${GoogleTest_Root}
                     RESULT_VARIABLE status)
 
    if (NOT ${status} EQUAL 0)
@@ -100,7 +100,8 @@ endif ()
 
 message ("-- ... Configuring directory ")
 
-configure_file (install/GoogleTestInstall.in ${GoogleTest_Root}/CMakeLists.txt @ONLY)
+   file(COPY GoogleTest_Root DESTINATION ${CMAKE_INSTALL_PREFIX}/gtest)
+   message ("INFO:: GoogleTest installation complete")
 
 # Wire the Google Test subproject in by adding it as a subdirector and
 # creating dependencies
