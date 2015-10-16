@@ -45,6 +45,7 @@ casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   taskutil.py
   listshapes.py
   astro_stations2simdata.py
+  remove_cloud.py
   setOrder.py
   specframeconvert.py
   tec_maps.py
