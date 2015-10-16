@@ -49,16 +49,13 @@ public:
 
 protected:
 
-
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+	CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
 	}
 
-	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
+	std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
 		return std::vector<Coordinate::Type>();
 	}
-
-    inline Bool _supportsMultipleBeams() const {return False;}
 
 private:
 	IPosition _factors;

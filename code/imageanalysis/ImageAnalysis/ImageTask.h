@@ -166,6 +166,9 @@ protected:
 
     virtual inline Bool _supportsMultipleRegions() const {return False;}
 
+    // does this task support images with multiple beams? False means it never does.
+    // True means it does, but not necessarily in all cases (in which case, the
+    // derived class is responsible for checking for and throwing exceptions in those cases).
     virtual inline Bool _supportsMultipleBeams() const {return True;}
 
     // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
