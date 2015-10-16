@@ -101,8 +101,6 @@ public:
 
     Record* boundingbox(const Record& region) const;
 
-    String brightnessunit() const;
-
     void calc(const String& expr, Bool verbose);
 
     // regions should be a Record of Records having different regions

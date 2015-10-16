@@ -488,13 +488,6 @@ Record* ImageAnalysis::boundingbox(
 	return outRec.release();
 }
 
-String ImageAnalysis::brightnessunit() const {
-	String rstat = _imageFloat
-		? _imageFloat->units().getName()
-		: _imageComplex->units().getName();
-	return rstat;
-}
-
 void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	*_log << LogOrigin(className(), __func__);
 	ThrowIf(expr.empty(), "You must specify an expression");
