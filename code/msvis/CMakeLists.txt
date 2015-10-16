@@ -84,7 +84,28 @@ casa_add_library( msvis
 ####  MSVis/VisBufferAsyncWrapper2.cc
 ####  MSVis/VisBufferImplAsync2.cc
 ####  MSVis/VisibilityIteratorImplAsync2.cc
-  )
+  MSVis/statistics/Vi2ChunkAntennaDataProvider.cc
+  MSVis/statistics/Vi2ChunkArrayIdDataProvider.cc
+  MSVis/statistics/Vi2ChunkDataDescriptionIdsDataProvider.cc
+  MSVis/statistics/Vi2ChunkFeedDataProvider.cc
+  MSVis/statistics/Vi2ChunkFieldIdDataProvider.cc
+  MSVis/statistics/Vi2ChunkFlagCubeDataProvider.cc
+  MSVis/statistics/Vi2ChunkFlagRowDataProvider.cc
+  MSVis/statistics/Vi2ChunkFloatVisDataProvider.cc
+  MSVis/statistics/Vi2ChunkIntervalDataProvider.cc
+  MSVis/statistics/Vi2ChunkScanDataProvider.cc
+  MSVis/statistics/Vi2ChunkTimeDataProvider.cc
+  MSVis/statistics/Vi2ChunkUVRangeDataProvider.cc
+  MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.cc
+  MSVis/statistics/Vi2StatsAmplitudeIterator.cc
+  MSVis/statistics/Vi2StatsBoolIterator.cc
+  MSVis/statistics/Vi2StatsFlagsIterator.cc
+  MSVis/statistics/Vi2StatsImaginaryIterator.cc
+  MSVis/statistics/Vi2StatsPhaseIterator.cc
+  MSVis/statistics/Vi2StatsRealIterator.cc
+  MSVis/statistics/Vi2StatsSigmasIterator.cc
+  MSVis/statistics/Vi2StatsUVRangeIterator.cc
+  MSVis/statistics/Vi2StatsWeightsIterator.cc)
 
 install (FILES
 	MSVis/AsynchronousInterface.h
@@ -158,6 +179,41 @@ install (FILES
         MSVis/VisibilityIteratorImpl2.h
         MSVis/VisibilityIteratorImplAsync2.h
 	DESTINATION include/casacode/msvis/MSVis
+	)
+
+install (FILES
+	MSVis/statistics/Vi2ChunkAntennaDataProvider.h
+	MSVis/statistics/Vi2ChunkArrayIdDataProvider.h
+	MSVis/statistics/Vi2ChunkCorrectedVisDataProvider.h
+	MSVis/statistics/Vi2ChunkDataDescriptionIdsDataProvider.h
+	MSVis/statistics/Vi2ChunkDataProvider.h
+	MSVis/statistics/Vi2ChunkFeedDataProvider.h
+	MSVis/statistics/Vi2ChunkFieldIdDataProvider.h
+	MSVis/statistics/Vi2ChunkFlagCubeDataProvider.h
+	MSVis/statistics/Vi2ChunkFlagRowDataProvider.h
+	MSVis/statistics/Vi2ChunkFloatVisDataProvider.h
+	MSVis/statistics/Vi2ChunkIntervalDataProvider.h
+	MSVis/statistics/Vi2ChunkModelVisDataProvider.h
+	MSVis/statistics/Vi2ChunkObservedVisDataProvider.h
+	MSVis/statistics/Vi2ChunkScanDataProvider.h
+	MSVis/statistics/Vi2ChunkTimeDataProvider.h
+	MSVis/statistics/Vi2ChunkUVRangeDataProvider.h
+	MSVis/statistics/Vi2ChunkVisAmplitudeProvider.h
+	MSVis/statistics/Vi2ChunkVisImaginaryProvider.h
+	MSVis/statistics/Vi2ChunkVisPhaseProvider.h
+	MSVis/statistics/Vi2ChunkVisRealProvider.h
+	MSVis/statistics/Vi2ChunkWeightSpectrumDataProvider.h
+	MSVis/statistics/Vi2StatsAmplitudeIterator.h
+	MSVis/statistics/Vi2StatsBoolIterator.h
+	MSVis/statistics/Vi2StatsDataIterator.h
+	MSVis/statistics/Vi2StatsFlagsIterator.h
+	MSVis/statistics/Vi2StatsImaginaryIterator.h
+	MSVis/statistics/Vi2StatsPhaseIterator.h
+	MSVis/statistics/Vi2StatsRealIterator.h
+	MSVis/statistics/Vi2StatsSigmasIterator.h
+	MSVis/statistics/Vi2StatsUVRangeIterator.h
+	MSVis/statistics/Vi2StatsWeightsIterator.h
+	DESTINATION include/casacode/msvis/MSVis/statistics
 	)
 
 casa_add_assay( msvis MSVis/test/tHanningSmooth.cc )
