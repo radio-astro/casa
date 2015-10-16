@@ -1696,9 +1696,9 @@ ms::statistics2(const std::string& column,
 				}
 			} else {
 				// remove TIME from sortColumnIds
-				auto endIter = sortColumnIds.cend();
+				auto endIter = sortColumnIds.end();
 				auto timeColIter = find(
-					sortColumnIds.cbegin(),
+					sortColumnIds.begin(),
 					endIter,
 					MSMainEnums::PredefinedColumns::TIME);
 				if (timeColIter != endIter)
@@ -1710,9 +1710,9 @@ ms::statistics2(const std::string& column,
 
 				if (!spanScan) {
 					// append SCAN_NUMBER to sort columns, if not present
-					endIter = sortColumnIds.cend();
+					endIter = sortColumnIds.end();
 					auto scanColIter = find(
-						sortColumnIds.cbegin(),
+						sortColumnIds.begin(),
 						endIter,
 						MSMainEnums::PredefinedColumns::SCAN_NUMBER);
 					if (scanColIter == endIter)
@@ -1722,9 +1722,9 @@ ms::statistics2(const std::string& column,
 
 				if (!spanSubscan) {
 					// append STATE_ID to sort columns, if not present
-					endIter = sortColumnIds.cend();
+					endIter = sortColumnIds.end();
 					auto stateColIter = find(
-						sortColumnIds.cbegin(),
+						sortColumnIds.begin(),
 						endIter,
 						MSMainEnums::PredefinedColumns::STATE_ID);
 					if (stateColIter == endIter)
