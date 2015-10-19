@@ -432,32 +432,32 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     Bool usemask, Bool replicateArray
 ) {
     // used to verify array dimension
-    uInt img_ndim = image->shape().asVector().nelements();
+    auto imageNDim = image->ndim();
 
     // Checks on pixels dimensions
-    Vector<Int> p_shape = pixels.shape().asVector();
-    uInt p_ndim = p_shape.size();
+    auto pixelShape = pixels.shape();
+    auto pixelNDim = pixels.ndim();
     ThrowIf(
-        p_ndim > img_ndim,
+        pixelNDim > imageNDim,
         "Pixels array has more axes than the image"
     );
-    for (uInt i = 0; i < p_ndim; i++) {
+    for (const auto& length: pixelShape) {
         ThrowIf(
-            p_shape(i) <= 0,
+            length <= 0,
             "The shape of the pixels array is invalid"
         );
     }
 
     // Checks on pixelmask dimensions
-    Vector<Int> m_shape = mask.shape().asVector();
-    uInt m_ndim = m_shape.size();
+    Vector<Int> maskShape = mask.shape().asVector();
+    uInt maskNDim = mask.ndim();
     ThrowIf(
-        m_ndim > img_ndim,
+        maskNDim > imageNDim,
         "Mask array has more axes than the image"
     );
-    for (uInt i = 0; i < m_ndim; i++) {
+    for (const auto& length: maskShape) {
         ThrowIf(
-            m_shape(i) <= 0,
+            length <= 0,
             "The shape of the pixelmask array is invalid"
         );
     }
@@ -466,30 +466,30 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     // as shape = [0], ndim = 1, nelements = 0
     IPosition dataShape;
     uInt dataDim = 0;
-    uInt pixelElements = pixels.nelements();
-    uInt maskElements = mask.nelements();
+    auto pixelElements = pixels.size();
+    auto maskElements = mask.size();
 
-    //
     if (pixelElements != 0 && maskElements != 0) {
         ThrowIf(
             ! pixels.shape().isEqual(mask.shape()),
             "Pixels and mask arrays have different shapes"
         );
         if (pixelElements != 0) {
-            dataShape = pixels.shape();
-            dataDim = pixels.ndim();
-        } else {
+            dataShape = pixelShape;
+            dataDim = pixelNDim;
+        }
+        else {
             dataShape = mask.shape();
-            dataDim = mask.ndim();
+            dataDim = maskNDim;
         }
     }
     else if (pixelElements != 0) {
-        dataShape = pixels.shape();
-        dataDim = pixels.ndim();
+        dataShape = pixelShape;
+        dataDim = pixelNDim;
     }
     else if (maskElements != 0) {
         dataShape = mask.shape();
-        dataDim = mask.ndim();
+        dataDim = maskNDim;
     }
     else {
         ThrowCc("Pixels and mask arrays are both zero length");
@@ -498,12 +498,16 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     // Make region.  If the region extends beyond the image, it is
     // truncated here.
     LogIO mylog;
-    const ImageRegion* pRegion = ImageRegion::fromRecord(
-        (list ? &mylog : nullptr), image->coordinates(),
-        image->shape(), region
+    const auto& csys = image->coordinates();
+    const auto imShape = image->shape();
+    unique_ptr<const ImageRegion> pRegion(
+        ImageRegion::fromRecord(
+            (list ? &mylog : nullptr), csys, imShape, region
+        )
     );
-    LatticeRegion latRegion = pRegion->toLatticeRegion(image->coordinates(),
-            image->shape());
+    LatticeRegion latRegion = pRegion->toLatticeRegion(
+        csys, imShape
+    );
     // The pixels array must be same shape as the bounding box of the
     // region for as many axes as there are in the pixels array.  We
     // pad with degenerate axes for missing axes. If the region
@@ -511,14 +515,15 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     // array will no longer be the correct shape and we get an error.
     // We could go to the trouble of fishing out the bit that doesn't
     // fall off the edge.
-    for (uInt i = 0; i < dataDim; i++) {
-        if (dataShape(i) != latRegion.shape()(i)) {
-            if (!(i == dataDim - 1 && dataShape(i) == 1)) {
+    auto latRegionShape = latRegion.shape();
+    for (uInt i = 0; i < dataDim; ++i) {
+        if (dataShape[i] != latRegionShape[i]) {
+            if (!(i == dataDim - 1 && dataShape[i] == 1)) {
                 ostringstream oss;
                 oss << "Data array shape (" << dataShape
                     << ") including inc, does not"
                     << " match the shape of the region bounding box ("
-                    << latRegion.shape() << ")" << endl;
+                    << latRegionShape << ")" << endl;
                 ThrowCc(String(oss));
             }
         }
@@ -531,19 +536,20 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, list);
         }
     }
-    Bool useMask2 = usemask;
-    if (!image->isMasked()) {
-        useMask2 = False;
+    if (! image->isMasked()) {
+        usemask = False;
     }
 
     // Put the mask first
     if (maskElements > 0 && image->hasPixelMask()) {
         Lattice<Bool>& maskOut = image->pixelMask();
         if (maskOut.isWritable()) {
-            if (dataDim == img_ndim) {
+            if (dataDim == imageNDim) {
                 if (replicateArray) {
-                    LatticeUtilities::replicate(maskOut, latRegion.slicer(),
-                            mask);
+                    LatticeUtilities::replicate(
+                        maskOut, latRegion.slicer(),
+                        mask
+                    );
                 }
                 else {
                     maskOut.putSlice(mask, latRegion.slicer().start());
@@ -551,13 +557,16 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             }
             else {
                 mylog << LogIO::NORMAL
-                        << "Padding mask array with degenerate axes"
-                        << LogIO::POST;
-                Array<Bool> maskref(mask.addDegenerate(img_ndim - mask.ndim()));
+                    << "Padding mask array with degenerate axes"
+                    << LogIO::POST;
+                Array<Bool> maskref(mask.addDegenerate(imageNDim - mask.ndim()));
                 if (replicateArray) {
-                    LatticeUtilities::replicate(maskOut, latRegion.slicer(),
-                            maskref);
-                } else {
+                    LatticeUtilities::replicate(
+                        maskOut, latRegion.slicer(),
+                        maskref
+                    );
+                }
+                else {
                     maskOut.putSlice(maskref, latRegion.slicer().start());
                 }
             }
@@ -568,42 +577,45 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     }
 
     // Get the mask and data from disk if we need it
-    IPosition pixelsShape = pixels.shape();
     Array<Bool> oldMask;
     Array<Float> oldData;
     Bool deleteOldMask, deleteOldData, deleteNewData;
     const Bool* pOldMask = 0;
     const Float* pOldData = 0;
     const Float* pNewData = 0;
-    if (pixelElements > 0 && useMask2) {
-        if (pixels.ndim() != img_ndim) {
-            pixelsShape.append(IPosition(img_ndim - pixels.ndim(), 1));
+    if (pixelElements > 0 && usemask) {
+        if (pixelNDim != imageNDim) {
+            pixelShape.append(IPosition(imageNDim - pixelNDim, 1));
         }
-        oldData = image->getSlice(latRegion.slicer().start(), pixelsShape,
-                False);
-        oldMask = image->getMaskSlice(latRegion.slicer().start(),
-                pixelsShape, False);
+        oldData = image->getSlice(
+            latRegion.slicer().start(), pixelShape, False
+        );
+        oldMask = image->getMaskSlice(
+            latRegion.slicer().start(), pixelShape, False
+        );
         pOldData = oldData.getStorage(deleteOldData); // From disk
         pOldMask = oldMask.getStorage(deleteOldMask); // From disk
         pNewData = pixels.getStorage(deleteNewData); // From user
     }
 
     // Put the pixels
-    if (dataDim == img_ndim) {
+    if (dataDim == imageNDim) {
         if (pixelElements > 0) {
-            if (useMask2) {
+            if (usemask) {
                 Bool deleteNewData2;
-                Array<Float> pixels2(pixelsShape);
+                Array<Float> pixels2(pixelShape);
                 Float* pNewData2 = pixels2.getStorage(deleteNewData2);
                 for (uInt i = 0; i < pixels2.nelements(); i++) {
                     pNewData2[i] = pNewData[i]; // Value user gives
-                    if (!pOldMask[i])
+                    if (!pOldMask[i]) {
                         pNewData2[i] = pOldData[i]; // Value on disk
+                    }
                 }
                 pixels2.putStorage(pNewData2, deleteNewData2);
                 if (replicateArray) {
-                    LatticeUtilities::replicate(*image, latRegion.slicer(),
-                            pixels2);
+                    LatticeUtilities::replicate(
+                        *image, latRegion.slicer(), pixels2
+                    );
                 }
                 else {
                     image->putSlice(pixels2, latRegion.slicer().start());
@@ -611,8 +623,10 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             }
             else {
                 if (replicateArray) {
-                    LatticeUtilities::replicate(*image, latRegion.slicer(),
-                            pixels);
+                    LatticeUtilities::replicate(
+                        *image, latRegion.slicer(),
+                        pixels
+                    );
                 }
                 else {
                     image->putSlice(pixels, latRegion.slicer().start());
@@ -623,33 +637,37 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     else {
         if (pixelElements > 0) {
             mylog << LogIO::NORMAL
-                    << "Padding pixels array with degenerate axes"
-                    << LogIO::POST;
+                << "Padding pixels array with degenerate axes"
+                << LogIO::POST;
             //
-            if (useMask2) {
+            if (usemask) {
                 Bool deleteNewData2;
-                Array<Float> pixels2(pixelsShape);
+                Array<Float> pixels2(pixelShape);
                 Float* pNewData2 = pixels2.getStorage(deleteNewData2);
                 for (uInt i = 0; i < pixels2.nelements(); i++) {
                     pNewData2[i] = pNewData[i]; // Value user gives
-                    if (!pOldMask[i])
+                    if (!pOldMask[i]) {
                         pNewData2[i] = pOldData[i]; // Value on disk
+                    }
                 }
                 pixels2.putStorage(pNewData2, deleteNewData2);
                 if (replicateArray) {
-                    LatticeUtilities::replicate(*image, latRegion.slicer(),
-                            pixels2);
+                    LatticeUtilities::replicate(
+                        *image, latRegion.slicer(), pixels2
+                    );
                 }
                 else {
                     image->putSlice(pixels2, latRegion.slicer().start());
                 }
             }
             else {
-                Array<Float> pixelsref(pixels.addDegenerate(img_ndim
-                        - pixels.ndim()));
+                Array<Float> pixelsref(
+                    pixels.addDegenerate(imageNDim - pixels.ndim())
+                );
                 if (replicateArray) {
-                    LatticeUtilities::replicate(*image, latRegion.slicer(),
-                            pixelsref);
+                    LatticeUtilities::replicate(
+                        *image, latRegion.slicer(), pixelsref
+                    );
                 }
                 else {
                     image->putSlice(pixelsref, latRegion.slicer().start());
@@ -658,14 +676,15 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
         }
     }
 
-    if (pOldMask != 0)
+    if (pOldMask != 0) {
         oldMask.freeStorage(pOldMask, deleteOldMask);
-    if (pOldData != 0)
+    }
+    if (pOldData != 0) {
         oldData.freeStorage(pOldData, deleteOldData);
-    if (pNewData != 0)
+    }
+    if (pNewData != 0) {
         pixels.freeStorage(pNewData, deleteNewData);
-    delete pRegion;
-
+    }
     return True;
 }
 
