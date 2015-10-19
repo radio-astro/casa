@@ -1572,6 +1572,7 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 	mask = maskPixels(shp - 1);
 }
 
+/*
 Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		const Array<Bool>& mask, Record& region, const Bool list,
 		const Bool usemask, const Bool, const Bool replicateArray) {
@@ -1823,6 +1824,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 	}
 	return True;
 }
+*/
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 	_onlyFloat(__func__);
@@ -2384,48 +2386,6 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	}
 	cSys.setReferencePixel(refPix);
 }
-
-/*
-Bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
-		const String& imagetype) {
-	Bool rstat(false);
-	*_log << LogOrigin("ImageAnalysis", "maketestimage");
-	String var = EnvironmentVariable::get("CASAPATH");
-	if (var.empty()) {
-		var = EnvironmentVariable::get("AIPSPATH");
-	}
-		if (!var.empty()) {
-			String fields[4];
-			Int num = split(var, fields, 4, String(" "));
-			String fitsfile;
-			if (num >= 1) {
-				if (imagetype.contains("cube"))
-					fitsfile = fields[0] + "/data/demo/Images/test_imageFloat.fits";
-				else if (imagetype.contains("2d"))
-					fitsfile = fields[0]
-							+ "/data/demo/Images/imagetestimage.fits";
-				int whichrep(0);
-				int whichhdu(0);
-				Bool zeroblanks = False;
-				auto x = ImageFactory::fromFITS(
-				    outfile, fitsfile,
-				    whichrep, whichhdu, zeroblanks, overwrite
-				);
-				rstat = (Bool)x;
-				if (rstat) {
-				    _imageFloat = x;
-				}
-			}
-			else {
-				*_log << LogIO::EXCEPTION << "Bad environment variable";
-			}
-		}
-		else {
-			*_log << LogIO::EXCEPTION << "Environment variable undefined, can't get data path";
-		}
-	return rstat;
-}
-*/
 
 ImageInterface<Float> *
 ImageAnalysis::newimage(const String& infile, const String& outfile,

@@ -61,6 +61,12 @@ public:
 		Bool locking, Bool replicate
 	);
 
+	static Bool putRegion(
+	    SPIIT image, const Array<T>& pixels,
+	    const Array<Bool>& mask, Record& region, Bool list,
+	    Bool usemask, Bool replicateArray
+	);
+
 	// get the aggregated values along the specified pixel axis using the region and mask at construction
 	// and any other mask the image may have. Supported values of <src>function</src> are (case-insensitive,
 	// minimum match) those supported by ImageCollapser, ie "flux", "max", "mean", "median", "min", "rms",
@@ -100,7 +106,7 @@ public:
 		const Quantity *const restFreq=0, const String& frame=""
 	);
 
-	String getClass() const { const static String name = "PixelValueManipulator"; return name; }
+	String getClass() const { return _className; }
 
 	// set region name for logging purposes. Only used if the logfile is set.
 	void setRegionName(const String& rname) { _regionName = rname; }
@@ -121,6 +127,7 @@ protected:
 private:
     IPosition _axes, _lastChunkShape;
     String _regionName;
+    const static String _className;
 
 	void _checkUnit(
 		const String& unit, const CoordinateSystem& csys,

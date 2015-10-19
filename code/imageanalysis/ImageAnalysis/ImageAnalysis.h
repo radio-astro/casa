@@ -213,11 +213,12 @@ public:
     void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
                      Vector<Int>& pos) const;
 
+    /*
     Bool putregion(const Array<Float>& pixels, const Array<Bool>& pixelmask, 
                    Record& region, const Bool list = False, 
                    const Bool usemask = True, 
                    const Bool locking = True, const Bool replicate = False);
-
+    */
     Bool rename(const String& name, const Bool overwrite = False);
 
     ImageInterface<Float>* sepconvolve(
