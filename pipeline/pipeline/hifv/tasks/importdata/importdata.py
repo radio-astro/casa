@@ -373,7 +373,11 @@ class VLAImportData(basetask.StandardTaskTemplate):
             history_table = os.path.join(ms.name, 'HISTORY')
             with casatools.TableReader(history_table) as table:
                 if table.nrows() != 0:
-                    bad_mses.append(ms)
+                    origin_col = table.getcol('ORIGIN')
+                    for i in range(len(origin_col)):
+                        if origin_col[i] == 'importasdm' or origin_col[i] == 'im::calcuvw()':
+                            continue
+                        bad_mses.append(ms)
 
         if bad_mses:
             # log a message like 'Entries were found in the HISTORY table for 
