@@ -242,16 +242,16 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
         casalog.post('Invalid parameter vis.', 'SEVERE')
         return False
 
-    mst = mstool()
-
-    mst.open(vis)
-    myref = mst.asdmref()
-    mst.close()
-    if not myref=='':
-        casalog.post('MS '+vis
-                     +' was imported with option lazy=True, i.e. its DATA column is read-only.'
-                     +'\nCannot proceed.', 'SEVERE')
-        return False
+    if correct_ms:
+        mst = mstool()
+        mst.open(vis)
+        myref = mst.asdmref()
+        mst.close()
+        if not myref=='':
+            casalog.post('MS '+vis
+                         +' was imported with option lazy=True, i.e. its DATA column is read-only.'
+                         +'\nCannot proceed.', 'SEVERE')
+            return False
 
     if not type(statsfile)==str: 
         casalog.post('Invalid parameter statsfile.', 'SEVERE')
