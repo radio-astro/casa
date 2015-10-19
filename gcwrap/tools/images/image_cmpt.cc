@@ -3462,10 +3462,11 @@ template<class T> void image::_putchunk(
 	);
 }
 
-bool image::putregion(const ::casac::variant& v_pixels,
-		const ::casac::variant& v_pixelmask, const variant& region,
-		const bool list, const bool usemask, const bool locking,
-		const bool replicateArray) {
+bool image::putregion(
+    const variant& v_pixels, const variant& v_pixelmask,
+    const variant& region, bool list, bool usemask,
+    bool locking, bool replicateArray
+) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
@@ -3475,19 +3476,22 @@ bool image::putregion(const ::casac::variant& v_pixels,
 		Array<Float> pixels;
 		if (isunset(v_pixels)) {
 			// do nothing
-		} else if (v_pixels.type() == ::casac::variant::DOUBLEVEC) {
+		}
+		else if (v_pixels.type() == ::casac::variant::DOUBLEVEC) {
 			std::vector<double> pixelVector = v_pixels.getDoubleVec();
 			Vector<Int> shape = v_pixels.arrayshape();
 			pixels.resize(IPosition(shape));
 			Vector<Double> localpix(pixelVector);
 			casa::convertArray(pixels, localpix.reform(IPosition(shape)));
-		} else if (v_pixels.type() == ::casac::variant::INTVEC) {
+		}
+		else if (v_pixels.type() == ::casac::variant::INTVEC) {
 			std::vector<int> pixelVector = v_pixels.getIntVec();
 			Vector<Int> shape = v_pixels.arrayshape();
 			pixels.resize(IPosition(shape));
 			Vector<Int> localpix(pixelVector);
 			casa::convertArray(pixels, localpix.reform(IPosition(shape)));
-		} else {
+		}
+		else {
 			_log << LogIO::SEVERE
 					<< "pixels is not understood, try using an array "
 					<< LogIO::POST;
@@ -3498,26 +3502,30 @@ bool image::putregion(const ::casac::variant& v_pixels,
 		Array<Bool> mask;
 		if (isunset(v_pixelmask)) {
 			// do nothing
-		} else if (v_pixelmask.type() == ::casac::variant::DOUBLEVEC) {
+		}
+		else if (v_pixelmask.type() == ::casac::variant::DOUBLEVEC) {
 			std::vector<double> maskVector = v_pixelmask.getDoubleVec();
 			Vector<Int> shape = v_pixelmask.arrayshape();
 			mask.resize(IPosition(shape));
 			Vector<Double> localmask(maskVector);
 			casa::convertArray(mask, localmask.reform(IPosition(shape)));
-		} else if (v_pixelmask.type() == ::casac::variant::INTVEC) {
+		}
+		else if (v_pixelmask.type() == ::casac::variant::INTVEC) {
 			std::vector<int> maskVector = v_pixelmask.getIntVec();
 			Vector<Int> shape = v_pixelmask.arrayshape();
 			mask.resize(IPosition(shape));
 			Vector<Int> localmask(maskVector);
 			casa::convertArray(mask, localmask.reform(IPosition(shape)));
-		} else if (v_pixelmask.type() == ::casac::variant::BOOLVEC) {
+		}
+		else if (v_pixelmask.type() == ::casac::variant::BOOLVEC) {
 			std::vector<bool> maskVector = v_pixelmask.getBoolVec();
 			Vector<Int> shape = v_pixelmask.arrayshape();
 			mask.resize(IPosition(shape));
 			Vector<Bool> localmask(maskVector);
 			// casa::convertArray(mask,localmask.reform(IPosition(shape)));
 			mask = localmask.reform(IPosition(shape));
-		} else {
+		}
+		else {
 			_log << LogIO::SEVERE
 					<< "mask is not understood, try using an array "
 					<< LogIO::POST;
@@ -3531,11 +3539,32 @@ bool image::putregion(const ::casac::variant& v_pixels,
 		}
 
 		SHARED_PTR<Record> theRegion(_getRegion(region, False));
+		/*
 		if (
+
 			_image->putregion(
 				pixels, mask, *theRegion, list, usemask,
 				locking, replicateArray
 			)
+			*/
+		if (
+		    (
+		        _image->isFloat()
+		        && PixelValueManipulator<Float>::putRegion(
+		            _image->getImage(), pixels, mask, *theRegion,
+		            list, usemask, replicateArray
+		        )
+		    )
+		    /*
+		    || (
+		       ! _image->isFloat()
+		       && PixelValueManipulator<Complex>::putRegion(
+		           _image->getComplexImage(),
+		           pixels, mask, *theRegion, list, usemask,
+		           locking, replicateArray
+		       )
+		    )
+		    */
 		) {
 			_stats.reset(0);
 			return True;
