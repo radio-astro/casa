@@ -12,8 +12,8 @@ import pylab as pl
 from matplotlib import pyplot
 from scipy import stats
 import scipy.optimize as opt
-import math
 import os
+import math
 
 def rmc_func1(x,a,b,c):    
     return a*(x-b)**2+c
@@ -33,9 +33,8 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
     
     m_el=m_el/57.295   # convert to radians
     mean_pwt=0.0; raw_mean_pwt=0.0
-    #    print " starting rough calc of pwv_z"
-    # correct for coupling to the sky, assuming T_loss=275K, eta_c=0.98
 
+    # correct for coupling to the sky, assuming T_loss=275K, eta_c=0.98
     eta_c=0.98
     T_loss=275.0
 
@@ -64,7 +63,8 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
 
        if Tphys<tsrc0:
            Tphys=tsrc0+1.0
-           if verb: print 'fixed physical temperature to be tsrc0'
+           if verb:
+               casalog.post('  fixed physical temperature to be tsrc0', 'INFO')
 
     tsrcn=np.zeros(4)
     teln=np.zeros(4)
@@ -84,8 +84,9 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
          tel[i]=0.02
       wt[i]=1.0-(abs(tel[i]-0.5)/0.49)**2.0    # weights
 
-    if verb: print tsrc0,tsrc1,tsrc2,tsrc3
-    if verb: print wt
+    if verb:
+        casalog.post( '  weights 0-3: '+str(wt), 'INFO')
+        casalog.post( '  tsrc 0-3:    '+str(tsrc0)+', '+str(tsrc1)+', '+str(tsrc2)+', '+str(tsrc3), 'INFO')
 
     use=1
     for i in range(4):
@@ -95,10 +96,6 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
     pwm=np.mean(pw)
 
     if pwm>5.0: wt[0]=0.0
-
-    #    print tsrc0,tsrc1,tsrc2,tsrc3
-    #    print tel
-    #    print pw
 
     if pwm>0.5:   # only look for a wet cloud component if pwv>0.5mm (bit arbitrary cutof but probably ok)
         pwt=np.zeros(4)
@@ -111,9 +108,7 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
         # find std for tauc=0.0000
         for i1 in range(4):
                 pwt[i1]=-(pl.log(tel[i1])+tau0[i1])/r[i1]
-     #           if pwt[i1]<0.0:
-     #               iloop=False
-     #               print 'pwt',i1,' is <0'
+
         mean_pwt,std_pwt_0=rmc_weighted_avg_and_std(pwt, wt)   # get std of 4 v
 
         #  tauc_r are the 5 ranges used to estimate the max value to be used in the array for fitting
@@ -131,7 +126,8 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
             mean_pwt,std_pwt_r[it]=rmc_weighted_avg_and_std(pwt, wt)   # get std of 4 values, using weights (should weight down channels 0,1 a lot)
             
         if min(std_pwt_r)==std_pwt_r[4]:
-            # print 'tauc is too large - setting to max'
+            if verb:
+                casalog.post('  tauc is too large - setting to max', 'INFO')
             tau_constant=3.0
         else:
             for itr in range(4,-1,-1):
@@ -158,8 +154,8 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
                 mm=min(std_arr)
                 nmin=[ii for ii,jj in enumerate(std_arr) if jj==mm][0]
                 a2=tau_arr[nmin]
-
-                if verb: print ' first guess tauc, nmin:',a2,nmin
+                if verb:
+                    casalog.post('  First guess tauc, nmin: '+str(a2)+', '+str(nmin), 'INFO')
                 # now do a fit +-50 elements around this point
                 tau_arr_subset=[]; std_arr_subset=[]
                 for isubset in range(-50,50):
@@ -171,7 +167,7 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
                     a1,a2,a3=opt.curve_fit(rmc_func1,tau_arr_subset,std_arr_subset,x0)[0]
                 except:
                     a2=tau_arr[nmin]
-                    print 'fitting failed, using approximation (minimum)'
+                    casalog.post('  Fitting failed, using approximation (minimum)', 'INFO')
                    
 
                 tau_constant=a2
@@ -192,12 +188,11 @@ def rmc_approxCalc(tsrc0, tsrc1, tsrc2, tsrc3,
             teln[i]=math.exp(-(pw_noc[i]*r[i]+tau0[i]))
             tsrcn[i]=Tphys*(1.0-teln[i])
 
-        if verb: 
-            print pw
-            print pw_noc
-            print tsrc0,tsrc1,tsrc2,tsrc3
-            print tsrcn[0],tsrcn[1],tsrcn[2],tsrcn[3]
-    
+        if verb:
+            casalog.post('  pw 0-3    : '+str(pw), 'INFO')
+            casalog.post('  pw_noc 0-3: '+str(pw_noc), 'INFO')
+            casalog.post('  tsrc 0-3  : '+str(tsrc0)+', '+str(tsrc1)+', '+str(tsrc2)+', '+str(tsrc3), 'INFO')
+            casalog.post('  tsrcn 0-3 : '+str(tsrcn[0])+', '+str(tsrcn[1])+', '+str(tsrcn[2])+', '+str(tsrcn[3]), 'INFO')
  
         #  estimate weighted mean pwv, with and without cloud component:
         # first estimate
@@ -233,15 +228,29 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
     """
     Parameters:
        vis - MS with WVR data included (imported ALMA data)
-       correct_ms - do the corrections to the wvr data in the MS (default True)
+       correct_ms - do the corrections to the wvr data in the MS (default False)
+       statsfile - store processing statistics in this filename (default '' = don't store) 
        verbose - control terminal output (default False) 
-       doplot - generate diagnostic plots (default False)
+       doplot - generate diagnostic plots in subdirectory vis+'_remove_cloud_plots' (default False)
     Example:
-       remove_cloud('uid___A002_X....', True, False)
+       remove_cloud(vis='uid___A002_X....', True, 'mystats.txt')
     """
+
+    casalog.post('*** Starting remove_cloud ***', 'INFO')
 
     if vis==None or type(vis)!=str:
         casalog.post('Invalid parameter vis.', 'SEVERE')
+        return False
+
+    mst = mstool()
+
+    mst.open(vis)
+    myref = mst.asdmref()
+    mst.close()
+    if not myref=='':
+        casalog.post('MS '+vis
+                     +' was imported with option lazy=True, i.e. its DATA column is read-only.'
+                     +'\nCannot proceed.', 'SEVERE')
         return False
 
     if not type(statsfile)==str: 
@@ -253,7 +262,13 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
         return False
 
     if correct_ms:   # either correct or dont correct ms file - need to set in advance
-        casalog.post('Will apply corrections to WVR data. MS will be modified', 'INFO')
+        casalog.post(' Will apply corrections to WVR data. MS will be modified.', 'INFO')
+
+    plotdir=''
+    if doplot:
+        plotdir = vis+'_remove_cloud_plots'
+        casalog.post(' Will (re-)create directory '+plotdir+' to store plots.', 'INFO')
+        os.system('rm -rf '+plotdir+'; mkdir '+plotdir)
 
     mytb = tbtool()
     
@@ -305,7 +320,7 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
 
     for iant in range(nant):
         if verbose:
-            print 'starting antenna#',iant, antnames[iant],':'
+            casalog.post('- Processing antenna#'+str(iant)+' ('+antnames[iant]+') ...', 'INFO')
         tb1=mytb.query("ANTENNA1==%d && PROCESSOR_ID==%d" % (iant,proc_id))
         temp=tb1.getcol('DATA')
         nsamples=len(temp[0][0][:])
@@ -325,7 +340,8 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
 
 	if correct_ms:
             # put the new tsrcn values for this sample & antenna into temp[0][0-3][isam]
-            if verbose: print 'writing new values to table in ',vis
+            if verbose:
+                casalog.post('   Writing new values to Main table of '+vis, 'INFO')
             for it in range(4):
                 temp[0][it][isam]=tsrcn[it]
             tb1.putcol('DATA',temp)
@@ -345,10 +361,10 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
             if abs(tau_con[i]-tau_constant_m)>0.2:
                 tau_con[i]=np.nan
 
-        casalog.post( antnames[iant]+':-', 'INFO')
-        casalog.post('PWV: before, after '+str(stats.nanmedian(pwvna))+str(stats.nanmedian(pwvn_noca)), 'INFO')
-        casalog.post('PWV rms: before, after '+str(stats.nanstd(pwvna)),str(stats.nanstd(pwvn_noca)), 'INFO')
-        casalog.post(' tau_constant '+str(tau_constant_m)+'  rms '+str(stats.nanstd(tau_con)), 'INFO')
+        casalog.post('   Result for '+antnames[iant]+':', 'INFO')
+        casalog.post('      PWV    : before, after '+str(stats.nanmedian(pwvna))+', '+str(stats.nanmedian(pwvn_noca)), 'INFO')
+        casalog.post('      PWV rms: before, after '+str(stats.nanstd(pwvna))+','+str(stats.nanstd(pwvn_noca)), 'INFO')
+        casalog.post('      tau_constant '+str(tau_constant_m)+'  rms '+str(stats.nanstd(tau_con)), 'INFO')
 
         pwv_ant[iant]=stats.nanmedian(pwvn_noca)
         pwv_std_ant[iant]=stats.nanstd(pwvn_noca)
@@ -365,9 +381,9 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
             pyplot.plot(tau_con_scaled)
             pyplot.title((antnames[iant]+'  '+str(iant)+'  '+vis))
             pyplot.draw()
-            plotfil=antnames[iant]+'.png'
+            plotfil=plotdir+'/'+antnames[iant]+'.png'
             pyplot.savefig(plotfil)
-            casalog.post('Generated '+plotfil, 'INFO')
+            casalog.post('    Generated '+plotfil, 'INFO')
     #end for
 
     mytb.close()
@@ -383,7 +399,7 @@ def remove_cloud(vis=None, correct_ms=False, statsfile='', verbose=False, doplot
             lineo=vis+'  pwv '+str(pwv_noca_all)+'+/-'+str(pwv_std_all)+' tauc '+str(tauc_all)+'+/-'+str(tauc_std_all)+'\n'
             fil.write(lineo)
             fil.close()
-            casalog.post('Saved statistics to '+statsfile, 'INFO')
+            casalog.post(' Saved remove_cloud statistics to '+statsfile, 'INFO')
         except Exception, instance: 
             casalog.post("*** Error \'"+instance+"\' writing file "+statsfile, 'WARN')
             return False 
