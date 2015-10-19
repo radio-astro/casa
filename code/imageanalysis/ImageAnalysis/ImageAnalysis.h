@@ -213,12 +213,6 @@ public:
     void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
                      Vector<Int>& pos) const;
 
-    /*
-    Bool putregion(const Array<Float>& pixels, const Array<Bool>& pixelmask, 
-                   Record& region, const Bool list = False, 
-                   const Bool usemask = True, 
-                   const Bool locking = True, const Bool replicate = False);
-    */
     Bool rename(const String& name, const Bool overwrite = False);
 
     ImageInterface<Float>* sepconvolve(
@@ -278,12 +272,6 @@ public:
     Record toworld(const Vector<double>& value, const String& format = "n", Bool doVelocity=True) const;
 
     Bool detached();
-
-    /*
-    //make test image...cube or 2d (default)
-    bool maketestimage(const String& outfile="", const Bool overwrite=False, 
-                       const String& imagetype="2d");
-    */
 
     ImageInterface<Float> * newimage(const String& infile,
                                      const String& outfile,

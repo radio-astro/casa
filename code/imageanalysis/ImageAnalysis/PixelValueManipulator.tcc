@@ -431,48 +431,35 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     const Array<Bool>& mask, Record& region, Bool list,
     Bool usemask, Bool replicateArray
 ) {
-    unique_ptr<LogIO> _log(new LogIO());
-    *_log << LogOrigin(_className, __func__);
-
     // used to verify array dimension
     uInt img_ndim = image->shape().asVector().nelements();
 
     // Checks on pixels dimensions
     Vector<Int> p_shape = pixels.shape().asVector();
     uInt p_ndim = p_shape.size();
-    if (p_ndim > img_ndim) {
-        *_log << "Pixels array has more axes than the image"
-                << LogIO::EXCEPTION;
-        return False;
-    }
-    //    if (p_ndim == 0) {
-    //  *_log << "The pixels array is empty" << LogIO::EXCEPTION;
-    //}
+    ThrowIf(
+        p_ndim > img_ndim,
+        "Pixels array has more axes than the image"
+    );
     for (uInt i = 0; i < p_ndim; i++) {
-        if (p_shape(i) <= 0) {
-            *_log << "The shape of the pixels array is invalid"
-                    << LogIO::EXCEPTION;
-            return False;
-        }
+        ThrowIf(
+            p_shape(i) <= 0,
+            "The shape of the pixels array is invalid"
+        );
     }
 
     // Checks on pixelmask dimensions
     Vector<Int> m_shape = mask.shape().asVector();
     uInt m_ndim = m_shape.size();
-    if (m_ndim > img_ndim) {
-        *_log << "Mask array has more axes than the image"
-                << LogIO::EXCEPTION;
-    }
-    //if (m_ndim == 0) {
-    //  *_log << "The pixelmask array is empty" << LogIO::EXCEPTION;
-    //  return False;
-    //}
+    ThrowIf(
+        m_ndim > img_ndim,
+        "Mask array has more axes than the image"
+    );
     for (uInt i = 0; i < m_ndim; i++) {
-        if (m_shape(i) <= 0) {
-            *_log << "The shape of the pixelmask array is invalid"
-                    << LogIO::EXCEPTION;
-            return False;
-        }
+        ThrowIf(
+            m_shape(i) <= 0,
+            "The shape of the pixelmask array is invalid"
+        );
     }
 
     // Warning, an empty Array comes through the Glish tasking system
@@ -484,10 +471,10 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
 
     //
     if (pixelElements != 0 && maskElements != 0) {
-        if (!pixels.shape().isEqual(mask.shape())) {
-            *_log << "Pixels and mask arrays have different shapes"
-                    << LogIO::EXCEPTION;
-        }
+        ThrowIf(
+            ! pixels.shape().isEqual(mask.shape()),
+            "Pixels and mask arrays have different shapes"
+        );
         if (pixelElements != 0) {
             dataShape = pixels.shape();
             dataDim = pixels.ndim();
@@ -495,23 +482,25 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             dataShape = mask.shape();
             dataDim = mask.ndim();
         }
-    } else if (pixelElements != 0) {
+    }
+    else if (pixelElements != 0) {
         dataShape = pixels.shape();
         dataDim = pixels.ndim();
-    } else if (maskElements != 0) {
+    }
+    else if (maskElements != 0) {
         dataShape = mask.shape();
         dataDim = mask.ndim();
-    } else {
-        *_log << "Pixels and mask arrays are both zero length"
-                << LogIO::EXCEPTION;
+    }
+    else {
+        ThrowCc("Pixels and mask arrays are both zero length");
     }
 
     // Make region.  If the region extends beyond the image, it is
     // truncated here.
-
+    LogIO mylog;
     const ImageRegion* pRegion = ImageRegion::fromRecord(
-        (list ? _log.get() : 0), image->coordinates(), image->shape(),
-        region
+        (list ? &mylog : nullptr), image->coordinates(),
+        image->shape(), region
     );
     LatticeRegion latRegion = pRegion->toLatticeRegion(image->coordinates(),
             image->shape());
@@ -527,10 +516,10 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
             if (!(i == dataDim - 1 && dataShape(i) == 1)) {
                 ostringstream oss;
                 oss << "Data array shape (" << dataShape
-                        << ") including inc, does not"
-                        << " match the shape of the region bounding box ("
-                        << latRegion.shape() << ")" << endl;
-                *_log << String(oss) << LogIO::EXCEPTION;
+                    << ") including inc, does not"
+                    << " match the shape of the region bounding box ("
+                    << latRegion.shape() << ")" << endl;
+                ThrowCc(String(oss));
             }
         }
     }
@@ -539,12 +528,13 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
     if (maskElements > 0) {
         if (! image->hasPixelMask()) {
             String maskName("");
-            ImageMaskAttacher::makeMask(*image, maskName, True, True, *_log, list);
+            ImageMaskAttacher::makeMask(*image, maskName, True, True, mylog, list);
         }
     }
     Bool useMask2 = usemask;
-    if (!image->isMasked())
+    if (!image->isMasked()) {
         useMask2 = False;
+    }
 
     // Put the mask first
     if (maskElements > 0 && image->hasPixelMask()) {
@@ -554,11 +544,13 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 if (replicateArray) {
                     LatticeUtilities::replicate(maskOut, latRegion.slicer(),
                             mask);
-                } else {
+                }
+                else {
                     maskOut.putSlice(mask, latRegion.slicer().start());
                 }
-            } else {
-                *_log << LogIO::NORMAL
+            }
+            else {
+                mylog << LogIO::NORMAL
                         << "Padding mask array with degenerate axes"
                         << LogIO::POST;
                 Array<Bool> maskref(mask.addDegenerate(img_ndim - mask.ndim()));
@@ -569,10 +561,9 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                     maskOut.putSlice(maskref, latRegion.slicer().start());
                 }
             }
-        } else {
-            *_log
-                    << "The mask is not writable. Probably an ImageExpr or SubImage"
-                    << LogIO::EXCEPTION;
+        }
+        else {
+            ThrowCc("The mask is not writable. Probably an ImageExpr or SubImage");
         }
     }
 
@@ -613,21 +604,25 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 if (replicateArray) {
                     LatticeUtilities::replicate(*image, latRegion.slicer(),
                             pixels2);
-                } else {
+                }
+                else {
                     image->putSlice(pixels2, latRegion.slicer().start());
                 }
-            } else {
+            }
+            else {
                 if (replicateArray) {
                     LatticeUtilities::replicate(*image, latRegion.slicer(),
                             pixels);
-                } else {
+                }
+                else {
                     image->putSlice(pixels, latRegion.slicer().start());
                 }
             }
         }
-    } else {
+    }
+    else {
         if (pixelElements > 0) {
-            *_log << LogIO::NORMAL
+            mylog << LogIO::NORMAL
                     << "Padding pixels array with degenerate axes"
                     << LogIO::POST;
             //
@@ -644,16 +639,19 @@ template<class T> Bool PixelValueManipulator<T>::putRegion(
                 if (replicateArray) {
                     LatticeUtilities::replicate(*image, latRegion.slicer(),
                             pixels2);
-                } else {
+                }
+                else {
                     image->putSlice(pixels2, latRegion.slicer().start());
                 }
-            } else {
+            }
+            else {
                 Array<Float> pixelsref(pixels.addDegenerate(img_ndim
                         - pixels.ndim()));
                 if (replicateArray) {
                     LatticeUtilities::replicate(*image, latRegion.slicer(),
                             pixelsref);
-                } else {
+                }
+                else {
                     image->putSlice(pixelsref, latRegion.slicer().start());
                 }
             }
