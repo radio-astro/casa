@@ -378,6 +378,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
                         if origin_col[i] == 'importasdm' or origin_col[i] == 'im::calcuvw()':
                             continue
                         bad_mses.append(ms)
+                        break
 
         if bad_mses:
             # log a message like 'Entries were found in the HISTORY table for 
