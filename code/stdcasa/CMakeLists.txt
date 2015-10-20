@@ -25,8 +25,14 @@
 # depends on the definitions file
 add_custom_target( stdcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/.svn" OR EXISTS "${CMAKE_SOURCE_DIR}/../.svn")
-		message("stdcase: .svn directories found. Running svn scripts.")
+execute_process( COMMAND svn info
+                 RESULT_VARIABLE SVNINFOSTATUS
+                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+message("SVNINFOSTATUS: ${SVNINFOSTATUS}")
+       
+if(${SVNINFOSTATUS} STREQUAL "0")
+		message("stdcasa: Running svn scripts.")
 		# This is delegated to the generate-svninfo script to allow for overriding
 		# subversion information via environment variables.
 		add_custom_command( OUTPUT definitions
@@ -61,7 +67,7 @@ else ()
 				COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 				)
 
-	message("stdcasa: Couldn't find .svn for directories. Creating a dummy version.cc.")
+	message("stdcasa: Creating a dummy version.cc.")
 		add_custom_command( OUTPUT version.cc
 			  COMMAND egrep subversion_revision definitions > tmp1.txt
 			  COMMAND sed -e 's|[^0-9]*\"||g' tmp1.txt > tmp2.txt
