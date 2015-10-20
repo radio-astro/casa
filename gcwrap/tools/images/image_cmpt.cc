@@ -3539,14 +3539,6 @@ bool image::putregion(
 		}
 
 		SHARED_PTR<Record> theRegion(_getRegion(region, False));
-		/*
-		if (
-
-			_image->putregion(
-				pixels, mask, *theRegion, list, usemask,
-				locking, replicateArray
-			)
-			*/
 		if (
 		    (
 		        _image->isFloat()
@@ -3555,16 +3547,6 @@ bool image::putregion(
 		            list, usemask, replicateArray
 		        )
 		    )
-		    /*
-		    || (
-		       ! _image->isFloat()
-		       && PixelValueManipulator<Complex>::putRegion(
-		           _image->getComplexImage(),
-		           pixels, mask, *theRegion, list, usemask,
-		           locking, replicateArray
-		       )
-		    )
-		    */
 		) {
 			_stats.reset(0);
 			return True;
@@ -4230,20 +4212,22 @@ bool image::set(
 		if (detached()) {
 			return False;
 		}
-
 		String pixels = vpixels.toString();
 		if (pixels == "[]")
 			pixels = "";
 		SHARED_PTR<Record> pRegion(_getRegion(region, False));
-
 		if (pixels == "" && pixelmask == -1) {
 			_log << LogIO::WARN
 					<< "You must specify at least either the pixels or the mask to set"
 					<< LogIO::POST;
 			return False;
 		}
-		if (_image->set(pixels, pixelmask, *pRegion, list)) {
-			_stats.reset(0);
+		if (
+		    PixelValueManipulator<Float>::set(
+		        _image->getImage(), pixels, pixelmask, *pRegion, list
+		    )
+		) {
+		    _stats.reset(0);
 			return True;
 		}
 		ThrowCc("Error setting pixel values.");
@@ -4253,6 +4237,7 @@ bool image::set(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+	return False;
 }
 
 bool image::setbrightnessunit(const std::string& unit) {
